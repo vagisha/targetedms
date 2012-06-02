@@ -1,0 +1,57 @@
+/*
+ * Copyright (c) 2012 LabKey Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.labkey.targetedms.view;
+
+import org.labkey.api.util.Formats;
+import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.parser.Precursor;
+
+/**
+ * User: vsharma
+ * Date: 5/7/12
+ * Time: 8:13 PM
+ */
+public class PrecursorHtmlMaker
+{
+    private PrecursorHtmlMaker() {}
+
+    private static final String[] CHARGE = {"",
+                                           "+",
+                                           "++",
+                                           "+++",
+                                           "++++",
+                                           "+++++",
+                                           "++++++",
+                                           "+++++++",
+                                           "++++++++",
+                                           "+++++++++"};
+
+    public static String getHtml(Peptide peptide, Precursor precursor, String isotopeLabel, int lightLabelId)
+    {
+        StringBuilder html = new StringBuilder();
+        html.append(ModifiedPeptideHtmlMaker.getHtml(peptide, precursor, lightLabelId));
+        html.append("<span>");
+        html.append(" - ").append(Formats.f4.format(precursor.getMz()));
+        html.append(CHARGE[precursor.getCharge()]);
+        if(!"light".equalsIgnoreCase(isotopeLabel))
+        {
+            html.append(" (").append(isotopeLabel).append(")");
+        }
+        html.append("</span>");
+
+        return html.toString();
+    }
+}

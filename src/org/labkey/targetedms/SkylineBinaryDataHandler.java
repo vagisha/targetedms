@@ -1,0 +1,82 @@
+package org.labkey.targetedms;
+
+import org.apache.log4j.Logger;
+import org.labkey.api.data.Container;
+import org.labkey.api.exp.ExperimentException;
+import org.labkey.api.exp.Handler;
+import org.labkey.api.exp.XarContext;
+import org.labkey.api.exp.api.AbstractExperimentDataHandler;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.security.User;
+import org.labkey.api.util.FileUtil;
+import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.parser.SkylineBinaryParser;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.zip.DataFormatException;
+
+/**
+ * User: jeckels
+ * Date: Apr 13, 2012
+ */
+public class SkylineBinaryDataHandler extends AbstractExperimentDataHandler
+{
+    private static final String EXTENSION = ".skyd";
+
+    @Override
+    public void importFile(ExpData data, File dataFile, ViewBackgroundInfo info, Logger log, XarContext context) throws ExperimentException
+    {
+        SkylineBinaryParser parser = new SkylineBinaryParser(dataFile);
+        try
+        {
+            parser.parse();
+        }
+        catch (IOException e)
+        {
+            throw new ExperimentException(e);
+        }
+    }
+
+    @Override
+    public ActionURL getContentURL(Container container, ExpData data)
+    {
+        return null;
+    }
+
+    @Override
+    public void deleteData(ExpData data, Container container, User user)
+    {
+        File file = data.getFile();
+        if (file != null)
+        {
+            TargetedMSRun run = TargetedMSManager.getRunByFileName(file.getParent(), file.getName(), container);
+            if (run != null)
+            {
+                TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container);
+            }
+        }
+    }
+
+    @Override
+    public void runMoved(ExpData newData, Container container, Container targetContainer, String oldRunLSID, String newRunLSID, User user, int oldDataRowID) throws ExperimentException
+    {
+        // TODO
+    }
+
+    @Override
+    public Handler.Priority getPriority(ExpData data)
+    {
+        String url = data.getDataFileUrl();
+        if (url == null)
+            return null;
+        String ext = FileUtil.getExtension(url);
+        if (ext == null)
+            return null;
+        ext = ext.toLowerCase();
+        // we handle only *.skys files
+        return EXTENSION.equals(ext) ? Handler.Priority.HIGH : null;
+    }
+}

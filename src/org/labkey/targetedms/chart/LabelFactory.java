@@ -1,0 +1,121 @@
+/*
+ * Copyright (c) 2012 LabKey Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.labkey.targetedms.chart;
+
+import org.labkey.api.util.Formats;
+import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.parser.PeptideChromInfo;
+import org.labkey.targetedms.parser.PrecursorChromInfo;
+import org.labkey.targetedms.parser.Replicate;
+import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.parser.Transition;
+import org.labkey.targetedms.query.PeptideManager;
+import org.labkey.targetedms.query.PrecursorManager;
+import org.labkey.targetedms.query.ReplicateManager;
+import org.labkey.targetedms.query.TransitionManager;
+
+import java.util.Map;
+
+/**
+ * User: vsharma
+ * Date: 5/2/12
+ * Time: 3:40 PM
+ */
+public class LabelFactory
+{
+    private static final String[] CHARGE = {"",
+                                           "+",
+                                           "++",
+                                           "+++",
+                                           "++++",
+                                           "+++++",
+                                           "++++++",
+                                           "+++++++",
+                                           "++++++++",
+                                           "+++++++++"};
+
+    private LabelFactory() {}
+
+    public static String transitionLabel(int transitionId)
+    {
+        Transition transition = TransitionManager.get(transitionId);
+
+        StringBuilder label = new StringBuilder();
+        label.append(transition.getFragmentType());
+        if(transition.getFragmentOrdinal() != null)
+        {
+            label.append(transition.getFragmentOrdinal());
+        }
+        label.append(" - ").append(Formats.f4.format(transition.getMz()));
+        if(transition.getCharge() != null)
+        {
+            label.append(CHARGE[transition.getCharge()]);
+        }
+        return label.toString();
+    }
+
+    public static String precursorLabel(int precursorId)
+    {
+        Map<String, Object> precursorSummary = PrecursorManager.getPrecursorSummary(precursorId);
+
+        StringBuilder label = new StringBuilder();
+        label.append(precursorSummary.get("sequence"));
+
+        label.append(" - ").append(Formats.f4.format(precursorSummary.get("mz")));
+        label.append(CHARGE[(Integer)precursorSummary.get("charge")]);
+        String isotopeLabel = (String) precursorSummary.get("label");
+        if(!"light".equalsIgnoreCase(isotopeLabel))
+        {
+            label.append(" (").append(isotopeLabel).append(")");
+        }
+
+        return label.toString();
+    }
+
+    public static String peptideChromInfoChartLabel(PeptideChromInfo pepChromInfo)
+    {
+        SampleFile sampleFile = ReplicateManager.getSampleFile(pepChromInfo.getSampleFileId());
+        Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
+        Peptide peptide = PeptideManager.get(pepChromInfo.getPeptideId());
+
+        StringBuilder label = new StringBuilder();
+        label.append(replicate.getName());
+        if(!sampleFile.getSampleName().contains(replicate.getName()))
+        {
+            label.append(" (").append(sampleFile.getSampleName()).append(')');
+        }
+        label.append('\n');
+        label.append(peptide.getSequence());
+        return label.toString();
+    }
+
+    public static String precursorChromInfoChartLabel(PrecursorChromInfo pChromInfo)
+    {
+        SampleFile sampleFile = ReplicateManager.getSampleFile(pChromInfo.getSampleFileId());
+        Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
+        String precursorLabel = precursorLabel(pChromInfo.getPrecursorId());
+
+        StringBuilder label = new StringBuilder();
+        label.append(replicate.getName());
+        if(!sampleFile.getSampleName().contains(replicate.getName()))
+        {
+            label.append(" (").append(sampleFile.getSampleName()).append(')');
+        }
+        label.append('\n');
+        label.append(precursorLabel);
+        return label.toString();
+    }
+}
