@@ -20,7 +20,7 @@ package org.labkey.targetedms.parser;
  * Date: 4/22/12
  * Time: 4:52 PM
  */
-public class ChromInfo extends SkylineEntity
+public class ChromInfo<AnnotationType extends AbstractAnnotation> extends AnnotatedEntity<AnnotationType>
 {
     private String _replicateName;
     private String _skylineSampleFileId;

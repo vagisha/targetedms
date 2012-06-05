@@ -31,19 +31,7 @@ import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.writer.ZipUtil;
-import org.labkey.targetedms.parser.Instrument;
-import org.labkey.targetedms.parser.Peptide;
-import org.labkey.targetedms.parser.PeptideChromInfo;
-import org.labkey.targetedms.parser.PeptideGroup;
-import org.labkey.targetedms.parser.PeptideSettings;
-import org.labkey.targetedms.parser.Precursor;
-import org.labkey.targetedms.parser.PrecursorChromInfo;
-import org.labkey.targetedms.parser.Replicate;
-import org.labkey.targetedms.parser.SampleFile;
-import org.labkey.targetedms.parser.SkylineDocumentParser;
-import org.labkey.targetedms.parser.Transition;
-import org.labkey.targetedms.parser.TransitionChromInfo;
-import org.labkey.targetedms.parser.TransitionSettings;
+import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.query.LibraryManager;
 
 import javax.xml.stream.XMLStreamException;
@@ -383,11 +371,23 @@ public class SkylineDocImporter
                 }
                 pepGroup = Table.insert(_user, TargetedMSManager.getTableInfoPeptideGroup(), pepGroup);
 
+                for (PeptideGroupAnnotation annotation : pepGroup.getAnnotations())
+                {
+                    annotation.setPeptideGroupId(pepGroup.getId());
+                    annotation = Table.insert(_user, TargetedMSManager.getTableInfoPeptideGroupAnnotation(), annotation);
+                }
+
                 // 2. peptide
                 for(Peptide peptide: pepGroup.getPeptideList())
                 {
                     peptide.setPeptideGroupId(pepGroup.getId());
                     peptide = Table.insert(_user, TargetedMSManager.getTableInfoPeptide(), peptide);
+
+                    for (PeptideAnnotation annotation : peptide.getAnnotations())
+                    {
+                        annotation.setPeptideId(peptide.getId());
+                        annotation = Table.insert(_user, TargetedMSManager.getTableInfoPeptideAnnotation(), annotation);
+                    }
 
                     for(Peptide.StructuralModification mod: peptide.getStructuralMods())
                     {
@@ -426,6 +426,12 @@ public class SkylineDocImporter
 
                         precursor = Table.insert(_user, TargetedMSManager.getTableInfoPrecursor(), precursor);
 
+                        for (PrecursorAnnotation annotation : precursor.getAnnotations())
+                        {
+                            annotation.setPrecursorId(precursor.getId());
+                            annotation = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
+                        }
+
                         Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap = new HashMap<Integer, Integer>();
 
                         Precursor.LibraryInfo libInfo = precursor.getLibraryInfo();
@@ -445,6 +451,12 @@ public class SkylineDocImporter
 
                             precursorChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfo(), precursorChromInfo);
                             sampleFileIdPrecursorChromInfoIdMap.put(sampleFileId, precursorChromInfo.getId());
+
+                            for (PrecursorChromInfoAnnotation annotation : precursorChromInfo.getAnnotations())
+                            {
+                                annotation.setPrecursorChromInfoId(precursorChromInfo.getId());
+                                annotation = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), annotation);
+                            }
                         }
 
                         // 4. transition
@@ -452,6 +464,13 @@ public class SkylineDocImporter
                         {
                             transition.setPrecursorId(precursor.getId());
                             Table.insert(_user, TargetedMSManager.getTableInfoTransition(), transition);
+
+                            // transition annotations
+                            for (TransitionAnnotation annotation : transition.getAnnotations())
+                            {
+                                annotation.setTransitionId(transition.getId());
+                                annotation = Table.insert(_user, TargetedMSManager.getTableInfoTransitionAnnotation(), annotation);
+                            }
 
                             // transition results
                             for(TransitionChromInfo transChromInfo: transition.getChromInfoList())
@@ -461,6 +480,13 @@ public class SkylineDocImporter
                                 transChromInfo.setSampleFileId(sampleFileId);
                                 transChromInfo.setPrecursorChromInfoId(sampleFileIdPrecursorChromInfoIdMap.get(sampleFileId));
                                 Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfo(), transChromInfo);
+
+                                for (TransitionChromInfoAnnotation annotation : transChromInfo.getAnnotations())
+                                {
+                                    annotation.setTransitionChromInfoId(transChromInfo.getId());
+                                    annotation = Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
+                                }
+
                             }
                         }
                     }

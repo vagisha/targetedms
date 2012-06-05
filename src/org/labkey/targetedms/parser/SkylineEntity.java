@@ -4,7 +4,7 @@ package org.labkey.targetedms.parser;
  * User: jeckels
  * Date: Apr 18, 2012
  */
-public class SkylineEntity
+public abstract class SkylineEntity
 {
     private int _id;
 

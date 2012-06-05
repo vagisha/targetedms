@@ -23,7 +23,7 @@ import java.util.Map;
  * Date: 4/2/12
  * Time: 2:13 PM
  */
-public class PeptideGroup extends SkylineEntity
+public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
 {
     private int _runId;
     private Integer _sequenceId;
@@ -38,6 +38,7 @@ public class PeptideGroup extends SkylineEntity
     private boolean _decoy;
 
     private List<Peptide> _peptideList;
+    private String _note;
 
     public int getRunId()
     {
@@ -127,5 +128,15 @@ public class PeptideGroup extends SkylineEntity
     public void setPeptideList(List<Peptide> peptideList)
     {
         _peptideList = peptideList;
+    }
+
+    public void setNote(String note)
+    {
+        _note = note;
+    }
+
+    public String getNote()
+    {
+        return _note;
     }
 }

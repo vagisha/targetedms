@@ -106,8 +106,16 @@ class PeptideSettingsParser
         PeptideSettings.PeptideModifications modifications = new PeptideSettings.PeptideModifications();
 
         PeptideSettings.ModificationSettings settings = new  PeptideSettings.ModificationSettings();
-        settings.setMaxVariableMods(XmlUtil.readRequiredIntegerAttribute(reader, "max_variable_mods", PEPTIDE_MODIFICATIONS));
-        settings.setMaxNeutralLosses(XmlUtil.readRequiredIntegerAttribute(reader, "max_neutral_losses", PEPTIDE_MODIFICATIONS));
+        Integer maxVariableMods = XmlUtil.readIntegerAttribute(reader, "max_variable_mods");
+        if (maxVariableMods != null)
+        {
+            settings.setMaxVariableMods(maxVariableMods.intValue());
+        }
+        Integer maxNeutralLosses = XmlUtil.readIntegerAttribute(reader, "max_neutral_losses");
+        if (maxNeutralLosses != null)
+        {
+            settings.setMaxNeutralLosses(maxNeutralLosses.intValue());
+        }
         modifications.setModificationSettings(settings);
 
         // If there is a single internal standard it is written out as an attribute.

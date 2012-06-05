@@ -23,7 +23,7 @@ import java.util.List;
  * Date: 4/2/12
  * Time: 10:28 AM
  */
-public class Peptide extends SkylineEntity
+public class Peptide extends AnnotatedEntity<PeptideAnnotation>
 {
     private int _peptideGroupId;
 
@@ -49,6 +49,7 @@ public class Peptide extends SkylineEntity
 
     private List<StructuralModification> _structuralMods;
     private List<IsotopeModification> _isotopeMods;
+    private String _note;
 
 
     public int getPeptideGroupId()
@@ -209,6 +210,16 @@ public class Peptide extends SkylineEntity
     public void setIsotopeMods(List<IsotopeModification> isotopeMods)
     {
         _isotopeMods = isotopeMods;
+    }
+
+    public void setNote(String note)
+    {
+        _note = note;
+    }
+
+    public String getNote()
+    {
+        return _note;
     }
 
     private static class Modification extends SkylineEntity

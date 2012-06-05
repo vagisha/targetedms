@@ -447,15 +447,6 @@
             <ns:column columnName="Note"/>
         </ns:columns>
     </ns:table>
-    <ns:table tableName="Annotation" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="Value"/>
-      </ns:columns>
-    </ns:table>
     <ns:table tableName="Enzyme" tableDbType="TABLE">
       <ns:columns>
           <ns:column columnName="Id">
@@ -536,7 +527,11 @@
     </ns:table>
     <ns:table tableName="PeptideAnnotation" tableDbType="TABLE">
       <ns:columns>
-        <ns:column columnName="AnnotationId"/>
+          <ns:column columnName="Id">
+              <ns:isHidden>true</ns:isHidden>
+          </ns:column>
+        <ns:column columnName="Name"/>
+        <ns:column columnName="Value"/>
         <ns:column columnName="PeptideId"/>
       </ns:columns>
     </ns:table>
@@ -554,13 +549,21 @@
     </ns:table>
     <ns:table tableName="PeptideGroupAnnotation" tableDbType="TABLE">
       <ns:columns>
-        <ns:column columnName="AnnotationId"/>
+          <ns:column columnName="Id">
+              <ns:isHidden>true</ns:isHidden>
+          </ns:column>
+        <ns:column columnName="Name"/>
+        <ns:column columnName="Value"/>
         <ns:column columnName="PeptideGroupId"/>
       </ns:columns>
     </ns:table>
     <ns:table tableName="PrecursorAnnotation" tableDbType="TABLE">
       <ns:columns>
-        <ns:column columnName="AnnotationId"/>
+          <ns:column columnName="Id">
+              <ns:isHidden>true</ns:isHidden>
+          </ns:column>
+        <ns:column columnName="Name"/>
+        <ns:column columnName="Value"/>
         <ns:column columnName="PrecursorId"/>
       </ns:columns>
     </ns:table>
@@ -600,7 +603,11 @@
     </ns:table>
     <ns:table tableName="precursorchrominfoannotation" tableDbType="TABLE">
       <ns:columns>
-        <ns:column columnName="annotationid"/>
+          <ns:column columnName="Id">
+              <ns:isHidden>true</ns:isHidden>
+          </ns:column>
+        <ns:column columnName="Name"/>
+        <ns:column columnName="Value"/>
         <ns:column columnName="precursorchrominfoid"/>
       </ns:columns>
     </ns:table>
@@ -702,7 +709,11 @@
     </ns:table>
     <ns:table tableName="transitionannotation" tableDbType="TABLE">
       <ns:columns>
-        <ns:column columnName="annotationid"/>
+          <ns:column columnName="Id">
+              <ns:isHidden>true</ns:isHidden>
+          </ns:column>
+        <ns:column columnName="Name"/>
+        <ns:column columnName="Value"/>
         <ns:column columnName="transitionid"/>
       </ns:columns>
     </ns:table>
@@ -720,7 +731,11 @@
     </ns:table>
     <ns:table tableName="transitionchrominfoannotation" tableDbType="TABLE">
       <ns:columns>
-        <ns:column columnName="annotationid"/>
+          <ns:column columnName="Id">
+              <ns:isHidden>true</ns:isHidden>
+          </ns:column>
+        <ns:column columnName="Name"/>
+        <ns:column columnName="Value"/>
         <ns:column columnName="transitionchrominfoid"/>
       </ns:columns>
     </ns:table>

@@ -20,7 +20,7 @@ package org.labkey.targetedms.parser;
  * Date: 4/16/12
  * Time: 3:39 PM
  */
-public class PrecursorChromInfo extends ChromInfo
+public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 {
     private int _precursorId;
     private int _peptideChromInfoId;

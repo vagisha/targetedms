@@ -71,12 +71,12 @@
     </tr>
     <tr>
         <td class="labkey-form-label">NeutralMass</td>
-        <td><%=Formats.f4.format(bean.getPeptide().getCalcNeutralMass())%></td>
+        <td><%= bean.getPeptide().getCalcNeutralMass() == null ? "" : Formats.f4.format(bean.getPeptide().getCalcNeutralMass())%></td>
     </tr>
     
     <tr>
         <td class="labkey-form-label">Avg. RT</td>
-        <td><%=Formats.f4.format(bean.getPeptide().getAvgMeasuredRetentionTime())%></td>
+        <td><%=bean.getPeptide().getAvgMeasuredRetentionTime() == null ? "" : Formats.f4.format(bean.getPeptide().getAvgMeasuredRetentionTime())%></td>
     </tr>
     
     <% if(bean.getPeptide().getPredictedRetentionTime() != null)

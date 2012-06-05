@@ -20,7 +20,7 @@ package org.labkey.targetedms.parser;
  * Date: 4/16/12
  * Time: 3:04 PM
  */
-public class TransitionChromInfo extends ChromInfo
+public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation>
 {
     private int _transitionId;
     private int _precursorChromInfoId;

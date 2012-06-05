@@ -23,7 +23,7 @@ import java.util.List;
  * Date: 4/2/12
  * Time: 10:28 AM
  */
-public class Precursor extends SkylineEntity
+public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
 {
     private int _peptideId;
 
@@ -43,6 +43,7 @@ public class Precursor extends SkylineEntity
 
     private List<Transition> _transitionList;
     private List<PrecursorChromInfo> _chromInfoList;
+    private String _note;
 
     public int getPeptideId()
     {
@@ -172,6 +173,16 @@ public class Precursor extends SkylineEntity
     public void setLibraryInfo(LibraryInfo libraryInfo)
     {
         _libraryInfo = libraryInfo;
+    }
+
+    public void setNote(String note)
+    {
+        _note = note;
+    }
+
+    public String getNote()
+    {
+        return _note;
     }
 
     public static final class LibraryInfo extends SkylineEntity

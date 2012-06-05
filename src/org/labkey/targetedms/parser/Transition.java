@@ -24,7 +24,7 @@ import java.util.List;
  * Date: 4/2/12
  * Time: 10:28 AM
  */
-public class Transition extends SkylineEntity
+public class Transition extends AnnotatedEntity<TransitionAnnotation>
 {
     private int precursorId;
 
