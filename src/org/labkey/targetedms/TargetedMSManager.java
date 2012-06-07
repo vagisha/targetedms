@@ -41,6 +41,7 @@ import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -280,7 +281,14 @@ public class TargetedMSManager
         SkylineDocImporter importer = new SkylineDocImporter(info.getUser(), info.getContainer(), file.getName(), file, null, xarContext);
         SkylineDocImporter.RunInfo runInfo = importer.prepareRun(false);
         TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, file, runInfo, root);
-        PipelineService.get().queueJob(job);
+        try
+        {
+            PipelineService.get().queueJob(job);
+        }
+        catch (PipelineValidationException e)
+        {
+            throw new IOException(e);
+        }
     }
 
     public static TargetedMSRun importRun(Logger log,
