@@ -53,6 +53,7 @@
             {
                 ActionURL url = new ActionURL(TargetedMSController.ShowProteinAction.class, getViewContext().getContainer());
                 url.addParameter("id", bean.getPeptideGroup().getId());
+                proteinLink = url.toString();
             }   
         %>
         <td class="labkey-form-label"><%=fieldLabel%></td>
