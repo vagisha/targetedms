@@ -64,7 +64,7 @@ public class DocTransitionsTableInfo extends FilteredTable
 
         // Display the fragment as y9 instead of 'y' and '9' in separate columns
         String sql = TargetedMSManager.getSqlDialect().concatenate(ExprColumn.STR_TABLE_ALIAS + ".FragmentType",
-                                                                   ExprColumn.STR_TABLE_ALIAS+".FragmentOrdinal");
+                                                                   "CAST(" + ExprColumn.STR_TABLE_ALIAS+".FragmentOrdinal AS VARCHAR)");
         SQLFragment fragmentSql = new SQLFragment(sql);
         ColumnInfo fragment = new ExprColumn(this, "Fragment", fragmentSql, JdbcType.VARCHAR);
         fragment.setTextAlign("Right");
