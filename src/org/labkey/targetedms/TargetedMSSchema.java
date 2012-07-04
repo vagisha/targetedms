@@ -31,6 +31,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.ms2.MS2Service;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
@@ -116,7 +117,9 @@ public class TargetedMSSchema extends UserSchema
         {
             public QuerySchema getSchema(DefaultSchema schema)
             {
-                return new TargetedMSSchema(schema.getUser(), schema.getContainer());
+                if (schema.getContainer().getActiveModules().contains(ModuleLoader.getInstance().getModule(TargetedMSModule.NAME)))
+                    return new TargetedMSSchema(schema.getUser(), schema.getContainer());
+                return null;
             }
         });
     }
