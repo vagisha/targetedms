@@ -199,7 +199,7 @@
             <ns:column columnName="StartIndex" />
             <ns:column columnName="EndIndex" />
             <ns:column columnName="CalcNeutralMass">
-                <ns:columnTitle>Neutral Mass</ns:columnTitle>
+                <ns:columnTitle>Peptide Neutral Mass</ns:columnTitle>
             </ns:column>
             <ns:column columnName="NumMissedCleavages">
                 <ns:columnTitle>Missed Cleavages</ns:columnTitle>
@@ -278,6 +278,7 @@
                 <ns:formatString>0+</ns:formatString>
             </ns:column>
             <ns:column columnName="NeutralMass">
+                <ns:columnTitle>Precursor Neutral Mass</ns:columnTitle>
                 <ns:formatString>0.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="CollisionEnergy">
@@ -370,6 +371,7 @@
                 <ns:formatString>0.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="NeutralMass">
+                <ns:columnTitle>Transition Neutral Mass</ns:columnTitle>
                 <ns:formatString>0.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="NeutralLossMass">

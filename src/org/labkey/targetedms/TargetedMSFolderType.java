@@ -40,7 +40,7 @@ public class TargetedMSFolderType extends DefaultFolderType
                     Portal.getPortalPart(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME).createWebPart()
             ),
             Collections.<Portal.WebPart>emptyList(),
-            getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment")),
+            getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment"), getModule("MS2")),
             module);
     }
 
