@@ -25,7 +25,7 @@ import org.labkey.api.query.QueryView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.TargetedMSTable;
+import org.labkey.targetedms.query.TargetedMSTable;
 import org.springframework.validation.BindException;
 
 import java.util.ArrayList;

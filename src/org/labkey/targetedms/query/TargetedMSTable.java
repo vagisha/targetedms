@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.labkey.targetedms;
+package org.labkey.targetedms.query;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;

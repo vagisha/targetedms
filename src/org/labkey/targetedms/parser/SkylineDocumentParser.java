@@ -47,6 +47,7 @@ public class SkylineDocumentParser
     private static final String TRANSITION_SETTINGS = "transition_settings";
     private static final String TRANSITION_INSTRUMENT = "transition_instrument";
     private static final String PEPTIDE_SETTINGS = "peptide_settings";
+    private static final String DATA_SETTINGS = "data_settings";
     private static final String MEASURED_RESULTS = "measured_results";
     private static final String REPLICATE = "replicate";
     private static final String SAMPLE_FILE = "sample_file";
@@ -88,6 +89,8 @@ public class SkylineDocumentParser
     private TransitionSettings _transitionSettings;
     private PeptideSettings _peptideSettings;
     private List<Replicate> _replicateList;
+    private enum AnnotationTypes { text, true_false, value_list }
+    private Map<String, AnnotationTypes> _annotationTypes = new HashMap<String, AnnotationTypes>();
     private Map<String, String> _sampleFileIdToFilePathMap;
 
     private double _matchTolerance = DEFAULT_TOLERANCE;
@@ -189,6 +192,29 @@ public class SkylineDocumentParser
                  {
                      readMeasuredResults(reader);
                  }
+                 else if(DATA_SETTINGS.equalsIgnoreCase(reader.getLocalName()))
+                 {
+                     readDataSettings(reader);
+                 }
+             }
+         }
+    }
+
+    private void readDataSettings(XMLStreamReader reader) throws XMLStreamException
+    {
+        while(reader.hasNext())
+         {
+             int evtType = reader.next();
+             if(XmlUtil.isEndElement(reader, evtType, DATA_SETTINGS))
+             {
+                 break;
+             }
+
+             if(XmlUtil.isStartElement(reader, evtType, ANNOTATION))
+             {
+                 String name = reader.getAttributeValue(null, "name");
+                 String type = reader.getAttributeValue(null, "type");
+                 _annotationTypes.put(name, AnnotationTypes.valueOf(type));
              }
          }
     }
@@ -954,7 +980,12 @@ public class SkylineDocumentParser
                 value.append(reader.getText());
             }
         }
-        if (value.length() > 0)
+        if (_annotationTypes.get(annotation.getName()) == AnnotationTypes.true_false)
+        {
+            // Boolean types are omitted if they're false, so consider it to be "true"
+            annotation.setValue(Boolean.TRUE.toString());
+        }
+        else if (value.length() > 0)
         {
             annotation.setValue(value.toString());
         }

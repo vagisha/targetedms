@@ -43,9 +43,11 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.view.ActionURL;
+import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocPrecursorTableInfo;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
 import org.labkey.targetedms.query.ModifiedPeptideDisplayColumn;
+import org.labkey.targetedms.query.TargetedMSTable;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -364,7 +366,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK directly to targetedms.Runs
         if (TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.RunFK.getSQL());
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.RunFK.getSQL(), TargetedMSManager.getTableInfoPeptideGroupAnnotation(), "PeptideGroupId");
             DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer()), Collections.singletonMap("id", "Id"));
             result.setDetailsURL(detailsURLs);
             result.getColumn("SequenceId").setFk(new LookupForeignKey("SeqId")
@@ -443,7 +445,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.peptidegroup
         if (TABLE_PEPTIDE.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideGroupFK.getSQL());
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideGroupFK.getSQL(), TargetedMSManager.getTableInfoPeptideAnnotation(), "PeptideId");
             result.getColumn("PeptideGroupId").setFk(new LookupForeignKey("Id")
             {
                 @Override
@@ -489,7 +491,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.peptide
         if (TABLE_PRECURSOR.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideFK.getSQL());
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideFK.getSQL(), TargetedMSManager.getTableInfoPrecursorAnnotation(), "PrecursorId");
             result.getColumn("PeptideId").setFk(new LookupForeignKey("Id")
             {
                 @Override
@@ -526,7 +528,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_TRANSITION.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PrecursorFK.getSQL());
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PrecursorFK.getSQL(), TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId");
             result.getColumn("PrecursorId").setFk(new LookupForeignKey("Id")
             {
                 @Override

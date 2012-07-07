@@ -27,7 +27,6 @@ src/org/labkey/targetedms/TargetedMSManager.java -text
 src/org/labkey/targetedms/TargetedMSModule.java -text
 src/org/labkey/targetedms/TargetedMSRun.java -text
 src/org/labkey/targetedms/TargetedMSSchema.java -text
-src/org/labkey/targetedms/TargetedMSTable.java -text
 src/org/labkey/targetedms/chart/ChartColors.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMaker.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMakerFactory.java -text
@@ -65,6 +64,7 @@ src/org/labkey/targetedms/parser/blib/BlibSpectrum.java -text
 src/org/labkey/targetedms/parser/blib/BlibSpectrumReader.java -text
 src/org/labkey/targetedms/pipeline/TargetedMSImportPipelineJob.java -text
 src/org/labkey/targetedms/pipeline/TargetedMSPipelineProvider.java -text
+src/org/labkey/targetedms/query/AnnotatedTargetedMSTable.java -text
 src/org/labkey/targetedms/query/ChromatogramDisplayColumnFactory.java -text
 src/org/labkey/targetedms/query/ChromatogramGridQuerySettings.java -text
 src/org/labkey/targetedms/query/DocPrecursorTableInfo.java -text
@@ -80,6 +80,7 @@ src/org/labkey/targetedms/query/PeptidePrecursorChromatogramsTableInfo.java -tex
 src/org/labkey/targetedms/query/PrecursorChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PrecursorManager.java -text
 src/org/labkey/targetedms/query/ReplicateManager.java -text
+src/org/labkey/targetedms/query/TargetedMSTable.java -text
 src/org/labkey/targetedms/query/TransitionManager.java -text
 src/org/labkey/targetedms/view/ChromatogramsDataRegion.java -text
 src/org/labkey/targetedms/view/DocumentPrecursorsView.java -text

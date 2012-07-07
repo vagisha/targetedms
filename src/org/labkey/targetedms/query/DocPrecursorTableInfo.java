@@ -85,6 +85,7 @@ public class DocPrecursorTableInfo extends FilteredTable
 
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Description"));
+        visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Annotations"));
 
         visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "NumMissedCleavages"));
@@ -124,6 +125,7 @@ public class DocPrecursorTableInfo extends FilteredTable
             "  pre.ModifiedSequence,\n" +
             "  pre.CollisionEnergy,\n" +
             "  pre.DeclusteringPotential,\n" +
+            "  pre.Annotations,\n" +
             "  pre.Decoy,\n" +
             "  pre.DecoyMassShift,\n" +
             "  pre.Note,\n"+
