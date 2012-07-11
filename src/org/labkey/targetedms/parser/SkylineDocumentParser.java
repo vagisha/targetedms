@@ -45,6 +45,10 @@ public class SkylineDocumentParser
 
     private static final String SETTINGS_SUMMARY = "settings_summary";
     private static final String TRANSITION_SETTINGS = "transition_settings";
+    private static final String TRANSITION_PREDICTION = "transition_prediction";
+    private static final String PREDICT_COLLISION_ENERGY = "predict_collision_energy";
+    private static final String REGRESSION_CE = "regression_ce";
+    private static final String PREDICT_DECLUSTERING_POTENTIAL = "predict_declustering_potential";
     private static final String TRANSITION_INSTRUMENT = "transition_instrument";
     private static final String PEPTIDE_SETTINGS = "peptide_settings";
     private static final String DATA_SETTINGS = "data_settings";
@@ -230,7 +234,11 @@ public class SkylineDocumentParser
                  break;
              }
 
-             if(XmlUtil.isStartElement(reader, evtType, TRANSITION_INSTRUMENT))
+             if(XmlUtil.isStartElement(reader, evtType, TRANSITION_PREDICTION))
+             {
+                 _transitionSettings.setPredictionSettings(readTransitionPrediction(reader));
+             }
+             else if(XmlUtil.isStartElement(reader, evtType, TRANSITION_INSTRUMENT))
              {
                  TransitionSettings.InstrumentSettings instrumentSettings = new TransitionSettings.InstrumentSettings();
                  _transitionSettings.setInstrumentSettings(instrumentSettings);
@@ -245,6 +253,90 @@ public class SkylineDocumentParser
              }
              // TODO: read full scan settings and prediction settings
          }
+    }
+
+    private TransitionSettings.PredictionSettings readTransitionPrediction(XMLStreamReader reader) throws XMLStreamException
+    {
+        TransitionSettings.PredictionSettings settings = new TransitionSettings.PredictionSettings();
+        settings.setPrecursorMassType(reader.getAttributeValue(null, "precursor_mass_type"));
+        settings.setProductMassType(reader.getAttributeValue(null, "fragment_mass_type"));
+        settings.setOptimizeBy(reader.getAttributeValue(null, "optimize_by"));
+
+        while(reader.hasNext())
+        {
+            int evtType = reader.next();
+            if (XmlUtil.isEndElement(reader, evtType, TRANSITION_PREDICTION))
+            {
+                break;
+            }
+
+            if (XmlUtil.isStartElement(reader, evtType, PREDICT_COLLISION_ENERGY))
+            {
+                settings.setCePredictor(readPredictor(reader, PREDICT_COLLISION_ENERGY));
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, PREDICT_DECLUSTERING_POTENTIAL))
+            {
+                settings.setDpPredictor(readPredictor(reader, PREDICT_DECLUSTERING_POTENTIAL));
+            }
+        }
+        return settings;
+    }
+
+    private TransitionSettings.Predictor readPredictor(XMLStreamReader reader, String endElementName) throws XMLStreamException
+    {
+        TransitionSettings.Predictor predictor = new TransitionSettings.Predictor();
+        predictor.setName(reader.getAttributeValue(null, "name"));
+        String stepSize = reader.getAttributeValue(null, "step_size");
+        if (stepSize != null)
+        {
+            predictor.setStepSize(Integer.parseInt(stepSize));
+        }
+        String stepCount = reader.getAttributeValue(null, "step_count");
+        if (stepCount != null)
+        {
+            predictor.setStepCount(Integer.parseInt(stepCount));
+        }
+        List<TransitionSettings.PredictorSettings> allSettings = new ArrayList<TransitionSettings.PredictorSettings>();
+        predictor.setSettings(allSettings);
+
+        String slope = reader.getAttributeValue(null, "slope");
+        String intercept = reader.getAttributeValue(null, "intercept");
+
+        if (slope != null && intercept != null)
+        {
+            TransitionSettings.PredictorSettings predictorSettings = new TransitionSettings.PredictorSettings();
+            predictorSettings.setSlope(Double.parseDouble(slope));
+            predictorSettings.setIntercept(Double.parseDouble(intercept));
+            allSettings.add(predictorSettings);
+        }
+
+        while (reader.hasNext())
+        {
+            int evtType = reader.next();
+            if (XmlUtil.isEndElement(reader, evtType, endElementName))
+            {
+                break;
+            }
+
+            if (XmlUtil.isStartElement(reader, evtType, REGRESSION_CE))
+            {
+                TransitionSettings.PredictorSettings settings = new TransitionSettings.PredictorSettings();
+                settings.setCharge(Integer.parseInt(reader.getAttributeValue(null, "charge")));
+                slope = reader.getAttributeValue(null, "slope");
+                if (slope != null)
+                {
+                    settings.setSlope(Double.parseDouble(slope));
+                }
+                intercept = reader.getAttributeValue(null, "intercept");
+                if (intercept != null)
+                {
+                    settings.setIntercept(Double.parseDouble(intercept));
+                }
+                allSettings.add(settings);
+            }
+        }
+
+        return predictor;
     }
 
     private void readMeasuredResults(XMLStreamReader reader) throws XMLStreamException

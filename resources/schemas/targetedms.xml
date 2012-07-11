@@ -621,9 +621,17 @@
         <ns:column columnName="name"/>
         <ns:column columnName="stepsize"/>
         <ns:column columnName="stepcount"/>
-        <ns:column columnName="charge"/>
-        <ns:column columnName="slope"/>
-        <ns:column columnName="intercept"/>
+      </ns:columns>
+    </ns:table>
+    <ns:table tableName="predictorsettings" tableDbType="TABLE">
+      <ns:columns>
+          <ns:column columnName="Id">
+              <ns:isHidden>true</ns:isHidden>
+          </ns:column>
+          <ns:column columnName="PredictorId"/>
+          <ns:column columnName="Charge"/>
+          <ns:column columnName="Slope"/>
+          <ns:column columnName="Intercept"/>
       </ns:columns>
     </ns:table>
     <ns:table tableName="protein" tableDbType="TABLE">

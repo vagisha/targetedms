@@ -102,6 +102,16 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_INSTRUMENT_SETTINGS);
     }
 
+    public static TableInfo getTableInfoPredictor()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_PREDICTOR);
+    }
+
+    public static TableInfo getTableInfoPredictorSettings()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_PREDICTOR_SETTINGS);
+    }
+
     public static TableInfo getTableInfoReplicate()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_REPLICATE);
@@ -185,6 +195,11 @@ public class TargetedMSManager
     public static TableInfo getTableInfoRetentionTimePredictionSettings()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_RETENTION_TIME_PREDICTION_SETTINGS);
+    }
+
+    public static TableInfo getTableInfoTransitionPredictionSettings()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_PREDICITION_SETTINGS);
     }
 
     public static TableInfo getTableInfoTransitionFullScanSettings()
@@ -647,6 +662,8 @@ public class TargetedMSManager
             // Delete from sampleFile
             deleteReplicateDependent(getTableInfoSampleFile());
 
+            // Delete from PredictorSettings and Predictor
+            deleteTransitionPredictionSettingsDependent();
 
             // Delete from PeptideGroup
             deleteRunDependent(getTableInfoPeptideGroup());
@@ -658,6 +675,8 @@ public class TargetedMSManager
             deleteRunDependent(getTableInfoInstrument());
             // Delete from RetentionTimePredictionSettings
             deleteRunDependent(getTableInfoRetentionTimePredictionSettings());
+            // Delete from TransitionPredictionSettings
+            deleteRunDependent(getTableInfoTransitionPredictionSettings());
             // Delete from TransitionFullScanSettings
             deleteRunDependent(getTableInfoTransitionFullScanSettings());
             // Delete from IsotopeEnrichment (part of Full Scan settings)
@@ -750,5 +769,19 @@ public class TargetedMSManager
     {
         Table.execute(getSchema(), "DELETE FROM " + tableInfo+ " WHERE ReplicateId IN (SELECT Id FROM " +
                     getTableInfoReplicate() + " WHERE RunId IN (SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted = ?))", true);
+    }
+
+    private static void deleteTransitionPredictionSettingsDependent() throws SQLException
+    {
+        Table.execute(getSchema(), "DELETE FROM " + getTableInfoPredictorSettings() + " WHERE PredictorId IN (SELECT Id FROM " +
+                    getTableInfoPredictor() + " WHERE " +
+                        "Id IN (SELECT CePredictorId FROM " + getTableInfoTransitionPredictionSettings() + " tps, " + getTableInfoRuns() + " r WHERE r.Id = tps.RunId AND r.Deleted = ?)" +
+                        "OR Id IN (SELECT DpPredictorId FROM " + getTableInfoTransitionPredictionSettings() + " tps, " + getTableInfoRuns() + " r WHERE r.Id = tps.RunId AND r.Deleted = ?))"
+                , true, true);
+
+        Table.execute(getSchema(), "DELETE FROM " + getTableInfoPredictor() + " WHERE " +
+                        "Id IN (SELECT CePredictorId FROM " + getTableInfoTransitionPredictionSettings() + " tps, " + getTableInfoRuns() + " r WHERE r.Id = tps.RunId AND r.Deleted = ?)" +
+                        "OR Id IN (SELECT DpPredictorId FROM " + getTableInfoTransitionPredictionSettings() + " tps, " + getTableInfoRuns() + " r WHERE r.Id = tps.RunId AND r.Deleted = ?)"
+                , true, true);
     }
 }

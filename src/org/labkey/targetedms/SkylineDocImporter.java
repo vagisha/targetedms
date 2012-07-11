@@ -212,6 +212,33 @@ public class SkylineDocImporter
             instrumentSettings.setRunId(_runId);
             Table.insert(_user, TargetedMSManager.getTableInfoTransInstrumentSettings(), instrumentSettings);
 
+            TransitionSettings.PredictionSettings predictionSettings = transSettings.getPredictionSettings();
+            predictionSettings.setRunId(_runId);
+            TransitionSettings.Predictor cePredictor = predictionSettings.getCePredictor();
+            if (cePredictor != null)
+            {
+                List<TransitionSettings.PredictorSettings> predictorSettingsList = cePredictor.getSettings();
+                cePredictor = Table.insert(_user, TargetedMSManager.getTableInfoPredictor(), cePredictor);
+                predictionSettings.setCePredictorId(cePredictor.getId());
+                for (TransitionSettings.PredictorSettings s : predictorSettingsList)
+                {
+                    s.setPredictorId(cePredictor.getId());
+                    Table.insert(_user, TargetedMSManager.getTableInfoPredictorSettings(), s);
+                }
+            }
+            TransitionSettings.Predictor dpPredictor = predictionSettings.getDpPredictor();
+            if (dpPredictor != null)
+            {
+                List<TransitionSettings.PredictorSettings> predictorSettingsList = dpPredictor.getSettings();
+                dpPredictor = Table.insert(_user, TargetedMSManager.getTableInfoPredictor(), dpPredictor);
+                predictionSettings.setDpPredictorId(dpPredictor.getId());
+                for (TransitionSettings.PredictorSettings s : predictorSettingsList)
+                {
+                    s.setPredictorId(cePredictor.getId());
+                    Table.insert(_user, TargetedMSManager.getTableInfoPredictorSettings(), s);
+                }
+            }
+            predictionSettings = Table.insert(_user, TargetedMSManager.getTableInfoTransitionPredictionSettings(), predictionSettings);
 
             // 2. Replicates and sample files
             Map<String, Integer> skylineIdSampleFileIdMap = new HashMap<String, Integer>();

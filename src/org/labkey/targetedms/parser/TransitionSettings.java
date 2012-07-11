@@ -345,6 +345,7 @@ public class TransitionSettings
             _maxTransitions = maxTransitions;
         }
     }
+    
     public static final class PredictionSettings
     {
         private int _runId;
@@ -444,9 +445,8 @@ public class TransitionSettings
         private String _name;
         private Integer _stepSize;
         private Integer _stepCount;
-        private Integer _charge;
-        private Double _slope;
-        private Double _intercept;
+
+        private List<PredictorSettings> _settings;
 
         public String getName()
         {
@@ -478,6 +478,24 @@ public class TransitionSettings
             _stepCount = stepCount;
         }
 
+        public List<PredictorSettings> getSettings()
+        {
+            return _settings;
+        }
+
+        public void setSettings(List<PredictorSettings> settings)
+        {
+            _settings = settings;
+        }
+    }
+
+    public static class PredictorSettings extends SkylineEntity
+    {
+        private int _predictorId;
+        private Integer _charge;
+        private Double _slope;
+        private Double _intercept;
+
         public Integer getCharge()
         {
             return _charge;
@@ -506,6 +524,16 @@ public class TransitionSettings
         public void setIntercept(Double intercept)
         {
             _intercept = intercept;
+        }
+
+        public int getPredictorId()
+        {
+            return _predictorId;
+        }
+
+        public void setPredictorId(int predictorId)
+        {
+            _predictorId = predictorId;
         }
     }
 }

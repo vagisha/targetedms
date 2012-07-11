@@ -66,6 +66,8 @@ public class TargetedMSSchema extends UserSchema
     // Tables
     public static final String TABLE_TARGETED_MS_RUNS = "TargetedMSRuns";
     public static final String TABLE_RUNS = "Runs";
+    public static final String TABLE_PREDICTOR = "Predictor";
+    public static final String TABLE_PREDICTOR_SETTINGS = "PredictorSettings";
     public static final String TABLE_TRANSITION_INSTRUMENT_SETTINGS = "TransitionInstrumentSettings";
     public static final String TABLE_REPLICATE = "Replicate";
     public static final String TABLE_RETENTION_TIME_PREDICTION_SETTINGS = "RetentionTimePredictionSettings";
