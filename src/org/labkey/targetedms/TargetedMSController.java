@@ -17,6 +17,7 @@
 package org.labkey.targetedms;
 
 
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -92,6 +93,8 @@ import java.util.List;
 
 public class TargetedMSController extends SpringActionController
 {
+    private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
+    
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(TargetedMSController.class);
 
     public TargetedMSController()
@@ -180,7 +183,7 @@ public class TargetedMSController extends SpringActionController
             JFreeChart chart = ChromatogramChartMakerFactory.createTransitionChromChart(tci, pci);
 
             response.setContentType("image/png");
-            ChartUtilities.writeChartAsPNG(response.getOutputStream(), chart, form.getChartWidth(), form.getChartHeight());
+            writePNG(form, response, chart);
         }
     }
 
@@ -198,7 +201,25 @@ public class TargetedMSController extends SpringActionController
 
             JFreeChart chart = ChromatogramChartMakerFactory.createPrecursorChromChart(pChromInfo, form.isSyncY(), form.isSyncX());
             response.setContentType("image/png");
+            writePNG(form, response, chart);
+        }
+    }
+
+    private void writePNG(AbstractChartForm form, HttpServletResponse response, JFreeChart chart)
+            throws IOException
+    {
+        // TODO: Remove try/catch once we require Java 7
+        // Ignore known Java 6 issue with sun.font.FileFontStrike.getCachedGlyphPtr(), http://bugs.sun.com/view_bug.do?bug_id=7007299
+        try
+        {
             ChartUtilities.writeChartAsPNG(response.getOutputStream(), chart, form.getChartWidth(), form.getChartHeight());
+        }
+        catch (NullPointerException e)
+        {
+            if ("getCachedGlyphPtr".equals(e.getStackTrace()[0].getMethodName()))
+                LOG.warn("Ignoring known synchronization issue with FileFontStrike.getCachedGlyphPtr()", e);
+            else
+                throw e;
         }
     }
 
@@ -216,7 +237,7 @@ public class TargetedMSController extends SpringActionController
 
             JFreeChart chart = ChromatogramChartMakerFactory.createPeptideChromChart(pChromInfo, form.isSyncY(), form.isSyncX());
             response.setContentType("image/png");
-            ChartUtilities.writeChartAsPNG(response.getOutputStream(), chart, form.getChartWidth(), form.getChartHeight());
+            writePNG(form, response, chart);
         }
     }
 
@@ -482,13 +503,16 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    public static class ChromatogramForm
+    public static class ChromatogramForm extends AbstractChartForm
     {
         private int _id;
-        private int _chartWidth = 400;
-        private int _chartHeight = 400;
         private boolean _syncY = false;
         private boolean _syncX = false;
+
+        public ChromatogramForm()
+        {
+            setChartWidth(400);
+        }
 
         public int getId()
         {
@@ -498,26 +522,6 @@ public class TargetedMSController extends SpringActionController
         public void setId(int id)
         {
             _id = id;
-        }
-
-        public int getChartWidth()
-        {
-            return _chartWidth;
-        }
-
-        public void setChartWidth(int chartWidth)
-        {
-            _chartWidth = chartWidth;
-        }
-
-        public int getChartHeight()
-        {
-            return _chartHeight;
-        }
-
-        public void setChartHeight(int chartHeight)
-        {
-            _chartHeight = chartHeight;
         }
 
         public boolean isSyncY()
@@ -686,25 +690,14 @@ public class TargetedMSController extends SpringActionController
 
             JFreeChart chart = PrecursorPeakAreaChartMaker.make(peptideGrp);
             response.setContentType("image/png");
-            ChartUtilities.writeChartAsPNG(response.getOutputStream(), chart, form.getChartWidth(), form.getChartHeight());
+            writePNG(form, response, chart);
         }
     }
 
-    public static class ShowPeakAreaForm
+    public abstract static class AbstractChartForm
     {
-        private int _id;
         private int _chartWidth = 600;
         private int _chartHeight = 400;
-
-        public int getId()
-        {
-            return _id;
-        }
-
-        public void setId(int id)
-        {
-            _id = id;
-        }
 
         public int getChartWidth()
         {
@@ -724,6 +717,21 @@ public class TargetedMSController extends SpringActionController
         public void setChartHeight(int chartHeight)
         {
             _chartHeight = chartHeight;
+        }
+    }
+
+    public static class ShowPeakAreaForm extends AbstractChartForm
+    {
+        private int _id;
+
+        public int getId()
+        {
+            return _id;
+        }
+
+        public void setId(int id)
+        {
+            _id = id;
         }
     }
 
