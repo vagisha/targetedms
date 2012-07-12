@@ -16,13 +16,16 @@
 
 package org.labkey.targetedms;
 
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.ProteinService;
 import org.labkey.api.collections.CsvSet;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.XarContext;
@@ -41,6 +44,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -240,6 +244,19 @@ public class SkylineDocImporter
             }
             predictionSettings = Table.insert(_user, TargetedMSManager.getTableInfoTransitionPredictionSettings(), predictionSettings);
 
+            TransitionSettings.FullScanSettings fullScanSettings = transSettings.getFullScanSettings();
+            if (fullScanSettings != null)
+            {
+                fullScanSettings.setRunId(_runId);
+                fullScanSettings = Table.insert(_user, TargetedMSManager.getTableInfoTransitionFullScanSettings(), fullScanSettings);
+
+                for (TransitionSettings.IsotopeEnrichment isotopeEnrichment : fullScanSettings.getIsotopeEnrichmentList())
+                {
+                    isotopeEnrichment.setRunId(_runId);
+                    Table.insert(_user, TargetedMSManager.getTableInfoIsotopeEnrichment(), isotopeEnrichment);
+                }
+            }
+
             // 2. Replicates and sample files
             Map<String, Integer> skylineIdSampleFileIdMap = new HashMap<String, Integer>();
             Map<String, Integer> filePathSampleFileIdMap = new HashMap<String, Integer>();
@@ -267,6 +284,7 @@ public class SkylineDocImporter
             // 3. Peptide settings
             Map<String, Integer> isotopeLabelIdMap = new HashMap<String, Integer>();
             Map<String, Integer> structuralModNameIdMap = new HashMap<String, Integer>();
+            Map<Integer, Collection<PeptideSettings.PotentialLoss>> structuralModLossesMap = new HashMap<Integer, Collection<PeptideSettings.PotentialLoss>>();
             Map<String, Integer> isotopeModNameIdMap = new HashMap<String, Integer>();
             PeptideSettings pepSettings = parser.getPeptideSettings();
             PeptideSettings.PeptideModifications modifications = pepSettings.getModifications();
@@ -293,12 +311,26 @@ public class SkylineDocImporter
                 List<PeptideSettings.RunStructuralModification> structuralMods = modifications.getStructuralModifications();
                 for(PeptideSettings.RunStructuralModification mod: structuralMods)
                 {
-                    // TODO: check if this modification already exists in the database
-                    mod = Table.insert(_user, TargetedMSManager.getTableInfoStructuralModification(), mod);
-                    structuralModNameIdMap.put(mod.getName(), mod.getId());
+                    PeptideSettings.StructuralModification existingMod = findExistingStructuralModification(mod);
+                    if (existingMod != null)
+                    {
+                        mod.setStructuralModId(existingMod.getId());
+                        structuralModNameIdMap.put(mod.getName(), existingMod.getId());
+                    }
+                    else
+                    {
+                        mod = Table.insert(_user, TargetedMSManager.getTableInfoStructuralModification(), mod);
+                        mod.setStructuralModId(mod.getId());
+                        structuralModNameIdMap.put(mod.getName(), mod.getId());
+
+                        for (PeptideSettings.PotentialLoss potentialLoss : mod.getPotentialLosses())
+                        {
+                            potentialLoss.setStructuralModId(mod.getId());
+                            Table.insert(_user, TargetedMSManager.getTableInfoStructuralModLoss(), potentialLoss);
+                        }
+                    }
 
                     mod.setRunId(_runId);
-                    mod.setStructuralModId(mod.getId());
                     Table.insert(_user, TargetedMSManager.getTableInfoRunStructuralModification(), mod);
                 }
 
@@ -513,6 +545,39 @@ public class SkylineDocImporter
                                     annotation.setTransitionChromInfoId(transChromInfo.getId());
                                     annotation = Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
                                 }
+                            }
+
+                            // transition neutral losses
+                            for (TransitionLoss loss : transition.getNeutralLosses())
+                            {
+                                Integer modificationId = structuralModNameIdMap.get(loss.getModificationName());
+                                if (modificationId == null)
+                                {
+                                    throw new IllegalStateException("No such structural modification found: " + loss.getModificationName());
+                                }
+
+                                Collection<PeptideSettings.PotentialLoss> potentialLosses = structuralModLossesMap.get(modificationId);
+                                if (potentialLosses == null)
+                                {
+                                    potentialLosses = new TableSelector(TargetedMSManager.getTableInfoStructuralModLoss(), new SimpleFilter("structuralmodid", modificationId), null).getCollection(PeptideSettings.PotentialLoss.class);
+                                    structuralModLossesMap.put(modificationId, potentialLosses);
+                                }
+                                boolean foundMatch = false;
+                                for (PeptideSettings.PotentialLoss potentialLoss : potentialLosses)
+                                {
+                                    if (loss.matches(potentialLoss))
+                                    {
+                                        loss.setTransitionId(transition.getId());
+                                        loss.setStructuralModLossId(potentialLoss.getId());
+                                        Table.insert(_user, TargetedMSManager.getTableInfoTransitionLoss(), loss);
+                                        foundMatch = true;
+                                        break;
+                                    }
+                                }
+                                if (!foundMatch)
+                                {
+                                    throw new IllegalStateException("No matching potential loss found for structural modification '" + loss.getModificationName() + "'. " + loss);
+                                }
 
                             }
                         }
@@ -542,6 +607,82 @@ public class SkylineDocImporter
 //                FileUtil.deleteDir(zipDir);
 //            }
         }
+    }
+
+    private PeptideSettings.StructuralModification findExistingStructuralModification(PeptideSettings.RunStructuralModification mod)
+    {
+        // Find all of the structural modifications that match the values exactly
+        SQLFragment sql = new SQLFragment("SELECT * FROM ");
+        sql.append(TargetedMSManager.getTableInfoStructuralModification(), "sm");
+        sql.append(" WHERE Name = ? ");
+        sql.add(mod.getName());
+        sql.append(getNullableCriteria("aminoacid", mod.getAminoAcid()));
+        sql.append(getNullableCriteria("terminus", mod.getTerminus()));
+        sql.append(getNullableCriteria("formula", mod.getFormula()));
+        sql.append(getNullableCriteria("massdiffmono", mod.getMassDiffMono()));
+        sql.append(getNullableCriteria("massdiffavg", mod.getMassDiffAvg()));
+        sql.append(getNullableCriteria("unimodid", mod.getUnimodId()));
+
+        PeptideSettings.StructuralModification[] structuralModifications = new SqlSelector(TargetedMSManager.getSchema().getScope(), sql).getArray(PeptideSettings.StructuralModification.class);
+
+        // Then see if any have the same the exact same set of potential losses
+        for (PeptideSettings.StructuralModification structuralModification : structuralModifications)
+        {
+            SQLFragment lossesSQL = new SQLFragment("SELECT * FROM ");
+            lossesSQL.append(TargetedMSManager.getTableInfoStructuralModLoss(), "sml");
+            lossesSQL.append(" WHERE StructuralModId = ?");
+            lossesSQL.add(structuralModification.getId());
+
+            PeptideSettings.PotentialLoss[] existingLosses = new SqlSelector(TargetedMSManager.getSchema().getScope(), lossesSQL).getArray(PeptideSettings.PotentialLoss.class);
+            if (existingLosses.length == mod.getPotentialLosses().size())
+            {
+                // Whether we've found a mismatch overall for this modification
+                boolean missingLoss = false;
+                for (PeptideSettings.PotentialLoss potentialLoss : mod.getPotentialLosses())
+                {
+                    // Whether we've found an exact potential loss match for this specific loss yet
+                    boolean foundMatch = false;
+                    for (PeptideSettings.PotentialLoss existingLoss : existingLosses)
+                    {
+                        if (existingLoss.equals(potentialLoss))
+                        {
+                            // Stop looking for a match
+                            foundMatch = true;
+                            break;
+                        }
+                    }
+                    if (!foundMatch)
+                    {
+                        // We didn't a matching potential loss, so this isn't the right structural modification
+                        missingLoss = true;
+                        break;
+                    }
+                }
+                if (!missingLoss)
+                {
+                    // They all matched and we had the right number, so we can safely reuse this structural modification
+                    return structuralModification;
+                }
+            }
+        }
+        // No match, so we'll need to insert a new one
+        return null;
+    }
+
+    private SQLFragment getNullableCriteria(String columnName, Object value)
+    {
+        SQLFragment result = new SQLFragment(" AND ");
+        result.append(columnName);
+        if (value == null)
+        {
+            result.append(" IS NULL ");
+        }
+        else
+        {
+            result.append(" = ? ");
+            result.add(value);
+        }
+        return result;
     }
 
     protected void updateRunStatus(String status)

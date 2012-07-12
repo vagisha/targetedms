@@ -51,6 +51,7 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
     private Double declusteringPotential;
 
     private List<TransitionChromInfo> _chromInfoList;
+    private List<TransitionLoss> _neutralLosses;
 
     public int getPrecursorId()
     {
@@ -210,5 +211,15 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
     public void setChromInfoList(List<TransitionChromInfo> chromInfoList)
     {
         _chromInfoList = chromInfoList;
+    }
+
+    public List<TransitionLoss> getNeutralLosses()
+    {
+        return _neutralLosses;
+    }
+
+    public void setNeutralLosses(List<TransitionLoss> neutralLosses)
+    {
+        _neutralLosses = neutralLosses;
     }
 }

@@ -38,6 +38,7 @@ class PeptideSettingsParser
     private static final String INTERNAL_STANDARD = "internal_standard";
     private static final String STATIC_MODIFICATIONS = "static_modifications";
     private static final String STATIC_MODIFICATION = "static_modification";
+    private static final String POTENTIAL_LOSS = "potential_loss";
     private static final String HEAVY_MODIFICATIONS = "heavy_modifications";
     private static final String AMINOACID = "aminoacid";
     private static final String TERMINUS = "terminus";
@@ -214,6 +215,7 @@ class PeptideSettingsParser
         }
         return modList;
     }
+    
     private PeptideSettings.RunStructuralModification readStaticModification(XMLStreamReader reader) throws XMLStreamException
     {
         PeptideSettings.RunStructuralModification mod = new PeptideSettings.RunStructuralModification();
@@ -227,6 +229,28 @@ class PeptideSettingsParser
         mod.setExplicitMod(XmlUtil.readBooleanAttribute(reader, EXPLICIT_DECL));
         mod.setUnimodId(XmlUtil.readIntegerAttribute(reader, UNIMMOD_ID));
 
+        List<PeptideSettings.PotentialLoss> potentialLosses = new ArrayList<PeptideSettings.PotentialLoss>();
+        mod.setPotentialLosses(potentialLosses);
+
+        while (reader.hasNext())
+        {
+            int evtType = reader.next();
+
+            if (XmlUtil.isEndElement(reader, evtType, STATIC_MODIFICATION))
+            {
+                break;
+            }
+
+            if (XmlUtil.isStartElement(reader, evtType, POTENTIAL_LOSS))
+            {
+                PeptideSettings.PotentialLoss potentialLoss = new PeptideSettings.PotentialLoss();
+                potentialLoss.setFormula(reader.getAttributeValue(null, "formula"));
+                potentialLoss.setMassDiffAvg(XmlUtil.readDoubleAttribute(reader, "massdiff_average"));
+                potentialLoss.setMassDiffMono(XmlUtil.readDoubleAttribute(reader, "massdiff_monoisotopic"));
+                potentialLosses.add(potentialLoss);
+            }
+        }
+        
         // TODO: read potential losses
         return mod;
     }

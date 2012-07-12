@@ -13,10 +13,12 @@ resources/schemas/dbscripts/postgresql/targetedms-0.17-0.18.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.18-0.19.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.20-0.21.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.21-0.22.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-0.22-0.23.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.19-0.20.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.20-0.21.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.21-0.22.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-0.22-0.23.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text
@@ -60,6 +62,7 @@ src/org/labkey/targetedms/parser/Transition.java -text
 src/org/labkey/targetedms/parser/TransitionAnnotation.java -text
 src/org/labkey/targetedms/parser/TransitionChromInfo.java -text
 src/org/labkey/targetedms/parser/TransitionChromInfoAnnotation.java -text
+src/org/labkey/targetedms/parser/TransitionLoss.java -text
 src/org/labkey/targetedms/parser/TransitionSettings.java -text
 src/org/labkey/targetedms/parser/XmlUtil.java -text
 src/org/labkey/targetedms/parser/blib/BlibSpectrum.java -text

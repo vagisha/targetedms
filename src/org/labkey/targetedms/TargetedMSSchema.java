@@ -84,6 +84,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PRECURSOR = "Precursor";
     public static final String TABLE_PRECURSOR_ANNOTATION = "PrecursorAnnotation";
     public static final String TABLE_TRANSITION = "Transition";
+    public static final String TABLE_TRANSITION_LOSS = "TransitionLoss";
     public static final String TABLE_TRANSITION_ANNOTATION = "TransitionAnnotation";
     public static final String TABLE_TRANSITION_CHROM_INFO = "TransitionChromInfo";
     public static final String TABLE_TRANSITION_CHROM_INFO_ANNOTATION = "TransitionChromInfoAnnotation";
@@ -93,6 +94,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_MODIFICATION_SETTINGS = "ModificationSettings";
     public static final String TABLE_ISOTOPE_LABEL = "IsotopeLabel";
     public static final String TABLE_STRUCTURAL_MODIFICATION = "StructuralModification";
+    public static final String TABLE_STRUCTURAL_MOD_LOSS = "StructuralModLoss";
     public static final String TABLE_ISOTOPE_MODIFICATION = "IsotopeModification";
     public static final String TABLE_RUN_STRUCTURAL_MODIFICATION = "RunStructuralModification";
     public static final String TABLE_RUN_ISOTOPE_MODIFICATION = "RunIsotopeModification";

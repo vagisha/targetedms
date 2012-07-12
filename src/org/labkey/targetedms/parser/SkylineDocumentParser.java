@@ -50,6 +50,9 @@ public class SkylineDocumentParser
     private static final String REGRESSION_CE = "regression_ce";
     private static final String PREDICT_DECLUSTERING_POTENTIAL = "predict_declustering_potential";
     private static final String TRANSITION_INSTRUMENT = "transition_instrument";
+    private static final String TRANSITION_FULL_SCAN = "transition_full_scan";
+    private static final String ISOTOPE_ENRICHMENTS = "isotope_enrichments";
+    private static final String ATOM_PERCENT_ENRICHMENT = "atom_percent_enrichment";
     private static final String PEPTIDE_SETTINGS = "peptide_settings";
     private static final String DATA_SETTINGS = "data_settings";
     private static final String MEASURED_RESULTS = "measured_results";
@@ -68,6 +71,8 @@ public class SkylineDocumentParser
     private static final String PRODUCT_MZ = "product_mz";
     private static final String COLLISION_ENERGY = "collision_energy";
     private static final String DECLUSTERING_POTENTIAL = "declustering_potential";
+    private static final String LOSSES = "losses";
+    private static final String NEUTRAL_LOSS = "neutral_loss";
     private static final String TRANSITION_PEAK = "transition_peak";
     private static final String PRECURSOR_PEAK = "precursor_peak";
     private static final String PEPTIDE_RESULT = "peptide_result";
@@ -226,33 +231,116 @@ public class SkylineDocumentParser
     private void readTransitionSettings(XMLStreamReader reader) throws XMLStreamException
     {
         _transitionSettings = new TransitionSettings();
-        while(reader.hasNext())
-         {
-             int evtType = reader.next();
-             if(XmlUtil.isEndElement(reader, evtType, TRANSITION_SETTINGS))
-             {
-                 break;
-             }
+        while (reader.hasNext())
+        {
+            int evtType = reader.next();
+            if (XmlUtil.isEndElement(reader, evtType, TRANSITION_SETTINGS))
+            {
+                break;
+            }
 
-             if(XmlUtil.isStartElement(reader, evtType, TRANSITION_PREDICTION))
-             {
-                 _transitionSettings.setPredictionSettings(readTransitionPrediction(reader));
-             }
-             else if(XmlUtil.isStartElement(reader, evtType, TRANSITION_INSTRUMENT))
-             {
-                 TransitionSettings.InstrumentSettings instrumentSettings = new TransitionSettings.InstrumentSettings();
-                 _transitionSettings.setInstrumentSettings(instrumentSettings);
-                 instrumentSettings.setDynamicMin(Boolean.parseBoolean(reader.getAttributeValue(null, "dynamic_min")));
-                 instrumentSettings.setMinMz(XmlUtil.readRequiredIntegerAttribute(reader, "min_mz", TRANSITION_INSTRUMENT));
-                 instrumentSettings.setMaxMz(XmlUtil.readRequiredIntegerAttribute(reader, "max_mz", TRANSITION_INSTRUMENT));
-                 _matchTolerance = XmlUtil.readRequiredDoubleAttribute(reader, "mz_match_tolerance", TRANSITION_INSTRUMENT);
-                 instrumentSettings.setMzMatchTolerance(_matchTolerance);
-                 instrumentSettings.setMinTime(XmlUtil.readIntegerAttribute(reader, "min_time"));
-                 instrumentSettings.setMaxTime(XmlUtil.readIntegerAttribute(reader, "max_time"));
-                 instrumentSettings.setMaxTransitions(XmlUtil.readIntegerAttribute(reader, "max_transitions"));
-             }
-             // TODO: read full scan settings and prediction settings
-         }
+            if (XmlUtil.isStartElement(reader, evtType, TRANSITION_PREDICTION))
+            {
+                _transitionSettings.setPredictionSettings(readTransitionPrediction(reader));
+            }
+            if (XmlUtil.isStartElement(reader, evtType, TRANSITION_FULL_SCAN))
+            {
+                _transitionSettings.setFullScanSettings(readFullScanSettings(reader));
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, TRANSITION_INSTRUMENT))
+            {
+                TransitionSettings.InstrumentSettings instrumentSettings = new TransitionSettings.InstrumentSettings();
+                _transitionSettings.setInstrumentSettings(instrumentSettings);
+                instrumentSettings.setDynamicMin(Boolean.parseBoolean(reader.getAttributeValue(null, "dynamic_min")));
+                instrumentSettings.setMinMz(XmlUtil.readRequiredIntegerAttribute(reader, "min_mz", TRANSITION_INSTRUMENT));
+                instrumentSettings.setMaxMz(XmlUtil.readRequiredIntegerAttribute(reader, "max_mz", TRANSITION_INSTRUMENT));
+                _matchTolerance = XmlUtil.readRequiredDoubleAttribute(reader, "mz_match_tolerance", TRANSITION_INSTRUMENT);
+                instrumentSettings.setMzMatchTolerance(_matchTolerance);
+                instrumentSettings.setMinTime(XmlUtil.readIntegerAttribute(reader, "min_time"));
+                instrumentSettings.setMaxTime(XmlUtil.readIntegerAttribute(reader, "max_time"));
+                instrumentSettings.setMaxTransitions(XmlUtil.readIntegerAttribute(reader, "max_transitions"));
+            }
+        }
+    }
+
+    private TransitionSettings.FullScanSettings readFullScanSettings(XMLStreamReader reader) throws XMLStreamException
+    {
+        TransitionSettings.FullScanSettings result = new TransitionSettings.FullScanSettings();
+        result.setPrecursorIsotopes(reader.getAttributeValue(null, "precursor_isotopes"));
+        result.setPrecursorIsotopeFilter(XmlUtil.readDoubleAttribute(reader, "precursor_isotope_filter"));
+        result.setPrecursorRes(XmlUtil.readDoubleAttribute(reader, "precursor_res"));
+        result.setPrecursorMassAnalyzer(reader.getAttributeValue(null, "precursor_mass_analyzer"));
+
+        result.setPrecursorFilter(XmlUtil.readDoubleAttribute(reader, "precursor_filter")); // Guessed at attribute value name
+        result.setPrecursorLeftFilter(XmlUtil.readDoubleAttribute(reader, "precursor_left_filter")); // Guessed at attribute value name
+        result.setPrecursorRightFilter(XmlUtil.readDoubleAttribute(reader, "precursor_right_filter")); // Guessed at attribute value name
+        result.setPrecursorResMz(XmlUtil.readDoubleAttribute(reader, "precursor_res_mz")); // Guessed at attribute value name
+        result.setProductMassAnalyzer(reader.getAttributeValue(null, "product_mass_analyzer")); // Guessed at attribute value name
+
+        List<TransitionSettings.IsotopeEnrichment> enrichments = new ArrayList<TransitionSettings.IsotopeEnrichment>();
+        result.setIsotopeEnrichmentList(enrichments);
+
+        while (reader.hasNext())
+        {
+            int evtType = reader.next();
+            if (XmlUtil.isEndElement(reader, evtType, TRANSITION_FULL_SCAN))
+            {
+                break;
+            }
+
+            if (XmlUtil.isStartElement(reader, evtType, ISOTOPE_ENRICHMENTS))
+            {
+                enrichments.addAll(readIsotopeEnrichments(reader));
+            }
+        }
+
+        return result;
+    }
+
+    private List<TransitionSettings.IsotopeEnrichment> readIsotopeEnrichments(XMLStreamReader reader) throws XMLStreamException
+    {
+        List<TransitionSettings.IsotopeEnrichment> result = new ArrayList<TransitionSettings.IsotopeEnrichment>();
+        while(reader.hasNext())
+        {
+            int evtType = reader.next();
+            if (XmlUtil.isEndElement(reader, evtType, ISOTOPE_ENRICHMENTS))
+            {
+                break;
+            }
+
+            if (XmlUtil.isStartElement(reader, evtType, ATOM_PERCENT_ENRICHMENT))
+            {
+                result.add(readAtomPercentEnrichment(reader));
+            }
+        }
+        return result;
+    }
+
+    private TransitionSettings.IsotopeEnrichment readAtomPercentEnrichment(XMLStreamReader reader) throws XMLStreamException
+    {
+        StringBuilder text = new StringBuilder();
+        TransitionSettings.IsotopeEnrichment result = new TransitionSettings.IsotopeEnrichment();
+        result.setSymbol(reader.getAttributeValue(null, "symbol"));
+        while(reader.hasNext())
+        {
+            int evtType = reader.next();
+            if (XmlUtil.isEndElement(reader, evtType, ATOM_PERCENT_ENRICHMENT))
+            {
+                break;
+            }
+
+            if (XmlUtil.isText(evtType))
+            {
+                text.append(reader.getText());
+            }
+        }
+
+        if (text.length() == 0)
+        {
+            throw new XMLStreamException("No text content for <" + ATOM_PERCENT_ENRICHMENT + "> element, should contain a percent value");
+        }
+        result.setPercentEnrichment(Double.parseDouble(text.toString()));
+        return result;
     }
 
     private TransitionSettings.PredictionSettings readTransitionPrediction(XMLStreamReader reader) throws XMLStreamException
@@ -963,6 +1051,9 @@ public class SkylineDocumentParser
         List<TransitionAnnotation> annotations = new ArrayList<TransitionAnnotation>();
         transition.setAnnotations(annotations);
 
+        List<TransitionLoss> neutralLosses = new ArrayList<TransitionLoss>();
+        transition.setNeutralLosses(neutralLosses);
+
         String fragment = reader.getAttributeValue(null, "fragment_type");
         transition.setFragmentType(fragment);
 
@@ -1049,11 +1140,39 @@ public class SkylineDocumentParser
                 TransitionChromInfo chromInfo = readTransitionChromInfo(reader);
                 chromInfoList.add(chromInfo);
             }
-            // TODO: read losses, transtion_lib_info
+            else if (XmlUtil.isStartElement(reader, evtType, LOSSES))
+            {
+                neutralLosses.addAll(readLosses(reader));
+            }
+            // TODO: transition_lib_info
         }
 
         _transitionCount++;
         return transition;
+    }
+
+    private List<TransitionLoss> readLosses(XMLStreamReader reader) throws XMLStreamException
+    {
+        List<TransitionLoss> result = new ArrayList<TransitionLoss>();
+        while (reader.hasNext())
+        {
+            int evtType = reader.next();
+            if(XmlUtil.isEndElement(reader, evtType, LOSSES))
+            {
+                break;
+            }
+
+            if (XmlUtil.isStartElement(reader, evtType, NEUTRAL_LOSS))
+            {
+                TransitionLoss loss = new TransitionLoss();
+                loss.setModificationName(XmlUtil.readRequiredAttribute(reader, "modification_name", NEUTRAL_LOSS));
+                loss.setFormula(reader.getAttributeValue(null, "formula"));
+                loss.setMassDiffMono(XmlUtil.readDoubleAttribute(reader, "massdiff_monoisotopic"));
+                loss.setMassDiffAvg(XmlUtil.readDoubleAttribute(reader, "massdiff_average"));
+                result.add(loss);
+            }
+        }
+        return result;
     }
 
     private <AnnotationType extends AbstractAnnotation> AnnotationType readAnnotation(XMLStreamReader reader, AnnotationType annotation) throws XMLStreamException

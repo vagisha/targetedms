@@ -212,6 +212,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION);
     }
 
+    public static TableInfo getTableInfoTransitionLoss()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_LOSS);
+    }
+
     public static TableInfo getTableInfoModificationSettings()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_MODIFICATION_SETTINGS);
@@ -240,6 +245,11 @@ public class TargetedMSManager
     public static TableInfo getTableInfoStructuralModification()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_STRUCTURAL_MODIFICATION);
+    }
+
+    public static TableInfo getTableInfoStructuralModLoss()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_STRUCTURAL_MOD_LOSS);
     }
 
     public static TableInfo getTableInfoRunIsotopeModification()
@@ -628,6 +638,8 @@ public class TargetedMSManager
             deleteTransitionDependent(getTableInfoTransitionChromInfo());
             // Delete from TransitionAnnotation
             deleteTransitionDependent(getTableInfoTransitionAnnotation());
+            // Delete from TransitionLoss
+            deleteTransitionDependent(getTableInfoTransitionLoss());
 
             // Delete from Transition
             deletePrecursorDependent(getTableInfoTransition());
