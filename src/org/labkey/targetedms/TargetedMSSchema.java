@@ -46,7 +46,6 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocPrecursorTableInfo;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
-import org.labkey.targetedms.query.ModifiedPeptideDisplayColumn;
 import org.labkey.targetedms.query.TargetedMSTable;
 
 import java.io.IOException;
@@ -108,7 +107,6 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PRECURSOR_LIB_INFO = "PrecursorLibInfo";
 
     public static final String TABLE_DOC_TRANSITIONS = "DocumentTransitions";
-    public static final String TABLE_DOC_PRECURSORS = "DocumentPrecursors";
 
     private static final String PROTOCOL_PATTERN_PREFIX = "urn:lsid:%:Protocol.%:";
 
@@ -495,29 +493,11 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.peptide
         if (TABLE_PRECURSOR.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideFK.getSQL(), TargetedMSManager.getTableInfoPrecursorAnnotation(), "PrecursorId");
-            result.getColumn("PeptideId").setFk(new LookupForeignKey("Id")
-            {
-                @Override
-                public TableInfo getLookupTableInfo()
-                {
-                    return getTable(TABLE_PEPTIDE);
-                }
-            });
+            DocPrecursorTableInfo result = new DocPrecursorTableInfo(this);
             final DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
                                                                         getContainer()),
                                                           Collections.singletonMap("id", "Id"));
             result.setDetailsURL(detailsURLs);
-            ColumnInfo modPepCol = result.wrapColumn("ModifiedPeptideHtml", result.getRealTable().getColumn("Id"));
-            DisplayColumnFactory modPepDisplayFactory = new DisplayColumnFactory()
-            {
-                public DisplayColumn createRenderer(ColumnInfo colInfo)
-                {
-                    return new ModifiedPeptideDisplayColumn(colInfo, detailsURLs.getActionURL());
-                }
-            };
-            modPepCol.setDisplayColumnFactory(modPepDisplayFactory);
-            result.addColumn(modPepCol);
             return result;
         }
 
@@ -595,11 +575,6 @@ public class TargetedMSSchema extends UserSchema
         if(TABLE_DOC_TRANSITIONS.equalsIgnoreCase(name))
         {
             return new DocTransitionsTableInfo(this);
-        }
-
-        if(TABLE_DOC_PRECURSORS.equalsIgnoreCase(name))
-        {
-            return new DocPrecursorTableInfo(this);
         }
 
         if (getTableNames().contains(name))

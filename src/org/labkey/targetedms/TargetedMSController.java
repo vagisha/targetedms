@@ -881,6 +881,7 @@ public class TargetedMSController extends SpringActionController
                                                                    form.getId(),
                                                                    forExport);
             view.setShowExportButtons(true);
+            view.setShowDetailsColumn(false);
             return view;
         }
 

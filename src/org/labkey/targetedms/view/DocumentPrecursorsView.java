@@ -43,7 +43,7 @@ public class DocumentPrecursorsView extends NestableQueryView
 
     public DocumentPrecursorsView(ViewContext ctx, TargetedMSSchema schema, int runId, boolean forExport) throws SQLException
     {
-        super(schema, schema.getSettings(ctx, DATAREGION_NAME, TargetedMSSchema.TABLE_DOC_PRECURSORS), true, !forExport,
+        super(schema, schema.getSettings(ctx, DATAREGION_NAME, TargetedMSSchema.TABLE_PRECURSOR), true, !forExport,
                 new QueryNestingOption(FieldKey.fromParts("PeptideId", "PeptideGroupId"),
                                        FieldKey.fromParts("PeptideId", "PeptideGroupId", "Id"), null));
         _targetedMsSchema = schema;
@@ -59,7 +59,7 @@ public class DocumentPrecursorsView extends NestableQueryView
     public TableInfo createTable()
     {
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in DocumentPrecursorsView class!";
-        DocPrecursorTableInfo tinfo  = (DocPrecursorTableInfo) _targetedMsSchema.getTable(TargetedMSSchema.TABLE_DOC_PRECURSORS);
+        DocPrecursorTableInfo tinfo  = (DocPrecursorTableInfo) _targetedMsSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
         if (tinfo != null)
         {
             tinfo.setRunId(_runId);
