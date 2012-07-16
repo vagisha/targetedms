@@ -33,6 +33,7 @@ import java.io.Writer;
 public class ModifiedPeptideDisplayColumn extends DataColumn
 {
     private ActionURL _linkUrl;
+    private ModifiedPeptideHtmlMaker _htmlMaker = new ModifiedPeptideHtmlMaker();
 
     public ModifiedPeptideDisplayColumn(ColumnInfo colInfo, ActionURL url)
     {
@@ -58,7 +59,7 @@ public class ModifiedPeptideDisplayColumn extends DataColumn
 
     private String getPeptideHtml(int precursorId)
     {
-        String html = ModifiedPeptideHtmlMaker.getHtml(precursorId);
+        String html = _htmlMaker.getHtml(PrecursorManager.get(precursorId));
 
         if(_linkUrl != null)
         {

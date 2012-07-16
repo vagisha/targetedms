@@ -15,14 +15,15 @@
 
 package org.labkey.targetedms.view;
 
+import org.labkey.api.util.Pair;
 import org.labkey.targetedms.chart.ChartColors;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideManager;
-import org.labkey.targetedms.query.PrecursorManager;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -32,6 +33,15 @@ import java.util.Map;
  */
 public class ModifiedPeptideHtmlMaker
 {
+    /** PeptideId -> Peptide */
+    private Map<Integer, Peptide> _peptides = new HashMap<Integer, Peptide>();
+    /** PeptideId -> (Index->MassDiff) */
+    private Map<Integer, Map<Integer, Double>> _structuralMods = new HashMap<Integer, Map<Integer, Double>>();
+    /** PeptideId/IsotopeLabelId -> (Index->MassDiff) */
+    private Map<Pair<Integer, Integer>, Map<Integer, Double>> _isotopeMods = new HashMap<Pair<Integer, Integer>, Map<Integer, Double>>();
+    /** PeptideId -> LightIsotopeLabelId */
+    private Map<Integer, Integer> _lightLabelIds = new HashMap<Integer, Integer>();
+
     private final static String[] HEX_PADDING = new String[] {
                                                         "",
                                                         "0",
@@ -42,33 +52,51 @@ public class ModifiedPeptideHtmlMaker
                                                         "000000"
     };
 
-    private ModifiedPeptideHtmlMaker() {}
+    public ModifiedPeptideHtmlMaker() {}
 
-    public static String getHtml(int precursorId)
+    public String getHtml(Precursor precursor)
     {
-        // Get the precursor
-        Precursor precursor = PrecursorManager.get(precursorId);
-
         // Get the peptide
-        Peptide peptide = PeptideManager.get(precursor.getPeptideId());
 
+        Peptide peptide = _peptides.get(precursor.getPeptideId());
+        if (peptide == null)
+        {
+            peptide = PeptideManager.get(precursor.getPeptideId());
+            _peptides.put(precursor.getPeptideId(), peptide);
+        }
 
-        Integer lightIsotopeLabelId = IsotopeLabelManager.getLightIsotopeLabelId(peptide.getId());
+        Integer lightIsotopeLabelId = _lightLabelIds.get(peptide.getId());
+        if (lightIsotopeLabelId == null)
+        {
+            lightIsotopeLabelId = IsotopeLabelManager.getLightIsotopeLabelId(peptide.getId());
+            _lightLabelIds.put(peptide.getId(), lightIsotopeLabelId);
+        }
 
         return getHtml(peptide, precursor, lightIsotopeLabelId);
     }
 
-    public static String getHtml(Peptide peptide, Precursor precursor, Integer lightLabelId)
+    public String getHtml(Peptide peptide, Precursor precursor, Integer lightLabelId)
     {
         Map<Integer, Double> strModIndexMassDiff;
         Map<Integer, Double> isotopeModIndexMassDiff;
 
         // Get the structural modifications for this peptide
-        strModIndexMassDiff = ModificationManager.getPeptideStructuralMods(precursor.getPeptideId());
+        strModIndexMassDiff = _structuralMods.get(precursor.getPeptideId());
+        if (strModIndexMassDiff == null)
+        {
+            strModIndexMassDiff = ModificationManager.getPeptideStructuralMods(precursor.getPeptideId());
+            _structuralMods.put(precursor.getPeptideId(), strModIndexMassDiff);
+        }
 
-        // Get the Isotope modifications for the peptide and label type
-        isotopeModIndexMassDiff = ModificationManager.getPeptideIsotopeMods(precursor.getPeptideId(),
-                precursor.getIsotopeLabelId());
+        Pair<Integer, Integer> isotopeKey = new Pair<Integer, Integer>(precursor.getPeptideId(), precursor.getIsotopeLabelId());
+        isotopeModIndexMassDiff = _isotopeMods.get(isotopeKey);
+        if (isotopeModIndexMassDiff == null)
+        {
+            // Get the Isotope modifications for the peptide and label type
+            isotopeModIndexMassDiff = ModificationManager.getPeptideIsotopeMods(precursor.getPeptideId(),
+                    precursor.getIsotopeLabelId());
+            _isotopeMods.put(isotopeKey, isotopeModIndexMassDiff);
+        }
 
         StringBuilder result = new StringBuilder();
 
@@ -106,7 +134,7 @@ public class ModifiedPeptideHtmlMaker
         return result.toString();
     }
 
-    public static String toHex(int rgb)
+    public String toHex(int rgb)
     {
         String hex = Integer.toHexString(rgb & 0x00ffffff);
         return "#"+ HEX_PADDING[6 - hex.length()] + hex;

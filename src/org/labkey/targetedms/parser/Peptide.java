@@ -227,7 +227,7 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
         private int _peptideId;
 
         private String _modificationName;
-        private double _massDiff;
+        private Double _massDiff;
         private int _indexAa;
 
         public int getPeptideId()
@@ -250,12 +250,12 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
             _modificationName = modificationName;
         }
 
-        public double getMassDiff()
+        public Double getMassDiff()
         {
             return _massDiff;
         }
 
-        public void setMassDiff(double massDiff)
+        public void setMassDiff(Double massDiff)
         {
             _massDiff = massDiff;
         }

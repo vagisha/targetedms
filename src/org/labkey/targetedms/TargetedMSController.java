@@ -398,7 +398,7 @@ public class TargetedMSController extends SpringActionController
 
         public String getModifiedPeptideHtml()
         {
-           return ModifiedPeptideHtmlMaker.getHtml(getPrecursor().getId());
+           return new ModifiedPeptideHtmlMaker().getHtml(getPrecursor());
         }
 
         public PeptideSettings.IsotopeLabel getIsotopeLabel()

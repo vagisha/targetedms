@@ -16,7 +16,6 @@
 
 package org.labkey.targetedms;
 
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.ProteinService;
 import org.labkey.api.collections.CsvSet;
@@ -216,11 +215,15 @@ public class SkylineDocImporter
             instrumentSettings.setRunId(_runId);
             Table.insert(_user, TargetedMSManager.getTableInfoTransInstrumentSettings(), instrumentSettings);
 
+            boolean insertCEOptmizations = false;
+            boolean insertDPOptmizations = false;
+
             TransitionSettings.PredictionSettings predictionSettings = transSettings.getPredictionSettings();
             predictionSettings.setRunId(_runId);
             TransitionSettings.Predictor cePredictor = predictionSettings.getCePredictor();
             if (cePredictor != null)
             {
+                insertCEOptmizations = predictionSettings.getOptimizeBy() != null && !"none".equalsIgnoreCase(predictionSettings.getOptimizeBy());
                 List<TransitionSettings.PredictorSettings> predictorSettingsList = cePredictor.getSettings();
                 cePredictor = Table.insert(_user, TargetedMSManager.getTableInfoPredictor(), cePredictor);
                 predictionSettings.setCePredictorId(cePredictor.getId());
@@ -233,6 +236,7 @@ public class SkylineDocImporter
             TransitionSettings.Predictor dpPredictor = predictionSettings.getDpPredictor();
             if (dpPredictor != null)
             {
+                insertDPOptmizations = predictionSettings.getOptimizeBy() != null && !"none".equalsIgnoreCase(predictionSettings.getOptimizeBy());
                 List<TransitionSettings.PredictorSettings> predictorSettingsList = dpPredictor.getSettings();
                 dpPredictor = Table.insert(_user, TargetedMSManager.getTableInfoPredictor(), dpPredictor);
                 predictionSettings.setDpPredictorId(dpPredictor.getId());
@@ -529,6 +533,24 @@ public class SkylineDocImporter
                             {
                                 annotation.setTransitionId(transition.getId());
                                 annotation = Table.insert(_user, TargetedMSManager.getTableInfoTransitionAnnotation(), annotation);
+                            }
+
+                            // Insert appropriate CE and DP transition optimizations
+                            if (insertCEOptmizations && transition.getCollisionEnergy() != null)
+                            {
+                                TransitionOptimization ceOpt = new TransitionOptimization();
+                                ceOpt.setTransitionId(transition.getId());
+                                ceOpt.setOptValue(transition.getCollisionEnergy());
+                                ceOpt.setOptimizationType("ce");
+                                Table.insert(_user, TargetedMSManager.getTableInfoTransitionOptimization(), ceOpt);
+                            }
+                            if (insertDPOptmizations && transition.getDeclusteringPotential() != null)
+                            {
+                                TransitionOptimization dpOpt = new TransitionOptimization();
+                                dpOpt.setTransitionId(transition.getId());
+                                dpOpt.setOptValue(transition.getDeclusteringPotential());
+                                dpOpt.setOptimizationType("dp");
+                                Table.insert(_user, TargetedMSManager.getTableInfoTransitionOptimization(), dpOpt);
                             }
 
                             // transition results

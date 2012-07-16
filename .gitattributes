@@ -63,6 +63,7 @@ src/org/labkey/targetedms/parser/TransitionAnnotation.java -text
 src/org/labkey/targetedms/parser/TransitionChromInfo.java -text
 src/org/labkey/targetedms/parser/TransitionChromInfoAnnotation.java -text
 src/org/labkey/targetedms/parser/TransitionLoss.java -text
+src/org/labkey/targetedms/parser/TransitionOptimization.java -text
 src/org/labkey/targetedms/parser/TransitionSettings.java -text
 src/org/labkey/targetedms/parser/XmlUtil.java -text
 src/org/labkey/targetedms/parser/blib/BlibSpectrum.java -text

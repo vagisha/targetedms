@@ -42,7 +42,7 @@ public class PrecursorHtmlMaker
     public static String getHtml(Peptide peptide, Precursor precursor, String isotopeLabel, int lightLabelId)
     {
         StringBuilder html = new StringBuilder();
-        html.append(ModifiedPeptideHtmlMaker.getHtml(peptide, precursor, lightLabelId));
+        html.append(new ModifiedPeptideHtmlMaker().getHtml(peptide, precursor, lightLabelId));
         html.append("<span>");
         html.append(" - ").append(Formats.f4.format(precursor.getMz()));
         html.append(CHARGE[precursor.getCharge()]);

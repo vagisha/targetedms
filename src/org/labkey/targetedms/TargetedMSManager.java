@@ -272,6 +272,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_ANNOTATION);
     }
 
+    public static TableInfo getTableInfoTransitionOptimization()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_OPTIMIZATION);
+    }
+
     public static TableInfo getTableInfoLibrarySettings()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_LIBRARY_SETTINGS);
@@ -640,6 +645,8 @@ public class TargetedMSManager
             deleteTransitionDependent(getTableInfoTransitionAnnotation());
             // Delete from TransitionLoss
             deleteTransitionDependent(getTableInfoTransitionLoss());
+            // Delete from TransitionOptimization
+            deleteTransitionDependent(getTableInfoTransitionOptimization());
 
             // Delete from Transition
             deletePrecursorDependent(getTableInfoTransition());

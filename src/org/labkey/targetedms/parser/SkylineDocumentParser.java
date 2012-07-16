@@ -800,7 +800,7 @@ public class SkylineDocumentParser
     {
         Peptide.StructuralModification mod = new Peptide.StructuralModification();
         mod.setModificationName(XmlUtil.readRequiredAttribute(reader, "modification_name", VARIABLE_MODIFICATION));
-        mod.setMassDiff(XmlUtil.readRequiredDoubleAttribute(reader, "mass_diff", VARIABLE_MODIFICATION));
+        mod.setMassDiff(XmlUtil.readDoubleAttribute(reader, "mass_diff"));
         mod.setIndexAa(XmlUtil.readRequiredIntegerAttribute(reader, "index_aa", VARIABLE_MODIFICATION));
         return mod;
     }

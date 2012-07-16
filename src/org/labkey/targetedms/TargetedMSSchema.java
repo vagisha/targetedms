@@ -85,6 +85,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_TRANSITION = "Transition";
     public static final String TABLE_TRANSITION_LOSS = "TransitionLoss";
     public static final String TABLE_TRANSITION_ANNOTATION = "TransitionAnnotation";
+    public static final String TABLE_TRANSITION_OPTIMIZATION = "TransitionOptimization";
     public static final String TABLE_TRANSITION_CHROM_INFO = "TransitionChromInfo";
     public static final String TABLE_TRANSITION_CHROM_INFO_ANNOTATION = "TransitionChromInfoAnnotation";
     public static final String TABLE_PEPTIDE_CHROM_INFO = "PeptideChromInfo";
