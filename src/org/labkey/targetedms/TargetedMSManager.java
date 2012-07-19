@@ -302,18 +302,21 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_PRECURSOR_LIB_INFO);
     }
 
-    public static void addRunToQueue(ViewBackgroundInfo info,
+    public static int addRunToQueue(ViewBackgroundInfo info,
                                      File file,
                                      PipeRoot root) throws SQLException, IOException
     {
         String description = "Skyline document import - " + file.getName();
         XarContext xarContext = new XarContext(description, info.getContainer(), info.getUser());
-        SkylineDocImporter importer = new SkylineDocImporter(info.getUser(), info.getContainer(), file.getName(), file, null, xarContext);
+        User user =  info.getUser();
+        Container container = info.getContainer();
+        SkylineDocImporter importer = new SkylineDocImporter(user, container, file.getName(), file, null, xarContext);
         SkylineDocImporter.RunInfo runInfo = importer.prepareRun(false);
         TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, file, runInfo, root);
         try
         {
             PipelineService.get().queueJob(job);
+            return PipelineService.get().getJobId(user, container, job.getJobGUID());
         }
         catch (PipelineValidationException e)
         {

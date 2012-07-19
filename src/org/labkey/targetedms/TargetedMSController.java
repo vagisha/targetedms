@@ -22,6 +22,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.labkey.api.ProteinService;
+import org.labkey.api.action.ApiAction;
+import org.labkey.api.action.ApiResponse;
+import org.labkey.api.action.ApiSimpleResponse;
+import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.QueryViewAction;
 import org.labkey.api.action.RedirectAction;
@@ -40,6 +44,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.services.ServiceRegistry;
@@ -89,7 +94,9 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class TargetedMSController extends SpringActionController
 {
@@ -777,6 +784,47 @@ public class TargetedMSController extends SpringActionController
             }
 
             return true;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class SkylineDocUploadApiAction extends ApiAction<PipelinePathForm>
+    {
+        public ApiResponse execute(PipelinePathForm form, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            User user = getUser();
+            Container container = getContainer();
+            List<Map<String, Object>> jobDetailsList = new ArrayList<Map<String, Object>>();
+
+            for (File file : form.getValidatedFiles(getContainer()))
+            {
+                if (!file.isFile())
+                {
+                    throw new NotFoundException("Expected a file but found a directory: " + file.getName());
+                }
+
+                ViewBackgroundInfo info = getViewBackgroundInfo();
+                try
+                {
+                    int jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
+                    Map<String, Object> detailsMap = new HashMap<String, Object>(4);
+                    detailsMap.put("Path", form.getPath());
+                    detailsMap.put("File",file.getName());
+                    detailsMap.put("RowId", jobId);
+                    jobDetailsList.add(detailsMap);
+                }
+                catch (IOException e)
+                {
+                    throw new ApiUsageException(e);
+                }
+                catch (SQLException e)
+                {
+                    throw new ApiUsageException(e);
+                }
+            }
+            response.put("UploadedJobDetails", jobDetailsList);
+            return response;
         }
     }
 
