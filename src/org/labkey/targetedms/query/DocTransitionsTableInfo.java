@@ -142,6 +142,6 @@ public class DocTransitionsTableInfo extends FilteredTable
 
         sql.add(runId);
 
-        addCondition(sql, "Run");
+        addCondition(sql, FieldKey.fromParts("Run"));
     }
 }

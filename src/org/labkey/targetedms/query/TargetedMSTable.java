@@ -19,6 +19,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 
 /**
@@ -28,7 +29,7 @@ import org.labkey.api.query.FilteredTable;
 public class TargetedMSTable extends FilteredTable
 {
     private final SQLFragment _containerSQL;
-    private static final String CONTAINER_FAKE_COLUMN_NAME = "Container";
+    private static final FieldKey CONTAINER_FAKE_COLUMN_NAME = FieldKey.fromParts("Container");
 
     public TargetedMSTable(TableInfo table, Container container, SQLFragment containerSQL)
     {

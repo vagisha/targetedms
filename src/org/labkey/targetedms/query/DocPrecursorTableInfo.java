@@ -144,6 +144,6 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
 
         sql.add(runId);
 
-        addCondition(sql, "Run");
+        addCondition(sql, FieldKey.fromParts("Run"));
     }
 }

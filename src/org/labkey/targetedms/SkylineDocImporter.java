@@ -28,6 +28,7 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.XarContext;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
@@ -387,17 +388,17 @@ public class SkylineDocImporter
             PeptideSettings.Enzyme enzyme = pepSettings.getEnzyme();
             if (enzyme != null)
             {
-                SimpleFilter filter = new SimpleFilter("cut", enzyme.getCut());
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("cut"), enzyme.getCut());
                 if (enzyme.getNoCut() == null)
                 {
-                    filter.addCondition(new CompareType.CompareClause("nocut", CompareType.ISBLANK, null));
+                    filter.addCondition(FieldKey.fromParts("nocut"), null, CompareType.ISBLANK);
                 }
                 else
                 {
-                    filter.addCondition("nocut", enzyme.getNoCut());
+                    filter.addCondition(FieldKey.fromParts("nocut"), enzyme.getNoCut());
                 }
-                filter.addCondition("sense", enzyme.getSense());
-                filter.addCondition("name", enzyme.getName());
+                filter.addCondition(FieldKey.fromParts("sense"), enzyme.getSense());
+                filter.addCondition(FieldKey.fromParts("name"), enzyme.getName());
                 PeptideSettings.Enzyme existingEnzyme = new TableSelector(TargetedMSManager.getTableInfoEnzyme(), Table.ALL_COLUMNS, filter, null).getObject(PeptideSettings.Enzyme.class);
                 if (existingEnzyme == null)
                 {
