@@ -91,6 +91,9 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PEPTIDE_CHROM_INFO = "PeptideChromInfo";
     public static final String TABLE_PRECURSOR_CHROM_INFO = "PrecursorChromInfo";
     public static final String TABLE_PRECURSOR_CHROM_INFO_ANNOTATION = "PrecursorChromInfoAnnotation";
+    public static final String TABLE_PEPTIDE_AREA_RATIO = "PeptideAreaRatio";
+    public static final String TABLE_PRECURSOR_AREA_RATIO = "PrecursorAreaRatio";
+    public static final String TABLE_TRANSITION_AREA_RATIO = "TransitionAreaRatio";
     public static final String TABLE_MODIFICATION_SETTINGS = "ModificationSettings";
     public static final String TABLE_ISOTOPE_LABEL = "IsotopeLabel";
     public static final String TABLE_STRUCTURAL_MODIFICATION = "StructuralModification";
@@ -171,6 +174,23 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(", ");
                 sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
                 sql.append(" WHERE r.Id = pg.RunId AND pg.Id = pep.PeptideGroupId AND pep.Id = PeptideId)");
+                return sql;
+            }
+        },
+        PeptideChromInfoFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
+                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoPeptideChromInfo(), "pci");
+                sql.append(" WHERE r.Id = pg.RunId AND pg.Id = pep.PeptideGroupId AND pep.Id = pci.PeptideId AND pci.Id = PeptideChromInfoId)");
                 return sql;
             }
         },
@@ -491,6 +511,12 @@ public class TargetedMSSchema extends UserSchema
             return result;
         }
 
+        // Tables that have a FK to targetedms.peptidechrominfo
+        if (TABLE_PEPTIDE_AREA_RATIO.equals(name))
+        {
+            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideChromInfoFK.getSQL());
+        }
+
         // Tables that have a FK to targetedms.peptide
         if (TABLE_PRECURSOR.equalsIgnoreCase(name))
         {
@@ -545,7 +571,8 @@ public class TargetedMSSchema extends UserSchema
         }
 
         // Tables that have a FK to targetedms.precursorchrominfo
-        if (TABLE_PRECURSOR_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name))
+        if (TABLE_PRECURSOR_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name) ||
+            TABLE_PRECURSOR_AREA_RATIO.equals(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PrecursorChromInfoFK.getSQL());
         }
@@ -566,7 +593,8 @@ public class TargetedMSSchema extends UserSchema
         }
 
         // Tables that have a FK to targetedms.transitionchrominfo
-        if (TABLE_TRANSITION_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name))
+        if (TABLE_TRANSITION_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name) ||
+            TABLE_TRANSITION_AREA_RATIO.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.TransitionChromInfoFK.getSQL());
         }
@@ -607,12 +635,15 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_ISOTOPE_ENRICHMENT);
         hs.add(TABLE_PEPTIDE_CHROM_INFO);
         hs.add(TABLE_PEPTIDE_ANNOTATION);
+        hs.add(TABLE_PEPTIDE_AREA_RATIO);
         hs.add(TABLE_TRANSITION_ANNOTATION);
         hs.add(TABLE_TRANSITION_CHROM_INFO);
+        hs.add(TABLE_TRANSITION_AREA_RATIO);
         hs.add(TABLE_TRANSITION_FULL_SCAN_SETTINGS);
         hs.add(TABLE_TRANSITION_PREDICITION_SETTINGS);
         hs.add(TABLE_PRECURSOR_CHROM_INFO);
         hs.add(TABLE_PRECURSOR_ANNOTATION);
+        hs.add(TABLE_PRECURSOR_AREA_RATIO);
         hs.add(TABLE_PRECURSOR_CHROM_INFO_ANNOTATION);
         hs.add(TABLE_TRANSITION_CHROM_INFO_ANNOTATION);
         hs.add(TABLE_SAMPLE_FILE);

@@ -790,7 +790,7 @@ public class SkylineDocumentParser
         String isotopeLabel = reader.getAttributeValue(null, "isotope_label");
         if(isotopeLabel == null)
         {
-            isotopeLabel = "heavy";
+            isotopeLabel = PeptideSettings.HEAVY_LABEL;
         }
         mod.setIsotopeLabel(isotopeLabel);
         return mod;

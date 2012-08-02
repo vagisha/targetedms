@@ -29,6 +29,8 @@ public class PeptideSettings
     private SpectrumLibrarySettings _librarySettings;
     private EnzymeDigestionSettings _enzymeDigestionSettings;
 
+    public static final String HEAVY_LABEL = "heavy";
+
     public Enzyme getEnzyme()
     {
         return _enzyme;

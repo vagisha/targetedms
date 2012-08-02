@@ -181,6 +181,14 @@ class PeptideSettingsParser
                 labelNames.add(mod.getIsotopeLabel());
             }
         }
+
+        // If we did not find either the "internal_standard" attribute or elements, check if we have
+        // a "heavy" isotope label.  If we do, set "heavy" as the internal standard
+        if(internalStandards.size() == 0 && labelNames.contains(PeptideSettings.HEAVY_LABEL))
+        {
+            internalStandards.add(PeptideSettings.HEAVY_LABEL);
+        }
+
         List<PeptideSettings.IsotopeLabel> labels = new ArrayList<PeptideSettings.IsotopeLabel>(labelNames.size());
         for(String name: labelNames)
         {
@@ -260,7 +268,7 @@ class PeptideSettingsParser
         String isotopeLabel = reader.getAttributeValue(null, "isotope_label");
         if(isotopeLabel == null)
         {
-            isotopeLabel = "heavy";
+            isotopeLabel = PeptideSettings.HEAVY_LABEL;
         }
 
         List<PeptideSettings.RunIsotopeModification> modList = new ArrayList<PeptideSettings.RunIsotopeModification>();

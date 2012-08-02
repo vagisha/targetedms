@@ -41,11 +41,13 @@ src/org/labkey/targetedms/chart/PrecursorPeakAreaChartMaker.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoPlus.java -text
 src/org/labkey/targetedms/parser/AbstractAnnotation.java -text
 src/org/labkey/targetedms/parser/AnnotatedEntity.java -text
+src/org/labkey/targetedms/parser/AreaRatio.java -text
 src/org/labkey/targetedms/parser/ChromInfo.java -text
 src/org/labkey/targetedms/parser/Chromatogram.java -text
 src/org/labkey/targetedms/parser/Instrument.java -text
 src/org/labkey/targetedms/parser/Peptide.java -text
 src/org/labkey/targetedms/parser/PeptideAnnotation.java -text
+src/org/labkey/targetedms/parser/PeptideAreaRatio.java -text
 src/org/labkey/targetedms/parser/PeptideChromInfo.java -text
 src/org/labkey/targetedms/parser/PeptideGroup.java -text
 src/org/labkey/targetedms/parser/PeptideGroupAnnotation.java -text
@@ -53,6 +55,7 @@ src/org/labkey/targetedms/parser/PeptideSettings.java -text
 src/org/labkey/targetedms/parser/PeptideSettingsParser.java -text
 src/org/labkey/targetedms/parser/Precursor.java -text
 src/org/labkey/targetedms/parser/PrecursorAnnotation.java -text
+src/org/labkey/targetedms/parser/PrecursorAreaRatio.java -text
 src/org/labkey/targetedms/parser/PrecursorChromInfo.java -text
 src/org/labkey/targetedms/parser/PrecursorChromInfoAnnotation.java -text
 src/org/labkey/targetedms/parser/Replicate.java -text
@@ -62,6 +65,7 @@ src/org/labkey/targetedms/parser/SkylineDocumentParser.java -text
 src/org/labkey/targetedms/parser/SkylineEntity.java -text
 src/org/labkey/targetedms/parser/Transition.java -text
 src/org/labkey/targetedms/parser/TransitionAnnotation.java -text
+src/org/labkey/targetedms/parser/TransitionAreaRatio.java -text
 src/org/labkey/targetedms/parser/TransitionChromInfo.java -text
 src/org/labkey/targetedms/parser/TransitionChromInfoAnnotation.java -text
 src/org/labkey/targetedms/parser/TransitionLoss.java -text

@@ -127,6 +127,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_CHROM_INFO);
     }
 
+    public static TableInfo getTableInfoTransitionAreaRatio()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_AREA_RATIO);
+    }
+
     public static TableInfo getTableInfoPeptideGroup()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
@@ -167,6 +172,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_PRECURSOR_CHROM_INFO);
     }
 
+    public static TableInfo getTableInfoPrecursorAreaRatio()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_PRECURSOR_AREA_RATIO);
+    }
+
     public static TableInfo getTableInfoPrecursorChromInfoAnnotation()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_PRECURSOR_CHROM_INFO_ANNOTATION);
@@ -180,6 +190,11 @@ public class TargetedMSManager
     public static TableInfo getTableInfoPeptideChromInfo()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_PEPTIDE_CHROM_INFO);
+    }
+
+    public static TableInfo getTableInfoPeptideAreaRatio()
+    {
+       return getSchema().getTable(TargetedMSSchema.TABLE_PEPTIDE_AREA_RATIO);
     }
 
     public static TableInfo getTableInfoInstrument()
@@ -638,9 +653,16 @@ public class TargetedMSManager
         {
             // Delete from TransitionChromInfoAnnotation
             deleteTransitionChromInfoDependent(getTableInfoTransitionChromInfoAnnotation());
+            // Delete from TransitionAreaRatio
+            deleteTransitionChromInfoDependent(getTableInfoTransitionAreaRatio());
 
             // Delete from PrecursorChromInfoAnnotation
             deletePrecursorChromInfoDependent(getTableInfoPrecursorChromInfoAnnotation());
+            // Delete from PrecursorAreaRatio
+            deletePrecursorChromInfoDependent(getTableInfoPrecursorAreaRatio());
+
+            // Delete from PeptideAreaRatio
+            deletePeptideChromInfoDependent(getTableInfoPeptideAreaRatio());
 
             // Delete from TransitionChromInfo
             deleteTransitionDependent(getTableInfoTransitionChromInfo());
@@ -747,6 +769,15 @@ public class TargetedMSManager
                 + getTableInfoPeptide() + " WHERE " +
                 "PeptideGroupId IN (SELECT Id FROM " + getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
                 getTableInfoRuns() + " WHERE Deleted = ?)))))", true);
+    }
+
+    public static void deletePeptideChromInfoDependent(TableInfo tableInfo) throws SQLException
+    {
+        Table.execute(getSchema(), "DELETE FROM " + tableInfo + " WHERE PeptideChromInfoId IN (SELECT Id FROM "
+                + getTableInfoPeptideChromInfo() + " WHERE PeptideId IN (SELECT Id FROM "
+                + getTableInfoPeptide() + " WHERE " +
+                "PeptideGroupId IN (SELECT Id FROM " + getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
+                getTableInfoRuns() + " WHERE Deleted = ?))))", true);
     }
 
     public static void deleteTransitionDependent(TableInfo tableInfo) throws SQLException
