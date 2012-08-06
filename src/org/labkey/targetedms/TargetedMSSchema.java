@@ -25,6 +25,7 @@ import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
+import org.labkey.api.data.EnumTableInfo;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.SQLFragment;
@@ -109,6 +110,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_LIBRARY_SETTINGS = "LibrarySettings";
     public static final String TABLE_LIBRARY_SOURCE = "LibrarySource";
     public static final String TABLE_PRECURSOR_LIB_INFO = "PrecursorLibInfo";
+    public static final String TABLE_RESPRESENTATIVE_DATA_STATE = "RepresentativeDataState";
 
     public static final String TABLE_DOC_TRANSITIONS = "DocumentTransitions";
 
@@ -351,6 +353,15 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn(result.getRealTable().getColumn("PrecursorCount"));
                 result.addWrapColumn(result.getRealTable().getColumn("TransitionCount"));
                 result.addWrapColumn(result.getRealTable().getColumn("Status"));
+                ColumnInfo stateColumn = result.addWrapColumn(result.getRealTable().getColumn("RepresentativeDataState"));
+                stateColumn.setFk(new LookupForeignKey("RowId")
+                {
+                    @Override
+                    public TableInfo getLookupTableInfo()
+                    {
+                        return getTable(TABLE_RESPRESENTATIVE_DATA_STATE);
+                    }
+                });
 
                 return result;
             }
@@ -384,6 +395,10 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_TARGETED_MS_RUNS.equalsIgnoreCase(name))
         {
             return getTargetedMSRunsTable();
+        }
+        if (TABLE_RESPRESENTATIVE_DATA_STATE.equalsIgnoreCase(name))
+        {
+            return new EnumTableInfo<TargetedMSRun.RepresentativeDataState>(TargetedMSRun.RepresentativeDataState.class, getSchema(), "Possible states a run might be in for resolving representative data after upload", true);
         }
 
         // Tables that have a FK directly to targetedms.Runs
@@ -659,6 +674,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_SPECTRUM_LIBRARY);
         hs.add(TABLE_LIBRARY_SOURCE);
         hs.add(TABLE_PRECURSOR_LIB_INFO);
+        hs.add(TABLE_RESPRESENTATIVE_DATA_STATE);
         return hs;
     }
 }

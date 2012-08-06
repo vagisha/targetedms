@@ -38,12 +38,14 @@ public class TargetedMSImportPipelineJob extends PipelineJob
 {
     private final File _file;
     private SkylineDocImporter.RunInfo _runInfo;
+    private final boolean _representative;
 
-    public TargetedMSImportPipelineJob(ViewBackgroundInfo info, File file, SkylineDocImporter.RunInfo runInfo, PipeRoot root) throws SQLException
+    public TargetedMSImportPipelineJob(ViewBackgroundInfo info, File file, SkylineDocImporter.RunInfo runInfo, PipeRoot root, boolean representative) throws SQLException
     {
         super(TargetedMSPipelineProvider.name, info, root);
         _file = file;
         _runInfo = runInfo;
+        _representative = representative;
 
         String basename = FileUtil.getBaseName(_file, 1);
         setLogFile(FT_LOG.newFile(_file.getParentFile(), basename));
@@ -69,8 +71,10 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         boolean completeStatus = false;
         try
         {
-            TargetedMSRun run = TargetedMSManager.importRun(getLogger(), _file, _runInfo,
-                                                            new XarContext(getDescription(), getContainer(), getUser()));
+            XarContext context = new XarContext(getDescription(), getContainer(), getUser());
+            SkylineDocImporter importer = new SkylineDocImporter(getUser(), getContainer(), context.getJobDescription(), _file, getLogger(), context, _representative);
+            TargetedMSRun run = importer.importRun(_runInfo);
+
             TargetedMSManager.ensureWrapped(run, getUser());
             setStatus(PipelineJob.COMPLETE_STATUS);
             completeStatus = true;

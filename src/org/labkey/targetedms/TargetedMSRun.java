@@ -30,6 +30,10 @@ import java.util.Date;
  */
 public class TargetedMSRun implements Serializable
 {
+    /** Don't change the ordering of these enum values without updating the values in targetedms.runs.representativedatastate */
+    public enum RepresentativeDataState
+    { NotRepresentative, Conflicted, Representative }
+
     protected int _runId;
     protected Container _container;
     protected String _description;
@@ -40,6 +44,8 @@ public class TargetedMSRun implements Serializable
     protected int _statusId;
     protected boolean _deleted;
     protected String _experimentRunLSID;
+
+    protected RepresentativeDataState _representativeDataState;
 
     protected int _peptideGroupCount;
     protected int _peptideCount;
@@ -229,5 +235,15 @@ public class TargetedMSRun implements Serializable
     public void setTransitionCount(int transitionCount)
     {
         _transitionCount = transitionCount;
+    }
+
+    public RepresentativeDataState getRepresentativeDataState()
+    {
+        return _representativeDataState;
+    }
+
+    public void setRepresentativeDataState(RepresentativeDataState representativeDataState)
+    {
+        _representativeDataState = representativeDataState;
     }
 }

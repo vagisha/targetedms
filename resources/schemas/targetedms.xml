@@ -145,6 +145,7 @@
             <ns:column columnName="Modified"/>
             <ns:column columnName="Path"/>
             <ns:column columnName="Status"/>
+            <ns:column columnName="RepresentativeDataState"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideGroup">
@@ -175,6 +176,7 @@
                 <ns:inputType>text</ns:inputType>
                 <ns:displayWidth>800</ns:displayWidth>
             </ns:column>
+            <ns:column columnName="ActiveRepresentativeData"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Peptide">

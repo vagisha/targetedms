@@ -15,12 +15,14 @@ resources/schemas/dbscripts/postgresql/targetedms-0.18-0.19.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.20-0.21.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.21-0.22.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.22-0.23.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-12.20-12.21.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.19-0.20.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.20-0.21.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.21-0.22.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.22-0.23.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-12.20-12.21.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text
@@ -105,7 +107,7 @@ src/org/labkey/targetedms/view/SpectrumViewBean.java -text
 src/org/labkey/targetedms/view/TransitionPeptideSearchViewProvider.java -text
 src/org/labkey/targetedms/view/TransitionProteinSearchViewProvider.java -text
 src/org/labkey/targetedms/view/chromatogramsForm.jsp -text
-src/org/labkey/targetedms/view/hello.jsp -text
+src/org/labkey/targetedms/view/confirmImport.jsp -text
 src/org/labkey/targetedms/view/peptidePeakAreaView.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
 src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text

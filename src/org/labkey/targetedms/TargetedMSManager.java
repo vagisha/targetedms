@@ -319,15 +319,15 @@ public class TargetedMSManager
 
     public static int addRunToQueue(ViewBackgroundInfo info,
                                      File file,
-                                     PipeRoot root) throws SQLException, IOException
+                                     PipeRoot root, boolean representative) throws SQLException, IOException
     {
         String description = "Skyline document import - " + file.getName();
         XarContext xarContext = new XarContext(description, info.getContainer(), info.getUser());
         User user =  info.getUser();
         Container container = info.getContainer();
-        SkylineDocImporter importer = new SkylineDocImporter(user, container, file.getName(), file, null, xarContext);
+        SkylineDocImporter importer = new SkylineDocImporter(user, container, file.getName(), file, null, xarContext, representative);
         SkylineDocImporter.RunInfo runInfo = importer.prepareRun(false);
-        TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, file, runInfo, root);
+        TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, file, runInfo, root, representative);
         try
         {
             PipelineService.get().queueJob(job);
@@ -337,15 +337,6 @@ public class TargetedMSManager
         {
             throw new IOException(e);
         }
-    }
-
-    public static TargetedMSRun importRun(Logger log,
-                             File file,
-                             SkylineDocImporter.RunInfo runInfo,
-                             XarContext context) throws SQLException, IOException, XMLStreamException, DataFormatException
-    {
-        SkylineDocImporter importer = new SkylineDocImporter(context.getUser(), context.getContainer(), context.getJobDescription(), file, log, context) ;
-        return importer.importRun(runInfo);
     }
 
     public static ExpRun ensureWrapped(TargetedMSRun run, User user) throws ExperimentException
@@ -464,40 +455,12 @@ public class TargetedMSManager
 
     private static TargetedMSRun[] getRuns(String whereClause, Object... params)
     {
-        ResultSet rs = null;
-
-        try
-        {
-            rs = Table.executeQuery(getSchema(),
-                    "SELECT Container, Id, Description, Path, FileName, Status, StatusId, Deleted, ExperimentRunLSID, "+
-                            "PeptideGroupCount, PeptideCount, PrecursorCount, TransitionCount FROM " +
-                            getTableInfoRuns() + " WHERE "+ whereClause,
-                    params);
-
-            List<TargetedMSRun> runs = new ArrayList<TargetedMSRun>();
-
-            while (rs.next())
-            {
-
-               BeanObjectFactory<TargetedMSRun> bof = new BeanObjectFactory<TargetedMSRun>(TargetedMSRun.class);
-               runs.add(bof.handle(rs));
-
-            }
-
-            return runs.toArray(new TargetedMSRun[runs.size()]);
-        }
-        catch (SQLException e)
-        {
-            _log.error("getRuns", e);
-            throw new RuntimeSQLException(e);
-        }
-        finally
-        {
-            if (rs != null)
-            {
-                try { rs.close(); } catch(SQLException ignored) {}
-            }
-        }
+        SQLFragment sql = new SQLFragment("SELECT * FROM ");
+        sql.append(getTableInfoRuns(), "r");
+        sql.append(" WHERE ");
+        sql.append(whereClause);
+        sql.addAll(params);
+        return new SqlSelector(getSchema(), sql).getArray(TargetedMSRun.class);
     }
 
     public static TargetedMSRun getRun(int runId)

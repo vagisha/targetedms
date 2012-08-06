@@ -27,6 +27,7 @@ import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ExportAction;
+import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.QueryViewAction;
 import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.SimpleViewAction;
@@ -43,12 +44,14 @@ import org.labkey.api.pipeline.browse.PipelinePathForm;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
+import org.labkey.api.security.ActionNames;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DetailsView;
 import org.labkey.api.view.GridView;
@@ -94,9 +97,12 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class TargetedMSController extends SpringActionController
 {
@@ -127,26 +133,10 @@ public class TargetedMSController extends SpringActionController
     }
 
     // ------------------------------------------------------------------------
-    // Begin action
-    // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
-    public class BeginAction extends SimpleViewAction
-    {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
-        {
-            return new JspView("/org/labkey/targetedms/view/hello.jsp");
-        }
-
-        public NavTree appendNavTrail(NavTree root)
-        {
-            return root;
-        }
-    }
-
-    // ------------------------------------------------------------------------
     // Action to show a list of uploaded documents
     // ------------------------------------------------------------------------
     @RequiresPermissionClass(ReadPermission.class)
+    @ActionNames("showList, begin")
     public class ShowListAction extends SimpleViewAction
     {
         public ModelAndView getView(Object o, BindException errors) throws Exception
@@ -742,23 +732,73 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    public static class SkylinePipelinePathForm extends PipelinePathForm
+    {
+        private String[] _representative = new String[0];
+
+        public String[] getRepresentative()
+        {
+            return _representative;
+        }
+
+        public void setRepresentative(String[] representative)
+        {
+            _representative = representative;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class SkylineDocUploadOptionsAction extends FormViewAction<SkylinePipelinePathForm>
+    {
+        @Override
+        public void validateCommand(SkylinePipelinePathForm form, Errors errors)
+        {
+        }
+
+        @Override
+        public ModelAndView getView(SkylinePipelinePathForm form, boolean reshow, BindException errors) throws Exception
+        {
+            form.getValidatedFiles(getContainer());
+            return new JspView("/org/labkey/targetedms/view/confirmImport.jsp", form, errors);
+        }
+
+        @Override
+        public boolean handlePost(SkylinePipelinePathForm form, BindException errors) throws Exception
+        {
+            return false;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(SkylinePipelinePathForm form)
+        {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root.addChild("Confirm TargetedMS Data Import");
+        }
+    }
+
     // ------------------------------------------------------------------------
     // Document upload action
     // ------------------------------------------------------------------------
     @RequiresPermissionClass(InsertPermission.class)
-    public class SkylineDocUploadAction extends RedirectAction<PipelinePathForm>
+    public class SkylineDocUploadAction extends RedirectAction<SkylinePipelinePathForm>
     {
-        public ActionURL getSuccessURL(PipelinePathForm form)
+        public ActionURL getSuccessURL(SkylinePipelinePathForm form)
         {
             return TargetedMSController.getShowListURL(getContainer());
         }
 
-        public void validateCommand(PipelinePathForm form, Errors errors)
+        public void validateCommand(SkylinePipelinePathForm form, Errors errors)
         {
         }
 
-        public boolean doAction(PipelinePathForm form, BindException errors) throws Exception
+        public boolean doAction(SkylinePipelinePathForm form, BindException errors) throws Exception
         {
+            Set<String> representativeFileNames = new HashSet<String>(Arrays.asList(form.getRepresentative()));
             for (File file : form.getValidatedFiles(getContainer()))
             {
                 if (!file.isFile())
@@ -769,7 +809,7 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
+                    TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()), representativeFileNames.contains(file.getName()));
                 }
                 catch (IOException e)
                 {
@@ -807,7 +847,7 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    int jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
+                    int jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()), false);
                     Map<String, Object> detailsMap = new HashMap<String, Object>(4);
                     detailsMap.put("Path", form.getPath());
                     detailsMap.put("File",file.getName());
@@ -845,7 +885,7 @@ public class TargetedMSController extends SpringActionController
         {
             //this action requires that a specific experiment run has been specified
             if(!form.hasRunId())
-                throw new RedirectException(new ActionURL(TargetedMSController.BeginAction.class, getViewContext().getContainer()));
+                throw new RedirectException(new ActionURL(ShowListAction.class, getViewContext().getContainer()));
 
             //ensure that the experiment run is valid and exists within the current container
             _run = validateRun(form.getId());

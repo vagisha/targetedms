@@ -1,4 +1,3 @@
-<%
 /*
  * Copyright (c) 2012 LabKey Corporation
  *
@@ -14,11 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-%>
-<%@ page import="org.labkey.api.view.HttpView"%>
-<%@ page import="org.labkey.api.view.ViewContext"%>
-<%@ page extends="org.labkey.api.jsp.JspBase" %>
-<%
-    ViewContext context = HttpView.currentContext();
-%>
-Hello, and welcome to the TargetedMS module.
+
+ALTER TABLE targetedms.runs ADD COLUMN RepresentativeDataState INT NOT NULL DEFAULT 0;
+
+ALTER TABLE targetedms.peptidegroup ADD COLUMN ActiveRepresentativeData BOOLEAN NOT NULL DEFAULT false;

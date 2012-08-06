@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.ProteinService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.EnumConverter;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
@@ -69,7 +70,7 @@ public class TargetedMSModule extends SpringModule
     @Override
     public double getVersion()
     {
-        return 12.20;
+        return 12.21;
     }
 
     @Override
@@ -134,6 +135,8 @@ public class TargetedMSModule extends SpringModule
     {
         addController("targetedms", TargetedMSController.class);
         TargetedMSSchema.register();
+        EnumConverter.registerEnum(TargetedMSRun.RepresentativeDataState.class);
+
     }
 
     @Override
