@@ -16,6 +16,7 @@ resources/schemas/dbscripts/postgresql/targetedms-0.20-0.21.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.21-0.22.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.22-0.23.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-12.20-12.21.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-12.21-12.22.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.19-0.20.sql -text
@@ -23,6 +24,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-0.20-0.21.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.21-0.22.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.22-0.23.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-12.20-12.21.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-12.21-12.22.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text

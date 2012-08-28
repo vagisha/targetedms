@@ -16,6 +16,7 @@
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.TargetedMSRun" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
@@ -25,7 +26,19 @@
 <table>
     <tr>
         <td class="labkey-form-label">File</td>
-        <td><%= bean.getRun().getFileName()%></td>
+        <td> <%= bean.getRun().getFileName()%> </td>
+    </tr>
+    <tr>
+        <td class="labkey-form-label">Representative State</td>
+        <%String color = bean.getRun().getRepresentativeDataState() == TargetedMSRun.RepresentativeDataState.Conflicted ?
+                         "#ff0000" :
+                         (bean.getRun().getRepresentativeDataState() == TargetedMSRun.RepresentativeDataState.Representative ?
+                         "#008000" : "#000000");
+        %>
+
+        <td style="color:<%=color%>;">
+            <%= bean.getRun().getRepresentativeDataState()%>
+        </td>
     </tr>
     <tr>
         <td class="labkey-form-label">Peptide Group Count</td>

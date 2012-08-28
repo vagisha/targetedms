@@ -145,7 +145,9 @@
             <ns:column columnName="Modified"/>
             <ns:column columnName="Path"/>
             <ns:column columnName="Status"/>
-            <ns:column columnName="RepresentativeDataState"/>
+            <ns:column columnName="RepresentativeDataState">
+                <ns:columnTitle>Representative State</ns:columnTitle>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideGroup">
@@ -176,7 +178,9 @@
                 <ns:inputType>text</ns:inputType>
                 <ns:displayWidth>800</ns:displayWidth>
             </ns:column>
-            <ns:column columnName="ActiveRepresentativeData"/>
+            <ns:column columnName="ActiveRepresentativeData">
+                <ns:columnTitle>Representative</ns:columnTitle>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Peptide">

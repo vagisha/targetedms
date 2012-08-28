@@ -383,6 +383,7 @@ public class TargetedMSSchema extends UserSchema
         columns.add(FieldKey.fromParts("File", "PeptideCount"));
         columns.add(FieldKey.fromParts("File", "PrecursorCount"));
         columns.add(FieldKey.fromParts("File", "TransitionCount"));
+        columns.add(FieldKey.fromParts("File", "RepresentativeDataState"));
 
         result.setDefaultVisibleColumns(columns);
 

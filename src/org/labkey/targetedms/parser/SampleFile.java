@@ -101,6 +101,8 @@ public class SampleFile extends SkylineEntity
 
     public void setSkylineId(String skylineId)
     {
+        if(skylineId != null && skylineId.startsWith("_"))
+            skylineId = skylineId.substring(1);
         _skylineId = skylineId;
     }
 

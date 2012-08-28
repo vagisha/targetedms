@@ -472,22 +472,38 @@ public class SkylineDocImporter
 
     private void resolveRepresentativeData(TargetedMSRun run) throws SQLException
     {
-        // Mark everything that doesn't already have representative data in this container as being active 
+        // Mark everything in this run that doesn't already have representative data in this container as being active
         SQLFragment makeActiveSQL = new SQLFragment("UPDATE " + TargetedMSManager.getTableInfoPeptideGroup());
-        makeActiveSQL.append(" SET ActiveRepresentativeData = ? WHERE SequenceId IS NOT NULL AND SequenceId NOT IN (SELECT SequenceId FROM ");
+        makeActiveSQL.append(" SET ActiveRepresentativeData = ? ");
         makeActiveSQL.add(true);
-        makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        makeActiveSQL.append(" WHERE RunId=? ");
+        makeActiveSQL.add(run.getId());
+        makeActiveSQL.append(" AND( ");
+        // If this peptide group has a SequenceId make sure we don't have another peptide group in this container
+        // with the same SequenceId that has been previously marked as representative
+        makeActiveSQL.append(" (SequenceId IS NOT NULL AND (SequenceId NOT IN (SELECT SequenceId FROM ");
+        makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg1");
         makeActiveSQL.append(", ");
-        makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r");
-        makeActiveSQL.append(" WHERE pg.RunId = r.Id AND r.Container = ? AND pg.ActiveRepresentativeData = ?)");
+        makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r1");
+        makeActiveSQL.append(" WHERE pg1.RunId = r1.Id AND r1.Container=? AND pg1.ActiveRepresentativeData=?))) ");
         makeActiveSQL.add(_container);
         makeActiveSQL.add(true);
+        // If the peptide group does not have a SequenceId or there isn't an older peptide group with the same
+        // SequenceId, compare the Labels to look for conflicting proteins.
+        makeActiveSQL.append(" OR (Label NOT IN (SELECT Label FROM ");
+        makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg2");
+        makeActiveSQL.append(", ");
+        makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r2");
+        makeActiveSQL.append(" WHERE pg2.RunID = r2.Id AND r2.Container=? AND pg2.ActiveRepresentativeData=?)) ");
+        makeActiveSQL.add(_container);
+        makeActiveSQL.add(true);
+        makeActiveSQL.append(")");
         new SqlExecutor(TargetedMSManager.getSchema(), makeActiveSQL).execute();
 
         // See how many conflict with existing representative data
         SQLFragment remainingConflictsSQL = new SQLFragment("SELECT COUNT(*) FROM ");
         remainingConflictsSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        remainingConflictsSQL.append(" WHERE SequenceId IS NOT NULL AND ActiveRepresentativeData = ? AND RunId = ?");
+        remainingConflictsSQL.append(" WHERE ActiveRepresentativeData = ? AND RunId = ?");
         remainingConflictsSQL.add(false);
         remainingConflictsSQL.add(run.getId());
         int conflictCount = new SqlSelector(TargetedMSManager.getSchema(), remainingConflictsSQL).getObject(Integer.class);
@@ -856,7 +872,7 @@ public class SkylineDocImporter
             // individual sample files
             if(internalStandardLabelIds.contains(precursor.getIsotopeLabelId()))
             {
-                // Key is charge + fragmentType+fragmentOrdinal + sample file name
+                // Key is charge + fragmentType+fragmentOrdinal + fragment_charge + sample file name
                 String key = getTransitionChromInfoKey(precursor, transition, transChromInfo);
                 Map<Integer, InternalStdArea> areasForLabels = intStandardTransitionAreas.get(key);
                 if(areasForLabels == null)
@@ -933,6 +949,8 @@ public class SkylineDocImporter
            .append("_")
            .append(transition.getFragmentType())
            .append(transition.getFragmentOrdinal())
+           .append("_")
+           .append(transition.getCharge())
            .append("_")
            .append(chromInfo.getSkylineSampleFileId());
        return key.toString();

@@ -46,7 +46,10 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
 
     public DocPrecursorTableInfo(TargetedMSSchema schema)
     {
-        super(TargetedMSManager.getTableInfoPrecursor(), schema.getContainer(), TargetedMSSchema.ContainerJoinType.PeptideFK.getSQL(), TargetedMSManager.getTableInfoPrecursorAnnotation(), "PrecursorId");
+        super(TargetedMSManager.getTableInfoPrecursor(),
+                schema.getContainer(),
+                TargetedMSSchema.ContainerJoinType.PeptideFK.getSQL(),
+                TargetedMSManager.getTableInfoPrecursorAnnotation(), "PrecursorId");
         _schema = schema;
 
         setName(TargetedMSSchema.TABLE_PRECURSOR);
@@ -103,6 +106,7 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Description"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Annotations"));
+        visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "ActiveRepresentativeData"));
 
         visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "NumMissedCleavages"));
@@ -115,6 +119,7 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("NeutralMass"));
         visibleColumns.add(FieldKey.fromParts("Mz"));
         visibleColumns.add(FieldKey.fromParts("Charge"));
+        visibleColumns.add(FieldKey.fromParts("Annotations"));
         visibleColumns.add(FieldKey.fromParts("TransitionCount"));
         visibleColumns.add(FieldKey.fromParts("Chromatograms"));
 
