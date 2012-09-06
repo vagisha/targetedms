@@ -88,6 +88,8 @@ public class SkylineDocumentParser
     private static final String LIBRARY_NAME = "library_name";
     private static final String COUNT_MEASURED = "count_measured";
 
+    private static final double MIN_SUPPORTED_VERSION = 1.2;
+
     private int _peptideGroupCount;
     private int _peptideCount;
     private int _precursorCount;
@@ -116,6 +118,7 @@ public class SkylineDocumentParser
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         _reader = inputFactory.createXMLStreamReader(_inputStream);
         _log = log;
+        readDocumentVersion(_reader);
     }
 
     public void close()
@@ -174,6 +177,27 @@ public class SkylineDocumentParser
     public PeptideSettings getPeptideSettings()
     {
         return _peptideSettings;
+    }
+
+    private void readDocumentVersion(XMLStreamReader reader) throws XMLStreamException
+    {
+        while (reader.hasNext())
+        {
+            int evtType = reader.next();
+            if(XmlUtil.isStartElement(reader, evtType, "srm_settings")) {
+
+                Double version = XmlUtil.readRequiredDoubleAttribute(reader, "format_version", "srm_settings");
+                if(version < MIN_SUPPORTED_VERSION)
+                {
+                    throw new IllegalStateException("The version of this Skyline document is "+version+
+                                                    ". Version less than " + MIN_SUPPORTED_VERSION +
+                                                    " is not supported.");
+                }
+                return;
+            }
+        }
+
+        throw new IllegalStateException("Not a valid Skyline document. <srm_settings> element was not found.");
     }
 
     private void readDocumentSettings(XMLStreamReader reader) throws XMLStreamException

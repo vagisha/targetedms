@@ -675,12 +675,15 @@ public class SkylineDocImporter
                     // For the precursors
                     for(PrecursorChromInfo precChromInfo: precursor.getChromInfoList())
                     {
+                        if(precChromInfo.getTotalArea() == null)
+                            continue;
+
                         String key = getPrecChromInfoKey(precursor, precChromInfo);
                         Map<Integer, InternalStdArea> areasForStdLabels = intStandardPrecursorAreas.get(key);
 
                         if(areasForStdLabels == null)
                         {
-                            _log.info("No internal standard precursor area found for precursor key "+key);
+                            _log.info("No internal standard precursor area found for precursor key "+key+" and peptide "+peptide.getSequence());
                             continue;
                         }
 
@@ -702,12 +705,15 @@ public class SkylineDocImporter
                     {
                         for(TransitionChromInfo transChromInfo: transition.getChromInfoList())
                         {
+                            if(transChromInfo.getArea() == null)
+                                continue;
+
                             String key = getTransitionChromInfoKey(precursor, transition, transChromInfo);
                             Map<Integer, InternalStdArea> areasForStdLabels = intStandardTransitionAreas.get(key);
 
                             if(areasForStdLabels == null)
                             {
-                                _log.info("No internal standard transition area found for transition key "+key);
+                                _log.info("No internal standard transition area found for transition key "+key+ " precursor "+precursor.getModifiedSequence());
                                 continue;
                             }
 
@@ -768,6 +774,10 @@ public class SkylineDocImporter
                 annotation.setPrecursorChromInfoId(precursorChromInfo.getId());
                 annotation = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), annotation);
             }
+
+            // This precursor chrom info may not have a peak area
+            if(precursorChromInfo.getTotalArea() == null)
+                continue;
 
             // If this precursor is labeled with an internal standard store the peak areas for the
             // individual sample files
@@ -872,6 +882,10 @@ public class SkylineDocImporter
             // individual sample files
             if(internalStandardLabelIds.contains(precursor.getIsotopeLabelId()))
             {
+                // There may not be any area associated with this transition chrom info.
+                if(transChromInfo.getArea() == null)
+                    continue;
+
                 // Key is charge + fragmentType+fragmentOrdinal + fragment_charge + sample file name
                 String key = getTransitionChromInfoKey(precursor, transition, transChromInfo);
                 Map<Integer, InternalStdArea> areasForLabels = intStandardTransitionAreas.get(key);
