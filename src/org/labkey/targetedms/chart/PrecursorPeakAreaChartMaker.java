@@ -15,6 +15,8 @@
 
 package org.labkey.targetedms.chart;
 
+import org.apache.commons.collections15.comparators.ReverseComparator;
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.LegendItem;
@@ -24,7 +26,10 @@ import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
+import org.jfree.chart.renderer.category.StatisticalBarRenderer;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
@@ -38,8 +43,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * User: vsharma
@@ -54,40 +61,64 @@ public class PrecursorPeakAreaChartMaker
     {
         List<SampleFile> sampleFiles = ReplicateManager.getSampleFilesForRun(peptideGroup.getRunId());
 
-        Map<Integer, PrecursorChromInfoPlus> precursorChromInfoMap = new HashMap<Integer, PrecursorChromInfoPlus>();
+        // key in the map is the precursorId; value is a list of chrom infos for this precursor in the various replicates.
+        Map<Integer, List<PrecursorChromInfoPlus>> precursorChromInfoMap = new HashMap<Integer, List<PrecursorChromInfoPlus>>();
         for(SampleFile file: sampleFiles)
         {
+            // chromatograms for this precursor from a single sample file.
             List<PrecursorChromInfoPlus> samplePrecChromInfos = PrecursorManager.getPrecursorChromInfosForPeptideGroup(
                                                                                 peptideGroup.getId(),
                                                                                 file.getId());
             for(PrecursorChromInfoPlus spci: samplePrecChromInfos)
             {
-                PrecursorChromInfoPlus pci = precursorChromInfoMap.get(spci.getPrecursorId());
-                if(pci == null)
+                List<PrecursorChromInfoPlus> pciList = precursorChromInfoMap.get(spci.getPrecursorId());
+                if(pciList == null)
                 {
-                    precursorChromInfoMap.put(spci.getPrecursorId(), spci);
+                    pciList = new ArrayList<PrecursorChromInfoPlus>();
+                    precursorChromInfoMap.put(spci.getPrecursorId(), pciList);
                 }
-                else {
-                    if(spci.getTotalArea() > pci.getTotalArea())
-                    {
-                        precursorChromInfoMap.put(spci.getPrecursorId(), spci);
-                    }
-                }
+                pciList.add(spci);
             }
         }
-        return make(peptideGroup, new ArrayList<PrecursorChromInfoPlus>(precursorChromInfoMap.values()));
-    }
 
-    public static JFreeChart make(PeptideGroup peptideGroup, SampleFile file)
-    {
-        // Get all the precursor areas for this peptide group
-        List<PrecursorChromInfoPlus> precursorChromInfos = PrecursorManager.getPrecursorChromInfosForPeptideGroup(
-                                                                                    peptideGroup.getId(), file.getId());
-        return make(peptideGroup, precursorChromInfos);
-    }
+        // If we have more than 1 chrom info for a precursorId we will create a statistical dataset.
+        boolean makeStatsDataset = false;
+        for(Integer precursorId: precursorChromInfoMap.keySet())
+        {
+            if(precursorChromInfoMap.get(precursorId).size() > 1)
+            {
+                makeStatsDataset = true;
+                break;
+            }
+        }
 
-    public static JFreeChart make(PeptideGroup peptideGroup, List<PrecursorChromInfoPlus> precursorChromInfos)
-    {
+        List<DatasetEntry> datasetEntries = makeDatasetEntries(precursorChromInfoMap, makeStatsDataset);
+
+        // Sort by area
+        Collections.sort(datasetEntries, new ReverseComparator<DatasetEntry>(new Comparator<DatasetEntry>()
+        {
+            @Override
+            public int compare(DatasetEntry datasetEntry, DatasetEntry datasetEntry1)
+            {
+                return Double.valueOf(datasetEntry.getValue()).compareTo(datasetEntry1.getValue());
+            }
+        }));
+
+        CategoryDataset dataset = createDataset(datasetEntries, makeStatsDataset);
+
+        JFreeChart chart = ChartFactory.createBarChart(
+                            peptideGroup.getLabel(),
+                            "Peptide",
+                            "Peak Area (10^6)",
+                            dataset,
+                            PlotOrientation.VERTICAL,
+                            true,   // include legend
+                            false,  // tooltips
+                            false   // URLs
+        );
+
+        chart.getPlot().setBackgroundPaint(Color.WHITE);
+
         // Get all the isotope labels for this run
         List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(peptideGroup.getRunId());
         Collections.sort(labels, new Comparator<PeptideSettings.IsotopeLabel>()
@@ -105,43 +136,6 @@ public class PrecursorPeakAreaChartMaker
         {
             labelColors.put(label.getName(), ChartColors.getIsotopeColor(label.getId() - lightLabelId));
         }
-
-        // Sort by peak area
-        Collections.sort(precursorChromInfos, new Comparator<PrecursorChromInfoPlus>()
-        {
-            @Override
-            public int compare(PrecursorChromInfoPlus one, PrecursorChromInfoPlus two)
-            {
-                return two.getTotalArea().compareTo(one.getTotalArea());
-            }
-        });
-
-
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        for(PrecursorChromInfoPlus chromInfo: precursorChromInfos)
-        {
-            String categoryLabel = chromInfo.getSequence().substring(0, 3);
-            if(!chromInfo.getLabel().equalsIgnoreCase("light"))
-            {
-                categoryLabel = "("+chromInfo.getLabel()+")"+categoryLabel;
-            }
-            dataset.addValue(chromInfo.getTotalArea() / 1000000, "", categoryLabel);
-        }
-
-        JFreeChart chart = ChartFactory.createBarChart(
-                            peptideGroup.getLabel(),
-                            "Peptide",
-                            "Peak Area (10^6)",
-                            dataset,
-                            PlotOrientation.VERTICAL,
-                            true,   // include legend
-                            false,  // tooltips
-                            false   // URLs
-        );
-
-        chart.getPlot().setBackgroundPaint(Color.WHITE);
-        CustomRenderer renderer = new CustomRenderer(precursorChromInfos, labelColors);
-        chart.getCategoryPlot().setRenderer(renderer);
 
         // If we have multiple isotope labels create a custom legend
         if(labels.size() == 1)
@@ -165,18 +159,138 @@ public class PrecursorPeakAreaChartMaker
                 CategoryLabelPositions.createUpRotationLabelPositions(Math.PI * 0.5)
         );
 
+        setRenderer(chart, datasetEntries,labelColors,  makeStatsDataset);
+
+        // For statistical bar plots we may get standard deviation bars that extend
+        // below 0.  We want to cut off at 0.
+        chart.getCategoryPlot().getRangeAxis().setLowerBound(0.0);
+
         return chart;
     }
 
-    private static class CustomRenderer extends BarRenderer
+    private static void setRenderer(JFreeChart chart, List<DatasetEntry> datasetEntries, Map<String, Color> labelColors,
+                                    boolean makeStatsDataset)
     {
-        private List<PrecursorChromInfoPlus> _precursorChromInfoPlusList;
+        if(!makeStatsDataset)
+        {
+            chart.getCategoryPlot().setRenderer(new CustomBarRenderer(datasetEntries, labelColors));
+        }
+        else
+        {
+            chart.getCategoryPlot().setRenderer(new CustomStatisticalBarRenderer(datasetEntries, labelColors));
+        }
+    }
+
+    private static CategoryDataset createDataset(List<DatasetEntry> datasetEntryList, boolean makeStatsDataset)
+    {
+        Set<String> uniqLabels = new HashSet<String>();
+        for(DatasetEntry entry: datasetEntryList)
+        {
+           if(uniqLabels.contains(entry.getPeptide()))
+           {
+               uniqLabels.remove(entry.getPeptide());
+           }
+           else
+           {
+               uniqLabels.add(entry.getPeptide());
+           }
+        }
+
+        if(makeStatsDataset)
+        {
+            DefaultStatisticalCategoryDataset dataset = new DefaultStatisticalCategoryDataset();
+            for(DatasetEntry entry: datasetEntryList)
+            {
+                String categoryLabel = getDatasetLabel(entry, uniqLabels);
+                dataset.add(entry.getValue(), entry.getSdev(), "", categoryLabel);
+            }
+            return dataset;
+        }
+        else
+        {
+            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+            for(DatasetEntry entry: datasetEntryList)
+            {
+                String categoryLabel = getDatasetLabel(entry, uniqLabels);
+                dataset.addValue(entry.getValue(), "", categoryLabel);
+            }
+            return dataset;
+        }
+    }
+
+    private static String getDatasetLabel(DatasetEntry entry, Set<String> uniqLabels)
+    {
+        StringBuilder label = new StringBuilder();
+        if(!entry.getLabel().equalsIgnoreCase("light"))
+        {
+            label.append("("+entry.getLabel()+")");
+        }
+        label.append(entry.getPeptide().substring(0, 3));
+        if(!uniqLabels.contains(entry.getPeptide()))
+        {
+            label.append(LabelFactory.getChargeLabel(entry.getCharge()));
+        }
+        return label.toString();
+    }
+
+    private static List<DatasetEntry> makeDatasetEntries(Map<Integer, List<PrecursorChromInfoPlus>> precursorChromInfoMap,
+                                                         boolean makeStatsDataset)
+    {
+        List<DatasetEntry> datasetEntryList = new ArrayList<DatasetEntry>();
+
+        if(!makeStatsDataset)
+        {
+            for(List<PrecursorChromInfoPlus> chromInfoList: precursorChromInfoMap.values())
+            {
+                for(PrecursorChromInfoPlus chromInfo: chromInfoList)
+                {
+                    if(chromInfo.getTotalArea() == null)
+                        continue;
+                    DatasetEntry entry = new DatasetEntry();
+                    entry.setValue(chromInfo.getTotalArea() / 1000000);
+                    entry.setPeptide(chromInfo.getSequence());
+                    entry.setCharge(chromInfo.getCharge());
+                    entry.setLabel(chromInfo.getLabel());
+                    datasetEntryList.add(entry);
+                }
+            }
+            return datasetEntryList;
+        }
+        else
+        {
+            for(Integer precursorId: precursorChromInfoMap.keySet())
+            {
+                List<PrecursorChromInfoPlus> chromInfoList = precursorChromInfoMap.get(precursorId);
+
+                SummaryStatistics stats = new SummaryStatistics();
+                for(PrecursorChromInfoPlus chromInfo: chromInfoList)
+                {
+                    if(chromInfo.getTotalArea() == null)
+                        continue;
+                    stats.addValue(chromInfo.getTotalArea() / 1000000);
+                }
+                DatasetEntry entry = new DatasetEntry();
+                entry.setValue(stats.getMean());
+                entry.setSdev(stats.getStandardDeviation());
+                entry.setPeptide(chromInfoList.get(0).getSequence());
+                entry.setCharge(chromInfoList.get(0).getCharge());
+                entry.setLabel(chromInfoList.get(0).getLabel());
+                datasetEntryList.add(entry);
+            }
+        }
+
+        return datasetEntryList;
+    }
+
+    private static class CustomBarRenderer extends BarRenderer
+    {
+        private List<DatasetEntry> _entryList;
         private Map<String, Color> _labelColors;
 
-        public CustomRenderer(final List<PrecursorChromInfoPlus> precursorChromInfoPlusList,
-                              final Map<String, Color> labelColors)
+        public CustomBarRenderer(final List<DatasetEntry> entryList,
+                                 final Map<String, Color> labelColors)
         {
-            _precursorChromInfoPlusList = precursorChromInfoPlusList;
+            _entryList = entryList;
             _labelColors = labelColors;
             setDefaultShadowsVisible(false);
             setDrawBarOutline(false);
@@ -185,54 +299,81 @@ public class PrecursorPeakAreaChartMaker
         }
 
         public Paint getItemPaint(final int row, final int column) {
-            return _labelColors.get(_precursorChromInfoPlusList.get(column).getLabel());
+            return _labelColors.get(_entryList.get(column).getLabel());
         }
     }
 
-//    public static JFreeChart makeStatisticalBarChart(PeptideGroup peptideGroup)
-//    {
-//        List<SampleFile> sampleFiles = ReplicateManager.getSampleFilesForRun(peptideGroup.getRunId());
-//
-//        // key in the map is precursorId
-//        Map<Integer, List<PrecursorChromInfoPlus>> precursorChromInfoMap = new HashMap<Integer, List<PrecursorChromInfoPlus>>();
-//
-//        for(SampleFile file: sampleFiles)
-//        {
-//            List<PrecursorChromInfoPlus> samplePrecChromInfos = PrecursorManager.getPrecursorChromInfosForPeptideGroup(
-//                                                                                peptideGroup.getId(),
-//                                                                                file.getId());
-//            for(PrecursorChromInfoPlus spci: samplePrecChromInfos)
-//            {
-//                List<PrecursorChromInfoPlus> pciList = precursorChromInfoMap.get(spci.getPrecursorId());
-//                if(pciList == null)
-//                {
-//                    pciList = new ArrayList<PrecursorChromInfoPlus>();
-//                    precursorChromInfoMap.put(spci.getPrecursorId(), pciList);
-//                }
-//                pciList.add(spci);
-//            }
-//        }
-//
-//        // If we have multiple precursor chrom infos for any of the precursors, generate Statistical bar plot
-//        // otherwise generate simple bar plot
-//        boolean createStatPlot = false;
-//        for(Integer precursorId: precursorChromInfoMap.keySet())
-//        {
-//            if(precursorChromInfoMap.get(precursorId).size() > 1)
-//            {
-//                createStatPlot = true;
-//                break;
-//            }
-//        }
-//
-//        if(createStatPlot)
-//        {
-//
-//        }
-//        else {
-//
-//        }
-//        // TODO
-//        return null;
-//    }
+    private static class CustomStatisticalBarRenderer extends StatisticalBarRenderer
+    {
+        private List<DatasetEntry> _entryList;
+        private Map<String, Color> _labelColors;
+
+        private CustomStatisticalBarRenderer(List<DatasetEntry> entryList, Map<String, Color> labelColors)
+        {
+             _entryList = entryList;
+            _labelColors = labelColors;
+        }
+        public Paint getItemPaint(final int row, final int column) {
+            return _labelColors.get(_entryList.get(column).getLabel());
+        }
+    }
+
+    private static class DatasetEntry
+    {
+        private String _peptide;
+        private int _charge;
+        private String _label;
+        private double _value;
+        private double _sdev;
+
+        public String getPeptide()
+        {
+            return _peptide;
+        }
+
+        public void setPeptide(String peptide)
+        {
+            _peptide = peptide;
+        }
+
+        public int getCharge()
+        {
+            return _charge;
+        }
+
+        public void setCharge(int charge)
+        {
+            _charge = charge;
+        }
+
+        public String getLabel()
+        {
+            return _label;
+        }
+
+        public void setLabel(String label)
+        {
+            _label = label;
+        }
+
+        public double getValue()
+        {
+            return _value;
+        }
+
+        public void setValue(double value)
+        {
+            _value = value;
+        }
+
+        public double getSdev()
+        {
+            return _sdev;
+        }
+
+        public void setSdev(double sdev)
+        {
+            _sdev = sdev;
+        }
+    }
 }

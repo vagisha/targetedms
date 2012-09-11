@@ -62,7 +62,7 @@ public class LabelFactory
         label.append(" - ").append(Formats.f4.format(transition.getMz()));
         if(transition.getCharge() != null)
         {
-            label.append(CHARGE[transition.getCharge()]);
+            label.append(getChargeLabel(transition.getCharge()));
         }
         return label.toString();
     }
@@ -75,7 +75,7 @@ public class LabelFactory
         label.append(precursorSummary.get("sequence"));
 
         label.append(" - ").append(Formats.f4.format(precursorSummary.get("mz")));
-        label.append(CHARGE[(Integer)precursorSummary.get("charge")]);
+        label.append(getChargeLabel((Integer)precursorSummary.get("charge")));
         String isotopeLabel = (String) precursorSummary.get("label");
         if(!"light".equalsIgnoreCase(isotopeLabel))
         {
@@ -117,5 +117,20 @@ public class LabelFactory
         label.append('\n');
         label.append(precursorLabel);
         return label.toString();
+    }
+
+    public static String getChargeLabel(int charge)
+    {
+        StringBuilder buf = new StringBuilder();
+        if(charge <= 0)
+            return "";
+        int diff = charge;
+        while(diff >= CHARGE.length)
+        {
+            buf.append(CHARGE[CHARGE.length - 1]);
+            diff = diff - (CHARGE.length - 1);
+        }
+        buf.append(CHARGE[diff]);
+        return buf.toString();
     }
 }
