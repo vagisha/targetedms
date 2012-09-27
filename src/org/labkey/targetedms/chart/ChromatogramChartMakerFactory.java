@@ -100,9 +100,11 @@ public class ChromatogramChartMakerFactory
         }
 
         List<TransChromInfoPlusTransition> tciList = new ArrayList<TransChromInfoPlusTransition>(chromatogram.getTransitionsCount());
-        for(int seriesIndex = 0; seriesIndex < chromatogram.getTransitionsCount(); seriesIndex++)
+        for(int chromatogramIndex = 0; chromatogramIndex < chromatogram.getTransitionsCount(); chromatogramIndex++)
         {
-            TransitionChromInfo tChromInfo = TransitionManager.getTransitionChromInfo(pChromInfo.getId(), seriesIndex);
+            TransitionChromInfo tChromInfo = TransitionManager.getTransitionChromInfo(pChromInfo.getId(), chromatogramIndex);
+            if(tChromInfo == null)
+                continue;
             Transition transition = TransitionManager.get(tChromInfo.getTransitionId());
             tciList.add(new TransChromInfoPlusTransition(tChromInfo, transition));
 

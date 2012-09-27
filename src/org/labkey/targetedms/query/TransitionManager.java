@@ -61,7 +61,8 @@ public class TransitionManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(TransitionChromInfo.class);
     }
 
-    public static TransitionChromInfo getTransitionChromInfo(int precursorChromInfoId, int seriesIndex)
+    // Returns null if an entry for the given precursorChromInfoId and chromatogramIndex is not found.
+    public static TransitionChromInfo getTransitionChromInfo(int precursorChromInfoId, int chromatogramIndex)
     {
         String sql = "SELECT tci.* FROM "+
                      TargetedMSManager.getTableInfoTransitionChromInfo()+" AS tci, "+
@@ -71,14 +72,9 @@ public class TransitionManager
                      "AND tci.ChromatogramIndex=?";
         SQLFragment sf = new SQLFragment(sql);
         sf.add(precursorChromInfoId);
-        sf.add(seriesIndex);
+        sf.add(chromatogramIndex);
 
-        TransitionChromInfo tChromInfo = new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(TransitionChromInfo.class);
-        if(tChromInfo == null)
-        {
-            throw new NotFoundException("No transitionChromInfo found for precursorChromInfo "+precursorChromInfoId+" and chromatogramIndex "+seriesIndex);
-        }
-        return tChromInfo;
+        return new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(TransitionChromInfo.class);
     }
 
     public static double getMaxTransitionIntensity(int peptideId)
