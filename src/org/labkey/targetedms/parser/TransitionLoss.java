@@ -22,10 +22,12 @@ package org.labkey.targetedms.parser;
 public class TransitionLoss extends SkylineEntity
 {
     // The fields needed to match it up correctly
-    private String _modificationName;
-    private String _formula;
-    private Double _massDiffMono;
-    private Double _massDiffAvg;
+    private String _modificationName; // Not null only for neutral losses associated with a structural modification.
+    private Integer _lossIndex;  // Not null only when we have a _modificationName.
+                                 // This is the index into the list of potential losses defined for a structural modification.
+    private String _formula;  // Not null only for custom  neutral losses
+    private Double _massDiffMono; // Not null only for custom neutral losses that have a formula
+    private Double _massDiffAvg; // Not null only for custom neutral losses that have a formula
 
     // The database fields
     private int _transitionId;
@@ -76,22 +78,34 @@ public class TransitionLoss extends SkylineEntity
         _massDiffAvg = massDiffAvg;
     }
 
-    public boolean matches(PeptideSettings.PotentialLoss loss)
+    public Integer getLossIndex()
     {
-        if (_formula != null ? !_formula.equals(loss.getFormula()) : loss.getFormula() != null) return false;
-        if (_massDiffAvg != null ? !_massDiffAvg.equals(loss.getMassDiffAvg()) : loss.getMassDiffAvg() != null)
-            return false;
-        if (_massDiffMono != null ? !_massDiffMono.equals(loss.getMassDiffMono()) : loss.getMassDiffMono() != null)
-            return false;
-
-        return true;
+        return _lossIndex;
     }
+
+    public void setLossIndex(Integer lossIndex)
+    {
+        _lossIndex = lossIndex;
+    }
+
+//    public boolean matches(PeptideSettings.PotentialLoss loss)
+//    {
+//        if (_formula != null ? !_formula.equals(loss.getFormula()) : loss.getFormula() != null) return false;
+//        if (_massDiffAvg != null ? !_massDiffAvg.equals(loss.getMassDiffAvg()) : loss.getMassDiffAvg() != null)
+//            return false;
+//        if (_massDiffMono != null ? !_massDiffMono.equals(loss.getMassDiffMono()) : loss.getMassDiffMono() != null)
+//            return false;
+//
+//        return true;
+//    }
 
     @Override
     public String toString()
     {
         return "TransitionLoss{" +
-                "_formula='" + _formula + '\'' +
+                "_modificationName='" + _modificationName + '\'' +
+                ", _lossIndex=" + _lossIndex +
+                ", _formula='" + _formula + '\'' +
                 ", _massDiffMono=" + _massDiffMono +
                 ", _massDiffAvg=" + _massDiffAvg +
                 '}';

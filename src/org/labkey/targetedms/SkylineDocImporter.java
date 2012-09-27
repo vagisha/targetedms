@@ -24,6 +24,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
@@ -45,7 +46,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -295,7 +295,7 @@ public class SkylineDocImporter
             Map<String, Integer> isotopeLabelIdMap = new HashMap<String, Integer>();
             Set<Integer> internalStandardLabelIds = new HashSet<Integer>();
             Map<String, Integer> structuralModNameIdMap = new HashMap<String, Integer>();
-            Map<Integer, Collection<PeptideSettings.PotentialLoss>> structuralModLossesMap = new HashMap<Integer, Collection<PeptideSettings.PotentialLoss>>();
+            Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap = new HashMap<Integer, PeptideSettings.PotentialLoss[]>();
             Map<String, Integer> isotopeModNameIdMap = new HashMap<String, Integer>();
             PeptideSettings pepSettings = parser.getPeptideSettings();
             PeptideSettings.PeptideModifications modifications = pepSettings.getModifications();
@@ -521,7 +521,7 @@ public class SkylineDocImporter
         }
     }
 
-    private void insertPeptideGroup(ProteinService proteinService, boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, Collection<PeptideSettings.PotentialLoss>> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup)
+    private void insertPeptideGroup(ProteinService proteinService, boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup)
             throws SQLException
     {
         pepGroup.setRunId(_runId);
@@ -546,7 +546,7 @@ public class SkylineDocImporter
         }
     }
 
-    private void insertPeptide(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, Collection<PeptideSettings.PotentialLoss>> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, Peptide peptide)
+    private void insertPeptide(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, Peptide peptide)
             throws SQLException
     {
         peptide.setPeptideGroupId(pepGroup.getId());
@@ -683,7 +683,7 @@ public class SkylineDocImporter
 
                         if(areasForStdLabels == null)
                         {
-                            _log.info("No internal standard precursor area found for precursor key "+key+" and peptide "+peptide.getSequence());
+                            _log.debug("No internal standard precursor area found for precursor key "+key+" and peptide "+peptide.getSequence());
                             continue;
                         }
 
@@ -713,7 +713,7 @@ public class SkylineDocImporter
 
                             if(areasForStdLabels == null)
                             {
-                                _log.info("No internal standard transition area found for transition key "+key+ " precursor "+precursor.getModifiedSequence());
+                                _log.debug("No internal standard transition area found for transition key "+key+ " precursor "+precursor.getModifiedSequence());
                                 continue;
                             }
 
@@ -735,7 +735,7 @@ public class SkylineDocImporter
         } // End if(internalStandardLabelIds.size() > 0)
     }
 
-    private void insertPrecursor(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, Collection<PeptideSettings.PotentialLoss>> structuralModLossesMap, Map<String, Integer> libraryNameIdMap, Peptide peptide, Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap, Map<String, Map<Integer, InternalStdArea>> intStandardPeptideAreas, Map<String, Map<Integer, InternalStdArea>> lightPeptideAreas, Map<String, Map<Integer, InternalStdArea>> intStandardPrecursorAreas, Map<String, Map<Integer, InternalStdArea>> intStandardTransitionAreas, Precursor precursor)
+    private void insertPrecursor(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> libraryNameIdMap, Peptide peptide, Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap, Map<String, Map<Integer, InternalStdArea>> intStandardPeptideAreas, Map<String, Map<Integer, InternalStdArea>> lightPeptideAreas, Map<String, Map<Integer, InternalStdArea>> intStandardPrecursorAreas, Map<String, Map<Integer, InternalStdArea>> intStandardTransitionAreas, Precursor precursor)
             throws SQLException
     {
         precursor.setPeptideId(peptide.getId());
@@ -755,7 +755,13 @@ public class SkylineDocImporter
         if(libInfo != null)
         {
             libInfo.setPrecursorId(precursor.getId());
-            libInfo.setSpectrumLibraryId(libraryNameIdMap.get(libInfo.getLibraryName()));
+            Integer specLibId = libraryNameIdMap.get(libInfo.getLibraryName());
+            if(specLibId == null)
+            {
+                throw new IllegalStateException(libraryNameIdMap.get(libInfo.getLibraryName()) + " library not found in settings.");
+            }
+            libInfo.setSpectrumLibraryId(specLibId);
+
             Table.insert(_user, TargetedMSManager.getTableInfoPrecursorLibInfo(), libInfo);
         }
 
@@ -832,7 +838,7 @@ public class SkylineDocImporter
         }
     }
 
-    private void insertTransition(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, Collection<PeptideSettings.PotentialLoss>> structuralModLossesMap, Map<String, Map<Integer, InternalStdArea>> intStandardTransitionAreas, Precursor precursor, Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap, Transition transition)
+    private void insertTransition(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Map<Integer, InternalStdArea>> intStandardTransitionAreas, Precursor precursor, Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap, Transition transition)
             throws SQLException
     {
         transition.setPrecursorId(precursor.getId());
@@ -910,35 +916,50 @@ public class SkylineDocImporter
         // transition neutral losses
         for (TransitionLoss loss : transition.getNeutralLosses())
         {
-            Integer modificationId = structuralModNameIdMap.get(loss.getModificationName());
-            if (modificationId == null)
+            if(loss.getModificationName() != null)
             {
-                throw new IllegalStateException("No such structural modification found: " + loss.getModificationName());
-            }
-
-            Collection<PeptideSettings.PotentialLoss> potentialLosses = structuralModLossesMap.get(modificationId);
-            if (potentialLosses == null)
-            {
-                potentialLosses = new TableSelector(TargetedMSManager.getTableInfoStructuralModLoss(), new SimpleFilter("structuralmodid", modificationId), null).getCollection(PeptideSettings.PotentialLoss.class);
-                structuralModLossesMap.put(modificationId, potentialLosses);
-            }
-            boolean foundMatch = false;
-            for (PeptideSettings.PotentialLoss potentialLoss : potentialLosses)
-            {
-                if (loss.matches(potentialLoss))
+                Integer modificationId = structuralModNameIdMap.get(loss.getModificationName());
+                if (modificationId == null)
                 {
-                    loss.setTransitionId(transition.getId());
-                    loss.setStructuralModLossId(potentialLoss.getId());
-                    Table.insert(_user, TargetedMSManager.getTableInfoTransitionLoss(), loss);
-                    foundMatch = true;
-                    break;
+                    throw new IllegalStateException("No such structural modification found: " + loss.getModificationName());
                 }
-            }
-            if (!foundMatch)
-            {
-                throw new IllegalStateException("No matching potential loss found for structural modification '" + loss.getModificationName() + "'. " + loss);
-            }
+                PeptideSettings.PotentialLoss[] potentialLosses = structuralModLossesMap.get(modificationId);
+                if (potentialLosses == null)
+                {
+                    potentialLosses = new TableSelector(TargetedMSManager.getTableInfoStructuralModLoss(),
+                                                        new SimpleFilter(FieldKey.fromString("structuralmodid"), modificationId),
+                                                        new Sort("id")) // Sort by insertion id so that we can find the right match
+                                                                        // if there were multiple potential losses defined for the modification
+                                                        .getArray(PeptideSettings.PotentialLoss.class);
+                    structuralModLossesMap.put(modificationId, potentialLosses);
+                }
 
+                if(loss.getLossIndex() == null)
+                {
+                    throw new IllegalStateException("No loss index found for transition loss."
+                                                    +" Loss: "+loss.toString()
+                                                    +"; Transition: "+transition.getLabel()
+                                                    +"; Precursor: "+precursor.getModifiedSequence());
+                }
+                if(loss.getLossIndex() < 0 || loss.getLossIndex() >= potentialLosses.length)
+                {
+                    throw new IllegalStateException("Loss index out of bounds for transition loss."
+                                                    +" Loss: "+loss.toString()
+                                                    +"; Transition: "+transition.getLabel()
+                                                    +"; Precursor: "+precursor.getModifiedSequence());
+                }
+
+                loss.setStructuralModLossId(potentialLosses[loss.getLossIndex()].getId());
+            }
+            else
+            {
+                // This is a custom neutral loss; it is not associated with a structural modifcation.
+                // Skyline does not yet support this case.
+                throw new IllegalStateException(" Unsupported custom neutral loss found."
+                                                +" Loss: "+loss.toString()
+                                                +"; Transition: "+transition.getLabel()
+                                                +"; Precursor: "+precursor.getModifiedSequence());
+            }
         }
     }
 

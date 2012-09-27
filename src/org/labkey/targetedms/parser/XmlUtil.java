@@ -17,6 +17,7 @@ package org.labkey.targetedms.parser;
 
 import org.apache.commons.beanutils.ConvertUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -31,7 +32,7 @@ public class XmlUtil
 {
     private XmlUtil() {}
 
-    public static boolean isStartElement(XMLStreamReader reader, int eventType)
+    public static boolean isStartElement(int eventType)
     {
         return eventType == XMLStreamReader.START_ELEMENT;
     }
@@ -84,9 +85,14 @@ public class XmlUtil
 
     public static Double readDoubleAttribute(XMLStreamReader reader, String attributeName) throws XMLStreamException
     {
+        return readDoubleAttribute(reader, attributeName, null);
+    }
+
+    public static Double readDoubleAttribute(XMLStreamReader reader, String attributeName, @Nullable Double defaultValue) throws XMLStreamException
+    {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)
-            return null;
+            return defaultValue;
         return Double.parseDouble(value.trim());
     }
 
@@ -98,9 +104,14 @@ public class XmlUtil
 
     public static Integer readIntegerAttribute(XMLStreamReader reader, String attributeName) throws XMLStreamException
     {
+        return readIntegerAttribute(reader, attributeName, null);
+    }
+
+    public static Integer readIntegerAttribute(XMLStreamReader reader, String attributeName, @Nullable Integer defaultValue) throws XMLStreamException
+    {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)
-            return null;
+            return defaultValue;
         return Integer.parseInt(value.trim());
     }
 
@@ -135,13 +146,10 @@ public class XmlUtil
 
     public static Boolean readBooleanAttribute(XMLStreamReader reader, String attributeName) throws XMLStreamException
     {
-        String value = reader.getAttributeValue(null, attributeName);
-        if (value == null)
-            return null;
-        return Boolean.parseBoolean(value);
+        return readBooleanAttribute(reader, attributeName, null);
     }
 
-    public static Boolean readBooleanAttribute(XMLStreamReader reader, String attributeName, boolean defaultValue) throws XMLStreamException
+    public static Boolean readBooleanAttribute(XMLStreamReader reader, String attributeName, @Nullable Boolean defaultValue) throws XMLStreamException
     {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)
@@ -149,12 +157,12 @@ public class XmlUtil
         return Boolean.parseBoolean(value);
     }
 
-    public static String readAttribute(XMLStreamReader reader, String attributeName, String defaultValue) throws XMLStreamException
+    public static String readAttribute(XMLStreamReader reader, String attributeName) throws XMLStreamException
     {
-        return (String) readAttributeWithDefault(reader, attributeName, defaultValue);
+        return readAttribute(reader, attributeName, null);
     }
 
-    private static Object readAttributeWithDefault(XMLStreamReader reader, String attributeName, Object defaultValue) throws XMLStreamException
+    public static String readAttribute(XMLStreamReader reader, String attributeName, @Nullable String defaultValue) throws XMLStreamException
     {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)

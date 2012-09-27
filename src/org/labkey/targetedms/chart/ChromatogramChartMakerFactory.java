@@ -23,12 +23,16 @@ import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.TransitionManager;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -95,16 +99,12 @@ public class ChromatogramChartMakerFactory
             maxRt = (float) PeptideManager.getMaxRetentionTime(precursor.getPeptideId());
         }
 
-
-        // Add transitions in reverse order so that we get the same colors as Skyline
-        for (int seriesIndex = chromatogram.getTransitionsCount() - 1; seriesIndex >= 0; seriesIndex--)
+        List<TransChromInfoPlusTransition> tciList = new ArrayList<TransChromInfoPlusTransition>(chromatogram.getTransitionsCount());
+        for(int seriesIndex = 0; seriesIndex < chromatogram.getTransitionsCount(); seriesIndex++)
         {
             TransitionChromInfo tChromInfo = TransitionManager.getTransitionChromInfo(pChromInfo.getId(), seriesIndex);
-
-            addTransitionAsSeries(dataset, chromatogram, seriesIndex,
-                                  (syncMz ? minRt : pChromInfo.getMinStartTime().floatValue()),
-                                  (syncMz ? maxRt : pChromInfo.getMaxEndTime().floatValue()),
-                                  LabelFactory.transitionLabel(tChromInfo.getTransitionId()));
+            Transition transition = TransitionManager.get(tChromInfo.getTransitionId());
+            tciList.add(new TransChromInfoPlusTransition(tChromInfo, transition));
 
             if(tChromInfo.getRetentionTime() != null && tChromInfo.getRetentionTime().equals(pChromInfo.getBestRetentionTime()))
             {
@@ -121,6 +121,36 @@ public class ChromatogramChartMakerFactory
         if(bestTChromInfo == null)
         {
             throw new IllegalStateException("Did not find best transitionChromInfo for precursorChromInfo "+pChromInfo.getId());
+        }
+
+        Collections.sort(tciList, new Comparator<TransChromInfoPlusTransition>()
+        {
+            @Override
+            public int compare(TransChromInfoPlusTransition o1, TransChromInfoPlusTransition o2)
+            {
+                Transition t1 = o1.getTransition();
+                Transition t2 = o2.getTransition();
+                Integer t1_idx = t1.isPrecursorIon() ? t1.getMassIndex() : t1.getFragmentOrdinal();
+                Integer t2_idx = t2.isPrecursorIon() ? t2.getMassIndex() : t2.getFragmentOrdinal();
+                if(t1_idx == null)
+                {
+                    throw new IllegalArgumentException("Transition (ID "+t1.getId()+") does not have either fragmentOrdinal or massIndex");
+                }
+                if(t2_idx == null)
+                {
+                    throw new IllegalArgumentException("Transition (ID "+t2.getId()+") does not have either fragment index or isotopic peak index");
+                }
+                // Precursor ions are ordered M, M+1, M+2.  Fragment ions are displayed in reverse order -- y9, y8, y7 etc.
+                return t1.isPrecursorIon() ? t1_idx.compareTo(t2_idx) : t2_idx.compareTo(t1_idx);
+            }
+        });
+
+        for(TransChromInfoPlusTransition chromInfoPlusTransition: tciList)
+        {
+            addTransitionAsSeries(dataset, chromatogram, chromInfoPlusTransition.getTransChromInfo().getChromatogramIndex(),
+                                  (syncMz ? minRt : pChromInfo.getMinStartTime().floatValue()),
+                                  (syncMz ? maxRt : pChromInfo.getMaxEndTime().floatValue()),
+                                  LabelFactory.transitionLabel(chromInfoPlusTransition.getTransition()));
         }
 
         ChromatogramChartMaker chartMaker = new ChromatogramChartMaker(ChromatogramChartMaker.TYPE.PRECURSOR);
@@ -146,6 +176,28 @@ public class ChromatogramChartMakerFactory
         }
 
         return chartMaker.make();
+    }
+
+    private static class TransChromInfoPlusTransition
+    {
+        private TransitionChromInfo _transChromInfo;
+        private Transition _transition;
+
+        public TransChromInfoPlusTransition(TransitionChromInfo transChromInfo, Transition transition)
+        {
+            _transChromInfo = transChromInfo;
+            _transition = transition;
+        }
+
+        public TransitionChromInfo getTransChromInfo()
+        {
+            return _transChromInfo;
+        }
+
+        public Transition getTransition()
+        {
+            return _transition;
+        }
     }
 
     private static void addTransitionAsSeries(XYSeriesCollection dataset, Chromatogram chromatogram, int seriesIndex,

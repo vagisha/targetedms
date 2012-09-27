@@ -51,13 +51,28 @@ public class LabelFactory
 
     public static String transitionLabel(int transitionId)
     {
-        Transition transition = TransitionManager.get(transitionId);
+        return transitionLabel(TransitionManager.get(transitionId));
+    }
 
+    public static String transitionLabel(Transition transition)
+    {
         StringBuilder label = new StringBuilder();
-        label.append(transition.getFragmentType());
-        if(transition.getFragmentOrdinal() != null)
+        if(transition.isPrecursorIon())
         {
-            label.append(transition.getFragmentOrdinal());
+            label.append("M");
+            Integer massIndex = transition.getMassIndex();
+            if(massIndex != null && massIndex != 0)
+            {
+                label.append("+").append(transition.getMassIndex());
+            }
+        }
+        else
+        {
+            label.append(transition.getFragmentType());
+            if(transition.getFragmentOrdinal() != null)
+            {
+                label.append(transition.getFragmentOrdinal());
+            }
         }
         label.append(" - ").append(Formats.f4.format(transition.getMz()));
         if(transition.getCharge() != null)

@@ -17,6 +17,8 @@
 package org.labkey.targetedms.parser;
 
 
+import org.labkey.targetedms.chart.LabelFactory;
+
 import java.util.List;
 
 /**
@@ -52,6 +54,8 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
 
     private List<TransitionChromInfo> _chromInfoList;
     private List<TransitionLoss> _neutralLosses;
+
+    private static final String PRECURSOR = "precursor";
 
     public int getPrecursorId()
     {
@@ -221,5 +225,15 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
     public void setNeutralLosses(List<TransitionLoss> neutralLosses)
     {
         _neutralLosses = neutralLosses;
+    }
+
+    public boolean isPrecursorIon()
+    {
+        return fragmentType != null ? fragmentType.equalsIgnoreCase(PRECURSOR) : false;
+    }
+
+    public String getLabel()
+    {
+        return LabelFactory.transitionLabel(this);
     }
 }

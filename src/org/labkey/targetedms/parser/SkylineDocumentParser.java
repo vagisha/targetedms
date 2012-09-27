@@ -801,7 +801,7 @@ public class SkylineDocumentParser
         return result.length() == 0 ? null : result.toString();
     }
 
-    private Peptide.IsotopeModification readIsotopeModification(XMLStreamReader reader) throws XMLStreamException
+    private Peptide.IsotopeModification readIsotopeModification(XMLStreamReader reader, String isotopeLabel) throws XMLStreamException
     {
         Peptide.IsotopeModification mod = new Peptide.IsotopeModification();
         mod.setModificationName(XmlUtil.readRequiredAttribute(reader, "modification_name", VARIABLE_MODIFICATION));
@@ -811,11 +811,7 @@ public class SkylineDocumentParser
             mod.setMassDiff(massDiff.doubleValue());
         }
         mod.setIndexAa(XmlUtil.readRequiredIntegerAttribute(reader, "index_aa", VARIABLE_MODIFICATION));
-        String isotopeLabel = reader.getAttributeValue(null, "isotope_label");
-        if(isotopeLabel == null)
-        {
-            isotopeLabel = PeptideSettings.HEAVY_LABEL;
-        }
+
         mod.setIsotopeLabel(isotopeLabel);
         return mod;
     }
@@ -850,6 +846,12 @@ public class SkylineDocumentParser
 
     private List<Peptide.IsotopeModification> readIsotopeModifications(XMLStreamReader reader, String parentElement, String childElement) throws XMLStreamException
     {
+        String isotopeLabel = reader.getAttributeValue(null, "isotope_label");
+        if(isotopeLabel == null)
+        {
+            isotopeLabel = PeptideSettings.HEAVY_LABEL;
+        }
+
         List<Peptide.IsotopeModification> modifications = new ArrayList<Peptide.IsotopeModification>();
         while(reader.hasNext())
         {
@@ -861,7 +863,7 @@ public class SkylineDocumentParser
 
             else if (XmlUtil.isStartElement(reader, evtType, childElement))
             {
-                modifications.add(readIsotopeModification(reader));
+                modifications.add(readIsotopeModification(reader, isotopeLabel));
             }
         }
         return modifications;
@@ -990,16 +992,20 @@ public class SkylineDocumentParser
                 else
                 {
                     int matchIndex = -1;
-                    // Figure out which index into the list of transitions we're inserting
+                    // Figure out which index into the list of transitions we're inserting.
+                    // If there are multiple matches within the given mz match tolerance return the closest match.
+                    double deltaNearestMz = Double.MAX_VALUE;
                     for (int i = 0; i < c.getTransitions().length; i++)
                     {
                         if (Math.abs(transition.getMz() - c.getTransitions()[i]) < _transitionSettings.getInstrumentSettings().getMzMatchTolerance())
                         {
-                            if (matchIndex != -1)
+                            double deltaMz = Math.abs(transition.getMz() - c.getTransitions()[i]);
+
+                            if(deltaMz < deltaNearestMz)
                             {
-                                throw new IllegalStateException("Multiple transition matches!");
+                                matchIndex = i;
+                                deltaNearestMz = deltaMz;
                             }
-                            matchIndex = i;
                         }
                     }
                     if (matchIndex == -1)
@@ -1119,6 +1125,11 @@ public class SkylineDocumentParser
             transition.setDecoyMassShift(Double.parseDouble(decoyMassShift));
 
 
+        if(transition.isPrecursorIon() && transition.getMassIndex() == null)
+        {
+            transition.setMassIndex(0);
+        }
+
         List<TransitionChromInfo> chromInfoList = new ArrayList<TransitionChromInfo>();
         transition.setChromInfoList(chromInfoList);
 
@@ -1189,8 +1200,9 @@ public class SkylineDocumentParser
             if (XmlUtil.isStartElement(reader, evtType, NEUTRAL_LOSS))
             {
                 TransitionLoss loss = new TransitionLoss();
-                loss.setModificationName(XmlUtil.readRequiredAttribute(reader, "modification_name", NEUTRAL_LOSS));
-                loss.setFormula(reader.getAttributeValue(null, "formula"));
+                loss.setModificationName(XmlUtil.readAttribute(reader, "modification_name"));
+                loss.setLossIndex(XmlUtil.readIntegerAttribute(reader, "loss_index", (loss.getModificationName() != null ? 0 : null)));
+                loss.setFormula(XmlUtil.readAttribute(reader, "formula"));
                 loss.setMassDiffMono(XmlUtil.readDoubleAttribute(reader, "massdiff_monoisotopic"));
                 loss.setMassDiffAvg(XmlUtil.readDoubleAttribute(reader, "massdiff_average"));
                 result.add(loss);
@@ -1315,7 +1327,7 @@ public class SkylineDocumentParser
         int maxTranMatch = 1;
 
         List<Chromatogram> listChrom = new ArrayList<Chromatogram>();
-        for (SkylineBinaryParser cache : _caches)
+        for (SkylineBinaryParser cache : _caches) // TODO: do we ever have more than one SkylineBinaryParser?
         {
             // Filter the list of chromatograms based on our precursor mZ
             int i = findEntry(precursorMz, tolerance, cache.getChromatograms(), 0, cache.getChromatograms().length - 1);

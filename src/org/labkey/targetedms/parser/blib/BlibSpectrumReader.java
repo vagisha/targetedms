@@ -78,11 +78,13 @@ public class BlibSpectrumReader
 
     private static BlibSpectrum readSpectrum(Connection conn, String modifiedPeptide, int charge) throws SQLException
     {
+        String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
+
         Statement stmt = null;
         ResultSet rs = null;
         try {
             stmt = conn.createStatement();
-            rs = stmt.executeQuery("SELECT * from RefSpectra WHERE peptideModSeq='"+modifiedPeptide+"' AND precursorCharge="+charge);
+            rs = stmt.executeQuery("SELECT * from RefSpectra WHERE peptideModSeq='"+blibPeptide+"' AND precursorCharge="+charge);
 
             // libLSID|createTime|numSpecs|majorVersion|minorVersion
             // id|peptideSeq|peptideModSeq|precursorCharge|precursorMZ|prevAA|nextAA|copies|numPeaks
@@ -92,7 +94,7 @@ public class BlibSpectrumReader
                 spectrum = new BlibSpectrum();
                 spectrum.setBlibId(rs.getInt(1));
                 spectrum.setPeptideSeq(rs.getString(2));
-                spectrum.setPeptideModSeq(rs.getString(3));
+                spectrum.setPeptideModSeq(modifiedPeptide);
                 spectrum.setPrecursorCharge(rs.getInt(4));
                 spectrum.setPrecursorMz(rs.getDouble(5));
                 spectrum.setPrevAa(rs.getString(6));
@@ -107,6 +109,15 @@ public class BlibSpectrumReader
             if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
             if(rs != null) try {rs.close();} catch(SQLException ignored){}
         }
+    }
+
+    private static String makePeptideBlibFormat(String modifiedPeptide)
+    {
+        // Modified peptide in Bibliospec always has a decimal point in the modification mass.
+        // Example: SSQPLASK[+42.0]QEK
+        // Skyline represents this as SSQPLASK[+42]QEK
+
+        return modifiedPeptide.replaceAll("\\[([+|-])(\\d+)\\]", "\\[$1$2\\.0\\]");
     }
 
     private static void readSpectrumPeaks(Connection conn, BlibSpectrum spectrum) throws SQLException
@@ -144,13 +155,21 @@ public class BlibSpectrumReader
     {
         int sizeOfMz = Double.SIZE / 8;
 
-        byte[] uncompressed = new byte[peakCount * sizeOfMz];
+        int uncompressedLength = peakCount * sizeOfMz;
+        byte[] uncompressed;
+        if(uncompressedLength == compressed.length)
+        {
+            uncompressed = compressed;
+        }
+        else
+        {
+            uncompressed = new byte[uncompressedLength];
 
-        Inflater inflater = new Inflater();
-        inflater.setInput(compressed, 0, compressed.length);
-
-        inflater.inflate(uncompressed);
-        inflater.end();
+            Inflater inflater = new Inflater();
+            inflater.setInput(compressed, 0, compressed.length);
+            inflater.inflate(uncompressed);
+            inflater.end();
+        }
 
         ByteBuffer bbuf = ByteBuffer.wrap(uncompressed);
         bbuf = bbuf.order(ByteOrder.LITTLE_ENDIAN);
@@ -166,13 +185,22 @@ public class BlibSpectrumReader
     {
         int sizeOfInten = Float.SIZE / 8;
 
-        byte[] uncompressed = new byte[peakCount * sizeOfInten];
+        int uncompressedLength = peakCount * sizeOfInten;
+        byte[] uncompressed;
 
-        Inflater inflater = new Inflater();
-        inflater.setInput(compressed, 0, compressed.length);
+        if(uncompressedLength == compressed.length)
+        {
+            uncompressed = compressed;
+        }
+        else
+        {
+            uncompressed = new byte[uncompressedLength];
 
-        inflater.inflate(uncompressed);
-        inflater.end();
+            Inflater inflater = new Inflater();
+            inflater.setInput(compressed, 0, compressed.length);
+            inflater.inflate(uncompressed);
+            inflater.end();
+        }
 
         ByteBuffer bbuf = ByteBuffer.wrap(uncompressed);
         bbuf = bbuf.order(ByteOrder.LITTLE_ENDIAN);

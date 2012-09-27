@@ -87,7 +87,9 @@ import org.labkey.targetedms.view.DocumentPrecursorsView;
 import org.labkey.targetedms.view.DocumentTransitionsView;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 import org.labkey.targetedms.view.PeptidePrecursorChromatogramsView;
-import org.labkey.targetedms.view.PeptideSpectrumView;
+import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatch;
+import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
+import org.labkey.targetedms.view.spectrum.PeptideSpectrumView;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
@@ -599,10 +601,13 @@ public class TargetedMSController extends SpringActionController
             vbox.addView(chromView);
 
 
-            // library spectrum, if there is one
-            PeptideSpectrumView spectrumView = new PeptideSpectrumView(peptide, errors);
-            if(spectrumView.hasSpectrum())
+            // library spectrum
+            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(peptide);
+            int idx = 0;
+            for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
             {
+                libSpecMatch.setLorikeetId(idx++);
+                PeptideSpectrumView spectrumView = new PeptideSpectrumView(libSpecMatch, errors);
                 spectrumView.enableExpandCollapse("PeptideSpectrumView", false);
                 vbox.addView(spectrumView);
             }
@@ -640,9 +645,16 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", peptideId));
             }
 
-            PeptideSpectrumView view = new PeptideSpectrumView(peptide, errors);
-            view.enableExpandCollapse("PeptideSpectrumView", false);
-            VBox vbox = new VBox(view);
+            VBox vbox = new VBox();
+            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(peptide);
+            int idx = 0;
+            for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
+            {
+                libSpecMatch.setLorikeetId(idx++);
+                PeptideSpectrumView spectrumView = new PeptideSpectrumView(libSpecMatch, errors);
+                spectrumView.enableExpandCollapse("PeptideSpectrumView", false);
+                vbox.addView(spectrumView);
+            }
             return vbox;
         }
 

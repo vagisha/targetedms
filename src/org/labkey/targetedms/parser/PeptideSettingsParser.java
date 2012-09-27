@@ -149,6 +149,8 @@ class PeptideSettingsParser
             internalStandards.add(inernalStandard);
         }
 
+        List<String> isotopeLabelNames  = new ArrayList<String>();
+
         while(reader.hasNext())
         {
             int evtType = reader.next();
@@ -167,30 +169,22 @@ class PeptideSettingsParser
             }
             else if(XmlUtil.isStartElement(reader, evtType, HEAVY_MODIFICATIONS))
             {
-                isotopeMods.addAll(readIsotopeModifications(reader));
+                isotopeMods.addAll(readIsotopeModifications(reader, isotopeLabelNames));
             }
         }
 
-        // Make a list of all the label types and mark the ones that were used as a standard
-        List<String> labelNames = new ArrayList<String>();  // We want to preserve the order of insertion.
-        labelNames.add("light");  // TODO: Do we need this?
-        for(PeptideSettings.RunIsotopeModification mod: isotopeMods)
-        {
-            if(!labelNames.contains(mod.getIsotopeLabel()))
-            {
-                labelNames.add(mod.getIsotopeLabel());
-            }
-        }
+        // Mark the label types that were used as an internal standard
+        isotopeLabelNames.add(0, "light");
 
         // If we did not find either the "internal_standard" attribute or elements, check if we have
         // a "heavy" isotope label.  If we do, set "heavy" as the internal standard
-        if(internalStandards.size() == 0 && labelNames.contains(PeptideSettings.HEAVY_LABEL))
+        if(internalStandards.size() == 0 && isotopeLabelNames.contains(PeptideSettings.HEAVY_LABEL))
         {
             internalStandards.add(PeptideSettings.HEAVY_LABEL);
         }
 
-        List<PeptideSettings.IsotopeLabel> labels = new ArrayList<PeptideSettings.IsotopeLabel>(labelNames.size());
-        for(String name: labelNames)
+        List<PeptideSettings.IsotopeLabel> labels = new ArrayList<PeptideSettings.IsotopeLabel>(isotopeLabelNames.size());
+        for(String name: isotopeLabelNames)
         {
             PeptideSettings.IsotopeLabel isotopeLabel = new PeptideSettings.IsotopeLabel();
             isotopeLabel.setName(name);
@@ -263,7 +257,7 @@ class PeptideSettingsParser
         return mod;
     }
 
-    private List<PeptideSettings.RunIsotopeModification> readIsotopeModifications(XMLStreamReader reader) throws XMLStreamException
+    private List<PeptideSettings.RunIsotopeModification> readIsotopeModifications(XMLStreamReader reader, List<String> isotopeLabelNames) throws XMLStreamException
     {
         String isotopeLabel = reader.getAttributeValue(null, "isotope_label");
         if(isotopeLabel == null)
@@ -283,11 +277,18 @@ class PeptideSettingsParser
 
             if(XmlUtil.isStartElement(reader, evtType, STATIC_MODIFICATION))
             {
+                // These are the modifications associated with one isotope label
+                // Example:
+                // <heavy_modifications isotope_label="all 15N">
+                // <static_modification name="all 15N" label_15N="true" />
+                // </heavy_modifications>
                 PeptideSettings.RunIsotopeModification mod = readIsotopeModification(reader);
                 mod.setIsotopeLabel(isotopeLabel);
                 modList.add(mod);
             }
         }
+
+        isotopeLabelNames.add(isotopeLabel);
         return modList;
     }
 
@@ -330,7 +331,7 @@ class PeptideSettingsParser
                 break;
             }
 
-            if(XmlUtil.isStartElement(reader, evtType))
+            if(XmlUtil.isStartElement(evtType))
             {
                 if(XmlUtil.isElement(reader, BIBLIOSPEC_LIB) ||
                    XmlUtil.isElement(reader, BIBLIOSPEC_LITE_LIB) ||
