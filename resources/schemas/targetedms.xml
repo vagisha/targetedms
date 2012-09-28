@@ -400,6 +400,7 @@
             <ns:column columnName="DecoyMassShift" />
             <ns:column columnName="Decoy"/>
             <ns:column columnName="Note"/>
+            <ns:column columnName="MassIndex"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="TransitionChromInfo">
@@ -682,6 +683,7 @@
         <ns:column columnName="structuralmodid"/>
         <ns:column columnName="runid"/>
         <ns:column columnName="explicitmod"/>
+        <ns:column columnName="variable"/>
       </ns:columns>
     </ns:table>
     <ns:table tableName="spectrumlibrary" tableDbType="TABLE">
