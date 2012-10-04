@@ -111,4 +111,40 @@ public class PeptideManager
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
+
+    public static Double getMinRetentionTime(int peptideId, int sampleFileId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT MIN(preci.MinStartTime) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptideChromInfo(), "pepci");
+        sql.append(" WHERE ");
+        sql.append("pepci.Id=preci.PeptideChromInfoId");
+        sql.append(" AND ");
+        sql.append("pepci.PeptideId=?");
+        sql.append(" AND ");
+        sql.append("preci.SampleFileId = ?");
+        sql.add(peptideId);
+        sql.add(sampleFileId);
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
+    }
+
+    public static Double getMaxRetentionTime(int peptideId, int sampleFileId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT MAX(preci.MaxEndTime) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptideChromInfo(), "pepci");
+        sql.append(" WHERE ");
+        sql.append("pepci.Id=preci.PeptideChromInfoId");
+        sql.append(" AND ");
+        sql.append("pepci.PeptideId=?");
+        sql.append(" AND ");
+        sql.append("preci.SampleFileId = ?");
+        sql.add(peptideId);
+        sql.add(sampleFileId);
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
+    }
 }

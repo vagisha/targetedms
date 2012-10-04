@@ -631,7 +631,7 @@ public class SkylineDocumentParser
         List<PeptideGroupAnnotation> annotations = new ArrayList<PeptideGroupAnnotation>();
         pepGroup.setAnnotations(annotations);
 
-        boolean isProtein =  PROTEIN.equalsIgnoreCase(_reader.getLocalName()) ? true : false;
+        boolean isProtein = PROTEIN.equalsIgnoreCase(_reader.getLocalName());
 
         if(isProtein)
         {
@@ -808,7 +808,7 @@ public class SkylineDocumentParser
         Double massDiff = XmlUtil.readDoubleAttribute(reader, "mass_diff");
         if (massDiff != null)
         {
-            mod.setMassDiff(massDiff.doubleValue());
+            mod.setMassDiff(massDiff);
         }
         mod.setIndexAa(XmlUtil.readRequiredIntegerAttribute(reader, "index_aa", VARIABLE_MODIFICATION));
 
@@ -997,15 +997,13 @@ public class SkylineDocumentParser
                     double deltaNearestMz = Double.MAX_VALUE;
                     for (int i = 0; i < c.getTransitions().length; i++)
                     {
-                        if (Math.abs(transition.getMz() - c.getTransitions()[i]) < _transitionSettings.getInstrumentSettings().getMzMatchTolerance())
-                        {
-                            double deltaMz = Math.abs(transition.getMz() - c.getTransitions()[i]);
+                        double deltaMz = Math.abs(transition.getMz() - c.getTransitions()[i]);
 
-                            if(deltaMz < deltaNearestMz)
-                            {
-                                matchIndex = i;
-                                deltaNearestMz = deltaMz;
-                            }
+                        if (deltaMz < _transitionSettings.getInstrumentSettings().getMzMatchTolerance() &&
+                            deltaMz < deltaNearestMz)
+                        {
+                            matchIndex = i;
+                            deltaNearestMz = deltaMz;
                         }
                     }
                     if (matchIndex == -1)
@@ -1149,7 +1147,7 @@ public class SkylineDocumentParser
                 Double precursorMz = XmlUtil.readDouble(reader, PRECURSOR_MZ);
                 if (precursorMz != null)
                 {
-                    transition.setPrecursorMz(precursorMz.doubleValue());
+                    transition.setPrecursorMz(precursorMz);
                 }
                 // Should we blow up if precursorMz was null?
             }
@@ -1158,7 +1156,7 @@ public class SkylineDocumentParser
                 Double productMz = XmlUtil.readDouble(reader, PRODUCT_MZ);
                 if (productMz != null)
                 {
-                    transition.setMz(productMz.doubleValue());
+                    transition.setMz(productMz);
                 }
                 // Should we blow up if productMz was null?
             }

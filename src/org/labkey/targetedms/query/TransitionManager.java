@@ -17,12 +17,19 @@ package org.labkey.targetedms.query;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
-import org.labkey.api.view.NotFoundException;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
+
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * User: vsharma
@@ -94,5 +101,16 @@ public class TransitionManager
         sql.add(peptideId);
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
+    }
+
+    public static Set<Integer> getTransitionChromatogramIndexes(int precursorChromInfoId)
+    {
+        TableInfo tinfo = TargetedMSManager.getTableInfoTransitionChromInfo();
+        Collection tranChromIndexes = new TableSelector(tinfo,
+                                                        tinfo.getColumns("ChromatogramIndex"),
+                                                        new SimpleFilter(FieldKey.fromParts("PrecursorChromInfoId"), precursorChromInfoId),
+                                                        null
+                                                        ).getCollection(Integer.class);
+        return new HashSet<Integer>(tranChromIndexes);
     }
 }

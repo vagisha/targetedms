@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: vsharma
@@ -88,18 +89,30 @@ public class ChromatogramChartMakerFactory
 
         Precursor precursor = PrecursorManager.get(pChromInfo.getPrecursorId());
 
-        TransitionChromInfo bestTChromInfo = null;
-
-        // get the min and max retention times of the transitions for this peptide, over all replicates
-        float minRt = 0;
-        float maxRt = 0;
+        // get the min and max retention times of the transitions for this precursor, over all replicates
+        float minPrecAllReplRt = 0;
+        float maxPrecAllReplRt = 0;
 
         if(syncMz){
-            minRt = (float) PeptideManager.getMinRetentionTime(precursor.getPeptideId());
-            maxRt = (float) PeptideManager.getMaxRetentionTime(precursor.getPeptideId());
+            minPrecAllReplRt = (float) PeptideManager.getMinRetentionTime(precursor.getPeptideId());
+            maxPrecAllReplRt = (float) PeptideManager.getMaxRetentionTime(precursor.getPeptideId());
+        }
+
+        Double pciMinStartTime = pChromInfo.getMinStartTime();
+        Double pciMaxStartTime = pChromInfo.getMaxEndTime();
+        // If this precursorChromInfo does not have a minStartTime and maxEndTime,
+        // get the minimum minStartTime and maximum maxEndTime for all precursors of this peptide in this replicate.
+        if(pciMinStartTime == null)
+        {
+           pciMinStartTime = PeptideManager.getMinRetentionTime(precursor.getPeptideId(), pChromInfo.getSampleFileId());
+        }
+        if(pciMaxStartTime == null)
+        {
+           pciMaxStartTime = PeptideManager.getMaxRetentionTime(precursor.getPeptideId(), pChromInfo.getSampleFileId());
         }
 
         List<TransChromInfoPlusTransition> tciList = new ArrayList<TransChromInfoPlusTransition>(chromatogram.getTransitionsCount());
+
         for(int chromatogramIndex = 0; chromatogramIndex < chromatogram.getTransitionsCount(); chromatogramIndex++)
         {
             TransitionChromInfo tChromInfo = TransitionManager.getTransitionChromInfo(pChromInfo.getId(), chromatogramIndex);
@@ -107,22 +120,6 @@ public class ChromatogramChartMakerFactory
                 continue;
             Transition transition = TransitionManager.get(tChromInfo.getTransitionId());
             tciList.add(new TransChromInfoPlusTransition(tChromInfo, transition));
-
-            if(tChromInfo.getRetentionTime() != null && tChromInfo.getRetentionTime().equals(pChromInfo.getBestRetentionTime()))
-            {
-                if(bestTChromInfo == null)
-                {
-                    bestTChromInfo = tChromInfo;
-                }
-                else if(tChromInfo.getHeight() > bestTChromInfo.getHeight())
-                {
-                    bestTChromInfo = tChromInfo;
-                }
-            }
-        }
-        if(bestTChromInfo == null)
-        {
-            throw new IllegalStateException("Did not find best transitionChromInfo for precursorChromInfo "+pChromInfo.getId());
         }
 
         Collections.sort(tciList, new Comparator<TransChromInfoPlusTransition>()
@@ -147,23 +144,36 @@ public class ChromatogramChartMakerFactory
             }
         });
 
+        Double bestTransitionHeight = 0.0;
+        int bestTransitionSeriesIndex = 0;
+        int seriesIndex = 0;
         for(TransChromInfoPlusTransition chromInfoPlusTransition: tciList)
         {
             addTransitionAsSeries(dataset, chromatogram, chromInfoPlusTransition.getTransChromInfo().getChromatogramIndex(),
-                                  (syncMz ? minRt : pChromInfo.getMinStartTime().floatValue()),
-                                  (syncMz ? maxRt : pChromInfo.getMaxEndTime().floatValue()),
+                                  (syncMz ? minPrecAllReplRt : pciMinStartTime.floatValue()),
+                                  (syncMz ? maxPrecAllReplRt : pciMaxStartTime.floatValue()),
                                   LabelFactory.transitionLabel(chromInfoPlusTransition.getTransition()));
+
+            TransitionChromInfo tChromInfo = chromInfoPlusTransition.getTransChromInfo();
+            if(tChromInfo.getHeight() != null && tChromInfo.getHeight() > bestTransitionHeight)
+            {
+                bestTransitionHeight = tChromInfo.getHeight();
+                bestTransitionSeriesIndex = seriesIndex;
+            }
+            seriesIndex++;
         }
 
         ChromatogramChartMaker chartMaker = new ChromatogramChartMaker(ChromatogramChartMaker.TYPE.PRECURSOR);
         chartMaker.setDataset(dataset);
         chartMaker.setTitle(LabelFactory.precursorChromInfoChartLabel(pChromInfo));
-        chartMaker.setPeakStartTime(pChromInfo.getMinStartTime());
-        chartMaker.setPeakEndtime(pChromInfo.getMaxEndTime());
-        chartMaker.addRetentionTimeAnnotation(pChromInfo.getBestRetentionTime(),
-                                              bestTChromInfo.getHeight() / 1000,
-                                              // Use transition indexes in reverse order so that we get the same colors as Skyline.
-                                              (chromatogram.getTransitionsCount() - bestTChromInfo.getChromatogramIndex() - 1));
+        if(pChromInfo.getMinStartTime() != null)
+            chartMaker.setPeakStartTime(pChromInfo.getMinStartTime());
+        if(pChromInfo.getMaxEndTime() != null)
+            chartMaker.setPeakEndtime(pChromInfo.getMaxEndTime());
+        if(pChromInfo.getBestRetentionTime() != null)
+            chartMaker.addRetentionTimeAnnotation(pChromInfo.getBestRetentionTime(),
+                                                  (bestTransitionHeight) / 1000,
+                                                  bestTransitionSeriesIndex);
 
         if(syncIntensity)
         {
@@ -173,8 +183,8 @@ public class ChromatogramChartMakerFactory
         }
         if(syncMz)
         {
-            chartMaker.setMinRt(minRt);
-            chartMaker.setMaxRt(maxRt);
+            chartMaker.setMinRt(minPrecAllReplRt);
+            chartMaker.setMaxRt(maxPrecAllReplRt);
         }
 
         return chartMaker.make();
@@ -240,8 +250,8 @@ public class ChromatogramChartMakerFactory
 
         for(PrecursorChromInfo pChromInfo: precursorChromInfoList)
         {
-            minRt = Math.min(minRt, pChromInfo.getMinStartTime());
-            maxRt = Math.max(maxRt, pChromInfo.getMaxEndTime());
+            minRt = pChromInfo.getMinStartTime() != null ? Math.min(minRt, pChromInfo.getMinStartTime()): minRt;
+            maxRt = pChromInfo.getMaxEndTime() != null ? Math.max(maxRt, pChromInfo.getMaxEndTime()) : maxRt;
         }
 
         Double minPeptideRt = Double.MAX_VALUE;
@@ -265,15 +275,16 @@ public class ChromatogramChartMakerFactory
 
             // instead of displaying separate peaks for each transition of this precursor
             // we will sum up the intensities and display a single peak for the precursor
-            double maxHeight = addPrecursorAsSeries(dataset, chromatogram,
+            double maxHeight = addPrecursorAsSeries(dataset, chromatogram, pChromInfo.getId(),
                                                     syncMz ? minPeptideRt.floatValue() : minRt.floatValue(),
                                                     syncMz ? maxPeptideRt.floatValue() : maxRt.floatValue(),
                                                     LabelFactory.precursorLabel(pChromInfo.getPrecursorId()));
 
-            chartMaker.addRetentionTimeAnnotation(pChromInfo.getBestRetentionTime(),
-                                                  maxHeight,
-                                                  // Use precursor indexes in reverse order so that we get the same colors as Skyline.
-                                                  precursorChromInfoList.size() - i - 1);
+            if(pChromInfo.getBestRetentionTime() != null)
+                chartMaker.addRetentionTimeAnnotation(pChromInfo.getBestRetentionTime(),
+                                                      maxHeight,
+                                                      // Use precursor indexes in reverse order so that we get the same colors as Skyline.
+                                                      precursorChromInfoList.size() - i - 1);
 
         }
 
@@ -299,7 +310,8 @@ public class ChromatogramChartMakerFactory
     }
 
     private static double addPrecursorAsSeries(XYSeriesCollection dataset, Chromatogram chromatogram,
-                                             float minTime, float maxTime, String label)
+                                               int precursorChromId,
+                                               float minTime, float maxTime, String label)
     {
         float[] times = chromatogram.getTimes();
 
@@ -310,10 +322,15 @@ public class ChromatogramChartMakerFactory
         minTime = minTime - displayWidth;
         maxTime = maxTime + displayWidth;
 
+        Set<Integer> transitionChromIndexes = TransitionManager.getTransitionChromatogramIndexes(precursorChromId);
+
         // sum up the intensities of all transitions of this precursor
         double[] totalIntensities = new double[times.length];
         for(int i = 0; i < chromatogram.getTransitionsCount(); i++)
         {
+            if(!transitionChromIndexes.contains(i))
+                continue;
+
             float[] transitionIntensities = chromatogram.getIntensities(i);
             assert times.length == transitionIntensities.length : "Length of times and intensities don't match";
 
