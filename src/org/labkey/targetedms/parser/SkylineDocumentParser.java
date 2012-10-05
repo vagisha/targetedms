@@ -478,6 +478,9 @@ public class SkylineDocumentParser
         List<SampleFile> sampleFileList = new ArrayList<SampleFile>();
         replicate.setSampleFileList(sampleFileList);
 
+        List<ReplicateAnnotation> annotations = new ArrayList<ReplicateAnnotation>();
+        replicate.setAnnotations(annotations);
+
         while(reader.hasNext()) {
 
             int evtType = _reader.next();
@@ -495,6 +498,10 @@ public class SkylineDocumentParser
                 }
                 _sampleFileIdToFilePathMap.put(sampleFile.getSkylineId(), sampleFile.getFilePath());
                 sampleFileList.add(sampleFile);
+            }
+            else if(XmlUtil.isStartElement(reader, evtType, ANNOTATION))
+            {
+                annotations.add(readAnnotation(reader, new ReplicateAnnotation()));
             }
         }
 

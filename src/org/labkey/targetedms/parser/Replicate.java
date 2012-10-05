@@ -21,7 +21,7 @@ import java.util.List;
  * User: jeckels
  * Date: Apr 18, 2012
  */
-public class Replicate extends SkylineEntity
+public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
 {
     private int _runId;
     private String _name;

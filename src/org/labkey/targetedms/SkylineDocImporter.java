@@ -289,6 +289,11 @@ public class SkylineDocImporter
                         instrument = Table.insert(_user, TargetedMSManager.getTableInfoInstrument(), instrument);
                     }
                 }
+                for (ReplicateAnnotation annotation : replicate.getAnnotations())
+                {
+                    annotation.setReplicateId(replicate.getId());
+                    annotation = Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
+                }
             }
 
             // 3. Peptide settings

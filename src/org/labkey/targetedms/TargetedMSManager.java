@@ -118,6 +118,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_SAMPLE_FILE);
     }
 
+    public static TableInfo getTableInfoReplicateAnnotation()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_REPLICATE_ANNOTATION);
+    }
+
     public static TableInfo getTableInfoTransitionChromInfo()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_CHROM_INFO);
@@ -664,6 +669,8 @@ public class TargetedMSManager
 
             // Delete from sampleFile
             deleteReplicateDependent(getTableInfoSampleFile());
+			// Delete from ReplicateAnnotation
+            deleteReplicateDependent(getTableInfoReplicateAnnotation());
 
             // Delete from PredictorSettings and Predictor
             deleteTransitionPredictionSettingsDependent();

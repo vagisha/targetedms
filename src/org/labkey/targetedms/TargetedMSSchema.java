@@ -70,6 +70,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PREDICTOR_SETTINGS = "PredictorSettings";
     public static final String TABLE_TRANSITION_INSTRUMENT_SETTINGS = "TransitionInstrumentSettings";
     public static final String TABLE_REPLICATE = "Replicate";
+    public static final String TABLE_REPLICATE_ANNOTATION = "ReplicateAnnotation";
     public static final String TABLE_RETENTION_TIME_PREDICTION_SETTINGS = "RetentionTimePredictionSettings";
     public static final String TABLE_TRANSITION_FULL_SCAN_SETTINGS = "TransitionFullScanSettings";
     public static final String TABLE_TRANSITION_PREDICITION_SETTINGS = "TransitionPredictionSettings";

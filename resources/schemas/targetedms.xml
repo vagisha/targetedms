@@ -54,6 +54,16 @@
             </ns:column>
         </ns:columns>
     </ns:table>
+    <ns:table tableName="ReplicateAnnotation" tableDbType="TABLE">
+      <ns:columns>
+          <ns:column columnName="Id">
+              <ns:isHidden>true</ns:isHidden>
+          </ns:column>
+        <ns:column columnName="Name"/>
+        <ns:column columnName="Value"/>
+        <ns:column columnName="ReplicateId"/>
+      </ns:columns>
+    </ns:table>
     <ns:table tableDbType="TABLE" tableName="SampleFile">
         <ns:titleColumn>SampleName</ns:titleColumn>
         <ns:description>Contains a row for each sample file loaded in a targeted MS run.</ns:description>
