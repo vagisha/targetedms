@@ -70,6 +70,7 @@ src/org/labkey/targetedms/parser/PrecursorAreaRatio.java -text
 src/org/labkey/targetedms/parser/PrecursorChromInfo.java -text
 src/org/labkey/targetedms/parser/PrecursorChromInfoAnnotation.java -text
 src/org/labkey/targetedms/parser/Replicate.java -text
+src/org/labkey/targetedms/parser/ReplicateAnnotation.java -text
 src/org/labkey/targetedms/parser/SampleFile.java -text
 src/org/labkey/targetedms/parser/SkylineBinaryParser.java -text
 src/org/labkey/targetedms/parser/SkylineDocumentParser.java -text
