@@ -1,6 +1,5 @@
 * text=auto !eol
 /TargetedMS.iml -text
-lib/commons-math3-3.0.jar -text
 lib/sqlitejdbc-v056.jar -text
 /module.properties -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-0.01.sql -text
