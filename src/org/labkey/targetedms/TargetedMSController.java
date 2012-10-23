@@ -71,7 +71,7 @@ import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
-import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.PeptideChromatogramsTableInfo;
@@ -694,10 +694,23 @@ public class TargetedMSController extends SpringActionController
             PeptideGroup peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), peptideGroupId);
             if(peptideGrp == null)
             {
-                throw new NotFoundException(String.format("No peptide group found in this folder for peptideId: %d", peptideGroupId));
+                throw new NotFoundException(String.format("No peptide group found in this folder for peptideGroupId: %d", peptideGroupId));
             }
 
-            JFreeChart chart = PrecursorPeakAreaChartMaker.make(peptideGrp);
+            Peptide peptide = null;
+            if(form.getPeptideId() != 0)
+            {
+                peptide = PeptideManager.get(form.getPeptideId());
+                if(peptide == null)
+                {
+                    throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", form.getPeptideId()));
+                }
+            }
+            JFreeChart chart = PrecursorPeakAreaChartMaker.make(peptideGrp,
+                                                                 form.getReplicateId(),
+                                                                 peptide,
+                                                                 form.getGroupByReplicateAnnotName(),
+                                                                 form.isCvValues());
             response.setContentType("image/png");
             writePNG(form, response, chart);
         }
@@ -732,6 +745,10 @@ public class TargetedMSController extends SpringActionController
     public static class ShowPeakAreaForm extends AbstractChartForm
     {
         private int _id;
+        private int _replicateId = 0; // A value of 0 means all replicates should be included in the plot.
+        private int _peptideId = 0;
+        private String _groupByReplicateAnnotName;
+        private boolean _cvValues;
 
         public int getId()
         {
@@ -741,6 +758,46 @@ public class TargetedMSController extends SpringActionController
         public void setId(int id)
         {
             _id = id;
+        }
+
+        public int getReplicateId()
+        {
+            return _replicateId;
+        }
+
+        public void setReplicateId(int replicateId)
+        {
+            _replicateId = replicateId;
+        }
+
+        public String getGroupByReplicateAnnotName()
+        {
+            return _groupByReplicateAnnotName;
+        }
+
+        public void setGroupByReplicateAnnotName(String groupByReplicateAnnotName)
+        {
+            _groupByReplicateAnnotName = groupByReplicateAnnotName;
+        }
+
+        public int getPeptideId()
+        {
+            return _peptideId;
+        }
+
+        public void setPeptideId(int peptideId)
+        {
+            _peptideId = peptideId;
+        }
+
+        public boolean isCvValues()
+        {
+            return _cvValues;
+        }
+
+        public void setCvValues(boolean cvValues)
+        {
+            _cvValues = cvValues;
         }
     }
 
@@ -1161,12 +1218,16 @@ public class TargetedMSController extends SpringActionController
 
 
             // Peptide peak areas
-            ActionURL peakAreaUrl = new ActionURL(ShowPeptidePeakAreasAction.class, getContainer());
-            peakAreaUrl.addParameter("id", form.getId());
-            List<SampleFile> sampleFiles = ReplicateManager.getSampleFilesForRun(group.getRunId());
+            PeakAreaGraphBean peakAreasBean = new PeakAreaGraphBean();
+            peakAreasBean.setPeptideGroupId(form.getId());
+            peakAreasBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
+            peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
+            peakAreasBean.setPeptideList(new ArrayList<Peptide>(PeptideManager.getPeptidesForGroup(group.getId())));
+
+
             //peakAreaUrl.addParameter("sampleFileId", sampleFiles.get(0).getId());
-            JspView<String> peakAreaView = new JspView<String>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
-                                                               peakAreaUrl.getLocalURIString());
+            JspView<PeakAreaGraphBean> peakAreaView = new JspView<PeakAreaGraphBean>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
+                                                                                      peakAreasBean);
             peakAreaView.setTitle("Peak Areas");
 
             result.addView(peakAreaView);
@@ -1193,6 +1254,54 @@ public class TargetedMSController extends SpringActionController
         public void setId(int id)
         {
             _id = id;
+        }
+    }
+
+    public static class PeakAreaGraphBean
+    {
+        private int _peptideGroupId;
+        private List<Replicate> _replicateList;
+        private List<String> _replicateAnnotationNameList;
+        private List<Peptide> _peptideList;
+
+        public int getPeptideGroupId()
+        {
+            return _peptideGroupId;
+        }
+
+        public void setPeptideGroupId(int peptideGroupId)
+        {
+            _peptideGroupId = peptideGroupId;
+        }
+
+        public List<Replicate> getReplicateList()
+        {
+            return _replicateList;
+        }
+
+        public void setReplicateList(List<Replicate> replicateList)
+        {
+            _replicateList = replicateList;
+        }
+
+        public List<String> getReplicateAnnotationNameList()
+        {
+            return _replicateAnnotationNameList;
+        }
+
+        public void setReplicateAnnotationNameList(List<String> replicateAnnotationNameList)
+        {
+            _replicateAnnotationNameList = replicateAnnotationNameList;
+        }
+
+        public List<Peptide> getPeptideList()
+        {
+            return _peptideList;
+        }
+
+        public void setPeptideList(List<Peptide> peptideList)
+        {
+            _peptideList = peptideList;
         }
     }
 

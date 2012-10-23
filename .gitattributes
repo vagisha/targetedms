@@ -47,6 +47,7 @@ src/org/labkey/targetedms/chart/ChartColors.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMaker.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMakerFactory.java -text
 src/org/labkey/targetedms/chart/LabelFactory.java -text
+src/org/labkey/targetedms/chart/PeakAreasChartInputMaker.java -text
 src/org/labkey/targetedms/chart/PrecursorPeakAreaChartMaker.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoPlus.java -text
 src/org/labkey/targetedms/parser/AbstractAnnotation.java -text

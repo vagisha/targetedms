@@ -28,7 +28,7 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo
     private String _sequence;
     private String _modifiedSequence;
     private int _charge;
-    private String _label;
+    private String _isotopeLabel;
 
     public String getGroupName()
     {
@@ -70,13 +70,13 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo
         _charge = charge;
     }
 
-    public String getLabel()
+    public String getIsotopeLabel()
     {
-        return _label;
+        return _isotopeLabel;
     }
 
-    public void setLabel(String label)
+    public void setIsotopeLabel(String isotopeLabel)
     {
-        _label = label;
+        _isotopeLabel = isotopeLabel;
     }
 }

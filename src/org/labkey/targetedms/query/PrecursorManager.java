@@ -173,17 +173,36 @@ public class PrecursorManager
         throw new IllegalStateException("Cannot get summary for precursor "+precursorId);
     }
 
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptideGroup(int peptideGroupId)
+    {
+        return getPrecursorChromInfosForPeptideGroup(peptideGroupId, 0);
+    }
+
     public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptideGroup(int peptideGroupId, int sampleFileId)
     {
+        return getPrecursorChromInfoList(peptideGroupId, true, sampleFileId);
+    }
+
+     public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId)
+    {
+        return getPrecursorChromInfoList(peptideId, false, 0);
+    }
+
+    private static List<PrecursorChromInfoPlus> getPrecursorChromInfoList(int id, boolean forPeptideGroup, int sampleFileId)
+    {
         SQLFragment sql = new SQLFragment("SELECT ");
-        sql.append("pci.*, pg.Label AS groupName, pep.Sequence, prec.ModifiedSequence, prec.Charge, label.Name AS label ");
+        sql.append("pci.*, pg.Label AS groupName, pep.Sequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel ");
         sql.append("FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo()).append(" pci, ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup()).append(" pg, ");
-        sql.append(TargetedMSManager.getTableInfoPeptide()).append(" pep, ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor()).append(" prec, ");
-        sql.append(TargetedMSManager.getTableInfoIsotopeLabel()).append(" label ");
-        sql.append("WHERE ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoIsotopeLabel(), "label");
+        sql.append(" WHERE ");
         sql.append("pg.Id = pep.PeptideGroupId ");
         sql.append("AND ");
         sql.append("pep.Id = prec.PeptideId ");
@@ -191,13 +210,25 @@ public class PrecursorManager
         sql.append("prec.Id = pci.PrecursorId ");
         sql.append("AND ");
         sql.append("prec.IsotopeLabelId = label.Id ");
-        sql.append("AND ");
-        sql.append("pg.Id=? ");
-        sql.append("AND ");
-        sql.append("pci.SampleFileId=?");
 
-        sql.add(peptideGroupId);
-        sql.add(sampleFileId);
+        if(forPeptideGroup)
+        {
+            sql.append("AND ");
+            sql.append("pg.Id=? ");
+        }
+        else
+        {
+            sql.append("AND ");
+            sql.append("pep.Id=? ");
+        }
+        sql.add(id);
+
+        if(sampleFileId != 0)
+        {
+            sql.append("AND ");
+            sql.append("pci.SampleFileId=?");
+            sql.add(sampleFileId);
+        }
 
         PrecursorChromInfoPlus[] precChromInfos = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(PrecursorChromInfoPlus.class);
 

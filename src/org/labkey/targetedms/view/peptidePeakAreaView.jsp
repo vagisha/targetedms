@@ -15,11 +15,237 @@
 
 <%@ page import="org.labkey.api.view.HttpView"%>
 <%@ page import="org.labkey.api.view.JspView"%>
+<%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="java.util.List" %>
+<%@ page import="org.labkey.targetedms.parser.Replicate" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
+<%@ page import="org.labkey.targetedms.parser.Peptide" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    JspView<String> me = (JspView<String>) HttpView.currentView();
-    String bean = me.getModelBean();
+    JspView<TargetedMSController.PeakAreaGraphBean> me = (JspView<TargetedMSController.PeakAreaGraphBean>) HttpView.currentView();
+    TargetedMSController.PeakAreaGraphBean bean = me.getModelBean();
+    int peptideGroupId = bean.getPeptideGroupId();
+    List<Replicate> replicateList = bean.getReplicateList();
+    List<String> replicateAnnotationNameList = bean.getReplicateAnnotationNameList();
+    List<Peptide> peptideList = bean.getPeptideList();
+    ActionURL peakAreaUrl = new ActionURL(TargetedMSController.ShowPeptidePeakAreasAction.class, getViewContext().getContainer());
+    peakAreaUrl.addParameter("id", peptideGroupId);
 %>
+<script type="text/javascript">
+    Ext.onReady(function() {
 
+        // data stores
+        var replicateStore = Ext4.create('Ext.data.Store', {
+           fields: ['name', 'replicateId'],
+           data:   [
+               {"name":"All", "replicateId":"0"},
+               <%for(int i = 0; i < replicateList.size(); i++) {%>
+               {"name":"<%=replicateList.get(i).getName()%>", "replicateId":"<%=replicateList.get(i).getId()%>" },
+               <%}%>
+           ]
+        });
 
-<img src="<%=bean%>" alt="Peptide Peak Areas"/>
+        var replicateAnnotNameStore = Ext4.create('Ext.data.Store', {
+            fields: ['name'],
+            data:   [
+                {"name":"None"},
+                <%for(int i = 0; i < replicateAnnotationNameList.size(); i++){%>
+                    {"name":"<%=replicateAnnotationNameList.get(i)%>"},
+                <%}%>
+            ]
+        });
+
+        var peptideStore = Ext4.create('Ext.data.Store', {
+            fields: ['sequence', 'peptideId'],
+            data: [
+                {"sequence":"All", "peptideId":"0"},
+                <%for(int i = 0; i < peptideList.size(); i++) {%>
+                {"sequence":"<%=peptideList.get(i).getSequence()%>", "peptideId":"<%=peptideList.get(i).getId()%>"},
+                <%}%>
+            ]
+        });
+
+        // combo boxes
+        var replicateComboBox;
+        if(replicateStore.count() > 0)
+        {
+            replicateComboBox = Ext4.create('Ext.form.ComboBox', {
+                                            fieldLabel: 'Replicate',
+                                            store: replicateStore ,
+                                            queryMode: 'local',
+                                            displayField: 'name',
+                                            valueField: 'replicateId',
+                                            forceSelection: 'true',
+                                            allowBlank: 'false',
+                                            value: replicateStore.getAt(0),
+                                            width: 400,
+                                            listeners:{
+                                                select: function(combo, record, index){
+                                                    var selected = combo.getValue();
+                                                    if(selected != 0)
+                                                    {
+                                                        replicateAnnotNameComboBox.disable();
+                                                        replicateAnnotNameComboBox.setValue(replicateAnnotNameStore.getAt(0));
+                                                        peptideComboBox.disable();
+                                                        peptideComboBox.setValue(peptideStore.getAt(0));
+                                                    }
+                                                    else
+                                                    {
+                                                        replicateAnnotNameComboBox.enable();
+                                                        peptideComboBox.enable();
+                                                    }
+                                                    updateCvCheckbox();
+                                                }
+                                            }
+            });
+        }
+
+        var replicateAnnotNameComboBox;
+        if(replicateAnnotNameStore.count() > 0)
+        {
+            replicateAnnotNameComboBox = Ext4.create('Ext.form.ComboBox',{
+                                                    fieldLabel: 'Group By',
+                                                    store: replicateAnnotNameStore ,
+                                                    queryMode: 'local',
+                                                    displayField: 'name',
+                                                    valueField: 'name',
+                                                    forceSelection: 'true',
+                                                    allowBlank: 'false',
+                                                    value: replicateAnnotNameStore.getAt(0),
+                                                    width: 400,
+                                                    listeners:{
+                                                        select: function(combo, record, index) {
+                                                            updateCvCheckbox();
+                                                        }
+                                                    }
+            });
+        }
+
+        var peptideComboBox;
+        if(peptideStore.count() > 0)
+        {
+            peptideComboBox = Ext4.create('Ext.form.ComboBox', {
+                                          fieldLabel: 'Peptide',
+                                          store: peptideStore,
+                                          queryMods: 'local',
+                                          displayField: 'sequence',
+                                          valueField: 'peptideId',
+                                          forceSelection: 'true',
+                                          allowBlank: 'false',
+                                          value: peptideStore.getAt(0),
+                                          width: 400,
+                                          listeners:{
+                                                select: function(combo, record, index){
+                                                    var selected = combo.getValue();
+                                                    if(selected != 0)
+                                                    {
+                                                        replicateComboBox.setValue(replicateStore.getAt(0));
+                                                        replicateComboBox.disable();
+                                                    }
+                                                    else
+                                                    {
+                                                        replicateComboBox.enable();
+                                                    }
+                                                    updateCvCheckbox();
+                                                }
+                                          }
+            });
+        }
+
+        // check boxes
+        var cvValuesCheckbox = Ext4.create('Ext.form.Checkbox', {
+                                            id: 'cvCheckbox',
+                                            fieldLabel: 'CV Values'
+        });
+
+        // peak areas graph
+        var peakAreasImg = Ext4.create('Ext.Img', {
+                                src: '<%=peakAreaUrl%>',
+                                renderTo: Ext.get('peakAreasGraphImg')
+                            });
+
+        // buttons
+        var updateBtn = new Ext.Button({text:'Update',
+            handler: function(){
+
+                var url =  LABKEY.ActionURL.buildURL(
+                                'targetedms',  // controller
+                                'showPeptidePeakAreas', // action
+                                 LABKEY.ActionURL.getContainer(),
+                                 {
+                                    id: <%=peptideGroupId%>,
+                                    replicateId: replicateComboBox.getValue(),
+                                    groupByReplicateAnnotName: replicateAnnotNameComboBox.getValue(),
+                                    peptideId: peptideComboBox.getValue(),
+                                    cvValues: cvValuesCheckbox.getValue()
+                                 }
+                            );
+                    //alert(url);
+                    // change the src of the image
+                    peakAreasImg.setSrc(url);
+                }
+        });
+
+        var items = [];
+        if(replicateStore.count() > 0) items.push(replicateComboBox);
+        if(replicateAnnotNameStore.count() > 0) items.push(replicateAnnotNameComboBox);
+        if(peptideStore.count() > 0) items.push(peptideComboBox);
+        items.push(cvValuesCheckbox);
+        if(items.length > 0)
+        {
+            Ext4.create('Ext.form.Panel', {
+                renderTo: Ext.get('peakAreasFormDiv'),
+                // resizable: true,
+                border: false,
+                buttonAlign: 'center',
+                items: items,
+                buttons: [updateBtn]
+            });
+        }
+
+        function updateCvCheckbox()
+        {
+            var allReplicates = replicateComboBox.getValue() == replicateStore.getAt(0).get('replicateId'); // replicate = 'All'
+            var noAnnotations = replicateAnnotNameComboBox.getValue() == replicateAnnotNameStore.getAt(0).get('name'); // annotation = 'None'
+
+            var replicateEnabled = replicateComboBox.disabled == false;
+            var annotEnabled = replicateAnnotNameComboBox.disabled == false;
+            if((replicateEnabled && allReplicates) ||
+               (annotEnabled && !noAnnotations)
+               )
+            {
+                cvValuesCheckbox.enable();
+            }
+            else
+            {
+                cvValuesCheckbox.setValue(false);
+                cvValuesCheckbox.disable();
+            }
+        }
+    });
+
+</script>
+
+<table>
+    <tbody>
+        <tr>
+            <td>
+                <div id="peakAreasGraphImg"></div>
+            </td>
+            <%if(replicateList.size() > 0){%>
+            <td valign="top">
+                <table>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div id="peakAreasFormDiv"></div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </td>
+            <%}%>
+        </tr>
+    </tbody>
+</table>
+

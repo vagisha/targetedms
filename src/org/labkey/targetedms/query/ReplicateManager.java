@@ -16,11 +16,15 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.Replicate;
+import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.SampleFile;
 
 import java.util.ArrayList;
@@ -84,5 +88,44 @@ public class ReplicateManager
         sf.add(runId);
 
         return new ArrayList<SampleFile>(new SqlSelector(TargetedMSManager.getSchema(), sf).getCollection(SampleFile.class));
+    }
+
+    public static List<Replicate> getReplicatesForRun(int runId)
+    {
+        return new ArrayList<Replicate>(
+                                 new TableSelector(TargetedMSManager.getTableInfoReplicate(),
+                                                   new SimpleFilter(FieldKey.fromParts("RunId"), runId),
+                                                   null)
+                                 .getCollection(Replicate.class));
+    }
+
+    public static List<String> getReplicateAnnotationNamesForRun(int runId)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("SELECT DISTINCT replAnnot.Name FROM ");
+        sql.append(TargetedMSManager.getTableInfoReplicate(), "repl");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoReplicateAnnotation(), "replAnnot");
+        sql.append(" WHERE ");
+        sql.append(" repl.RunID = ? ");
+        sql.append(" AND repl.Id = replAnnot.ReplicateId ");
+        sql.add(runId);
+
+        return new ArrayList<String>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(String.class));
+    }
+
+    public static List<ReplicateAnnotation> getReplicateAnnotationsForRun(int runId)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("SELECT replAnnot.* FROM ");
+        sql.append(TargetedMSManager.getTableInfoReplicate(), "repl");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoReplicateAnnotation(), "replAnnot");
+        sql.append(" WHERE ");
+        sql.append(" repl.RunID = ? ");
+        sql.append(" AND repl.Id = replAnnot.ReplicateId ");
+        sql.add(runId);
+
+        return new ArrayList<ReplicateAnnotation>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(ReplicateAnnotation.class));
     }
 }
