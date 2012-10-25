@@ -531,9 +531,16 @@ public class SkylineDocImporter
     {
         pepGroup.setRunId(_runId);
 
+        // targetedms.peptidegroup table limits the label to 255 characters
+        String pepGrpLabel = pepGroup.getLabel();
+        pepGrpLabel = pepGrpLabel.length() > 255 ? pepGrpLabel.substring(0, 255) : pepGrpLabel;
+        pepGroup.setLabel(pepGrpLabel);
+
         if(pepGroup.isProtein())
         {
-            int seqId = proteinService.ensureProtein(pepGroup.getSequence(), null, pepGroup.getLabel(), pepGroup.getDescription());
+            // prot.sequences table limits the name to 50 characters
+            String protName = pepGrpLabel.length() > 50 ? pepGrpLabel.substring(0, 50) : pepGrpLabel;
+            int seqId = proteinService.ensureProtein(pepGroup.getSequence(), null, protName, pepGroup.getDescription());
             pepGroup.setSequenceId(seqId);
         }
         pepGroup = Table.insert(_user, TargetedMSManager.getTableInfoPeptideGroup(), pepGroup);

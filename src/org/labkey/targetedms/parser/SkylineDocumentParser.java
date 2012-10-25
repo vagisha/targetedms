@@ -99,9 +99,8 @@ public class SkylineDocumentParser
 
     private TransitionSettings _transitionSettings;
     private PeptideSettings _peptideSettings;
+    private DataSettings _dataSettings;
     private List<Replicate> _replicateList;
-    private enum AnnotationTypes { text, true_false, value_list }
-    private Map<String, AnnotationTypes> _annotationTypes = new HashMap<String, AnnotationTypes>();
     private Map<String, String> _sampleFileIdToFilePathMap;
 
     private double _matchTolerance = DEFAULT_TOLERANCE;
@@ -202,6 +201,7 @@ public class SkylineDocumentParser
 
     private void readDocumentSettings(XMLStreamReader reader) throws XMLStreamException
     {
+        _dataSettings = new DataSettings();
          while(reader.hasNext())
          {
              int evtType = reader.next();
@@ -221,16 +221,58 @@ public class SkylineDocumentParser
                  {
                      readTransitionSettings(reader);
                  }
-                 else if(MEASURED_RESULTS.equalsIgnoreCase(reader.getLocalName()))
-                 {
-                     readMeasuredResults(reader);
-                 }
                  else if(DATA_SETTINGS.equalsIgnoreCase(reader.getLocalName()))
                  {
                      readDataSettings(reader);
                  }
+                 else if(MEASURED_RESULTS.equalsIgnoreCase(reader.getLocalName()))
+                 {
+                     readMeasuredResults(reader);
+                 }
              }
          }
+
+         // Update the boolean type annotations for replicates. We do this after reading both the <data_settings> and
+         // <measured_results> elements since older files have <data_settings> after <measured_results>
+         updateReplicateAnnotations();
+    }
+
+    private void updateReplicateAnnotations()
+    {
+        if(_replicateList == null || _replicateList.size() == 0)
+            return;
+        for(Replicate replicate: _replicateList) {
+
+            List<ReplicateAnnotation> annotations = replicate.getAnnotations();
+
+            for(ReplicateAnnotation annot: annotations)
+            {
+                if(_dataSettings.isBooleanAnnotation(annot.getName()))
+                {
+                    // If we are reading an older file, <measured_results> were read before <data_settings>
+                    // so we did not have annotation definitions while reading the replicate annotations.
+                    // The value of boolean annotations is the same as the name of the annotation in .sky files.
+                    // We need to change it to "true".
+                    annot.setValue(Boolean.TRUE.toString());
+                }
+            }
+
+            // Boolean type annotations are not listed in the .sky file if their value was false.
+            // We would still like to store them in the database.
+            List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations, DataSettings.AnnotationTarget.replicate);
+            List<ReplicateAnnotation> missingReplAnnotations = new ArrayList<ReplicateAnnotation>(missingBooleanAnnotations.size());
+            for(String missingAnotName: missingBooleanAnnotations)
+            {
+                addMissingBooleanAnnotation(missingReplAnnotations, missingAnotName, new ReplicateAnnotation());
+            }
+
+            if(missingReplAnnotations.size() > 0)
+            {
+                List<ReplicateAnnotation> combinedAnnotations = new ArrayList<ReplicateAnnotation>(annotations);
+                combinedAnnotations.addAll(missingReplAnnotations);
+                replicate.setAnnotations(combinedAnnotations);
+            }
+        }
     }
 
     private void readDataSettings(XMLStreamReader reader) throws XMLStreamException
@@ -246,8 +288,9 @@ public class SkylineDocumentParser
              if(XmlUtil.isStartElement(reader, evtType, ANNOTATION))
              {
                  String name = reader.getAttributeValue(null, "name");
+                 String targets = reader.getAttributeValue(null, "targets");
                  String type = reader.getAttributeValue(null, "type");
-                 _annotationTypes.put(name, AnnotationTypes.valueOf(type));
+                 _dataSettings.addAnnotation(name, targets, type);
              }
          }
     }
@@ -680,6 +723,15 @@ public class SkylineDocumentParser
             }
         }
 
+        // Boolean type annotations are not listed in the .sky file if their value was false.
+        // We would still like to store them in the database.
+        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
+                                                                                            DataSettings.AnnotationTarget.protein);
+        for(String missingAnotName: missingBooleanAnnotations)
+        {
+            addMissingBooleanAnnotation(annotations, missingAnotName, new PeptideGroupAnnotation());
+        }
+
         _peptideGroupCount++;
         return pepGroup;
     }
@@ -785,6 +837,16 @@ public class SkylineDocumentParser
                 isotopeMods.addAll(readIsotopeModifications(reader, IMPLICIT_HEAVY_MODIFICATIONS, IMPLICIT_MODIFICATION));
             }
         }
+
+        // Boolean type annotations are not listed in the .sky file if their value was false.
+        // We would still like to store them in the database.
+        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
+                                                                                            DataSettings.AnnotationTarget.peptide);
+        for(String missingAnotName: missingBooleanAnnotations)
+        {
+            addMissingBooleanAnnotation(annotations, missingAnotName, new PeptideAnnotation());
+        }
+
         _peptideCount++;
         return peptide;
     }
@@ -959,6 +1021,15 @@ public class SkylineDocumentParser
             }
         }
 
+        // Boolean type annotations are not listed in the .sky file if their value was false.
+        // We would still like to store them in the database.
+        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
+                                                                                            DataSettings.AnnotationTarget.precursor);
+        for(String missingAnotName: missingBooleanAnnotations)
+        {
+            addMissingBooleanAnnotation(annotations, missingAnotName, new PrecursorAnnotation());
+        }
+
         List<Chromatogram> chromatograms = tryLoadChromatogram(transitionList, precursor.getMz(), _matchTolerance);
         Map<String, Chromatogram> filePathChromatogramMap = new HashMap<String, Chromatogram>();
         for(Chromatogram chromatogram: chromatograms)
@@ -1077,6 +1148,15 @@ public class SkylineDocumentParser
             }
         }
 
+        // Boolean type annotations are not listed in the .sky file if their value was false.
+        // We would still like to store them in the database.
+        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
+                                                                                            DataSettings.AnnotationTarget.precursor_result);
+        for(String missingAnotName: missingBooleanAnnotations)
+        {
+            addMissingBooleanAnnotation(annotations, missingAnotName, new PrecursorChromInfoAnnotation());
+        }
+
         return chromInfo;
     }
 
@@ -1187,6 +1267,15 @@ public class SkylineDocumentParser
             // TODO: transition_lib_info
         }
 
+        // Boolean type annotations are not listed in the .sky file if their value was false.
+        // We would still like to store them in the database.
+        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
+                                                                                            DataSettings.AnnotationTarget.transition);
+        for(String missingAnotName: missingBooleanAnnotations)
+        {
+            addMissingBooleanAnnotation(annotations, missingAnotName, new TransitionAnnotation());
+        }
+
         _transitionCount++;
         return transition;
     }
@@ -1216,7 +1305,7 @@ public class SkylineDocumentParser
         return result;
     }
 
-    private <AnnotationType extends AbstractAnnotation> AnnotationType readAnnotation(XMLStreamReader reader, AnnotationType annotation) throws XMLStreamException
+    private <AnnotationTargetType extends AbstractAnnotation> AnnotationTargetType readAnnotation(XMLStreamReader reader, AnnotationTargetType annotation) throws XMLStreamException
     {
         annotation.setName(reader.getAttributeValue(null, "name"));
         StringBuilder value = new StringBuilder();
@@ -1232,7 +1321,7 @@ public class SkylineDocumentParser
                 value.append(reader.getText());
             }
         }
-        if (_annotationTypes.get(annotation.getName()) == AnnotationTypes.true_false)
+        if (_dataSettings.isBooleanAnnotation(annotation.getName()))
         {
             // Boolean types are omitted if they're false, so consider it to be "true"
             annotation.setValue(Boolean.TRUE.toString());
@@ -1242,6 +1331,15 @@ public class SkylineDocumentParser
             annotation.setValue(value.toString());
         }
         return annotation;
+    }
+
+    private <AnnotationTargetType extends AbstractAnnotation> void addMissingBooleanAnnotation(List<AnnotationTargetType> annotations,
+                                                                                 String missingAnotName,
+                                                                                 AnnotationTargetType annotation)
+    {
+        annotation.setName(missingAnotName);
+        annotation.setValue(Boolean.FALSE.toString());
+        annotations.add(annotation);
     }
 
     private TransitionChromInfo readTransitionChromInfo(XMLStreamReader reader) throws XMLStreamException
@@ -1284,6 +1382,15 @@ public class SkylineDocumentParser
             {
                 chromInfo.setNote(readNote(reader));
             }
+        }
+
+        // Boolean type annotations are not listed in the .sky file if their value was false.
+        // We would still like to store them in the database.
+        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
+                                                                                            DataSettings.AnnotationTarget.transition_result);
+        for(String missingAnotName: missingBooleanAnnotations)
+        {
+            addMissingBooleanAnnotation(annotations, missingAnotName, new TransitionChromInfoAnnotation());
         }
 
         return chromInfo;
@@ -1428,35 +1535,5 @@ public class SkylineDocumentParser
     public int getTransitionCount()
     {
         return _transitionCount;
-    }
-
-    public static void main(String[] args) throws Exception
-    {
-        String workingDir = System.getProperty("user.dir");
-        System.out.println(workingDir);
-
-        String path = workingDir + File.separator +
-                      "resources" + File.separator +
-                      "skyline_files" + File.separator +
-                      "WormUnrefined.sky";
-                      // "Study7_for_xml_validation_current.sky";
-
-        System.out.println("Reading file: "+path);
-        SkylineDocumentParser parser = new SkylineDocumentParser(new File(path), Logger.getLogger(SkylineDocumentParser.class));
-
-        List<Replicate> replicateList = parser.getReplicates();
-        for(Replicate replicate: replicateList)
-        {
-            System.out.println(replicate.getName());
-
-        }
-        while(parser.hasNextPeptideGroup()) {
-            PeptideGroup pepGroup = parser.nextPeptideGroup();
-        }
-        parser.close();
-        System.out.println("Number of peptide groups: "+parser.getPeptideGroupCount());
-        System.out.println("Number of peptides: "+parser.getPeptideCount());
-        System.out.println("Number of precursors: "+parser.getPrecursorCount());
-        System.out.println("Number of transitions: "+parser.getTransitionCount());
     }
 }

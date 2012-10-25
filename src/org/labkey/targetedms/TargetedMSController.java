@@ -1181,7 +1181,7 @@ public class TargetedMSController extends SpringActionController
                 }
 
                 ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
-                WebPartView sequenceView = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 100);
+                WebPartView sequenceView = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 100, true);
 
                 sequenceView.setTitle("Sequence Coverage");
                 sequenceView.enableExpandCollapse("SequenceCoverage", false);
@@ -1333,7 +1333,7 @@ public class TargetedMSController extends SpringActionController
                 searchURL.addParameter("seqId", group.getSequenceId().intValue());
                 searchURL.addParameter("identifier", group.getLabel());
                 getViewContext().getResponse().getWriter().write("<a href=\"" + searchURL + "\">Search for other references to this protein</a><br/>");
-                WebPartView sequenceView = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 40);
+                WebPartView sequenceView = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 40, true);
                 sequenceView.render(getViewContext().getRequest(), getViewContext().getResponse());
             }
 
