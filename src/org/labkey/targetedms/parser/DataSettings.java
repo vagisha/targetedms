@@ -46,20 +46,35 @@ public class DataSettings
     private Map<AnnotationTarget, List<AnnotationDefinition>> _targetAnnotationsMap =
                         new HashMap<AnnotationTarget, List<AnnotationDefinition>>();
 
-    public void addAnnotation(String name, String target, String type)
+    public void addAnnotations(String name, String targetsString, String type)
     {
+        String[] targetsArr = targetsString.replaceAll("\\s", "").split(",");
+        if(targetsArr.length == 0)
+        {
+            throw new IllegalStateException("No targets found for annotation "+name);
+        }
+        List<AnnotationTarget> targets = new ArrayList<AnnotationTarget>(targetsArr.length);
+        for(String targetStr: targetsArr)
+        {
+            targets.add(AnnotationTarget.valueOf(targetStr));
+        }
+
         AnnotationDefinition annot = new AnnotationDefinition(
                                         name,
-                                        AnnotationTarget.valueOf(target),
+                                        targets,
                                         AnnotationType.valueOf(type));
         _annotationDefinitions.put(name, annot);
-        List<AnnotationDefinition> targetAnnotations = _targetAnnotationsMap.get(annot.getTarget());
-        if(targetAnnotations == null)
+
+        for(AnnotationTarget target: annot.getTargets())
         {
-            targetAnnotations = new ArrayList<AnnotationDefinition>();
-            _targetAnnotationsMap.put(annot.getTarget(), targetAnnotations);
+            List<AnnotationDefinition> targetAnnotations = _targetAnnotationsMap.get(target);
+            if(targetAnnotations == null)
+            {
+                targetAnnotations = new ArrayList<AnnotationDefinition>();
+                _targetAnnotationsMap.put(target, targetAnnotations);
+            }
+            targetAnnotations.add(annot);
         }
-        targetAnnotations.add(annot);
     }
 
     public boolean isBooleanAnnotation(String name) {
@@ -95,13 +110,13 @@ public class DataSettings
     {
         private String _name;
         private AnnotationType _type;
-        private AnnotationTarget _target;
+        private List<AnnotationTarget> _targetList;
 
-        AnnotationDefinition(String name, AnnotationTarget target, AnnotationType type)
+        AnnotationDefinition(String name, List<AnnotationTarget> targets, AnnotationType type)
         {
             _name = name;
             _type = type;
-            _target = target;
+            _targetList = targets;
         }
 
         public String getName()
@@ -114,9 +129,9 @@ public class DataSettings
             return _type;
         }
 
-        public AnnotationTarget getTarget()
+        public List<AnnotationTarget> getTargets()
         {
-            return _target;
+            return _targetList;
         }
     }
 }

@@ -287,10 +287,10 @@ public class SkylineDocumentParser
 
              if(XmlUtil.isStartElement(reader, evtType, ANNOTATION))
              {
-                 String name = reader.getAttributeValue(null, "name");
-                 String targets = reader.getAttributeValue(null, "targets");
-                 String type = reader.getAttributeValue(null, "type");
-                 _dataSettings.addAnnotation(name, targets, type);
+                 String name = XmlUtil.readRequiredAttribute(reader, "name", DATA_SETTINGS);
+                 String targets = XmlUtil.readRequiredAttribute(reader, "targets", DATA_SETTINGS);
+                 String type = XmlUtil.readRequiredAttribute(reader, "type", DATA_SETTINGS);
+                 _dataSettings.addAnnotations(name, targets, type);
              }
          }
     }
