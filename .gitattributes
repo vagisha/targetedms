@@ -51,6 +51,8 @@ src/org/labkey/targetedms/chart/ChromatogramChartMakerFactory.java -text
 src/org/labkey/targetedms/chart/LabelFactory.java -text
 src/org/labkey/targetedms/chart/PeakAreasChartInputMaker.java -text
 src/org/labkey/targetedms/chart/PrecursorPeakAreaChartMaker.java -text
+src/org/labkey/targetedms/conflict/ConflictPeptide.java -text
+src/org/labkey/targetedms/conflict/ConflictProtein.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoPlus.java -text
 src/org/labkey/targetedms/parser/AbstractAnnotation.java -text
 src/org/labkey/targetedms/parser/AnnotatedEntity.java -text
@@ -94,6 +96,7 @@ src/org/labkey/targetedms/pipeline/TargetedMSPipelineProvider.java -text
 src/org/labkey/targetedms/query/AnnotatedTargetedMSTable.java -text
 src/org/labkey/targetedms/query/ChromatogramDisplayColumnFactory.java -text
 src/org/labkey/targetedms/query/ChromatogramGridQuerySettings.java -text
+src/org/labkey/targetedms/query/ConflictResultsManager.java -text
 src/org/labkey/targetedms/query/DocPrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/DocTransitionsTableInfo.java -text
 src/org/labkey/targetedms/query/IsotopeLabelManager.java -text
@@ -119,6 +122,7 @@ src/org/labkey/targetedms/view/TransitionPeptideSearchViewProvider.java -text
 src/org/labkey/targetedms/view/TransitionProteinSearchViewProvider.java -text
 src/org/labkey/targetedms/view/chromatogramsForm.jsp -text
 src/org/labkey/targetedms/view/confirmImport.jsp -text
+src/org/labkey/targetedms/view/conflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/peptidePeakAreaView.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
 src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text

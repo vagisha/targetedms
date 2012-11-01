@@ -478,6 +478,13 @@ public class TargetedMSManager
         return run;
     }
 
+    public static TargetedMSRun[] getConflictRuns(Container c)
+    {
+        return getRuns("Container=? AND RepresentativeDataState=?",
+                                       c.getId(),
+                                       TargetedMSRun.RepresentativeDataState.Conflicted.ordinal());
+    }
+
     public static void updateRun(TargetedMSRun run, User user) throws SQLException
     {
         Table.update(user, getTableInfoRuns(), run, run.getRunId());

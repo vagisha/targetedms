@@ -37,6 +37,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ms2.MS2Urls;
@@ -65,6 +66,8 @@ import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
 import org.labkey.targetedms.chart.PrecursorPeakAreaChartMaker;
+import org.labkey.targetedms.conflict.ConflictPeptide;
+import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.PeptideGroup;
@@ -73,6 +76,7 @@ import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.TransitionChromInfo;
+import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.PeptideChromatogramsTableInfo;
 import org.labkey.targetedms.query.PeptideGroupManager;
@@ -100,6 +104,8 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -1347,4 +1353,208 @@ public class TargetedMSController extends SpringActionController
             return root;
         }
     }
+
+    // ------------------------------------------------------------------------
+    // Action to show representative data conflicts, if any, in a container
+    // ------------------------------------------------------------------------
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ShowConflictUiAction extends SimpleViewAction
+    {
+        @Override
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            ProteinConflictBean bean = new ProteinConflictBean();
+            bean.setConflictNodeList(ConflictResultsManager.getConflictProteins(getContainer()));
+
+            JspView<ProteinConflictBean> conflictInfo = new JspView("/org/labkey/targetedms/view/conflictResolutionView.jsp", bean);
+            conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
+            conflictInfo.setTitle("Representative Data Conflicts");
+
+            return conflictInfo;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    public static class ProteinConflictBean
+    {
+        private List<ConflictProtein> conflictProteinList;
+
+        public List<ConflictProtein> getConflictNodeList()
+        {
+            return conflictProteinList;
+        }
+
+        public void setConflictNodeList(List<ConflictProtein> conflictProteinList)
+        {
+            this.conflictProteinList = conflictProteinList;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ProteinConflictPeptidesAjaxAction extends ApiAction<ProteinPeptidesForm>
+    {
+        @Override
+        public ApiResponse execute(ProteinPeptidesForm proteinPeptidesForm, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+
+            //Map<String, Object> returnMap = new HashMap<String, Object>();
+
+            int newProteinId = proteinPeptidesForm.getNewProteinId();
+            int oldProteinId = proteinPeptidesForm.getOldProteinId();
+
+            List<ConflictPeptide> conflictPeptides = ConflictResultsManager.getConflictPeptidesForProteins(newProteinId, oldProteinId);
+            // Sort them by ascending peptide ranks in the new protein
+            Collections.sort(conflictPeptides, new Comparator<ConflictPeptide>()
+            {
+                @Override
+                public int compare(ConflictPeptide o1, ConflictPeptide o2)
+                {
+                    if(o1.getNewPeptideRank() == 0) return 1;
+                    if(o2.getOldPeptideRank() == 0) return -1;
+                    return Integer.valueOf(o1.getNewPeptideRank()).compareTo(o2.getNewPeptideRank());
+                }
+            });
+            List<Map<String, Object>> conflictPeptidesMap = new ArrayList<Map<String, Object>>();
+            for(ConflictPeptide peptide: conflictPeptides)
+            {
+                Map<String, Object> map = new HashMap<String, Object>();
+                // PrecursorHtmlMaker.getHtml(peptide.getNewPeptide(), peptide.getNewPeptidePrecursor(), )
+                String newPepSequence = peptide.getNewPeptide() != null ? peptide.getNewPeptide().getSequence() : "-";
+                map.put("newPeptide", newPepSequence);
+                String newPepRank = peptide.getNewPeptide() != null ? String.valueOf(peptide.getNewPeptideRank()) : "-";
+                map.put("newPeptideRank", newPepRank);
+                String oldPepSequence = peptide.getOldPeptide() != null ? peptide.getOldPeptide().getSequence() : "-";
+                map.put("oldPeptide", oldPepSequence);
+                String oldPepRank = peptide.getOldPeptide() != null ? String.valueOf(peptide.getOldPeptideRank()) : "-";
+                map.put("oldPeptideRank",oldPepRank);
+                conflictPeptidesMap.add(map);
+            }
+
+            response.put("conflictPeptides", conflictPeptidesMap);
+            return response;
+        }
+    }
+
+    public static class ProteinPeptidesForm
+    {
+        private int _newProteinId;
+        private int _oldProteinId;
+
+        public int getNewProteinId()
+        {
+            return _newProteinId;
+        }
+
+        public void setNewProteinId(int newProteinId)
+        {
+            _newProteinId = newProteinId;
+        }
+
+        public int getOldProteinId()
+        {
+            return _oldProteinId;
+        }
+
+        public void setOldProteinId(int oldProteinId)
+        {
+            _oldProteinId = oldProteinId;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ResolveConflictAction extends RedirectAction<ResolveConflictForm>
+    {
+        @Override
+        public URLHelper getSuccessURL(ResolveConflictForm resolveConflictForm)
+        {
+            return TargetedMSController.getShowListURL(getContainer());
+        }
+
+        @Override
+        public void validateCommand(ResolveConflictForm target, Errors errors)
+        {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public boolean doAction(ResolveConflictForm resolveConflictForm, BindException errors) throws Exception
+        {
+           // Set activeRepresentativeData to true.
+            int[] selectedPepGrpIds = resolveConflictForm.getSelectedPeptideGroupIds();
+            PeptideGroupManager.updateRepresentativeStatus(selectedPepGrpIds, true);
+
+            // Set activeRepresentativeData to false.
+            int[] deselectPepGrpIds = resolveConflictForm.getDeSelectedPeptideGroupIds();
+            PeptideGroupManager.updateRepresentativeStatus(deselectPepGrpIds, false);
+
+            // Get a list of conflicted runs
+            TargetedMSRun[] conflictRuns = TargetedMSManager.getConflictRuns(getContainer());
+            if(conflictRuns != null)
+            {
+                for(TargetedMSRun run: conflictRuns)
+                {
+                    // If any of the peptide groups for the run are representative mark conflicted run as representative.
+                    if(PeptideGroupManager.hasRepresentativeData(run.getId()));
+                    {
+                        run.setRepresentativeDataState(TargetedMSRun.RepresentativeDataState.Representative);
+                        run = Table.update(getUser(), TargetedMSManager.getTableInfoRuns(), run, run.getId());
+                    }
+                }
+            }
+            return true;
+        }
+    }
+
+    public static class ResolveConflictForm
+    {
+        public String[] _selectedInputValues;
+        private int[] _selectedPeptideGroupIds;
+        private int[] _deSelectedPeptideGroupIds;
+
+        public String[] getSelectedInputValues()
+        {
+            return _selectedInputValues;
+        }
+
+        public void setSelectedInputValues(String[] selectedInputValues)
+        {
+            _selectedInputValues = selectedInputValues;
+            if(selectedInputValues != null)
+            {
+                _selectedPeptideGroupIds = new int[_selectedInputValues.length];
+                _deSelectedPeptideGroupIds = new int[_selectedInputValues.length];
+
+                int count = 0;
+                for(String value: _selectedInputValues)
+                {
+                    int idx = value.indexOf('_');
+                    if(idx != -1)
+                    {
+                        int selected = Integer.parseInt(value.substring(0, idx));
+                        int deselected = Integer.parseInt(value.substring(idx+1));
+                        _selectedPeptideGroupIds[count] = selected;
+                        _deSelectedPeptideGroupIds[count] = deselected;
+                        count++;
+                    }
+                }
+            }
+        }
+
+        public int[] getSelectedPeptideGroupIds()
+        {
+            return _selectedPeptideGroupIds;
+        }
+
+        public int[] getDeSelectedPeptideGroupIds()
+        {
+            return _deSelectedPeptideGroupIds;
+        }
+    }
+
 }
