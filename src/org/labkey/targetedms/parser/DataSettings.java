@@ -30,7 +30,7 @@ import java.util.Set;
  */
 public class DataSettings
 {
-    public enum AnnotationType { text, true_false, value_list }
+    public enum AnnotationType { text, number, true_false, value_list }
 
     public enum AnnotationTarget {
         protein,
