@@ -16,7 +16,7 @@
 
 package org.labkey.targetedms;
 
-import org.labkey.api.module.DefaultFolderType;
+import org.labkey.api.module.MultiPortalFolderType;
 import org.labkey.api.util.HelpTopic;
 import org.labkey.api.view.Portal;
 
@@ -28,7 +28,7 @@ import java.util.Collections;
  * Date: 4/1/12
  * Time: 10:58 AM
  */
-public class TargetedMSFolderType extends DefaultFolderType
+public class TargetedMSFolderType extends MultiPortalFolderType
 {
     public TargetedMSFolderType(TargetedMSModule module)
     {
