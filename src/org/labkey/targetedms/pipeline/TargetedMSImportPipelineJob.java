@@ -17,6 +17,7 @@
 package org.labkey.targetedms.pipeline;
 
 import org.labkey.api.exp.XarContext;
+import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.util.FileUtil;
@@ -26,7 +27,6 @@ import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 
-import java.io.File;
 import java.sql.SQLException;
 
 /**
@@ -36,19 +36,19 @@ import java.sql.SQLException;
  */
 public class TargetedMSImportPipelineJob extends PipelineJob
 {
-    private final File _file;
+    private final ExpData _expData;
     private SkylineDocImporter.RunInfo _runInfo;
     private final boolean _representative;
 
-    public TargetedMSImportPipelineJob(ViewBackgroundInfo info, File file, SkylineDocImporter.RunInfo runInfo, PipeRoot root, boolean representative) throws SQLException
+    public TargetedMSImportPipelineJob(ViewBackgroundInfo info, ExpData expData, SkylineDocImporter.RunInfo runInfo, PipeRoot root, boolean representative) throws SQLException
     {
         super(TargetedMSPipelineProvider.name, info, root);
-        _file = file;
+        _expData = expData;
         _runInfo = runInfo;
         _representative = representative;
 
-        String basename = FileUtil.getBaseName(_file, 1);
-        setLogFile(FT_LOG.newFile(_file.getParentFile(), basename));
+        String basename = FileUtil.getBaseName(_expData.getFile(), 1);
+        setLogFile(FT_LOG.newFile(_expData.getFile().getParentFile(), basename));
     }
 
     public ActionURL getStatusHref()
@@ -72,7 +72,7 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         try
         {
             XarContext context = new XarContext(getDescription(), getContainer(), getUser());
-            SkylineDocImporter importer = new SkylineDocImporter(getUser(), getContainer(), context.getJobDescription(), _file, getLogger(), context, _representative);
+            SkylineDocImporter importer = new SkylineDocImporter(getUser(), getContainer(), context.getJobDescription(), _expData, getLogger(), context, _representative);
             TargetedMSRun run = importer.importRun(_runInfo);
 
             TargetedMSManager.ensureWrapped(run, getUser());

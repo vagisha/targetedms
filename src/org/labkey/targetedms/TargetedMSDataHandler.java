@@ -62,15 +62,11 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     @Override
     public void deleteData(ExpData data, Container container, User user)
     {
-        File file = data.getFile();
-        if (file != null)
+        TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId(), container);
+        if (run != null)
         {
-            TargetedMSRun run = TargetedMSManager.getRunByFileName(file.getParent(), file.getName(), container);
-            if (run != null)
-            {
-                TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container);
-                TargetedMSManager.purgeDeletedRuns();
-            }
+            TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container);
+            TargetedMSManager.purgeDeletedRuns();
         }
     }
 

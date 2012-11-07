@@ -347,7 +347,6 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn(result.getRealTable().getColumn("Id"));
                 result.addWrapColumn(result.getRealTable().getColumn("Description"));
                 result.addWrapColumn(result.getRealTable().getColumn("Created"));
-                result.addWrapColumn(result.getRealTable().getColumn("Path"));
                 result.addWrapColumn(result.getRealTable().getColumn("Filename"));
                 result.addWrapColumn(result.getRealTable().getColumn("PeptideGroupCount"));
                 result.addWrapColumn(result.getRealTable().getColumn("PeptideCount"));

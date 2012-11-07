@@ -51,6 +51,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
@@ -151,7 +152,6 @@ public class TargetedMSController extends SpringActionController
         {
             QueryView gridView = ExperimentService.get().createExperimentRunWebPart(getViewContext(), TargetedMSModule.EXP_RUN_TYPE);
             gridView.setTitle(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME);
-            // gridView.setTitleHref(PageFlowUtil.urlProvider(MS2Urls.class).getShowListUrl(getContainer()));
             gridView.setTitleHref(new ActionURL(TargetedMSController.ShowListAction.class, getContainer()));
 
             return new VBox(gridView);
@@ -819,6 +819,18 @@ public class TargetedMSController extends SpringActionController
         public void setRepresentative(String[] representative)
         {
             _representative = representative;
+        }
+
+        @Override
+        public List<File> getValidatedFiles(Container c)
+        {
+            List<File> files = super.getValidatedFiles(c);
+            List<File> resolvedFiles = new ArrayList<File>(files.size());
+            for(File file: files)
+            {
+                resolvedFiles.add(FileUtil.resolveFile(file));  // Strips out ".." and "." from the path
+            }
+            return resolvedFiles;
         }
     }
 

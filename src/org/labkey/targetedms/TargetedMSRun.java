@@ -37,7 +37,6 @@ public class TargetedMSRun implements Serializable
     protected int _runId;
     protected Container _container;
     protected String _description;
-    protected String _path;
     protected String _fileName;
     protected String _status;
     protected Date _loaded;
@@ -51,6 +50,7 @@ public class TargetedMSRun implements Serializable
     protected int _peptideCount;
     protected int _precursorCount;
     protected int _transitionCount;
+    protected int _dataId; // FK to exp.data's RowId column
 
     public TargetedMSRun()
     {
@@ -113,20 +113,7 @@ public class TargetedMSRun implements Serializable
         _description = description;
     }
 
-
-    public String getPath()
-    {
-        return _path;
-    }
-
-
-    public void setPath(String path)
-    {
-        _path = path;
-    }
-
-
-    public String getFileName()
+	public String getFileName()
     {
         return _fileName;
     }
@@ -245,5 +232,15 @@ public class TargetedMSRun implements Serializable
     public void setRepresentativeDataState(RepresentativeDataState representativeDataState)
     {
         _representativeDataState = representativeDataState;
+    }
+
+    public int getDataId()
+    {
+        return _dataId;
+    }
+
+    public void setDataId(int dataId)
+    {
+        _dataId = dataId;
     }
 }

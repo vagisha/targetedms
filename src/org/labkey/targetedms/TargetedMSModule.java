@@ -70,7 +70,7 @@ public class TargetedMSModule extends SpringModule
     @Override
     public double getVersion()
     {
-        return 12.26;
+        return 12.27;
     }
 
     @Override

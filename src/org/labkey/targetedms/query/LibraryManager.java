@@ -17,6 +17,8 @@ package org.labkey.targetedms.query;
 
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
@@ -94,13 +96,18 @@ public class LibraryManager
             throw new NotFoundException("No run found for Id "+runId);
         }
 
-        String path = run.getPath();
-        String fileName = run.getFileName();
+        ExpData expData = ExperimentService.get().getExpData(run.getDataId());
+        if(expData == null)
+        {
+            throw new IllegalStateException("Experiment data not found for runId "+runId+" and dataId "+run.getDataId());
+        }
 
-        String ext = FileUtil.getExtension(fileName);
+        File file = expData.getFile();
+        String path = file.getParent();
+        String ext = FileUtil.getExtension(file.getName());
         if("zip".equalsIgnoreCase(ext))
         {
-            path = path + File.separator + FileUtil.getBaseName(fileName);
+            path = FileUtil.getBaseName(file.getPath());
         }
 
         Map<PeptideSettings.SpectrumLibrary, String> libraryPathsMap = new HashMap<PeptideSettings.SpectrumLibrary, String>();

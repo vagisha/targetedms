@@ -32,6 +32,7 @@ import org.labkey.api.exp.AbstractFileXarSource;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.Lsid;
 import org.labkey.api.exp.XarContext;
+import org.labkey.api.exp.XarFormatException;
 import org.labkey.api.exp.XarSource;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpMaterial;
@@ -319,16 +320,46 @@ public class TargetedMSManager
     }
 
     public static int addRunToQueue(ViewBackgroundInfo info,
-                                     File file,
-                                     PipeRoot root, boolean representative) throws SQLException, IOException
+                                     final File file,
+                                     PipeRoot root, boolean representative) throws SQLException, IOException, XarFormatException
     {
         String description = "Skyline document import - " + file.getName();
         XarContext xarContext = new XarContext(description, info.getContainer(), info.getUser());
         User user =  info.getUser();
         Container container = info.getContainer();
-        SkylineDocImporter importer = new SkylineDocImporter(user, container, file.getName(), file, null, xarContext, representative);
-        SkylineDocImporter.RunInfo runInfo = importer.prepareRun(false);
-        TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, file, runInfo, root, representative);
+
+        // If an entry does not already exist for this data file in exp.data create it now.
+		// This should happen only if a file was copied to the pipeline directory instead
+		// of being uploaded via the files browser.
+        ExpData expData = ExperimentService.get().getExpDataByURL(file, container);
+        if(expData == null)
+        {
+            XarSource source = new AbstractFileXarSource("Wrap Targeted MS Run", container, user)
+            {
+                public File getLogFile() throws IOException
+                {
+                    throw new UnsupportedOperationException();
+                }
+
+                @Override
+                public File getRoot()
+                {
+                    return file.getParentFile();
+                }
+
+                @Override
+                public ExperimentArchiveDocument getDocument() throws XmlException, IOException
+                {
+                    throw new UnsupportedOperationException();
+                }
+            };
+
+            expData = ExperimentService.get().createData(file.toURI(), source);
+        }
+
+        SkylineDocImporter importer = new SkylineDocImporter(user, container, file.getName(), expData, null, xarContext, representative);
+        SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
+        TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, expData, runInfo, root, representative);
         try
         {
             PipelineService.get().queueJob(job);
@@ -375,41 +406,18 @@ public class TargetedMSManager
                 protocol = ExperimentService.get().insertSimpleProtocol(protocol, user);
             }
 
+            ExpData expData = ExperimentService.get().getExpData(run.getDataId());
+            File skylineFile = expData.getFile();
+
             ExpRun expRun = ExperimentService.get().createExperimentRun(container, run.getDescription());
             expRun.setProtocol(protocol);
-
-            final File skylineFile = new File(run.getPath(), run.getFileName());
             expRun.setFilePathRoot(skylineFile.getParentFile());
             ViewBackgroundInfo info = new ViewBackgroundInfo(container, user, null);
 
             Map<ExpData, String> inputDatas = new HashMap<ExpData, String>();
             Map<ExpData, String> outputDatas = new HashMap<ExpData, String>();
-            XarSource source = new AbstractFileXarSource("Wrap Targeted MS Run", container, user)
-            {
-                public File getLogFile() throws IOException
-                {
-                    throw new UnsupportedOperationException();
-                }
 
-                @Override
-                public File getRoot()
-                {
-                    return skylineFile.getParentFile();
-                }
-
-                @Override
-                public ExperimentArchiveDocument getDocument() throws XmlException, IOException
-                {
-                    throw new UnsupportedOperationException();
-                }
-            };
-
-            ExpData skylineData = ExperimentService.get().getExpDataByURL(skylineFile, container);
-            if (skylineData == null)
-            {
-                skylineData = ExperimentService.get().createData(skylineFile.toURI(), source);
-            }
-            outputDatas.put(skylineData, "sky");
+            outputDatas.put(expData, "sky");
 
             expRun = ExperimentService.get().saveSimpleExperimentRun(expRun,
                                                                      Collections.<ExpMaterial, String>emptyMap(),
@@ -429,29 +437,24 @@ public class TargetedMSManager
         {
             throw new ExperimentException(e);
         }
-//        catch (URISyntaxException e)
-//        {
-//            throw new ExperimentException(e);
-//        }
         finally
         {
             ExperimentService.get().getSchema().getScope().closeConnection();
         }
     }
 
-    public static TargetedMSRun getRunByFileName(String path, String fileName, Container c)
+    public static TargetedMSRun getRunByDataId(int dataId, Container c)
     {
-        TargetedMSRun[] runs = getRuns("LOWER(Path) = LOWER(?) AND LOWER(FileName) = LOWER(?) AND Deleted = ? AND Container = ?", path, fileName, Boolean.FALSE, c.getId());
-        if (null == runs || runs.length == 0)
+        TargetedMSRun[] runs = getRuns("DataId = ? AND Deleted = ? AND Container = ?", dataId, Boolean.FALSE, c.getId());
+        if(null == runs || runs.length == 0)
         {
             return null;
         }
-        if (runs.length == 1)
+        if(runs.length == 1)
         {
             return runs[0];
-
         }
-        throw new IllegalStateException("There is more than one non-deleted Targeted MS Run for " + path + "/" + fileName);
+        throw new IllegalStateException("There is more than one non-deleted Targeted MS Run for dataId " + dataId);
     }
 
     private static TargetedMSRun[] getRuns(String whereClause, Object... params)
@@ -492,7 +495,7 @@ public class TargetedMSManager
 
     // For safety, simply mark runs as deleted.  This allows them to be (manually) restored.
     // TODO: Do we really want to hang on to the data of a deleted run?
-    public static void markAsDeleted(List<Integer> runIds, Container c, User user)
+    private static void markAsDeleted(List<Integer> runIds, Container c, User user)
     {
         if (runIds.isEmpty())
             return;
@@ -505,8 +508,7 @@ public class TargetedMSManager
             TargetedMSRun run = getRun(runId);
             if (run != null)
             {
-                File file = new File(run.getPath(), run.getFileName());
-                ExpData data = ExperimentService.get().getExpDataByURL(file, c);
+                ExpData data = ExperimentService.get().getExpData(run.getDataId());
                 if (data != null)
                 {
                     ExpRun expRun = data.getRun();

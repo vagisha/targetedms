@@ -18,7 +18,6 @@ package org.labkey.targetedms;
 
 import org.apache.log4j.Logger;
 import org.labkey.api.ProteinService;
-import org.labkey.api.collections.CsvSet;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
@@ -30,6 +29,7 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.XarContext;
+import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
@@ -44,7 +44,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -70,7 +69,8 @@ public class SkylineDocImporter
     protected User _user;
     protected Container _container;
     private final boolean _representative;
-    protected String _description, _fileName, _path;
+    private final ExpData _expData;
+    protected String _description;
 
     protected int _runId;
 
@@ -85,24 +85,20 @@ public class SkylineDocImporter
     // protected Connection _conn;
     // private static final int BATCH_SIZE = 100;
 
-    public SkylineDocImporter(User user, Container c, String description, File file, Logger log, XarContext context, boolean representative)
+    public SkylineDocImporter(User user, Container c, String description, ExpData expData, Logger log, XarContext context, boolean representative)
     {
         _context = context;
         _user = user;
         _container = c;
         _representative = representative;
 
-        _path = file.getParent();
-        _fileName = file.getName();
+        _expData = expData;
 
         if (null != description)
             _description = description;
         else
         {
-            int extension = _fileName.lastIndexOf(".");
-
-            if (-1 != extension)
-                _description = _fileName.substring(0, extension);
+            _description = FileUtil.getBaseName(_expData.getFile().getName());
         }
 
         _log = (null == log ? _systemLog : log);
@@ -117,7 +113,7 @@ public class SkylineDocImporter
         // Skip if run was already fully imported
         if (runInfo.isAlreadyImported() && run != null && run.getStatusId() == SkylineDocImporter.STATUS_SUCCESS)
         {
-            _log.info(_fileName + " has already been imported so it does not need to be imported again");
+            _log.info(_expData.getFile().getName() + " has already been imported so it does not need to be imported again");
             return run;
         }
 
@@ -181,7 +177,7 @@ public class SkylineDocImporter
         File zipDir = null;
         try
         {
-            File f = new File(_path + "/" + _fileName);
+            File f = _expData.getFile();
 
             NetworkDrive.ensureDrive(f.getPath());
 
@@ -1162,7 +1158,7 @@ public class SkylineDocImporter
         }
     }
 
-    protected RunInfo prepareRun(boolean restart) throws SQLException
+    protected RunInfo prepareRun() throws SQLException
     {
         try
         {
@@ -1175,18 +1171,11 @@ public class SkylineDocImporter
                 _runId = getRun();
                 if (_runId != -1)
                 {
-                    if (!restart)
-                    {
-                        alreadyImported = true;
-                    }
-                    else
-                    {
-                        _log.info("Restarting import from " + _fileName);
-                    }
+                    alreadyImported = true;
                 }
                 else
                 {
-                    _log.info("Starting import from " + _fileName);
+                    _log.info("Starting import from " + _expData.getFile().getName());
                     _runId = createRun();
                 }
             }
@@ -1200,38 +1189,30 @@ public class SkylineDocImporter
         }
     }
 
-    protected int getRun() throws SQLException
+    protected int getRun()
     {
-        SimpleFilter filter = new SimpleFilter("Path", _path);
-        filter.addCondition("FileName", _fileName);
-        filter.addCondition("Container", _container.getId());
-        filter.addCondition("Deleted", Boolean.FALSE);
-        ResultSet rs = Table.select(TargetedMSManager.getTableInfoRuns(), new CsvSet("Id,Path,FileName,Container,Deleted"), filter, null);
-
-        int runId = -1;
-
-        if (rs.next())
-            runId = rs.getInt("Id");
-
-        rs.close();
-        return runId;
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("DataId"), _expData.getRowId());
+        filter.addCondition(FieldKey.fromParts("Container"), _container.getId());
+        filter.addCondition(FieldKey.fromParts("Deleted"), Boolean.FALSE);
+        TargetedMSRun run = new TableSelector(TargetedMSManager.getTableInfoRuns(), filter, null).getObject(TargetedMSRun.class);
+        return run != null ? run.getId() : -1;
     }
 
     protected int createRun() throws SQLException
     {
         HashMap<String, Object> runMap = new HashMap<String, Object>();
 
-        TargetedMSRun run = TargetedMSManager.getRunByFileName(_path, _fileName, _container);
+        TargetedMSRun run = TargetedMSManager.getRunByDataId(_expData.getRowId(), _container);
         if (run != null)
         {
-            throw new IllegalStateException("There is already a run for " + _path + "/" + _fileName + " in " + _container.getPath());
+            throw new IllegalStateException("There is already a run for " + _expData.getFile() + " in " + _container.getPath());
         }
 
         run = new TargetedMSRun();
         run.setDescription(_description);
         run.setContainer(_container);
-        run.setPath(_path);
-        run.setFileName(_fileName);
+        run.setFileName(_expData.getFile().getName());
+        run.setDataId(_expData.getRowId());
         run.setStatus(IMPORT_STARTED);
         run.setRepresentativeDataState(_representative ? TargetedMSRun.RepresentativeDataState.Conflicted : TargetedMSRun.RepresentativeDataState.NotRepresentative);
 

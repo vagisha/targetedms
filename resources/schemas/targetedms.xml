@@ -153,11 +153,11 @@
             <ns:column columnName="Deleted"/>
             <ns:column columnName="Description"/>
             <ns:column columnName="Modified"/>
-            <ns:column columnName="Path"/>
             <ns:column columnName="Status"/>
             <ns:column columnName="RepresentativeDataState">
                 <ns:columnTitle>Representative State</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="DataId"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideGroup">
