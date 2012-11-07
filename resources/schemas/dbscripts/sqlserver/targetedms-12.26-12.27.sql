@@ -15,8 +15,8 @@
  */
 
 ALTER TABLE targetedms.Runs ADD DataId INT;
-
-UPDATE targetedms.Runs runs SET DataId=(SELECT data.RowId FROM exp.Data data, exp.ExperimentRun expRun WHERE expRun.RowId=data.RunId AND expRun.lsid=runs.ExperimentRunLsid);
+GO
+UPDATE targetedms.Runs SET DataId =(SELECT data.RowId FROM exp.Data data, exp.ExperimentRun expRun WHERE expRun.RowId=data.RunId AND expRun.lsid = ExperimentRunLsid);
 
 ALTER TABLE targetedms.Runs ADD CONSTRAINT FK_Runs_Data FOREIGN KEY (DataId) REFERENCES exp.Data(RowId);
 
