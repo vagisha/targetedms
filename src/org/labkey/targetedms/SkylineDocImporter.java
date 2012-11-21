@@ -38,6 +38,7 @@ import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.writer.ZipUtil;
 import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.query.LibraryManager;
+import org.labkey.targetedms.query.RepresentativeStateManager;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -68,7 +69,7 @@ public class SkylineDocImporter
 
     protected User _user;
     protected Container _container;
-    private final boolean _representative;
+    private final TargetedMSRun.RepresentativeDataState _representative;
     private final ExpData _expData;
     protected String _description;
 
@@ -85,7 +86,7 @@ public class SkylineDocImporter
     // protected Connection _conn;
     // private static final int BATCH_SIZE = 100;
 
-    public SkylineDocImporter(User user, Container c, String description, ExpData expData, Logger log, XarContext context, boolean representative)
+    public SkylineDocImporter(User user, Container c, String description, ExpData expData, Logger log, XarContext context, TargetedMSRun.RepresentativeDataState representative)
     {
         _context = context;
         _user = user;
@@ -447,7 +448,7 @@ public class SkylineDocImporter
             run.setTransitionCount(parser.getTransitionCount());
             Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
-            if (_representative)
+            if (run.isRepresentative())
             {
                 resolveRepresentativeData(run);
             }
@@ -473,53 +474,7 @@ public class SkylineDocImporter
 
     private void resolveRepresentativeData(TargetedMSRun run) throws SQLException
     {
-        // Mark everything in this run that doesn't already have representative data in this container as being active
-        SQLFragment makeActiveSQL = new SQLFragment("UPDATE " + TargetedMSManager.getTableInfoPeptideGroup());
-        makeActiveSQL.append(" SET ActiveRepresentativeData = ? ");
-        makeActiveSQL.add(true);
-        makeActiveSQL.append(" WHERE RunId=? ");
-        makeActiveSQL.add(run.getId());
-        makeActiveSQL.append(" AND( ");
-        // If this peptide group has a SequenceId make sure we don't have another peptide group in this container
-        // with the same SequenceId that has been previously marked as representative
-        makeActiveSQL.append(" (SequenceId IS NOT NULL AND (SequenceId NOT IN (SELECT SequenceId FROM ");
-        makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg1");
-        makeActiveSQL.append(", ");
-        makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r1");
-        makeActiveSQL.append(" WHERE pg1.RunId = r1.Id AND r1.Container=? AND pg1.ActiveRepresentativeData=?))) ");
-        makeActiveSQL.add(_container);
-        makeActiveSQL.add(true);
-        // If the peptide group does not have a SequenceId or there isn't an older peptide group with the same
-        // SequenceId, compare the Labels to look for conflicting proteins.
-        makeActiveSQL.append(" OR (Label NOT IN (SELECT Label FROM ");
-        makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg2");
-        makeActiveSQL.append(", ");
-        makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r2");
-        makeActiveSQL.append(" WHERE pg2.RunID = r2.Id AND r2.Container=? AND pg2.ActiveRepresentativeData=?)) ");
-        makeActiveSQL.add(_container);
-        makeActiveSQL.add(true);
-        makeActiveSQL.append(")");
-        new SqlExecutor(TargetedMSManager.getSchema(), makeActiveSQL).execute();
-
-        // See how many conflict with existing representative data
-        SQLFragment remainingConflictsSQL = new SQLFragment("SELECT COUNT(*) FROM ");
-        remainingConflictsSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        remainingConflictsSQL.append(" WHERE ActiveRepresentativeData = ? AND RunId = ?");
-        remainingConflictsSQL.add(false);
-        remainingConflictsSQL.add(run.getId());
-        int conflictCount = new SqlSelector(TargetedMSManager.getSchema(), remainingConflictsSQL).getObject(Integer.class);
-
-        if (conflictCount == 0)
-        {
-            // If there are no conflicts, mark the run as being resolved
-            run.setRepresentativeDataState(TargetedMSRun.RepresentativeDataState.Representative);
-            run = Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
-            _log.info("Run contains representative data. No conflicts with existing representative data in current container found");
-        }
-        else
-        {
-            _log.info("Run contains representative data. " + conflictCount + " conflicts with existing representative data in current container found, manual reconciliation required");
-        }
+        RepresentativeStateManager.setRepresentativeState(_user, _container, run, run.getRepresentativeDataState());
     }
 
     private void insertPeptideGroup(ProteinService proteinService, boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup)
@@ -1214,7 +1169,7 @@ public class SkylineDocImporter
         run.setFileName(_expData.getFile().getName());
         run.setDataId(_expData.getRowId());
         run.setStatus(IMPORT_STARTED);
-        run.setRepresentativeDataState(_representative ? TargetedMSRun.RepresentativeDataState.Conflicted : TargetedMSRun.RepresentativeDataState.NotRepresentative);
+        run.setRepresentativeDataState(_representative == null ? TargetedMSRun.RepresentativeDataState.NotRepresentative : _representative);
 
         run = Table.insert(_user, TargetedMSManager.getTableInfoRuns(), run);
         return run.getId();

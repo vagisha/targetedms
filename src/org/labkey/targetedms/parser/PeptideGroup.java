@@ -25,6 +25,10 @@ import java.util.Map;
  */
 public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
 {
+    /** Don't change the ordering of these enum values without updating the values in targetedms.peptidegroup.representativedatastate */
+    public enum RepresentativeDataState
+    { NotRepresentative, Representative, Representative_Deprecated, Conflicted }
+
     private int _runId;
     private Integer _sequenceId;
 
@@ -39,6 +43,8 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
 
     private List<Peptide> _peptideList;
     private String _note;
+
+    protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
 
     public int getRunId()
     {
@@ -139,4 +145,15 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
     {
         return _note;
     }
+
+    public RepresentativeDataState getRepresentativeDataState()
+    {
+        return _representativeDataState;
+    }
+
+    public void setRepresentativeDataState(RepresentativeDataState representativeDataState)
+    {
+        _representativeDataState = representativeDataState;
+    }
+
 }

@@ -24,9 +24,11 @@ public class ConflictProtein
 {
     private int _newProteinId;
     private int _newProteinRunId;
+    private String _newRunFile;
     private String _newProteinLabel;
     private int _oldProteinId;
     private int _oldProteinRunId;
+    private String _oldRunFile;
     private String _oldProteinLabel;
 
     public ConflictProtein() {}
@@ -74,6 +76,26 @@ public class ConflictProtein
     public int getOldProteinRunId()
     {
         return _oldProteinRunId;
+    }
+
+    public String getNewRunFile()
+    {
+        return _newRunFile;
+    }
+
+    public void setNewRunFile(String newRunFile)
+    {
+        _newRunFile = newRunFile;
+    }
+
+    public String getOldRunFile()
+    {
+        return _oldRunFile;
+    }
+
+    public void setOldRunFile(String oldRunFile)
+    {
+        _oldRunFile = oldRunFile;
     }
 
     public void setOldProteinRunId(int oldProteinRunId)

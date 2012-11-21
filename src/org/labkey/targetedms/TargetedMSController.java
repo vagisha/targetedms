@@ -37,7 +37,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ms2.MS2Urls;
@@ -85,6 +84,7 @@ import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorChromatogramsTableInfo;
 import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.ReplicateManager;
+import org.labkey.targetedms.query.RepresentativeStateManager;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.labkey.targetedms.query.TransitionManager;
 import org.labkey.targetedms.view.ChromatogramsDataRegion;
@@ -153,8 +153,10 @@ public class TargetedMSController extends SpringActionController
             QueryView gridView = ExperimentService.get().createExperimentRunWebPart(getViewContext(), TargetedMSModule.EXP_RUN_TYPE);
             gridView.setTitle(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME);
             gridView.setTitleHref(new ActionURL(TargetedMSController.ShowListAction.class, getContainer()));
-
-            return new VBox(gridView);
+            VBox vbox = new VBox();
+            vbox.addView(new JspView("/org/labkey/targetedms/view/conflictSummary.jsp"));
+            vbox.addView(gridView);
+            return vbox;
         }
 
         public NavTree appendNavTrail(NavTree root)
@@ -809,16 +811,27 @@ public class TargetedMSController extends SpringActionController
 
     public static class SkylinePipelinePathForm extends PipelinePathForm
     {
-        private String[] _representative = new String[0];
+        private String[] _proteinRepresentative = new String[0];
+        private String[] _peptideRepresentative = new String[0];
 
-        public String[] getRepresentative()
+        public String[] getProteinRepresentative()
         {
-            return _representative;
+            return _proteinRepresentative;
         }
 
-        public void setRepresentative(String[] representative)
+        public void setProteinRepresentative(String[] representative)
         {
-            _representative = representative;
+            _proteinRepresentative = representative;
+        }
+
+        public String[] getPeptideRepresentative()
+        {
+            return _peptideRepresentative;
+        }
+
+        public void setPeptideRepresentative(String[] peptideRepresentative)
+        {
+            _peptideRepresentative = peptideRepresentative;
         }
 
         @Override
@@ -885,7 +898,8 @@ public class TargetedMSController extends SpringActionController
 
         public boolean doAction(SkylinePipelinePathForm form, BindException errors) throws Exception
         {
-            Set<String> representativeFileNames = new HashSet<String>(Arrays.asList(form.getRepresentative()));
+            Set<String> proteinRepresentativeFiles = new HashSet<String>(Arrays.asList(form.getProteinRepresentative()));
+            Set<String> peptideRepresentativeFiles = new HashSet<String>(Arrays.asList(form.getPeptideRepresentative()));
             for (File file : form.getValidatedFiles(getContainer()))
             {
                 if (!file.isFile())
@@ -896,7 +910,13 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()), representativeFileNames.contains(file.getName()));
+                    TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
+                    if(proteinRepresentativeFiles.contains(file.getName()))
+                        representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
+                    else if(peptideRepresentativeFiles.contains(file.getName()))
+                        representative = TargetedMSRun.RepresentativeDataState.Representative_Peptide;
+                                                                           ;
+                    TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()), representative);
                 }
                 catch (IOException e)
                 {
@@ -934,7 +954,8 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    int jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()), false);
+                    int jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()),
+                                                                TargetedMSRun.RepresentativeDataState.NotRepresentative);
                     Map<String, Object> detailsMap = new HashMap<String, Object>(4);
                     detailsMap.put("Path", form.getPath());
                     detailsMap.put("File",file.getName());
@@ -1376,7 +1397,7 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(Object o, BindException errors) throws Exception
         {
             ProteinConflictBean bean = new ProteinConflictBean();
-            bean.setConflictNodeList(ConflictResultsManager.getConflictProteins(getContainer()));
+            bean.setConflictNodeList(ConflictResultsManager.getConflictedProteins(getContainer()));
 
             JspView<ProteinConflictBean> conflictInfo = new JspView("/org/labkey/targetedms/view/conflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
@@ -1497,27 +1518,29 @@ public class TargetedMSController extends SpringActionController
         @Override
         public boolean doAction(ResolveConflictForm resolveConflictForm, BindException errors) throws Exception
         {
-           // Set activeRepresentativeData to true.
-            int[] selectedPepGrpIds = resolveConflictForm.getSelectedPeptideGroupIds();
-            PeptideGroupManager.updateRepresentativeStatus(selectedPepGrpIds, true);
 
-            // Set activeRepresentativeData to false.
-            int[] deselectPepGrpIds = resolveConflictForm.getDeSelectedPeptideGroupIds();
-            PeptideGroupManager.updateRepresentativeStatus(deselectPepGrpIds, false);
+            TargetedMSManager.getSchema().getScope().ensureTransaction();
 
-            // Get a list of conflicted runs
-            TargetedMSRun[] conflictRuns = TargetedMSManager.getConflictRuns(getContainer());
-            if(conflictRuns != null)
-            {
-                for(TargetedMSRun run: conflictRuns)
-                {
-                    // If any of the peptide groups for the run are representative mark conflicted run as representative.
-                    if(PeptideGroupManager.hasRepresentativeData(run.getId()));
-                    {
-                        run.setRepresentativeDataState(TargetedMSRun.RepresentativeDataState.Representative);
-                        run = Table.update(getUser(), TargetedMSManager.getTableInfoRuns(), run, run.getId());
-                    }
-                }
+            try {
+                // Set RepresentativeDataState to Representative.
+                int[] selectedPepGrpIds = resolveConflictForm.getSelectedPeptideGroupIds();
+                PeptideGroupManager.updateRepresentativeStatus(selectedPepGrpIds, PeptideGroup.RepresentativeDataState.Representative);
+
+                // Set to either NotRepresentative or Representative_Deprecated.
+                // If the original status was Representative it will be updated to Representative_Deprecated.
+                // If the original status was Conflicted it will be update to NotRepresentative.
+                int[] deselectPepGrpIds = resolveConflictForm.getDeSelectedPeptideGroupIds();
+                PeptideGroupManager.updateStatusToDeprecatedOrNotRepresentative(deselectPepGrpIds);
+
+                // If there are runs in the container that no longer have any representative data mark
+                // them as being not representative.
+                TargetedMSManager.updateRunRepresentativeStatus_ProteinData(getContainer());
+
+                TargetedMSManager.getSchema().getScope().commitTransaction();
+            }
+            finally {
+
+                TargetedMSManager.getSchema().getScope().closeConnection();
             }
             return true;
         }
@@ -1569,4 +1592,63 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ChangeRepresentativeStateAction extends RedirectAction<ChangeRepresentativeStateForm>
+    {
+        @Override
+        public URLHelper getSuccessURL(ChangeRepresentativeStateForm changeStateForm)
+        {
+            ActionURL url = new ActionURL(ShowPrecursorListAction.class, getContainer());
+            url.addParameter("id", changeStateForm.getRunId());
+            return url;
+        }
+
+        @Override
+        public void validateCommand(ChangeRepresentativeStateForm target, Errors errors)
+        {
+            //To change body of implemented methods use File | Settings | File Templates.
+        }
+
+        @Override
+        public boolean doAction(ChangeRepresentativeStateForm changeStateForm, BindException errors) throws Exception
+        {
+
+            TargetedMSRun run = TargetedMSManager.getRun(changeStateForm.getRunId());
+            if(run == null)
+            {
+                throw new NotFoundException("Targeted MS run with ID "+changeStateForm.getRunId()+" not found in the database.");
+            }
+
+            TargetedMSRun.RepresentativeDataState state = TargetedMSRun.RepresentativeDataState.valueOf(changeStateForm.getState());
+
+            RepresentativeStateManager.setRepresentativeState(getUser(), getContainer(), run, state);
+            return true;
+        }
+    }
+
+    public static class ChangeRepresentativeStateForm
+    {
+        private int _runId;
+        private String _state;
+
+        public int getRunId()
+        {
+            return _runId;
+        }
+
+        public void setRunId(int runId)
+        {
+            _runId = runId;
+        }
+
+        public String getState()
+        {
+            return _state;
+        }
+
+        public void setState(String state)
+        {
+            _state = state;
+        }
+    }
 }

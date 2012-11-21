@@ -32,7 +32,7 @@ public class TargetedMSRun implements Serializable
 {
     /** Don't change the ordering of these enum values without updating the values in targetedms.runs.representativedatastate */
     public enum RepresentativeDataState
-    { NotRepresentative, Conflicted, Representative }
+    { NotRepresentative, Representative_Protein, Representative_Peptide }
 
     protected int _runId;
     protected Container _container;
@@ -44,7 +44,7 @@ public class TargetedMSRun implements Serializable
     protected boolean _deleted;
     protected String _experimentRunLSID;
 
-    protected RepresentativeDataState _representativeDataState;
+    protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
 
     protected int _peptideGroupCount;
     protected int _peptideCount;
@@ -232,6 +232,12 @@ public class TargetedMSRun implements Serializable
     public void setRepresentativeDataState(RepresentativeDataState representativeDataState)
     {
         _representativeDataState = representativeDataState;
+    }
+
+    public boolean isRepresentative()
+    {
+        return _representativeDataState == RepresentativeDataState.Representative_Protein ||
+               _representativeDataState == RepresentativeDataState.Representative_Peptide;
     }
 
     public int getDataId()

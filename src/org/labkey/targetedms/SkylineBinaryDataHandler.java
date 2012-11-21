@@ -66,7 +66,7 @@ public class SkylineBinaryDataHandler extends AbstractExperimentDataHandler
         TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId(), container);
         if (run != null)
         {
-            TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container);
+            TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container, user);
         }
     }
 

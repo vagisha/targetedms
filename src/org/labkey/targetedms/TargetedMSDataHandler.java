@@ -65,7 +65,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId(), container);
         if (run != null)
         {
-            TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container);
+            TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container, user);
             TargetedMSManager.purgeDeletedRuns();
         }
     }

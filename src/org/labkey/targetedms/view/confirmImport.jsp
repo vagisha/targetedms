@@ -18,16 +18,33 @@
 <%@ page import="org.labkey.api.view.HttpView"%>
 <%@ page import="org.labkey.api.view.ViewContext"%>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.view.ActionURL" %>
-<%@ page import="org.labkey.api.view.template.ClientDependency" %>
-<%@ page import="java.io.File" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     ViewContext context = HttpView.currentContext();
     org.labkey.targetedms.TargetedMSController.SkylinePipelinePathForm form = (org.labkey.targetedms.TargetedMSController.SkylinePipelinePathForm)HttpView.currentModel();
     org.labkey.api.view.ActionURL targetURL = new org.labkey.api.view.ActionURL(TargetedMSController.SkylineDocUploadAction.class, context.getContainer());
 %>
-<table>
+<script type="text/javascript">
+    Ext.onReady(function() {
+
+        Ext.select('.repr_cb').on('click', function(event, target) {
+
+            if(target.checked)
+            {
+                if(target.name == 'proteinRepresentative')
+                {
+                    document.getElementById('peptide_'+target.value).checked= false;
+                }
+                else
+                {
+                    document.getElementById('protein_'+target.value).checked= false;
+                }
+            }
+        });
+    });
+</script>
+
+<table cellspacing="0" cellpadding="5" class="labkey-show-borders">
     <tr>
         <th>Representative</th>
         <th>File Name</th>
@@ -36,13 +53,16 @@
         <input type="hidden" name="path" value="<%= h(form.getPath() )%>" />
         <% for (java.io.File file : form.getValidatedFiles(context.getContainer()))
         { %>
-            <tr>
-                <td><input name="representative" type="checkbox" value="<%=h(file.getName()) %>"/></td>
+            <tr style="border:1px solid;">
+                <td>
+                    <input name="proteinRepresentative" class="repr_cb" id="protein_<%=h(file.getName()) %>" type="checkbox" value="<%=h(file.getName()) %>"/>Protein
+                    <input name="peptideRepresentative" class="repr_cb" id="peptide_<%=h(file.getName()) %>" type="checkbox" value="<%=h(file.getName()) %>"/>Peptide
+                </td>
                 <td><input type="hidden" name="file" value="<%= h(file.getName()) %>" /><%= h(file.getName())%></td>
             </tr><%
         } %>
         <tr>
-            <td colspan="2">
+            <td colspan="2" align="center">
                 <%= generateSubmitButton("Import") %> <%= generateButton("Cancel", form.getReturnActionURL(context.getContainer().getStartURL(context.getUser())))%>
             </td>
         </tr>

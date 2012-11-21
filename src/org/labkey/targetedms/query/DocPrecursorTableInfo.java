@@ -106,7 +106,8 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Description"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Annotations"));
-        visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "ActiveRepresentativeData"));
+        visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RepresentativeDataState"));
+
 
         visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "NumMissedCleavages"));

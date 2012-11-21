@@ -152,20 +152,21 @@ function toggleCheckboxSelection(element)
 <table class="labkey-data-region labkey-show-borders">
     <thead>
        <tr>
-            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Your Representative Results</div></th>
+            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Representative Results</div></th>
             <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Current Representative Results</div></th>
         </tr>
     </thead>
     <tbody>
         <tr>
             <td class="labkey-column-header"></td>
-            <!--<td class="labkey-column-header">RunId</td>-->
-            <td class="labkey-column-header">ProteinId</td>
             <td class="labkey-column-header">Protein</td>
+            <td class="labkey-column-header">Run</td>
+            <!--<td class="labkey-column-header">ProteinId</td>-->
+
             <td class="labkey-column-header"></td>
-            <!--<td class="labkey-column-header">RunId</td>-->
-            <td class="labkey-column-header">ProteinId</td>
             <td class="labkey-column-header">Protein</td>
+            <td class="labkey-column-header">Run</td>
+            <!--<td class="labkey-column-header">ProteinId</td>-->
         </tr>
     <% int index = 0; %>
     <%for (ConflictProtein protein: bean.getConflictNodeList()) {%>
@@ -177,28 +178,28 @@ function toggleCheckboxSelection(element)
                                         name="selectedInputValues"
                                         value="<%=protein.getNewProteinId()%>_<%=protein.getOldProteinId()%>"
                                         checked="checked"/></td>
-             <!--<td class="representative <%=protein.getNewProteinId()%>"><%=protein.getNewProteinRunId()%></td>-->
-             <td class="representative newProtein <%=protein.getNewProteinId()%>"><%=protein.getNewProteinId()%></td>
+             <!--<td class="representative newProtein <%=protein.getNewProteinId()%>"><%=protein.getNewProteinId()%></td>-->
              <td class="representative newProtein label <%=protein.getNewProteinId()%>">
                  <span class="label" id="<%=protein.getNewProteinId()%>_<%=protein.getOldProteinId()%>">
                      <img src="<%=plusImgUrl%>"/>
                      <%=protein.getNewProteinLabel()%>
                  </span>
              </td>
+             <td class="representative newProtein <%=protein.getNewProteinId()%>"><%=protein.getNewRunFile()%></td>
 
              <!-- Old representative protein -->
              <td class="oldProtein <%=protein.getNewProteinId()%>">
                  <input type="checkbox" class="<%=protein.getNewProteinId()%> oldProtein"
                                         name="selectedInputValues"
                                         value="<%=protein.getOldProteinId()%>_<%=protein.getNewProteinId()%>" /></td>
-             <!--<td class="<%=protein.getNewProteinId()%>"><%=protein.getOldProteinRunId()%></td>-->
-             <td class="oldProtein <%=protein.getNewProteinId()%>"><%=protein.getOldProteinId()%></td>
+             <!--<td class="oldProtein <%=protein.getNewProteinId()%>"><%=protein.getOldProteinId()%></td>-->
              <td class="oldProtein label <%=protein.getNewProteinId()%>">
                  <span class="label" id="<%=protein.getNewProteinId()%>_<%=protein.getOldProteinId()%>">
                      <img src="<%=plusImgUrl%>"/>
                      <%=protein.getOldProteinLabel()%>
                  </span>
              </td>
+             <td class="oldProtein <%=protein.getNewProteinId()%>"><%=protein.getOldRunFile()%></td>
          </tr>
         <!-- This is a hidden table row where peptide and transition details will be displayed -->
         <tr>
