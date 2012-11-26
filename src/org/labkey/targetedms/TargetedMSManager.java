@@ -48,7 +48,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.targetedms.parser.PeptideGroup;
+import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
 import org.labkey.targetedms.query.RepresentativeStateManager;
 
@@ -513,7 +513,25 @@ public class TargetedMSManager
         sql.append(" WHERE runid = ?");
         sql.add(runId);
         sql.append(" AND representativedatastate = ?");
-        sql.add(PeptideGroup.RepresentativeDataState.Conflicted.ordinal());
+        sql.add(RepresentativeDataState.Conflicted.ordinal());
+        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+        return count != null ? count : 0;
+    }
+
+    private static int getConflictedPeptideCount(int runId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
+        sql.append(" WHERE pepgrp.runid = ?");
+        sql.add(runId);
+        sql.append(" AND prec.representativedatastate = ?");
+        sql.add(RepresentativeDataState.Conflicted.ordinal());
+        sql.append(" AND prec.PeptideId = pep.Id");
+        sql.append(" AND pep.PeptideGroupId = pepgrp.Id");
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
         return count != null ? count : 0;
     }
@@ -528,37 +546,46 @@ public class TargetedMSManager
         sql.add(container.getId());
         sql.append(" AND run.id = pepgrp.runid");
         sql.append(" AND pepgrp.representativedatastate = ?");
-        sql.add(PeptideGroup.RepresentativeDataState.Conflicted.ordinal());
+        sql.add(RepresentativeDataState.Conflicted.ordinal());
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
         return count != null ? count > 0 : false;
     }
 
     public static boolean hasConflictedPeptides(Container container)
     {
-        return false; // TODO:
+        SQLFragment sql = new SQLFragment("SELECT COUNT(prec.id) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoRuns(), "run");
+        sql.append(" WHERE run.container = ?");
+        sql.add(container.getId());
+        sql.append(" AND prec.RepresentativeDataState = ?");
+        sql.add(RepresentativeDataState.Conflicted.ordinal());
+        sql.append(" AND prec.PeptideId = pep.Id");
+        sql.append(" AND pep.PeptideGroupId = pepgrp.Id");
+        sql.append(" AND pepgrp.RunId = run.Id");
+
+        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+        return count != null ? count > 0 : false;
     }
 
-    private static int getConflictedPeptideCount(int runId)
+    public static void markRunsNotRepresentative(Container container, TargetedMSRun.RepresentativeDataState representativeState)
     {
-        return 0;
-        // TODO:
-    }
+        Collection<Integer> representativeRunIds = null;
 
-    public static void updateRunRepresentativeStatus_ProteinData(Container container)
-    {
-        SQLFragment reprRunIdSql = new SQLFragment();
-        reprRunIdSql.append("SELECT DISTINCT (RunId) FROM ");
-        reprRunIdSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
-        Integer[] stateArray = new Integer[] {
-            PeptideGroup.RepresentativeDataState.Representative.ordinal(),
-            PeptideGroup.RepresentativeDataState.Representative_Deprecated.ordinal(),
-            PeptideGroup.RepresentativeDataState.Conflicted.ordinal()
-        };
-        String states = StringUtils.join(stateArray, ",");
+        if(representativeState == TargetedMSRun.RepresentativeDataState.Representative_Protein)
+        {
+            representativeRunIds = getProteinRepresentativeRunIds(container);
+        }
+        else if(representativeState == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
+        {
+            representativeRunIds = getPeptideRepresentativeRunIds(container);
+        }
 
-        reprRunIdSql.append(" WHERE RepresentativeDataState IN (" + states + ")");
-
-        Collection<Integer> representativeRunIds = new SqlSelector(TargetedMSManager.getSchema(), reprRunIdSql).getCollection(Integer.class);
         if(representativeRunIds == null || representativeRunIds.size() == 0)
         {
             return;
@@ -571,10 +598,51 @@ public class TargetedMSManager
         updateSql.append(" WHERE Container = ?");
         updateSql.add(container);
         updateSql.append(" AND RepresentativeDataState = ? ");
-        updateSql.add(TargetedMSRun.RepresentativeDataState.Representative_Protein.ordinal());
+        updateSql.add(representativeState.ordinal());
         updateSql.append(" AND Id NOT IN ("+StringUtils.join(representativeRunIds, ",")+")");
 
         new SqlExecutor(TargetedMSManager.getSchema(), updateSql).execute();
+    }
+
+    private static Collection<Integer> getProteinRepresentativeRunIds(Container container)
+    {
+        SQLFragment reprRunIdSql = new SQLFragment();
+        reprRunIdSql.append("SELECT DISTINCT (RunId) FROM ");
+        reprRunIdSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
+        Integer[] stateArray = new Integer[] {
+            RepresentativeDataState.Representative.ordinal(),
+            RepresentativeDataState.Deprecated.ordinal(),
+            RepresentativeDataState.Conflicted.ordinal()
+        };
+        String states = StringUtils.join(stateArray, ",");
+
+        reprRunIdSql.append(" WHERE RepresentativeDataState IN (" + states + ")");
+
+        return new SqlSelector(TargetedMSManager.getSchema(), reprRunIdSql).getCollection(Integer.class);
+    }
+
+    private static Collection<Integer> getPeptideRepresentativeRunIds(Container container)
+    {
+        // Get a list of runIds that have proteins that are either representative, deprecated or conflicted.
+        SQLFragment reprRunIdSql = new SQLFragment();
+        reprRunIdSql.append("SELECT DISTINCT (pepgrp.RunId) FROM ");
+        reprRunIdSql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        reprRunIdSql.append(", ");
+        reprRunIdSql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        reprRunIdSql.append(", ");
+        reprRunIdSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
+        Integer[] stateArray = new Integer[] {
+            RepresentativeDataState.Representative.ordinal(),
+            RepresentativeDataState.Deprecated.ordinal(),
+            RepresentativeDataState.Conflicted.ordinal()
+        };
+        String states = StringUtils.join(stateArray, ",");
+
+        reprRunIdSql.append(" WHERE prec.RepresentativeDataState IN (" + states + ")");
+        reprRunIdSql.append(" AND prec.PeptideId = pep.Id");
+        reprRunIdSql.append(" AND pep.PeptideGroupId = pepgrp.Id");
+
+        return new SqlSelector(TargetedMSManager.getSchema(), reprRunIdSql).getCollection(Integer.class);
     }
 
     public static void updateRun(TargetedMSRun run, User user) throws SQLException

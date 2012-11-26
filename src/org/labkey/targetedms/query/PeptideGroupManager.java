@@ -25,6 +25,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.PeptideGroup;
+import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,7 +61,7 @@ public class PeptideGroupManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(PeptideGroup.class);
     }
 
-    public static void updateRepresentativeStatus(int[] peptideGroupIds, PeptideGroup.RepresentativeDataState representativeState)
+    public static void updateRepresentativeStatus(int[] peptideGroupIds, RepresentativeDataState representativeState)
     {
         if(peptideGroupIds == null || peptideGroupIds.length == 0)
             return;
@@ -83,6 +84,9 @@ public class PeptideGroupManager
         new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
     }
 
+    // Set to either NotRepresentative or Representative_Deprecated.
+    // If the original status was Representative it will be updated to Representative_Deprecated.
+    // If the original status was Conflicted it will be update to NotRepresentative.
     public static void updateStatusToDeprecatedOrNotRepresentative(int[] peptideGroupIds)
     {
         if(peptideGroupIds == null || peptideGroupIds.length == 0)
@@ -98,9 +102,9 @@ public class PeptideGroupManager
 
         SQLFragment sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPeptideGroup());
         sql.append(" SET RepresentativeDataState = ");
-        sql.append(" CASE WHEN RepresentativeDataState = "+PeptideGroup.RepresentativeDataState.Conflicted.ordinal());
-        sql.append(" THEN "+PeptideGroup.RepresentativeDataState.NotRepresentative.ordinal());
-        sql.append(" ELSE "+PeptideGroup.RepresentativeDataState.Representative_Deprecated.ordinal());
+        sql.append(" CASE WHEN RepresentativeDataState = "+RepresentativeDataState.Conflicted.ordinal());
+        sql.append(" THEN "+RepresentativeDataState.NotRepresentative.ordinal());
+        sql.append(" ELSE "+RepresentativeDataState.Deprecated.ordinal());
         sql.append(" END");
         sql.append(" WHERE "+TargetedMSManager.getTableInfoPeptideGroup()+".Id IN (");
         sql.append(peptideGroupIdsString.toString());
@@ -113,7 +117,7 @@ public class PeptideGroupManager
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("RunId"), runId);
-        filter.addCondition(FieldKey.fromParts("RepresentativeDataState"), PeptideGroup.RepresentativeDataState.Representative.ordinal());
+        filter.addCondition(FieldKey.fromParts("RepresentativeDataState"), RepresentativeDataState.Representative.ordinal());
 
         Collection<PeptideGroup> groups = new TableSelector(TargetedMSManager.getTableInfoPeptideGroup(), filter, null).getCollection(PeptideGroup.class);
         return new ArrayList<PeptideGroup>(groups);
@@ -130,7 +134,7 @@ public class PeptideGroupManager
         sql.add(container);
         sql.append(" AND pepgrp.runId = run.Id");
         sql.append(" AND pepgrp.RepresentativeDataState = ?");
-        sql.add(PeptideGroup.RepresentativeDataState.Representative_Deprecated.ordinal());
+        sql.add(RepresentativeDataState.Deprecated.ordinal());
         sql.append(" AND (");
         if(pepGrp.getSequenceId() != null)
         {
@@ -151,7 +155,7 @@ public class PeptideGroupManager
         return deprecatedGroups[0];
     }
 
-    public static int setRepresentativeState(int runId, PeptideGroup.RepresentativeDataState state)
+    public static int setRepresentativeState(int runId, RepresentativeDataState state)
     {
         SQLFragment sql = new SQLFragment();
         sql.append("UPDATE "+TargetedMSManager.getTableInfoPeptideGroup());

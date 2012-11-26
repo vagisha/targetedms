@@ -15,16 +15,16 @@
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.settings.AppProps" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.ViewContext" %>
 <%@ page import="org.labkey.targetedms.conflict.ConflictProtein" %>
+<%@ page import="org.labkey.api.settings.AppProps" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     ViewContext context = HttpView.currentContext();
     JspView<TargetedMSController.ProteinConflictBean> me = (JspView<TargetedMSController.ProteinConflictBean>) HttpView.currentView();
     TargetedMSController.ProteinConflictBean bean = me.getModelBean();
-    ActionURL conflictPeptidesUrl = new ActionURL(TargetedMSController.ProteinConflictPeptidesAjaxAction.class, context.getContainer());
+    String conflictPeptidesUrl = new ActionURL(TargetedMSController.ProteinConflictPeptidesAjaxAction.class, context.getContainer()).getLocalURIString();
 
     String plusImgUrl = request.getContextPath()+"/_images/plus.gif";
     String minusImgUrl = request.getContextPath()+"/_images/minus.gif";
@@ -35,7 +35,7 @@
     span.label {text-decoration: underline; cursor: pointer;}
 </style>
 
-<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath()%>/TargetedMS/jquery/jquery-1.8.3.min.js"></script>
 
 <script type="text/javascript">
 
@@ -90,6 +90,8 @@ function loadProteinDetails(element, newProteinId, oldProteinId, response, reque
         $("#"+oldProteinId+"_details").text(""); // Remove "loading..."
         $("#"+newProteinId+"_details").append(newPeptidesTable);
         $("#"+oldProteinId+"_details").append(oldPeptidesTable);
+
+        $(element).addClass('content_loaded');
     }
 }
 
@@ -149,6 +151,7 @@ function toggleCheckboxSelection(element)
 
 <%int colspan=3;%>
 <form <%=formAction(TargetedMSController.ResolveConflictAction.class, Method.Post)%>>
+<input type="hidden" name="conflictLevel" value="protein"/>
 <table class="labkey-data-region labkey-show-borders">
     <thead>
        <tr>
@@ -169,7 +172,7 @@ function toggleCheckboxSelection(element)
             <!--<td class="labkey-column-header">ProteinId</td>-->
         </tr>
     <% int index = 0; %>
-    <%for (ConflictProtein protein: bean.getConflictNodeList()) {%>
+    <%for (ConflictProtein protein: bean.getConflictProteinList()) {%>
          <tr class="labkey-alternate-row">
 
              <!-- New representative protein -->

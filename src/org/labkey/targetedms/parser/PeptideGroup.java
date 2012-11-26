@@ -25,10 +25,6 @@ import java.util.Map;
  */
 public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
 {
-    /** Don't change the ordering of these enum values without updating the values in targetedms.peptidegroup.representativedatastate */
-    public enum RepresentativeDataState
-    { NotRepresentative, Representative, Representative_Deprecated, Conflicted }
-
     private int _runId;
     private Integer _sequenceId;
 

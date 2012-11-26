@@ -23,6 +23,7 @@ resources/schemas/dbscripts/postgresql/targetedms-12.24-12.25.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-12.25-12.26.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-12.26-12.27.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-12.27-12.28.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-12.28-12.29.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.19-0.20.sql -text
@@ -37,6 +38,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-12.24-12.25.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-12.25-12.26.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-12.26-12.27.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-12.27-12.28.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-12.28-12.29.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text
@@ -56,7 +58,9 @@ src/org/labkey/targetedms/chart/LabelFactory.java -text
 src/org/labkey/targetedms/chart/PeakAreasChartInputMaker.java -text
 src/org/labkey/targetedms/chart/PrecursorPeakAreaChartMaker.java -text
 src/org/labkey/targetedms/conflict/ConflictPeptide.java -text
+src/org/labkey/targetedms/conflict/ConflictPrecursor.java -text
 src/org/labkey/targetedms/conflict/ConflictProtein.java -text
+src/org/labkey/targetedms/conflict/ConflictTransition.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoPlus.java -text
 src/org/labkey/targetedms/parser/AbstractAnnotation.java -text
 src/org/labkey/targetedms/parser/AnnotatedEntity.java -text
@@ -80,6 +84,7 @@ src/org/labkey/targetedms/parser/PrecursorChromInfo.java -text
 src/org/labkey/targetedms/parser/PrecursorChromInfoAnnotation.java -text
 src/org/labkey/targetedms/parser/Replicate.java -text
 src/org/labkey/targetedms/parser/ReplicateAnnotation.java -text
+src/org/labkey/targetedms/parser/RepresentativeDataState.java -text
 src/org/labkey/targetedms/parser/SampleFile.java -text
 src/org/labkey/targetedms/parser/SkylineBinaryParser.java -text
 src/org/labkey/targetedms/parser/SkylineDocumentParser.java -text
@@ -127,11 +132,12 @@ src/org/labkey/targetedms/view/TransitionPeptideSearchViewProvider.java -text
 src/org/labkey/targetedms/view/TransitionProteinSearchViewProvider.java -text
 src/org/labkey/targetedms/view/chromatogramsForm.jsp -text
 src/org/labkey/targetedms/view/confirmImport.jsp -text
-src/org/labkey/targetedms/view/conflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/conflictSummary.jsp -text
 src/org/labkey/targetedms/view/peptidePeakAreaView.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
 src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text
+src/org/labkey/targetedms/view/precursorConflictResolutionView.jsp -text
+src/org/labkey/targetedms/view/proteinConflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/proteinSearch.jsp -text
 src/org/labkey/targetedms/view/runSummaryView.jsp -text
 src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatch.java -text
@@ -140,6 +146,7 @@ src/org/labkey/targetedms/view/spectrum/PeptideSpectrumView.java -text
 src/org/labkey/targetedms/view/spectrum/spectrumView.jsp -text
 webapp/TargetedMS/images/Fragment.gif -text
 webapp/TargetedMS/images/TransitionGroup.gif -text
+webapp/TargetedMS/jquery/jquery-1.8.3.min.js -text
 webapp/TargetedMS/lorikeet_0.3/css/lorikeet.css -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_lorikeet.png -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_scan.png -text

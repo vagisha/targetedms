@@ -19,13 +19,17 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
+import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
+import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -35,7 +39,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.labkey.targetedms.TargetedMSManager.getSchema;
 
 /**
  * User: vsharma
@@ -48,7 +51,9 @@ public class PrecursorManager
 
     public static Precursor get(int precursorId)
     {
-        return Table.selectObject(TargetedMSManager.getTableInfoPrecursor(), precursorId, Precursor.class);
+        return new TableSelector(TargetedMSManager.getTableInfoPrecursor(),
+                                 new SimpleFilter(FieldKey.fromParts("Id"), precursorId),
+                                 null).getObject(Precursor.class);
     }
 
     public static Precursor getPrecursor(Container c, int id)
@@ -149,7 +154,7 @@ public class PrecursorManager
         Table.TableResultSet rs = null;
         try
         {
-            rs = Table.executeQuery(getSchema(), sf);
+            rs = new SqlSelector(TargetedMSManager.getSchema(), sf).getResultSet();
             if(rs.next())
             {
                 Map<String, Object> result = new HashMap<String, Object>();
@@ -233,5 +238,135 @@ public class PrecursorManager
         PrecursorChromInfoPlus[] precChromInfos = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(PrecursorChromInfoPlus.class);
 
         return Arrays.asList(precChromInfos);
+    }
+
+    public static List<Precursor> getRepresentativePrecursors(int runId)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("SELECT prec.* FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(" WHERE");
+        sql.append(" prec.PeptideId = pep.Id");
+        sql.append(" AND");
+        sql.append(" pep.PeptideGroupId = pg.Id");
+        sql.append(" AND");
+        sql.append(" pg.RunId = ?");
+        sql.add(runId);
+        sql.append(" AND");
+        sql.append(" prec.RepresentativeDataState = ?");
+        sql.add(RepresentativeDataState.Representative.ordinal());
+
+        Precursor[] reprPrecursors = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Precursor.class);
+        return Arrays.asList(reprPrecursors);
+    }
+
+    public static Precursor getLastDeprecatedPrecursor(Precursor prec, Container container)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("SELECT prec.* FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoRuns(), "run");
+        sql.append(" WHERE");
+        sql.append(" prec.PeptideId = pep.Id");
+        sql.append(" AND");
+        sql.append(" pep.PeptideGroupId = pg.Id");
+        sql.append(" AND");
+        sql.append(" pg.RunId = run.Id");
+        sql.append(" AND");
+        sql.append(" run.Container = ?");
+        sql.add(container);
+        sql.append(" AND");
+        sql.append(" prec.RepresentativeDataState = ?");
+        sql.add(RepresentativeDataState.Deprecated.ordinal());
+        sql.append(" AND");
+        sql.append(" prec.ModifiedSequence = ?");
+        sql.add(prec.getModifiedSequence());
+        sql.append(" ORDER BY prec.Modified DESC ");
+
+        Precursor[] deprecatedPrecursors = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Precursor.class);
+        if(deprecatedPrecursors == null || deprecatedPrecursors.length == 0)
+        {
+            return null;
+        }
+        return deprecatedPrecursors[0];
+    }
+
+    public static int setRepresentativeState(int runId, RepresentativeDataState state)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
+        sql.append(" SET RepresentativeDataState = ?");
+        sql.add(state.ordinal());
+        sql.append(" FROM "+TargetedMSManager.getTableInfoPeptide());
+        sql.append(", "+TargetedMSManager.getTableInfoPeptideGroup());
+        sql.append(" WHERE ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup()+".Id = "+TargetedMSManager.getTableInfoPeptide()+".PeptideGroupId");
+        sql.append(" AND ");
+        sql.append(TargetedMSManager.getTableInfoPeptide()+".Id = "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId");
+        sql.append(" AND ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup()+".RunId = ?");
+        sql.add(runId);
+        return new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
+    }
+
+    public static void updateRepresentativeStatus(int[] precursorIds, RepresentativeDataState representativeState)
+    {
+        if(precursorIds == null || precursorIds.length == 0)
+            return;
+
+        StringBuilder precursorIdsString = new StringBuilder();
+        for(int id: precursorIds)
+        {
+            precursorIdsString.append(",").append(id);
+        }
+        if(precursorIdsString.length() > 0)
+            precursorIdsString.deleteCharAt(0);
+
+        SQLFragment sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
+        sql.append(" SET RepresentativeDataState = ? ");
+        sql.add(representativeState.ordinal());
+        sql.append(" WHERE "+TargetedMSManager.getTableInfoPrecursor()+".Id IN (");
+        sql.append(precursorIdsString.toString());
+        sql.append(")");
+
+        new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
+    }
+
+    // Set to either NotRepresentative or Representative_Deprecated.
+    // If the original status was Representative it will be updated to Representative_Deprecated.
+    // If the original status was Conflicted it will be update to NotRepresentative.
+    public static void updateStatusToDeprecatedOrNotRepresentative(int[] precursorIds)
+    {
+        if(precursorIds == null || precursorIds.length == 0)
+            return;
+
+        StringBuilder precursorIdsString = new StringBuilder();
+        for(int id: precursorIds)
+        {
+            precursorIdsString.append(",").append(id);
+        }
+        if(precursorIdsString.length() > 0)
+            precursorIdsString.deleteCharAt(0);
+
+        SQLFragment sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
+        sql.append(" SET RepresentativeDataState = ");
+        sql.append(" CASE WHEN RepresentativeDataState = "+RepresentativeDataState.Conflicted.ordinal());
+        sql.append(" THEN "+RepresentativeDataState.NotRepresentative.ordinal());
+        sql.append(" ELSE "+RepresentativeDataState.Deprecated.ordinal());
+        sql.append(" END");
+        sql.append(" WHERE "+TargetedMSManager.getTableInfoPrecursor()+".Id IN (");
+        sql.append(precursorIdsString.toString());
+        sql.append(")");
+
+        new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
     }
 }

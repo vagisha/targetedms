@@ -45,6 +45,8 @@ public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
     private List<PrecursorChromInfo> _chromInfoList;
     private String _note;
 
+    protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
+
     public int getPeptideId()
     {
         return _peptideId;
@@ -183,6 +185,16 @@ public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
     public String getNote()
     {
         return _note;
+    }
+
+    public RepresentativeDataState getRepresentativeDataState()
+    {
+        return _representativeDataState;
+    }
+
+    public void setRepresentativeDataState(RepresentativeDataState representativeDataState)
+    {
+        _representativeDataState = representativeDataState;
     }
 
     public static final class LibraryInfo extends SkylineEntity

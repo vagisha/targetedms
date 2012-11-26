@@ -20,11 +20,15 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.conflict.ConflictPeptide;
+import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
+import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.Peptide;
-import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.Precursor;
+import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.targetedms.parser.Transition;
+import org.labkey.targetedms.parser.TransitionChromInfo;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,12 +76,59 @@ public class ConflictResultsManager
         getConflictProteinsSql.append(" AND pg2.RepresentativeDataState=? ");
         getConflictProteinsSql.add(container);
         getConflictProteinsSql.add(container);
-        getConflictProteinsSql.add(PeptideGroup.RepresentativeDataState.Conflicted.ordinal());
-        getConflictProteinsSql.add(PeptideGroup.RepresentativeDataState.Representative.ordinal());
+        getConflictProteinsSql.add(RepresentativeDataState.Conflicted.ordinal());
+        getConflictProteinsSql.add(RepresentativeDataState.Representative.ordinal());
 
         ConflictProtein[] pepGroups = new SqlSelector(TargetedMSManager.getSchema(), getConflictProteinsSql).getArray(ConflictProtein.class);
         return Arrays.asList(pepGroups);
     }
+
+    public static List<ConflictPrecursor> getConflictedPrecursors(Container container)
+    {
+        // Get a list of conflicted precursors in the given container
+        SQLFragment getConflictPrecursorsSql = new SQLFragment("SELECT ");
+        getConflictPrecursorsSql.append("prec.Id AS newPrecursorId, ");
+        getConflictPrecursorsSql.append("r.Id AS newPrecursorRunId, ");
+        getConflictPrecursorsSql.append("r.filename AS newRunFile, ");
+        getConflictPrecursorsSql.append("prec2.Id AS oldPrecursorId, ");
+        getConflictPrecursorsSql.append("r2.Id AS oldPrecursorRunId, ");
+        getConflictPrecursorsSql.append("r2.filename AS oldRunFile");
+        getConflictPrecursorsSql.append(" FROM ");
+        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoRuns(), "r");
+        getConflictPrecursorsSql.append(", ");
+        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        getConflictPrecursorsSql.append(", ");
+        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        getConflictPrecursorsSql.append(", ");
+        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        getConflictPrecursorsSql.append(" INNER JOIN ");
+        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPrecursor(), "prec2");
+        getConflictPrecursorsSql.append(" ON (prec.ModifiedSequence = prec2.ModifiedSequence) ");
+        getConflictPrecursorsSql.append(" INNER JOIN ");
+        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptide(), "pep2");
+        getConflictPrecursorsSql.append(" ON (prec2.PeptideId = pep2.Id) ");
+        getConflictPrecursorsSql.append(" INNER JOIN ");
+        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg2");
+        getConflictPrecursorsSql.append(" ON (pg2.Id = pep2.PeptideGroupId) ");
+        getConflictPrecursorsSql.append(" INNER JOIN ");
+        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoRuns(), "r2");
+        getConflictPrecursorsSql.append(" ON (r2.Id = pg2.RunId) ");
+        getConflictPrecursorsSql.append(" WHERE r.Id = pg.RunId ");
+        getConflictPrecursorsSql.append(" AND pg.Id = pep.PeptideGroupId");
+        getConflictPrecursorsSql.append(" AND pep.Id = prec.PeptideId");
+        getConflictPrecursorsSql.append(" AND r.Container=? " );
+        getConflictPrecursorsSql.append(" AND r2.Container=? ");
+        getConflictPrecursorsSql.append(" AND prec.RepresentativeDataState=? ");
+        getConflictPrecursorsSql.append(" AND prec2.RepresentativeDataState=? ");
+        getConflictPrecursorsSql.add(container);
+        getConflictPrecursorsSql.add(container);
+        getConflictPrecursorsSql.add(RepresentativeDataState.Conflicted.ordinal());
+        getConflictPrecursorsSql.add(RepresentativeDataState.Representative.ordinal());
+
+        ConflictPrecursor[] precursors = new SqlSelector(TargetedMSManager.getSchema(), getConflictPrecursorsSql).getArray(ConflictPrecursor.class);
+        return Arrays.asList(precursors);
+    }
+
 
     public static List<ConflictPeptide> getConflictPeptidesForProteins(int newProteinId, int oldProteinId)
     {
@@ -228,6 +279,125 @@ public class ConflictResultsManager
         public void setPrecursor(Precursor precursor)
         {
             _precursor = precursor;
+        }
+
+        public double getAvgArea()
+        {
+            return _avgArea;
+        }
+
+        public void setAvgArea(double avgArea)
+        {
+            _avgArea = avgArea;
+        }
+
+        public int getRank()
+        {
+            return _rank;
+        }
+
+        public void setRank(int rank)
+        {
+            _rank = rank;
+        }
+    }
+
+    public static List<ConflictTransition> getConflictTransitionsForPrecursors(int newPrecursorId, int oldPrecursorId)
+    {
+        List<TransitionWithAreaAndRank> newPrecursorTransitions = getRankedTransitionsForPrecursor(newPrecursorId);
+        List<TransitionWithAreaAndRank> oldPrecursorTransitions = getRankedTransitionsForPrecursor(oldPrecursorId);
+
+        Precursor newPrecursor = PrecursorManager.get(newPrecursorId);
+        Precursor oldPrecursor = PrecursorManager.get(oldPrecursorId);
+
+        // Key in the conflictTransitionMap is the transition label (y7, y8, etc.)
+        Map<String, ConflictTransition> conflictTransitionMap = new HashMap<String, ConflictTransition>();
+        for(TransitionWithAreaAndRank twr: newPrecursorTransitions)
+        {
+            ConflictTransition cTransition = new ConflictTransition();
+            cTransition.setNewPrecursor(newPrecursor);
+            cTransition.setNewTransition(twr.getTransition());
+            cTransition.setNewTransitionRank(twr.getRank());
+
+            String transitionLabel = twr.getTransition().getLabel();
+            if(conflictTransitionMap.containsKey(transitionLabel))
+            {
+                throw new IllegalStateException("Transition "+transitionLabel+" has been seen already for precursor "+newPrecursor.getModifiedSequence()+" with ID "+newPrecursorId);
+            }
+            conflictTransitionMap.put(transitionLabel, cTransition);
+        }
+
+        for(TransitionWithAreaAndRank twr: oldPrecursorTransitions)
+        {
+            String transitionLabel = twr.getTransition().getLabel();
+            ConflictTransition cTransition = conflictTransitionMap.get(transitionLabel);
+            if(cTransition == null)
+            {
+                cTransition = new ConflictTransition();
+                conflictTransitionMap.put(transitionLabel, cTransition);
+            }
+            cTransition.setOldPrecursor(oldPrecursor);
+            cTransition.setOldTransition(twr.getTransition());
+            cTransition.setOldTransitionRank(twr.getRank());
+        }
+
+        return new ArrayList<ConflictTransition>(conflictTransitionMap.values());
+    }
+
+    public static List<TransitionWithAreaAndRank> getRankedTransitionsForPrecursor(int precursorId)
+    {
+        Collection<Transition> transitions = TransitionManager.getTransitionsForPrecursor(precursorId);
+
+        // Each transition may have been measured in more than one replicate. We need to get the
+        // the average area for each transition across all replicates
+        List<TransitionWithAreaAndRank> transWithRankList = new ArrayList<TransitionWithAreaAndRank>(transitions.size());
+        for(Transition transition: transitions)
+        {
+            Collection<TransitionChromInfo> transChromInfoList = TransitionManager.getTransitionChromInfoListForTransition(transition.getId());
+            double totalArea = 0.0;
+            for(TransitionChromInfo tci: transChromInfoList)
+            {
+                totalArea += tci.getArea();
+            }
+            TransitionWithAreaAndRank twr = new TransitionWithAreaAndRank();
+            twr.setTransition(transition);
+            twr.setAvgArea(totalArea / transChromInfoList.size());
+            transWithRankList.add(twr);
+        }
+
+        // Sort by average area.
+        Collections.sort(transWithRankList, new Comparator<TransitionWithAreaAndRank>()
+        {
+            @Override
+            public int compare(TransitionWithAreaAndRank o1, TransitionWithAreaAndRank o2)
+            {
+                return Double.valueOf(o2.getAvgArea()).compareTo(o1.getAvgArea());
+            }
+        });
+
+        int rank = 1;
+        for(TransitionWithAreaAndRank twr: transWithRankList)
+        {
+            twr.setRank(rank++);
+        }
+
+        return transWithRankList;
+    }
+
+    private static class TransitionWithAreaAndRank
+    {
+        private Transition _transition;
+        private double _avgArea;
+        private int _rank;
+
+        public Transition getTransition()
+        {
+            return _transition;
+        }
+
+        public void setTransition(Transition transition)
+        {
+            _transition = transition;
         }
 
         public double getAvgArea()

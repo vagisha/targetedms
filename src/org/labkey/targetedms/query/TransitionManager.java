@@ -113,4 +113,16 @@ public class TransitionManager
                                                         ).getCollection(Integer.class);
         return new HashSet<Integer>(tranChromIndexes);
     }
+
+    public static Collection<Transition> getTransitionsForPrecursor(int precursorId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoTransition(),
+                                 new SimpleFilter(FieldKey.fromParts("PrecursorId"), precursorId), null).getCollection(Transition.class);
+    }
+
+    public static Collection<TransitionChromInfo> getTransitionChromInfoListForTransition(int transitionId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(),
+                                 new SimpleFilter(FieldKey.fromParts("TransitionId"), transitionId), null).getCollection(TransitionChromInfo.class);
+    }
 }

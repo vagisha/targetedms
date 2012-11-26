@@ -54,4 +54,15 @@ public class PrecursorHtmlMaker
 
         return html.toString();
     }
+
+    public static String getModSeqChargeHtml( ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker, Precursor precursor)
+    {
+        StringBuilder html = new StringBuilder();
+        html.append(modifiedPeptideHtmlMaker.getHtml(precursor));
+        html.append("<span>");
+        html.append(CHARGE[precursor.getCharge()]);
+        html.append("</span>");
+
+        return html.toString();
+    }
 }

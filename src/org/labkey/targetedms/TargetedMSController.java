@@ -67,7 +67,9 @@ import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
 import org.labkey.targetedms.chart.PrecursorPeakAreaChartMaker;
 import org.labkey.targetedms.conflict.ConflictPeptide;
+import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
+import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.PeptideGroup;
@@ -75,6 +77,7 @@ import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
+import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
@@ -1391,17 +1394,17 @@ public class TargetedMSController extends SpringActionController
     // Action to show representative data conflicts, if any, in a container
     // ------------------------------------------------------------------------
     @RequiresPermissionClass(InsertPermission.class)
-    public class ShowConflictUiAction extends SimpleViewAction
+    public class ShowProteinConflictUiAction extends SimpleViewAction
     {
         @Override
         public ModelAndView getView(Object o, BindException errors) throws Exception
         {
             ProteinConflictBean bean = new ProteinConflictBean();
-            bean.setConflictNodeList(ConflictResultsManager.getConflictedProteins(getContainer()));
+            bean.setConflictProteinList(ConflictResultsManager.getConflictedProteins(getContainer()));
 
-            JspView<ProteinConflictBean> conflictInfo = new JspView("/org/labkey/targetedms/view/conflictResolutionView.jsp", bean);
+            JspView<ProteinConflictBean> conflictInfo = new JspView("/org/labkey/targetedms/view/proteinConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
-            conflictInfo.setTitle("Representative Data Conflicts");
+            conflictInfo.setTitle("Representative Protein Data Conflicts");
 
             return conflictInfo;
         }
@@ -1417,12 +1420,12 @@ public class TargetedMSController extends SpringActionController
     {
         private List<ConflictProtein> conflictProteinList;
 
-        public List<ConflictProtein> getConflictNodeList()
+        public List<ConflictProtein> getConflictProteinList()
         {
             return conflictProteinList;
         }
 
-        public void setConflictNodeList(List<ConflictProtein> conflictProteinList)
+        public void setConflictProteinList(List<ConflictProtein> conflictProteinList)
         {
             this.conflictProteinList = conflictProteinList;
         }
@@ -1435,8 +1438,6 @@ public class TargetedMSController extends SpringActionController
         public ApiResponse execute(ProteinPeptidesForm proteinPeptidesForm, BindException errors) throws Exception
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
-
-            //Map<String, Object> returnMap = new HashMap<String, Object>();
 
             int newProteinId = proteinPeptidesForm.getNewProteinId();
             int oldProteinId = proteinPeptidesForm.getOldProteinId();
@@ -1501,6 +1502,113 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermissionClass(InsertPermission.class)
+    public class ShowPrecursorConflictUiAction extends SimpleViewAction
+    {
+        @Override
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            PrecursorConflictBean bean = new PrecursorConflictBean();
+            bean.setConflictPrecursorList(ConflictResultsManager.getConflictedPrecursors(getContainer()));
+
+            JspView<PrecursorConflictBean> conflictInfo = new JspView("/org/labkey/targetedms/view/precursorConflictResolutionView.jsp", bean);
+            conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
+            conflictInfo.setTitle("Representative Peptide Data Conflicts");
+
+            return conflictInfo;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    public static class PrecursorConflictBean
+    {
+        private List<ConflictPrecursor> _conflictPrecursorList;
+
+        public List<ConflictPrecursor> getConflictPrecursorList()
+        {
+            return _conflictPrecursorList;
+        }
+
+        public void setConflictPrecursorList(List<ConflictPrecursor> conflictPrecursorList)
+        {
+            _conflictPrecursorList = conflictPrecursorList;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class PrecursorConflictTransitionsAjaxAction extends ApiAction<ConflictPrecursorsForm>
+    {
+        @Override
+        public ApiResponse execute(ConflictPrecursorsForm conflictPrecursorsForm, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+
+            int newPrecursorId = conflictPrecursorsForm.getNewPrecursorId();
+            int oldPrecursorId = conflictPrecursorsForm.getOldPrecursorId();
+
+            List<ConflictTransition> conflictTransitions = ConflictResultsManager.getConflictTransitionsForPrecursors(newPrecursorId, oldPrecursorId);
+            // Sort them by ascending transitions ranks in the new precursor
+            Collections.sort(conflictTransitions, new Comparator<ConflictTransition>()
+            {
+                @Override
+                public int compare(ConflictTransition o1, ConflictTransition o2)
+                {
+                    if(o1.getNewTransitionRank() == 0) return 1;
+                    if(o2.getOldTransitionRank() == 0) return -1;
+                    return Integer.valueOf(o1.getNewTransitionRank()).compareTo(o2.getNewTransitionRank());
+                }
+            });
+            List<Map<String, Object>> conflictTransitionsMap = new ArrayList<Map<String, Object>>();
+            for(ConflictTransition transition: conflictTransitions)
+            {
+                Map<String, Object> map = new HashMap<String, Object>();
+                String newTransitionLabel = transition.getNewTransition() != null ? transition.getNewTransition().getLabel() : "-";
+                map.put("newTransition", newTransitionLabel);
+                String newTransRank = transition.getNewTransition() != null ? String.valueOf(transition.getNewTransitionRank()) : "-";
+                map.put("newTransitionRank", newTransRank);
+                String oldTransLabel = transition.getOldTransition() != null ? transition.getOldTransition().getLabel() : "-";
+                map.put("oldTransition", oldTransLabel);
+                String oldPepRank = transition.getOldTransition() != null ? String.valueOf(transition.getOldTransitionRank()) : "-";
+                map.put("oldTransitionRank",oldPepRank);
+                conflictTransitionsMap.add(map);
+            }
+
+            response.put("conflictTransitions", conflictTransitionsMap);
+            return response;
+        }
+    }
+
+    public static class ConflictPrecursorsForm
+    {
+        private int _newPrecursorId;
+        private int _oldPrecursorId;
+
+        public int getNewPrecursorId()
+        {
+            return _newPrecursorId;
+        }
+
+        public void setNewPrecursorId(int newPrecursorId)
+        {
+            _newPrecursorId = newPrecursorId;
+        }
+
+        public int getOldPrecursorId()
+        {
+            return _oldPrecursorId;
+        }
+
+        public void setOldPrecursorId(int oldPrecursorId)
+        {
+            _oldPrecursorId = oldPrecursorId;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
     public class ResolveConflictAction extends RedirectAction<ResolveConflictForm>
     {
         @Override
@@ -1510,31 +1618,62 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public void validateCommand(ResolveConflictForm target, Errors errors)
+        public void validateCommand(ResolveConflictForm form, Errors errors)
         {
-            //To change body of implemented methods use File | Settings | File Templates.
         }
 
         @Override
         public boolean doAction(ResolveConflictForm resolveConflictForm, BindException errors) throws Exception
         {
 
+            if(resolveConflictForm.getConflictLevel() == null)
+            {
+                errors.reject(ERROR_MSG, "Missing 'conflictLevel' parameter.");
+                return false;
+            }
+            if(!resolveConflictForm.getConflictLevel().equalsIgnoreCase("peptide") &&
+               !resolveConflictForm.getConflictLevel().equalsIgnoreCase("protein"))
+            {
+                errors.reject(ERROR_MSG, resolveConflictForm.getConflictLevel() + " is an invalid value for 'conflictLevel' parameter."+
+                              " Valid values are 'peptide' or 'protein'.");
+
+                return false;
+            }
+
             TargetedMSManager.getSchema().getScope().ensureTransaction();
 
             try {
-                // Set RepresentativeDataState to Representative.
-                int[] selectedPepGrpIds = resolveConflictForm.getSelectedPeptideGroupIds();
-                PeptideGroupManager.updateRepresentativeStatus(selectedPepGrpIds, PeptideGroup.RepresentativeDataState.Representative);
 
-                // Set to either NotRepresentative or Representative_Deprecated.
-                // If the original status was Representative it will be updated to Representative_Deprecated.
-                // If the original status was Conflicted it will be update to NotRepresentative.
-                int[] deselectPepGrpIds = resolveConflictForm.getDeSelectedPeptideGroupIds();
-                PeptideGroupManager.updateStatusToDeprecatedOrNotRepresentative(deselectPepGrpIds);
+                int[] selectedIds = resolveConflictForm.getSelectedIds();
+                int[] deselectIds = resolveConflictForm.getDeselectedIds();
+                if(resolveConflictForm.getConflictLevel().equalsIgnoreCase("protein"))
+                {
+                    // Set RepresentativeDataState to Representative.
+                    PeptideGroupManager.updateRepresentativeStatus(selectedIds, RepresentativeDataState.Representative);
 
-                // If there are runs in the container that no longer have any representative data mark
-                // them as being not representative.
-                TargetedMSManager.updateRunRepresentativeStatus_ProteinData(getContainer());
+                    // Set to either NotRepresentative or Representative_Deprecated.
+                    // If the original status was Representative it will be updated to Representative_Deprecated.
+                    // If the original status was Conflicted it will be update to NotRepresentative.
+                    PeptideGroupManager.updateStatusToDeprecatedOrNotRepresentative(deselectIds);
+
+                    // If there are runs in the container that no longer have any representative data mark
+                    // them as being not representative.
+                    TargetedMSManager.markRunsNotRepresentative(getContainer(), TargetedMSRun.RepresentativeDataState.Representative_Protein);
+                }
+                else
+                {
+                    // Set RepresentativeDataState to Representative.
+                    PrecursorManager.updateRepresentativeStatus(selectedIds, RepresentativeDataState.Representative);
+
+                    // Set to either NotRepresentative or Representative_Deprecated.
+                    // If the original status was Representative it will be updated to Representative_Deprecated.
+                    // If the original status was Conflicted it will be update to NotRepresentative.
+                    PrecursorManager.updateStatusToDeprecatedOrNotRepresentative(deselectIds);
+
+                    // If there are runs in the container that no longer have any representative data mark
+                    // them as being not representative.
+                    TargetedMSManager.markRunsNotRepresentative(getContainer(), TargetedMSRun.RepresentativeDataState.Representative_Peptide);
+                }
 
                 TargetedMSManager.getSchema().getScope().commitTransaction();
             }
@@ -1548,9 +1687,20 @@ public class TargetedMSController extends SpringActionController
 
     public static class ResolveConflictForm
     {
+        public String _conflictLevel; // Either 'peptide' or 'protein'
         public String[] _selectedInputValues;
-        private int[] _selectedPeptideGroupIds;
-        private int[] _deSelectedPeptideGroupIds;
+        private int[] _selectedIds;
+        private int[] _deselectedIds;
+
+        public String getConflictLevel()
+        {
+            return _conflictLevel;
+        }
+
+        public void setConflictLevel(String conflictLevel)
+        {
+            _conflictLevel = conflictLevel;
+        }
 
         public String[] getSelectedInputValues()
         {
@@ -1562,8 +1712,8 @@ public class TargetedMSController extends SpringActionController
             _selectedInputValues = selectedInputValues;
             if(selectedInputValues != null)
             {
-                _selectedPeptideGroupIds = new int[_selectedInputValues.length];
-                _deSelectedPeptideGroupIds = new int[_selectedInputValues.length];
+                _selectedIds = new int[_selectedInputValues.length];
+                _deselectedIds = new int[_selectedInputValues.length];
 
                 int count = 0;
                 for(String value: _selectedInputValues)
@@ -1573,22 +1723,22 @@ public class TargetedMSController extends SpringActionController
                     {
                         int selected = Integer.parseInt(value.substring(0, idx));
                         int deselected = Integer.parseInt(value.substring(idx+1));
-                        _selectedPeptideGroupIds[count] = selected;
-                        _deSelectedPeptideGroupIds[count] = deselected;
+                        _selectedIds[count] = selected;
+                        _deselectedIds[count] = deselected;
                         count++;
                     }
                 }
             }
         }
 
-        public int[] getSelectedPeptideGroupIds()
+        public int[] getSelectedIds()
         {
-            return _selectedPeptideGroupIds;
+            return _selectedIds;
         }
 
-        public int[] getDeSelectedPeptideGroupIds()
+        public int[] getDeselectedIds()
         {
-            return _deSelectedPeptideGroupIds;
+            return _deselectedIds;
         }
     }
 

@@ -33,8 +33,8 @@ if (bean.getSpectrum() != null)
 %>
 
 <!--[if IE]><script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/excanvas.min.js"></script><![endif]-->
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.4/jquery-ui.min.js"></script>
+<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath()%>/MS2/lorikeet_0.3/js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath()%>/MS2/lorikeet_0.3/js/jquery-ui-1.8.4.min.js"></script>
 <script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/specview.js"></script>
 <script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/peptide.js"></script>
 <script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/aminoacid.js"></script>
@@ -66,6 +66,9 @@ $(document).ready(function () {
                                 peaks: <%= bean.getPeaks()%>,
                                 extraPeakSeries: []
                                 });
+
+    //var canvas = $("#lorikeet_0 canvas")[0];
+    //alert(canvas.toDataURL("image/png"));
 
 });
 

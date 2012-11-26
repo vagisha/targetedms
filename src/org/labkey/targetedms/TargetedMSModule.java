@@ -40,6 +40,8 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
 import org.labkey.targetedms.parser.PeptideGroup;
+import org.labkey.targetedms.parser.Precursor;
+import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
@@ -72,7 +74,7 @@ public class TargetedMSModule extends SpringModule
     @Override
     public double getVersion()
     {
-        return 12.28;
+        return 12.29;
     }
 
     @Override
@@ -140,7 +142,7 @@ public class TargetedMSModule extends SpringModule
         addController("targetedms", TargetedMSController.class);
         TargetedMSSchema.register();
         EnumConverter.registerEnum(TargetedMSRun.RepresentativeDataState.class);
-        EnumConverter.registerEnum(PeptideGroup.RepresentativeDataState.class);
+        EnumConverter.registerEnum(RepresentativeDataState.class);
     }
 
     @Override

@@ -26,7 +26,6 @@
     boolean conflictedRun = TargetedMSManager.isRunConflicted(bean.getRun());
     TargetedMSRun.RepresentativeDataState representativeState = bean.getRun().getRepresentativeDataState();
 
-    ActionURL proteinConflictViewUrl = new ActionURL(TargetedMSController.ShowConflictUiAction.class, getViewContext().getContainer());
     ActionURL changeStateUrl = new ActionURL(TargetedMSController.ChangeRepresentativeStateAction.class, getViewContext().getContainer());
 %>
 
@@ -49,13 +48,17 @@
             </span>
         </td>
         <td>
-            <%if(conflictedRun){%>
-                <a style="color:red; text-decoration:underline;" href="<%=proteinConflictViewUrl%>">Resolve conflicts</a>
+            <%if(conflictedRun){
+                String conflictViewUrl = (representativeState == TargetedMSRun.RepresentativeDataState.Representative_Protein) ?
+                                            new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getViewContext().getContainer()).getLocalURIString() :
+                                            new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
+            %>
+                <a style="color:red; text-decoration:underline;" href="<%=conflictViewUrl%>">Resolve conflicts</a>
                 <%
                     changeStateUrl.addParameter("state", TargetedMSRun.RepresentativeDataState.NotRepresentative.toString());
                     changeStateUrl.addParameter("runId", String.valueOf(bean.getRun().getId()));
                 %>
-                <a style="text-decoration:underline;" href="<%=changeStateUrl%>">Set Not Representative</a>
+                <a style="text-decoration:underline;" href="<%=changeStateUrl.getLocalURIString()%>">Set Not Representative</a>
             <%} else {%>
                 <form action="<%=changeStateUrl%>">
                     <input type="hidden" name="runId" value="<%=bean.getRun().getId()%>"/>

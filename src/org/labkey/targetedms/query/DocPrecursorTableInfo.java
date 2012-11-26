@@ -120,8 +120,9 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("NeutralMass"));
         visibleColumns.add(FieldKey.fromParts("Mz"));
         visibleColumns.add(FieldKey.fromParts("Charge"));
-        visibleColumns.add(FieldKey.fromParts("Annotations"));
+        visibleColumns.add(FieldKey.fromParts("RepresentativeDataState"));
         visibleColumns.add(FieldKey.fromParts("TransitionCount"));
+        visibleColumns.add(FieldKey.fromParts("Annotations"));
         visibleColumns.add(FieldKey.fromParts("Chromatograms"));
 
         setDefaultVisibleColumns(visibleColumns);

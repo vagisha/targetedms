@@ -21,15 +21,19 @@
 <%
     boolean hasProteinConflicts = TargetedMSManager.hasConflictedProteins(getViewContext().getContainer());
     boolean hasPeptideConflicts = TargetedMSManager.hasConflictedPeptides(getViewContext().getContainer());
-    ActionURL proteinConflictViewUrl = new ActionURL(TargetedMSController.ShowConflictUiAction.class, getViewContext().getContainer());
+    String proteinConflictViewUrl = new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
+    String peptideConflictViewUrl = new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
 %>
 <%if(hasProteinConflicts){%>
     <span style="color:red; font-weight:bold;">
         There are conflicting representative proteins in this folder.
-        <a style="color:red; text-decoration:underline;" href="<%=proteinConflictViewUrl%>">Resolve conflicts.</a>
+        <a style="color:red; text-decoration:underline;" href="<%=proteinConflictViewUrl%>">Resolve protein conflicts.</a>
     </span>
 <%}%>
 <%if(hasPeptideConflicts){%>
-    There are conflicting representative peptides in this folder.  Resolve conflicts.
+    <span style="color:red; font-weight:bold;">
+        There are conflicting representative peptides in this folder.
+        <a style="color:red; text-decoration:underline;" href="<%=peptideConflictViewUrl%>">Resolve peptide conflicts.</a>
+    </span>
 <%}%>
 

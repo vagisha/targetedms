@@ -8,6 +8,8 @@ import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.PeptideGroup;
+import org.labkey.targetedms.parser.Precursor;
+import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -38,7 +40,11 @@ public class RepresentativeStateManager
             }
             else if(state == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
             {
-                // TODO
+                if(run.getRepresentativeDataState() == TargetedMSRun.RepresentativeDataState.Representative_Protein)
+                {
+                    revertProteinRepresentativeState(user, container, run);
+                }
+                conflictCount = resolveRepresentativePeptideState(container, run);
             }
             else if(state == TargetedMSRun.RepresentativeDataState.NotRepresentative)
             {
@@ -81,28 +87,43 @@ public class RepresentativeStateManager
             if(lastDeprecatedGroup != null)
             {
                 // Mark the last deprecated protein as representative
-                lastDeprecatedGroup.setRepresentativeDataState(PeptideGroup.RepresentativeDataState.Representative);
+                lastDeprecatedGroup.setRepresentativeDataState(RepresentativeDataState.Representative);
                 Table.update(user, TargetedMSManager.getTableInfoPeptideGroup(), lastDeprecatedGroup, lastDeprecatedGroup.getId());
             }
         }
 
         // Mark all proteins in this run as not representative
-        PeptideGroupManager.setRepresentativeState(run.getId(), PeptideGroup.RepresentativeDataState.NotRepresentative);
+        PeptideGroupManager.setRepresentativeState(run.getId(), RepresentativeDataState.NotRepresentative);
     }
 
-    private static void revertPeptideRepresentativeState(User user, Container container, TargetedMSRun run)
+    private static void revertPeptideRepresentativeState(User user, Container container, TargetedMSRun run) throws SQLException
     {
-        // TODO
+        // Get a list of precursors in this run that are marked as representative.
+        List<Precursor> representativePrecursors = PrecursorManager.getRepresentativePrecursors(run.getRunId());
+
+        // Roll back representative state to the most recently deprecated precursors in other runs
+        // in this container(folder).
+        for(Precursor prec: representativePrecursors)
+        {
+            Precursor lastDeprecatedPrec = PrecursorManager.getLastDeprecatedPrecursor(prec, container);
+            if(lastDeprecatedPrec != null)
+            {
+                // Mark the last deprecated precursor as representative
+                lastDeprecatedPrec.setRepresentativeDataState(RepresentativeDataState.Representative);
+                Table.update(user, TargetedMSManager.getTableInfoPrecursor(), lastDeprecatedPrec, lastDeprecatedPrec.getId());
+            }
+        }
+
+        // Mark all precursors in this run as not representative
+        PrecursorManager.setRepresentativeState(run.getId(), RepresentativeDataState.NotRepresentative);
     }
 
     private static int resolveRepresentativeProteinState(Container container, TargetedMSRun run) throws SQLException
     {
         // Mark everything in this run that doesn't already have representative data in this container as being active
         SQLFragment makeActiveSQL = new SQLFragment("UPDATE " + TargetedMSManager.getTableInfoPeptideGroup());
-        // makeActiveSQL.append(" SET ActiveRepresentativeData = ? ");
         makeActiveSQL.append(" SET RepresentativeDataState = ?");
-        // makeActiveSQL.add(true);
-        makeActiveSQL.add(PeptideGroup.RepresentativeDataState.Representative.ordinal());
+        makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
         makeActiveSQL.append(" WHERE RunId=? ");
         makeActiveSQL.add(run.getId());
         makeActiveSQL.append(" AND( ");
@@ -112,52 +133,84 @@ public class RepresentativeStateManager
         makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg1");
         makeActiveSQL.append(", ");
         makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r1");
-        // makeActiveSQL.append(" WHERE pg1.RunId = r1.Id AND r1.Container=? AND pg1.ActiveRepresentativeData=?))) ");
         makeActiveSQL.append(" WHERE pg1.RunId = r1.Id AND r1.Container=? AND pg1.RepresentativeDataState=?))) ");
         makeActiveSQL.add(container);
-        // makeActiveSQL.add(true);
-        makeActiveSQL.add(PeptideGroup.RepresentativeDataState.Representative.ordinal());
+        makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
         // If the peptide group does not have a SequenceId or there isn't an older peptide group with the same
         // SequenceId, compare the Labels to look for conflicting proteins.
         makeActiveSQL.append(" OR (Label NOT IN (SELECT Label FROM ");
         makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg2");
         makeActiveSQL.append(", ");
         makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r2");
-        // makeActiveSQL.append(" WHERE pg2.RunID = r2.Id AND r2.Container=? AND pg2.ActiveRepresentativeData=?)) ");
         makeActiveSQL.append(" WHERE pg2.RunID = r2.Id AND r2.Container=? AND pg2.RepresentativeDataState=?)) ");
         makeActiveSQL.add(container);
-        // makeActiveSQL.add(true);
-        makeActiveSQL.add(PeptideGroup.RepresentativeDataState.Representative.ordinal());
+        makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
         makeActiveSQL.append(")");
         new SqlExecutor(TargetedMSManager.getSchema(), makeActiveSQL).execute();
 
         // Mark all other peptide groups as being in the conflicted state
         SQLFragment makeConflictedSQL = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPeptideGroup());
         makeConflictedSQL.append(" SET RepresentativeDataState = ?");
-        makeConflictedSQL.add(PeptideGroup.RepresentativeDataState.Conflicted.ordinal());
+        makeConflictedSQL.add(RepresentativeDataState.Conflicted.ordinal());
         makeConflictedSQL.append(" WHERE RunId=?");
         makeConflictedSQL.add(run.getId());
         makeConflictedSQL.append(" AND RepresentativeDataState != ?");
-        makeConflictedSQL.add(PeptideGroup.RepresentativeDataState.Representative.ordinal());
+        makeConflictedSQL.add(RepresentativeDataState.Representative.ordinal());
         int conflictCount = new SqlExecutor(TargetedMSManager.getSchema(), makeConflictedSQL).execute();
 
+        return conflictCount;
+    }
 
-        // See how many conflict with existing representative data
-//        SQLFragment remainingConflictsSQL = new SQLFragment("SELECT COUNT(*) FROM ");
-//        remainingConflictsSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-//        remainingConflictsSQL.append(" WHERE ActiveRepresentativeData = ? AND RunId = ?");
-//        remainingConflictsSQL.add(false);
-//        remainingConflictsSQL.add(run.getId());
-//        int conflictCount = new SqlSelector(TargetedMSManager.getSchema(), remainingConflictsSQL).getObject(Integer.class);
+    private static int resolveRepresentativePeptideState(Container container, TargetedMSRun run) throws SQLException
+    {
+        // Mark everything in this run that doesn't already have representative data in this container as being active
+        SQLFragment makeActiveSQL = new SQLFragment("UPDATE " + TargetedMSManager.getTableInfoPrecursor());
+        makeActiveSQL.append(" SET RepresentativeDataState = ?");
+        makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
+        makeActiveSQL.append(" FROM "+TargetedMSManager.getTableInfoPeptide());
+        makeActiveSQL.append(", "+TargetedMSManager.getTableInfoPeptideGroup());
+        makeActiveSQL.append(", "+TargetedMSManager.getTableInfoRuns());
+        makeActiveSQL.append(" WHERE "+TargetedMSManager.getTableInfoPeptideGroup()+".RunId=? ");
+        makeActiveSQL.add(run.getId());
+        makeActiveSQL.append(" AND "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId = "+TargetedMSManager.getTableInfoPeptide()+".Id");
+        makeActiveSQL.append(" AND "+TargetedMSManager.getTableInfoPeptide()+".PeptideGroupId = "+TargetedMSManager.getTableInfoPeptideGroup()+".Id");
 
-//        if (conflictCount == 0)
-//        {
-//            _log.info("Run contains representative data. No conflicts with existing representative data in current container found");
-//        }
-//        else
-//        {
-//            _log.info("Run contains representative data. " + conflictCount + " conflicts with existing representative data in current container found, manual reconciliation required");
-//        }
+        makeActiveSQL.append(" AND");
+        makeActiveSQL.append(" ModifiedSequence NOT IN (SELECT ModifiedSequence FROM ");
+        makeActiveSQL.append(TargetedMSManager.getTableInfoPrecursor(), "prec1");
+        makeActiveSQL.append(", ");
+        makeActiveSQL.append(TargetedMSManager.getTableInfoPeptide(), "pep1");
+        makeActiveSQL.append(", ");
+        makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg1");
+        makeActiveSQL.append(", ");
+        makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r1");
+        makeActiveSQL.append(" WHERE pg1.RunId = r1.Id ");
+        makeActiveSQL.append(" AND");
+        makeActiveSQL.append(" pep1.PeptideGroupId = pg1.Id");
+        makeActiveSQL.append(" AND");
+        makeActiveSQL.append(" prec1.PeptideId = pep1.Id");
+        makeActiveSQL.append(" AND");
+        makeActiveSQL.append(" r1.Container=?");
+        makeActiveSQL.append(" AND");
+        makeActiveSQL.append(" prec1.RepresentativeDataState=? ");
+        makeActiveSQL.add(container);
+        makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
+        makeActiveSQL.append(")");
+        new SqlExecutor(TargetedMSManager.getSchema(), makeActiveSQL).execute();
+
+        // Mark all other precursors as being in the conflicted state
+        SQLFragment makeConflictedSQL = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
+        makeConflictedSQL.append(" SET RepresentativeDataState = ?");
+        makeConflictedSQL.add(RepresentativeDataState.Conflicted.ordinal());
+        makeConflictedSQL.append(" FROM "+TargetedMSManager.getTableInfoPeptide());
+        makeConflictedSQL.append(", "+TargetedMSManager.getTableInfoPeptideGroup());
+        makeConflictedSQL.append(" WHERE " + TargetedMSManager.getTableInfoPeptideGroup() + ".RunId=?");
+        makeConflictedSQL.add(run.getId());
+        makeConflictedSQL.append(" AND " + TargetedMSManager.getTableInfoPrecursor() + ".RepresentativeDataState != ?");
+        makeConflictedSQL.add(RepresentativeDataState.Representative.ordinal());
+        makeConflictedSQL.append(" AND "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId = "+TargetedMSManager.getTableInfoPeptide()+".Id");
+        makeConflictedSQL.append(" AND "+TargetedMSManager.getTableInfoPeptide()+".PeptideGroupId = "+TargetedMSManager.getTableInfoPeptideGroup()+".Id");
+        int conflictCount = new SqlExecutor(TargetedMSManager.getSchema(), makeConflictedSQL).execute();
 
         return conflictCount;
     }
