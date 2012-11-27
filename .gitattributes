@@ -16,6 +16,7 @@ resources/schemas/dbscripts/postgresql/targetedms-0.20-0.21.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.21-0.22.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-0.22-0.23.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-12.20-12.21.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-12.20-12.30.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-12.21-12.22.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-12.22-12.23.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-12.23-12.24.sql -text
@@ -31,6 +32,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-0.20-0.21.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.21-0.22.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-0.22-0.23.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-12.20-12.21.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-12.20-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-12.21-12.22.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-12.22-12.23.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-12.23-12.24.sql -text
