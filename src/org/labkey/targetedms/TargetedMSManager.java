@@ -325,6 +325,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_PRECURSOR_LIB_INFO);
     }
 
+    public static TableInfo getTableInfoAnnotationSettings()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_ANNOTATION_SETTINGS);
+    }
+
     public static int addRunToQueue(ViewBackgroundInfo info,
                                      final File file,
                                      PipeRoot root,
@@ -880,6 +885,8 @@ public class TargetedMSManager
             deleteRunDependent(getTableInfoSpectrumLibrary());
             // Delete from RunEnzyme
             deleteRunDependent(getTableInfoRunEnzyme());
+            // Delete from AnnotationSettings
+            deleteRunDependent(getTableInfoAnnotationSettings());
 
 
             // Delete from runs

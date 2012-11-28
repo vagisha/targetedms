@@ -49,9 +49,12 @@
         </td>
         <td>
             <%if(conflictedRun){
-                String conflictViewUrl = (representativeState == TargetedMSRun.RepresentativeDataState.Representative_Protein) ?
-                                            new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getViewContext().getContainer()).getLocalURIString() :
-                                            new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
+                ActionURL url = (representativeState == TargetedMSRun.RepresentativeDataState.Representative_Protein) ?
+                                            new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getViewContext().getContainer()) :
+                                            new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer());
+
+                url.addParameter("conflictedRunId", String.valueOf(bean.getRun().getId()));
+                String conflictViewUrl = url.getLocalURIString();
             %>
                 <a style="color:red; text-decoration:underline;" href="<%=conflictViewUrl%>">Resolve conflicts</a>
                 <%

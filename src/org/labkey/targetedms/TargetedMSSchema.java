@@ -44,6 +44,7 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.view.ActionURL;
+import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocPrecursorTableInfo;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
@@ -111,6 +112,9 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_LIBRARY_SETTINGS = "LibrarySettings";
     public static final String TABLE_LIBRARY_SOURCE = "LibrarySource";
     public static final String TABLE_PRECURSOR_LIB_INFO = "PrecursorLibInfo";
+    public static final String TABLE_ANNOTATION_SETTINGS = "AnnotationSettings";
+
+    public static final String TABLE_RESPRESENTATIVE_DATA_STATE_RUN = "RepresentativeDataState_Run";
     public static final String TABLE_RESPRESENTATIVE_DATA_STATE = "RepresentativeDataState";
 
     public static final String TABLE_DOC_TRANSITIONS = "DocumentTransitions";
@@ -359,7 +363,7 @@ public class TargetedMSSchema extends UserSchema
                     @Override
                     public TableInfo getLookupTableInfo()
                     {
-                        return getTable(TABLE_RESPRESENTATIVE_DATA_STATE);
+                        return getTable(TABLE_RESPRESENTATIVE_DATA_STATE_RUN);
                     }
                 });
 
@@ -397,9 +401,38 @@ public class TargetedMSSchema extends UserSchema
         {
             return getTargetedMSRunsTable();
         }
+        if (TABLE_RESPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
+        {
+            return new EnumTableInfo<TargetedMSRun.RepresentativeDataState>(
+                    TargetedMSRun.RepresentativeDataState.class,
+                    getSchema(),
+                    new EnumTableInfo.EnumValueGetter<TargetedMSRun.RepresentativeDataState>() {
+
+                        @Override
+                        public String getValue(TargetedMSRun.RepresentativeDataState e)
+                        {
+                            return e.getLabel();
+                        }
+                    },
+                    true,
+                    "Possible states a run might be in for resolving representative data after upload"
+                    );
+        }
         if (TABLE_RESPRESENTATIVE_DATA_STATE.equalsIgnoreCase(name))
         {
-            return new EnumTableInfo<TargetedMSRun.RepresentativeDataState>(TargetedMSRun.RepresentativeDataState.class, getSchema(), "Possible states a run might be in for resolving representative data after upload", true);
+            return new EnumTableInfo<RepresentativeDataState>(
+                    RepresentativeDataState.class,
+                    getSchema(),
+                    new EnumTableInfo.EnumValueGetter<RepresentativeDataState>() {
+
+                        @Override
+                        public String getValue(RepresentativeDataState e)
+                        {
+                            return e.getLabel();
+                        }
+                    },
+                    true,
+                    "Possible representative states for a peptide group or precursor");
         }
 
         // Tables that have a FK directly to targetedms.Runs
@@ -457,6 +490,14 @@ public class TargetedMSSchema extends UserSchema
                     return getTable(TABLE_TARGETED_MS_RUNS);
                 }
             });
+            result.getColumn("RepresentativeDataState").setFk(new LookupForeignKey("RowId")
+            {
+                @Override
+                public TableInfo getLookupTableInfo()
+                {
+                    return getTable(TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE);
+                }
+            });
             return result;
         }
 
@@ -475,7 +516,8 @@ public class TargetedMSSchema extends UserSchema
             TABLE_MODIFICATION_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_LIBRARY_SETTINGS.equals(name) ||
             TABLE_RUN_ENZYME.equals(name) ||
-            TABLE_SPECTRUM_LIBRARY.equalsIgnoreCase(name)
+            TABLE_SPECTRUM_LIBRARY.equalsIgnoreCase(name) ||
+            TABLE_ANNOTATION_SETTINGS.equalsIgnoreCase(name)
             )
         {
             return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.RunFK.getSQL());
@@ -541,6 +583,15 @@ public class TargetedMSSchema extends UserSchema
                                                                         getContainer()),
                                                           Collections.singletonMap("id", "Id"));
             result.setDetailsURL(detailsURLs);
+            result.getColumn("RepresentativeDataState").setFk(new LookupForeignKey("RowId")
+            {
+                @Override
+                public TableInfo getLookupTableInfo()
+                {
+                    TableInfo tinfo = getTable(TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE);
+                    return tinfo;
+                }
+            });
             return result;
         }
 
@@ -675,6 +726,8 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_SPECTRUM_LIBRARY);
         hs.add(TABLE_LIBRARY_SOURCE);
         hs.add(TABLE_PRECURSOR_LIB_INFO);
+        hs.add(TABLE_ANNOTATION_SETTINGS);
+        hs.add(TABLE_RESPRESENTATIVE_DATA_STATE_RUN);
         hs.add(TABLE_RESPRESENTATIVE_DATA_STATE);
         return hs;
     }

@@ -23,5 +23,20 @@ package org.labkey.targetedms.parser;
 public enum RepresentativeDataState
 {
     /** Don't change the ordering of these enum values without updating the values in targetedms.peptidegroup.representativedatastate */
-    NotRepresentative, Representative, Deprecated, Conflicted
+    NotRepresentative(""),
+    Representative("Representative"),
+    Deprecated("Deprecated"),
+    Conflicted("Conflicted");
+
+    private String _label;
+
+    private RepresentativeDataState(String label)
+    {
+        _label = label;
+    }
+
+    public String getLabel()
+    {
+        return _label;
+    }
 }

@@ -28,6 +28,10 @@
 
     String plusImgUrl = request.getContextPath()+"/_images/plus.gif";
     String minusImgUrl = request.getContextPath()+"/_images/minus.gif";
+
+    String runProteinDetailsUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, context.getContainer()).getLocalURIString();
+
+    String proteinConflictUiUrl = new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, context.getContainer()).getLocalURIString();
 %>
 
 <style type="text/css">
@@ -149,6 +153,26 @@ function toggleCheckboxSelection(element)
 
 </script>
 
+<%if(bean.getAllConflictRunFiles() != null && bean.getAllConflictRunFiles().size() > 1) {%>
+    <div style="margin-bottom:10px;">
+        The following runs have conflicting proteins:
+        <ul>
+            <%for(String conflictRun: bean.getAllConflictRunFiles().keySet()) {%>
+                 <li>
+                     <a href="<%=proteinConflictUiUrl%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=conflictRun%></a>
+                 </li>
+            <%}%>
+        </ul>
+        Conflicts can be resolved for one run at a time.
+    </div>
+<%}%>
+<%if(bean.getConflictRunFileName() != null) {%>
+    <div style="color:red; margin-bottom:10px;">
+        Resolve conflicts for <%=bean.getConflictRunFileName()%>.
+    </div>
+<%}%>
+
+
 <%int colspan=3;%>
 <form <%=formAction(TargetedMSController.ResolveConflictAction.class, Method.Post)%>>
 <input type="hidden" name="conflictLevel" value="protein"/>
@@ -188,7 +212,9 @@ function toggleCheckboxSelection(element)
                      <%=protein.getNewProteinLabel()%>
                  </span>
              </td>
-             <td class="representative newProtein <%=protein.getNewProteinId()%>"><%=protein.getNewRunFile()%></td>
+             <td class="representative newProtein <%=protein.getNewProteinId()%>">
+                 <a href="<%=runProteinDetailsUrl%>id=<%=protein.getNewProteinId()%>"><%=protein.getNewRunFile()%></a>
+             </td>
 
              <!-- Old representative protein -->
              <td class="oldProtein <%=protein.getNewProteinId()%>">
@@ -202,7 +228,9 @@ function toggleCheckboxSelection(element)
                      <%=protein.getOldProteinLabel()%>
                  </span>
              </td>
-             <td class="oldProtein <%=protein.getNewProteinId()%>"><%=protein.getOldRunFile()%></td>
+             <td class="oldProtein <%=protein.getNewProteinId()%>">
+                 <a href="<%=runProteinDetailsUrl%>id=<%=protein.getOldProteinId()%>"><%=protein.getOldRunFile()%></a>
+             </td>
          </tr>
         <!-- This is a hidden table row where peptide and transition details will be displayed -->
         <tr>

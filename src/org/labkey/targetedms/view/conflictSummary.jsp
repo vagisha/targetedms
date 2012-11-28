@@ -1,5 +1,4 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
-<%@ page import="org.labkey.api.settings.AppProps" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
@@ -25,15 +24,15 @@
     String peptideConflictViewUrl = new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
 %>
 <%if(hasProteinConflicts){%>
-    <span style="color:red; font-weight:bold;">
+    <div style="color:red; font-weight:bold;">
         There are conflicting representative proteins in this folder.
         <a style="color:red; text-decoration:underline;" href="<%=proteinConflictViewUrl%>">Resolve protein conflicts.</a>
-    </span>
+    </div>
 <%}%>
 <%if(hasPeptideConflicts){%>
-    <span style="color:red; font-weight:bold;">
+    <div style="color:red; font-weight:bold;">
         There are conflicting representative peptides in this folder.
         <a style="color:red; text-decoration:underline;" href="<%=peptideConflictViewUrl%>">Resolve peptide conflicts.</a>
-    </span>
+    </div>
 <%}%>
 

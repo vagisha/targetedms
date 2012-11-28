@@ -21,7 +21,6 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.axis.CategoryLabelPositions;
-import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
@@ -40,7 +39,6 @@ import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
 import java.awt.*;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -55,9 +53,7 @@ import java.util.Map;
  */
 public class PrecursorPeakAreaChartMaker
 {
-    private PrecursorPeakAreaChartMaker() {}
-
-    public static JFreeChart make(PeptideGroup peptideGroup, int replicateId,
+    public JFreeChart make(PeptideGroup peptideGroup, int replicateId,
                                   Peptide peptide, String groupByAnnotation,
                                   boolean cvValues)
     {
@@ -89,11 +85,11 @@ public class PrecursorPeakAreaChartMaker
         String xLabel;
         if(peptide == null)
         {
-            xLabel = StringUtils.isBlank(groupByAnnotation) ? "Peptide" : "Annotation, Peptide";
+            xLabel = noAnnotation(groupByAnnotation) ? "Peptide" : "Annotation, Peptide";
         }
         else
         {
-            xLabel = StringUtils.isBlank(groupByAnnotation) ? "Replicate" : "Annotation";
+            xLabel = noAnnotation(groupByAnnotation) ? "Replicate" : "Annotation";
         }
 
         JFreeChart chart = ChartFactory.createBarChart(
@@ -144,6 +140,11 @@ public class PrecursorPeakAreaChartMaker
         return chart;
     }
 
+    private static boolean noAnnotation(String groupByAnnotation)
+    {
+        return "None".equalsIgnoreCase(groupByAnnotation) || StringUtils.isBlank(groupByAnnotation);
+    }
+
     private static int getMagnitude(double maxCategoryValue)
     {
         double quotient = maxCategoryValue / 1000;
@@ -155,7 +156,7 @@ public class PrecursorPeakAreaChartMaker
         return magnitude == 1 ? "" : (magnitude == 1000 ? "10^3" : "10^6");
     }
 
-    private static List<PrecursorChromInfoPlus> getPrecursorChromInfo(PeptideGroup peptideGroup, int replicateId)
+    private List<PrecursorChromInfoPlus> getPrecursorChromInfo(PeptideGroup peptideGroup, int replicateId)
     {
         if(replicateId == 0)
         {
@@ -182,12 +183,12 @@ public class PrecursorPeakAreaChartMaker
         }
     }
 
-    private static List<PrecursorChromInfoPlus> getPrecursorChromInfo(Peptide peptide)
+    private List<PrecursorChromInfoPlus> getPrecursorChromInfo(Peptide peptide)
     {
         return PrecursorManager.getPrecursorChromInfosForPeptide(peptide.getId());
     }
 
-    private static Map<String, Color> getIsotopeLabelColors(int runId)
+    private Map<String, Color> getIsotopeLabelColors(int runId)
     {
         List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(runId);
         Collections.sort(labels, new Comparator<PeptideSettings.IsotopeLabel>()
@@ -208,7 +209,7 @@ public class PrecursorPeakAreaChartMaker
         return labelColors;
     }
 
-    private static void setRenderer(JFreeChart chart, PeakAreasChartInputMaker.PeakAreaDataset dataset, Map<String, Color> labelColors)
+    private void setRenderer(JFreeChart chart, PeakAreasChartInputMaker.PeakAreaDataset dataset, Map<String, Color> labelColors)
     {
         if(!dataset.isStatistical())
         {
@@ -255,7 +256,7 @@ public class PrecursorPeakAreaChartMaker
             return _labelColors.get(_sortedSeriesLabels.get(row)); // row = series index
         }
     }
-    private static CategoryDataset createDataset(PeakAreasChartInputMaker.PeakAreaDataset peakAreaDataset, int peakAreaAxisMagnitude)
+    private CategoryDataset createDataset(PeakAreasChartInputMaker.PeakAreaDataset peakAreaDataset, int peakAreaAxisMagnitude)
     {
 
         if(peakAreaDataset.isStatistical())

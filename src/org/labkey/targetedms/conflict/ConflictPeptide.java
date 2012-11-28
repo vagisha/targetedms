@@ -27,10 +27,10 @@ public class ConflictPeptide
 {
     private Peptide _newPeptide;
     private Precursor _newPeptidePrecursor;
-    private int _newPeptideRank;
+    private int _newPeptideRank = Integer.MAX_VALUE;
     private Peptide _oldPeptide;
     private Precursor _oldPeptidePrecursor;
-    private int _oldPeptideRank;
+    private int _oldPeptideRank = Integer.MAX_VALUE;
 
     public Peptide getNewPeptide()
     {

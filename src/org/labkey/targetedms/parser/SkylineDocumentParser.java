@@ -178,6 +178,11 @@ public class SkylineDocumentParser
         return _peptideSettings;
     }
 
+    public DataSettings getDataSettings()
+    {
+        return _dataSettings;
+    }
+
     private void readDocumentVersion(XMLStreamReader reader) throws XMLStreamException
     {
         while (reader.hasNext())

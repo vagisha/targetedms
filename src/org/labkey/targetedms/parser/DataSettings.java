@@ -106,6 +106,23 @@ public class DataSettings
         return missingAnnotations;
     }
 
+    public List<AnnotationSetting> getAnnotationSettings()
+    {
+        List<AnnotationSetting> settingsList = new ArrayList<AnnotationSetting>();
+        for(AnnotationDefinition annotDef: _annotationDefinitions.values())
+        {
+            for(AnnotationTarget target: annotDef.getTargets())
+            {
+                AnnotationSetting setting = new AnnotationSetting();
+                setting.setName(annotDef.getName());
+                setting.setTargets(target.toString());
+                setting.setType(annotDef.getType().toString());
+                settingsList.add(setting);
+            }
+        }
+        return settingsList;
+    }
+
     private class AnnotationDefinition
     {
         private String _name;

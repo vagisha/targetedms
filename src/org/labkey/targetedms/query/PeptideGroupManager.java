@@ -165,4 +165,28 @@ public class PeptideGroupManager
         sql.add(runId);
         return new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
     }
+
+    public static boolean ensureContainerMembership(int[] peptideGroupIds, Container container)
+    {
+        if(peptideGroupIds == null || peptideGroupIds.length == 0)
+            return false;
+
+        StringBuilder pepGrpIds = new StringBuilder();
+        for(int id: peptideGroupIds)
+        {
+            pepGrpIds.append(",").append(id);
+        }
+        if(pepGrpIds.length() > 0)
+            pepGrpIds.deleteCharAt(0);
+        SQLFragment sql = new SQLFragment("SELECT COUNT(pg.Id) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoRuns(), "r");
+        sql.append(" WHERE ");
+        sql.append("pg.RunId = r.Id AND r.Container = ? AND pg.Id IN (" + pepGrpIds + ")");
+        sql.add(container.getId());
+
+        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+        return count != null && count == peptideGroupIds.length;
+    }
 }

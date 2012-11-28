@@ -32,7 +32,23 @@ public class TargetedMSRun implements Serializable
 {
     /** Don't change the ordering of these enum values without updating the values in targetedms.runs.representativedatastate */
     public enum RepresentativeDataState
-    { NotRepresentative, Representative_Protein, Representative_Peptide }
+    {
+        NotRepresentative(""),
+        Representative_Protein("R - Protein"),
+        Representative_Peptide("R - Peptide");
+
+        private String _label;
+
+        private RepresentativeDataState(String label)
+        {
+            _label = label;
+        }
+
+        public String getLabel()
+        {
+            return _label;
+        }
+    }
 
     protected int _runId;
     protected Container _container;

@@ -432,6 +432,14 @@ public class SkylineDocImporter
                 digestSettings = Table.insert(_user, TargetedMSManager.getTableInfoRunEnzyme(), digestSettings);
             }
 
+            // Data settings -- these are the annotation settings
+            DataSettings dataSettings = parser.getDataSettings();
+            for(AnnotationSetting annotSetting: dataSettings.getAnnotationSettings())
+            {
+                annotSetting.setRunId(_runId);
+                Table.insert(_user, TargetedMSManager.getTableInfoAnnotationSettings(), annotSetting);
+            }
+
             // TODO: bulk insert of precursor, transition, chrom info etc.
 
             // Store the data
@@ -494,6 +502,14 @@ public class SkylineDocImporter
             int seqId = proteinService.ensureProtein(pepGroup.getSequence(), null, protName, pepGroup.getDescription());
             pepGroup.setSequenceId(seqId);
         }
+
+        if(pepGroup.getLabel().trim().length() == 0)
+        {
+            // If the label was empty add a dummy label so that Table.insert does not insert a NULL value.
+            // The "label" column in targetedms.PeptideGroup is not nullable.
+            pepGroup.setLabel("PEPTIDES");
+        }
+        // CONSIDER: If there is already an identical entry in the PeptideGroup table re-use it.
         pepGroup = Table.insert(_user, TargetedMSManager.getTableInfoPeptideGroup(), pepGroup);
 
         for (PeptideGroupAnnotation annotation : pepGroup.getAnnotations())

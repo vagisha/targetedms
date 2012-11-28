@@ -27,10 +27,10 @@ public class ConflictTransition
 {
     private Precursor _newPrecursor;
     private Transition _newTransition;
-    private int _newTransitionRank;
+    private int _newTransitionRank = Integer.MAX_VALUE;
     private Precursor _oldPrecursor;
     private Transition _oldTransition;
-    private int _oldTransitionRank;
+    private int _oldTransitionRank = Integer.MAX_VALUE;
 
     public Precursor getNewPrecursor()
     {

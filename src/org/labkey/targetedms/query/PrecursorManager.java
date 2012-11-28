@@ -369,4 +369,32 @@ public class PrecursorManager
 
         new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
     }
+
+    public static boolean ensureContainerMembership(int[] precursorIds, Container container)
+    {
+        if(precursorIds == null || precursorIds.length == 0)
+            return false;
+
+        StringBuilder precIds = new StringBuilder();
+        for(int id: precursorIds)
+        {
+            precIds.append(",").append(id);
+        }
+        if(precIds.length() > 0)
+            precIds.deleteCharAt(0);
+        SQLFragment sql = new SQLFragment("SELECT COUNT(pg.Id) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoRuns(), "r");
+        sql.append(" WHERE pre.PeptideId = pep.Id AND ");
+        sql.append("pep.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Container = ? AND pre.Id IN ("+precIds+")");
+        sql.add(container.getId());
+
+        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+        return count != null && count == precursorIds.length;
+    }
 }

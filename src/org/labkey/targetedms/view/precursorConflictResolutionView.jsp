@@ -33,6 +33,9 @@
     String minusImgUrl = request.getContextPath()+"/_images/minus.gif";
 
     ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker = new ModifiedPeptideHtmlMaker();
+
+    String runPrecursorDetailsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, context.getContainer()).getLocalURIString();
+    String precursorConflictUiUrl = new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, context.getContainer()).getLocalURIString();
 %>
 
 <style type="text/css">
@@ -154,6 +157,25 @@ function toggleCheckboxSelection(element)
 
 </script>
 
+<%if(bean.getAllConflictRunFiles() != null && bean.getAllConflictRunFiles().size() > 1) {%>
+    <div style="margin-bottom:10px;">
+        The following runs have conflicting peptides:
+        <ul>
+            <%for(String conflictRun: bean.getAllConflictRunFiles().keySet()) {%>
+                 <li>
+                     <a href="<%=precursorConflictUiUrl%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=conflictRun%></a>
+                 </li>
+            <%}%>
+        </ul>
+        Conflicts can be resolved for one run at a time.
+    </div>
+<%}%>
+<%if(bean.getConflictRunFileName() != null) {%>
+    <div style="color:red; margin-bottom:10px;">
+        Resolve conflicts for <%=bean.getConflictRunFileName()%>.
+    </div>
+<%}%>
+
 <%int colspan=3;%>
 <form <%=formAction(TargetedMSController.ResolveConflictAction.class, Method.Post)%>>
 <input type="hidden" name="conflictLevel" value="peptide"/>
@@ -193,7 +215,9 @@ function toggleCheckboxSelection(element)
                      <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getNewPrecursorId()))%>
                  </span>
              </td>
-             <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>"><%=precursor.getNewRunFile()%></td>
+             <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
+                 <a href="<%=runPrecursorDetailsUrl%>id=<%=precursor.getNewPrecursorId()%>"><%=precursor.getNewRunFile()%></a>
+             </td>
 
              <!-- Old representative precursor -->
              <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">
@@ -207,7 +231,9 @@ function toggleCheckboxSelection(element)
                      <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getOldPrecursorId()))%>
                  </span>
              </td>
-             <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>"><%=precursor.getOldRunFile()%></td>
+             <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">
+                <a href="<%=runPrecursorDetailsUrl%>id=<%=precursor.getOldPrecursorId()%>"><%=precursor.getOldRunFile()%></a>
+             </td>
          </tr>
         <!-- This is a hidden table row where transition details will be displayed -->
         <tr>

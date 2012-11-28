@@ -24,12 +24,18 @@
 <%
     JspView<TargetedMSController.PeakAreaGraphBean> me = (JspView<TargetedMSController.PeakAreaGraphBean>) HttpView.currentView();
     TargetedMSController.PeakAreaGraphBean bean = me.getModelBean();
-    int peptideGroupId = bean.getPeptideGroupId();
+    int peptideGroupId = bean.getPeptideGroupId(); // Used when displaying peak areas for all peptides of a protein
+    int peptideId = bean.getPeptideId(); // Used when displaying peak areas for a single peptide in multiple replicates
+                                         // or grouped by replicate annotation.
     List<Replicate> replicateList = bean.getReplicateList();
     List<String> replicateAnnotationNameList = bean.getReplicateAnnotationNameList();
     List<Peptide> peptideList = bean.getPeptideList();
+
     ActionURL peakAreaUrl = new ActionURL(TargetedMSController.ShowPeptidePeakAreasAction.class, getViewContext().getContainer());
-    peakAreaUrl.addParameter("id", peptideGroupId);
+    if(peptideGroupId != 0)
+        peakAreaUrl.addParameter("peptideGroupId", peptideGroupId);
+    else if(peptideId != 0)
+        peakAreaUrl.addParameter("peptideId", peptideId);
 %>
 <script type="text/javascript">
     Ext.onReady(function() {
@@ -173,10 +179,10 @@
                                 'showPeptidePeakAreas', // action
                                  LABKEY.ActionURL.getContainer(),
                                  {
-                                    id: <%=peptideGroupId%>,
+                                    peptideGroupId: <%=peptideGroupId%>,
                                     replicateId: replicateComboBox.getValue(),
                                     groupByReplicateAnnotName: replicateAnnotNameComboBox.getValue(),
-                                    peptideId: peptideComboBox.getValue(),
+                                    peptideId: peptideStore.count() > 1 ? peptideComboBox.getValue() : <%=peptideId%>,
                                     cvValues: cvValuesCheckbox.getValue()
                                  }
                             );
@@ -187,10 +193,13 @@
         });
 
         var items = [];
-        if(replicateStore.count() > 0) items.push(replicateComboBox);
-        if(replicateAnnotNameStore.count() > 0) items.push(replicateAnnotNameComboBox);
-        if(peptideStore.count() > 0) items.push(peptideComboBox);
-        items.push(cvValuesCheckbox);
+        if(replicateStore.count() > 2) items.push(replicateComboBox);
+        if(replicateAnnotNameStore.count() > 1) items.push(replicateAnnotNameComboBox);
+        if(peptideStore.count() > 2) items.push(peptideComboBox);
+        if(replicateStore.count() > 2 || replicateAnnotNameStore.count() > 1)
+        {
+            items.push(cvValuesCheckbox);
+        }
         if(items.length > 0)
         {
             Ext4.create('Ext.form.Panel', {
@@ -202,14 +211,25 @@
                 buttons: [updateBtn]
             });
         }
+        updateCvCheckbox();
+
 
         function updateCvCheckbox()
         {
+            if(!cvValuesCheckbox.isVisible())
+                return;
+
             var allReplicates = replicateComboBox.getValue() == replicateStore.getAt(0).get('replicateId'); // replicate = 'All'
             var noAnnotations = replicateAnnotNameComboBox.getValue() == replicateAnnotNameStore.getAt(0).get('name'); // annotation = 'None'
 
-            var replicateEnabled = replicateComboBox.disabled == false;
-            var annotEnabled = replicateAnnotNameComboBox.disabled == false;
+            var replicateEnabled = false;
+            if(replicateComboBox.isVisible())
+                replicateEnabled = replicateComboBox.disabled == false;
+            var annotEnabled = false;
+            if(replicateAnnotNameComboBox.isVisible())
+                annotEnabled = replicateAnnotNameComboBox.disabled == false;
+
+            //alert("allReplicates: "+allReplicates+", noAnnotations: "+noAnnotations+", replicateEnabled: "+replicateEnabled+", annotEnabled: "+annotEnabled);
             if((replicateEnabled && allReplicates) ||
                (annotEnabled && !noAnnotations)
                )
@@ -232,7 +252,6 @@
             <td>
                 <div id="peakAreasGraphImg"></div>
             </td>
-            <%if(replicateList.size() > 0){%>
             <td valign="top">
                 <table>
                     <tbody>
@@ -244,7 +263,6 @@
                     </tbody>
                 </table>
             </td>
-            <%}%>
         </tr>
     </tbody>
 </table>

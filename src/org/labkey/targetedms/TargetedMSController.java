@@ -611,6 +611,18 @@ public class TargetedMSController extends SpringActionController
             vbox.addView(chartForm);
             vbox.addView(chromView);
 
+             // Peak area graph for the peptide
+            PeakAreaGraphBean peakAreasBean = new PeakAreaGraphBean();
+            peakAreasBean.setPeptideId(peptideId);
+            peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
+
+
+            JspView<PeakAreaGraphBean> peakAreaView = new JspView<PeakAreaGraphBean>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
+                                                                                                   peakAreasBean);
+            peakAreaView.setTitle("Peak Areas");
+
+            vbox.addView(peakAreaView);
+
 
             // library spectrum
             List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(peptide);
@@ -700,24 +712,32 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void export(ShowPeakAreaForm form, HttpServletResponse response, BindException errors) throws Exception
         {
-            int peptideGroupId = form.getId();  // peptide group Id
-
-            PeptideGroup peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), peptideGroupId);
-            if(peptideGrp == null)
+            PeptideGroup peptideGrp = null;
+            if(form.getPeptideGroupId() != 0)
             {
-                throw new NotFoundException(String.format("No peptide group found in this folder for peptideGroupId: %d", peptideGroupId));
+                peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), form.getPeptideGroupId());
+                if(peptideGrp == null)
+                {
+                    throw new NotFoundException(String.format("No peptide group found in this folder for peptideGroupId: %d", form.getPeptideGroupId()));
+                }
             }
 
             Peptide peptide = null;
             if(form.getPeptideId() != 0)
             {
-                peptide = PeptideManager.get(form.getPeptideId());
+                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
                 if(peptide == null)
                 {
                     throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", form.getPeptideId()));
                 }
+
+                if(peptideGrp == null)
+                {
+                    peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), peptide.getPeptideGroupId());
+                }
             }
-            JFreeChart chart = PrecursorPeakAreaChartMaker.make(peptideGrp,
+
+            JFreeChart chart = new PrecursorPeakAreaChartMaker().make(peptideGrp,
                                                                  form.getReplicateId(),
                                                                  peptide,
                                                                  form.getGroupByReplicateAnnotName(),
@@ -755,20 +775,20 @@ public class TargetedMSController extends SpringActionController
 
     public static class ShowPeakAreaForm extends AbstractChartForm
     {
-        private int _id;
+        private int _peptideGroupId;
         private int _replicateId = 0; // A value of 0 means all replicates should be included in the plot.
         private int _peptideId = 0;
         private String _groupByReplicateAnnotName;
         private boolean _cvValues;
 
-        public int getId()
+        public int getPeptideGroupId()
         {
-            return _id;
+            return _peptideGroupId;
         }
 
-        public void setId(int id)
+        public void setPeptideGroupId(int peptideGroupId)
         {
-            _id = id;
+            _peptideGroupId = peptideGroupId;
         }
 
         public int getReplicateId()
@@ -1204,7 +1224,7 @@ public class TargetedMSController extends SpringActionController
             DataRegion groupDetails = new DataRegion();
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             TableInfo tableInfo = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
-            groupDetails.setColumns(tableInfo.getColumns("Label", "Description", "Decoy", "Note"));
+            groupDetails.setColumns(tableInfo.getColumns("Label", "Description", "Decoy", "Note", "RunId"));
             groupDetails.setButtonBar(ButtonBar.BUTTON_BAR_EMPTY);
             DetailsView groupDetailsView = new DetailsView(groupDetails, form.getId());
             groupDetailsView.setTitle("Peptide Group");
@@ -1302,6 +1322,7 @@ public class TargetedMSController extends SpringActionController
     public static class PeakAreaGraphBean
     {
         private int _peptideGroupId;
+        private int _peptideId;
         private List<Replicate> _replicateList;
         private List<String> _replicateAnnotationNameList;
         private List<Peptide> _peptideList;
@@ -1316,9 +1337,19 @@ public class TargetedMSController extends SpringActionController
             _peptideGroupId = peptideGroupId;
         }
 
+        public int getPeptideId()
+        {
+            return _peptideId;
+        }
+
+        public void setPeptideId(int peptideId)
+        {
+            _peptideId = peptideId;
+        }
+
         public List<Replicate> getReplicateList()
         {
-            return _replicateList;
+            return _replicateList != null ? _replicateList : Collections.<Replicate>emptyList();
         }
 
         public void setReplicateList(List<Replicate> replicateList)
@@ -1328,7 +1359,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<String> getReplicateAnnotationNameList()
         {
-            return _replicateAnnotationNameList;
+            return _replicateAnnotationNameList != null ? _replicateAnnotationNameList : Collections.<String>emptyList();
         }
 
         public void setReplicateAnnotationNameList(List<String> replicateAnnotationNameList)
@@ -1338,7 +1369,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<Peptide> getPeptideList()
         {
-            return _peptideList;
+            return _peptideList != null ? _peptideList : Collections.<Peptide>emptyList();
         }
 
         public void setPeptideList(List<Peptide> peptideList)
@@ -1394,13 +1425,60 @@ public class TargetedMSController extends SpringActionController
     // Action to show representative data conflicts, if any, in a container
     // ------------------------------------------------------------------------
     @RequiresPermissionClass(InsertPermission.class)
-    public class ShowProteinConflictUiAction extends SimpleViewAction
+    public class ShowProteinConflictUiAction extends SimpleViewAction<ConflictUIForm>
     {
         @Override
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public ModelAndView getView(ConflictUIForm form, BindException errors) throws Exception
         {
+            List<ConflictProtein> conflictProteinList = ConflictResultsManager.getConflictedProteins(getContainer());
+            // If the list contains the same conflicted proteins from multiple files return the ones from the
+            // oldest run first.  Or, use the runId from the form if we are given one.
+            int conflictRunId = form.getConflictedRunId();
+            boolean useMin = false;
+            if(conflictRunId == 0)
+            {
+                conflictRunId = Integer.MAX_VALUE;
+                useMin = true;
+            }
+            String conflictRunFileName = null;
+            Map<String, Integer> conflictRunFiles = new HashMap<String, Integer>();
+            for(ConflictProtein cProtein: conflictProteinList)
+            {
+                if(useMin && (cProtein.getNewProteinRunId() < conflictRunId))
+                {
+                    conflictRunId = cProtein.getNewProteinRunId();
+                    conflictRunFileName = cProtein.getNewRunFile();
+                }
+                else if(!useMin && (conflictRunId == cProtein.getNewProteinRunId()))
+                {
+                    conflictRunFileName = cProtein.getNewRunFile();
+                }
+                conflictRunFiles.put(cProtein.getNewRunFile(), cProtein.getNewProteinRunId());
+            }
+
+            //ensure that the run is valid and exists within the current container
+            validateRun(conflictRunId);
+
+            if(conflictRunFileName == null)
+            {
+                throw new NotFoundException("Run with ID "+conflictRunId+" does not have any protein conflicts.");
+            }
+
+            List<ConflictProtein> singleRunConflictProteins = new ArrayList<ConflictProtein>();
+            for(ConflictProtein cProtein: conflictProteinList)
+            {
+                if(cProtein.getNewProteinRunId() != conflictRunId)
+                    continue;
+                singleRunConflictProteins.add(cProtein);
+            }
+
             ProteinConflictBean bean = new ProteinConflictBean();
-            bean.setConflictProteinList(ConflictResultsManager.getConflictedProteins(getContainer()));
+            bean.setCurrentConflictRunFile(conflictRunFileName);
+            bean.setConflictProteinList(singleRunConflictProteins);
+            if(conflictRunFiles.size() > 1)
+            {
+                bean.setAllConflictRunFiles(conflictRunFiles);
+            }
 
             JspView<ProteinConflictBean> conflictInfo = new JspView("/org/labkey/targetedms/view/proteinConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
@@ -1416,18 +1494,55 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    public static class ConflictUIForm
+    {
+        private int _conflictedRunId;
+
+        public int getConflictedRunId()
+        {
+            return _conflictedRunId;
+        }
+
+        public void setConflictedRunId(int conflictedRunId)
+        {
+            _conflictedRunId = conflictedRunId;
+        }
+    }
+
     public static class ProteinConflictBean
     {
-        private List<ConflictProtein> conflictProteinList;
+        private List<ConflictProtein> _conflictProteinList;
+        private Map<String, Integer> _allConflictRunFiles;
+        private String _conflictRunFileName;
 
         public List<ConflictProtein> getConflictProteinList()
         {
-            return conflictProteinList;
+            return _conflictProteinList;
         }
 
         public void setConflictProteinList(List<ConflictProtein> conflictProteinList)
         {
-            this.conflictProteinList = conflictProteinList;
+            _conflictProteinList = conflictProteinList;
+        }
+
+        public Map<String, Integer> getAllConflictRunFiles()
+        {
+            return _allConflictRunFiles;
+        }
+
+        public void setAllConflictRunFiles(Map<String, Integer> allConflictRunFiles)
+        {
+            _allConflictRunFiles = allConflictRunFiles;
+        }
+
+        public void setCurrentConflictRunFile(String conflictRunFileName)
+        {
+            _conflictRunFileName = conflictRunFileName;
+        }
+
+        public String getConflictRunFileName()
+        {
+            return _conflictRunFileName;
         }
     }
 
@@ -1440,7 +1555,15 @@ public class TargetedMSController extends SpringActionController
             ApiSimpleResponse response = new ApiSimpleResponse();
 
             int newProteinId = proteinPeptidesForm.getNewProteinId();
+            if(PeptideGroupManager.getPeptideGroup(getContainer(), newProteinId) == null)
+            {
+                throw new NotFoundException("PeptideGroup with ID "+newProteinId+" was not found in the container.");
+            }
             int oldProteinId = proteinPeptidesForm.getOldProteinId();
+            if(PeptideGroupManager.getPeptideGroup(getContainer(), oldProteinId) == null)
+            {
+                throw new NotFoundException("PeptideGroup with ID "+oldProteinId+" was not found in the container.");
+            }
 
             List<ConflictPeptide> conflictPeptides = ConflictResultsManager.getConflictPeptidesForProteins(newProteinId, oldProteinId);
             // Sort them by ascending peptide ranks in the new protein
@@ -1449,8 +1572,6 @@ public class TargetedMSController extends SpringActionController
                 @Override
                 public int compare(ConflictPeptide o1, ConflictPeptide o2)
                 {
-                    if(o1.getNewPeptideRank() == 0) return 1;
-                    if(o2.getOldPeptideRank() == 0) return -1;
                     return Integer.valueOf(o1.getNewPeptideRank()).compareTo(o2.getNewPeptideRank());
                 }
             });
@@ -1502,13 +1623,61 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermissionClass(InsertPermission.class)
-    public class ShowPrecursorConflictUiAction extends SimpleViewAction
+    public class ShowPrecursorConflictUiAction extends SimpleViewAction<ConflictUIForm>
     {
         @Override
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public ModelAndView getView(ConflictUIForm form, BindException errors) throws Exception
         {
+            List<ConflictPrecursor> conflictPrecursorList = ConflictResultsManager.getConflictedPrecursors(getContainer());
+            // If the list contains the same conflicted precursors from multiple files return the ones from the
+            // oldest run first.  Or, use the runId from the form if we are given one.
+            int conflictRunId = form.getConflictedRunId();
+            boolean useMin = false;
+            if(conflictRunId == 0)
+            {
+                conflictRunId = Integer.MAX_VALUE;
+                useMin = true;
+            }
+
+            String conflictRunFileName = null;
+            Map<String, Integer> conflictRunFiles = new HashMap<String, Integer>();
+            for(ConflictPrecursor cPrecursor: conflictPrecursorList)
+            {
+                if(useMin && cPrecursor.getNewPrecursorRunId() < conflictRunId)
+                {
+                    conflictRunId = cPrecursor.getNewPrecursorRunId();
+                    conflictRunFileName = cPrecursor.getNewRunFile();
+                }
+                else if(!useMin && cPrecursor.getNewPrecursorRunId() == conflictRunId)
+                {
+                    conflictRunFileName = cPrecursor.getNewRunFile();
+                }
+                conflictRunFiles.put(cPrecursor.getNewRunFile(), cPrecursor.getNewPrecursorRunId());
+            }
+
+            //ensure that the run is valid and exists within the current container
+            validateRun(conflictRunId);
+
+            if(conflictRunFileName == null)
+            {
+                throw new NotFoundException("Run with ID "+conflictRunId+" does not have any peptide conflicts.");
+            }
+
+            List<ConflictPrecursor> singleRunConflictPrecursors = new ArrayList<ConflictPrecursor>();
+            for(ConflictPrecursor cPrecursor: conflictPrecursorList)
+            {
+                if(cPrecursor.getNewPrecursorRunId() != conflictRunId)
+                    continue;
+                singleRunConflictPrecursors.add(cPrecursor);
+            }
+
             PrecursorConflictBean bean = new PrecursorConflictBean();
-            bean.setConflictPrecursorList(ConflictResultsManager.getConflictedPrecursors(getContainer()));
+            bean.setConflictRunFileName(conflictRunFileName);
+            bean.setConflictPrecursorList(singleRunConflictPrecursors);
+            if(conflictRunFiles.size() > 1)
+            {
+                bean.setAllConflictRunFiles(conflictRunFiles);
+            }
 
             JspView<PrecursorConflictBean> conflictInfo = new JspView("/org/labkey/targetedms/view/precursorConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
@@ -1527,6 +1696,8 @@ public class TargetedMSController extends SpringActionController
     public static class PrecursorConflictBean
     {
         private List<ConflictPrecursor> _conflictPrecursorList;
+        private Map<String, Integer> _allConflictRunFiles;
+        private String _conflictRunFileName;
 
         public List<ConflictPrecursor> getConflictPrecursorList()
         {
@@ -1536,6 +1707,26 @@ public class TargetedMSController extends SpringActionController
         public void setConflictPrecursorList(List<ConflictPrecursor> conflictPrecursorList)
         {
             _conflictPrecursorList = conflictPrecursorList;
+        }
+
+        public Map<String, Integer> getAllConflictRunFiles()
+        {
+            return _allConflictRunFiles;
+        }
+
+        public void setAllConflictRunFiles(Map<String, Integer> allConflictRunFiles)
+        {
+            _allConflictRunFiles = allConflictRunFiles;
+        }
+
+        public String getConflictRunFileName()
+        {
+            return _conflictRunFileName;
+        }
+
+        public void setConflictRunFileName(String conflictRunFileName)
+        {
+            _conflictRunFileName = conflictRunFileName;
         }
     }
 
@@ -1548,7 +1739,15 @@ public class TargetedMSController extends SpringActionController
             ApiSimpleResponse response = new ApiSimpleResponse();
 
             int newPrecursorId = conflictPrecursorsForm.getNewPrecursorId();
+            if(PrecursorManager.getPrecursor(getContainer(), newPrecursorId) == null)
+            {
+                throw new NotFoundException("Precursor with ID "+newPrecursorId+" was not found in the container.");
+            }
             int oldPrecursorId = conflictPrecursorsForm.getOldPrecursorId();
+            if(PrecursorManager.getPrecursor(getContainer(), oldPrecursorId) == null)
+            {
+                throw new NotFoundException("Precursor with ID "+oldPrecursorId+" was not found in the container.");
+            }
 
             List<ConflictTransition> conflictTransitions = ConflictResultsManager.getConflictTransitionsForPrecursors(newPrecursorId, oldPrecursorId);
             // Sort them by ascending transitions ranks in the new precursor
@@ -1557,8 +1756,6 @@ public class TargetedMSController extends SpringActionController
                 @Override
                 public int compare(ConflictTransition o1, ConflictTransition o2)
                 {
-                    if(o1.getNewTransitionRank() == 0) return 1;
-                    if(o2.getOldTransitionRank() == 0) return -1;
                     return Integer.valueOf(o1.getNewTransitionRank()).compareTo(o2.getNewTransitionRank());
                 }
             });
@@ -1631,8 +1828,9 @@ public class TargetedMSController extends SpringActionController
                 errors.reject(ERROR_MSG, "Missing 'conflictLevel' parameter.");
                 return false;
             }
-            if(!resolveConflictForm.getConflictLevel().equalsIgnoreCase("peptide") &&
-               !resolveConflictForm.getConflictLevel().equalsIgnoreCase("protein"))
+            boolean resolveProtein = resolveConflictForm.getConflictLevel().equalsIgnoreCase("protein");
+            boolean resolvePrecursor = resolveConflictForm.getConflictLevel().equalsIgnoreCase("peptide");
+            if(!resolveProtein && !resolvePrecursor)
             {
                 errors.reject(ERROR_MSG, resolveConflictForm.getConflictLevel() + " is an invalid value for 'conflictLevel' parameter."+
                               " Valid values are 'peptide' or 'protein'.");
@@ -1640,13 +1838,46 @@ public class TargetedMSController extends SpringActionController
                 return false;
             }
 
+            int[] selectedIds = resolveConflictForm.getSelectedIds();
+            int[] deselectIds = resolveConflictForm.getDeselectedIds();
+            if(selectedIds == null || selectedIds.length == 0)
+            {
+                errors.reject(ERROR_MSG, "No IDs were found to be marked as representative.");
+                return false;
+            }
+            if(deselectIds == null || deselectIds.length == 0)
+            {
+                errors.reject(ERROR_MSG, "No IDs were found to be marked as deprecated.");
+                return false;
+            }
+
+            // ensure that the peptide-group or precursor Ids belong to a run in the container
+            if(resolveProtein)
+            {
+                if(!PeptideGroupManager.ensureContainerMembership(selectedIds, getContainer()))
+                {
+                    throw new NotFoundException("One or more of the selected peptideGroupIds were not found in the container.");
+                }
+                if(!PeptideGroupManager.ensureContainerMembership(deselectIds, getContainer()))
+                {
+                    throw new NotFoundException("One or more of the deselected peptideGroupIds were not found in the container.");
+                }
+            }
+            if(resolvePrecursor)
+            {
+                if(!PrecursorManager.ensureContainerMembership(selectedIds, getContainer()))
+                {
+                    throw new NotFoundException("One or more of the selected precursorIds were not found in the container.");
+                }
+                if(!PrecursorManager.ensureContainerMembership(deselectIds, getContainer()))
+                {
+                    throw new NotFoundException("One or more of the deselected precursorIds were not found in the container.");
+                }
+            }
+
             TargetedMSManager.getSchema().getScope().ensureTransaction();
-
             try {
-
-                int[] selectedIds = resolveConflictForm.getSelectedIds();
-                int[] deselectIds = resolveConflictForm.getDeselectedIds();
-                if(resolveConflictForm.getConflictLevel().equalsIgnoreCase("protein"))
+                if(resolveProtein)
                 {
                     // Set RepresentativeDataState to Representative.
                     PeptideGroupManager.updateRepresentativeStatus(selectedIds, RepresentativeDataState.Representative);
@@ -1762,12 +1993,8 @@ public class TargetedMSController extends SpringActionController
         @Override
         public boolean doAction(ChangeRepresentativeStateForm changeStateForm, BindException errors) throws Exception
         {
-
-            TargetedMSRun run = TargetedMSManager.getRun(changeStateForm.getRunId());
-            if(run == null)
-            {
-                throw new NotFoundException("Targeted MS run with ID "+changeStateForm.getRunId()+" not found in the database.");
-            }
+            //ensure that the run is valid and exists within the current container
+            TargetedMSRun run = validateRun(changeStateForm.getRunId());
 
             TargetedMSRun.RepresentativeDataState state = TargetedMSRun.RepresentativeDataState.valueOf(changeStateForm.getState());
 
