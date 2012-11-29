@@ -16,9 +16,6 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.DisplayColumn;
-import org.labkey.api.data.DisplayColumnFactory;
-import org.labkey.api.data.IconDisplayColumn;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
@@ -26,9 +23,6 @@ import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.LookupForeignKey;
-import org.labkey.api.settings.AppProps;
-import org.labkey.api.view.ActionURL;
-import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 
@@ -72,21 +66,6 @@ public class DocTransitionsTableInfo extends FilteredTable
         addColumn(fragment);
 
 
-        ColumnInfo chromatogramsLinkCol = wrapColumn("Chromatograms", getRealTable().getColumn("Id"));
-        chromatogramsLinkCol.setIsUnselectable(true);
-        chromatogramsLinkCol.setDisplayColumnFactory(new DisplayColumnFactory()
-        {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                ActionURL url = new ActionURL(TargetedMSController.TransitionChromatogramChartAction.class, getContainer());
-                return new IconDisplayColumn(colInfo, 18, 18, url, "id",
-                                             AppProps.getInstance().getContextPath() + "/TargetedMS/images/Fragment.gif");
-            }
-        });
-        addColumn(chromatogramsLinkCol);
-
-
         ArrayList<FieldKey> visibleColumns = new ArrayList<FieldKey>();
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Description"));
@@ -109,7 +88,6 @@ public class DocTransitionsTableInfo extends FilteredTable
         visibleColumns.add(FieldKey.fromParts("Fragment"));
         visibleColumns.add(FieldKey.fromParts("Mz"));
         visibleColumns.add(FieldKey.fromParts("Charge"));
-        visibleColumns.add(FieldKey.fromParts("Chromatograms"));
 
         setDefaultVisibleColumns(visibleColumns);
 

@@ -19,8 +19,11 @@ package org.labkey.targetedms;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.title.TextTitle;
 import org.labkey.api.ProteinService;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
@@ -103,6 +106,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
@@ -620,6 +624,7 @@ public class TargetedMSController extends SpringActionController
             JspView<PeakAreaGraphBean> peakAreaView = new JspView<PeakAreaGraphBean>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
                                                                                                    peakAreasBean);
             peakAreaView.setTitle("Peak Areas");
+            peakAreaView.enableExpandCollapse("PeakAreasView", false);
 
             vbox.addView(peakAreaView);
 
@@ -742,8 +747,26 @@ public class TargetedMSController extends SpringActionController
                                                                  peptide,
                                                                  form.getGroupByReplicateAnnotName(),
                                                                  form.isCvValues());
-            response.setContentType("image/png");
-            writePNG(form, response, chart);
+            if(chart != null)
+            {
+                response.setContentType("image/png");
+                writePNG(form, response, chart);
+            }
+            else
+            {
+                chart = createEmptyChart();
+                form.setChartHeight(20);
+                form.setChartWidth(300);
+                response.setContentType("image/png");
+                writePNG(form, response, chart);
+            }
+        }
+
+        private JFreeChart createEmptyChart()
+        {
+            JFreeChart chart = ChartFactory.createBarChart("", "", "", null, PlotOrientation.VERTICAL, false, false, false);
+            chart.setTitle(new TextTitle("No chromatogram data found.", new java.awt.Font("SansSerif", Font.PLAIN, 12)));
+            return chart;
         }
     }
 
@@ -1291,6 +1314,7 @@ public class TargetedMSController extends SpringActionController
             JspView<PeakAreaGraphBean> peakAreaView = new JspView<PeakAreaGraphBean>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
                                                                                       peakAreasBean);
             peakAreaView.setTitle("Peak Areas");
+            peakAreaView.enableExpandCollapse("PeakAreasView", false);
 
             result.addView(peakAreaView);
 

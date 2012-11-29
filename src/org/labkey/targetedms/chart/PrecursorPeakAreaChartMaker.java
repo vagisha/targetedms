@@ -72,6 +72,11 @@ public class PrecursorPeakAreaChartMaker
             inputMaker.setChartType(PeakAreasChartInputMaker.ChartType.REPLICATE_COMPARISON, peptideGroup.getRunId());
         }
 
+        if(pciPlusList == null || pciPlusList.size() == 0)
+        {
+            return null;
+        }
+
         inputMaker.setGroupByAnnotationName(groupByAnnotation);
         inputMaker.setPrecursorChromInfoList(pciPlusList);
         inputMaker.setCvValues(cvValues);

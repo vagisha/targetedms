@@ -41,6 +41,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.LookupForeignKey;
 import org.labkey.api.query.QuerySchema;
+import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.view.ActionURL;
@@ -681,6 +682,20 @@ public class TargetedMSSchema extends UserSchema
         }
 
         return null;
+    }
+
+    protected QuerySettings createQuerySettings(String dataRegionName, String queryName, String viewName)
+    {
+        if(TABLE_PRECURSOR.equalsIgnoreCase(queryName))
+        {
+            return new QuerySettings(dataRegionName)
+            {
+                {
+                    setMaxRows(10);
+                }
+            };
+        }
+        return super.createQuerySettings(dataRegionName, queryName, viewName);
     }
 
     @Override
