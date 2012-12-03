@@ -957,7 +957,7 @@ public class SkylineDocumentParser
 
     private String getDefaultSkylineSampleFileId(String replicateName)
     {
-        return replicateName+"_f0";
+        return replicateName.replaceAll("\\s+", "_")+"_f0";
     }
 
     private Precursor readPrecursor(XMLStreamReader reader) throws XMLStreamException, IOException

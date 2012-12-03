@@ -17,7 +17,7 @@
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
 <%
-    String url = AppProps.getInstance().getContextPath()+"/ms2/home/"+getViewContext().getContainer().getName()+"/doProteinSearch.view";
+    String url = AppProps.getInstance().getContextPath()+"/ms2"+getViewContext().getContainer().getEncodedPath()+"doProteinSearch.view";
 %>
 
 <form action="<%= url %>" method="get">
