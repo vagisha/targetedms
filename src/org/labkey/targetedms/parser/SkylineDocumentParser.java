@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms.parser;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.util.NetworkDrive;
 
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.zip.DataFormatException;
 
 /**
@@ -90,6 +92,12 @@ public class SkylineDocumentParser
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
 
+    private static final Pattern XML_ID_REGEX = Pattern.compile("\"/^[:_A-Za-z][-.:_A-Za-z0-9]*$/\"");
+    private static final String XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    private static final String XML_ID_FOLLOW_CHARS = "-.:_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    private static final String XML_NON_ID_SEPARATOR_CHARS = ";[]{}()!|\\/\"'<>";
+    private static final String XML_NON_ID_PUNCTUATION_CHARS = ",?";
+
     private int _peptideGroupCount;
     private int _peptideCount;
     private int _precursorCount;
@@ -102,6 +110,9 @@ public class SkylineDocumentParser
     private DataSettings _dataSettings;
     private List<Replicate> _replicateList;
     private Map<String, String> _sampleFileIdToFilePathMap;
+    // Map of replicate names and sample file Ids ('id' attribute of <sample_file> element.
+    // An entry is added to this map only if a replicate contains a single sample file.
+    private Map<String, String> _replicateSampleFileIdMap;
 
     private double _matchTolerance = DEFAULT_TOLERANCE;
 
@@ -144,6 +155,7 @@ public class SkylineDocumentParser
     {
         _replicateList = new ArrayList<Replicate>();
         _sampleFileIdToFilePathMap = new HashMap<String, String>();
+        _replicateSampleFileIdMap = new HashMap<String, String>();
 
         readDocumentSettings(_reader);
 
@@ -542,7 +554,10 @@ public class SkylineDocumentParser
                 SampleFile sampleFile = readSampleFile(reader);
                 if (sampleFile.getSkylineId() == null)
                 {
-                    sampleFile.setSkylineId(getDefaultSkylineSampleFileId(replicate.getName()));
+                    // This should only happen for older Skyline documents.
+                    // CONSIDER: Throw an exception since we are enforcing a minimum version for documents that
+                    //           that should always have the 'id' attribute for sample files.
+                    sampleFile.setSkylineId(getSkylineXmlSampleFileId(replicate.getName()));
                 }
                 _sampleFileIdToFilePathMap.put(sampleFile.getSkylineId(), sampleFile.getFilePath());
                 sampleFileList.add(sampleFile);
@@ -551,9 +566,62 @@ public class SkylineDocumentParser
             {
                 annotations.add(readAnnotation(reader, new ReplicateAnnotation()));
             }
+
+            if(sampleFileList.size() == 1)
+            {
+                // Only for replicates with single sample files, store the id given by Skyline to the sample file.
+                _replicateSampleFileIdMap.put(replicate.getName(), sampleFileList.get(0).getSkylineId());
+            }
         }
 
         return replicate;
+    }
+
+    private String getSkylineXmlSampleFileId(String replicateName)
+    {
+        if(StringUtils.isBlank(replicateName))
+        {
+            throw new IllegalStateException("Replicate name cannot be empty.");
+        }
+
+        if(XML_ID_REGEX.matcher(replicateName).matches())
+        {
+            return replicateName+"_f0";
+        }
+
+        StringBuilder validXmlIdSb = new StringBuilder();
+        int i = 0;
+        if(XML_ID_FIRST_CHARS.indexOf(replicateName.charAt(i)) != -1)
+        {
+            validXmlIdSb.append(replicateName.charAt(i));
+        }
+        else
+        {
+            validXmlIdSb.append("_");
+            // If the first character is not allowable, advance past it.
+            // Otherwise, keep it in the ID.
+            if (XML_ID_FOLLOW_CHARS.indexOf(replicateName.charAt(i)) == -1)
+            {
+                i++;
+            }
+        }
+
+        for (; i < replicateName.length(); i++)
+        {
+            char c = replicateName.charAt(i);
+            if (XML_ID_FOLLOW_CHARS.indexOf(c) != -1)
+                validXmlIdSb.append(c);
+            else if (Character.isSpaceChar(c))
+                validXmlIdSb.append('_');
+            else if (XML_NON_ID_SEPARATOR_CHARS.indexOf(c) != -1)
+                validXmlIdSb.append(':');
+            else if (XML_NON_ID_PUNCTUATION_CHARS.indexOf(c) != -1)
+                validXmlIdSb.append('.');
+            else
+                validXmlIdSb.append('-');
+        }
+        validXmlIdSb.append("_f0");
+        return validXmlIdSb.toString();
     }
 
     private SampleFile readSampleFile(XMLStreamReader reader) throws XMLStreamException
@@ -947,7 +1015,7 @@ public class SkylineDocumentParser
     {
         PeptideChromInfo chromInfo = new PeptideChromInfo();
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", PEPTIDE_RESULT));
-        chromInfo.setSkylineSampleFileId(XmlUtil.readAttribute(reader, "file", getDefaultSkylineSampleFileId(chromInfo.getReplicateName())));
+        setSkylineSampleFileId(reader, chromInfo);
         chromInfo.setRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
         chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
         // TODO: read predicted retention time and ratio to standard
@@ -955,9 +1023,18 @@ public class SkylineDocumentParser
         // TODO: read note and annotations
     }
 
-    private String getDefaultSkylineSampleFileId(String replicateName)
+    private void setSkylineSampleFileId(XMLStreamReader reader, ChromInfo chromInfo) throws XMLStreamException
     {
-        return replicateName.replaceAll("\\s+", "_")+"_f0";
+        String skylineSampleFileId = XmlUtil.readAttribute(reader, "file");
+        if(skylineSampleFileId == null)
+        {
+            skylineSampleFileId = _replicateSampleFileIdMap.get(chromInfo.getReplicateName());
+            if(skylineSampleFileId == null)
+            {
+                throw new IllegalStateException("Could not find Skyline-given sample file Id for chrom info in replicate "+chromInfo.getReplicateName());
+            }
+        }
+        chromInfo.setSkylineSampleFileId(skylineSampleFileId);
     }
 
     private Precursor readPrecursor(XMLStreamReader reader) throws XMLStreamException, IOException
@@ -1119,7 +1196,7 @@ public class SkylineDocumentParser
         chromInfo.setAnnotations(annotations);
 
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", PRECURSOR_PEAK));
-        chromInfo.setSkylineSampleFileId(XmlUtil.readAttribute(reader, "file", getDefaultSkylineSampleFileId(chromInfo.getReplicateName())));
+        setSkylineSampleFileId(reader, chromInfo);
         chromInfo.setOptimizationStep(XmlUtil.readIntegerAttribute(reader, "step"));
         chromInfo.setBestRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
         chromInfo.setMinStartTime(XmlUtil.readDoubleAttribute(reader, "start_time"));
@@ -1354,7 +1431,7 @@ public class SkylineDocumentParser
         chromInfo.setAnnotations(annotations);
 
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", TRANSITION_PEAK));
-        chromInfo.setSkylineSampleFileId(XmlUtil.readAttribute(reader, "file", getDefaultSkylineSampleFileId(chromInfo.getReplicateName())));
+        setSkylineSampleFileId(reader, chromInfo);
         chromInfo.setOptimizationStep(XmlUtil.readIntegerAttribute(reader, "step"));
         chromInfo.setRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
         chromInfo.setStartTime(XmlUtil.readDoubleAttribute(reader, "start_time"));
