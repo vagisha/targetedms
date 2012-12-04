@@ -24,7 +24,6 @@ import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
-import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
@@ -962,9 +961,9 @@ public class SkylineDocImporter
            key.append(precursor.getCharge())
            .append("_")
            .append(transition.getFragmentType())
-           .append(transition.getFragmentOrdinal())
+           .append(transition.isPrecursorIon() ? transition.getMassIndex() : transition.getFragmentOrdinal())
            .append("_")
-           .append(transition.getCharge())
+           .append(transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge())
            .append("_")
            .append(chromInfo.getSkylineSampleFileId());
        return key.toString();
