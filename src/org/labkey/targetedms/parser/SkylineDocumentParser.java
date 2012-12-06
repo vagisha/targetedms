@@ -110,8 +110,11 @@ public class SkylineDocumentParser
     private DataSettings _dataSettings;
     private List<Replicate> _replicateList;
     private Map<String, String> _sampleFileIdToFilePathMap;
-    // Map of replicate names and sample file Ids ('id' attribute of <sample_file> element.
+    // Map of replicate names and sample file Ids ('id' attribute of <sample_file> element).
     // An entry is added to this map only if a replicate contains a single sample file.
+    // This is used to lookup the sample file for chrom info elements (<peptide_result>, <precursor_peak> and <transition_peak>)
+    // that do not have the "file" attribute.  The "file" attribute is missing only if the replicate has a single
+    // sample file.
     private Map<String, String> _replicateSampleFileIdMap;
 
     private double _matchTolerance = DEFAULT_TOLERANCE;
@@ -627,7 +630,7 @@ public class SkylineDocumentParser
     private SampleFile readSampleFile(XMLStreamReader reader) throws XMLStreamException
     {
         SampleFile sampleFile = new SampleFile();
-        sampleFile.setSkylineId(reader.getAttributeValue(null, "id"));
+        sampleFile.setSkylineId(XmlUtil.readRequiredAttribute(reader, "id", SAMPLE_FILE));
         sampleFile.setFilePath(XmlUtil.readRequiredAttribute(reader, "file_path", SAMPLE_FILE));
         sampleFile.setSampleName(XmlUtil.readAttribute(reader, "sample_name", SAMPLE_FILE));
 

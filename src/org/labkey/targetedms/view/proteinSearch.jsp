@@ -1,5 +1,6 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
-<%@ page import="org.labkey.api.settings.AppProps" %>
+<%@ page import="org.labkey.api.util.PageFlowUtil" %>
+<%@ page import="org.labkey.api.ms2.MS2Urls" %>
 <%--
 ~ Copyright (c) 2012 LabKey Corporation
 ~
@@ -16,11 +17,7 @@
 --%>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
-<%
-    String url = AppProps.getInstance().getContextPath()+"/ms2"+getViewContext().getContainer().getEncodedPath()+"doProteinSearch.view";
-%>
-
-<form action="<%= url %>" method="get">
+<form action="<%= h(PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getViewContext().getContainer())) %>" method="get">
 
     <table>
         <tr>
