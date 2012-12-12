@@ -354,13 +354,20 @@ class PeptideSettingsParser
         library.setRevision(XmlUtil.readAttribute(reader, REVISION, null));
         library.setLibraryType(elementName.substring(0, elementName.indexOf("_library")));
 
+        String skylineLibraryId;
         if(BIBLIOSPEC_LITE_LIB.equalsIgnoreCase(elementName))
         {
-            library.setSkylineLibraryId(XmlUtil.readRequiredAttribute(reader, LSID, BIBLIOSPEC_LITE_LIB));
+            skylineLibraryId = XmlUtil.readRequiredAttribute(reader, LSID, BIBLIOSPEC_LITE_LIB);
         }
         else
         {
-            library.setSkylineLibraryId(XmlUtil.readAttribute(reader, elementName, null));
+            skylineLibraryId = XmlUtil.readAttribute(reader, ID, null);
+        }
+        // SpectrumLibrary.SkylineLibraryId is limited to 200 characters. Truncate longer ids for now since we don't use them anywhere.
+        // TODO: Increase limit on this column.
+        if(skylineLibraryId != null)
+        {
+            library.setSkylineLibraryId(skylineLibraryId.length() > 200 ? skylineLibraryId.substring(0, 200) : skylineLibraryId);
         }
         return library;
     }

@@ -40,7 +40,7 @@
 <table>
     <tr>
         <td class="labkey-form-label">File</td>
-        <td><%= bean.getRun().getFileName()%></td>
+        <td><%= h(bean.getRun().getFileName())%></td>
     </tr>
     <tr>
         <%
@@ -48,23 +48,11 @@
             boolean isProtein = seqId  != null;
             String fieldLabel =  isProtein ? "Protein" : "Group";
             
-            String proteinLink = null;
-            if(isProtein)
-            {
-                ActionURL url = new ActionURL(TargetedMSController.ShowProteinAction.class, getViewContext().getContainer());
-                url.addParameter("id", bean.getPeptideGroup().getId());
-                proteinLink = url.toString();
-            }   
+            ActionURL showProteinUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, getViewContext().getContainer());
+            showProteinUrl.addParameter("id", bean.getPeptideGroup().getId());
         %>
         <td class="labkey-form-label"><%=fieldLabel%></td>
-        <% if(isProtein)
-           { %>
-            <td><a href="<%=proteinLink%>"><%= bean.getPeptideGroup().getLabel()%></a></td>
-        <%}
-          else
-          {%>
-            <td><%= bean.getPeptideGroup().getLabel()%></td>
-          <%}%>
+        <td><a href="<%=h(showProteinUrl)%>"><%= h(bean.getPeptideGroup().getLabel())%></a></td>
     </tr>
     <tr>
         <td class="labkey-form-label">Sequence</td>

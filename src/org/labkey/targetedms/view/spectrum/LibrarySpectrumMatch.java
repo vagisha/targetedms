@@ -34,6 +34,7 @@ public class LibrarySpectrumMatch
     private PeptideSettings.SpectrumLibrary _library;
     private String _lorikeetId;
     Map<Integer, Double> _modLocationMassMap;
+    Map<Integer, Double> _isotopeModLocationMassMap;
 
     public String getPeptide()
     {
@@ -123,31 +124,47 @@ public class LibrarySpectrumMatch
         _modLocationMassMap = modLocationMassMap;
     }
 
+    public void setIsotopeModifications(Map<Integer, Double> isotopeModLocationMassMap)
+    {
+        _isotopeModLocationMassMap = isotopeModLocationMassMap;
+    }
+
     public String getStructuralModifications()
     {
-        if(getPeptide() == null || _modLocationMassMap == null)
+        if(getPeptide() == null || (_modLocationMassMap == null && _isotopeModLocationMassMap == null))
             return "[]";
 
         // Example: [{index: 8, modMass: 42.0, aminoAcid: 'K'}]
         StringBuilder mods = new StringBuilder();
-        mods.append("[\n");
-        boolean first = true;
-        for(Integer location: _modLocationMassMap.keySet())
-        {
-            if(!first)
-                mods.append("\n,");
+        mods.append("[");
 
-            char aa = _peptide.charAt(location - 1);
+        // Return all modifications (structural and isotopic) in the same set so that the modified residues
+        // show up as highlighed in the spectrum viewer.
+        mods.append(appendModifications(_modLocationMassMap));
+        mods.append(appendModifications(_isotopeModLocationMassMap));
+
+        mods.append("\n]\n");
+        return mods.toString();
+    }
+
+    private String appendModifications(Map<Integer, Double> modLocationMassMap)
+    {
+        if(modLocationMassMap == null)
+            return "";
+
+        StringBuilder mods = new StringBuilder();
+        for(Integer location: modLocationMassMap.keySet())
+        {
+            mods.append("\n");
             mods.append("{index: ")
                 .append(location + 1) // Lorikeet uses a 1-based index
                 .append(", modMass: ")
-                .append(_modLocationMassMap.get(location))
+                .append(modLocationMassMap.get(location))
                 .append(", aminoAcid: '")
                 .append(_peptide.charAt(location))
                 .append("'}");
-            first = false;
+            mods.append(",");
         }
-        mods.append("\n]\n");
         return mods.toString();
     }
 }

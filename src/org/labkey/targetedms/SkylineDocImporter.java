@@ -632,6 +632,10 @@ public class SkylineDocImporter
                 {
                     for(Map.Entry<Integer, InternalStdArea> heavyLabelArea: intStdSampleFileAreas.entrySet())
                     {
+                        // Skip if there were no heavy labeled peaks for this peptide.
+                        if(heavyLabelArea.getValue().getArea() == 0)
+                            continue;
+
                         PeptideAreaRatio peptideAreaRatio = new PeptideAreaRatio();
                         peptideAreaRatio.setIsotopeLabelId(lightLabelArea.getKey());
                         peptideAreaRatio.setIsotopeLabelStdId(heavyLabelArea.getKey());
@@ -760,7 +764,7 @@ public class SkylineDocImporter
             }
 
             // This precursor chrom info may not have a peak area
-            if(precursorChromInfo.getTotalArea() == null)
+            if(precursorChromInfo.getTotalArea() == null || precursorChromInfo.getTotalArea() == 0)
                 continue;
 
             // If this precursor is labeled with an internal standard store the peak areas for the
@@ -867,7 +871,7 @@ public class SkylineDocImporter
             if(internalStandardLabelIds.contains(precursor.getIsotopeLabelId()))
             {
                 // There may not be any area associated with this transition chrom info.
-                if(transChromInfo.getArea() == null)
+                if(transChromInfo.getArea() == null || transChromInfo.getArea() == 0)
                     continue;
 
                 // Key is charge + fragmentType+fragmentOrdinal + fragment_charge + sample file name

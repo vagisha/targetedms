@@ -87,8 +87,15 @@ public class SkylineDocumentParser
     private static final String VARIABLE_MODIFICATION = "variable_modification";
     private static final String SEQUENCE = "sequence";
     private static final String BIBLIOSPEC_SPECTRUM_INFO = "bibliospec_spectrum_info";
+    private static final String HUNTER_SPECTRUM_INFO = "hunter_spectrum_info";
+    private static final String NIST_SPECTRUM_INFO = "nist_spectrum_info";
+    private static final String SPECTRAST_SPECTRUM_INFO = "spectrast_spectrum_info";
     private static final String LIBRARY_NAME = "library_name";
     private static final String COUNT_MEASURED = "count_measured";
+    private static final String EXPECT = "expect";
+    private static final String PROCESSED_INTENSITY =  "processed_intensity";
+    private static final String TOTAL_INTENSITY = "total_intensity";
+    private static final String TFRATIO = "tfratio";
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
 
@@ -1083,10 +1090,21 @@ public class SkylineDocumentParser
             {
                 break;
             }
-            // TODO: handle other library types
             else if(XmlUtil.isStartElement(reader, evtType, BIBLIOSPEC_SPECTRUM_INFO))
             {
-                precursor.setLibraryInfo(readLibraryInfo(reader));
+                precursor.setLibraryInfo(readBibliospecLibraryInfo(reader));
+            }
+            else if(XmlUtil.isStartElement(reader, evtType, HUNTER_SPECTRUM_INFO))
+            {
+                precursor.setLibraryInfo(readHunterLibraryInfo(reader));
+            }
+            else if(XmlUtil.isStartElement(reader, evtType, NIST_SPECTRUM_INFO))
+            {
+                precursor.setLibraryInfo(readNistLibraryInfo(reader));
+            }
+            else if(XmlUtil.isStartElement(reader, evtType, SPECTRAST_SPECTRUM_INFO))
+            {
+                precursor.setLibraryInfo(readSpectrastLibraryInfo(reader));
             }
             else if (XmlUtil.isStartElement(reader, evtType, TRANSITION))
             {
@@ -1183,12 +1201,45 @@ public class SkylineDocumentParser
         return precursor;
     }
 
-    private Precursor.LibraryInfo readLibraryInfo(XMLStreamReader reader) throws XMLStreamException
+    private Precursor.LibraryInfo readBibliospecLibraryInfo(XMLStreamReader reader) throws XMLStreamException
     {
         // <bibliospec_spectrum_info library_name="Yeast_mini" count_measured="895" />
         Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
         libInfo.setLibraryName(XmlUtil.readRequiredAttribute(reader, LIBRARY_NAME, BIBLIOSPEC_SPECTRUM_INFO));
         libInfo.setScore1(XmlUtil.readRequiredDoubleAttribute(reader, COUNT_MEASURED, BIBLIOSPEC_SPECTRUM_INFO));
+        return libInfo;
+    }
+
+    private Precursor.LibraryInfo readHunterLibraryInfo(XMLStreamReader reader) throws XMLStreamException
+    {
+        // <hunter_spectrum_info library_name="GPM_Hunter_yeast" expect="1.030315E-10" processed_intensity="213.6469" />
+        Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
+        libInfo.setLibraryName(XmlUtil.readRequiredAttribute(reader, LIBRARY_NAME, HUNTER_SPECTRUM_INFO));
+        libInfo.setScore1(XmlUtil.readRequiredDoubleAttribute(reader, EXPECT, HUNTER_SPECTRUM_INFO));
+        libInfo.setScore2(XmlUtil.readRequiredDoubleAttribute(reader, PROCESSED_INTENSITY, HUNTER_SPECTRUM_INFO));
+        return libInfo;
+    }
+
+    private Precursor.LibraryInfo readNistLibraryInfo(XMLStreamReader reader) throws XMLStreamException
+    {
+        // <nist_spectrum_info library_name="NIST_MSP_Yeast_qtof" count_measured="14" total_intensity="75798" tfratio="17000" />
+        Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
+        libInfo.setLibraryName(XmlUtil.readRequiredAttribute(reader, LIBRARY_NAME, NIST_SPECTRUM_INFO));
+        libInfo.setScore1(XmlUtil.readRequiredIntegerAttribute(reader, COUNT_MEASURED, NIST_SPECTRUM_INFO));
+        libInfo.setScore2(XmlUtil.readRequiredDoubleAttribute(reader, TOTAL_INTENSITY, NIST_SPECTRUM_INFO));
+        libInfo.setScore3(XmlUtil.readRequiredDoubleAttribute(reader, TFRATIO, NIST_SPECTRUM_INFO));
+        return libInfo;
+    }
+
+    private Precursor.LibraryInfo readSpectrastLibraryInfo(XMLStreamReader reader) throws XMLStreamException
+    {
+        // <spectrast_spectrum_info library_name="ISB_SpectraST_yeast" count_measured="62" total_intensity="94691.2" tfratio="1000" />
+        // <spectrast_spectrum_info library_name="NIST_SpectraST_Yeast_qtof" count_measured="14" total_intensity="75798" tfratio="17000" />
+        Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
+        libInfo.setLibraryName(XmlUtil.readRequiredAttribute(reader, LIBRARY_NAME, SPECTRAST_SPECTRUM_INFO));
+        libInfo.setScore1(XmlUtil.readRequiredIntegerAttribute(reader, COUNT_MEASURED, SPECTRAST_SPECTRUM_INFO));
+        libInfo.setScore2(XmlUtil.readRequiredDoubleAttribute(reader, TOTAL_INTENSITY, SPECTRAST_SPECTRUM_INFO));
+        libInfo.setScore3(XmlUtil.readRequiredDoubleAttribute(reader, TFRATIO, SPECTRAST_SPECTRUM_INFO));
         return libInfo;
     }
 

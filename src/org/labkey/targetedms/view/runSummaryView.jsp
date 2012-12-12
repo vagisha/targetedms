@@ -27,12 +27,18 @@
     TargetedMSRun.RepresentativeDataState representativeState = bean.getRun().getRepresentativeDataState();
 
     ActionURL changeStateUrl = new ActionURL(TargetedMSController.ChangeRepresentativeStateAction.class, getViewContext().getContainer());
+
+    ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getViewContext().getContainer());
+    downloadAction.addParameter("runId", bean.getRun().getId());
 %>
 
 <table>
     <tr>
         <td class="labkey-form-label">File</td>
-        <td> <%= bean.getRun().getFileName()%> </td>
+        <td>
+            <%= bean.getRun().getFileName()%>
+            <%= textLink("Download", downloadAction)%>
+        </td>
     </tr>
     <tr>
         <td class="labkey-form-label">Representative State</td>

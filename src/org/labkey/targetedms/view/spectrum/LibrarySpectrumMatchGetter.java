@@ -63,13 +63,17 @@ public class LibrarySpectrumMatchGetter
             if(precursorCharges.contains(precursor.getCharge()))
                 continue;
 
+            precursorCharges.add(precursor.getCharge());
+
             for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
             {
                 BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(libraryFilePathsMap.get(library),
                         precursor.getModifiedSequence(),
                         precursor.getCharge());
 
-                if(spectrum != null)
+                // Make sure that the Bibliospec spectrum has peaks.  Minimized libraries in Skyline can have
+                // library entries with no spectrum peaks.  This should be fixed in Skyline.
+                if(spectrum != null && spectrum.getNumPeaks() > 0)
                 {
                     LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
                     pepSpec.setCharge(precursor.getCharge());
@@ -81,6 +85,10 @@ public class LibrarySpectrumMatchGetter
 
                     // Add any structural modifications
                     pepSpec.setStructuralModifications(modLocationMassMap);
+
+                    // Add any isotope modifications (can be different for each precursor)
+                    Map<Integer, Double> isotopeModLocationMassMap = ModificationManager.getPeptideIsotopeMods(peptide.getId(),  precursor.getIsotopeLabelId());
+                    pepSpec.setIsotopeModifications(isotopeModLocationMassMap);
 
                     break;  // return spectrum from the first library that has a match
                 }

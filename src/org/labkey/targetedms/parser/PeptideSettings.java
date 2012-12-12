@@ -288,7 +288,7 @@ public class PeptideSettings
             _label13C = label13C;
         }
 
-        public Boolean isLabel15N()
+        public Boolean getLabel15N()
         {
             return _label15N;
         }
@@ -298,7 +298,7 @@ public class PeptideSettings
             _label15N = label15N;
         }
 
-        public Boolean isLabel18O()
+        public Boolean getLabel18O()
         {
             return _label18O;
         }
@@ -308,7 +308,7 @@ public class PeptideSettings
             _label18O = label18O;
         }
 
-        public Boolean isLabel2H()
+        public Boolean getLabel2H()
         {
             return _label2H;
         }

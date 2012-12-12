@@ -41,6 +41,8 @@ import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ms2.MS2Urls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
@@ -54,6 +56,7 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
@@ -1066,12 +1069,12 @@ public class TargetedMSController extends SpringActionController
 
         public NavTree appendNavTrail(NavTree root)
         {
-            if (null != _run)
-            {
-                root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
-                root.addChild(_run.getBaseName());
-            }
-            return root;
+            return appendNavTrail(root, _run).addChild(_run.getBaseName());
+        }
+
+        public NavTree appendNavTrail(NavTree root, TargetedMSRun run)
+        {
+            return root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
         }
 
         public abstract String getDataRegionName();
@@ -1234,6 +1237,9 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermissionClass(ReadPermission.class)
     public class ShowProteinAction extends SimpleViewAction<ProteinDetailForm>
     {
+        private TargetedMSRun _run; // save for use in appendNavTrail
+        private String _proteinLabel;
+
         @Override
         public ModelAndView getView(final ProteinDetailForm form, BindException errors) throws Exception
         {
@@ -1242,6 +1248,9 @@ public class TargetedMSController extends SpringActionController
             {
                 throw new NotFoundException("Could not find peptide group #" + form.getId());
             }
+
+            _run = TargetedMSManager.getRun(group.getRunId());
+            _proteinLabel = group.getLabel();
 
             // Peptide group details
             DataRegion groupDetails = new DataRegion();
@@ -1324,7 +1333,9 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
+            return new ShowPrecursorListAction().appendNavTrail(root, _run)
+                                                .addChild(_run.getFileName(), getShowRunURL(getContainer(), _run.getId()))
+                                                .addChild(_proteinLabel);
         }
     }
 
@@ -2050,6 +2061,63 @@ public class TargetedMSController extends SpringActionController
         public void setState(String state)
         {
             _state = state;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    public class DownloadDocumentAction extends SimpleViewAction<DownloadDocumentForm>
+    {
+        public ModelAndView getView(DownloadDocumentForm form, BindException errors) throws Exception
+        {
+            if (form.getRunId() < 0)
+            {
+                throw new NotFoundException("No run ID specified.");
+            }
+            TargetedMSRun run = validateRun(form.getRunId());
+            ExpRun expRun = ExperimentService.get().getExpRun(run.getExperimentRunLSID());
+            if (expRun == null)
+            {
+                throw new NotFoundException("Run " + run.getExperimentRunLSID() + " does not exist.");
+            }
+
+            ExpData[] inputDatas = expRun.getAllDataUsedByRun();
+            if(inputDatas == null || inputDatas.length == 0)
+            {
+                throw new NotFoundException("No input data found for run "+expRun.getRowId());
+            }
+            // The first file will be the .zip file since we only use one file as input data.
+            File file = expRun.getAllDataUsedByRun()[0].getFile();
+            if (file == null)
+            {
+                throw new NotFoundException("Data file for run " + run.getFileName() + " was not found.");
+            }
+            if(!NetworkDrive.exists(file))
+            {
+                throw new NotFoundException("File " + file + " does not exist.");
+            }
+
+            PageFlowUtil.streamFile(getViewContext().getResponse(), file, true);
+            return null;
+        }
+
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    public static class DownloadDocumentForm
+    {
+        private int _runId;
+
+        public int getRunId()
+        {
+            return _runId;
+        }
+
+        public void setRunId(int runId)
+        {
+            _runId = runId;
         }
     }
 }
