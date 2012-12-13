@@ -101,7 +101,7 @@ public class PeakAreasChartInputMaker
             for (PeptideCategory category: datasetMap.keySet())
             {
                 PeakAreaCategoryDataset categoryDataset = new PeakAreaCategoryDataset(category.getLabel());
-                categoryDataset.setData(datasetMap.get(category), _cvValues);
+                categoryDataset.setData(datasetMap.get(category), _cvValues, _chartType);
                 dataset.addCategory(categoryDataset);
             }
             return dataset;
@@ -131,12 +131,11 @@ public class PeakAreasChartInputMaker
             }
 
             PeakAreaDataset dataset = new PeakAreaDataset();
-            dataset.setSortByPeakAreas(StringUtils.isBlank(_groupByAnnotationName));
 
             for (String categoryLabel: datasetMap.keySet())
             {
                 PeakAreaCategoryDataset categoryDataset = new PeakAreaCategoryDataset(categoryLabel);
-                categoryDataset.setData(datasetMap.get(categoryLabel), _cvValues);
+                categoryDataset.setData(datasetMap.get(categoryLabel), _cvValues, _chartType);
                 dataset.addCategory(categoryDataset);
             }
             return dataset;
@@ -166,11 +165,11 @@ public class PeakAreasChartInputMaker
 
         for(PrecursorChromInfoPlus pciPlus: pciPlusList)
         {
-            List<Integer> pepChargeStates = pepChargeMap.get(String.valueOf(pciPlus.getCharge()));
+            List<Integer> pepChargeStates = pepChargeMap.get(pciPlus.getModifiedSequence());
             if(pepChargeStates == null)
             {
                 pepChargeStates = new ArrayList<Integer>();
-                pepChargeMap.put(pciPlus.getSequence(), pepChargeStates);
+                pepChargeMap.put(pciPlus.getModifiedSequence(), pepChargeStates);
             }
             pepChargeStates.add(pciPlus.getCharge());
         }
@@ -209,23 +208,26 @@ public class PeakAreasChartInputMaker
                                                     Map<String, List<Integer>> peptideChargeMap)
     {
         int charge = pciPlus.getCharge();
-        if(peptideChargeMap != null && peptideChargeMap.get(pciPlus.getSequence()).size() == 1)
+        if(peptideChargeMap != null && peptideChargeMap.get(pciPlus.getModifiedSequence()).size() == 1)
             charge = 0;
-        return new PeptideCategory(pciPlus.getSequence(),
+        return new PeptideCategory(pciPlus.getModifiedSequence(),
                                    charge,
+                                   pciPlus.getIsotopeLabel(),
                                    sampleFileAnnotMap.get(pciPlus.getSampleFileId()));
     }
 
-    private static class PeptideCategory
+    static class PeptideCategory
     {
-        private String _peptide;
+        private String _modifiedSequence;
         private int _charge;
+        private String _isotopeLabel;
         private String _annotationValue;
 
-        public PeptideCategory(String peptide, int charge, String annotValue)
+        public PeptideCategory(String modifiedSequence, int charge, String isotopeLabel, String annotValue)
         {
-            _peptide = peptide;
+            _modifiedSequence = modifiedSequence;
             _charge = charge;
+            _isotopeLabel = isotopeLabel;
             _annotationValue = annotValue;
         }
 
@@ -237,7 +239,7 @@ public class PeakAreasChartInputMaker
             {
                 label.append(_annotationValue).append(",  ");
             }
-            label.append(_peptide.substring(0,3));
+            label.append(_modifiedSequence);
             if(_charge > 0)
             {
                 label.append(LabelFactory.getChargeLabel(_charge));
@@ -251,15 +253,31 @@ public class PeakAreasChartInputMaker
         }
 
         @Override
-        public boolean equals(Object obj)
+        public boolean equals(Object o)
         {
-            return obj instanceof PeptideCategory && (obj == this || ((PeptideCategory) obj).getLabel().equals(this.getLabel()));
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PeptideCategory that = (PeptideCategory) o;
+
+            if (_charge != that._charge) return false;
+            if (_annotationValue != null ? !_annotationValue.equals(that._annotationValue) : that._annotationValue != null)
+                return false;
+            if (_isotopeLabel != null ? !_isotopeLabel.equals(that._isotopeLabel) : that._isotopeLabel != null)
+                return false;
+            if (!_modifiedSequence.equals(that._modifiedSequence)) return false;
+
+            return true;
         }
 
         @Override
         public int hashCode()
         {
-            return getLabel().hashCode();
+            int result = _modifiedSequence.hashCode();
+            result = 31 * result + _charge;
+            result = 31 * result + (_isotopeLabel != null ? _isotopeLabel.hashCode() : 0);
+            result = 31 * result + (_annotationValue != null ? _annotationValue.hashCode() : 0);
+            return result;
         }
     }
 
@@ -267,8 +285,8 @@ public class PeakAreasChartInputMaker
     {
         private Map<String, PeakAreaCategoryDataset> _categoryDatasetMap;
         private List<String> _sortedCategoryLabels;
-        private List<String> _sortedSeriesLabels;
-        private boolean _sortByPeakAreas = true;
+        private List<SeriesLabel> _sortedSeriesLabels;
+        private boolean _sortByPeakAreas = false;
         private boolean _numericSort = true;
         private double _maxPeakArea = 0;
 
@@ -334,17 +352,17 @@ public class PeakAreasChartInputMaker
             return _sortedCategoryLabels;
         }
 
-        public List<String> getSortedSeriesLabels()
+        public List<SeriesLabel> getSortedSeriesLabels()
         {
             if(_sortedSeriesLabels != null)
                 return _sortedSeriesLabels;
 
-            Set<String> seriesLabels = new HashSet<String>();
+            Set<SeriesLabel> seriesLabels = new HashSet<SeriesLabel>();
             for(PeakAreaCategoryDataset dataset: _categoryDatasetMap.values())
             {
                 seriesLabels.addAll(dataset.getSeriesLabels());
             }
-            _sortedSeriesLabels = new ArrayList<String>(seriesLabels);
+            _sortedSeriesLabels = new ArrayList<SeriesLabel>(seriesLabels);
             Collections.sort(_sortedSeriesLabels);
 
             return _sortedSeriesLabels;
@@ -364,12 +382,22 @@ public class PeakAreasChartInputMaker
         {
             return _maxPeakArea;
         }
+
+        public int getMaxSeriesCount()
+        {
+            int maxCount = 0;
+            for(PeakAreaCategoryDataset dataset: _categoryDatasetMap.values())
+            {
+                maxCount = Math.max(maxCount, dataset.getSeriesLabels().size());
+            }
+            return maxCount;
+        }
     }
 
     public static class PeakAreaCategoryDataset
     {
         private String _categoryLabel;  // goes on the X-axis
-        private Map<String, PeakAreaSeriesDataset> _seriesDatasetsMap;
+        private Map<SeriesLabel, PeakAreaSeriesDataset> _seriesDatasetsMap;
         private double _maxPeakArea;
 
         public PeakAreaCategoryDataset(String label)
@@ -382,22 +410,33 @@ public class PeakAreasChartInputMaker
             return _categoryLabel;
         }
 
-        public void setData(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues)
+        public void setData(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues, ChartType chartType)
         {
-            Map<String, List<PrecursorChromInfoPlus>> seriesDataMap = new HashMap<String, List<PrecursorChromInfoPlus>>();
+            Map<SeriesLabel, List<PrecursorChromInfoPlus>> seriesDataMap = new HashMap<SeriesLabel, List<PrecursorChromInfoPlus>>();
             for(PrecursorChromInfoPlus pciPlus: pciPlusList)
             {
-                List<PrecursorChromInfoPlus> seriesData = seriesDataMap.get(pciPlus.getIsotopeLabel());
+                SeriesLabel seriesLabel = new SeriesLabel();
+                if(chartType == ChartType.REPLICATE_COMPARISON)
+                {
+                    // For PEPTIDE_COMPARISON charts each precursor is treated as a separate category.
+                    // So, the precursor charge should not be part of the series label.
+                    // For REPLICATE_COMPARISON charts each precursor of a peptide is displayed as a series so we
+                    // need both the charge and isotope label to uniquely distinguish a series.
+                    seriesLabel.setCharge(pciPlus.getCharge());
+                }
+                seriesLabel.setIsotopeLabel(pciPlus.getIsotopeLabel());
+
+                List<PrecursorChromInfoPlus> seriesData = seriesDataMap.get(seriesLabel);
                 if(seriesData == null)
                 {
                     seriesData = new ArrayList<PrecursorChromInfoPlus>();
-                    seriesDataMap.put(pciPlus.getIsotopeLabel(), seriesData);
+                    seriesDataMap.put(seriesLabel, seriesData);
                 }
                 seriesData.add(pciPlus);
             }
 
-            _seriesDatasetsMap = new HashMap<String, PeakAreaSeriesDataset>();
-            for(String seriesLabel: seriesDataMap.keySet())
+            _seriesDatasetsMap = new HashMap<SeriesLabel, PeakAreaSeriesDataset>();
+            for(SeriesLabel seriesLabel: seriesDataMap.keySet())
             {
                 PeakAreaSeriesDataset seriesDataset = new PeakAreaSeriesDataset(seriesLabel);
                 seriesDataset.setData(seriesDataMap.get(seriesLabel), cvValues);
@@ -405,7 +444,7 @@ public class PeakAreasChartInputMaker
                 _maxPeakArea = Math.max(_maxPeakArea, seriesDataset.getValue());
             }
         }
-        public PeakAreaSeriesDataset getSeriesDataset(String seriesLabel)
+        public PeakAreaSeriesDataset getSeriesDataset(SeriesLabel seriesLabel)
         {
             return _seriesDatasetsMap.get(seriesLabel);
         }
@@ -421,9 +460,9 @@ public class PeakAreasChartInputMaker
             return _maxPeakArea;
         }
 
-        public List<String> getSeriesLabels()
+        public List<SeriesLabel> getSeriesLabels()
         {
-            return new ArrayList<String>(_seriesDatasetsMap.keySet());
+            return new ArrayList<SeriesLabel>(_seriesDatasetsMap.keySet());
         }
 
         public boolean isStatistical()
@@ -437,20 +476,101 @@ public class PeakAreasChartInputMaker
         }
     }
 
+    static class SeriesLabel implements Comparable<SeriesLabel>
+    {
+        private int _charge;
+        private String _isotopeLabel = "";
+
+        public int getCharge()
+        {
+            return _charge;
+        }
+
+        public void setCharge(int charge)
+        {
+            _charge = charge;
+        }
+
+        public String getIsotopeLabel()
+        {
+            return _isotopeLabel;
+        }
+
+        public void setIsotopeLabel(String isotopeLabel)
+        {
+            _isotopeLabel = isotopeLabel;
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder label = new StringBuilder();
+            label.append(LabelFactory.getChargeLabel(getCharge()));
+            if(getIsotopeLabel() != null)
+            {
+                label.append(" ").append(getIsotopeLabel());
+            }
+            return label.toString();
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SeriesLabel that = (SeriesLabel) o;
+
+            if (_charge != that._charge) return false;
+            if (_isotopeLabel != null ? !_isotopeLabel.equals(that._isotopeLabel) : that._isotopeLabel != null)
+                return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result;
+            result = _charge;
+            result = 31 * result + (_isotopeLabel != null ? _isotopeLabel.hashCode() : 0);
+            return result;
+        }
+
+        @Override
+        public int compareTo(SeriesLabel o)
+        {
+            int cmp = Integer.valueOf(this.getCharge()).compareTo(o.getCharge());
+            if(cmp != 0)
+            {
+                return cmp;
+            }
+            else
+            {
+                if(this.getIsotopeLabel() == null && o.getIsotopeLabel() == null)
+                    return 0;
+                if(this.getIsotopeLabel() == null)
+                    return 1;
+                if(o.getIsotopeLabel() == null)
+                    return -1;
+                return this.getIsotopeLabel().compareTo(o.getIsotopeLabel());
+            }
+        }
+    }
+
     public static class PeakAreaSeriesDataset
     {
-        private String _seriesLabel;    // goes in the legend
-        private String _entryLabel;     // goes on top of the bar
+        private SeriesLabel _seriesLabel;    // goes in the legend
         private double _value;
         private double _sdev;
         private boolean _isStatistical;
 
-        public PeakAreaSeriesDataset(String label)
+        public PeakAreaSeriesDataset(SeriesLabel label)
         {
             _seriesLabel = label;
         }
 
-        public String getSeriesLabel()
+        public SeriesLabel getSeriesLabel()
         {
             return _seriesLabel;
         }
@@ -461,7 +581,7 @@ public class PeakAreasChartInputMaker
             if(pciPlusList.size() == 1)
             {
                 Double peakArea = pciPlusList.get(0).getTotalArea();
-                if(peakArea != null)
+                if(peakArea != null && !cvValues)
                     _value = peakArea;
             }
             else
@@ -486,16 +606,6 @@ public class PeakAreasChartInputMaker
                     _isStatistical = true;
                 }
             }
-        }
-
-        public String getEntryLabel()
-        {
-            return _entryLabel;
-        }
-
-        public void setEntryLabel(String entryLabel)
-        {
-            _entryLabel = entryLabel;
         }
 
         public double getValue()

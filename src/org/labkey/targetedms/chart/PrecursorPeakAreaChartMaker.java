@@ -40,8 +40,6 @@ import org.labkey.targetedms.query.ReplicateManager;
 
 import java.awt.*;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,8 +108,8 @@ public class PrecursorPeakAreaChartMaker
 
         chart.getPlot().setBackgroundPaint(Color.WHITE);
 
-        // Get all the isotope labels for this run
-        Map<String, Color> labelColors = getIsotopeLabelColors(peptideGroup.getRunId());
+        // Get a map of colors for each series in the chart
+        Map<String, Color> labelColors = getLabelColors(peptideGroup.getRunId(), peakAreaDataset);
 
         // Create a custom legend only if we have more than 1 isotope labels
         if(peakAreaDataset.getSortedSeriesLabels().size() == 1)
@@ -122,19 +120,17 @@ public class PrecursorPeakAreaChartMaker
         {
             LegendItemCollection legendItems = new LegendItemCollection();
 
-            for(String label: peakAreaDataset.getSortedSeriesLabels())
+            for(PeakAreasChartInputMaker.SeriesLabel label: peakAreaDataset.getSortedSeriesLabels())
             {
-                Color color = labelColors.get(label);
-                LegendItem legendItem = new LegendItem(label, "-", null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, color);
+                Color color = labelColors.get(label.toString());
+                LegendItem legendItem = new LegendItem(label.toString(), "-", null, null, Plot.DEFAULT_LEGEND_ITEM_BOX, color);
                 legendItems.add(legendItem);
             }
             chart.getCategoryPlot().setFixedLegendItems(legendItems);
         }
 
-        chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(
-                CategoryLabelPositions.createUpRotationLabelPositions(Math.PI * 0.5)
-        );
-        chart.getCategoryPlot().getDomainAxis().setMaximumCategoryLabelWidthRatio(0.3f);
+        chart.getCategoryPlot().getDomainAxis().setCategoryLabelPositions(CategoryLabelPositions.UP_90);
+        chart.getCategoryPlot().getDomainAxis().setMaximumCategoryLabelWidthRatio(0.9f);
 
         setRenderer(chart,peakAreaDataset, labelColors);
 
@@ -193,23 +189,36 @@ public class PrecursorPeakAreaChartMaker
         return PrecursorManager.getPrecursorChromInfosForPeptide(peptide.getId());
     }
 
-    private Map<String, Color> getIsotopeLabelColors(int runId)
+    private Map<String, Color> getLabelColors(int runId, PeakAreasChartInputMaker.PeakAreaDataset peakAreaDataset)
     {
-        List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(runId);
-        Collections.sort(labels, new Comparator<PeptideSettings.IsotopeLabel>()
+        // If this dataset has only one series for each category use a single color
+        if(peakAreaDataset.getMaxSeriesCount() == 1)
         {
-            @Override
-            public int compare(PeptideSettings.IsotopeLabel one, PeptideSettings.IsotopeLabel two)
-            {
-                return Integer.valueOf(one.getId()).compareTo(two.getId());
-            }
-        });
+            Map<String, Color> labelColors = new HashMap<String, Color>();
+            labelColors.put(peakAreaDataset.getSortedSeriesLabels().get(0).toString(), ChartColors.getPrecursorColor(0));
+        }
 
-        Map<String, Color> labelColors = new HashMap<String, Color>();
-        int lightLabelId = labels.get(0).getId();
+        List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(runId);
+        Map<String, PeptideSettings.IsotopeLabel> labelMap = new HashMap<String, PeptideSettings.IsotopeLabel>();
+        int lightLabelId = Integer.MAX_VALUE;
         for(PeptideSettings.IsotopeLabel label: labels)
         {
-            labelColors.put(label.getName(), ChartColors.getIsotopeColor(label.getId() - lightLabelId));
+            labelMap.put(label.getName(), label);
+            lightLabelId = Math.min(lightLabelId, label.getId());
+        }
+
+        List<PeakAreasChartInputMaker.SeriesLabel> sortedSeriesLabels = peakAreaDataset.getSortedSeriesLabels();
+        int minCharge = Integer.MAX_VALUE;
+        for(PeakAreasChartInputMaker.SeriesLabel seriesLabel: sortedSeriesLabels)
+        {
+            minCharge = Math.min(minCharge, seriesLabel.getCharge());
+        }
+
+        Map<String, Color> labelColors = new HashMap<String, Color>();
+        for(PeakAreasChartInputMaker.SeriesLabel seriesLabel: sortedSeriesLabels)
+        {
+            int colorIndex = (seriesLabel.getCharge() - minCharge) * labels.size() + (labelMap.get(seriesLabel.getIsotopeLabel()).getId() - lightLabelId);
+            labelColors.put(seriesLabel.toString(), ChartColors.getIsotopeColor(colorIndex));
         }
         return labelColors;
     }
@@ -228,10 +237,10 @@ public class PrecursorPeakAreaChartMaker
 
     private static class CustomBarRenderer extends BarRenderer
     {
-        private List<String> _sortedSeriesLabels;
+        private List<PeakAreasChartInputMaker.SeriesLabel> _sortedSeriesLabels;
         private Map<String, Color> _labelColors;
 
-        public CustomBarRenderer(final List<String> sortedSeriesLabels,
+        public CustomBarRenderer(final List<PeakAreasChartInputMaker.SeriesLabel> sortedSeriesLabels,
                                  final Map<String, Color> labelColors)
         {
             _sortedSeriesLabels = sortedSeriesLabels;
@@ -243,22 +252,22 @@ public class PrecursorPeakAreaChartMaker
         }
 
         public Paint getItemPaint(final int row, final int column) {
-            return _labelColors.get(_sortedSeriesLabels.get(row)); // row = series index
+            return _labelColors.get(_sortedSeriesLabels.get(row).toString()); // row = series index
         }
     }
 
     private static class CustomStatisticalBarRenderer extends StatisticalBarRenderer
     {
-        private List<String> _sortedSeriesLabels;
+        private List<PeakAreasChartInputMaker.SeriesLabel> _sortedSeriesLabels;
         private Map<String, Color> _labelColors;
 
-        private CustomStatisticalBarRenderer(List<String> sortedSeriesLabels, Map<String, Color> labelColors)
+        private CustomStatisticalBarRenderer(List<PeakAreasChartInputMaker.SeriesLabel> sortedSeriesLabels, Map<String, Color> labelColors)
         {
              _sortedSeriesLabels = sortedSeriesLabels;
             _labelColors = labelColors;
         }
         public Paint getItemPaint(final int row, final int column) {
-            return _labelColors.get(_sortedSeriesLabels.get(row)); // row = series index
+            return _labelColors.get(_sortedSeriesLabels.get(row).toString()); // row = series index
         }
     }
     private CategoryDataset createDataset(PeakAreasChartInputMaker.PeakAreaDataset peakAreaDataset, int peakAreaAxisMagnitude)
@@ -271,12 +280,12 @@ public class PrecursorPeakAreaChartMaker
             {
                 PeakAreasChartInputMaker.PeakAreaCategoryDataset categoryDataset = peakAreaDataset.getCategoryDataset(categoryLabel);
 
-                for(String seriesLabel: peakAreaDataset.getSortedSeriesLabels())
+                for(PeakAreasChartInputMaker.SeriesLabel seriesLabel: peakAreaDataset.getSortedSeriesLabels())
                 {
                     PeakAreasChartInputMaker.PeakAreaSeriesDataset seriesDataset = categoryDataset.getSeriesDataset(seriesLabel);
                     dataset.add(seriesDataset.getValue() / peakAreaAxisMagnitude,
                                 seriesDataset.getSdev() / peakAreaAxisMagnitude,
-                                seriesLabel,
+                                seriesLabel.toString(),
                                 categoryLabel);
                 }
             }
@@ -289,10 +298,12 @@ public class PrecursorPeakAreaChartMaker
             {
                 PeakAreasChartInputMaker.PeakAreaCategoryDataset categoryDataset = peakAreaDataset.getCategoryDataset(categoryLabel);
 
-                for(String seriesLabel: peakAreaDataset.getSortedSeriesLabels())
+                for(PeakAreasChartInputMaker.SeriesLabel seriesLabel: peakAreaDataset.getSortedSeriesLabels())
                 {
                     PeakAreasChartInputMaker.PeakAreaSeriesDataset seriesDataset = categoryDataset.getSeriesDataset(seriesLabel);
-                    dataset.addValue(seriesDataset.getValue() / peakAreaAxisMagnitude, seriesLabel, categoryLabel);
+                    if(seriesDataset == null)
+                        continue;
+                    dataset.addValue(seriesDataset.getValue() / peakAreaAxisMagnitude, seriesLabel.toString(), categoryLabel);
                 }
             }
             return dataset;

@@ -183,7 +183,10 @@
                                     replicateId: replicateComboBox.getValue(),
                                     groupByReplicateAnnotName: replicateAnnotNameComboBox.getValue(),
                                     peptideId: peptideStore.count() > 1 ? peptideComboBox.getValue() : <%=peptideId%>,
-                                    cvValues: cvValuesCheckbox.getValue()
+                                    cvValues: cvValuesCheckbox.getValue(),
+                                    chartWidth: chartWidthTb.getValue(),
+                                    chartHeight: chartHeightTb.getValue()
+
                                  }
                             );
                     //alert(url);
@@ -191,6 +194,24 @@
                     peakAreasImg.setSrc(url);
                 }
         });
+
+        // chart width and height
+        var chartWidthTb = Ext4.create('Ext.form.TextField',{
+                    fieldLabel: "Width",
+                    name: "chartWidth",
+                    id: "chartWidth",
+                    allowBlank: false,
+                    maskRe: /[0-9]/,
+                    value: "600"}
+        );
+        var chartHeightTb = Ext4.create('Ext.form.TextField',{
+                    fieldLabel: "Height",
+                    name: "chartHeight",
+                    id: "chartHeight",
+                    allowBlank: false,
+                    maskRe: /[0-9]/,
+                    value: "400"}
+        );
 
         var items = [];
         if(replicateStore.count() > 2) items.push(replicateComboBox);
@@ -200,6 +221,9 @@
         {
             items.push(cvValuesCheckbox);
         }
+        items.push(chartWidthTb);
+        items.push(chartHeightTb);
+
         if(items.length > 0)
         {
             Ext4.create('Ext.form.Panel', {
