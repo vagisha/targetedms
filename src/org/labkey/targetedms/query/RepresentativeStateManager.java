@@ -43,7 +43,8 @@ public class RepresentativeStateManager
                                              throws SQLException
     {
         TargetedMSManager.getSchema().getScope().ensureTransaction();
-        try {
+        try
+        {
             int conflictCount = 0;
             if(state == TargetedMSRun.RepresentativeDataState.Representative_Protein)
             {
@@ -161,7 +162,7 @@ public class RepresentativeStateManager
         makeActiveSQL.add(container);
         makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
         makeActiveSQL.append(")");
-        new SqlExecutor(TargetedMSManager.getSchema(), makeActiveSQL).execute();
+        new SqlExecutor(TargetedMSManager.getSchema()).execute(makeActiveSQL);
 
         // Mark all other peptide groups as being in the conflicted state
         SQLFragment makeConflictedSQL = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPeptideGroup());
@@ -171,7 +172,7 @@ public class RepresentativeStateManager
         makeConflictedSQL.add(run.getId());
         makeConflictedSQL.append(" AND RepresentativeDataState != ?");
         makeConflictedSQL.add(RepresentativeDataState.Representative.ordinal());
-        int conflictCount = new SqlExecutor(TargetedMSManager.getSchema(), makeConflictedSQL).execute();
+        int conflictCount = new SqlExecutor(TargetedMSManager.getSchema()).execute(makeConflictedSQL);
 
         return conflictCount;
     }
@@ -211,7 +212,7 @@ public class RepresentativeStateManager
         makeActiveSQL.add(container);
         makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
         makeActiveSQL.append(")");
-        new SqlExecutor(TargetedMSManager.getSchema(), makeActiveSQL).execute();
+        new SqlExecutor(TargetedMSManager.getSchema()).execute(makeActiveSQL);
 
         // Mark all other precursors as being in the conflicted state
         SQLFragment makeConflictedSQL = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
@@ -225,7 +226,7 @@ public class RepresentativeStateManager
         makeConflictedSQL.add(RepresentativeDataState.Representative.ordinal());
         makeConflictedSQL.append(" AND "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId = "+TargetedMSManager.getTableInfoPeptide()+".Id");
         makeConflictedSQL.append(" AND "+TargetedMSManager.getTableInfoPeptide()+".PeptideGroupId = "+TargetedMSManager.getTableInfoPeptideGroup()+".Id");
-        int conflictCount = new SqlExecutor(TargetedMSManager.getSchema(), makeConflictedSQL).execute();
+        int conflictCount = new SqlExecutor(TargetedMSManager.getSchema()).execute(makeConflictedSQL);
 
         return conflictCount;
     }

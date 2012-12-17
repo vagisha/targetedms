@@ -606,7 +606,7 @@ public class TargetedMSManager
         updateSql.add(representativeState.ordinal());
         updateSql.append(" AND Id NOT IN ("+StringUtils.join(representativeRunIds, ",")+")");
 
-        new SqlExecutor(TargetedMSManager.getSchema(), updateSql).execute();
+        new SqlExecutor(TargetedMSManager.getSchema()).execute(updateSql);
     }
 
     private static Collection<Integer> getProteinRepresentativeRunIds(Container container)
@@ -706,7 +706,8 @@ public class TargetedMSManager
     // pulled out into separate method so could be called by itself from data handlers
     public static void markDeleted(List<Integer> runIds, Container c, User user)
     {
-        try {
+        try
+        {
             for(int runId: runIds)
             {
                 TargetedMSRun run = getRun(runId);
@@ -728,7 +729,7 @@ public class TargetedMSManager
         where.addInClause(FieldKey.fromParts("Id"), runIds);
         markDeleted.append(where.getSQLFragment(getSqlDialect()));
 
-        new SqlExecutor(getSchema(), markDeleted).execute();
+        new SqlExecutor(getSchema()).execute(markDeleted);
     }
 
     public static TargetedMSRun getRunForPrecursor(int precursorId)

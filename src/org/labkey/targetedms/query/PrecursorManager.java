@@ -315,7 +315,7 @@ public class PrecursorManager
         sql.append(" AND ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup()+".RunId = ?");
         sql.add(runId);
-        return new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
+        return new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
     public static void updateRepresentativeStatus(int[] precursorIds, RepresentativeDataState representativeState)
@@ -338,7 +338,7 @@ public class PrecursorManager
         sql.append(precursorIdsString.toString());
         sql.append(")");
 
-        new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
+        new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
     // Set to either NotRepresentative or Representative_Deprecated.
@@ -367,7 +367,7 @@ public class PrecursorManager
         sql.append(precursorIdsString.toString());
         sql.append(")");
 
-        new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
+        new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
     public static boolean ensureContainerMembership(int[] precursorIds, Container container)

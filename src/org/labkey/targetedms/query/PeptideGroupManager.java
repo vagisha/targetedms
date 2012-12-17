@@ -81,7 +81,7 @@ public class PeptideGroupManager
         sql.append(peptideGroupIdsString.toString());
         sql.append(")");
 
-        new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
+        new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
     // Set to either NotRepresentative or Representative_Deprecated.
@@ -110,7 +110,7 @@ public class PeptideGroupManager
         sql.append(peptideGroupIdsString.toString());
         sql.append(")");
 
-        new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
+        new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
     public static List<PeptideGroup> getRepresentativePeptideGroups(int runId)
@@ -163,7 +163,7 @@ public class PeptideGroupManager
         sql.add(state.ordinal());
         sql.append(" WHERE runId = ?");
         sql.add(runId);
-        return new SqlExecutor(TargetedMSManager.getSchema(), sql).execute();
+        return new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
     public static boolean ensureContainerMembership(int[] peptideGroupIds, Container container)
