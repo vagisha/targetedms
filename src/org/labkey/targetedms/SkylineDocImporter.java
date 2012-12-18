@@ -932,6 +932,8 @@ public class SkylineDocImporter
                 }
 
                 loss.setStructuralModLossId(potentialLosses[loss.getLossIndex()].getId());
+                loss.setTransitionId(transition.getId());
+                Table.insert(_user, TargetedMSManager.getTableInfoTransitionLoss(), loss);
             }
             else
             {
@@ -970,6 +972,14 @@ public class SkylineDocImporter
            .append(transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge())
            .append("_")
            .append(chromInfo.getSkylineSampleFileId());
+        List<TransitionLoss> transitionLosses = transition.getNeutralLosses();
+        if(transitionLosses != null && transitionLosses.size() > 0)
+        {
+            for(TransitionLoss loss: transitionLosses)
+            {
+                key.append("_").append(loss.toString());
+            }
+        }
        return key.toString();
     }
 

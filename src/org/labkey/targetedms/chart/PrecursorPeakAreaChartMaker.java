@@ -192,10 +192,11 @@ public class PrecursorPeakAreaChartMaker
     private Map<String, Color> getLabelColors(int runId, PeakAreasChartInputMaker.PeakAreaDataset peakAreaDataset)
     {
         // If this dataset has only one series for each category use a single color
-        if(peakAreaDataset.getMaxSeriesCount() == 1)
+        if(peakAreaDataset.getSortedSeriesLabels().size() == 1)
         {
             Map<String, Color> labelColors = new HashMap<String, Color>();
             labelColors.put(peakAreaDataset.getSortedSeriesLabels().get(0).toString(), ChartColors.getPrecursorColor(0));
+            return labelColors;
         }
 
         List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(runId);
@@ -283,10 +284,18 @@ public class PrecursorPeakAreaChartMaker
                 for(PeakAreasChartInputMaker.SeriesLabel seriesLabel: peakAreaDataset.getSortedSeriesLabels())
                 {
                     PeakAreasChartInputMaker.PeakAreaSeriesDataset seriesDataset = categoryDataset.getSeriesDataset(seriesLabel);
-                    dataset.add(seriesDataset.getValue() / peakAreaAxisMagnitude,
-                                seriesDataset.getSdev() / peakAreaAxisMagnitude,
-                                seriesLabel.toString(),
-                                categoryLabel);
+                    if(seriesDataset == null)
+                    {
+                        // Add an empty series otherwise color order of series can be incorrect.
+                        dataset.add(0, 0, seriesLabel.toString(), categoryLabel);
+                    }
+                    else
+                    {
+                        dataset.add(seriesDataset.getValue() / peakAreaAxisMagnitude,
+                                    seriesDataset.getSdev() / peakAreaAxisMagnitude,
+                                    seriesLabel.toString(),
+                                    categoryLabel);
+                    }
                 }
             }
             return dataset;
@@ -302,8 +311,14 @@ public class PrecursorPeakAreaChartMaker
                 {
                     PeakAreasChartInputMaker.PeakAreaSeriesDataset seriesDataset = categoryDataset.getSeriesDataset(seriesLabel);
                     if(seriesDataset == null)
-                        continue;
-                    dataset.addValue(seriesDataset.getValue() / peakAreaAxisMagnitude, seriesLabel.toString(), categoryLabel);
+                    {
+                        // Add an empty series otherwise color order of series can be incorrect.
+                        dataset.addValue(0, seriesLabel.toString(), categoryLabel);
+                    }
+                    else
+                    {
+                        dataset.addValue(seriesDataset.getValue() / peakAreaAxisMagnitude, seriesLabel.toString(), categoryLabel);
+                    }
                 }
             }
             return dataset;

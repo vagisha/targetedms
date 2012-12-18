@@ -266,6 +266,16 @@ public class ChromatogramChartMakerFactory
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 
+
+        Collections.sort(precursorChromInfoList, new Comparator<PrecursorChromInfo>()
+        {
+            @Override
+            public int compare(PrecursorChromInfo o1, PrecursorChromInfo o2)
+            {
+                return Integer.valueOf(o2.getPrecursorId()).compareTo(o1.getPrecursorId());
+            }
+        });
+
         // Add precursors in reverse order so that we get the same colors as Skyline
         for(int i = precursorChromInfoList.size() - 1; i >= 0; i--)
         {
