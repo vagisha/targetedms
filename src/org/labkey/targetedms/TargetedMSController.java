@@ -1286,7 +1286,6 @@ public class TargetedMSController extends SpringActionController
 
             // List of peptides
             QuerySettings settings = new QuerySettings(getViewContext(), "Peptides", "Peptide");
-            settings.setAllowChooseQuery(false);
             QueryView peptidesView = new QueryView(schema, settings, errors)
             {
                 @Override

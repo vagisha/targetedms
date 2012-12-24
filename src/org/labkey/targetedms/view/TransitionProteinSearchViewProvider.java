@@ -48,7 +48,6 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
     {
         QuerySettings settings = new QuerySettings(viewContext, getDataRegionName(), "Peptide");
         settings.addAggregates(new Aggregate("PeptideGroupId/RunId/File", Aggregate.Type.COUNT_DISTINCT));
-        settings.setAllowChooseQuery(false);
         QueryView result = new QueryView(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()), settings, errors)
         {
             @Override

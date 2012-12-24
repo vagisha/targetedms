@@ -42,7 +42,6 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
     public QueryView createView(ViewContext viewContext, final ProteinService.PeptideSearchForm form, BindException errors)
     {
         QuerySettings settings = new QuerySettings(viewContext, getDataRegionName(), "Peptide");
-        settings.setAllowChooseQuery(false);
         settings.addAggregates(new Aggregate("PeptideGroupId/RunId/File", Aggregate.Type.COUNT_DISTINCT));
         settings.addAggregates(new Aggregate("Sequence", Aggregate.Type.COUNT_DISTINCT));
         QueryView result = new QueryView(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()), settings, errors)

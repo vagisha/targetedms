@@ -33,7 +33,6 @@ public class ChromatogramGridQuerySettings extends QuerySettings
         super(dataRegionName);
         init(context);
 
-        setAllowChooseQuery(false);
         setAllowCustomizeView(false);
         setAllowChooseView(false);
     }
