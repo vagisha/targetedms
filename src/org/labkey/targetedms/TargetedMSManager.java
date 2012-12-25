@@ -56,7 +56,6 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -692,15 +691,8 @@ public class TargetedMSManager
 
     public static void markAsDeleted(Container c, User user)
     {
-        try
-        {
-            Integer[] runIds = Table.executeArray(getSchema(), "SELECT Run FROM " + getTableInfoRuns() + " WHERE Container=?", new Object[]{c.getId()}, Integer.class);
-            markAsDeleted(Arrays.asList(runIds), c, user);
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
-        }
+        List<Integer> runIds = new SqlSelector(getSchema(), "SELECT Run FROM " + getTableInfoRuns() + " WHERE Container = ?", c).getArrayList(Integer.class);
+        markAsDeleted(runIds, c, user);
     }
 
     // pulled out into separate method so could be called by itself from data handlers
