@@ -27,13 +27,13 @@ import org.labkey.targetedms.TargetedMSSchema;
  * Date: 4/29/12
  * Time: 3:31 PM
  */
-public class PeptideChromatogramsTableInfo extends FilteredTable
+public class PeptideChromatogramsTableInfo extends FilteredTable<TargetedMSSchema>
 {
     private int _peptideId;
 
-    public PeptideChromatogramsTableInfo(Container container)
+    public PeptideChromatogramsTableInfo(TargetedMSSchema schema)
     {
-        super(TargetedMSManager.getTableInfoPeptideChromInfo(), container);
+        super(TargetedMSManager.getTableInfoPeptideChromInfo(), schema);
 
         setName(TargetedMSSchema.TABLE_PEPTIDE_CHROM_INFO);
 

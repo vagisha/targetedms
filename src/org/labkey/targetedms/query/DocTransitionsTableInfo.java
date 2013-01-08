@@ -32,14 +32,11 @@ import java.util.ArrayList;
  * User: vsharma
  * Date: Apr 13, 2012
  */
-public class DocTransitionsTableInfo extends FilteredTable
+public class DocTransitionsTableInfo extends FilteredTable<TargetedMSSchema>
 {
-    private final TargetedMSSchema _schema;
-
     public DocTransitionsTableInfo(TargetedMSSchema schema)
     {
-        super(TargetedMSManager.getTableInfoTransition(), schema.getContainer());
-        _schema = schema;
+        super(TargetedMSManager.getTableInfoTransition(), schema);
 
         setName(TargetedMSSchema.TABLE_DOC_TRANSITIONS);
 

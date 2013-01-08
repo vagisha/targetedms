@@ -17,13 +17,11 @@ package org.labkey.targetedms.view;
 
 import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.ButtonBar;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.query.QuerySettings;
-import org.labkey.api.security.User;
 import org.labkey.api.view.GridView;
-import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSController;
+import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.query.PeptidePrecursorChromatogramsTableInfo;
 import org.springframework.validation.Errors;
@@ -37,11 +35,11 @@ public class PeptidePrecursorChromatogramsView extends GridView
 {
     public static final String TITLE = "Chromatograms";
 
-    public PeptidePrecursorChromatogramsView(Peptide peptide, Container container, User user,
+    public PeptidePrecursorChromatogramsView(Peptide peptide, TargetedMSSchema schema,
                                              TargetedMSController.ChromatogramForm form,
                                              Errors errors)
     {
-        super(makeDataRegion(peptide, container, user, form), errors);
+        super(makeDataRegion(peptide, schema, form), errors);
         QuerySettings settings = new QuerySettings(getViewContext(), "Peptide and Precursor chromatograms");
         settings.setMaxRows(10);
         getDataRegion().setSettings(settings);
@@ -51,10 +49,10 @@ public class PeptidePrecursorChromatogramsView extends GridView
         setShowTitle(true);
     }
 
-    private static DataRegion makeDataRegion(Peptide peptide, Container container, User user,
+    private static DataRegion makeDataRegion(Peptide peptide, TargetedMSSchema schema,
                                              TargetedMSController.ChromatogramForm form)
     {
-        PeptidePrecursorChromatogramsTableInfo tableInfo = new PeptidePrecursorChromatogramsTableInfo(container, user,
+        PeptidePrecursorChromatogramsTableInfo tableInfo = new PeptidePrecursorChromatogramsTableInfo(schema,
                                                                                                       peptide, form);
         DataRegion dRegion = new DataRegion();
         dRegion.setTable(tableInfo);

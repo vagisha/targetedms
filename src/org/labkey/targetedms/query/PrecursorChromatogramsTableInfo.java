@@ -27,13 +27,13 @@ import org.labkey.targetedms.TargetedMSSchema;
  * Date: 4/29/12
  * Time: 3:31 PM
  */
-public class PrecursorChromatogramsTableInfo extends FilteredTable
+public class PrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSchema>
 {
     private int _precursorId;
 
-    public PrecursorChromatogramsTableInfo(Container container)
+    public PrecursorChromatogramsTableInfo(TargetedMSSchema schema)
     {
-        super(TargetedMSManager.getTableInfoPrecursorChromInfo(), container);
+        super(TargetedMSManager.getTableInfoPrecursorChromInfo(), schema);
 
         setName(TargetedMSSchema.TABLE_PRECURSOR_CHROM_INFO);
 

@@ -39,18 +39,18 @@ import java.util.List;
  * Date: 5/3/12
  * Time: 12:18 PM
  */
-public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable
+public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSchema>
 {
-    public PeptidePrecursorChromatogramsTableInfo(Container container, User user, Peptide peptide,
+    public PeptidePrecursorChromatogramsTableInfo(TargetedMSSchema schema, Peptide peptide,
                                                   TargetedMSController.ChromatogramForm form)
     {
-        super(getPivotByPrecursorChromInfoTable(container, user, peptide), container);
+        super(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), peptide), schema);
         wrapAllColumns(true);
 
         ColumnInfo pepChromCol = getColumn("pepciId");
         pepChromCol.setLabel("");
         pepChromCol.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(
-                                                        container,
+                                                        schema.getContainer(),
                                                         ChromatogramDisplayColumnFactory.TYPE.PEPTIDE,
                                                         form.getChartWidth(),
                                                         form.getChartHeight(),
@@ -62,7 +62,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable
         for(ColumnInfo colInfo: getPrecursorChromInfoColumns())
         {
             colInfo.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(
-                                                        container,
+                                                        schema.getContainer(),
                                                         ChromatogramDisplayColumnFactory.TYPE.PRECURSOR,
                                                         form.getChartWidth(),
                                                         form.getChartHeight(),

@@ -15,25 +15,25 @@
  */
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
+import org.labkey.targetedms.TargetedMSSchema;
 
 /**
  * User: jeckels
  * Date: Apr 19, 2012
  */
-public class TargetedMSTable extends FilteredTable
+public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
 {
     private final SQLFragment _containerSQL;
     private static final FieldKey CONTAINER_FAKE_COLUMN_NAME = FieldKey.fromParts("Container");
 
-    public TargetedMSTable(TableInfo table, Container container, SQLFragment containerSQL)
+    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment containerSQL)
     {
-        super(table, container);
+        super(table, schema);
         _containerSQL = containerSQL;
         wrapAllColumns(true);
         applyContainerFilter(getContainerFilter());

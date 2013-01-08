@@ -16,7 +16,6 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
@@ -31,6 +30,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.AbstractAnnotation;
 
 import java.util.Collection;
@@ -45,9 +45,9 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
     private final TableInfo _annotationTableInfo;
     private final String _annotationFKName;
 
-    public AnnotatedTargetedMSTable(TableInfo table, Container container, SQLFragment containerSQL, TableInfo annotationTableInfo, String annotationFKName)
+    public AnnotatedTargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment containerSQL, TableInfo annotationTableInfo, String annotationFKName)
     {
-        super(table, container, containerSQL);
+        super(table, schema, containerSQL);
         _annotationTableInfo = annotationTableInfo;
         _annotationFKName = annotationFKName;
 

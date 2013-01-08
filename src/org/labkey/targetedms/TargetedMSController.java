@@ -299,7 +299,7 @@ public class TargetedMSController extends SpringActionController
             precursorInfo.setFrame(WebPartView.FrameType.PORTAL);
             precursorInfo.setTitle("Precursor");
 
-            PrecursorChromatogramsTableInfo tableInfo = new PrecursorChromatogramsTableInfo(getContainer());
+            PrecursorChromatogramsTableInfo tableInfo = new PrecursorChromatogramsTableInfo(new TargetedMSSchema(getUser(), getContainer()));
             tableInfo.setPrecursorId(precursorId);
             tableInfo.addPrecursorFilter();
 
@@ -366,7 +366,7 @@ public class TargetedMSController extends SpringActionController
             peptideInfo.setFrame(WebPartView.FrameType.PORTAL);
             peptideInfo.setTitle("Peptide");
 
-            PeptideChromatogramsTableInfo tableInfo = new PeptideChromatogramsTableInfo(getContainer());
+            PeptideChromatogramsTableInfo tableInfo = new PeptideChromatogramsTableInfo(new TargetedMSSchema(getUser(), getContainer()));
             tableInfo.setPeptideId(peptideId);
             tableInfo.addPeptideFilter();
 
@@ -612,8 +612,8 @@ public class TargetedMSController extends SpringActionController
 
             // precursor and transition chromatograms. One row per replicate
             JspView<List<PeptideChromatogramsViewBean>> chartForm = new JspView("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
-            PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, getContainer(),
-                                                                                                getUser(), form, errors);
+            PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),
+                                                                                                form, errors);
             chromView.enableExpandCollapse(PeptidePrecursorChromatogramsView.TITLE, false);
             vbox.addView(chartForm);
             vbox.addView(chromView);

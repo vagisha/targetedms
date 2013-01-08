@@ -42,15 +42,12 @@ import java.util.Collections;
  */
 public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
 {
-    private final TargetedMSSchema _schema;
-
     public DocPrecursorTableInfo(TargetedMSSchema schema)
     {
         super(TargetedMSManager.getTableInfoPrecursor(),
-                schema.getContainer(),
+                schema,
                 TargetedMSSchema.ContainerJoinType.PeptideFK.getSQL(),
                 TargetedMSManager.getTableInfoPrecursorAnnotation(), "PrecursorId");
-        _schema = schema;
 
         setName(TargetedMSSchema.TABLE_PRECURSOR);
 

@@ -348,7 +348,7 @@ public class TargetedMSSchema extends UserSchema
         {
             public TableInfo getLookupTableInfo()
             {
-                FilteredTable result = new FilteredTable(TargetedMSManager.getTableInfoRuns());
+                FilteredTable result = new FilteredTable<TargetedMSSchema>(TargetedMSManager.getTableInfoRuns(), TargetedMSSchema.this);
                 result.addWrapColumn(result.getRealTable().getColumn("Id"));
                 result.addWrapColumn(result.getRealTable().getColumn("Description"));
                 result.addWrapColumn(result.getRealTable().getColumn("Created"));
@@ -439,7 +439,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK directly to targetedms.Runs
         if (TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.RunFK.getSQL(), TargetedMSManager.getTableInfoPeptideGroupAnnotation(), "PeptideGroupId");
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL(), TargetedMSManager.getTableInfoPeptideGroupAnnotation(), "PeptideGroupId");
             DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer()), Collections.singletonMap("id", "Id"));
             result.setDetailsURL(detailsURLs);
             result.getColumn("SequenceId").setFk(new LookupForeignKey("SeqId")
@@ -521,13 +521,13 @@ public class TargetedMSSchema extends UserSchema
             TABLE_ANNOTATION_SETTINGS.equalsIgnoreCase(name)
             )
         {
-            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.RunFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL());
         }
 
         // Tables that have a FK to targetedms.peptidegroup
         if (TABLE_PEPTIDE.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideGroupFK.getSQL(), TargetedMSManager.getTableInfoPeptideAnnotation(), "PeptideId");
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideGroupFK.getSQL(), TargetedMSManager.getTableInfoPeptideAnnotation(), "PeptideId");
             result.getColumn("PeptideGroupId").setFk(new LookupForeignKey("Id")
             {
                 @Override
@@ -553,18 +553,18 @@ public class TargetedMSSchema extends UserSchema
             TABLE_PROTEIN.equalsIgnoreCase(name) ||
             TABLE_PEPTIDE_GROUP_ANNOTATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideGroupFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideGroupFK.getSQL());
         }
 
         // Tables that have a FK to targetedms.replicate
         if (TABLE_SAMPLE_FILE.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.ReplicateFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.ReplicateFK.getSQL());
         }
 
         if (TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideFK.getSQL());
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideFK.getSQL());
             // Add a link to view the chromatogram an individual transition
             result.setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.PeptideChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
             return result;
@@ -573,7 +573,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.peptidechrominfo
         if (TABLE_PEPTIDE_AREA_RATIO.equals(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideChromInfoFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideChromInfoFK.getSQL());
         }
 
         // Tables that have a FK to targetedms.peptide
@@ -589,8 +589,7 @@ public class TargetedMSSchema extends UserSchema
                 @Override
                 public TableInfo getLookupTableInfo()
                 {
-                    TableInfo tinfo = getTable(TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE);
-                    return tinfo;
+                    return getTable(TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE);
                 }
             });
             return result;
@@ -602,12 +601,12 @@ public class TargetedMSSchema extends UserSchema
             TABLE_PEPTIDE_STRUCTURAL_MODIFICATION.equalsIgnoreCase(name) ||
             TABLE_PEPTIDE_ISOTOPE_MODIFICATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PeptideFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideFK.getSQL());
         }
 
         if (TABLE_TRANSITION.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PrecursorFK.getSQL(), TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId");
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorFK.getSQL(), TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId");
             result.getColumn("PrecursorId").setFk(new LookupForeignKey("Id")
             {
                 @Override
@@ -621,7 +620,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_PRECURSOR_CHROM_INFO.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PrecursorFK.getSQL());
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorFK.getSQL());
             // Add a link to view the chromatogram for all of the precursor's transitions
             result.setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.PrecursorChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
             return result;
@@ -635,20 +634,20 @@ public class TargetedMSSchema extends UserSchema
             TABLE_TRANSITION.equalsIgnoreCase(name)
             )
         {
-            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PrecursorFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorFK.getSQL());
         }
 
         // Tables that have a FK to targetedms.precursorchrominfo
         if (TABLE_PRECURSOR_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name) ||
             TABLE_PRECURSOR_AREA_RATIO.equals(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.PrecursorChromInfoFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorChromInfoFK.getSQL());
         }
 
         // Tables that have a FK to targetedms.transition
         if (TABLE_TRANSITION_CHROM_INFO.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.TransitionFK.getSQL());
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionFK.getSQL());
             // Add a link to view the chromatogram an individual transition
             result.setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.TransitionChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
             return result;
@@ -657,14 +656,14 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_TRANSITION_ANNOTATION.equalsIgnoreCase(name) ||
             TABLE_TRANSITION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.TransitionFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionFK.getSQL());
         }
 
         // Tables that have a FK to targetedms.transitionchrominfo
         if (TABLE_TRANSITION_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name) ||
             TABLE_TRANSITION_AREA_RATIO.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), getContainer(), ContainerJoinType.TransitionChromInfoFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionChromInfoFK.getSQL());
         }
 
         // TODO - handle filtering for annotation, predictor
@@ -676,7 +675,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (getTableNames().contains(name))
         {
-            FilteredTable result = new FilteredTable(getSchema().getTable(name), getContainer());
+            FilteredTable result = new FilteredTable<TargetedMSSchema>(getSchema().getTable(name), this);
             result.wrapAllColumns(true);
             return result;
         }
