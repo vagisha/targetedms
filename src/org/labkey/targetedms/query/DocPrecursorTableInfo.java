@@ -79,7 +79,7 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
             @Override
             public TableInfo getLookupTableInfo()
             {
-                return _schema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
+                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
             }
         });
 

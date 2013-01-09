@@ -49,7 +49,7 @@ public class DocTransitionsTableInfo extends FilteredTable<TargetedMSSchema>
             @Override
             public TableInfo getLookupTableInfo()
             {
-                return _schema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
+                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
             }
         });
 

@@ -26,18 +26,18 @@
 <table>
     <tr>
         <td class="labkey-form-label">File</td>
-        <td><%= bean.getRun().getFileName()%></td>
+        <td><%= h(bean.getRun().getFileName())%></td>
     </tr>
     <tr>
         <%
             String fieldLabel = bean.getPeptideGroup().getSequenceId() != null ? "Protein" : "Group";
         %>
-        <td class="labkey-form-label"><%=fieldLabel%></td>
-        <td><%= bean.getPeptideGroup().getLabel()%></td>
+        <td class="labkey-form-label"><%=h(fieldLabel)%></td>
+        <td><%= h(bean.getPeptideGroup().getLabel())%></td>
     </tr>
     <tr>
         <td class="labkey-form-label">Peptide</td>
-        <td><%= bean.getModifiedPeptideHtml()%></td>
+        <td><%= text(bean.getModifiedPeptideHtml())%></td>
     </tr>
 
     <%
@@ -46,18 +46,17 @@
     %>
     <tr>
         <td class="labkey-form-label">Label</td>
-        <td><%= bean.getIsotopeLabel().getName()%></td>
+        <td><%= h(bean.getIsotopeLabel().getName()) %></td>
     </tr>
     <%}%>
 
-    </tr>
     <tr>
         <td class="labkey-form-label">Charge</td>
         <td><%= bean.getPrecursor().getCharge()%></td>
     </tr>
     <tr>
         <td class="labkey-form-label">m/z</td>
-        <td><%= ROUND_4.format(bean.getPrecursor().getMz()) %></td>
+        <td><%= h(ROUND_4.format(bean.getPrecursor().getMz())) %></td>
     </tr>
 </table>
 
