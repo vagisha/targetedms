@@ -103,7 +103,7 @@ public class ConflictResultsManager
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
         getConflictPrecursorsSql.append(" INNER JOIN ");
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPrecursor(), "prec2");
-        getConflictPrecursorsSql.append(" ON (prec.ModifiedSequence = prec2.ModifiedSequence) ");
+        getConflictPrecursorsSql.append(" ON (prec.ModifiedSequence = prec2.ModifiedSequence AND prec.charge = prec2.Charge) ");
         getConflictPrecursorsSql.append(" INNER JOIN ");
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptide(), "pep2");
         getConflictPrecursorsSql.append(" ON (prec2.PeptideId = pep2.Id) ");
@@ -357,11 +357,14 @@ public class ConflictResultsManager
             double totalArea = 0.0;
             for(TransitionChromInfo tci: transChromInfoList)
             {
-                totalArea += tci.getArea();
+                if(tci.getArea() != null)
+                {
+                    totalArea += tci.getArea();
+                }
             }
             TransitionWithAreaAndRank twr = new TransitionWithAreaAndRank();
             twr.setTransition(transition);
-            twr.setAvgArea(totalArea / transChromInfoList.size());
+            twr.setAvgArea((transChromInfoList == null || transChromInfoList.size() == 0) ? 0 : totalArea / transChromInfoList.size());
             transWithRankList.add(twr);
         }
 
