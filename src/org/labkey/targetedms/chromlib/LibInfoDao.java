@@ -1,0 +1,137 @@
+package org.labkey.targetedms.chromlib;
+
+import org.labkey.targetedms.chromlib.Constants.ColumnDef;
+import org.labkey.targetedms.chromlib.Constants.LibInfoColumn;
+import org.labkey.targetedms.chromlib.Constants.Table;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * User: vsharma
+ * Date: 12/29/12
+ * Time: 9:25 PM
+ */
+public class LibInfoDao implements Dao<LibInfo>
+{
+    public void save(LibInfo libInfo, Connection connection) throws SQLException
+    {
+        if(libInfo != null)
+        {
+            StringBuilder sql = new StringBuilder();
+            sql.append("INSERT INTO ");
+            sql.append(Table.LibInfo);
+            sql.append(" (");
+            sql.append(getInsertColumnSql());
+            sql.append(")");
+            sql.append(" VALUES (?,?,?,?,?,?,?,?,?);");
+
+            PreparedStatement stmt = null;
+            try
+            {
+                stmt = connection.prepareStatement(sql.toString());
+                int colIndex = 1;
+                stmt.setString(colIndex++, libInfo.getPanoramaServer());
+                stmt.setString(colIndex++, libInfo.getContainer());
+                stmt.setString(colIndex++, Constants.DATE_FORMAT.format(libInfo.getCreated()));
+                stmt.setString(colIndex++, libInfo.getSchemaVersion());
+                stmt.setInt(colIndex++, libInfo.getLibraryRevision());
+                stmt.setInt(colIndex++, libInfo.getProteins());
+                stmt.setInt(colIndex++, libInfo.getPeptides());
+                stmt.setInt(colIndex++, libInfo.getPrecursors());
+                stmt.setInt(colIndex, libInfo.getTransitions());
+                stmt.executeUpdate();
+            }
+            finally
+            {
+                if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
+            }
+        }
+    }
+
+    public List<LibInfo> queryAll(Connection connection) throws SQLException
+    {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT * FROM ");
+        sql.append(Table.LibInfo);
+
+        Statement stmt = null;
+        ResultSet rs = null;
+        try
+        {
+            stmt = connection.createStatement();
+            rs = stmt.executeQuery(sql.toString());
+
+            List<LibInfo> libInfos = new ArrayList<LibInfo>();
+            while(rs.next())
+            {
+                LibInfo libInfo = new LibInfo();
+                libInfo.setPanoramaServer(rs.getString(LibInfoColumn.PanoramaServer.colName()));
+                libInfo.setContainer(rs.getString(LibInfoColumn.Container.colName()));
+                String created = rs.getString(LibInfoColumn.Created.colName());
+                try
+                {
+                    libInfo.setCreated(Constants.DATE_FORMAT.parse(created));
+                }
+                catch (ParseException e)
+                {
+                    throw new RuntimeException("Error parsing date '"+created+"' in "+Table.LibInfo, e);
+                }
+                libInfo.setSchemaVersion(rs.getString(LibInfoColumn.SchemaVersion.colName()));
+                libInfo.setLibraryRevision(rs.getInt(LibInfoColumn.LibraryRevision.colName()));
+                libInfo.setProteins(rs.getInt(LibInfoColumn.Proteins.colName()));
+                libInfo.setPeptides(rs.getInt(LibInfoColumn.Peptides.colName()));
+                libInfo.setPrecursors(rs.getInt(LibInfoColumn.Precursors.colName()));
+                libInfo.setTransitions(rs.getInt(LibInfoColumn.Transitions.colName()));
+                libInfos.add(libInfo);
+            }
+            return libInfos;
+        }
+        finally
+        {
+            if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
+            if(rs != null) try {rs.close();} catch(SQLException ignored){}
+        }
+    }
+
+    @Override
+    public LibInfo queryForId(int id, Connection connection) throws SQLException
+    {
+        throw new UnsupportedOperationException(Table.LibInfo+" does not have an Id field.");
+    }
+
+    @Override
+    public List<LibInfo> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection) throws SQLException
+    {
+        throw new UnsupportedOperationException(Table.LibInfo+" does not have a foreign key");
+    }
+
+    @Override
+    public void saveAll(List<LibInfo> libInfos, Connection connection) throws SQLException
+    {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getTableName()
+    {
+        return Table.LibInfo.name();
+    }
+
+    public String getInsertColumnSql()
+    {
+        StringBuilder columnSql = new StringBuilder();
+        for(ColumnDef column: LibInfoColumn.values())
+        {
+            columnSql.append(", ").append(column.colName());
+        }
+        columnSql.deleteCharAt(0); // delete first comma
+        return columnSql.toString();
+    }
+}
