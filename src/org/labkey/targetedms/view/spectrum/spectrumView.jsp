@@ -64,7 +64,8 @@ $(document).ready(function () {
                                 charge: <%= bean.getCharge()%>,
                                 // peaks in the scan: [m/z, intensity] pairs.
                                 peaks: <%= bean.getPeaks()%>,
-                                extraPeakSeries: []
+                                extraPeakSeries: [],
+                                peakDetect: false
                                 });
 
     //var canvas = $("#lorikeet_0 canvas")[0];

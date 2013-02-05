@@ -1,3 +1,7 @@
+/*LastChangedDate: 2012-12-21 16:04:41 -0800 (Fri, 21 Dec 2012) */
+/*LastChangedBy: vagisha@gmail.com */
+/*LastChangedRevision: 49 */
+
 @media print {
 	.noprint {
          display:none;
@@ -20,7 +24,7 @@ div.lorikeet div.bar {
     color:black; 
 }
 div.lorikeet td {
-	background-color:#FFFFFF;
+	background-color:#FFFFEF; 
 	border:1px solid black;
 	padding: 5px;
 }
@@ -100,6 +104,17 @@ div.lorikeet .ionTable td.matchIon {
 }
       
 
+/* THE FOLLOWING STYLES ARE FOR THE TABLE DISPLAYING VARIABLE MODIFICATIONS */
+div.lorikeet .varModsTable {
+    border-collapse:collapse;
+}
+
+div.lorikeet .varModsTable td {
+	border: 0px;
+	text-align: left;
+	font-size: 10pt;
+    padding: 1px 5px 1px 0px;
+}
 
 /*
  * THE FOLLOWING STYLES ARE FOR THE SLIDERS CONTROLLING THE PLOT SIZE

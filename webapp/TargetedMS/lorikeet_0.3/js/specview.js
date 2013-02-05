@@ -1,3 +1,7 @@
+// LastChangedDate: 2013-01-13 10:50:24 -0800 (Sun, 13 Jan 2013) 
+// LastChangedBy: vagisha@gmail.com 
+// LastChangedRevision: 50 
+
 (function($) {
 
     // plugin name - specview
@@ -8,7 +12,12 @@
                 scanNum: null,
                 fileName: null,
                 charge: null,
+                fragmentMassType: 'mono',
+                precursorMassType: 'mono',
+                peakDetect: true,
+                calculatedMz: null,
                 precursorMz: null,
+                precursorIntensity: null,
                 staticMods: [],
                 variableMods: [],
                 ntermMod: 0, // additional mass to be added to the n-term
@@ -20,12 +29,14 @@
                 precursorPeaks: null,
                 precursorPeakClickFn: null,
                 zoomMs1: false,
-                width: 750, 	// width of the ms/ms plot
+                width: 700, 	// width of the ms/ms plot
                 height: 450, 	// height of the ms/ms plot
                 massError: 0.5, // mass tolerance for labeling peaks
                 extraPeakSeries:[],
                 showIonTable: true,
-                showViewingOptions: true
+                showViewingOptions: true,
+                showOptionsTable: true,
+                showSequenceInfo: true
         };
 			
 	    var options = $.extend(true, {}, defaults, opts); // this is a deep copy
@@ -72,7 +83,7 @@
             ionTable: "ionTable",
             fileinfo: "fileinfo",
             seqinfo: "seqinfo",
-            removeNoise: "removeNoise"
+            peakDetect: "peakDetect"
 	};
 
     function getElementId(container, elementId){
@@ -88,6 +99,9 @@
     }
 
     function init(parent_container, options) {
+
+        // trim any 0 intensity peaks from the end of the peaks array
+        trimPeaksArray(options);
 
         // read the static modifications
         var parsedStaticMods = [];
@@ -114,6 +128,13 @@
                                 options.ntermMod, options.ctermMod);
         options.peptide = peptide;
 
+        // Calculate a theoretical m/z from the given sequence and charge
+        if(options.sequence && options.charge) {
+            var mass = options.peptide.getNeutralMassMono();
+            options.calculatedMz = Ion.getMz(mass, options.charge);
+        }
+
+
         var container = createContainer(parent_container);
         // alert(container.attr('id')+" parent "+container.parent().attr('id'));
         storeContainerData(container, options);
@@ -127,40 +148,100 @@
 
         makeViewingOptions(container, options);
 
-        showSequenceInfo(container, options);
-        showFileInfo(container, options);
-        showModInfo(container, options);
-
+        if(options.showSequenceInfo) {
+            showSequenceInfo(container, options);
+            showFileInfo(container, options);
+            showModInfo(container, options);
+        }
 
         createPlot(container, getDatasets(container)); // Initial MS/MS Plot
+
         if(options.ms1peaks && options.ms1peaks.length > 0) {
-            if(options.zoomMs1 && options.precursorMz) {
 
-                var ms1zoomRange = container.data("ms1zoomRange");
+            var precursorMz = options.precursorMz;
 
-                ms1zoomRange = {xaxis: {}, yaxis: {}};
-                ms1zoomRange.xaxis.from = options.precursorMz - 5.0;
-                ms1zoomRange.xaxis.to = options.precursorMz + 5.0;
-                var max_intensity = 0;
-                for(var j = 0; j < options.ms1peaks.length; j += 1) {
-                    var pk = options.ms1peaks[j];
-                    if(pk[0] < options.precursorMz - 5.0)
-                        continue;
-                    if(pk[0] > options.precursorMz + 5.0)
-                        break;
-                    if(pk[1] > max_intensity)
-                        max_intensity = pk[1];
+            if(precursorMz)
+            {
+                // Find an actual peak closest to the precursor
+                var diff = 5.0;
+                var x, y;
+
+                for(var i = 0; i < options.ms1peaks.length; i += 1) {
+                    var pk = options.ms1peaks[i];
+                    var d = Math.abs(pk[0] - precursorMz);
+                    if(!diff || d < diff) {
+                        x = pk[0];
+                        y = pk[1];
+                        diff = d;
+                    }
                 }
-                ms1zoomRange.yaxis.from = 0.0;
-                ms1zoomRange.yaxis.to = max_intensity;
+                if(diff <= 0.5) {
+                    options.precursorIntensity = y;
+                    if(!options.precursorPeaks)
+                    {
+                        options.precursorPeaks = [];
+                    }
+                    options.precursorPeaks.push([x,y]);
+                }
+
+                // Determine a zoom range
+                if(options.zoomMs1)
+                {
+                    var maxIntensityInRange = 0;
+
+                    for(var j = 0; j < options.ms1peaks.length; j += 1) {
+                        var pk = options.ms1peaks[j];
+
+                        if(pk[0] < options.precursorMz - 5.0)
+                            continue;
+                        if(pk[0] > options.precursorMz + 5.0)
+                            break;
+                        if(pk[1] > maxIntensityInRange)
+                            maxIntensityInRange = pk[1];
+                    }
+
+                    options.maxIntensityInMs1ZoomRange = maxIntensityInRange;
+
+                    // Set the zoom range
+                    var ms1zoomRange = container.data("ms1zoomRange");
+                    ms1zoomRange = {xaxis: {}, yaxis: {}};
+                    ms1zoomRange.xaxis.from = options.precursorMz - 5.0;
+                    ms1zoomRange.xaxis.to = options.precursorMz + 5.0;
+
+                    ms1zoomRange.yaxis.from = 0.0;
+                    ms1zoomRange.yaxis.to = options.maxIntensityInMs1ZoomRange;
+                    container.data("ms1zoomRange", ms1zoomRange);
+                }
             }
+
             createMs1Plot(container);
             setupMs1PlotInteractions(container);
         }
 
         setupInteractions(container);
 
-        makeIonTable(container);
+        if(options.showIonTable) {
+            makeIonTable(container);
+        }
+    }
+
+    // trim any 0 intensity peaks from the end of the ms/ms peaks array
+    function trimPeaksArray(options)
+    {
+        var peaksLength = options.peaks.length;
+        var lastNonZeroIntensityPeakIndex = peaksLength - 1;
+        for(var i = peaksLength - 1; i >= 0; i--)
+        {
+            if(options.peaks[i][1] != 0.0)
+            {
+                lastNonZeroIntensityPeakIndex = i;
+                break;
+            }
+        }
+        if(lastNonZeroIntensityPeakIndex < peaksLength - 1)
+        {
+            options.peaks.splice(lastNonZeroIntensityPeakIndex+1, peaksLength - lastNonZeroIntensityPeakIndex);
+        }
     }
 
     function storeContainerData(container, options) {
@@ -183,6 +264,10 @@
         container.data("massError", options.massError);
 
         var maxInt = getMaxInt(options);
+        var xmin = options.peaks[0][0];
+        var xmax = options.peaks[options.peaks.length - 1][0];
+        var padding = (xmax - xmin) * 0.025;
+        // console.log("x-axis padding: "+padding);
         var plotOptions =  {
                 series: {
                     peaks: { show: true, lineWidth: 1, shadowSize: 0},
@@ -195,9 +280,14 @@
                         autoHighlight: false,
                         borderWidth: 1,
                         labelMargin: 1},
-                xaxis: { tickLength: 3, tickColor: "#000" },
+                xaxis: { tickLength: 3, tickColor: "#000",
+                         min: xmin - padding,
+                         max: xmax + padding},
                 yaxis: { tickLength: 0, tickColor: "#000",
-                        tickFormatter: function(val, axis) {return Math.round((val * 100)/maxInt)+"%";}}
+                         max: maxInt*1.1,
+                         ticks: [0, maxInt*0.1, maxInt*0.2, maxInt*0.3, maxInt*0.4, maxInt*0.5,
+                                 maxInt*0.6, maxInt*0.7, maxInt*0.8, maxInt*0.9, maxInt],
+                         tickFormatter: function(val, axis) {return Math.round((val * 100)/maxInt)+"%";}}
 	        }
         container.data("plotOptions", plotOptions);
         container.data("maxInt", maxInt);
@@ -267,7 +357,7 @@
 		if(ms1zoomRange) {
 			ms1plotOptions.xaxis.min = ms1zoomRange.xaxis.from;
 			ms1plotOptions.xaxis.max = ms1zoomRange.xaxis.to;
-			ms1plotOptions.yaxis.min = ms1zoomRange.yaxis.from;
+			ms1plotOptions.yaxis.min = 0; // ms1zoomRange.yaxis.from;
 			ms1plotOptions.yaxis.max = ms1zoomRange.yaxis.to;
 		}
 
@@ -276,44 +366,20 @@
         container.data("ms1plot", ms1plot);
 
 
-		// mark the current precursor peak
-		if(options.precursorPeaks) {
-			var x,y, diff, precursorMz;
-			
-			// If we are given a precursor m/z use it
-			if(options.precursorMz) {
-				precursorMz = options.precursorMz;
-			}
-			// Otherwise calculate a theoretical m/z from the given sequence and charge
-			else if(options.sequence && options.charge) {
-				var mass = options.peptide.getNeutralMassMono();
-				precursorMz = Ion.getMz(mass, options.charge);
-			}
-			
-			if(precursorMz) {
-				// find the closest actual peak
-				for(var i = 0; i < options.precursorPeaks.length; i += 1) {
-					var pk = options.precursorPeaks[i];
-					var d = Math.abs(pk[0] - precursorMz);
-					if(!diff || d < diff) {
-						x = pk[0];
-						y = pk[1];
-						diff = d;
-					}
-				}
-				if(diff <= 0.5) {
-					var o = ms1plot.pointOffset({ x: x, y: y});
-				    var ctx = ms1plot.getCanvas().getContext("2d");
-				    ctx.beginPath();
-				    ctx.moveTo(o.left-10, o.top-5);
-				    ctx.lineTo(o.left-10, o.top + 5);
-				    ctx.lineTo(o.left-10 + 10, o.top);
-				    ctx.lineTo(o.left-10, o.top-5);
-				    ctx.fillStyle = "#008800";
-				    ctx.fill();
-				    placeholder.append('<div style="position:absolute;left:' + (o.left + 4) + 'px;top:' + (o.top-4) + 'px;color:#000;font-size:smaller">'+x.toFixed(2)+'</div>');
-				}
-			}
+		// Mark the precursor peak with a green triangle.
+		if(options.precursorMz) {
+
+            var o = ms1plot.pointOffset({ x: options.precursorMz, y: options.precursorIntensity});
+            var ctx = ms1plot.getCanvas().getContext("2d");
+            ctx.beginPath();
+            ctx.moveTo(o.left-10, o.top-5);
+            ctx.lineTo(o.left-10, o.top + 5);
+            ctx.lineTo(o.left-10 + 10, o.top);
+            ctx.lineTo(o.left-10, o.top-5);
+            ctx.fillStyle = "#008800";
+            ctx.fill();
+            placeholder.append('<div style="position:absolute;left:' + (o.left + 4) + 'px;top:' + (o.top-4) + 'px;color:#000;font-size:smaller">'+options.precursorMz.toFixed(2)+'</div>');
+
 		}
 		
 		// mark the scan number if we have it
@@ -322,40 +388,33 @@
 			placeholder.append('<div style="position:absolute;left:' + (o.left + 4) + 'px;top:' + (o.top+4) + 'px;color:#666;font-size:smaller">MS1 scan: '+options.ms1scanLabel+'</div>');
 		}
 		
-		// zoom out icon on plot right hand corner
-		if(container.data("zoomrange")) {
+		// zoom out icon on plot right hand corner if we are not already zoomed in to the precursor.
+		if(container.data("ms1zoomRange")) {
 			placeholder.append('<div id="'+getElementId(container, elementIds.ms1plot_zoom_out)+'" class="zoom_out_link"  style="position:absolute; left:'
 					+ (o.left + ms1plot.width() - 40) + 'px;top:' + (o.top+4) + 'px;"></div>');
 
 			$(getElementSelector(container, elementIds.ms1plot_zoom_out)).click( function() {
-				ms1zoomRange = null;
+				container.data("ms1zoomRange", null);
 				createMs1Plot(container);
 			});
 		}
-		
-		if(options.precursorPeaks) {
+		else {
 			placeholder.append('<div id="'+getElementId(container, elementIds.ms1plot_zoom_in)+'" class="zoom_in_link"  style="position:absolute; left:'
 					+ (o.left + ms1plot.width() - 20) + 'px;top:' + (o.top+4) + 'px;"></div>');
 			$(getElementSelector(container, elementIds.ms1plot_zoom_in)).click( function() {
 				var ranges = {};
 				ranges.yaxis = {};
 				ranges.xaxis = {};
-				ranges.yaxis.from = null;
-				ranges.yaxis.to = null;
-				ranges.xaxis.from = null;
-				ranges.xaxis.to = null;
-				var maxInt = 0;
-				for(var p = 0; p < options.precursorPeaks.length; p += 1) {
-					if(options.precursorPeaks[p][1] > maxInt)
-						maxInt = options.precursorPeaks[p][1];
-				}
-				ranges.yaxis.to = maxInt;
+				ranges.yaxis.from = 0.0;
+				ranges.yaxis.to = options.maxIntensityInMs1ZoomRange;
+
+                ranges.xaxis.from = options.precursorMz - 5.0;
+                ranges.xaxis.to = options.precursorMz + 5.0;
+
                 container.data("ms1zoomRange", ranges);
 				createMs1Plot(container);
 			});
 		}
-		
-
 	}
 
     // -----------------------------------------------
@@ -400,7 +459,7 @@
     		if($(getElementSelector(container, elementIds.zoom_x)).is(":checked"))
     			selectOpts.xaxis = { min: zoomRange.xaxis.from, max: zoomRange.xaxis.to };
     		if($(getElementSelector(container, elementIds.zoom_y)).is(":checked"))
-    			selectOpts.yaxis = { min: zoomRange.yaxis.from, max: zoomRange.yaxis.to };
+    			selectOpts.yaxis = { min: 0, max: zoomRange.yaxis.to };
     		
     		plot = $.plot(getElementSelector(container, elementIds.msmsplot), datasets,
                       $.extend(true, {}, container.data("plotOptions"), selectOpts));
@@ -498,7 +557,7 @@
 	    	container.data("massTypeChanged", true);
 	    	plotAccordingToChoices(container);
 	    });
-        $(getElementSelector(container, elementIds.removeNoise)).click(function() {
+        $(getElementSelector(container, elementIds.peakDetect)).click(function() {
             container.data("peakAssignmentTypeChanged", true);
             plotAccordingToChoices(container);
         });
@@ -605,7 +664,7 @@
 				plotAccordingToChoices(container);
 				if(options.ms1peaks && options.ms1peaks.length > 0) {
 					$(getElementSelector(container, elementIds.msPlot)).css({width: width});
-					createMs1Plot(ms1zoomRange);
+					createMs1Plot(container);
 				}
 				$(getElementSelector(container, elementIds.slider_width_val)).text(width);
 			}
@@ -1089,10 +1148,10 @@
     {
         var options = container.data("options");
 
-        if($(getElementSelector(container, elementIds.removeNoise)).is(":checked"))
+        if($(getElementSelector(container, elementIds.peakDetect)).is(":checked"))
         {
             if(options.sparsePeaks == null) {
-                calculateSparsePeaks(container);
+                doPeakDetection(container);
             }
             return options.sparsePeaks;
         }
@@ -1102,9 +1161,9 @@
         }
     }
 
-    function calculateSparsePeaks(container) {
+    function doPeakDetection(container) {
 
-        //console.log("calculating sparse peaks");
+        // console.log("calculating sparse peaks");
 
         var peaks = container.data("options").peaks;
         var sparsePeaks = [];
@@ -1121,8 +1180,13 @@
             var totalIntensity = intensity;
             var peakCount = 1;
             // sum up the intensities in the +/- 50Da window of this peak
+            var maxIntensity = intensity;
             while((minMz >= mz - 50.0) && j >= 0)
             {
+                if(peaks[j][1] > maxIntensity)
+                {
+                    maxIntensity = peaks[j][1];
+                }
                 totalIntensity += peaks[j][1];
                 minMz = peaks[j][0];
                 j -= 1;
@@ -1131,6 +1195,10 @@
             j = i+1;
             while(maxMz <= mz + 50.0 && j < peaks.length)
             {
+                if(peaks[j][1] > maxIntensity)
+                {
+                    maxIntensity = peaks[j][1];
+                }
                 totalIntensity += peaks[j][1];
                 maxMz = peaks[j][0];
                 j += 1;
@@ -1138,33 +1206,40 @@
             }
 
             var mean = totalIntensity / peakCount;
-
-            // calculate the standard deviation
-            var sdev = 0;
-            j = i - 1;
-            while((minMz >= mz - 50.0) && j >= 0)
-            {
-                sdev += Math.pow((peaks[j][1] - mean), 2);
-                minMz = peaks[j][0];
-                j -= 1;
-            }
-            j = i+1;
-            while(maxMz <= mz + 50.0 && j < peaks.length)
-            {
-                sdev += Math.pow((peaks[j][1] - mean), 2);
-                maxMz = peaks[j][0];
-                j += 1;
-            }
-            sdev = Math.sqrt(sdev / peakCount);
-
-            if(intensity >= mean + 2 * sdev)
+            if(peakCount <= 10 && intensity == maxIntensity)
             {
                 sparsePeaks.push(peak);
             }
-            //console.log(intensity+"  "+mean+"  "+sdev);
+
+            else
+            {
+                // calculate the standard deviation
+                var sdev = 0;
+                j = i - 1;
+                while((minMz >= mz - 50.0) && j >= 0)
+                {
+                    sdev += Math.pow((peaks[j][1] - mean), 2);
+                    minMz = peaks[j][0];
+                    j -= 1;
+                }
+                j = i+1;
+                while(maxMz <= mz + 50.0 && j < peaks.length)
+                {
+                    sdev += Math.pow((peaks[j][1] - mean), 2);
+                    maxMz = peaks[j][0];
+                    j += 1;
+                }
+                sdev = Math.sqrt(sdev / peakCount);
+
+                if(intensity >= mean + 2 * sdev)
+                {
+                    sparsePeaks.push(peak);
+                }
+                //console.log(intensity+"  "+mean+"  "+sdev);
+            }
 		}
-        //console.log("Sparse Peak count: "+sparsePeaks.length);
-        //console.log("All Peaks count: "+peaks.length);
+        // console.log("Sparse Peak count: "+sparsePeaks.length);
+        // console.log("All Peaks count: "+peaks.length);
         container.data("options").sparsePeaks = sparsePeaks;
     }
 
@@ -1200,28 +1275,32 @@
 		parentTable += '<td rowspan="'+rowspan+'" valign="top" id="'+getElementId(container, elementIds.optionsTable)+'"> ';
 		parentTable += '</td> ';
 
-		// placeholder for sequence, m/z, scan number etc
-		parentTable += '<td style="background-color: white; padding:5px; border:1px dotted #cccccc;" valign="bottom" align="center"> ';
-		parentTable += '<div id="'+getElementId(container, elementIds.seqinfo)+'" style="width:100%;"></div> ';
-		// placeholder for file name, scan number and charge
-		parentTable += '<div id="'+getElementId(container, elementIds.fileinfo)+'" style="width:100%;"></div> ';
-		parentTable += '</td> ';
+        if(options.showSequenceInfo) {
+            // placeholder for sequence, m/z, scan number etc
+            parentTable += '<td style="background-color: white; padding:5px; border:1px dotted #cccccc;" valign="bottom" align="center"> ';
+            parentTable += '<div id="'+getElementId(container, elementIds.seqinfo)+'" style="width:100%;"></div> ';
+            // placeholder for file name, scan number and charge
+            parentTable += '<div id="'+getElementId(container, elementIds.fileinfo)+'" style="width:100%;"></div> ';
+            parentTable += '</td> ';
+        }
 
 
-		// placeholder for the ion table
-		parentTable += '<td rowspan="'+rowspan+'" valign="top" id="'+getElementId(container, elementIds.ionTableLoc1)+'" > ';
-		parentTable += '<div id="'+getElementId(container, elementIds.ionTableDiv)+'">';
-		parentTable += '<span id="'+getElementId(container, elementIds.moveIonTable)+'" class="font_small link">[Click]</span> <span class="font_small">to move table</span>';
-		// placeholder for file name, scan number, modifications etc.
-		parentTable += '<div id="'+getElementId(container, elementIds.modInfo)+'" style="margin-top:5px;"></div> ';
-		parentTable += '</div> ';
-		parentTable += '</td> ';
-		parentTable += '</tr> ';
+        if(options.showIonTable) {
+            // placeholder for the ion table
+            parentTable += '<td rowspan="'+rowspan+'" valign="top" id="'+getElementId(container, elementIds.ionTableLoc1)+'" > ';
+            parentTable += '<div id="'+getElementId(container, elementIds.ionTableDiv)+'">';
+            parentTable += '<span id="'+getElementId(container, elementIds.moveIonTable)+'" class="font_small link">[Click]</span> <span class="font_small">to move table</span>';
+            // placeholder for modifications
+            parentTable += '<div id="'+getElementId(container, elementIds.modInfo)+'" style="margin-top:5px;"></div> ';
+            parentTable += '</div> ';
+            parentTable += '</td> ';
+            parentTable += '</tr> ';
+        }
 
 
 		// placeholders for the ms/ms plot
 		parentTable += '<tr> ';
-		parentTable += '<td style="background-color: white; padding:5px; border:1px dotted #cccccc;" valign="middle" align="center"> ';
+		parentTable += '<td style="background-color: white; padding:5px; border:1px dotted #cccccc;" valign="top" align="center"> ';
 		parentTable += '<div id="'+getElementId(container, elementIds.msmsplot)+'" align="bottom" style="width:'+options.width+'px;height:'+options.height+'px;"></div> ';
 
 		// placeholder for viewing options (zoom, plot size etc.)
@@ -1399,10 +1478,10 @@
 			
 			var neutralMass = 0;
 			
-			if(massType == "mono")
-				neutralMass = options.peptide.getNeutralMassMono();
-			else if(massType == "avg")
-				neutralMass = options.peptide.getNeutralMassAvg();
+			if(options.precursorMassType == 'mono')
+               neutralMass = options.peptide.getNeutralMassMono();
+            else
+		        neutralMass = options.peptide.getNeutralMassAvg();
 				
 			
 			var mz;
@@ -1453,9 +1532,6 @@
 			}
 			if(options.scanNum) {
 				fileinfo += ', Scan: '+options.scanNum;
-			}	
-			if(options.precursorMz) {
-				fileinfo += ', Precursor m/z: '+options.precursorMz;
 			}
 			if(options.charge) {
 				fileinfo += ', Charge: '+options.charge;
@@ -1497,23 +1573,47 @@
 		
 		if(options.variableMods && options.variableMods.length > 0) {
 			
-			var modChars = [];
-			var uniqvarmods = [];
+			var uniqVarMods = {};
 			for(var i = 0; i < options.variableMods.length; i += 1) {
 				var mod = options.variableMods[i];
-				if(modChars[mod.aa.code])
-					continue;
-				modChars[mod.aa.code] = 1;
-				uniqvarmods.push(mod);
+                var varmods = uniqVarMods[mod.aa.code + ' ' + mod.modMass];
+				if(!varmods)
+                {
+					varmods = [];
+                    uniqVarMods[mod.aa.code + ' ' + mod.modMass] = varmods;
+                }
+				varmods.push(mod);
 			}  
-			
+
+            var keys = [];
+            for(var key in uniqVarMods)
+            {
+                if(uniqVarMods.hasOwnProperty(key))
+                {
+                    keys.push(key);
+                }
+            }
+            keys.sort();
+
 			modInfo += '<div style="margin-top:5px;">';
 			modInfo += 'Variable Modifications: ';
-			for(var i = 0; i < uniqvarmods.length; i += 1) {
-				var mod = uniqvarmods[i];
-				//if(i > 0) modInfo += ', ';
-				modInfo += "<div><b>"+mod.aa.code+": "+mod.modMass+"</b></div>";
+            modInfo += "<table class='varModsTable'>";
+			for(var i in keys) {
+				var varmods = uniqVarMods[keys[i]];
+                modInfo += "<tr><td><span style='font-weight: bold;'>";
+                modInfo += varmods[0].aa.code+": "+varmods[0].modMass;
+                modInfo += "</span></td>";
+                modInfo += "<td>[";
+                for(var i = 0; i < varmods.length; i++)
+                {
+                    if(i != 0)
+                        modInfo += ", ";
+                    modInfo += varmods[i].position;
+                }
+                modInfo += "]</td>";
+                modInfo += "</tr>";
 			}
+            modInfo += "</table>";
 			modInfo += '</div>';
 		}
 		
@@ -1650,8 +1750,14 @@
 		myTable += '<tr><td class="optionCell"> ';
 		myTable += '<div> Mass Type:<br/> ';
 		myTable += '<nobr> ';
-		myTable += '<input type="radio" name="'+getRadioName(container, "massTypeOpt")+'" value="mono" checked="checked"/><span style="font-weight: bold;">Mono</span> ';
-		myTable += '<input type="radio" name="'+getRadioName(container, "massTypeOpt")+'" value="avg"/><span style="font-weight: bold;">Avg</span> ';
+		myTable += '<input type="radio" name="'+getRadioName(container, "massTypeOpt")+'" value="mono"';
+        if(options.fragmentMassType == 'mono')
+            myTable += ' checked = "checked" ';
+        myTable += '/><span style="font-weight: bold;">Mono</span> ';
+		myTable += '<input type="radio" name="'+getRadioName(container, "massTypeOpt")+'" value="avg"';
+        if(options.fragmentMassType == 'avg')
+            myTable += ' checked = "checked" ';
+        myTable += '/><span style="font-weight: bold;">Avg</span> ';
 		myTable += '</nobr> ';
 		myTable += '</div> ';
 		myTable += '<div style="margin-top:10px;"> ';
@@ -1667,7 +1773,12 @@
 		myTable+= '<div> Peak Assignment:<br/> ';
 		myTable+= '<input type="radio" name="'+getRadioName(container, "peakAssignOpt")+'" value="intense" checked="checked"/><span style="font-weight: bold;">Most Intense</span><br/> ';
 		myTable+= '<input type="radio" name="'+getRadioName(container, "peakAssignOpt")+'" value="close"/><span style="font-weight: bold;">Nearest Match</span><br/> ';
-        myTable+= '<input type="checkbox" value="true" checked="checked" id="'+getElementId(container, elementIds.removeNoise)+'"/><span style="font-weight:bold;">Remove Noise</span>';
+        myTable+= '<input type="checkbox" value="true" ';
+        if(options.peakDetect == true)
+        {
+            myTable+=checked="checked"
+        }
+        myTable+= ' id="'+getElementId(container, elementIds.peakDetect)+'"/><span style="font-weight:bold;">Peak Detect</span>';
 		myTable+= '</div> ';
 		myTable += '</td> </tr> ';
 		
@@ -1692,7 +1803,7 @@
 		myTable += '</table>';
 
 		$(getElementSelector(container, elementIds.optionsTable)).append(myTable);
-        if(!options.showIonTable) {
+        if(!options.showOptionsTable) {
             $(getElementSelector(container, elementIds.optionsTable)).hide();
         }
 	}

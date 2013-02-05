@@ -1,3 +1,7 @@
+// LastChangedDate: 2012-12-21 16:04:41 -0800 (Fri, 21 Dec 2012) 
+// LastChangedBy: vagisha@gmail.com 
+// LastChangedRevision: 49 
+
 /* Javascript plotting library for jQuery, v. 0.6.
  *
  * Released under the MIT license by IOLA, December 2007.
@@ -1672,9 +1676,9 @@
                 
                 ctx.fillStyle = series.color;
                 ctx.textAlign = "center";
-        		ctx.font = '14px Arial';
+        		ctx.font = '11px Arial';
         		if(series.labelType == 'mz')
-        			ctx.font = '12px Arial';
+        			ctx.font = '11px Arial';
         		
                 var incr = ps;
                 
@@ -1798,7 +1802,7 @@
 	                		ctx.save();
 	                		ctx.translate(myx, myy2)
 	                		ctx.rotate(-90 * Math.PI/180);
-	                		ctx.fillText(label, (metrics.width / 2)+1 ,3);
+	                		ctx.fillText(label, (metrics.width / 2)+4 ,3);
 	                		ctx.restore();
                 		}
             		}

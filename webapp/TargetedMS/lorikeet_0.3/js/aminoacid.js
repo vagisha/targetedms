@@ -1,3 +1,7 @@
+// LastChangedDate: 2012-12-21 16:04:41 -0800 (Fri, 21 Dec 2012) 
+// LastChangedBy: vagisha@gmail.com 
+// LastChangedRevision: 49 
+
 function AminoAcid(aaCode, aaShortName, aaName, monoMass, avgMass) {
    this.code = aaCode;
    this.shortName = aaShortName;
