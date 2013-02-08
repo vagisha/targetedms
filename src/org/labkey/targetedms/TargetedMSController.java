@@ -1069,7 +1069,12 @@ public class TargetedMSController extends SpringActionController
 
         public NavTree appendNavTrail(NavTree root)
         {
-            return appendNavTrail(root, _run).addChild(_run.getBaseName());
+            NavTree navTree = appendNavTrail(root, _run);
+            if (_run != null)
+            {
+                navTree = navTree.addChild(_run.getBaseName());
+            }
+            return navTree;
         }
 
         public NavTree appendNavTrail(NavTree root, TargetedMSRun run)
