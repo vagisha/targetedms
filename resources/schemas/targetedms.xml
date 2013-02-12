@@ -190,7 +190,7 @@
             </ns:column>
             <ns:column columnName="Modified"/>
             <ns:column columnName="RepresentativeDataState">
-                <ns:columnTitle>Representative State</ns:columnTitle>
+                <ns:columnTitle>Representative</ns:columnTitle>
             </ns:column>
         </ns:columns>
     </ns:table>
@@ -313,7 +313,7 @@
             <ns:column columnName="Note"/>
             <ns:column columnName="Modified"/>
             <ns:column columnName="RepresentativeDataState">
-                <ns:columnTitle>Representative State</ns:columnTitle>
+                <ns:columnTitle>Representative</ns:columnTitle>
             </ns:column>
         </ns:columns>
     </ns:table>

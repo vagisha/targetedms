@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.query;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DisplayColumn;
@@ -22,18 +23,17 @@ import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.Sort;
-import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableSelector;
+import org.labkey.api.gwt.client.FacetingBehaviorType;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.parser.AbstractAnnotation;
 
-import java.util.Collection;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -42,24 +42,35 @@ import java.util.Set;
  */
 public class AnnotatedTargetedMSTable extends TargetedMSTable
 {
-    private final TableInfo _annotationTableInfo;
-    private final String _annotationFKName;
+    private static final String ANNOT_NAME_VALUE_SEPARATOR = ": ";
+    private static final String ANNOT_DELIMITER = "#@#";
 
-    public AnnotatedTargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment containerSQL, TableInfo annotationTableInfo, String annotationFKName)
+    public AnnotatedTargetedMSTable(TableInfo table,
+                                    TargetedMSSchema schema,
+                                    SQLFragment containerSQL,
+                                    TableInfo annotationTableInfo,
+                                    String annotationFKName,
+                                    String columnName)
     {
         super(table, schema, containerSQL);
-        _annotationTableInfo = annotationTableInfo;
-        _annotationFKName = annotationFKName;
 
-        SQLFragment annotationsSQL = new SQLFragment("(SELECT COUNT(Id) FROM ");
+        SQLFragment annotationsSQL = new SQLFragment("(SELECT ");
+        annotationsSQL.append(TargetedMSManager.getSqlDialect().getGroupConcat(
+                new SQLFragment(TargetedMSManager.getSqlDialect().concatenate("a.Name", "\'"+ ANNOT_NAME_VALUE_SEPARATOR +"\' ", "a.Value")),
+                false,
+                true,
+                "'" + ANNOT_DELIMITER + "'"));
+        annotationsSQL.append(" FROM ");
         annotationsSQL.append(annotationTableInfo, "a");
         annotationsSQL.append(" WHERE a.");
         annotationsSQL.append(annotationFKName);
         annotationsSQL.append(" = ");
         annotationsSQL.append(ExprColumn.STR_TABLE_ALIAS);
         annotationsSQL.append(".Id)");
-        ExprColumn annotationsColumn = new ExprColumn(this, "Annotations", annotationsSQL, JdbcType.INTEGER);
+        ExprColumn annotationsColumn = new ExprColumn(this, "Annotations", annotationsSQL, JdbcType.VARCHAR);
+        annotationsColumn.setLabel(columnName);
         annotationsColumn.setTextAlign("left");
+        annotationsColumn.setFacetingBehaviorType(FacetingBehaviorType.ALWAYS_OFF);
         addColumn(annotationsColumn);
 
         annotationsColumn.setDisplayColumnFactory(new DisplayColumnFactory()
@@ -95,31 +106,27 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         @Override
         public boolean isSortable()
         {
-            // This is somewhat questionable since the database doesn't what we're going to actually display, but
-            // at least it lets the user group the annotatated vs non-annotated rows
             return true;
         }
 
         @Override
         public boolean isFilterable()
         {
-            // The database is only returning the number of annotations, so it's not useful to filter on them
-            // because they don't match with what we're going to show in the UI
-            return false;
+            return true;
         }
 
-        public int getAnnotationCount(RenderContext ctx)
+        private List<String> getAnnotations(RenderContext ctx)
         {
-            Number value = (Number)super.getValue(ctx);
-            return value == null ? 0 : value.intValue();
-        }
-
-        /** Do a separate query to get the annotations for this row */
-        private Collection<AbstractAnnotation> getAnnotations(RenderContext ctx)
-        {
-            int id = ctx.get(_idFieldKey, Integer.class);
-            TableSelector selector = new TableSelector(_annotationTableInfo, Table.ALL_COLUMNS, new SimpleFilter(_annotationFKName, id), new Sort("Name"));
-            return selector.getCollection(AbstractAnnotation.class);
+            String annotations = (String)super.getValue(ctx);
+            if(!StringUtils.isBlank(annotations))
+            {
+                String[] annotationsArray = annotations.split(ANNOT_DELIMITER);
+                return Arrays.asList(annotationsArray);
+            }
+            else
+            {
+                return Collections.emptyList();
+            }
         }
 
         /** Build up the non-HTML encoded annotations for TSV/Excel export, etc */
@@ -127,17 +134,12 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         public String getValue(RenderContext ctx)
         {
             StringBuilder sb = new StringBuilder();
-            if (getAnnotationCount(ctx) > 0)
+            String separator = "";
+            for (String annotation : getAnnotations(ctx))
             {
-                String separator = "";
-                for (AbstractAnnotation annotation : getAnnotations(ctx))
-                {
-                    sb.append(separator);
-                    separator = "\n";
-                    sb.append(annotation.getName());
-                    sb.append(": ");
-                    sb.append(annotation.getValue());
-                }
+                sb.append(separator);
+                separator = "\n";
+                sb.append(annotation);
             }
             return sb.toString();
         }
@@ -166,17 +168,14 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         public String getFormattedValue(RenderContext ctx)
         {
             StringBuilder sb = new StringBuilder();
-            if (getAnnotationCount(ctx) > 0)
+            String separator = "";
+            for (String annotation : getAnnotations(ctx))
             {
-                String separator = "";
-                for (AbstractAnnotation annotation : getAnnotations(ctx))
-                {
-                    sb.append(separator);
-                    separator = "<br/>";
-                    sb.append(PageFlowUtil.filter(annotation.getName()));
-                    sb.append(": ");
-                    sb.append(PageFlowUtil.filter(annotation.getValue()));
-                }
+                sb.append(separator);
+                separator = "<br/>";
+                sb.append("<nobr>");
+                sb.append(PageFlowUtil.filter(annotation));
+                sb.append("</nobr>");
             }
             return sb.toString();
         }

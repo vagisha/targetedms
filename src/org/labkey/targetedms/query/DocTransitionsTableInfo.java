@@ -16,40 +16,59 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.DisplayColumn;
+import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.LookupForeignKey;
+import org.labkey.api.view.ActionURL;
+import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * User: vsharma
  * Date: Apr 13, 2012
  */
-public class DocTransitionsTableInfo extends FilteredTable<TargetedMSSchema>
+public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
 {
     public DocTransitionsTableInfo(TargetedMSSchema schema)
     {
-        super(TargetedMSManager.getTableInfoTransition(), schema);
+        super(TargetedMSManager.getTableInfoTransition(),
+              schema,
+              TargetedMSSchema.ContainerJoinType.PrecursorFK.getSQL(),
+              TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId",
+              "Annotations");
 
-        setName(TargetedMSSchema.TABLE_DOC_TRANSITIONS);
+        setName(TargetedMSSchema.TABLE_TRANSITION);
 
-        //wrap all the columns
-        wrapAllColumns(true);
-
-        ColumnInfo peptideCol = getColumn("PrecursorId");
-        peptideCol.setFk(new LookupForeignKey("Id")
+        ColumnInfo precursorCol = getColumn("PrecursorId");
+        precursorCol.setFk(new LookupForeignKey("Id")
         {
             @Override
             public TableInfo getLookupTableInfo()
             {
                 return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
+            }
+        });
+
+        final DetailsURL precursorDetailsURLs = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
+                                                                    getContainer()),
+                                                      Collections.singletonMap("id", "PrecursorId"));
+
+        precursorCol.setDisplayColumnFactory(new DisplayColumnFactory()
+        {
+            @Override
+            public DisplayColumn createRenderer(ColumnInfo colInfo)
+            {
+                return new ModifiedPeptideDisplayColumn(colInfo, getColumn("PrecursorId"), precursorDetailsURLs.getActionURL());
             }
         });
 
@@ -66,20 +85,25 @@ public class DocTransitionsTableInfo extends FilteredTable<TargetedMSSchema>
         ArrayList<FieldKey> visibleColumns = new ArrayList<FieldKey>();
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Description"));
+        visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Annotations"));
+        visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "RepresentativeDataState"));
 
         // Peptide level information
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "Sequence"));
+        visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "Annotations"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "NumMissedCleavages"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "CalcNeutralMass"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "Rank"));
 
 
         // Precursor level information
-        visibleColumns.add(FieldKey.fromParts("PrecursorId", "ModifiedPeptideHtml")); // Modified peptide column
+        visibleColumns.add(FieldKey.fromParts("PrecursorId")); // Modified peptide column
+        visibleColumns.add(FieldKey.fromParts("PrecursorId", "Annotations"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "IsotopeLabelId", "Name"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "NeutralMass"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "Mz"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "Charge"));
+        visibleColumns.add(FieldKey.fromParts("PrecursorId", "RepresentativeDataState"));
 
         // Transition level information
         visibleColumns.add(FieldKey.fromParts("Fragment"));

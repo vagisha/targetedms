@@ -47,9 +47,37 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
         super(TargetedMSManager.getTableInfoPrecursor(),
                 schema,
                 TargetedMSSchema.ContainerJoinType.PeptideFK.getSQL(),
-                TargetedMSManager.getTableInfoPrecursorAnnotation(), "PrecursorId");
+                TargetedMSManager.getTableInfoPrecursorAnnotation(),
+                "PrecursorId",
+                "Precursor Annotations");
 
         setName(TargetedMSSchema.TABLE_PRECURSOR);
+
+        final DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
+                                                                    getContainer()),
+                                                      Collections.singletonMap("id", "Id"));
+
+        setDetailsURL(detailsURLs);
+
+        ColumnInfo peptideCol = getColumn("PeptideId");
+        peptideCol.setFk(new LookupForeignKey("Id")
+        {
+            @Override
+            public TableInfo getLookupTableInfo()
+            {
+                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
+            }
+        });
+
+        getColumn("RepresentativeDataState").setFk(new LookupForeignKey("RowId")
+        {
+            @Override
+            public TableInfo getLookupTableInfo()
+            {
+                return getUserSchema().getTable(TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE);
+            }
+        });
+
 
         SQLFragment transitionCountSQL = new SQLFragment("(SELECT COUNT(t.Id) FROM ");
         transitionCountSQL.append(TargetedMSManager.getTableInfoTransition(), "t");
@@ -59,27 +87,14 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
         ExprColumn transitionCountCol = new ExprColumn(this, "TransitionCount", transitionCountSQL, JdbcType.INTEGER);
         addColumn(transitionCountCol);
 
-        final DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
-                                                                    getContainer()),
-                                                      Collections.singletonMap("id", "Id"));
-        ColumnInfo modPepCol = wrapColumn("ModifiedPeptideHtml", getRealTable().getColumn("Id"));
-        DisplayColumnFactory modPepDisplayFactory = new DisplayColumnFactory()
-        {
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new ModifiedPeptideDisplayColumn(colInfo, detailsURLs.getActionURL());
-            }
-        };
-        modPepCol.setDisplayColumnFactory(modPepDisplayFactory);
-        addColumn(modPepCol);
 
-        ColumnInfo peptideCol = getColumn("PeptideId");
-        peptideCol.setFk(new LookupForeignKey("Id")
+        ColumnInfo modSeqCol = getColumn("ModifiedSequence");
+        modSeqCol.setDisplayColumnFactory(new DisplayColumnFactory()
         {
             @Override
-            public TableInfo getLookupTableInfo()
+            public DisplayColumn createRenderer(ColumnInfo colInfo)
             {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
+                return new ModifiedPeptideDisplayColumn(colInfo, getRealTable().getColumn("Id"), detailsURLs.getActionURL());
             }
         });
 
@@ -107,19 +122,21 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
 
 
         visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
+        visibleColumns.add(FieldKey.fromParts("PeptideId", "Annotations"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "NumMissedCleavages"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "CalcNeutralMass"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "Rank"));
 
 
-        visibleColumns.add(FieldKey.fromParts("ModifiedPeptideHtml"));
+        visibleColumns.add(FieldKey.fromParts("ModifiedSequence"));
+        visibleColumns.add(FieldKey.fromParts("Annotations"));
         visibleColumns.add(FieldKey.fromParts("IsotopeLabelId", "Name"));
         visibleColumns.add(FieldKey.fromParts("NeutralMass"));
         visibleColumns.add(FieldKey.fromParts("Mz"));
         visibleColumns.add(FieldKey.fromParts("Charge"));
         visibleColumns.add(FieldKey.fromParts("RepresentativeDataState"));
         visibleColumns.add(FieldKey.fromParts("TransitionCount"));
-        visibleColumns.add(FieldKey.fromParts("Annotations"));
+
         visibleColumns.add(FieldKey.fromParts("Chromatograms"));
 
         setDefaultVisibleColumns(visibleColumns);

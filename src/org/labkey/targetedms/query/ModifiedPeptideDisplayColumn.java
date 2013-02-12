@@ -35,9 +35,13 @@ public class ModifiedPeptideDisplayColumn extends DataColumn
     private ActionURL _linkUrl;
     private ModifiedPeptideHtmlMaker _htmlMaker = new ModifiedPeptideHtmlMaker();
 
-    public ModifiedPeptideDisplayColumn(ColumnInfo colInfo, ActionURL url)
+    private final ColumnInfo _precursorIdCol;
+
+    public ModifiedPeptideDisplayColumn(ColumnInfo colInfo, ColumnInfo precursorIdCol, ActionURL url)
     {
         super(colInfo);
+
+        _precursorIdCol = precursorIdCol;
 
         _linkUrl = url;
 
@@ -49,11 +53,11 @@ public class ModifiedPeptideDisplayColumn extends DataColumn
     @Override
     public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
     {
-        Object Id = getValue(ctx);  // Primary key from the Precursor table
-        if(null == Id)
+        Object id = _precursorIdCol.getValue(ctx);  // Primary key from the Precursor table
+        if(null == id)
             return;
 
-        String html = getPeptideHtml((Integer) Id);
+        String html = getPeptideHtml((Integer) id);
         out.write(html);
     }
 

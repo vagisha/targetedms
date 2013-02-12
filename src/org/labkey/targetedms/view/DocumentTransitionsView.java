@@ -43,7 +43,7 @@ public class DocumentTransitionsView extends NestableQueryView
 
     public DocumentTransitionsView(ViewContext ctx, TargetedMSSchema schema, int runId, boolean forExport) throws SQLException
     {
-        super(schema, schema.getSettings(ctx, DATAREGION_NAME, TargetedMSSchema.TABLE_DOC_TRANSITIONS), true, !forExport,
+        super(schema, schema.getSettings(ctx, DATAREGION_NAME, TargetedMSSchema.TABLE_TRANSITION), true, !forExport,
                 new QueryNestingOption(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId"), FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Id"), null));
         _targetedMsSchema = schema;
         _runId = runId;
@@ -58,7 +58,7 @@ public class DocumentTransitionsView extends NestableQueryView
     public TableInfo createTable()
     {
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in DocumentTransitionsView class!";
-        DocTransitionsTableInfo tinfo  = (DocTransitionsTableInfo) _targetedMsSchema.getTable(TargetedMSSchema.TABLE_DOC_TRANSITIONS);
+        DocTransitionsTableInfo tinfo  = (DocTransitionsTableInfo) _targetedMsSchema.getTable(TargetedMSSchema.TABLE_TRANSITION);
         if (tinfo != null)
         {
             tinfo.setRunId(_runId);

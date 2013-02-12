@@ -177,7 +177,7 @@ public class ChromatogramChartMakerFactory
 
         if(syncIntensity)
         {
-            // get the height of the tallest transition peak for this precursor over all replicates
+            // get the height of the tallest transition peak for this peptide over all replicates
             double maxIntensity = TransitionManager.getMaxTransitionIntensity(precursor.getPeptideId());
             chartMaker.setMaxIntensity(maxIntensity);
         }
@@ -304,12 +304,12 @@ public class ChromatogramChartMakerFactory
         chartMaker.setPeakStartTime(minRt);
         chartMaker.setPeakEndtime(maxRt);
 
-//        if(syncIntensity)
-//        {
-//            // get the height of the tallest precursor peak for this peptide over all replicates
-//            double maxIntensity = TransitionManager.getMaxTransitionIntensity(precursor.getPeptideId());
-//            chartMaker.setMaxIntensity(maxIntensity);
-//        }
+        if(syncIntensity)
+        {
+            // get the height of the tallest precursor for this peptide over all replicates
+            double maxIntensity = PrecursorManager.getMaxPrecursorIntensity(pepChromInfo.getPeptideId());
+            chartMaker.setMaxIntensity(maxIntensity);
+        }
         if(syncMz)
         {
             chartMaker.setMinRt(minPeptideRt);

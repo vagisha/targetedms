@@ -397,4 +397,26 @@ public class PrecursorManager
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
         return count != null && count == precursorIds.length;
     }
+
+    public static double getMaxPrecursorIntensity(int peptideId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT MAX(precHeight) FROM (");
+        sql.append("SELECT SUM(tci.Height) AS precHeight FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptideChromInfo(), "pepci");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
+        sql.append(" WHERE");
+        sql.append(" pepci.Id = preci.PeptideChromInfoId");
+        sql.append(" AND");
+        sql.append(" preci.Id = tci.PrecursorChromInfoId");
+        sql.append(" AND");
+        sql.append(" pepci.PeptideId=?");
+        sql.add(peptideId);
+        sql.append(" GROUP BY tci.PrecursorChromInfoId");
+        sql.append(" ) a");
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
+    }
 }
