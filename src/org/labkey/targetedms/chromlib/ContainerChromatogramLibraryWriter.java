@@ -27,7 +27,7 @@ import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
-//import org.labkey.targetedms.query.InstrumentManager;
+import org.labkey.targetedms.query.InstrumentManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideGroupManager;
@@ -252,10 +252,10 @@ public class ContainerChromatogramLibraryWriter
 
             if(sampleFile.getInstrumentId() != null)
             {
-//                Instrument instrument = InstrumentManager.getInstrument(sampleFile.getInstrumentId());
-//                libSampleFile.setInstrumentIonizationType(instrument.getIonizationType());
-//                libSampleFile.setInstrumentAnalyzer(instrument.getAnalyzer());
-//                libSampleFile.setInstrumentDetector(instrument.getDetector());
+                Instrument instrument = InstrumentManager.getInstrument(sampleFile.getInstrumentId());
+                libSampleFile.setInstrumentIonizationType(instrument.getIonizationType());
+                libSampleFile.setInstrumentAnalyzer(instrument.getAnalyzer());
+                libSampleFile.setInstrumentDetector(instrument.getDetector());
             }
 
             _libWriter.writeSampleFile(libSampleFile);

@@ -172,6 +172,6 @@ public class TargetedMSModule extends SpringModule
         proteinService.registerProteinSearchView(new TransitionProteinSearchViewProvider());
         proteinService.registerPeptideSearchView(new TransitionPeptideSearchViewProvider());
 
-//        AuditLogService.get().addAuditViewFactory(TargetedMsRepresentativeStateAuditViewFactory.getInstance());
+        AuditLogService.get().addAuditViewFactory(TargetedMsRepresentativeStateAuditViewFactory.getInstance());
     }
 }

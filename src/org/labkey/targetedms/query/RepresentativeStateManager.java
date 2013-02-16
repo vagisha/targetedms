@@ -23,7 +23,7 @@ import org.labkey.api.security.User;
 import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
-//import org.labkey.targetedms.TargetedMsRepresentativeStateAuditViewFactory;
+import org.labkey.targetedms.TargetedMsRepresentativeStateAuditViewFactory;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -88,8 +88,8 @@ public class RepresentativeStateManager
             ChromatogramLibraryUtils.incrementLibraryRevision(container);
 
             // Add event to audit log.
-//            TargetedMsRepresentativeStateAuditViewFactory.addAuditEntry(container, user,
-//                    "Updated representative state. Number of conflicts " + conflictCount);
+            TargetedMsRepresentativeStateAuditViewFactory.addAuditEntry(container, user,
+                    "Updated representative state. Number of conflicts " + conflictCount);
 
 
             return conflictCount;

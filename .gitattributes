@@ -54,6 +54,7 @@ src/org/labkey/targetedms/TargetedMSManager.java -text
 src/org/labkey/targetedms/TargetedMSModule.java -text
 src/org/labkey/targetedms/TargetedMSRun.java -text
 src/org/labkey/targetedms/TargetedMSSchema.java -text
+src/org/labkey/targetedms/TargetedMsRepresentativeStateAuditViewFactory.java -text
 src/org/labkey/targetedms/chart/ChartColors.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMaker.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMakerFactory.java -text
@@ -146,6 +147,7 @@ src/org/labkey/targetedms/query/ChromatogramGridQuerySettings.java -text
 src/org/labkey/targetedms/query/ConflictResultsManager.java -text
 src/org/labkey/targetedms/query/DocPrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/DocTransitionsTableInfo.java -text
+src/org/labkey/targetedms/query/InstrumentManager.java -text
 src/org/labkey/targetedms/query/IsotopeLabelManager.java -text
 src/org/labkey/targetedms/query/LibraryManager.java -text
 src/org/labkey/targetedms/query/ModificationManager.java -text
