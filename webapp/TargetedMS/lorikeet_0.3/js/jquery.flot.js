@@ -1676,7 +1676,7 @@
                 
                 ctx.fillStyle = series.color;
                 ctx.textAlign = "center";
-        		ctx.font = '11px Arial';
+        		ctx.font = '12px Arial';
         		if(series.labelType == 'mz')
         			ctx.font = '11px Arial';
         		

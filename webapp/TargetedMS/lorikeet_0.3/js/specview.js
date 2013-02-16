@@ -1,6 +1,6 @@
-// LastChangedDate: 2013-01-13 10:50:24 -0800 (Sun, 13 Jan 2013) 
+// LastChangedDate: 2013-02-15 21:55:34 -0800 (Fri, 15 Feb 2013)
 // LastChangedBy: vagisha@gmail.com 
-// LastChangedRevision: 50 
+// LastChangedRevision: 52 
 
 (function($) {
 
@@ -1598,8 +1598,8 @@
 			modInfo += '<div style="margin-top:5px;">';
 			modInfo += 'Variable Modifications: ';
             modInfo += "<table class='varModsTable'>";
-			for(var i in keys) {
-				var varmods = uniqVarMods[keys[i]];
+			for(var k = 0; k < keys.length; k++) {
+				var varmods = uniqVarMods[keys[k]];
                 modInfo += "<tr><td><span style='font-weight: bold;'>";
                 modInfo += varmods[0].aa.code+": "+varmods[0].modMass;
                 modInfo += "</span></td>";
