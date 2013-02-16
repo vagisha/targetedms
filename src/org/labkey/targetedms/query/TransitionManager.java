@@ -84,6 +84,19 @@ public class TransitionManager
         return new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(TransitionChromInfo.class);
     }
 
+    public static TransitionChromInfo getTransitionChromInfoForTransition(int transitionId, int precursorChromInfoId)
+    {
+        SimpleFilter filter = new SimpleFilter();
+        filter.addCondition(FieldKey.fromParts("PrecursorChromInfoId"), precursorChromInfoId);
+        filter.addCondition(FieldKey.fromParts("TransitionId"), transitionId);
+
+        return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(),
+                                 Table.ALL_COLUMNS,
+                                 filter,
+                                 null)
+                                 .getObject(TransitionChromInfo.class);
+    }
+
     public static double getMaxTransitionIntensity(int peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(tci.Height) FROM ");

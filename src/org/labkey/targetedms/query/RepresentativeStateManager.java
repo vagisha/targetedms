@@ -20,8 +20,10 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
 import org.labkey.api.security.User;
+import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.TargetedMsRepresentativeStateAuditViewFactory;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -81,6 +83,14 @@ public class RepresentativeStateManager
             run = Table.update(user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
             TargetedMSManager.getSchema().getScope().commitTransaction();
+
+            // Increment the chromatogram library revision number for this container.
+            ChromatogramLibraryUtils.incrementLibraryRevision(container);
+
+            // Add event to audit log.
+            TargetedMsRepresentativeStateAuditViewFactory.addAuditEntry(container, user,
+                    "Updated representative state. Number of conflicts " + conflictCount);
+
 
             return conflictCount;
         }

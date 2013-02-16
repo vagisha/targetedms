@@ -120,7 +120,7 @@ public class PrecursorManager
         return Arrays.asList(precursors);
     }
 
-    public static List<PrecursorChromInfo> getPrecursorChromInfo(int peptideChromInfoId)
+    public static List<PrecursorChromInfo> getPrecursorChromInfosForPeptideChromInfo(int peptideChromInfoId)
     {
         List<PrecursorChromInfo> chromInfoList = new ArrayList<PrecursorChromInfo>();
         SimpleFilter filter = new SimpleFilter();
@@ -138,6 +138,34 @@ public class PrecursorManager
         }
         Collections.addAll(chromInfoList, chromInfos);
         return chromInfoList;
+    }
+
+    public static List<PrecursorChromInfo> getPrecursorChromInfosForPrecursor(int precursorId)
+    {
+        SimpleFilter filter = new SimpleFilter();
+        filter.addCondition(FieldKey.fromParts("PrecursorId"), precursorId);
+
+        List<PrecursorChromInfo> precursorChromInfos = new TableSelector(TargetedMSManager.getTableInfoPrecursorChromInfo(),
+                                   Table.ALL_COLUMNS,
+                                   filter,
+                                   new Sort("-TotalArea"))
+                                  .getArrayList(PrecursorChromInfo.class);
+
+        return precursorChromInfos;
+    }
+
+    public static PrecursorChromInfo getBestPrecursorChromInfoForPrecursor(int precursorId)
+    {
+        List<PrecursorChromInfo> chromInfos = getPrecursorChromInfosForPrecursor(precursorId);
+
+        if(chromInfos == null || chromInfos.size() == 0)
+        {
+            return null;
+        }
+        else
+        {
+            return chromInfos.get(0);
+        }
     }
 
     public static Map<String, Object> getPrecursorSummary(int precursorId)

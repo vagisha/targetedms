@@ -84,7 +84,7 @@ public class ModifiedPeptideHtmlMaker
         strModIndexMassDiff = _structuralMods.get(precursor.getPeptideId());
         if (strModIndexMassDiff == null)
         {
-            strModIndexMassDiff = ModificationManager.getPeptideStructuralMods(precursor.getPeptideId());
+            strModIndexMassDiff = ModificationManager.getPeptideStructuralModsMap(precursor.getPeptideId());
             _structuralMods.put(precursor.getPeptideId(), strModIndexMassDiff);
         }
 
@@ -93,7 +93,7 @@ public class ModifiedPeptideHtmlMaker
         if (isotopeModIndexMassDiff == null)
         {
             // Get the Isotope modifications for the peptide and label type
-            isotopeModIndexMassDiff = ModificationManager.getPeptideIsotopeMods(precursor.getPeptideId(),
+            isotopeModIndexMassDiff = ModificationManager.getPeptideIsotopeModsMap(precursor.getPeptideId(),
                     precursor.getIsotopeLabelId());
             _isotopeMods.put(isotopeKey, isotopeModIndexMassDiff);
         }

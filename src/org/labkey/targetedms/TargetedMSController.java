@@ -33,6 +33,7 @@ import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.QueryViewAction;
 import org.labkey.api.action.RedirectAction;
+import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.ButtonBar;
@@ -72,6 +73,8 @@ import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
 import org.labkey.targetedms.chart.PrecursorPeakAreaChartMaker;
+import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
+import org.labkey.targetedms.chromlib.ContainerChromatogramLibraryWriter;
 import org.labkey.targetedms.conflict.ConflictPeptide;
 import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
@@ -1946,6 +1949,12 @@ public class TargetedMSController extends SpringActionController
                 }
 
                 TargetedMSManager.getSchema().getScope().commitTransaction();
+
+                // Increment the chromatogram library revision number for this container.
+                ChromatogramLibraryUtils.incrementLibraryRevision(getContainer());
+
+                // Add event to audit log.
+                TargetedMsRepresentativeStateAuditViewFactory.addAuditEntry(getContainer(), getUser(), "Conflict resolved.");
             }
             finally {
 
@@ -2068,6 +2077,9 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    // ------------------------------------------------------------------------
+    // Action to download a Skyline zip file.
+    // ------------------------------------------------------------------------
     @RequiresPermissionClass(ReadPermission.class)
     public class DownloadDocumentAction extends SimpleViewAction<DownloadDocumentForm>
     {
@@ -2122,6 +2134,162 @@ public class TargetedMSController extends SpringActionController
         public void setRunId(int runId)
         {
             _runId = runId;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Actions to export chromatogram libraries
+    // ------------------------------------------------------------------------
+    @RequiresPermissionClass(ReadPermission.class)
+    public class DownloadChromLibraryAction extends SimpleViewAction
+    {
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            // Check if the folder has any representative data
+            List<Integer> representativeRunIds = TargetedMSManager.getCurrentRepresentativeRunIds(getContainer());
+            if(representativeRunIds.size() == 0)
+            {
+                errors.reject(ERROR_MSG, "Folder "+getContainer().getPath()+" does not contain any representative data.");
+                return new SimpleErrorView(errors, true);
+                // throw new NotFoundException("Folder "+getContainer().getPath()+" does not contain any representative data.");
+            }
+
+
+            Container container = getContainer();
+            File chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container);
+            if(!ChromatogramLibraryUtils.isChromLibFileUptoDate(container))
+            {
+                // The SQLite file either does not exist or is not uptodate. Write a new one
+                ContainerChromatogramLibraryWriter writer = new ContainerChromatogramLibraryWriter(
+                                                                             getViewContext().getActionURL().getBaseServerURI(),
+                                                                             getContainer(),
+                                                                             representativeRunIds
+                                                                             );
+                // Get the latest library revision.
+                int libraryRevision = ChromatogramLibraryUtils.getCurrentRevision(getContainer());
+
+                writer.writeLibrary(libraryRevision);
+
+                if(!chromLibFile.exists())
+                {
+                    throw new NotFoundException("Chromatogram library file " + chromLibFile.getPath() + " was not found.");
+                }
+            }
+
+            PageFlowUtil.streamFile(getViewContext().getResponse(),
+                                    chromLibFile,
+                                    true);
+
+            return null;
+        }
+
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class IsLibraryCurrentAction extends ApiAction<LibraryDetailsForm>
+    {
+        public ApiResponse execute(LibraryDetailsForm form, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+
+            Container container = getContainer();
+
+            // Required parameters in the request.
+            if(form.getPanoramaServer() == null)
+            {
+                throw new ApiUsageException("Missing required parameter 'panoramaServer'");
+            }
+            if(form.getContainer() == null)
+            {
+                throw new ApiUsageException("Missing required parameter 'container'");
+            }
+            if(form.getSchemaVersion() == null)
+            {
+                throw new ApiUsageException("Missing required parameter 'schemaVersion'");
+            }
+            if(form.getLibraryRevision() == null)
+            {
+                throw new ApiUsageException("Missing required parameter 'libraryRevision'");
+            }
+
+
+            // Check panorama server.
+            URLHelper requestParamServerUrl = new URLHelper(form.getPanoramaServer());
+            URLHelper requestServerUrl = new URLHelper(getViewContext().getActionURL().getBaseServerURI());
+            if(!URLHelper.queryEqual(requestParamServerUrl, requestServerUrl))
+            {
+                response.put("errorMessage", "Incorrect Panorama server: "+form.getPanoramaServer());
+                return response;
+            }
+
+            // Check container path.
+            if(!container.getPath().equals(form.getContainer()))
+            {
+                response.put("errorMessage", "Mismatch in container path. Expected "+container.getPath()+", found "+form.getContainer());
+                return response;
+            }
+
+            // Check the schema version and library revision.
+            if(!ChromatogramLibraryUtils.isRevisionCurrent(getContainer(), form.getSchemaVersion(), form.getLibraryRevision()))
+            {
+                response.put("isUptoDate", Boolean.FALSE);
+                return response;
+            }
+
+            response.put("isUptoDate", Boolean.TRUE);
+            return response;
+        }
+    }
+
+    public static class LibraryDetailsForm
+    {
+        private String _panoramaServer;
+        private String _container;
+        private String _schemaVersion;
+        private Integer _libraryRevision;
+
+        public String getPanoramaServer()
+        {
+            return _panoramaServer;
+        }
+
+        public void setPanoramaServer(String panoramaServer)
+        {
+            _panoramaServer = panoramaServer;
+        }
+
+        public String getContainer()
+        {
+            return _container;
+        }
+
+        public void setContainer(String container)
+        {
+            _container = container;
+        }
+
+        public String getSchemaVersion()
+        {
+            return _schemaVersion;
+        }
+
+        public void setSchemaVersion(String schemaVersion)
+        {
+            _schemaVersion = schemaVersion;
+        }
+
+        public Integer getLibraryRevision()
+        {
+            return _libraryRevision;
+        }
+
+        public void setLibraryRevision(Integer libraryRevision)
+        {
+            _libraryRevision = libraryRevision;
         }
     }
 }

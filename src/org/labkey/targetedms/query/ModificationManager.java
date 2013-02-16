@@ -16,12 +16,18 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
-import org.labkey.api.view.NotFoundException;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.parser.PeptideSettings;
 
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.labkey.targetedms.TargetedMSManager.getSchema;
@@ -35,7 +41,13 @@ public class ModificationManager
 {
     private ModificationManager() {}
 
-    public static Map<Integer, Double> getPeptideStructuralMods(int peptideId)
+    /**
+     * @param peptideId
+     * @return Map of the modified amino acid index in the peptide sequence
+     *         and the mass of the modification.
+     *         ModifiedIndex -> MassDiff
+     */
+    public static Map<Integer, Double> getPeptideStructuralModsMap(int peptideId)
     {
         Map<Integer, Double> strModIndexMassDiff = new HashMap<Integer, Double>();
         String sql = "SELECT IndexAa, MassDiff "+
@@ -70,7 +82,13 @@ public class ModificationManager
         return strModIndexMassDiff;
     }
 
-    public static Map<Integer, Double> getPeptideIsotopeMods(int peptideId, int isotopeLabelId)
+    /**
+     * @param peptideId
+     * @return Map of the modified amino acid index in the peptide sequence
+     *         and the mass of the modification.
+     *         ModifiedIndex -> MassDiff
+     */
+    public static Map<Integer, Double> getPeptideIsotopeModsMap(int peptideId, int isotopeLabelId)
     {
         Map<Integer, Double> isotopeModIndexMassDiff = new HashMap<Integer, Double>();
         String sql = "SELECT pm.IndexAa, pm.MassDiff "+
@@ -107,5 +125,59 @@ public class ModificationManager
             if(rs != null) try {rs.close();} catch(SQLException ignored){}
         }
         return isotopeModIndexMassDiff;
+    }
+
+    public static List<PeptideSettings.RunIsotopeModification> getIsotopeModificationsForRun(int runId)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("SELECT * FROM ");
+        sql.append(TargetedMSManager.getTableInfoIsotopeModification(), "mod");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoRunIsotopeModification(), "rmod");
+        sql.append(" WHERE");
+        sql.append(" mod.Id = rmod.IsotopeModId");
+        sql.append(" AND rmod.RunId = ?");
+        sql.add(runId);
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PeptideSettings.RunIsotopeModification.class);
+    }
+
+    public static List<PeptideSettings.RunStructuralModification> getStructuralModificationsForRun(int runId)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("SELECT * FROM ");
+        sql.append(TargetedMSManager.getTableInfoStructuralModification(), "mod");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoRunStructuralModification(), "rmod");
+        sql.append(" WHERE");
+        sql.append(" mod.Id = rmod.StructuralModId");
+        sql.append(" AND rmod.RunId = ?");
+        sql.add(runId);
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PeptideSettings.RunStructuralModification.class);
+    }
+
+    public static List<PeptideSettings.PotentialLoss> getPotentialLossesForStructuralMod(int modId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoStructuralModLoss(),
+                                 new SimpleFilter(FieldKey.fromParts("StructuralModId"), modId),
+                                 null)
+                                .getArrayList(PeptideSettings.PotentialLoss.class);
+    }
+
+    public static List<Peptide.StructuralModification> getPeptideStructuralModifications(int peptideId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoPeptideStructuralModification(),
+                                  new SimpleFilter(FieldKey.fromParts("PeptideId"), peptideId),
+                                  null)
+                                  .getArrayList(Peptide.StructuralModification.class);
+    }
+
+    public static List<Peptide.IsotopeModification> getPeptideIsotopelModifications(int peptideId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoPeptideIsotopeModification(),
+                                  new SimpleFilter(FieldKey.fromParts("PeptideId"), peptideId),
+                                  null)
+                                  .getArrayList(Peptide.IsotopeModification.class);
     }
 }

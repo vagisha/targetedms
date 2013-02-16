@@ -23,12 +23,13 @@ import java.text.SimpleDateFormat;
  * Date: 12/31/12
  * Time: 2:26 PM
  */
-public class Constants
+class Constants
 {
     private Constants() {}
 
     public static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 
+    public static final String LIB_FILE_DIR = "targetedMSLib";
     public static final String CHROM_LIB_FILE_NAME = "chromlib";
     public static final String CHROM_LIB_FILE_EXT = "db";
 

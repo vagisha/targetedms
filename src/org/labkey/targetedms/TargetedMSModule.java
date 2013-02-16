@@ -18,6 +18,7 @@ package org.labkey.targetedms;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.ProteinService;
+import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.EnumConverter;
@@ -102,7 +103,7 @@ public class TargetedMSModule extends SpringModule
         {
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
             {
-                    JspView view = new JspView("/org/labkey/targetedms/view/proteinSearch.jsp");
+                JspView view = new JspView("/org/labkey/targetedms/view/proteinSearch.jsp");
                 view.setTitle("Protein Search");
                 return view;
             }
@@ -170,5 +171,7 @@ public class TargetedMSModule extends SpringModule
         ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
         proteinService.registerProteinSearchView(new TransitionProteinSearchViewProvider());
         proteinService.registerPeptideSearchView(new TransitionPeptideSearchViewProvider());
+
+        AuditLogService.get().addAuditViewFactory(TargetedMsRepresentativeStateAuditViewFactory.getInstance());
     }
 }

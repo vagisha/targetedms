@@ -240,7 +240,7 @@ public class ChromatogramChartMakerFactory
     public static JFreeChart createPeptideChromChart(PeptideChromInfo pepChromInfo, boolean syncIntensity, boolean syncMz)
     {
         // Get the precursors for the peptide
-        List<PrecursorChromInfo> precursorChromInfoList = PrecursorManager.getPrecursorChromInfo(pepChromInfo.getId());
+        List<PrecursorChromInfo> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptideChromInfo(pepChromInfo.getId());
 
 
 

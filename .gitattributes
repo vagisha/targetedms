@@ -62,8 +62,12 @@ src/org/labkey/targetedms/chart/PeakAreasChartInputMaker.java -text
 src/org/labkey/targetedms/chart/PrecursorPeakAreaChartMaker.java -text
 src/org/labkey/targetedms/chromlib/BaseDaoImpl.java -text
 src/org/labkey/targetedms/chromlib/ChromLibSqliteSchemaCreator.java -text
+src/org/labkey/targetedms/chromlib/ChromatogramLibraryReader.java -text
+src/org/labkey/targetedms/chromlib/ChromatogramLibraryUtils.java -text
+src/org/labkey/targetedms/chromlib/ChromatogramLibraryWriter.java -text
 src/org/labkey/targetedms/chromlib/ConnectionSource.java -text
 src/org/labkey/targetedms/chromlib/Constants.java -text
+src/org/labkey/targetedms/chromlib/ContainerChromatogramLibraryWriter.java -text
 src/org/labkey/targetedms/chromlib/Dao.java -text
 src/org/labkey/targetedms/chromlib/LibInfo.java -text
 src/org/labkey/targetedms/chromlib/LibInfoDao.java -text

@@ -56,7 +56,7 @@ public class LibrarySpectrumMatchGetter
         Set<Integer> precursorCharges = new HashSet<Integer>();
         List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<LibrarySpectrumMatch>();
 
-        Map<Integer, Double> modLocationMassMap = ModificationManager.getPeptideStructuralMods(peptide.getId());
+        Map<Integer, Double> modLocationMassMap = ModificationManager.getPeptideStructuralModsMap(peptide.getId());
 
         for(Precursor precursor: precursors)
         {
@@ -87,7 +87,7 @@ public class LibrarySpectrumMatchGetter
                     pepSpec.setStructuralModifications(modLocationMassMap);
 
                     // Add any isotope modifications (can be different for each precursor)
-                    Map<Integer, Double> isotopeModLocationMassMap = ModificationManager.getPeptideIsotopeMods(peptide.getId(),  precursor.getIsotopeLabelId());
+                    Map<Integer, Double> isotopeModLocationMassMap = ModificationManager.getPeptideIsotopeModsMap(peptide.getId(), precursor.getIsotopeLabelId());
                     pepSpec.setIsotopeModifications(isotopeModLocationMassMap);
 
                     break;  // return spectrum from the first library that has a match
