@@ -1954,7 +1954,7 @@ public class TargetedMSController extends SpringActionController
                 ChromatogramLibraryUtils.incrementLibraryRevision(getContainer());
 
                 // Add event to audit log.
-                TargetedMsRepresentativeStateAuditViewFactory.addAuditEntry(getContainer(), getUser(), "Conflict resolved.");
+//                TargetedMsRepresentativeStateAuditViewFactory.addAuditEntry(getContainer(), getUser(), "Conflict resolved.");
             }
             finally {
 
