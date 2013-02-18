@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.ProteinService;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.EnumConverter;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
@@ -126,13 +125,6 @@ public class TargetedMSModule extends SpringModule
     public Set<String> getSchemaNames()
     {
         return PageFlowUtil.set(TargetedMSManager.get().getSchemaName());
-    }
-
-    @Override
-    @NotNull
-    public Set<DbSchema> getSchemasToTest()
-    {
-        return PageFlowUtil.set(TargetedMSManager.getSchema());
     }
 
     @Override
