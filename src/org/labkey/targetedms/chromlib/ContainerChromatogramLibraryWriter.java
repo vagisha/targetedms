@@ -15,7 +15,9 @@
  */
 package org.labkey.targetedms.chromlib;
 
+import org.apache.commons.io.FileUtils;
 import org.labkey.api.data.Container;
+import org.labkey.api.util.NetworkDrive;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.Instrument;
@@ -38,8 +40,6 @@ import org.labkey.targetedms.query.TransitionManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -116,8 +116,14 @@ public class ContainerChromatogramLibraryWriter
 
         File finalChromLibFile = ChromatogramLibraryUtils.getChromLibFile(_container);
         // Rename the temp file
-        Files.move(tempChromLibFile.toPath(), finalChromLibFile.toPath(), StandardCopyOption.REPLACE_EXISTING,
-                                                                           StandardCopyOption.ATOMIC_MOVE);
+        if(NetworkDrive.exists(finalChromLibFile))
+        {
+            File oldFile = new File(finalChromLibFile.getPath()+".old");
+            FileUtils.moveFile(finalChromLibFile, oldFile);
+            FileUtils.deleteQuietly(oldFile);
+        }
+
+        FileUtils.moveFile(tempChromLibFile, finalChromLibFile);
 
         return finalChromLibFile.getPath();
     }
