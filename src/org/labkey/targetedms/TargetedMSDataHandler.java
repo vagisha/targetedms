@@ -19,23 +19,17 @@ package org.labkey.targetedms;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.ExperimentException;
-import org.labkey.api.exp.Handler;
 import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.AbstractExperimentDataHandler;
+import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
-import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.security.User;
-import org.labkey.api.util.FileType;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 
-import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Arrays;
 
 /**
@@ -45,6 +39,12 @@ import java.util.Arrays;
  */
 public class TargetedMSDataHandler extends AbstractExperimentDataHandler
 {
+    @Override
+    public DataType getDataType()
+    {
+        return null;
+    }
+
     @Override
     public void importFile(ExpData data, File dataFile, ViewBackgroundInfo info, Logger log, XarContext context) throws ExperimentException
     {

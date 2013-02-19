@@ -21,6 +21,7 @@ import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.Handler;
 import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.AbstractExperimentDataHandler;
+import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
@@ -39,6 +40,12 @@ import java.util.Arrays;
 public class SkylineBinaryDataHandler extends AbstractExperimentDataHandler
 {
     private static final String EXTENSION = ".skyd";
+
+    @Override
+    public DataType getDataType()
+    {
+        return null;
+    }
 
     @Override
     public void importFile(ExpData data, File dataFile, ViewBackgroundInfo info, Logger log, XarContext context) throws ExperimentException
