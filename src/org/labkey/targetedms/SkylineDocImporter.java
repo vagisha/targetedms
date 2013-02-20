@@ -266,6 +266,8 @@ public class SkylineDocImporter
             // 2. Replicates and sample files
             Map<String, Integer> skylineIdSampleFileIdMap = new HashMap<String, Integer>();
             Map<String, Integer> filePathSampleFileIdMap = new HashMap<String, Integer>();
+            Map<Instrument, Integer> instrumentIdMap = new HashMap<Instrument, Integer>();
+
             for(Replicate replicate: parser.getReplicates())
             {
                 replicate.setRunId(_runId);
@@ -274,16 +276,33 @@ public class SkylineDocImporter
                 for(SampleFile sampleFile: replicate.getSampleFileList())
                 {
                     sampleFile.setReplicateId(replicate.getId());
+
+                    if(sampleFile.getInstrumentList().size() > 1)
+                    {
+                        // TODO: The schema will have to be changed if we need to support more than one instrument per sample file.
+                        //       For now throw an exception.
+                        throw new IllegalStateException("Multiple instruments found for sample file "+sampleFile.getSampleName()
+                                              +". Only one instrument per sample file is supported.");
+                    }
+                    for (Instrument instrument : sampleFile.getInstrumentList())
+                    {
+                        Integer instrumentId = instrumentIdMap.get(instrument);
+                        if(instrumentId == null)
+                        {
+                            instrument.setRunId(_runId);
+                            instrument = Table.insert(_user, TargetedMSManager.getTableInfoInstrument(), instrument);
+                            instrumentIdMap.put(instrument, instrument.getId());
+                            instrumentId = instrument.getId();
+                        }
+
+                        sampleFile.setInstrumentId(instrumentId);
+                    }
+
                     sampleFile = Table.insert(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile);
+
                     // Remember the ids we inserted so we can reference them later
                     skylineIdSampleFileIdMap.put(sampleFile.getSkylineId(), sampleFile.getId());
                     filePathSampleFileIdMap.put(sampleFile.getFilePath(), sampleFile.getId());
-
-                    for (Instrument instrument : sampleFile.getInstrumentList())
-                    {
-                        instrument.setRunId(_runId);
-                        instrument = Table.insert(_user, TargetedMSManager.getTableInfoInstrument(), instrument);
-                    }
                 }
                 for (ReplicateAnnotation annotation : replicate.getAnnotations())
                 {

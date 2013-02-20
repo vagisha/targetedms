@@ -89,4 +89,31 @@ public class Instrument
     {
         this.detector = detector;
     }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (!(o instanceof Instrument)) return false;
+
+        Instrument that = (Instrument) o;
+
+        if (analyzer != null ? !analyzer.equals(that.analyzer) : that.analyzer != null) return false;
+        if (detector != null ? !detector.equals(that.detector) : that.detector != null) return false;
+        if (ionizationType != null ? !ionizationType.equals(that.ionizationType) : that.ionizationType != null)
+            return false;
+        if (model != null ? !model.equals(that.model) : that.model != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = model != null ? model.hashCode() : 0;
+        result = 31 * result + (ionizationType != null ? ionizationType.hashCode() : 0);
+        result = 31 * result + (analyzer != null ? analyzer.hashCode() : 0);
+        result = 31 * result + (detector != null ? detector.hashCode() : 0);
+        return result;
+    }
 }

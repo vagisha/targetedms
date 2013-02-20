@@ -642,7 +642,7 @@ public class SkylineDocumentParser
         sampleFile.setSampleName(XmlUtil.readAttribute(reader, "sample_name", SAMPLE_FILE));
 
         sampleFile.setAcquiredTime(XmlUtil.readDateAttribute(reader, "acquired_time"));
-        sampleFile.setAcquiredTime(XmlUtil.readDateAttribute(reader, "modified_time"));
+        sampleFile.setModifiedTime(XmlUtil.readDateAttribute(reader, "modified_time"));
 
         List<Instrument> instrumentList = new ArrayList<Instrument>();
         sampleFile.setInstrumentList(instrumentList);
