@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.labkey.api.util.UnexpectedException;
+
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -60,7 +62,7 @@ public class Chromatogram extends SkylineEntity
     }
 
     /** Parses the header information from the underlying file */
-    public Chromatogram(ByteBuffer buffer)
+    public Chromatogram(ByteBuffer buffer, SkylineBinaryParser.CachedFile[] cachedFiles, float[] transitions)
     {
         _precursor = buffer.getFloat();
         _fileIndex = buffer.getInt();
@@ -73,24 +75,14 @@ public class Chromatogram extends SkylineEntity
         _compressedSize = buffer.getInt();
         buffer.getInt(); // Burn four bytes for due to layout/alignment in data file
         _locationPoints = buffer.getLong();
+
+        _cachedFiles = cachedFiles;
+        _transitions = transitions;
     }
 
     public float getPrecursorMz()
     {
         return _precursor;
-    }
-
-    /** Read the chromatograms themselves out of the .skyd file */
-    public void read(FileChannel channel, SkylineBinaryParser.CachedFile[] cachedFiles, float[] transitions) throws IOException, DataFormatException
-    {
-        _cachedFiles = cachedFiles;
-        _transitions = transitions;
-        // Get the compressed bytes
-        _chromatogram = new byte[_compressedSize];
-        MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, _locationPoints, _compressedSize);
-        buffer.get(_chromatogram);
-
-        ensureUncompressed();
     }
 
     private void ensureUncompressed() throws DataFormatException
@@ -232,6 +224,36 @@ public class Chromatogram extends SkylineEntity
     public byte[] getChromatogram()
     {
         return _chromatogram;
+    }
+
+    /** Read the chromatogram out of the file, but don't hold on to it. This reduces memory usage during import */
+    public byte[] readChromatogram(SkylineBinaryParser parser)
+    {
+        if (_chromatogram != null)
+        {
+            // If we have a cached one already for some reason, just use it
+            return _chromatogram;
+        }
+
+        try
+        {
+            // Get the compressed bytes
+            MappedByteBuffer buffer = parser.getChannel().map(FileChannel.MapMode.READ_ONLY, _locationPoints, _compressedSize);
+            byte[] result = new byte[_compressedSize];
+            buffer.get(result);
+
+            // Make sure it uncompresses successfully so that we don't import bad content into the database
+            uncompress(result);
+            return result;
+        }
+        catch (IOException e)
+        {
+            throw new UnexpectedException(e);
+        }
+        catch (DataFormatException e)
+        {
+            throw new UnexpectedException(e);
+        }
     }
 
     public void setChromatogram(byte[] chromatogram)

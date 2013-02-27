@@ -120,7 +120,9 @@ public class SkylineDocImporter
         try
         {
             updateRunStatus(IMPORT_STARTED);
+            _log.info("Starting to import Skyline document from " + run.getFileName());
             importSkylineDoc(run);
+            _log.info("Completed import of Skyline document from " + run.getFileName());
         }
         catch (FileNotFoundException fnfe)
         {
@@ -462,10 +464,15 @@ public class SkylineDocImporter
 
             // Store the data
             // 1. peptide group
+            int peptideGroupCount = 0;
             while (parser.hasNextPeptideGroup())
             {
                 PeptideGroup pepGroup = parser.nextPeptideGroup();
                 insertPeptideGroup(proteinService, insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap, libraryNameIdMap, pepGroup);
+                if (++peptideGroupCount % 100 == 0)
+                {
+                    _log.info("Imported " + peptideGroupCount + " peptide groups.");
+                }
             }
 
             run.setPeptideGroupCount(parser.getPeptideGroupCount());

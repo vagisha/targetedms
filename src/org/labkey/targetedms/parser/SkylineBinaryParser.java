@@ -33,7 +33,9 @@ import java.util.zip.DataFormatException;
 public class SkylineBinaryParser
 {
     private final File _file;
-    private final long[] _headers = new long[Header.values().length - 1]; 
+    private FileChannel _channel;
+    private RandomAccessFile _randomAccessFile;
+    private final long[] _headers = new long[Header.values().length - 1];
 
     private Chromatogram[] _chromatograms;
     private float[] _transitions;
@@ -48,14 +50,21 @@ public class SkylineBinaryParser
         _file = file;
     }
 
-    public Chromatogram getChromatogram(int index)
-    {
-        return _chromatograms[index];
-    }
-
     public Chromatogram[] getChromatograms()
     {
         return _chromatograms;
+    }
+
+    public void close()
+    {
+        if (_channel != null)
+        {
+            try { _channel.close(); } catch (IOException ignored) {}
+        }
+        if (_randomAccessFile != null)
+        {
+            try { _randomAccessFile.close(); } catch (IOException ignored) {}
+        }
     }
 
     /** File-level header fields */
@@ -111,18 +120,16 @@ public class SkylineBinaryParser
 
     public void parse() throws IOException
     {
-        RandomAccessFile raf = null;
         try
         {
-            raf = new RandomAccessFile(_file, "r");
+            _randomAccessFile = new RandomAccessFile(_file, "r");
             long fileSize = _file.length();
 
             int headerLength = Header.count.ordinal();
-            FileChannel channel = raf.getChannel();
+            _channel = _randomAccessFile.getChannel();
 
-            ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, fileSize - headerLength * Integer.SIZE / 8, headerLength * Integer.SIZE / 8); // 4 bytes per int
+            ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, fileSize - headerLength * Integer.SIZE / 8, headerLength * Integer.SIZE / 8); // 4 bytes per int
             buffer.order(ByteOrder.LITTLE_ENDIAN);
-
 
             for (int i = 0; i < _headers.length; i++)
             {
@@ -135,17 +142,13 @@ public class SkylineBinaryParser
                 return;
             }
 
-            parseFiles(version, channel);
-            parseTransitions(channel);
-            parseChromatograms(channel);
+            parseFiles(version);
+            parseTransitions();
+            parseChromatograms();
         }
         catch (DataFormatException e)
         {
             throw new IOException("Invalid ZIP content", e);
-        }
-        finally
-        {
-            if (raf != null) { try { raf.close(); } catch (IOException ignored) {} }
         }
     }
 
@@ -198,7 +201,7 @@ public class SkylineBinaryParser
         }
     }
 
-    private void parseFiles(int formatVersion, FileChannel channel) throws IOException
+    private void parseFiles(int formatVersion) throws IOException
     {
         ByteBuffer buffer;
         int numFiles = Header.num_files.getHeaderValueInt(_headers);
@@ -211,7 +214,7 @@ public class SkylineBinaryParser
 
         for (int i = 0; i < numFiles; i++)
         {
-            buffer = channel.map(FileChannel.MapMode.READ_ONLY, offset, countFileHeader);
+            buffer = _channel.map(FileChannel.MapMode.READ_ONLY, offset, countFileHeader);
             offset+= countFileHeader;
             buffer.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -221,7 +224,7 @@ public class SkylineBinaryParser
             int lenInstrumentInfo = formatVersion > FORMAT_VERSION_CACHE_3 ? buffer.getInt() : -1;
 
             byte[] filePathBuffer = new byte[lenPath];
-            buffer = channel.map(FileChannel.MapMode.READ_ONLY, offset, lenPath);
+            buffer = _channel.map(FileChannel.MapMode.READ_ONLY, offset, lenPath);
             offset += lenPath;
             buffer.get(filePathBuffer);
             String filePath = new String(filePathBuffer, 0, lenPath);
@@ -230,7 +233,7 @@ public class SkylineBinaryParser
             if (lenInstrumentInfo >= 0)
             {
                 byte[] instrumentInfoBuffer = new byte[lenInstrumentInfo];
-                buffer = channel.map(FileChannel.MapMode.READ_ONLY, offset, lenInstrumentInfo);
+                buffer = _channel.map(FileChannel.MapMode.READ_ONLY, offset, lenInstrumentInfo);
                 offset += lenInstrumentInfo;
                 buffer.get(instrumentInfoBuffer);
                 instrumentInfoStr = new String(instrumentInfoBuffer, 0, lenInstrumentInfo, Charset.forName("UTF8"));
@@ -243,17 +246,12 @@ public class SkylineBinaryParser
         }
     }
 
-    public CachedFile[] getCacheFiles()
-    {
-        return _cacheFiles;
-    }
-
-    private void parseTransitions(FileChannel channel) throws IOException
+    private void parseTransitions() throws IOException
     {
         int numTransitions = Header.num_transitions.getHeaderValueInt(_headers);
         long transitionsStart = Header.location_trans_lo.getHeaderValueLong(_headers);
 
-        ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, transitionsStart, Float.SIZE / 8 * numTransitions);
+        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, transitionsStart, Float.SIZE / 8 * numTransitions);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
         _transitions = new float[numTransitions];
@@ -263,26 +261,25 @@ public class SkylineBinaryParser
         }
     }
 
-    private void parseChromatograms(FileChannel channel) throws IOException, DataFormatException
+    private void parseChromatograms() throws IOException, DataFormatException
     {
         int numChrom = Header.num_chromatograms.getHeaderValueInt(_headers);
         long chromatogramStart = Header.location_headers_lo.getHeaderValueLong(_headers);
 
-        ByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, chromatogramStart, Chromatogram.SIZE * numChrom);
+        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, chromatogramStart, Chromatogram.SIZE * numChrom);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
         // Read the chromatogram headers out of the file
         _chromatograms = new Chromatogram[numChrom];
         for (int i = 0; i < _chromatograms.length; i++)
         {
-            _chromatograms[i] = new Chromatogram(buffer);
+            _chromatograms[i] = new Chromatogram(buffer, _cacheFiles, _transitions);
         }
+    }
 
-        // Then go and read the chromatograms themselves
-        for (Chromatogram chromatogram : _chromatograms)
-        {
-            chromatogram.read(channel, _cacheFiles, _transitions);
-        }
+    public FileChannel getChannel()
+    {
+        return _channel;
     }
 
     public boolean isVersionCurrent()

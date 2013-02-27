@@ -110,7 +110,7 @@ public class SkylineDocumentParser
     private int _precursorCount;
     private int _transitionCount;
 
-    private List<SkylineBinaryParser> _caches = new ArrayList<SkylineBinaryParser>();
+    private SkylineBinaryParser _binaryParser;
 
     private TransitionSettings _transitionSettings;
     private PeptideSettings _peptideSettings;
@@ -159,6 +159,10 @@ public class SkylineDocumentParser
         {
             _log.error(e);
         }
+        if (_binaryParser != null)
+        {
+            _binaryParser.close();
+        }
     }
 
     public void readSettings() throws XMLStreamException, IOException
@@ -178,10 +182,8 @@ public class SkylineDocumentParser
         File file = new File(_file.getPath() + "d");
         if (NetworkDrive.exists(file))
         {
-            SkylineBinaryParser parser = new SkylineBinaryParser(file);
-            parser.parse();
-
-            _caches.add(parser);
+            _binaryParser = new SkylineBinaryParser(file);
+            _binaryParser.parse();
         }
     }
 
@@ -1152,7 +1154,8 @@ public class SkylineDocumentParser
             }
             else
             {
-                chromInfo.setChromatogram(chromatogram.getChromatogram());
+                // Read it out of the file on-demand, so we only load the subset that we need
+                chromInfo.setChromatogram(chromatogram.readChromatogram(_binaryParser));
                 chromInfo.setNumPoints(chromatogram.getNumPoints());
                 chromInfo.setNumTransitions(chromatogram.getNumTransitions());
             }
@@ -1575,10 +1578,10 @@ public class SkylineDocumentParser
         int maxTranMatch = 1;
 
         List<Chromatogram> listChrom = new ArrayList<Chromatogram>();
-        for (SkylineBinaryParser cache : _caches) // TODO: do we ever have more than one SkylineBinaryParser?
+        if (_binaryParser != null)
         {
             // Filter the list of chromatograms based on our precursor mZ
-            int i = findEntry(precursorMz, tolerance, cache.getChromatograms(), 0, cache.getChromatograms().length - 1);
+            int i = findEntry(precursorMz, tolerance, _binaryParser.getChromatograms(), 0, _binaryParser.getChromatograms().length - 1);
             if (i == -1)
             {
                 return Collections.emptyList();
@@ -1586,10 +1589,10 @@ public class SkylineDocumentParser
 
             // Add entries to a list until they no longer match
             List<Chromatogram> listChromatograms = new ArrayList<Chromatogram>();
-            while (i < cache.getChromatograms().length &&
-                    matchMz(precursorMz, cache.getChromatograms()[i].getPrecursorMz(), tolerance))
+            while (i < _binaryParser.getChromatograms().length &&
+                    matchMz(precursorMz, _binaryParser.getChromatograms()[i].getPrecursorMz(), tolerance))
             {
-                listChromatograms.add(cache.getChromatograms()[i++]);
+                listChromatograms.add(_binaryParser.getChromatograms()[i++]);
             }
 
             for (Chromatogram chromInfo : listChromatograms)
