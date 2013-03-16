@@ -19,6 +19,7 @@ import org.labkey.api.ProteinService;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.view.ViewContext;
@@ -42,8 +43,8 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
     public QueryView createView(ViewContext viewContext, final ProteinService.PeptideSearchForm form, BindException errors)
     {
         QuerySettings settings = new QuerySettings(viewContext, getDataRegionName(), "Peptide");
-        settings.addAggregates(new Aggregate("PeptideGroupId/RunId/File", Aggregate.Type.COUNT_DISTINCT));
-        settings.addAggregates(new Aggregate("Sequence", Aggregate.Type.COUNT_DISTINCT));
+        settings.addAggregates(new Aggregate(FieldKey.fromParts("PeptideGroupId", "RunId", "File"), Aggregate.Type.COUNT, null, true));
+        settings.addAggregates(new Aggregate(FieldKey.fromParts("Sequence"), Aggregate.Type.COUNT, null, true));
         QueryView result = new QueryView(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()), settings, errors)
         {
             @Override
