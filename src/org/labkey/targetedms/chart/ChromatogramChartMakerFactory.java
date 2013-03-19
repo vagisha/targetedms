@@ -150,8 +150,8 @@ public class ChromatogramChartMakerFactory
         for(TransChromInfoPlusTransition chromInfoPlusTransition: tciList)
         {
             addTransitionAsSeries(dataset, chromatogram, chromInfoPlusTransition.getTransChromInfo().getChromatogramIndex(),
-                                  (syncMz ? minPrecAllReplRt : pciMinStartTime.floatValue()),
-                                  (syncMz ? maxPrecAllReplRt : pciMaxStartTime.floatValue()),
+                                  (syncMz || pciMinStartTime == null ? minPrecAllReplRt : pciMinStartTime.floatValue()),
+                                  (syncMz || pciMaxStartTime == null ? maxPrecAllReplRt : pciMaxStartTime.floatValue()),
                                   LabelFactory.transitionLabel(chromInfoPlusTransition.getTransition()));
 
             TransitionChromInfo tChromInfo = chromInfoPlusTransition.getTransChromInfo();
