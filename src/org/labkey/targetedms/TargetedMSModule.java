@@ -41,6 +41,7 @@ import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
+import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
 
@@ -108,9 +109,18 @@ public class TargetedMSModule extends SpringModule
             }
         };
 
+        BaseWebPartFactory modificationSearchFactory = new BaseWebPartFactory(ModificationSearchWebPart.NAME)
+        {
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            {
+                return new ModificationSearchWebPart(TargetedMSController.ModificationSearchForm.createDefault());
+            }
+        };
+
         List<WebPartFactory> webpartFactoryList = new ArrayList<WebPartFactory>(1);
         webpartFactoryList.add(runsFactory);
         webpartFactoryList.add(proteinSearchFactory);
+        webpartFactoryList.add(modificationSearchFactory);
         return webpartFactoryList;
     }
 

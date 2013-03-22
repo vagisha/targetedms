@@ -31,12 +31,14 @@ import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.FormViewAction;
+import org.labkey.api.action.HasViewContext;
 import org.labkey.api.action.QueryViewAction;
 import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.ButtonBar;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.NestableQueryView;
@@ -69,6 +71,7 @@ import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.RedirectException;
 import org.labkey.api.view.VBox;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
@@ -99,6 +102,7 @@ import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.labkey.targetedms.query.TransitionManager;
+import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.view.ChromatogramsDataRegion;
 import org.labkey.targetedms.view.DocumentPrecursorsView;
 import org.labkey.targetedms.view.DocumentTransitionsView;
@@ -2290,6 +2294,164 @@ public class TargetedMSController extends SpringActionController
         public void setLibraryRevision(Integer libraryRevision)
         {
             _libraryRevision = libraryRevision;
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    public class ModificationSearchAction extends QueryViewAction<ModificationSearchForm, QueryView>
+    {
+        public ModificationSearchAction()
+        {
+            super(ModificationSearchForm.class);
+        }
+
+        @Override
+        protected QueryView createQueryView(ModificationSearchForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+        {
+            return createModificationSearchView(form, errors);
+        }
+
+        @Override
+        protected ModelAndView getHtmlView(final ModificationSearchForm form, BindException errors) throws Exception
+        {
+            VBox result = new VBox(new ModificationSearchWebPart(form));
+
+            if (form.getAminoAcidArr() != null && form.getAminoAcidArr().length > 0)
+                result.addView(createModificationSearchView(form, errors));
+
+            return result;
+        }
+
+        private QueryView createModificationSearchView(final ModificationSearchForm form, BindException errors)
+        {
+            ViewContext viewContext = getViewContext();
+            QuerySettings settings = new QuerySettings(viewContext, "TargetedMSMatches", "Precursor");
+            QueryView result = new QueryView(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()), settings, errors)
+            {
+                @Override
+                protected TableInfo createTable()
+                {
+                    TargetedMSTable result = (TargetedMSTable) super.createTable();
+
+                    if (form.getAminoAcidArr() != null && form.getAminoAcidArr().length > 0)
+                    {
+                        String modStr = "";
+                        String delim = "";
+                        for (char aa : form.getAminoAcidArr())
+                        {
+                            modStr += delim + aa + "[" + (form.getDeltaMass() > 0 ? "+" : "") + form.getDeltaMass() + "]";
+                            delim = ";";
+                        }
+                        result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), modStr, CompareType.CONTAINS_ONE_OF));
+                    }
+                    else
+                        result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), null, CompareType.ISBLANK));
+
+                    List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
+                    visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
+                    visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
+                    visibleColumns.add(FieldKey.fromParts("ModifiedSequence"));
+                    visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "File"));
+                    result.setDefaultVisibleColumns(visibleColumns);
+
+                    return result;
+                }
+            };
+            result.setTitle("TargetedMS Peptides");
+            result.setUseQueryViewActionExportURLs(true);
+            return result;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root.addChild("Modification Search Results");
+        }
+    }
+
+    public static class ModificationSearchForm extends QueryViewAction.QueryExportForm implements HasViewContext
+    {
+        private ViewContext _context;
+        private String _searchType;
+        private String _customName;
+        private String _unimodName;
+        private String _aminoAcids;
+        private char[] _aminoAcidArr;
+        private int _deltaMass;
+
+        public static ModificationSearchForm createDefault()
+        {
+            ModificationSearchForm result = new ModificationSearchForm();
+            result.setDeltaMass(0);
+            return result;
+        }
+
+        public void setViewContext(ViewContext context)
+        {
+            _context = context;
+        }
+
+        public ViewContext getViewContext()
+        {
+            return _context;
+        }
+
+        public int getDeltaMass()
+        {
+            return _deltaMass;
+        }
+
+        public void setDeltaMass(int deltaMass)
+        {
+            _deltaMass = deltaMass;
+        }
+
+        public String getAminoAcids()
+        {
+            return _aminoAcids;
+        }
+
+        public void setAminoAcids(String aminoAcids)
+        {
+            _aminoAcids = aminoAcids;
+
+            if (_aminoAcids != null)
+                _aminoAcidArr = _aminoAcids.replaceAll("[^A-Za-z]","").toUpperCase().toCharArray();
+        }
+
+        public char[] getAminoAcidArr()
+        {
+            return _aminoAcidArr;
+        }
+
+        public String getSearchType()
+        {
+            return _searchType;
+        }
+
+        public void setSearchType(String searchType)
+        {
+            _searchType = searchType;
+        }
+
+        public String getCustomName()
+        {
+            return _customName;
+        }
+
+        public void setCustomName(String customName)
+        {
+            _customName = customName;
+        }
+
+        public String getUnimodName()
+        {
+            return _unimodName;
+        }
+
+        public void setUnimodName(String unimodName)
+        {
+            _unimodName = unimodName;
         }
     }
 }

@@ -164,6 +164,9 @@ src/org/labkey/targetedms/query/ReplicateManager.java -text
 src/org/labkey/targetedms/query/RepresentativeStateManager.java -text
 src/org/labkey/targetedms/query/TargetedMSTable.java -text
 src/org/labkey/targetedms/query/TransitionManager.java -text
+src/org/labkey/targetedms/search/ModificationSearchBean.java -text
+src/org/labkey/targetedms/search/ModificationSearchWebPart.java -text
+src/org/labkey/targetedms/search/modificationSearch.jsp -text
 src/org/labkey/targetedms/view/ChromatogramsDataRegion.java -text
 src/org/labkey/targetedms/view/DocumentPrecursorsView.java -text
 src/org/labkey/targetedms/view/DocumentTransitionsView.java -text
