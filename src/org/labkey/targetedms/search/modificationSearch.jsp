@@ -24,7 +24,7 @@
 
     String initSearchType = bean.getForm().getSearchType() != null ? bean.getForm().getSearchType() : "deltaMass";
     String initAminoAcids = bean.getForm().getAminoAcids() != null ? bean.getForm().getAminoAcids() : "";
-    Integer initDeltaMass = bean.getForm().getDeltaMass() != 0 ? bean.getForm().getDeltaMass() : null;
+    Double initDeltaMass = bean.getForm().getDeltaMass() != null ? bean.getForm().getDeltaMass() : null;
 
     ActionURL modificationSearchUrl = new ActionURL(TargetedMSController.ModificationSearchAction.class, getViewContext().getContainer());
 
@@ -36,12 +36,23 @@
 
     Ext4.onReady(function(){
 
+        Ext4.define('UnimodRecord', {
+            extend: 'Ext.data.Model',
+            fields: [
+                { name: 'title', mapping: '@title' },
+                { name: 'full_name', mapping: '@full_name' },
+                { name: 'site', mapping: 'specificity@site' },
+                { name: 'mono_mass', mapping: 'delta@mono_mass' },
+                { name: 'avge_mass', mapping: 'delta@avge_mass' }
+            ]
+        });
+
         Ext4.create('Ext.form.Panel', {
             renderTo: <%=q(renderId)%>,
             standardSubmit: true,
             border: false, frame: false,
             defaults: {
-                labelWidth: 110,
+                labelWidth: 120,
                 labelStyle: 'background-color: #E1E5E1; padding: 5px;'
             },
             items: [
@@ -53,7 +64,7 @@
                     items: [
                         { boxLabel: 'By Delta Mass', name: 'searchType', inputValue: 'deltaMass', checked: <%=initSearchType.equals("deltaMass")%> },
                         { boxLabel: 'By Custom Name', name: 'searchType', inputValue: 'customName', checked: <%=initSearchType.equals("customName")%>},
-                        { boxLabel: 'By Unimod Name', name: 'searchType', inputValue: 'unimodName', checked: <%=initSearchType.equals("unimodName")%>, hidden: true }
+                        { boxLabel: 'By Unimod Name', name: 'searchType', inputValue: 'unimodName', checked: <%=initSearchType.equals("unimodName")%> }
                     ],
                     listeners: {
                         scope: this,
@@ -90,6 +101,8 @@
                     fieldLabel: 'Delta Mass',
                     name: 'deltaMass',
                     allowBlank: false,
+                    allowDecimal: true,
+                    decimalPrecision: 6, // TODO: should these values be rounded to integers?
                     hidden: <%=!initSearchType.equals("deltaMass")%>,
                     searchType: 'deltaMass',
                     value: '<%=initDeltaMass%>'
@@ -98,11 +111,11 @@
                     xtype: 'combo',
                     fieldLabel: 'Custom Name',
                     name: 'customName',
-                    width: 350,
+                    width: 500,
                     hidden: <%=!initSearchType.equals("customName")%>,
                     value: <%=q(bean.getForm().getCustomName())%>,
                     searchType: 'customName',
-                    editable : false,
+                    editable : true,
                     queryMode : 'local',
                     displayField : 'Name',
                     valueField : 'Name',
@@ -117,19 +130,48 @@
                         change: function(cmp, newValue, oldValue) {
                             // set the amino acid and delta mass based on the selected custom name record
                             var record = cmp.getStore().findRecord('Name', newValue);
-                            cmp.up('form').getForm().findField('aminoAcids').setValue(record.get('AminoAcid'));
-                            cmp.up('form').getForm().findField('deltaMass').setValue(record.get('MassDiff'));
+                            cmp.up('form').getForm().findField('aminoAcids').setValue(record ? record.get('AminoAcid') : null);
+                            cmp.up('form').getForm().findField('deltaMass').setValue(record ? record.get('MassDiff') : null);
                         }
                     }
                 },
                 {
                     xtype: 'combo',
-                    fieldLabel: 'Unimod Name',
+                    fieldLabel: 'Unimod Name<%= helpPopup("Unimod", "Unimod is a public domain database, distributed under a copyleft licence: a copyright notice that permits unrestricted redistribution and modification, provided that all copies and derivatives retain the same permissions.") %>',
                     name: 'unimodName',
+                    width: 500,
                     hidden: <%=!initSearchType.equals("unimodName")%>,
                     value: <%=q(bean.getForm().getUnimodName())%>,
                     searchType: 'unimodName',
-                    store: null
+                    editable : true,
+                    queryMode : 'local',
+                    displayField : 'title',
+                    valueField : 'title',
+                    store: Ext4.create('Ext.data.Store', {
+                        model: 'UnimodRecord',
+                        autoLoad: true,
+                        proxy: {
+                            type: 'ajax',
+                            url : LABKEY.contextPath + '/TargetedMS/unimod/unimod.xml',
+                            reader: {
+                                type: 'xml',
+                                namespace: 'umod',
+                                root: 'modifications',
+                                record: 'mod'
+                            }
+                        }
+                    }),
+                    listeners: {
+                        scope: this,
+                        change: function(cmp, newValue, oldValue) {
+                            // set the amino acid and delta mass based on the selected unimod name record
+                            var record = cmp.getStore().findRecord('title', newValue);
+                            // TODO: this is currently only picking up the first specified site
+                            // TODO: how to deal with site: C-term?
+                            cmp.up('form').getForm().findField('aminoAcids').setValue(record ? record.get('site').substring(0,1) : null);
+                            cmp.up('form').getForm().findField('deltaMass').setValue(record ? record.get('mono_mass') : null);
+                        }
+                    }
                 }
             ],
             buttonAlign: 'left',
@@ -148,7 +190,7 @@
                 }
             }]
         });
-
+                       console.log(<%=q(bean.getForm().getUnimodName())%>)
     });
 
 </script>
