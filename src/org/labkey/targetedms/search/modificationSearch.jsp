@@ -24,7 +24,7 @@
 
     String initSearchType = bean.getForm().getSearchType() != null ? bean.getForm().getSearchType() : "deltaMass";
     String initAminoAcids = bean.getForm().getAminoAcids() != null ? bean.getForm().getAminoAcids() : "";
-    Double initDeltaMass = bean.getForm().getDeltaMass() != null ? bean.getForm().getDeltaMass() : null;
+    Integer initDeltaMass = bean.getForm().getDeltaMass() != null ? bean.getForm().getDeltaMass() : null;
 
     ActionURL modificationSearchUrl = new ActionURL(TargetedMSController.ModificationSearchAction.class, getViewContext().getContainer());
 
@@ -36,14 +36,25 @@
 
     Ext4.onReady(function(){
 
+        // model used to parse unimod.xml for each modification
         Ext4.define('UnimodRecord', {
             extend: 'Ext.data.Model',
             fields: [
                 { name: 'title', mapping: '@title' },
                 { name: 'full_name', mapping: '@full_name' },
-                { name: 'site', mapping: 'specificity@site' },
                 { name: 'mono_mass', mapping: 'delta@mono_mass' },
                 { name: 'avge_mass', mapping: 'delta@avge_mass' }
+            ]
+        });
+
+        // model used to parse the specified sites for a given unimod modification name
+        Ext4.define('UnimodSpecificity', {
+            extend: 'Ext.data.Model',
+            fields: [
+                { name: 'site', mapping: '@site' },
+                { name: 'position', mapping: '@position' },
+                { name: 'hidden', mapping: '@hidden' },
+                { name: 'classification', mapping: '@classification' }
             ]
         });
 
@@ -102,7 +113,7 @@
                     name: 'deltaMass',
                     allowBlank: false,
                     allowDecimal: true,
-                    decimalPrecision: 6, // TODO: should these values be rounded to integers?
+                    decimalPrecision: 0, // round valeus to integers
                     hidden: <%=!initSearchType.equals("deltaMass")%>,
                     searchType: 'deltaMass',
                     value: '<%=initDeltaMass%>'
@@ -166,10 +177,39 @@
                         change: function(cmp, newValue, oldValue) {
                             // set the amino acid and delta mass based on the selected unimod name record
                             var record = cmp.getStore().findRecord('title', newValue);
-                            // TODO: this is currently only picking up the first specified site
-                            // TODO: how to deal with site: C-term?
-                            cmp.up('form').getForm().findField('aminoAcids').setValue(record ? record.get('site').substring(0,1) : null);
                             cmp.up('form').getForm().findField('deltaMass').setValue(record ? record.get('mono_mass') : null);
+                            cmp.up('form').getForm().findField('aminoAcids').setValue(null);
+
+                            // parse the XML file again for the selected modification name to get the set of specified sites
+                            // note: skipping C-term and N-term
+                            var modSpecificityStore = Ext4.create('Ext.data.Store', {
+                                model: 'UnimodSpecificity',
+                                autoLoad: true,
+                                proxy: {
+                                    type: 'ajax',
+                                    url : LABKEY.contextPath + '/TargetedMS/unimod/unimod.xml',
+                                    reader: {
+                                        type: 'xml',
+                                        namespace: 'umod',
+                                        root: 'mod[title=' + newValue + ']',
+                                        record: 'specificity'
+                                    }
+                                },
+                                listeners: {
+                                    scope: this,
+                                    load: function(store, records) {
+                                        if (records.length > 0)
+                                        {
+                                            var aminoAcidStr = "";
+                                            Ext4.each(records, function(record) {
+                                                if (record.get("site") != null && record.get("site").length == 1)
+                                                    aminoAcidStr += record.get("site");
+                                            });
+                                            cmp.up('form').getForm().findField('aminoAcids').setValue(aminoAcidStr);
+                                        }
+                                    }
+                                }
+                            });
                         }
                     }
                 }
@@ -190,7 +230,6 @@
                 }
             }]
         });
-                       console.log(<%=q(bean.getForm().getUnimodName())%>)
     });
 
 </script>
