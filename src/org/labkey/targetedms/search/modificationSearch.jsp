@@ -24,7 +24,7 @@
 
     String initSearchType = bean.getForm().getSearchType() != null ? bean.getForm().getSearchType() : "deltaMass";
     String initAminoAcids = bean.getForm().getAminoAcids() != null ? bean.getForm().getAminoAcids() : "";
-    Integer initDeltaMass = bean.getForm().getDeltaMass() != null ? bean.getForm().getDeltaMass() : null;
+    Double initDeltaMass = bean.getForm().getDeltaMass() != null ? bean.getForm().getDeltaMass() : null;
 
     ActionURL modificationSearchUrl = new ActionURL(TargetedMSController.ModificationSearchAction.class, getViewContext().getContainer());
 
@@ -148,7 +148,8 @@
                 },
                 {
                     xtype: 'combo',
-                    fieldLabel: 'Unimod Name<%= helpPopup("Unimod", "Unimod is a public domain database, distributed under a copyleft licence: a copyright notice that permits unrestricted redistribution and modification, provided that all copies and derivatives retain the same permissions.") %>',
+                    fieldLabel: 'Unimod Name:<%= helpPopup("Unimod", "Unimod is a public domain database, distributed under a copyleft licence: a copyright notice that permits unrestricted redistribution and modification, provided that all copies and derivatives retain the same permissions.") %>',
+                    labelSeparator: '',
                     name: 'unimodName',
                     width: 500,
                     hidden: <%=!initSearchType.equals("unimodName")%>,
@@ -166,7 +167,7 @@
                             url : LABKEY.contextPath + '/TargetedMS/unimod/unimod.xml',
                             reader: {
                                 type: 'xml',
-                                namespace: 'umod',
+                                //namespace: 'umod',
                                 root: 'modifications',
                                 record: 'mod'
                             }
@@ -190,7 +191,7 @@
                                     url : LABKEY.contextPath + '/TargetedMS/unimod/unimod.xml',
                                     reader: {
                                         type: 'xml',
-                                        namespace: 'umod',
+                                        //namespace: 'umod',
                                         root: 'mod[title=' + newValue + ']',
                                         record: 'specificity'
                                     }
@@ -224,6 +225,7 @@
                     {
                         btn.up('form').submit({
                             url: <%=q(modificationSearchUrl.getLocalURIString())%>,
+                            method: 'GET',
                             params: values
                         });
                     }

@@ -120,6 +120,7 @@ import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -2335,11 +2336,13 @@ public class TargetedMSController extends SpringActionController
 
                     if (form.getAminoAcidArr() != null && form.getAminoAcidArr().length > 0)
                     {
+                        DecimalFormat df = new DecimalFormat("0");
+
                         String modStr = "";
                         String delim = "";
                         for (char aa : form.getAminoAcidArr())
                         {
-                            modStr += delim + aa + "[" + (form.getDeltaMass() > 0 ? "+" : "") + form.getDeltaMass() + "]";
+                            modStr += delim + aa + "[" + (form.getDeltaMass() > 0 ? "+" : "") + df.format(form.getDeltaMass()) + "]";
                             delim = ";";
                         }
                         result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), modStr, CompareType.CONTAINS_ONE_OF));
@@ -2357,7 +2360,7 @@ public class TargetedMSController extends SpringActionController
                     return result;
                 }
             };
-            result.setTitle("TargetedMS Peptides");
+            result.setTitle("Targeted MS Peptides");
             result.setUseQueryViewActionExportURLs(true);
             return result;
         }
@@ -2377,7 +2380,7 @@ public class TargetedMSController extends SpringActionController
         private String _unimodName;
         private String _aminoAcids;
         private char[] _aminoAcidArr;
-        private Integer _deltaMass;
+        private Double _deltaMass;
 
         public static ModificationSearchForm createDefault()
         {
@@ -2396,12 +2399,12 @@ public class TargetedMSController extends SpringActionController
             return _context;
         }
 
-        public Integer getDeltaMass()
+        public Double getDeltaMass()
         {
             return _deltaMass;
         }
 
-        public void setDeltaMass(Integer deltaMass)
+        public void setDeltaMass(Double deltaMass)
         {
             _deltaMass = deltaMass;
         }
