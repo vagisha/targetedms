@@ -46,8 +46,10 @@ import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -175,5 +177,14 @@ public class TargetedMSModule extends SpringModule
         proteinService.registerPeptideSearchView(new TransitionPeptideSearchViewProvider());
 
         AuditLogService.get().addAuditViewFactory(TargetedMsRepresentativeStateAuditViewFactory.getInstance());
+    }
+
+    @NotNull
+    @Override
+    public Set<Class> getUnitTests()
+    {
+        return new HashSet<Class>(Arrays.asList(
+                TargetedMSController.TestCase.class
+        ));
     }
 }

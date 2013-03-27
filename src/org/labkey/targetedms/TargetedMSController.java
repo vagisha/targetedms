@@ -17,6 +17,7 @@
 package org.labkey.targetedms;
 
 
+import junit.framework.Assert;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
@@ -24,6 +25,7 @@ import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
+import org.junit.Test;
 import org.labkey.api.ProteinService;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
@@ -2334,21 +2336,8 @@ public class TargetedMSController extends SpringActionController
                 {
                     TargetedMSTable result = (TargetedMSTable) super.createTable();
 
-                    if (form.getAminoAcidArr() != null && form.getAminoAcidArr().length > 0)
-                    {
-                        DecimalFormat df = new DecimalFormat("0");
-
-                        String modStr = "";
-                        String delim = "";
-                        for (char aa : form.getAminoAcidArr())
-                        {
-                            modStr += delim + aa + "[" + (form.getDeltaMass() > 0 ? "+" : "") + df.format(form.getDeltaMass()) + "]";
-                            delim = ";";
-                        }
-                        result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), modStr, CompareType.CONTAINS_ONE_OF));
-                    }
-                    else
-                        result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), null, CompareType.ISBLANK));
+                    String modStr = form.getModificationSearchStr();
+                    result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), modStr, modStr != null ? CompareType.CONTAINS_ONE_OF : CompareType.ISBLANK));
 
                     List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
@@ -2387,6 +2376,25 @@ public class TargetedMSController extends SpringActionController
             ModificationSearchForm result = new ModificationSearchForm();
             result.setSearchType("deltaMass");
             return result;
+        }
+
+        public String getModificationSearchStr()
+        {
+            DecimalFormat df = new DecimalFormat("0");
+            String modStr = null;
+            String delim = "";
+
+            if (_aminoAcidArr != null && _aminoAcidArr.length > 0)
+            {
+                modStr = "";
+                for (char aa : _aminoAcidArr)
+                {
+                    modStr += delim + aa + "[" + (_deltaMass != null && _deltaMass > 0 ? "+" : "") + df.format(_deltaMass) + "]";
+                    delim = ";";
+                }
+            }
+
+            return modStr;
         }
 
         public void setViewContext(ViewContext context)
@@ -2455,6 +2463,47 @@ public class TargetedMSController extends SpringActionController
         public void setUnimodName(String unimodName)
         {
             _unimodName = unimodName;
+        }
+    }
+
+    public static class TestCase extends Assert
+    {
+        @Test
+        public void testModificationSearch() throws Exception
+        {
+            // test amino acid parsing and modificaation search string generation
+            ModificationSearchForm form = ModificationSearchForm.createDefault();
+
+            form.setDeltaMass(10.0);
+            form.setAminoAcids("R");
+            assertEquals("Unexpected number of parsed amino acids", 1, form.getAminoAcidArr().length);
+            assertTrue(form.getAminoAcidArr()[0] == 'R');
+            assertEquals("Unexpected modification search string", "R[+10]", form.getModificationSearchStr());
+
+            form.setDeltaMass(8.0);
+            form.setAminoAcids("RK");
+            assertEquals("Unexpected number of parsed amino acids", 2, form.getAminoAcidArr().length);
+            assertTrue(form.getAminoAcidArr()[0] == 'R');
+            assertTrue(form.getAminoAcidArr()[1] == 'K');
+            assertEquals("Unexpected modification search string", "R[+8];K[+8]", form.getModificationSearchStr());
+
+            form.setDeltaMass(8.01);
+            form.setAminoAcids("R K N");
+            assertEquals("Unexpected number of parsed amino acids", 3, form.getAminoAcidArr().length);
+            assertTrue(form.getAminoAcidArr()[0] == 'R');
+            assertTrue(form.getAminoAcidArr()[1] == 'K');
+            assertTrue(form.getAminoAcidArr()[2] == 'N');
+            assertEquals("Unexpected modification search string", "R[+8];K[+8];N[+8]", form.getModificationSearchStr());
+
+            form.setDeltaMass(-57.6);
+            form.setAminoAcids("R,K;N S|T");
+            assertEquals("Unexpected number of parsed amino acids", 5, form.getAminoAcidArr().length);
+            assertTrue(form.getAminoAcidArr()[0] == 'R');
+            assertTrue(form.getAminoAcidArr()[1] == 'K');
+            assertTrue(form.getAminoAcidArr()[2] == 'N');
+            assertTrue(form.getAminoAcidArr()[3] == 'S');
+            assertTrue(form.getAminoAcidArr()[4] == 'T');
+            assertEquals("Unexpected modification search string", "R[-58];K[-58];N[-58];S[-58];T[-58]", form.getModificationSearchStr());
         }
     }
 }
