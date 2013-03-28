@@ -25,6 +25,9 @@
     String initSearchType = bean.getForm().getSearchType() != null ? bean.getForm().getSearchType() : "deltaMass";
     String initAminoAcids = bean.getForm().getAminoAcids() != null ? bean.getForm().getAminoAcids() : "";
     Double initDeltaMass = bean.getForm().getDeltaMass() != null ? bean.getForm().getDeltaMass() : null;
+    String initNameType = bean.getForm().getModificationNameType() != null ? bean.getForm().getModificationNameType() : "custom";
+    boolean initStructuralCheck = (bean.getForm().isStructural() != null && bean.getForm().isStructural()) || initSearchType.equals("deltaMass");
+    boolean initIsotopeLabelCheck = (bean.getForm().isIsotopeLabel() != null && bean.getForm().isIsotopeLabel()) || initSearchType.equals("deltaMass");
 
     ActionURL modificationSearchUrl = new ActionURL(TargetedMSController.ModificationSearchAction.class, getViewContext().getContainer());
 
@@ -58,7 +61,7 @@
             ]
         });
 
-        Ext4.create('Ext.form.Panel', {
+        var form = Ext4.create('Ext.form.Panel', {
             renderTo: <%=q(renderId)%>,
             standardSubmit: true,
             border: false, frame: false,
@@ -69,31 +72,36 @@
             items: [
                 {
                     xtype: 'radiogroup',
-                    fieldLabel: 'Search Type',
-                    columns: 3,
-                    width: 550,
+                    fieldLabel: 'Search By',
+                    columns: 2,
+                    width: 430,
                     items: [
-                        { boxLabel: 'By Delta Mass', name: 'searchType', inputValue: 'deltaMass', checked: <%=initSearchType.equals("deltaMass")%> },
-                        { boxLabel: 'By Custom Name', name: 'searchType', inputValue: 'customName', checked: <%=initSearchType.equals("customName")%>},
-                        { boxLabel: 'By Unimod Name', name: 'searchType', inputValue: 'unimodName', checked: <%=initSearchType.equals("unimodName")%> }
+                        { boxLabel: 'Delta Mass', name: 'searchType', inputValue: 'deltaMass', checked: <%=initSearchType.equals("deltaMass")%> },
+                        { boxLabel: 'Modification Name', name: 'searchType', inputValue: 'modificationName', checked: <%=initSearchType.equals("modificationName")%>}
                     ],
                     listeners: {
                         scope: this,
                         change: function(cmp, newValue, oldValue) {
                             if (newValue['searchType'])
                             {
-                                Ext4.each(cmp.up('form').getForm().getFields().items, function(field){
-                                    if (field.searchType)
-                                    {
-                                        // hide/show form fields based on the selected search type
-                                        var show = field.searchType == newValue['searchType'];
-                                        field.setVisible(show);
+                                // hide/show form fields based on the selected search type
+                                form.down('textfield[name=aminoAcids]').setVisible(newValue['searchType'] == 'deltaMass');
+                                form.down('numberfield[name=deltaMass]').setVisible(newValue['searchType'] == 'deltaMass');
+                                form.down('radiogroup[name=modificationNameTypeRadioGroup]').setVisible(newValue['searchType'] == 'modificationName');
+                                form.down('checkboxgroup[name=includeCheckboxGroup]').setVisible(newValue['searchType'] == 'modificationName');
 
-                                        // clear values and invalid states
-                                        field.setValue(null);
-                                        field.clearInvalid();
-                                    }
-                                });
+                                // hide/show name combos based on searchType and modificationNameType
+                                var modificationNameType = form.down('radiogroup[name=modificationNameTypeRadioGroup]').getValue()["modificationNameType"];
+                                form.down('combo[name=customName]').setVisible(newValue['searchType'] == 'modificationName' && modificationNameType == 'custom');
+                                form.down('combo[name=unimodName]').setVisible(newValue['searchType'] == 'modificationName' && modificationNameType != 'custom');
+
+                                // clear values for text/number fields and combos
+                                form.down('textfield[name=aminoAcids]').setValue(null);
+                                form.down('textfield[name=aminoAcids]').clearInvalid();
+                                form.down('numberfield[name=deltaMass]').setValue(null);
+                                form.down('numberfield[name=deltaMass]').clearInvalid();
+                                form.down('combo[name=customName]').setValue(null);
+                                form.down('combo[name=unimodName]').setValue(null);
                             }
                         }
                     }
@@ -104,45 +112,118 @@
                     name: 'aminoAcids',
                     allowBlank: false,
                     hidden: <%=!initSearchType.equals("deltaMass")%>,
-                    searchType: 'deltaMass',
                     value: <%=q(initAminoAcids)%>
                 },
                 {
                     xtype: 'numberfield',
                     fieldLabel: 'Delta Mass',
                     name: 'deltaMass',
+                    hideTrigger: true,
                     allowBlank: false,
                     allowDecimal: true,
-                    decimalPrecision: 0, // round valeus to integers
+                    decimalPrecision: 1, // round valeus to tenth
                     hidden: <%=!initSearchType.equals("deltaMass")%>,
-                    searchType: 'deltaMass',
                     value: '<%=initDeltaMass%>'
+                },
+                {
+                    xtype: 'radiogroup',
+                    fieldLabel: 'Type',
+                    columns: 1,
+                    name: 'modificationNameTypeRadioGroup',
+                    hidden: <%=!initSearchType.equals("modificationName")%>,
+                    items: [
+                        { boxLabel: 'Names used in imported experiments', name: 'modificationNameType', inputValue: 'custom', checked: <%=initNameType.equals("custom")%> },
+                        { boxLabel: 'Common Unimod modifications', name: 'modificationNameType', inputValue: 'unimodCommon', checked: <%=initNameType.equals("unimodCommon")%> },
+                        { boxLabel: 'All Unimod modifications', name: 'modificationNameType', inputValue: 'unimodAll', checked: <%=initNameType.equals("unimodAll")%> }
+                    ],
+                    listeners: {
+                        change : function(cmp, newValue) {
+                            var value = newValue["modificationNameType"];
+
+                            // hide/show name combos based on radio selection
+                            form.down('combo[name=customName]').setVisible(value == "custom");
+                            form.down('combo[name=unimodName]').setVisible(value == "unimodCommon" || value == "unimodAll");
+
+                            // clear combo values on radio change
+                            form.down('combo[name=customName]').setValue(null);
+                            form.down('combo[name=unimodName]').setValue(null);
+
+                            // filter unimod combo based on Common or All selection
+                            // TODO: filter combo store
+                        }
+                    }
+                },
+                {
+                    xtype: 'checkboxgroup',
+                    width: 430,
+                    fieldLabel: 'Include',
+                    name: 'includeCheckboxGroup',
+                    hidden: <%=!initSearchType.equals("modificationName")%>,
+                    items: [
+                        { boxLabel: 'Structural', name: 'structural', inputValue: true, checked: <%=initStructuralCheck%> },
+                        { boxLabel: 'Isotope Label', name: 'isotopeLabel', inputValue: true, checked: <%=initIsotopeLabelCheck%> }
+                    ],
+                    listeners: {
+                        change: function(cmp, newValue, oldValue) {
+                            // filter the custom name store based on the selected types
+                            var customNameCombo = form.down('combo[name=customName]');
+                            form.filterComboStore(customNameCombo.getStore(), newValue);
+
+                            // TODO: enable
+                            // filter the unimod name store based on the selected types
+                            //var unimodNameCombo = form.down('combo[name=unimodName]');
+                            //form.filterComboStore(unimodNameCombo.getStore(), newValue);
+                        }
+                    }
                 },
                 {
                     xtype: 'combo',
                     fieldLabel: 'Custom Name',
                     name: 'customName',
                     width: 500,
-                    hidden: <%=!initSearchType.equals("customName")%>,
+                    hidden: <%=!initSearchType.equals("modificationName") || !initNameType.equals("custom")%>,
                     value: <%=q(bean.getForm().getCustomName())%>,
-                    searchType: 'customName',
                     editable : true,
                     queryMode : 'local',
                     displayField : 'Name',
                     valueField : 'Name',
                     store : Ext4.create('LABKEY.ext4.Store', {
                         schemaName: "targetedms",
-                        sql: "SELECT DISTINCT StructuralModId.Name AS Name, StructuralModId.AminoAcid AS AminoAcid, MassDiff FROM PeptideStructuralModification",
+                        // union of structural and isotope label modifications
+                        sql : "SELECT CONVERT('Structural', SQL_VARCHAR) AS Type, Name, GROUP_CONCAT(AminoAcid, '') AS AminoAcid, MassDiff FROM ("
+                        	+ "  SELECT DISTINCT"
+                            + "    StructuralModId.Name AS Name,"
+                            + "    CASE WHEN StructuralModId.AminoAcid IS NOT NULL THEN StructuralModId.AminoAcid"
+                            + "         WHEN IndexAA IS NOT NULL THEN substring(PeptideId.Sequence, IndexAA + 1, 1)"
+                            + "    END AS AminoAcid,"
+                            + "    MassDiff"
+                            + "  FROM PeptideStructuralModification"
+                            + ") AS x GROUP BY Name, MassDiff "
+                            + "UNION "
+                            + "SELECT CONVERT('Isotope Label', SQL_VARCHAR) AS Type, Name, GROUP_CONCAT(AminoAcid, '') AS AminoAcid, MassDiff FROM ("
+                            + "  SELECT DISTINCT"
+                            + "    IsotopeModId.Name AS Name,"
+                            + "    CASE WHEN IsotopeModId.AminoAcid IS NOT NULL THEN IsotopeModId.AminoAcid"
+                            + "         WHEN IndexAA IS NOT NULL THEN substring(PeptideId.Sequence, IndexAA + 1, 1)"
+                            + "    END AS AminoAcid,"
+                            + "    MassDiff"
+                            + "  FROM PeptideIsotopeModification"
+                            + ") AS x GROUP BY Name, MassDiff",
                         sort: "Name",
-                        autoLoad: true
+                        autoLoad: true,
+                        listeners: {
+                            load: function(store, records) {
+                                // set initial filter
+                                form.filterComboStore(store, form.down('checkboxgroup[name=includeCheckboxGroup]').getValue());
+                            }
+                        }
                     }),
                     listeners: {
-                        scope: this,
                         change: function(cmp, newValue, oldValue) {
                             // set the amino acid and delta mass based on the selected custom name record
                             var record = cmp.getStore().findRecord('Name', newValue);
-                            cmp.up('form').getForm().findField('aminoAcids').setValue(record ? record.get('AminoAcid') : null);
-                            cmp.up('form').getForm().findField('deltaMass').setValue(record ? record.get('MassDiff') : null);
+                            form.down('textfield[name=aminoAcids]').setValue(record ? record.get('AminoAcid') : null);
+                            form.down('numberfield[name=deltaMass]').setValue(record ? record.get('MassDiff') : null);
                         }
                     }
                 },
@@ -152,9 +233,8 @@
                     labelSeparator: '',
                     name: 'unimodName',
                     width: 500,
-                    hidden: <%=!initSearchType.equals("unimodName")%>,
+                    hidden: <%=!initSearchType.equals("modificationName") || initNameType.equals("custom")%>,
                     value: <%=q(bean.getForm().getUnimodName())%>,
-                    searchType: 'unimodName',
                     editable : true,
                     queryMode : 'local',
                     displayField : 'title',
@@ -178,8 +258,8 @@
                         change: function(cmp, newValue, oldValue) {
                             // set the amino acid and delta mass based on the selected unimod name record
                             var record = cmp.getStore().findRecord('title', newValue);
-                            cmp.up('form').getForm().findField('deltaMass').setValue(record ? record.get('mono_mass') : null);
-                            cmp.up('form').getForm().findField('aminoAcids').setValue(null);
+                            form.down('textfield[name=aminoAcids]').setValue(null);
+                            form.down('numberfield[name=deltaMass]').setValue(record ? record.get('mono_mass') : null);
 
                             // parse the XML file again for the selected modification name to get the set of specified sites
                             // note: skipping C-term and N-term
@@ -206,7 +286,7 @@
                                                 if (record.get("site") != null && record.get("site").length == 1)
                                                     aminoAcidStr += record.get("site");
                                             });
-                                            cmp.up('form').getForm().findField('aminoAcids').setValue(aminoAcidStr);
+                                            form.down('textfield[name=aminoAcids]').setValue(aminoAcidStr);
                                         }
                                     }
                                 }
@@ -220,17 +300,25 @@
                 text: 'Search',
                 formBind: true,
                 handler: function(btn) {
-                    var values = btn.up('form').getForm().getValues();
+                    var values = form.getForm().getValues();
                     if (values['aminoAcids'] && values['deltaMass'])
                     {
-                        btn.up('form').submit({
+                        form.submit({
                             url: <%=q(modificationSearchUrl.getLocalURIString())%>,
                             method: 'GET',
                             params: values
                         });
                     }
                 }
-            }]
+            }],
+
+            filterComboStore : function(store, values) {
+                store.clearFilter();
+                store.filterBy(function(record) {
+                    return (values["structural"] && record.get("Type") == "Structural")
+                        || (values["isotopeLabel"] && record.get("Type") == "Isotope Label");
+                });
+            }
         });
     });
 

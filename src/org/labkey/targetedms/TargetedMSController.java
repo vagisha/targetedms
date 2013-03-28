@@ -2365,11 +2365,15 @@ public class TargetedMSController extends SpringActionController
     {
         private ViewContext _context;
         private String _searchType;
+        private String _modificationNameType;
+        private Boolean _structural;
+        private Boolean _isotopeLabel;
         private String _customName;
         private String _unimodName;
         private String _aminoAcids;
         private char[] _aminoAcidArr;
         private Double _deltaMass;
+
 
         public static ModificationSearchForm createDefault()
         {
@@ -2380,7 +2384,7 @@ public class TargetedMSController extends SpringActionController
 
         public String getModificationSearchStr()
         {
-            DecimalFormat df = new DecimalFormat("0");
+            DecimalFormat df = new DecimalFormat("0.#");
             String modStr = null;
             String delim = "";
 
@@ -2445,6 +2449,36 @@ public class TargetedMSController extends SpringActionController
             _searchType = searchType;
         }
 
+        public String getModificationNameType()
+        {
+            return _modificationNameType;
+        }
+
+        public void setModificationNameType(String modificationNameType)
+        {
+            _modificationNameType = modificationNameType;
+        }
+
+        public Boolean isStructural()
+        {
+            return _structural;
+        }
+
+        public void setStructural(Boolean structural)
+        {
+            _structural = structural;
+        }
+
+        public Boolean isIsotopeLabel()
+        {
+            return _isotopeLabel;
+        }
+
+        public void setIsotopeLabel(Boolean isotopeLabel)
+        {
+            _isotopeLabel = isotopeLabel;
+        }
+
         public String getCustomName()
         {
             return _customName;
@@ -2495,7 +2529,7 @@ public class TargetedMSController extends SpringActionController
             assertTrue(form.getAminoAcidArr()[2] == 'N');
             assertEquals("Unexpected modification search string", "R[+8];K[+8];N[+8]", form.getModificationSearchStr());
 
-            form.setDeltaMass(-57.6);
+            form.setDeltaMass(-144.11);
             form.setAminoAcids("R,K;N S|T");
             assertEquals("Unexpected number of parsed amino acids", 5, form.getAminoAcidArr().length);
             assertTrue(form.getAminoAcidArr()[0] == 'R');
@@ -2503,7 +2537,7 @@ public class TargetedMSController extends SpringActionController
             assertTrue(form.getAminoAcidArr()[2] == 'N');
             assertTrue(form.getAminoAcidArr()[3] == 'S');
             assertTrue(form.getAminoAcidArr()[4] == 'T');
-            assertEquals("Unexpected modification search string", "R[-58];K[-58];N[-58];S[-58];T[-58]", form.getModificationSearchStr());
+            assertEquals("Unexpected modification search string", "R[-144.1];K[-144.1];N[-144.1];S[-144.1];T[-144.1]", form.getModificationSearchStr());
         }
     }
 }
