@@ -39,25 +39,26 @@
 
     Ext4.onReady(function(){
 
-        // model used to parse unimod.xml for each modification
+        // model used to parse unimod_PARSED.xml for a set of modifications
         Ext4.define('UnimodRecord', {
+            extend: 'Ext.data.Model',
+            fields: [
+                { name: 'Name', mapping: '@Name' },
+                { name: 'AAs', mapping: '@AAs' },
+                { name: 'ID', mapping: '@ID' },
+                { name: 'Structural', mapping: '@Structural' },
+                { name: 'Hidden', mapping: '@Hidden' }
+            ]
+        });
+
+        // model used to parse the specified record for a given unimod modification name to get the delta mass
+        Ext4.define('UnimodDeltaMass', {
             extend: 'Ext.data.Model',
             fields: [
                 { name: 'title', mapping: '@title' },
                 { name: 'full_name', mapping: '@full_name' },
                 { name: 'mono_mass', mapping: 'delta@mono_mass' },
                 { name: 'avge_mass', mapping: 'delta@avge_mass' }
-            ]
-        });
-
-        // model used to parse the specified sites for a given unimod modification name
-        Ext4.define('UnimodSpecificity', {
-            extend: 'Ext.data.Model',
-            fields: [
-                { name: 'site', mapping: '@site' },
-                { name: 'position', mapping: '@position' },
-                { name: 'hidden', mapping: '@hidden' },
-                { name: 'classification', mapping: '@classification' }
             ]
         });
 
@@ -149,7 +150,7 @@
                             form.down('combo[name=unimodName]').setValue(null);
 
                             // filter unimod combo based on Common or All selection
-                            // TODO: filter combo store
+                            form.filterComboStore(form.down('combo[name=unimodName]').getStore());
                         }
                     }
                 },
@@ -166,13 +167,10 @@
                     listeners: {
                         change: function(cmp, newValue, oldValue) {
                             // filter the custom name store based on the selected types
-                            var customNameCombo = form.down('combo[name=customName]');
-                            form.filterComboStore(customNameCombo.getStore(), newValue);
+                            form.filterComboStore(form.down('combo[name=customName]').getStore());
 
-                            // TODO: enable
                             // filter the unimod name store based on the selected types
-                            //var unimodNameCombo = form.down('combo[name=unimodName]');
-                            //form.filterComboStore(unimodNameCombo.getStore(), newValue);
+                            form.filterComboStore(form.down('combo[name=unimodName]').getStore());
                         }
                     }
                 },
@@ -214,7 +212,7 @@
                         listeners: {
                             load: function(store, records) {
                                 // set initial filter
-                                form.filterComboStore(store, form.down('checkboxgroup[name=includeCheckboxGroup]').getValue());
+                                form.filterComboStore(store);
                             }
                         }
                     }),
@@ -237,60 +235,52 @@
                     value: <%=q(bean.getForm().getUnimodName())%>,
                     editable : true,
                     queryMode : 'local',
-                    displayField : 'title',
-                    valueField : 'title',
+                    displayField : 'Name',
+                    valueField : 'Name',
                     store: Ext4.create('Ext.data.Store', {
                         model: 'UnimodRecord',
                         autoLoad: true,
+                        sorters : [{ property: 'Name' }],
                         proxy: {
                             type: 'ajax',
-                            url : LABKEY.contextPath + '/TargetedMS/unimod/unimod.xml',
-                            reader: {
-                                type: 'xml',
-                                //namespace: 'umod',
-                                root: 'modifications',
-                                record: 'mod'
+                            url : LABKEY.contextPath + '/TargetedMS/unimod/unimod_PARSED.xml',
+                            reader: { type: 'xml', root: 'modifications', record: 'mod' }
+                        },
+                        listeners: {
+                            load: function(store, records) {
+                                // set initial filter
+                                form.filterComboStore(store);
                             }
                         }
                     }),
                     listeners: {
                         scope: this,
                         change: function(cmp, newValue, oldValue) {
-                            // set the amino acid and delta mass based on the selected unimod name record
-                            var record = cmp.getStore().findRecord('title', newValue);
-                            form.down('textfield[name=aminoAcids]').setValue(null);
-                            form.down('numberfield[name=deltaMass]').setValue(record ? record.get('mono_mass') : null);
+                            var record = cmp.getStore().findRecord('Name', newValue);
 
-                            // parse the XML file again for the selected modification name to get the set of specified sites
-                            // note: skipping C-term and N-term
-                            var modSpecificityStore = Ext4.create('Ext.data.Store', {
-                                model: 'UnimodSpecificity',
-                                autoLoad: true,
-                                proxy: {
-                                    type: 'ajax',
-                                    url : LABKEY.contextPath + '/TargetedMS/unimod/unimod.xml',
-                                    reader: {
-                                        type: 'xml',
-                                        //namespace: 'umod',
-                                        root: 'mod[title=' + newValue + ']',
-                                        record: 'specificity'
-                                    }
-                                },
-                                listeners: {
-                                    scope: this,
-                                    load: function(store, records) {
-                                        if (records.length > 0)
-                                        {
-                                            var aminoAcidStr = "";
-                                            Ext4.each(records, function(record) {
-                                                if (record.get("site") != null && record.get("site").length == 1)
-                                                    aminoAcidStr += record.get("site");
-                                            });
-                                            form.down('textfield[name=aminoAcids]').setValue(aminoAcidStr);
+                            // set the amino acid based on the selected unimod name record
+                            form.down('textfield[name=aminoAcids]').setValue(record ? record.get('AAs') : null);
+
+                            // parse the unimoc.xml file for the delta mass
+                            form.down('numberfield[name=deltaMass]').setValue(null);
+                            if (record)
+                            {
+                                var modSpecificityStore = Ext4.create('Ext.data.Store', {
+                                    model: 'UnimodDeltaMass',
+                                    autoLoad: true,
+                                    proxy: {
+                                        type: 'ajax',
+                                        url : LABKEY.contextPath + '/TargetedMS/unimod/unimod_NO_NAMESPACE.xml',
+                                        reader: { type: 'xml', root: 'modifications', record: 'mod[record_id=' + record.get("ID") + ']' }
+                                    },
+                                    listeners: {
+                                        scope: this,
+                                        load: function(store, records) {
+                                            form.down('numberfield[name=deltaMass]').setValue(records.length == 1 ? records[0].get('mono_mass') : null);
                                         }
                                     }
-                                }
-                            });
+                                });
+                            }
                         }
                     }
                 }
@@ -312,11 +302,39 @@
                 }
             }],
 
-            filterComboStore : function(store, values) {
+            getFilterValues : function() {
+                var values = form.down('checkboxgroup[name=includeCheckboxGroup]').getValue();
+                if (form.down('radiogroup[name=modificationNameTypeRadioGroup]').getValue()["modificationNameType"] == "unimodCommon")
+                    values["common"] = true;
+
+                return values;
+            },
+
+            filterComboStore : function(store) {
+                var values = form.getFilterValues();
+
                 store.clearFilter();
                 store.filterBy(function(record) {
-                    return (values["structural"] && record.get("Type") == "Structural")
-                        || (values["isotopeLabel"] && record.get("Type") == "Isotope Label");
+                    var include = true;
+
+                    if (record.get("Type"))
+                    {
+                        include = (values["structural"] && record.get("Type") == "Structural")
+                            || (values["isotopeLabel"] && record.get("Type") == "Isotope Label");
+                    }
+                    else if (record.get("Structural"))
+                    {
+                        include = (values["structural"] && record.get("Structural") == "true")
+                            || (values["isotopeLabel"] && record.get("Structural") == "false");
+                    }
+
+                    if (include && record.get("Hidden"))
+                    {
+                        // Common modification are set as Hidden = false
+                        include = !values["common"] || record.get("Hidden") == "false";
+                    }
+
+                    return include;
                 });
             }
         });
