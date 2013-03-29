@@ -1122,7 +1122,7 @@
    <mod Name = "mTRAQ:13C(3)15N(1) (T)" AAs = "T" Formula = "C'3N' - C3N" ID = "889" Structural = "false" Hidden = "true" />
    <mod Name = "mTRAQ:13C(6)15N(2) (H)" AAs = "H" Formula = "C'6N'2 - C6N2" ID = "1302" Structural = "false" Hidden = "true" />
    <mod Name = "mTRAQ:13C(6)15N(2) (S)" AAs = "S" Formula = "C'6N'2 - C6N2" ID = "1302" Structural = "false" Hidden = "true" />
-y   <!--<mod Name = "Phenylisocyanate:2H(5) (N-term)" Formula = "H'5 - H5" ID = "412" Structural = "false" Hidden = "true" />-->
+   <!--<mod Name = "Phenylisocyanate:2H(5) (N-term)" Formula = "H'5 - H5" ID = "412" Structural = "false" Hidden = "true" />-->
    <mod Name = "Propionamide:2H(3) (C)" AAs = "C" Formula = "H'3 - H3" ID = "97" Structural = "false" Hidden = "true" />
    <mod Name = "Propionyl:13C(3) (K)" AAs = "K" Formula = "C'3 - C3" ID = "59" Structural = "false" Hidden = "true" />
    <!--<mod Name = "Propionyl:13C(3) (N-term)" Formula = "C'3 - C3" ID = "59" Structural = "false" Hidden = "true" />-->
