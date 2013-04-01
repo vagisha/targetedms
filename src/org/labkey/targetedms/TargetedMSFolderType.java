@@ -29,6 +29,8 @@ import java.util.Arrays;
  */
 public class TargetedMSFolderType extends MultiPortalFolderType
 {
+    public static final String MS2_SEARCH_WEBPART = "MS2 Search (Tabbed)";
+
     public TargetedMSFolderType(TargetedMSModule module)
     {
         super("Targeted MS",
@@ -38,7 +40,7 @@ public class TargetedMSFolderType extends MultiPortalFolderType
                     Portal.getPortalPart(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME).createWebPart()
             ),
             Arrays.asList(
-                    Portal.getPortalPart(TargetedMSModule.TARGETED_MS_PROTEIN_SEARCH).createWebPart()
+                    Portal.getPortalPart(MS2_SEARCH_WEBPART).createWebPart()
             ),
             getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment"), getModule("MS2"), getModule("MS1")),
             module);
