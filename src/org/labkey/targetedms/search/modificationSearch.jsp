@@ -85,7 +85,7 @@
             border: false, frame: false,
             defaults: {
                 labelWidth: 120,
-                labelStyle: 'background-color: #E1E5E1; padding: 5px;'
+                labelStyle: 'background-color: #E0E6EA; padding: 5px;'
             },
             items: [
                 {
