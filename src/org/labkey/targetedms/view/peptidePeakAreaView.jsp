@@ -44,9 +44,9 @@
         var replicateStore = Ext4.create('Ext.data.Store', {
            fields: ['name', 'replicateId'],
            data:   [
-               {"name":"All", "replicateId":"0"},
+               {"name":"All", "replicateId":"0"}
                <%for(int i = 0; i < replicateList.size(); i++) {%>
-               {"name":"<%=replicateList.get(i).getName()%>", "replicateId":"<%=replicateList.get(i).getId()%>" },
+               ,{"name":"<%=replicateList.get(i).getName()%>", "replicateId":"<%=replicateList.get(i).getId()%>" }
                <%}%>
            ]
         });
@@ -54,9 +54,9 @@
         var replicateAnnotNameStore = Ext4.create('Ext.data.Store', {
             fields: ['name'],
             data:   [
-                {"name":"None"},
+                {"name":"None"}
                 <%for(int i = 0; i < replicateAnnotationNameList.size(); i++){%>
-                    {"name":"<%=replicateAnnotationNameList.get(i)%>"},
+                    ,{"name":"<%=replicateAnnotationNameList.get(i)%>"}
                 <%}%>
             ]
         });
@@ -64,9 +64,9 @@
         var peptideStore = Ext4.create('Ext.data.Store', {
             fields: ['sequence', 'peptideId'],
             data: [
-                {"sequence":"All", "peptideId":"0"},
+                {"sequence":"All", "peptideId":"0"}
                 <%for(int i = 0; i < peptideList.size(); i++) {%>
-                {"sequence":"<%=peptideList.get(i).getSequence()%>", "peptideId":"<%=peptideList.get(i).getId()%>"},
+                ,{"sequence":"<%=peptideList.get(i).getSequence()%>", "peptideId":"<%=peptideList.get(i).getId()%>"}
                 <%}%>
             ]
         });
