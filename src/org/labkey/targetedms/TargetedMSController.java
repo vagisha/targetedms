@@ -42,6 +42,7 @@ import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.SimpleFilter;
@@ -2329,6 +2330,10 @@ public class TargetedMSController extends SpringActionController
         {
             ViewContext viewContext = getViewContext();
             QuerySettings settings = new QuerySettings(viewContext, "TargetedMSMatches", "Precursor");
+
+            if (form.isIncludeSubfolders())
+                settings.setContainerFilterName(ContainerFilter.Type.CurrentAndSubfolders.name());
+
             QueryView result = new QueryView(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()), settings, errors)
             {
                 @Override
@@ -2373,7 +2378,7 @@ public class TargetedMSController extends SpringActionController
         private String _aminoAcids;
         private char[] _aminoAcidArr;
         private Double _deltaMass;
-
+        private boolean _includeSubfolders;
 
         public static ModificationSearchForm createDefault()
         {
@@ -2497,6 +2502,16 @@ public class TargetedMSController extends SpringActionController
         public void setUnimodName(String unimodName)
         {
             _unimodName = unimodName;
+        }
+
+        public boolean isIncludeSubfolders()
+        {
+            return _includeSubfolders;
+        }
+
+        public void setIncludeSubfolders(boolean includeSubfolders)
+        {
+            _includeSubfolders = includeSubfolders;
         }
     }
 

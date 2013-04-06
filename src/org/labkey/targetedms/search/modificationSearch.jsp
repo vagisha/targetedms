@@ -84,7 +84,7 @@
             standardSubmit: true,
             border: false, frame: false,
             defaults: {
-                labelWidth: 120,
+                labelWidth: 150,
                 labelStyle: 'background-color: #E0E6EA; padding: 5px;'
             },
             items: [
@@ -92,7 +92,7 @@
                     xtype: 'radiogroup',
                     fieldLabel: 'Search By',
                     columns: 2,
-                    width: 430,
+                    width: 460,
                     items: [
                         { boxLabel: 'Delta Mass', name: 'searchType', inputValue: 'deltaMass', checked: <%=initSearchType.equals("deltaMass")%> },
                         { boxLabel: 'Modification Name', name: 'searchType', inputValue: 'modificationName', checked: <%=initSearchType.equals("modificationName")%>}
@@ -173,7 +173,7 @@
                 },
                 {
                     xtype: 'checkboxgroup',
-                    width: 430,
+                    width: 460,
                     fieldLabel: 'Include',
                     name: 'includeCheckboxGroup',
                     hidden: <%=!initSearchType.equals("modificationName")%>,
@@ -203,6 +203,7 @@
                     displayField : 'Name',
                     valueField : 'Name',
                     store : Ext4.create('LABKEY.ext4.Store', {
+                        containerFilter: <%=q(bean.getForm().isIncludeSubfolders() ? "CurrentAndSubfolders" : "Current")%>,
                         schemaName: "targetedms",
                         // union of structural and isotope label modifications
                         sql : "SELECT CONVERT('Structural', SQL_VARCHAR) AS Type, Name, GROUP_CONCAT(AminoAcid, '') AS AminoAcid, MassDiff FROM ("
@@ -298,6 +299,20 @@
                                     }
                                 });
                             }
+                        }
+                    }
+                },
+                {
+                    xtype: 'checkbox',
+                    name: 'includeSubfolders',
+                    fieldLabel: 'Search in Subfolders',
+                    inputValue: true,
+                    checked: <%=bean.getForm().isIncludeSubfolders()%>,
+                    listeners: {
+                        change: function(cb, newValue) {
+                            // set the custom name store's containerFilter
+                            form.down('combo[name=customName]').getStore().containerFilter = (newValue ? 'CurrentAndSubfolders' : 'Current');
+                            form.down('combo[name=customName]').getStore().load();
                         }
                     }
                 }

@@ -17,6 +17,7 @@ package org.labkey.targetedms.view;
 
 import org.labkey.api.ProteinService;
 import org.labkey.api.data.Aggregate;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FieldKey;
@@ -48,6 +49,11 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
     {
         QuerySettings settings = new QuerySettings(viewContext, getDataRegionName(), "Peptide");
         settings.addAggregates(new Aggregate(FieldKey.fromParts("PeptideGroupId", "RunId", "File"), Aggregate.Type.COUNT, null, true));
+
+        // Issue 17576: Peptide and Protein searches do not work for searching in subfolders
+        if (form.isIncludeSubfolders())
+            settings.setContainerFilterName(ContainerFilter.Type.CurrentAndSubfolders.name());
+
         QueryView result = new QueryView(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()), settings, errors)
         {
             @Override

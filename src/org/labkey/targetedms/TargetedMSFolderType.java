@@ -21,6 +21,7 @@ import org.labkey.api.util.HelpTopic;
 import org.labkey.api.view.Portal;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * User: vsharma
@@ -29,18 +30,15 @@ import java.util.Arrays;
  */
 public class TargetedMSFolderType extends MultiPortalFolderType
 {
-    public static final String MS2_SEARCH_WEBPART = "MS2 Search (Tabbed)";
-
     public TargetedMSFolderType(TargetedMSModule module)
     {
         super("Targeted MS",
                 "Manage targeted MS assays generated in Skyline.",
+            Collections.<Portal.WebPart>emptyList(),
             Arrays.asList(
                     Portal.getPortalPart("Data Pipeline").createWebPart(),
+                    Portal.getPortalPart("Mass Spec Search (Tabbed)").createWebPart(),
                     Portal.getPortalPart(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME).createWebPart()
-            ),
-            Arrays.asList(
-                    Portal.getPortalPart(MS2_SEARCH_WEBPART).createWebPart()
             ),
             getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment"), getModule("MS2"), getModule("MS1")),
             module);
