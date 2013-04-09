@@ -75,7 +75,7 @@ public class TargetedMSModule extends SpringModule
     @Override
     public double getVersion()
     {
-        return 12.31;
+        return 13.10;
     }
 
     @Override
@@ -92,11 +92,13 @@ public class TargetedMSModule extends SpringModule
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
             {
                 QueryView gridView = ExperimentService.get().createExperimentRunWebPart(new ViewContext(portalCtx), EXP_RUN_TYPE);
-                gridView.setTitle(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME);
-                gridView.setTitleHref(new ActionURL(TargetedMSController.ShowListAction.class, portalCtx.getContainer()));
+                gridView.setFrame(WebPartView.FrameType.NONE);
                 VBox vbox = new VBox();
                 vbox.addView(new JspView("/org/labkey/targetedms/view/conflictSummary.jsp"));
                 vbox.addView(gridView);
+                vbox.setFrame(WebPartView.FrameType.PORTAL);
+                vbox.setTitle(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME);
+                vbox.setTitleHref(new ActionURL(TargetedMSController.ShowListAction.class, portalCtx.getContainer()));
                 return vbox;
             }
         };
