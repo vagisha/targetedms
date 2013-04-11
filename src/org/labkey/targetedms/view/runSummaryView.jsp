@@ -36,7 +36,7 @@
     <tr>
         <td class="labkey-form-label">File</td>
         <td>
-            <%= bean.getRun().getFileName()%>
+            <%= h(bean.getRun().getFileName())%>
             <%= textLink("Download", downloadAction)%>
         </td>
     </tr>
@@ -49,7 +49,7 @@
         %>
 
         <td>
-            <span style="color:<%=color%>;">
+            <span style="color:<%=text(color)%>;">
                 <%= representativeState%>
             </span>
         </td>

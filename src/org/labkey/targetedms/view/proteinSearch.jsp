@@ -21,12 +21,12 @@
 
     <table>
         <tr>
-            <td class="labkey-form-label">Protein Name *<%= helpPopup("Protein name", "Required to search for proteins. You may use the name as specified by the FASTA file, or an annotation, such as a gene name, that has been loaded from an annotations file. You may comma separate multiple names.") %></td>
-            <td nowrap><input size="20" type="text" name="identifier" value=""/></td>
+            <td class="labkey-form-label"><label for="identifierInput">Protein Name</label> *<%= helpPopup("Protein name", "Required to search for proteins. You may use the name as specified by the FASTA file, or an annotation, such as a gene name, that has been loaded from an annotations file. You may comma separate multiple names.") %></td>
+            <td nowrap><input size="20" type="text" id="identifierInput" name="identifier" value=""/></td>
         </tr>
         <tr>
-            <td class="labkey-form-label">Search in subfolders<%= helpPopup("Search in subfolders", "If checked, the search will also look in all of this folder's children.") %></td>
-            <td nowrap><input type="checkbox" name="includeSubfolders" checked="true" /></td>
+            <td class="labkey-form-label"><label for="includeSubfoldersInput">Search in subfolders</label><%= helpPopup("Search in subfolders", "If checked, the search will also look in all of this folder's children.") %></td>
+            <td nowrap><input type="checkbox" id="includeSubfoldersInput" name="includeSubfolders" checked="true" /></td>
         </tr>
         <tr>
             <td colspan="2"><labkey:button text="Search" /></td>

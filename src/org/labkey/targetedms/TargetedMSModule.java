@@ -185,8 +185,6 @@ public class TargetedMSModule extends SpringModule
     @Override
     public Set<Class> getUnitTests()
     {
-        return new HashSet<Class>(Arrays.asList(
-                TargetedMSController.TestCase.class
-        ));
+        return PageFlowUtil.<Class>set(TargetedMSController.TestCase.class);
     }
 }

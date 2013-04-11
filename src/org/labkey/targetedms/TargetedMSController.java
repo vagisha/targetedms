@@ -57,7 +57,6 @@ import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
 import org.labkey.api.security.RequiresPermissionClass;
-import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.services.ServiceRegistry;
@@ -306,7 +305,7 @@ public class TargetedMSController extends SpringActionController
             bean.setIsotopeLabel(label);
             bean.setRun(_run);
 
-            JspView<List<PrecursorChromatogramsViewBean>> precursorInfo = new JspView("/org/labkey/targetedms/view/precursorChromatogramsView.jsp", bean);
+            JspView<PrecursorChromatogramsViewBean> precursorInfo = new JspView<PrecursorChromatogramsViewBean>("/org/labkey/targetedms/view/precursorChromatogramsView.jsp", bean);
             precursorInfo.setFrame(WebPartView.FrameType.PORTAL);
             precursorInfo.setTitle("Precursor");
 
@@ -373,7 +372,7 @@ public class TargetedMSController extends SpringActionController
             bean.setLabels(IsotopeLabelManager.getIsotopeLabels(_run.getId()));
             bean.setPrecursorList(PrecursorManager.getPrecursorsForPeptide(peptide.getId()));
 
-            JspView<List<PrecursorChromatogramsViewBean>> peptideInfo = new JspView("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
+            JspView<PeptideChromatogramsViewBean> peptideInfo = new JspView<PeptideChromatogramsViewBean>("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
             peptideInfo.setFrame(WebPartView.FrameType.PORTAL);
             peptideInfo.setTitle("Peptide");
 
@@ -616,13 +615,13 @@ public class TargetedMSController extends SpringActionController
             bean.setRun(_run);
 
             // summary for this peptide
-            JspView<List<PeptideChromatogramsViewBean>> peptideInfo = new JspView("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
+            JspView<PeptideChromatogramsViewBean> peptideInfo = new JspView<PeptideChromatogramsViewBean>("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
             peptideInfo.setFrame(WebPartView.FrameType.PORTAL);
             peptideInfo.setTitle("Peptide Summary");
             vbox.addView(peptideInfo);
 
             // precursor and transition chromatograms. One row per replicate
-            JspView<List<PeptideChromatogramsViewBean>> chartForm = new JspView("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
+            JspView<PeptideChromatogramsViewBean> chartForm = new JspView<PeptideChromatogramsViewBean>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
             PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),
                                                                                                 form, errors);
             chromView.enableExpandCollapse(PeptidePrecursorChromatogramsView.TITLE, false);
@@ -919,7 +918,7 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(SkylinePipelinePathForm form, boolean reshow, BindException errors) throws Exception
         {
             form.getValidatedFiles(getContainer());
-            return new JspView("/org/labkey/targetedms/view/confirmImport.jsp", form, errors);
+            return new JspView<SkylinePipelinePathForm>("/org/labkey/targetedms/view/confirmImport.jsp", form, errors);
         }
 
         @Override
@@ -1000,8 +999,6 @@ public class TargetedMSController extends SpringActionController
         public ApiResponse execute(PipelinePathForm form, BindException errors) throws Exception
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
-            User user = getUser();
-            Container container = getContainer();
             List<Map<String, Object>> jobDetailsList = new ArrayList<Map<String, Object>>();
 
             for (File file : form.getValidatedFiles(getContainer()))
@@ -1308,7 +1305,7 @@ public class TargetedMSController extends SpringActionController
                 protected TableInfo createTable()
                 {
                     TargetedMSTable result = (TargetedMSTable) super.createTable();
-                    result.addCondition(new SimpleFilter("PeptideGroupId", form.getId()));
+                    result.addCondition(new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), form.getId()));
                     List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
                     visibleColumns.add(FieldKey.fromParts("Sequence"));
                     visibleColumns.add(FieldKey.fromParts("CalcNeutralMass"));
@@ -1530,7 +1527,7 @@ public class TargetedMSController extends SpringActionController
                 bean.setAllConflictRunFiles(conflictRunFiles);
             }
 
-            JspView<ProteinConflictBean> conflictInfo = new JspView("/org/labkey/targetedms/view/proteinConflictResolutionView.jsp", bean);
+            JspView<ProteinConflictBean> conflictInfo = new JspView<ProteinConflictBean>("/org/labkey/targetedms/view/proteinConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
             conflictInfo.setTitle("Representative Protein Data Conflicts");
 
@@ -1729,7 +1726,7 @@ public class TargetedMSController extends SpringActionController
                 bean.setAllConflictRunFiles(conflictRunFiles);
             }
 
-            JspView<PrecursorConflictBean> conflictInfo = new JspView("/org/labkey/targetedms/view/precursorConflictResolutionView.jsp", bean);
+            JspView<PrecursorConflictBean> conflictInfo = new JspView<PrecursorConflictBean>("/org/labkey/targetedms/view/precursorConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
             conflictInfo.setTitle("Representative Peptide Data Conflicts");
 
@@ -2043,7 +2040,6 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void validateCommand(ChangeRepresentativeStateForm target, Errors errors)
         {
-            //To change body of implemented methods use File | Settings | File Templates.
         }
 
         @Override

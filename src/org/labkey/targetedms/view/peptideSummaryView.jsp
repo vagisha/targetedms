@@ -51,28 +51,28 @@
             ActionURL showProteinUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, getViewContext().getContainer());
             showProteinUrl.addParameter("id", bean.getPeptideGroup().getId());
         %>
-        <td class="labkey-form-label"><%=fieldLabel%></td>
+        <td class="labkey-form-label"><%=h(fieldLabel)%></td>
         <td><a href="<%=h(showProteinUrl)%>"><%= h(bean.getPeptideGroup().getLabel())%></a></td>
     </tr>
     <tr>
         <td class="labkey-form-label">Sequence</td>
-        <td><%=bean.getPeptide().getSequence()%></td>
+        <td><%=h(bean.getPeptide().getSequence())%></td>
     </tr>
     <tr>
         <td class="labkey-form-label">NeutralMass</td>
-        <td><%= bean.getPeptide().getCalcNeutralMass() == null ? "" : Formats.f4.format(bean.getPeptide().getCalcNeutralMass())%></td>
+        <td><%= h(bean.getPeptide().getCalcNeutralMass() == null ? "" : Formats.f4.format(bean.getPeptide().getCalcNeutralMass()))%></td>
     </tr>
     
     <tr>
         <td class="labkey-form-label">Avg. RT</td>
-        <td><%=bean.getPeptide().getAvgMeasuredRetentionTime() == null ? "" : Formats.f4.format(bean.getPeptide().getAvgMeasuredRetentionTime())%></td>
+        <td><%=h(bean.getPeptide().getAvgMeasuredRetentionTime() == null ? "" : Formats.f4.format(bean.getPeptide().getAvgMeasuredRetentionTime()))%></td>
     </tr>
     
     <% if(bean.getPeptide().getPredictedRetentionTime() != null)
     {%>
     <tr>
         <td class="labkey-form-label">Predicted RT</td>
-        <td><%=Formats.f4.format(bean.getPeptide().getPredictedRetentionTime())%></td>
+        <td><%=h(Formats.f4.format(bean.getPeptide().getPredictedRetentionTime()))%></td>
     </tr>
     <%}%>
     
@@ -83,11 +83,11 @@
             <%for(Precursor precursor: bean.getPrecursorList())
             {%>
                  <div>
-                     <%=PrecursorHtmlMaker.getHtml(bean.getPeptide(),
+                     <%=text(PrecursorHtmlMaker.getHtml(bean.getPeptide(),
                                                     precursor,
                                                     labelIdMap.get(precursor.getIsotopeLabelId()),
                                                     bean.getLightIsotopeLableId()
-                     )%>
+                     ))%>
 
                      <a href="<%=precursorChromsUrl+"id="+precursor.getId()%>">
                         <img src="<%=imgUrl%>" alt="Precursor Chromatogram"/>

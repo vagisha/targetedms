@@ -43,7 +43,7 @@
     span.label {text-decoration: underline; cursor: pointer;}
 </style>
 
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath()%>/TargetedMS/jquery/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="<%= h(AppProps.getInstance().getContextPath())%>/TargetedMS/jquery/jquery-1.8.3.min.js"></script>
 
 <script type="text/javascript">
 
@@ -108,8 +108,6 @@ function togglePrecursorDetails(element, newPrecursorId, oldPrecursorId)
     if(!$(element).hasClass('content_loaded'))
     {
         var url = <%=q(conflictTransitionsUrl)%>
-            var url;
-            // alert(url);
 
             Ext.Ajax.request({
                 url: url,
@@ -163,7 +161,7 @@ function toggleCheckboxSelection(element)
         <ul>
             <%for(String conflictRun: bean.getAllConflictRunFiles().keySet()) {%>
                  <li>
-                     <a href="<%=precursorConflictUiUrl%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=conflictRun%></a>
+                     <a href="<%=precursorConflictUiUrl%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=h(conflictRun)%></a>
                  </li>
             <%}%>
         </ul>
@@ -172,7 +170,7 @@ function toggleCheckboxSelection(element)
 <%}%>
 <%if(bean.getConflictRunFileName() != null) {%>
     <div style="color:red; margin-bottom:10px;">
-        Resolve conflicts for <%=bean.getConflictRunFileName()%>.
+        Resolve conflicts for <%=h(bean.getConflictRunFileName())%>.
     </div>
 <%}%>
 

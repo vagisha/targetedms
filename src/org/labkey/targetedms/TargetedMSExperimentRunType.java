@@ -16,10 +16,16 @@
 
 package org.labkey.targetedms;
 
+import org.labkey.api.data.ActionButton;
+import org.labkey.api.data.ButtonBar;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.Handler;
 import org.labkey.api.exp.Lsid;
 import org.labkey.api.exp.api.ExpProtocol;
+import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.DataView;
+import org.labkey.api.view.ViewContext;
 
 /**
  * User: vsharma
@@ -52,5 +58,17 @@ public class TargetedMSExperimentRunType extends ExperimentRunType
         }
 
         return null;
+    }
+
+    @Override
+    public void populateButtonBar(ViewContext context, ButtonBar bar, DataView view, ContainerFilter containerFilter)
+    {
+        super.populateButtonBar(context, bar, view, containerFilter);
+        if (!TargetedMSManager.getCurrentRepresentativeRunIds(context.getContainer()).isEmpty())
+        {
+            ActionURL downloadURL = new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, context.getContainer());
+            ActionButton downloadButton = new ActionButton("Download Chromatogram Library", downloadURL);
+            bar.add(downloadButton);
+        }
     }
 }
