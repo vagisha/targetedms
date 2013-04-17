@@ -95,10 +95,6 @@ public class LibraryManager
         {
             throw new NotFoundException("No run found for Id "+runId);
         }
-        if(run.getDataId() == null)
-        {
-            throw new NotFoundException("No dataId found for run Id "+runId);
-        }
 
         ExpData expData = ExperimentService.get().getExpData(run.getDataId());
         if(expData == null)

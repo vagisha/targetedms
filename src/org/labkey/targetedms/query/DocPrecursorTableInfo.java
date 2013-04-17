@@ -27,7 +27,6 @@ import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
 import org.labkey.api.settings.AppProps;
-import org.labkey.api.util.ContainerContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
@@ -57,7 +56,7 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
         final DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
                                                                     getContainer()),
                                                       Collections.singletonMap("id", "Id"));
-        detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Folder")));
+
         setDetailsURL(detailsURLs);
 
         ColumnInfo peptideCol = getColumn("PeptideId");

@@ -28,9 +28,6 @@ import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.springframework.validation.BindException;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
 * User: jeckels
 * Date: May 10, 2012
@@ -61,21 +58,10 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
             {
                 TargetedMSTable result = (TargetedMSTable) super.createTable();
                 result.addCondition(new SimpleFilter(form.createFilter("Sequence")));
-
-                List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
-                visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "Label"));
-                visibleColumns.add(FieldKey.fromParts("Sequence"));
-                if (form.isSubfolders())
-                {
-                    visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
-                }
-                visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
-                result.setDefaultVisibleColumns(visibleColumns);
-
                 return result;
             }
         };
-        result.setTitle("Targeted MS Peptides");
+        result.setTitle("TargetedMS Peptides");
         result.enableExpandCollapse("TargetedMSPeptides", false);
         result.setUseQueryViewActionExportURLs(true);
         return result;

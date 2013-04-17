@@ -45,7 +45,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.NestableQueryView;
-import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExpData;
@@ -53,7 +52,6 @@ import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.ms2.MS2Urls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
@@ -62,11 +60,9 @@ import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.services.ServiceRegistry;
-import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.Pair;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DetailsView;
@@ -2320,7 +2316,7 @@ public class TargetedMSController extends SpringActionController
         {
             VBox result = new VBox(new ModificationSearchWebPart(form));
 
-            if (form.isNtermSearch() || form.isCtermSearch() || form.getModificationSearchStr() != null)
+            if (form.getAminoAcidArr() != null && form.getAminoAcidArr().length > 0)
                 result.addView(createModificationSearchView(form, errors));
 
             return result;
@@ -2341,32 +2337,13 @@ public class TargetedMSController extends SpringActionController
                 {
                     TargetedMSTable result = (TargetedMSTable) super.createTable();
 
-                    DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()), Collections.singletonMap("id", "PeptideId"));
-                    detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Folder")));
-                    result.setDetailsURL(detailsURLs);
-
-                    if (form.isNtermSearch())
-                    {
-                        result.addCondition(new SQLFragment("ModifiedSequence LIKE '_" + form.getDeltaMassSearchStr(true) + "%' ESCAPE '!'"));
-                    }
-                    else if (form.isCtermSearch())
-                    {
-                        result.addCondition(new SQLFragment("ModifiedSequence LIKE '%" + form.getDeltaMassSearchStr(true) + "' ESCAPE '!'"));
-                    }
-                    else
-                    {
-                        String modStr = form.getModificationSearchStr();
-                        result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), modStr, modStr != null ? CompareType.CONTAINS_ONE_OF : CompareType.ISBLANK));
-                    }
+                    String modStr = form.getModificationSearchStr();
+                    result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), modStr, modStr != null ? CompareType.CONTAINS_ONE_OF : CompareType.ISBLANK));
 
                     List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
                     visibleColumns.add(FieldKey.fromParts("ModifiedSequence"));
-                    if (form.isIncludeSubfolders())
-                    {
-                        visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Folder", "Path"));
-                    }
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "File"));
                     result.setDefaultVisibleColumns(visibleColumns);
 
@@ -2398,7 +2375,6 @@ public class TargetedMSController extends SpringActionController
         private char[] _aminoAcidArr;
         private Double _deltaMass;
         private boolean _includeSubfolders;
-        private String _modSearchPairsStr;
 
         public static ModificationSearchForm createDefault()
         {
@@ -2409,60 +2385,21 @@ public class TargetedMSController extends SpringActionController
 
         public String getModificationSearchStr()
         {
+            DecimalFormat df = new DecimalFormat("0.#");
             String modStr = null;
             String delim = "";
 
-            if (_modSearchPairsStr != null)
-            {
-                // Issue 17596: allow for a set of AA / DeltaMass pairs
-                modStr = "";
-                for (Pair<String, Double> entry : getModSearchPairs())
-                {
-                    for (char aa : splitAminoAcidString(entry.getKey()))
-                    {
-                        modStr += delim + aa + getDeltaMassSearchStr(entry.getValue(), false);
-                        delim = ";";
-                    }
-                }
-            }
-            else if (_aminoAcidArr != null && _aminoAcidArr.length > 0)
+            if (_aminoAcidArr != null && _aminoAcidArr.length > 0)
             {
                 modStr = "";
                 for (char aa : _aminoAcidArr)
                 {
-                    modStr += delim + aa + getDeltaMassSearchStr(false);
+                    modStr += delim + aa + "[" + (_deltaMass != null && _deltaMass > 0 ? "+" : "") + df.format(_deltaMass) + "]";
                     delim = ";";
                 }
             }
 
             return modStr;
-        }
-
-        public String getDeltaMassSearchStr(boolean withEscapeChar)
-        {
-            return getDeltaMassSearchStr(_deltaMass, withEscapeChar);
-        }
-
-        public String getDeltaMassSearchStr(Double deltaMass, boolean withEscapeChar)
-        {
-            // use ! as the escape character in the SQL LIKE clause with brackets (i.e. ModifiedSequence LIKE '%![+8!]' ESCAPE '!' )
-            DecimalFormat df = new DecimalFormat("0.#");
-            return (withEscapeChar ? "!" : "") + "[" + (deltaMass != null && deltaMass > 0 ? "+" : "") + df.format(deltaMass) + (withEscapeChar ? "!" : "") + "]";
-        }
-
-        public char[] splitAminoAcidString(String aminoAcids)
-        {
-            return aminoAcids.replaceAll("[^A-Za-z]","").toUpperCase().toCharArray();
-        }
-
-        public boolean isCtermSearch()
-        {
-            return _aminoAcids != null && _aminoAcids.equals("]");
-        }
-
-        public boolean isNtermSearch()
-        {
-            return _aminoAcids != null && _aminoAcids.equals("[");
         }
 
         public void setViewContext(ViewContext context)
@@ -2495,7 +2432,7 @@ public class TargetedMSController extends SpringActionController
             _aminoAcids = aminoAcids;
 
             if (_aminoAcids != null)
-                _aminoAcidArr = splitAminoAcidString(_aminoAcids);
+                _aminoAcidArr = _aminoAcids.replaceAll("[^A-Za-z]","").toUpperCase().toCharArray();
         }
 
         public char[] getAminoAcidArr()
@@ -2572,40 +2509,6 @@ public class TargetedMSController extends SpringActionController
         {
             _includeSubfolders = includeSubfolders;
         }
-
-        public List<Pair<String, Double>> getModSearchPairs()
-        {
-            List<Pair<String, Double>> pairs = new ArrayList<Pair<String, Double>>();
-            if (_modSearchPairsStr != null)
-            {
-                String[] pairStrs = _modSearchPairsStr.split(";");
-                for (String pairStr : pairStrs)
-                {
-                    String[] pair = pairStr.split(",");
-                    if (pair.length == 2)
-                    {
-                        try {
-                            pairs.add(new Pair<String, Double>(pair[0], Double.parseDouble(pair[1])));
-                        }
-                        catch (NumberFormatException e)
-                        {
-                            // skip any pairs that don't conform to the expected format
-                        }
-                    }
-                }
-            }
-            return pairs;
-        }
-
-        public String getModSearchPairsStr()
-        {
-            return _modSearchPairsStr;
-        }
-
-        public void setModSearchPairsStr(String modSearchPairsStr)
-        {
-            _modSearchPairsStr = modSearchPairsStr;
-        }
     }
 
     public static class TestCase extends Assert
@@ -2646,20 +2549,6 @@ public class TargetedMSController extends SpringActionController
             assertTrue(form.getAminoAcidArr()[3] == 'S');
             assertTrue(form.getAminoAcidArr()[4] == 'T');
             assertEquals("Unexpected modification search string", "R[-144.1];K[-144.1];N[-144.1];S[-144.1];T[-144.1]", form.getModificationSearchStr());
-
-            form.setAminoAcids("[");
-            assertTrue(form.isNtermSearch());
-            assertFalse(form.isCtermSearch());
-            form.setAminoAcids("]");
-            assertTrue(form.isCtermSearch());
-            assertFalse(form.isNtermSearch());
-
-            form.setModSearchPairsStr("GT,6;VG,5");
-            assertEquals("Unexpected modification search string", "G[+6];T[+6];V[+5];G[+5]", form.getModificationSearchStr());
-
-            form.setDeltaMass(10.0);
-            assertEquals("Unexpected delta mass search string", "[+10]", form.getDeltaMassSearchStr(false));
-            assertEquals("Unexpected delta mass search string", "![+10!]", form.getDeltaMassSearchStr(true));
         }
     }
 }

@@ -708,7 +708,7 @@ public class TargetedMSManager
         for (Integer runId : runIds)
         {
             TargetedMSRun run = getRun(runId);
-            if (run != null && run.getDataId() != null)
+            if (run != null)
             {
                 ExpData data = ExperimentService.get().getExpData(run.getDataId());
                 if (data != null)

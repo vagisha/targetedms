@@ -43,7 +43,6 @@
     String initAminoAcids = bean.getForm().getAminoAcids() != null ? bean.getForm().getAminoAcids() : "";
     Double initDeltaMass = bean.getForm().getDeltaMass() != null ? bean.getForm().getDeltaMass() : null;
     String initNameType = bean.getForm().getModificationNameType() != null ? bean.getForm().getModificationNameType() : "custom";
-    String initModSearchPairsStr = bean.getForm().getModSearchPairsStr() != null ? bean.getForm().getModSearchPairsStr() : null;
     boolean initStructuralCheck = (bean.getForm().isStructural() != null && bean.getForm().isStructural()) || initSearchType.equals("deltaMass");
     boolean initIsotopeLabelCheck = (bean.getForm().isIsotopeLabel() != null && bean.getForm().isIsotopeLabel()) || initSearchType.equals("deltaMass");
 
@@ -64,7 +63,6 @@
                 { name: 'Name', mapping: '@Name' },
                 { name: 'AAs', mapping: '@AAs' },
                 { name: 'ID', mapping: '@ID' },
-                { name: 'DeltaMass', mapping: '@DeltaMass' },
                 { name: 'Structural', mapping: '@Structural' },
                 { name: 'Hidden', mapping: '@Hidden' }
             ]
@@ -117,8 +115,9 @@
 
                                 // clear values for text/number fields and combos
                                 form.down('textfield[name=aminoAcids]').setValue(null);
+                                form.down('textfield[name=aminoAcids]').clearInvalid();
                                 form.down('numberfield[name=deltaMass]').setValue(null);
-                                form.down('hiddenfield[name=modSearchPairsStr]').setValue(null);
+                                form.down('numberfield[name=deltaMass]').clearInvalid();
                                 form.down('combo[name=customName]').setValue(null);
                                 form.down('combo[name=unimodName]').setValue(null);
                             }
@@ -129,6 +128,7 @@
                     xtype: 'textfield',
                     fieldLabel: 'Amino Acids',
                     name: 'aminoAcids',
+                    allowBlank: false,
                     hidden: <%=!initSearchType.equals("deltaMass")%>,
                     value: <%=q(initAminoAcids)%>
                 },
@@ -137,16 +137,11 @@
                     fieldLabel: 'Delta Mass',
                     name: 'deltaMass',
                     hideTrigger: true,
+                    allowBlank: false,
                     allowDecimal: true,
                     decimalPrecision: 1, // round valeus to tenth
                     hidden: <%=!initSearchType.equals("deltaMass")%>,
                     value: '<%=initDeltaMass%>'
-                },
-                {
-                    // hidden text field for searching by pairs of amino acid / delta mass modifications
-                    xtype: 'hiddenfield',
-                    name: 'modSearchPairsStr',
-                    value: <%=q(initModSearchPairsStr)%>
                 },
                 {
                     xtype: 'radiogroup',
@@ -211,7 +206,7 @@
                         containerFilter: <%=q(bean.getForm().isIncludeSubfolders() ? "CurrentAndSubfolders" : "Current")%>,
                         schemaName: "targetedms",
                         // union of structural and isotope label modifications
-                        sql : "SELECT CONVERT('Structural', SQL_VARCHAR) AS Type, Name, GROUP_CONCAT(AminoAcid, '') AS AminoAcid, MassDiff, NULL AS ModSearchPairsStr FROM ("
+                        sql : "SELECT CONVERT('Structural', SQL_VARCHAR) AS Type, Name, GROUP_CONCAT(AminoAcid, '') AS AminoAcid, MassDiff FROM ("
                         	+ "  SELECT DISTINCT"
                             + "    StructuralModId.Name AS Name,"
                             + "    CASE WHEN StructuralModId.AminoAcid IS NOT NULL THEN StructuralModId.AminoAcid"
@@ -221,7 +216,7 @@
                             + "  FROM PeptideStructuralModification"
                             + ") AS x GROUP BY Name, MassDiff "
                             + "UNION "
-                            + "SELECT CONVERT('Isotope Label', SQL_VARCHAR) AS Type, Name, GROUP_CONCAT(AminoAcid, '') AS AminoAcid, MassDiff, NULL AS ModSearchPairsStr FROM ("
+                            + "SELECT CONVERT('Isotope Label', SQL_VARCHAR) AS Type, Name, GROUP_CONCAT(AminoAcid, '') AS AminoAcid, MassDiff FROM ("
                             + "  SELECT DISTINCT"
                             + "    IsotopeModId.Name AS Name,"
                             + "    CASE WHEN IsotopeModId.AminoAcid IS NOT NULL THEN IsotopeModId.AminoAcid"
@@ -233,30 +228,7 @@
                         sort: "Name",
                         autoLoad: true,
                         listeners: {
-                            load: function(store) {
-                                // Issue 17596: allow for a set of AA / DeltaMass pairs by replacing any duplicate
-                                // records (i.e. same modification name) with an entry that sets the "ModSearchPairsStr" property
-                                for (var index = 0; index < store.getCount(); index++)
-                                {
-                                    var rec = store.getAt(index);
-                                    var recSearchPairStr = rec.get("AminoAcid") + "," + rec.get("MassDiff");
-
-                                    // if there is a previous record with the same modification name, append the recSearchPairStr to that record and remove this one
-                                    var prevIndex = store.find("Name", rec.get("Name"), 0, false, true, true);
-                                    if (index > prevIndex)
-                                    {
-                                        var prevRecord = store.getAt(prevIndex);
-                                        prevRecord.set("ModSearchPairsStr", prevRecord.get("ModSearchPairsStr") + ";" + recSearchPairStr);
-
-                                        store.remove(rec);
-                                        index--;
-                                    }
-                                    else
-                                    {
-                                        rec.set("ModSearchPairsStr", recSearchPairStr);
-                                    }
-                                }
-
+                            load: function(store, records) {
                                 // set initial filter
                                 form.filterComboStore(store);
                             }
@@ -264,11 +236,10 @@
                     }),
                     listeners: {
                         change: function(cmp, newValue, oldValue) {
-                            // set the modification search pairs for the selected custom name record
+                            // set the amino acid and delta mass based on the selected custom name record
                             var record = cmp.getStore().findRecord('Name', newValue);
-                            form.down('textfield[name=aminoAcids]').setValue(null);
-                            form.down('numberfield[name=deltaMass]').setValue(null);
-                            form.down('hiddenfield[name=modSearchPairsStr]').setValue(record ? record.get('ModSearchPairsStr') : null);
+                            form.down('textfield[name=aminoAcids]').setValue(record ? record.get('AminoAcid') : null);
+                            form.down('numberfield[name=deltaMass]').setValue(record ? record.get('MassDiff') : null);
                         }
                     }
                 },
@@ -308,13 +279,9 @@
                             // set the amino acid based on the selected unimod name record
                             form.down('textfield[name=aminoAcids]').setValue(record ? record.get('AAs') : null);
 
-                            // parse the unimod.xml file for the delta mass if there isn't one directly on the parsed xml record
+                            // parse the unimoc.xml file for the delta mass
                             form.down('numberfield[name=deltaMass]').setValue(null);
-                            if (record.get('DeltaMass'))
-                            {
-                                form.down('numberfield[name=deltaMass]').setValue(record.get('DeltaMass'));
-                            }
-                            else if (record)
+                            if (record)
                             {
                                 var modSpecificityStore = Ext4.create('Ext.data.Store', {
                                     model: 'UnimodDeltaMass',
@@ -353,13 +320,17 @@
             buttonAlign: 'left',
             buttons: [{
                 text: 'Search',
+                formBind: true,
                 handler: function(btn) {
                     var values = form.getForm().getValues();
-                    form.submit({
-                        url: <%=q(modificationSearchUrl.getLocalURIString())%>,
-                        method: 'GET',
-                        params: values
-                    });
+                    if (values['aminoAcids'] && values['deltaMass'])
+                    {
+                        form.submit({
+                            url: <%=q(modificationSearchUrl.getLocalURIString())%>,
+                            method: 'GET',
+                            params: values
+                        });
+                    }
                 }
             }],
 

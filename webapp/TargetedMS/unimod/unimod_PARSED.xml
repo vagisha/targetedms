@@ -2,29 +2,29 @@
 <!-- PARSED VERSION OF THE Skyline/Model/DocSettings/UniModData.cs FILE -->
 <modifications>
    <mod Name = "Acetyl (K)" AAs = "K" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "false" />
-   <mod Name = "Acetyl (N-term)" AAs = "[" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "false" />
-   <mod Name = "Amidated (C-term)" AAs = "]" Formula = "HN - O" ID = "2" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "Acetyl (N-term)" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "false" />-->
+   <!--<mod Name = "Amidated (C-term)" Formula = "HN - O" ID = "2" Structural = "true" Hidden = "false" />-->
    <mod Name = "Ammonia-loss (N-term C)" AAs = "C" Formula = "-H3N" ID = "385" Structural = "true" Hidden = "false" />
    <mod Name = "Biotin (K)" AAs = "K" Formula = "C10H14N2O2S" ID = "3" Structural = "true" Hidden = "false" />
-   <mod Name = "Biotin (N-term)" AAs = "[" Formula = "C10H14N2O2S" ID = "3" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "Biotin (N-term)" Formula = "C10H14N2O2S" ID = "3" Structural = "true" Hidden = "false" />-->
    <mod Name = "Carbamidomethyl (C)" AAs = "C" Formula = "H3C2NO" ID = "4" Structural = "true" Hidden = "false" />
    <mod Name = "Carbamyl (K)" AAs = "K" Formula = "HCNO" ID = "5" Structural = "true" Hidden = "false" />
-   <mod Name = "Carbamyl (N-term)" AAs = "[" Formula = "HCNO" ID = "5" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "Carbamyl (N-term)" Formula = "HCNO" ID = "5" Structural = "true" Hidden = "false" />-->
    <mod Name = "Carboxymethyl (C)" AAs = "C" Formula = "C2H2O2" ID = "6" Structural = "true" Hidden = "false" />
-   <mod Name = "Cation:Na (C-term)" AAs = "]" Formula = "Na - H" ID = "30" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "Cation:Na (C-term)" Formula = "Na - H" ID = "30" Structural = "true" Hidden = "false" />-->
    <mod Name = "Cation:Na (DE)" AAs = "D E" Formula = "Na - H" ID = "30" Structural = "true" Hidden = "false" />
    <mod Name = "cysTMT6plex (C)" AAs = "C" Formula = "H25C10C'4N2N'O2S" ID = "985" Structural = "true" Hidden = "false" />
    <mod Name = "Deamidated (NQ)" AAs = "N Q" Formula = "O - HN" ID = "7" Structural = "true" Hidden = "false" />
    <mod Name = "Dehydrated (N-term C)" AAs = "C" Formula = "-H2O" ID = "23" Structural = "true" Hidden = "false" />
    <mod Name = "Dehydro (C)" AAs = "C" Formula = "-H" ID = "374" Structural = "true" Hidden = "false" />
    <mod Name = "DiLeu4plex (K)" AAs = "K" Formula = "H13H'2C8NO'" ID = "1322" Structural = "true" Hidden = "false" />
-   <mod Name = "DiLeu4plex (N-term)" AAs = "[" Formula = "H13H'2C8NO'" ID = "1322" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "DiLeu4plex (N-term)" Formula = "H13H'2C8NO'" ID = "1322" Structural = "true" Hidden = "false" />-->
    <mod Name = "DiLeu4plex (Y)" AAs = "Y" Formula = "H13H'2C8NO'" ID = "1322" Structural = "true" Hidden = "false" />
    <mod Name = "Dioxidation (M)" AAs = "M" Formula = "O2" ID = "425" Structural = "true" Hidden = "false" />
    <mod Name = "Ethanolyl (C)" AAs = "C" Formula = "H4C2O" ID = "278" Structural = "true" Hidden = "false" />
    <mod Name = "ExacTagAmine (K)" AAs = "K" Formula = "H52C25C'12N8N'6O19S" ID = "741" Structural = "true" Hidden = "false" />
    <mod Name = "ExacTagThiol (C)" AAs = "C" Formula = "H50C23C'12N8N'6O18" ID = "740" Structural = "true" Hidden = "false" />
-   <mod Name = "Formyl (N-term)" AAs = "[" Formula = "CO" ID = "122" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "Formyl (N-term)" Formula = "CO" ID = "122" Structural = "true" Hidden = "false" />-->
    <mod Name = "Gln->pyro-Glu (N-term Q)" AAs = "Q" Formula = "-H3N" ID = "28" Structural = "true" Hidden = "false" />
    <mod Name = "Glu->pyro-Glu (N-term E)" AAs = "E" Formula = "-H2O" ID = "27" Structural = "true" Hidden = "false" />
    <mod Name = "Guanidinyl (K)" AAs = "K" Formula = "H2CN2" ID = "52" Structural = "true" Hidden = "false" />
@@ -32,18 +32,18 @@
    <mod Name = "ICPL (K)" AAs = "K" Formula = "C6H3NO" ID = "365" Structural = "true" Hidden = "false" />
    <mod Name = "ICPL:13C(6) (K)" AAs = "K" Formula = "H3C'6NO" ID = "364" Structural = "true" Hidden = "false" />
    <mod Name = "iTRAQ4plex (K)" AAs = "K" Formula = "H12C4C'3NN'O" ID = "214" Structural = "true" Hidden = "false" />
-   <mod Name = "iTRAQ4plex (N-term)" AAs = "[" Formula = "H12C4C'3NN'O" ID = "214" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "iTRAQ4plex (N-term)" Formula = "H12C4C'3NN'O" ID = "214" Structural = "true" Hidden = "false" />-->
    <mod Name = "iTRAQ4plex (Y)" AAs = "Y" Formula = "H12C4C'3NN'O" ID = "214" Structural = "true" Hidden = "false" />
    <mod Name = "iTRAQ8plex (K)" AAs = "K" Formula = "C'7N'C7H24N3O3" ID = "730" Structural = "true" Hidden = "false" />
-   <mod Name = "iTRAQ8plex (N-term)" AAs = "[" Formula = "C'7N'C7H24N3O3" ID = "730" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "iTRAQ8plex (N-term)" Formula = "C'7N'C7H24N3O3" ID = "730" Structural = "true" Hidden = "false" />-->
    <mod Name = "iTRAQ8plex (Y)" AAs = "Y" Formula = "C'7N'C7H24N3O3" ID = "730" Structural = "true" Hidden = "false" />
    <mod Name = "Met->Hse (C-term M)" AAs = "M" Formula = "O - H2CS" ID = "10" Structural = "true" Hidden = "false" />
    <mod Name = "Met->Hsl (C-term M)" AAs = "M" Formula = "-H4CS" ID = "11" Structural = "true" Hidden = "false" />
-   <mod Name = "Methyl (C-term)" AAs = "]" Formula = "CH2" ID = "34" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "Methyl (C-term)" Formula = "CH2" ID = "34" Structural = "true" Hidden = "false" />-->
    <mod Name = "Methyl (DE)" AAs = "D E" Formula = "CH2" ID = "34" Structural = "true" Hidden = "false" />
    <mod Name = "Methylthio (C)" AAs = "C" Formula = "H2CS" ID = "39" Structural = "true" Hidden = "false" />
    <mod Name = "mTRAQ (K)" AAs = "K" Formula = "C7H12N2O" ID = "888" Structural = "true" Hidden = "false" />
-   <mod Name = "mTRAQ (N-term)" AAs = "[" Formula = "C7H12N2O" ID = "888" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "mTRAQ (N-term)" Formula = "C7H12N2O" ID = "888" Structural = "true" Hidden = "false" />-->
    <mod Name = "mTRAQ (Y)" AAs = "Y" Formula = "C7H12N2O" ID = "888" Structural = "true" Hidden = "false" />
    <mod Name = "NIPCAM (C)" AAs = "C" Formula = "H9C5NO" ID = "17" Structural = "true" Hidden = "false" />
    <mod Name = "Oxidation (HW)" AAs = "H W" Formula = "O" ID = "35" Structural = "true" Hidden = "false" />
@@ -55,20 +55,20 @@
    <mod Name = "Pyro-carbamidomethyl (N-term C)" AAs = "C" Formula = "C2O" ID = "26" Structural = "true" Hidden = "false" />
    <mod Name = "Sulfo (STY)" AAs = "S T Y" Formula = "O3S" ID = "40" Structural = "true" Hidden = "false" />
    <mod Name = "TMT2plex (K)" AAs = "K" Formula = "H20C11C'N2O2" ID = "738" Structural = "true" Hidden = "false" />
-   <mod Name = "TMT2plex (N-term)" AAs = "[" Formula = "H20C11C'N2O2" ID = "738" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "TMT2plex (N-term)" Formula = "H20C11C'N2O2" ID = "738" Structural = "true" Hidden = "false" />-->
    <mod Name = "TMT6plex (K)" AAs = "K" Formula = "H20C8C'4NN'O2" ID = "737" Structural = "true" Hidden = "false" />
-   <mod Name = "TMT6plex (N-term)" AAs = "[" Formula = "H20C8C'4NN'O2" ID = "737" Structural = "true" Hidden = "false" />
+   <!--<mod Name = "TMT6plex (N-term)" Formula = "H20C8C'4NN'O2" ID = "737" Structural = "true" Hidden = "false" />-->
    <mod Name = "ICAT-C:13C(9) (C)" AAs = "C" Formula = "C'9 - C9" ID = "106" Structural = "false" Hidden = "false" />
    <mod Name = "ICPL:13C(6)2H(4) (K)" AAs = "K" Formula = "C'6H'4 - C6H4" ID = "866" Structural = "false" Hidden = "false" />
-   <mod Name = "ICPL:13C(6)2H(4) (N-term)" AAs = "[" Formula = "C'6H'4 - C6H4" ID = "866" Structural = "false" Hidden = "false" />
+   <!--<mod Name = "ICPL:13C(6)2H(4) (N-term)" Formula = "C'6H'4 - C6H4" ID = "866" Structural = "false" Hidden = "false" />-->
    <mod Name = "ICPL:2H(4) (K)" AAs = "K" Formula = "H'4 - H4" ID = "687" Structural = "false" Hidden = "false" />
-   <mod Name = "Label:18O(1) (C-term)" AAs = "]" Formula = "O' - O" ID = "258" Structural = "false" Hidden = "false" />
-   <mod Name = "Label:18O(2) (C-term)" AAs = "]" Formula = "O'2 - O2" ID = "193" Structural = "false" Hidden = "false" />
+   <!--<mod Name = "Label:18O(1) (C-term)" Formula = "O' - O" ID = "258" Structural = "false" Hidden = "false" />-->
+   <!--<mod Name = "Label:18O(2) (C-term)" Formula = "O'2 - O2" ID = "193" Structural = "false" Hidden = "false" />-->
    <mod Name = "mTRAQ:13C(3)15N(1) (K)" AAs = "K" Formula = "C'3N' - C3N" ID = "889" Structural = "false" Hidden = "false" />
-   <mod Name = "mTRAQ:13C(3)15N(1) (N-term)" AAs = "[" Formula = "C'3N' - C3N" ID = "889" Structural = "false" Hidden = "false" />
+   <!--<mod Name = "mTRAQ:13C(3)15N(1) (N-term)" Formula = "C'3N' - C3N" ID = "889" Structural = "false" Hidden = "false" />-->
    <mod Name = "mTRAQ:13C(3)15N(1) (Y)" AAs = "Y" Formula = "C'3N' - C3N" ID = "889" Structural = "false" Hidden = "false" />
    <mod Name = "mTRAQ:13C(6)15N(2) (K)" AAs = "K" Formula = "C'6N'2 - C6N2" ID = "1302" Structural = "false" Hidden = "false" />
-   <mod Name = "mTRAQ:13C(6)15N(2) (N-term)" AAs = "[" Formula = "C'6N'2 - C6N2" ID = "1302" Structural = "false" Hidden = "false" />
+   <!--<mod Name = "mTRAQ:13C(6)15N(2) (N-term)" Formula = "C'6N'2 - C6N2" ID = "1302" Structural = "false" Hidden = "false" />-->
    <mod Name = "mTRAQ:13C(6)15N(2) (Y)" AAs = "Y" Formula = "C'6N'2 - C6N2" ID = "1302" Structural = "false" Hidden = "false" />
    <mod Name = "2-dimethylsuccinyl (C)" AAs = "C" Formula = "H8C6O4" ID = "1262" Structural = "true" Hidden = "true" />
    <mod Name = "2-monomethylsuccinyl (C)" AAs = "C" Formula = "H6C5O4" ID = "1253" Structural = "true" Hidden = "true" />
@@ -76,7 +76,7 @@
    <mod Name = "2-succinyl (C)" AAs = "C" Formula = "H4C4O4" ID = "957" Structural = "true" Hidden = "true" />
    <mod Name = "2HPG (R)" AAs = "R" Formula = "H10C16O5" ID = "187" Structural = "true" Hidden = "true" />
    <mod Name = "3-deoxyglucosone (R)" AAs = "R" Formula = "H8C6O4" ID = "949" Structural = "true" Hidden = "true" />
-   <mod Name = "3sulfo (N-term)" AAs = "[" Formula = "H4C7O4S" ID = "748" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "3sulfo (N-term)" Formula = "H4C7O4S" ID = "748" Structural = "true" Hidden = "true" />-->
    <mod Name = "4-ONE (C)" AAs = "C" Formula = "H14C9O2" ID = "721" Structural = "true" Hidden = "true" />
    <mod Name = "4-ONE (H)" AAs = "H" Formula = "H14C9O2" ID = "721" Structural = "true" Hidden = "true" />
    <mod Name = "4-ONE (K)" AAs = "K" Formula = "H14C9O2" ID = "721" Structural = "true" Hidden = "true" />
@@ -84,12 +84,12 @@
    <mod Name = "4-ONE+Delta:H(-2)O(-1) (H)" AAs = "H" Formula = "H12C9O" ID = "743" Structural = "true" Hidden = "true" />
    <mod Name = "4-ONE+Delta:H(-2)O(-1) (K)" AAs = "K" Formula = "H12C9O" ID = "743" Structural = "true" Hidden = "true" />
    <mod Name = "4AcAllylGal (C)" AAs = "C" Formula = "H24C17O9" ID = "901" Structural = "true" Hidden = "true" />
-   <mod Name = "a-type-ion (C-term)" AAs = "]" Formula = "-H2CO2" ID = "140" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "a-type-ion (C-term)" Formula = "-H2CO2" ID = "140" Structural = "true" Hidden = "true" />-->
    <mod Name = "AccQTag (K)" AAs = "K" Formula = "H6C10N2O" ID = "194" Structural = "true" Hidden = "true" />
-   <mod Name = "AccQTag (N-term)" AAs = "[" Formula = "H6C10N2O" ID = "194" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "AccQTag (N-term)" Formula = "H6C10N2O" ID = "194" Structural = "true" Hidden = "true" />-->
    <mod Name = "Acetyl (C)" AAs = "C" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "true" />
    <mod Name = "Acetyl (H)" AAs = "H" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "true" />
-   <mod Name = "Acetyl (N-term)" AAs = "[" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Acetyl (N-term)" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "true" />-->
    <mod Name = "Acetyl (S)" AAs = "S" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "true" />
    <mod Name = "Acetyl (T)" AAs = "T" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "true" />
    <mod Name = "Acetyl (Y)" AAs = "Y" Formula = "C2H2O" ID = "1" Structural = "true" Hidden = "true" />
@@ -111,21 +111,21 @@
    <mod Name = "AHA-Alkyne-KDDDD (M)" AAs = "M" Formula = "H37C26N11O14 - S" ID = "1001" Structural = "true" Hidden = "true" />
    <mod Name = "AHA-SS (M)" AAs = "M" Formula = "H9C7N5O2" ID = "1249" Structural = "true" Hidden = "true" />
    <mod Name = "AHA-SS_CAM (M)" AAs = "M" Formula = "H12C9N6O3" ID = "1250" Structural = "true" Hidden = "true" />
-   <mod Name = "Ahx2+Hsl (C-term)" AAs = "]" Formula = "H27C16N3O3" ID = "1015" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Ahx2+Hsl (C-term)" Formula = "H27C16N3O3" ID = "1015" Structural = "true" Hidden = "true" />-->
    <mod Name = "Amidine (K)" AAs = "K" Formula = "H3C2N" ID = "141" Structural = "true" Hidden = "true" />
-   <mod Name = "Amidine (N-term)" AAs = "[" Formula = "H3C2N" ID = "141" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Amidine (N-term)" Formula = "H3C2N" ID = "141" Structural = "true" Hidden = "true" />-->
    <mod Name = "Amidino (C)" AAs = "C" Formula = "H2CN2" ID = "440" Structural = "true" Hidden = "true" />
    <mod Name = "Amino (Y)" AAs = "Y" Formula = "HN" ID = "342" Structural = "true" Hidden = "true" />
    <mod Name = "Ammonia-loss (N)" AAs = "N" Formula = "-H3N" ID = "385" Structural = "true" Hidden = "true" />
    <mod Name = "Ammonia-loss (Protein N-term S)" AAs = "S" Formula = "-H3N" ID = "385" Structural = "true" Hidden = "true" />
    <mod Name = "Ammonia-loss (Protein N-term T)" AAs = "T" Formula = "-H3N" ID = "385" Structural = "true" Hidden = "true" />
-   <mod Name = "Ammonium (C-term)" AAs = "]" Formula = "H3N" ID = "989" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Ammonium (C-term)" Formula = "H3N" ID = "989" Structural = "true" Hidden = "true" />-->
    <mod Name = "Ammonium (DE)" AAs = "D E" Formula = "H3N" ID = "989" Structural = "true" Hidden = "true" />
    <mod Name = "AMTzHexNAc2 (N)" AAs = "N" Formula = "H30C19N6O10" ID = "934" Structural = "true" Hidden = "true" />
    <mod Name = "AMTzHexNAc2 (S)" AAs = "S" Formula = "H30C19N6O10" ID = "934" Structural = "true" Hidden = "true" />
    <mod Name = "AMTzHexNAc2 (T)" AAs = "T" Formula = "H30C19N6O10" ID = "934" Structural = "true" Hidden = "true" />
    <mod Name = "Archaeol (C)" AAs = "C" Formula = "H86C43O2" ID = "410" Structural = "true" Hidden = "true" />
-   <mod Name = "Arg (N-term)" AAs = "[" Formula = "H12C6N4O" ID = "1288" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Arg (N-term)" Formula = "H12C6N4O" ID = "1288" Structural = "true" Hidden = "true" />-->
    <mod Name = "Arg->GluSA (R)" AAs = "R" Formula = "O - H5CN3" ID = "344" Structural = "true" Hidden = "true" />
    <mod Name = "Arg->Npo (R)" AAs = "R" Formula = "C3NO2 - H" ID = "837" Structural = "true" Hidden = "true" />
    <mod Name = "Arg->Orn (R)" AAs = "R" Formula = "-H2CN2" ID = "372" Structural = "true" Hidden = "true" />
@@ -143,7 +143,7 @@
    <mod Name = "BDMAPP (W)" AAs = "W" Formula = "H12C11NOBr" ID = "684" Structural = "true" Hidden = "true" />
    <mod Name = "BDMAPP (Y)" AAs = "Y" Formula = "H12C11NOBr" ID = "684" Structural = "true" Hidden = "true" />
    <mod Name = "Benzoyl (K)" AAs = "K" Formula = "H4C7O" ID = "136" Structural = "true" Hidden = "true" />
-   <mod Name = "Benzoyl (N-term)" AAs = "[" Formula = "H4C7O" ID = "136" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Benzoyl (N-term)" Formula = "H4C7O" ID = "136" Structural = "true" Hidden = "true" />-->
    <mod Name = "benzylguanidine (K)" AAs = "K" Formula = "H8C8N2" ID = "1349" Structural = "true" Hidden = "true" />
    <mod Name = "BHAc (K)" AAs = "K" Formula = "H25C16N3O3S" ID = "998" Structural = "true" Hidden = "true" />
    <mod Name = "BHT (C)" AAs = "C" Formula = "H22C15O" ID = "176" Structural = "true" Hidden = "true" />
@@ -165,12 +165,12 @@
    <mod Name = "Biotin:Sigma-B1267 (C)" AAs = "C" Formula = "C20H27N5O5S" ID = "993" Structural = "true" Hidden = "true" />
    <mod Name = "Biotin:Thermo-21325 (K)" AAs = "K" Formula = "C34H45N7O7S" ID = "884" Structural = "true" Hidden = "true" />
    <mod Name = "Biotin:Thermo-21345 (Q)" AAs = "Q" Formula = "C15H25N3O2S" ID = "800" Structural = "true" Hidden = "true" />
-   <mod Name = "Biotin:Thermo-21360 (C-term)" AAs = "]" Formula = "C21H37N5O6S" ID = "811" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Biotin:Thermo-21360 (C-term)" Formula = "C21H37N5O6S" ID = "811" Structural = "true" Hidden = "true" />-->
    <mod Name = "Biotin:Thermo-21901+2H2O (C)" AAs = "C" Formula = "C23H39N5O9S" ID = "1320" Structural = "true" Hidden = "true" />
    <mod Name = "Biotin:Thermo-21901+H2O (C)" AAs = "C" Formula = "C23H37N5O8S" ID = "1039" Structural = "true" Hidden = "true" />
    <mod Name = "Biotin:Thermo-21911 (C)" AAs = "C" Formula = "C41H71N5O16S" ID = "1340" Structural = "true" Hidden = "true" />
-   <mod Name = "Biotin:Thermo-33033 (N-term)" AAs = "[" Formula = "C25H35N6O4S2" ID = "1251" Structural = "true" Hidden = "true" />
-   <mod Name = "Biotin:Thermo-33033-H (N-term)" AAs = "[" Formula = "C25H34N6O4S2" ID = "1252" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Biotin:Thermo-33033 (N-term)" Formula = "C25H35N6O4S2" ID = "1251" Structural = "true" Hidden = "true" />-->
+   <!--<mod Name = "Biotin:Thermo-33033-H (N-term)" Formula = "C25H34N6O4S2" ID = "1252" Structural = "true" Hidden = "true" />-->
    <mod Name = "Biotin:Thermo-88310 (K)" AAs = "K" Formula = "C10H16N2O2" ID = "1031" Structural = "true" Hidden = "true" />
    <mod Name = "Biotin:Thermo-88317 (S)" AAs = "S" Formula = "C22H42N3O4P" ID = "1037" Structural = "true" Hidden = "true" />
    <mod Name = "Biotin:Thermo-88317 (Y)" AAs = "Y" Formula = "C22H42N3O4P" ID = "1037" Structural = "true" Hidden = "true" />
@@ -183,7 +183,7 @@
    <mod Name = "bisANS-sulfonates (T)" AAs = "T" Formula = "H25C32N2" ID = "1330" Structural = "true" Hidden = "true" />
    <mod Name = "BITC (C)" AAs = "C" Formula = "H7C8NS" ID = "978" Structural = "true" Hidden = "true" />
    <mod Name = "BITC (K)" AAs = "K" Formula = "H7C8NS" ID = "978" Structural = "true" Hidden = "true" />
-   <mod Name = "BITC (N-term)" AAs = "[" Formula = "H7C8NS" ID = "978" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "BITC (N-term)" Formula = "H7C8NS" ID = "978" Structural = "true" Hidden = "true" />-->
    <mod Name = "BMOE (C)" AAs = "C" Formula = "H8C10N2O4" ID = "824" Structural = "true" Hidden = "true" />
    <mod Name = "BMP-piperidinol (C)" AAs = "C" Formula = "H17C18NO" ID = "1281" Structural = "true" Hidden = "true" />
    <mod Name = "BMP-piperidinol (M)" AAs = "M" Formula = "H17C18NO" ID = "1281" Structural = "true" Hidden = "true" />
@@ -195,8 +195,8 @@
    <mod Name = "Bromobimane (C)" AAs = "C" Formula = "H10C10N2O2" ID = "301" Structural = "true" Hidden = "true" />
    <mod Name = "Butyryl (K)" AAs = "K" Formula = "H6C4O" ID = "1289" Structural = "true" Hidden = "true" />
    <mod Name = "C8-QAT (K)" AAs = "K" Formula = "H29C14NO" ID = "513" Structural = "true" Hidden = "true" />
-   <mod Name = "C8-QAT (N-term)" AAs = "[" Formula = "H29C14NO" ID = "513" Structural = "true" Hidden = "true" />
-   <mod Name = "CAF (N-term)" AAs = "[" Formula = "H4C3O4S" ID = "272" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "C8-QAT (N-term)" Formula = "H29C14NO" ID = "513" Structural = "true" Hidden = "true" />-->
+   <!--<mod Name = "CAF (N-term)" Formula = "H4C3O4S" ID = "272" Structural = "true" Hidden = "true" />-->
    <mod Name = "CAMthiopropanoyl (K)" AAs = "K" Formula = "H7C5NO2S" ID = "293" Structural = "true" Hidden = "true" />
    <mod Name = "Can-FP-biotin (S)" AAs = "S" Formula = "H34C19N3O5PS" ID = "333" Structural = "true" Hidden = "true" />
    <mod Name = "Can-FP-biotin (T)" AAs = "T" Formula = "H34C19N3O5PS" ID = "333" Structural = "true" Hidden = "true" />
@@ -205,7 +205,7 @@
    <mod Name = "Carbamidomethyl (E)" AAs = "E" Formula = "H3C2NO" ID = "4" Structural = "true" Hidden = "true" />
    <mod Name = "Carbamidomethyl (H)" AAs = "H" Formula = "H3C2NO" ID = "4" Structural = "true" Hidden = "true" />
    <mod Name = "Carbamidomethyl (K)" AAs = "K" Formula = "H3C2NO" ID = "4" Structural = "true" Hidden = "true" />
-   <mod Name = "Carbamidomethyl (N-term)" AAs = "[" Formula = "H3C2NO" ID = "4" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Carbamidomethyl (N-term)" Formula = "H3C2NO" ID = "4" Structural = "true" Hidden = "true" />-->
    <mod Name = "Carbamidomethyl (S)" AAs = "S" Formula = "H3C2NO" ID = "4" Structural = "true" Hidden = "true" />
    <mod Name = "Carbamidomethyl (T)" AAs = "T" Formula = "H3C2NO" ID = "4" Structural = "true" Hidden = "true" />
    <mod Name = "Carbamidomethyl (Y)" AAs = "Y" Formula = "H3C2NO" ID = "4" Structural = "true" Hidden = "true" />
@@ -226,27 +226,27 @@
    <mod Name = "Carboxyethyl (H)" AAs = "H" Formula = "H4C3O2" ID = "378" Structural = "true" Hidden = "true" />
    <mod Name = "Carboxyethyl (K)" AAs = "K" Formula = "H4C3O2" ID = "378" Structural = "true" Hidden = "true" />
    <mod Name = "Carboxymethyl (K)" AAs = "K" Formula = "C2H2O2" ID = "6" Structural = "true" Hidden = "true" />
-   <mod Name = "Carboxymethyl (N-term)" AAs = "[" Formula = "C2H2O2" ID = "6" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Carboxymethyl (N-term)" Formula = "C2H2O2" ID = "6" Structural = "true" Hidden = "true" />-->
    <mod Name = "Carboxymethyl (W)" AAs = "W" Formula = "C2H2O2" ID = "6" Structural = "true" Hidden = "true" />
-   <mod Name = "CarboxymethylDMAP (N-term)" AAs = "[" Formula = "H10C9N2O" ID = "1350" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "CarboxymethylDMAP (N-term)" Formula = "H10C9N2O" ID = "1350" Structural = "true" Hidden = "true" />-->
    <mod Name = "CarboxymethylDTT (C)" AAs = "C" Formula = "H10C6O4S2" ID = "894" Structural = "true" Hidden = "true" />
-   <mod Name = "Cation:Ag (C-term)" AAs = "]" Formula = "Ag - H" ID = "955" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cation:Ag (C-term)" Formula = "Ag - H" ID = "955" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cation:Ag (DE)" AAs = "D E" Formula = "Ag - H" ID = "955" Structural = "true" Hidden = "true" />
-   <mod Name = "Cation:Ca[II] (C-term)" AAs = "]" Formula = "Ca - H2" ID = "951" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cation:Ca[II] (C-term)" Formula = "Ca - H2" ID = "951" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cation:Ca[II] (DE)" AAs = "D E" Formula = "Ca - H2" ID = "951" Structural = "true" Hidden = "true" />
-   <mod Name = "Cation:Cu[I] (C-term)" AAs = "]" Formula = "Cu - H" ID = "531" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cation:Cu[I] (C-term)" Formula = "Cu - H" ID = "531" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cation:Cu[I] (DE)" AAs = "D E" Formula = "Cu - H" ID = "531" Structural = "true" Hidden = "true" />
-   <mod Name = "Cation:Fe[II] (C-term)" AAs = "]" Formula = "Fe - H2" ID = "952" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cation:Fe[II] (C-term)" Formula = "Fe - H2" ID = "952" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cation:Fe[II] (DE)" AAs = "D E" Formula = "Fe - H2" ID = "952" Structural = "true" Hidden = "true" />
-   <mod Name = "Cation:K (C-term)" AAs = "]" Formula = "K - H" ID = "530" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cation:K (C-term)" Formula = "K - H" ID = "530" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cation:K (DE)" AAs = "D E" Formula = "K - H" ID = "530" Structural = "true" Hidden = "true" />
-   <mod Name = "Cation:Li (C-term)" AAs = "]" Formula = "Li - H" ID = "950" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cation:Li (C-term)" Formula = "Li - H" ID = "950" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cation:Li (DE)" AAs = "D E" Formula = "Li - H" ID = "950" Structural = "true" Hidden = "true" />
-   <mod Name = "Cation:Mg[II] (C-term)" AAs = "]" Formula = "Mg - H2" ID = "956" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cation:Mg[II] (C-term)" Formula = "Mg - H2" ID = "956" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cation:Mg[II] (DE)" AAs = "D E" Formula = "Mg - H2" ID = "956" Structural = "true" Hidden = "true" />
-   <mod Name = "Cation:Ni[II] (C-term)" AAs = "]" Formula = "Ni - H2" ID = "953" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cation:Ni[II] (C-term)" Formula = "Ni - H2" ID = "953" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cation:Ni[II] (DE)" AAs = "D E" Formula = "Ni - H2" ID = "953" Structural = "true" Hidden = "true" />
-   <mod Name = "Cation:Zn[II] (C-term)" AAs = "]" Formula = "Zn - H2" ID = "954" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cation:Zn[II] (C-term)" Formula = "Zn - H2" ID = "954" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cation:Zn[II] (DE)" AAs = "D E" Formula = "Zn - H2" ID = "954" Structural = "true" Hidden = "true" />
    <mod Name = "cGMP (C)" AAs = "C" Formula = "H11C10N5O7P" ID = "849" Structural = "true" Hidden = "true" />
    <mod Name = "cGMP (S)" AAs = "S" Formula = "H11C10N5O7P" ID = "849" Structural = "true" Hidden = "true" />
@@ -258,13 +258,13 @@
    <mod Name = "Chlorpyrifos (T)" AAs = "T" Formula = "H10C4O2PS" ID = "975" Structural = "true" Hidden = "true" />
    <mod Name = "Chlorpyrifos (Y)" AAs = "Y" Formula = "H10C4O2PS" ID = "975" Structural = "true" Hidden = "true" />
    <mod Name = "CLIP_TRAQ_2 (K)" AAs = "K" Formula = "H12C6C'N2O" ID = "525" Structural = "true" Hidden = "true" />
-   <mod Name = "CLIP_TRAQ_2 (N-term)" AAs = "[" Formula = "H12C6C'N2O" ID = "525" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "CLIP_TRAQ_2 (N-term)" Formula = "H12C6C'N2O" ID = "525" Structural = "true" Hidden = "true" />-->
    <mod Name = "CLIP_TRAQ_2 (Y)" AAs = "Y" Formula = "H12C6C'N2O" ID = "525" Structural = "true" Hidden = "true" />
    <mod Name = "CLIP_TRAQ_3 (K)" AAs = "K" Formula = "H20C11C'N3O4" ID = "536" Structural = "true" Hidden = "true" />
-   <mod Name = "CLIP_TRAQ_3 (N-term)" AAs = "[" Formula = "H20C11C'N3O4" ID = "536" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "CLIP_TRAQ_3 (N-term)" Formula = "H20C11C'N3O4" ID = "536" Structural = "true" Hidden = "true" />-->
    <mod Name = "CLIP_TRAQ_3 (Y)" AAs = "Y" Formula = "H20C11C'N3O4" ID = "536" Structural = "true" Hidden = "true" />
    <mod Name = "CLIP_TRAQ_4 (K)" AAs = "K" Formula = "H15C9C'N2O5" ID = "537" Structural = "true" Hidden = "true" />
-   <mod Name = "CLIP_TRAQ_4 (N-term)" AAs = "[" Formula = "H15C9C'N2O5" ID = "537" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "CLIP_TRAQ_4 (N-term)" Formula = "H15C9C'N2O5" ID = "537" Structural = "true" Hidden = "true" />-->
    <mod Name = "CLIP_TRAQ_4 (Y)" AAs = "Y" Formula = "H15C9C'N2O5" ID = "537" Structural = "true" Hidden = "true" />
    <mod Name = "CoenzymeA (C)" AAs = "C" Formula = "H34C21N7O16P3S" ID = "281" Structural = "true" Hidden = "true" />
    <mod Name = "Cresylphosphate (H)" AAs = "H" Formula = "H7C7O3P" ID = "1255" Structural = "true" Hidden = "true" />
@@ -297,14 +297,14 @@
    <mod Name = "cysTMT (C)" AAs = "C" Formula = "H25C14N3O2S" ID = "984" Structural = "true" Hidden = "true" />
    <mod Name = "Cytopiloyne (C)" AAs = "C" Formula = "H22C19O7" ID = "270" Structural = "true" Hidden = "true" />
    <mod Name = "Cytopiloyne (K)" AAs = "K" Formula = "H22C19O7" ID = "270" Structural = "true" Hidden = "true" />
-   <mod Name = "Cytopiloyne (N-term)" AAs = "[" Formula = "H22C19O7" ID = "270" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cytopiloyne (N-term)" Formula = "H22C19O7" ID = "270" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cytopiloyne (P)" AAs = "P" Formula = "H22C19O7" ID = "270" Structural = "true" Hidden = "true" />
    <mod Name = "Cytopiloyne (R)" AAs = "R" Formula = "H22C19O7" ID = "270" Structural = "true" Hidden = "true" />
    <mod Name = "Cytopiloyne (S)" AAs = "S" Formula = "H22C19O7" ID = "270" Structural = "true" Hidden = "true" />
    <mod Name = "Cytopiloyne (Y)" AAs = "Y" Formula = "H22C19O7" ID = "270" Structural = "true" Hidden = "true" />
    <mod Name = "Cytopiloyne+water (C)" AAs = "C" Formula = "H24C19O8" ID = "271" Structural = "true" Hidden = "true" />
    <mod Name = "Cytopiloyne+water (K)" AAs = "K" Formula = "H24C19O8" ID = "271" Structural = "true" Hidden = "true" />
-   <mod Name = "Cytopiloyne+water (N-term)" AAs = "[" Formula = "H24C19O8" ID = "271" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Cytopiloyne+water (N-term)" Formula = "H24C19O8" ID = "271" Structural = "true" Hidden = "true" />-->
    <mod Name = "Cytopiloyne+water (R)" AAs = "R" Formula = "H24C19O8" ID = "271" Structural = "true" Hidden = "true" />
    <mod Name = "Cytopiloyne+water (S)" AAs = "S" Formula = "H24C19O8" ID = "271" Structural = "true" Hidden = "true" />
    <mod Name = "Cytopiloyne+water (T)" AAs = "T" Formula = "H24C19O8" ID = "271" Structural = "true" Hidden = "true" />
@@ -312,7 +312,7 @@
    <mod Name = "DAET (S)" AAs = "S" Formula = "H9C4NS - O" ID = "178" Structural = "true" Hidden = "true" />
    <mod Name = "DAET (T)" AAs = "T" Formula = "H9C4NS - O" ID = "178" Structural = "true" Hidden = "true" />
    <mod Name = "Dansyl (K)" AAs = "K" Formula = "H11C12NO2S" ID = "139" Structural = "true" Hidden = "true" />
-   <mod Name = "Dansyl (N-term)" AAs = "[" Formula = "H11C12NO2S" ID = "139" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Dansyl (N-term)" Formula = "H11C12NO2S" ID = "139" Structural = "true" Hidden = "true" />-->
    <mod Name = "Deamidated (Protein N-term F)" AAs = "F" Formula = "O - HN" ID = "7" Structural = "true" Hidden = "true" />
    <mod Name = "Deamidated (R)" AAs = "R" Formula = "O - HN" ID = "7" Structural = "true" Hidden = "true" />
    <mod Name = "Deamidated:18O(1) (NQ)" AAs = "N Q" Formula = "O' - HN" ID = "366" Structural = "true" Hidden = "true" />
@@ -328,14 +328,14 @@
    <mod Name = "Delta:H(1)O(-1)18O(1) (N)" AAs = "N" Formula = "O' - HN" ID = "170" Structural = "true" Hidden = "true" />
    <mod Name = "Delta:H(2)C(2) (H)" AAs = "H" Formula = "H2C2" ID = "254" Structural = "true" Hidden = "true" />
    <mod Name = "Delta:H(2)C(2) (K)" AAs = "K" Formula = "H2C2" ID = "254" Structural = "true" Hidden = "true" />
-   <mod Name = "Delta:H(2)C(2) (N-term)" AAs = "[" Formula = "H2C2" ID = "254" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Delta:H(2)C(2) (N-term)" Formula = "H2C2" ID = "254" Structural = "true" Hidden = "true" />-->
    <mod Name = "Delta:H(2)C(3) (K)" AAs = "K" Formula = "H2C3" ID = "207" Structural = "true" Hidden = "true" />
    <mod Name = "Delta:H(2)C(3)O(1) (K)" AAs = "K" Formula = "H2C3O" ID = "319" Structural = "true" Hidden = "true" />
    <mod Name = "Delta:H(2)C(3)O(1) (R)" AAs = "R" Formula = "H2C3O" ID = "319" Structural = "true" Hidden = "true" />
    <mod Name = "Delta:H(2)C(5) (K)" AAs = "K" Formula = "H2C5" ID = "318" Structural = "true" Hidden = "true" />
    <mod Name = "Delta:H(4)C(2) (H)" AAs = "H" Formula = "H4C2" ID = "255" Structural = "true" Hidden = "true" />
    <mod Name = "Delta:H(4)C(2) (K)" AAs = "K" Formula = "H4C2" ID = "255" Structural = "true" Hidden = "true" />
-   <mod Name = "Delta:H(4)C(2) (N-term)" AAs = "[" Formula = "H4C2" ID = "255" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Delta:H(4)C(2) (N-term)" Formula = "H4C2" ID = "255" Structural = "true" Hidden = "true" />-->
    <mod Name = "Delta:H(4)C(2)O(-1)S(1) (S)" AAs = "S" Formula = "H4C2S - O" ID = "327" Structural = "true" Hidden = "true" />
    <mod Name = "Delta:H(4)C(3) (H)" AAs = "H" Formula = "H4C3" ID = "256" Structural = "true" Hidden = "true" />
    <mod Name = "Delta:H(4)C(3) (K)" AAs = "K" Formula = "H4C3" ID = "256" Structural = "true" Hidden = "true" />
@@ -382,11 +382,11 @@
    <mod Name = "Didehydro (Y)" AAs = "Y" Formula = "-H2" ID = "401" Structural = "true" Hidden = "true" />
    <mod Name = "Didehydroretinylidene (K)" AAs = "K" Formula = "H24C20" ID = "433" Structural = "true" Hidden = "true" />
    <mod Name = "Diethyl (K)" AAs = "K" Formula = "H8C4" ID = "518" Structural = "true" Hidden = "true" />
-   <mod Name = "Diethyl (N-term)" AAs = "[" Formula = "H8C4" ID = "518" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Diethyl (N-term)" Formula = "H8C4" ID = "518" Structural = "true" Hidden = "true" />-->
    <mod Name = "Diethylphosphate (C)" AAs = "C" Formula = "H9C4O3P" ID = "725" Structural = "true" Hidden = "true" />
    <mod Name = "Diethylphosphate (H)" AAs = "H" Formula = "H9C4O3P" ID = "725" Structural = "true" Hidden = "true" />
    <mod Name = "Diethylphosphate (K)" AAs = "K" Formula = "H9C4O3P" ID = "725" Structural = "true" Hidden = "true" />
-   <mod Name = "Diethylphosphate (N-term)" AAs = "[" Formula = "H9C4O3P" ID = "725" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Diethylphosphate (N-term)" Formula = "H9C4O3P" ID = "725" Structural = "true" Hidden = "true" />-->
    <mod Name = "Diethylphosphate (S)" AAs = "S" Formula = "H9C4O3P" ID = "725" Structural = "true" Hidden = "true" />
    <mod Name = "Diethylphosphate (T)" AAs = "T" Formula = "H9C4O3P" ID = "725" Structural = "true" Hidden = "true" />
    <mod Name = "Diethylphosphate (Y)" AAs = "Y" Formula = "H9C4O3P" ID = "725" Structural = "true" Hidden = "true" />
@@ -396,28 +396,28 @@
    <mod Name = "Diiodo (Y)" AAs = "Y" Formula = "I2 - H2" ID = "130" Structural = "true" Hidden = "true" />
    <mod Name = "Diironsubcluster (C)" AAs = "C" Formula = "C5N2O5S2Fe2 - H" ID = "439" Structural = "true" Hidden = "true" />
    <mod Name = "Diisopropylphosphate (K)" AAs = "K" Formula = "H13C6O3P" ID = "362" Structural = "true" Hidden = "true" />
-   <mod Name = "Diisopropylphosphate (N-term)" AAs = "[" Formula = "H13C6O3P" ID = "362" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Diisopropylphosphate (N-term)" Formula = "H13C6O3P" ID = "362" Structural = "true" Hidden = "true" />-->
    <mod Name = "Diisopropylphosphate (S)" AAs = "S" Formula = "H13C6O3P" ID = "362" Structural = "true" Hidden = "true" />
    <mod Name = "Diisopropylphosphate (T)" AAs = "T" Formula = "H13C6O3P" ID = "362" Structural = "true" Hidden = "true" />
    <mod Name = "Diisopropylphosphate (Y)" AAs = "Y" Formula = "H13C6O3P" ID = "362" Structural = "true" Hidden = "true" />
    <mod Name = "DiLeu4plex115 (K)" AAs = "K" Formula = "H15C7C'N'O'" ID = "1321" Structural = "true" Hidden = "true" />
-   <mod Name = "DiLeu4plex115 (N-term)" AAs = "[" Formula = "H15C7C'N'O'" ID = "1321" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "DiLeu4plex115 (N-term)" Formula = "H15C7C'N'O'" ID = "1321" Structural = "true" Hidden = "true" />-->
    <mod Name = "DiLeu4plex115 (Y)" AAs = "Y" Formula = "H15C7C'N'O'" ID = "1321" Structural = "true" Hidden = "true" />
    <mod Name = "DiLeu4plex117 (K)" AAs = "K" Formula = "H13H'2C7C'N'O" ID = "1323" Structural = "true" Hidden = "true" />
-   <mod Name = "DiLeu4plex117 (N-term)" AAs = "[" Formula = "H13H'2C7C'N'O" ID = "1323" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "DiLeu4plex117 (N-term)" Formula = "H13H'2C7C'N'O" ID = "1323" Structural = "true" Hidden = "true" />-->
    <mod Name = "DiLeu4plex117 (Y)" AAs = "Y" Formula = "H13H'2C7C'N'O" ID = "1323" Structural = "true" Hidden = "true" />
    <mod Name = "DiLeu4plex118 (K)" AAs = "K" Formula = "H11H'4C8NO" ID = "1324" Structural = "true" Hidden = "true" />
-   <mod Name = "DiLeu4plex118 (N-term)" AAs = "[" Formula = "H11H'4C8NO" ID = "1324" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "DiLeu4plex118 (N-term)" Formula = "H11H'4C8NO" ID = "1324" Structural = "true" Hidden = "true" />-->
    <mod Name = "DiLeu4plex118 (Y)" AAs = "Y" Formula = "H11H'4C8NO" ID = "1324" Structural = "true" Hidden = "true" />
    <mod Name = "Dimethyl (K)" AAs = "K" Formula = "C2H4" ID = "36" Structural = "true" Hidden = "true" />
    <mod Name = "Dimethyl (N)" AAs = "N" Formula = "C2H4" ID = "36" Structural = "true" Hidden = "true" />
-   <mod Name = "Dimethyl (N-term)" AAs = "[" Formula = "C2H4" ID = "36" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Dimethyl (N-term)" Formula = "C2H4" ID = "36" Structural = "true" Hidden = "true" />-->
    <mod Name = "Dimethyl (Protein N-term P)" AAs = "P" Formula = "C2H4" ID = "36" Structural = "true" Hidden = "true" />
    <mod Name = "Dimethyl (R)" AAs = "R" Formula = "C2H4" ID = "36" Structural = "true" Hidden = "true" />
    <mod Name = "Dimethyl:2H(4) (K)" AAs = "K" Formula = "H'4C2" ID = "199" Structural = "true" Hidden = "true" />
-   <mod Name = "Dimethyl:2H(4) (N-term)" AAs = "[" Formula = "H'4C2" ID = "199" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Dimethyl:2H(4) (N-term)" Formula = "H'4C2" ID = "199" Structural = "true" Hidden = "true" />-->
    <mod Name = "Dimethyl:2H(4)13C(2) (K)" AAs = "K" Formula = "C'2H'4" ID = "510" Structural = "true" Hidden = "true" />
-   <mod Name = "Dimethyl:2H(4)13C(2) (N-term)" AAs = "[" Formula = "C'2H'4" ID = "510" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Dimethyl:2H(4)13C(2) (N-term)" Formula = "C'2H'4" ID = "510" Structural = "true" Hidden = "true" />-->
    <mod Name = "DimethylamineGMBS (C)" AAs = "C" Formula = "H21C13N3O3" ID = "943" Structural = "true" Hidden = "true" />
    <mod Name = "DimethylArsino (C)" AAs = "C" Formula = "H5C2As" ID = "902" Structural = "true" Hidden = "true" />
    <mod Name = "DimethylpyrroleAdduct (K)" AAs = "K" Formula = "H6C6" ID = "316" Structural = "true" Hidden = "true" />
@@ -438,7 +438,7 @@
    <mod Name = "DNCB_hapten (H)" AAs = "H" Formula = "H2C6N2O4" ID = "1331" Structural = "true" Hidden = "true" />
    <mod Name = "DNCB_hapten (K)" AAs = "K" Formula = "H2C6N2O4" ID = "1331" Structural = "true" Hidden = "true" />
    <mod Name = "DNCB_hapten (Y)" AAs = "Y" Formula = "H2C6N2O4" ID = "1331" Structural = "true" Hidden = "true" />
-   <mod Name = "dNIC (N-term)" AAs = "[" Formula = "HH'3C6NO" ID = "698" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "dNIC (N-term)" Formula = "HH'3C6NO" ID = "698" Structural = "true" Hidden = "true" />-->
    <mod Name = "DNPS (C)" AAs = "C" Formula = "H3C6N2O4S" ID = "941" Structural = "true" Hidden = "true" />
    <mod Name = "DNPS (W)" AAs = "W" Formula = "H3C6N2O4S" ID = "941" Structural = "true" Hidden = "true" />
    <mod Name = "DTBP (K)" AAs = "K" Formula = "H5C3NS" ID = "324" Structural = "true" Hidden = "true" />
@@ -460,26 +460,26 @@
    <mod Name = "EQAT (C)" AAs = "C" Formula = "C10H20N2O" ID = "197" Structural = "true" Hidden = "true" />
    <mod Name = "EQIGG (K)" AAs = "K" Formula = "H32C20N6O8" ID = "846" Structural = "true" Hidden = "true" />
    <mod Name = "ESP (K)" AAs = "K" Formula = "C16H26N4O2S" ID = "90" Structural = "true" Hidden = "true" />
-   <mod Name = "ESP (N-term)" AAs = "[" Formula = "C16H26N4O2S" ID = "90" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "ESP (N-term)" Formula = "C16H26N4O2S" ID = "90" Structural = "true" Hidden = "true" />-->
    <mod Name = "Ethanedithiol (S)" AAs = "S" Formula = "H4C2S2 - O" ID = "200" Structural = "true" Hidden = "true" />
    <mod Name = "Ethanedithiol (T)" AAs = "T" Formula = "H4C2S2 - O" ID = "200" Structural = "true" Hidden = "true" />
-   <mod Name = "Ethanolamine (C-term)" AAs = "]" Formula = "H5C2N" ID = "734" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Ethanolamine (C-term)" Formula = "H5C2N" ID = "734" Structural = "true" Hidden = "true" />-->
    <mod Name = "Ethanolamine (D)" AAs = "D" Formula = "H5C2N" ID = "734" Structural = "true" Hidden = "true" />
    <mod Name = "Ethanolamine (E)" AAs = "E" Formula = "H5C2N" ID = "734" Structural = "true" Hidden = "true" />
    <mod Name = "Ethanolyl (K)" AAs = "K" Formula = "H4C2O" ID = "278" Structural = "true" Hidden = "true" />
    <mod Name = "Ethanolyl (R)" AAs = "R" Formula = "H4C2O" ID = "278" Structural = "true" Hidden = "true" />
    <mod Name = "Ethoxyformyl (H)" AAs = "H" Formula = "H5C3O2" ID = "915" Structural = "true" Hidden = "true" />
-   <mod Name = "Ethyl (C-term)" AAs = "]" Formula = "H4C2" ID = "280" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Ethyl (C-term)" Formula = "H4C2" ID = "280" Structural = "true" Hidden = "true" />-->
    <mod Name = "Ethyl (D)" AAs = "D" Formula = "H4C2" ID = "280" Structural = "true" Hidden = "true" />
    <mod Name = "Ethyl (E)" AAs = "E" Formula = "H4C2" ID = "280" Structural = "true" Hidden = "true" />
    <mod Name = "Ethyl (K)" AAs = "K" Formula = "H4C2" ID = "280" Structural = "true" Hidden = "true" />
-   <mod Name = "Ethyl (N-term)" AAs = "[" Formula = "H4C2" ID = "280" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Ethyl (N-term)" Formula = "H4C2" ID = "280" Structural = "true" Hidden = "true" />-->
    <mod Name = "Ethyl+Deamidated (N)" AAs = "N" Formula = "H3C2O - N" ID = "931" Structural = "true" Hidden = "true" />
    <mod Name = "Ethyl+Deamidated (Q)" AAs = "Q" Formula = "H3C2O - N" ID = "931" Structural = "true" Hidden = "true" />
    <mod Name = "ethylamino (S)" AAs = "S" Formula = "H5C2N - O" ID = "926" Structural = "true" Hidden = "true" />
    <mod Name = "ethylamino (T)" AAs = "T" Formula = "H5C2N - O" ID = "926" Structural = "true" Hidden = "true" />
    <mod Name = "Ethylphosphate (K)" AAs = "K" Formula = "H5C2O3P" ID = "726" Structural = "true" Hidden = "true" />
-   <mod Name = "Ethylphosphate (N-term)" AAs = "[" Formula = "H5C2O3P" ID = "726" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Ethylphosphate (N-term)" Formula = "H5C2O3P" ID = "726" Structural = "true" Hidden = "true" />-->
    <mod Name = "Ethylphosphate (S)" AAs = "S" Formula = "H5C2O3P" ID = "726" Structural = "true" Hidden = "true" />
    <mod Name = "Ethylphosphate (T)" AAs = "T" Formula = "H5C2O3P" ID = "726" Structural = "true" Hidden = "true" />
    <mod Name = "Ethylphosphate (Y)" AAs = "Y" Formula = "H5C2O3P" ID = "726" Structural = "true" Hidden = "true" />
@@ -515,10 +515,10 @@
    <mod Name = "GeranylGeranyl (C)" AAs = "C" Formula = "H32C20" ID = "48" Structural = "true" Hidden = "true" />
    <mod Name = "GGQ (K)" AAs = "K" Formula = "H14C9N4O4" ID = "1292" Structural = "true" Hidden = "true" />
    <mod Name = "GIST-Quat (K)" AAs = "K" Formula = "C7H13NO" ID = "60" Structural = "true" Hidden = "true" />
-   <mod Name = "GIST-Quat (N-term)" AAs = "[" Formula = "C7H13NO" ID = "60" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "GIST-Quat (N-term)" Formula = "C7H13NO" ID = "60" Structural = "true" Hidden = "true" />-->
    <mod Name = "Glu (E)" AAs = "E" Formula = "H7C5NO3" ID = "450" Structural = "true" Hidden = "true" />
    <mod Name = "Gluconoylation (K)" AAs = "K" Formula = "H10C6O6" ID = "1343" Structural = "true" Hidden = "true" />
-   <mod Name = "Gluconoylation (N-term)" AAs = "[" Formula = "H10C6O6" ID = "1343" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Gluconoylation (N-term)" Formula = "H10C6O6" ID = "1343" Structural = "true" Hidden = "true" />-->
    <mod Name = "glucosone (R)" AAs = "R" Formula = "H8C6O5" ID = "981" Structural = "true" Hidden = "true" />
    <mod Name = "Glucosylgalactosyl (K)" AAs = "K" Formula = "H20C12O11" ID = "393" Structural = "true" Hidden = "true" />
    <mod Name = "Glucuronyl (S)" AAs = "S" Formula = "H8C6O6" ID = "54" Structural = "true" Hidden = "true" />
@@ -533,13 +533,13 @@
    <mod Name = "Glycerophospho (S)" AAs = "S" Formula = "H7C3O5P" ID = "419" Structural = "true" Hidden = "true" />
    <mod Name = "GlycerylPE (E)" AAs = "E" Formula = "H12C5NO5P" ID = "396" Structural = "true" Hidden = "true" />
    <mod Name = "glycidamide (K)" AAs = "K" Formula = "H5C3NO2" ID = "1014" Structural = "true" Hidden = "true" />
-   <mod Name = "glycidamide (N-term)" AAs = "[" Formula = "H5C3NO2" ID = "1014" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "glycidamide (N-term)" Formula = "H5C3NO2" ID = "1014" Structural = "true" Hidden = "true" />-->
    <mod Name = "Glycosyl (P)" AAs = "P" Formula = "H8C5O5" ID = "408" Structural = "true" Hidden = "true" />
    <mod Name = "GlyGly (C)" AAs = "C" Formula = "H6C4N2O2" ID = "121" Structural = "true" Hidden = "true" />
    <mod Name = "GlyGly (K)" AAs = "K" Formula = "H6C4N2O2" ID = "121" Structural = "true" Hidden = "true" />
    <mod Name = "GlyGly (S)" AAs = "S" Formula = "H6C4N2O2" ID = "121" Structural = "true" Hidden = "true" />
    <mod Name = "GlyGly (T)" AAs = "T" Formula = "H6C4N2O2" ID = "121" Structural = "true" Hidden = "true" />
-   <mod Name = "Guanidinyl (N-term)" AAs = "[" Formula = "H2CN2" ID = "52" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Guanidinyl (N-term)" Formula = "H2CN2" ID = "52" Structural = "true" Hidden = "true" />-->
    <mod Name = "HCysteinyl (C)" AAs = "C" Formula = "H7C4NO2S" ID = "1271" Structural = "true" Hidden = "true" />
    <mod Name = "HCysThiolactone (K)" AAs = "K" Formula = "H7C4NOS" ID = "1270" Structural = "true" Hidden = "true" />
    <mod Name = "Heme (C)" AAs = "C" Formula = "H32C34N4O4Fe" ID = "390" Structural = "true" Hidden = "true" />
@@ -553,7 +553,7 @@
    <mod Name = "Hex (C)" AAs = "C" Formula = "H10C6O5" ID = "41" Structural = "true" Hidden = "true" />
    <mod Name = "Hex (K)" AAs = "K" Formula = "H10C6O5" ID = "41" Structural = "true" Hidden = "true" />
    <mod Name = "Hex (N)" AAs = "N" Formula = "H10C6O5" ID = "41" Structural = "true" Hidden = "true" />
-   <mod Name = "Hex (N-term)" AAs = "[" Formula = "H10C6O5" ID = "41" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Hex (N-term)" Formula = "H10C6O5" ID = "41" Structural = "true" Hidden = "true" />-->
    <mod Name = "Hex (R)" AAs = "R" Formula = "H10C6O5" ID = "41" Structural = "true" Hidden = "true" />
    <mod Name = "Hex (S)" AAs = "S" Formula = "H10C6O5" ID = "41" Structural = "true" Hidden = "true" />
    <mod Name = "Hex (T)" AAs = "T" Formula = "H10C6O5" ID = "41" Structural = "true" Hidden = "true" />
@@ -628,15 +628,15 @@
    <mod Name = "ICAT-G (C)" AAs = "C" Formula = "C22H38N4O6S" ID = "8" Structural = "true" Hidden = "true" />
    <mod Name = "ICAT-H (C)" AAs = "C" Formula = "C15ClH20NO6" ID = "123" Structural = "true" Hidden = "true" />
    <mod Name = "ICDID (C)" AAs = "C" Formula = "C8H10O2" ID = "1018" Structural = "true" Hidden = "true" />
-   <mod Name = "ICPL (N-term)" AAs = "[" Formula = "C6H3NO" ID = "365" Structural = "true" Hidden = "true" />
-   <mod Name = "ICPL:13C(6) (N-term)" AAs = "[" Formula = "H3C'6NO" ID = "364" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "ICPL (N-term)" Formula = "C6H3NO" ID = "365" Structural = "true" Hidden = "true" />-->
+   <!--<mod Name = "ICPL:13C(6) (N-term)" Formula = "H3C'6NO" ID = "364" Structural = "true" Hidden = "true" />-->
    <mod Name = "IDEnT (C)" AAs = "C" Formula = "H7C9NOCl2" ID = "762" Structural = "true" Hidden = "true" />
    <mod Name = "IED-Biotin (C)" AAs = "C" Formula = "H22C14N4O3S" ID = "294" Structural = "true" Hidden = "true" />
    <mod Name = "IGBP (C)" AAs = "C" Formula = "BrC12H13N2O2" ID = "243" Structural = "true" Hidden = "true" />
    <mod Name = "IMEHex(2)NeuAc (K)" AAs = "K" Formula = "H40C25N2O18S" ID = "1286" Structural = "true" Hidden = "true" />
    <mod Name = "IMID (K)" AAs = "K" Formula = "C3H4N2" ID = "94" Structural = "true" Hidden = "true" />
    <mod Name = "Iminobiotin (K)" AAs = "K" Formula = "H15C10N3OS" ID = "89" Structural = "true" Hidden = "true" />
-   <mod Name = "Iminobiotin (N-term)" AAs = "[" Formula = "H15C10N3OS" ID = "89" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Iminobiotin (N-term)" Formula = "H15C10N3OS" ID = "89" Structural = "true" Hidden = "true" />-->
    <mod Name = "Iodo (H)" AAs = "H" Formula = "I - H" ID = "129" Structural = "true" Hidden = "true" />
    <mod Name = "Iodo (Y)" AAs = "Y" Formula = "I - H" ID = "129" Structural = "true" Hidden = "true" />
    <mod Name = "iodoTMT (C)" AAs = "C" Formula = "H28C16N4O3" ID = "1341" Structural = "true" Hidden = "true" />
@@ -652,7 +652,7 @@
    <mod Name = "IodoU-AMP (F)" AAs = "F" Formula = "H11C9N2O9P" ID = "292" Structural = "true" Hidden = "true" />
    <mod Name = "IodoU-AMP (W)" AAs = "W" Formula = "H11C9N2O9P" ID = "292" Structural = "true" Hidden = "true" />
    <mod Name = "IodoU-AMP (Y)" AAs = "Y" Formula = "H11C9N2O9P" ID = "292" Structural = "true" Hidden = "true" />
-   <mod Name = "ISD_z+2_ion (N-term)" AAs = "[" Formula = "-HN" ID = "991" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "ISD_z+2_ion (N-term)" Formula = "-HN" ID = "991" Structural = "true" Hidden = "true" />-->
    <mod Name = "Isopropylphospho (S)" AAs = "S" Formula = "H7C3O3P" ID = "363" Structural = "true" Hidden = "true" />
    <mod Name = "Isopropylphospho (T)" AAs = "T" Formula = "H7C3O3P" ID = "363" Structural = "true" Hidden = "true" />
    <mod Name = "Isopropylphospho (Y)" AAs = "Y" Formula = "H7C3O3P" ID = "363" Structural = "true" Hidden = "true" />
@@ -660,16 +660,16 @@
    <mod Name = "iTRAQ4plex (S)" AAs = "S" Formula = "H12C4C'3NN'O" ID = "214" Structural = "true" Hidden = "true" />
    <mod Name = "iTRAQ4plex (T)" AAs = "T" Formula = "H12C4C'3NN'O" ID = "214" Structural = "true" Hidden = "true" />
    <mod Name = "iTRAQ4plex114 (K)" AAs = "K" Formula = "H12C5C'2N2O'" ID = "532" Structural = "true" Hidden = "true" />
-   <mod Name = "iTRAQ4plex114 (N-term)" AAs = "[" Formula = "H12C5C'2N2O'" ID = "532" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "iTRAQ4plex114 (N-term)" Formula = "H12C5C'2N2O'" ID = "532" Structural = "true" Hidden = "true" />-->
    <mod Name = "iTRAQ4plex114 (Y)" AAs = "Y" Formula = "H12C5C'2N2O'" ID = "532" Structural = "true" Hidden = "true" />
    <mod Name = "iTRAQ4plex115 (K)" AAs = "K" Formula = "H12C6C'NN'O'" ID = "533" Structural = "true" Hidden = "true" />
-   <mod Name = "iTRAQ4plex115 (N-term)" AAs = "[" Formula = "H12C6C'NN'O'" ID = "533" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "iTRAQ4plex115 (N-term)" Formula = "H12C6C'NN'O'" ID = "533" Structural = "true" Hidden = "true" />-->
    <mod Name = "iTRAQ4plex115 (Y)" AAs = "Y" Formula = "H12C6C'NN'O'" ID = "533" Structural = "true" Hidden = "true" />
    <mod Name = "iTRAQ8plex (H)" AAs = "H" Formula = "C'7N'C7H24N3O3" ID = "730" Structural = "true" Hidden = "true" />
    <mod Name = "iTRAQ8plex (S)" AAs = "S" Formula = "C'7N'C7H24N3O3" ID = "730" Structural = "true" Hidden = "true" />
    <mod Name = "iTRAQ8plex (T)" AAs = "T" Formula = "C'7N'C7H24N3O3" ID = "730" Structural = "true" Hidden = "true" />
    <mod Name = "iTRAQ8plex:13C(6)15N(2) (K)" AAs = "K" Formula = "C'6N'2C8H24N2O3" ID = "731" Structural = "true" Hidden = "true" />
-   <mod Name = "iTRAQ8plex:13C(6)15N(2) (N-term)" AAs = "[" Formula = "C'6N'2C8H24N2O3" ID = "731" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "iTRAQ8plex:13C(6)15N(2) (N-term)" Formula = "C'6N'2C8H24N2O3" ID = "731" Structural = "true" Hidden = "true" />-->
    <mod Name = "iTRAQ8plex:13C(6)15N(2) (Y)" AAs = "Y" Formula = "C'6N'2C8H24N2O3" ID = "731" Structural = "true" Hidden = "true" />
    <mod Name = "Label:13C(1)2H(3)+Oxidation (M)" AAs = "M" Formula = "H'3C'O - H3C" ID = "885" Structural = "true" Hidden = "true" />
    <mod Name = "Label:13C(4)+Oxidation (M)" AAs = "M" Formula = "C'4O - C4" ID = "1267" Structural = "true" Hidden = "true" />
@@ -691,17 +691,17 @@
    <mod Name = "Leu->MetOx (L)" AAs = "L" Formula = "OS - H2C" ID = "905" Structural = "true" Hidden = "true" />
    <mod Name = "LeuArgGlyGly (K)" AAs = "K" Formula = "H29C16N7O4" ID = "535" Structural = "true" Hidden = "true" />
    <mod Name = "LG-anhydrolactam (K)" AAs = "K" Formula = "H26C20O3" ID = "946" Structural = "true" Hidden = "true" />
-   <mod Name = "LG-anhydrolactam (N-term)" AAs = "[" Formula = "H26C20O3" ID = "946" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "LG-anhydrolactam (N-term)" Formula = "H26C20O3" ID = "946" Structural = "true" Hidden = "true" />-->
    <mod Name = "LG-anhyropyrrole (K)" AAs = "K" Formula = "H26C20O2" ID = "948" Structural = "true" Hidden = "true" />
-   <mod Name = "LG-anhyropyrrole (N-term)" AAs = "[" Formula = "H26C20O2" ID = "948" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "LG-anhyropyrrole (N-term)" Formula = "H26C20O2" ID = "948" Structural = "true" Hidden = "true" />-->
    <mod Name = "LG-Hlactam-K (K)" AAs = "K" Formula = "H28C20O5" ID = "504" Structural = "true" Hidden = "true" />
    <mod Name = "LG-Hlactam-R (R)" AAs = "R" Formula = "H26C19O5 - N2" ID = "506" Structural = "true" Hidden = "true" />
    <mod Name = "LG-lactam-K (K)" AAs = "K" Formula = "H28C20O4" ID = "503" Structural = "true" Hidden = "true" />
    <mod Name = "LG-lactam-R (R)" AAs = "R" Formula = "H26C19O4 - N2" ID = "505" Structural = "true" Hidden = "true" />
    <mod Name = "LG-pyrrole (K)" AAs = "K" Formula = "H28C20O3" ID = "947" Structural = "true" Hidden = "true" />
-   <mod Name = "LG-pyrrole (N-term)" AAs = "[" Formula = "H28C20O3" ID = "947" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "LG-pyrrole (N-term)" Formula = "H28C20O3" ID = "947" Structural = "true" Hidden = "true" />-->
    <mod Name = "Lipoyl (K)" AAs = "K" Formula = "H12C8OS2" ID = "42" Structural = "true" Hidden = "true" />
-   <mod Name = "Lys (N-term)" AAs = "[" Formula = "H12C6N2O" ID = "1301" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Lys (N-term)" Formula = "H12C6N2O" ID = "1301" Structural = "true" Hidden = "true" />-->
    <mod Name = "Lys->Allysine (K)" AAs = "K" Formula = "O - H3N" ID = "352" Structural = "true" Hidden = "true" />
    <mod Name = "Lys->AminoadipicAcid (K)" AAs = "K" Formula = "O2 - H3N" ID = "381" Structural = "true" Hidden = "true" />
    <mod Name = "Lys->CamCys (K)" AAs = "K" Formula = "OS - H4C" ID = "903" Structural = "true" Hidden = "true" />
@@ -734,7 +734,7 @@
    <mod Name = "Methyl (K)" AAs = "K" Formula = "CH2" ID = "34" Structural = "true" Hidden = "true" />
    <mod Name = "Methyl (L)" AAs = "L" Formula = "CH2" ID = "34" Structural = "true" Hidden = "true" />
    <mod Name = "Methyl (N)" AAs = "N" Formula = "CH2" ID = "34" Structural = "true" Hidden = "true" />
-   <mod Name = "Methyl (N-term)" AAs = "[" Formula = "CH2" ID = "34" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Methyl (N-term)" Formula = "CH2" ID = "34" Structural = "true" Hidden = "true" />-->
    <mod Name = "Methyl (Q)" AAs = "Q" Formula = "CH2" ID = "34" Structural = "true" Hidden = "true" />
    <mod Name = "Methyl (R)" AAs = "R" Formula = "CH2" ID = "34" Structural = "true" Hidden = "true" />
    <mod Name = "Methyl (S)" AAs = "S" Formula = "CH2" ID = "34" Structural = "true" Hidden = "true" />
@@ -754,7 +754,7 @@
    <mod Name = "Methylthio (D)" AAs = "D" Formula = "H2CS" ID = "39" Structural = "true" Hidden = "true" />
    <mod Name = "Methylthio (K)" AAs = "K" Formula = "H2CS" ID = "39" Structural = "true" Hidden = "true" />
    <mod Name = "Methylthio (N)" AAs = "N" Formula = "H2CS" ID = "39" Structural = "true" Hidden = "true" />
-   <mod Name = "Methylthio (N-term)" AAs = "[" Formula = "H2CS" ID = "39" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Methylthio (N-term)" Formula = "H2CS" ID = "39" Structural = "true" Hidden = "true" />-->
    <mod Name = "MG-H1 (R)" AAs = "R" Formula = "H2C3O" ID = "859" Structural = "true" Hidden = "true" />
    <mod Name = "MM-diphenylpentanone (C)" AAs = "C" Formula = "H19C18NO" ID = "1315" Structural = "true" Hidden = "true" />
    <mod Name = "Molybdopterin (C)" AAs = "C" Formula = "H11C10N5O8PS2Mo" ID = "391" Structural = "true" Hidden = "true" />
@@ -778,7 +778,7 @@
    <mod Name = "NBS (W)" AAs = "W" Formula = "H3C6NO2S" ID = "172" Structural = "true" Hidden = "true" />
    <mod Name = "NBS:13C(6) (W)" AAs = "W" Formula = "H3C'6NO2S" ID = "171" Structural = "true" Hidden = "true" />
    <mod Name = "NDA (K)" AAs = "K" Formula = "H5C13N" ID = "457" Structural = "true" Hidden = "true" />
-   <mod Name = "NDA (N-term)" AAs = "[" Formula = "H5C13N" ID = "457" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "NDA (N-term)" Formula = "H5C13N" ID = "457" Structural = "true" Hidden = "true" />-->
    <mod Name = "NEIAA (C)" AAs = "C" Formula = "H7C4NO" ID = "211" Structural = "true" Hidden = "true" />
    <mod Name = "NEIAA (Y)" AAs = "Y" Formula = "H7C4NO" ID = "211" Structural = "true" Hidden = "true" />
    <mod Name = "NEIAA:2H(5) (C)" AAs = "C" Formula = "H2H'5C4NO" ID = "212" Structural = "true" Hidden = "true" />
@@ -796,8 +796,8 @@
    <mod Name = "NeuGc (S)" AAs = "S" Formula = "H17C11NO9" ID = "1304" Structural = "true" Hidden = "true" />
    <mod Name = "NeuGc (T)" AAs = "T" Formula = "H17C11NO9" ID = "1304" Structural = "true" Hidden = "true" />
    <mod Name = "NHS-LC-Biotin (K)" AAs = "K" Formula = "H25C16N3O3S" ID = "92" Structural = "true" Hidden = "true" />
-   <mod Name = "NHS-LC-Biotin (N-term)" AAs = "[" Formula = "H25C16N3O3S" ID = "92" Structural = "true" Hidden = "true" />
-   <mod Name = "NIC (N-term)" AAs = "[" Formula = "H3C6NO" ID = "697" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "NHS-LC-Biotin (N-term)" Formula = "H25C16N3O3S" ID = "92" Structural = "true" Hidden = "true" />-->
+   <!--<mod Name = "NIC (N-term)" Formula = "H3C6NO" ID = "697" Structural = "true" Hidden = "true" />-->
    <mod Name = "Nitro (W)" AAs = "W" Formula = "NO2 - H" ID = "354" Structural = "true" Hidden = "true" />
    <mod Name = "Nitro (Y)" AAs = "Y" Formula = "NO2 - H" ID = "354" Structural = "true" Hidden = "true" />
    <mod Name = "Nitrosyl (C)" AAs = "C" Formula = "NO - H" ID = "275" Structural = "true" Hidden = "true" />
@@ -847,13 +847,13 @@
    <mod Name = "Palmitoyl (T)" AAs = "T" Formula = "H30C16O" ID = "47" Structural = "true" Hidden = "true" />
    <mod Name = "PEITC (C)" AAs = "C" Formula = "H9C9NS" ID = "979" Structural = "true" Hidden = "true" />
    <mod Name = "PEITC (K)" AAs = "K" Formula = "H9C9NS" ID = "979" Structural = "true" Hidden = "true" />
-   <mod Name = "PEITC (N-term)" AAs = "[" Formula = "H9C9NS" ID = "979" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "PEITC (N-term)" Formula = "H9C9NS" ID = "979" Structural = "true" Hidden = "true" />-->
    <mod Name = "Pentylamine (Q)" AAs = "Q" Formula = "H11C5N" ID = "801" Structural = "true" Hidden = "true" />
    <mod Name = "PEO-Iodoacetyl-LC-Biotin (C)" AAs = "C" Formula = "H30C18N4O5S" ID = "20" Structural = "true" Hidden = "true" />
    <mod Name = "PET (S)" AAs = "S" Formula = "H7C7NS - O" ID = "264" Structural = "true" Hidden = "true" />
    <mod Name = "PET (T)" AAs = "T" Formula = "H7C7NS - O" ID = "264" Structural = "true" Hidden = "true" />
    <mod Name = "Phe->CamCys (F)" AAs = "F" Formula = "NOS - HC4" ID = "904" Structural = "true" Hidden = "true" />
-   <mod Name = "Phenylisocyanate (N-term)" AAs = "[" Formula = "C7H5NO" ID = "411" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Phenylisocyanate (N-term)" Formula = "C7H5NO" ID = "411" Structural = "true" Hidden = "true" />-->
    <mod Name = "Phospho (C)" AAs = "C" Formula = "HO3P" ID = "21" Structural = "true" Hidden = "true" />
    <mod Name = "Phospho (D)" AAs = "D" Formula = "HO3P" ID = "21" Structural = "true" Hidden = "true" />
    <mod Name = "Phospho (H)" AAs = "H" Formula = "HO3P" ID = "21" Structural = "true" Hidden = "true" />
@@ -864,7 +864,7 @@
    <mod Name = "Phosphoadenosine (T)" AAs = "T" Formula = "H12C10N5O6P" ID = "405" Structural = "true" Hidden = "true" />
    <mod Name = "Phosphoadenosine (Y)" AAs = "Y" Formula = "H12C10N5O6P" ID = "405" Structural = "true" Hidden = "true" />
    <mod Name = "Phosphogluconoylation (K)" AAs = "K" Formula = "H11C6O9P" ID = "1344" Structural = "true" Hidden = "true" />
-   <mod Name = "Phosphogluconoylation (N-term)" AAs = "[" Formula = "H11C6O9P" ID = "1344" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Phosphogluconoylation (N-term)" Formula = "H11C6O9P" ID = "1344" Structural = "true" Hidden = "true" />-->
    <mod Name = "Phosphoguanosine (H)" AAs = "H" Formula = "H12C10N5O7P" ID = "413" Structural = "true" Hidden = "true" />
    <mod Name = "Phosphoguanosine (K)" AAs = "K" Formula = "H12C10N5O7P" ID = "413" Structural = "true" Hidden = "true" />
    <mod Name = "PhosphoHex (S)" AAs = "S" Formula = "H11C6O8P" ID = "429" Structural = "true" Hidden = "true" />
@@ -884,18 +884,18 @@
    <mod Name = "Phycoerythrobilin (C)" AAs = "C" Formula = "H40C33N4O6" ID = "388" Structural = "true" Hidden = "true" />
    <mod Name = "Phytochromobilin (C)" AAs = "C" Formula = "H36C33N4O6" ID = "389" Structural = "true" Hidden = "true" />
    <mod Name = "Piperidine (K)" AAs = "K" Formula = "H8C5" ID = "520" Structural = "true" Hidden = "true" />
-   <mod Name = "Piperidine (N-term)" AAs = "[" Formula = "H8C5" ID = "520" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Piperidine (N-term)" Formula = "H8C5" ID = "520" Structural = "true" Hidden = "true" />-->
    <mod Name = "Pro->pyro-Glu (P)" AAs = "P" Formula = "O - H2" ID = "359" Structural = "true" Hidden = "true" />
    <mod Name = "Pro->Pyrrolidinone (P)" AAs = "P" Formula = "-H2CO" ID = "360" Structural = "true" Hidden = "true" />
    <mod Name = "Pro->Pyrrolidone (P)" AAs = "P" Formula = "-CO" ID = "369" Structural = "true" Hidden = "true" />
    <mod Name = "probiotinhydrazide (P)" AAs = "P" Formula = "H18C10N4O2S" ID = "357" Structural = "true" Hidden = "true" />
-   <mod Name = "Propargylamine (C-term)" AAs = "]" Formula = "H3C3N - O" ID = "958" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Propargylamine (C-term)" Formula = "H3C3N - O" ID = "958" Structural = "true" Hidden = "true" />-->
    <mod Name = "Propargylamine (D)" AAs = "D" Formula = "H3C3N - O" ID = "958" Structural = "true" Hidden = "true" />
    <mod Name = "Propargylamine (E)" AAs = "E" Formula = "H3C3N - O" ID = "958" Structural = "true" Hidden = "true" />
    <mod Name = "Propionamide (K)" AAs = "K" Formula = "C3H5NO" ID = "24" Structural = "true" Hidden = "true" />
-   <mod Name = "Propionamide (N-term)" AAs = "[" Formula = "C3H5NO" ID = "24" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Propionamide (N-term)" Formula = "C3H5NO" ID = "24" Structural = "true" Hidden = "true" />-->
    <mod Name = "Propionyl (K)" AAs = "K" Formula = "C3H4O" ID = "58" Structural = "true" Hidden = "true" />
-   <mod Name = "Propionyl (N-term)" AAs = "[" Formula = "C3H4O" ID = "58" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Propionyl (N-term)" Formula = "C3H4O" ID = "58" Structural = "true" Hidden = "true" />-->
    <mod Name = "Propionyl (S)" AAs = "S" Formula = "C3H4O" ID = "58" Structural = "true" Hidden = "true" />
    <mod Name = "Propionyl (T)" AAs = "T" Formula = "C3H4O" ID = "58" Structural = "true" Hidden = "true" />
    <mod Name = "Propiophenone (C)" AAs = "C" Formula = "H8C9O" ID = "1310" Structural = "true" Hidden = "true" />
@@ -906,19 +906,19 @@
    <mod Name = "Propiophenone (T)" AAs = "T" Formula = "H8C9O" ID = "1310" Structural = "true" Hidden = "true" />
    <mod Name = "Propiophenone (W)" AAs = "W" Formula = "H8C9O" ID = "1310" Structural = "true" Hidden = "true" />
    <mod Name = "Propyl (K)" AAs = "K" Formula = "C3H6" ID = "1305" Structural = "true" Hidden = "true" />
-   <mod Name = "Propyl (N-term)" AAs = "[" Formula = "C3H6" ID = "1305" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Propyl (N-term)" Formula = "C3H6" ID = "1305" Structural = "true" Hidden = "true" />-->
    <mod Name = "Propyl:2H(6) (K)" AAs = "K" Formula = "H'6C3" ID = "1306" Structural = "true" Hidden = "true" />
-   <mod Name = "Propyl:2H(6) (N-term)" AAs = "[" Formula = "H'6C3" ID = "1306" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Propyl:2H(6) (N-term)" Formula = "H'6C3" ID = "1306" Structural = "true" Hidden = "true" />-->
    <mod Name = "PropylNAGthiazoline (C)" AAs = "C" Formula = "H14C9NO4S" ID = "514" Structural = "true" Hidden = "true" />
    <mod Name = "PS_Hapten (C)" AAs = "C" Formula = "H4C7O2" ID = "1345" Structural = "true" Hidden = "true" />
    <mod Name = "PS_Hapten (H)" AAs = "H" Formula = "H4C7O2" ID = "1345" Structural = "true" Hidden = "true" />
    <mod Name = "PS_Hapten (K)" AAs = "K" Formula = "H4C7O2" ID = "1345" Structural = "true" Hidden = "true" />
    <mod Name = "pupylation (K)" AAs = "K" Formula = "H13C9N3O5" ID = "1264" Structural = "true" Hidden = "true" />
-   <mod Name = "Puromycin (C-term)" AAs = "]" Formula = "H27C22N7O4" ID = "973" Structural = "true" Hidden = "true" />
-   <mod Name = "PyMIC (N-term)" AAs = "[" Formula = "H6C7N2O" ID = "501" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Puromycin (C-term)" Formula = "H27C22N7O4" ID = "973" Structural = "true" Hidden = "true" />-->
+   <!--<mod Name = "PyMIC (N-term)" Formula = "H6C7N2O" ID = "501" Structural = "true" Hidden = "true" />-->
    <mod Name = "PyridoxalPhosphate (K)" AAs = "K" Formula = "H8C8NO5P" ID = "46" Structural = "true" Hidden = "true" />
    <mod Name = "Pyridylacetyl (K)" AAs = "K" Formula = "H5C7NO" ID = "25" Structural = "true" Hidden = "true" />
-   <mod Name = "Pyridylacetyl (N-term)" AAs = "[" Formula = "H5C7NO" ID = "25" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Pyridylacetyl (N-term)" Formula = "H5C7NO" ID = "25" Structural = "true" Hidden = "true" />-->
    <mod Name = "pyrophospho (S)" AAs = "S" Formula = "H2O6P2" ID = "898" Structural = "true" Hidden = "true" />
    <mod Name = "pyrophospho (T)" AAs = "T" Formula = "H2O6P2" ID = "898" Structural = "true" Hidden = "true" />
    <mod Name = "PyruvicAcidIminyl (K)" AAs = "K" Formula = "H2C3O2" ID = "422" Structural = "true" Hidden = "true" />
@@ -937,13 +937,13 @@
    <mod Name = "SecNEM (C)" AAs = "C" Formula = "C6H7NO2Se - S" ID = "1033" Structural = "true" Hidden = "true" />
    <mod Name = "Ser->LacticAcid (Protein N-term S)" AAs = "S" Formula = "-HN" ID = "403" Structural = "true" Hidden = "true" />
    <mod Name = "SMA (K)" AAs = "K" Formula = "H9C6NO2" ID = "29" Structural = "true" Hidden = "true" />
-   <mod Name = "SMA (N-term)" AAs = "[" Formula = "H9C6NO2" ID = "29" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "SMA (N-term)" Formula = "H9C6NO2" ID = "29" Structural = "true" Hidden = "true" />-->
    <mod Name = "SMCC-maleimide (C)" AAs = "C" Formula = "H27C17N3O3" ID = "908" Structural = "true" Hidden = "true" />
    <mod Name = "SPITC (K)" AAs = "K" Formula = "C7H5NO3S2" ID = "261" Structural = "true" Hidden = "true" />
-   <mod Name = "SPITC (N-term)" AAs = "[" Formula = "C7H5NO3S2" ID = "261" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "SPITC (N-term)" Formula = "C7H5NO3S2" ID = "261" Structural = "true" Hidden = "true" />-->
    <mod Name = "Succinyl (K)" AAs = "K" Formula = "C4H4O3" ID = "64" Structural = "true" Hidden = "true" />
-   <mod Name = "Succinyl (N-term)" AAs = "[" Formula = "C4H4O3" ID = "64" Structural = "true" Hidden = "true" />
-   <mod Name = "SulfanilicAcid (C-term)" AAs = "]" Formula = "C6H5NO2S" ID = "285" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Succinyl (N-term)" Formula = "C4H4O3" ID = "64" Structural = "true" Hidden = "true" />-->
+   <!--<mod Name = "SulfanilicAcid (C-term)" Formula = "C6H5NO2S" ID = "285" Structural = "true" Hidden = "true" />-->
    <mod Name = "SulfanilicAcid (D)" AAs = "D" Formula = "C6H5NO2S" ID = "285" Structural = "true" Hidden = "true" />
    <mod Name = "SulfanilicAcid (E)" AAs = "E" Formula = "C6H5NO2S" ID = "285" Structural = "true" Hidden = "true" />
    <mod Name = "Sulfide (C)" AAs = "C" Formula = "S" ID = "421" Structural = "true" Hidden = "true" />
@@ -951,7 +951,7 @@
    <mod Name = "Sulfo (C)" AAs = "C" Formula = "O3S" ID = "40" Structural = "true" Hidden = "true" />
    <mod Name = "sulfo+amino (Y)" AAs = "Y" Formula = "HNO3S" ID = "997" Structural = "true" Hidden = "true" />
    <mod Name = "Sulfo-NHS-LC-LC-Biotin (K)" AAs = "K" Formula = "H36C22N4O4S" ID = "523" Structural = "true" Hidden = "true" />
-   <mod Name = "Sulfo-NHS-LC-LC-Biotin (N-term)" AAs = "[" Formula = "H36C22N4O4S" ID = "523" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Sulfo-NHS-LC-LC-Biotin (N-term)" Formula = "H36C22N4O4S" ID = "523" Structural = "true" Hidden = "true" />-->
    <mod Name = "SulfoGMBS (C)" AAs = "C" Formula = "H26C22N4O5S" ID = "942" Structural = "true" Hidden = "true" />
    <mod Name = "SulfurDioxide (C)" AAs = "C" Formula = "O2S" ID = "1327" Structural = "true" Hidden = "true" />
    <mod Name = "SUMO2135 (K)" AAs = "K" Formula = "H137C90N21O37S" ID = "960" Structural = "true" Hidden = "true" />
@@ -961,7 +961,7 @@
    <mod Name = "Thiadiazole (C)" AAs = "C" Formula = "H6C9N2S" ID = "1035" Structural = "true" Hidden = "true" />
    <mod Name = "Thiazolidine (N-term C)" AAs = "C" Formula = "C" ID = "1009" Structural = "true" Hidden = "true" />
    <mod Name = "Thioacyl (K)" AAs = "K" Formula = "H4C3OS" ID = "126" Structural = "true" Hidden = "true" />
-   <mod Name = "Thioacyl (N-term)" AAs = "[" Formula = "H4C3OS" ID = "126" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "Thioacyl (N-term)" Formula = "H4C3OS" ID = "126" Structural = "true" Hidden = "true" />-->
    <mod Name = "thioacylPA (K)" AAs = "K" Formula = "H9C6NO2S" ID = "967" Structural = "true" Hidden = "true" />
    <mod Name = "Thiophos-S-S-biotin (S)" AAs = "S" Formula = "H34C19N4O5PS3" ID = "332" Structural = "true" Hidden = "true" />
    <mod Name = "Thiophos-S-S-biotin (T)" AAs = "T" Formula = "H34C19N4O5PS3" ID = "332" Structural = "true" Hidden = "true" />
@@ -972,13 +972,13 @@
    <mod Name = "Thrbiotinhydrazide (T)" AAs = "T" Formula = "H16C10N4OS" ID = "361" Structural = "true" Hidden = "true" />
    <mod Name = "Thyroxine (Y)" AAs = "Y" Formula = "C6OI4" ID = "398" Structural = "true" Hidden = "true" />
    <mod Name = "TMAB (K)" AAs = "K" Formula = "H14C7NO" ID = "476" Structural = "true" Hidden = "true" />
-   <mod Name = "TMAB (N-term)" AAs = "[" Formula = "H14C7NO" ID = "476" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "TMAB (N-term)" Formula = "H14C7NO" ID = "476" Structural = "true" Hidden = "true" />-->
    <mod Name = "TMAB:2H(9) (K)" AAs = "K" Formula = "H5H'9C7NO" ID = "477" Structural = "true" Hidden = "true" />
-   <mod Name = "TMAB:2H(9) (N-term)" AAs = "[" Formula = "H5H'9C7NO" ID = "477" Structural = "true" Hidden = "true" />
-   <mod Name = "TMPP-Ac (N-term)" AAs = "[" Formula = "H33C29O10P" ID = "827" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "TMAB:2H(9) (N-term)" Formula = "H5H'9C7NO" ID = "477" Structural = "true" Hidden = "true" />-->
+   <!--<mod Name = "TMPP-Ac (N-term)" Formula = "H33C29O10P" ID = "827" Structural = "true" Hidden = "true" />-->
    <mod Name = "TMT (H)" AAs = "H" Formula = "H20C12N2O2" ID = "739" Structural = "true" Hidden = "true" />
    <mod Name = "TMT (K)" AAs = "K" Formula = "H20C12N2O2" ID = "739" Structural = "true" Hidden = "true" />
-   <mod Name = "TMT (N-term)" AAs = "[" Formula = "H20C12N2O2" ID = "739" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "TMT (N-term)" Formula = "H20C12N2O2" ID = "739" Structural = "true" Hidden = "true" />-->
    <mod Name = "TMT (S)" AAs = "S" Formula = "H20C12N2O2" ID = "739" Structural = "true" Hidden = "true" />
    <mod Name = "TMT (T)" AAs = "T" Formula = "H20C12N2O2" ID = "739" Structural = "true" Hidden = "true" />
    <mod Name = "TMT2plex (H)" AAs = "H" Formula = "H20C11C'N2O2" ID = "738" Structural = "true" Hidden = "true" />
@@ -988,7 +988,7 @@
    <mod Name = "TMT6plex (S)" AAs = "S" Formula = "H20C8C'4NN'O2" ID = "737" Structural = "true" Hidden = "true" />
    <mod Name = "TMT6plex (T)" AAs = "T" Formula = "H20C8C'4NN'O2" ID = "737" Structural = "true" Hidden = "true" />
    <mod Name = "TNBS (K)" AAs = "K" Formula = "HC6N3O6" ID = "751" Structural = "true" Hidden = "true" />
-   <mod Name = "TNBS (N-term)" AAs = "[" Formula = "HC6N3O6" ID = "751" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "TNBS (N-term)" Formula = "HC6N3O6" ID = "751" Structural = "true" Hidden = "true" />-->
    <mod Name = "trifluoro (L)" AAs = "L" Formula = "F3 - H3" ID = "750" Structural = "true" Hidden = "true" />
    <mod Name = "Triiodo (Y)" AAs = "Y" Formula = "I3 - H3" ID = "131" Structural = "true" Hidden = "true" />
    <mod Name = "Triiodothyronine (Y)" AAs = "Y" Formula = "HC6OI3" ID = "397" Structural = "true" Hidden = "true" />
@@ -1028,10 +1028,10 @@
    <mod Name = "Xlink:SMCC (C)" AAs = "C" Formula = "H15C12NO4" ID = "1024" Structural = "true" Hidden = "true" />
    <mod Name = "Xlink:SSD (K)" AAs = "K" Formula = "H15C12NO5" ID = "273" Structural = "true" Hidden = "true" />
    <mod Name = "ZGB (K)" AAs = "K" Formula = "H53C37N6O6F2SB" ID = "861" Structural = "true" Hidden = "true" />
-   <mod Name = "ZGB (N-term)" AAs = "[" Formula = "H53C37N6O6F2SB" ID = "861" Structural = "true" Hidden = "true" />
+   <!--<mod Name = "ZGB (N-term)" Formula = "H53C37N6O6F2SB" ID = "861" Structural = "true" Hidden = "true" />-->
    <mod Name = "Acetyl:2H(3) (H)" AAs = "H" Formula = "H'3 - H3" ID = "56" Structural = "false" Hidden = "true" />
    <mod Name = "Acetyl:2H(3) (K)" AAs = "K" Formula = "H'3 - H3" ID = "56" Structural = "false" Hidden = "true" />
-   <mod Name = "Acetyl:2H(3) (N-term)" AAs = "[" Formula = "H'3 - H3" ID = "56" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "Acetyl:2H(3) (N-term)" Formula = "H'3 - H3" ID = "56" Structural = "false" Hidden = "true" />-->
    <mod Name = "Acetyl:2H(3) (S)" AAs = "S" Formula = "H'3 - H3" ID = "56" Structural = "false" Hidden = "true" />
    <mod Name = "Acetyl:2H(3) (T)" AAs = "T" Formula = "H'3 - H3" ID = "56" Structural = "false" Hidden = "true" />
    <mod Name = "Acetyl:2H(3) (Y)" AAs = "Y" Formula = "H'3 - H3" ID = "56" Structural = "false" Hidden = "true" />
@@ -1039,26 +1039,26 @@
    <mod Name = "AEC-MAEC:2H(4) (T)" AAs = "T" Formula = "H'4 - H4" ID = "792" Structural = "false" Hidden = "true" />
    <mod Name = "Carboxymethyl:13C(2) (C)" AAs = "C" Formula = "C'2 - C2" ID = "775" Structural = "false" Hidden = "true" />
    <mod Name = "Dimethyl:2H(6) (K)" AAs = "K" Formula = "H'6 - H6" ID = "1291" Structural = "false" Hidden = "true" />
-   <mod Name = "Dimethyl:2H(6) (N-term)" AAs = "[" Formula = "H'6 - H6" ID = "1291" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "Dimethyl:2H(6) (N-term)" Formula = "H'6 - H6" ID = "1291" Structural = "false" Hidden = "true" />-->
    <mod Name = "Dimethyl:2H(6)13C(2) (K)" AAs = "K" Formula = "C'2H'6 - C2H6" ID = "330" Structural = "false" Hidden = "true" />
-   <mod Name = "Dimethyl:2H(6)13C(2) (N-term)" AAs = "[" Formula = "C'2H'6 - C2H6" ID = "330" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "Dimethyl:2H(6)13C(2) (N-term)" Formula = "C'2H'6 - C2H6" ID = "330" Structural = "false" Hidden = "true" />-->
    <mod Name = "Dimethyl:2H(6)13C(2) (R)" AAs = "R" Formula = "C'2H'6 - C2H6" ID = "330" Structural = "false" Hidden = "true" />
    <mod Name = "DTT_C:2H(6) (C)" AAs = "C" Formula = "H'6 - H6" ID = "764" Structural = "false" Hidden = "true" />
    <mod Name = "DTT_ST:2H(6) (S)" AAs = "S" Formula = "H'6 - H6" ID = "763" Structural = "false" Hidden = "true" />
    <mod Name = "DTT_ST:2H(6) (T)" AAs = "T" Formula = "H'6 - H6" ID = "763" Structural = "false" Hidden = "true" />
    <mod Name = "EQAT:2H(5) (C)" AAs = "C" Formula = "H'5 - H5" ID = "198" Structural = "false" Hidden = "true" />
    <mod Name = "ESP:2H(10) (K)" AAs = "K" Formula = "H'10 - H10" ID = "91" Structural = "false" Hidden = "true" />
-   <mod Name = "ESP:2H(10) (N-term)" AAs = "[" Formula = "H'10 - H10" ID = "91" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "ESP:2H(10) (N-term)" Formula = "H'10 - H10" ID = "91" Structural = "false" Hidden = "true" />-->
    <mod Name = "GIST-Quat:2H(3) (K)" AAs = "K" Formula = "H'3 - H3" ID = "61" Structural = "false" Hidden = "true" />
-   <mod Name = "GIST-Quat:2H(3) (N-term)" AAs = "[" Formula = "H'3 - H3" ID = "61" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "GIST-Quat:2H(3) (N-term)" Formula = "H'3 - H3" ID = "61" Structural = "false" Hidden = "true" />-->
    <mod Name = "GIST-Quat:2H(6) (K)" AAs = "K" Formula = "H'6 - H6" ID = "62" Structural = "false" Hidden = "true" />
-   <mod Name = "GIST-Quat:2H(6) (N-term)" AAs = "[" Formula = "H'6 - H6" ID = "62" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "GIST-Quat:2H(6) (N-term)" Formula = "H'6 - H6" ID = "62" Structural = "false" Hidden = "true" />-->
    <mod Name = "GIST-Quat:2H(9) (K)" AAs = "K" Formula = "H'9 - H9" ID = "63" Structural = "false" Hidden = "true" />
-   <mod Name = "GIST-Quat:2H(9) (N-term)" AAs = "[" Formula = "H'9 - H9" ID = "63" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "GIST-Quat:2H(9) (N-term)" Formula = "H'9 - H9" ID = "63" Structural = "false" Hidden = "true" />-->
    <mod Name = "ICAT-G:2H(8) (C)" AAs = "C" Formula = "H'8 - H8" ID = "9" Structural = "false" Hidden = "true" />
    <mod Name = "ICAT-H:13C(6) (C)" AAs = "C" Formula = "C'6 - C6" ID = "124" Structural = "false" Hidden = "true" />
    <mod Name = "ICDID:2H(6) (C)" AAs = "C" Formula = "H'6 - H6" ID = "1019" Structural = "false" Hidden = "true" />
-   <mod Name = "ICPL:2H(4) (N-term)" AAs = "[" Formula = "H'4 - H4" ID = "687" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "ICPL:2H(4) (N-term)" Formula = "H'4 - H4" ID = "687" Structural = "false" Hidden = "true" />-->
    <mod Name = "IGBP:13C(2) (C)" AAs = "C" Formula = "C'2 - C2" ID = "499" Structural = "false" Hidden = "true" />
    <mod Name = "IMID:2H(4) (K)" AAs = "K" Formula = "H'4 - H4" ID = "95" Structural = "false" Hidden = "true" />
    <mod Name = "Label:13C(1)2H(3) (M)" AAs = "M" Formula = "H'3C' - H3C" ID = "862" Structural = "false" Hidden = "true" />
@@ -1113,7 +1113,7 @@
    <mod Name = "Label:2H(4) (Y)" AAs = "Y" Formula = "H'4 - H4" ID = "481" Structural = "false" Hidden = "true" />
    <mod Name = "Label:2H(4)13C(1) (R)" AAs = "R" Formula = "H'4C' - H4C" ID = "1300" Structural = "false" Hidden = "true" />
    <mod Name = "Label:2H(9)13C(6)15N(2) (K)" AAs = "K" Formula = "H'9C'6N'2 - H9C6N2" ID = "696" Structural = "false" Hidden = "true" />
-   <mod Name = "Methyl:2H(3) (C-term)" AAs = "]" Formula = "H'3 - H3" ID = "298" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "Methyl:2H(3) (C-term)" Formula = "H'3 - H3" ID = "298" Structural = "false" Hidden = "true" />-->
    <mod Name = "Methyl:2H(3) (D)" AAs = "D" Formula = "H'3 - H3" ID = "298" Structural = "false" Hidden = "true" />
    <mod Name = "Methyl:2H(3) (E)" AAs = "E" Formula = "H'3 - H3" ID = "298" Structural = "false" Hidden = "true" />
    <mod Name = "Methyl:2H(3)13C(1) (R)" AAs = "R" Formula = "C'H'3 - CH3" ID = "329" Structural = "false" Hidden = "true" />
@@ -1122,27 +1122,19 @@
    <mod Name = "mTRAQ:13C(3)15N(1) (T)" AAs = "T" Formula = "C'3N' - C3N" ID = "889" Structural = "false" Hidden = "true" />
    <mod Name = "mTRAQ:13C(6)15N(2) (H)" AAs = "H" Formula = "C'6N'2 - C6N2" ID = "1302" Structural = "false" Hidden = "true" />
    <mod Name = "mTRAQ:13C(6)15N(2) (S)" AAs = "S" Formula = "C'6N'2 - C6N2" ID = "1302" Structural = "false" Hidden = "true" />
-   <mod Name = "Phenylisocyanate:2H(5) (N-term)" AAs = "[" Formula = "H'5 - H5" ID = "412" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "Phenylisocyanate:2H(5) (N-term)" Formula = "H'5 - H5" ID = "412" Structural = "false" Hidden = "true" />-->
    <mod Name = "Propionamide:2H(3) (C)" AAs = "C" Formula = "H'3 - H3" ID = "97" Structural = "false" Hidden = "true" />
    <mod Name = "Propionyl:13C(3) (K)" AAs = "K" Formula = "C'3 - C3" ID = "59" Structural = "false" Hidden = "true" />
-   <mod Name = "Propionyl:13C(3) (N-term)" AAs = "[" Formula = "C'3 - C3" ID = "59" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "Propionyl:13C(3) (N-term)" Formula = "C'3 - C3" ID = "59" Structural = "false" Hidden = "true" />-->
    <mod Name = "QAT:2H(3) (C)" AAs = "C" Formula = "H'3 - H3" ID = "196" Structural = "false" Hidden = "true" />
    <mod Name = "SecNEM:2H(5) (C)" AAs = "C" Formula = "H'5 - H5" ID = "1034" Structural = "false" Hidden = "true" />
    <mod Name = "SPITC:13C(6) (K)" AAs = "K" Formula = "C'6 - C6" ID = "464" Structural = "false" Hidden = "true" />
-   <mod Name = "SPITC:13C(6) (N-term)" AAs = "[" Formula = "C'6 - C6" ID = "464" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "SPITC:13C(6) (N-term)" Formula = "C'6 - C6" ID = "464" Structural = "false" Hidden = "true" />-->
    <mod Name = "Succinyl:13C(4) (K)" AAs = "K" Formula = "C'4 - C4" ID = "66" Structural = "false" Hidden = "true" />
-   <mod Name = "Succinyl:13C(4) (N-term)" AAs = "[" Formula = "C'4 - C4" ID = "66" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "Succinyl:13C(4) (N-term)" Formula = "C'4 - C4" ID = "66" Structural = "false" Hidden = "true" />-->
    <mod Name = "Succinyl:2H(4) (K)" AAs = "K" Formula = "H'4 - H4" ID = "65" Structural = "false" Hidden = "true" />
-   <mod Name = "Succinyl:2H(4) (N-term)" AAs = "[" Formula = "H'4 - H4" ID = "65" Structural = "false" Hidden = "true" />
-   <mod Name = "SulfanilicAcid:13C(6) (C-term)" AAs = "]" Formula = "C'6 - C6" ID = "286" Structural = "false" Hidden = "true" />
+   <!--<mod Name = "Succinyl:2H(4) (N-term)" Formula = "H'4 - H4" ID = "65" Structural = "false" Hidden = "true" />-->
+   <!--<mod Name = "SulfanilicAcid:13C(6) (C-term)" Formula = "C'6 - C6" ID = "286" Structural = "false" Hidden = "true" />-->
    <mod Name = "SulfanilicAcid:13C(6) (D)" AAs = "D" Formula = "C'6 - C6" ID = "286" Structural = "false" Hidden = "true" />
    <mod Name = "SulfanilicAcid:13C(6) (E)" AAs = "E" Formula = "C'6 - C6" ID = "286" Structural = "false" Hidden = "true" />
-   <!-- Hardcoded Skyline Mods -->
-   <!--<mod Name = "Label:15N" Structural = "false" Hidden = "false" />-->
-   <!--<mod Name = "Label:13C" Structural = "false" Hidden = "false" />-->
-   <!--<mod Name = "Label:13C15N" Structural = "false" Hidden = "false" />-->
-   <mod Name = "Label:13C(6)15N(2) (C-term K)" AAs = "K" DeltaMass = "8" Structural = "false" Hidden = "false" />
-   <mod Name = "Label:13C(6)15N(4) (C-term R)" AAs = "R" DeltaMass = "10" Structural = "false" Hidden = "false" />
-   <mod Name = "Label:13C(6) (C-term K)" AAs = "K" DeltaMass = "6" Structural = "false" Hidden = "false" />
-   <mod Name = "Label:13C(6) (C-term R)" AAs = "R" DeltaMass = "6" Structural = "false" Hidden = "false" />
 </modifications>
