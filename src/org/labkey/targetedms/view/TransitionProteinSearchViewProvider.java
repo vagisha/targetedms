@@ -85,12 +85,16 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
                 List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
                 visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "Label"));
                 visibleColumns.add(FieldKey.fromParts("Sequence"));
+                if (form.isIncludeSubfolders())
+                {
+                    visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
+                }
                 visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
                 result.setDefaultVisibleColumns(visibleColumns);
                 return result;
             }
         };
-        result.setTitle("TargetedMS Peptides");
+        result.setTitle("Targeted MS Peptides");
         result.enableExpandCollapse("TargetedMSPeptides", false);
         result.setUseQueryViewActionExportURLs(true);
         return result;

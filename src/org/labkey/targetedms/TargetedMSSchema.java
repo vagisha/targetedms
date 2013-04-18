@@ -40,10 +40,12 @@ import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.LookupForeignKey;
+import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.util.ContainerContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
@@ -148,6 +150,8 @@ public class TargetedMSSchema extends UserSchema
         super(SCHEMA_NAME, SCHEMA_DESCR, user, container, TargetedMSManager.getSchema());
         _restrictContainer = restrictContainer;
 
+        _expSchema = new ExpSchema(user, container);
+
         if (_restrictContainer)
         {
             _containerFilter = ContainerFilter.CURRENT;
@@ -155,10 +159,8 @@ public class TargetedMSSchema extends UserSchema
         else
         {
             _containerFilter = new ContainerFilter.CurrentAndSubfolders(user);
+            _expSchema.setContainerFilter(_containerFilter);
         }
-
-        _expSchema = new ExpSchema(user, container);
-        _expSchema.setContainerFilter(_containerFilter);
     }
 
     public DbSchema getSchema()
@@ -329,11 +331,6 @@ public class TargetedMSSchema extends UserSchema
         result.setProtocolPatterns(PROTOCOL_PATTERN_PREFIX + TargetedMSModule.IMPORT_SKYDOC_PROTOCOL_OBJECT_PREFIX + "%",
                                    PROTOCOL_PATTERN_PREFIX + TargetedMSModule.IMPORT_SKYZIP_PROTOCOL_OBJECT_PREFIX + "%");
 
-        if(_restrictContainer)
-        {
-            result.setContainerFilter(_containerFilter);
-        }
-
         // Add a lookup column to the Runs table in targetedms schema
         SQLFragment sql = new SQLFragment("(SELECT MIN(tmsRuns.Id)\n" +
                 "\nFROM " + TargetedMSManager.getTableInfoRuns() + " tmsRuns " +
@@ -444,6 +441,7 @@ public class TargetedMSSchema extends UserSchema
                                                                   "PeptideGroupId",
                                                                   "Protein Annotations");
             DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer()), Collections.singletonMap("id", "Id"));
+            detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("RunId", "Folder")));
             result.setDetailsURL(detailsURLs);
             result.getColumn("SequenceId").setFk(new LookupForeignKey("SeqId")
             {
@@ -466,7 +464,8 @@ public class TargetedMSSchema extends UserSchema
                     JSONObject props = new JSONObject();
                     props.put("width", 450);
                     props.put("title", "Protein Details");
-                    return new AJAXDetailsDisplayColumn(colInfo, new ActionURL(TargetedMSController.ShowProteinAJAXAction.class, getContainer()), params, props)
+                    FieldKey containerFieldKey = new FieldKey(new FieldKey(colInfo.getFieldKey().getParent(), "RunId"), "Folder");
+                    return new AJAXDetailsDisplayColumn(colInfo, new ActionURL(TargetedMSController.ShowProteinAJAXAction.class, getContainer()), params, props, containerFieldKey)
                     {
                         private boolean _renderedCSS = false;
 
@@ -486,22 +485,8 @@ public class TargetedMSSchema extends UserSchema
                     };
                 }
             });
-            result.getColumn("RunId").setFk(new LookupForeignKey("File")
-            {
-                @Override
-                public TableInfo getLookupTableInfo()
-                {
-                    return getTable(TABLE_TARGETED_MS_RUNS);
-                }
-            });
-            result.getColumn("RepresentativeDataState").setFk(new LookupForeignKey("RowId")
-            {
-                @Override
-                public TableInfo getLookupTableInfo()
-                {
-                    return getTable(TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE);
-                }
-            });
+            result.getColumn("RunId").setFk(new QueryForeignKey(this, TABLE_TARGETED_MS_RUNS, "File", null));
+            result.getColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE, "RowId", null));
             return result;
         }
 
@@ -546,14 +531,16 @@ public class TargetedMSSchema extends UserSchema
             });
             DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()),
                                                                   Collections.singletonMap("id", "Id"));
+            detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("PeptideGroupId", "RunId", "Folder")));
             result.setDetailsURL(detailsURLs);
             List<FieldKey> defaultCols = new ArrayList<FieldKey>(result.getDefaultVisibleColumns());
-            defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
-            defaultCols.add(1, FieldKey.fromParts("PeptideGroupId", "Label"));
+            defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
+            defaultCols.add(1, FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
+            defaultCols.add(2, FieldKey.fromParts("PeptideGroupId", "Label"));
             defaultCols.remove(FieldKey.fromParts("PeptideGroupId"));
             result.setDefaultVisibleColumns(defaultCols);
-            ColumnInfo labelColumn = result.getColumn("Sequence");
-            labelColumn.setURL(detailsURLs);
+            ColumnInfo sequenceColumn = result.getColumn("Sequence");
+            sequenceColumn.setURL(detailsURLs);
             return result;
         }
 

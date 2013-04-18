@@ -66,7 +66,7 @@ public class TargetedMSRun implements Serializable
     protected int _peptideCount;
     protected int _precursorCount;
     protected int _transitionCount;
-    protected int _dataId; // FK to exp.data's RowId column
+    protected Integer _dataId; // FK to exp.data's RowId column
 
     public TargetedMSRun()
     {
@@ -256,12 +256,12 @@ public class TargetedMSRun implements Serializable
                _representativeDataState == RepresentativeDataState.Representative_Peptide;
     }
 
-    public int getDataId()
+    public Integer getDataId()
     {
         return _dataId;
     }
 
-    public void setDataId(int dataId)
+    public void setDataId(Integer dataId)
     {
         _dataId = dataId;
     }
