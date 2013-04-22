@@ -32,6 +32,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     private Double _area;
     private Double _areaNormalized;
     private Double _background;
+    private Double _massErrorPPM;
     private Double _fwhm;
     private Boolean _fwhmDegenerate;
     private Boolean _truncated;
@@ -131,6 +132,16 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     public void setBackground(Double background)
     {
         this._background = background;
+    }
+
+    public Double getMassErrorPPM()
+    {
+        return _massErrorPPM;
+    }
+
+    public void setMassErrorPPM(Double massErrorPPM)
+    {
+        _massErrorPPM = massErrorPPM;
     }
 
     public Double getFwhm()

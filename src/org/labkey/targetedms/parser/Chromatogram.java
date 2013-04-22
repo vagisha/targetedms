@@ -33,26 +33,35 @@ public class Chromatogram extends SkylineEntity
 {
     // Size is one four-byte float, eight four-byte ints, one four-byte spacer, and one eight-byte long.
     // Divide by 8 to convert from bits to bytes
-    public static final int SIZE = (Float.SIZE + 8 * Integer.SIZE + Integer.SIZE + Long.SIZE) / 8;
+    public static final int SIZE4 = (Float.SIZE + 8 * Integer.SIZE + Integer.SIZE + Long.SIZE) / 8;
+    // Grown slightly in format version 5
+    public static final int SIZE5 = (Double.SIZE + 7 * Integer.SIZE + 5 * Short.SIZE + 2 * Byte.SIZE + Long.SIZE) / 8;
+
+    public static int getSize(int formatVersion)
+    {
+        return (formatVersion > SkylineBinaryParser.FORMAT_VERSION_CACHE_4 ? SIZE5 : SIZE4);
+    }
 
     private int _runId;
 
-    private float _precursor;
+    private double _precursor;
+    private String _modifiedSequence;
     private int _fileIndex;
     private int _numTransitions;
     private int _startTransitionIndex;
     private int _numPeaks;
     private int _startPeakIndex;
+    private int _startScoreIndex;
     private int _maxPeakIndex;
     private int _numPoints;
     private int _compressedSize;
-    // One "spacer" int for alignment purposes before the next variable
+    private short _flags;
     private long _locationPoints;
 
     private float[] _times;
     private float[][] _intensities;
     private SkylineBinaryParser.CachedFile[] _cachedFiles;
-    private float[] _transitions;
+    private ChromatogramTran[] _transitions;
     /** The compressed bytes */
     private byte[] _chromatogram;
 
@@ -62,27 +71,55 @@ public class Chromatogram extends SkylineEntity
     }
 
     /** Parses the header information from the underlying file */
-    public Chromatogram(ByteBuffer buffer, SkylineBinaryParser.CachedFile[] cachedFiles, float[] transitions)
+    public Chromatogram(int formatVersion, ByteBuffer buffer, byte[] seqBytes, SkylineBinaryParser.CachedFile[] cachedFiles, ChromatogramTran[] transitions)
     {
-        _precursor = buffer.getFloat();
-        _fileIndex = buffer.getInt();
-        _numTransitions = buffer.getInt();
-        _startTransitionIndex = buffer.getInt();
-        _numPeaks = buffer.getInt();
-        _startPeakIndex = buffer.getInt();
-        _maxPeakIndex = buffer.getInt();
-        _numPoints = buffer.getInt();
-        _compressedSize = buffer.getInt();
-        buffer.getInt(); // Burn four bytes for due to layout/alignment in data file
-        _locationPoints = buffer.getLong();
+        if (formatVersion > SkylineBinaryParser.FORMAT_VERSION_CACHE_4)
+        {
+            int seqIndex = buffer.getInt();
+            _startTransitionIndex = buffer.getInt();
+            _startPeakIndex = buffer.getInt();
+            _startScoreIndex = buffer.getInt();
+            _numPoints = buffer.getInt();
+            _compressedSize = buffer.getInt();
+            _flags = buffer.getShort();
+            _fileIndex = buffer.getShort();
+            short seqLen = buffer.getShort();
+            _numTransitions = buffer.getShort();
+            _numPeaks = buffer.get();
+            _maxPeakIndex = buffer.get();
+            buffer.getShort(); // Burn 2 bytes for due to compiler alignment of in-memory data structure
+            buffer.getInt(); // Burn 4 bytes for due to compiler alignment of in-memory data structure
+            _precursor = buffer.getDouble();
+            _locationPoints = buffer.getLong();
+            _modifiedSequence = seqIndex != -1 ? new String(seqBytes, seqIndex, seqLen) : null;
+        }
+        else
+        {
+            _precursor = buffer.getFloat();
+            _fileIndex = buffer.getInt();
+            _numTransitions = buffer.getInt();
+            _startTransitionIndex = buffer.getInt();
+            _numPeaks = buffer.getInt();
+            _startPeakIndex = buffer.getInt();
+            _maxPeakIndex = buffer.getInt();
+            _numPoints = buffer.getInt();
+            _compressedSize = buffer.getInt();
+            buffer.getInt();  // Burn 4 bytes for due to compiler alignment of in-memory data structure
+            _locationPoints = buffer.getLong();
+        }
 
         _cachedFiles = cachedFiles;
         _transitions = transitions;
     }
 
-    public float getPrecursorMz()
+    public double getPrecursorMz()
     {
         return _precursor;
+    }
+
+    public String getModifiedSequence()
+    {
+        return _modifiedSequence;
     }
 
     private void ensureUncompressed() throws DataFormatException
@@ -183,7 +220,7 @@ public class Chromatogram extends SkylineEntity
             for (int i = start; i < end; i++)
             {
                 // Do we need to look through all of the transitions from the .skyd file?
-                if (compareTolerant((float)transition.getMz(), _transitions[i], tolerance) == 0)
+                if (compareTolerant(transition.getMz(), _transitions[i].getProduct(), tolerance) == 0)
                 {
                     match++;
                     if (!multiMatch)
@@ -281,10 +318,11 @@ public class Chromatogram extends SkylineEntity
         _numTransitions = numTransitions;
     }
 
-    public float[] getTransitions()
+    public double[] getTransitions()
     {
-        float[] result = new float[_numTransitions];
-        System.arraycopy(_transitions, _startTransitionIndex, result, 0, _numTransitions);
+        double[] result = new double[_numTransitions];
+        for (int i = 0; i < _numTransitions; i++)
+            result[i] = _transitions[_startTransitionIndex + i].getProduct();
         return result;
     }
 }

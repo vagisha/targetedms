@@ -22,6 +22,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.util.Date;
 import java.util.zip.DataFormatException;
 
 /**
@@ -38,11 +39,15 @@ public class SkylineBinaryParser
     private final long[] _headers = new long[Header.values().length - 1];
 
     private Chromatogram[] _chromatograms;
-    private float[] _transitions;
+    private ChromatogramTran[] _transitions;
 
-    public static final int FORMAT_VERSION_CACHE = 4;
+    public static final int FORMAT_VERSION_CACHE_5 = 5;
+    public static final int FORMAT_VERSION_CACHE_4 = 4;
     public static final int FORMAT_VERSION_CACHE_3 = 3;
     public static final int FORMAT_VERSION_CACHE_2 = 2;
+
+    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_5;
+
     private CachedFile[] _cacheFiles;
 
     public SkylineBinaryParser(File file)
@@ -70,6 +75,15 @@ public class SkylineBinaryParser
     /** File-level header fields */
     private enum Header
     {
+        // Version 5 header addition
+        num_score_types,
+        num_scores,
+        location_scores_lo(true),
+        location_scores_hi,
+        num_seq_bytes,
+        location_seq_bytes_lo(true),
+        location_seq_bytes_hi,
+
         format_version,
         num_peaks,
         location_peaks_lo(true),
@@ -143,25 +157,12 @@ public class SkylineBinaryParser
             }
 
             parseFiles(version);
-            parseTransitions();
-            parseChromatograms();
+            parseTransitions(version);
+            parseChromatograms(version);
         }
         catch (DataFormatException e)
         {
             throw new IOException("Invalid ZIP content", e);
-        }
-    }
-
-    private static int getFileHeaderCount(int formatVersion)
-    {
-        switch (formatVersion)
-        {
-            case FORMAT_VERSION_CACHE:
-                return FileHeader.count.ordinal() * 4;
-            case (FORMAT_VERSION_CACHE_3):
-                return FileHeader.len_instrument_info.ordinal() * 4;
-            default:
-                return FileHeader.runstart_lo.ordinal() * 4;
         }
     }
 
@@ -175,19 +176,38 @@ public class SkylineBinaryParser
         runstart_hi,
         // Version 4 file header addition
         len_instrument_info,
+        // Version 5 file header addition
+        flags,
 
-        count
+        count;
+
+        public static int getSize(int formatVersion)
+        {
+            switch (formatVersion)
+            {
+                case FORMAT_VERSION_CACHE_5:
+                    return FileHeader.count.ordinal() * 4;
+                case FORMAT_VERSION_CACHE_4:
+                    return FileHeader.flags.ordinal() * 4;
+                case (FORMAT_VERSION_CACHE_3):
+                    return FileHeader.len_instrument_info.ordinal() * 4;
+                default:
+                    return FileHeader.runstart_lo.ordinal() * 4;
+            }
+        }
     }
 
     public static class CachedFile
     {
         private final String _filePath;
         private final String _instrumentInfo;
+        private final int _flags;
 
-        public CachedFile(String filePath, String instrumentInfo)
+        public CachedFile(String filePath, String instrumentInfo, int flags)
         {
             _filePath = filePath;
             _instrumentInfo = instrumentInfo;
+            _flags = flags;
         }
 
         public String getFilePath()
@@ -199,6 +219,11 @@ public class SkylineBinaryParser
         {
             return _instrumentInfo;
         }
+
+        public boolean IsSingleMatchMz()
+        {
+            return (_flags & 0x02) != 0;
+        }
     }
 
     private void parseFiles(int formatVersion) throws IOException
@@ -208,7 +233,7 @@ public class SkylineBinaryParser
         long filesStart = Header.location_files_lo.getHeaderValueLong(_headers);
 
         _cacheFiles = new CachedFile[numFiles];
-        int countFileHeader = getFileHeaderCount(formatVersion);
+        int countFileHeader = FileHeader.getSize(formatVersion);
 
         long offset = filesStart;
 
@@ -222,6 +247,7 @@ public class SkylineBinaryParser
             int lenPath = buffer.getInt();
             long runstartBinary = (isVersionCurrent() ? buffer.getLong() : 0);
             int lenInstrumentInfo = formatVersion > FORMAT_VERSION_CACHE_3 ? buffer.getInt() : -1;
+            int flags = formatVersion > FORMAT_VERSION_CACHE_4 ? buffer.getInt() : 0;
 
             byte[] filePathBuffer = new byte[lenPath];
             buffer = _channel.map(FileChannel.MapMode.READ_ONLY, offset, lenPath);
@@ -239,41 +265,60 @@ public class SkylineBinaryParser
                 instrumentInfoStr = new String(instrumentInfoBuffer, 0, lenInstrumentInfo, Charset.forName("UTF8"));
             }
 
-//            DateTime modifiedTime = DateTime.FromBinary(modifiedBinary);
-//            DateTime? runstartTime = runstartBinary != 0 ? DateTime.FromBinary(runstartBinary) : (DateTime?) null;
+            Date modifiedTime = new Date(modifiedBinary);
+            Date runstartTime = (runstartBinary != 0 ? new Date(runstartBinary) : null);
 //            var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
-            _cacheFiles[i] = new CachedFile(filePath, instrumentInfoStr);
+            _cacheFiles[i] = new CachedFile(filePath, instrumentInfoStr, flags);
         }
     }
 
-    private void parseTransitions() throws IOException
+    private void parseTransitions(int formatVersion) throws IOException
     {
         int numTransitions = Header.num_transitions.getHeaderValueInt(_headers);
         long transitionsStart = Header.location_trans_lo.getHeaderValueLong(_headers);
 
-        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, transitionsStart, Float.SIZE / 8 * numTransitions);
+        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, transitionsStart, ChromatogramTran.getSize(formatVersion) * numTransitions);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        _transitions = new float[numTransitions];
+        _transitions = new ChromatogramTran[numTransitions];
         for (int i = 0; i< numTransitions; i++)
         {
-            _transitions[i] = buffer.getFloat();
+            if (formatVersion > FORMAT_VERSION_CACHE_4)
+            {
+                _transitions[i] = new ChromatogramTran(buffer.getDouble(),
+                        buffer.getFloat(), ChromatogramTran.Source.fromBits(buffer.getShort()));
+                buffer.getShort();  // read padding
+            }
+            else
+            {
+                _transitions[i] = new ChromatogramTran(buffer.getFloat());
+            }
         }
     }
 
-    private void parseChromatograms() throws IOException, DataFormatException
+    private void parseChromatograms(int formatVersion) throws IOException, DataFormatException
     {
+        byte[] seqBytes = null;
+        if (formatVersion > FORMAT_VERSION_CACHE_4)
+        {
+            int numSeqBytes = Header.num_seq_bytes.getHeaderValueInt(_headers);
+            long seqBytesStart = Header.location_seq_bytes_lo.getHeaderValueLong(_headers);
+            ByteBuffer bufferSb = _channel.map(FileChannel.MapMode.READ_ONLY, seqBytesStart, numSeqBytes);
+            seqBytes = new byte[numSeqBytes];
+            bufferSb.get(seqBytes);
+        }
+
         int numChrom = Header.num_chromatograms.getHeaderValueInt(_headers);
         long chromatogramStart = Header.location_headers_lo.getHeaderValueLong(_headers);
 
-        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, chromatogramStart, Chromatogram.SIZE * numChrom);
+        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, chromatogramStart, Chromatogram.getSize(formatVersion) * numChrom);
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
         // Read the chromatogram headers out of the file
         _chromatograms = new Chromatogram[numChrom];
         for (int i = 0; i < _chromatograms.length; i++)
         {
-            _chromatograms[i] = new Chromatogram(buffer, _cacheFiles, _transitions);
+            _chromatograms[i] = new Chromatogram(formatVersion, buffer, seqBytes, _cacheFiles, _transitions);
         }
     }
 
@@ -285,6 +330,8 @@ public class SkylineBinaryParser
     public boolean isVersionCurrent()
     {
         long version = Header.format_version.getHeaderValueInt(_headers);
-        return (version == FORMAT_VERSION_CACHE || version == FORMAT_VERSION_CACHE_3);
+        return (version == FORMAT_VERSION_CACHE_5 ||
+                version == FORMAT_VERSION_CACHE_4 ||
+                version == FORMAT_VERSION_CACHE_3);
     }
 }

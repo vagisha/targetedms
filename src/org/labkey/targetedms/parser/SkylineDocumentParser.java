@@ -76,6 +76,7 @@ public class SkylineDocumentParser
     private static final String LOSSES = "losses";
     private static final String NEUTRAL_LOSS = "neutral_loss";
     private static final String TRANSITION_PEAK = "transition_peak";
+    private static final String TRANSITION_LIB_INFO = "transition_lib_info";
     private static final String PRECURSOR_PEAK = "precursor_peak";
     private static final String PEPTIDE_RESULT = "peptide_result";
     private static final String EXPLICIT_MODIFICATION = "explicit_modification";
@@ -834,17 +835,21 @@ public class SkylineDocumentParser
 
         String start = reader.getAttributeValue(null, "start");
         if(null != start)
-            peptide.setStart(Integer.parseInt(start));
+            peptide.setStartIndex(Integer.parseInt(start));
 
         String end =  reader.getAttributeValue(null, "end");
         if(null != end)
-            peptide.setEnd(Integer.parseInt(end));
+            peptide.setEndIndex(Integer.parseInt(end));
 
         peptide.setSequence(reader.getAttributeValue(null, "sequence"));
 
+        // Get the peptide structurally modified sequence (format v1.5)
+        String modifiedSequenceLight = reader.getAttributeValue(null, "modified_sequence");
+        peptide.setPeptideModifiedSequence(modifiedSequenceLight);
+
         String prevAa = reader.getAttributeValue(null, "prev_aa");
         if(null != prevAa)
-            peptide.setPrevAa(prevAa);
+            peptide.setPreviousAa(prevAa);
 
         String nextAa = reader.getAttributeValue(null, "next_aa");
         if(null != nextAa)
@@ -887,7 +892,7 @@ public class SkylineDocumentParser
             }
             else if (XmlUtil.isStartElement(reader, evtType, PRECURSOR))
             {
-                precursorList.add(readPrecursor(reader));
+                precursorList.add(readPrecursor(reader, modifiedSequenceLight));
             }
             else if (XmlUtil.isStartElement(reader, evtType, NOTE))
             {
@@ -1049,7 +1054,7 @@ public class SkylineDocumentParser
         chromInfo.setSkylineSampleFileId(skylineSampleFileId);
     }
 
-    private Precursor readPrecursor(XMLStreamReader reader) throws XMLStreamException, IOException
+    private Precursor readPrecursor(XMLStreamReader reader, String modifiedSequenceLight) throws XMLStreamException, IOException
     {
         Precursor precursor = new Precursor();
         List<Transition> transitionList = new ArrayList<Transition>();
@@ -1135,7 +1140,8 @@ public class SkylineDocumentParser
             addMissingBooleanAnnotation(annotations, missingAnotName, new PrecursorAnnotation());
         }
 
-        List<Chromatogram> chromatograms = tryLoadChromatogram(transitionList, precursor.getMz(), _matchTolerance);
+        List<Chromatogram> chromatograms = tryLoadChromatogram(transitionList,
+                precursor.getMz(), modifiedSequenceLight,  _matchTolerance);
         Map<String, Chromatogram> filePathChromatogramMap = new HashMap<String, Chromatogram>();
         for(Chromatogram chromatogram: chromatograms)
         {
@@ -1179,9 +1185,10 @@ public class SkylineDocumentParser
                     // Figure out which index into the list of transitions we're inserting.
                     // If there are multiple matches within the given mz match tolerance return the closest match.
                     double deltaNearestMz = Double.MAX_VALUE;
-                    for (int i = 0; i < c.getTransitions().length; i++)
+                    double[] transitions = c.getTransitions();
+                    for (int i = 0; i < transitions.length; i++)
                     {
-                        double deltaMz = Math.abs(transition.getMz() - c.getTransitions()[i]);
+                        double deltaMz = Math.abs(transition.getMz() - transitions[i]);
 
                         if (deltaMz < _transitionSettings.getInstrumentSettings().getMzMatchTolerance() &&
                             deltaMz < deltaNearestMz)
@@ -1260,14 +1267,17 @@ public class SkylineDocumentParser
         chromInfo.setMaxEndTime(XmlUtil.readDoubleAttribute(reader, "end_time"));
         chromInfo.setTotalArea(XmlUtil.readDoubleAttribute(reader, "area"));
         chromInfo.setTotalBackground(XmlUtil.readDoubleAttribute(reader, "background"));
+        chromInfo.setMaxHeight(XmlUtil.readDoubleAttribute(reader, "height"));
+        chromInfo.setAverageMassErrorPPM(XmlUtil.readDoubleAttribute(reader, "mass_error_ppm"));
         Double fwhm =  XmlUtil.readDoubleAttribute(reader, "fwhm");
         // TODO: Found NaN value for fwhm in Study7.sky.  Should this happen?
         fwhm = (fwhm != null && fwhm.isNaN()) ? null : fwhm;
         chromInfo.setMaxFwhm(fwhm);
         chromInfo.setNumTruncated(XmlUtil.readIntegerAttribute(reader, "truncated"));
         chromInfo.setIdentified(XmlUtil.readBooleanAttribute(reader, "identified"));
-        chromInfo.setLibraryDtop(XmlUtil.readDoubleAttribute(reader, "library_dtop"));
-        chromInfo.setIsotopeDtop(XmlUtil.readDoubleAttribute(reader, "isotope_dtop"));
+        chromInfo.setLibraryDotP(XmlUtil.readDoubleAttribute(reader, "library_dotp"));
+        chromInfo.setIsotopeDotP(XmlUtil.readDoubleAttribute(reader, "isotope_dotp"));
+        chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
         chromInfo.setUserSet(XmlUtil.readBooleanAttribute(reader, "user_set"));
 
         while(reader.hasNext())
@@ -1321,7 +1331,7 @@ public class SkylineDocumentParser
 
         String calcNeutralMass = reader.getAttributeValue(null, "calc_neutral_mass");
         if(calcNeutralMass != null)
-            transition.setCalcNeutralMass(Double.parseDouble(calcNeutralMass));
+            transition.setNeutralMass(Double.parseDouble(calcNeutralMass));
 
         String neutralMassLoss = reader.getAttributeValue(null, "loss_neutral_mass");
         if(neutralMassLoss != null)
@@ -1399,11 +1409,16 @@ public class SkylineDocumentParser
                 TransitionChromInfo chromInfo = readTransitionChromInfo(reader);
                 chromInfoList.add(chromInfo);
             }
+            else if (XmlUtil.isStartElement(reader, evtType, TRANSITION_LIB_INFO))
+            {
+                transition.setLibraryRank(Integer.parseInt(reader.getAttributeValue(null, "rank")));
+                transition.setLibraryIntensity(Double.parseDouble(reader.getAttributeValue(null, "intensity")));
+                reader.nextTag();
+            }
             else if (XmlUtil.isStartElement(reader, evtType, LOSSES))
             {
                 neutralLosses.addAll(readLosses(reader));
             }
-            // TODO: transition_lib_info
         }
 
         // Boolean type annotations are not listed in the .sky file if their value was false.
@@ -1496,6 +1511,7 @@ public class SkylineDocumentParser
         chromInfo.setArea(XmlUtil.readDoubleAttribute(reader, "area"));
         chromInfo.setBackground(XmlUtil.readDoubleAttribute(reader, "background"));
         chromInfo.setHeight(XmlUtil.readDoubleAttribute(reader, "height"));
+        chromInfo.setMassErrorPPM(XmlUtil.readDoubleAttribute(reader, "mass_error_ppm"));
         Double fwhm =  XmlUtil.readDoubleAttribute(reader, "fwhm");
         // TODO: Found NaN value for fwhm in Study7.sky.  Should this happen?
         fwhm = (fwhm != null && fwhm.isNaN()) ? null : fwhm;
@@ -1565,7 +1581,10 @@ public class SkylineDocumentParser
     }
 
 
-    public List<Chromatogram> tryLoadChromatogram(List<Transition> transitions, double precursorMz, double tolerance)
+    public List<Chromatogram> tryLoadChromatogram(List<Transition> transitions,
+                                                  double precursorMz,
+                                                  String modifiedSequenceLight,
+                                                  double tolerance)
     {
         // Add precursor matches to a list, if they match at least 1 transition
         // in this group, and are potentially the maximal transition match.
@@ -1592,7 +1611,13 @@ public class SkylineDocumentParser
             while (i < _binaryParser.getChromatograms().length &&
                     matchMz(precursorMz, _binaryParser.getChromatograms()[i].getPrecursorMz(), tolerance))
             {
-                listChromatograms.add(_binaryParser.getChromatograms()[i++]);
+                Chromatogram chrom = _binaryParser.getChromatograms()[i++];
+                // Sequence matching for extracted chromatogram data added in v1.5
+                String modifiedSequenceChrom = chrom.getModifiedSequence();
+                if (modifiedSequenceLight != null && modifiedSequenceChrom != null &&
+                        !modifiedSequenceLight.equals(modifiedSequenceChrom))
+                    continue;
+                listChromatograms.add(chrom);
             }
 
             for (Chromatogram chromInfo : listChromatograms)

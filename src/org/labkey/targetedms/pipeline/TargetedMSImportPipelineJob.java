@@ -58,7 +58,7 @@ public class TargetedMSImportPipelineJob extends PipelineJob
 
     public String getDescription()
     {
-        return "Skyline document import";
+        return "Skyline document import - " + _expData.getFile().getName();
     }
 
     public void run()

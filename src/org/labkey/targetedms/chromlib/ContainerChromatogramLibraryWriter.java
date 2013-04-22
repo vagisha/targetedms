@@ -378,9 +378,9 @@ public class ContainerChromatogramLibraryWriter
     {
         LibPeptide libPeptide = new LibPeptide();
         libPeptide.setSequence(peptide.getSequence());
-        libPeptide.setStartIndex(peptide.getStart());
-        libPeptide.setEndIndex(peptide.getEnd());
-        String previousAa = peptide.getPrevAa();
+        libPeptide.setStartIndex(peptide.getStartIndex());
+        libPeptide.setEndIndex(peptide.getEndIndex());
+        String previousAa = peptide.getPreviousAa();
         if(previousAa != null && previousAa.length() > 0)
         {
             libPeptide.setPreviousAa(previousAa.charAt(0));
@@ -515,7 +515,7 @@ public class ContainerChromatogramLibraryWriter
         LibTransition transitionToSave = new LibTransition();
         transitionToSave.setMz(transition.getMz());
         transitionToSave.setCharge(transition.getCharge());
-        transitionToSave.setNeutralMass(transition.getCalcNeutralMass());
+        transitionToSave.setNeutralMass(transition.getNeutralMass());
         transitionToSave.setNeutralLossMass(transition.getNeutralLossMass());
         transitionToSave.setFragmentType(transition.getFragmentType());
         transitionToSave.setFragmentOrdinal(transition.getFragmentOrdinal());

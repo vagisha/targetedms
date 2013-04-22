@@ -235,6 +235,7 @@
             <ns:column columnName="Decoy"/>
             <ns:column columnName="Note"/>
             <ns:column columnName="Rank"/>
+            <ns:column columnName="PeptideModifiedSequence"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideChromInfo">
@@ -359,8 +360,11 @@
                 <ns:formatString>0.00</ns:formatString>
             </ns:column>
             <ns:column columnName="NumTruncated"/>
-            <ns:column columnName="LibraryDtop">
-                <ns:columnTitle>Libraty DTOP</ns:columnTitle>
+            <ns:column columnName="LibraryDotP">
+                <ns:columnTitle>Library DotP</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="IsotopeDotP">
+                <ns:columnTitle>Isotope DotP</ns:columnTitle>
             </ns:column>
             <ns:column columnName="OptimizationStep"/>
             <ns:column columnName="UserSet"/>
@@ -375,6 +379,8 @@
             </ns:column>
             <ns:column columnName="Identified"/>
             <ns:column columnName="Note"/>
+            <ns:column columnName="MaxHeight"/>
+            <ns:column columnName="AverageMassErrorPPM"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Transition">
@@ -469,6 +475,7 @@
             </ns:column>
             <ns:column columnName="Identified"/>
             <ns:column columnName="Note"/>
+            <ns:column columnName="MassErrorPPM"/>
         </ns:columns>
     </ns:table>
     <ns:table tableName="Enzyme" tableDbType="TABLE">

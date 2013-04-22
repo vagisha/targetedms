@@ -75,6 +75,7 @@ public class ChromatogramChartMakerFactory
         {
             // marker for retention time
             chartMaker.addRetentionTimeAnnotation(tChromInfo.getRetentionTime(),
+                                                  pChromInfo.getAverageMassErrorPPM(),
                                                   tChromInfo.getHeight() / 1000,
                                                   0);
         }
@@ -172,6 +173,7 @@ public class ChromatogramChartMakerFactory
             chartMaker.setPeakEndtime(pChromInfo.getMaxEndTime());
         if(pChromInfo.getBestRetentionTime() != null)
             chartMaker.addRetentionTimeAnnotation(pChromInfo.getBestRetentionTime(),
+                                                  pChromInfo.getAverageMassErrorPPM(),
                                                   (bestTransitionHeight) / 1000,
                                                   bestTransitionSeriesIndex);
 
@@ -292,6 +294,7 @@ public class ChromatogramChartMakerFactory
 
             if(pChromInfo.getBestRetentionTime() != null)
                 chartMaker.addRetentionTimeAnnotation(pChromInfo.getBestRetentionTime(),
+                                                      pChromInfo.getAverageMassErrorPPM(),
                                                       maxHeight,
                                                       // Use precursor indexes in reverse order so that we get the same colors as Skyline.
                                                       precursorChromInfoList.size() - i - 1);

@@ -32,11 +32,13 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     private Double _totalAreaNormalized;
     private Double _totalBackground;
     private Double _maxFwhm;
+    private Double _maxHeight;
+    private Double _averageMassErrorPPM;
     private Double _peakCountRatio;
     private Integer _numTruncated;
     private Boolean _identified;
-    private Double _libraryDtop;
-    private Double _isotopeDtop;
+    private Double _libraryDotP;
+    private Double _isotopeDotP;
     private Integer _optimizationStep;
     private Boolean _userSet;
     private String _note;
@@ -136,6 +138,26 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         this._maxFwhm = maxFwhm;
     }
 
+    public Double getMaxHeight()
+    {
+        return _maxHeight;
+    }
+
+    public void setMaxHeight(Double maxHeight)
+    {
+        _maxHeight = maxHeight;
+    }
+
+    public Double getAverageMassErrorPPM()
+    {
+        return _averageMassErrorPPM;
+    }
+
+    public void setAverageMassErrorPPM(Double averageMassErrorPPM)
+    {
+        _averageMassErrorPPM = averageMassErrorPPM;
+    }
+
     public Double getPeakCountRatio()
     {
         return _peakCountRatio;
@@ -166,24 +188,24 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         this._identified = identified;
     }
 
-    public Double getLibraryDtop()
+    public Double getLibraryDotP()
     {
-        return _libraryDtop;
+        return _libraryDotP;
     }
 
-    public void setLibraryDtop(Double libraryDtop)
+    public void setLibraryDotP(Double libraryDotP)
     {
-        this._libraryDtop = libraryDtop;
+        this._libraryDotP = libraryDotP;
     }
 
-    public Double getIsotopeDtop()
+    public Double getIsotopeDotP()
     {
-        return _isotopeDtop;
+        return _isotopeDotP;
     }
 
-    public void setIsotopeDtop(Double isotopeDtop)
+    public void setIsotopeDotP(Double isotopeDotP)
     {
-        this._isotopeDtop = isotopeDtop;
+        this._isotopeDotP = isotopeDotP;
     }
 
     public Integer getOptimizationStep()

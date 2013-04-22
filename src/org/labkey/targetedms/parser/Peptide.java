@@ -28,10 +28,11 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
     private int _peptideGroupId;
 
     private String _sequence;
-    private String _prevAa;
+    private String _peptideModifiedSequence;
+    private String _previousAa;
     private String _nextAa;
-    private Integer _start;
-    private Integer _end;
+    private Integer _startIndex;
+    private Integer _endIndex;
     private double _calcNeutralMass;
     private int _numMissedCleavages;
     private Double _predictedRetentionTime;
@@ -72,14 +73,24 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
         _sequence = sequence;
     }
 
-    public String getPrevAa()
+    public String getPeptideModifiedSequence()
     {
-        return _prevAa;
+        return _peptideModifiedSequence;
     }
 
-    public void setPrevAa(String prevAa)
+    public void setPeptideModifiedSequence(String modifiedSeqence)
     {
-        _prevAa = prevAa;
+        _peptideModifiedSequence = modifiedSeqence;
+    }
+
+    public String getPreviousAa()
+    {
+        return _previousAa;
+    }
+
+    public void setPreviousAa(String previousAa)
+    {
+        _previousAa = previousAa;
     }
 
     public String getNextAa()
@@ -92,24 +103,24 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
         _nextAa = nextAa;
     }
 
-    public Integer getStart()
+    public Integer getStartIndex()
     {
-        return _start;
+        return _startIndex;
     }
 
-    public void setStart(Integer start)
+    public void setStartIndex(Integer start)
     {
-        _start = start;
+        _startIndex = start;
     }
 
-    public Integer getEnd()
+    public Integer getEndIndex()
     {
-        return _end;
+        return _endIndex;
     }
 
-    public void setEnd(Integer end)
+    public void setEndIndex(Integer end)
     {
-        _end = end;
+        _endIndex = end;
     }
 
     public Double getCalcNeutralMass()

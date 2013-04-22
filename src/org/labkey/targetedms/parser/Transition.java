@@ -34,12 +34,16 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
     private Integer fragmentOrdinal;  // e.g. Value is 9 for the y9 fragment
     private Integer charge;
 
-    private Double calcNeutralMass;
+    private Double neutralMass;
     private Double neutralLossMass;
 
     private String cleavageAa;
 
     private Double decoyMassShift;
+
+    // Library values
+    private Integer _libraryRank;
+    private Double _libraryIntensity;
 
     // These fields will be set if the fragmentType is 'precursor'.
     private Integer massIndex;
@@ -97,14 +101,14 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
         this.charge = charge;
     }
 
-    public Double getCalcNeutralMass()
+    public Double getNeutralMass()
     {
-        return calcNeutralMass;
+        return neutralMass;
     }
 
-    public void setCalcNeutralMass(Double calcNeutralMass)
+    public void setNeutralMass(Double neutralMass)
     {
-        this.calcNeutralMass = calcNeutralMass;
+        this.neutralMass = neutralMass;
     }
 
     public Double getNeutralLossMass()
@@ -135,6 +139,26 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
     public void setDecoyMassShift(Double decoyMassShift)
     {
         this.decoyMassShift = decoyMassShift;
+    }
+
+    public Integer getLibraryRank()
+    {
+        return _libraryRank;
+    }
+
+    public void setLibraryRank(Integer libraryRank)
+    {
+        _libraryRank = libraryRank;
+    }
+
+    public Double getLibraryIntensity()
+    {
+        return _libraryIntensity;
+    }
+
+    public void setLibraryIntensity(Double libraryIntensity)
+    {
+        _libraryIntensity = libraryIntensity;
     }
 
     public Integer getMassIndex()

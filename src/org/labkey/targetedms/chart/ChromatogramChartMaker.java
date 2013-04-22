@@ -86,11 +86,13 @@ class ChromatogramChartMaker
         _peakEndtime = peakEndtime;
     }
 
-    public void addRetentionTimeAnnotation(double retentionTime, double height, int seriesIndex)
+    public void addRetentionTimeAnnotation(double retentionTime, Double massError, double height, int seriesIndex)
     {
-        XYPointerAnnotation pointer = new XYPointerAnnotation(ROUND_1.format(retentionTime),
-                                                                  retentionTime, height,
-                                                                  Math.PI);
+        String label = ROUND_1.format(retentionTime);
+        // TODO: Can we make this 2-line formatting like in Skyline?
+        if (massError != null)
+            label += " (" + ROUND_1.format(massError) + " ppm)";
+        XYPointerAnnotation pointer = new XYPointerAnnotation(label, retentionTime, height, Math.PI);
             pointer.setTipRadius(3.0);  // The radius from the (x, y) point to the tip of the arrow
             pointer.setBaseRadius(13.0); // The radius from the (x, y) point to the start of the arrow line
             pointer.setArrowLength(13.0);  //The length of the arrow head
