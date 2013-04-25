@@ -87,8 +87,8 @@ public class Chromatogram extends SkylineEntity
             _numTransitions = buffer.getShort();
             _numPeaks = buffer.get();
             _maxPeakIndex = buffer.get();
-            buffer.getShort(); // Burn 2 bytes for due to compiler alignment of in-memory data structure
-            buffer.getInt(); // Burn 4 bytes for due to compiler alignment of in-memory data structure
+            buffer.getShort(); // Burn 2 bytes due to compiler alignment of in-memory data structure
+            buffer.getInt(); // Burn 4 bytes due to compiler alignment of in-memory data structure (v5) or StatusId and StatusRank (v6)
             _precursor = buffer.getDouble();
             _locationPoints = buffer.getLong();
             _modifiedSequence = seqIndex != -1 ? new String(seqBytes, seqIndex, seqLen) : null;

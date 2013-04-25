@@ -41,12 +41,13 @@ public class SkylineBinaryParser
     private Chromatogram[] _chromatograms;
     private ChromatogramTran[] _transitions;
 
+    public static final int FORMAT_VERSION_CACHE_6 = 6;
     public static final int FORMAT_VERSION_CACHE_5 = 5;
     public static final int FORMAT_VERSION_CACHE_4 = 4;
     public static final int FORMAT_VERSION_CACHE_3 = 3;
     public static final int FORMAT_VERSION_CACHE_2 = 2;
 
-    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_5;
+    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_6;
 
     private CachedFile[] _cacheFiles;
 
@@ -178,6 +179,9 @@ public class SkylineBinaryParser
         len_instrument_info,
         // Version 5 file header addition
         flags,
+        // Version 6 file header addition
+        max_retention_time,
+        max_intensity,
 
         count;
 
@@ -185,8 +189,10 @@ public class SkylineBinaryParser
         {
             switch (formatVersion)
             {
-                case FORMAT_VERSION_CACHE_5:
+                case FORMAT_VERSION_CACHE_6:
                     return FileHeader.count.ordinal() * 4;
+                case FORMAT_VERSION_CACHE_5:
+                    return FileHeader.max_retention_time.ordinal() * 4;
                 case FORMAT_VERSION_CACHE_4:
                     return FileHeader.flags.ordinal() * 4;
                 case (FORMAT_VERSION_CACHE_3):
@@ -330,7 +336,8 @@ public class SkylineBinaryParser
     public boolean isVersionCurrent()
     {
         long version = Header.format_version.getHeaderValueInt(_headers);
-        return (version == FORMAT_VERSION_CACHE_5 ||
+        return (version == FORMAT_VERSION_CACHE_6 ||
+                version == FORMAT_VERSION_CACHE_5 ||
                 version == FORMAT_VERSION_CACHE_4 ||
                 version == FORMAT_VERSION_CACHE_3);
     }

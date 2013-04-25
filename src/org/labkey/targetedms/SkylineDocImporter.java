@@ -20,10 +20,10 @@ import org.apache.log4j.Logger;
 import org.labkey.api.ProteinService;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
+import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
@@ -130,31 +130,7 @@ public class SkylineDocImporter
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
             throw fnfe;
         }
-        catch (SQLException e)
-        {
-            logError("Skyline document import failed", e);
-            updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
-            throw e;
-        }
-        catch (IOException e)
-        {
-            logError("Skyline document import failed", e);
-            updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
-            throw e;
-        }
-        catch (XMLStreamException e)
-        {
-            logError("Skyline document import failed", e);
-            updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
-            throw e;
-        }
-        catch (RuntimeException e)
-        {
-            logError("Skyline document import failed", e);
-            updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
-            throw e;
-        }
-        catch (DataFormatException e)
+        catch (SQLException | DataFormatException | IOException | XMLStreamException | RuntimeException e)
         {
             logError("Skyline document import failed", e);
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
@@ -176,7 +152,7 @@ public class SkylineDocImporter
         // data for this run before restarting the import in the case of a retry
         TargetedMSManager.getSchema().getScope().ensureTransaction();
         SkylineDocumentParser parser = null;
-        File zipDir = null;
+        File zipDir;
         try
         {
             File f = _expData.getFile();
@@ -266,9 +242,9 @@ public class SkylineDocImporter
             }
 
             // 2. Replicates and sample files
-            Map<String, Integer> skylineIdSampleFileIdMap = new HashMap<String, Integer>();
-            Map<String, Integer> filePathSampleFileIdMap = new HashMap<String, Integer>();
-            Map<Instrument, Integer> instrumentIdMap = new HashMap<Instrument, Integer>();
+            Map<String, Integer> skylineIdSampleFileIdMap = new HashMap<>();
+            Map<String, Integer> filePathSampleFileIdMap = new HashMap<>();
+            Map<Instrument, Integer> instrumentIdMap = new HashMap<>();
 
             for(Replicate replicate: parser.getReplicates())
             {
@@ -314,11 +290,11 @@ public class SkylineDocImporter
             }
 
             // 3. Peptide settings
-            Map<String, Integer> isotopeLabelIdMap = new HashMap<String, Integer>();
-            Set<Integer> internalStandardLabelIds = new HashSet<Integer>();
-            Map<String, Integer> structuralModNameIdMap = new HashMap<String, Integer>();
-            Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap = new HashMap<Integer, PeptideSettings.PotentialLoss[]>();
-            Map<String, Integer> isotopeModNameIdMap = new HashMap<String, Integer>();
+            Map<String, Integer> isotopeLabelIdMap = new HashMap<>();
+            Set<Integer> internalStandardLabelIds = new HashSet<>();
+            Map<String, Integer> structuralModNameIdMap = new HashMap<>();
+            Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap = new HashMap<>();
+            Map<String, Integer> isotopeModNameIdMap = new HashMap<>();
             PeptideSettings pepSettings = parser.getPeptideSettings();
             PeptideSettings.PeptideModifications modifications = pepSettings.getModifications();
             if(modifications != null)
@@ -389,7 +365,7 @@ public class SkylineDocImporter
 
             // Spectrum library settings
             Map<String, Integer> librarySourceTypes = LibraryManager.getLibrarySourceTypes();
-            Map<String, Integer> libraryNameIdMap = new HashMap<String, Integer>();
+            Map<String, Integer> libraryNameIdMap = new HashMap<>();
             PeptideSettings.SpectrumLibrarySettings librarySettings = pepSettings.getLibrarySettings();
             if(librarySettings != null)
             {
@@ -579,14 +555,14 @@ public class SkylineDocImporter
             Table.insert(_user, TargetedMSManager.getTableInfoPeptideIsotopeModification(), mod);
         }
 
-        Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap = new HashMap<>();
 
         // Store the peak areas of the peptides labeled with different isotope labels  (in different sample files)
         // The key is the sample file name. The value is also a map with the isotope label ID as the key
         // Peak areas are the sum of the areas of the precursors of this peptide
         // labeleled with a specific isotope label
-        Map<String, Map<Integer, InternalStdArea>> intStandardPeptideAreas = new HashMap<String, Map<Integer, InternalStdArea>>();
-        Map<String, Map<Integer, InternalStdArea>> lightPeptideAreas = new HashMap<String, Map<Integer, InternalStdArea>>();
+        Map<String, Map<Integer, InternalStdArea>> intStandardPeptideAreas = new HashMap<>();
+        Map<String, Map<Integer, InternalStdArea>> lightPeptideAreas = new HashMap<>();
 
         for(PeptideChromInfo peptideChromInfo: peptide.getPeptideChromInfoList())
         {
@@ -608,7 +584,7 @@ public class SkylineDocImporter
                     Map<Integer, InternalStdArea> areasForFile = intStandardPeptideAreas.get(skylineSampleFileId);
                     if(areasForFile == null)
                     {
-                        areasForFile = new HashMap<Integer, InternalStdArea>();
+                        areasForFile = new HashMap<>();
                         intStandardPeptideAreas.put(skylineSampleFileId, areasForFile);
                     }
                     areasForFile.put(labelId,  new InternalStdArea(labelId,
@@ -621,7 +597,7 @@ public class SkylineDocImporter
                    Map<Integer, InternalStdArea> areasForFile = lightPeptideAreas.get(skylineSampleFileId);
                     if(areasForFile == null)
                     {
-                        areasForFile = new HashMap<Integer, InternalStdArea>();
+                        areasForFile = new HashMap<>();
                         lightPeptideAreas.put(skylineSampleFileId, areasForFile);
                     }
                     areasForFile.put(labelId,  new InternalStdArea(labelId,
@@ -634,11 +610,11 @@ public class SkylineDocImporter
         // Store the peak areas of precursors (in different sample files) labeled with an internal standard.
         // The key in the map is the precursor charge + sample file name. Value is also a map with the
         // isotope label id as the key
-        Map<String, Map<Integer, InternalStdArea>> intStandardPrecursorAreas = new HashMap<String, Map<Integer, InternalStdArea>>();
+        Map<String, Map<Integer, InternalStdArea>> intStandardPrecursorAreas = new HashMap<>();
         // Store the peak areas of the transitions (in different sample files) labeled with an internal standard.
         // The key in the map is the precursor charge + transitiontype+transitionOrdinal + sample file name.
         // Value is also a map with the isotope label id as the key
-        Map<String,  Map<Integer, InternalStdArea>> intStandardTransitionAreas = new HashMap<String,  Map<Integer, InternalStdArea>>();
+        Map<String,  Map<Integer, InternalStdArea>> intStandardTransitionAreas = new HashMap<>();
 
 
         // 3. precursor
@@ -757,7 +733,7 @@ public class SkylineDocImporter
             annotation = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
         }
 
-        Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap = new HashMap<Integer, Integer>();
+        Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap = new HashMap<>();
 
         Precursor.LibraryInfo libInfo = precursor.getLibraryInfo();
         if(libInfo != null)
@@ -802,14 +778,14 @@ public class SkylineDocImporter
                 Map<Integer, InternalStdArea> areasForPrecKey= intStandardPeptideAreas.get(key);
                 if(areasForPrecKey == null)
                 {
-                    areasForPrecKey = new HashMap<Integer, InternalStdArea>();
+                    areasForPrecKey = new HashMap<>();
                     intStandardPrecursorAreas.put(key, areasForPrecKey);
                 }
 
                 if(areasForPrecKey.containsKey(precursor.getIsotopeLabelId()))
                 {
                     throw new IllegalStateException("Duplicate area information found for label "+precursor.getIsotopeLabel()+
-                                                    " and precursor chrom info key, "+key+", while calculating peak area ratios.");
+                                                    " and precursor chrom info key, "+key+", while calculating peak area ratios. This is likely because there are separate replicates that refer to the same sample file based on ID, but with different paths.");
                 }
                 InternalStdArea internalStdArea = new InternalStdArea(precursor.getIsotopeLabelId(),
                         precursorChromInfo.getId(), precursorChromInfo.getTotalArea());
@@ -905,14 +881,14 @@ public class SkylineDocImporter
                 Map<Integer, InternalStdArea> areasForLabels = intStandardTransitionAreas.get(key);
                 if(areasForLabels == null)
                 {
-                    areasForLabels = new HashMap<Integer, InternalStdArea>();
+                    areasForLabels = new HashMap<>();
                     intStandardTransitionAreas.put(key, areasForLabels);
                 }
 
                 if(areasForLabels.containsKey(precursor.getIsotopeLabelId()))
                 {
                     throw new IllegalStateException("Duplicate area information found for label "+precursor.getIsotopeLabel()+
-                                                    " and transition chrom info key, "+key+", while calculating peak area ratios.");
+                                                    " and transition chrom info key, "+key+", while calculating peak area ratios.  This is likely because there are separate replicates that refer to the same sample file based on ID, but with different paths.");
                 }
 
                 InternalStdArea internalStdArea = new InternalStdArea(precursor.getIsotopeLabelId(),
@@ -1132,15 +1108,8 @@ public class SkylineDocImporter
 
     protected static void updateRunStatus(int runId, String status, int statusId)
     {
-        try
-        {
-            Table.execute(TargetedMSManager.getSchema(), "UPDATE " + TargetedMSManager.getTableInfoRuns() + " SET Status = ?, StatusId = ? WHERE Id = ?",
+        new SqlExecutor(TargetedMSManager.getSchema()).execute("UPDATE " + TargetedMSManager.getTableInfoRuns() + " SET Status = ?, StatusId = ? WHERE Id = ?",
                     status, statusId, runId);
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
-        }
     }
 
     private static final Object _schemaLock = new Object();
@@ -1210,8 +1179,6 @@ public class SkylineDocImporter
 
     protected int createRun() throws SQLException
     {
-        HashMap<String, Object> runMap = new HashMap<String, Object>();
-
         TargetedMSRun run = TargetedMSManager.getRunByDataId(_expData.getRowId(), _container);
         if (run != null)
         {
