@@ -41,14 +41,14 @@ public class ReplicateManager
 
     public static SampleFile getSampleFile(int sampleFileId)
     {
-        return Table.selectObject(TargetedMSManager.getSchema().getTable(TargetedMSSchema.TABLE_SAMPLE_FILE),
-                sampleFileId, SampleFile.class);
+        return new TableSelector(TargetedMSManager.getSchema().getTable(TargetedMSSchema.TABLE_SAMPLE_FILE))
+            .getObject(sampleFileId, SampleFile.class);
     }
 
     public static Replicate getReplicate(int replicateId)
     {
-        return Table.selectObject(TargetedMSManager.getSchema().getTable(TargetedMSSchema.TABLE_REPLICATE),
-                replicateId, Replicate.class);
+        return new TableSelector(TargetedMSManager.getSchema().getTable(TargetedMSSchema.TABLE_REPLICATE))
+            .getObject(replicateId, Replicate.class);
     }
 
     public static SampleFile getSampleFileForPrecursorChromInfo(int precursorChromInfoId)

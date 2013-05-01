@@ -19,7 +19,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.Peptide;
@@ -38,7 +37,7 @@ public class PeptideManager
 
     public static Peptide get(int peptideId)
     {
-        return Table.selectObject(TargetedMSManager.getTableInfoPeptide(), peptideId, Peptide.class);
+        return new TableSelector(TargetedMSManager.getTableInfoPeptide()).getObject(peptideId, Peptide.class);
     }
     public static Peptide getPeptide(Container c, int id)
     {

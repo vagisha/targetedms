@@ -42,7 +42,7 @@ public class TransitionManager
 
     public static Transition get(int transitionId)
     {
-        return Table.selectObject(TargetedMSManager.getTableInfoTransition(), transitionId, Transition.class);
+        return new TableSelector(TargetedMSManager.getTableInfoTransition()).getObject(transitionId, Transition.class);
     }
 
     public static TransitionChromInfo getTransitionChromInfo(Container c, int id)

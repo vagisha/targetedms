@@ -20,6 +20,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.PeptideSettings;
@@ -86,6 +87,6 @@ public class IsotopeLabelManager
 
     public static PeptideSettings.IsotopeLabel getIsotopeLabel(int isotopeLabelId)
     {
-        return Table.selectObject(TargetedMSManager.getTableInfoIsotopeLabel(), isotopeLabelId, PeptideSettings.IsotopeLabel.class);
+        return new TableSelector(TargetedMSManager.getTableInfoIsotopeLabel()).getObject(isotopeLabelId, PeptideSettings.IsotopeLabel.class);
     }
 }
