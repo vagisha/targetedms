@@ -439,9 +439,15 @@ public class TargetedMSSchema extends UserSchema
                                                                   ContainerJoinType.RunFK.getSQL(),
                                                                   TargetedMSManager.getTableInfoPeptideGroupAnnotation(),
                                                                   "PeptideGroupId",
-                                                                  "Protein Annotations");
+                                                                  "Protein Annotations")
+            {
+                @Override
+                public FieldKey getContainerFieldKey()
+                {
+                    return FieldKey.fromParts("RunId", "Folder");
+                }
+            };
             DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer()), Collections.singletonMap("id", "Id"));
-            detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("RunId", "Folder")));
             result.setDetailsURL(detailsURLs);
             result.getColumn("SequenceId").setFk(new LookupForeignKey("SeqId")
             {
@@ -520,7 +526,14 @@ public class TargetedMSSchema extends UserSchema
                                                                   ContainerJoinType.PeptideGroupFK.getSQL(),
                                                                   TargetedMSManager.getTableInfoPeptideAnnotation(),
                                                                   "PeptideId",
-                                                                  "Peptide Annotations");
+                                                                  "Peptide Annotations")
+            {
+                @Override
+                public FieldKey getContainerFieldKey()
+                {
+                    return FieldKey.fromParts("PeptideGroupId", "RunId", "Folder");
+                }
+            };
             result.getColumn("PeptideGroupId").setFk(new LookupForeignKey("Id")
             {
                 @Override
@@ -531,7 +544,6 @@ public class TargetedMSSchema extends UserSchema
             });
             DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()),
                                                                   Collections.singletonMap("id", "Id"));
-            detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("PeptideGroupId", "RunId", "Folder")));
             result.setDetailsURL(detailsURLs);
             List<FieldKey> defaultCols = new ArrayList<FieldKey>(result.getDefaultVisibleColumns());
             defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
