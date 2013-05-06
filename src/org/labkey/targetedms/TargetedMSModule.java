@@ -26,6 +26,7 @@ import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.module.SpringModule;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.QueryView;
@@ -46,10 +47,8 @@ import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -63,8 +62,15 @@ public class TargetedMSModule extends SpringModule
     public static final String IMPORT_SKYZIP_PROTOCOL_OBJECT_PREFIX = "TargetedMS.ImportSkyZip";
 
     public static final ExperimentRunType EXP_RUN_TYPE = new TargetedMSExperimentRunType();
+    public static final String TARGETED_MS_SETUP = "Targeted MS Setup";
+    public static final String TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD = "Chromatogram Library Download";
     public static final String TARGETED_MS_RUNS_WEBPART_NAME = "Targeted MS Runs";
     public static final String TARGETED_MS_PROTEIN_SEARCH = "Targeted MS Protein Search";
+
+    public static final String TARGETED_MS_FOLDER_TYPE = "TargetedMS Folder Type";
+    public static final String TARGETED_MS_FOLDER_TYPE_EXPERIMENT = "Experiment";
+    public static final String TARGETED_MS_FOLDER_TYPE_LIBRARY = "Library";
+    public static final String TARGETED_MS_FOLDER_TYPE_UNDEFINED = "Undefined";
 
     @Override
     public String getName()
@@ -87,6 +93,26 @@ public class TargetedMSModule extends SpringModule
     @Override
     protected Collection<WebPartFactory> createWebPartFactories()
     {
+        BaseWebPartFactory setupFactory = new BaseWebPartFactory(TARGETED_MS_SETUP)
+                {
+                    public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+                    {
+                        JspView view = new JspView("/org/labkey/targetedms/view/folderSetup.jsp");
+                                        view.setTitle("Configure Targeted MS Folder");
+                                        return view;
+                    }
+                };
+
+        BaseWebPartFactory chromatogramLibraryDownload = new BaseWebPartFactory(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD)
+                        {
+                            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+                            {
+                                JspView view = new JspView("/org/labkey/targetedms/view/chromatogramLibraryDownload.jsp");
+                                                view.setTitle("Chromatogram Library Download");
+                                                return view;
+                            }
+                        };
+
         BaseWebPartFactory runsFactory = new BaseWebPartFactory(TARGETED_MS_RUNS_WEBPART_NAME)
         {
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
@@ -122,6 +148,8 @@ public class TargetedMSModule extends SpringModule
         };
 
         List<WebPartFactory> webpartFactoryList = new ArrayList<WebPartFactory>(1);
+        webpartFactoryList.add(setupFactory);
+        webpartFactoryList.add(chromatogramLibraryDownload);
         webpartFactoryList.add(runsFactory);
         webpartFactoryList.add(proteinSearchFactory);
         webpartFactoryList.add(modificationSearchFactory);
@@ -148,6 +176,12 @@ public class TargetedMSModule extends SpringModule
         TargetedMSSchema.register();
         EnumConverter.registerEnum(TargetedMSRun.RepresentativeDataState.class);
         EnumConverter.registerEnum(RepresentativeDataState.class);
+
+        // Set the TargetedMS Folder Type property
+        ModuleProperty moduleTypeProperty = new ModuleProperty(this, TARGETED_MS_FOLDER_TYPE);
+        moduleTypeProperty.setDefaultValue(TARGETED_MS_FOLDER_TYPE_UNDEFINED);
+        moduleTypeProperty.setCanSetPerContainer(true);
+        addModuleProperty(moduleTypeProperty);
     }
 
     @Override

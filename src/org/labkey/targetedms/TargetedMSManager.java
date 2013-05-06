@@ -41,6 +41,8 @@ import org.labkey.api.exp.api.ExpMaterial;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
@@ -62,6 +64,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
 
 public class TargetedMSManager
 {
@@ -1018,5 +1022,23 @@ public class TargetedMSManager
                         "Id IN (SELECT CePredictorId FROM " + getTableInfoTransitionPredictionSettings() + " tps, " + getTableInfoRuns() + " r WHERE r.Id = tps.RunId AND r.Deleted = ?)" +
                         "OR Id IN (SELECT DpPredictorId FROM " + getTableInfoTransitionPredictionSettings() + " tps, " + getTableInfoRuns() + " r WHERE r.Id = tps.RunId AND r.Deleted = ?)"
                 , true, true);
+    }
+
+    // return the ModuleProperty value for "TARGETED_MS_FOLDER_TYPE"
+    public static String getFolderType(Container c) {
+        TargetedMSModule targetedMSModule = null;
+        for (Module m : c.getActiveModules())
+        {
+            if (m instanceof TargetedMSModule)
+            {
+                targetedMSModule = (TargetedMSModule) m;
+            }
+        }
+        if (targetedMSModule == null)
+        {
+            return null; // no TargetedMS module found - do nothing
+        }
+        ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
+        return moduleProperty.getEffectiveValue(c);
     }
 }

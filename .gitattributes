@@ -178,9 +178,11 @@ src/org/labkey/targetedms/view/PeptidePrecursorChromatogramsView.java -text
 src/org/labkey/targetedms/view/PrecursorHtmlMaker.java -text
 src/org/labkey/targetedms/view/TransitionPeptideSearchViewProvider.java -text
 src/org/labkey/targetedms/view/TransitionProteinSearchViewProvider.java -text
+src/org/labkey/targetedms/view/chromatogramLibraryDownload.jsp -text
 src/org/labkey/targetedms/view/chromatogramsForm.jsp -text
 src/org/labkey/targetedms/view/confirmImport.jsp -text
 src/org/labkey/targetedms/view/conflictSummary.jsp -text
+src/org/labkey/targetedms/view/folderSetup.jsp -text
 src/org/labkey/targetedms/view/peptidePeakAreaView.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
 src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text
@@ -192,6 +194,7 @@ src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatch.java -text
 src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatchGetter.java -text
 src/org/labkey/targetedms/view/spectrum/PeptideSpectrumView.java -text
 src/org/labkey/targetedms/view/spectrum/spectrumView.jsp -text
+webapp/TargetedMS/images/ChromatogramLibraryScreenshot.png -text
 webapp/TargetedMS/images/Fragment.gif -text
 webapp/TargetedMS/images/TransitionGroup.gif -text
 webapp/TargetedMS/jquery/jquery-1.8.3.min.js -text

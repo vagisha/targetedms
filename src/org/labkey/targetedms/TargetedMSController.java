@@ -32,6 +32,7 @@ import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ExportAction;
+import org.labkey.api.action.FormHandlerAction;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasViewContext;
 import org.labkey.api.action.QueryViewAction;
@@ -51,6 +52,8 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.ms2.MS2Urls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
 import org.labkey.api.query.DetailsURL;
@@ -74,6 +77,7 @@ import org.labkey.api.view.GridView;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
+import org.labkey.api.view.Portal;
 import org.labkey.api.view.RedirectException;
 import org.labkey.api.view.VBox;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -137,6 +141,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.targetedms.TargetedMSModule.*;
+
 public class TargetedMSController extends SpringActionController
 {
     private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
@@ -166,6 +172,106 @@ public class TargetedMSController extends SpringActionController
     }
 
     // ------------------------------------------------------------------------
+    // Action to setup a new folder
+    // ------------------------------------------------------------------------
+    @RequiresPermissionClass(ReadPermission.class)
+    public class FolderSetupAction extends FormHandlerAction<FolderSetupForm>
+    {
+        public static final String EXPERIMENTAL_DATA = "experimentalData";
+        public static final String CHROMATOGRAM_LIBRARY = "chromatogramLibrary";
+
+        public static final String DEFAULT_TAB = "DefaultDashboard";
+        public static final String DATA_PINELINE_TAB = "Data Pipeline";
+
+        public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
+        public static final String DATA_PIPELINE_WEBPART = "Data Pipeline";
+
+        @Override
+        public void validateCommand(FolderSetupForm target, Errors errors)
+        {
+        }
+
+        @Override
+        public boolean handlePost(FolderSetupForm folderSetupForm, BindException errors) throws Exception
+        {
+            Container c = getContainer();
+            TargetedMSModule targetedMSModule = null;
+            for (Module m : c.getActiveModules())
+            {
+                if (m instanceof TargetedMSModule)
+                {
+                    targetedMSModule = (TargetedMSModule) m;
+                }
+            }
+            if (targetedMSModule == null)
+            {
+                return true; // no TargetedMS module found - do nothing
+            }
+            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
+            switch (moduleProperty.getEffectiveValue(c))
+            {
+                case TARGETED_MS_FOLDER_TYPE_EXPERIMENT:
+                    return true;  // Module type already set to Experiment
+                case TARGETED_MS_FOLDER_TYPE_LIBRARY:
+                    return true;  // Module type already set to Library
+                case TARGETED_MS_FOLDER_TYPE_UNDEFINED:
+                    // continue with the remainder of the function
+                    break;
+            }
+            if (folderSetupForm.getFolderType() != null && folderSetupForm.getFolderType().equals(EXPERIMENTAL_DATA))
+            {
+                moduleProperty.saveValue(getUser(), c, TARGETED_MS_FOLDER_TYPE_EXPERIMENT);
+
+                // setup the EXPERIMENTAL_DATA default webparts
+                ArrayList<Portal.WebPart> tab1 = new ArrayList<>();
+                tab1.add(Portal.getPortalPart(MASS_SPEC_SEARCH_WEBPART).createWebPart());
+                tab1.add(Portal.getPortalPart(TARGETED_MS_RUNS_WEBPART_NAME).createWebPart());
+                Portal.saveParts(c, DEFAULT_TAB, tab1);
+                // Add a second portal page (tab) and webparts
+                ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
+                tab2.add(Portal.getPortalPart(DATA_PIPELINE_WEBPART).createWebPart());
+                Portal.saveParts(c, DATA_PINELINE_TAB, tab2);
+                Portal.addProperty(c, DATA_PINELINE_TAB, Portal.PROP_CUSTOMTAB);
+
+                return true;
+            }
+            else if (folderSetupForm.getFolderType() != null && folderSetupForm.getFolderType().equals(CHROMATOGRAM_LIBRARY))
+            {
+                // setup the CHROMATOGRAM_LIBRARY default webparts
+                moduleProperty.saveValue(getUser(), c, TARGETED_MS_FOLDER_TYPE_LIBRARY);
+
+                // Add the appropriate web parts to the page
+                ArrayList<Portal.WebPart> tab1 = new ArrayList<>();
+                tab1.add(Portal.getPortalPart(MASS_SPEC_SEARCH_WEBPART).createWebPart());
+                // TODO: show proteins and peptides as seperate grids
+                // create query view pointed at protein or peptideGroup query and one pointed at peptide query. exposed in TargetedMS schema
+                // configure query webpart - probably will want a custom webpart.
+                // example - sampleSetWebPart, shows a grid with custom buttons
+
+                tab1.add(Portal.getPortalPart(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD).createWebPart());
+                Portal.saveParts(c, DEFAULT_TAB, tab1);
+                // Add a second portal page (tab) and webparts
+                ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
+                tab2.add(Portal.getPortalPart(DATA_PIPELINE_WEBPART).createWebPart());
+                Portal.saveParts(c, DATA_PINELINE_TAB, tab2);
+                Portal.addProperty(c, DATA_PINELINE_TAB, Portal.PROP_CUSTOMTAB);
+
+                return true;
+            }
+            else
+            {
+                return true;  // no option selected - do nothing
+            }
+        }
+
+        @Override
+        public URLHelper getSuccessURL(FolderSetupForm folderSetupForm)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+    }
+
+    // ------------------------------------------------------------------------
     // Action to show a list of uploaded documents
     // ------------------------------------------------------------------------
     @RequiresPermissionClass(ReadPermission.class)
@@ -174,8 +280,8 @@ public class TargetedMSController extends SpringActionController
     {
         public ModelAndView getView(Object o, BindException errors) throws Exception
         {
-            QueryView gridView = ExperimentService.get().createExperimentRunWebPart(getViewContext(), TargetedMSModule.EXP_RUN_TYPE);
-            gridView.setTitle(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME);
+            QueryView gridView = ExperimentService.get().createExperimentRunWebPart(getViewContext(), EXP_RUN_TYPE);
+            gridView.setTitle(TARGETED_MS_RUNS_WEBPART_NAME);
             gridView.setTitleHref(new ActionURL(TargetedMSController.ShowListAction.class, getContainer()));
             VBox vbox = new VBox();
             vbox.addView(new JspView("/org/labkey/targetedms/view/conflictSummary.jsp"));
@@ -2660,6 +2766,32 @@ public class TargetedMSController extends SpringActionController
             form.setDeltaMass(10.0);
             assertEquals("Unexpected delta mass search string", "[+10]", form.getDeltaMassSearchStr(false));
             assertEquals("Unexpected delta mass search string", "![+10!]", form.getDeltaMassSearchStr(true));
+        }
+    }
+
+    public static class FolderSetupForm
+    {
+        private String _folderType;
+        private boolean _precursorNormalized;
+
+        public String getFolderType()
+        {
+            return _folderType;
+        }
+
+        public void setFolderType(String folderType)
+        {
+            _folderType = folderType;
+        }
+
+        public boolean isPrecursorNormalized()
+        {
+            return _precursorNormalized;
+        }
+
+        public void setPrecursorNormalized(boolean precursorNormalized)
+        {
+            _precursorNormalized = precursorNormalized;
         }
     }
 }
