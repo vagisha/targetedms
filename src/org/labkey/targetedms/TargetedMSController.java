@@ -52,9 +52,11 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.module.DefaultFolderType;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.ms2.MS2Urls;
+import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
@@ -132,14 +134,11 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.labkey.targetedms.TargetedMSModule.*;
 
@@ -177,10 +176,6 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermissionClass(ReadPermission.class)
     public class FolderSetupAction extends FormHandlerAction<FolderSetupForm>
     {
-        public static final String EXPERIMENTAL_DATA = "experimentalData";
-        public static final String CHROMATOGRAM_LIBRARY = "chromatogramLibrary";
-
-        public static final String DEFAULT_TAB = "DefaultDashboard";
         public static final String DATA_PINELINE_TAB = "Data Pipeline";
 
         public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
@@ -208,25 +203,25 @@ public class TargetedMSController extends SpringActionController
                 return true; // no TargetedMS module found - do nothing
             }
             ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
-            switch (moduleProperty.getEffectiveValue(c))
+            switch (FolderType.valueOf(moduleProperty.getValueContainerSpecific(c)))
             {
-                case TARGETED_MS_FOLDER_TYPE_EXPERIMENT:
-                    return true;  // Module type already set to Experiment
-                case TARGETED_MS_FOLDER_TYPE_LIBRARY:
-                    return true;  // Module type already set to Library
-                case TARGETED_MS_FOLDER_TYPE_UNDEFINED:
+                case Experiment:
+                case Library:
+                case LibraryProtein:
+                    return true;  // Module type already set to LibraryProtein
+                case Undefined:
                     // continue with the remainder of the function
                     break;
             }
-            if (folderSetupForm.getFolderType() != null && folderSetupForm.getFolderType().equals(EXPERIMENTAL_DATA))
+            if (folderSetupForm.getFolderType() != null && folderSetupForm.getFolderType().equals(FolderType.Experiment.toString()))
             {
-                moduleProperty.saveValue(getUser(), c, TARGETED_MS_FOLDER_TYPE_EXPERIMENT);
+                moduleProperty.saveValue(getUser(), c, FolderType.Experiment.toString());
 
                 // setup the EXPERIMENTAL_DATA default webparts
                 ArrayList<Portal.WebPart> tab1 = new ArrayList<>();
                 tab1.add(Portal.getPortalPart(MASS_SPEC_SEARCH_WEBPART).createWebPart());
                 tab1.add(Portal.getPortalPart(TARGETED_MS_RUNS_WEBPART_NAME).createWebPart());
-                Portal.saveParts(c, DEFAULT_TAB, tab1);
+                Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, tab1);
                 // Add a second portal page (tab) and webparts
                 ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
                 tab2.add(Portal.getPortalPart(DATA_PIPELINE_WEBPART).createWebPart());
@@ -235,21 +230,26 @@ public class TargetedMSController extends SpringActionController
 
                 return true;
             }
-            else if (folderSetupForm.getFolderType() != null && folderSetupForm.getFolderType().equals(CHROMATOGRAM_LIBRARY))
+            else if (folderSetupForm.getFolderType() != null && folderSetupForm.getFolderType().equals(FolderType.Library.toString()))
             {
                 // setup the CHROMATOGRAM_LIBRARY default webparts
-                moduleProperty.saveValue(getUser(), c, TARGETED_MS_FOLDER_TYPE_LIBRARY);
+                if (folderSetupForm.isPrecursorNormalized())
+                {
+                    moduleProperty.saveValue(getUser(), c, FolderType.LibraryProtein.toString());
+                }
+                else
+                {
+                    moduleProperty.saveValue(getUser(), c, FolderType.Library.toString());
+                }
+
 
                 // Add the appropriate web parts to the page
                 ArrayList<Portal.WebPart> tab1 = new ArrayList<>();
                 tab1.add(Portal.getPortalPart(MASS_SPEC_SEARCH_WEBPART).createWebPart());
-                // TODO: show proteins and peptides as seperate grids
-                // create query view pointed at protein or peptideGroup query and one pointed at peptide query. exposed in TargetedMS schema
-                // configure query webpart - probably will want a custom webpart.
-                // example - sampleSetWebPart, shows a grid with custom buttons
-
+                tab1.add(Portal.getPortalPart(TARGETED_MS_PEPTIDE_GROUP_VIEW).createWebPart());
+                tab1.add(Portal.getPortalPart(TARGETED_MS_PEPTIDE_VIEW).createWebPart());
                 tab1.add(Portal.getPortalPart(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD).createWebPart());
-                Portal.saveParts(c, DEFAULT_TAB, tab1);
+                Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, tab1);
                 // Add a second portal page (tab) and webparts
                 ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
                 tab2.add(Portal.getPortalPart(DATA_PIPELINE_WEBPART).createWebPart());
@@ -1058,7 +1058,7 @@ public class TargetedMSController extends SpringActionController
     {
         public ActionURL getSuccessURL(SkylinePipelinePathForm form)
         {
-            return TargetedMSController.getShowListURL(getContainer());
+            return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
         }
 
         public void validateCommand(SkylinePipelinePathForm form, Errors errors)
@@ -1067,8 +1067,15 @@ public class TargetedMSController extends SpringActionController
 
         public boolean doAction(SkylinePipelinePathForm form, BindException errors) throws Exception
         {
-            Set<String> proteinRepresentativeFiles = new HashSet<String>(Arrays.asList(form.getProteinRepresentative()));
-            Set<String> peptideRepresentativeFiles = new HashSet<String>(Arrays.asList(form.getPeptideRepresentative()));
+            String folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+            // Default folder type or Experiment is not representative
+            TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
+            if (FolderType.Library.toString().equals(folderType))
+                representative = TargetedMSRun.RepresentativeDataState.Representative_Peptide;
+            else if (FolderType.LibraryProtein.toString().equals(folderType))
+                representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
+
+
             for (File file : form.getValidatedFiles(getContainer()))
             {
                 if (!file.isFile())
@@ -1079,12 +1086,6 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
-                    if(proteinRepresentativeFiles.contains(file.getName()))
-                        representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
-                    else if(peptideRepresentativeFiles.contains(file.getName()))
-                        representative = TargetedMSRun.RepresentativeDataState.Representative_Peptide;
-                                                                           ;
                     TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()), representative);
                 }
                 catch (IOException e)

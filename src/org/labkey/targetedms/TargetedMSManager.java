@@ -1039,6 +1039,6 @@ public class TargetedMSManager
             return null; // no TargetedMS module found - do nothing
         }
         ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
-        return moduleProperty.getEffectiveValue(c);
+        return moduleProperty.getValueContainerSpecific(c);
     }
 }

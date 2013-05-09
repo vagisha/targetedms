@@ -25,14 +25,14 @@
 %>
 <%if(hasProteinConflicts){%>
     <div style="color:red; font-weight:bold;">
-        There are conflicting representative proteins in this folder.
-        <a style="color:red; text-decoration:underline;" href="<%=proteinConflictViewUrl%>">Resolve protein conflicts.</a>
+        There are conflicting proteins in this folder.
+        <a style="color:red; text-decoration:underline;" href="<%= h(proteinConflictViewUrl) %>">Resolve protein conflicts.</a>
     </div>
 <%}%>
 <%if(hasPeptideConflicts){%>
     <div style="color:red; font-weight:bold;">
-        There are conflicting representative peptides in this folder.
-        <a style="color:red; text-decoration:underline;" href="<%=peptideConflictViewUrl%>">Resolve peptide conflicts.</a>
+        There are conflicting peptides in this folder.
+        <a style="color:red; text-decoration:underline;" href="<%= h(peptideConflictViewUrl) %>">Resolve peptide conflicts.</a>
     </div>
 <%}%>
 

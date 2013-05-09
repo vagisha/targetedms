@@ -49,7 +49,7 @@ public class TargetedMSPipelineProvider extends PipelineProvider
         }
 
         String actionId = createActionId(TargetedMSController.SkylineDocUploadAction.class, "Import Skyline Results");
-        addAction(actionId, TargetedMSController.SkylineDocUploadOptionsAction.class, "Import Skyline Results",
+        addAction(actionId, TargetedMSController.SkylineDocUploadAction.class, "Import Skyline Results",
                 directory, directory.listFiles(new UploadFileFilter()), true, true, includeAll);
     }
 

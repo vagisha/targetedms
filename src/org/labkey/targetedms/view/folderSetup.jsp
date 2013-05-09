@@ -2,6 +2,7 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
+<%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%--
 ~ Copyright (c) 2012-2013 LabKey Corporation
 ~
@@ -21,24 +22,26 @@
     String folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
     boolean isNull = folderType == null;
     boolean isUndefined = "Undefined".equalsIgnoreCase(folderType);
-    boolean isSet =  ( "Experiment".equalsIgnoreCase(folderType) || "Library".equalsIgnoreCase(folderType) );
+    boolean isSet = ( "Experiment".equalsIgnoreCase(folderType) || "Library".equalsIgnoreCase(folderType) || "LibraryProtein".equalsIgnoreCase(folderType) );
 
+    if (isNull)
+    {
+%>
+  The Targeted MS folder type cannot be configured for this page.
+<%
+    }
 %>
 
-<div id="folder-type-null" <%= isNull ? "" : "style=\"display:none\"" %> >
-  The Targeted MS folder type cannot be configured for this page.
-</div>
-
-<div id="folder-type-set" <%= isUndefined ? "" : "style=\"display:none\"" %> >
+<div id="folder-type-set" <%= text(isUndefined ? "" : "style=\"display:none\"") %> >
     <form action="<%= h(new ActionURL(TargetedMSController.FolderSetupAction.class, getViewContext().getContainer())) %>" method="post">
-        <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSController.FolderSetupAction.EXPERIMENTAL_DATA) %>"> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
-        <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSController.FolderSetupAction.CHROMATOGRAM_LIBRARY) %>"> <b>Chromatogram library</b> - curated precursor and product ion expression data for use in designing and validating future experiments</br>
+        <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>"> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
+        <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSModule.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - curated precursor and product ion expression data for use in designing and validating future experiments</br>
         &nbsp &nbsp &nbsp &nbsp &nbsp  <input type="checkbox" name="precursorNormalized" value="true">Precursor expression normalized to protein concentration<br>
         <labkey:button text="Submit" />
     </form>
 </div>
 
-<div id="folder-type-unset" <%= isSet ? "" : "style=\"display:none\"" %> >
+<div id="folder-type-unset" <%= text(isSet ? "" : "style=\"display:none\"") %> >
     This Targeted MS folder has already been configured with the following folder type: '<%= h(folderType)%>'.<br>
 </div>
 

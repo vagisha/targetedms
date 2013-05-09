@@ -3,6 +3,19 @@
 <%@ page import="org.labkey.api.ms2.MS2Urls" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.api.view.JspView" %>
+<%@ page import="org.labkey.api.view.HttpView" %>
+<%@ page import="org.labkey.targetedms.TargetedMSManager" %>
+<%@ page import="org.labkey.targetedms.TargetedMSRun" %>
+<%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
+<%@ page import="org.labkey.api.query.QueryView" %>
+<%@ page import="org.labkey.api.query.QueryService" %>
+<%@ page import="org.labkey.api.security.User" %>
+<%@ page import="org.labkey.api.data.TableInfo" %>
+<%@ page import="org.labkey.api.data.TableSelector" %>
+<%@ page import="org.labkey.api.data.SimpleFilter" %>
+<%@ page import="org.labkey.api.data.CompareType" %>
+<%@ page import="org.labkey.api.query.FieldKey" %>
 <%--
 ~ Copyright (c) 2013 LabKey Corporation
 ~
@@ -18,6 +31,33 @@
 ~ limitations under the License.
 --%>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
+
+<%
+    // Perform a query to pull back all runs to
+    //  show number of peptides marked as representative & peptide groups marked as representative
+    //  uses targetedms schema to get table info for peptide and peptide group
+    //  then use a table selector, add filters to only include rows that are marked as representative
+    //    on table selector
+
+    long peptideGroupCount = 0, peptideCount = 0;
+    TargetedMSSchema schema = new TargetedMSSchema(getViewContext().getUser(), getViewContext().getContainer());
+    if (schema != null)
+    {
+        TableInfo peptideGroup = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
+        if (peptideGroup != null)
+        {
+            SimpleFilter peptideGroupFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState", "Value"), "Representative", CompareType.EQUAL);
+            peptideGroupCount = new TableSelector(peptideGroup, peptideGroupFilter, null).getRowCount();
+        }
+
+        TableInfo peptide = schema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
+        if (peptide != null)
+        {
+            SimpleFilter peptideFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState", "Value"), "Representative", CompareType.EQUAL);
+            peptideCount = new TableSelector(peptide, peptideFilter, null).getRowCount();
+        }
+    }
+%>
 
 <div class="labkey-download"><style type="text/css">
 
@@ -82,7 +122,7 @@ div.labkey-download h3 {
 <br>
 <br>
 <h3>Download Chromatogram Library:</h3>
-<a href="" class="banner-button">Download</a>
+<a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer())) %>" class="banner-button">Download</a> <br>
 </tr>
 </table>
 </div>
@@ -91,7 +131,7 @@ div.labkey-download h3 {
 <td width="80%">
     <h3>Library Statistics:</h3>
     <p class="banner">
-        The library contains X proteins, Y peptides, and Z chromatograms and was last updated on XX/YY/ZZ.<br>
+        The library contains <%= h(peptideGroupCount)%> proteins and <%= h(peptideCount) %> precursors.<br>
 </td><td valign="top" width="20%" nowrap>
 </td>
 </tr>

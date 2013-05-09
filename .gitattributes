@@ -174,7 +174,9 @@ src/org/labkey/targetedms/view/ChromatogramsDataRegion.java -text
 src/org/labkey/targetedms/view/DocumentPrecursorsView.java -text
 src/org/labkey/targetedms/view/DocumentTransitionsView.java -text
 src/org/labkey/targetedms/view/ModifiedPeptideHtmlMaker.java -text
+src/org/labkey/targetedms/view/PeptideGroupViewWebPart.java -text
 src/org/labkey/targetedms/view/PeptidePrecursorChromatogramsView.java -text
+src/org/labkey/targetedms/view/PeptideViewWebPart.java -text
 src/org/labkey/targetedms/view/PrecursorHtmlMaker.java -text
 src/org/labkey/targetedms/view/TransitionPeptideSearchViewProvider.java -text
 src/org/labkey/targetedms/view/TransitionProteinSearchViewProvider.java -text

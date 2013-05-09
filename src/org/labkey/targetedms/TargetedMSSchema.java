@@ -383,7 +383,6 @@ public class TargetedMSSchema extends UserSchema
         columns.add(FieldKey.fromParts("File", "PeptideCount"));
         columns.add(FieldKey.fromParts("File", "PrecursorCount"));
         columns.add(FieldKey.fromParts("File", "TransitionCount"));
-        columns.add(FieldKey.fromParts("File", "RepresentativeDataState"));
 
         result.setDefaultVisibleColumns(columns);
 
@@ -493,6 +492,7 @@ public class TargetedMSSchema extends UserSchema
             });
             result.getColumn("RunId").setFk(new QueryForeignKey(this, TABLE_TARGETED_MS_RUNS, "File", null));
             result.getColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE, "RowId", null));
+            result.getColumn("RepresentativeDataState").setHidden(true);
             return result;
         }
 

@@ -43,6 +43,8 @@ import org.labkey.api.view.WebPartView;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
+import org.labkey.targetedms.view.PeptideGroupViewWebPart;
+import org.labkey.targetedms.view.PeptideViewWebPart;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
 
@@ -64,13 +66,16 @@ public class TargetedMSModule extends SpringModule
     public static final ExperimentRunType EXP_RUN_TYPE = new TargetedMSExperimentRunType();
     public static final String TARGETED_MS_SETUP = "Targeted MS Setup";
     public static final String TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD = "Chromatogram Library Download";
+    public static final String TARGETED_MS_PEPTIDE_VIEW = "Targeted MS Peptide View";
+    public static final String TARGETED_MS_PEPTIDE_GROUP_VIEW = "Targeted MS Protein View";
     public static final String TARGETED_MS_RUNS_WEBPART_NAME = "Targeted MS Runs";
     public static final String TARGETED_MS_PROTEIN_SEARCH = "Targeted MS Protein Search";
 
     public static final String TARGETED_MS_FOLDER_TYPE = "TargetedMS Folder Type";
-    public static final String TARGETED_MS_FOLDER_TYPE_EXPERIMENT = "Experiment";
-    public static final String TARGETED_MS_FOLDER_TYPE_LIBRARY = "Library";
-    public static final String TARGETED_MS_FOLDER_TYPE_UNDEFINED = "Undefined";
+
+    public enum FolderType {
+        Experiment, Library, LibraryProtein, Undefined;
+    }
 
     @Override
     public String getName()
@@ -94,24 +99,42 @@ public class TargetedMSModule extends SpringModule
     protected Collection<WebPartFactory> createWebPartFactories()
     {
         BaseWebPartFactory setupFactory = new BaseWebPartFactory(TARGETED_MS_SETUP)
-                {
-                    public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
-                    {
-                        JspView view = new JspView("/org/labkey/targetedms/view/folderSetup.jsp");
-                                        view.setTitle("Configure Targeted MS Folder");
-                                        return view;
-                    }
-                };
+        {
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            {
+                JspView view = new JspView("/org/labkey/targetedms/view/folderSetup.jsp");
+                view.setTitle("Configure Targeted MS Folder");
+                return view;
+            }
+        };
 
         BaseWebPartFactory chromatogramLibraryDownload = new BaseWebPartFactory(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD)
-                        {
-                            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
-                            {
-                                JspView view = new JspView("/org/labkey/targetedms/view/chromatogramLibraryDownload.jsp");
-                                                view.setTitle("Chromatogram Library Download");
-                                                return view;
-                            }
-                        };
+        {
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            {
+                JspView view = new JspView("/org/labkey/targetedms/view/chromatogramLibraryDownload.jsp");
+                view.setTitle(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD);
+                return view;
+            }
+        };
+
+        BaseWebPartFactory peptideView  = new BaseWebPartFactory(TARGETED_MS_PEPTIDE_VIEW)
+        {
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            {
+                QueryView view = new PeptideViewWebPart(portalCtx);
+                return view;
+            }
+        };
+
+        BaseWebPartFactory peptideGroupView  = new BaseWebPartFactory(TARGETED_MS_PEPTIDE_GROUP_VIEW)
+        {
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            {
+                QueryView view = new PeptideGroupViewWebPart(portalCtx);
+                return view;
+            }
+        };
 
         BaseWebPartFactory runsFactory = new BaseWebPartFactory(TARGETED_MS_RUNS_WEBPART_NAME)
         {
@@ -147,9 +170,11 @@ public class TargetedMSModule extends SpringModule
             }
         };
 
-        List<WebPartFactory> webpartFactoryList = new ArrayList<WebPartFactory>(1);
+        List<WebPartFactory> webpartFactoryList = new ArrayList<>();
         webpartFactoryList.add(setupFactory);
         webpartFactoryList.add(chromatogramLibraryDownload);
+        webpartFactoryList.add(peptideView);
+        webpartFactoryList.add(peptideGroupView);
         webpartFactoryList.add(runsFactory);
         webpartFactoryList.add(proteinSearchFactory);
         webpartFactoryList.add(modificationSearchFactory);
@@ -179,7 +204,7 @@ public class TargetedMSModule extends SpringModule
 
         // Set the TargetedMS Folder Type property
         ModuleProperty moduleTypeProperty = new ModuleProperty(this, TARGETED_MS_FOLDER_TYPE);
-        moduleTypeProperty.setDefaultValue(TARGETED_MS_FOLDER_TYPE_UNDEFINED);
+        moduleTypeProperty.setDefaultValue(FolderType.Undefined.toString());
         moduleTypeProperty.setCanSetPerContainer(true);
         addModuleProperty(moduleTypeProperty);
     }
