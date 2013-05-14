@@ -43,18 +43,29 @@ public class AnnotationUIDisplayColumn extends DataColumn
     @Override
     public Object getDisplayValue(RenderContext ctx)
     {
+        return getValue(ctx);
+    }
+
+    @Override
+    public String getFormattedValue(RenderContext ctx)
+    {
+        return h(getValue(ctx));
+    }
+
+    @Override
+    public Object getValue(RenderContext ctx)
+    {
         String note = (String)ctx.get(_noteFieldKey);
         String annotation = (String)ctx.get(_annotationFieldKey);
 
         StringBuilder response = new StringBuilder();
 
-        // note='value1',annotation='value2'
         if (note != null)
-            response.append("note='").append(note).append("'");
+            response.append("Note: ").append(note);
         if (note != null && annotation != null)
             response.append(",");
         if (annotation != null)
-            response.append("annotation='").append(annotation).append("'");
+            response.append(annotation);
 
         return response.toString();
     }
