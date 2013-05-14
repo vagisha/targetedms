@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.view;
 
+import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserSchema;
@@ -39,6 +40,10 @@ public class PeptideGroupViewWebPart extends QueryView
     {
         UserSchema schema = getSchema();
         QuerySettings settings = schema.getSettings(portalCtx, dataRegionName, TargetedMSSchema.TABLE_PEPTIDE_GROUP);
+
+        if ( !portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
+            settings.setViewName("LibraryProteins");
+
         return settings;
     }
 

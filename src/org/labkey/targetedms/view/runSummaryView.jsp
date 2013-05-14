@@ -34,7 +34,7 @@
         </td>
     </tr>
     <tr>
-        <td class="labkey-form-label">Peptide Group Count</td>
+        <td class="labkey-form-label">Protein Count</td>
         <td><%= bean.getRun().getPeptideGroupCount()%></td>
 
         <td class="labkey-form-label">Peptide Count</td>

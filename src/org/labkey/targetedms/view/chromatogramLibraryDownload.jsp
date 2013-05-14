@@ -1,21 +1,12 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
-<%@ page import="org.labkey.api.ms2.MS2Urls" %>
-<%@ page import="org.labkey.api.view.ActionURL" %>
-<%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.view.JspView" %>
-<%@ page import="org.labkey.api.view.HttpView" %>
-<%@ page import="org.labkey.targetedms.TargetedMSManager" %>
-<%@ page import="org.labkey.targetedms.TargetedMSRun" %>
-<%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
-<%@ page import="org.labkey.api.query.QueryView" %>
-<%@ page import="org.labkey.api.query.QueryService" %>
-<%@ page import="org.labkey.api.security.User" %>
+<%@ page import="org.labkey.api.data.CompareType" %>
+<%@ page import="org.labkey.api.data.SimpleFilter" %>
 <%@ page import="org.labkey.api.data.TableInfo" %>
 <%@ page import="org.labkey.api.data.TableSelector" %>
-<%@ page import="org.labkey.api.data.SimpleFilter" %>
-<%@ page import="org.labkey.api.data.CompareType" %>
 <%@ page import="org.labkey.api.query.FieldKey" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
 <%--
 ~ Copyright (c) 2013 LabKey Corporation
 ~
@@ -34,28 +25,25 @@
 
 <%
     // Perform a query to pull back all runs to
-    //  show number of peptides marked as representative & peptide groups marked as representative
-    //  uses targetedms schema to get table info for peptide and peptide group
+    //  show number of peptides marked as representative & peptide groups (proteins) marked as representative
+    //  uses targetedms schema to get table info for peptide and peptide group (protein)
     //  then use a table selector, add filters to only include rows that are marked as representative
     //    on table selector
 
     long peptideGroupCount = 0, peptideCount = 0;
     TargetedMSSchema schema = new TargetedMSSchema(getViewContext().getUser(), getViewContext().getContainer());
-    if (schema != null)
+    TableInfo peptideGroup = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
+    if (peptideGroup != null)
     {
-        TableInfo peptideGroup = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
-        if (peptideGroup != null)
-        {
-            SimpleFilter peptideGroupFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState", "Value"), "Representative", CompareType.EQUAL);
-            peptideGroupCount = new TableSelector(peptideGroup, peptideGroupFilter, null).getRowCount();
-        }
+        SimpleFilter peptideGroupFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState", "Value"), "Representative", CompareType.EQUAL);
+        peptideGroupCount = new TableSelector(peptideGroup, peptideGroupFilter, null).getRowCount();
+    }
 
-        TableInfo peptide = schema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
-        if (peptide != null)
-        {
-            SimpleFilter peptideFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState", "Value"), "Representative", CompareType.EQUAL);
-            peptideCount = new TableSelector(peptide, peptideFilter, null).getRowCount();
-        }
+    TableInfo peptide = schema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
+    if (peptide != null)
+    {
+        SimpleFilter peptideFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState", "Value"), "Representative", CompareType.EQUAL);
+        peptideCount = new TableSelector(peptide, peptideFilter, null).getRowCount();
     }
 %>
 
@@ -114,6 +102,11 @@ div.labkey-download h3 {
     }
   </style>
 <![endif]-->
+
+<%
+        if (peptideCount > 0 || peptideGroupCount > 0)
+        {
+%>
 <div class="banner">
 <table width="100%">
 <tr>
@@ -136,3 +129,12 @@ div.labkey-download h3 {
 </td>
 </tr>
 </table>
+<%
+        }
+        else
+        {
+%>
+  This library does not currently contain any data. Import a file in the Data Pipeline to proceed.
+<%
+        }
+%>

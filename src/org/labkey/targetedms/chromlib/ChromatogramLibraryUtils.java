@@ -70,8 +70,7 @@ public class ChromatogramLibraryUtils
     public static int incrementLibraryRevision(Container container)
     {
         PropertyManager.PropertyMap propMap = PropertyManager.getWritableProperties(container, "TargetedMS", true);
-        String propKey = "chromLibRevision";
-        String revisionVal = propMap.get(propKey);
+        String revisionVal = propMap.get(propMapKey);
         int newRevision;
         if(revisionVal == null)
         {
@@ -82,7 +81,7 @@ public class ChromatogramLibraryUtils
             newRevision = Integer.parseInt(revisionVal) + 1;
         }
 
-        propMap.put(propKey, Integer.toString(newRevision));
+        propMap.put(propMapKey, Integer.toString(newRevision));
         PropertyManager.saveProperties(propMap);
         return newRevision;
     }

@@ -2,6 +2,8 @@
 /TargetedMS.iml -text
 lib/sqlite-jdbc-3.7.2.jar -text
 /module.properties -text
+resources/queries/targetedms/peptide/LibraryPeptides.qview.xml -text
+resources/queries/targetedms/peptidegroup/LibraryProteins.qview.xml -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.11-0.12.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.12-0.13.sql -text
@@ -175,6 +177,7 @@ src/org/labkey/targetedms/query/TransitionManager.java -text
 src/org/labkey/targetedms/search/ModificationSearchBean.java -text
 src/org/labkey/targetedms/search/ModificationSearchWebPart.java -text
 src/org/labkey/targetedms/search/modificationSearch.jsp -text
+src/org/labkey/targetedms/view/AnnotationUIDisplayColumn.java -text
 src/org/labkey/targetedms/view/ChromatogramsDataRegion.java -text
 src/org/labkey/targetedms/view/DocumentPrecursorsView.java -text
 src/org/labkey/targetedms/view/DocumentTransitionsView.java -text

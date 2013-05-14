@@ -34,10 +34,29 @@
 
 <div id="folder-type-set" <%= text(isUndefined ? "" : "style=\"display:none\"") %> >
     <form action="<%= h(new ActionURL(TargetedMSController.FolderSetupAction.class, getViewContext().getContainer())) %>" method="post">
-        <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>"> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
-        <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSModule.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - curated precursor and product ion expression data for use in designing and validating future experiments</br>
-        &nbsp &nbsp &nbsp &nbsp &nbsp  <input type="checkbox" name="precursorNormalized" value="true">Precursor expression normalized to protein concentration<br>
-        <labkey:button text="Submit" />
+        <table>
+            <tr>
+                <td>
+                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>"> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSModule.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - curated precursor and product ion expression data for use in designing and validating future experiments</br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                &nbsp &nbsp &nbsp &nbsp &nbsp  <input type="checkbox" name="precursorNormalized" value="true">Precursor expression normalized to protein concentration<br>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <labkey:button text="Submit" />
+                </td>
+            </tr>
+        </table>
+
     </form>
 </div>
 

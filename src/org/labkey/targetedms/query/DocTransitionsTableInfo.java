@@ -21,6 +21,7 @@ import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
@@ -29,6 +30,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,7 +41,7 @@ import java.util.Collections;
  */
 public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
 {
-    public DocTransitionsTableInfo(TargetedMSSchema schema)
+    public DocTransitionsTableInfo(final TargetedMSSchema schema)
     {
         super(TargetedMSManager.getTableInfoTransition(),
               schema,
@@ -109,6 +111,19 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("Charge"));
 
         setDefaultVisibleColumns(visibleColumns);
+
+        // Create a WrappedColumn for Note & Annotations
+        WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
+        noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
+        {
+            @Override
+            public DisplayColumn createRenderer(ColumnInfo colInfo)
+            {
+                return new AnnotationUIDisplayColumn(colInfo);
+            }
+        });
+        noteAnnotation.setLabel("Note/Annotations");
+        addColumn(noteAnnotation);
 
     }
 

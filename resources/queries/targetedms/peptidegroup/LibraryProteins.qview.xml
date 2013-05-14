@@ -1,0 +1,9 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <columns>
+        <column name="RunId/File" />
+        <column name="Label" />
+        <column name="Description" />
+        <column name="Modified" />
+        <column name="NoteAnnotations" />
+    </columns>
+</customView>

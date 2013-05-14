@@ -30,6 +30,7 @@ import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
 import org.labkey.api.module.ModuleLoader;
@@ -45,13 +46,13 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.util.ContainerContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocPrecursorTableInfo;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
 import org.labkey.targetedms.query.TargetedMSTable;
+import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -493,6 +494,20 @@ public class TargetedMSSchema extends UserSchema
             result.getColumn("RunId").setFk(new QueryForeignKey(this, TABLE_TARGETED_MS_RUNS, "File", null));
             result.getColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE, "RowId", null));
             result.getColumn("RepresentativeDataState").setHidden(true);
+
+            // Create a WrappedColumn for Note & Annotations
+            WrappedColumn noteAnnotation = new WrappedColumn(result.getColumn("Annotations"), "NoteAnnotations");
+            noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
+            {
+                @Override
+                public DisplayColumn createRenderer(ColumnInfo colInfo)
+                {
+                    return new AnnotationUIDisplayColumn(colInfo);
+                }
+            });
+            noteAnnotation.setLabel("Note/Annotations");
+            result.addColumn(noteAnnotation);
+
             return result;
         }
 
@@ -551,6 +566,20 @@ public class TargetedMSSchema extends UserSchema
             defaultCols.add(2, FieldKey.fromParts("PeptideGroupId", "Label"));
             defaultCols.remove(FieldKey.fromParts("PeptideGroupId"));
             result.setDefaultVisibleColumns(defaultCols);
+
+            // Add a WrappedColumn for Note & Annotations
+            WrappedColumn noteAnnotation = new WrappedColumn(result.getColumn("Annotations"), "NoteAnnotations");
+            noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
+            {
+                @Override
+                public DisplayColumn createRenderer(ColumnInfo colInfo)
+                {
+                    return new AnnotationUIDisplayColumn(colInfo);
+                }
+            });
+            noteAnnotation.setLabel("Note/Annotations");
+            result.addColumn(noteAnnotation);
+
             ColumnInfo sequenceColumn = result.getColumn("Sequence");
             sequenceColumn.setURL(detailsURLs);
             return result;

@@ -130,6 +130,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
@@ -245,10 +246,10 @@ public class TargetedMSController extends SpringActionController
 
                 // Add the appropriate web parts to the page
                 ArrayList<Portal.WebPart> tab1 = new ArrayList<>();
+                tab1.add(Portal.getPortalPart(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD).createWebPart());
                 tab1.add(Portal.getPortalPart(MASS_SPEC_SEARCH_WEBPART).createWebPart());
                 tab1.add(Portal.getPortalPart(TARGETED_MS_PEPTIDE_GROUP_VIEW).createWebPart());
                 tab1.add(Portal.getPortalPart(TARGETED_MS_PEPTIDE_VIEW).createWebPart());
-                tab1.add(Portal.getPortalPart(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD).createWebPart());
                 Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, tab1);
                 // Add a second portal page (tab) and webparts
                 ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
@@ -2291,9 +2292,10 @@ public class TargetedMSController extends SpringActionController
                 }
             }
 
-            PageFlowUtil.streamFile(getViewContext().getResponse(),
-                                    chromLibFile,
-                                    true);
+            // construct new filename
+            String fileName = getViewContext().getContainer().getName() + "_rev" + ChromatogramLibraryUtils.getCurrentRevision(getContainer())+ ".clib";
+
+            PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.<String, String>emptyMap(), fileName, new FileInputStream(chromLibFile), true);
 
             return null;
         }
