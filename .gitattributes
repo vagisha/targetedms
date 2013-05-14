@@ -28,6 +28,7 @@ resources/schemas/dbscripts/postgresql/targetedms-12.28-12.29.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-12.30-13.10.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.10-13.11.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.12-13.13.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-13.13-13.14.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.19-0.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.20-0.21.sql -text
@@ -47,6 +48,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-12.28-12.29.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-12.30-13.10.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.10-13.11.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.12-13.13.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-13.13-13.14.sql -text
 resources/schemas/targetedms.xml -text
 src/META-INF/targetedms/jars.txt -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
@@ -60,6 +62,7 @@ src/org/labkey/targetedms/TargetedMSManager.java -text
 src/org/labkey/targetedms/TargetedMSModule.java -text
 src/org/labkey/targetedms/TargetedMSRun.java -text
 src/org/labkey/targetedms/TargetedMSSchema.java -text
+src/org/labkey/targetedms/TargetedMSUpgradeCode.java -text
 src/org/labkey/targetedms/TargetedMsRepresentativeStateAuditViewFactory.java -text
 src/org/labkey/targetedms/chart/ChartColors.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMaker.java -text

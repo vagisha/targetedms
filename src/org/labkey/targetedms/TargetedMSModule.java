@@ -21,6 +21,7 @@ import org.labkey.api.ProteinService;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.EnumConverter;
+import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
@@ -72,9 +73,20 @@ public class TargetedMSModule extends SpringModule
     public static final String TARGETED_MS_PROTEIN_SEARCH = "Targeted MS Protein Search";
 
     public static final String TARGETED_MS_FOLDER_TYPE = "TargetedMS Folder Type";
+    public static ModuleProperty FOLDER_TYPE_PROPERTY;
 
-    public enum FolderType {
-        Experiment, Library, LibraryProtein, Undefined;
+    public enum FolderType
+    {
+        Experiment, Library, LibraryProtein, Undefined
+    }
+
+    public TargetedMSModule()
+    {
+        FOLDER_TYPE_PROPERTY = new ModuleProperty(this, TARGETED_MS_FOLDER_TYPE);
+        // Set up the TargetedMS Folder Type property
+        FOLDER_TYPE_PROPERTY.setDefaultValue(FolderType.Undefined.toString());
+        FOLDER_TYPE_PROPERTY.setCanSetPerContainer(true);
+        addModuleProperty(FOLDER_TYPE_PROPERTY);
     }
 
     @Override
@@ -86,7 +98,7 @@ public class TargetedMSModule extends SpringModule
     @Override
     public double getVersion()
     {
-        return 13.13;
+        return 13.14;
     }
 
     @Override
@@ -201,12 +213,6 @@ public class TargetedMSModule extends SpringModule
         TargetedMSSchema.register();
         EnumConverter.registerEnum(TargetedMSRun.RepresentativeDataState.class);
         EnumConverter.registerEnum(RepresentativeDataState.class);
-
-        // Set the TargetedMS Folder Type property
-        ModuleProperty moduleTypeProperty = new ModuleProperty(this, TARGETED_MS_FOLDER_TYPE);
-        moduleTypeProperty.setDefaultValue(FolderType.Undefined.toString());
-        moduleTypeProperty.setCanSetPerContainer(true);
-        addModuleProperty(moduleTypeProperty);
     }
 
     @Override
@@ -245,5 +251,11 @@ public class TargetedMSModule extends SpringModule
     public Set<Class> getUnitTests()
     {
         return PageFlowUtil.<Class>set(TargetedMSController.TestCase.class);
+    }
+
+    @Override
+    public UpgradeCode getUpgradeCode()
+    {
+        return new TargetedMSUpgradeCode();
     }
 }

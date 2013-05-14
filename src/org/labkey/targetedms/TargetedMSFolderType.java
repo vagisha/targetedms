@@ -30,9 +30,11 @@ import java.util.Collections;
  */
 public class TargetedMSFolderType extends MultiPortalFolderType
 {
+    public static final String NAME = "Targeted MS";
+
     public TargetedMSFolderType(TargetedMSModule module)
     {
-        super("Targeted MS",
+        super(NAME,
                 "Manage targeted MS assays generated in Skyline.",
             Collections.<Portal.WebPart>emptyList(),
             Arrays.asList(
