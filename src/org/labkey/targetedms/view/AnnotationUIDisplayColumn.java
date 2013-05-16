@@ -49,7 +49,9 @@ public class AnnotationUIDisplayColumn extends DataColumn
     @Override
     public String getFormattedValue(RenderContext ctx)
     {
-        return h(getValue(ctx));
+        String result = h(getValue(ctx));
+        result = result.replaceAll("\n", "<br />");
+        return result;
     }
 
     @Override
@@ -60,10 +62,10 @@ public class AnnotationUIDisplayColumn extends DataColumn
 
         StringBuilder response = new StringBuilder();
 
-        if (note != null)
-            response.append("Note: ").append(note);
         if (note != null && annotation != null)
-            response.append(",");
+            response.append("Note: ").append(note).append("\n");
+        else if (note != null)
+            response.append(note);
         if (annotation != null)
             response.append(annotation);
 

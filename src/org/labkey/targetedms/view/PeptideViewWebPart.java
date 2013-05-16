@@ -31,7 +31,6 @@ public class PeptideViewWebPart extends QueryView
         setTitle("Peptides");
         setShowDetailsColumn(false);
 
-        setShowExportButtons(false);
         setShowBorders(true);
         setShadeAlternatingRows(true);
     }

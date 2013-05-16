@@ -34,7 +34,7 @@
 
 <div id="folder-type-set" <%= text(isUndefined ? "" : "style=\"display:none\"") %> >
     <form action="<%= h(new ActionURL(TargetedMSController.FolderSetupAction.class, getViewContext().getContainer())) %>" method="post">
-        <table>
+        <table cellspacing="7">
             <tr>
                 <td>
                     <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>"> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
@@ -47,7 +47,7 @@
             </tr>
             <tr>
                 <td>
-                &nbsp &nbsp &nbsp &nbsp &nbsp  <input type="checkbox" name="precursorNormalized" value="true">Precursor expression normalized to protein concentration<br>
+                &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp  <input type="checkbox" name="precursorNormalized" value="true">Rank peptides within proteins by peak area<br>
                 </td>
             </tr>
             <tr>

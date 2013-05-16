@@ -43,7 +43,7 @@ import java.util.Set;
 public class AnnotatedTargetedMSTable extends TargetedMSTable
 {
     private static final String ANNOT_NAME_VALUE_SEPARATOR = ": ";
-    private static final String ANNOT_DELIMITER = "#@#";
+    private static final String ANNOT_DELIMITER = "\n";
 
     public AnnotatedTargetedMSTable(TableInfo table,
                                     TargetedMSSchema schema,

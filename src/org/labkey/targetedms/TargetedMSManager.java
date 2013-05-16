@@ -333,6 +333,16 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_ANNOTATION_SETTINGS);
     }
 
+    public static TableInfo getTableInfoiRTPeptide()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_IRT_PEPTIDE);
+    }
+
+    public static TableInfo getTableInfoiRTScale()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_IRT_SCALE);
+    }
+
     public static int addRunToQueue(ViewBackgroundInfo info,
                                      final File file,
                                      PipeRoot root,

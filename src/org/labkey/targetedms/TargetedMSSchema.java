@@ -120,6 +120,8 @@ public class TargetedMSSchema extends UserSchema
 
     public static final String TABLE_RESPRESENTATIVE_DATA_STATE_RUN = "RepresentativeDataState_Run";
     public static final String TABLE_RESPRESENTATIVE_DATA_STATE = "RepresentativeDataState";
+    public static final String TABLE_IRT_PEPTIDE = "iRTPeptide";
+    public static final String TABLE_IRT_SCALE = "iRTScale";
 
     private static final String PROTOCOL_PATTERN_PREFIX = "urn:lsid:%:Protocol.%:";
 
@@ -317,6 +319,17 @@ public class TargetedMSSchema extends UserSchema
                 sql.append("pre.Id = t.PrecursorId AND tci.TransitionId = t.Id AND tci.Id = TransitionChromInfoId)");
                 return sql;
             }
+        },
+        iRTScaleFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment("(SELECT s.Container FROM ");
+                sql.append(TargetedMSManager.getTableInfoiRTScale(), "s");
+                sql.append(" WHERE s.Id = iRTScaleId)");
+                return sql;
+            }
         };
 
         public abstract SQLFragment getSQL();
@@ -396,6 +409,10 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_TARGETED_MS_RUNS.equalsIgnoreCase(name))
         {
             return getTargetedMSRunsTable();
+        }
+        if (TABLE_IRT_PEPTIDE.equalsIgnoreCase(name))
+        {
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.iRTScaleFK.getSQL());
         }
         if (TABLE_RESPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
         {
@@ -511,6 +528,7 @@ public class TargetedMSSchema extends UserSchema
             return result;
         }
 
+        // Tables that have a FK to targetedms.Runs
         if (TABLE_TRANSITION_INSTRUMENT_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name) ||
             TABLE_INSTRUMENT.equalsIgnoreCase(name) ||
@@ -527,8 +545,7 @@ public class TargetedMSSchema extends UserSchema
             TABLE_LIBRARY_SETTINGS.equals(name) ||
             TABLE_RUN_ENZYME.equals(name) ||
             TABLE_SPECTRUM_LIBRARY.equalsIgnoreCase(name) ||
-            TABLE_ANNOTATION_SETTINGS.equalsIgnoreCase(name)
-            )
+            TABLE_ANNOTATION_SETTINGS.equalsIgnoreCase(name) )
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL());
         }
@@ -678,7 +695,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (getTableNames().contains(name))
         {
-            FilteredTable result = new FilteredTable<TargetedMSSchema>(getSchema().getTable(name), this);
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this);
             result.wrapAllColumns(true);
             return result;
         }
@@ -746,6 +763,8 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_ANNOTATION_SETTINGS);
         hs.add(TABLE_RESPRESENTATIVE_DATA_STATE_RUN);
         hs.add(TABLE_RESPRESENTATIVE_DATA_STATE);
+        hs.add(TABLE_IRT_PEPTIDE);
+        hs.add(TABLE_IRT_SCALE);
         return hs;
     }
 }

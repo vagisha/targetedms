@@ -108,10 +108,11 @@ div.labkey-download h3 {
         {
 %>
 <div class="banner">
-<table width="100%">
+<table>
 <tr>
     <!-- context path -->
-<td width="60%"><img src="<%= h(getViewContext().getContextPath())%>/TargetedMS/images/ChromatogramLibraryScreenshot.png"></td><td valign="top" align="center" width="40%">
+<td><img src="<%= h(getViewContext().getContextPath())%>/TargetedMS/images/ChromatogramLibraryScreenshot.png"></td>
+<td valign="top" align="center">
 <br>
 <br>
 <h3>Download Chromatogram Library:</h3>

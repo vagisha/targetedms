@@ -31,7 +31,6 @@ public class PeptideGroupViewWebPart extends QueryView
         setTitle("Proteins");
         setShowDetailsColumn(false);
 
-        setShowExportButtons(false);
         setShowBorders(true);
         setShadeAlternatingRows(true);
     }
