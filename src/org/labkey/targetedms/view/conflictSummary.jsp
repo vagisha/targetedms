@@ -3,7 +3,7 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%--
-~ Copyright (c) 2012 LabKey Corporation
+~ Copyright (c) 2012-2013 LabKey Corporation
 ~
 ~ Licensed under the Apache License, Version 2.0 (the "License");
 ~ You may obtain a copy of the License at
