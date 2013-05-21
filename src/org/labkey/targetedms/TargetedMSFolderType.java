@@ -16,12 +16,17 @@
 
 package org.labkey.targetedms;
 
+import org.jetbrains.annotations.NotNull;
+import org.labkey.api.data.Container;
 import org.labkey.api.module.MultiPortalFolderType;
 import org.labkey.api.util.HelpTopic;
+import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.NavTree;
 import org.labkey.api.view.Portal;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * User: vsharma
@@ -49,5 +54,12 @@ public class TargetedMSFolderType extends MultiPortalFolderType
     {
         // TODO:
         return new HelpTopic("targetedms");
+    }
+
+    @NotNull
+    @Override
+    public List<NavTree> getExtraSetupSteps(Container c)
+    {
+        return Collections.singletonList(new NavTree(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER, new ActionURL(TargetedMSController.SetupAction.class, c)));
     }
 }

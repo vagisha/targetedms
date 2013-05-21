@@ -44,6 +44,7 @@ import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.SQLFragment;
@@ -64,6 +65,7 @@ import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
 import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.services.ServiceRegistry;
@@ -148,6 +150,7 @@ public class TargetedMSController extends SpringActionController
     private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
     
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(TargetedMSController.class);
+    public static final String CONFIGURE_TARGETED_MS_FOLDER = "Configure Targeted MS Folder";
 
     public TargetedMSController()
     {
@@ -271,6 +274,31 @@ public class TargetedMSController extends SpringActionController
             return getContainer().getStartURL(getUser());
         }
     }
+
+    // ------------------------------------------------------------------------
+    // Action to show a list of uploaded documents
+    // ------------------------------------------------------------------------
+    @RequiresPermissionClass(AdminPermission.class)
+    public class SetupAction extends SimpleViewAction
+    {
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            JspView view = new JspView("/org/labkey/targetedms/view/folderSetup.jsp");
+            view.setFrame(WebPartView.FrameType.NONE);
+
+            getPageConfig().setNavTrail(ContainerManager.getCreateContainerWizardSteps(getContainer(), getContainer().getParent()));
+            getPageConfig().setTemplate(PageConfig.Template.Wizard);
+            getPageConfig().setTitle(CONFIGURE_TARGETED_MS_FOLDER);
+
+            return view;
+        }
+
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
 
     // ------------------------------------------------------------------------
     // Action to show a list of uploaded documents

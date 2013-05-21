@@ -3,6 +3,7 @@
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
+<%@ page import="org.labkey.targetedms.TargetedMSFolderType" %>
 <%--
 ~ Copyright (c) 2012-2013 LabKey Corporation
 ~
@@ -21,8 +22,11 @@
 <%
     String folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
     boolean isNull = folderType == null;
-    boolean isUndefined = "Undefined".equalsIgnoreCase(folderType);
-    boolean isSet = ( "Experiment".equalsIgnoreCase(folderType) || "Library".equalsIgnoreCase(folderType) || "LibraryProtein".equalsIgnoreCase(folderType) );
+    boolean isUndefined = TargetedMSModule.FolderType.Undefined.toString().equalsIgnoreCase(folderType);
+    boolean isExperiment = TargetedMSModule.FolderType.Experiment.toString().equalsIgnoreCase(folderType);
+    boolean isSet = ( isExperiment ||
+            TargetedMSModule.FolderType.Library.toString().equalsIgnoreCase(folderType) ||
+            TargetedMSModule.FolderType.LibraryProtein.toString().equalsIgnoreCase(folderType) );
 
     if (isNull)
     {
@@ -34,10 +38,10 @@
 
 <div id="folder-type-set" <%= text(isUndefined ? "" : "style=\"display:none\"") %> >
     <form action="<%= h(new ActionURL(TargetedMSController.FolderSetupAction.class, getViewContext().getContainer())) %>" method="post">
-        <table cellspacing="7">
+        <table cellspacing="7" width="100%">
             <tr>
                 <td>
-                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>"> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
+                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>" <%= text(isUndefined || isExperiment ? "checked" : "" )%>> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
                 </td>
             </tr>
             <tr>
@@ -51,8 +55,8 @@
                 </td>
             </tr>
             <tr>
-                <td>
-                    <labkey:button text="Submit" />
+                <td align="right">
+                    <labkey:button text="Finish" />
                 </td>
             </tr>
         </table>
