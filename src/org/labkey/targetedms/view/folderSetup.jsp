@@ -20,13 +20,13 @@
 --%>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    String folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
     boolean isNull = folderType == null;
-    boolean isUndefined = TargetedMSModule.FolderType.Undefined.toString().equalsIgnoreCase(folderType);
-    boolean isExperiment = TargetedMSModule.FolderType.Experiment.toString().equalsIgnoreCase(folderType);
+    boolean isUndefined = folderType == TargetedMSModule.FolderType.Undefined;
+    boolean isExperiment = folderType == TargetedMSModule.FolderType.Experiment;
     boolean isSet = ( isExperiment ||
-            TargetedMSModule.FolderType.Library.toString().equalsIgnoreCase(folderType) ||
-            TargetedMSModule.FolderType.LibraryProtein.toString().equalsIgnoreCase(folderType) );
+            folderType == TargetedMSModule.FolderType.Library ||
+            folderType == TargetedMSModule.FolderType.LibraryProtein );
 
     if (isNull)
     {
@@ -65,6 +65,6 @@
 </div>
 
 <div id="folder-type-unset" <%= text(isSet ? "" : "style=\"display:none\"") %> >
-    This Targeted MS folder has already been configured with the following folder type: '<%= h(folderType)%>'.<br>
+    This Targeted MS folder has already been configured with the following folder type: '<%= h(folderType.toString())%>'.<br>
 </div>
 

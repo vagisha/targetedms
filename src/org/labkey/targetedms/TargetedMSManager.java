@@ -1035,7 +1035,7 @@ public class TargetedMSManager
     }
 
     // return the ModuleProperty value for "TARGETED_MS_FOLDER_TYPE"
-    public static String getFolderType(Container c) {
+    public static TargetedMSModule.FolderType getFolderType(Container c) {
         TargetedMSModule targetedMSModule = null;
         for (Module m : c.getActiveModules())
         {
@@ -1049,6 +1049,15 @@ public class TargetedMSManager
             return null; // no TargetedMS module found - do nothing
         }
         ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
-        return moduleProperty.getValueContainerSpecific(c);
+        String svalue = moduleProperty.getValueContainerSpecific(c);
+        try
+        {
+            return TargetedMSModule.FolderType.valueOf(svalue);
+        }
+        catch (IllegalArgumentException e)
+        {
+            // return undefined if the string does not match any type
+            return TargetedMSModule.FolderType.Undefined;
+        }
     }
 }

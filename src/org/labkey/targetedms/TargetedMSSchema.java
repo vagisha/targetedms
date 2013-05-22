@@ -166,7 +166,7 @@ public class TargetedMSSchema extends UserSchema
         }
     }
 
-    public DbSchema getSchema()
+    public static DbSchema getSchema()
     {
         return DbSchema.get(SCHEMA_NAME);
     }

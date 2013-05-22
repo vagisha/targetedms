@@ -25,6 +25,7 @@ import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
+import org.jfree.data.category.DefaultCategoryDataset;
 import org.junit.Test;
 import org.labkey.api.ProteinService;
 import org.labkey.api.action.ApiAction;
@@ -48,8 +49,11 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
@@ -65,6 +69,7 @@ import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
 import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
@@ -134,8 +139,11 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.sql.Date;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -143,7 +151,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.labkey.targetedms.TargetedMSModule.*;
+import static org.labkey.targetedms.TargetedMSModule.EXP_RUN_TYPE;
+import static org.labkey.targetedms.TargetedMSModule.FolderType;
+import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD;
+import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
+import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_PEPTIDE_GROUP_VIEW;
+import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_PEPTIDE_VIEW;
+import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME;
 
 public class TargetedMSController extends SpringActionController
 {
@@ -1096,14 +1110,13 @@ public class TargetedMSController extends SpringActionController
 
         public boolean doAction(SkylinePipelinePathForm form, BindException errors) throws Exception
         {
-            String folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+            FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
             // Default folder type or Experiment is not representative
             TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
-            if (FolderType.Library.toString().equals(folderType))
+            if (folderType == FolderType.Library)
                 representative = TargetedMSRun.RepresentativeDataState.Representative_Peptide;
-            else if (FolderType.LibraryProtein.toString().equals(folderType))
+            else if (folderType == FolderType.LibraryProtein)
                 representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
-
 
             for (File file : form.getValidatedFiles(getContainer()))
             {
@@ -2824,5 +2837,148 @@ public class TargetedMSController extends SpringActionController
         {
             _precursorNormalized = precursorNormalized;
         }
+    }
+
+    // ------------------------------------------------------------------------
+    // Actions to render a graph of library statistics
+    // - viewable from the chromatogramLibraryDownload.jsp webpart
+    // ------------------------------------------------------------------------
+    @RequiresPermissionClass(ReadPermission.class)
+    public class GraphLibraryStatisticsAction extends ExportAction
+    {
+        @Override
+        public void export(Object o, HttpServletResponse response, BindException errors) throws Exception
+        {
+            int width;
+            int height = 250;
+
+            DefaultCategoryDataset dataset = getNumProteinsNumPeptidesByDay();
+            width = dataset.getRowCount() * 75 + 50;
+
+            JFreeChart chart = ChartFactory.createBarChart(
+                        null,                     // chart title
+                        "date",                    // domain axis label
+                        "# added",             // range axis label
+                        dataset,                  // data
+                        PlotOrientation.VERTICAL, // orientation
+                        true,                     // include legend
+                        false,                     // tooltips?
+                        false                     // URLs?
+                    );
+            chart.setBackgroundPaint(new Color(1,1,1,1));
+
+            response.setContentType("image/png");
+            ChartUtilities.writeChartAsPNG(response.getOutputStream(), chart, width, height);
+        }
+
+        // ------------------------------------------------------------------------
+        // Helper method to return representative proteins and peptides grouped by date
+        // - returns a dataset for use with JFreeChart
+        // ------------------------------------------------------------------------
+        private DefaultCategoryDataset getNumProteinsNumPeptidesByDay() {
+            final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+            // determine the folder type
+            final FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+
+            final String proteinLabel = "Proteins";
+            final String peptideLabel = "Peptides";
+
+            SQLFragment sqlFragment = new SQLFragment();
+            sqlFragment.append("SELECT COALESCE(x.RunDate,y.RunDate) AS RunDate, ProteinCount, PeptideCount FROM ");
+            sqlFragment.append("(SELECT pepCount.RunDate, COUNT(DISTINCT pepCount.Id) AS PeptideCount ");
+            sqlFragment.append("FROM   ( SELECT ");
+            sqlFragment.append("CAST(r.Created AS DATE) as RunDate, ");
+            sqlFragment.append("p.Id ");
+            sqlFragment.append("FROM ");
+            sqlFragment.append("targetedms.peptide AS p, ");
+            sqlFragment.append("targetedms.Runs AS r, ");
+            sqlFragment.append("targetedms.PeptideGroup AS pg, ");
+            sqlFragment.append("targetedms.Precursor AS pc ");
+            sqlFragment.append("WHERE ");
+            sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id AND pc.RepresentativeDataState = 1 AND r.Deleted = ? AND r.Container = ? ");
+            sqlFragment.append(") AS pepCount ");
+            sqlFragment.append("GROUP BY pepCount.RunDate) AS x FULL OUTER JOIN ");
+            sqlFragment.append("(SELECT protCount.RunDate, COUNT(DISTINCT protCount.Id) AS ProteinCount ");
+            sqlFragment.append("FROM   ( SELECT ");
+            sqlFragment.append("CAST(r.Created AS DATE) as RunDate, ");
+            sqlFragment.append("pg.Id ");
+            sqlFragment.append("FROM ");
+            sqlFragment.append("targetedms.Runs AS r, ");
+            sqlFragment.append("targetedms.PeptideGroup AS pg ");
+            sqlFragment.append("WHERE ");
+            sqlFragment.append("pg.RunId = r.Id AND pg.RepresentativeDataState = 1  AND r.Deleted = ? AND r.Container = ? ");
+            sqlFragment.append(") AS protCount ");
+            sqlFragment.append("GROUP BY protCount.RunDate) AS y ");
+            sqlFragment.append("ON x.RunDate = y.RunDate ORDER BY COALESCE(x.RunDate,y.RunDate); ");
+
+            sqlFragment.add(false);
+            sqlFragment.add(getContainer().getId());
+            sqlFragment.add(false);
+            sqlFragment.add(getContainer().getId());
+
+            // grab data from database
+            SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
+            // add data to the dataset
+            sqlSelector.forEach(new Selector.ForEachBlock<ResultSet>() {
+                @Override
+                public void exec(ResultSet rs) throws SQLException
+                {
+                Date runDate = rs.getDate("runDate");
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("M/d");
+                if (folderType == FolderType.LibraryProtein)
+                    dataset.addValue(rs.getInt("ProteinCount"), proteinLabel, simpleDateFormat.format(runDate));
+                dataset.addValue(rs.getInt("PeptideCount"), peptideLabel, simpleDateFormat.format(runDate));
+                }
+            });
+
+            return dataset;
+        }
+    }
+
+    public static final long getNumRepresentativeProteins(User user, Container container) {
+        long peptideGroupCount = 0;
+        TargetedMSSchema schema = new TargetedMSSchema(user, container);
+        TableInfo peptideGroup = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
+        if (peptideGroup != null)
+        {
+            SimpleFilter peptideGroupFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState", "Value"), "Representative", CompareType.EQUAL);
+            peptideGroupCount = new TableSelector(peptideGroup, peptideGroupFilter, null).getRowCount();
+        }
+        return peptideGroupCount;
+    }
+
+    public static final long getNumRepresentativePeptides(Container container) {
+        SQLFragment sqlFragment = new SQLFragment();
+        sqlFragment.append("SELECT DISTINCT(p.Id) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPrecursor(), "pc");
+        sqlFragment.append(" WHERE ");
+        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id AND pc.RepresentativeDataState = 1 AND r.Deleted = ? AND r.Container = ? ");
+
+        // add variables
+        sqlFragment.add(false);
+        sqlFragment.add(container.getId());
+
+        // run the query on the database and count rows
+        SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
+        long peptideCount = sqlSelector.getRowCount();
+
+        return peptideCount;
+    }
+
+    public static final long getNumRankedTransitions(User user, Container container) {
+        long transitionCount = 0;
+        TargetedMSSchema schema = new TargetedMSSchema(user, container);
+        TableInfo transition = schema.getTable(TargetedMSSchema.TABLE_TRANSITION);
+        if (transition != null)
+        {
+            transitionCount = new TableSelector(transition).getRowCount();
+        }
+        return transitionCount;
     }
 }

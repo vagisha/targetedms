@@ -50,11 +50,8 @@ public class RepresentativeStateManager
             int conflictCount = 0;
             if(state == TargetedMSRun.RepresentativeDataState.Representative_Protein)
             {
-                if(run.getRepresentativeDataState() == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
-                {
-                    revertPeptideRepresentativeState(user, container, run);
-                }
                 conflictCount = resolveRepresentativeProteinState(container, run);
+                conflictCount += resolveRepresentativePeptideState(container, run);
             }
             else if(state == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
             {

@@ -42,9 +42,7 @@ public class TargetedMSFolderType extends MultiPortalFolderType
         super(NAME,
                 "Manage targeted MS assays generated in Skyline.",
             Collections.<Portal.WebPart>emptyList(),
-            Arrays.asList(
-                    Portal.getPortalPart(TargetedMSModule.TARGETED_MS_SETUP).createWebPart()
-            ),
+            null, // do not add any WebParts to the page before configuration is complete
             getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment"), getModule("MS2"), getModule("MS1")),
             module);
     }
