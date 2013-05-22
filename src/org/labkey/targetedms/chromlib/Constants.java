@@ -113,7 +113,9 @@ class Constants
         CollisionEnergy("DOUBLE"),
         DeclusteringPotential("DOUBLE"),
         TotalArea("DOUBLE"),
-        Representative("TINYINT NOT NULL DEFAULT 0"),
+        NumPoints("INTEGER"),
+        NumTransitions("INTEGER"),
+        AverageMassErrorPPM("DOUBLE"),
         Chromatogram("BLOB"),
 
         PrecursorId("INTEGER NOT NULL REFERENCES "+Table.Precursor+"("+Id+")"),
@@ -131,6 +133,7 @@ class Constants
         Area("DOUBLE"),
         Height("DOUBLE"),
         Fwhm("DOUBLE"),
+        MassErrorPPM("DOUBLE"),
         ChromatogramIndex("INTEGER");
 
         private String definition;
@@ -403,7 +406,10 @@ class Constants
         CollisionEnergy(Column.CollisionEnergy),
         DeclusteringPotential(Column.DeclusteringPotential),
         TotalArea(Column.TotalArea),
-        Representative(Column.Representative),
+        NumTransitions(Column.NumTransitions),
+        NumPoints(Column.NumPoints),
+        AverageMassErrorPPM(Column.AverageMassErrorPPM),
+        SampleFileId(Column.SampleFileId),
         Chromatogram(Column.Chromatogram);
 
         private final String _colName;
@@ -492,6 +498,7 @@ class Constants
         Area(Column.Area),
         Height(Column.Height),
         Fwhm(Column.Fwhm),
+        MassErrorPPM(Column.MassErrorPPM),
         ChromatogramIndex(Column.ChromatogramIndex);
 
         private final String _colName;

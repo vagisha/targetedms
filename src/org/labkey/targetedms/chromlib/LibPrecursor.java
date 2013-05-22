@@ -37,14 +37,17 @@ public class LibPrecursor implements ObjectWithId
     private Double _collisionEnergy;
     private Double _declusteringPotential;
     private Double _totalArea;
-    private Boolean _representative;
     private byte[] _chromatogram;
+    private int _sampleFileId;
 
     private List<LibTransition> _transitions;
 
     private List<LibPrecursorRetentionTime> _retentionTimes;
 
     private List<LibPrecursorIsotopeModification> _isotopeModifications;
+    private Integer _numTransitions;
+    private Integer _numPoints;
+    private Double _averageMassErrorPPM;
 
     public int getId()
     {
@@ -146,16 +149,6 @@ public class LibPrecursor implements ObjectWithId
         this._totalArea = totalArea;
     }
 
-    public Boolean getRepresentative()
-    {
-        return _representative;
-    }
-
-    public void setRepresentative(Boolean representative)
-    {
-        this._representative = representative;
-    }
-
     public byte[] getChromatogram()
     {
         return _chromatogram;
@@ -170,7 +163,7 @@ public class LibPrecursor implements ObjectWithId
     {
         if(_transitions == null)
         {
-            _transitions = new ArrayList<LibTransition>();
+            _transitions = new ArrayList<>();
         }
         _transitions.add(transition);
     }
@@ -187,7 +180,7 @@ public class LibPrecursor implements ObjectWithId
     {
         if(_retentionTimes == null)
         {
-            _retentionTimes = new ArrayList<LibPrecursorRetentionTime>();
+            _retentionTimes = new ArrayList<>();
         }
         _retentionTimes.add(retentionTime);
     }
@@ -204,7 +197,7 @@ public class LibPrecursor implements ObjectWithId
     {
         if(_isotopeModifications == null)
         {
-            _isotopeModifications = new ArrayList<LibPrecursorIsotopeModification>();
+            _isotopeModifications = new ArrayList<>();
         }
         _isotopeModifications.add(isotopeModification);
     }
@@ -237,12 +230,18 @@ public class LibPrecursor implements ObjectWithId
             return false;
         if (!_modifiedSequence.equals(precursor._modifiedSequence)) return false;
         if (!_mz.equals(precursor._mz)) return false;
+        if (_sampleFileId != precursor._sampleFileId) return false;
         if (!_neutralMass.equals(precursor._neutralMass)) return false;
-        if (!_representative.equals(precursor._representative)) return false;
         if (_retentionTimes != null ? !_retentionTimes.equals(precursor._retentionTimes) : precursor._retentionTimes != null)
             return false;
         if (!_totalArea.equals(precursor._totalArea)) return false;
         if (_transitions != null ? !_transitions.equals(precursor._transitions) : precursor._transitions != null)
+            return false;
+        if (_numTransitions != null ? !_numTransitions.equals(precursor._numTransitions) : precursor._numTransitions != null)
+            return false;
+        if (_numPoints != null ? !_numPoints.equals(precursor._numPoints) : precursor._numPoints != null)
+            return false;
+        if (_averageMassErrorPPM != null ? !_averageMassErrorPPM.equals(precursor._averageMassErrorPPM) : precursor._averageMassErrorPPM != null)
             return false;
 
         return true;
@@ -260,11 +259,54 @@ public class LibPrecursor implements ObjectWithId
         result = 31 * result + (_collisionEnergy != null ? _collisionEnergy.hashCode() : 0);
         result = 31 * result + (_declusteringPotential != null ? _declusteringPotential.hashCode() : 0);
         result = 31 * result + _totalArea.hashCode();
-        result = 31 * result + _representative.hashCode();
+        result = 31 * result + (_averageMassErrorPPM != null ? _averageMassErrorPPM.hashCode() : 0);
+        result = 31 * result + (_numPoints != null ? _numPoints.hashCode() : 0);
+        result = 31 * result + (_numTransitions != null ? _numTransitions.hashCode() : 0);
+        result = 31 * result + _sampleFileId;
         result = 31 * result + (_chromatogram != null ? Arrays.hashCode(_chromatogram) : 0);
         result = 31 * result + (_transitions != null ? _transitions.hashCode() : 0);
         result = 31 * result + (_retentionTimes != null ? _retentionTimes.hashCode() : 0);
         result = 31 * result + (_isotopeModifications != null ? _isotopeModifications.hashCode() : 0);
         return result;
+    }
+
+    public void setNumTransitions(Integer numTransitions)
+    {
+        _numTransitions = numTransitions;
+    }
+
+    public Integer getNumTransitions()
+    {
+        return _numTransitions;
+    }
+
+    public void setNumPoints(Integer numPoints)
+    {
+        _numPoints = numPoints;
+    }
+
+    public Integer getNumPoints()
+    {
+        return _numPoints;
+    }
+
+    public void setAverageMassErrorPPM(Double averageMassErrorPPM)
+    {
+        _averageMassErrorPPM = averageMassErrorPPM;
+    }
+
+    public Double getAverageMassErrorPPM()
+    {
+        return _averageMassErrorPPM;
+    }
+
+    public int getSampleFileId()
+    {
+        return _sampleFileId;
+    }
+
+    public void setSampleFileId(int sampleFileId)
+    {
+        _sampleFileId = sampleFileId;
     }
 }

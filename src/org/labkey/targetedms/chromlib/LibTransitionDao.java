@@ -47,6 +47,7 @@ public class LibTransitionDao extends BaseDaoImpl<LibTransition>
         stmt.setObject(colIndex++, transition.getArea(), Types.DOUBLE);
         stmt.setObject(colIndex++, transition.getHeight(), Types.DOUBLE);
         stmt.setObject(colIndex++, transition.getFwhm(), Types.DOUBLE);
+        stmt.setObject(colIndex++, transition.getMassErrorPPM(), Types.DOUBLE);
         stmt.setObject(colIndex, transition.getChromatogramIndex(), Types.INTEGER);
     }
 
@@ -80,6 +81,7 @@ public class LibTransitionDao extends BaseDaoImpl<LibTransition>
             transition.setArea(rs.getDouble(TransitionColumn.Area.colName()));
             transition.setHeight(rs.getDouble(TransitionColumn.Height.colName()));
             transition.setFwhm(rs.getDouble(TransitionColumn.Fwhm.colName()));
+            transition.setMassErrorPPM(rs.getDouble(TransitionColumn.MassErrorPPM.colName()));
             transition.setChromatogramIndex(readInteger(rs, TransitionColumn.ChromatogramIndex.colName()));
 
             transitions.add(transition);

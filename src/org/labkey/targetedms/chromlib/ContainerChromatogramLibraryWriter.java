@@ -435,9 +435,18 @@ public class ContainerChromatogramLibraryWriter
         {
             libPrecursor.setTotalArea(chromInfo.getTotalArea());
             libPrecursor.setChromatogram(chromInfo.getChromatogram());
-        }
+            libPrecursor.setNumTransitions(chromInfo.getNumTransitions());
+            libPrecursor.setNumPoints(chromInfo.getNumPoints());
+            libPrecursor.setAverageMassErrorPPM(chromInfo.getAverageMassErrorPPM());
 
-        libPrecursor.setRepresentative(representative);
+            int sampleFileId = chromInfo.getSampleFileId();
+            Integer libSampleFileId = _sampleFileIdMap.get(sampleFileId);
+            if(libSampleFileId == null)
+            {
+                throw new IllegalStateException("Could not find an Id in the library for sample file Id "+sampleFileId);
+            }
+            libPrecursor.setSampleFileId(libSampleFileId.intValue());
+        }
 
         // Add the precursor isotope modifications
         addPrecursorIsotopeModifications(precursorIsotopeMods, libPrecursor);
@@ -527,6 +536,7 @@ public class ContainerChromatogramLibraryWriter
             transitionToSave.setHeight(tci.getHeight());
             transitionToSave.setFwhm(tci.getFwhm());
             transitionToSave.setChromatogramIndex(tci.getChromatogramIndex());
+            transitionToSave.setMassErrorPPM(tci.getMassErrorPPM());
         }
 
         _transitionCount++;

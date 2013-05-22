@@ -93,7 +93,10 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         stmt.setObject(colIndex++, precursor.getCollisionEnergy(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getDeclusteringPotential(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getTotalArea(), Types.DOUBLE);
-        stmt.setBoolean(colIndex++, precursor.getRepresentative());
+        stmt.setObject(colIndex++, precursor.getNumTransitions(), Types.INTEGER);
+        stmt.setObject(colIndex++, precursor.getNumPoints(), Types.INTEGER);
+        stmt.setObject(colIndex++, precursor.getAverageMassErrorPPM(), Types.DOUBLE);
+        stmt.setInt(colIndex++, precursor.getSampleFileId());
         stmt.setObject(colIndex, precursor.getChromatogram(), Types.BLOB);
     }
 
@@ -175,7 +178,10 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
             precursor.setCollisionEnergy(readDouble(rs, PrecursorColumn.CollisionEnergy.colName()));
             precursor.setDeclusteringPotential(readDouble(rs, PrecursorColumn.DeclusteringPotential.colName()));
             precursor.setTotalArea(rs.getDouble(PrecursorColumn.TotalArea.colName()));
-            precursor.setRepresentative(rs.getBoolean(PrecursorColumn.Representative.colName()));
+            precursor.setNumTransitions(rs.getInt(PrecursorColumn.NumTransitions.colName()));
+            precursor.setNumPoints(rs.getInt(PrecursorColumn.NumPoints.colName()));
+            precursor.setAverageMassErrorPPM(rs.getDouble(PrecursorColumn.AverageMassErrorPPM.colName()));
+            precursor.setSampleFileId(rs.getInt(PrecursorColumn.SampleFileId.colName()));
             precursor.setChromatogram(rs.getBytes(PrecursorColumn.Chromatogram.colName()));
 
             precursors.add(precursor);

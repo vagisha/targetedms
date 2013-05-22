@@ -35,6 +35,7 @@ public class LibTransition implements ObjectWithId
     private Double _height;
     private Double _fwhm;
     private Integer _chromatogramIndex;
+    private Double _massErrorPPM;
 
     public int getId()
     {
@@ -189,6 +190,7 @@ public class LibTransition implements ObjectWithId
         if (_neutralLossMass != null ? !_neutralLossMass.equals(that._neutralLossMass) : that._neutralLossMass != null)
             return false;
         if (_neutralMass != null ? !_neutralMass.equals(that._neutralMass) : that._neutralMass != null) return false;
+        if (_massErrorPPM != null ? !_massErrorPPM.equals(that._massErrorPPM) : that._massErrorPPM != null) return false;
 
         return true;
     }
@@ -208,6 +210,17 @@ public class LibTransition implements ObjectWithId
         result = 31 * result + _height.hashCode();
         result = 31 * result + _fwhm.hashCode();
         result = 31 * result + (_chromatogramIndex != null ? _chromatogramIndex.hashCode() : 0);
+        result = 31 * result + (_massErrorPPM != null ? _massErrorPPM.hashCode() : 0);
         return result;
+    }
+
+    public void setMassErrorPPM(Double massErrorPPM)
+    {
+        _massErrorPPM = massErrorPPM;
+    }
+
+    public Double getMassErrorPPM()
+    {
+        return _massErrorPPM;
     }
 }
