@@ -96,7 +96,7 @@ div.labkey-download h3 {
 <td valign="top" align="center">
 <br>
 <br>
-<h3>Download Chromatogram Library:</h3>
+<h3>Download Library:</h3>
 <a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer())) %>" class="banner-button">Download</a> <br>
 Revision <%= h(ChromatogramLibraryUtils.getCurrentRevision(getViewContext().getContainer()))%><br>
 [ Archived Revisions ]

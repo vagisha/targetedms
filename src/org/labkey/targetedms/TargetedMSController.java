@@ -143,13 +143,17 @@ import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.labkey.targetedms.TargetedMSModule.EXP_RUN_TYPE;
 import static org.labkey.targetedms.TargetedMSModule.FolderType;
@@ -2852,8 +2856,8 @@ public class TargetedMSController extends SpringActionController
             int width;
             int height = 250;
 
-            DefaultCategoryDataset dataset = getNumProteinsNumPeptidesByDay();
-            width = dataset.getRowCount() * 75 + 50;
+            DefaultCategoryDataset dataset = getNumProteinsNumPeptidesByDate();
+            width = dataset.getColumnCount() * 75 + 50;
 
             JFreeChart chart = ChartFactory.createBarChart(
                         null,                     // chart title
@@ -2875,7 +2879,7 @@ public class TargetedMSController extends SpringActionController
         // Helper method to return representative proteins and peptides grouped by date
         // - returns a dataset for use with JFreeChart
         // ------------------------------------------------------------------------
-        private DefaultCategoryDataset getNumProteinsNumPeptidesByDay() {
+        private DefaultCategoryDataset getNumProteinsNumPeptidesByDate() {
             final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
             // determine the folder type
             final FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
@@ -2918,18 +2922,65 @@ public class TargetedMSController extends SpringActionController
 
             // grab data from database
             SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
-            // add data to the dataset
+
+            // find the start date of the library
+            Map<String, Object>[] values = sqlSelector.getMapArray();
+            Map<String, Object> firstVal = values[0];
+            java.util.Date firstDate;
+            try
+            {
+                firstDate = new SimpleDateFormat("yyyy-MM-dd").parse( (String) firstVal.get("runDate") );
+            }
+            catch (ParseException e)
+            {
+                throw new UnsupportedOperationException();
+            }
+
+            // calculate the # days old the first run is
+            Calendar cal1 = Calendar.getInstance(); // current date
+            Calendar cal2 = Calendar.getInstance();
+            cal2.setTime(firstDate);
+
+            long diff = cal1.getTimeInMillis() - cal2.getTimeInMillis();
+            long dayCount = TimeUnit.MILLISECONDS.toDays(diff);
+
+            // build HashMap of values for binning purposes
+            final Map<String, Integer> protMap = new LinkedHashMap<>();
+            final Map<String, Integer> pepMap = new LinkedHashMap<>();
+
+            final SimpleDateFormat simpleDateFormat;
+
+            if (dayCount < 14) // less than 2 weeks old, day representation of the graph
+                simpleDateFormat = new SimpleDateFormat("M/d");
+            else if (dayCount < 56) // less than eight weeks old, week representation of the graph
+                simpleDateFormat = new SimpleDateFormat("W/MMM");
+            else // old graph, month representation of the graph
+                simpleDateFormat = new SimpleDateFormat("MMM/yy");
+
+            // add data to maps - binning by the date specified in simpleDateFormat
             sqlSelector.forEach(new Selector.ForEachBlock<ResultSet>() {
                 @Override
                 public void exec(ResultSet rs) throws SQLException
                 {
-                Date runDate = rs.getDate("runDate");
-                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("M/d");
-                if (folderType == FolderType.LibraryProtein)
-                    dataset.addValue(rs.getInt("ProteinCount"), proteinLabel, simpleDateFormat.format(runDate));
-                dataset.addValue(rs.getInt("PeptideCount"), peptideLabel, simpleDateFormat.format(runDate));
+                    Date runDate = rs.getDate("runDate");
+                    String strDate = simpleDateFormat.format(runDate);
+
+                    int protCount = protMap.containsKey(strDate) ? protMap.get(strDate) : 0;
+                    protMap.put(strDate, protCount + rs.getInt("ProteinCount"));
+
+                    int pepCount = pepMap.containsKey(strDate) ? pepMap.get(strDate) : 0;
+                    pepMap.put(strDate, pepCount + rs.getInt("PeptideCount"));
                 }
             });
+
+            // put all data from maps into dataset
+            for (Map.Entry<String, Integer> entry : protMap.entrySet())
+            {
+                String key = entry.getKey();
+                if (folderType == FolderType.LibraryProtein)
+                    dataset.addValue(entry.getValue(), proteinLabel, key);
+                dataset.addValue( pepMap.get(key), peptideLabel, key);
+            }
 
             return dataset;
         }

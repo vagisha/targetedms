@@ -36,10 +36,17 @@
     }
 %>
 
+<style type="text/css">
+tr.spaceUnder > td
+{
+  padding-bottom: 1em;
+}
+</style>
+
 <div id="folder-type-set" <%= text(isUndefined ? "" : "style=\"display:none\"") %> >
     <form action="<%= h(new ActionURL(TargetedMSController.FolderSetupAction.class, getViewContext().getContainer())) %>" method="post">
         <table cellspacing="7" width="100%">
-            <tr>
+            <tr class="spaceUnder">
                 <td>
                     <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>" <%= text(isUndefined || isExperiment ? "checked" : "" )%>> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
                 </td>
@@ -60,7 +67,6 @@
                 </td>
             </tr>
         </table>
-
     </form>
 </div>
 
