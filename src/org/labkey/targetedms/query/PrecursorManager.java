@@ -122,7 +122,7 @@ public class PrecursorManager
 
     public static List<PrecursorChromInfo> getPrecursorChromInfosForPeptideChromInfo(int peptideChromInfoId)
     {
-        List<PrecursorChromInfo> chromInfoList = new ArrayList<PrecursorChromInfo>();
+        List<PrecursorChromInfo> chromInfoList = new ArrayList<>();
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition("PeptideChromInfoId", peptideChromInfoId);
 
@@ -179,13 +179,11 @@ public class PrecursorManager
         sf.append(" WHERE pre.PeptideId = pep.Id AND pre.IsotopeLabelId = label.Id AND pre.Id = ? ");
         sf.add(precursorId);
 
-        Table.TableResultSet rs = null;
-        try
+        try (Table.TableResultSet rs = new SqlSelector(TargetedMSManager.getSchema(), sf).getResultSet())
         {
-            rs = new SqlSelector(TargetedMSManager.getSchema(), sf).getResultSet();
-            if(rs.next())
+            if (rs.next())
             {
-                Map<String, Object> result = new HashMap<String, Object>();
+                Map<String, Object> result = new HashMap<>();
 
                 result.put("charge", rs.getInt("charge"));
                 result.put("mz", rs.getDouble("Mz"));
@@ -199,10 +197,7 @@ public class PrecursorManager
         {
             throw new RuntimeException(e);
         }
-        finally
-        {
-            if(rs != null) try {rs.close();} catch(SQLException ignored){}
-        }
+
         throw new IllegalStateException("Cannot get summary for precursor "+precursorId);
     }
 
@@ -321,7 +316,7 @@ public class PrecursorManager
         sql.append(" ORDER BY prec.Modified DESC ");
 
         Precursor[] deprecatedPrecursors = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Precursor.class);
-        if(deprecatedPrecursors == null || deprecatedPrecursors.length == 0)
+        if (deprecatedPrecursors.length == 0)
         {
             return null;
         }
