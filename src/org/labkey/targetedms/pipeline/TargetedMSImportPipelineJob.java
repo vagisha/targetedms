@@ -24,6 +24,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.SkylineDocImporter;
+import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 
@@ -53,6 +54,10 @@ public class TargetedMSImportPipelineJob extends PipelineJob
 
     public ActionURL getStatusHref()
     {
+        if (_runInfo.getRunId() > 0)
+        {
+            return TargetedMSController.getShowRunURL(getContainer(), _runInfo.getRunId());
+        }
         return null;
     }
 
