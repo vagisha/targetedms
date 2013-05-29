@@ -183,7 +183,7 @@ public class SkylineDocumentParser
         File file = new File(_file.getPath() + "d");
         if (NetworkDrive.exists(file))
         {
-            _binaryParser = new SkylineBinaryParser(file);
+            _binaryParser = new SkylineBinaryParser(file, _log);
             _binaryParser.parse();
         }
     }

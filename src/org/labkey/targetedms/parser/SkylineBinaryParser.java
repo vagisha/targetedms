@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.apache.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -34,6 +36,7 @@ import java.util.zip.DataFormatException;
 public class SkylineBinaryParser
 {
     private final File _file;
+    private final Logger _log;
     private FileChannel _channel;
     private RandomAccessFile _randomAccessFile;
     private final long[] _headers = new long[Header.values().length - 1];
@@ -47,13 +50,15 @@ public class SkylineBinaryParser
     public static final int FORMAT_VERSION_CACHE_3 = 3;
     public static final int FORMAT_VERSION_CACHE_2 = 2;
 
+    /** Newest supported version */
     public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_6;
 
     private CachedFile[] _cacheFiles;
 
-    public SkylineBinaryParser(File file)
+    public SkylineBinaryParser(File file, Logger log)
     {
         _file = file;
+        _log = log;
     }
 
     public Chromatogram[] getChromatograms()
@@ -154,6 +159,12 @@ public class SkylineBinaryParser
 
             if (version < FORMAT_VERSION_CACHE_2)
             {
+                _log.warn("Version " + version + " is not supported for .skyd files. The earliest supported version is " + FORMAT_VERSION_CACHE_2 + ". Skipping chromatogram import.");
+                return;
+            }
+            if (version > FORMAT_VERSION_CACHE)
+            {
+                _log.warn("Version " + version + " is not supported for .skyd files. The newest supported version is " + FORMAT_VERSION_CACHE + ". Skipping chromatogram import.");
                 return;
             }
 

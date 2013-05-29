@@ -50,7 +50,7 @@ public class SkylineBinaryDataHandler extends AbstractExperimentDataHandler
     @Override
     public void importFile(ExpData data, File dataFile, ViewBackgroundInfo info, Logger log, XarContext context) throws ExperimentException
     {
-        SkylineBinaryParser parser = new SkylineBinaryParser(dataFile);
+        SkylineBinaryParser parser = new SkylineBinaryParser(dataFile, log);
         try
         {
             parser.parse();
