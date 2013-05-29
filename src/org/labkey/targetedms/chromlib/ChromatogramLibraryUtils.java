@@ -19,12 +19,16 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
+import org.labkey.api.view.NotFoundException;
+import org.labkey.targetedms.TargetedMSManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -83,6 +87,10 @@ public class ChromatogramLibraryUtils
 
         propMap.put(propMapKey, Integer.toString(newRevision));
         PropertyManager.saveProperties(propMap);
+
+        // write the library to a file every time there is an increment
+        writeLibrary(container, newRevision);
+
         return newRevision;
     }
 
@@ -91,7 +99,7 @@ public class ChromatogramLibraryUtils
         // Get the latest library revision.
         int currentRevision = getCurrentRevision(container, true);
 
-        File chromLibFile = getChromLibFile(container);
+        File chromLibFile = getChromLibFile(container, currentRevision);
         if(!chromLibFile.exists())
         {
             return false;
@@ -105,17 +113,17 @@ public class ChromatogramLibraryUtils
         return (Constants.SCHEMA_VERSION.equals(libInfoDb.getSchemaVersion()) && libInfoDb.getLibraryRevision() == currentRevision);
     }
 
-    public static File getChromLibFile(Container container) throws IOException
+    public static File getChromLibFile(Container container, int revision) throws IOException
     {
         File chromLibDir = getChromLibDir(container, false);
-        return new File(chromLibDir, Constants.CHROM_LIB_FILE_NAME+"_"+container.getId()+"."+Constants.CHROM_LIB_FILE_EXT);
+        return new File(chromLibDir, Constants.CHROM_LIB_FILE_NAME+"_"+container.getRowId()+"_rev"+revision+"."+Constants.CHROM_LIB_FILE_EXT);
     }
 
-    public static File getChromLibTempFile(Container container) throws IOException
+    public static File getChromLibTempFile(Container container, int revision) throws IOException
     {
         File chromLibDir = getChromLibDir(container, true);
         return new File(chromLibDir,
-                        FileUtil.makeFileNameWithTimestamp(Constants.CHROM_LIB_FILE_NAME+"_"+container.getId(),
+                        FileUtil.makeFileNameWithTimestamp(Constants.CHROM_LIB_FILE_NAME+"_"+container.getRowId()+"_rev"+revision,
                                                            Constants.CHROM_LIB_FILE_EXT));
     }
 
@@ -132,5 +140,39 @@ public class ChromatogramLibraryUtils
             }
         }
         return chromLibDir;
+    }
+
+    public static void writeLibrary(Container container, int targetRevision)
+    {
+        try
+        {
+            // Grab the panorama Server Url for storage in the library file
+            String panoramaServer = AppProps.getInstance().getBaseServerUrl();
+
+            // Check if the folder has any representative data
+            List<Integer> representativeRunIds = TargetedMSManager.getCurrentRepresentativeRunIds(container);
+
+            // Get the latest library revision.
+            int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(container);
+            int libraryRevision = ( targetRevision != 0) ? targetRevision : currentRevision;
+
+            File chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container, libraryRevision);
+
+            ContainerChromatogramLibraryWriter writer = new ContainerChromatogramLibraryWriter(
+                                                                         panoramaServer,
+                                                                         container,
+                                                                         representativeRunIds
+                                                                         );
+            writer.writeLibrary(libraryRevision);
+
+            if(!chromLibFile.exists())
+            {
+                throw new NotFoundException("Chromatogram library file " + chromLibFile.getPath() + " was not found.");
+            }
+        }
+        catch (java.io.IOException|SQLException exception)
+        {
+           throw new RuntimeException("There was an error writing a TargetedMS Library archive file.");
+        }
     }
 }

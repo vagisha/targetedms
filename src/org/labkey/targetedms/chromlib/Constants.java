@@ -31,7 +31,7 @@ class Constants
 
     public static final String LIB_FILE_DIR = "targetedMSLib";
     public static final String CHROM_LIB_FILE_NAME = "chromlib";
-    public static final String CHROM_LIB_FILE_EXT = "db";
+    public static final String CHROM_LIB_FILE_EXT = "clib";
 
     public static final String SCHEMA_VERSION = "1.0";
 

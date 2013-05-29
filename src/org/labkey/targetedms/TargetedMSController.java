@@ -139,7 +139,6 @@ import java.awt.*;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.sql.Date;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
@@ -149,6 +148,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -307,6 +307,26 @@ public class TargetedMSController extends SpringActionController
             getPageConfig().setNavTrail(ContainerManager.getCreateContainerWizardSteps(getContainer(), getContainer().getParent()));
             getPageConfig().setTemplate(PageConfig.Template.Wizard);
             getPageConfig().setTitle(CONFIGURE_TARGETED_MS_FOLDER);
+
+            return view;
+        }
+
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Action to show a list of chromatogram library archived revisions
+    // ------------------------------------------------------------------------
+    @RequiresPermissionClass(ReadPermission.class)
+    public class ArchivedRevisionsAction extends SimpleViewAction
+    {
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            JspView view = new JspView("/org/labkey/targetedms/view/archivedRevisionsDownload.jsp");
+            getPageConfig().setTitle("Download Archived Revisions");
 
             return view;
         }
@@ -2301,45 +2321,48 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Actions to export chromatogram libraries
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
-    public class DownloadChromLibraryAction extends SimpleViewAction
+    public static class DownloadForm
     {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        int revision;
+
+        public int getRevision()
+        {
+            return revision;
+        }
+
+        public void setRevision(int revision)
+        {
+            this.revision = revision;
+        }
+    }
+    @RequiresPermissionClass(ReadPermission.class)
+    public class DownloadChromLibraryAction extends SimpleViewAction<DownloadForm>
+    {
+        public ModelAndView getView(DownloadForm form, BindException errors) throws Exception
         {
             // Check if the folder has any representative data
             List<Integer> representativeRunIds = TargetedMSManager.getCurrentRepresentativeRunIds(getContainer());
             if(representativeRunIds.size() == 0)
             {
-                errors.reject(ERROR_MSG, "Folder "+getContainer().getPath()+" does not contain any representative data.");
-                return new SimpleErrorView(errors, true);
-                // throw new NotFoundException("Folder "+getContainer().getPath()+" does not contain any representative data.");
+                //errors.reject(ERROR_MSG, "Folder "+getContainer().getPath()+" does not contain any representative data.");
+                //return new SimpleErrorView(errors, true);
+                throw new NotFoundException("Folder "+getContainer().getPath()+" does not contain any representative data.");
             }
 
+            // Get the latest library revision.
+            int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(getContainer());
+            int libraryRevision = ( form.getRevision() != 0) ? form.getRevision() : currentRevision;
 
             Container container = getContainer();
-            File chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container);
-            if(!ChromatogramLibraryUtils.isChromLibFileUptoDate(container))
-            {
-                // The SQLite file either does not exist or is not uptodate. Write a new one
-                ContainerChromatogramLibraryWriter writer = new ContainerChromatogramLibraryWriter(
-                                                                             getViewContext().getActionURL().getBaseServerURI(),
-                                                                             getContainer(),
-                                                                             representativeRunIds
-                                                                             );
-                // Get the latest library revision.
-                int libraryRevision = ChromatogramLibraryUtils.getCurrentRevision(getContainer());
+            File chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container, libraryRevision);
 
-                writer.writeLibrary(libraryRevision);
-
-                if(!chromLibFile.exists())
-                {
-                    throw new NotFoundException("Chromatogram library file " + chromLibFile.getPath() + " was not found.");
-                }
-            }
+            // If the library is not found (i.e. was deleted), created a new library
+            // file using current runs, but set the old revision number
+            if(!chromLibFile.exists())
+                ChromatogramLibraryUtils.writeLibrary(container, libraryRevision);
 
             // construct new filename
-            String fileName = getViewContext().getContainer().getName() + "_rev" + ChromatogramLibraryUtils.getCurrentRevision(getContainer())+ ".clib";
-
+            String fileName = getViewContext().getContainer().getName() + "_rev" + libraryRevision + ".clib";
             PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.<String, String>emptyMap(), fileName, new FileInputStream(chromLibFile), true);
 
             return null;
@@ -2891,7 +2914,7 @@ public class TargetedMSController extends SpringActionController
             sqlFragment.append("SELECT COALESCE(x.RunDate,y.RunDate) AS RunDate, ProteinCount, PeptideCount FROM ");
             sqlFragment.append("(SELECT pepCount.RunDate, COUNT(DISTINCT pepCount.Id) AS PeptideCount ");
             sqlFragment.append("FROM   ( SELECT ");
-            sqlFragment.append("CAST(r.Created AS DATE) as RunDate, ");
+            sqlFragment.append("r.Created as RunDate, ");
             sqlFragment.append("p.Id ");
             sqlFragment.append("FROM ");
             sqlFragment.append("targetedms.peptide AS p, ");
@@ -2904,7 +2927,7 @@ public class TargetedMSController extends SpringActionController
             sqlFragment.append("GROUP BY pepCount.RunDate) AS x FULL OUTER JOIN ");
             sqlFragment.append("(SELECT protCount.RunDate, COUNT(DISTINCT protCount.Id) AS ProteinCount ");
             sqlFragment.append("FROM   ( SELECT ");
-            sqlFragment.append("CAST(r.Created AS DATE) as RunDate, ");
+            sqlFragment.append("r.Created as RunDate, ");
             sqlFragment.append("pg.Id ");
             sqlFragment.append("FROM ");
             sqlFragment.append("targetedms.Runs AS r, ");
@@ -2926,15 +2949,7 @@ public class TargetedMSController extends SpringActionController
             // find the start date of the library
             Map<String, Object>[] values = sqlSelector.getMapArray();
             Map<String, Object> firstVal = values[0];
-            java.util.Date firstDate;
-            try
-            {
-                firstDate = new SimpleDateFormat("yyyy-MM-dd").parse( (String) firstVal.get("runDate") );
-            }
-            catch (ParseException e)
-            {
-                throw new UnsupportedOperationException();
-            }
+            Date firstDate = (Date) firstVal.get("runDate");
 
             // calculate the # days old the first run is
             Calendar cal1 = Calendar.getInstance(); // current date

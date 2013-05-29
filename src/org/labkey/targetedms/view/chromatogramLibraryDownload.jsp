@@ -4,6 +4,7 @@
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
+<%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%--
 ~ Copyright (c) 2013 LabKey Corporation
 ~
@@ -99,7 +100,7 @@ div.labkey-download h3 {
 <h3>Download Library:</h3>
 <a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer())) %>" class="banner-button">Download</a> <br>
 Revision <%= h(ChromatogramLibraryUtils.getCurrentRevision(getViewContext().getContainer()))%><br>
-[ Archived Revisions ]
+<%= PageFlowUtil.textLink("Archived Revisions", new ActionURL(TargetedMSController.ArchivedRevisionsAction.class, getViewContext().getContainer()))%>
 </tr>
 </table>
 </div>

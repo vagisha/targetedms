@@ -87,7 +87,7 @@ public class ContainerChromatogramLibraryWriter
 
     public String writeLibrary(int libraryRevision) throws SQLException, IOException
     {
-        File tempChromLibFile = ChromatogramLibraryUtils.getChromLibTempFile(_container);
+        File tempChromLibFile = ChromatogramLibraryUtils.getChromLibTempFile(_container, libraryRevision);
 
         try
         {
@@ -114,7 +114,7 @@ public class ContainerChromatogramLibraryWriter
             close();
         }
 
-        File finalChromLibFile = ChromatogramLibraryUtils.getChromLibFile(_container);
+        File finalChromLibFile = ChromatogramLibraryUtils.getChromLibFile(_container, libraryRevision);
         // Rename the temp file
         if(NetworkDrive.exists(finalChromLibFile))
         {

@@ -190,6 +190,7 @@ src/org/labkey/targetedms/view/PeptideViewWebPart.java -text
 src/org/labkey/targetedms/view/PrecursorHtmlMaker.java -text
 src/org/labkey/targetedms/view/TransitionPeptideSearchViewProvider.java -text
 src/org/labkey/targetedms/view/TransitionProteinSearchViewProvider.java -text
+src/org/labkey/targetedms/view/archivedRevisionsDownload.jsp -text
 src/org/labkey/targetedms/view/chromatogramLibraryDownload.jsp -text
 src/org/labkey/targetedms/view/chromatogramsForm.jsp -text
 src/org/labkey/targetedms/view/confirmImport.jsp -text
