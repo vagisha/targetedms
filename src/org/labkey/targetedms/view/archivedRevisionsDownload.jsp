@@ -5,6 +5,10 @@
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
 <%@ page import="org.labkey.api.util.PageFlowUtil" %>
+<%@ page import="java.io.File" %>
+<%@ page import="org.labkey.api.util.FileUtil" %>
+<%@ page import="org.apache.commons.io.FileUtils" %>
+<%@ page import="java.util.Date" %>
 <%--
 ~ Copyright (c) 2013 LabKey Corporation
 ~
@@ -31,14 +35,27 @@
 %>
 
 <h3>Download Archived Revisions</h3>
-
+<table>
 <%
     for (int i=1; i <= currentRevision; i++)
     {
         ActionURL u = new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer());
         u.addParameter("revision", i);
+        File archiveFile = ChromatogramLibraryUtils.getChromLibFile(getViewContext().getContainer(), i);
+        if (archiveFile.isFile()) {
 %>
-    <%= PageFlowUtil.textLink("Revision"+i, u) %> <br/>
+    <tr>
+        <td><%= PageFlowUtil.textLink("Revision " + i, u) %></td>
+        <td><%= h(FileUtils.byteCountToDisplaySize(archiveFile.length())) %>, created <%= h(formatDateTime(new Date(archiveFile.lastModified())))%></td>
+    </tr>
 <%
+        }
+        else
+        {
+%><tr>
+    <td>Revision <%= i %></td>
+    <td>unavailable<br/></td>
+</tr><%
+        }
     }
 %>

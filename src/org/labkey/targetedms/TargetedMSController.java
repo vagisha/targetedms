@@ -2356,10 +2356,16 @@ public class TargetedMSController extends SpringActionController
             Container container = getContainer();
             File chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container, libraryRevision);
 
-            // If the library is not found (i.e. was deleted), created a new library
-            // file using current runs, but set the old revision number
+            // If the library is not found (i.e. was deleted),
             if(!chromLibFile.exists())
-                ChromatogramLibraryUtils.writeLibrary(container, libraryRevision);
+            {
+                // create a new library file if the version numbers match
+                if (libraryRevision == currentRevision)
+                    ChromatogramLibraryUtils.writeLibrary(container, libraryRevision);
+                else
+                    throw new NotFoundException("Unable to find archived library for revision " + libraryRevision);
+            }
+
 
             // construct new filename
             String fileName = getViewContext().getContainer().getName() + "_rev" + libraryRevision + ".clib";
