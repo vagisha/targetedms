@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
@@ -27,6 +28,8 @@ import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.PeptideSettings;
 
 import java.io.File;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +46,24 @@ public class LibraryManager
 
     public static Map<String, Integer> getLibrarySourceTypes()
     {
-        return new TableSelector(TargetedMSManager.getTableInfoLibrarySource(), PageFlowUtil.set("Type", "Id")).getValueMap();
+        ResultSet rs = null;
+        Map<String, Integer> result = new HashMap<String, Integer>();
+        try {
+            rs = Table.select(TargetedMSManager.getTableInfoLibrarySource(), Table.ALL_COLUMNS, null, null);
+            while(rs.next())
+            {
+                result.put(rs.getString("Type"), rs.getInt("Id"));
+            }
+            return result;
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+            if(rs != null) try {rs.close();} catch(SQLException ignored){}
+        }
     }
 
     public static List<PeptideSettings.SpectrumLibrary> getLibraries(int runId)

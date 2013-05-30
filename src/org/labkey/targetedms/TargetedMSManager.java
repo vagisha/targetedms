@@ -1060,4 +1060,21 @@ public class TargetedMSManager
             return TargetedMSModule.FolderType.Undefined;
         }
     }
+
+    public static void renameRun(int runId, String newDescription)
+    {
+        if (newDescription == null || newDescription.length() == 0)
+            return;
+
+        try
+        {
+            Table.execute(getSchema(), "UPDATE " + getTableInfoRuns() + " SET Description=? WHERE Id = ?",
+                    newDescription, runId);
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+    }
+
 }

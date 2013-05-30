@@ -202,6 +202,7 @@ src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/precursorConflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/proteinConflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/proteinSearch.jsp -text
+src/org/labkey/targetedms/view/renameRun.jsp -text
 src/org/labkey/targetedms/view/runSummaryView.jsp -text
 src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatch.java -text
 src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatchGetter.java -text

@@ -353,7 +353,7 @@ public class TargetedMSSchema extends UserSchema
         ColumnInfo skyDocDetailColumn = new ExprColumn(result, "File", sql, JdbcType.INTEGER);
 
         ActionURL url = TargetedMSController.getShowRunURL(getContainer());
-        skyDocDetailColumn.setFk(new LookupForeignKey(url, "id", "Id", "FileName")
+        skyDocDetailColumn.setFk(new LookupForeignKey(url, "id", "Id", "Description")
         {
             public TableInfo getLookupTableInfo()
             {

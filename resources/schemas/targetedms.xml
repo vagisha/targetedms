@@ -88,7 +88,7 @@
     </ns:table>
     <ns:table tableName="Runs" tableDbType="TABLE">
         <ns:description>Contains a row for each Targeted MS run.</ns:description>
-        <ns:titleColumn>FileName</ns:titleColumn>
+        <ns:titleColumn>Description</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="Id">
                 <ns:isHidden>true</ns:isHidden>

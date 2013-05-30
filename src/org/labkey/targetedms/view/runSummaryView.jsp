@@ -17,19 +17,24 @@
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
+<%@ page import="org.labkey.targetedms.TargetedMSRun" %>
+<%@ page import="org.labkey.api.data.Container" %>
+<%@ page import="org.labkey.api.security.permissions.UpdatePermission" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
     TargetedMSController.RunDetailsBean bean = me.getModelBean();
     ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getViewContext().getContainer());
     downloadAction.addParameter("runId", bean.getRun().getId());
+    TargetedMSRun run = bean.getRun();
+    Container c = me.getViewContext().getContainer();
 %>
 
 <table>
     <tr>
-        <td class="labkey-form-label">File</td>
+        <td class="labkey-form-label">Name</td>
         <td>
-            <%= h(bean.getRun().getFileName())%>
+            <%= h(bean.getRun().getDescription())%>
             <%= textLink("Download", downloadAction)%>
         </td>
     </tr>
@@ -47,6 +52,14 @@
         <td class="labkey-form-label">Transition Count</td>
         <td><%= bean.getRun().getTransitionCount()%></td>
     </tr>
+
+    <tr><td colspan="4">
+        <div>
+            <%
+             if (c.hasPermission(me.getViewContext().getUser(), UpdatePermission.class))
+             { %>
+                 <%=textLink("Rename", TargetedMSController.getRenameRunURL(c, run, me.getViewContext().getActionURL()))%> <%
+             } %>
+        </div>
+    </td></tr>
 </table>
-
-

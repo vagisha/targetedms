@@ -38,7 +38,7 @@ import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasViewContext;
 import org.labkey.api.action.QueryViewAction;
 import org.labkey.api.action.RedirectAction;
-import org.labkey.api.action.SimpleErrorView;
+import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.ButtonBar;
@@ -73,9 +73,11 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.HelpTopic;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
@@ -83,6 +85,7 @@ import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DetailsView;
 import org.labkey.api.view.GridView;
+import org.labkey.api.view.HttpView;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
@@ -1257,7 +1260,7 @@ public class TargetedMSController extends SpringActionController
             NavTree navTree = appendNavTrail(root, _run);
             if (_run != null)
             {
-                navTree = navTree.addChild(_run.getBaseName());
+                navTree = navTree.addChild(_run.getDescription());
             }
             return navTree;
         }
@@ -3053,4 +3056,171 @@ public class TargetedMSController extends SpringActionController
         }
         return transitionCount;
     }
+
+    /*
+     * BEGIN RENAME CODE BLOCK
+     */
+    public static class RunForm extends ReturnUrlForm
+    {
+        public enum PARAMS
+        {
+            run, expanded, grouping
+        }
+
+        int run = 0;
+        String columns;
+
+        public void setRun(int run)
+        {
+            this.run = run;
+        }
+
+        public int getRun()
+        {
+            return run;
+        }
+
+        public String getColumns()
+        {
+            return columns;
+        }
+
+        public void setColumns(String columns)
+        {
+            this.columns = columns;
+        }
+
+        public ActionURL getReturnActionURL()
+        {
+            ActionURL result;
+            try
+            {
+                result = super.getReturnActionURL();
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            catch (Exception e)
+            {
+                // Bad URL -- fall through
+            }
+
+            // Bad or missing returnUrl -- go to showRun or showList
+            Container c = HttpView.currentContext().getContainer();
+
+            if (0 != run)
+                return getShowRunURL(c, run);
+            else
+                return getShowListURL(c);
+        }
+    }
+
+    public static ActionURL getRenameRunURL(Container c, TargetedMSRun run, ActionURL returnURL)
+    {
+        ActionURL url = new ActionURL(RenameRunAction.class, c);
+        url.addParameter("run", run.getRunId() );
+        url.addReturnURL(returnURL);
+        return url;
+    }
+
+    public static class RenameForm extends RunForm
+    {
+        private String description;
+
+        public String getDescription()
+        {
+            return description;
+        }
+
+        public void setDescription(String description)
+        {
+            this.description = description;
+        }
+    }
+
+    @RequiresPermissionClass(UpdatePermission.class)
+    public class RenameRunAction extends FormViewAction<RenameForm>
+    {
+        private TargetedMSRun _run;
+        private URLHelper _returnURL;
+
+        public void validateCommand(RenameForm target, Errors errors)
+        {
+        }
+
+        public ModelAndView getView(RenameForm form, boolean reshow, BindException errors) throws Exception
+        {
+            _run = validateRun(form.getRun());
+            _returnURL = form.getReturnURLHelper(getShowRunURL(getContainer(), form.getRun()));
+
+            String description = form.getDescription();
+            if (description == null || description.length() == 0)
+                description = _run.getDescription();
+
+            RenameBean bean = new RenameBean();
+            bean.run = _run;
+            bean.description = description;
+            bean.returnURL = _returnURL;
+
+            getPageConfig().setFocusId("description");
+
+            JspView<RenameBean> jview = new JspView<>("/org/labkey/targetedms/view/renameRun.jsp", bean);
+            jview.setFrame(WebPartView.FrameType.PORTAL);
+            jview.setTitle("Rename TargetedMS Run");
+            return jview;
+        }
+
+        public boolean handlePost(RenameForm form, BindException errors) throws Exception
+        {
+            _run = validateRun(form.getRun());
+            TargetedMSManager.renameRun(form.getRun(), form.getDescription());
+            return true;
+        }
+
+        public URLHelper getSuccessURL(RenameForm form)
+        {
+            return form.getReturnURLHelper();
+        }
+
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return appendRunNavTrail(root, _run, _returnURL, "Rename Run", getPageConfig(), null);
+        }
+    }
+
+
+    public class RenameBean
+    {
+        public TargetedMSRun run;
+        public String description;
+        public URLHelper returnURL;
+    }
+
+    private NavTree appendRunNavTrail(NavTree root, TargetedMSRun run, URLHelper runURL, String title, PageConfig page, String helpTopic)
+    {
+        appendRootNavTrail(root, null, page, helpTopic);
+
+        if (null != runURL)
+            root.addChild(run.getDescription(), runURL);
+        else
+            root.addChild(run.getDescription());
+
+        if (null != title)
+            root.addChild(title);
+        return root;
+    }
+
+    private NavTree appendRootNavTrail(NavTree root, String title, PageConfig page, String helpTopic)
+    {
+        page.setHelpTopic(new HelpTopic(null == helpTopic ? "targetedms" : helpTopic));
+        root.addChild("TargetedMS Runs", getShowListURL(getContainer()));
+        if (null != title)
+            root.addChild(title);
+        return root;
+    }
+
+    /*
+     * END RENAME CODE BLOCK
+     */
 }

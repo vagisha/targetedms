@@ -39,8 +39,8 @@
 
 <table>
     <tr>
-        <td class="labkey-form-label">File</td>
-        <td><%= h(bean.getRun().getFileName())%></td>
+        <td class="labkey-form-label">Name</td>
+        <td><%= h(bean.getRun().getDescription())%></td>
     </tr>
     <tr>
         <%
