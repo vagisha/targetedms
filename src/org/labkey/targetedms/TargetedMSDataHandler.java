@@ -31,6 +31,7 @@ import org.labkey.api.view.ViewBackgroundInfo;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: vsharma
@@ -55,7 +56,11 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     @Override
     public ActionURL getContentURL(Container container, ExpData data)
     {
-        // TODO
+        TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId(), container);
+        if (run != null)
+        {
+            return TargetedMSController.getShowRunURL(container, run.getRunId());
+        }
         return null;
     }
 
@@ -67,6 +72,15 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         {
             TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container, user);
             TargetedMSManager.purgeDeletedRuns();
+        }
+    }
+
+    @Override
+    public void beforeDeleteData(List<ExpData> data) throws ExperimentException
+    {
+        for (ExpData expData : data)
+        {
+            deleteData(expData, expData.getContainer(), null);
         }
     }
 
