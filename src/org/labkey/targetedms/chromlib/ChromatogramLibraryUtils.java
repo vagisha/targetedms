@@ -172,7 +172,7 @@ public class ChromatogramLibraryUtils
         }
         catch (java.io.IOException|SQLException exception)
         {
-           throw new RuntimeException("There was an error writing a TargetedMS Library archive file.");
+           throw new RuntimeException("There was an error writing a TargetedMS Library archive file.", exception);
         }
     }
 }

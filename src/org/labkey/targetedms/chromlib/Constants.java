@@ -210,7 +210,7 @@ class Constants
     {
         Id(Column.Id),
         Name(Column.Name, "VARCHAR(100) NOT NULL"),
-        AminoAcid(Column.AminoAcid, "VARCHAR(30) NOT NULL"),
+        AminoAcid(Column.AminoAcid, "VARCHAR(30)"),
         Terminus(Column.Terminus),
         Formula(Column.Formula),
         MassDiffMono(Column.MassDiffMono),
