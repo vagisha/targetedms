@@ -82,15 +82,15 @@ public class LibSampleFileDao extends BaseDaoImpl<LibSampleFile>
 
     protected List<LibSampleFile> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibSampleFile> sampleFiles = new ArrayList<LibSampleFile>();
+        List<LibSampleFile> sampleFiles = new ArrayList<>();
         while(rs.next())
         {
             LibSampleFile sampleFile = new LibSampleFile();
-            sampleFile.setId(rs.getInt(SampleFileColumn.Id.colName()));
-            sampleFile.setFilePath(rs.getString(SampleFileColumn.FilePath.colName()));
-            sampleFile.setSampleName(rs.getString(SampleFileColumn.SampleName.colName()));
+            sampleFile.setId(rs.getInt(SampleFileColumn.Id.baseColumn().name()));
+            sampleFile.setFilePath(rs.getString(SampleFileColumn.FilePath.baseColumn().name()));
+            sampleFile.setSampleName(rs.getString(SampleFileColumn.SampleName.baseColumn().name()));
 
-            String acquiredTime = rs.getString(SampleFileColumn.AcquiredTime.colName());
+            String acquiredTime = rs.getString(SampleFileColumn.AcquiredTime.baseColumn().name());
             if(!rs.wasNull())
             {
                 try
@@ -103,7 +103,7 @@ public class LibSampleFileDao extends BaseDaoImpl<LibSampleFile>
                 }
             }
 
-            String modifiedTime = rs.getString(SampleFileColumn.ModifiedTime.colName());
+            String modifiedTime = rs.getString(SampleFileColumn.ModifiedTime.baseColumn().name());
             if(!rs.wasNull())
             {
                 try
@@ -115,9 +115,9 @@ public class LibSampleFileDao extends BaseDaoImpl<LibSampleFile>
                     throw new RuntimeException("Error parsing ModifedTime '"+modifiedTime+"' in "+getTableName(), e);
                 }
             }
-            sampleFile.setInstrumentIonizationType(rs.getString(SampleFileColumn.InstrumentIonizationType.colName()));
-            sampleFile.setInstrumentAnalyzer(rs.getString(SampleFileColumn.InstrumentAnalyzer.colName()));
-            sampleFile.setInstrumentDetector(rs.getString(SampleFileColumn.InstrumentDetector.colName()));
+            sampleFile.setInstrumentIonizationType(rs.getString(SampleFileColumn.InstrumentIonizationType.baseColumn().name()));
+            sampleFile.setInstrumentAnalyzer(rs.getString(SampleFileColumn.InstrumentAnalyzer.baseColumn().name()));
+            sampleFile.setInstrumentDetector(rs.getString(SampleFileColumn.InstrumentDetector.baseColumn().name()));
             sampleFiles.add(sampleFile);
         }
         return sampleFiles;

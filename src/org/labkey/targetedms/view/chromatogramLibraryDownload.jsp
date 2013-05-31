@@ -1,10 +1,11 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
+<%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
+<%@ page import="java.text.DecimalFormat" %>
 <%--
 ~ Copyright (c) 2013 LabKey Corporation
 ~
@@ -27,6 +28,7 @@
     long peptideGroupCount = TargetedMSController.getNumRepresentativeProteins(getViewContext().getUser(), getViewContext().getContainer());
     long peptideCount = TargetedMSController.getNumRepresentativePeptides(getViewContext().getContainer());
     long transitionCount = TargetedMSController.getNumRankedTransitions(getViewContext().getUser(), getViewContext().getContainer());
+    DecimalFormat format = new DecimalFormat("#,###");
 %>
 
 <div class="labkey-download"><style type="text/css">
@@ -113,14 +115,14 @@ Revision <%= h(ChromatogramLibraryUtils.getCurrentRevision(getViewContext().getC
             if (folderType == TargetedMSModule.FolderType.Library)
             {
 %>
-        The library contains <%= h(peptideCount)%> peptides with <%= h(transitionCount)%> ranked transitions.
+        The library contains <%= h(format.format(peptideCount))%> peptides with <%= h(format.format(transitionCount))%> ranked transitions.
 <%
             }
             else if (folderType == TargetedMSModule.FolderType.LibraryProtein)
             {
 %>
-        The library contains <%= h(peptideGroupCount)%> proteins with <%= h(peptideCount) %> ranked peptides.<br>
-        The <%=h(peptideCount)%> ranked peptides contain <%= h(transitionCount)%> ranked transitions.
+        The library contains <%= h(format.format(peptideGroupCount))%> proteins with <%= h(format.format(peptideCount)) %> ranked peptides.<br>
+        The <%=h(format.format(peptideCount))%> ranked peptides contain <%= h(format.format(transitionCount))%> ranked transitions.
 <%
             }
 %>

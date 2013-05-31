@@ -102,8 +102,8 @@ public class LibPeptideDao extends BaseDaoImpl<LibPeptide>
         {
             super.saveAll(peptides, connection);
 
-            List<LibPeptideStructuralModification> strModList = new ArrayList<LibPeptideStructuralModification>();
-            List<LibPrecursor> precursors = new ArrayList<LibPrecursor>();
+            List<LibPeptideStructuralModification> strModList = new ArrayList<>();
+            List<LibPrecursor> precursors = new ArrayList<>();
 
             if(_pepStrModDao != null)
             {
@@ -141,19 +141,19 @@ public class LibPeptideDao extends BaseDaoImpl<LibPeptide>
 
     protected List<LibPeptide> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibPeptide> peptides = new ArrayList<LibPeptide>();
+        List<LibPeptide> peptides = new ArrayList<>();
         while(rs.next())
         {
             LibPeptide peptide = new LibPeptide();
-            peptide.setId(rs.getInt(PeptideColumn.Id.colName()));
-            peptide.setProteinId(readInteger(rs, PeptideColumn.ProteinId.colName()));
-            peptide.setSequence(rs.getString(PeptideColumn.Sequence.colName()));
-            peptide.setStartIndex(readInteger(rs, PeptideColumn.StartIndex.colName()));
-            peptide.setEndIndex(readInteger(rs, PeptideColumn.EndIndex.colName()));
-            peptide.setPreviousAa(readCharacter(rs, PeptideColumn.PreviousAa.colName()));
-            peptide.setNextAa(readCharacter(rs, PeptideColumn.NextAa.colName()));
-            peptide.setCalcNeutralMass(rs.getDouble(PeptideColumn.CalcNeutralMass.colName()));
-            peptide.setNumMissedCleavages(rs.getInt(PeptideColumn.NumMissedCleavages.colName()));
+            peptide.setId(rs.getInt(PeptideColumn.Id.baseColumn().name()));
+            peptide.setProteinId(readInteger(rs, PeptideColumn.ProteinId.baseColumn().name()));
+            peptide.setSequence(rs.getString(PeptideColumn.Sequence.baseColumn().name()));
+            peptide.setStartIndex(readInteger(rs, PeptideColumn.StartIndex.baseColumn().name()));
+            peptide.setEndIndex(readInteger(rs, PeptideColumn.EndIndex.baseColumn().name()));
+            peptide.setPreviousAa(readCharacter(rs, PeptideColumn.PreviousAa.baseColumn().name()));
+            peptide.setNextAa(readCharacter(rs, PeptideColumn.NextAa.baseColumn().name()));
+            peptide.setCalcNeutralMass(rs.getDouble(PeptideColumn.CalcNeutralMass.baseColumn().name()));
+            peptide.setNumMissedCleavages(rs.getInt(PeptideColumn.NumMissedCleavages.baseColumn().name()));
 
             peptides.add(peptide);
         }
@@ -162,7 +162,7 @@ public class LibPeptideDao extends BaseDaoImpl<LibPeptide>
 
     public void loadPrecursors(LibPeptide peptide, Connection connection) throws SQLException
     {
-        List<LibPrecursor> precursors = _precursorDao.queryForForeignKey(Constants.PrecursorColumn.PeptideId.colName(),
+        List<LibPrecursor> precursors = _precursorDao.queryForForeignKey(Constants.PrecursorColumn.PeptideId.baseColumn().name(),
                                                                          peptide.getId(),
                                                                          connection);
         for(LibPrecursor precursor: precursors)
@@ -173,7 +173,7 @@ public class LibPeptideDao extends BaseDaoImpl<LibPeptide>
 
     public void loadPeptideStructuralMods(LibPeptide peptide, Connection connection) throws SQLException
     {
-        List<LibPeptideStructuralModification> precStructuralMods = _pepStrModDao.queryForForeignKey(Constants.PeptideStructuralModificationColumn.PeptideId.colName(),
+        List<LibPeptideStructuralModification> precStructuralMods = _pepStrModDao.queryForForeignKey(Constants.PeptideStructuralModificationColumn.PeptideId.baseColumn().name(),
                                                                                                      peptide.getId(),
                                                                                                      connection);
         for(LibPeptideStructuralModification precStrMod: precStructuralMods)

@@ -57,17 +57,17 @@ public class LibStructuralModLossDao extends BaseDaoImpl<LibStructuralModLoss>
 
     protected List<LibStructuralModLoss> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibStructuralModLoss> modLosses = new ArrayList<LibStructuralModLoss>();
+        List<LibStructuralModLoss> modLosses = new ArrayList<>();
         while(rs.next())
         {
             LibStructuralModLoss modLoss = new LibStructuralModLoss();
-            modLoss.setId(rs.getInt(StructuralModLossColumn.Id.colName()));
-            modLoss.setStructuralModId(rs.getInt(StructuralModLossColumn.StructuralModId.colName()));
-            modLoss.setFormula(rs.getString(StructuralModLossColumn.Formula.colName()));
-            double massDiffMono = rs.getDouble(StructuralModLossColumn.MassDiffMono.colName());
+            modLoss.setId(rs.getInt(StructuralModLossColumn.Id.baseColumn().name()));
+            modLoss.setStructuralModId(rs.getInt(StructuralModLossColumn.StructuralModId.baseColumn().name()));
+            modLoss.setFormula(rs.getString(StructuralModLossColumn.Formula.baseColumn().name()));
+            double massDiffMono = rs.getDouble(StructuralModLossColumn.MassDiffMono.baseColumn().name());
             if(!rs.wasNull())
                 modLoss.setMassDiffMono(massDiffMono);
-            double massDiffAvg = rs.getDouble(StructuralModLossColumn.MassDiffAvg.colName());
+            double massDiffAvg = rs.getDouble(StructuralModLossColumn.MassDiffAvg.baseColumn().name());
             if(!rs.wasNull())
                 modLoss.setMassDiffAvg(massDiffAvg);
             modLosses.add(modLoss);

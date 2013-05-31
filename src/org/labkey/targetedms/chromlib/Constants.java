@@ -51,7 +51,7 @@ class Constants
         Transition
     }
 
-    private static enum Column
+    public static enum Column
     {
         Id("INTEGER PRIMARY KEY"),
 
@@ -83,7 +83,7 @@ class Constants
         Variable("TINYINT NOT NULL"),
         ExplicitMod("TINYINT"),
 
-        StructuralModId("INTEGER NOT NULL REFERENCES "+Table.StructuralModification+"("+Id+")"),
+        StructuralModId("INTEGER NOT NULL", Table.StructuralModification, Id),
 
         IsotopeLabel("VARCHAR(50) NOT NULL"),
         Label13C("TINYINT"),
@@ -102,7 +102,7 @@ class Constants
         CalcNeutralMass("DOUBLE NOT NULL"),
         NumMissedCleavages("INTEGER NOT NULL"),
 
-        PeptideId("INTEGER NOT NULL REFERENCES "+Table.Peptide+"("+Id+")"),
+        PeptideId("INTEGER NOT NULL", Table.Peptide, Id),
         IndexAa("INTEGER NOT NULL"),
         MassDiff("DOUBLE NOT NULL"),
 
@@ -118,10 +118,10 @@ class Constants
         AverageMassErrorPPM("DOUBLE"),
         Chromatogram("BLOB"),
 
-        PrecursorId("INTEGER NOT NULL REFERENCES "+Table.Precursor+"("+Id+")"),
-        IsotopeModId("INTEGER NOT NULL REFERENCES "+Table.IsotopeModification+"("+Id+")"),
+        PrecursorId("INTEGER NOT NULL", Table.Precursor, Id),
+        IsotopeModId("INTEGER NOT NULL", Table.IsotopeModification, Id),
 
-        SampleFileId("INTEGER NOT NULL REFERENCES "+Table.SampleFile+"("+Id+")"),
+        SampleFileId("INTEGER NOT NULL", Table.SampleFile, Id),
         RetentionTime("DOUBLE"),
         StartTime("DOUBLE"),
         EndTime("DOUBLE"),
@@ -136,18 +136,50 @@ class Constants
         MassErrorPPM("DOUBLE"),
         ChromatogramIndex("INTEGER");
 
-        private String definition;
+        private final String definition;
+        private final Table _fkTable;
+        private final Column _fkColumn;
 
-        private Column() {}
+        private Column()
+        {
+            this(null);
+        }
+
         private Column(String definition)
         {
+            this(definition, null, null);
+        }
+
+        private Column(String definition, Table fkTable, Column fkColumn)
+        {
             this.definition = definition;
+            _fkTable = fkTable;
+            _fkColumn = fkColumn;
+            if ((_fkTable == null && _fkColumn != null) || (_fkTable != null && _fkColumn == null))
+            {
+                throw new IllegalArgumentException("Both a table and column must be specified as the foreign key targets");
+            }
+        }
+
+        public String getDefinition()
+        {
+            return definition;
+        }
+
+        public Table getFkTable()
+        {
+            return _fkTable;
+        }
+
+        public Column getFkColumn()
+        {
+            return _fkColumn;
         }
     }
 
     public interface ColumnDef
     {
-        public String colName();
+        public Column baseColumn();
         public String definition();
     }
 
@@ -169,10 +201,14 @@ class Constants
         {
             _column = column;
         }
-        public String colName()
+
+        @Override
+        public Column baseColumn()
         {
-            return _column.name();
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _column.definition;
@@ -196,10 +232,14 @@ class Constants
         {
             _column = column;
         }
-        public String colName()
+
+        @Override
+        public Column baseColumn()
         {
-            return _column.name();
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _column.definition;
@@ -219,23 +259,27 @@ class Constants
         Variable(Column.Variable),
         ExplicitMod(Column.ExplicitMod);
 
-        private final String _colName;
+        private final Column _column;
         private final String _definition;
 
         private StructuralModificationColumn(Column column)
         {
-            _colName = column.name();
+            _column = column;
             _definition = column.definition;
         }
         private StructuralModificationColumn(Column column, String definition)
         {
-            _colName = column.name();
+            _column = column;
             _definition = definition;
         }
-        public String colName()
+
+        @Override
+        public Column baseColumn()
         {
-            return _colName;
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _definition;
@@ -256,10 +300,14 @@ class Constants
         {
             _column = column;
         }
-        public String colName()
+
+        @Override
+        public Column baseColumn()
         {
-            return _column.name();
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _column.definition;
@@ -282,23 +330,27 @@ class Constants
         Label2H(Column.Label2H),
         UnimodId(Column.UnimodId);
 
-        private final String _colName;
+        private final Column _column;
         private final String _definition;
 
         private IsotopeModificationColumn(Column column)
         {
-            _colName = column.name();
+            _column = column;
             _definition = column.definition;
         }
         private IsotopeModificationColumn(Column column, String definition)
         {
-            _colName = column.name();
+            _column = column;
             _definition = definition;
         }
-        public String colName()
+
+        @Override
+        public Column baseColumn()
         {
-            return _colName;
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _definition;
@@ -312,23 +364,26 @@ class Constants
         Description(Column.Description),
         Sequence(Column.Sequence, "TEXT");
 
-        private final String _colName;
+        private final Column _column;
         private final String _definition;
 
         private ProteinColumn(Column column)
         {
-            _colName = column.name();
+            _column = column;
             _definition = column.definition;
         }
         private ProteinColumn(Column column, String definition)
         {
-            _colName = column.name();
+            _column = column;
             _definition = definition;
         }
-        public String colName()
+        @Override
+        public Column baseColumn()
         {
-            return _colName;
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _definition;
@@ -347,23 +402,27 @@ class Constants
         CalcNeutralMass(Column.CalcNeutralMass),
         NumMissedCleavages(Column.NumMissedCleavages);
 
-        private final String _colName;
+        private final Column _column;
         private final String _definition;
 
         private PeptideColumn(Column column)
         {
-            _colName = column.name();
+            _column = column;
             _definition = column.definition;
         }
         private PeptideColumn(Column column, String definition)
         {
-            _colName = column.name();
+            _column = column;
             _definition = definition;
         }
-        public String colName()
+
+        @Override
+        public Column baseColumn()
         {
-            return _colName;
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _definition;
@@ -384,10 +443,14 @@ class Constants
         {
             _column = column;
         }
-        public String colName()
+
+        @Override
+        public Column baseColumn()
         {
-            return _column.name();
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _column.definition;
@@ -412,23 +475,25 @@ class Constants
         SampleFileId(Column.SampleFileId),
         Chromatogram(Column.Chromatogram);
 
-        private final String _colName;
+        private final Column _column;
         private final String _definition;
 
         private PrecursorColumn(Column column)
         {
-            _colName = column.name();
+            _column = column;
             _definition = column.definition;
         }
         private PrecursorColumn(Column column, String definition)
         {
-            _colName = column.name();
+            _column = column;
             _definition = definition;
         }
-        public String colName()
+        @Override
+        public Column baseColumn()
         {
-            return _colName;
+            return _column;
         }
+
         public String definition()
         {
             return _definition;
@@ -449,10 +514,14 @@ class Constants
         {
             _column = column;
         }
-        public String colName()
+
+        @Override
+        public Column baseColumn()
         {
-            return _column.name();
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _column.definition;
@@ -474,10 +543,14 @@ class Constants
         {
             _column = column;
         }
-        public String colName()
+
+        @Override
+        public Column baseColumn()
         {
-            return _column.name();
+            return _column;
         }
+
+        @Override
         public String definition()
         {
             return _column.definition;
@@ -501,22 +574,23 @@ class Constants
         MassErrorPPM(Column.MassErrorPPM),
         ChromatogramIndex(Column.ChromatogramIndex);
 
-        private final String _colName;
+        private final Column _column;
         private final String _definition;
 
         private TransitionColumn(Column column)
         {
-            _colName = column.name();
+            _column = column;
             _definition = column.definition;
         }
         private TransitionColumn(Column column, String definition)
         {
-            _colName = column.name();
+            _column = column;
             _definition = definition;
         }
-        public String colName()
+        @Override
+        public Column baseColumn()
         {
-            return _colName;
+            return _column;
         }
         public String definition()
         {

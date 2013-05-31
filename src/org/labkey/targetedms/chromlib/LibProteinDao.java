@@ -84,7 +84,7 @@ public class LibProteinDao extends BaseDaoImpl<LibProtein>
         {
             super.saveAll(proteins, connection);
 
-            List<LibPeptide> peptideList = new ArrayList<LibPeptide>();
+            List<LibPeptide> peptideList = new ArrayList<>();
 
             if(_peptideDao != null)
             {
@@ -109,14 +109,14 @@ public class LibProteinDao extends BaseDaoImpl<LibProtein>
 
     protected List<LibProtein> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibProtein> proteins = new ArrayList<LibProtein>();
+        List<LibProtein> proteins = new ArrayList<>();
         while(rs.next())
         {
             LibProtein protein = new LibProtein();
-            protein.setId(rs.getInt(ProteinColumn.Id.colName()));
-            protein.setName(rs.getString(ProteinColumn.Name.colName()));
-            protein.setDescription(rs.getString(ProteinColumn.Description.colName()));
-            protein.setSequence(rs.getString(ProteinColumn.Sequence.colName()));
+            protein.setId(rs.getInt(ProteinColumn.Id.baseColumn().name()));
+            protein.setName(rs.getString(ProteinColumn.Name.baseColumn().name()));
+            protein.setDescription(rs.getString(ProteinColumn.Description.baseColumn().name()));
+            protein.setSequence(rs.getString(ProteinColumn.Sequence.baseColumn().name()));
 
             proteins.add(protein);
         }
@@ -125,7 +125,7 @@ public class LibProteinDao extends BaseDaoImpl<LibProtein>
 
     public void loadPeptides(LibProtein protein, Connection connection) throws SQLException
     {
-        List<LibPeptide> peptides = _peptideDao.queryForForeignKey(Constants.PeptideColumn.ProteinId.colName(), protein.getId(), connection);
+        List<LibPeptide> peptides = _peptideDao.queryForForeignKey(Constants.PeptideColumn.ProteinId.baseColumn().name(), protein.getId(), connection);
         for(LibPeptide peptide: peptides)
         {
             protein.addPeptide(peptide);

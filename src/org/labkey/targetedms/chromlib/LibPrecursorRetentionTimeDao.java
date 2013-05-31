@@ -57,16 +57,16 @@ public class LibPrecursorRetentionTimeDao extends BaseDaoImpl<LibPrecursorRetent
 
     protected List<LibPrecursorRetentionTime> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibPrecursorRetentionTime> precursorRetentionTimes = new ArrayList<LibPrecursorRetentionTime>();
+        List<LibPrecursorRetentionTime> precursorRetentionTimes = new ArrayList<>();
         while(rs.next())
         {
             LibPrecursorRetentionTime precRetentionTime = new LibPrecursorRetentionTime();
-            precRetentionTime.setId(rs.getInt(PrecursorRetentionTimeColumn.Id.colName()));
-            precRetentionTime.setPrecursorId(rs.getInt(PrecursorRetentionTimeColumn.PrecursorId.colName()));
-            precRetentionTime.setSampleFileId(rs.getInt(PrecursorRetentionTimeColumn.SampleFileId.colName()));
-            precRetentionTime.setRetentionTime(readDouble(rs, PrecursorRetentionTimeColumn.RetentionTime.colName()));
-            precRetentionTime.setStartTime(readDouble(rs, PrecursorRetentionTimeColumn.StartTime.colName()));
-            precRetentionTime.setEndTime(readDouble(rs, PrecursorRetentionTimeColumn.EndTime.colName()));
+            precRetentionTime.setId(rs.getInt(PrecursorRetentionTimeColumn.Id.baseColumn().name()));
+            precRetentionTime.setPrecursorId(rs.getInt(PrecursorRetentionTimeColumn.PrecursorId.baseColumn().name()));
+            precRetentionTime.setSampleFileId(rs.getInt(PrecursorRetentionTimeColumn.SampleFileId.baseColumn().name()));
+            precRetentionTime.setRetentionTime(readDouble(rs, PrecursorRetentionTimeColumn.RetentionTime.baseColumn().name()));
+            precRetentionTime.setStartTime(readDouble(rs, PrecursorRetentionTimeColumn.StartTime.baseColumn().name()));
+            precRetentionTime.setEndTime(readDouble(rs, PrecursorRetentionTimeColumn.EndTime.baseColumn().name()));
 
             precursorRetentionTimes.add(precRetentionTime);
         }

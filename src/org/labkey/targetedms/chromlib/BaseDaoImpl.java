@@ -277,7 +277,7 @@ public abstract class BaseDaoImpl<T extends ObjectWithId> implements Dao<T>
         {
             if(i > startIdx)
                 sql.append(", ");
-            sql.append(colnames[i].colName());
+            sql.append(colnames[i].baseColumn().name());
         }
 
         sql.append(")");

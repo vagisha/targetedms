@@ -62,14 +62,14 @@ public class ChromLibSqliteSchemaCreator
         // Create PeptideStructuralModification table.
         createPeptideStructuralModificationTable(conn);
 
+        // Create SampleFile table.
+        createSampleFileTable(conn);
+
         // Create Precursor table.
         createPrecursorTable(conn);
 
         // Create PrecursorIsotopeModification table.
         createPrecursorIsotopeModificationTable(conn);
-
-        // Create SampleFile table.
-        createSampleFileTable(conn);
 
         // Create PrecursorRetentionTime table.
         createPrecursorRetentionTimeTable(conn);
@@ -143,7 +143,17 @@ public class ChromLibSqliteSchemaCreator
         StringBuilder columnSql = new StringBuilder();
         for(Constants.ColumnDef column: columns)
         {
-            columnSql.append(", ").append(column.colName()).append(" ").append(column.definition());
+            columnSql.append(", ").append(column.baseColumn().name()).append(" ").append(column.definition());
+
+            // Append the foreign key if it has one
+            if (column.baseColumn().getFkColumn() != null)
+            {
+                columnSql.append(" REFERENCES ").
+                        append(column.baseColumn().getFkTable()).
+                        append("(").
+                        append(column.baseColumn().
+                                getFkColumn()).append(")");
+            }
         }
         columnSql.deleteCharAt(0); // delete first comma
         return columnSql.toString();
@@ -158,19 +168,29 @@ public class ChromLibSqliteSchemaCreator
         sql.append(getColumnSql(columns));
         sql.append(" )");
 
-        Statement stmt = null;
-        try {
-            stmt = conn.createStatement();
+        try (Statement stmt = conn.createStatement())
+        {
             stmt.execute(sql.toString());
         }
-        finally
+
+        for (Constants.ColumnDef column : columns)
         {
-            try{
-                if (stmt != null)
+            if (column.baseColumn().getFkColumn() != null)
+            {
+                try (Statement stmt = conn.createStatement())
                 {
-                    stmt.close();
+                    StringBuilder indexSQL = new StringBuilder("CREATE INDEX IDX_");
+                    indexSQL.append(tableName);
+                    indexSQL.append("_");
+                    indexSQL.append(column.baseColumn().name());
+                    indexSQL.append(" ON ");
+                    indexSQL.append(column.baseColumn().getFkTable());
+                    indexSQL.append("(");
+                    indexSQL.append(column.baseColumn().getFkColumn());
+                    indexSQL.append(")");
+                    stmt.execute(indexSQL.toString());
                 }
-            } catch(SQLException ignored) {}
+            }
         }
     }
 }

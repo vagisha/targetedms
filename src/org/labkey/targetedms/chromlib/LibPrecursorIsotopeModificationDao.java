@@ -55,15 +55,15 @@ public class LibPrecursorIsotopeModificationDao extends BaseDaoImpl<LibPrecursor
 
     protected List<LibPrecursorIsotopeModification> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibPrecursorIsotopeModification> precIsotopeModifications = new ArrayList<LibPrecursorIsotopeModification>();
+        List<LibPrecursorIsotopeModification> precIsotopeModifications = new ArrayList<>();
         while(rs.next())
         {
             LibPrecursorIsotopeModification precIsotopeMod = new LibPrecursorIsotopeModification();
-            precIsotopeMod.setId(rs.getInt(PrecursorIsotopeModificationColumn.Id.colName()));
-            precIsotopeMod.setPrecursorId(rs.getInt(PrecursorIsotopeModificationColumn.PrecursorId.colName()));
-            precIsotopeMod.setIsotopeModificationId(rs.getInt(PrecursorIsotopeModificationColumn.IsotopeModId.colName()));
-            precIsotopeMod.setIndexAa(rs.getInt(PrecursorIsotopeModificationColumn.IndexAa.colName()));
-            precIsotopeMod.setMassDiff(readDouble(rs, PrecursorIsotopeModificationColumn.MassDiff.colName()));
+            precIsotopeMod.setId(rs.getInt(PrecursorIsotopeModificationColumn.Id.baseColumn().name()));
+            precIsotopeMod.setPrecursorId(rs.getInt(PrecursorIsotopeModificationColumn.PrecursorId.baseColumn().name()));
+            precIsotopeMod.setIsotopeModificationId(rs.getInt(PrecursorIsotopeModificationColumn.IsotopeModId.baseColumn().name()));
+            precIsotopeMod.setIndexAa(rs.getInt(PrecursorIsotopeModificationColumn.IndexAa.baseColumn().name()));
+            precIsotopeMod.setMassDiff(readDouble(rs, PrecursorIsotopeModificationColumn.MassDiff.baseColumn().name()));
 
             precIsotopeModifications.add(precIsotopeMod);
         }

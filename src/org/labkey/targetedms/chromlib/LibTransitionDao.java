@@ -65,24 +65,24 @@ public class LibTransitionDao extends BaseDaoImpl<LibTransition>
 
     protected List<LibTransition> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibTransition> transitions = new ArrayList<LibTransition>();
+        List<LibTransition> transitions = new ArrayList<>();
         while(rs.next())
         {
             LibTransition transition = new LibTransition();
-            transition.setId(rs.getInt(TransitionColumn.Id.colName()));
-            transition.setPrecursorId(rs.getInt(TransitionColumn.PrecursorId.colName()));
-            transition.setMz(readDouble(rs, TransitionColumn.Mz.colName()));
-            transition.setCharge(readInteger(rs, TransitionColumn.Charge.colName()));
-            transition.setNeutralMass(readDouble(rs, TransitionColumn.NeutralMass.colName()));
-            transition.setNeutralLossMass(readDouble(rs, TransitionColumn.NeutralLossMass.colName()));
-            transition.setFragmentType(rs.getString(TransitionColumn.FragmentType.colName()));
-            transition.setFragmentOrdinal(readInteger(rs, TransitionColumn.FragmentOrdinal.colName()));
-            transition.setMassIndex(readInteger(rs, TransitionColumn.MassIndex.colName()));
-            transition.setArea(rs.getDouble(TransitionColumn.Area.colName()));
-            transition.setHeight(rs.getDouble(TransitionColumn.Height.colName()));
-            transition.setFwhm(rs.getDouble(TransitionColumn.Fwhm.colName()));
-            transition.setMassErrorPPM(rs.getDouble(TransitionColumn.MassErrorPPM.colName()));
-            transition.setChromatogramIndex(readInteger(rs, TransitionColumn.ChromatogramIndex.colName()));
+            transition.setId(rs.getInt(TransitionColumn.Id.baseColumn().name()));
+            transition.setPrecursorId(rs.getInt(TransitionColumn.PrecursorId.baseColumn().name()));
+            transition.setMz(readDouble(rs, TransitionColumn.Mz.baseColumn().name()));
+            transition.setCharge(readInteger(rs, TransitionColumn.Charge.baseColumn().name()));
+            transition.setNeutralMass(readDouble(rs, TransitionColumn.NeutralMass.baseColumn().name()));
+            transition.setNeutralLossMass(readDouble(rs, TransitionColumn.NeutralLossMass.baseColumn().name()));
+            transition.setFragmentType(rs.getString(TransitionColumn.FragmentType.baseColumn().name()));
+            transition.setFragmentOrdinal(readInteger(rs, TransitionColumn.FragmentOrdinal.baseColumn().name()));
+            transition.setMassIndex(readInteger(rs, TransitionColumn.MassIndex.baseColumn().name()));
+            transition.setArea(rs.getDouble(TransitionColumn.Area.baseColumn().name()));
+            transition.setHeight(rs.getDouble(TransitionColumn.Height.baseColumn().name()));
+            transition.setFwhm(rs.getDouble(TransitionColumn.Fwhm.baseColumn().name()));
+            transition.setMassErrorPPM(rs.getDouble(TransitionColumn.MassErrorPPM.baseColumn().name()));
+            transition.setChromatogramIndex(readInteger(rs, TransitionColumn.ChromatogramIndex.baseColumn().name()));
 
             transitions.add(transition);
         }

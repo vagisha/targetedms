@@ -87,9 +87,9 @@ public class LibInfoDao implements Dao<LibInfo>
             while(rs.next())
             {
                 LibInfo libInfo = new LibInfo();
-                libInfo.setPanoramaServer(rs.getString(LibInfoColumn.PanoramaServer.colName()));
-                libInfo.setContainer(rs.getString(LibInfoColumn.Container.colName()));
-                String created = rs.getString(LibInfoColumn.Created.colName());
+                libInfo.setPanoramaServer(rs.getString(LibInfoColumn.PanoramaServer.baseColumn().name()));
+                libInfo.setContainer(rs.getString(LibInfoColumn.Container.baseColumn().name()));
+                String created = rs.getString(LibInfoColumn.Created.baseColumn().name());
                 try
                 {
                     libInfo.setCreated(Constants.DATE_FORMAT.parse(created));
@@ -98,12 +98,12 @@ public class LibInfoDao implements Dao<LibInfo>
                 {
                     throw new RuntimeException("Error parsing date '"+created+"' in "+Table.LibInfo, e);
                 }
-                libInfo.setSchemaVersion(rs.getString(LibInfoColumn.SchemaVersion.colName()));
-                libInfo.setLibraryRevision(rs.getInt(LibInfoColumn.LibraryRevision.colName()));
-                libInfo.setProteins(rs.getInt(LibInfoColumn.Proteins.colName()));
-                libInfo.setPeptides(rs.getInt(LibInfoColumn.Peptides.colName()));
-                libInfo.setPrecursors(rs.getInt(LibInfoColumn.Precursors.colName()));
-                libInfo.setTransitions(rs.getInt(LibInfoColumn.Transitions.colName()));
+                libInfo.setSchemaVersion(rs.getString(LibInfoColumn.SchemaVersion.baseColumn().name()));
+                libInfo.setLibraryRevision(rs.getInt(LibInfoColumn.LibraryRevision.baseColumn().name()));
+                libInfo.setProteins(rs.getInt(LibInfoColumn.Proteins.baseColumn().name()));
+                libInfo.setPeptides(rs.getInt(LibInfoColumn.Peptides.baseColumn().name()));
+                libInfo.setPrecursors(rs.getInt(LibInfoColumn.Precursors.baseColumn().name()));
+                libInfo.setTransitions(rs.getInt(LibInfoColumn.Transitions.baseColumn().name()));
                 libInfos.add(libInfo);
             }
             return libInfos;
@@ -144,7 +144,7 @@ public class LibInfoDao implements Dao<LibInfo>
         StringBuilder columnSql = new StringBuilder();
         for(ColumnDef column: LibInfoColumn.values())
         {
-            columnSql.append(", ").append(column.colName());
+            columnSql.append(", ").append(column.baseColumn().name());
         }
         columnSql.deleteCharAt(0); // delete first comma
         return columnSql.toString();

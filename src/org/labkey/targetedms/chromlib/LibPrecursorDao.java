@@ -119,9 +119,9 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         {
             super.saveAll(precursors, connection);
 
-            List<LibPrecursorIsotopeModification> precIsotopeMods = new ArrayList<LibPrecursorIsotopeModification>();
-            List<LibPrecursorRetentionTime> precRetentionTimes = new ArrayList<LibPrecursorRetentionTime>();
-            List<LibTransition> transitions = new ArrayList<LibTransition>();
+            List<LibPrecursorIsotopeModification> precIsotopeMods = new ArrayList<>();
+            List<LibPrecursorRetentionTime> precRetentionTimes = new ArrayList<>();
+            List<LibTransition> transitions = new ArrayList<>();
 
             if(_precIsotopeModDao != null)
             {
@@ -164,25 +164,25 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
 
     protected List<LibPrecursor> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibPrecursor> precursors = new ArrayList<LibPrecursor>();
+        List<LibPrecursor> precursors = new ArrayList<>();
         while(rs.next())
         {
             LibPrecursor precursor = new LibPrecursor();
-            precursor.setId(rs.getInt(PrecursorColumn.Id.colName()));
-            precursor.setPeptideId(rs.getInt(PrecursorColumn.PeptideId.colName()));
-            precursor.setIsotopeLabel(rs.getString(PrecursorColumn.IsotopeLabel.colName()));
-            precursor.setMz(rs.getDouble(PrecursorColumn.Mz.colName()));
-            precursor.setCharge(rs.getInt(PrecursorColumn.Charge.colName()));
-            precursor.setNeutralMass(rs.getDouble(PrecursorColumn.NeutralMass.colName()));
-            precursor.setModifiedSequence(rs.getString(PrecursorColumn.ModifiedSequence.colName()));
-            precursor.setCollisionEnergy(readDouble(rs, PrecursorColumn.CollisionEnergy.colName()));
-            precursor.setDeclusteringPotential(readDouble(rs, PrecursorColumn.DeclusteringPotential.colName()));
-            precursor.setTotalArea(rs.getDouble(PrecursorColumn.TotalArea.colName()));
-            precursor.setNumTransitions(rs.getInt(PrecursorColumn.NumTransitions.colName()));
-            precursor.setNumPoints(rs.getInt(PrecursorColumn.NumPoints.colName()));
-            precursor.setAverageMassErrorPPM(rs.getDouble(PrecursorColumn.AverageMassErrorPPM.colName()));
-            precursor.setSampleFileId(rs.getInt(PrecursorColumn.SampleFileId.colName()));
-            precursor.setChromatogram(rs.getBytes(PrecursorColumn.Chromatogram.colName()));
+            precursor.setId(rs.getInt(PrecursorColumn.Id.baseColumn().name()));
+            precursor.setPeptideId(rs.getInt(PrecursorColumn.PeptideId.baseColumn().name()));
+            precursor.setIsotopeLabel(rs.getString(PrecursorColumn.IsotopeLabel.baseColumn().name()));
+            precursor.setMz(rs.getDouble(PrecursorColumn.Mz.baseColumn().name()));
+            precursor.setCharge(rs.getInt(PrecursorColumn.Charge.baseColumn().name()));
+            precursor.setNeutralMass(rs.getDouble(PrecursorColumn.NeutralMass.baseColumn().name()));
+            precursor.setModifiedSequence(rs.getString(PrecursorColumn.ModifiedSequence.baseColumn().name()));
+            precursor.setCollisionEnergy(readDouble(rs, PrecursorColumn.CollisionEnergy.baseColumn().name()));
+            precursor.setDeclusteringPotential(readDouble(rs, PrecursorColumn.DeclusteringPotential.baseColumn().name()));
+            precursor.setTotalArea(rs.getDouble(PrecursorColumn.TotalArea.baseColumn().name()));
+            precursor.setNumTransitions(rs.getInt(PrecursorColumn.NumTransitions.baseColumn().name()));
+            precursor.setNumPoints(rs.getInt(PrecursorColumn.NumPoints.baseColumn().name()));
+            precursor.setAverageMassErrorPPM(rs.getDouble(PrecursorColumn.AverageMassErrorPPM.baseColumn().name()));
+            precursor.setSampleFileId(rs.getInt(PrecursorColumn.SampleFileId.baseColumn().name()));
+            precursor.setChromatogram(rs.getBytes(PrecursorColumn.Chromatogram.baseColumn().name()));
 
             precursors.add(precursor);
         }
@@ -191,7 +191,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
 
     public void loadTransitions(LibPrecursor precursor, Connection connection) throws SQLException
     {
-        List<LibTransition> transitions = _transitionDao.queryForForeignKey(Constants.TransitionColumn.PrecursorId.colName(),
+        List<LibTransition> transitions = _transitionDao.queryForForeignKey(Constants.TransitionColumn.PrecursorId.baseColumn().name(),
                                                                             precursor.getId(),
                                                                             connection);
         for(LibTransition transition: transitions)
@@ -202,7 +202,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
 
     public void loadPrecursorIsotopeModifications(LibPrecursor precursor, Connection connection) throws SQLException
     {
-        List<LibPrecursorIsotopeModification> precIsotopeMods = _precIsotopeModDao.queryForForeignKey(Constants.PrecursorIsotopeModificationColumn.PrecursorId.colName(),
+        List<LibPrecursorIsotopeModification> precIsotopeMods = _precIsotopeModDao.queryForForeignKey(Constants.PrecursorIsotopeModificationColumn.PrecursorId.baseColumn().name(),
                                                                                                       precursor.getId(),
                                                                                                       connection);
         for(LibPrecursorIsotopeModification precIsoMod: precIsotopeMods)
@@ -213,7 +213,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
 
     public void loadPrecursorRetentionTimes(LibPrecursor precursor, Connection connection) throws SQLException
     {
-        List<LibPrecursorRetentionTime> precRetTimes = _precRetentionTimeDao.queryForForeignKey(Constants.PrecursorRetentionTimeColumn.PrecursorId.colName(),
+        List<LibPrecursorRetentionTime> precRetTimes = _precRetentionTimeDao.queryForForeignKey(Constants.PrecursorRetentionTimeColumn.PrecursorId.baseColumn().name(),
                                                                                                 precursor.getId(),
                                                                                                 connection);
         for(LibPrecursorRetentionTime precRt: precRetTimes)

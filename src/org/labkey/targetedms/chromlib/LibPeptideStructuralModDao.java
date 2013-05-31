@@ -55,15 +55,15 @@ public class LibPeptideStructuralModDao extends BaseDaoImpl<LibPeptideStructural
 
     protected List<LibPeptideStructuralModification> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibPeptideStructuralModification> pepStrMods = new ArrayList<LibPeptideStructuralModification>();
+        List<LibPeptideStructuralModification> pepStrMods = new ArrayList<>();
         while(rs.next())
         {
             LibPeptideStructuralModification pepStrMod = new LibPeptideStructuralModification();
-            pepStrMod.setId(rs.getInt(PeptideStructuralModificationColumn.Id.colName()));
-            pepStrMod.setPeptideId(rs.getInt(PeptideStructuralModificationColumn.PeptideId.colName()));
-            pepStrMod.setStructuralModificationId(rs.getInt(PeptideStructuralModificationColumn.StructuralModId.colName()));
-            pepStrMod.setIndexAa(rs.getInt(PeptideStructuralModificationColumn.IndexAa.colName()));
-            pepStrMod.setMassDiff(rs.getDouble(PeptideStructuralModificationColumn.MassDiff.colName()));
+            pepStrMod.setId(rs.getInt(PeptideStructuralModificationColumn.Id.baseColumn().name()));
+            pepStrMod.setPeptideId(rs.getInt(PeptideStructuralModificationColumn.PeptideId.baseColumn().name()));
+            pepStrMod.setStructuralModificationId(rs.getInt(PeptideStructuralModificationColumn.StructuralModId.baseColumn().name()));
+            pepStrMod.setIndexAa(rs.getInt(PeptideStructuralModificationColumn.IndexAa.baseColumn().name()));
+            pepStrMod.setMassDiff(rs.getDouble(PeptideStructuralModificationColumn.MassDiff.baseColumn().name()));
 
             pepStrMods.add(pepStrMod);
         }

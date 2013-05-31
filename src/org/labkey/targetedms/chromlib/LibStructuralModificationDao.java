@@ -93,27 +93,27 @@ public class LibStructuralModificationDao extends BaseDaoImpl<LibStructuralModif
 
     protected List<LibStructuralModification> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibStructuralModification> structuralMods = new ArrayList<LibStructuralModification>();
+        List<LibStructuralModification> structuralMods = new ArrayList<>();
         while(rs.next())
         {
             LibStructuralModification structuralModification = new LibStructuralModification();
-            structuralModification.setId(rs.getInt(StructuralModificationColumn.Id.colName()));
-            structuralModification.setName(rs.getString(StructuralModificationColumn.Name.colName()));
-            structuralModification.setAminoAcid(rs.getString(StructuralModificationColumn.AminoAcid.colName()));
-            String terminus = rs.getString(StructuralModificationColumn.Terminus.colName());
+            structuralModification.setId(rs.getInt(StructuralModificationColumn.Id.baseColumn().name()));
+            structuralModification.setName(rs.getString(StructuralModificationColumn.Name.baseColumn().name()));
+            structuralModification.setAminoAcid(rs.getString(StructuralModificationColumn.AminoAcid.baseColumn().name()));
+            String terminus = rs.getString(StructuralModificationColumn.Terminus.baseColumn().name());
             if(terminus != null) structuralModification.setTerminus(terminus.charAt(0));
-            structuralModification.setFormula(rs.getString(StructuralModificationColumn.Formula.colName()));
-            double massDiffMono = rs.getDouble(StructuralModificationColumn.MassDiffMono.colName());
+            structuralModification.setFormula(rs.getString(StructuralModificationColumn.Formula.baseColumn().name()));
+            double massDiffMono = rs.getDouble(StructuralModificationColumn.MassDiffMono.baseColumn().name());
             if(!rs.wasNull())
                 structuralModification.setMassDiffMono(massDiffMono);
-            double massDiffAvg = rs.getDouble(StructuralModificationColumn.MassDiffAvg.colName());
+            double massDiffAvg = rs.getDouble(StructuralModificationColumn.MassDiffAvg.baseColumn().name());
             if(!rs.wasNull())
                 structuralModification.setMassDiffAvg(massDiffAvg);
-            int unimodId = rs.getInt(StructuralModificationColumn.UnimodId.colName());
+            int unimodId = rs.getInt(StructuralModificationColumn.UnimodId.baseColumn().name());
             if(!rs.wasNull())
                 structuralModification.setUnimodId(unimodId);
-            structuralModification.setVariable(rs.getBoolean(StructuralModificationColumn.Variable.colName()));
-            boolean explicitMod = rs.getBoolean(StructuralModificationColumn.ExplicitMod.colName());
+            structuralModification.setVariable(rs.getBoolean(StructuralModificationColumn.Variable.baseColumn().name()));
+            boolean explicitMod = rs.getBoolean(StructuralModificationColumn.ExplicitMod.baseColumn().name());
             if(!rs.wasNull())
                 structuralModification.setExplicitMod(explicitMod);
             structuralMods.add(structuralModification);
@@ -125,7 +125,7 @@ public class LibStructuralModificationDao extends BaseDaoImpl<LibStructuralModif
     {
         if(strMod != null)
         {
-            List<LibStructuralModLoss> modLosses = _modLossDao.queryForForeignKey(StructuralModLossColumn.StructuralModId.colName(),
+            List<LibStructuralModLoss> modLosses = _modLossDao.queryForForeignKey(StructuralModLossColumn.StructuralModId.baseColumn().name(),
                                                                                   strMod.getId(),
                                                                                   connection);
             for(LibStructuralModLoss modLoss: modLosses)
