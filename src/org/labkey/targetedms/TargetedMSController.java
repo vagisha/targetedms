@@ -2889,12 +2889,12 @@ public class TargetedMSController extends SpringActionController
             int height = 250;
 
             DefaultCategoryDataset dataset = getNumProteinsNumPeptidesByDate();
-            width = dataset.getColumnCount() * 75 + 50;
+            width = dataset.getColumnCount() * 50 + 50;
 
             JFreeChart chart = ChartFactory.createBarChart(
                         null,                     // chart title
-                        "date",                    // domain axis label
-                        "# added",             // range axis label
+                        null,                     // domain axis label
+                        "# added",                // range axis label
                         dataset,                  // data
                         PlotOrientation.VERTICAL, // orientation
                         true,                     // include legend
@@ -2955,31 +2955,9 @@ public class TargetedMSController extends SpringActionController
             // grab data from database
             SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
 
-            // find the start date of the library
-            Map<String, Object>[] values = sqlSelector.getMapArray();
-            Map<String, Object> firstVal = values[0];
-            Date firstDate = (Date) firstVal.get("runDate");
-
-            // calculate the # days old the first run is
-            Calendar cal1 = Calendar.getInstance(); // current date
-            Calendar cal2 = Calendar.getInstance();
-            cal2.setTime(firstDate);
-
-            long diff = cal1.getTimeInMillis() - cal2.getTimeInMillis();
-            long dayCount = TimeUnit.MILLISECONDS.toDays(diff);
-
             // build HashMap of values for binning purposes
-            final Map<String, Integer> protMap = new LinkedHashMap<>();
-            final Map<String, Integer> pepMap = new LinkedHashMap<>();
-
-            final SimpleDateFormat simpleDateFormat;
-
-            if (dayCount < 14) // less than 2 weeks old, day representation of the graph
-                simpleDateFormat = new SimpleDateFormat("M/d");
-            else if (dayCount < 56) // less than eight weeks old, week representation of the graph
-                simpleDateFormat = new SimpleDateFormat("W/MMM");
-            else // old graph, month representation of the graph
-                simpleDateFormat = new SimpleDateFormat("MMM/yy");
+            final LinkedHashMap<Date, Integer> protMap = new LinkedHashMap<>();
+            final LinkedHashMap<Date, Integer> pepMap = new LinkedHashMap<>();
 
             // add data to maps - binning by the date specified in simpleDateFormat
             sqlSelector.forEach(new Selector.ForEachBlock<ResultSet>() {
@@ -2987,27 +2965,69 @@ public class TargetedMSController extends SpringActionController
                 public void exec(ResultSet rs) throws SQLException
                 {
                     Date runDate = rs.getDate("runDate");
-                    String strDate = simpleDateFormat.format(runDate);
-
-                    int protCount = protMap.containsKey(strDate) ? protMap.get(strDate) : 0;
-                    protMap.put(strDate, protCount + rs.getInt("ProteinCount"));
-
-                    int pepCount = pepMap.containsKey(strDate) ? pepMap.get(strDate) : 0;
-                    pepMap.put(strDate, pepCount + rs.getInt("PeptideCount"));
+                    int protCount = protMap.containsKey(runDate) ? protMap.get(runDate) : 0;
+                    protMap.put(runDate, protCount + rs.getInt("ProteinCount"));
+                    int pepCount = pepMap.containsKey(runDate) ? pepMap.get(runDate) : 0;
+                    pepMap.put(runDate, pepCount + rs.getInt("PeptideCount"));
                 }
             });
 
-            // put all data from maps into dataset
-            for (Map.Entry<String, Integer> entry : protMap.entrySet())
+            LinkedHashMap<Date, Integer> binnedProtMap = binDateHashMap(protMap, 0);
+            LinkedHashMap<Date, Integer> binnedPepMap = binDateHashMap(pepMap, 0);
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("M/d");
+
+            if (protMap.size() > 10) // if more than 2 weeks, bin by week
             {
-                String key = entry.getKey();
+                binnedProtMap = binDateHashMap(protMap, Calendar.DAY_OF_WEEK);
+                binnedPepMap = binDateHashMap(pepMap, Calendar.DAY_OF_WEEK);
+            }
+            if (binnedProtMap.size() > 10 )
+            {
+                binnedProtMap = binDateHashMap(protMap, Calendar.DAY_OF_MONTH);
+                binnedPepMap = binDateHashMap(pepMap, Calendar.DAY_OF_MONTH);
+                simpleDateFormat = new SimpleDateFormat("MMM yy");
+            }
+            // put all data from maps into dataset
+            for (Map.Entry<Date, Integer> entry : binnedProtMap.entrySet())
+            {
+                Date key = entry.getKey();
                 if (folderType == FolderType.LibraryProtein)
-                    dataset.addValue(entry.getValue(), proteinLabel, key);
-                dataset.addValue( pepMap.get(key), peptideLabel, key);
+                    dataset.addValue(entry.getValue(), proteinLabel, simpleDateFormat.format(key));
+                dataset.addValue( binnedPepMap.get(key), peptideLabel, simpleDateFormat.format(key));
             }
 
             return dataset;
         }
+    }
+
+    // binDateHashMap - function to bin an existing hashmap of <date, count> into different date increments
+    // useful values for mode include
+    //   0 - do not perform any additional binning
+    //   Calendar.DAY_OF_WEEK - bin by week
+    //   Calendar.DAY_OF_MONTH - bin by month
+    public static LinkedHashMap<Date, Integer> binDateHashMap(LinkedHashMap<Date, Integer> hashMap, int mode )
+    {
+        LinkedHashMap<Date, Integer> newMap = new LinkedHashMap<>();
+
+        // put all data from maps into dataset
+        for (Map.Entry<Date, Integer> entry : hashMap.entrySet())
+        {
+            Date keyDate = entry.getKey();
+
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(keyDate);
+            calendar.clear(Calendar.HOUR);
+            calendar.clear(Calendar.MINUTE);
+            calendar.clear(Calendar.MILLISECOND);
+            if ( mode != 0) // bin by week or month, passed as an argument
+                calendar.set(mode, 1);
+            Date newDate = calendar.getTime();
+
+            int count = newMap.containsKey(keyDate) ? newMap.get(keyDate) : 0;
+            newMap.put(newDate, count + hashMap.get(keyDate));
+        }
+
+        return newMap;
     }
 
     public static final long getNumRepresentativeProteins(User user, Container container) {
