@@ -184,9 +184,9 @@ public class ChromLibSqliteSchemaCreator
                     indexSQL.append("_");
                     indexSQL.append(column.baseColumn().name());
                     indexSQL.append(" ON ");
-                    indexSQL.append(column.baseColumn().getFkTable());
+                    indexSQL.append(tableName);
                     indexSQL.append("(");
-                    indexSQL.append(column.baseColumn().getFkColumn());
+                    indexSQL.append(column.baseColumn().name());
                     indexSQL.append(")");
                     stmt.execute(indexSQL.toString());
                 }
