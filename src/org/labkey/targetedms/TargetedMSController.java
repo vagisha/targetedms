@@ -17,7 +17,6 @@
 package org.labkey.targetedms;
 
 
-import org.junit.Assert;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
@@ -26,6 +25,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.protein.ProteinService;
@@ -508,7 +508,7 @@ public class TargetedMSController extends SpringActionController
             {
                 root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
 
-                root.addChild(_run.getFileName(), getShowRunURL(getContainer(), _run.getId()));
+                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
 
                 ActionURL precChromUrl = new ActionURL(PeptideAllChromatogramsChartAction.class, getContainer());
                 precChromUrl.addParameter("id", String.valueOf(_peptideId));
@@ -574,7 +574,7 @@ public class TargetedMSController extends SpringActionController
             if (null != _run)
             {
                 root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
-                root.addChild(_run.getFileName(), getShowRunURL(getContainer(), _run.getId()));
+                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
                 root.addChild("Peptide Chromatograms");
             }
             return root;
@@ -840,7 +840,7 @@ public class TargetedMSController extends SpringActionController
             if (null != _run)
             {
                 root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
-                root.addChild(_run.getFileName(), getShowRunURL(getContainer(), _run.getId()));
+                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
                 root.addChild(_sequence);
             }
             return root;
@@ -1428,7 +1428,7 @@ public class TargetedMSController extends SpringActionController
             PeptideGroup group = PeptideGroupManager.getPeptideGroup(getContainer(), form.getId());
             if (group == null)
             {
-                throw new NotFoundException("Could not find peptide group #" + form.getId());
+                throw new NotFoundException("Could not find protein #" + form.getId());
             }
 
             _run = TargetedMSManager.getRun(group.getRunId());
@@ -1441,7 +1441,7 @@ public class TargetedMSController extends SpringActionController
             groupDetails.setColumns(tableInfo.getColumns("Label", "Description", "Decoy", "Note", "RunId"));
             groupDetails.setButtonBar(ButtonBar.BUTTON_BAR_EMPTY);
             DetailsView groupDetailsView = new DetailsView(groupDetails, form.getId());
-            groupDetailsView.setTitle("Peptide Group");
+            groupDetailsView.setTitle("Protein");
 
             VBox result = new VBox(groupDetailsView);
 
@@ -1515,7 +1515,7 @@ public class TargetedMSController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             return new ShowPrecursorListAction().appendNavTrail(root, _run)
-                                                .addChild(_run.getFileName(), getShowRunURL(getContainer(), _run.getId()))
+                                                .addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()))
                                                 .addChild(_proteinLabel);
         }
     }
@@ -3186,7 +3186,7 @@ public class TargetedMSController extends SpringActionController
         public boolean handlePost(RenameForm form, BindException errors) throws Exception
         {
             _run = validateRun(form.getRun());
-            TargetedMSManager.renameRun(form.getRun(), form.getDescription());
+            TargetedMSManager.renameRun(form.getRun(), form.getDescription(), getUser());
             return true;
         }
 

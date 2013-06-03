@@ -20,6 +20,7 @@
 <%@ page import="org.labkey.targetedms.TargetedMSRun" %>
 <%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.security.permissions.UpdatePermission" %>
+<%@ page import="java.text.DecimalFormat" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
@@ -28,6 +29,7 @@
     downloadAction.addParameter("runId", bean.getRun().getId());
     TargetedMSRun run = bean.getRun();
     Container c = me.getViewContext().getContainer();
+    DecimalFormat decimalFormat = new DecimalFormat("#,###");
 %>
 
 <table>
@@ -40,17 +42,17 @@
     </tr>
     <tr>
         <td class="labkey-form-label">Protein Count</td>
-        <td><%= bean.getRun().getPeptideGroupCount()%></td>
+        <td><%= h(decimalFormat.format(bean.getRun().getPeptideGroupCount())) %></td>
 
         <td class="labkey-form-label">Peptide Count</td>
-        <td><%= bean.getRun().getPeptideCount()%></td>
+        <td><%= h(decimalFormat.format(bean.getRun().getPeptideCount())) %></td>
     </tr>
     <tr>
         <td class="labkey-form-label">Precursor Count</td>
-        <td><%= bean.getRun().getPrecursorCount()%></td>
+        <td><%= h(decimalFormat.format(bean.getRun().getPrecursorCount())) %></td>
 
         <td class="labkey-form-label">Transition Count</td>
-        <td><%= bean.getRun().getTransitionCount()%></td>
+        <td><%= h(decimalFormat.format(bean.getRun().getTransitionCount())) %></td>
     </tr>
 
     <tr><td colspan="4">

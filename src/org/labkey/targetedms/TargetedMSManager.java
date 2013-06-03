@@ -1068,19 +1068,23 @@ public class TargetedMSManager
         }
     }
 
-    public static void renameRun(int runId, String newDescription)
+    public static void renameRun(int runId, String newDescription, User user)
     {
         if (newDescription == null || newDescription.length() == 0)
             return;
 
-        try
+        new SqlExecutor(getSchema()).execute("UPDATE " + getTableInfoRuns() + " SET Description=? WHERE Id = ?",
+                            newDescription, runId);
+        TargetedMSRun run = getRun(runId);
+        if (run != null)
         {
-            Table.execute(getSchema(), "UPDATE " + getTableInfoRuns() + " SET Description=? WHERE Id = ?",
-                    newDescription, runId);
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
+            // Keep the experiment run wrapper in sync
+            ExpRun expRun = ExperimentService.get().getExpRun(run.getExperimentRunLSID());
+            if (expRun != null)
+            {
+                expRun.setName(newDescription);
+                expRun.save(user);
+            }
         }
     }
 

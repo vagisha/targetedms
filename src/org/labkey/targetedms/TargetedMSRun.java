@@ -75,7 +75,7 @@ public class TargetedMSRun implements Serializable
 
     public String toString()
     {
-        return getRunId() + " " + getDescription() + " " + getFileName();
+        return getRunId() + " " + getDescription() + " " + getDescription();
     }
 
     public void setExperimentRunLSID(String experimentRunLSID)
