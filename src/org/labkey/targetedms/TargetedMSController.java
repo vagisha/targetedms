@@ -1137,14 +1137,6 @@ public class TargetedMSController extends SpringActionController
 
         public boolean doAction(SkylinePipelinePathForm form, BindException errors) throws Exception
         {
-            FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
-            // Default folder type or Experiment is not representative
-            TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
-            if (folderType == FolderType.Library)
-                representative = TargetedMSRun.RepresentativeDataState.Representative_Peptide;
-            else if (folderType == FolderType.LibraryProtein)
-                representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
-
             for (File file : form.getValidatedFiles(getContainer()))
             {
                 if (!file.isFile())
@@ -1155,7 +1147,7 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()), representative);
+                    TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
                 }
                 catch (IOException e)
                 {
@@ -1191,8 +1183,7 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    int jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()),
-                                                                TargetedMSRun.RepresentativeDataState.NotRepresentative);
+                    int jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
                     Map<String, Object> detailsMap = new HashMap<String, Object>(4);
                     detailsMap.put("Path", form.getPath());
                     detailsMap.put("File",file.getName());

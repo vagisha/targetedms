@@ -345,8 +345,7 @@ public class TargetedMSManager
 
     public static int addRunToQueue(ViewBackgroundInfo info,
                                      final File file,
-                                     PipeRoot root,
-                                     TargetedMSRun.RepresentativeDataState representative) throws SQLException, IOException, XarFormatException
+                                     PipeRoot root) throws SQLException, IOException, XarFormatException
     {
         String description = "Skyline document import - " + file.getName();
         XarContext xarContext = new XarContext(description, info.getContainer(), info.getUser());
@@ -381,6 +380,14 @@ public class TargetedMSManager
 
             expData = ExperimentService.get().createData(file.toURI(), source);
         }
+
+        TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
+        // Default folder type or Experiment is not representative
+        TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
+        if (folderType == TargetedMSModule.FolderType.Library)
+            representative = TargetedMSRun.RepresentativeDataState.Representative_Peptide;
+        else if (folderType == TargetedMSModule.FolderType.LibraryProtein)
+            representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
 
         SkylineDocImporter importer = new SkylineDocImporter(user, container, file.getName(), expData, null, xarContext, representative);
         SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
