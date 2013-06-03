@@ -27,7 +27,8 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.junit.Test;
-import org.labkey.api.ProteinService;
+import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.protein.ProteinService;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
@@ -99,7 +100,6 @@ import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
 import org.labkey.targetedms.chart.PrecursorPeakAreaChartMaker;
 import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
-import org.labkey.targetedms.chromlib.ContainerChromatogramLibraryWriter;
 import org.labkey.targetedms.conflict.ConflictPeptide;
 import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
@@ -145,7 +145,6 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -156,7 +155,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 import static org.labkey.targetedms.TargetedMSModule.EXP_RUN_TYPE;
 import static org.labkey.targetedms.TargetedMSModule.FolderType;
@@ -2505,6 +2503,9 @@ public class TargetedMSController extends SpringActionController
 
         private QueryView createModificationSearchView(final ModificationSearchForm form, BindException errors)
         {
+            if (! getContainer().getActiveModules().contains(ModuleLoader.getInstance().getModule(TargetedMSModule.class)))
+                return null;
+
             ViewContext viewContext = getViewContext();
             QuerySettings settings = new QuerySettings(viewContext, "TargetedMSMatches", "Precursor");
 

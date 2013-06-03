@@ -15,7 +15,7 @@
 
 package org.labkey.targetedms.view;
 
-import org.labkey.api.ProteinService;
+import org.labkey.api.protein.ProteinService;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;

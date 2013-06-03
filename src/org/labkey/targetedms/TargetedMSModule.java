@@ -17,7 +17,7 @@
 package org.labkey.targetedms;
 
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.ProteinService;
+import org.labkey.api.protein.ProteinService;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.EnumConverter;
@@ -30,6 +30,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.module.SpringModule;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.protein.ProteomicsModule;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.PageFlowUtil;
@@ -55,7 +56,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-public class TargetedMSModule extends SpringModule
+public class TargetedMSModule extends SpringModule implements ProteomicsModule
 {
     public static final String NAME = "TargetedMS";
 

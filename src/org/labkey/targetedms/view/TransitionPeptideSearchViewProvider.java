@@ -15,15 +15,17 @@
  */
 package org.labkey.targetedms.view;
 
-import org.labkey.api.ProteinService;
+import org.labkey.api.protein.ProteinService;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.view.ViewContext;
+import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.springframework.validation.BindException;
@@ -46,6 +48,9 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
     @Override
     public QueryView createView(ViewContext viewContext, final ProteinService.PeptideSearchForm form, BindException errors)
     {
+        if (! viewContext.getContainer().getActiveModules().contains(ModuleLoader.getInstance().getModule(TargetedMSModule.class)))
+            return null;  // only enable this view if the TargetedMSModule is active
+
         QuerySettings settings = new QuerySettings(viewContext, getDataRegionName(), "Peptide");
         settings.addAggregates(new Aggregate(FieldKey.fromParts("PeptideGroupId", "RunId", "File"), Aggregate.Type.COUNT, null, true));
         settings.addAggregates(new Aggregate(FieldKey.fromParts("Sequence"), Aggregate.Type.COUNT, null, true));

@@ -17,7 +17,7 @@
 package org.labkey.targetedms;
 
 import org.apache.log4j.Logger;
-import org.labkey.api.ProteinService;
+import org.labkey.api.protein.ProteinService;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
