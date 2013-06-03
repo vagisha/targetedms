@@ -408,7 +408,7 @@ public class SkylineDocImporter
                 }
                 filter.addCondition(FieldKey.fromParts("sense"), enzyme.getSense());
                 filter.addCondition(FieldKey.fromParts("name"), enzyme.getName());
-                PeptideSettings.Enzyme existingEnzyme = new TableSelector(TargetedMSManager.getTableInfoEnzyme(), Table.ALL_COLUMNS, filter, null).getObject(PeptideSettings.Enzyme.class);
+                PeptideSettings.Enzyme existingEnzyme = new TableSelector(TargetedMSManager.getTableInfoEnzyme(), filter, null).getObject(PeptideSettings.Enzyme.class);
                 if (existingEnzyme == null)
                 {
                     enzyme = Table.insert(_user, TargetedMSManager.getTableInfoEnzyme(), enzyme);

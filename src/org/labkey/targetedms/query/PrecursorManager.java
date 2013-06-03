@@ -146,7 +146,6 @@ public class PrecursorManager
         filter.addCondition(FieldKey.fromParts("PrecursorId"), precursorId);
 
         List<PrecursorChromInfo> precursorChromInfos = new TableSelector(TargetedMSManager.getTableInfoPrecursorChromInfo(),
-                                   Table.ALL_COLUMNS,
                                    filter,
                                    new Sort("-TotalArea"))
                                   .getArrayList(PrecursorChromInfo.class);

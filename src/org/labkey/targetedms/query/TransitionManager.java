@@ -91,7 +91,6 @@ public class TransitionManager
         filter.addCondition(FieldKey.fromParts("TransitionId"), transitionId);
 
         return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(),
-                                 Table.ALL_COLUMNS,
                                  filter,
                                  null)
                                  .getObject(TransitionChromInfo.class);

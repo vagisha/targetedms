@@ -21,7 +21,6 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
@@ -47,8 +46,9 @@ public class LibraryManager
     public static Map<String, Integer> getLibrarySourceTypes()
     {
         ResultSet rs = null;
-        Map<String, Integer> result = new HashMap<String, Integer>();
-        try {
+        Map<String, Integer> result = new HashMap<>();
+        try
+        {
             rs = Table.select(TargetedMSManager.getTableInfoLibrarySource(), Table.ALL_COLUMNS, null, null);
             while(rs.next())
             {
