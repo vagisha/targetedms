@@ -327,14 +327,15 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(Object o, BindException errors) throws Exception
         {
             JspView view = new JspView("/org/labkey/targetedms/view/archivedRevisionsDownload.jsp");
-            getPageConfig().setTitle("Download Archived Revisions");
+            view.setFrame(WebPartView.FrameType.PORTAL);
+            view.setTitle("Archived Revisions");
 
             return view;
         }
 
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
+            return root.addChild("Download Chromatogram Library");
         }
     }
 
@@ -2360,7 +2361,7 @@ public class TargetedMSController extends SpringActionController
 
 
             // construct new filename
-            String fileName = getViewContext().getContainer().getName() + "_rev" + libraryRevision + ".clib";
+            String fileName = ChromatogramLibraryUtils.getDownloadFileName(container, libraryRevision);
             PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.<String, String>emptyMap(), fileName, new FileInputStream(chromLibFile), true);
 
             return null;

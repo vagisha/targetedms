@@ -1,10 +1,12 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
+<%@ page import="org.apache.commons.io.FileUtils" %>
 <%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
+<%@ page import="java.io.File" %>
 <%@ page import="java.text.DecimalFormat" %>
 <%--
 ~ Copyright (c) 2013 LabKey Corporation
@@ -29,6 +31,8 @@
     long peptideCount = TargetedMSController.getNumRepresentativePeptides(getViewContext().getContainer());
     long transitionCount = TargetedMSController.getNumRankedTransitions(getViewContext().getUser(), getViewContext().getContainer());
     DecimalFormat format = new DecimalFormat("#,###");
+    int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(getViewContext().getContainer());
+    File archiveFile = ChromatogramLibraryUtils.getChromLibFile(getViewContext().getContainer(), currentRevision);
 %>
 
 <div class="labkey-download"><style type="text/css">
@@ -98,10 +102,11 @@ div.labkey-download h3 {
 <td><img src="<%= h(new ActionURL(TargetedMSController.GraphLibraryStatisticsAction.class, getViewContext().getContainer())) %>"></td>
 <td valign="top" align="center">
 <br>
-<br>
-<h3>Download Library:</h3>
-<a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer())) %>" class="banner-button">Download</a> <br>
-Revision <%= h(ChromatogramLibraryUtils.getCurrentRevision(getViewContext().getContainer()))%><br>
+<h3><%= h(getViewContext().getContainer().getName())%> Library</h3>
+<a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer())) %>" class="banner-button">Download</a> <br/>
+        <%= h(ChromatogramLibraryUtils.getDownloadFileName(getViewContext().getContainer(), currentRevision)) %><br/>
+    Revision <%= h(currentRevision)%><%= h(archiveFile.isFile() ? ", " + FileUtils.byteCountToDisplaySize(archiveFile.length()) : "") %><br/>
+    <br/>
 <%= PageFlowUtil.textLink("Archived Revisions", new ActionURL(TargetedMSController.ArchivedRevisionsAction.class, getViewContext().getContainer()))%>
 </tr>
 </table>

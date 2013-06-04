@@ -113,6 +113,14 @@ public class ChromatogramLibraryUtils
         return (Constants.SCHEMA_VERSION.equals(libInfoDb.getSchemaVersion()) && libInfoDb.getLibraryRevision() == currentRevision);
     }
 
+    /** @return the name of the file that downloaders will see */
+    public static String getDownloadFileName(Container container, int revision) throws IOException
+    {
+        return container.getName() + "_rev" + revision + ".clib";
+    }
+
+    /** @return the name of the file that will be stored on disk.
+     * Uses the container's RowId instead of name to handle renames gracefully */
     public static File getChromLibFile(Container container, int revision) throws IOException
     {
         File chromLibDir = getChromLibDir(container, false);

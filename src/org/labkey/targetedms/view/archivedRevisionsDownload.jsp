@@ -6,7 +6,6 @@
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
 <%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page import="java.io.File" %>
-<%@ page import="org.labkey.api.util.FileUtil" %>
 <%@ page import="org.apache.commons.io.FileUtils" %>
 <%@ page import="java.util.Date" %>
 <%--
@@ -34,9 +33,14 @@
 
 %>
 
-<h3>Download Archived Revisions</h3>
-<table>
-<%
+<table class="labkey-data-region labkey-show-borders">
+<tr>
+    <th>Revision #</th>
+    <th>File name</th>
+    <th>Size</th>
+    <th>Date created</th>
+</tr>
+        <%
     for (int i=1; i <= currentRevision; i++)
     {
         ActionURL u = new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer());
@@ -45,16 +49,20 @@
         if (archiveFile.isFile()) {
 %>
     <tr>
-        <td><%= PageFlowUtil.textLink("Revision " + i, u) %></td>
-        <td><%= h(FileUtils.byteCountToDisplaySize(archiveFile.length())) %>, created <%= h(formatDateTime(new Date(archiveFile.lastModified())))%></td>
+        <td><%= i %></td>
+        <td><%= PageFlowUtil.textLink(ChromatogramLibraryUtils.getDownloadFileName(getViewContext().getContainer(), i), u) %></td>
+        <td><%= h(FileUtils.byteCountToDisplaySize(archiveFile.length())) %></td>
+        <td><%= h(formatDateTime(new Date(archiveFile.lastModified())))%></td>
     </tr>
 <%
         }
         else
         {
 %><tr>
-    <td>Revision <%= i %></td>
-    <td>unavailable<br/></td>
+    <td><%= i %></td>
+    <td><%= h(ChromatogramLibraryUtils.getDownloadFileName(getViewContext().getContainer(), i)) %></td>
+    <td>unavailable</td>
+    <td></td>
 </tr><%
         }
     }
