@@ -343,7 +343,7 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_IRT_SCALE);
     }
 
-    public static int addRunToQueue(ViewBackgroundInfo info,
+    public static Integer addRunToQueue(ViewBackgroundInfo info,
                                      final File file,
                                      PipeRoot root) throws SQLException, IOException, XarFormatException
     {

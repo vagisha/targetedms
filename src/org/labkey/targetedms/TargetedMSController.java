@@ -1182,7 +1182,7 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    int jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
+                    Integer jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
                     Map<String, Object> detailsMap = new HashMap<String, Object>(4);
                     detailsMap.put("Path", form.getPath());
                     detailsMap.put("File",file.getName());
