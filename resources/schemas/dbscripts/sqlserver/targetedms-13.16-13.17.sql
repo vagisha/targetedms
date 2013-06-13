@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 
+-- We may have multiple light precursors for a given peptide if they have different charge states.
+-- They should have the same ModifiedSequence, so it doesn't matter which one we use
 UPDATE targetedms.peptide set PeptideModifiedSequence = (
-   select prec.ModifiedSequence from targetedms.Precursor AS prec, targetedms.IsotopeLabel AS ilabel
+   select MIN(prec.ModifiedSequence) from targetedms.Precursor AS prec, targetedms.IsotopeLabel AS ilabel
    WHERE prec.IsotopeLabelId = ilabel.id AND ilabel.name = 'light' AND prec.PeptideId = targetedms.Peptide.Id
 ) WHERE PeptideModifiedSequence IS NULL;
