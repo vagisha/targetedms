@@ -16,6 +16,7 @@
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ page import="org.labkey.targetedms.parser.PeptideSettings" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.PrecursorChromatogramsViewBean> me = (JspView<TargetedMSController.PrecursorChromatogramsViewBean>) HttpView.currentView();
@@ -41,7 +42,7 @@
     </tr>
 
     <%
-        if(!"light".equalsIgnoreCase(bean.getIsotopeLabel().getName()))
+        if(!PeptideSettings.IsotopeLabel.LIGHT.equalsIgnoreCase(bean.getIsotopeLabel().getName()))
         {
     %>
     <tr>

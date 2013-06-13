@@ -18,6 +18,7 @@ package org.labkey.targetedms.chart;
 import org.labkey.api.util.Formats;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
+import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.SampleFile;
@@ -92,7 +93,7 @@ public class LabelFactory
         label.append(" - ").append(Formats.f4.format(precursorSummary.get("mz")));
         label.append(getChargeLabel((Integer)precursorSummary.get("charge")));
         String isotopeLabel = (String) precursorSummary.get("label");
-        if(!"light".equalsIgnoreCase(isotopeLabel))
+        if(!PeptideSettings.IsotopeLabel.LIGHT.equalsIgnoreCase(isotopeLabel))
         {
             label.append(" (").append(isotopeLabel).append(")");
         }

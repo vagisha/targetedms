@@ -2,7 +2,7 @@
     <columns>
         <column name="PeptideGroupId/RunId/File" />
         <column name="PeptideGroupId/Label" />
-        <column name="Sequence" />
+        <column name="PeptideModifiedSequence" />
         <column name="NoteAnnotations" />
         <column name="StartIndex" />
         <column name="EndIndex" />

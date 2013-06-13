@@ -599,6 +599,11 @@ public class TargetedMSSchema extends UserSchema
 
             ColumnInfo sequenceColumn = result.getColumn("Sequence");
             sequenceColumn.setURL(detailsURLs);
+
+            ColumnInfo modifiedSequenceColumn = result.getColumn("PeptideModifiedSequence");
+            modifiedSequenceColumn.setLabel("Peptide");
+            modifiedSequenceColumn.setURL(detailsURLs);
+
             return result;
         }
 

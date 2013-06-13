@@ -1079,7 +1079,7 @@ public class SkylineDocumentParser
 
         precursor.setModifiedSequence(reader.getAttributeValue(null, "modified_sequence"));
 
-        precursor.setIsotopeLabel(XmlUtil.readAttribute(reader, "isotope_label", "light"));
+        precursor.setIsotopeLabel(XmlUtil.readAttribute(reader, "isotope_label", PeptideSettings.IsotopeLabel.LIGHT));
 
         String collisionEnergy = reader.getAttributeValue(null, COLLISION_ENERGY);
         if(null != collisionEnergy)

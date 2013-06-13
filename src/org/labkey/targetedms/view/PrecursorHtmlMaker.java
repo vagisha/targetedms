@@ -17,6 +17,7 @@ package org.labkey.targetedms.view;
 
 import org.labkey.api.util.Formats;
 import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
 
 /**
@@ -46,7 +47,7 @@ public class PrecursorHtmlMaker
         html.append("<span>");
         html.append(" - ").append(Formats.f4.format(precursor.getMz()));
         html.append(CHARGE[precursor.getCharge()]);
-        if(!"light".equalsIgnoreCase(isotopeLabel))
+        if(!PeptideSettings.IsotopeLabel.LIGHT.equalsIgnoreCase(isotopeLabel))
         {
             html.append(" (").append(isotopeLabel).append(")");
         }

@@ -530,6 +530,16 @@ public class SkylineDocImporter
             throws SQLException
     {
         peptide.setPeptideGroupId(pepGroup.getId());
+        // If the peptide modified sequence has not been set, use the light precursor sequence
+        if (peptide.getPeptideModifiedSequence() == null )
+        {
+            for(Precursor precursor: peptide.getPrecursorList())
+            {
+                if ( PeptideSettings.IsotopeLabel.LIGHT.equalsIgnoreCase(precursor.getIsotopeLabel()) )
+                    peptide.setPeptideModifiedSequence(precursor.getModifiedSequence());
+            }
+        }
+
         peptide = Table.insert(_user, TargetedMSManager.getTableInfoPeptide(), peptide);
 
         for (PeptideAnnotation annotation : peptide.getAnnotations())
