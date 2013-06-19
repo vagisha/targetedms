@@ -112,7 +112,7 @@ public class ChromatogramChartMakerFactory
            pciMaxStartTime = PeptideManager.getMaxRetentionTime(precursor.getPeptideId(), pChromInfo.getSampleFileId());
         }
 
-        List<TransChromInfoPlusTransition> tciList = new ArrayList<TransChromInfoPlusTransition>(chromatogram.getTransitionsCount());
+        List<TransChromInfoPlusTransition> tciList = new ArrayList<>(chromatogram.getTransitionsCount());
 
         for(int chromatogramIndex = 0; chromatogramIndex < chromatogram.getTransitionsCount(); chromatogramIndex++)
         {

@@ -67,7 +67,7 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
                 TargetedMSTable result = (TargetedMSTable) super.createTable();
                 result.addCondition(new SimpleFilter(form.createFilter("Sequence")));
 
-                List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
+                List<FieldKey> visibleColumns = new ArrayList<>();
                 visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "Label"));
                 visibleColumns.add(FieldKey.fromParts("Sequence"));
                 if (form.isSubfolders())

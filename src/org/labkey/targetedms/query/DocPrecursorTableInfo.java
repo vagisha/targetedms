@@ -116,7 +116,7 @@ public class DocPrecursorTableInfo extends AnnotatedTargetedMSTable
         addColumn(chromatogramsLinkCol);
 
         //only display a subset of the columns by default
-        ArrayList<FieldKey> visibleColumns = new ArrayList<FieldKey>();
+        ArrayList<FieldKey> visibleColumns = new ArrayList<>();
 
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Description"));

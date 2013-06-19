@@ -78,7 +78,7 @@ public class PeakAreasChartInputMaker
         {
             Map<String, List<Integer>> peptideChargeMap = getPeptideChargeMap(_pciPlusList);
 
-            Map<PeptideCategory, List<PrecursorChromInfoPlus>> datasetMap = new HashMap<PeptideCategory, List<PrecursorChromInfoPlus>>();
+            Map<PeptideCategory, List<PrecursorChromInfoPlus>> datasetMap = new HashMap<>();
 
             for(PrecursorChromInfoPlus pciPlus: _pciPlusList)
             {
@@ -89,7 +89,7 @@ public class PeakAreasChartInputMaker
                 List<PrecursorChromInfoPlus> categoryPciList = datasetMap.get(categoryLabel);
                 if(categoryPciList == null)
                 {
-                    categoryPciList = new ArrayList<PrecursorChromInfoPlus>();
+                    categoryPciList = new ArrayList<>();
                     datasetMap.put(categoryLabel, categoryPciList);
                 }
                 categoryPciList.add(pciPlus);
@@ -110,7 +110,7 @@ public class PeakAreasChartInputMaker
         {
             Map<Integer, String> sampleFileReplicateMap = getSampleFileReplicateMap();
 
-            Map<String, List<PrecursorChromInfoPlus>> datasetMap = new HashMap<String, List<PrecursorChromInfoPlus>>();
+            Map<String, List<PrecursorChromInfoPlus>> datasetMap = new HashMap<>();
 
             for(PrecursorChromInfoPlus pciPlus: _pciPlusList)
             {
@@ -124,7 +124,7 @@ public class PeakAreasChartInputMaker
                 List<PrecursorChromInfoPlus> categoryPciList = datasetMap.get(categoryLabel);
                 if(categoryPciList == null)
                 {
-                    categoryPciList = new ArrayList<PrecursorChromInfoPlus>();
+                    categoryPciList = new ArrayList<>();
                     datasetMap.put(categoryLabel, categoryPciList);
                 }
                 categoryPciList.add(pciPlus);
@@ -144,10 +144,10 @@ public class PeakAreasChartInputMaker
 
     private Map<Integer, String> getSampleFileReplicateMap()
     {
-        Map<Integer, String> sampleFileReplicateMap = new HashMap<Integer, String>();
+        Map<Integer, String> sampleFileReplicateMap = new HashMap<>();
         List<SampleFile> sampleFiles = ReplicateManager.getSampleFilesForRun(_runId);
         List<Replicate> replicates = ReplicateManager.getReplicatesForRun(_runId);
-        Map<Integer, String> replicateNameMap = new HashMap<Integer, String>();
+        Map<Integer, String> replicateNameMap = new HashMap<>();
         for(Replicate replicate: replicates)
         {
             replicateNameMap.put(replicate.getId(), replicate.getName());
@@ -161,14 +161,14 @@ public class PeakAreasChartInputMaker
 
     private Map<String, List<Integer>> getPeptideChargeMap(List<PrecursorChromInfoPlus> pciPlusList)
     {
-        Map<String, List<Integer>> pepChargeMap = new HashMap<String, List<Integer>>();
+        Map<String, List<Integer>> pepChargeMap = new HashMap<>();
 
         for(PrecursorChromInfoPlus pciPlus: pciPlusList)
         {
             List<Integer> pepChargeStates = pepChargeMap.get(pciPlus.getModifiedSequence());
             if(pepChargeStates == null)
             {
-                pepChargeStates = new ArrayList<Integer>();
+                pepChargeStates = new ArrayList<>();
                 pepChargeMap.put(pciPlus.getModifiedSequence(), pepChargeStates);
             }
             pepChargeStates.add(pciPlus.getCharge());
@@ -179,11 +179,11 @@ public class PeakAreasChartInputMaker
 
     private Map<Integer, String> getSampleAnnotationMap()
     {
-        Map<Integer, String> sampleFileAnnotMap = new HashMap<Integer, String>();
+        Map<Integer, String> sampleFileAnnotMap = new HashMap<>();
         if(_groupByAnnotationName != null)
         {
             List<ReplicateAnnotation> replicateAnnotationList = ReplicateManager.getReplicateAnnotationsForRun(_runId);
-            Map<Integer, String> replicateAnnotationMap = new HashMap<Integer, String>();
+            Map<Integer, String> replicateAnnotationMap = new HashMap<>();
             for(ReplicateAnnotation annot: replicateAnnotationList)
             {
                 if(!annot.getName().equals(_groupByAnnotationName))
@@ -299,7 +299,7 @@ public class PeakAreasChartInputMaker
         {
             if(_categoryDatasetMap == null)
             {
-                _categoryDatasetMap = new HashMap<String, PeakAreaCategoryDataset>();
+                _categoryDatasetMap = new HashMap<>();
             }
             _categoryDatasetMap.put(categoryDataset.getCategoryLabel(), categoryDataset);
             _maxPeakArea = Math.max(_maxPeakArea, categoryDataset.getSeriesMaxValue());
@@ -326,7 +326,7 @@ public class PeakAreasChartInputMaker
                     }
                 }
             }
-            List<PeakAreaCategoryDataset> categoryDatasets = new ArrayList<PeakAreaCategoryDataset>(_categoryDatasetMap.values());
+            List<PeakAreaCategoryDataset> categoryDatasets = new ArrayList<>(_categoryDatasetMap.values());
             Collections.sort(categoryDatasets, new Comparator<PeakAreaCategoryDataset>()
             {
                 @Override
@@ -344,7 +344,7 @@ public class PeakAreasChartInputMaker
                 }
             });
 
-            _sortedCategoryLabels = new ArrayList<String>();
+            _sortedCategoryLabels = new ArrayList<>();
             for(PeakAreaCategoryDataset dataset: categoryDatasets)
             {
                 _sortedCategoryLabels.add(dataset.getCategoryLabel());
@@ -357,12 +357,12 @@ public class PeakAreasChartInputMaker
             if(_sortedSeriesLabels != null)
                 return _sortedSeriesLabels;
 
-            Set<SeriesLabel> seriesLabels = new HashSet<SeriesLabel>();
+            Set<SeriesLabel> seriesLabels = new HashSet<>();
             for(PeakAreaCategoryDataset dataset: _categoryDatasetMap.values())
             {
                 seriesLabels.addAll(dataset.getSeriesLabels());
             }
-            _sortedSeriesLabels = new ArrayList<SeriesLabel>(seriesLabels);
+            _sortedSeriesLabels = new ArrayList<>(seriesLabels);
             Collections.sort(_sortedSeriesLabels);
 
             return _sortedSeriesLabels;
@@ -412,7 +412,7 @@ public class PeakAreasChartInputMaker
 
         public void setData(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues, ChartType chartType)
         {
-            Map<SeriesLabel, List<PrecursorChromInfoPlus>> seriesDataMap = new HashMap<SeriesLabel, List<PrecursorChromInfoPlus>>();
+            Map<SeriesLabel, List<PrecursorChromInfoPlus>> seriesDataMap = new HashMap<>();
             for(PrecursorChromInfoPlus pciPlus: pciPlusList)
             {
                 SeriesLabel seriesLabel = new SeriesLabel();
@@ -429,13 +429,13 @@ public class PeakAreasChartInputMaker
                 List<PrecursorChromInfoPlus> seriesData = seriesDataMap.get(seriesLabel);
                 if(seriesData == null)
                 {
-                    seriesData = new ArrayList<PrecursorChromInfoPlus>();
+                    seriesData = new ArrayList<>();
                     seriesDataMap.put(seriesLabel, seriesData);
                 }
                 seriesData.add(pciPlus);
             }
 
-            _seriesDatasetsMap = new HashMap<SeriesLabel, PeakAreaSeriesDataset>();
+            _seriesDatasetsMap = new HashMap<>();
             for(SeriesLabel seriesLabel: seriesDataMap.keySet())
             {
                 PeakAreaSeriesDataset seriesDataset = new PeakAreaSeriesDataset(seriesLabel);
@@ -462,7 +462,7 @@ public class PeakAreasChartInputMaker
 
         public List<SeriesLabel> getSeriesLabels()
         {
-            return new ArrayList<SeriesLabel>(_seriesDatasetsMap.keySet());
+            return new ArrayList<>(_seriesDatasetsMap.keySet());
         }
 
         public boolean isStatistical()

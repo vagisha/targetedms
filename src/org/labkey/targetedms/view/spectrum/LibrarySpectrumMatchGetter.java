@@ -53,8 +53,8 @@ public class LibrarySpectrumMatchGetter
         // Precursors are sorted by label type (light label first) and charge
         // If there are precursors with different charge we want to display MS/MS spectra for all of them.
 
-        Set<Integer> precursorCharges = new HashSet<Integer>();
-        List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<LibrarySpectrumMatch>();
+        Set<Integer> precursorCharges = new HashSet<>();
+        List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<>();
 
         Map<Integer, Double> modLocationMassMap = ModificationManager.getPeptideStructuralModsMap(peptide.getId());
 

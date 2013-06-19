@@ -137,10 +137,10 @@ class PeptideSettingsParser
         // If there is a single internal standard it is written out as an attribute.
         // Otherwise, there is one <internal_standard> element for each standard
         String inernalStandard = reader.getAttributeValue(null, INTERNAL_STANDARD);
-        Set<String> internalStandards = new HashSet<String> ();
+        Set<String> internalStandards = new HashSet<>();
 
-        List<PeptideSettings.RunStructuralModification> staticMods = new ArrayList<PeptideSettings.RunStructuralModification>();
-        List<PeptideSettings.RunIsotopeModification> isotopeMods = new ArrayList<PeptideSettings.RunIsotopeModification>();
+        List<PeptideSettings.RunStructuralModification> staticMods = new ArrayList<>();
+        List<PeptideSettings.RunIsotopeModification> isotopeMods = new ArrayList<>();
         modifications.setStructuralModifications(staticMods);
         modifications.setIsotopeModifications(isotopeMods);
 
@@ -149,7 +149,7 @@ class PeptideSettingsParser
             internalStandards.add(inernalStandard);
         }
 
-        List<String> isotopeLabelNames  = new ArrayList<String>();
+        List<String> isotopeLabelNames  = new ArrayList<>();
 
         while(reader.hasNext())
         {
@@ -183,7 +183,7 @@ class PeptideSettingsParser
             internalStandards.add(PeptideSettings.HEAVY_LABEL);
         }
 
-        List<PeptideSettings.IsotopeLabel> labels = new ArrayList<PeptideSettings.IsotopeLabel>(isotopeLabelNames.size());
+        List<PeptideSettings.IsotopeLabel> labels = new ArrayList<>(isotopeLabelNames.size());
         for(String name: isotopeLabelNames)
         {
             PeptideSettings.IsotopeLabel isotopeLabel = new PeptideSettings.IsotopeLabel();
@@ -200,7 +200,7 @@ class PeptideSettingsParser
 
     private List<PeptideSettings.RunStructuralModification> readStaticModifications(XMLStreamReader reader) throws XMLStreamException
     {
-        List<PeptideSettings.RunStructuralModification> modList = new ArrayList<PeptideSettings.RunStructuralModification>();
+        List<PeptideSettings.RunStructuralModification> modList = new ArrayList<>();
 
         while(reader.hasNext())
         {
@@ -231,7 +231,7 @@ class PeptideSettingsParser
         mod.setExplicitMod(XmlUtil.readBooleanAttribute(reader, EXPLICIT_DECL));
         mod.setUnimodId(XmlUtil.readIntegerAttribute(reader, UNIMMOD_ID));
 
-        List<PeptideSettings.PotentialLoss> potentialLosses = new ArrayList<PeptideSettings.PotentialLoss>();
+        List<PeptideSettings.PotentialLoss> potentialLosses = new ArrayList<>();
         mod.setPotentialLosses(potentialLosses);
 
         while (reader.hasNext())
@@ -265,7 +265,7 @@ class PeptideSettingsParser
             isotopeLabel = PeptideSettings.HEAVY_LABEL;
         }
 
-        List<PeptideSettings.RunIsotopeModification> modList = new ArrayList<PeptideSettings.RunIsotopeModification>();
+        List<PeptideSettings.RunIsotopeModification> modList = new ArrayList<>();
 
         while(reader.hasNext())
         {
@@ -320,7 +320,7 @@ class PeptideSettingsParser
         settings.setRankType(XmlUtil.readAttribute(reader, RANK_TYPE, null));
         settings.setPeptideCount(XmlUtil.readIntegerAttribute(reader, PEPTIDE_COUNT));
 
-        List<PeptideSettings.SpectrumLibrary> libraryList = new ArrayList<PeptideSettings.SpectrumLibrary>();
+        List<PeptideSettings.SpectrumLibrary> libraryList = new ArrayList<>();
         settings.setLibraries(libraryList);
 
         while(reader.hasNext())

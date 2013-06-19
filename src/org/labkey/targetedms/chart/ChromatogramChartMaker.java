@@ -61,7 +61,7 @@ class ChromatogramChartMaker
     public ChromatogramChartMaker(TYPE chromatogramType)
     {
         _chromatogramType = chromatogramType;
-        _retentionTimeAnnotations = new ArrayList<XYPointerAnnotation>();
+        _retentionTimeAnnotations = new ArrayList<>();
     }
 
     private static final DecimalFormat ROUND_1 = new DecimalFormat("0.0");

@@ -105,7 +105,7 @@ public class LibraryManager
             path = FileUtil.getBaseName(file.getPath());
         }
 
-        Map<PeptideSettings.SpectrumLibrary, String> libraryPathsMap = new HashMap<PeptideSettings.SpectrumLibrary, String>();
+        Map<PeptideSettings.SpectrumLibrary, String> libraryPathsMap = new HashMap<>();
         for(PeptideSettings.SpectrumLibrary library: libraries)
         {
             libraryPathsMap.put(library, path + File.separator + library.getFileNameHint());

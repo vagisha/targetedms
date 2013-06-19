@@ -80,10 +80,10 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
 
     public List<String> getDisplayColumnNames()
     {
-        List<String> colNames = new ArrayList<String>();
+        List<String> colNames = new ArrayList<>();
         colNames.add("pepciId");
 		// Sort the precursor chrom info columns
-        List<ColumnInfo> colInfoList = new ArrayList<ColumnInfo>(getPrecursorChromInfoColumns());
+        List<ColumnInfo> colInfoList = new ArrayList<>(getPrecursorChromInfoColumns());
         Collections.sort(colInfoList, new Comparator<ColumnInfo>()
         {
             @Override
@@ -156,7 +156,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
         qdef.setSql(sql);
         qdef.setIsHidden(true);
 
-        List<QueryException> errors = new ArrayList<QueryException>();
+        List<QueryException> errors = new ArrayList<>();
         TableInfo tableInfo = qdef.getTable(errors, true);
 
         if (!errors.isEmpty())

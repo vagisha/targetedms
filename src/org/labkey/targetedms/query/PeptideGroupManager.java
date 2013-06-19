@@ -120,7 +120,7 @@ public class PeptideGroupManager
         filter.addCondition(FieldKey.fromParts("RepresentativeDataState"), RepresentativeDataState.Representative.ordinal());
 
         Collection<PeptideGroup> groups = new TableSelector(TargetedMSManager.getTableInfoPeptideGroup(), filter, null).getCollection(PeptideGroup.class);
-        return new ArrayList<PeptideGroup>(groups);
+        return new ArrayList<>(groups);
     }
 
     public static PeptideGroup getLastDeprecatedPeptideGroup(PeptideGroup pepGrp, Container container)

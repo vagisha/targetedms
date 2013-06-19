@@ -42,9 +42,9 @@ public class DataSettings
         transition_result
     }
 
-    private Map<String, AnnotationDefinition> _annotationDefinitions = new HashMap<String, AnnotationDefinition>();
+    private Map<String, AnnotationDefinition> _annotationDefinitions = new HashMap<>();
     private Map<AnnotationTarget, List<AnnotationDefinition>> _targetAnnotationsMap =
-                        new HashMap<AnnotationTarget, List<AnnotationDefinition>>();
+                        new HashMap<>();
 
     public void addAnnotations(String name, String targetsString, String type)
     {
@@ -53,7 +53,7 @@ public class DataSettings
         {
             throw new IllegalStateException("No targets found for annotation "+name);
         }
-        List<AnnotationTarget> targets = new ArrayList<AnnotationTarget>(targetsArr.length);
+        List<AnnotationTarget> targets = new ArrayList<>(targetsArr.length);
         for(String targetStr: targetsArr)
         {
             targets.add(AnnotationTarget.valueOf(targetStr));
@@ -70,7 +70,7 @@ public class DataSettings
             List<AnnotationDefinition> targetAnnotations = _targetAnnotationsMap.get(target);
             if(targetAnnotations == null)
             {
-                targetAnnotations = new ArrayList<AnnotationDefinition>();
+                targetAnnotations = new ArrayList<>();
                 _targetAnnotationsMap.put(target, targetAnnotations);
             }
             targetAnnotations.add(annot);
@@ -85,7 +85,7 @@ public class DataSettings
 
     public <AnnotationTargetType extends AbstractAnnotation> List<String> getMissingBooleanAnnotations(List<AnnotationTargetType> annotations, AnnotationTarget target)
     {
-        Set<String> annotNames = new HashSet<String>();
+        Set<String> annotNames = new HashSet<>();
         for(AnnotationTargetType annot: annotations)
         {
             annotNames.add(annot.getName());
@@ -95,7 +95,7 @@ public class DataSettings
         if(annotDefs == null)
             return Collections.emptyList();
 
-        List<String> missingAnnotations = new ArrayList<String>();
+        List<String> missingAnnotations = new ArrayList<>();
         for(AnnotationDefinition def: annotDefs)
         {
             if(def.getType() == AnnotationType.true_false && !annotNames.contains(def.getName()))
@@ -108,7 +108,7 @@ public class DataSettings
 
     public List<AnnotationSetting> getAnnotationSettings()
     {
-        List<AnnotationSetting> settingsList = new ArrayList<AnnotationSetting>();
+        List<AnnotationSetting> settingsList = new ArrayList<>();
         for(AnnotationDefinition annotDef: _annotationDefinitions.values())
         {
             for(AnnotationTarget target: annotDef.getTargets())

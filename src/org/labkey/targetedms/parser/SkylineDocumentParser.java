@@ -168,9 +168,9 @@ public class SkylineDocumentParser
 
     public void readSettings() throws XMLStreamException, IOException
     {
-        _replicateList = new ArrayList<Replicate>();
-        _sampleFileIdToFilePathMap = new HashMap<String, String>();
-        _replicateSampleFileIdMap = new HashMap<String, String>();
+        _replicateList = new ArrayList<>();
+        _sampleFileIdToFilePathMap = new HashMap<>();
+        _replicateSampleFileIdMap = new HashMap<>();
 
         readDocumentSettings(_reader);
 
@@ -290,7 +290,7 @@ public class SkylineDocumentParser
             // Boolean type annotations are not listed in the .sky file if their value was false.
             // We would still like to store them in the database.
             List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations, DataSettings.AnnotationTarget.replicate);
-            List<ReplicateAnnotation> missingReplAnnotations = new ArrayList<ReplicateAnnotation>(missingBooleanAnnotations.size());
+            List<ReplicateAnnotation> missingReplAnnotations = new ArrayList<>(missingBooleanAnnotations.size());
             for(String missingAnotName: missingBooleanAnnotations)
             {
                 addMissingBooleanAnnotation(missingReplAnnotations, missingAnotName, new ReplicateAnnotation());
@@ -298,7 +298,7 @@ public class SkylineDocumentParser
 
             if(missingReplAnnotations.size() > 0)
             {
-                List<ReplicateAnnotation> combinedAnnotations = new ArrayList<ReplicateAnnotation>(annotations);
+                List<ReplicateAnnotation> combinedAnnotations = new ArrayList<>(annotations);
                 combinedAnnotations.addAll(missingReplAnnotations);
                 replicate.setAnnotations(combinedAnnotations);
             }
@@ -374,7 +374,7 @@ public class SkylineDocumentParser
         result.setPrecursorResMz(XmlUtil.readDoubleAttribute(reader, "precursor_res_mz")); // Guessed at attribute value name
         result.setProductMassAnalyzer(reader.getAttributeValue(null, "product_mass_analyzer")); // Guessed at attribute value name
 
-        List<TransitionSettings.IsotopeEnrichment> enrichments = new ArrayList<TransitionSettings.IsotopeEnrichment>();
+        List<TransitionSettings.IsotopeEnrichment> enrichments = new ArrayList<>();
         result.setIsotopeEnrichmentList(enrichments);
 
         while (reader.hasNext())
@@ -396,7 +396,7 @@ public class SkylineDocumentParser
 
     private List<TransitionSettings.IsotopeEnrichment> readIsotopeEnrichments(XMLStreamReader reader) throws XMLStreamException
     {
-        List<TransitionSettings.IsotopeEnrichment> result = new ArrayList<TransitionSettings.IsotopeEnrichment>();
+        List<TransitionSettings.IsotopeEnrichment> result = new ArrayList<>();
         while(reader.hasNext())
         {
             int evtType = reader.next();
@@ -481,7 +481,7 @@ public class SkylineDocumentParser
         {
             predictor.setStepCount(Integer.parseInt(stepCount));
         }
-        List<TransitionSettings.PredictorSettings> allSettings = new ArrayList<TransitionSettings.PredictorSettings>();
+        List<TransitionSettings.PredictorSettings> allSettings = new ArrayList<>();
         predictor.setSettings(allSettings);
 
         String slope = reader.getAttributeValue(null, "slope");
@@ -526,7 +526,7 @@ public class SkylineDocumentParser
 
     private void readMeasuredResults(XMLStreamReader reader) throws XMLStreamException
     {
-         this._replicateList = new ArrayList<Replicate>();
+         this._replicateList = new ArrayList<>();
 
          while(reader.hasNext()) {
 
@@ -548,10 +548,10 @@ public class SkylineDocumentParser
         Replicate replicate = new Replicate();
         replicate.setName(XmlUtil.readRequiredAttribute(reader, "name", REPLICATE));
 
-        List<SampleFile> sampleFileList = new ArrayList<SampleFile>();
+        List<SampleFile> sampleFileList = new ArrayList<>();
         replicate.setSampleFileList(sampleFileList);
 
-        List<ReplicateAnnotation> annotations = new ArrayList<ReplicateAnnotation>();
+        List<ReplicateAnnotation> annotations = new ArrayList<>();
         replicate.setAnnotations(annotations);
 
         while(reader.hasNext()) {
@@ -647,7 +647,7 @@ public class SkylineDocumentParser
         sampleFile.setAcquiredTime(XmlUtil.readDateAttribute(reader, "acquired_time"));
         sampleFile.setModifiedTime(XmlUtil.readDateAttribute(reader, "modified_time"));
 
-        List<Instrument> instrumentList = new ArrayList<Instrument>();
+        List<Instrument> instrumentList = new ArrayList<>();
         sampleFile.setInstrumentList(instrumentList);
 
         while(reader.hasNext()) {
@@ -669,7 +669,7 @@ public class SkylineDocumentParser
 
     private List<Instrument> readInstrumentInfoList(XMLStreamReader reader) throws XMLStreamException
     {
-        List<Instrument> result = new ArrayList<Instrument>();
+        List<Instrument> result = new ArrayList<>();
         while(reader.hasNext()) {
 
             int evtType = _reader.next();
@@ -762,9 +762,9 @@ public class SkylineDocumentParser
     private PeptideGroup readPeptideGroup(XMLStreamReader reader) throws XMLStreamException, IOException
     {
         PeptideGroup pepGroup = new PeptideGroup();
-        List<Peptide> peptideList = new ArrayList<Peptide>();
+        List<Peptide> peptideList = new ArrayList<>();
         pepGroup.setPeptideList(peptideList);
-        List<PeptideGroupAnnotation> annotations = new ArrayList<PeptideGroupAnnotation>();
+        List<PeptideGroupAnnotation> annotations = new ArrayList<>();
         pepGroup.setAnnotations(annotations);
 
         boolean isProtein = PROTEIN.equalsIgnoreCase(_reader.getLocalName());
@@ -825,12 +825,12 @@ public class SkylineDocumentParser
     private Peptide readPeptide(XMLStreamReader reader) throws XMLStreamException, IOException
     {
         Peptide peptide = new Peptide();
-        List<Precursor> precursorList = new ArrayList<Precursor>();
+        List<Precursor> precursorList = new ArrayList<>();
         peptide.setPrecursorList(precursorList);
-        List<PeptideAnnotation> annotations = new ArrayList<PeptideAnnotation>();
+        List<PeptideAnnotation> annotations = new ArrayList<>();
         peptide.setAnnotations(annotations);
 
-        List<PeptideChromInfo> peptideChromInfoList = new ArrayList<PeptideChromInfo>();
+        List<PeptideChromInfo> peptideChromInfoList = new ArrayList<>();
         peptide.setPeptideChromInfoList(peptideChromInfoList);
 
         String start = reader.getAttributeValue(null, "start");
@@ -879,8 +879,8 @@ public class SkylineDocumentParser
         if(null != avgMeasuredRt)
             peptide.setAvgMeasuredRetentionTime(Double.parseDouble(avgMeasuredRt));
 
-        List<Peptide.StructuralModification> structuralMods = new ArrayList<Peptide.StructuralModification>();
-        List<Peptide.IsotopeModification> isotopeMods = new ArrayList<Peptide.IsotopeModification>();
+        List<Peptide.StructuralModification> structuralMods = new ArrayList<>();
+        List<Peptide.IsotopeModification> isotopeMods = new ArrayList<>();
         peptide.setStructuralMods(structuralMods);
         peptide.setIsotopeMods(isotopeMods);
         while(reader.hasNext())
@@ -986,7 +986,7 @@ public class SkylineDocumentParser
 
     private List<Peptide.StructuralModification> readStructuralModifications(XMLStreamReader reader, String parentElement, String childElement) throws XMLStreamException
     {
-        List<Peptide.StructuralModification> modifications = new ArrayList<Peptide.StructuralModification>();
+        List<Peptide.StructuralModification> modifications = new ArrayList<>();
         while(reader.hasNext())
         {
            int evtType = reader.next();
@@ -1011,7 +1011,7 @@ public class SkylineDocumentParser
             isotopeLabel = PeptideSettings.HEAVY_LABEL;
         }
 
-        List<Peptide.IsotopeModification> modifications = new ArrayList<Peptide.IsotopeModification>();
+        List<Peptide.IsotopeModification> modifications = new ArrayList<>();
         while(reader.hasNext())
         {
            int evtType = reader.next();
@@ -1057,12 +1057,12 @@ public class SkylineDocumentParser
     private Precursor readPrecursor(XMLStreamReader reader, String modifiedSequenceLight) throws XMLStreamException, IOException
     {
         Precursor precursor = new Precursor();
-        List<Transition> transitionList = new ArrayList<Transition>();
+        List<Transition> transitionList = new ArrayList<>();
         precursor.setTransitionList(transitionList);
-        List<PrecursorAnnotation> annotations = new ArrayList<PrecursorAnnotation>();
+        List<PrecursorAnnotation> annotations = new ArrayList<>();
         precursor.setAnnotations(annotations);
 
-        List<PrecursorChromInfo> chromInfoList = new ArrayList<PrecursorChromInfo>();
+        List<PrecursorChromInfo> chromInfoList = new ArrayList<>();
         precursor.setChromInfoList(chromInfoList);
 
         String charge = reader.getAttributeValue(null, "charge");
@@ -1142,7 +1142,7 @@ public class SkylineDocumentParser
 
         List<Chromatogram> chromatograms = tryLoadChromatogram(transitionList,
                 precursor.getMz(), modifiedSequenceLight,  _matchTolerance);
-        Map<String, Chromatogram> filePathChromatogramMap = new HashMap<String, Chromatogram>();
+        Map<String, Chromatogram> filePathChromatogramMap = new HashMap<>();
         for(Chromatogram chromatogram: chromatograms)
         {
             filePathChromatogramMap.put(chromatogram.getFilePath(), chromatogram);
@@ -1256,7 +1256,7 @@ public class SkylineDocumentParser
     private PrecursorChromInfo readPrecursorChromInfo(XMLStreamReader reader) throws XMLStreamException
     {
         PrecursorChromInfo chromInfo = new PrecursorChromInfo();
-        List<PrecursorChromInfoAnnotation> annotations = new ArrayList<PrecursorChromInfoAnnotation>();
+        List<PrecursorChromInfoAnnotation> annotations = new ArrayList<>();
         chromInfo.setAnnotations(annotations);
 
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", PRECURSOR_PEAK));
@@ -1312,10 +1312,10 @@ public class SkylineDocumentParser
     private Transition readTransition(XMLStreamReader reader) throws XMLStreamException
     {
         Transition transition = new Transition();
-        List<TransitionAnnotation> annotations = new ArrayList<TransitionAnnotation>();
+        List<TransitionAnnotation> annotations = new ArrayList<>();
         transition.setAnnotations(annotations);
 
-        List<TransitionLoss> neutralLosses = new ArrayList<TransitionLoss>();
+        List<TransitionLoss> neutralLosses = new ArrayList<>();
         transition.setNeutralLosses(neutralLosses);
 
         String fragment = reader.getAttributeValue(null, "fragment_type");
@@ -1364,7 +1364,7 @@ public class SkylineDocumentParser
             transition.setMassIndex(0);
         }
 
-        List<TransitionChromInfo> chromInfoList = new ArrayList<TransitionChromInfo>();
+        List<TransitionChromInfo> chromInfoList = new ArrayList<>();
         transition.setChromInfoList(chromInfoList);
 
         while(reader.hasNext()) {
@@ -1436,7 +1436,7 @@ public class SkylineDocumentParser
 
     private List<TransitionLoss> readLosses(XMLStreamReader reader) throws XMLStreamException
     {
-        List<TransitionLoss> result = new ArrayList<TransitionLoss>();
+        List<TransitionLoss> result = new ArrayList<>();
         while (reader.hasNext())
         {
             int evtType = reader.next();
@@ -1499,7 +1499,7 @@ public class SkylineDocumentParser
     private TransitionChromInfo readTransitionChromInfo(XMLStreamReader reader) throws XMLStreamException
     {
         TransitionChromInfo chromInfo = new TransitionChromInfo();
-        List<TransitionChromInfoAnnotation> annotations = new ArrayList<TransitionChromInfoAnnotation>();
+        List<TransitionChromInfoAnnotation> annotations = new ArrayList<>();
         chromInfo.setAnnotations(annotations);
 
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", TRANSITION_PEAK));
@@ -1596,7 +1596,7 @@ public class SkylineDocumentParser
         //       Skyline never creates this case, but it has been reported
         int maxTranMatch = 1;
 
-        List<Chromatogram> listChrom = new ArrayList<Chromatogram>();
+        List<Chromatogram> listChrom = new ArrayList<>();
         if (_binaryParser != null)
         {
             // Filter the list of chromatograms based on our precursor mZ
@@ -1607,7 +1607,7 @@ public class SkylineDocumentParser
             }
 
             // Add entries to a list until they no longer match
-            List<Chromatogram> listChromatograms = new ArrayList<Chromatogram>();
+            List<Chromatogram> listChromatograms = new ArrayList<>();
             while (i < _binaryParser.getChromatograms().length &&
                     matchMz(precursorMz, _binaryParser.getChromatograms()[i].getPrecursorMz(), tolerance))
             {
@@ -1647,7 +1647,7 @@ public class SkylineDocumentParser
         // is only one precursor match per file.
         if (listChrom.size() > 1)
         {
-            List<Chromatogram> listChromFinal = new ArrayList<Chromatogram>();
+            List<Chromatogram> listChromFinal = new ArrayList<>();
             for (Chromatogram chromInfo : listChrom)
             {
                 String filePath = chromInfo.getFilePath();

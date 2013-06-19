@@ -357,7 +357,7 @@ public class TargetedMSSchema extends UserSchema
         {
             public TableInfo getLookupTableInfo()
             {
-                FilteredTable result = new FilteredTable<TargetedMSSchema>(TargetedMSManager.getTableInfoRuns(), TargetedMSSchema.this);
+                FilteredTable result = new FilteredTable<>(TargetedMSManager.getTableInfoRuns(), TargetedMSSchema.this);
                 result.addWrapColumn(result.getRealTable().getColumn("Id"));
                 result.addWrapColumn(result.getRealTable().getColumn("Description"));
                 result.addWrapColumn(result.getRealTable().getColumn("Created"));
@@ -385,7 +385,7 @@ public class TargetedMSSchema extends UserSchema
 
 
         //adjust the default visible columns
-        List<FieldKey> columns = new ArrayList<FieldKey>(result.getDefaultVisibleColumns());
+        List<FieldKey> columns = new ArrayList<>(result.getDefaultVisibleColumns());
         columns.remove(FieldKey.fromParts("File"));
         columns.remove(FieldKey.fromParts("Protocol"));
         columns.remove(FieldKey.fromParts("CreatedBy"));
@@ -416,7 +416,7 @@ public class TargetedMSSchema extends UserSchema
         }
         if (TABLE_RESPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
         {
-            return new EnumTableInfo<TargetedMSRun.RepresentativeDataState>(
+            return new EnumTableInfo<>(
                     TargetedMSRun.RepresentativeDataState.class,
                     getSchema(),
                     new EnumTableInfo.EnumValueGetter<TargetedMSRun.RepresentativeDataState>() {
@@ -433,7 +433,7 @@ public class TargetedMSSchema extends UserSchema
         }
         if (TABLE_RESPRESENTATIVE_DATA_STATE.equalsIgnoreCase(name))
         {
-            return new EnumTableInfo<RepresentativeDataState>(
+            return new EnumTableInfo<>(
                     RepresentativeDataState.class,
                     getSchema(),
                     new EnumTableInfo.EnumValueGetter<RepresentativeDataState>() {
@@ -482,7 +482,7 @@ public class TargetedMSSchema extends UserSchema
                 public DisplayColumn createRenderer(ColumnInfo colInfo)
                 {
                     FieldKey seqIdFK = new FieldKey(colInfo.getFieldKey().getParent(), "Id");
-                    Map<String, FieldKey> params = new HashMap<String, FieldKey>();
+                    Map<String, FieldKey> params = new HashMap<>();
                     params.put("id", seqIdFK);
                     JSONObject props = new JSONObject();
                     props.put("width", 450);
@@ -577,7 +577,7 @@ public class TargetedMSSchema extends UserSchema
             DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()),
                                                                   Collections.singletonMap("id", "Id"));
             result.setDetailsURL(detailsURLs);
-            List<FieldKey> defaultCols = new ArrayList<FieldKey>(result.getDefaultVisibleColumns());
+            List<FieldKey> defaultCols = new ArrayList<>(result.getDefaultVisibleColumns());
             defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
             defaultCols.add(1, FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
             defaultCols.add(2, FieldKey.fromParts("PeptideGroupId", "Label"));

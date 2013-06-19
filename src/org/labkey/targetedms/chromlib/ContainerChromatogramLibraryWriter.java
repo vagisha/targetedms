@@ -95,11 +95,11 @@ public class ContainerChromatogramLibraryWriter
             _libWriter.setMaxCacheSize(20000);
             _libWriter.openLibrary(tempChromLibFile);
 
-            _sampleFileIdMap = new HashMap<Integer, Integer>();
-            _isotopeLabelMap = new HashMap<Integer, String>();
-            _isotopeModificationMap = new HashMap<Integer, Integer>();
-            _isotopeModificationAndLabelMap = new HashMap<Integer, Integer>();
-            _structuralModificationMap = new HashMap<Integer, Integer>();
+            _sampleFileIdMap = new HashMap<>();
+            _isotopeLabelMap = new HashMap<>();
+            _isotopeModificationMap = new HashMap<>();
+            _isotopeModificationAndLabelMap = new HashMap<>();
+            _structuralModificationMap = new HashMap<>();
 
             for(Integer runId: _representativeRunIds)
             {
@@ -284,7 +284,7 @@ public class ContainerChromatogramLibraryWriter
         });
 
         int lastPeptideId = 0;
-        List<Precursor> peptidePrecursors = new ArrayList<Precursor>();
+        List<Precursor> peptidePrecursors = new ArrayList<>();
         for(Precursor precursor: precursors)
         {
             if(precursor.getPeptideId() != lastPeptideId)
@@ -298,7 +298,7 @@ public class ContainerChromatogramLibraryWriter
                     _libWriter.writePeptide(libPeptide);
                 }
                 lastPeptideId = precursor.getPeptideId();
-                peptidePrecursors = new ArrayList<Precursor>();
+                peptidePrecursors = new ArrayList<>();
             }
             peptidePrecursors.add(precursor);
         }
@@ -346,7 +346,7 @@ public class ContainerChromatogramLibraryWriter
         // Get the isotope modifications for the peptide.
         List<Peptide.IsotopeModification> pepIsotopeMods = ModificationManager.getPeptideIsotopelModifications(peptide.getId());
         // IsotopeLabelId(Panorama) -> List<Peptide.IsotopeModification>
-        Map<Integer, List<Peptide.IsotopeModification>> precIsotopeModMap = new HashMap<Integer, List<Peptide.IsotopeModification>>();
+        Map<Integer, List<Peptide.IsotopeModification>> precIsotopeModMap = new HashMap<>();
         for(Peptide.IsotopeModification isotopeMod: pepIsotopeMods)
         {
             Integer isotopeLabelId = _isotopeModificationAndLabelMap.get(isotopeMod.getIsotopeModId());
@@ -357,7 +357,7 @@ public class ContainerChromatogramLibraryWriter
             List<Peptide.IsotopeModification> isotopeMods = precIsotopeModMap.get(isotopeLabelId);
             if(isotopeMods == null)
             {
-                isotopeMods = new ArrayList<Peptide.IsotopeModification>();
+                isotopeMods = new ArrayList<>();
                 precIsotopeModMap.put(isotopeLabelId, isotopeMods);
             }
             isotopeMods.add(isotopeMod);
@@ -505,7 +505,7 @@ public class ContainerChromatogramLibraryWriter
 
     private void addTransitions(LibPrecursor precToSave, Precursor precursor, PrecursorChromInfo precursorChromInfo)
     {
-        List<Transition> transitions = new ArrayList<Transition>(TransitionManager.getTransitionsForPrecursor(precursor.getId()));
+        List<Transition> transitions = new ArrayList<>(TransitionManager.getTransitionsForPrecursor(precursor.getId()));
         for(Transition transition: transitions)
         {
             TransitionChromInfo tci = null;

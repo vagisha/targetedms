@@ -484,7 +484,7 @@ public class TargetedMSController extends SpringActionController
             bean.setIsotopeLabel(label);
             bean.setRun(_run);
 
-            JspView<PrecursorChromatogramsViewBean> precursorInfo = new JspView<PrecursorChromatogramsViewBean>("/org/labkey/targetedms/view/precursorChromatogramsView.jsp", bean);
+            JspView<PrecursorChromatogramsViewBean> precursorInfo = new JspView<>("/org/labkey/targetedms/view/precursorChromatogramsView.jsp", bean);
             precursorInfo.setFrame(WebPartView.FrameType.PORTAL);
             precursorInfo.setTitle("Precursor");
 
@@ -551,7 +551,7 @@ public class TargetedMSController extends SpringActionController
             bean.setLabels(IsotopeLabelManager.getIsotopeLabels(_run.getId()));
             bean.setPrecursorList(PrecursorManager.getPrecursorsForPeptide(peptide.getId()));
 
-            JspView<PeptideChromatogramsViewBean> peptideInfo = new JspView<PeptideChromatogramsViewBean>("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
+            JspView<PeptideChromatogramsViewBean> peptideInfo = new JspView<>("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
             peptideInfo.setFrame(WebPartView.FrameType.PORTAL);
             peptideInfo.setTitle("Peptide");
 
@@ -794,13 +794,13 @@ public class TargetedMSController extends SpringActionController
             bean.setRun(_run);
 
             // summary for this peptide
-            JspView<PeptideChromatogramsViewBean> peptideInfo = new JspView<PeptideChromatogramsViewBean>("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
+            JspView<PeptideChromatogramsViewBean> peptideInfo = new JspView<>("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
             peptideInfo.setFrame(WebPartView.FrameType.PORTAL);
             peptideInfo.setTitle("Peptide Summary");
             vbox.addView(peptideInfo);
 
             // precursor and transition chromatograms. One row per replicate
-            JspView<PeptideChromatogramsViewBean> chartForm = new JspView<PeptideChromatogramsViewBean>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
+            JspView<PeptideChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
             PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),
                                                                                                 form, errors);
             chromView.enableExpandCollapse(PeptidePrecursorChromatogramsView.TITLE, false);
@@ -813,7 +813,7 @@ public class TargetedMSController extends SpringActionController
             peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
 
 
-            JspView<PeakAreaGraphBean> peakAreaView = new JspView<PeakAreaGraphBean>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
+            JspView<PeakAreaGraphBean> peakAreaView = new JspView<>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
                                                                                                    peakAreasBean);
             peakAreaView.setTitle("Peak Areas");
             peakAreaView.enableExpandCollapse("PeakAreasView", false);
@@ -1076,7 +1076,7 @@ public class TargetedMSController extends SpringActionController
         public List<File> getValidatedFiles(Container c)
         {
             List<File> files = super.getValidatedFiles(c);
-            List<File> resolvedFiles = new ArrayList<File>(files.size());
+            List<File> resolvedFiles = new ArrayList<>(files.size());
             for(File file: files)
             {
                 resolvedFiles.add(FileUtil.resolveFile(file));  // Strips out ".." and "." from the path
@@ -1097,7 +1097,7 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(SkylinePipelinePathForm form, boolean reshow, BindException errors) throws Exception
         {
             form.getValidatedFiles(getContainer());
-            return new JspView<SkylinePipelinePathForm>("/org/labkey/targetedms/view/confirmImport.jsp", form, errors);
+            return new JspView<>("/org/labkey/targetedms/view/confirmImport.jsp", form, errors);
         }
 
         @Override
@@ -1170,7 +1170,7 @@ public class TargetedMSController extends SpringActionController
         public ApiResponse execute(PipelinePathForm form, BindException errors) throws Exception
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
-            List<Map<String, Object>> jobDetailsList = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> jobDetailsList = new ArrayList<>();
 
             for (File file : form.getValidatedFiles(getContainer()))
             {
@@ -1183,7 +1183,7 @@ public class TargetedMSController extends SpringActionController
                 try
                 {
                     Integer jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
-                    Map<String, Object> detailsMap = new HashMap<String, Object>(4);
+                    Map<String, Object> detailsMap = new HashMap<>(4);
                     detailsMap.put("Path", form.getPath());
                     detailsMap.put("File",file.getName());
                     detailsMap.put("RowId", jobId);
@@ -1231,7 +1231,7 @@ public class TargetedMSController extends SpringActionController
             bean.setForm(form);
             bean.setRun(_run);
 
-            JspView<RunDetailsBean> runSummaryView = new JspView<RunDetailsBean>("/org/labkey/targetedms/view/runSummaryView.jsp", bean);
+            JspView<RunDetailsBean> runSummaryView = new JspView<>("/org/labkey/targetedms/view/runSummaryView.jsp", bean);
             runSummaryView.setFrame(WebPartView.FrameType.PORTAL);
             runSummaryView.setTitle("Document Summary");
 
@@ -1451,7 +1451,7 @@ public class TargetedMSController extends SpringActionController
             if (group.getSequenceId() != null)
             {
                 int seqId = group.getSequenceId().intValue();
-                List<String> peptideSequences = new ArrayList<String>();
+                List<String> peptideSequences = new ArrayList<>();
                 for (Peptide peptide : PeptideManager.getPeptidesForGroup(group.getId()))
                 {
                     peptideSequences.add(peptide.getSequence());
@@ -1476,7 +1476,7 @@ public class TargetedMSController extends SpringActionController
                 {
                     TargetedMSTable result = (TargetedMSTable) super.createTable();
                     result.addCondition(new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), form.getId()));
-                    List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
+                    List<FieldKey> visibleColumns = new ArrayList<>();
                     visibleColumns.add(FieldKey.fromParts("Sequence"));
                     visibleColumns.add(FieldKey.fromParts("CalcNeutralMass"));
                     visibleColumns.add(FieldKey.fromParts("NumMissedCleavages"));
@@ -1498,11 +1498,11 @@ public class TargetedMSController extends SpringActionController
             peakAreasBean.setPeptideGroupId(form.getId());
             peakAreasBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
             peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
-            peakAreasBean.setPeptideList(new ArrayList<Peptide>(PeptideManager.getPeptidesForGroup(group.getId())));
+            peakAreasBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId())));
 
 
             //peakAreaUrl.addParameter("sampleFileId", sampleFiles.get(0).getId());
-            JspView<PeakAreaGraphBean> peakAreaView = new JspView<PeakAreaGraphBean>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
+            JspView<PeakAreaGraphBean> peakAreaView = new JspView<>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
                                                                                       peakAreasBean);
             peakAreaView.setTitle("Peak Areas");
             peakAreaView.enableExpandCollapse("PeakAreasView", false);
@@ -1613,7 +1613,7 @@ public class TargetedMSController extends SpringActionController
             if (group.getSequenceId()!= null)
             {
                 int seqId = group.getSequenceId().intValue();
-                List<String> peptideSequences = new ArrayList<String>();
+                List<String> peptideSequences = new ArrayList<>();
                 for (Peptide peptide : PeptideManager.getPeptidesForGroup(group.getId()))
                 {
                     peptideSequences.add(peptide.getSequence());
@@ -1658,7 +1658,7 @@ public class TargetedMSController extends SpringActionController
                 useMin = true;
             }
             String conflictRunFileName = null;
-            Map<String, Integer> conflictRunFiles = new HashMap<String, Integer>();
+            Map<String, Integer> conflictRunFiles = new HashMap<>();
             for(ConflictProtein cProtein: conflictProteinList)
             {
                 if(useMin && (cProtein.getNewProteinRunId() < conflictRunId))
@@ -1681,7 +1681,7 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("Run with ID "+conflictRunId+" does not have any protein conflicts.");
             }
 
-            List<ConflictProtein> singleRunConflictProteins = new ArrayList<ConflictProtein>();
+            List<ConflictProtein> singleRunConflictProteins = new ArrayList<>();
             for(ConflictProtein cProtein: conflictProteinList)
             {
                 if(cProtein.getNewProteinRunId() != conflictRunId)
@@ -1697,7 +1697,7 @@ public class TargetedMSController extends SpringActionController
                 bean.setAllConflictRunFiles(conflictRunFiles);
             }
 
-            JspView<ProteinConflictBean> conflictInfo = new JspView<ProteinConflictBean>("/org/labkey/targetedms/view/proteinConflictResolutionView.jsp", bean);
+            JspView<ProteinConflictBean> conflictInfo = new JspView<>("/org/labkey/targetedms/view/proteinConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
             conflictInfo.setTitle("Representative Protein Data Conflicts");
 
@@ -1792,10 +1792,10 @@ public class TargetedMSController extends SpringActionController
                     return Integer.valueOf(o1.getNewPeptideRank()).compareTo(o2.getNewPeptideRank());
                 }
             });
-            List<Map<String, Object>> conflictPeptidesMap = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> conflictPeptidesMap = new ArrayList<>();
             for(ConflictPeptide peptide: conflictPeptides)
             {
-                Map<String, Object> map = new HashMap<String, Object>();
+                Map<String, Object> map = new HashMap<>();
                 // PrecursorHtmlMaker.getHtml(peptide.getNewPeptide(), peptide.getNewPeptidePrecursor(), )
                 String newPepSequence = peptide.getNewPeptide() != null ? peptide.getNewPeptide().getSequence() : "-";
                 map.put("newPeptide", newPepSequence);
@@ -1857,7 +1857,7 @@ public class TargetedMSController extends SpringActionController
             }
 
             String conflictRunFileName = null;
-            Map<String, Integer> conflictRunFiles = new HashMap<String, Integer>();
+            Map<String, Integer> conflictRunFiles = new HashMap<>();
             for(ConflictPrecursor cPrecursor: conflictPrecursorList)
             {
                 if(useMin && cPrecursor.getNewPrecursorRunId() < conflictRunId)
@@ -1880,7 +1880,7 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("Run with ID "+conflictRunId+" does not have any peptide conflicts.");
             }
 
-            List<ConflictPrecursor> singleRunConflictPrecursors = new ArrayList<ConflictPrecursor>();
+            List<ConflictPrecursor> singleRunConflictPrecursors = new ArrayList<>();
             for(ConflictPrecursor cPrecursor: conflictPrecursorList)
             {
                 if(cPrecursor.getNewPrecursorRunId() != conflictRunId)
@@ -1896,7 +1896,7 @@ public class TargetedMSController extends SpringActionController
                 bean.setAllConflictRunFiles(conflictRunFiles);
             }
 
-            JspView<PrecursorConflictBean> conflictInfo = new JspView<PrecursorConflictBean>("/org/labkey/targetedms/view/precursorConflictResolutionView.jsp", bean);
+            JspView<PrecursorConflictBean> conflictInfo = new JspView<>("/org/labkey/targetedms/view/precursorConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
             conflictInfo.setTitle("Representative Peptide Data Conflicts");
 
@@ -1976,10 +1976,10 @@ public class TargetedMSController extends SpringActionController
                     return Integer.valueOf(o1.getNewTransitionRank()).compareTo(o2.getNewTransitionRank());
                 }
             });
-            List<Map<String, Object>> conflictTransitionsMap = new ArrayList<Map<String, Object>>();
+            List<Map<String, Object>> conflictTransitionsMap = new ArrayList<>();
             for(ConflictTransition transition: conflictTransitions)
             {
-                Map<String, Object> map = new HashMap<String, Object>();
+                Map<String, Object> map = new HashMap<>();
                 String newTransitionLabel = transition.getNewTransition() != null ? transition.getNewTransition().getLabel() : "-";
                 map.put("newTransition", newTransitionLabel);
                 String newTransRank = transition.getNewTransition() != null ? String.valueOf(transition.getNewTransitionRank()) : "-";
@@ -2538,7 +2538,7 @@ public class TargetedMSController extends SpringActionController
                         result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), modStr, modStr != null ? CompareType.CONTAINS_ONE_OF : CompareType.ISBLANK));
                     }
 
-                    List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
+                    List<FieldKey> visibleColumns = new ArrayList<>();
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
                     visibleColumns.add(FieldKey.fromParts("ModifiedSequence"));
@@ -2754,7 +2754,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<Pair<String, Double>> getModSearchPairs()
         {
-            List<Pair<String, Double>> pairs = new ArrayList<Pair<String, Double>>();
+            List<Pair<String, Double>> pairs = new ArrayList<>();
             if (_modSearchPairsStr != null)
             {
                 String[] pairStrs = _modSearchPairsStr.split(";");
@@ -2764,7 +2764,7 @@ public class TargetedMSController extends SpringActionController
                     if (pair.length == 2)
                     {
                         try {
-                            pairs.add(new Pair<String, Double>(pair[0], Double.parseDouble(pair[1])));
+                            pairs.add(new Pair<>(pair[0], Double.parseDouble(pair[1])));
                         }
                         catch (NumberFormatException e)
                         {

@@ -171,7 +171,7 @@ public class ChromatogramLibraryWriter
     {
         if(_libProteinCache == null)
         {
-            _libProteinCache = new ArrayList<LibProtein>();
+            _libProteinCache = new ArrayList<>();
         }
         _libProteinCache.add(libProtein);
 
@@ -187,7 +187,7 @@ public class ChromatogramLibraryWriter
     {
         if(_libPeptideCache == null)
         {
-            _libPeptideCache = new ArrayList<LibPeptide>();
+            _libPeptideCache = new ArrayList<>();
         }
         _libPeptideCache.add(libPeptide);
 

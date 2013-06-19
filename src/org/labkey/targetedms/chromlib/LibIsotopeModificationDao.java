@@ -71,7 +71,7 @@ public class LibIsotopeModificationDao extends BaseDaoImpl<LibIsotopeModificatio
 
     protected List<LibIsotopeModification> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibIsotopeModification> isotopeMods = new ArrayList<LibIsotopeModification>();
+        List<LibIsotopeModification> isotopeMods = new ArrayList<>();
         while(rs.next())
         {
             LibIsotopeModification isotopeModification = new LibIsotopeModification();

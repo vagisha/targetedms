@@ -82,7 +82,7 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
                 sql.append("))");
                 result.addCondition(sql);
 
-                List<FieldKey> visibleColumns = new ArrayList<FieldKey>();
+                List<FieldKey> visibleColumns = new ArrayList<>();
                 visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "Label"));
                 visibleColumns.add(FieldKey.fromParts("Sequence"));
                 if (form.isIncludeSubfolders())

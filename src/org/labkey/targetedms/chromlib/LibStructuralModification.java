@@ -143,7 +143,7 @@ public class LibStructuralModification implements ObjectWithId
     {
         if(_modLosses == null)
         {
-            _modLosses = new ArrayList<LibStructuralModLoss>();
+            _modLosses = new ArrayList<>();
         }
         _modLosses.add(modLoss);
     }

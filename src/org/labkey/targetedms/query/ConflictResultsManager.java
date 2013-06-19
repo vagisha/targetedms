@@ -135,7 +135,7 @@ public class ConflictResultsManager
         List<BestPrecursorPeptide> newProteinPeptides = getBestPrecursorsForProtein(newProteinId);
         List<BestPrecursorPeptide> oldProteinPeptides = getBestPrecursorsForProtein(oldProteinId);
 
-        Map<String, ConflictPeptide> conflictPeptideMap = new HashMap<String, ConflictPeptide>();
+        Map<String, ConflictPeptide> conflictPeptideMap = new HashMap<>();
         for(BestPrecursorPeptide peptide: newProteinPeptides)
         {
             ConflictPeptide cPeptide = new ConflictPeptide();
@@ -163,13 +163,13 @@ public class ConflictResultsManager
             cPeptide.setOldPeptideRank(peptide.getRank());
         }
 
-        return new ArrayList<ConflictPeptide>(conflictPeptideMap.values());
+        return new ArrayList<>(conflictPeptideMap.values());
     }
 
     private static List<BestPrecursorPeptide> getBestPrecursorsForProtein(int proteinId)
     {
         Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(proteinId);
-        List<BestPrecursorPeptide> proteinPeptides = new ArrayList<BestPrecursorPeptide>();
+        List<BestPrecursorPeptide> proteinPeptides = new ArrayList<>();
         for(Peptide peptide: peptides)
         {
             BestPrecursorPeptide bestPrecursor = getBestPrecursor(peptide);
@@ -311,7 +311,7 @@ public class ConflictResultsManager
         Precursor oldPrecursor = PrecursorManager.get(oldPrecursorId);
 
         // Key in the conflictTransitionMap is the transition label (y7, y8, etc.)
-        Map<String, ConflictTransition> conflictTransitionMap = new HashMap<String, ConflictTransition>();
+        Map<String, ConflictTransition> conflictTransitionMap = new HashMap<>();
         for(TransitionWithAreaAndRank twr: newPrecursorTransitions)
         {
             ConflictTransition cTransition = new ConflictTransition();
@@ -341,7 +341,7 @@ public class ConflictResultsManager
             cTransition.setOldTransitionRank(twr.getRank());
         }
 
-        return new ArrayList<ConflictTransition>(conflictTransitionMap.values());
+        return new ArrayList<>(conflictTransitionMap.values());
     }
 
     public static List<TransitionWithAreaAndRank> getRankedTransitionsForPrecursor(int precursorId)
@@ -350,7 +350,7 @@ public class ConflictResultsManager
 
         // Each transition may have been measured in more than one replicate. We need to get the
         // the average area for each transition across all replicates
-        List<TransitionWithAreaAndRank> transWithRankList = new ArrayList<TransitionWithAreaAndRank>(transitions.size());
+        List<TransitionWithAreaAndRank> transWithRankList = new ArrayList<>(transitions.size());
         for(Transition transition: transitions)
         {
             Collection<TransitionChromInfo> transChromInfoList = TransitionManager.getTransitionChromInfoListForTransition(transition.getId());

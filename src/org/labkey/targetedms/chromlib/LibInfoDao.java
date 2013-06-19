@@ -83,7 +83,7 @@ public class LibInfoDao implements Dao<LibInfo>
             stmt = connection.createStatement();
             rs = stmt.executeQuery(sql.toString());
 
-            List<LibInfo> libInfos = new ArrayList<LibInfo>();
+            List<LibInfo> libInfos = new ArrayList<>();
             while(rs.next())
             {
                 LibInfo libInfo = new LibInfo();

@@ -87,12 +87,12 @@ public class ReplicateManager
         SQLFragment sf = new SQLFragment(sql);
         sf.add(runId);
 
-        return new ArrayList<SampleFile>(new SqlSelector(TargetedMSManager.getSchema(), sf).getCollection(SampleFile.class));
+        return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sf).getCollection(SampleFile.class));
     }
 
     public static List<Replicate> getReplicatesForRun(int runId)
     {
-        return new ArrayList<Replicate>(
+        return new ArrayList<>(
                                  new TableSelector(TargetedMSManager.getTableInfoReplicate(),
                                                    new SimpleFilter(FieldKey.fromParts("RunId"), runId),
                                                    null)
@@ -111,7 +111,7 @@ public class ReplicateManager
         sql.append(" AND repl.Id = replAnnot.ReplicateId ");
         sql.add(runId);
 
-        return new ArrayList<String>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(String.class));
+        return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(String.class));
     }
 
     public static List<ReplicateAnnotation> getReplicateAnnotationsForRun(int runId)
@@ -126,6 +126,6 @@ public class ReplicateManager
         sql.append(" AND repl.Id = replAnnot.ReplicateId ");
         sql.add(runId);
 
-        return new ArrayList<ReplicateAnnotation>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(ReplicateAnnotation.class));
+        return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(ReplicateAnnotation.class));
     }
 }

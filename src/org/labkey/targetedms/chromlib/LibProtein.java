@@ -77,7 +77,7 @@ public class LibProtein implements ObjectWithId
     {
         if(_peptides == null)
         {
-            _peptides = new ArrayList<LibPeptide>();
+            _peptides = new ArrayList<>();
         }
         _peptides.add(peptide);
     }

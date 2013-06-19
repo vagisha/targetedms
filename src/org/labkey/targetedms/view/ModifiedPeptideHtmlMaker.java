@@ -34,13 +34,13 @@ import java.util.Map;
 public class ModifiedPeptideHtmlMaker
 {
     /** PeptideId -> Peptide */
-    private Map<Integer, Peptide> _peptides = new HashMap<Integer, Peptide>();
+    private Map<Integer, Peptide> _peptides = new HashMap<>();
     /** PeptideId -> (Index->MassDiff) */
-    private Map<Integer, Map<Integer, Double>> _structuralMods = new HashMap<Integer, Map<Integer, Double>>();
+    private Map<Integer, Map<Integer, Double>> _structuralMods = new HashMap<>();
     /** PeptideId/IsotopeLabelId -> (Index->MassDiff) */
-    private Map<Pair<Integer, Integer>, Map<Integer, Double>> _isotopeMods = new HashMap<Pair<Integer, Integer>, Map<Integer, Double>>();
+    private Map<Pair<Integer, Integer>, Map<Integer, Double>> _isotopeMods = new HashMap<>();
     /** PeptideId -> LightIsotopeLabelId */
-    private Map<Integer, Integer> _lightLabelIds = new HashMap<Integer, Integer>();
+    private Map<Integer, Integer> _lightLabelIds = new HashMap<>();
 
     private final static String[] HEX_PADDING = new String[] {
                                                         "",
@@ -88,7 +88,7 @@ public class ModifiedPeptideHtmlMaker
             _structuralMods.put(precursor.getPeptideId(), strModIndexMassDiff);
         }
 
-        Pair<Integer, Integer> isotopeKey = new Pair<Integer, Integer>(precursor.getPeptideId(), precursor.getIsotopeLabelId());
+        Pair<Integer, Integer> isotopeKey = new Pair<>(precursor.getPeptideId(), precursor.getIsotopeLabelId());
         isotopeModIndexMassDiff = _isotopeMods.get(isotopeKey);
         if (isotopeModIndexMassDiff == null)
         {

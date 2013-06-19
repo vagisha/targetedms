@@ -165,7 +165,7 @@ public class PrecursorPeakAreaChartMaker
         }
         else
         {
-            List<PrecursorChromInfoPlus> pciPlusList = new ArrayList<PrecursorChromInfoPlus>();
+            List<PrecursorChromInfoPlus> pciPlusList = new ArrayList<>();
 
             // Returns the chrom infos only for the sample files with the given replicate ID.
             List<SampleFile> sampleFiles = ReplicateManager.getSampleFilesForRun(peptideGroup.getRunId());
@@ -194,13 +194,13 @@ public class PrecursorPeakAreaChartMaker
         // If this dataset has only one series for each category use a single color
         if(peakAreaDataset.getSortedSeriesLabels().size() == 1)
         {
-            Map<String, Color> labelColors = new HashMap<String, Color>();
+            Map<String, Color> labelColors = new HashMap<>();
             labelColors.put(peakAreaDataset.getSortedSeriesLabels().get(0).toString(), ChartColors.getPrecursorColor(0));
             return labelColors;
         }
 
         List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(runId);
-        Map<String, PeptideSettings.IsotopeLabel> labelMap = new HashMap<String, PeptideSettings.IsotopeLabel>();
+        Map<String, PeptideSettings.IsotopeLabel> labelMap = new HashMap<>();
         int lightLabelId = Integer.MAX_VALUE;
         for(PeptideSettings.IsotopeLabel label: labels)
         {
@@ -215,7 +215,7 @@ public class PrecursorPeakAreaChartMaker
             minCharge = Math.min(minCharge, seriesLabel.getCharge());
         }
 
-        Map<String, Color> labelColors = new HashMap<String, Color>();
+        Map<String, Color> labelColors = new HashMap<>();
         for(PeakAreasChartInputMaker.SeriesLabel seriesLabel: sortedSeriesLabels)
         {
             int colorIndex = (seriesLabel.getCharge() - minCharge) * labels.size() + (labelMap.get(seriesLabel.getIsotopeLabel()).getId() - lightLabelId);

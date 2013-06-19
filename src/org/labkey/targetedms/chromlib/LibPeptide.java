@@ -134,7 +134,7 @@ public class LibPeptide implements ObjectWithId
     {
         if(_structuralModifications == null)
         {
-            _structuralModifications = new ArrayList<LibPeptideStructuralModification>();
+            _structuralModifications = new ArrayList<>();
         }
         _structuralModifications.add(structuralModification);
     }
@@ -151,7 +151,7 @@ public class LibPeptide implements ObjectWithId
     {
         if(_precursors == null)
         {
-            _precursors = new ArrayList<LibPrecursor>();
+            _precursors = new ArrayList<>();
         }
         _precursors.add(precursor);
     }

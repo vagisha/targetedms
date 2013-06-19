@@ -84,7 +84,7 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
         addColumn(fragment);
 
 
-        ArrayList<FieldKey> visibleColumns = new ArrayList<FieldKey>();
+        ArrayList<FieldKey> visibleColumns = new ArrayList<>();
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Description"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Annotations"));

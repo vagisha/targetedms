@@ -446,8 +446,8 @@ public class TargetedMSManager
             expRun.setFilePathRoot(skylineFile.getParentFile());
             ViewBackgroundInfo info = new ViewBackgroundInfo(container, user, null);
 
-            Map<ExpData, String> inputDatas = new HashMap<ExpData, String>();
-            Map<ExpData, String> outputDatas = new HashMap<ExpData, String>();
+            Map<ExpData, String> inputDatas = new HashMap<>();
+            Map<ExpData, String> outputDatas = new HashMap<>();
 
             outputDatas.put(expData, "sky");
 
@@ -631,7 +631,7 @@ public class TargetedMSManager
 
     public static List<Integer> getCurrentRepresentativeRunIds(Container container)
     {
-        List<Integer> representativeRunIds = new ArrayList<Integer>();
+        List<Integer> representativeRunIds = new ArrayList<>();
         Collection<Integer> proteinRepresentativeRunIds = getCurrentProteinRepresentativeRunIds(container);
         if(proteinRepresentativeRunIds != null)
         {
@@ -724,7 +724,7 @@ public class TargetedMSManager
             return;
 
         // Save these to delete after we've deleted the runs
-        List<ExpRun> experimentRunsToDelete = new ArrayList<ExpRun>();
+        List<ExpRun> experimentRunsToDelete = new ArrayList<>();
 
         for (Integer runId : runIds)
         {

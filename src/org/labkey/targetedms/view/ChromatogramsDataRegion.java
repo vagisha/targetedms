@@ -142,7 +142,7 @@ public class ChromatogramsDataRegion extends DataRegion
         MenuButton pageSizeMenu = new MenuButton("Row Size", getName() + ".Menu.RowSize");
 
         // insert current maxRows into sorted list of possible sizes
-        List<Integer> sizes = new LinkedList<Integer>(Arrays.asList(1, 2, 3, 4, 5, 10));
+        List<Integer> sizes = new LinkedList<>(Arrays.asList(1, 2, 3, 4, 5, 10));
         if (maxRowSize > 0)
         {
             int index = Collections.binarySearch(sizes, maxRowSize);
@@ -191,7 +191,7 @@ public class ChromatogramsDataRegion extends DataRegion
         };
 
         // insert current maxRows into sorted list of possible sizes
-        List<Integer> sizes = new LinkedList<Integer>(Arrays.asList(10, 20, 50, 100));
+        List<Integer> sizes = new LinkedList<>(Arrays.asList(10, 20, 50, 100));
         if (maxRows > 0)
         {
             int index = Collections.binarySearch(sizes, maxRows);

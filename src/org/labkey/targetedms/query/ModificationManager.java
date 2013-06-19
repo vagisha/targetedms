@@ -49,7 +49,7 @@ public class ModificationManager
      */
     public static Map<Integer, Double> getPeptideStructuralModsMap(int peptideId)
     {
-        Map<Integer, Double> strModIndexMassDiff = new HashMap<Integer, Double>();
+        Map<Integer, Double> strModIndexMassDiff = new HashMap<>();
         String sql = "SELECT IndexAa, MassDiff "+
                      "FROM "+ TargetedMSManager.getTableInfoPeptideStructuralModification()+" "+
                      "WHERE PeptideId=?";
@@ -90,7 +90,7 @@ public class ModificationManager
      */
     public static Map<Integer, Double> getPeptideIsotopeModsMap(int peptideId, int isotopeLabelId)
     {
-        Map<Integer, Double> isotopeModIndexMassDiff = new HashMap<Integer, Double>();
+        Map<Integer, Double> isotopeModIndexMassDiff = new HashMap<>();
         String sql = "SELECT pm.IndexAa, pm.MassDiff "+
                      "FROM "+
                      TargetedMSManager.getTableInfoPeptideIsotopeModification()+" AS pm, "+
