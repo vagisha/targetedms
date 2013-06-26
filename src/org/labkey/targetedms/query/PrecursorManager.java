@@ -163,6 +163,14 @@ public class PrecursorManager
         }
         else
         {
+            // Look for one that has area information
+            for (PrecursorChromInfo chromInfo : chromInfos)
+            {
+                if (chromInfo.getTotalArea() != null && (chromInfo.getNumTruncated() == null || chromInfo.getNumTruncated().intValue() == 0))
+                {
+                    return chromInfo;
+                }
+            }
             return chromInfos.get(0);
         }
     }
