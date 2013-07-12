@@ -32,7 +32,7 @@ public class SampleFile extends SkylineEntity
     private Date _acquiredTime;
     private Date _modifiedTime;
 
-    private List<Instrument> _instrumentList;
+    private List<Instrument> _instrumentInfoList;
 
     public int getReplicateId()
     {
@@ -104,13 +104,13 @@ public class SampleFile extends SkylineEntity
         _skylineId = skylineId;
     }
 
-    public List<Instrument> getInstrumentList()
+    public List<Instrument> getInstrumentInfoList()
     {
-        return _instrumentList;
+        return _instrumentInfoList;
     }
 
-    public void setInstrumentList(List<Instrument> instrumentList)
+    public void setInstrumentInfoList(List<Instrument> instrumentInfoList)
     {
-        _instrumentList = instrumentList;
+        _instrumentInfoList = instrumentInfoList;
     }
 }

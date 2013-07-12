@@ -50,15 +50,12 @@ public class RepresentativeStateManager
             int conflictCount = 0;
             if(state == TargetedMSRun.RepresentativeDataState.Representative_Protein)
             {
+                // For runs containing protein representative data (ranked peptides for proteins)
+                // only the proteins are marked as representative.
                 conflictCount = resolveRepresentativeProteinState(container, run);
-                conflictCount += resolveRepresentativePeptideState(container, run);
             }
             else if(state == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
             {
-                if(run.getRepresentativeDataState() == TargetedMSRun.RepresentativeDataState.Representative_Protein)
-                {
-                    revertProteinRepresentativeState(user, container, run);
-                }
                 conflictCount = resolveRepresentativePeptideState(container, run);
             }
             else if(state == TargetedMSRun.RepresentativeDataState.NotRepresentative)

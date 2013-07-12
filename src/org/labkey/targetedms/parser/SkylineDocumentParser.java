@@ -648,7 +648,7 @@ public class SkylineDocumentParser
         sampleFile.setModifiedTime(XmlUtil.readDateAttribute(reader, "modified_time"));
 
         List<Instrument> instrumentList = new ArrayList<>();
-        sampleFile.setInstrumentList(instrumentList);
+        sampleFile.setInstrumentInfoList(instrumentList);
 
         while(reader.hasNext()) {
 

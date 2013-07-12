@@ -631,33 +631,32 @@ public class TargetedMSManager
 
     public static List<Integer> getCurrentRepresentativeRunIds(Container container)
     {
-        List<Integer> representativeRunIds = new ArrayList<>();
-        Collection<Integer> proteinRepresentativeRunIds = getCurrentProteinRepresentativeRunIds(container);
-        if(proteinRepresentativeRunIds != null)
+        List<Integer> representativeRunIds = null;
+        if(getFolderType(container) == TargetedMSModule.FolderType.LibraryProtein)
         {
-            representativeRunIds.addAll(proteinRepresentativeRunIds);
+            representativeRunIds = getCurrentProteinRepresentativeRunIds(container);
         }
-        Collection<Integer> peptideRepresentativeRunIds = getCurrentPeptideRepresentativeRunIds(container);
-        if(peptideRepresentativeRunIds != null)
+        else if(getFolderType(container) == TargetedMSModule.FolderType.Library)
         {
-            representativeRunIds.addAll(peptideRepresentativeRunIds);
+            representativeRunIds = getCurrentPeptideRepresentativeRunIds(container);
         }
-        return representativeRunIds;
+
+        return representativeRunIds != null ? representativeRunIds : Collections.<Integer>emptyList();
     }
 
-    private static Collection<Integer> getCurrentProteinRepresentativeRunIds(Container container)
+    private static List<Integer> getCurrentProteinRepresentativeRunIds(Container container)
     {
         return getProteinRepresentativeRunIds(container, new Integer[]{RepresentativeDataState.Representative.ordinal()});
     }
 
-    private static Collection<Integer> getProteinRepresentativeRunIds(Container container)
+    private static List<Integer> getProteinRepresentativeRunIds(Container container)
     {
         return getProteinRepresentativeRunIds(container, new Integer[]{RepresentativeDataState.Representative.ordinal(),
                                                                        RepresentativeDataState.Deprecated.ordinal(),
                                                                        RepresentativeDataState.Conflicted.ordinal()});
     }
 
-    private static Collection<Integer> getProteinRepresentativeRunIds(Container container, Integer[] stateArray)
+    private static List<Integer> getProteinRepresentativeRunIds(Container container, Integer[] stateArray)
     {
         SQLFragment reprRunIdSql = new SQLFragment();
         reprRunIdSql.append("SELECT DISTINCT (RunId) FROM ");
@@ -671,22 +670,22 @@ public class TargetedMSManager
         reprRunIdSql.add(container);
         reprRunIdSql.append(" AND runs.Id = pepgrp.RunId");
 
-        return new SqlSelector(TargetedMSManager.getSchema(), reprRunIdSql).getCollection(Integer.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), reprRunIdSql).getArrayList(Integer.class);
     }
 
-    private static Collection<Integer> getCurrentPeptideRepresentativeRunIds(Container container)
+    private static List<Integer> getCurrentPeptideRepresentativeRunIds(Container container)
     {
         return getPeptideRepresentativeRunIds(container, new Integer[]{RepresentativeDataState.Representative.ordinal()});
     }
 
-    private static Collection<Integer> getPeptideRepresentativeRunIds(Container container)
+    private static List<Integer> getPeptideRepresentativeRunIds(Container container)
     {
         return getPeptideRepresentativeRunIds(container, new Integer[]{RepresentativeDataState.Representative.ordinal(),
                                                                        RepresentativeDataState.Deprecated.ordinal(),
                                                                        RepresentativeDataState.Conflicted.ordinal()});
     }
 
-    private static Collection<Integer> getPeptideRepresentativeRunIds(Container container, Integer[] stateArray)
+    private static List<Integer> getPeptideRepresentativeRunIds(Container container, Integer[] stateArray)
     {
         // Get a list of runIds that have proteins that are either representative, deprecated or conflicted.
         SQLFragment reprRunIdSql = new SQLFragment();
@@ -708,7 +707,7 @@ public class TargetedMSManager
         reprRunIdSql.add(container);
         reprRunIdSql.append(" AND runs.Id = pepgrp.RunId");
 
-        return new SqlSelector(TargetedMSManager.getSchema(), reprRunIdSql).getCollection(Integer.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), reprRunIdSql).getArrayList(Integer.class);
     }
 
     public static void updateRun(TargetedMSRun run, User user) throws SQLException

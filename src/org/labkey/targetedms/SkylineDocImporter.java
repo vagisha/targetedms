@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.data.CompareType;
@@ -45,8 +46,10 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -255,15 +258,11 @@ public class SkylineDocImporter
                 {
                     sampleFile.setReplicateId(replicate.getId());
 
-                    if(sampleFile.getInstrumentList().size() > 1)
+                    List<Instrument> instrumentInfoList = sampleFile.getInstrumentInfoList();
+                    if(instrumentInfoList != null && instrumentInfoList.size() > 0)
                     {
-                        // TODO: The schema will have to be changed if we need to support more than one instrument per sample file.
-                        //       For now throw an exception.
-                        throw new IllegalStateException("Multiple instruments found for sample file "+sampleFile.getSampleName()
-                                              +". Only one instrument per sample file is supported.");
-                    }
-                    for (Instrument instrument : sampleFile.getInstrumentList())
-                    {
+                        Instrument instrument = combineInstrumentInfos(instrumentInfoList);
+
                         Integer instrumentId = instrumentIdMap.get(instrument);
                         if(instrumentId == null)
                         {
@@ -480,6 +479,45 @@ public class SkylineDocImporter
 //            }
         }
     }
+
+    // Skyline documents may contain multiple <instrument_info> elements that contain
+    // values of different analyzers or detectors in the same instrument. Combine all the
+    // values into a single instrument object.
+    private Instrument combineInstrumentInfos(List<Instrument> instrumentInfoList)
+    {
+        LinkedHashSet<String> models = new LinkedHashSet<>();
+        List<String> ionizationTypes = new ArrayList<>();
+        List<String> analyzers = new ArrayList<>();
+        List<String> detectors = new ArrayList<>();
+
+        for(Instrument instrumentInfo: instrumentInfoList)
+        {
+            String model = instrumentInfo.getModel();
+            if (StringUtils.isNotBlank(model))
+                models.add(model);
+
+            String ionizationType = instrumentInfo.getIonizationType();
+            if (StringUtils.isNotBlank(ionizationType))
+                ionizationTypes.add(ionizationType);
+
+            String analyzer = instrumentInfo.getAnalyzer();
+            if (StringUtils.isNotBlank(analyzer))
+                analyzers.add(analyzer);
+
+            String detector = instrumentInfo.getDetector();
+            if (StringUtils.isNotBlank(detector))
+                detectors.add(detector);
+        }
+
+        Instrument instrument = new Instrument();
+        instrument.setModel(StringUtils.join(models, ","));
+        instrument.setIonizationType(StringUtils.join(ionizationTypes, ","));
+        instrument.setAnalyzer(StringUtils.join(analyzers, ","));
+        instrument.setDetector(StringUtils.join(detectors, ","));
+
+        return instrument;
+    }
+
 
     private void resolveRepresentativeData(TargetedMSRun run) throws SQLException
     {

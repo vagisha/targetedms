@@ -2924,7 +2924,15 @@ public class TargetedMSController extends SpringActionController
             sqlFragment.append("targetedms.PeptideGroup AS pg, ");
             sqlFragment.append("targetedms.Precursor AS pc ");
             sqlFragment.append("WHERE ");
-            sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id AND pc.RepresentativeDataState = 1 AND r.Deleted = ? AND r.Container = ? ");
+            sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id AND r.Deleted = ? AND r.Container = ? ");
+            // Only proteins (PeptideGroup) are marked as representative in "LibraryProtein" folder types. Get the Ids
+            // of all the peptides of representative proteins.
+            if(folderType == FolderType.LibraryProtein)
+                sqlFragment.append("AND pg.RepresentativeDataState = ? ");
+            // Precursors are marked a representative in "LibraryPeptide" folder type.  Get the peptide Ids
+            // of all the representative precursors.
+            else
+               sqlFragment.append("AND pc.RepresentativeDataState = ? ");
             sqlFragment.append(") AS pepCount ");
             sqlFragment.append("GROUP BY pepCount.RunDate) AS x FULL OUTER JOIN ");
             sqlFragment.append("(SELECT protCount.RunDate, COUNT(DISTINCT protCount.Id) AS ProteinCount ");
@@ -2935,13 +2943,15 @@ public class TargetedMSController extends SpringActionController
             sqlFragment.append("targetedms.Runs AS r, ");
             sqlFragment.append("targetedms.PeptideGroup AS pg ");
             sqlFragment.append("WHERE ");
-            sqlFragment.append("pg.RunId = r.Id AND pg.RepresentativeDataState = 1  AND r.Deleted = ? AND r.Container = ? ");
+            sqlFragment.append("pg.RunId = r.Id AND pg.RepresentativeDataState = ?  AND r.Deleted = ? AND r.Container = ? ");
             sqlFragment.append(") AS protCount ");
             sqlFragment.append("GROUP BY protCount.RunDate) AS y ");
             sqlFragment.append("ON x.RunDate = y.RunDate ORDER BY COALESCE(x.RunDate,y.RunDate); ");
 
             sqlFragment.add(false);
             sqlFragment.add(getContainer().getId());
+            sqlFragment.add(RepresentativeDataState.Representative.ordinal());
+            sqlFragment.add(RepresentativeDataState.Representative.ordinal());
             sqlFragment.add(false);
             sqlFragment.add(getContainer().getId());
 
@@ -3036,6 +3046,9 @@ public class TargetedMSController extends SpringActionController
     }
 
     public static final long getNumRepresentativePeptides(Container container) {
+
+        final FolderType folderType = TargetedMSManager.getFolderType(container);
+
         SQLFragment sqlFragment = new SQLFragment();
         sqlFragment.append("SELECT DISTINCT(p.Id) FROM ");
         sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p");
@@ -3046,11 +3059,16 @@ public class TargetedMSController extends SpringActionController
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoPrecursor(), "pc");
         sqlFragment.append(" WHERE ");
-        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id AND pc.RepresentativeDataState = 1 AND r.Deleted = ? AND r.Container = ? ");
+        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id  AND r.Deleted = ? AND r.Container = ? ");
+        if(folderType == FolderType.LibraryProtein)
+            sqlFragment.append("AND pg.RepresentativeDataState = ? ");
+        else
+            sqlFragment.append("AND pc.RepresentativeDataState = ? ");
 
         // add variables
         sqlFragment.add(false);
         sqlFragment.add(container.getId());
+        sqlFragment.add(RepresentativeDataState.Representative.ordinal());
 
         // run the query on the database and count rows
         SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
@@ -3060,14 +3078,32 @@ public class TargetedMSController extends SpringActionController
     }
 
     public static final long getNumRankedTransitions(User user, Container container) {
-        long transitionCount = 0;
-        TargetedMSSchema schema = new TargetedMSSchema(user, container);
-        TableInfo transition = schema.getTable(TargetedMSSchema.TABLE_TRANSITION);
-        if (transition != null)
-        {
-            transitionCount = new TableSelector(transition).getRowCount();
-        }
-        return transitionCount;
+        final FolderType folderType = TargetedMSManager.getFolderType(container);
+
+        SQLFragment sqlFragment = new SQLFragment();
+        sqlFragment.append("SELECT DISTINCT(tr.Id) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoTransition(), "tr");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPrecursor(), "pc");
+        sqlFragment.append(" WHERE ");
+        sqlFragment.append("tr.precursorId = pc.Id AND pc.PeptideId = p.Id AND p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? ");
+        if(folderType == FolderType.LibraryProtein)
+            sqlFragment.append("AND pg.RepresentativeDataState = ? ");
+        else
+            sqlFragment.append("AND pc.RepresentativeDataState = ? ");
+
+        sqlFragment.add(false);
+        sqlFragment.add(container.getId());
+        sqlFragment.add(RepresentativeDataState.Representative.ordinal());
+
+        SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
+        return sqlSelector.getRowCount();
     }
 
     /*
