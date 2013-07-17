@@ -38,6 +38,7 @@ import org.labkey.api.action.HasViewContext;
 import org.labkey.api.action.QueryViewAction;
 import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.ReturnUrlForm;
+import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.ButtonBar;
@@ -1647,6 +1648,12 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(ConflictUIForm form, BindException errors) throws Exception
         {
             List<ConflictProtein> conflictProteinList = ConflictResultsManager.getConflictedProteins(getContainer());
+            if(conflictProteinList.size() == 0)
+            {
+                errors.reject(ERROR_MSG, "Library folder "+getContainer().getPath()+" does not contain any conflicting proteins.");
+                return new SimpleErrorView(errors, true);
+            }
+
             // If the list contains the same conflicted proteins from multiple files return the ones from the
             // oldest run first.  Or, use the runId from the form if we are given one.
             int conflictRunId = form.getConflictedRunId();
@@ -1847,6 +1854,12 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(ConflictUIForm form, BindException errors) throws Exception
         {
             List<ConflictPrecursor> conflictPrecursorList = ConflictResultsManager.getConflictedPrecursors(getContainer());
+            if(conflictPrecursorList.size() == 0)
+            {
+                errors.reject(ERROR_MSG, "Library folder "+getContainer().getPath()+" does not contain any conflicting peptides.");
+                return new SimpleErrorView(errors, true);
+            }
+
             // If the list contains the same conflicted precursors from multiple files return the ones from the
             // oldest run first.  Or, use the runId from the form if we are given one.
             int conflictRunId = form.getConflictedRunId();
