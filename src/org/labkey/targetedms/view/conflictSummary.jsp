@@ -1,7 +1,9 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
-<%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.TargetedMSManager" %>
+<%@ page import="org.labkey.targetedms.TargetedMSModule" %>
+<%@ page import="org.labkey.targetedms.query.ConflictResultsManager" %>
 <%--
 ~ Copyright (c) 2012-2013 LabKey Corporation
 ~
@@ -18,21 +20,28 @@
 --%>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    boolean hasProteinConflicts = TargetedMSManager.hasConflictedProteins(getViewContext().getContainer());
-    boolean hasPeptideConflicts = TargetedMSManager.hasConflictedPeptides(getViewContext().getContainer());
-    String proteinConflictViewUrl = new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
-    String peptideConflictViewUrl = new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
+
+    long conflictCount = ConflictResultsManager.getConflictCount(getViewContext().getUser(), getViewContext().getContainer());
+    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+    String conflictViewUrl = (folderType == TargetedMSModule.FolderType.LibraryProtein) ?
+                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getViewContext().getContainer()).getLocalURIString() :
+                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
 %>
-<%if(hasProteinConflicts){%>
-    <div style="color:red; font-weight:bold;">
-        There are conflicting proteins in this folder.
-        <a style="color:red; text-decoration:underline;" href="<%= h(proteinConflictViewUrl) %>">Resolve protein conflicts.</a>
-    </div>
-<%}%>
-<%if(hasPeptideConflicts){%>
-    <div style="color:red; font-weight:bold;">
-        There are conflicting peptides in this folder.
-        <a style="color:red; text-decoration:underline;" href="<%= h(peptideConflictViewUrl) %>">Resolve peptide conflicts.</a>
-    </div>
-<%}%>
+
+<%
+    if(conflictCount > 0) {
+%>
+    <%if(folderType == TargetedMSModule.FolderType.LibraryProtein){%>
+        <div style="color:red; font-weight:bold;">
+            There are conflicting proteins in this folder.
+            <a style="color:red; text-decoration:underline;" href="<%= h(conflictViewUrl) %>">Resolve conflicts.</a>
+        </div>
+    <%}%>
+    <%if(folderType == TargetedMSModule.FolderType.Library){%>
+        <div style="color:red; font-weight:bold;">
+            There are conflicting peptides in this folder.
+            <a style="color:red; text-decoration:underline;" href="<%= h(conflictViewUrl) %>">Resolve conflicts.</a>
+        </div>
+    <%}%>
+<% } %>
 

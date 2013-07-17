@@ -15,6 +15,7 @@
 
 package org.labkey.targetedms.view;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.ContainerFilter;
@@ -30,6 +31,8 @@ import org.labkey.targetedms.query.TargetedMSTable;
 import org.springframework.validation.BindException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -64,9 +67,11 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
                 // Apply a filter to restrict to the set of matching proteins
                 SQLFragment sql = new SQLFragment("PeptideGroupId IN (SELECT pg.Id FROM ");
                 sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-                sql.append(" WHERE pg.SequenceId IN (");
+
+                sql.append(" WHERE ( ");
                 if (form.getSeqId().length > 0)
                 {
+                    sql.append("pg.SequenceId IN (");
                     String separator = "";
                     for (int seqId : form.getSeqId())
                     {
@@ -74,11 +79,12 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
                         sql.append(seqId);
                         separator = ",";
                     }
+                    sql.append(")");
+                    sql.append(" OR ");
                 }
-                else
-                {
-                    sql.append("NULL");
-                }
+
+                sql.append(getProteinLabelCondition("pg.Label", getProteinLabels(form.getIdentifier()), form.isExactMatch()));
+
                 sql.append("))");
                 result.addCondition(sql);
 
@@ -98,5 +104,42 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
         result.enableExpandCollapse("TargetedMSPeptides", false);
         result.setUseQueryViewActionExportURLs(true);
         return result;
+    }
+
+    private List<String> getProteinLabels(String labels)
+    {
+        if(StringUtils.isBlank(labels))
+            return Collections.emptyList();
+
+        return Arrays.asList(StringUtils.split(labels, " \t\n\r,"));
+    }
+
+    private SQLFragment getProteinLabelCondition (String columnName, List<String> labels, boolean exactMatch)
+    {
+        SQLFragment sqlFragment = new SQLFragment();
+        String separator = "";
+        sqlFragment.append("(");
+        if (labels.isEmpty())
+        {
+            sqlFragment.append("1 = 2");
+        }
+        for (String param : labels)
+        {
+            sqlFragment.append(separator);
+            sqlFragment.append("LOWER (" + columnName + ")");
+            if (exactMatch)
+            {
+                sqlFragment.append(" = LOWER(?)");
+                sqlFragment.add(param);
+            }
+            else
+            {
+                sqlFragment.append(" LIKE LOWER(?)");
+                sqlFragment.add("%" + param + "%");
+            }
+            separator = " OR ";
+        }
+        sqlFragment.append(")");
+        return sqlFragment;
     }
 }

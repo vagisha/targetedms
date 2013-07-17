@@ -116,7 +116,10 @@ function togglePrecursorDetails(element, newPrecursorId, oldPrecursorId)
                 success: function(response, request){
                     loadPrecursorDetails(element, newPrecursorId, oldPrecursorId, response, request);
                 },
-                failure: null
+                failure: function(response, request) {
+                    $("#"+newPrecursorId+"_details").text("ERROR: "+response.responseText);
+                    $("#"+oldPrecursorId+"_details").text("ERROR");
+                }
             });
     }
 
@@ -168,6 +171,9 @@ function toggleCheckboxSelection(element)
         Conflicts can be resolved for one run at a time.
     </div>
 <%}%>
+
+<div style="margin-bottom:10px;">Check the peptides that you would like to include in the library.</div>
+
 <%if(bean.getConflictRunFileName() != null) {%>
     <div style="color:red; margin-bottom:10px;">
         Resolve conflicts for <%=h(bean.getConflictRunFileName())%>.
@@ -180,8 +186,8 @@ function toggleCheckboxSelection(element)
 <table class="labkey-data-region labkey-show-borders">
     <thead>
        <tr>
-            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Representative Results</div></th>
-            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Current Representative Results</div></th>
+            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Peptides in Run</div></th>
+            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Current Library Peptides</div></th>
         </tr>
     </thead>
     <tbody>
@@ -247,7 +253,7 @@ function toggleCheckboxSelection(element)
             <td colspan="8" style="padding:10px;" align="center">
                 <%=generateSubmitButton("Apply Changes")%>
                 &nbsp;
-                <%=generateButton("Cancel", TargetedMSController.ShowListAction.class)%>
+                <%=generateButton("Cancel", context.getContainer().getStartURL(context.getUser()))%>
             </td>
         </tr>
     </tbody>

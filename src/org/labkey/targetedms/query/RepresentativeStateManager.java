@@ -41,7 +41,7 @@ public class RepresentativeStateManager
 {
     private RepresentativeStateManager() {}
 
-    public static int setRepresentativeState(User user, Container container,
+    public static void setRepresentativeState(User user, Container container,
                                              TargetedMSRun run, TargetedMSRun.RepresentativeDataState state)
                                              throws SQLException
     {
@@ -50,8 +50,6 @@ public class RepresentativeStateManager
             int conflictCount = 0;
             if(state == TargetedMSRun.RepresentativeDataState.Representative_Protein)
             {
-                // For runs containing protein representative data (ranked peptides for proteins)
-                // only the proteins are marked as representative.
                 conflictCount = resolveRepresentativeProteinState(container, run);
             }
             else if(state == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
@@ -74,9 +72,9 @@ public class RepresentativeStateManager
                 throw new IllegalArgumentException("Unrecognized representative data state: "+state);
 
             run.setRepresentativeDataState(state);
-            run = Table.update(user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
+            Table.update(user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
-                        // Increment the chromatogram library revision number for this container.
+            // Increment the chromatogram library revision number for this container.
             ChromatogramLibraryUtils.incrementLibraryRevision(container);
 
             // Add event to audit log.
@@ -84,7 +82,6 @@ public class RepresentativeStateManager
                     "Updated representative state. Number of conflicts " + conflictCount);
 
             transaction.commit();
-            return conflictCount;
         }
     }
 
@@ -103,11 +100,18 @@ public class RepresentativeStateManager
                 // Mark the last deprecated protein as representative
                 lastDeprecatedGroup.setRepresentativeDataState(RepresentativeDataState.Representative);
                 Table.update(user, TargetedMSManager.getTableInfoPeptideGroup(), lastDeprecatedGroup, lastDeprecatedGroup.getId());
+
+                // Set the representative state of all the precursors in this peptide group to be the same
+                // as the representative state of the peptide group
+                updatePrecursorRepresentativeState(lastDeprecatedGroup);
             }
         }
 
         // Mark all proteins in this run as not representative
         PeptideGroupManager.setRepresentativeState(run.getId(), RepresentativeDataState.NotRepresentative);
+
+        // Set the representative state of all the precursors in this run to not-representative
+        updatePrecursorRepresentativeState(run);
     }
 
     private static void revertPeptideRepresentativeState(User user, Container container, TargetedMSRun run) throws SQLException
@@ -172,7 +176,39 @@ public class RepresentativeStateManager
         makeConflictedSQL.add(RepresentativeDataState.Representative.ordinal());
         int conflictCount = new SqlExecutor(TargetedMSManager.getSchema()).execute(makeConflictedSQL);
 
+        // Set the representative state of all the precursors in this run to be the same
+        // as the representative state of the proteins
+        updatePrecursorRepresentativeState(run);
+
+
         return conflictCount;
+    }
+
+    private static void updatePrecursorRepresentativeState(TargetedMSRun run)
+    {
+       updatePrecursorRepresentativeState("pg.RunId", run.getId());
+    }
+
+    private static void updatePrecursorRepresentativeState(PeptideGroup peptideGroup)
+    {
+        updatePrecursorRepresentativeState("pg.Id", peptideGroup.getId());
+    }
+
+    private static void updatePrecursorRepresentativeState(String refCol, int refId)
+    {
+        SQLFragment updatePrecursorStateSQL = new SQLFragment();
+        updatePrecursorStateSQL.append("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
+        updatePrecursorStateSQL.append(" SET RepresentativeDataState = pg.RepresentativeDataState ");
+        updatePrecursorStateSQL.append(" FROM ");
+        updatePrecursorStateSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        updatePrecursorStateSQL.append(", ");
+        updatePrecursorStateSQL.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        updatePrecursorStateSQL.append(" WHERE pg.Id = pep.peptideGroupId");
+        updatePrecursorStateSQL.append(" AND pep.Id = "+TargetedMSManager.getTableInfoPrecursor()+".peptideId");
+        updatePrecursorStateSQL.append(" AND " + refCol + " = ?");
+        updatePrecursorStateSQL.add(refId);
+
+        new SqlExecutor(TargetedMSManager.getSchema()).execute(updatePrecursorStateSQL);
     }
 
     private static int resolveRepresentativePeptideState(Container container, TargetedMSRun run) throws SQLException
@@ -188,9 +224,11 @@ public class RepresentativeStateManager
         makeActiveSQL.add(run.getId());
         makeActiveSQL.append(" AND "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId = "+TargetedMSManager.getTableInfoPeptide()+".Id");
         makeActiveSQL.append(" AND "+TargetedMSManager.getTableInfoPeptide()+".PeptideGroupId = "+TargetedMSManager.getTableInfoPeptideGroup()+".Id");
-
-        makeActiveSQL.append(" AND");
-        makeActiveSQL.append(" ModifiedSequence NOT IN (SELECT ModifiedSequence FROM ");
+        makeActiveSQL.append(" AND ");
+        makeActiveSQL.append(TargetedMSManager.getSqlDialect().concatenate("ModifiedSequence", "CAST(Charge AS varchar)"));
+        makeActiveSQL.append(" NOT IN (SELECT ");
+        makeActiveSQL.append(TargetedMSManager.getSqlDialect().concatenate("ModifiedSequence", "CAST(Charge AS varchar)"));
+        makeActiveSQL.append(" FROM ");
         makeActiveSQL.append(TargetedMSManager.getTableInfoPrecursor(), "prec1");
         makeActiveSQL.append(", ");
         makeActiveSQL.append(TargetedMSManager.getTableInfoPeptide(), "pep1");

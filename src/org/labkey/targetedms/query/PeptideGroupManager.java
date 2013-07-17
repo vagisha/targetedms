@@ -82,6 +82,26 @@ public class PeptideGroupManager
         sql.append(")");
 
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
+
+        // Update the representative state of all precursors of the given peptide groups
+        updatePrecursorRepresentativeState(peptideGroupIdsString);
+    }
+
+    private static void updatePrecursorRepresentativeState(StringBuilder peptideGroupIdsString)
+    {
+        SQLFragment sql;
+        sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
+        sql.append(" SET RepresentativeDataState = pg.RepresentativeDataState");
+        sql.append(" FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(" WHERE pg.Id IN (");
+        sql.append(peptideGroupIdsString.toString());
+        sql.append(")");
+        sql.append(" AND pg.Id = pep.peptideGroupId ");
+        sql.append(" AND pep.Id = "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId");
+        new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
     // Set to either NotRepresentative or Representative_Deprecated.
@@ -111,6 +131,9 @@ public class PeptideGroupManager
         sql.append(")");
 
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
+
+        // Update the representative state of all precursors of the given peptide groups
+        updatePrecursorRepresentativeState(peptideGroupIdsString);
     }
 
     public static List<PeptideGroup> getRepresentativePeptideGroups(int runId)

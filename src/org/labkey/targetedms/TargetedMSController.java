@@ -27,8 +27,6 @@ import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.junit.Assert;
 import org.junit.Test;
-import org.labkey.api.module.ModuleLoader;
-import org.labkey.api.protein.ProteinService;
 import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
@@ -60,10 +58,12 @@ import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.DefaultFolderType;
 import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.ms2.MS2Urls;
 import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
+import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
@@ -121,7 +121,6 @@ import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorChromatogramsTableInfo;
 import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.ReplicateManager;
-import org.labkey.targetedms.query.RepresentativeStateManager;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.labkey.targetedms.query.TransitionManager;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
@@ -1699,7 +1698,7 @@ public class TargetedMSController extends SpringActionController
 
             JspView<ProteinConflictBean> conflictInfo = new JspView<>("/org/labkey/targetedms/view/proteinConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
-            conflictInfo.setTitle("Representative Protein Data Conflicts");
+            conflictInfo.setTitle("Library Protein Conflicts");
 
             return conflictInfo;
         }
@@ -1797,11 +1796,13 @@ public class TargetedMSController extends SpringActionController
             {
                 Map<String, Object> map = new HashMap<>();
                 // PrecursorHtmlMaker.getHtml(peptide.getNewPeptide(), peptide.getNewPeptidePrecursor(), )
-                String newPepSequence = peptide.getNewPeptide() != null ? peptide.getNewPeptide().getSequence() : "-";
+                String newPepSequence = peptide.getNewPeptide() != null ? peptide.getNewPeptide().getPeptideModifiedSequence() : "-";
+
                 map.put("newPeptide", newPepSequence);
                 String newPepRank = peptide.getNewPeptide() != null ? String.valueOf(peptide.getNewPeptideRank()) : "-";
                 map.put("newPeptideRank", newPepRank);
-                String oldPepSequence = peptide.getOldPeptide() != null ? peptide.getOldPeptide().getSequence() : "-";
+                String oldPepSequence = peptide.getOldPeptide() != null ? peptide.getOldPeptide().getPeptideModifiedSequence() : "-";
+
                 map.put("oldPeptide", oldPepSequence);
                 String oldPepRank = peptide.getOldPeptide() != null ? String.valueOf(peptide.getOldPeptideRank()) : "-";
                 map.put("oldPeptideRank",oldPepRank);
@@ -1898,7 +1899,7 @@ public class TargetedMSController extends SpringActionController
 
             JspView<PrecursorConflictBean> conflictInfo = new JspView<>("/org/labkey/targetedms/view/precursorConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
-            conflictInfo.setTitle("Representative Peptide Data Conflicts");
+            conflictInfo.setTitle("Library Peptide Conflicts");
 
             return conflictInfo;
         }
@@ -2028,7 +2029,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public URLHelper getSuccessURL(ResolveConflictForm resolveConflictForm)
         {
-            return TargetedMSController.getShowListURL(getContainer());
+            return getContainer().getStartURL(getUser());
         }
 
         @Override
@@ -2193,61 +2194,6 @@ public class TargetedMSController extends SpringActionController
         public int[] getDeselectedIds()
         {
             return _deselectedIds;
-        }
-    }
-
-    @RequiresPermissionClass(InsertPermission.class)
-    public class ChangeRepresentativeStateAction extends RedirectAction<ChangeRepresentativeStateForm>
-    {
-        @Override
-        public URLHelper getSuccessURL(ChangeRepresentativeStateForm changeStateForm)
-        {
-            ActionURL url = new ActionURL(ShowPrecursorListAction.class, getContainer());
-            url.addParameter("id", changeStateForm.getRunId());
-            return url;
-        }
-
-        @Override
-        public void validateCommand(ChangeRepresentativeStateForm target, Errors errors)
-        {
-        }
-
-        @Override
-        public boolean doAction(ChangeRepresentativeStateForm changeStateForm, BindException errors) throws Exception
-        {
-            //ensure that the run is valid and exists within the current container
-            TargetedMSRun run = validateRun(changeStateForm.getRunId());
-
-            TargetedMSRun.RepresentativeDataState state = TargetedMSRun.RepresentativeDataState.valueOf(changeStateForm.getState());
-
-            RepresentativeStateManager.setRepresentativeState(getUser(), getContainer(), run, state);
-            return true;
-        }
-    }
-
-    public static class ChangeRepresentativeStateForm
-    {
-        private int _runId;
-        private String _state;
-
-        public int getRunId()
-        {
-            return _runId;
-        }
-
-        public void setRunId(int runId)
-        {
-            _runId = runId;
-        }
-
-        public String getState()
-        {
-            return _state;
-        }
-
-        public void setState(String state)
-        {
-            _state = state;
         }
     }
 

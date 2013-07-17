@@ -561,43 +561,6 @@ public class TargetedMSManager
         return count != null ? count : 0;
     }
 
-    public static boolean hasConflictedProteins(Container container)
-    {
-        SQLFragment sql = new SQLFragment("SELECT COUNT(pepgrp.id) FROM ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoRuns(), "run");
-        sql.append(" WHERE run.container = ?");
-        sql.add(container.getId());
-        sql.append(" AND run.id = pepgrp.runid");
-        sql.append(" AND pepgrp.representativedatastate = ?");
-        sql.add(RepresentativeDataState.Conflicted.ordinal());
-        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null ? count > 0 : false;
-    }
-
-    public static boolean hasConflictedPeptides(Container container)
-    {
-        SQLFragment sql = new SQLFragment("SELECT COUNT(prec.id) FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoRuns(), "run");
-        sql.append(" WHERE run.container = ?");
-        sql.add(container.getId());
-        sql.append(" AND prec.RepresentativeDataState = ?");
-        sql.add(RepresentativeDataState.Conflicted.ordinal());
-        sql.append(" AND prec.PeptideId = pep.Id");
-        sql.append(" AND pep.PeptideGroupId = pepgrp.Id");
-        sql.append(" AND pepgrp.RunId = run.Id");
-
-        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null ? count > 0 : false;
-    }
-
     public static void markRunsNotRepresentative(Container container, TargetedMSRun.RepresentativeDataState representativeState)
     {
         Collection<Integer> representativeRunIds = null;

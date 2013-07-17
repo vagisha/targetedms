@@ -6,6 +6,7 @@
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
+<%@ page import="org.labkey.targetedms.query.ConflictResultsManager" %>
 <%@ page import="java.io.File" %>
 <%@ page import="java.text.DecimalFormat" %>
 <%--
@@ -33,6 +34,11 @@
     DecimalFormat format = new DecimalFormat("#,###");
     int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(getViewContext().getContainer());
     File archiveFile = ChromatogramLibraryUtils.getChromLibFile(getViewContext().getContainer(), currentRevision);
+
+    long conflictCount = ConflictResultsManager.getConflictCount(getViewContext().getUser(), getViewContext().getContainer());
+    String conflictViewUrl = (folderType == TargetedMSModule.FolderType.LibraryProtein) ?
+                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getViewContext().getContainer()).getLocalURIString() :
+                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
 %>
 
 <div class="labkey-download"><style type="text/css">
@@ -104,8 +110,10 @@ div.labkey-download h3 {
 <br>
 <h3><%= h(getViewContext().getContainer().getName())%> Library</h3>
 <a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer())) %>" class="banner-button">Download</a> <br/>
-        <%= h(ChromatogramLibraryUtils.getDownloadFileName(getViewContext().getContainer(), currentRevision)) %><br/>
-    Revision <%= h(currentRevision)%><%= h(archiveFile.isFile() ? ", " + FileUtils.byteCountToDisplaySize(archiveFile.length()) : "") %><br/>
+        <%= h(ChromatogramLibraryUtils.getDownloadFileName(getViewContext().getContainer(), currentRevision)) %>
+    <%= h(archiveFile.isFile() ? "(" + FileUtils.byteCountToDisplaySize(archiveFile.length()) + ")" : "") %>
+    <br/>
+    Revision <%= h(currentRevision)%><br/>
     <br/>
 <%= PageFlowUtil.textLink("Archived Revisions", new ActionURL(TargetedMSController.ArchivedRevisionsAction.class, getViewContext().getContainer()))%>
 </tr>
@@ -121,6 +129,17 @@ div.labkey-download h3 {
             {
 %>
         The library contains <%= h(format.format(peptideCount))%> peptides with <%= h(format.format(transitionCount))%> ranked transitions.
+
+<%
+                if(conflictCount > 0) {
+%>
+                    <div style="color:red; font-weight:bold; margin-top:10px">
+                        There are <%=conflictCount%> conflicting peptides in this folder.
+                        <a style="color:red; text-decoration:underline;" href="<%= h(conflictViewUrl) %>">Resolve conflicts</a>
+                    </div>
+<%
+                }
+%>
 <%
             }
             else if (folderType == TargetedMSModule.FolderType.LibraryProtein)
@@ -128,6 +147,17 @@ div.labkey-download h3 {
 %>
         The library contains <%= h(format.format(peptideGroupCount))%> proteins with <%= h(format.format(peptideCount)) %> ranked peptides.<br>
         The <%=h(format.format(peptideCount))%> ranked peptides contain <%= h(format.format(transitionCount))%> ranked transitions.
+
+<%
+                if(conflictCount > 0) {
+%>
+                    <div style="color:red; font-weight:bold; margin-top:10px">
+                        There are <%=conflictCount%> conflicting proteins in this folder.
+                        <a style="color:red; text-decoration:underline;" href="<%= h(conflictViewUrl) %>">Resolve conflicts</a>
+                    </div>
+<%
+                }
+%>
 <%
             }
 %>

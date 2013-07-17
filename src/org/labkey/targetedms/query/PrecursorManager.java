@@ -35,6 +35,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -164,6 +165,40 @@ public class PrecursorManager
         else
         {
             // Look for one that has area information
+            for (PrecursorChromInfo chromInfo : chromInfos)
+            {
+                if (chromInfo.getTotalArea() != null && (chromInfo.getNumTruncated() == null || chromInfo.getNumTruncated().intValue() == 0))
+                {
+                    return chromInfo;
+                }
+            }
+            return chromInfos.get(0);
+        }
+    }
+
+    public static PrecursorChromInfo getBestPrecursorChromInfoForPeptide(int peptideId)
+    {
+        List<PrecursorChromInfoPlus> chromInfos = getPrecursorChromInfosForPeptide(peptideId);
+
+        if(chromInfos == null || chromInfos.size() == 0)
+        {
+            return null;
+        }
+        else
+        {
+            Collections.sort(chromInfos, new Comparator<PrecursorChromInfoPlus>()
+            {
+                @Override
+                public int compare(PrecursorChromInfoPlus o1, PrecursorChromInfoPlus o2)
+                {
+                    if( (o1 == o2 ) || (o1.getTotalArea() == o2.getTotalArea()) ) { return 0; }
+                    else if(o1.getTotalArea() == null) {return 1;}
+                    else if(o2.getTotalArea() == null) {return -1;}
+
+                    return o2.getTotalArea().compareTo(o1.getTotalArea());
+                }
+            });
+
             for (PrecursorChromInfo chromInfo : chromInfos)
             {
                 if (chromInfo.getTotalArea() != null && (chromInfo.getNumTruncated() == null || chromInfo.getNumTruncated().intValue() == 0))
@@ -406,9 +441,18 @@ public class PrecursorManager
             return false;
 
         StringBuilder precIds = new StringBuilder();
+        Arrays.sort(precursorIds);
+        int lastPrecursorId = 0;
+        int precursorIdCount = 0;
         for(int id: precursorIds)
         {
-            precIds.append(",").append(id);
+            // Ignore duplicates
+            if( id != lastPrecursorId)
+            {
+                precIds.append(",").append(id);
+                precursorIdCount++;
+            }
+            lastPrecursorId = id;
         }
         if(precIds.length() > 0)
             precIds.deleteCharAt(0);
@@ -425,7 +469,7 @@ public class PrecursorManager
         sql.add(container.getId());
 
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null && count == precursorIds.length;
+        return count != null && count == precursorIdCount;
     }
 
     public static double getMaxPrecursorIntensity(int peptideId)

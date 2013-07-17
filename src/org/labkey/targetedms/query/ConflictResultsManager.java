@@ -17,15 +17,23 @@ package org.labkey.targetedms.query;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
+import org.labkey.api.util.Formats;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSModule;
+import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.conflict.ConflictPeptide;
 import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.conflict.ConflictTransition;
-import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.Precursor;
+import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
@@ -124,6 +132,7 @@ public class ConflictResultsManager
         getConflictPrecursorsSql.add(container);
         getConflictPrecursorsSql.add(RepresentativeDataState.Conflicted.ordinal());
         getConflictPrecursorsSql.add(RepresentativeDataState.Representative.ordinal());
+        getConflictPrecursorsSql.append(" ORDER BY pep.Id");
 
         ConflictPrecursor[] precursors = new SqlSelector(TargetedMSManager.getSchema(), getConflictPrecursorsSql).getArray(ConflictPrecursor.class);
         return Arrays.asList(precursors);
@@ -143,20 +152,22 @@ public class ConflictResultsManager
             cPeptide.setNewPeptidePrecursor(peptide.getPrecursor());
             cPeptide.setNewPeptideRank(peptide.getRank());
 
-            if(conflictPeptideMap.containsKey(peptide.getPeptide().getSequence()))
+            String modifiedSequence = peptide.getPeptide().getPeptideModifiedSequence();
+            if(conflictPeptideMap.containsKey(modifiedSequence))
             {
-                throw new IllegalStateException("Peptide "+peptide.getPeptide().getSequence()+" has been seen already for peptide group ID "+newProteinId);
+                throw new IllegalStateException("Peptide "+modifiedSequence+" has been seen already for peptide group ID "+newProteinId);
             }
-            conflictPeptideMap.put(peptide.getPeptide().getSequence(), cPeptide);
+            conflictPeptideMap.put(modifiedSequence, cPeptide);
         }
 
         for(BestPrecursorPeptide peptide: oldProteinPeptides)
         {
-            ConflictPeptide cPeptide = conflictPeptideMap.get(peptide.getPeptide().getSequence());
+            String modifiedSequence = peptide.getPeptide().getPeptideModifiedSequence();
+            ConflictPeptide cPeptide = conflictPeptideMap.get(modifiedSequence);
             if(cPeptide == null)
             {
                 cPeptide = new ConflictPeptide();
-                conflictPeptideMap.put(peptide.getPeptide().getSequence(), cPeptide);
+                conflictPeptideMap.put(modifiedSequence, cPeptide);
             }
             cPeptide.setOldPeptide(peptide.getPeptide());
             cPeptide.setOldPeptidePrecursor(peptide.getPrecursor());
@@ -164,6 +175,25 @@ public class ConflictResultsManager
         }
 
         return new ArrayList<>(conflictPeptideMap.values());
+    }
+
+    private static String getPeptideModifiedSequence(Peptide peptide)
+    {
+        Map<Integer, Double> structuralModMap = ModificationManager.getPeptideStructuralModsMap(peptide.getId());
+        StringBuilder modifiedSequence = new StringBuilder();
+
+        String sequence = peptide.getSequence();
+        for(int i = 0; i < sequence.length(); i++)
+        {
+            modifiedSequence.append(sequence.charAt(i));
+            Double massDiff = structuralModMap.get(i);
+            if(massDiff != null)
+            {
+                String sign = massDiff > 0 ? "+" : "";
+                modifiedSequence.append("[").append(sign).append(Formats.f1.format(massDiff)).append("]");
+            }
+        }
+        return modifiedSequence.toString();
     }
 
     private static List<BestPrecursorPeptide> getBestPrecursorsForProtein(int proteinId)
@@ -180,14 +210,16 @@ public class ConflictResultsManager
             @Override
             public int compare(BestPrecursorPeptide o1, BestPrecursorPeptide o2)
             {
-                return Double.valueOf(o2.getAvgArea()).compareTo(o1.getAvgArea());
+                return Double.valueOf(o2.getMaxArea()).compareTo(o1.getMaxArea());
             }
         });
-        int rank = 1;
+        int rank = 0;
+        double lastMaxArea = Double.MAX_VALUE;
         for(BestPrecursorPeptide bestPrecursor: proteinPeptides)
         {
+            if(bestPrecursor.getMaxArea() < lastMaxArea) rank++;
             bestPrecursor.setRank(rank);
-            rank++;
+            lastMaxArea = bestPrecursor.getMaxArea();
         }
 
         return proteinPeptides;
@@ -195,62 +227,28 @@ public class ConflictResultsManager
 
     private static BestPrecursorPeptide getBestPrecursor(Peptide peptide)
     {
-        List<PrecursorChromInfoPlus> pciPlusList = PrecursorManager.getPrecursorChromInfosForPeptide(peptide.getId());
-        Collections.sort(pciPlusList, new Comparator<PrecursorChromInfoPlus>()
-        {
-            @Override
-            public int compare(PrecursorChromInfoPlus o1, PrecursorChromInfoPlus o2)
-            {
-                return Integer.valueOf(o1.getPrecursorId()).compareTo(o2.getPrecursorId());
-            }
-        });
-
-        int bestPrecursorId = 0;
-        double bestAvgArea = 0; // avg area across all replicates
-        int currentPrecursorId = 0;
-        double currentTotalArea = 0;
-        int currentPciCount = 0;
-
-        for(PrecursorChromInfoPlus pciPlus: pciPlusList)
-        {
-            if(pciPlus.getPrecursorId() != currentPrecursorId)
-            {
-                if(currentPrecursorId != 0 && currentPciCount > 0)
-                {
-                    double currentAvgArea = currentTotalArea / currentPciCount;
-                    if(currentAvgArea > bestAvgArea)
-                    {
-                        bestAvgArea = currentAvgArea;
-                        bestPrecursorId = currentPrecursorId;
-                    }
-                }
-                currentPciCount = 0;
-                currentTotalArea = 0.0;
-                currentPrecursorId = 0;
-            }
-            if(pciPlus.getTotalArea() != null)
-            {
-                currentPrecursorId = pciPlus.getPrecursorId();
-                currentPciCount++;
-                currentTotalArea += pciPlus.getTotalArea();
-            }
-        }
-
-        // last one
-        if(currentPrecursorId != 0 && currentPciCount > 0)
-        {
-            double currentAvgArea = currentTotalArea / currentPciCount;
-            if(currentAvgArea > bestAvgArea)
-            {
-                bestAvgArea = currentAvgArea;
-                bestPrecursorId = currentPrecursorId;
-            }
-        }
+        PrecursorChromInfo bestPrecursorChromInfo = PrecursorManager.getBestPrecursorChromInfoForPeptide(peptide.getId());
 
         BestPrecursorPeptide bestPrecursorPeptide = new BestPrecursorPeptide();
         bestPrecursorPeptide.setPeptide(peptide);
-        bestPrecursorPeptide.setPrecursor(PrecursorManager.get(bestPrecursorId));
-        bestPrecursorPeptide.setAvgArea(bestAvgArea);
+
+        // If this peptide does not have a light precursor and was loaded from a Skyline document pre v1.5
+        // its modified sequence was not set.
+        if(peptide.getPeptideModifiedSequence() == null)
+        {
+            peptide.setPeptideModifiedSequence(getPeptideModifiedSequence(peptide));
+        }
+
+        if(bestPrecursorChromInfo != null)
+        {
+            bestPrecursorPeptide.setPrecursor(PrecursorManager.get(bestPrecursorChromInfo.getPrecursorId()));
+            bestPrecursorPeptide.setMaxArea(bestPrecursorChromInfo.getTotalArea());
+        }
+        else
+        {
+            bestPrecursorPeptide.setMaxArea(0);
+        }
+
         return bestPrecursorPeptide;
     }
 
@@ -258,7 +256,7 @@ public class ConflictResultsManager
     {
         private Peptide _peptide;
         private Precursor _precursor;
-        private double _avgArea;
+        private double _maxArea;
         private int _rank;
 
         public Peptide getPeptide()
@@ -281,14 +279,14 @@ public class ConflictResultsManager
             _precursor = precursor;
         }
 
-        public double getAvgArea()
+        public double getMaxArea()
         {
-            return _avgArea;
+            return _maxArea;
         }
 
-        public void setAvgArea(double avgArea)
+        public void setMaxArea(double maxArea)
         {
-            _avgArea = avgArea;
+            _maxArea = maxArea;
         }
 
         public int getRank()
@@ -422,5 +420,54 @@ public class ConflictResultsManager
         {
             _rank = rank;
         }
+    }
+
+        private static long getProteinConflictCount(User user, Container container)
+    {
+        TargetedMSSchema schema = new TargetedMSSchema(user, container);
+        TableInfo PepGrpTable = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
+        SimpleFilter representativeStateFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState"), RepresentativeDataState.Conflicted.ordinal());
+        return new TableSelector(PepGrpTable, representativeStateFilter, null).getRowCount();
+    }
+
+    private static long getPeptideConflictCount(User user, Container container)
+    {
+        SQLFragment sqlFragment = new SQLFragment();
+        sqlFragment.append("SELECT DISTINCT(p.Id) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPrecursor(), "pc");
+        sqlFragment.append(" WHERE ");
+        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id  AND r.Deleted = ? AND r.Container = ? ");
+        sqlFragment.append("AND pc.RepresentativeDataState = ? ");
+
+        sqlFragment.add(false);
+        sqlFragment.add(container.getId());
+        sqlFragment.add(RepresentativeDataState.Conflicted.ordinal());
+
+        SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
+        return sqlSelector.getRowCount();
+    }
+
+    public static final long getConflictCount(User user, Container container) {
+
+        final TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
+
+        long conflictCount = 0;
+
+        if(folderType == TargetedMSModule.FolderType.LibraryProtein)
+        {
+            conflictCount = getProteinConflictCount(user, container);
+        }
+        else if(folderType == TargetedMSModule.FolderType.Library)
+        {
+            conflictCount = getPeptideConflictCount(user, container);
+        }
+
+       return conflictCount;
     }
 }

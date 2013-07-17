@@ -114,7 +114,10 @@ function toggleProteinDetails(element, newProteinId, oldProteinId)
                 success: function(response, request){
                     loadProteinDetails(element, newProteinId, oldProteinId, response, request);
                 },
-                failure: null
+                failure: function(response, request) {
+                    $("#"+newProteinId+"_details").text("ERROR: "+response.responseText);
+                    $("#"+oldProteinId+"_details").text("ERROR");
+                }
             });
     }
 
@@ -166,6 +169,9 @@ function toggleCheckboxSelection(element)
         Conflicts can be resolved for one run at a time.
     </div>
 <%}%>
+
+<div style="margin-bottom:10px;">Check the proteins that you would like to include in the library.</div>
+
 <%if(bean.getConflictRunFileName() != null) {%>
     <div style="color:red; margin-bottom:10px;">
         Resolve conflicts for <%=bean.getConflictRunFileName()%>.
@@ -179,8 +185,8 @@ function toggleCheckboxSelection(element)
 <table class="labkey-data-region labkey-show-borders">
     <thead>
        <tr>
-            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Representative Results</div></th>
-            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Current Representative Results</div></th>
+            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Proteins in Run</div></th>
+            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Current Library Proteins</div></th>
         </tr>
     </thead>
     <tbody>
@@ -246,7 +252,7 @@ function toggleCheckboxSelection(element)
             <td colspan="8" style="padding:10px;" align="center">
                 <%=generateSubmitButton("Apply Changes")%>
                 &nbsp;
-                <%=generateButton("Cancel", TargetedMSController.ShowListAction.class)%>
+                <%=generateButton("Cancel", context.getContainer().getStartURL(context.getUser()))%>
             </td>
         </tr>
     </tbody>
