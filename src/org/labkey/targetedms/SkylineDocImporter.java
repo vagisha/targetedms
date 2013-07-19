@@ -246,7 +246,6 @@ public class SkylineDocImporter
 
             // 2. Replicates and sample files
             Map<String, Integer> skylineIdSampleFileIdMap = new HashMap<>();
-            Map<String, Integer> filePathSampleFileIdMap = new HashMap<>();
             Map<Instrument, Integer> instrumentIdMap = new HashMap<>();
 
             for(Replicate replicate: parser.getReplicates())
@@ -256,6 +255,12 @@ public class SkylineDocImporter
 
                 for(SampleFile sampleFile: replicate.getSampleFileList())
                 {
+                    String sampleFileKey = getSampleFileKey(replicate, sampleFile);
+                    if(skylineIdSampleFileIdMap.containsKey(sampleFileKey))
+                    {
+                        throw new IllegalStateException("Sample file id '" + sampleFile.getSkylineId() + "' for replicate '" + replicate.getName() + "' has already been seen in the document.");
+                    }
+
                     sampleFile.setReplicateId(replicate.getId());
 
                     List<Instrument> instrumentInfoList = sampleFile.getInstrumentInfoList();
@@ -278,8 +283,7 @@ public class SkylineDocImporter
                     sampleFile = Table.insert(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile);
 
                     // Remember the ids we inserted so we can reference them later
-                    skylineIdSampleFileIdMap.put(sampleFile.getSkylineId(), sampleFile.getId());
-                    filePathSampleFileIdMap.put(sampleFile.getFilePath(), sampleFile.getId());
+                    skylineIdSampleFileIdMap.put(sampleFileKey, sampleFile.getId());
                 }
                 for (ReplicateAnnotation annotation : replicate.getAnnotations())
                 {
@@ -606,7 +610,7 @@ public class SkylineDocImporter
         Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap = new HashMap<>();
 
         // Store the peak areas of the peptides labeled with different isotope labels  (in different sample files)
-        // The key is the sample file name. The value is also a map with the isotope label ID as the key
+        // The key is the sample file key (getSampleFileKey()). The value is also a map with the isotope label ID as the key
         // Peak areas are the sum of the areas of the precursors of this peptide
         // labeleled with a specific isotope label
         Map<String, Map<Integer, InternalStdArea>> intStandardPeptideAreas = new HashMap<>();
@@ -614,7 +618,13 @@ public class SkylineDocImporter
 
         for(PeptideChromInfo peptideChromInfo: peptide.getPeptideChromInfoList())
         {
-            int sampleFileId = skylineIdSampleFileIdMap.get(peptideChromInfo.getSkylineSampleFileId());
+            String sampleFileKey = getSampleFileKey(peptideChromInfo);
+            Integer sampleFileId = skylineIdSampleFileIdMap.get(sampleFileKey);
+            if(sampleFileId == null)
+            {
+                throw new IllegalStateException("Database ID not found for Skyline samplefile id "+peptideChromInfo.getSkylineSampleFileId() + " in replicate " + peptideChromInfo.getReplicateName());
+            }
+
             peptideChromInfo.setPeptideId(peptide.getId());
             peptideChromInfo.setSampleFileId(sampleFileId);
             peptideChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPeptideChromInfo(), peptideChromInfo);
@@ -622,18 +632,17 @@ public class SkylineDocImporter
             sampleFileIdPeptideChromInfoIdMap.put(sampleFileId, peptideChromInfo.getId());
 
             // We will have one PeptideChromInfo for each file
-            String skylineSampleFileId = peptideChromInfo.getSkylineSampleFileId();
             // Iterate over the isotope labels
             for(Integer labelId: isotopeLabelIdMap.values())
             {
                 // this is a heavy label
                 if(internalStandardLabelIds.contains(labelId))
                 {
-                    Map<Integer, InternalStdArea> areasForFile = intStandardPeptideAreas.get(skylineSampleFileId);
+                    Map<Integer, InternalStdArea> areasForFile = intStandardPeptideAreas.get(sampleFileKey);
                     if(areasForFile == null)
                     {
                         areasForFile = new HashMap<>();
-                        intStandardPeptideAreas.put(skylineSampleFileId, areasForFile);
+                        intStandardPeptideAreas.put(sampleFileKey, areasForFile);
                     }
                     areasForFile.put(labelId,  new InternalStdArea(labelId,
                                                                    peptideChromInfo.getId(),
@@ -642,11 +651,11 @@ public class SkylineDocImporter
                 // this is a light label
                 else
                 {
-                   Map<Integer, InternalStdArea> areasForFile = lightPeptideAreas.get(skylineSampleFileId);
+                   Map<Integer, InternalStdArea> areasForFile = lightPeptideAreas.get(sampleFileKey);
                     if(areasForFile == null)
                     {
                         areasForFile = new HashMap<>();
-                        lightPeptideAreas.put(skylineSampleFileId, areasForFile);
+                        lightPeptideAreas.put(sampleFileKey, areasForFile);
                     }
                     areasForFile.put(labelId,  new InternalStdArea(labelId,
                                                                    peptideChromInfo.getId(),
@@ -656,11 +665,11 @@ public class SkylineDocImporter
         }
 
         // Store the peak areas of precursors (in different sample files) labeled with an internal standard.
-        // The key in the map is the precursor charge + sample file name. Value is also a map with the
+        // The key in the map is the precursor charge + sample file key (getSampleFileKey()). Value is also a map with the
         // isotope label id as the key
         Map<String, Map<Integer, InternalStdArea>> intStandardPrecursorAreas = new HashMap<>();
         // Store the peak areas of the transitions (in different sample files) labeled with an internal standard.
-        // The key in the map is the precursor charge + transitiontype+transitionOrdinal + sample file name.
+        // The key in the map is the precursor charge + transitiontype+transitionOrdinal + sample file key (getSampleFileKey()).
         // Value is also a map with the isotope label id as the key
         Map<String,  Map<Integer, InternalStdArea>> intStandardTransitionAreas = new HashMap<>();
 
@@ -799,7 +808,17 @@ public class SkylineDocImporter
 
         for (PrecursorChromInfo precursorChromInfo: precursor.getChromInfoList())
         {
-            int sampleFileId = skylineIdSampleFileIdMap.get(precursorChromInfo.getSkylineSampleFileId());
+            Integer sampleFileId = skylineIdSampleFileIdMap.get(getSampleFileKey(precursorChromInfo));
+            if(sampleFileId == null)
+            {
+                throw new IllegalStateException("Database ID not found for Skyline samplefile id "+precursorChromInfo.getSkylineSampleFileId() + " in replicate " + precursorChromInfo.getReplicateName());
+            }
+            if(sampleFileIdPrecursorChromInfoIdMap.containsKey(sampleFileId))
+            {
+                throw new IllegalStateException("Multiple precursor chrom infos found for precursor "+
+                           precursor.getModifiedSequence()+" and sample file "+precursorChromInfo.getSkylineSampleFileId()+
+                           " in replicate "+precursorChromInfo.getReplicateName());
+            }
             precursorChromInfo.setPrecursorId(precursor.getId());
             precursorChromInfo.setSampleFileId(sampleFileId);
             precursorChromInfo.setPeptideChromInfoId(sampleFileIdPeptideChromInfoIdMap.get(sampleFileId));
@@ -819,11 +838,12 @@ public class SkylineDocImporter
 
             // If this precursor is labeled with an internal standard store the peak areas for the
             // individual sample files
+            String sampleFileKey = getSampleFileKey(precursorChromInfo);
             if(internalStandardLabelIds.contains(precursor.getIsotopeLabelId()))
             {
-                // key is charge + sample file name
+                // key is charge + sample file key (getSampleFileKey())
                 String key = getPrecChromInfoKey(precursor, precursorChromInfo);
-                Map<Integer, InternalStdArea> areasForPrecKey= intStandardPeptideAreas.get(key);
+                Map<Integer, InternalStdArea> areasForPrecKey = intStandardPrecursorAreas.get(key);
                 if(areasForPrecKey == null)
                 {
                     areasForPrecKey = new HashMap<>();
@@ -833,18 +853,18 @@ public class SkylineDocImporter
                 if(areasForPrecKey.containsKey(precursor.getIsotopeLabelId()))
                 {
                     throw new IllegalStateException("Duplicate area information found for label "+precursor.getIsotopeLabel()+
-                                                    " and precursor chrom info key, "+key+", while calculating peak area ratios. This is likely because there are separate replicates that refer to the same sample file based on ID, but with different paths.");
+                                                    " and precursor chrom info key, "+key+", while calculating peak area ratios.");
                 }
                 InternalStdArea internalStdArea = new InternalStdArea(precursor.getIsotopeLabelId(),
                         precursorChromInfo.getId(), precursorChromInfo.getTotalArea());
                 areasForPrecKey.put(precursor.getIsotopeLabelId(), internalStdArea);
 
                 // Add the precursor area to the peptide peak areas for this sample file and heavy label type
-                Map<Integer, InternalStdArea> areasForFile = intStandardPeptideAreas.get(precursorChromInfo.getSkylineSampleFileId());
+                Map<Integer, InternalStdArea> areasForFile = intStandardPeptideAreas.get(sampleFileKey);
                 if(areasForFile == null)
                 {
                     throw new IllegalStateException("Peptide peak areas not found for file "+
-                                                     precursorChromInfo.getSkylineSampleFileId()+" and peptide "+peptide.getSequence());
+                                                     sampleFileKey+" and peptide "+peptide.getSequence());
                 }
                 InternalStdArea areaForLabel = areasForFile.get(precursor.getIsotopeLabelId());
                 areaForLabel.addArea(precursorChromInfo.getTotalArea());
@@ -852,11 +872,11 @@ public class SkylineDocImporter
             else
             {
                 // Add the precursor area to the peptide peak areas for this sample file and light label type
-                Map<Integer, InternalStdArea> areasForFile = lightPeptideAreas.get(precursorChromInfo.getSkylineSampleFileId());
+                Map<Integer, InternalStdArea> areasForFile = lightPeptideAreas.get(sampleFileKey);
                 if(areasForFile == null)
                 {
                     throw new IllegalStateException("Peptide peak areas not found for file "+
-                                                     precursorChromInfo.getSkylineSampleFileId()+" and peptide "+peptide.getSequence());
+                                                     sampleFileKey+" and peptide "+peptide.getSequence());
                 }
                 InternalStdArea areaForLabel = areasForFile.get(precursor.getIsotopeLabelId());
                 areaForLabel.addArea(precursorChromInfo.getTotalArea());
@@ -904,7 +924,11 @@ public class SkylineDocImporter
         // transition results
         for(TransitionChromInfo transChromInfo: transition.getChromInfoList())
         {
-            int sampleFileId = skylineIdSampleFileIdMap.get(transChromInfo.getSkylineSampleFileId());
+            Integer sampleFileId = skylineIdSampleFileIdMap.get(getSampleFileKey(transChromInfo));
+            if(sampleFileId == null)
+            {
+                throw new IllegalStateException("Database ID not found for Skyline samplefile id "+transChromInfo.getSkylineSampleFileId() + " in replicate " + transChromInfo.getReplicateName());
+            }
             transChromInfo.setTransitionId(transition.getId());
             transChromInfo.setSampleFileId(sampleFileId);
             transChromInfo.setPrecursorChromInfoId(sampleFileIdPrecursorChromInfoIdMap.get(sampleFileId));
@@ -936,7 +960,7 @@ public class SkylineDocImporter
                 if(areasForLabels.containsKey(precursor.getIsotopeLabelId()))
                 {
                     throw new IllegalStateException("Duplicate area information found for label "+precursor.getIsotopeLabel()+
-                                                    " and transition chrom info key, "+key+", while calculating peak area ratios.  This is likely because there are separate replicates that refer to the same sample file based on ID, but with different paths.");
+                                                    " and transition chrom info key, "+key+", while calculating peak area ratios.");
                 }
 
                 InternalStdArea internalStdArea = new InternalStdArea(precursor.getIsotopeLabelId(),
@@ -1007,7 +1031,7 @@ public class SkylineDocImporter
         StringBuilder key = new StringBuilder();
            key.append(precursor.getCharge())
            .append("_")
-           .append(chromInfo.getSkylineSampleFileId());
+           .append(getSampleFileKey(chromInfo));
        return key.toString();
     }
 
@@ -1021,7 +1045,7 @@ public class SkylineDocImporter
            .append("_")
            .append(transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge())
            .append("_")
-           .append(chromInfo.getSkylineSampleFileId());
+           .append(getSampleFileKey(chromInfo));
         List<TransitionLoss> transitionLosses = transition.getNeutralLosses();
         if(transitionLosses != null && transitionLosses.size() > 0)
         {
@@ -1031,6 +1055,21 @@ public class SkylineDocImporter
             }
         }
        return key.toString();
+    }
+
+    private static String getSampleFileKey(ChromInfo chromInfo)
+    {
+        return getSampleFileKey(chromInfo.getReplicateName(), chromInfo.getSkylineSampleFileId());
+    }
+
+    private String getSampleFileKey(Replicate replicate, SampleFile sampleFile)
+    {
+        return getSampleFileKey(replicate.getName(), sampleFile.getSkylineId());
+    }
+
+    private static String getSampleFileKey(String replicateName, String skylineSampleFileId)
+    {
+        return new StringBuilder(replicateName).append("_").append(skylineSampleFileId).toString();
     }
 
     private static final class InternalStdArea
