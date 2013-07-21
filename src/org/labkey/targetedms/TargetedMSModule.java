@@ -245,6 +245,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         proteinService.registerPeptideSearchView(new TransitionPeptideSearchViewProvider());
 
         AuditLogService.get().addAuditViewFactory(TargetedMsRepresentativeStateAuditViewFactory.getInstance());
+        AuditLogService.registerAuditType(new TargetedMsRepresentativeStateAuditProvider());
     }
 
     @NotNull

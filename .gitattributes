@@ -73,6 +73,7 @@ src/org/labkey/targetedms/TargetedMSModule.java -text
 src/org/labkey/targetedms/TargetedMSRun.java -text
 src/org/labkey/targetedms/TargetedMSSchema.java -text
 src/org/labkey/targetedms/TargetedMSUpgradeCode.java -text
+src/org/labkey/targetedms/TargetedMsRepresentativeStateAuditProvider.java -text
 src/org/labkey/targetedms/TargetedMsRepresentativeStateAuditViewFactory.java -text
 src/org/labkey/targetedms/chart/ChartColors.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMaker.java -text
