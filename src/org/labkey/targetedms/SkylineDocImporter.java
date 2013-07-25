@@ -542,7 +542,7 @@ public class SkylineDocImporter
         {
             // prot.sequences table limits the name to 50 characters
             String protName = pepGrpLabel.length() > 50 ? pepGrpLabel.substring(0, 50) : pepGrpLabel;
-            int seqId = proteinService.ensureProtein(pepGroup.getSequence(), null, protName, pepGroup.getDescription());
+            int seqId = proteinService.ensureProteinAndIdentifier(pepGroup.getSequence(), null, protName, pepGroup.getDescription(), "Skyline");
             pepGroup.setSequenceId(seqId);
         }
 
