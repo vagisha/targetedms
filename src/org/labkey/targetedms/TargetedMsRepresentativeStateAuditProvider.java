@@ -52,6 +52,12 @@ public class TargetedMsRepresentativeStateAuditProvider extends AbstractAuditTyp
         return (K)bean;
     }
 
+    @Override
+    public <K extends AuditTypeEvent> Class<K> getEventClass()
+    {
+        return (Class<K>)AuditTypeEvent.class;
+    }
+
     public static class TargetedMsRepresentativeStateAuditDomainKind extends AbstractAuditDomainKind
     {
         public static final String NAME = "TargetedMsRepresentativeStateAuditDomain";
