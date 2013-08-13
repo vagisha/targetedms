@@ -1,6 +1,5 @@
 * text=auto !eol
 /TargetedMS.iml -text
-lib/sqlite-jdbc-3.7.2.jar -text
 /module.properties -text
 resources/queries/targetedms/peptide/LibraryPeptides.qview.xml -text
 resources/queries/targetedms/peptidegroup/LibraryProteins.qview.xml -text
