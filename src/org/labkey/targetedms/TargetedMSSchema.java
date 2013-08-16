@@ -49,8 +49,10 @@ import org.labkey.api.security.User;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
-import org.labkey.targetedms.query.DocPrecursorTableInfo;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
+import org.labkey.targetedms.query.ModifiedPeptideDisplayColumn;
+import org.labkey.targetedms.query.PrecursorTableInfo;
+import org.labkey.targetedms.query.RepresentativeStateDisplayColumn;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
@@ -88,6 +90,9 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PEPTIDE = "Peptide";
     public static final String TABLE_PEPTIDE_ANNOTATION = "PeptideAnnotation";
     public static final String TABLE_PRECURSOR = "Precursor";
+    public static final String TABLE_EXPERIMENT_PRECURSOR = "ExperimentPrecursor";
+    public static final String TABLE_LIBRARY_PRECURSOR = "LibraryPrecursor";
+    public static final String TABLE_LIBRARY_DOC_PRECURSOR = "LibraryDocPrecursor";
     public static final String TABLE_PRECURSOR_ANNOTATION = "PrecursorAnnotation";
     public static final String TABLE_TRANSITION = "Transition";
     public static final String TABLE_TRANSITION_LOSS = "TransitionLoss";
@@ -433,7 +438,7 @@ public class TargetedMSSchema extends UserSchema
         }
         if (TABLE_RESPRESENTATIVE_DATA_STATE.equalsIgnoreCase(name))
         {
-            return new EnumTableInfo<>(
+            EnumTableInfo tableInfo = new EnumTableInfo<>(
                     RepresentativeDataState.class,
                     getSchema(),
                     new EnumTableInfo.EnumValueGetter<RepresentativeDataState>() {
@@ -446,6 +451,19 @@ public class TargetedMSSchema extends UserSchema
                     },
                     true,
                     "Possible representative states for a peptide group or precursor");
+
+            ColumnInfo viewColumn = tableInfo.getColumn("Value");
+            viewColumn.setLabel("Library State");
+            viewColumn.setDisplayColumnFactory(new DisplayColumnFactory()
+            {
+                @Override
+                public DisplayColumn createRenderer(ColumnInfo colInfo)
+                {
+                    return new RepresentativeStateDisplayColumn(colInfo);
+                }
+            });
+
+            return tableInfo;
         }
 
         // Tables that have a FK directly to targetedms.Runs
@@ -574,9 +592,9 @@ public class TargetedMSSchema extends UserSchema
                     return getTable(TABLE_PEPTIDE_GROUP);
                 }
             });
-            DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()),
+            final DetailsURL detailsURL = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()),
                                                                   Collections.singletonMap("id", "Id"));
-            result.setDetailsURL(detailsURLs);
+            result.setDetailsURL(detailsURL);
             List<FieldKey> defaultCols = new ArrayList<>(result.getDefaultVisibleColumns());
             defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
             defaultCols.add(1, FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
@@ -598,17 +616,34 @@ public class TargetedMSSchema extends UserSchema
             result.addColumn(noteAnnotation);
 
             ColumnInfo sequenceColumn = result.getColumn("Sequence");
-            sequenceColumn.setURL(detailsURLs);
+            sequenceColumn.setURL(detailsURL);
 
             ColumnInfo modifiedSequenceColumn = result.getColumn("PeptideModifiedSequence");
-            modifiedSequenceColumn.setLabel("Peptide");
-            modifiedSequenceColumn.setURL(detailsURLs);
+            modifiedSequenceColumn.setDisplayColumnFactory( new DisplayColumnFactory()
+            {
+                @Override
+                public DisplayColumn createRenderer(ColumnInfo colInfo)
+                {
+                    return new ModifiedPeptideDisplayColumn(colInfo, detailsURL.getActionURL(), true);
+                }
+            });
+
+            SQLFragment currentLibPrecursorCountSQL = new SQLFragment("(SELECT COUNT(p.Id) FROM ");
+            currentLibPrecursorCountSQL.append(TargetedMSManager.getTableInfoPrecursor(), "p");
+            currentLibPrecursorCountSQL.append(" WHERE p.PeptideId = ");
+            currentLibPrecursorCountSQL.append(ExprColumn.STR_TABLE_ALIAS);
+            currentLibPrecursorCountSQL.append(".Id");
+            currentLibPrecursorCountSQL.append(" AND p.RepresentativeDataState = ?");
+            currentLibPrecursorCountSQL.add(RepresentativeDataState.Representative.ordinal());
+            currentLibPrecursorCountSQL.append(")");
+            ExprColumn currentLibPrecursorCountCol = new ExprColumn(result, "RepresentivePrecursorCount", currentLibPrecursorCountSQL, JdbcType.INTEGER);
+            currentLibPrecursorCountCol.setLabel("Library Precursor Count");
+            result.addColumn(currentLibPrecursorCountCol);
 
             return result;
         }
 
-        if (TABLE_PEPTIDE.equalsIgnoreCase(name) ||
-            TABLE_PROTEIN.equalsIgnoreCase(name) ||
+        if (TABLE_PROTEIN.equalsIgnoreCase(name) ||
             TABLE_PEPTIDE_GROUP_ANNOTATION.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideGroupFK.getSQL());
@@ -637,7 +672,17 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.peptide
         if (TABLE_PRECURSOR.equalsIgnoreCase(name))
         {
-            return new DocPrecursorTableInfo(this);
+            return new PrecursorTableInfo(this);
+        }
+
+        if(TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(name))
+        {
+            return new PrecursorTableInfo.ExperimentPrecursorTableInfo(this);
+        }
+
+        if(TABLE_LIBRARY_PRECURSOR.equalsIgnoreCase(name) || TABLE_LIBRARY_DOC_PRECURSOR.equalsIgnoreCase(name))
+        {
+            return new PrecursorTableInfo.LibraryPrecursorTableInfo(this);
         }
         if (TABLE_PEPTIDE_ANNOTATION.equalsIgnoreCase(name) ||
             TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name) ||

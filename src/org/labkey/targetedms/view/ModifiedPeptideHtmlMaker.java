@@ -15,6 +15,8 @@
 
 package org.labkey.targetedms.view;
 
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.util.Pair;
 import org.labkey.targetedms.chart.ChartColors;
 import org.labkey.targetedms.parser.Peptide;
@@ -77,37 +79,60 @@ public class ModifiedPeptideHtmlMaker
 
     public String getHtml(Peptide peptide, Precursor precursor, Integer lightLabelId)
     {
+        return getHtml(peptide.getId(), peptide.getSequence(), precursor.getModifiedSequence(), precursor.getIsotopeLabelId(), lightLabelId);
+    }
+
+    public String getHtml(Peptide peptide)
+    {
+        String altSequence = peptide.getPeptideModifiedSequence();
+        if(StringUtils.isBlank(altSequence))
+        {
+            altSequence = peptide.getSequence();
+        }
+
+        return getHtml(peptide.getId(), peptide.getSequence(), altSequence, null, null);
+    }
+
+    private String getHtml(Integer peptideId, String sequence, String altSequence, @Nullable Integer isotopteLabelId,  @Nullable Integer lightLabelId)
+    {
         Map<Integer, Double> strModIndexMassDiff;
         Map<Integer, Double> isotopeModIndexMassDiff;
 
         // Get the structural modifications for this peptide
-        strModIndexMassDiff = _structuralMods.get(precursor.getPeptideId());
+        strModIndexMassDiff = _structuralMods.get(peptideId);
         if (strModIndexMassDiff == null)
         {
-            strModIndexMassDiff = ModificationManager.getPeptideStructuralModsMap(precursor.getPeptideId());
-            _structuralMods.put(precursor.getPeptideId(), strModIndexMassDiff);
+            strModIndexMassDiff = ModificationManager.getPeptideStructuralModsMap(peptideId);
+            _structuralMods.put(peptideId, strModIndexMassDiff);
         }
 
-        Pair<Integer, Integer> isotopeKey = new Pair<>(precursor.getPeptideId(), precursor.getIsotopeLabelId());
-        isotopeModIndexMassDiff = _isotopeMods.get(isotopeKey);
-        if (isotopeModIndexMassDiff == null)
+        if(isotopteLabelId != null)
         {
-            // Get the Isotope modifications for the peptide and label type
-            isotopeModIndexMassDiff = ModificationManager.getPeptideIsotopeModsMap(precursor.getPeptideId(),
-                    precursor.getIsotopeLabelId());
-            _isotopeMods.put(isotopeKey, isotopeModIndexMassDiff);
+            Pair<Integer, Integer> isotopeKey = new Pair<>(peptideId, isotopteLabelId);
+            isotopeModIndexMassDiff = _isotopeMods.get(isotopeKey);
+            if (isotopeModIndexMassDiff == null)
+            {
+                // Get the Isotope modifications for the peptide and label type
+                isotopeModIndexMassDiff = ModificationManager.getPeptideIsotopeModsMap(peptideId,
+                        isotopteLabelId);
+                _isotopeMods.put(isotopeKey, isotopeModIndexMassDiff);
+            }
         }
+        else
+        {
+            isotopeModIndexMassDiff = new HashMap<>(0);
+        }
+
 
         StringBuilder result = new StringBuilder();
 
-        result.append("<span title='").append(precursor.getModifiedSequence()).append("'>");
+        result.append("<span title='").append(altSequence).append("'>");
         String labelModColor = "black";
-        if(lightLabelId != null)
+        if(lightLabelId != null && isotopteLabelId != null)
         {
-            labelModColor = toHex(ChartColors.getIsotopeColor(precursor.getIsotopeLabelId() - lightLabelId).getRGB());
+            labelModColor = toHex(ChartColors.getIsotopeColor(isotopteLabelId - lightLabelId).getRGB());
         }
 
-        String sequence = peptide.getSequence();
         for(int i = 0; i < sequence.length(); i++)
         {
             Double strMassDiff = strModIndexMassDiff.get(i);

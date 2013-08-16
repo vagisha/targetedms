@@ -22,18 +22,14 @@ import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
-import org.labkey.api.view.ActionURL;
-import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * User: vsharma
@@ -61,19 +57,6 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
             }
         });
 
-        final DetailsURL precursorDetailsURLs = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
-                                                                    getContainer()),
-                                                      Collections.singletonMap("id", "PrecursorId"));
-
-        precursorCol.setDisplayColumnFactory(new DisplayColumnFactory()
-        {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new ModifiedPeptideDisplayColumn(colInfo, getColumn("PrecursorId"), precursorDetailsURLs.getActionURL());
-            }
-        });
-
         // Display the fragment as y9 instead of 'y' and '9' in separate columns
         String sql = TargetedMSManager.getSqlDialect().concatenate(ExprColumn.STR_TABLE_ALIAS + ".FragmentType",
                                                                    "CAST(" + ExprColumn.STR_TABLE_ALIAS+".FragmentOrdinal AS VARCHAR)");
@@ -90,7 +73,7 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Annotations"));
 
         // Peptide level information
-        visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "Sequence"));
+        visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideModifiedSequence"));  // Modified peptide column
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "Annotations"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "NumMissedCleavages"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "CalcNeutralMass"));
@@ -98,7 +81,7 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
 
 
         // Precursor level information
-        visibleColumns.add(FieldKey.fromParts("PrecursorId")); // Modified peptide column
+        visibleColumns.add(FieldKey.fromParts("PrecursorId", "ModifiedSequence")); // Modified precursor column
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "Annotations"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "IsotopeLabelId", "Name"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "NeutralMass"));

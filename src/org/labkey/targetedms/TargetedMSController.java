@@ -162,6 +162,7 @@ import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_CHROMATOGRAM_LI
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_PEPTIDE_GROUP_VIEW;
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_PEPTIDE_VIEW;
+import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_PRECURSOR_VIEW;
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME;
 
 public class TargetedMSController extends SpringActionController
@@ -270,8 +271,15 @@ public class TargetedMSController extends SpringActionController
                 ArrayList<Portal.WebPart> tab1 = new ArrayList<>();
                 tab1.add(Portal.getPortalPart(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD).createWebPart());
                 tab1.add(Portal.getPortalPart(MASS_SPEC_SEARCH_WEBPART).createWebPart());
-                tab1.add(Portal.getPortalPart(TARGETED_MS_PEPTIDE_GROUP_VIEW).createWebPart());
+
+                if(folderSetupForm.isPrecursorNormalized())
+                {
+                    tab1.add(Portal.getPortalPart(TARGETED_MS_PEPTIDE_GROUP_VIEW).createWebPart());
+                }
+
                 tab1.add(Portal.getPortalPart(TARGETED_MS_PEPTIDE_VIEW).createWebPart());
+                tab1.add(Portal.getPortalPart(TARGETED_MS_PRECURSOR_VIEW).createWebPart());
+                tab1.add(Portal.getPortalPart(TARGETED_MS_RUNS_WEBPART_NAME).createWebPart());
                 Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, tab1);
                 // Add a second portal page (tab) and webparts
                 ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
@@ -1304,10 +1312,22 @@ public class TargetedMSController extends SpringActionController
         @Override
         protected DocumentPrecursorsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
         {
-            DocumentPrecursorsView view = new DocumentPrecursorsView(getViewContext(),
-                                                                   new TargetedMSSchema(getUser(), getContainer()),
-                                                                   form.getId(),
-                                                                   forExport);
+            FolderType folderType = TargetedMSManager.getFolderType(getContainer());
+            DocumentPrecursorsView view = null;
+            String queryName = null;
+            if(folderType == FolderType.LibraryProtein || folderType == FolderType.Library)
+            {
+               queryName = TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR;
+            }
+            else
+            {
+                queryName = TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR;
+            }
+            view = new DocumentPrecursorsView(getViewContext(),
+                                                   new TargetedMSSchema(getUser(), getContainer()),
+                                                   queryName,
+                                                   form.getId(),
+                                                   forExport);
             view.setShowExportButtons(true);
             view.setShowDetailsColumn(false);
             return view;
@@ -2998,15 +3018,13 @@ public class TargetedMSController extends SpringActionController
         TableInfo peptideGroup = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
         if (peptideGroup != null)
         {
-            SimpleFilter peptideGroupFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState", "Value"), "Representative", CompareType.EQUAL);
+            SimpleFilter peptideGroupFilter = new SimpleFilter(FieldKey.fromParts("RepresentativeDataState"), RepresentativeDataState.Representative.ordinal(), CompareType.EQUAL);
             peptideGroupCount = new TableSelector(peptideGroup, peptideGroupFilter, null).getRowCount();
         }
         return peptideGroupCount;
     }
 
     public static final long getNumRepresentativePeptides(Container container) {
-
-        final FolderType folderType = TargetedMSManager.getFolderType(container);
 
         SQLFragment sqlFragment = new SQLFragment();
         sqlFragment.append("SELECT DISTINCT(p.Id) FROM ");
@@ -3019,10 +3037,7 @@ public class TargetedMSController extends SpringActionController
         sqlFragment.append(TargetedMSManager.getTableInfoPrecursor(), "pc");
         sqlFragment.append(" WHERE ");
         sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id  AND r.Deleted = ? AND r.Container = ? ");
-        if(folderType == FolderType.LibraryProtein)
-            sqlFragment.append("AND pg.RepresentativeDataState = ? ");
-        else
-            sqlFragment.append("AND pc.RepresentativeDataState = ? ");
+        sqlFragment.append("AND pc.RepresentativeDataState = ? ");
 
         // add variables
         sqlFragment.add(false);
@@ -3036,8 +3051,7 @@ public class TargetedMSController extends SpringActionController
         return peptideCount;
     }
 
-    public static final long getNumRankedTransitions(User user, Container container) {
-        final FolderType folderType = TargetedMSManager.getFolderType(container);
+    public static final long getNumRankedTransitions(Container container) {
 
         SQLFragment sqlFragment = new SQLFragment();
         sqlFragment.append("SELECT DISTINCT(tr.Id) FROM ");
@@ -3052,10 +3066,7 @@ public class TargetedMSController extends SpringActionController
         sqlFragment.append(TargetedMSManager.getTableInfoPrecursor(), "pc");
         sqlFragment.append(" WHERE ");
         sqlFragment.append("tr.precursorId = pc.Id AND pc.PeptideId = p.Id AND p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? ");
-        if(folderType == FolderType.LibraryProtein)
-            sqlFragment.append("AND pg.RepresentativeDataState = ? ");
-        else
-            sqlFragment.append("AND pc.RepresentativeDataState = ? ");
+        sqlFragment.append("AND pc.RepresentativeDataState = ? ");
 
         sqlFragment.add(false);
         sqlFragment.add(container.getId());

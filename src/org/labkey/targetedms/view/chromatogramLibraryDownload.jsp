@@ -30,7 +30,7 @@
 
     long peptideGroupCount = TargetedMSController.getNumRepresentativeProteins(getViewContext().getUser(), getViewContext().getContainer());
     long peptideCount = TargetedMSController.getNumRepresentativePeptides(getViewContext().getContainer());
-    long transitionCount = TargetedMSController.getNumRankedTransitions(getViewContext().getUser(), getViewContext().getContainer());
+    long transitionCount = TargetedMSController.getNumRankedTransitions(getViewContext().getContainer());
     DecimalFormat format = new DecimalFormat("#,###");
     int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(getViewContext().getContainer());
     File archiveFile = ChromatogramLibraryUtils.getChromLibFile(getViewContext().getContainer(), currentRevision);

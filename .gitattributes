@@ -1,7 +1,11 @@
 * text=auto !eol
 /TargetedMS.iml -text
 /module.properties -text
+resources/queries/targetedms/librarydocprecursor/AllPrecursors.qview.xml -text
+resources/queries/targetedms/libraryprecursor/FolderPrecursors.qview.xml -text
+resources/queries/targetedms/peptide/FolderPeptides.qview.xml -text
 resources/queries/targetedms/peptide/LibraryPeptides.qview.xml -text
+resources/queries/targetedms/peptidegroup/FolderProteins.qview.xml -text
 resources/queries/targetedms/peptidegroup/LibraryProteins.qview.xml -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.11-0.12.sql -text
@@ -167,7 +171,6 @@ src/org/labkey/targetedms/query/AnnotatedTargetedMSTable.java -text
 src/org/labkey/targetedms/query/ChromatogramDisplayColumnFactory.java -text
 src/org/labkey/targetedms/query/ChromatogramGridQuerySettings.java -text
 src/org/labkey/targetedms/query/ConflictResultsManager.java -text
-src/org/labkey/targetedms/query/DocPrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/DocTransitionsTableInfo.java -text
 src/org/labkey/targetedms/query/InstrumentManager.java -text
 src/org/labkey/targetedms/query/IsotopeLabelManager.java -text
@@ -180,7 +183,9 @@ src/org/labkey/targetedms/query/PeptideManager.java -text
 src/org/labkey/targetedms/query/PeptidePrecursorChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PrecursorChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PrecursorManager.java -text
+src/org/labkey/targetedms/query/PrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/ReplicateManager.java -text
+src/org/labkey/targetedms/query/RepresentativeStateDisplayColumn.java -text
 src/org/labkey/targetedms/query/RepresentativeStateManager.java -text
 src/org/labkey/targetedms/query/TargetedMSTable.java -text
 src/org/labkey/targetedms/query/TransitionManager.java -text
@@ -191,6 +196,7 @@ src/org/labkey/targetedms/view/AnnotationUIDisplayColumn.java -text
 src/org/labkey/targetedms/view/ChromatogramsDataRegion.java -text
 src/org/labkey/targetedms/view/DocumentPrecursorsView.java -text
 src/org/labkey/targetedms/view/DocumentTransitionsView.java -text
+src/org/labkey/targetedms/view/LibraryPrecursorViewWebPart.java -text
 src/org/labkey/targetedms/view/ModifiedPeptideHtmlMaker.java -text
 src/org/labkey/targetedms/view/PeptideGroupViewWebPart.java -text
 src/org/labkey/targetedms/view/PeptidePrecursorChromatogramsView.java -text

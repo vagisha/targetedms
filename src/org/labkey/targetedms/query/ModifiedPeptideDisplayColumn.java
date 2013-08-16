@@ -18,6 +18,7 @@ package org.labkey.targetedms.query;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 
@@ -33,27 +34,34 @@ import java.io.Writer;
 public class ModifiedPeptideDisplayColumn extends DataColumn
 {
     private ActionURL _linkUrl;
+    private final boolean _isPeptide;
     private ModifiedPeptideHtmlMaker _htmlMaker = new ModifiedPeptideHtmlMaker();
 
-    private final ColumnInfo _precursorIdCol;
+    private final FieldKey _idColumnFieldKey;
 
-    public ModifiedPeptideDisplayColumn(ColumnInfo colInfo, ColumnInfo precursorIdCol, ActionURL url)
+    public ModifiedPeptideDisplayColumn(ColumnInfo colInfo, ActionURL url, boolean isPeptide)
     {
         super(colInfo);
-
-        _precursorIdCol = precursorIdCol;
+        _idColumnFieldKey = new FieldKey(colInfo.getFieldKey().getParent(), "Id");
 
         _linkUrl = url;
+        _isPeptide = isPeptide;
 
-        setCaption("Precursor");
-        setDescription("Modified Peptide");
+        if(isPeptide)
+        {
+            setDescription("Modified Peptide Sequence");
+        }
+        else
+        {
+            setDescription("Modified Precursor Sequence");
+        }
         setTextAlign("left");
     }
 
     @Override
     public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
     {
-        Object id = _precursorIdCol.getValue(ctx);  // Primary key from the Precursor table
+        Object id = ctx.get(_idColumnFieldKey); // Primary key from the Peptide or Precursor table
         if(null == id)
             return;
 
@@ -61,13 +69,13 @@ public class ModifiedPeptideDisplayColumn extends DataColumn
         out.write(html);
     }
 
-    private String getPeptideHtml(int precursorId)
+    private String getPeptideHtml(int id)
     {
-        String html = _htmlMaker.getHtml(PrecursorManager.get(precursorId));
+        String html = _isPeptide ? _htmlMaker.getHtml(PeptideManager.get(id)) : _htmlMaker.getHtml(PrecursorManager.get(id));
 
         if(_linkUrl != null)
         {
-            _linkUrl.replaceParameter("id", String.valueOf(precursorId));
+            _linkUrl.replaceParameter("id", String.valueOf(id));
             html = "<a href=\""+_linkUrl.getLocalURIString()+"\" style=\"color: #000000\">" + html + "</a>";
         }
         return html;

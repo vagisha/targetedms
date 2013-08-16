@@ -156,7 +156,9 @@
             <ns:column columnName="Created"/>
             <ns:column columnName="Deleted"/>
             <ns:column columnName="Description"/>
-            <ns:column columnName="Modified"/>
+            <ns:column columnName="Modified">
+                <ns:formatString>DateTime</ns:formatString>
+            </ns:column>
             <ns:column columnName="Status"/>
             <ns:column columnName="RepresentativeDataState">
                 <ns:columnTitle>Representative State</ns:columnTitle>
@@ -193,14 +195,16 @@
                 <ns:inputType>text</ns:inputType>
                 <ns:displayWidth>800</ns:displayWidth>
             </ns:column>
-            <ns:column columnName="Modified"/>
+            <ns:column columnName="Modified">
+                <ns:formatString>DateTime</ns:formatString>
+            </ns:column>
             <ns:column columnName="RepresentativeDataState">
-                <ns:columnTitle>Representative</ns:columnTitle>
+                <ns:columnTitle>Library State</ns:columnTitle>
             </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Peptide">
-        <ns:titleColumn>Sequence</ns:titleColumn>
+        <ns:titleColumn>PeptideModifiedSequence</ns:titleColumn>
         <ns:description>Contains a row for each peptide loaded in a targeted MS run.</ns:description>
         <ns:columns>
             <ns:column columnName="Id">
@@ -209,9 +213,7 @@
             <ns:column columnName="PeptideGroupId">
                 <ns:columnTitle>Group</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="Sequence">
-                <ns:columnTitle>Peptide</ns:columnTitle>
-            </ns:column>
+            <ns:column columnName="Sequence" />
             <ns:column columnName="PreviousAa">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
@@ -240,7 +242,9 @@
             <ns:column columnName="Decoy"/>
             <ns:column columnName="Note"/>
             <ns:column columnName="Rank"/>
-            <ns:column columnName="PeptideModifiedSequence"/>
+            <ns:column columnName="PeptideModifiedSequence">
+                <ns:columnTitle>Peptide</ns:columnTitle>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideChromInfo">
@@ -317,9 +321,11 @@
             <ns:column columnName="DecoyMassShift" />
             <ns:column columnName="Decoy"/>
             <ns:column columnName="Note"/>
-            <ns:column columnName="Modified"/>
+            <ns:column columnName="Modified">
+                <ns:formatString>DateTime</ns:formatString>
+            </ns:column>
             <ns:column columnName="RepresentativeDataState">
-                <ns:columnTitle>Representative</ns:columnTitle>
+                <ns:columnTitle>Library State</ns:columnTitle>
             </ns:column>
         </ns:columns>
     </ns:table>

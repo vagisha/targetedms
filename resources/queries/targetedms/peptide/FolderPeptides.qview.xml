@@ -1,5 +1,5 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        label="Library Peptides">
+        label="All Folder Peptides">
     <columns>
         <column name="PeptideGroupId/RunId/File" />
         <column name="PeptideGroupId/Label" />
@@ -12,10 +12,8 @@
         <column name="RtCalculatorScore" />
         <column name="PredictedRetentionTime" />
         <column name="AvgMeasuredRetentionTime" />
+        <column name="RepresentivePrecursorCount" />
     </columns>
-    <filters>
-        <filter column="RepresentivePrecursorCount" operator="gt" value="0"/>
-    </filters>
     <sorts>
        <sort column="PeptideGroupId/Label" />
        <sort column="Sequence" />

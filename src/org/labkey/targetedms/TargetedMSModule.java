@@ -17,7 +17,6 @@
 package org.labkey.targetedms;
 
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.protein.ProteinService;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.EnumConverter;
@@ -30,6 +29,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.module.SpringModule;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.protein.ProteinService;
 import org.labkey.api.protein.ProteomicsModule;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.services.ServiceRegistry;
@@ -45,6 +45,7 @@ import org.labkey.api.view.WebPartView;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
+import org.labkey.targetedms.view.LibraryPrecursorViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.PeptideViewWebPart;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
@@ -68,6 +69,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final ExperimentRunType EXP_RUN_TYPE = new TargetedMSExperimentRunType();
     public static final String TARGETED_MS_SETUP = "Targeted MS Setup";
     public static final String TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD = "Chromatogram Library Download";
+    public static final String TARGETED_MS_PRECURSOR_VIEW = "Targeted MS Precursor View";
     public static final String TARGETED_MS_PEPTIDE_VIEW = "Targeted MS Peptide View";
     public static final String TARGETED_MS_PEPTIDE_GROUP_VIEW = "Targeted MS Protein View";
     public static final String TARGETED_MS_RUNS_WEBPART_NAME = "Targeted MS Runs";
@@ -131,6 +133,15 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             }
         };
 
+        BaseWebPartFactory precursorView = new BaseWebPartFactory(TARGETED_MS_PRECURSOR_VIEW)
+        {
+            @Override
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart) throws Exception
+            {
+               return new LibraryPrecursorViewWebPart(portalCtx);
+            }
+        };
+
         BaseWebPartFactory peptideView  = new BaseWebPartFactory(TARGETED_MS_PEPTIDE_VIEW)
         {
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
@@ -186,6 +197,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         List<WebPartFactory> webpartFactoryList = new ArrayList<>();
         webpartFactoryList.add(setupFactory);
         webpartFactoryList.add(chromatogramLibraryDownload);
+        webpartFactoryList.add(precursorView);
         webpartFactoryList.add(peptideView);
         webpartFactoryList.add(peptideGroupView);
         webpartFactoryList.add(runsFactory);

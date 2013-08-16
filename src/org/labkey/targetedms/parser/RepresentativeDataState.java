@@ -24,7 +24,7 @@ public enum RepresentativeDataState
 {
     /** Don't change the ordering of these enum values without updating the values in targetedms.peptidegroup.representativedatastate */
     NotRepresentative(""),
-    Representative("Representative"),
+    Representative("Current"),
     Deprecated("Deprecated"),
     Conflicted("Conflicted");
 
