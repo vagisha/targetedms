@@ -76,6 +76,11 @@ public class SkylineDocImporter
     protected String _description;
 
     protected int _runId;
+    private boolean _isProteinLibraryDoc = false;
+    private boolean _isPeptideLibraryDoc = false;
+    private Set<Integer> _libProteinSequenceIds;
+    private Set<String> _libProteinLabels;
+    private Set<String> _libPrecursors;
 
     // Use passed in logger for import status, information, and file format problems.  This should
     // end up in the pipeline log.
@@ -119,6 +124,10 @@ public class SkylineDocImporter
             _log.info(_expData.getFile().getName() + " has already been imported so it does not need to be imported again");
             return run;
         }
+
+        TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(_container);
+        _isProteinLibraryDoc = folderType == TargetedMSModule.FolderType.LibraryProtein;
+        _isPeptideLibraryDoc = folderType == TargetedMSModule.FolderType.Library;
 
         try
         {
@@ -443,6 +452,15 @@ public class SkylineDocImporter
 
             // Store the data
             // 1. peptide group
+            if(_isProteinLibraryDoc)
+            {
+                _libProteinSequenceIds = new HashSet<>();
+                _libProteinLabels = new HashSet<>();
+            }
+            if(_isPeptideLibraryDoc)
+            {
+                _libPrecursors = new HashSet<>();
+            }
             int peptideGroupCount = 0;
             while (parser.hasNextPeptideGroup())
             {
@@ -552,6 +570,32 @@ public class SkylineDocImporter
             // The "label" column in targetedms.PeptideGroup is not nullable.
             pepGroup.setLabel("PEPTIDES");
         }
+
+        if(_isProteinLibraryDoc)
+        {
+            if(pepGroup.getSequenceId() != null)
+            {
+                if(_libProteinSequenceIds.contains(pepGroup.getSequenceId()))
+                {
+                    throw new IllegalStateException("Duplicate protein found: "+pepGroup.getLabel()+", seqId "+pepGroup.getSequenceId()
+                    + ". Documents uploaded to a protein library folder should contain unique proteins.");
+                }
+                else
+                {
+                    _libProteinSequenceIds.add(pepGroup.getSequenceId());
+                }
+            }
+            if(_libProteinLabels.contains(pepGroup.getLabel()))
+            {
+                throw new IllegalStateException("Duplicate protein label found: "+pepGroup.getLabel()
+                + ". Documents uploaded to a protein library folder should contain unique proteins.");
+            }
+            else
+            {
+                _libProteinLabels.add(pepGroup.getLabel());
+            }
+        }
+
         // CONSIDER: If there is already an identical entry in the PeptideGroup table re-use it.
         pepGroup = Table.insert(_user, TargetedMSManager.getTableInfoPeptideGroup(), pepGroup);
 
@@ -779,6 +823,19 @@ public class SkylineDocImporter
     private void insertPrecursor(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> libraryNameIdMap, Peptide peptide, Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap, Map<String, Map<Integer, InternalStdArea>> intStandardPeptideAreas, Map<String, Map<Integer, InternalStdArea>> lightPeptideAreas, Map<String, Map<Integer, InternalStdArea>> intStandardPrecursorAreas, Map<String, Map<Integer, InternalStdArea>> intStandardTransitionAreas, Precursor precursor)
             throws SQLException
     {
+        if(_isPeptideLibraryDoc)
+        {
+            String precursorKey = new StringBuilder(precursor.getModifiedSequence()).append(", charge ").append(precursor.getCharge()).toString();
+            if(_libPrecursors.contains(precursorKey))
+            {
+                throw new IllegalStateException("Duplicate precursor found: " + precursorKey
+                + ". Documents uploaded to a peptide library folder should contain unique precursors.");
+            }
+            else
+            {
+                _libPrecursors.add(precursorKey);
+            }
+        }
         precursor.setPeptideId(peptide.getId());
         precursor.setIsotopeLabelId(isotopeLabelIdMap.get(precursor.getIsotopeLabel()));
 
