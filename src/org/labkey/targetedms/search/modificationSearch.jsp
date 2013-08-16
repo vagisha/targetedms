@@ -310,27 +310,31 @@
 
                             // parse the unimod.xml file for the delta mass if there isn't one directly on the parsed xml record
                             form.down('numberfield[name=deltaMass]').setValue(null);
-                            if (record.get('DeltaMass'))
+
+                            if (record)
                             {
-                                form.down('numberfield[name=deltaMass]').setValue(record.get('DeltaMass'));
-                            }
-                            else if (record)
-                            {
-                                var modSpecificityStore = Ext4.create('Ext.data.Store', {
-                                    model: 'UnimodDeltaMass',
-                                    autoLoad: true,
-                                    proxy: {
-                                        type: 'ajax',
-                                        url : LABKEY.contextPath + '/TargetedMS/unimod/unimod_NO_NAMESPACE.xml',
-                                        reader: { type: 'xml', root: 'modifications', record: 'mod[record_id=' + record.get("ID") + ']' }
-                                    },
-                                    listeners: {
-                                        scope: this,
-                                        load: function(store, records) {
-                                            form.down('numberfield[name=deltaMass]').setValue(records.length == 1 ? records[0].get('mono_mass') : null);
+                                if (record.get('DeltaMass'))
+                                {
+                                    form.down('numberfield[name=deltaMass]').setValue(record.get('DeltaMass'));
+                                }
+                                else
+                                {
+                                    Ext4.create('Ext.data.Store', {
+                                        model: 'UnimodDeltaMass',
+                                        autoLoad: true,
+                                        proxy: {
+                                            type: 'ajax',
+                                            url : LABKEY.contextPath + '/TargetedMS/unimod/unimod_NO_NAMESPACE.xml',
+                                            reader: { type: 'xml', root: 'modifications', record: 'mod[record_id=' + record.get("ID") + ']' }
+                                        },
+                                        listeners: {
+                                            scope: this,
+                                            load: function(store, records) {
+                                                form.down('numberfield[name=deltaMass]').setValue(records.length == 1 ? records[0].get('mono_mass') : null);
+                                            }
                                         }
-                                    }
-                                });
+                                    });
+                                }
                             }
                         }
                     }
