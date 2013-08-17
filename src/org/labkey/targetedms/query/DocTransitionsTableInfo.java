@@ -58,11 +58,24 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
         });
 
         // Display the fragment as y9 instead of 'y' and '9' in separate columns
-        String sql = TargetedMSManager.getSqlDialect().concatenate(ExprColumn.STR_TABLE_ALIAS + ".FragmentType",
-                                                                   "CAST(" + ExprColumn.STR_TABLE_ALIAS+".FragmentOrdinal AS VARCHAR)");
-        SQLFragment fragmentSql = new SQLFragment(sql);
+        StringBuilder sql = new StringBuilder();
+        sql.append(" CASE WHEN ");
+        sql.append(ExprColumn.STR_TABLE_ALIAS).append(".FragmentType != 'precursor'");
+        sql.append(" THEN ");
+        sql.append(TargetedMSManager.getSqlDialect().concatenate(ExprColumn.STR_TABLE_ALIAS + ".FragmentType",
+                                                                 "CAST(" + ExprColumn.STR_TABLE_ALIAS+".FragmentOrdinal AS VARCHAR)"));
+        sql.append(" ELSE ");
+        sql.append("CASE WHEN ");
+        sql.append(ExprColumn.STR_TABLE_ALIAS).append(".MassIndex != 0");
+        sql.append(" THEN ");
+        sql.append(TargetedMSManager.getSqlDialect().concatenate("'M'","CAST(" + ExprColumn.STR_TABLE_ALIAS+".MassIndex AS VARCHAR)"));
+        sql.append(" ELSE ");
+        sql.append("'M'");
+        sql.append(" END ");
+        sql.append(" END ");
+        SQLFragment fragmentSql = new SQLFragment(sql.toString());
         ColumnInfo fragment = new ExprColumn(this, "Fragment", fragmentSql, JdbcType.VARCHAR);
-        fragment.setTextAlign("Right");
+        fragment.setTextAlign("Left");
         fragment.setJdbcType(JdbcType.VARCHAR);
         addColumn(fragment);
 
