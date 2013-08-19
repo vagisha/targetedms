@@ -157,7 +157,7 @@ public class ChromatogramLibraryUtils
             // Grab the panorama Server Url for storage in the library file
             String panoramaServer = AppProps.getInstance().getBaseServerUrl();
 
-            // Check if the folder has any representative data
+            // Get a list of runIds that have active representative data
             List<Integer> representativeRunIds = TargetedMSManager.getCurrentRepresentativeRunIds(container);
 
             // Get the latest library revision.

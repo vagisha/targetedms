@@ -141,7 +141,7 @@ public class PrecursorManager
         return chromInfoList;
     }
 
-    public static List<PrecursorChromInfo> getPrecursorChromInfosForPrecursor(int precursorId)
+    public static List<PrecursorChromInfo> getSortedPrecursorChromInfosForPrecursor(int precursorId)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("PrecursorId"), precursorId);
@@ -156,7 +156,8 @@ public class PrecursorManager
 
     public static PrecursorChromInfo getBestPrecursorChromInfoForPrecursor(int precursorId)
     {
-        List<PrecursorChromInfo> chromInfos = getPrecursorChromInfosForPrecursor(precursorId);
+        // Get a list of chrom infos sorted by peak area (descending).
+        List<PrecursorChromInfo> chromInfos = getSortedPrecursorChromInfosForPrecursor(precursorId);
 
         if(chromInfos == null || chromInfos.size() == 0)
         {
@@ -164,13 +165,21 @@ public class PrecursorManager
         }
         else
         {
-            // Look for one that has area information
+            // Look for one that has area information and the peaks are not truncated
             for (PrecursorChromInfo chromInfo : chromInfos)
             {
                 if (chromInfo.getTotalArea() != null && (chromInfo.getNumTruncated() == null || chromInfo.getNumTruncated().intValue() == 0))
                 {
                     return chromInfo;
                 }
+            }
+
+            // If we did not find a chrom info with a non-null precursor area and non-truncated peaks,
+            // return the first chrom info with non-null precursor area.
+            for(PrecursorChromInfo chromInfo: chromInfos)
+            {
+                if(chromInfo.getTotalArea() != null)
+                    return chromInfo;
             }
             return chromInfos.get(0);
         }

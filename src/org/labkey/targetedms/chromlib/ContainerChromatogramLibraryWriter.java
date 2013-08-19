@@ -17,6 +17,8 @@ package org.labkey.targetedms.chromlib;
 
 import org.apache.commons.io.FileUtils;
 import org.labkey.api.data.Container;
+import org.labkey.api.protein.ProteinService;
+import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
@@ -78,11 +80,15 @@ public class ContainerChromatogramLibraryWriter
     // ModificationId(Panorama) -> ModificationId(SQLite Library)
     private Map<Integer, Integer> _structuralModificationMap;
 
+    private ProteinService _proteinService;
+
     public ContainerChromatogramLibraryWriter(String panoramaServer, Container container, List<Integer> representativeRunIds)
     {
         _panoramaServer = panoramaServer;
         _container = container;
         _representativeRunIds = representativeRunIds != null ? representativeRunIds : Collections.<Integer>emptyList();
+
+        _proteinService = ServiceRegistry.get().getService(ProteinService.class);
     }
 
     public String writeLibrary(int libraryRevision) throws SQLException, IOException
@@ -316,7 +322,10 @@ public class ContainerChromatogramLibraryWriter
         LibProtein libProtein = new LibProtein();
         libProtein.setName(pepGroup.getLabel());
         libProtein.setDescription(pepGroup.getDescription());
-        libProtein.setSequence(pepGroup.getSequence());
+        if(pepGroup.getSequenceId() != null)
+        {
+            libProtein.setSequence(_proteinService.getProteinSequence(pepGroup.getSequenceId()));
+        }
 
         // Add peptides.
         addPeptides(pepGroup, libProtein);
@@ -433,7 +442,7 @@ public class ContainerChromatogramLibraryWriter
         PrecursorChromInfo chromInfo = PrecursorManager.getBestPrecursorChromInfoForPrecursor(precursor.getId());
         if(chromInfo != null)
         {
-            libPrecursor.setTotalArea(chromInfo.getTotalArea());
+            libPrecursor.setTotalArea(chromInfo.getTotalArea() == null ? 0.0 : chromInfo.getTotalArea());
             libPrecursor.setChromatogram(chromInfo.getChromatogram());
             libPrecursor.setNumTransitions(chromInfo.getNumTransitions());
             libPrecursor.setNumPoints(chromInfo.getNumPoints());
@@ -446,6 +455,12 @@ public class ContainerChromatogramLibraryWriter
                 throw new IllegalStateException("Could not find an Id in the library for sample file Id "+sampleFileId);
             }
             libPrecursor.setSampleFileId(libSampleFileId.intValue());
+        }
+        else
+        {
+            libPrecursor.setTotalArea(0.0);
+            libPrecursor.setNumTransitions(0);
+            libPrecursor.setNumPoints(0);
         }
 
         // Add the precursor isotope modifications
@@ -464,10 +479,13 @@ public class ContainerChromatogramLibraryWriter
     private void addPrecursorRetentionTimes(LibPrecursor libPrecursor, Precursor precursor)
     {
         // Get the precursor chrom infos
-        List<PrecursorChromInfo> precursorChromInfos = PrecursorManager.getPrecursorChromInfosForPrecursor(precursor.getId());
+        List<PrecursorChromInfo> precursorChromInfos = PrecursorManager.getSortedPrecursorChromInfosForPrecursor(precursor.getId());
 
         for(PrecursorChromInfo chromInfo: precursorChromInfos)
         {
+            if(chromInfo.getBestRetentionTime() == null)
+                continue;
+
             int sampleFileId = chromInfo.getSampleFileId();
             Integer libSampleFileId = _sampleFileIdMap.get(sampleFileId);
             if(libSampleFileId == null)
@@ -532,11 +550,17 @@ public class ContainerChromatogramLibraryWriter
 
         if(tci != null)
         {
-            transitionToSave.setArea(tci.getArea());
-            transitionToSave.setHeight(tci.getHeight());
-            transitionToSave.setFwhm(tci.getFwhm());
+            transitionToSave.setArea(tci.getArea() == null ? 0.0 : tci.getArea());
+            transitionToSave.setHeight(tci.getHeight() == null ? 0.0 : tci.getHeight());
+            transitionToSave.setFwhm(tci.getFwhm() == null ? 0.0 : tci.getFwhm());
             transitionToSave.setChromatogramIndex(tci.getChromatogramIndex());
             transitionToSave.setMassErrorPPM(tci.getMassErrorPPM());
+        }
+        else
+        {
+            transitionToSave.setArea(0.0);
+            transitionToSave.setHeight(0.0);
+            transitionToSave.setFwhm(0.0);
         }
 
         _transitionCount++;
