@@ -52,7 +52,7 @@ public class ConnectionSource
     public ConnectionSource(String libraryFilePath)
     {
         _libraryFilePath = libraryFilePath;
-        String connectURI = new StringBuilder().append("jdbc:sqlite:/").append(libraryFilePath).toString();
+        String connectURI = "jdbc:sqlite:/" + libraryFilePath;
         _dataSource = setupDataSource(connectURI);
     }
 
