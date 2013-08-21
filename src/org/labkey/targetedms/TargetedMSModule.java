@@ -110,6 +110,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         return true;
     }
 
+    @NotNull
     @Override
     protected Collection<WebPartFactory> createWebPartFactories()
     {
@@ -206,6 +207,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         return webpartFactoryList;
     }
 
+    @NotNull
     @Override
     public Collection<String> getSummary(Container c)
     {
