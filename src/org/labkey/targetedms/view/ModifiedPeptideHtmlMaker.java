@@ -137,18 +137,20 @@ public class ModifiedPeptideHtmlMaker
         {
             Double strMassDiff = strModIndexMassDiff.get(i);
             Double isotopeMassDiff = isotopeModIndexMassDiff.get(i);
-            if(strMassDiff != null && isotopeMassDiff != null)
-            {
-                throw new IllegalStateException("Found both structural and isotope modifications for index "+i+" of peptide "+sequence);
-            }
 
-            if(isotopeMassDiff != null)
+            if(isotopeMassDiff != null || strMassDiff != null)
             {
-                result.append("<span style='font-weight:bold;color:").append(labelModColor).append(";'>").append(sequence.charAt(i)).append("</span>");
-            }
-            else if(strMassDiff != null)
-            {
-                result.append("<span style='font-weight:bold;text-decoration:underline;'>").append(sequence.charAt(i)).append("</span>");
+                StringBuilder style = new StringBuilder("style='font-weight:bold;");
+                if(isotopeMassDiff != null)
+                {
+                    style.append("color:").append(labelModColor).append(";");
+                }
+                if(strMassDiff != null)
+                {
+                    style.append("text-decoration:underline;");
+                }
+                style.append("'");
+                result.append("<span ").append(style).append(">").append(sequence.charAt(i)).append("</span>");
             }
             else
             {
