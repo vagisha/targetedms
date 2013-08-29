@@ -116,6 +116,11 @@ public class TargetedMsRepresentativeStateAuditProvider extends AbstractAuditTyp
         public static final String NAME = "TargetedMsRepresentativeStateAuditDomain";
         public static String NAMESPACE_PREFIX = "Audit-" + NAME;
 
+        public TargetedMsRepresentativeStateAuditDomainKind()
+        {
+            super(AUDIT_EVENT_TYPE);
+        }
+
         @Override
         protected Set<PropertyStorageSpec> getColumns()
         {
