@@ -180,4 +180,26 @@ public class ModificationManager
                                   null)
                                   .getArrayList(Peptide.IsotopeModification.class);
     }
+
+    public static List<Peptide.IsotopeModification> getPeptideIsotopelModifications(int peptideId, int isotopeLabelId)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("SELECT pi.* FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptideIsotopeModification(), "pi");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoRunIsotopeModification(), "i");
+        sql.append(" WHERE ");
+        sql.append(" pi.peptideId = ?");
+        sql.add(peptideId);
+        sql.append(" AND i.isotopeLabelId = ?");
+        sql.add(isotopeLabelId);
+        sql.append(" AND pi.IsotopeModId=i.IsotopeModId");
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Peptide.IsotopeModification.class);
+    }
+
+    public static PeptideSettings.ModificationSettings getSettings(int runId)
+    {
+        return new TableSelector(TargetedMSManager.getTableInfoModificationSettings()).getObject(runId, PeptideSettings.ModificationSettings.class);
+    }
 }

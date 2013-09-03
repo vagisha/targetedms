@@ -233,7 +233,7 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
         return _note;
     }
 
-    private static class Modification extends SkylineEntity
+    public static class Modification extends SkylineEntity
     {
         private int _peptideId;
 

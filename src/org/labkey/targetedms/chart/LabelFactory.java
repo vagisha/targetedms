@@ -74,6 +74,12 @@ public class LabelFactory
             {
                 label.append(transition.getFragmentOrdinal());
             }
+
+            Double neutralLossMass = transition.getNeutralLossMass();
+            if(neutralLossMass != null && neutralLossMass > 0.0)
+            {
+                label.append(" -").append(Formats.f0.format(neutralLossMass));
+            }
         }
         label.append(" - ").append(Formats.f4.format(transition.getMz()));
         if(transition.getCharge() != null)

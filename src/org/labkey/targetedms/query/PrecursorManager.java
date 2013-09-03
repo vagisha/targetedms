@@ -102,7 +102,7 @@ public class PrecursorManager
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition("PeptideId", peptideId);
 
-        Sort sort = new Sort("IsotopeLabelId, Charge");
+        Sort sort = new Sort("Charge, IsotopeLabelId");
 
         Precursor[] precursors;
         try
@@ -270,8 +270,8 @@ public class PrecursorManager
     private static List<PrecursorChromInfoPlus> getPrecursorChromInfoList(int id, boolean forPeptideGroup, int sampleFileId)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
-        sql.append("pci.*, pg.Label AS groupName, pep.Sequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel ");
-        sql.append("FROM ");
+        sql.append("pci.*, pg.Label AS groupName, pep.Sequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
+        sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");

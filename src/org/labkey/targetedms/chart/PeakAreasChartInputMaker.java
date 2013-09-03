@@ -55,7 +55,15 @@ public class PeakAreasChartInputMaker
 
     public void setPrecursorChromInfoList(List<PrecursorChromInfoPlus> pciPlusList)
     {
-        _pciPlusList = pciPlusList;
+        if(pciPlusList != null)
+        {
+            _pciPlusList = pciPlusList;
+            Collections.sort(_pciPlusList, new PrecursorChromInfoPlus.PrecursorChromInfoComparator());
+        }
+        else
+        {
+            _pciPlusList = Collections.emptyList();
+        }
     }
 
     public void setGroupByAnnotationName(String groupByAnnotationName)

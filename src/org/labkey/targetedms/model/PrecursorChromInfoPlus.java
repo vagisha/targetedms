@@ -17,6 +17,8 @@ package org.labkey.targetedms.model;
 
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 
+import java.util.Comparator;
+
 /**
  * User: vsharma
  * Date: 5/8/12
@@ -29,6 +31,8 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo
     private String _modifiedSequence;
     private int _charge;
     private String _isotopeLabel;
+
+    private int _isotopeLabelId;
 
     public String getGroupName()
     {
@@ -78,5 +82,29 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo
     public void setIsotopeLabel(String isotopeLabel)
     {
         _isotopeLabel = isotopeLabel;
+    }
+
+    public int getIsotopeLabelId()
+    {
+        return _isotopeLabelId;
+    }
+
+    public void setIsotopeLabelId(int isotopeLabelId)
+    {
+        _isotopeLabelId = isotopeLabelId;
+    }
+
+    public static class PrecursorChromInfoComparator implements Comparator<PrecursorChromInfoPlus>
+    {
+         @Override
+        public int compare(PrecursorChromInfoPlus o1, PrecursorChromInfoPlus o2)
+        {
+            int result = Integer.valueOf(o1.getCharge()).compareTo(o2.getCharge());
+            if(result == 0)
+            {
+                return Integer.valueOf(o1.getIsotopeLabelId()).compareTo(o2.getIsotopeLabelId());
+            }
+            return result;
+        }
     }
 }

@@ -62,6 +62,7 @@ $(document).ready(function () {
                                 precursorMz: 1,
                                 staticMods: [],
                                 variableMods: <%= bean.getStructuralModifications()%>,
+                                maxNeutralLossCount: <%= bean.getMaxNeutralLosses()%>,
                                 width: 600,
                                 charge: <%= bean.getCharge()%>,
                                 // peaks in the scan: [m/z, intensity] pairs.

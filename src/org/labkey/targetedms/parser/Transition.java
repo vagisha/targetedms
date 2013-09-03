@@ -60,6 +60,12 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
     private List<TransitionLoss> _neutralLosses;
 
     private static final String PRECURSOR = "precursor";
+    private static final String Y_ION = "y";
+    private static final String Z_ION = "z";
+    private static final String X_ION = "x";
+    private static final String B_ION = "b";
+    private static final String C_ION = "c";
+    private static final String A_ION = "a";
 
     public int getPrecursorId()
     {
@@ -254,6 +260,22 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
     public boolean isPrecursorIon()
     {
         return fragmentType != null ? fragmentType.equalsIgnoreCase(PRECURSOR) : false;
+    }
+
+    public boolean isNterm()
+    {
+        return fragmentType == null ? false
+                                    : (fragmentType.equalsIgnoreCase(B_ION)
+                                       || fragmentType.equalsIgnoreCase(C_ION)
+                                       || fragmentType.equalsIgnoreCase(A_ION));
+    }
+
+    public boolean isCterm()
+    {
+        return fragmentType == null ? false
+                                    : (fragmentType.equalsIgnoreCase(Y_ION)
+                                       || fragmentType.equalsIgnoreCase(Z_ION)
+                                       || fragmentType.equalsIgnoreCase(X_ION));
     }
 
     public String getLabel()

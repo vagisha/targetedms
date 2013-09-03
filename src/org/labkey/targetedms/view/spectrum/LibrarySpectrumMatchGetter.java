@@ -27,6 +27,7 @@ import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PrecursorManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -50,13 +51,19 @@ public class LibrarySpectrumMatchGetter
         List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(run.getId());
         Map<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId(), libraries);
 
-        // Precursors are sorted by label type (light label first) and charge
+        // Precursors are sorted by charge and label type (light label first).
         // If there are precursors with different charge we want to display MS/MS spectra for all of them.
 
         Set<Integer> precursorCharges = new HashSet<>();
         List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<>();
 
-        Map<Integer, Double> modLocationMassMap = ModificationManager.getPeptideStructuralModsMap(peptide.getId());
+        List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(peptide.getId());
+        Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
+        for(Peptide.StructuralModification mod: structuralModifications)
+        {
+            List<PeptideSettings.PotentialLoss> losses = ModificationManager.getPotentialLossesForStructuralMod(mod.getStructuralModId());
+            potentialLossMap.put(mod.getStructuralModId(), losses);
+        }
 
         for(Precursor precursor: precursors)
         {
@@ -84,11 +91,13 @@ public class LibrarySpectrumMatchGetter
                     matchedSpectra.add(pepSpec);
 
                     // Add any structural modifications
-                    pepSpec.setStructuralModifications(modLocationMassMap);
+                    pepSpec.setStructuralModifications(structuralModifications);
+                    // Add any potential losses
+                    pepSpec.setPotentialLosses(potentialLossMap);
 
                     // Add any isotope modifications (can be different for each precursor)
-                    Map<Integer, Double> isotopeModLocationMassMap = ModificationManager.getPeptideIsotopeModsMap(peptide.getId(), precursor.getIsotopeLabelId());
-                    pepSpec.setIsotopeModifications(isotopeModLocationMassMap);
+                    List<Peptide.IsotopeModification> isotopeModifications = ModificationManager.getPeptideIsotopelModifications(peptide.getId(), precursor.getIsotopeLabelId());
+                    pepSpec.setIsotopeModifications(isotopeModifications);
 
                     break;  // return spectrum from the first library that has a match
                 }

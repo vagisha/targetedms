@@ -18,6 +18,7 @@ package org.labkey.targetedms.chart;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.Precursor;
@@ -33,7 +34,9 @@ import org.labkey.targetedms.query.TransitionManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -123,27 +126,7 @@ public class ChromatogramChartMakerFactory
             tciList.add(new TransChromInfoPlusTransition(tChromInfo, transition));
         }
 
-        Collections.sort(tciList, new Comparator<TransChromInfoPlusTransition>()
-        {
-            @Override
-            public int compare(TransChromInfoPlusTransition o1, TransChromInfoPlusTransition o2)
-            {
-                Transition t1 = o1.getTransition();
-                Transition t2 = o2.getTransition();
-                Integer t1_idx = t1.isPrecursorIon() ? t1.getMassIndex() : t1.getFragmentOrdinal();
-                Integer t2_idx = t2.isPrecursorIon() ? t2.getMassIndex() : t2.getFragmentOrdinal();
-                if(t1_idx == null)
-                {
-                    throw new IllegalArgumentException("Transition (ID "+t1.getId()+") does not have either fragmentOrdinal or massIndex");
-                }
-                if(t2_idx == null)
-                {
-                    throw new IllegalArgumentException("Transition (ID "+t2.getId()+") does not have either fragment index or isotopic peak index");
-                }
-                // Precursor ions are ordered M, M+1, M+2.  Fragment ions are displayed in reverse order -- y9, y8, y7 etc.
-                return t1.isPrecursorIon() ? t1_idx.compareTo(t2_idx) : t2_idx.compareTo(t1_idx);
-            }
-        });
+        Collections.sort(tciList, new TransitionComparator());
 
         Double bestTransitionHeight = 0.0;
         int bestTransitionSeriesIndex = 0;
@@ -214,6 +197,59 @@ public class ChromatogramChartMakerFactory
         }
     }
 
+    private static class TransitionComparator implements Comparator<TransChromInfoPlusTransition>
+    {
+        private static Map<String, Integer> ionOrder;
+        static{
+            ionOrder = new HashMap<>();
+            ionOrder.put("precursor", 1);
+            ionOrder.put("y", 2);
+            ionOrder.put("b", 3);
+            ionOrder.put("z", 4);
+            ionOrder.put("c", 5);
+            ionOrder.put("x", 6);
+            ionOrder.put("a", 7);
+        }
+
+        @Override
+        public int compare(TransChromInfoPlusTransition o1, TransChromInfoPlusTransition o2)
+        {
+            Transition t1 = o1.getTransition();
+            Transition t2 = o2.getTransition();
+            int result = ionOrder.get(t1.getFragmentType()).compareTo(ionOrder.get(t2.getFragmentType()));
+            if(result == 0)
+            {
+                if(t1.isPrecursorIon() && t2.isPrecursorIon())
+                {
+                    // Precursor ions are ordered M, M+1, M+2.
+                    return t1.getMassIndex().compareTo(t2.getMassIndex());
+                }
+                else
+                {
+                    result = t1.getCharge().compareTo(t2.getCharge());
+                    if(result == 0)
+                    {
+                        // c-term fragment ions are displayed in reverse order -- y9, y8, y7 etc.
+                        // n-term fragment ions are displayed in forward order -- b1, b2, b3 etc.
+                        if(t1.isNterm() && t2.isNterm())
+                        {
+                            result = t1.getFragmentOrdinal().compareTo(t2.getFragmentOrdinal());
+                            if(result != 0)  return result;
+                        }
+                        else if(t1.isCterm() && t2.isCterm())
+                        {
+                            result = t2.getFragmentOrdinal().compareTo(t1.getFragmentOrdinal());
+                            if(result != 0)  return result;
+                        }
+                        return Double.valueOf(t2.getMz()).compareTo(t1.getMz());
+                    }
+                    return result;
+                }
+            }
+            return result;
+        }
+    }
+
     private static void addTransitionAsSeries(XYSeriesCollection dataset, Chromatogram chromatogram, int seriesIndex,
                                               float minTime, float maxTime, String label)
     {
@@ -241,10 +277,9 @@ public class ChromatogramChartMakerFactory
 
     public static JFreeChart createPeptideChromChart(PeptideChromInfo pepChromInfo, boolean syncIntensity, boolean syncMz)
     {
-        // Get the precursors for the peptide
-        List<PrecursorChromInfo> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptideChromInfo(pepChromInfo.getId());
-
-
+        // Get the precursor chrom infos for the peptide
+        List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptide(pepChromInfo.getPeptideId());
+        Collections.sort(precursorChromInfoList, new PrecursorChromInfoPlus.PrecursorChromInfoComparator());
 
         // get the min and max peak integration boundaries.
         Double minRt = Double.MAX_VALUE;
@@ -268,18 +303,7 @@ public class ChromatogramChartMakerFactory
 
         XYSeriesCollection dataset = new XYSeriesCollection();
 
-
-        Collections.sort(precursorChromInfoList, new Comparator<PrecursorChromInfo>()
-        {
-            @Override
-            public int compare(PrecursorChromInfo o1, PrecursorChromInfo o2)
-            {
-                return Integer.valueOf(o2.getPrecursorId()).compareTo(o1.getPrecursorId());
-            }
-        });
-
-        // Add precursors in reverse order so that we get the same colors as Skyline
-        for(int i = precursorChromInfoList.size() - 1; i >= 0; i--)
+        for(int i = 0; i < precursorChromInfoList.size(); i++)
         {
             PrecursorChromInfo pChromInfo = precursorChromInfoList.get(i);
 
