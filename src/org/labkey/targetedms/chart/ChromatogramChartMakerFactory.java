@@ -278,7 +278,7 @@ public class ChromatogramChartMakerFactory
     public static JFreeChart createPeptideChromChart(PeptideChromInfo pepChromInfo, boolean syncIntensity, boolean syncMz)
     {
         // Get the precursor chrom infos for the peptide
-        List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptide(pepChromInfo.getPeptideId());
+        List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptide(pepChromInfo.getPeptideId(), pepChromInfo.getSampleFileId());
         Collections.sort(precursorChromInfoList, new PrecursorChromInfoPlus.PrecursorChromInfoComparator());
 
         // get the min and max peak integration boundaries.

@@ -262,9 +262,14 @@ public class PrecursorManager
         return getPrecursorChromInfoList(peptideGroupId, true, sampleFileId);
     }
 
-     public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId)
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId)
     {
         return getPrecursorChromInfoList(peptideId, false, 0);
+    }
+
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId, int sampleFileId)
+    {
+        return getPrecursorChromInfoList(peptideId, false, sampleFileId);
     }
 
     private static List<PrecursorChromInfoPlus> getPrecursorChromInfoList(int id, boolean forPeptideGroup, int sampleFileId)
