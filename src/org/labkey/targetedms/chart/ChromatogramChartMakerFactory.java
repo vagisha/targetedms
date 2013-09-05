@@ -320,8 +320,7 @@ public class ChromatogramChartMakerFactory
                 chartMaker.addRetentionTimeAnnotation(pChromInfo.getBestRetentionTime(),
                                                       pChromInfo.getAverageMassErrorPPM(),
                                                       maxHeight,
-                                                      // Use precursor indexes in reverse order so that we get the same colors as Skyline.
-                                                      precursorChromInfoList.size() - i - 1);
+                                                      i);
 
         }
 
