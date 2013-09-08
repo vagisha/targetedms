@@ -23,8 +23,8 @@ import org.labkey.api.util.HelpTopic;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.Portal;
+import org.labkey.api.view.ViewContext;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -59,5 +59,17 @@ public class TargetedMSFolderType extends MultiPortalFolderType
     public List<NavTree> getExtraSetupSteps(Container c)
     {
         return Collections.singletonList(new NavTree(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER, new ActionURL(TargetedMSController.SetupAction.class, c)));
+    }
+
+    @Override
+    public String getLabel()
+    {
+        return "Panorama";
+    }
+
+     @Override
+    public String getStartPageLabel(ViewContext ctx)
+    {
+        return "Panorama Dashboard";
     }
 }

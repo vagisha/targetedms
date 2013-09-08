@@ -171,7 +171,7 @@ public class TargetedMSController extends SpringActionController
     private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
     
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(TargetedMSController.class);
-    public static final String CONFIGURE_TARGETED_MS_FOLDER = "Configure Targeted MS Folder";
+    public static final String CONFIGURE_TARGETED_MS_FOLDER = "Configure Panorama Folder";
 
     public TargetedMSController()
     {

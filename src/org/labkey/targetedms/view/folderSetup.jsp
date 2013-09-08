@@ -33,7 +33,7 @@
     if (isNull)
     {
 %>
-  The Targeted MS folder type cannot be configured for this page.
+  The Panorama folder type cannot be configured for this page.
 <%
     }
 %>
@@ -73,6 +73,6 @@ tr.spaceUnder > td
 </div>
 
 <div id="folder-type-unset" <%= text(isSet ? "" : "style=\"display:none\"") %> >
-    This Targeted MS folder has already been configured with the following folder type: '<%= h(folderType.toString())%>'.<br>
+    This Panorama folder has already been configured with the following folder type: '<%= h(folderType.toString())%>'.<br>
 </div>
 

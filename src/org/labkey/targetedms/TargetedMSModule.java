@@ -119,8 +119,14 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
             {
                 JspView view = new JspView("/org/labkey/targetedms/view/folderSetup.jsp");
-                view.setTitle("Configure Targeted MS Folder");
+                view.setTitle(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER);
                 return view;
+            }
+
+            @Override
+            public String getDisplayName(Container container, String location)
+            {
+                return "Panorama Setup";
             }
         };
 
