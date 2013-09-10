@@ -6,7 +6,6 @@
         <column name="Description" />
         <column name="NoteAnnotations" />
         <column name="RepresentativeDataState/Value" />
-        <column name="Modifed" />
     </columns>
     <sorts>
        <sort column="Label" />

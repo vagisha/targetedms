@@ -68,7 +68,7 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
         sql.append("CASE WHEN ");
         sql.append(ExprColumn.STR_TABLE_ALIAS).append(".MassIndex != 0");
         sql.append(" THEN ");
-        sql.append(TargetedMSManager.getSqlDialect().concatenate("'M'","CAST(" + ExprColumn.STR_TABLE_ALIAS+".MassIndex AS VARCHAR)"));
+        sql.append(TargetedMSManager.getSqlDialect().concatenate("'M+'","CAST(" + ExprColumn.STR_TABLE_ALIAS+".MassIndex AS VARCHAR)"));
         sql.append(" ELSE ");
         sql.append("'M'");
         sql.append(" END ");
@@ -118,7 +118,7 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
                 return new AnnotationUIDisplayColumn(colInfo);
             }
         });
-        noteAnnotation.setLabel("Note/Annotations");
+        noteAnnotation.setLabel("Transition Note/Annotations");
         addColumn(noteAnnotation);
 
     }

@@ -3,6 +3,7 @@
 /module.properties -text
 resources/queries/targetedms/librarydocprecursor/AllPrecursors.qview.xml -text
 resources/queries/targetedms/libraryprecursor/FolderPrecursors.qview.xml -text
+resources/queries/targetedms/libraryprecursor/LibraryPrecursors.qview.xml -text
 resources/queries/targetedms/peptide/FolderPeptides.qview.xml -text
 resources/queries/targetedms/peptide/LibraryPeptides.qview.xml -text
 resources/queries/targetedms/peptidegroup/FolderProteins.qview.xml -text

@@ -755,7 +755,9 @@ public class TargetedMSSchema extends UserSchema
 
     protected QuerySettings createQuerySettings(String dataRegionName, String queryName, String viewName)
     {
-        if(TABLE_PRECURSOR.equalsIgnoreCase(queryName))
+        if(TABLE_PRECURSOR.equalsIgnoreCase(queryName)
+           || TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(queryName)
+           || TABLE_LIBRARY_DOC_PRECURSOR.equalsIgnoreCase(queryName))
         {
             return new QuerySettings(dataRegionName)
             {

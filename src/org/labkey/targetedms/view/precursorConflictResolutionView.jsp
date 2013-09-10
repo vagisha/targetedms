@@ -189,7 +189,7 @@ function toggleCheckboxSelection(element)
 <table class="labkey-data-region labkey-show-borders">
     <thead>
        <tr>
-            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Peptides in Run</div></th>
+            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Peptides in Document</div></th>
             <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Current Library Peptides</div></th>
         </tr>
     </thead>
@@ -197,12 +197,12 @@ function toggleCheckboxSelection(element)
         <tr>
             <td class="labkey-column-header"></td>
             <td class="labkey-column-header">Precursor</td>
-            <td class="labkey-column-header">Run</td>
+            <td class="labkey-column-header">Document</td>
             <!--<td class="labkey-column-header">PrecursorId</td>-->
 
             <td class="labkey-column-header"></td>
             <td class="labkey-column-header">Precursor</td>
-            <td class="labkey-column-header">Run</td>
+            <td class="labkey-column-header">Document</td>
             <!--<td class="labkey-column-header">PrecursorId</td>-->
         </tr>
     <% int index = 0; %>
