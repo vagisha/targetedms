@@ -3065,7 +3065,7 @@ public class TargetedMSController extends SpringActionController
         return peptideCount;
     }
 
-    public static final long getNumRankedTransitions(Container container) {
+    public static long getNumRankedTransitions(Container container) {
 
         SQLFragment sqlFragment = new SQLFragment();
         sqlFragment.append("SELECT DISTINCT(tr.Id) FROM ");

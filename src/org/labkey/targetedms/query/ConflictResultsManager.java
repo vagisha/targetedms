@@ -453,7 +453,7 @@ public class ConflictResultsManager
         return sqlSelector.getRowCount();
     }
 
-    public static final long getConflictCount(User user, Container container) {
+    public static long getConflictCount(User user, Container container) {
 
         final TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
 
