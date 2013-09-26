@@ -97,9 +97,10 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
         ExprColumn transitionCountCol = new ExprColumn(this, "TransitionCount", transitionCountSQL, JdbcType.INTEGER);
         addColumn(transitionCountCol);
 
-
-        ColumnInfo modSeqCol = getColumn("ModifiedSequence");
-        modSeqCol.setDisplayColumnFactory(new DisplayColumnFactory()
+        WrappedColumn modSeqCol = new WrappedColumn(getColumn("Id"), ModifiedPeptideDisplayColumn.PRECURSOR_COLUMN_NAME);
+        modSeqCol.setLabel("Precursor");
+        modSeqCol.setDescription("Modified precursor sequence");
+        modSeqCol.setDisplayColumnFactory( new DisplayColumnFactory()
         {
             @Override
             public DisplayColumn createRenderer(ColumnInfo colInfo)
@@ -107,6 +108,7 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
                 return new ModifiedPeptideDisplayColumn(colInfo, detailsURLs.getActionURL(), false);
             }
         });
+        addColumn(modSeqCol);
 
         ColumnInfo chromatogramsLinkCol = wrapColumn("Chromatograms", getRealTable().getColumn("Id"));
         chromatogramsLinkCol.setIsUnselectable(true);
@@ -129,14 +131,14 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Description"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "NoteAnnotations"));
 
-        visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideModifiedSequence"));
-        visibleColumns.add(FieldKey.fromParts("PeptideId", "Annotations"));
+        visibleColumns.add(FieldKey.fromParts("PeptideId", ModifiedPeptideDisplayColumn.PEPTIDE_COLUMN_NAME));
+        visibleColumns.add(FieldKey.fromParts("PeptideId", "NoteAnnotations"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "NumMissedCleavages"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "CalcNeutralMass"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "Rank"));
 
 
-        visibleColumns.add(FieldKey.fromParts("ModifiedSequence"));
+        visibleColumns.add(FieldKey.fromParts(ModifiedPeptideDisplayColumn.PRECURSOR_COLUMN_NAME));
         visibleColumns.add(FieldKey.fromParts("NoteAnnotations"));
         visibleColumns.add(FieldKey.fromParts("IsotopeLabelId", "Name"));
         visibleColumns.add(FieldKey.fromParts("Charge"));
@@ -159,7 +161,7 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
                 return new AnnotationUIDisplayColumn(colInfo);
             }
         });
-        noteAnnotation.setLabel("Note/Annotations");
+        noteAnnotation.setLabel("Precursor Note/Annotations");
         addColumn(noteAnnotation);
     }
 

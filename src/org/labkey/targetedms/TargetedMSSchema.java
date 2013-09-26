@@ -540,7 +540,7 @@ public class TargetedMSSchema extends UserSchema
                     return new AnnotationUIDisplayColumn(colInfo);
                 }
             });
-            noteAnnotation.setLabel("Note/Annotations");
+            noteAnnotation.setLabel("Protein Note/Annotations");
             result.addColumn(noteAnnotation);
 
             return result;
@@ -612,14 +612,16 @@ public class TargetedMSSchema extends UserSchema
                     return new AnnotationUIDisplayColumn(colInfo);
                 }
             });
-            noteAnnotation.setLabel("Note/Annotations");
+            noteAnnotation.setLabel("Peptide Note/Annotations");
             result.addColumn(noteAnnotation);
 
             ColumnInfo sequenceColumn = result.getColumn("Sequence");
             sequenceColumn.setURL(detailsURL);
 
-            ColumnInfo modifiedSequenceColumn = result.getColumn("PeptideModifiedSequence");
-            modifiedSequenceColumn.setDisplayColumnFactory( new DisplayColumnFactory()
+            WrappedColumn modSeqCol = new WrappedColumn(result.getColumn("Id"), ModifiedPeptideDisplayColumn.PEPTIDE_COLUMN_NAME);
+            modSeqCol.setLabel("Peptide");
+            modSeqCol.setDescription("Modified peptide sequence");
+            modSeqCol.setDisplayColumnFactory( new DisplayColumnFactory()
             {
                 @Override
                 public DisplayColumn createRenderer(ColumnInfo colInfo)
@@ -627,6 +629,8 @@ public class TargetedMSSchema extends UserSchema
                     return new ModifiedPeptideDisplayColumn(colInfo, detailsURL.getActionURL(), true);
                 }
             });
+            result.addColumn(modSeqCol);
+            defaultCols.add(3, FieldKey.fromParts(ModifiedPeptideDisplayColumn.PEPTIDE_COLUMN_NAME));
 
             SQLFragment currentLibPrecursorCountSQL = new SQLFragment("(SELECT COUNT(p.Id) FROM ");
             currentLibPrecursorCountSQL.append(TargetedMSManager.getTableInfoPrecursor(), "p");

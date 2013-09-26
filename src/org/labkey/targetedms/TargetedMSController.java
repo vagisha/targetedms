@@ -117,6 +117,7 @@ import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.ModificationManager;
+import org.labkey.targetedms.query.ModifiedPeptideDisplayColumn;
 import org.labkey.targetedms.query.PeptideChromatogramsTableInfo;
 import org.labkey.targetedms.query.PeptideGroupManager;
 import org.labkey.targetedms.query.PeptideManager;
@@ -1511,12 +1512,13 @@ public class TargetedMSController extends SpringActionController
                     TargetedMSTable result = (TargetedMSTable) super.createTable();
                     result.addCondition(new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), form.getId()));
                     List<FieldKey> visibleColumns = new ArrayList<>();
-                    visibleColumns.add(FieldKey.fromParts("Sequence"));
+                    visibleColumns.add(FieldKey.fromParts(ModifiedPeptideDisplayColumn.PEPTIDE_COLUMN_NAME));
                     visibleColumns.add(FieldKey.fromParts("CalcNeutralMass"));
                     visibleColumns.add(FieldKey.fromParts("NumMissedCleavages"));
                     visibleColumns.add(FieldKey.fromParts("Rank"));
                     visibleColumns.add(FieldKey.fromParts("AvgMeasuredRetentionTime"));
                     visibleColumns.add(FieldKey.fromParts("PredictedRetentionTime"));
+                    visibleColumns.add(FieldKey.fromParts("RtCalculatorScore"));
                     result.setDefaultVisibleColumns(visibleColumns);
                     return result;
                 }
@@ -2534,7 +2536,7 @@ public class TargetedMSController extends SpringActionController
                     List<FieldKey> visibleColumns = new ArrayList<>();
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
-                    visibleColumns.add(FieldKey.fromParts("ModifiedSequence"));
+                    visibleColumns.add(FieldKey.fromParts(ModifiedPeptideDisplayColumn.PRECURSOR_COLUMN_NAME));
                     if (form.isIncludeSubfolders())
                     {
                         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Folder", "Path"));

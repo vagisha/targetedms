@@ -24,6 +24,7 @@ import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Set;
 
 
 /**
@@ -39,22 +40,17 @@ public class ModifiedPeptideDisplayColumn extends DataColumn
 
     private final FieldKey _idColumnFieldKey;
 
+    public static final String PEPTIDE_COLUMN_NAME = "ModifiedPeptideDisplayColumn";
+    public static final String PRECURSOR_COLUMN_NAME = "ModifiedPrecursorDisplayColumn";
+
     public ModifiedPeptideDisplayColumn(ColumnInfo colInfo, ActionURL url, boolean isPeptide)
     {
         super(colInfo);
-        _idColumnFieldKey = new FieldKey(colInfo.getFieldKey().getParent(), "Id");
+        _idColumnFieldKey = colInfo.getFieldKey();
 
         _linkUrl = url;
         _isPeptide = isPeptide;
 
-        if(isPeptide)
-        {
-            setDescription("Modified Peptide Sequence");
-        }
-        else
-        {
-            setDescription("Modified Precursor Sequence");
-        }
         setTextAlign("left");
     }
 

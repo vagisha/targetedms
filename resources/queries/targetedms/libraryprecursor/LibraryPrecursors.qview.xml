@@ -3,7 +3,7 @@
     <columns>
         <column name="PeptideId/PeptideGroupId/RunId/File" />
         <column name="PeptideId/PeptideGroupId/Label" />
-        <column name="ModifiedSequence" />
+        <column name="ModifiedPrecursorDisplayColumn" /> <!-- Defined in ModifiedPeptideDisplayColumn.java -->
         <column name="Charge" />
         <column name="IsotopeLabelId" />
         <column name="Mz" />

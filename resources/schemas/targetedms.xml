@@ -243,7 +243,7 @@
             <ns:column columnName="Note"/>
             <ns:column columnName="Rank"/>
             <ns:column columnName="PeptideModifiedSequence">
-                <ns:columnTitle>Peptide</ns:columnTitle>
+                <ns:columnTitle>Modified Peptide</ns:columnTitle>
             </ns:column>
         </ns:columns>
     </ns:table>
@@ -294,7 +294,7 @@
                 <ns:inputType>text</ns:inputType>
             </ns:column>
             <ns:column columnName="ModifiedSequence">
-                <ns:columnTitle>Precursor</ns:columnTitle>
+                <ns:columnTitle>Modified Precursor</ns:columnTitle>
             </ns:column>
             <ns:column columnName="Mz">
                 <ns:columnTitle>Q1 m/z</ns:columnTitle>

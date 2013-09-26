@@ -5,11 +5,11 @@
         <column name="PeptideId/PeptideGroupId/Description" />
         <column name="PeptideId/PeptideGroupId/NoteAnnotations" />
         <column name="PeptideId/PeptideGroupId/RepresentativeDataState/Value" />
-        <column name="PeptideId/PeptideModifiedSequence" />
-        <column name="PeptideId/Annotations" />
+        <column name="PeptideId/ModifiedPeptideDisplayColumn" /> <!-- Defined in ModifiedPeptideDisplayColumn.java -->
+        <column name="PeptideId/NoteAnnotations" />
         <column name="PeptideId/NumMissedCleavages" />
         <column name="PeptideId/CalcNeutralMass" />
-        <column name="ModifiedSequence" />
+        <column name="ModifiedPrecursorDisplayColumn" />  <!-- Defined in ModifiedPeptideDisplayColumn.java -->
         <column name="NoteAnnotations" />
         <column name="IsotopeLabelId" />
         <column name="Charge" />
