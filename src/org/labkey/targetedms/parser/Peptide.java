@@ -38,6 +38,8 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
     private Double _predictedRetentionTime;
     private Double _avgMeasuredRetentionTime;  // average measured retention time over all replicates
 
+    private Double _rtCalculatorScore;
+
 
     private Integer _rank;  // peptide rank either by spectrum count or by the total intensity
                            // of the picked transition peaks.
@@ -161,6 +163,16 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
     public void setAvgMeasuredRetentionTime(Double avgMeasuredRetentionTime)
     {
         _avgMeasuredRetentionTime = avgMeasuredRetentionTime;
+    }
+
+    public Double getRtCalculatorScore()
+    {
+        return _rtCalculatorScore;
+    }
+
+    public void setRtCalculatorScore(Double rtCalculatorScore)
+    {
+        _rtCalculatorScore = rtCalculatorScore;
     }
 
     public Integer getRank()

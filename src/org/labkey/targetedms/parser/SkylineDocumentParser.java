@@ -879,6 +879,10 @@ public class SkylineDocumentParser
         if(null != avgMeasuredRt)
             peptide.setAvgMeasuredRetentionTime(Double.parseDouble(avgMeasuredRt));
 
+        String rtCalculatorScore = reader.getAttributeValue(null, "rt_calculator_score");
+        if(null != rtCalculatorScore)
+            peptide.setRtCalculatorScore(Double.parseDouble(rtCalculatorScore));
+
         List<Peptide.StructuralModification> structuralMods = new ArrayList<>();
         List<Peptide.IsotopeModification> isotopeMods = new ArrayList<>();
         peptide.setStructuralMods(structuralMods);

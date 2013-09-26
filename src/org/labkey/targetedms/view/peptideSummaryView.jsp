@@ -77,6 +77,14 @@
         <td><%=h(Formats.f4.format(bean.getPeptide().getPredictedRetentionTime()))%></td>
     </tr>
     <%}%>
+
+    <% if(bean.getPeptide().getRtCalculatorScore() != null)
+    {%>
+    <tr>
+        <td class="labkey-form-label">RT Score</td>
+        <td><%=h(Formats.f4.format(bean.getPeptide().getRtCalculatorScore()))%></td>
+    </tr>
+    <%}%>
     
     <tr>
 
