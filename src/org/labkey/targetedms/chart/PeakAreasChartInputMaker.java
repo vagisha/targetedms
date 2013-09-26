@@ -17,7 +17,10 @@ package org.labkey.targetedms.chart;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.junit.Assert;
+import org.junit.Test;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
+import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.SampleFile;
@@ -84,13 +87,11 @@ public class PeakAreasChartInputMaker
 
         if(_chartType == ChartType.PEPTIDE_COMPARISON)
         {
-            Map<String, List<Integer>> peptideChargeMap = getPeptideChargeMap(_pciPlusList);
-
             Map<PeptideCategory, List<PrecursorChromInfoPlus>> datasetMap = new HashMap<>();
 
             for(PrecursorChromInfoPlus pciPlus: _pciPlusList)
             {
-                PeptideCategory categoryLabel = getPeptideCategoryLabel(pciPlus, sampleFileAnnotMap, peptideChargeMap);
+                PeptideCategory categoryLabel = getPeptideCategoryLabel(pciPlus, sampleFileAnnotMap);
                 if(!StringUtils.isBlank(_groupByAnnotationName) && !categoryLabel.hasAnnotationValue())
                     continue;
 
@@ -103,12 +104,14 @@ public class PeakAreasChartInputMaker
                 categoryPciList.add(pciPlus);
             }
 
+            trimPeptideCategoryLabels(datasetMap.keySet());
+
             PeakAreaDataset dataset = new PeakAreaDataset();
             dataset.setSortByPeakAreas(StringUtils.isBlank(_groupByAnnotationName));
 
             for (PeptideCategory category: datasetMap.keySet())
             {
-                PeakAreaCategoryDataset categoryDataset = new PeakAreaCategoryDataset(category.getLabel());
+                PeakAreaCategoryDataset categoryDataset = new PeakAreaCategoryDataset(category);
                 categoryDataset.setData(datasetMap.get(category), _cvValues, _chartType);
                 dataset.addCategory(categoryDataset);
             }
@@ -142,7 +145,7 @@ public class PeakAreasChartInputMaker
 
             for (String categoryLabel: datasetMap.keySet())
             {
-                PeakAreaCategoryDataset categoryDataset = new PeakAreaCategoryDataset(categoryLabel);
+                PeakAreaCategoryDataset categoryDataset = new PeakAreaCategoryDataset(new ReplicateComparisonCategory(categoryLabel));
                 categoryDataset.setData(datasetMap.get(categoryLabel), _cvValues, _chartType);
                 dataset.addCategory(categoryDataset);
             }
@@ -167,22 +170,34 @@ public class PeakAreasChartInputMaker
         return sampleFileReplicateMap;
     }
 
-    private Map<String, List<Integer>> getPeptideChargeMap(List<PrecursorChromInfoPlus> pciPlusList)
+    private static Map<String, Set<Integer>> getPeptideChargeMap(Set<PeptideCategory> peptideCategories)
     {
-        Map<String, List<Integer>> pepChargeMap = new HashMap<>();
+        Map<String, Set<Integer>> pepChargeMap = new HashMap<>();
 
-        for(PrecursorChromInfoPlus pciPlus: pciPlusList)
+        for(PeptideCategory pepCategory: peptideCategories)
         {
-            List<Integer> pepChargeStates = pepChargeMap.get(pciPlus.getModifiedSequence());
+            String peptideChargeMapKey = getPeptideChargeMapKey(pepCategory);
+            if(peptideChargeMapKey == null)
+                continue;
+            Set<Integer> pepChargeStates = pepChargeMap.get(peptideChargeMapKey);
             if(pepChargeStates == null)
             {
-                pepChargeStates = new ArrayList<>();
-                pepChargeMap.put(pciPlus.getModifiedSequence(), pepChargeStates);
+                pepChargeStates = new HashSet<>();
+                pepChargeMap.put(peptideChargeMapKey, pepChargeStates);
             }
-            pepChargeStates.add(pciPlus.getCharge());
+            pepChargeStates.add(pepCategory.getCharge());
         }
 
         return pepChargeMap;
+    }
+
+    private static String getPeptideChargeMapKey(PeptideCategory pepCategory)
+    {
+        if(pepCategory != null)
+        {
+            return pepCategory.getModifiedSequence() + "_" + pepCategory.getIsotopeLabel();
+        }
+        return null;
     }
 
     private Map<Integer, String> getSampleAnnotationMap()
@@ -212,46 +227,168 @@ public class PeakAreasChartInputMaker
     }
 
     private PeptideCategory getPeptideCategoryLabel(PrecursorChromInfoPlus pciPlus,
-                                                    Map<Integer, String> sampleFileAnnotMap,
-                                                    Map<String, List<Integer>> peptideChargeMap)
+                                                    Map<Integer, String> sampleFileAnnotMap)
     {
-        int charge = pciPlus.getCharge();
-        if(peptideChargeMap != null && peptideChargeMap.get(pciPlus.getModifiedSequence()).size() == 1)
-            charge = 0;
-        return new PeptideCategory(pciPlus.getModifiedSequence(),
-                                   charge,
+        return new PeptideCategory(pciPlus.getPeptideModifiedSequence(),
+                                   pciPlus.getSequence(),
+                                   pciPlus.getCharge(),
                                    pciPlus.getIsotopeLabel(),
                                    sampleFileAnnotMap.get(pciPlus.getSampleFileId()));
     }
 
-    static class PeptideCategory
+    private static void trimPeptideCategoryLabels(Set<PeptideCategory> peptideCategories)
+    {
+        Map<String, Set<Integer>> peptideChargeMap = getPeptideChargeMap(peptideCategories);
+        for(PeptideCategory pepCategory: peptideCategories)
+        {
+            if(peptideChargeMap != null && peptideChargeMap.get(getPeptideChargeMapKey(pepCategory)).size() == 1)
+                pepCategory.setUseChargeInDisplayLabel(false);
+        }
+
+        makeUniquePrefixes(new ArrayList<>(peptideCategories), 3);
+    }
+
+    private static void makeUniquePrefixes(List<PeptideCategory> peptideCategories, int prefixLen)
+    {
+        if(peptideCategories == null || peptideCategories.size() == 0)
+            return;
+
+        if(peptideCategories.size() == 1)
+        {
+            PeptideCategory category = peptideCategories.get(0);
+            String sequence = category.getSequence();
+            prefixLen = Math.max(3, prefixLen - 1);
+            category.setSeqPrefix(sequence.substring(0, Math.min(prefixLen, sequence.length())));
+            return;
+        }
+
+        Set<String> uniqSequences = new HashSet<>();
+        for(PeptideCategory category: peptideCategories)
+        {
+            uniqSequences.add(category.getSequence());
+        }
+        if(uniqSequences.size() == 1)
+        {
+            prefixLen = Math.max(3, prefixLen - 1);
+            prefixLen = Math.min(prefixLen, peptideCategories.get(0).getSequence().length());
+
+            // If all the given categories have the same sequence, set the
+            for(PeptideCategory category: peptideCategories)
+            {
+                String sequence = category.getSequence();
+                category.setSeqPrefix(sequence.substring(0, prefixLen));
+            }
+            return;
+        }
+
+        Map<String, List<PeptideCategory>> prefixCategoryMap = new HashMap<>();
+        for(PeptideCategory category: peptideCategories)
+        {
+            String sequence = category.getSequence();
+            String prefix = category.getSequence().substring(0, Math.min(sequence.length(), prefixLen));
+            List<PeptideCategory> categoriesForPrefix = prefixCategoryMap.get(prefix);
+            if(categoriesForPrefix == null)
+            {
+                categoriesForPrefix = new ArrayList<>();
+                prefixCategoryMap.put(prefix, categoriesForPrefix);
+
+            }
+            categoriesForPrefix.add(category);
+        }
+
+        for(String prefix: prefixCategoryMap.keySet())
+        {
+            List<PeptideCategory> categoriesForPrefix = prefixCategoryMap.get(prefix);
+            makeUniquePrefixes(categoriesForPrefix, prefixLen + 1);
+        }
+    }
+
+    static interface PeakAreaCategory
+    {
+        public String getCategoryLabel();
+        public String getDisplayLabel();
+    }
+
+    static class ReplicateComparisonCategory implements PeakAreaCategory
+    {
+        private final String _label;
+
+        public ReplicateComparisonCategory(String label)
+        {
+            _label = label;
+        }
+
+        @Override
+        public String getCategoryLabel()
+        {
+            return _label;
+        }
+
+        @Override
+        public String getDisplayLabel()
+        {
+            return _label;
+        }
+    }
+
+    static class PeptideCategory implements PeakAreaCategory
     {
         private String _modifiedSequence;
         private int _charge;
         private String _isotopeLabel;
         private String _annotationValue;
+        private String _sequence;
+        private String _seqPrefix;
+        private boolean _useChargeInDisplayLabel = true;
 
-        public PeptideCategory(String modifiedSequence, int charge, String isotopeLabel, String annotValue)
+        public PeptideCategory(String modifiedSequence, String sequence, int charge, String isotopeLabel, String annotValue)
         {
             _modifiedSequence = modifiedSequence;
+            _sequence = sequence;
+            _seqPrefix = sequence;
             _charge = charge;
             _isotopeLabel = isotopeLabel;
             _annotationValue = annotValue;
         }
 
-        public String getLabel()
+        public String getModifiedSequence()
+        {
+            return _modifiedSequence;
+        }
+
+        public String getSequence()
+        {
+            return _sequence;
+        }
+
+        public int getCharge()
+        {
+            return _charge;
+        }
+
+        public String getIsotopeLabel()
+        {
+            return _isotopeLabel;
+        }
+
+        public String getCategoryLabel()
         {
             StringBuilder label = new StringBuilder();
 
-            if(_annotationValue != null && !StringUtils.isBlank(_annotationValue))
+            if(hasAnnotationValue())
             {
-                label.append(_annotationValue).append(",  ");
+                label.append(_annotationValue).append(", ");
             }
             label.append(_modifiedSequence);
             if(_charge > 0)
             {
                 label.append(LabelFactory.getChargeLabel(_charge));
             }
+            if(_isotopeLabel != null && !_isotopeLabel.equalsIgnoreCase(PeptideSettings.IsotopeLabel.LIGHT))
+            {
+                label.append(" (").append(_isotopeLabel).append(")");
+            }
+
             return label.toString();
         }
 
@@ -286,6 +423,34 @@ public class PeakAreasChartInputMaker
             result = 31 * result + (_isotopeLabel != null ? _isotopeLabel.hashCode() : 0);
             result = 31 * result + (_annotationValue != null ? _annotationValue.hashCode() : 0);
             return result;
+        }
+
+        public void setUseChargeInDisplayLabel(boolean useChargeInDisplayLabel)
+        {
+            _useChargeInDisplayLabel = useChargeInDisplayLabel;
+        }
+
+        public void setSeqPrefix(String seqPrefix)
+        {
+            _seqPrefix = seqPrefix;
+        }
+
+        @Override
+        public String getDisplayLabel()
+        {
+            StringBuilder label = new StringBuilder();
+
+            if(hasAnnotationValue())
+            {
+                label.append(_annotationValue).append(", ");
+            }
+            label.append(_seqPrefix
+            );
+            if(_useChargeInDisplayLabel)
+            {
+                label.append(LabelFactory.getChargeLabel(_charge));
+            }
+            return label.toString();
         }
     }
 
@@ -404,18 +569,23 @@ public class PeakAreasChartInputMaker
 
     public static class PeakAreaCategoryDataset
     {
-        private String _categoryLabel;  // goes on the X-axis
+        private PeakAreaCategory _category;
         private Map<SeriesLabel, PeakAreaSeriesDataset> _seriesDatasetsMap;
         private double _maxPeakArea;
 
-        public PeakAreaCategoryDataset(String label)
+        public PeakAreaCategoryDataset(PeakAreaCategory category)
         {
-            _categoryLabel = label;
+            _category = category;
         }
 
         public String getCategoryLabel()
         {
-            return _categoryLabel;
+            return _category.getCategoryLabel();
+        }
+
+        public PeakAreaCategory getCategory()
+        {
+            return _category;
         }
 
         public void setData(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues, ChartType chartType)
@@ -629,6 +799,59 @@ public class PeakAreasChartInputMaker
         public boolean isStatistical()
         {
             return _isStatistical;
+        }
+    }
+
+     public static class TestCase extends Assert
+    {
+        @Test
+        public void testTrimPeptideCategoryLabels() throws Exception
+        {
+            PeptideCategory category1 = new PeptideCategory("A", "A", 2, "light", null);
+            PeptideCategory category2 = new PeptideCategory("AB", "AB", 2, "light", null);
+            PeptideCategory category3 = new PeptideCategory("ABCXYZ", "ABCXYZ", 2, "light", null);
+            PeptideCategory category4 = new PeptideCategory("ABCXYZ", "ABCXYZ", 3, "light", null);
+            PeptideCategory category5 = new PeptideCategory("ABCXYZ", "ABCXYZ", 2, "heavy", null);
+            PeptideCategory category6 = new PeptideCategory("ABCXYZ", "ABCXYZ", 3, "heavy", null);
+            PeptideCategory category7 = new PeptideCategory("ABDAAA", "ABDAAA", 2, "light", null);
+            PeptideCategory category8 = new PeptideCategory("ABDEEEE", "ABDEEEE", 2, "light", null);
+            PeptideCategory category9 = new PeptideCategory("ABDFAAA", "ABDFAAA", 2, "light", null);
+            PeptideCategory category10 = new PeptideCategory("UVWXYZ", "UVWXYZ", 2, "light", null);
+
+
+            Set<PeptideCategory> peptideCategoryList = new HashSet<PeptideCategory>(1);
+            peptideCategoryList.add(category1);
+            peptideCategoryList.add(category2);
+            peptideCategoryList.add(category3);
+            peptideCategoryList.add(category4);
+            peptideCategoryList.add(category5);
+            peptideCategoryList.add(category6);
+            peptideCategoryList.add(category7);
+            peptideCategoryList.add(category8);
+            peptideCategoryList.add(category9);
+            peptideCategoryList.add(category10);
+
+            PeakAreasChartInputMaker.trimPeptideCategoryLabels(peptideCategoryList);
+            assertTrue(category1.getCategoryLabel().equals("A++"));
+            assertTrue(category1.getDisplayLabel().equals("A"));
+            assertTrue(category2.getCategoryLabel().equals("AB++"));
+            assertTrue(category2.getDisplayLabel().equals("AB"));
+            assertTrue(category3.getCategoryLabel().equals("ABCXYZ++"));
+            assertTrue(category3.getDisplayLabel().equals("ABC++"));
+            assertTrue(category4.getCategoryLabel().equals("ABCXYZ+++"));
+            assertTrue(category4.getDisplayLabel().equals("ABC+++"));
+            assertTrue(category5.getCategoryLabel().equals("ABCXYZ++ (heavy)"));
+            assertTrue(category5.getDisplayLabel().equals("ABC++"));
+            assertTrue(category6.getCategoryLabel().equals("ABCXYZ+++ (heavy)"));
+            assertTrue(category6.getDisplayLabel().equals("ABC+++"));
+            assertTrue(category7.getCategoryLabel().equals("ABDAAA++"));
+            assertTrue(category7.getDisplayLabel().equals("ABDA"));
+            assertTrue(category8.getCategoryLabel().equals("ABDEEEE++"));
+            assertTrue(category8.getDisplayLabel().equals("ABDE"));
+            assertTrue(category9.getCategoryLabel().equals("ABDFAAA++"));
+            assertTrue(category9.getDisplayLabel().equals("ABDF"));
+            assertTrue(category10.getCategoryLabel().equals("UVWXYZ++"));
+            assertTrue(category10.getDisplayLabel().equals("UVW"));
         }
     }
 }

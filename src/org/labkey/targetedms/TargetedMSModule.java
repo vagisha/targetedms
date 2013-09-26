@@ -42,6 +42,8 @@ import org.labkey.api.view.VBox;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
+import org.labkey.targetedms.chart.PeakAreasChartInputMaker;
+import org.labkey.targetedms.chart.PrecursorPeakAreaChartMaker;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
@@ -54,6 +56,7 @@ import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -272,7 +275,12 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public Set<Class> getUnitTests()
     {
-        return PageFlowUtil.<Class>set(TargetedMSController.TestCase.class);
+        Set<Class> set = new HashSet<>();
+        set.add(TargetedMSController.TestCase.class);
+        set.add(PeakAreasChartInputMaker.TestCase.class);
+        set.add(PrecursorPeakAreaChartMaker.TestCase.class);
+        return set;
+
     }
 
     @Override

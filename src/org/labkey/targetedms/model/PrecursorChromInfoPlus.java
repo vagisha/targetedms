@@ -28,6 +28,7 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo
 {
     private String _groupName;
     private String _sequence;
+    private String _peptideModifiedSequence;
     private String _modifiedSequence;
     private int _charge;
     private String _isotopeLabel;
@@ -52,6 +53,16 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo
     public void setSequence(String sequence)
     {
         _sequence = sequence;
+    }
+
+    public String getPeptideModifiedSequence()
+    {
+        return _peptideModifiedSequence != null ? _peptideModifiedSequence : _modifiedSequence;
+    }
+
+    public void setPeptideModifiedSequence(String peptideModifiedSequence)
+    {
+        _peptideModifiedSequence = peptideModifiedSequence;
     }
 
     public String getModifiedSequence()

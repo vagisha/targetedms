@@ -232,7 +232,7 @@
                 renderTo: Ext.get('peakAreasFormDiv'),
                 // resizable: true,
                 border: false,
-                buttonAlign: 'center',
+                buttonAlign: 'left',
                 items: items,
                 buttons: [updateBtn]
             });

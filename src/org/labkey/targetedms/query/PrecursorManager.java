@@ -275,7 +275,7 @@ public class PrecursorManager
     private static List<PrecursorChromInfoPlus> getPrecursorChromInfoList(int id, boolean forPeptideGroup, int sampleFileId)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
-        sql.append("pci.*, pg.Label AS groupName, pep.Sequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
+        sql.append("pci.*, pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
         sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
         sql.append(", ");

@@ -196,7 +196,7 @@ class ChromatogramChartMaker
             for(int i = 0; i < plot.getSeriesCount(); i++)
             {
                 renderer.setSeriesPaint(i, ChartColors.getTransitionColor(i));
-                renderer.setSeriesStroke(i, new BasicStroke(2.0f)); // only for screenshots; remove later
+                renderer.setSeriesStroke(i, new BasicStroke(2.0f));
             }
         }
         else if(_chromatogramType == TYPE.PEPTIDE)
@@ -204,7 +204,7 @@ class ChromatogramChartMaker
             for(int i = 0; i < plot.getSeriesCount(); i++)
             {
                 renderer.setSeriesPaint(i, ChartColors.getPrecursorColor(i));
-                renderer.setSeriesStroke(i, new BasicStroke(2.0f)); // only for screenshots; remove later
+                renderer.setSeriesStroke(i, new BasicStroke(2.0f));
             }
         }
     }
