@@ -213,7 +213,7 @@ function toggleCheckboxSelection(element)
                  <input type="checkbox" class="<%=protein.getNewProteinId()%> newProtein"
                                         name="selectedInputValues"
                                         value="<%=protein.getNewProteinId()%>_<%=protein.getOldProteinId()%>"
-                                        checked="checked"/></td>
+                                        checked/></td>
              <!--<td class="representative newProtein <%=protein.getNewProteinId()%>"><%=protein.getNewProteinId()%></td>-->
              <td class="representative newProtein label <%=protein.getNewProteinId()%>">
                  <span class="label" id="<%=protein.getNewProteinId()%>_<%=protein.getOldProteinId()%>">

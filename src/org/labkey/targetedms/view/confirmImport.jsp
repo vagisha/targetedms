@@ -18,11 +18,12 @@
 <%@ page import="org.labkey.api.view.HttpView"%>
 <%@ page import="org.labkey.api.view.ViewContext"%>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     ViewContext context = HttpView.currentContext();
-    org.labkey.targetedms.TargetedMSController.SkylinePipelinePathForm form = (org.labkey.targetedms.TargetedMSController.SkylinePipelinePathForm)HttpView.currentModel();
-    org.labkey.api.view.ActionURL targetURL = new org.labkey.api.view.ActionURL(TargetedMSController.SkylineDocUploadAction.class, context.getContainer());
+    TargetedMSController.SkylinePipelinePathForm form = (TargetedMSController.SkylinePipelinePathForm)HttpView.currentModel();
+    ActionURL targetURL = new org.labkey.api.view.ActionURL(TargetedMSController.SkylineDocUploadAction.class, context.getContainer());
 %>
 <script type="text/javascript">
     Ext.onReady(function() {

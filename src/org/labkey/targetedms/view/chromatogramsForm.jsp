@@ -36,9 +36,9 @@
     </tr>
     <tr>
         <td class="labkey-form-label">Synchronize Y-axis</td>
-        <td nowrap><input type="checkbox" name="syncY" <% if (bean.getForm().isSyncY()) { %>checked="true" <% } %> /></td>
+        <td nowrap><input type="checkbox" name="syncY"<%=checked(bean.getForm().isSyncY())%>/></td>
         <td class="labkey-form-label">Synchronize X-axis</td>
-        <td nowrap><input type="checkbox" name="syncX" <% if (bean.getForm().isSyncX()) { %>checked="true" <% } %> /></td>
+        <td nowrap><input type="checkbox" name="syncX"<%=checked(bean.getForm().isSyncX())%>/></td>
     </tr>
     <tr>
         <td colspan = "4"><labkey:button text="Update" /></td>

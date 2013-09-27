@@ -28,7 +28,7 @@
         </tr>
         <tr>
             <td class="labkey-form-label"><label for="includeSubfoldersInput">Search in subfolders</label><%= helpPopup("Search in subfolders", "If checked, the search will also look in all of this folder's children.") %></td>
-            <td nowrap><input type="checkbox" id="includeSubfoldersInput" name="includeSubfolders" checked="true" /></td>
+            <td nowrap><input type="checkbox" id="includeSubfoldersInput" name="includeSubfolders" checked/></td>
         </tr>
         <tr>
             <td colspan="2"><labkey:button text="Search" /></td>

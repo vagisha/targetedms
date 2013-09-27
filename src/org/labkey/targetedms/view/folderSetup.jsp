@@ -50,7 +50,7 @@ tr.spaceUnder > td
         <table cellspacing="7" width="100%">
             <tr class="spaceUnder">
                 <td>
-                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>" <%= text(isUndefined || isExperiment ? "checked" : "" )%>> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
+                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>"<%=checked(isUndefined || isExperiment)%>> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
                 </td>
             </tr>
             <tr>

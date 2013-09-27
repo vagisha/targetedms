@@ -214,7 +214,7 @@ function toggleCheckboxSelection(element)
                  <input type="checkbox" class="<%=precursor.getNewPrecursorId()%> newPrecursor"
                                         name="selectedInputValues"
                                         value="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>"
-                                        checked="checked"/></td>
+                                        checked/></td>
              <!--<td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>"><%=precursor.getNewPrecursorId()%></td>-->
              <td class="representative newPrecursor label <%=precursor.getNewPrecursorId()%>">
                  <span class="label" id="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
