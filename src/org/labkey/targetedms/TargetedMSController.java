@@ -398,7 +398,6 @@ public class TargetedMSController extends SpringActionController
 
             JFreeChart chart = ChromatogramChartMakerFactory.createTransitionChromChart(tci, pci);
 
-            response.setContentType("image/png");
             writePNG(form, response, chart);
         }
     }
@@ -416,7 +415,6 @@ public class TargetedMSController extends SpringActionController
             }
 
             JFreeChart chart = ChromatogramChartMakerFactory.createPrecursorChromChart(pChromInfo, form.isSyncY(), form.isSyncX());
-            response.setContentType("image/png");
             writePNG(form, response, chart);
         }
     }
@@ -424,19 +422,8 @@ public class TargetedMSController extends SpringActionController
     private void writePNG(AbstractChartForm form, HttpServletResponse response, JFreeChart chart)
             throws IOException
     {
-        // TODO: Remove try/catch once we require Java 7
-        // Ignore known Java 6 issue with sun.font.FileFontStrike.getCachedGlyphPtr(), http://bugs.sun.com/view_bug.do?bug_id=7007299
-        try
-        {
-            ChartUtilities.writeChartAsPNG(response.getOutputStream(), chart, form.getChartWidth(), form.getChartHeight());
-        }
-        catch (NullPointerException e)
-        {
-            if ("getCachedGlyphPtr".equals(e.getStackTrace()[0].getMethodName()))
-                LOG.warn("Ignoring known synchronization issue with FileFontStrike.getCachedGlyphPtr()", e);
-            else
-                throw e;
-        }
+        response.setContentType("image/png");
+        ChartUtilities.writeChartAsPNG(response.getOutputStream(), chart, form.getChartWidth(), form.getChartHeight());
     }
 
     @RequiresPermissionClass(ReadPermission.class)
@@ -452,7 +439,6 @@ public class TargetedMSController extends SpringActionController
             }
 
             JFreeChart chart = ChromatogramChartMakerFactory.createPeptideChromChart(pChromInfo, form.isSyncY(), form.isSyncX());
-            response.setContentType("image/png");
             writePNG(form, response, chart);
         }
     }
@@ -964,7 +950,6 @@ public class TargetedMSController extends SpringActionController
                                                                  form.isCvValues());
             if(chart != null)
             {
-                response.setContentType("image/png");
                 writePNG(form, response, chart);
             }
             else
@@ -972,7 +957,6 @@ public class TargetedMSController extends SpringActionController
                 chart = createEmptyChart();
                 form.setChartHeight(20);
                 form.setChartWidth(300);
-                response.setContentType("image/png");
                 writePNG(form, response, chart);
             }
         }
