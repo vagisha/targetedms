@@ -948,17 +948,14 @@ public class TargetedMSController extends SpringActionController
                                                                  peptide,
                                                                  form.getGroupByReplicateAnnotName(),
                                                                  form.isCvValues());
-            if(chart != null)
-            {
-                writePNG(form, response, chart);
-            }
-            else
+            if (null == chart)
             {
                 chart = createEmptyChart();
                 form.setChartHeight(20);
                 form.setChartWidth(300);
-                writePNG(form, response, chart);
             }
+
+            writePNG(form, response, chart);
         }
 
         private JFreeChart createEmptyChart()
