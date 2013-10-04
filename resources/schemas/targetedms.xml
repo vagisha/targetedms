@@ -201,6 +201,7 @@
             <ns:column columnName="RepresentativeDataState">
                 <ns:columnTitle>Library State</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="Name" />
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Peptide">

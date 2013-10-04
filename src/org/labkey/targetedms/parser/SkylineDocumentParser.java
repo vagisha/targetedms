@@ -772,7 +772,13 @@ public class SkylineDocumentParser
         if(isProtein)
         {
             // <protein> elements have the 'name'  and 'description' attribute
-            pepGroup.setLabel(reader.getAttributeValue(null, "name"));
+            // <protein> elements can also have a 'label_name' attribute.  This is the name that the user
+            // can type in the document node in Skyline, and most likely the name they want to see in Panorama.
+            String name = reader.getAttributeValue(null, "name");
+            String labelName = reader.getAttributeValue(null, "label_name");
+            pepGroup.setLabel(StringUtils.isBlank(labelName) ? name : labelName);
+            pepGroup.setName((!StringUtils.isBlank(labelName) && !StringUtils.isBlank(name)) ? name : null);
+
             pepGroup.setDescription(reader.getAttributeValue(null, "description"));
             pepGroup.setDecoy(Boolean.parseBoolean(reader.getAttributeValue(null, "decoy")));
             pepGroup.setProtein(true);

@@ -89,6 +89,7 @@ public class SkylineDocImporter
     // Use system logger for bugs & system problems, and in cases where we don't have a pipeline logger
     protected static Logger _systemLog = Logger.getLogger(SkylineDocImporter.class);
     protected final XarContext _context;
+    private int blankLabelIndex;
 
     // protected Connection _conn;
     // private static final int BATCH_SIZE = 100;
@@ -551,24 +552,32 @@ public class SkylineDocImporter
     {
         pepGroup.setRunId(_runId);
 
-        // targetedms.peptidegroup table limits the label to 255 characters
         String pepGrpLabel = pepGroup.getLabel();
-        pepGrpLabel = pepGrpLabel.length() > 255 ? pepGrpLabel.substring(0, 255) : pepGrpLabel;
-        pepGroup.setLabel(pepGrpLabel);
-
-        if(pepGroup.isProtein())
+        if(!StringUtils.isBlank(pepGrpLabel))
         {
-            // prot.sequences table limits the name to 50 characters
-            String protName = pepGrpLabel.length() > 50 ? pepGrpLabel.substring(0, 50) : pepGrpLabel;
-            int seqId = proteinService.ensureProteinAndIdentifier(pepGroup.getSequence(), null, protName, pepGroup.getDescription(), "Skyline");
-            pepGroup.setSequenceId(seqId);
+            // targetedms.peptidegroup table limits the label to 255 characters
+            pepGrpLabel = pepGrpLabel.length() > 255 ? pepGrpLabel.substring(0, 255) : pepGrpLabel;
+            pepGroup.setLabel(pepGrpLabel);
+
+            if(pepGroup.isProtein())
+            {
+                // prot.sequences table limits the name to 50 characters
+                String protName = pepGrpLabel.length() > 50 ? pepGrpLabel.substring(0, 50) : pepGrpLabel;
+                int seqId = proteinService.ensureProteinAndIdentifier(pepGroup.getSequence(), null, protName, pepGroup.getDescription(), "Skyline");
+                pepGroup.setSequenceId(seqId);
+
+                String otherProtName = pepGroup.getName();
+                if(!StringUtils.isBlank(otherProtName))
+                {
+                    otherProtName = otherProtName.substring(0, Math.min(otherProtName.length(), 50));
+                    proteinService.ensureProteinAndIdentifier(pepGroup.getSequence(), null, otherProtName, pepGroup.getDescription(), "Skyline");
+                }
+            }
         }
-
-        if(pepGroup.getLabel().trim().length() == 0)
+        else
         {
-            // If the label was empty add a dummy label so that Table.insert does not insert a NULL value.
-            // The "label" column in targetedms.PeptideGroup is not nullable.
-            pepGroup.setLabel("PEPTIDES");
+            // Add a dummy label. The "label" column in targetedms.PeptideGroup is not nullable.
+            pepGroup.setLabel("PEPTIDE_GROUP_" + blankLabelIndex++);
         }
 
         if(_isProteinLibraryDoc)

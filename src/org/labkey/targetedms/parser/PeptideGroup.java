@@ -29,6 +29,7 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
     private Integer _sequenceId;
 
     private String _label;
+    private String _name;
     private String _description;
 
     private String _sequence;
@@ -70,6 +71,16 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
     public void setLabel(String label)
     {
         _label = label;
+    }
+
+    public String getName()
+    {
+        return _name;
+    }
+
+    public void setName(String name)
+    {
+        _name = name;
     }
 
     public String getDescription()

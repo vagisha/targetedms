@@ -654,7 +654,8 @@ public class TargetedMSSchema extends UserSchema
         }
 
         // Tables that have a FK to targetedms.replicate
-        if (TABLE_SAMPLE_FILE.equalsIgnoreCase(name))
+        if (TABLE_SAMPLE_FILE.equalsIgnoreCase(name) ||
+            TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.ReplicateFK.getSQL());
         }
@@ -788,6 +789,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_PRECURSOR);
         hs.add(TABLE_TRANSITION);
         hs.add(TABLE_REPLICATE);
+        hs.add(TABLE_REPLICATE_ANNOTATION);
         hs.add(TABLE_INSTRUMENT);
         hs.add(TABLE_ISOTOPE_ENRICHMENT);
         hs.add(TABLE_PEPTIDE_CHROM_INFO);
