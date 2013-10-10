@@ -1,3 +1,0 @@
-{table}
-Filename|Component|Version|Source|License|LabKey Dev|Purpose
-{table}

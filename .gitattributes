@@ -68,7 +68,6 @@ resources/schemas/dbscripts/sqlserver/targetedms-13.17-13.18.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.20-13.21.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.21-13.22.sql -text
 resources/schemas/targetedms.xml -text
-src/META-INF/targetedms/jars.txt -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text
 src/org/labkey/targetedms/TargetedMSContainerListener.java -text
