@@ -365,12 +365,19 @@ public class SkylineDocImporter
                 List<PeptideSettings.RunIsotopeModification> isotopeMods = modifications.getIsotopeModifications();
                 for(PeptideSettings.RunIsotopeModification mod: isotopeMods)
                 {
-                    // TODO: check if this modification already exists in the database
-                    mod = Table.insert(_user, TargetedMSManager.getTableInfoIsotopeModification(), mod);
-                    isotopeModNameIdMap.put(mod.getName(), mod.getId());
+                    PeptideSettings.IsotopeModification existingIsotopeMod = findExistingIsotopeModification(mod);
+                    if (existingIsotopeMod != null)
+                    {
+                        mod.setIsotopeModId(existingIsotopeMod.getId());
+                    }
+                    else
+                    {
+                        PeptideSettings.IsotopeModification newMod = Table.insert(_user, TargetedMSManager.getTableInfoIsotopeModification(), mod);
+                        mod.setIsotopeModId(newMod.getId());
+                    }
 
+                    isotopeModNameIdMap.put(mod.getName(), mod.getIsotopeModId());
                     mod.setRunId(_runId);
-                    mod.setIsotopeModId(mod.getId());
                     mod.setIsotopeLabelId(isotopeLabelIdMap.get(mod.getIsotopeLabel()));
                     Table.insert(_user, TargetedMSManager.getTableInfoRunIsotopeModification(), mod);
                 }
@@ -1230,6 +1237,29 @@ public class SkylineDocImporter
         }
         // No match, so we'll need to insert a new one
         return null;
+    }
+
+    private PeptideSettings.IsotopeModification findExistingIsotopeModification(PeptideSettings.RunIsotopeModification mod)
+    {
+        // Find all of the isotope modifications that match the values exactly
+        SQLFragment sql = new SQLFragment("SELECT * FROM ");
+        sql.append(TargetedMSManager.getTableInfoIsotopeModification(), "imod");
+        sql.append(" WHERE Name = ? ");
+        sql.add(mod.getName());
+        sql.append(getNullableCriteria("aminoacid", mod.getAminoAcid()));
+        sql.append(getNullableCriteria("terminus", mod.getTerminus()));
+        sql.append(getNullableCriteria("formula", mod.getFormula()));
+        sql.append(getNullableCriteria("massdiffmono", mod.getMassDiffMono()));
+        sql.append(getNullableCriteria("massdiffavg", mod.getMassDiffAvg()));
+        sql.append(getNullableCriteria("label13c", mod.getLabel13C()));
+        sql.append(getNullableCriteria("label15n", mod.getLabel15N()));
+        sql.append(getNullableCriteria("label18o", mod.getLabel18O()));
+        sql.append(getNullableCriteria("label2h", mod.getLabel2H()));
+        sql.append(getNullableCriteria("unimodid", mod.getUnimodId()));
+
+        PeptideSettings.IsotopeModification[] isotopeModifications = new SqlSelector(TargetedMSManager.getSchema().getScope(), sql).getArray(PeptideSettings.IsotopeModification.class);
+
+        return isotopeModifications.length == 0 ? null : isotopeModifications[0];
     }
 
     private SQLFragment getNullableCriteria(String columnName, Object value)

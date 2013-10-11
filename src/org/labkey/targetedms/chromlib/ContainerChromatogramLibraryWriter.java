@@ -194,6 +194,9 @@ public class ContainerChromatogramLibraryWriter
         List<PeptideSettings.RunIsotopeModification> isotopeMods = ModificationManager.getIsotopeModificationsForRun(runId);
         for(PeptideSettings.RunIsotopeModification mod: isotopeMods)
         {
+            // If we have already saved this modification, don't save it again.
+            if(_isotopeModificationMap.containsKey(mod.getId()))
+                continue;
             LibIsotopeModification libIsotopeMod = new LibIsotopeModification();
             libIsotopeMod.setName(mod.getName());
             String isotopeLabel = _isotopeLabelMap.get(mod.getIsotopeLabelId());

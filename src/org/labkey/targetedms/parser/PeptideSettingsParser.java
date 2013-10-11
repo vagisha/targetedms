@@ -46,7 +46,7 @@ class PeptideSettingsParser
     private static final String MASSDIFF_MONOISOTOPIC = "massdiff_monoisotopic";
     private static final String MASSDIFF_AVERAGE = "massdiff_average";
     private static final String EXPLICIT_DECL = "explicit_decl";
-    private static final String UNIMMOD_ID = "unimmod_id";
+    private static final String UNIMOD_ID = "unimod_id";
     private static final String NAME = "name";
     private static final String PICK = "pick";
     private static final String RANK_TYPE = "rank_type";
@@ -229,7 +229,7 @@ class PeptideSettingsParser
         mod.setMassDiffMono(XmlUtil.readDoubleAttribute(reader, MASSDIFF_MONOISOTOPIC));
         mod.setMassDiffAvg(XmlUtil.readDoubleAttribute(reader, MASSDIFF_AVERAGE));
         mod.setExplicitMod(XmlUtil.readBooleanAttribute(reader, EXPLICIT_DECL));
-        mod.setUnimodId(XmlUtil.readIntegerAttribute(reader, UNIMMOD_ID));
+        mod.setUnimodId(XmlUtil.readIntegerAttribute(reader, UNIMOD_ID));
 
         List<PeptideSettings.PotentialLoss> potentialLosses = new ArrayList<>();
         mod.setPotentialLosses(potentialLosses);
@@ -302,7 +302,7 @@ class PeptideSettingsParser
         mod.setMassDiffMono(XmlUtil.readDoubleAttribute(reader, MASSDIFF_MONOISOTOPIC));
         mod.setMassDiffAvg(XmlUtil.readDoubleAttribute(reader, MASSDIFF_AVERAGE));
         mod.setExplicitMod(XmlUtil.readBooleanAttribute(reader, EXPLICIT_DECL));
-        mod.setUnimodId(XmlUtil.readIntegerAttribute(reader, UNIMMOD_ID));
+        mod.setUnimodId(XmlUtil.readIntegerAttribute(reader, UNIMOD_ID));
         mod.setLabel13C(XmlUtil.readBooleanAttribute(reader, "label_13C"));
         mod.setLabel15N(XmlUtil.readBooleanAttribute(reader, "label_15N"));
         mod.setLabel18O(XmlUtil.readBooleanAttribute(reader, "label_18O"));
