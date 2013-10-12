@@ -538,7 +538,6 @@
         <ns:column columnName="Label15N"/>
         <ns:column columnName="Label18O"/>
         <ns:column columnName="Label2H"/>
-        <ns:column columnName="ExplicitMod"/>
         <ns:column columnName="UnimodId"/>
       </ns:columns>
     </ns:table>
