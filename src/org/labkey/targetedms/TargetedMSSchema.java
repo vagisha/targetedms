@@ -33,7 +33,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
-import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.module.Module;
 import org.labkey.api.ms2.MS2Service;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
@@ -135,15 +135,13 @@ public class TargetedMSSchema extends UserSchema
     private final ContainerFilter _containerFilter;
 
 
-    static public void register()
+    static public void register(Module module)
     {
-        DefaultSchema.registerProvider(SCHEMA_NAME, new DefaultSchema.SchemaProvider()
+        DefaultSchema.registerProvider(SCHEMA_NAME, new DefaultSchema.SchemaProvider(module)
         {
-            public QuerySchema getSchema(DefaultSchema schema)
+            public QuerySchema createSchema(DefaultSchema schema, Module module)
             {
-                if (schema.getContainer().getActiveModules().contains(ModuleLoader.getInstance().getModule(TargetedMSModule.NAME)))
-                    return new TargetedMSSchema(schema.getUser(), schema.getContainer());
-                return null;
+                return new TargetedMSSchema(schema.getUser(), schema.getContainer());
             }
         });
     }

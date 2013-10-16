@@ -234,7 +234,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     protected void init()
     {
         addController("targetedms", TargetedMSController.class);
-        TargetedMSSchema.register();
+        TargetedMSSchema.register(this);
         EnumConverter.registerEnum(TargetedMSRun.RepresentativeDataState.class);
         EnumConverter.registerEnum(RepresentativeDataState.class);
     }
