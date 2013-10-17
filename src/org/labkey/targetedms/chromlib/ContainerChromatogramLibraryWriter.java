@@ -227,6 +227,10 @@ public class ContainerChromatogramLibraryWriter
         List<PeptideSettings.RunStructuralModification> structuralMods = ModificationManager.getStructuralModificationsForRun(runId);
         for(PeptideSettings.RunStructuralModification mod: structuralMods)
         {
+            // If we have already saved this modification, don't save it again.
+            if(_structuralModificationMap.containsKey(mod.getId()))
+                continue;
+
             LibStructuralModification libStrMod = new LibStructuralModification();
             libStrMod.setName(mod.getName());
             libStrMod.setAminoAcid(mod.getAminoAcid());

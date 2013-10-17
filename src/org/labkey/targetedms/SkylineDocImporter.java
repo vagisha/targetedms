@@ -473,7 +473,7 @@ public class SkylineDocImporter
             while (parser.hasNextPeptideGroup())
             {
                 PeptideGroup pepGroup = parser.nextPeptideGroup();
-                insertPeptideGroup(proteinService, insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap, libraryNameIdMap, pepGroup);
+                insertPeptideGroup(proteinService, insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap, libraryNameIdMap, pepGroup, parser);
                 if (++peptideGroupCount % 100 == 0)
                 {
                     _log.info("Imported " + peptideGroupCount + " peptide groups.");
@@ -554,8 +554,8 @@ public class SkylineDocImporter
         RepresentativeStateManager.setRepresentativeState(_user, _container, run, run.getRepresentativeDataState());
     }
 
-    private void insertPeptideGroup(ProteinService proteinService, boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup)
-            throws SQLException
+    private void insertPeptideGroup(ProteinService proteinService, boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser)
+            throws SQLException, XMLStreamException, IOException, DataFormatException
     {
         pepGroup.setRunId(_runId);
 
@@ -621,9 +621,10 @@ public class SkylineDocImporter
             annotation = Table.insert(_user, TargetedMSManager.getTableInfoPeptideGroupAnnotation(), annotation);
         }
 
-        // 2. peptide
-        for(Peptide peptide: pepGroup.getPeptideList())
+        // Read peptides for this protein
+        while(parser.hasNextPeptide())
         {
+            Peptide peptide = parser.nextPeptide();
             insertPeptide(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap, libraryNameIdMap, pepGroup, peptide);
         }
     }

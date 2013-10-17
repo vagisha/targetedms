@@ -741,7 +741,6 @@ public class SkylineDocumentParser
     {
        while (_reader.hasNext())
         {
-
             int evtType = _reader.next();
             if (evtType == XMLStreamReader.START_ELEMENT)
             {
@@ -762,8 +761,6 @@ public class SkylineDocumentParser
     private PeptideGroup readPeptideGroup(XMLStreamReader reader) throws XMLStreamException, IOException
     {
         PeptideGroup pepGroup = new PeptideGroup();
-        List<Peptide> peptideList = new ArrayList<>();
-        pepGroup.setPeptideList(peptideList);
         List<PeptideGroupAnnotation> annotations = new ArrayList<>();
         pepGroup.setAnnotations(annotations);
 
@@ -807,7 +804,7 @@ public class SkylineDocumentParser
             }
             else if (XmlUtil.isStartElement(reader, evtType, PEPTIDE))
             {
-                peptideList.add(readPeptide(reader));
+                break; // We will read peptides one by one
             }
             else if (XmlUtil.isStartElement(reader, evtType, NOTE))
             {
@@ -826,6 +823,34 @@ public class SkylineDocumentParser
 
         _peptideGroupCount++;
         return pepGroup;
+    }
+
+    public boolean hasNextPeptide() throws XMLStreamException
+    {
+        int evtType = _reader.getEventType();
+        if(XmlUtil.isStartElement(_reader, evtType, PEPTIDE))
+        {
+            return true;
+        }
+
+        while (_reader.hasNext())
+        {
+            evtType = _reader.next();
+            if(XmlUtil.isStartElement(_reader, evtType, PEPTIDE))
+            {
+                return true;
+            }
+            if(XmlUtil.isEndElement(_reader, evtType, PEPTIDE_LIST) || XmlUtil.isEndElement(_reader, evtType, PROTEIN))
+            {
+                return false;
+            }
+        }
+        return false;
+    }
+
+    public Peptide nextPeptide() throws XMLStreamException, DataFormatException, IOException
+    {
+        return readPeptide(_reader);
     }
 
     private Peptide readPeptide(XMLStreamReader reader) throws XMLStreamException, IOException
@@ -1047,7 +1072,6 @@ public class SkylineDocumentParser
         chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
         // TODO: read predicted retention time and ratio to standard
         return chromInfo;
-        // TODO: read note and annotations
     }
 
     private void setSkylineSampleFileId(XMLStreamReader reader, ChromInfo chromInfo) throws XMLStreamException

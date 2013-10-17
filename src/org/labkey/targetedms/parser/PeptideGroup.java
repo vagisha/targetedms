@@ -15,7 +15,6 @@
 
 package org.labkey.targetedms.parser;
 
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,7 +37,6 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
 
     private boolean _decoy;
 
-    private List<Peptide> _peptideList;
     private String _note;
 
     protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
@@ -131,16 +129,6 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
     public void setDecoy(boolean decoy)
     {
         _decoy = decoy;
-    }
-
-    public List<Peptide> getPeptideList()
-    {
-        return _peptideList;
-    }
-
-    public void setPeptideList(List<Peptide> peptideList)
-    {
-        _peptideList = peptideList;
     }
 
     public void setNote(String note)
