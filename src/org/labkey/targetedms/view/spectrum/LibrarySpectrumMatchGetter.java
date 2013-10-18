@@ -68,9 +68,7 @@ public class LibrarySpectrumMatchGetter
         for(Precursor precursor: precursors)
         {
             if(precursorCharges.contains(precursor.getCharge()))
-                continue;
-
-            precursorCharges.add(precursor.getCharge());
+                continue;  // We already have a match for this charge state
 
             for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
             {
@@ -99,6 +97,7 @@ public class LibrarySpectrumMatchGetter
                     List<Peptide.IsotopeModification> isotopeModifications = ModificationManager.getPeptideIsotopelModifications(peptide.getId(), precursor.getIsotopeLabelId());
                     pepSpec.setIsotopeModifications(isotopeModifications);
 
+                    precursorCharges.add(precursor.getCharge());
                     break;  // return spectrum from the first library that has a match
                 }
             }

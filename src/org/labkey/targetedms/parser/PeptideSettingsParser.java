@@ -60,10 +60,14 @@ class PeptideSettingsParser
     private static final String LSID = "lsid";
     private static final String ID = "id";
     private static final String REVISION = "revision";
+    private static final String DOCUMENT_LIBRARY = "document_library";
 
+    private String _documentName;
 
-    public PeptideSettings parse(XMLStreamReader reader) throws XMLStreamException
+    public PeptideSettings parse(XMLStreamReader reader, String documentName) throws XMLStreamException
     {
+        _documentName = documentName;
+
         PeptideSettings settings = new PeptideSettings();
 
         while(reader.hasNext())
@@ -323,6 +327,14 @@ class PeptideSettingsParser
         List<PeptideSettings.SpectrumLibrary> libraryList = new ArrayList<>();
         settings.setLibraries(libraryList);
 
+        boolean documentLibrary = XmlUtil.readBooleanAttribute(reader, DOCUMENT_LIBRARY, false);
+        if(documentLibrary && _documentName != null)
+        {
+            // If there is a "document library" we will not have a separate library element
+            // with the library name.  Document libraries have the same name as the .sky file.
+            libraryList.add(getDocumentLibrary());
+        }
+
         while(reader.hasNext())
         {
             int evtType = reader.next();
@@ -344,6 +356,14 @@ class PeptideSettingsParser
             }
         }
         return  settings;
+    }
+
+    private PeptideSettings.SpectrumLibrary getDocumentLibrary()
+    {
+        PeptideSettings.SpectrumLibrary library = new PeptideSettings.SpectrumLibrary();
+        library.setName(_documentName);
+        library.setLibraryType(BIBLIOSPEC_LITE_LIB.substring(0, BIBLIOSPEC_LITE_LIB.indexOf("_library")));
+        return library;
     }
 
     private PeptideSettings.SpectrumLibrary readLibrary(XMLStreamReader reader, String elementName) throws XMLStreamException

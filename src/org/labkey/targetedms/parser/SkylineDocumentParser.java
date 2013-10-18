@@ -18,6 +18,7 @@ package org.labkey.targetedms.parser;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 
 import javax.xml.stream.XMLInputFactory;
@@ -245,7 +246,7 @@ public class SkylineDocumentParser
                  if(PEPTIDE_SETTINGS.equalsIgnoreCase(reader.getLocalName()))
                  {
                      PeptideSettingsParser pepSettingsParser = new PeptideSettingsParser();
-                     _peptideSettings = pepSettingsParser.parse(reader);
+                     _peptideSettings = pepSettingsParser.parse(reader, FileUtil.getBaseName(_file));
                  }
                  else if(TRANSITION_SETTINGS.equalsIgnoreCase(reader.getLocalName()))
                  {
