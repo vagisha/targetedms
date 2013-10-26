@@ -21,7 +21,6 @@ import org.labkey.test.Locator;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4HelperWD;
-import org.labkey.test.util.FileBrowserHelperWD;
 import org.labkey.test.util.LogMethod;
 
 /**
@@ -60,8 +59,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         goToModule("Pipeline");
         clickButton("Process and Import Data");
         waitForText(file, 5*defaultWaitForPage);
-        FileBrowserHelperWD fileBrowserHelper = new FileBrowserHelperWD(this);
-        fileBrowserHelper.importFile(file, "Import Skyline Results");
+        _fileBrowserHelper.importFile(file, "Import Skyline Results");
         waitForText("Skyline document import");
         waitForPipelineJobsToFinish(1);
     }
