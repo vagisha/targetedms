@@ -40,6 +40,7 @@ resources/schemas/dbscripts/postgresql/targetedms-13.15-13.16.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.16-13.17.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.17-13.18.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.20-13.21.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-13.20-13.30.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.21-13.22.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.22-13.23.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-0.01.sql -text
@@ -67,6 +68,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-13.15-13.16.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.16-13.17.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.17-13.18.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.20-13.21.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-13.20-13.30.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.21-13.22.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.22-13.23.sql -text
 resources/schemas/targetedms.xml -text
