@@ -152,7 +152,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     {
         // add modificaiton search webpart and do an initial search by AminoAcid and DeltaMass
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
-        assertTextPresent("Mass Spec Search");
+        waitForElement(Locator.id("identifierInput"));
         _ext4Helper.clickExt4Tab("Modification Search");
         waitForElement(Locator.name("aminoAcids"));
         setFormElement(Locator.name("aminoAcids"), "R");
