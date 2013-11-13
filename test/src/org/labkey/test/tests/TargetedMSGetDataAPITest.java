@@ -15,17 +15,16 @@
  */
 package org.labkey.test.tests;
 
-import org.junit.Assert;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
-import org.labkey.test.categories.CustomModules;
+import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.UIContainerHelper;
 import org.labkey.test.util.WikiHelper;
 
-@Category({CustomModules.class, MS2.class})
+@Category({DailyB.class, MS2.class})
 public class TargetedMSGetDataAPITest extends TargetedMSTest
 {
     String CLIENT_API_CORE1 = "{"+

@@ -17,12 +17,12 @@ package org.labkey.test.tests;
 
 import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
-import org.labkey.test.categories.CustomModules;
+import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.UIContainerHelper;
 
-@Category({CustomModules.class, MS2.class})
+@Category({DailyB.class, MS2.class})
 public class TargetedMSLibraryTest extends TargetedMSTest
 {
     public TargetedMSLibraryTest()
