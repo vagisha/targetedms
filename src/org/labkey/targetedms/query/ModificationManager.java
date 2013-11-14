@@ -16,15 +16,16 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
 
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -49,16 +50,16 @@ public class ModificationManager
      */
     public static Map<Integer, Double> getPeptideStructuralModsMap(int peptideId)
     {
-        Map<Integer, Double> strModIndexMassDiff = new HashMap<>();
+        final Map<Integer, Double> strModIndexMassDiff = new HashMap<>();
         String sql = "SELECT IndexAa, MassDiff "+
                      "FROM "+ TargetedMSManager.getTableInfoPeptideStructuralModification()+" "+
                      "WHERE PeptideId=?";
         SQLFragment sf = new SQLFragment(sql, peptideId);
-        Table.TableResultSet rs = null;
-        try
+
+        new SqlSelector(getSchema(), sf).forEach(new Selector.ForEachBlock<ResultSet>()
         {
-            rs = Table.executeQuery(getSchema(), sf);
-            while(rs.next())
+            @Override
+            public void exec(ResultSet rs) throws SQLException
             {
                 int index = rs.getInt("IndexAa");
                 double massDiff = rs.getDouble("MassDiff");
@@ -70,15 +71,8 @@ public class ModificationManager
                 }
                 strModIndexMassDiff.put(index, massDiff);
             }
-        }
-        catch(SQLException e)
-        {
-            throw new RuntimeException(e);
-        }
-        finally
-        {
-            if(rs != null) try {rs.close();} catch(SQLException ignored){}
-        }
+        });
+
         return strModIndexMassDiff;
     }
 
@@ -90,7 +84,7 @@ public class ModificationManager
      */
     public static Map<Integer, Double> getPeptideIsotopeModsMap(int peptideId, int isotopeLabelId)
     {
-        Map<Integer, Double> isotopeModIndexMassDiff = new HashMap<>();
+        final Map<Integer, Double> isotopeModIndexMassDiff = new HashMap<>();
         String sql = "SELECT pm.IndexAa, pm.MassDiff "+
                      "FROM "+
                      TargetedMSManager.getTableInfoPeptideIsotopeModification()+" AS pm, "+
@@ -99,11 +93,11 @@ public class ModificationManager
                      "AND pm.PeptideId=? "+
                      "AND m.IsotopeLabelId=?";
         SQLFragment sf = new SQLFragment(sql, peptideId, isotopeLabelId);
-        Table.TableResultSet rs = null;
-        try
+
+        new SqlSelector(getSchema(), sf).forEach(new Selector.ForEachBlock<ResultSet>()
         {
-            rs = Table.executeQuery(getSchema(), sf);
-            while(rs.next())
+            @Override
+            public void exec(ResultSet rs) throws SQLException
             {
                 int index = rs.getInt("IndexAa");
                 double massDiff = rs.getDouble("MassDiff");
@@ -115,15 +109,8 @@ public class ModificationManager
                 }
                 isotopeModIndexMassDiff.put(index, massDiff);
             }
-        }
-        catch(SQLException e)
-        {
-            throw new RuntimeException(e);
-        }
-        finally
-        {
-            if(rs != null) try {rs.close();} catch(SQLException ignored){}
-        }
+        });
+
         return isotopeModIndexMassDiff;
     }
 
