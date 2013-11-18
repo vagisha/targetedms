@@ -717,7 +717,7 @@ public class TargetedMSSchema extends UserSchema
 
         // Tables that have a FK to targetedms.precursorchrominfo
         if (TABLE_PRECURSOR_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name) ||
-            TABLE_PRECURSOR_AREA_RATIO.equals(name))
+            TABLE_PRECURSOR_AREA_RATIO.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorChromInfoFK.getSQL());
         }

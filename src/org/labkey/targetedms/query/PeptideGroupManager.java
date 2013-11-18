@@ -30,6 +30,7 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: vsharma
@@ -211,5 +212,45 @@ public class PeptideGroupManager
 
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
         return count != null && count == peptideGroupIds.length;
+    }
+
+    public static Integer getBestSampleFile(PeptideGroup peptideGroup)
+    {
+        if(peptideGroup == null)
+            return null;
+
+        SQLFragment sql = new SQLFragment();
+        sql.append(" SELECT pepgrp.Id, pci.SampleFileId SampleFileId, SUM(pci.TotalArea) areaSum");
+        sql.append(" FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(" WHERE");
+        sql.append(" pci.PrecursorId = prec.Id");
+        sql.append(" AND");
+        sql.append(" prec.PeptideId = pep.Id");
+        sql.append(" AND");
+        sql.append(" pep.PeptideGroupId = pepgrp.Id");
+        sql.append(" AND");
+        sql.append(" pci.TotalArea IS NOT NULL");
+        sql.append(" AND");
+        sql.append(" (pci.NumTruncated IS NULL OR pci.NumTruncated = 0)");
+        sql.append(" AND");
+        sql.append(" pepgrp.Id = ?");
+        sql.add(peptideGroup.getId());
+        sql.append(" GROUP BY pepgrp.Id, pci.SampleFileId");
+        sql.append(" ORDER BY areaSUM DESC");
+        // sql.append(" LIMIT 1");
+
+        Map<String, Object>[] mapArray = new SqlSelector(TargetedMSManager.getSchema(), sql).getMapArray();
+        if(mapArray != null && mapArray.length > 0)
+        {
+            return (Integer) mapArray[0].get("SampleFileId");
+        }
+        return null;
     }
 }

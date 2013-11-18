@@ -82,6 +82,9 @@ public class ContainerChromatogramLibraryWriter
 
     private ProteinService _proteinService;
 
+    private TargetedMSRun.RepresentativeDataState _libraryType = null;
+    private Integer _bestSampleFileIdForCurrentPeptideGroup;
+
     public ContainerChromatogramLibraryWriter(String panoramaServer, Container container, List<Integer> representativeRunIds)
     {
         _panoramaServer = panoramaServer;
@@ -174,6 +177,17 @@ public class ContainerChromatogramLibraryWriter
 
         // Write the representative data.
         TargetedMSRun run = TargetedMSManager.getRun(runId);
+
+        if(_libraryType == null)
+        {
+            _libraryType = run.getRepresentativeDataState();
+        }
+        else if(_libraryType != run.getRepresentativeDataState())
+        {
+            throw new IllegalStateException("Run representative state "+run.getRepresentativeDataState()+
+                                             " does not match library type "+_libraryType);
+        }
+
         if(run.getRepresentativeDataState() == TargetedMSRun.RepresentativeDataState.Representative_Protein)
         {
             // If the run has representative protein data write the representative peptide groups.
@@ -305,7 +319,7 @@ public class ContainerChromatogramLibraryWriter
                 if(peptidePrecursors.size() > 0)
                 {
                     Peptide peptide = PeptideManager.get(lastPeptideId);
-                    LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors, true);
+                    LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors);
                     peptidePrecursors.clear();
 
                     _libWriter.writePeptide(libPeptide);
@@ -318,7 +332,7 @@ public class ContainerChromatogramLibraryWriter
         if(peptidePrecursors.size() > 0)
         {
             Peptide peptide = PeptideManager.get(lastPeptideId);
-            LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors, true);
+            LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors);
             _libWriter.writePeptide(libPeptide);
         }
     }
@@ -334,12 +348,20 @@ public class ContainerChromatogramLibraryWriter
             libProtein.setSequence(_proteinService.getProteinSequence(pepGroup.getSequenceId()));
         }
 
+        // Get the sample file that has the maximum overall peak area for this protein
+        getBestSampleFileForPeptideGroup(pepGroup);
+
         // Add peptides.
         addPeptides(pepGroup, libProtein);
 
         // Save the protein.
         _proteinCount++;
         _libWriter.writeProtein(libProtein);
+    }
+
+    private void getBestSampleFileForPeptideGroup(PeptideGroup pepGroup)
+    {
+        _bestSampleFileIdForCurrentPeptideGroup = PeptideGroupManager.getBestSampleFile(pepGroup);
     }
 
     private void addPeptides(PeptideGroup pepGroup, LibProtein protein)
@@ -349,13 +371,13 @@ public class ContainerChromatogramLibraryWriter
         {
             List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId());
 
-            LibPeptide libPeptide = makeLibPeptide(peptide, precursors, false);
+            LibPeptide libPeptide = makeLibPeptide(peptide, precursors);
 
             protein.addPeptide(libPeptide);
         }
     }
 
-    private LibPeptide makeLibPeptide(Peptide peptide, List<Precursor> precursors, boolean representative)
+    private LibPeptide makeLibPeptide(Peptide peptide, List<Precursor> precursors)
     {
         LibPeptide libPeptide = makeLibPeptide(peptide);
 
@@ -384,7 +406,7 @@ public class ContainerChromatogramLibraryWriter
             List<Peptide.IsotopeModification> precIsotopeMods = precIsotopeModMap.get(precursor.getIsotopeLabelId());
             precIsotopeMods = (precIsotopeMods != null) ? precIsotopeMods : Collections.<Peptide.IsotopeModification>emptyList();
 
-            LibPrecursor libPrecursor = makeLibPrecursor(precursor, representative, precIsotopeMods);
+            LibPrecursor libPrecursor = makeLibPrecursor(precursor, precIsotopeMods);
             libPeptide.addPrecursor(libPrecursor);
         }
         return libPeptide;
@@ -429,7 +451,24 @@ public class ContainerChromatogramLibraryWriter
         return libPeptide;
     }
 
-    private LibPrecursor makeLibPrecursor(Precursor precursor, boolean representative,
+    private PrecursorChromInfo getBestPrecursorChromInfo(Precursor precursor)
+    {
+        if(_libraryType == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
+        {
+            // Get the precursor chrom info for this precursor that has the max total area across all replicates.
+            return PrecursorManager.getBestPrecursorChromInfoForPrecursor(precursor.getId());
+        }
+        else if(_libraryType == TargetedMSRun.RepresentativeDataState.Representative_Protein)
+        {
+            if(_bestSampleFileIdForCurrentPeptideGroup != null)
+            {
+                return PrecursorManager.getPrecursorChromInfoForSampleFile(precursor.getId(), _bestSampleFileIdForCurrentPeptideGroup);
+            }
+        }
+        return null;
+    }
+
+    private LibPrecursor makeLibPrecursor(Precursor precursor,
                                           List<Peptide.IsotopeModification> precursorIsotopeMods)
     {
         LibPrecursor libPrecursor = new LibPrecursor();
@@ -445,17 +484,17 @@ public class ContainerChromatogramLibraryWriter
         libPrecursor.setModifiedSequence(precursor.getModifiedSequence());
         libPrecursor.setCollisionEnergy(precursor.getCollisionEnergy());
         libPrecursor.setDeclusteringPotential(precursor.getDeclusteringPotential());
-        // Get the precursor chrom info for this precursor that has the max total area across all replicates.
-        PrecursorChromInfo chromInfo = PrecursorManager.getBestPrecursorChromInfoForPrecursor(precursor.getId());
-        if(chromInfo != null)
-        {
-            libPrecursor.setTotalArea(chromInfo.getTotalArea() == null ? 0.0 : chromInfo.getTotalArea());
-            libPrecursor.setChromatogram(chromInfo.getChromatogram());
-            libPrecursor.setNumTransitions(chromInfo.getNumTransitions());
-            libPrecursor.setNumPoints(chromInfo.getNumPoints());
-            libPrecursor.setAverageMassErrorPPM(chromInfo.getAverageMassErrorPPM());
 
-            int sampleFileId = chromInfo.getSampleFileId();
+        PrecursorChromInfo bestChromInfo = getBestPrecursorChromInfo(precursor);
+        if(bestChromInfo != null)
+        {
+            libPrecursor.setTotalArea(bestChromInfo.getTotalArea() == null ? 0.0 : bestChromInfo.getTotalArea());
+            libPrecursor.setChromatogram(bestChromInfo.getChromatogram());
+            libPrecursor.setNumTransitions(bestChromInfo.getNumTransitions());
+            libPrecursor.setNumPoints(bestChromInfo.getNumPoints());
+            libPrecursor.setAverageMassErrorPPM(bestChromInfo.getAverageMassErrorPPM());
+
+            int sampleFileId = bestChromInfo.getSampleFileId();
             Integer libSampleFileId = _sampleFileIdMap.get(sampleFileId);
             if(libSampleFileId == null)
             {
@@ -477,7 +516,7 @@ public class ContainerChromatogramLibraryWriter
         addPrecursorRetentionTimes(libPrecursor, precursor);
 
         // Add transitions.
-        addTransitions(libPrecursor, precursor, chromInfo);
+        addTransitions(libPrecursor, precursor, bestChromInfo);
 
         _precursorCount++;
         return libPrecursor;

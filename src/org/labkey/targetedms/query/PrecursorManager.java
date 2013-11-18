@@ -32,7 +32,6 @@ import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -97,6 +96,14 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(PrecursorChromInfo.class);
     }
 
+    public static PrecursorChromInfo getPrecursorChromInfoForSampleFile(int precursorId, int sampleFileId)
+    {
+        SimpleFilter filter = new SimpleFilter();
+        filter.addCondition(FieldKey.fromParts("PrecursorId"), precursorId);
+        filter.addCondition(FieldKey.fromParts("SampleFileId"), sampleFileId);
+        return new TableSelector(TargetedMSManager.getTableInfoPrecursorChromInfo(), filter, null).getObject(PrecursorChromInfo.class);
+    }
+
     public static List<Precursor> getPrecursorsForPeptide(int peptideId)
     {
         SimpleFilter filter = new SimpleFilter();
@@ -119,26 +126,6 @@ public class PrecursorManager
             throw new NotFoundException(String.format("No precursors found for peptideId %d", peptideId));
         }
         return Arrays.asList(precursors);
-    }
-
-    public static List<PrecursorChromInfo> getPrecursorChromInfosForPeptideChromInfo(int peptideChromInfoId)
-    {
-        List<PrecursorChromInfo> chromInfoList = new ArrayList<>();
-        SimpleFilter filter = new SimpleFilter();
-        filter.addCondition("PeptideChromInfoId", peptideChromInfoId);
-
-        PrecursorChromInfo[] chromInfos;
-        try
-        {
-            chromInfos = Table.select(TargetedMSManager.getTableInfoPrecursorChromInfo(),
-                                      Table.ALL_COLUMNS, filter, null, PrecursorChromInfo.class);
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeException(e);
-        }
-        Collections.addAll(chromInfoList, chromInfos);
-        return chromInfoList;
     }
 
     public static List<PrecursorChromInfo> getSortedPrecursorChromInfosForPrecursor(int precursorId)

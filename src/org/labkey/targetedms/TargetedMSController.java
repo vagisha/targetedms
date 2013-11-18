@@ -1496,7 +1496,6 @@ public class TargetedMSController extends SpringActionController
                     visibleColumns.add(FieldKey.fromParts(ModifiedPeptideDisplayColumn.PEPTIDE_COLUMN_NAME));
                     visibleColumns.add(FieldKey.fromParts("CalcNeutralMass"));
                     visibleColumns.add(FieldKey.fromParts("NumMissedCleavages"));
-                    visibleColumns.add(FieldKey.fromParts("Rank"));
                     visibleColumns.add(FieldKey.fromParts("AvgMeasuredRetentionTime"));
                     visibleColumns.add(FieldKey.fromParts("PredictedRetentionTime"));
                     visibleColumns.add(FieldKey.fromParts("RtCalculatorScore"));
