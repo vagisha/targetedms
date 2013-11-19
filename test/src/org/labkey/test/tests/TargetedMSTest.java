@@ -88,7 +88,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
                 break;
             case LibraryProtein:
                 click(Locator.radioButtonById("chromatogramLibrary")); // click the 2nd radio button - Library
-                click(Locator.checkboxById("precursorNormalized")); // check the normalization checkbox.
+                click(Locator.checkboxByName("precursorNormalized")); // check the normalization checkbox.
                 break;
         }
         clickButton("Finish");
