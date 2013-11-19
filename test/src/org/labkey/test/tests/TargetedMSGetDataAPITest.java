@@ -61,7 +61,8 @@ public class TargetedMSGetDataAPITest extends TargetedMSTest
     @Override
     protected void doTestSteps() throws Exception
     {
-        setupAndImportData(FolderType.Experiment);
+        setupFolder(FolderType.Experiment);
+        importData("MRMer.zip");
         clientApiTest();
     }
 
