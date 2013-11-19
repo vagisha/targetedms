@@ -15,7 +15,6 @@
  */
 package org.labkey.test.tests;
 
-import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestTimeoutException;
@@ -23,6 +22,8 @@ import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4HelperWD;
 import org.labkey.test.util.FileBrowserHelperWD;
 import org.labkey.test.util.LogMethod;
+
+import static org.junit.Assert.*;
 
 /**
  * User: elvan
@@ -119,11 +120,11 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         waitForText("Transition List");
         DataRegionTable drt = new DataRegionTable("transitions_view", this);
         drt.getDataAsText(5, "Label");
-        Assert.assertEquals("heavy", drt.getDataAsText(5, "Label"));
-        Assert.assertEquals("1353.7491", drt.getDataAsText(5, "Precursor Neutral Mass"));
-        Assert.assertEquals("677.8818", drt.getDataAsText(5, "Q1 m/z"));
-        Assert.assertEquals("y7", drt.getDataAsText(5, "Fragment"));
-        Assert.assertEquals("727.3973", drt.getDataAsText(5, "Q3 m/z"));
+        assertEquals("heavy", drt.getDataAsText(5, "Label"));
+        assertEquals("1353.7491", drt.getDataAsText(5, "Precursor Neutral Mass"));
+        assertEquals("677.8818", drt.getDataAsText(5, "Q1 m/z"));
+        assertEquals("y7", drt.getDataAsText(5, "Fragment"));
+        assertEquals("727.3973", drt.getDataAsText(5, "Q3 m/z"));
         // We don't find these values based on their column headers because DataRegionTable gets confused with the
         // nested data regions having the same id in the HTML. The checks above happen to work because
         // they correspond to columns that aren't in the parent table, so the XPath flips to the second table with
@@ -162,16 +163,16 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         //waitForText("1 - 13 of 13");
         assertTextPresentInThisOrder("Targeted MS Modification Search", "Targeted MS Peptides");
         assertTextPresent("Amino Acids:", "Delta Mass:");
-        Assert.assertEquals(13, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
-        Assert.assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(13, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
 
         // search for K[+8] modification
         setFormElement(Locator.name("aminoAcids"), "k R, N"); // should be split into just chars
         setFormElement(Locator.name("deltaMass"), "8.01"); // should be rounded to a whole number
         waitAndClickAndWait(Locator.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
-        Assert.assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
-        Assert.assertEquals(31, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
+        assertEquals(31, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
 
         // test custom name search type
         _ext4Helper.selectRadioButton("Search By:", "Modification Name");
@@ -183,13 +184,13 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         _ext4Helper.selectComboBoxItem("Custom Name:", "Label:13C(6)15N(4) (C-term R)");
         waitAndClickAndWait(Locator.ext4Button("Search"));
         //waitForText("1 - 13 of 13");
-        Assert.assertEquals(13, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
-        Assert.assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(13, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
         _ext4Helper.selectComboBoxItem("Custom Name:", "Label:13C(6)15N(2) (C-term K)");
         waitAndClickAndWait(Locator.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
-        Assert.assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
-        Assert.assertEquals(31, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
+        assertEquals(31, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
 
         // test unimod name search type
         _ext4Helper.selectRadioButton("Type:", "All Unimod modifications");
@@ -200,8 +201,8 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         _ext4Helper.selectComboBoxItem(Ext4HelperWD.Locators.formItemWithLabelContaining("Unimod Name:"), "Label:13C(6)15N(4) (C-term R)");
         waitAndClickAndWait(Locator.ext4Button("Search"));
         //waitForText("1 - 13 of 13");
-        Assert.assertEquals(13, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
-        Assert.assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(13, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
 
         // test C-term search using special character (i.e. ] )
         _ext4Helper.selectRadioButton("Search By:", "Delta Mass");
@@ -209,8 +210,8 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         setFormElement(Locator.name("deltaMass"), "8");
         waitAndClickAndWait(Locator.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
-        Assert.assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
-        Assert.assertEquals(31, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
+        assertEquals(31, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'K[+8]')]")));
     }
 
     @LogMethod
