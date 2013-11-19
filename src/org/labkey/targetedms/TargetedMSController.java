@@ -947,7 +947,8 @@ public class TargetedMSController extends SpringActionController
                                                                  form.getReplicateId(),
                                                                  peptide,
                                                                  form.getGroupByReplicateAnnotName(),
-                                                                 form.isCvValues());
+                                                                 form.isCvValues(),
+                                                                 form.isLogValues());
             if (null == chart)
             {
                 chart = createEmptyChart();
@@ -999,6 +1000,7 @@ public class TargetedMSController extends SpringActionController
         private int _peptideId = 0;
         private String _groupByReplicateAnnotName;
         private boolean _cvValues;
+        private boolean _logValues;
 
         public int getPeptideGroupId()
         {
@@ -1048,6 +1050,16 @@ public class TargetedMSController extends SpringActionController
         public void setCvValues(boolean cvValues)
         {
             _cvValues = cvValues;
+        }
+
+        public boolean isLogValues()
+        {
+            return _logValues;
+        }
+
+        public void setLogValues(boolean logValues)
+        {
+            _logValues = logValues;
         }
     }
 

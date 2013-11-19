@@ -22,6 +22,7 @@ import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.axis.CategoryLabelPositions;
+import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.Plot;
@@ -63,7 +64,7 @@ public class PrecursorPeakAreaChartMaker
 {
     public JFreeChart make(PeptideGroup peptideGroup, int replicateId,
                                   Peptide peptide, String groupByAnnotation,
-                                  boolean cvValues)
+                                  boolean cvValues, boolean logValues)
     {
 
         List<PrecursorChromInfoPlus> pciPlusList;
@@ -88,13 +89,22 @@ public class PrecursorPeakAreaChartMaker
         inputMaker.setGroupByAnnotationName(groupByAnnotation);
         inputMaker.setPrecursorChromInfoList(pciPlusList);
         inputMaker.setCvValues(cvValues);
+        inputMaker.setLogValues(logValues);
         final PeakAreasChartInputMaker.PeakAreaDataset peakAreaDataset = inputMaker.make();
 
         double maxCategoryValue = peakAreaDataset.getMaxPeakArea();
         int peakAreaAxisMagnitude = getMagnitude(maxCategoryValue);
-        CategoryDataset dataset = createDataset(peakAreaDataset, peakAreaAxisMagnitude);
+        CategoryDataset dataset = createDataset(peakAreaDataset, peakAreaAxisMagnitude, logValues);
 
         String yLabel = cvValues ? "Peak Area CV(%)" : "Peak Area "+getMagnitudeString(peakAreaAxisMagnitude);
+        if(cvValues && logValues){
+           yLabel = "Log Peak Area CV(%)";
+        }
+        if(!cvValues && logValues){
+            yLabel =   "Log Peak Area";
+        }
+
+
         String xLabel;
         if(peptide == null)
         {
@@ -165,6 +175,14 @@ public class PrecursorPeakAreaChartMaker
         xAxis.setLabelFont(yAxis.getLabelFont());
         xAxis.setTickLabelFont(yAxis.getTickLabelFont());
         plot.setDomainAxis(xAxis);
+        if(logValues)
+        {
+            LogarithmicAxis logYAxis = new LogarithmicAxis(yLabel);
+            logYAxis.setAllowNegativesFlag(true);
+            logYAxis.setLog10TickLabelsFlag(true);
+            plot.setRangeAxis(logYAxis);
+        }
+
         setRenderer(chart, peakAreaDataset, labelColors);
 
 
@@ -308,7 +326,7 @@ public class PrecursorPeakAreaChartMaker
             return _labelColors.get(_sortedSeriesLabels.get(row).toString()); // row = series index
         }
     }
-    private CategoryDataset createDataset(PeakAreasChartInputMaker.PeakAreaDataset peakAreaDataset, int peakAreaAxisMagnitude)
+    private CategoryDataset createDataset(PeakAreasChartInputMaker.PeakAreaDataset peakAreaDataset, int peakAreaAxisMagnitude, boolean logScale)
     {
 
         if(peakAreaDataset.isStatistical())
@@ -328,8 +346,8 @@ public class PrecursorPeakAreaChartMaker
                     }
                     else
                     {
-                        dataset.add(seriesDataset.getValue() / peakAreaAxisMagnitude,
-                                    seriesDataset.getSdev() / peakAreaAxisMagnitude,
+                        dataset.add(getDatasetValue(seriesDataset.getValue(), peakAreaAxisMagnitude, logScale),
+                                    getDatasetValue(seriesDataset.getSdev(), peakAreaAxisMagnitude, logScale),
                                     seriesLabel.toString(),
                                     categoryLabel);
                     }
@@ -354,7 +372,7 @@ public class PrecursorPeakAreaChartMaker
                     }
                     else
                     {
-                        dataset.addValue(seriesDataset.getValue() / peakAreaAxisMagnitude, seriesLabel.toString(), categoryLabel);
+                        dataset.addValue(getDatasetValue(seriesDataset.getValue(), peakAreaAxisMagnitude, logScale), seriesLabel.toString(), categoryLabel);
                     }
                 }
             }
@@ -362,6 +380,10 @@ public class PrecursorPeakAreaChartMaker
         }
     }
 
+    private double getDatasetValue(double value, int peakAreaAxisMagnitude, boolean logScale)
+    {
+        return logScale ? value : value / peakAreaAxisMagnitude;
+    }
     private static class LabelMinimizer
     {
         private static final char LABEL_SEP_CHAR = '_';

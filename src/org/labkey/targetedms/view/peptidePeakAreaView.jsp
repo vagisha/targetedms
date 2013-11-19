@@ -166,6 +166,11 @@
                                             fieldLabel: 'CV Values'
         });
 
+        var logValuesCheckbox = Ext4.create('Ext.form.Checkbox', {
+                                            id: 'logCheckbox',
+                                               fieldLabel: 'Log Values'
+        });
+
         // peak areas graph
         var peakAreasImg = Ext4.create('Ext.Img', {
                                 src: '<%=peakAreaUrl%>',
@@ -186,6 +191,7 @@
                                     groupByReplicateAnnotName: replicateAnnotNameComboBox.getValue(),
                                     peptideId: peptideStore.count() > 1 ? peptideComboBox.getValue() : <%=peptideId%>,
                                     cvValues: cvValuesCheckbox.getValue(),
+                                    logValues: logValuesCheckbox.getValue(),
                                     chartWidth: chartWidthTb.getValue(),
                                     chartHeight: chartHeightTb.getValue()
 
@@ -223,6 +229,7 @@
         {
             items.push(cvValuesCheckbox);
         }
+        items.push(logValuesCheckbox);
         items.push(chartWidthTb);
         items.push(chartHeightTb);
 

@@ -49,6 +49,7 @@ public class PeakAreasChartInputMaker
     private List<PrecursorChromInfoPlus> _pciPlusList;  // precursor = modified sequence + charge + isotope label
     private String _groupByAnnotationName;
     private boolean _cvValues = false;
+    private boolean _logValues = false;
 
     public void setChartType(ChartType chartType, int runId)
     {
@@ -78,6 +79,10 @@ public class PeakAreasChartInputMaker
     public void setCvValues(boolean cvValues)
     {
         _cvValues = cvValues;
+    }
+    public void setLogValues(boolean logValues)
+    {
+        _logValues = logValues;
     }
 
     public PeakAreaDataset make()
@@ -112,7 +117,7 @@ public class PeakAreasChartInputMaker
             for (PeptideCategory category: datasetMap.keySet())
             {
                 PeakAreaCategoryDataset categoryDataset = new PeakAreaCategoryDataset(category);
-                categoryDataset.setData(datasetMap.get(category), _cvValues, _chartType);
+                categoryDataset.setData(datasetMap.get(category), _cvValues, _logValues, _chartType);
                 dataset.addCategory(categoryDataset);
             }
             return dataset;
@@ -146,7 +151,7 @@ public class PeakAreasChartInputMaker
             for (String categoryLabel: datasetMap.keySet())
             {
                 PeakAreaCategoryDataset categoryDataset = new PeakAreaCategoryDataset(new ReplicateComparisonCategory(categoryLabel));
-                categoryDataset.setData(datasetMap.get(categoryLabel), _cvValues, _chartType);
+                categoryDataset.setData(datasetMap.get(categoryLabel), _cvValues, _logValues, _chartType);
                 dataset.addCategory(categoryDataset);
             }
             return dataset;
@@ -588,7 +593,7 @@ public class PeakAreasChartInputMaker
             return _category;
         }
 
-        public void setData(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues, ChartType chartType)
+        public void setData(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues, boolean logValues, ChartType chartType)
         {
             Map<SeriesLabel, List<PrecursorChromInfoPlus>> seriesDataMap = new HashMap<>();
             for(PrecursorChromInfoPlus pciPlus: pciPlusList)
@@ -617,7 +622,7 @@ public class PeakAreasChartInputMaker
             for(SeriesLabel seriesLabel: seriesDataMap.keySet())
             {
                 PeakAreaSeriesDataset seriesDataset = new PeakAreaSeriesDataset(seriesLabel);
-                seriesDataset.setData(seriesDataMap.get(seriesLabel), cvValues);
+                seriesDataset.setData(seriesDataMap.get(seriesLabel), cvValues, logValues);
                 _seriesDatasetsMap.put(seriesLabel, seriesDataset);
                 _maxPeakArea = Math.max(_maxPeakArea, seriesDataset.getValue());
             }
@@ -753,14 +758,16 @@ public class PeakAreasChartInputMaker
             return _seriesLabel;
         }
 
-        public void setData(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues)
+        public void setData(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues, boolean logValues)
         {
             //double denominator = 1000000.0;
             if(pciPlusList.size() == 1)
             {
                 Double peakArea = pciPlusList.get(0).getTotalArea();
                 if(peakArea != null && !cvValues)
+                {
                     _value = peakArea;
+                }
             }
             else
             {
