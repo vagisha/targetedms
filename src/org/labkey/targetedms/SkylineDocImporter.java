@@ -18,6 +18,7 @@ package org.labkey.targetedms;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -53,6 +54,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.DataFormatException;
 
 /**
@@ -163,10 +165,9 @@ public class SkylineDocImporter
     {
         // TODO - Consider if this is too big to fit in a single transaction. If so, need to blow away all existing
         // data for this run before restarting the import in the case of a retry
-        TargetedMSManager.getSchema().getScope().ensureTransaction();
         SkylineDocumentParser parser = null;
         File zipDir;
-        try
+        try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
         {
             File f = _expData.getFile();
 
@@ -491,11 +492,10 @@ public class SkylineDocImporter
                 resolveRepresentativeData(run);
             }
 
-            TargetedMSManager.getSchema().getScope().commitTransaction();
+            transaction.commit();
         }
         finally
         {
-            TargetedMSManager.getSchema().getScope().closeConnection();
             if (parser != null)
                 parser.close();
             // TODO: We are not deleting the directory so that we can query any Bibliospec spectrum library
@@ -1296,7 +1296,7 @@ public class SkylineDocImporter
                     status, statusId, runId);
     }
 
-    private static final Object _schemaLock = new Object();
+    private static final ReentrantLock _schemaLock = new ReentrantLock();
 
     public static class RunInfo implements Serializable
     {
@@ -1323,32 +1323,24 @@ public class SkylineDocImporter
 
     protected RunInfo prepareRun() throws SQLException
     {
-        try
+        try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction(_schemaLock))
         {
             boolean alreadyImported = false;
-            TargetedMSManager.getSchema().getScope().ensureTransaction();
 
-            synchronized (_schemaLock)
+            // Don't import if we've already imported this file (undeleted run exists matching this file name)
+            _runId = getRun();
+            if (_runId != -1)
             {
-                // Don't import if we've already imported this file (undeleted run exists matching this file name)
-                _runId = getRun();
-                if (_runId != -1)
-                {
-                    alreadyImported = true;
-                }
-                else
-                {
-                    _log.info("Starting import from " + _expData.getFile().getName());
-                    _runId = createRun();
-                }
+                alreadyImported = true;
+            }
+            else
+            {
+                _log.info("Starting import from " + _expData.getFile().getName());
+                _runId = createRun();
             }
 
-            TargetedMSManager.getSchema().getScope().commitTransaction();
+            transaction.commit();
             return new RunInfo(_runId, alreadyImported);
-        }
-        finally
-        {
-            TargetedMSManager.getSchema().getScope().closeConnection();
         }
     }
 

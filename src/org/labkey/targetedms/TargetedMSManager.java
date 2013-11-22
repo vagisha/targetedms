@@ -22,6 +22,7 @@ import org.apache.xmlbeans.XmlException;
 import org.fhcrc.cpas.exp.xml.ExperimentArchiveDocument;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
@@ -419,10 +420,8 @@ public class TargetedMSManager
 
     private static ExpRun wrapRun(TargetedMSRun run, User user) throws ExperimentException
     {
-        try
+        try (DbScope.Transaction transaction = ExperimentService.get().getSchema().getScope().ensureTransaction())
         {
-            ExperimentService.get().getSchema().getScope().ensureTransaction();
-
             Container container = run.getContainer();
 
             // Make sure that we have a protocol in this folder
@@ -462,16 +461,12 @@ public class TargetedMSManager
             run.setExperimentRunLSID(expRun.getLSID());
             TargetedMSManager.updateRun(run, user);
 
-            ExperimentService.get().getSchema().getScope().commitTransaction();
+            transaction.commit();
             return expRun;
         }
         catch (SQLException e)
         {
             throw new ExperimentException(e);
-        }
-        finally
-        {
-            ExperimentService.get().getSchema().getScope().closeConnection();
         }
     }
 

@@ -47,6 +47,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DataRegion;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
@@ -2134,8 +2135,9 @@ public class TargetedMSController extends SpringActionController
                 }
             }
 
-            TargetedMSManager.getSchema().getScope().ensureTransaction();
-            try {
+
+            try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
+            {
                 if(resolveProtein)
                 {
                     // Set RepresentativeDataState to Representative.
@@ -2165,17 +2167,12 @@ public class TargetedMSController extends SpringActionController
                     TargetedMSManager.markRunsNotRepresentative(getContainer(), TargetedMSRun.RepresentativeDataState.Representative_Peptide);
                 }
 
-                TargetedMSManager.getSchema().getScope().commitTransaction();
-
                 // Increment the chromatogram library revision number for this container.
                 ChromatogramLibraryUtils.incrementLibraryRevision(getContainer());
 
                 // Add event to audit log.
                 TargetedMsRepresentativeStateAuditViewFactory.addAuditEntry(getContainer(), getUser(), "Conflict resolved.");
-            }
-            finally {
-
-                TargetedMSManager.getSchema().getScope().closeConnection();
+                transaction.commit();
             }
             return true;
         }
