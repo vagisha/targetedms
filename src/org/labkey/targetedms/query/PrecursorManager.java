@@ -111,21 +111,14 @@ public class PrecursorManager
 
         Sort sort = new Sort("Charge, IsotopeLabelId");
 
-        Precursor[] precursors;
-        try
-        {
-            precursors = Table.select(TargetedMSManager.getTableInfoPrecursor(), Table.ALL_COLUMNS, filter, sort, Precursor.class);
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeException(e);
-        }
+        List<Precursor> precursors = new TableSelector(TargetedMSManager.getTableInfoPrecursor(), filter, sort).getArrayList(Precursor.class);
 
-        if(precursors.length == 0)
+        if (precursors.isEmpty())
         {
             throw new NotFoundException(String.format("No precursors found for peptideId %d", peptideId));
         }
-        return Arrays.asList(precursors);
+
+        return precursors;
     }
 
     public static List<PrecursorChromInfo> getSortedPrecursorChromInfosForPrecursor(int precursorId)
@@ -133,12 +126,10 @@ public class PrecursorManager
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("PrecursorId"), precursorId);
 
-        List<PrecursorChromInfo> precursorChromInfos = new TableSelector(TargetedMSManager.getTableInfoPrecursorChromInfo(),
+        return new TableSelector(TargetedMSManager.getTableInfoPrecursorChromInfo(),
                                    filter,
                                    new Sort("-TotalArea"))
                                   .getArrayList(PrecursorChromInfo.class);
-
-        return precursorChromInfos;
     }
 
     public static PrecursorChromInfo getBestPrecursorChromInfoForPrecursor(int precursorId)

@@ -44,20 +44,7 @@ public class IsotopeLabelManager
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition("RunId", runId);
 
-        PeptideSettings.IsotopeLabel[] labels;
-        try
-        {
-            labels = Table.select(TargetedMSManager.getTableInfoIsotopeLabel(),
-                    Table.ALL_COLUMNS,
-                    filter, new Sort("Id"),
-                    PeptideSettings.IsotopeLabel.class);
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeException(e);
-        }
-
-        return Arrays.asList(labels);
+        return new TableSelector(TargetedMSManager.getTableInfoIsotopeLabel(), filter, new Sort("Id")).getArrayList(PeptideSettings.IsotopeLabel.class);
     }
 
     public static int getLightIsotopeLabelId(int peptideId)
@@ -78,7 +65,8 @@ public class IsotopeLabelManager
         sql.add(peptideId);
 
         Integer ltIsotopeLabelId = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        if(ltIsotopeLabelId == null)
+
+        if (ltIsotopeLabelId == null)
         {
             throw new NotFoundException("No light isotope label found for peptide: "+peptideId);
         }
