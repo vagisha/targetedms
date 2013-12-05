@@ -16,8 +16,8 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
@@ -53,6 +53,6 @@ public class PeptideChromatogramsTableInfo extends FilteredTable<TargetedMSSchem
 
     public void addPeptideFilter()
     {
-        addCondition(new SimpleFilter("PeptideId", _peptideId));
+        addCondition(new SimpleFilter(FieldKey.fromParts("PeptideId"), _peptideId));
     }
 }

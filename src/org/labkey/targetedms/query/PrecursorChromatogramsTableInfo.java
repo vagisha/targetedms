@@ -16,8 +16,8 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
@@ -54,6 +54,6 @@ public class PrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSch
 
     public void addPrecursorFilter()
     {
-        addCondition(new SimpleFilter("PrecursorId", _precursorId));
+        addCondition(new SimpleFilter(FieldKey.fromParts("PrecursorId"), _precursorId));
     }
 }

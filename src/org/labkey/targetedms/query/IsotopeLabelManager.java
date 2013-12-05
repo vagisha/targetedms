@@ -19,14 +19,12 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.PeptideSettings;
 
-import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -42,7 +40,7 @@ public class IsotopeLabelManager
     {
         // TODO: Cache isotope label information for a run
         SimpleFilter filter = new SimpleFilter();
-        filter.addCondition("RunId", runId);
+        filter.addCondition(FieldKey.fromParts("RunId"), runId);
 
         return new TableSelector(TargetedMSManager.getTableInfoIsotopeLabel(), filter, new Sort("Id")).getArrayList(PeptideSettings.IsotopeLabel.class);
     }

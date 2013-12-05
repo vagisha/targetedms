@@ -107,7 +107,7 @@ public class PrecursorManager
     public static List<Precursor> getPrecursorsForPeptide(int peptideId)
     {
         SimpleFilter filter = new SimpleFilter();
-        filter.addCondition("PeptideId", peptideId);
+        filter.addCondition(FieldKey.fromParts("PeptideId"), peptideId);
 
         Sort sort = new Sort("Charge, IsotopeLabelId");
 

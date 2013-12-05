@@ -20,6 +20,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
@@ -78,7 +79,7 @@ public class PeptideManager
     public static Collection<Peptide> getPeptidesForGroup(int peptideGroupId)
     {
         return new TableSelector(TargetedMSManager.getTableInfoPeptide(),
-                                 new SimpleFilter("PeptideGroupId", peptideGroupId), null).getCollection(Peptide.class);
+                new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), peptideGroupId), null).getCollection(Peptide.class);
     }
 
     public static double getMinRetentionTime(int peptideId)

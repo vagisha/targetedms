@@ -20,6 +20,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
@@ -49,7 +50,7 @@ public class LibraryManager
     public static List<PeptideSettings.SpectrumLibrary> getLibraries(int runId)
     {
         SimpleFilter filter = new SimpleFilter();
-        filter.addCondition("RunId", runId);
+        filter.addCondition(FieldKey.fromParts("RunId"), runId);
 
         return new TableSelector(TargetedMSManager.getTableInfoSpectrumLibrary(),
                                filter,
