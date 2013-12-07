@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DisplayColumn;
@@ -164,7 +165,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         }
 
         /** The HTML encoded annotation name/value pairs */
-        @Override
+        @Override @NotNull
         public String getFormattedValue(RenderContext ctx)
         {
             StringBuilder sb = new StringBuilder();

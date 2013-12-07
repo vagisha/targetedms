@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.view;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DataColumn;
@@ -61,11 +62,11 @@ public class AnnotationUIDisplayColumn extends DataColumn
         return getValue(ctx);
     }
 
-    @Override
+    @Override @NotNull
     public String getFormattedValue(RenderContext ctx)
     {
         String result = h(getValue(ctx));
-        result = result.replaceAll("\n", "<br />");
+        result = result.replaceAll("\\n", "<br />");
         return result;
     }
 
