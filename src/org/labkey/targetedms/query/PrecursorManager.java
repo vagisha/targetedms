@@ -21,7 +21,7 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.Table;
+import org.labkey.api.data.TableResultSet;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.view.NotFoundException;
@@ -208,7 +208,7 @@ public class PrecursorManager
         sf.append(" WHERE pre.PeptideId = pep.Id AND pre.IsotopeLabelId = label.Id AND pre.Id = ? ");
         sf.add(precursorId);
 
-        try (Table.TableResultSet rs = new SqlSelector(TargetedMSManager.getSchema(), sf).getResultSet())
+        try (TableResultSet rs = new SqlSelector(TargetedMSManager.getSchema(), sf).getResultSet())
         {
             if (rs.next())
             {
