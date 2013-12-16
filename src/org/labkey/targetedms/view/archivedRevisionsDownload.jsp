@@ -16,24 +16,26 @@
  */
 %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
+<%@ page import="org.apache.commons.io.FileUtils" %>
+<%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page import="java.io.File" %>
-<%@ page import="org.apache.commons.io.FileUtils" %>
 <%@ page import="java.util.Date" %>
+<%@ page import="org.labkey.api.data.Container" %>
+<%@ page import="org.labkey.api.util.DateUtil" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+    Container c = getContainer();
+    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(c);
 
     boolean isLibrary = ( folderType == TargetedMSModule.FolderType.Library ||
                           folderType == TargetedMSModule.FolderType.LibraryProtein );
 
-    int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(getViewContext().getContainer());
-
+    int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c);
 %>
 
 <table class="labkey-data-region labkey-show-borders">
@@ -46,16 +48,16 @@
         <%
     for (int i=1; i <= currentRevision; i++)
     {
-        ActionURL u = new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer());
+        ActionURL u = new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, c);
         u.addParameter("revision", i);
-        File archiveFile = ChromatogramLibraryUtils.getChromLibFile(getViewContext().getContainer(), i);
+        File archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, i);
         if (archiveFile.isFile()) {
 %>
     <tr>
         <td><%= i %></td>
-        <td><%= PageFlowUtil.textLink(ChromatogramLibraryUtils.getDownloadFileName(getViewContext().getContainer(), i), u) %></td>
+        <td><%= PageFlowUtil.textLink(ChromatogramLibraryUtils.getDownloadFileName(c, i), u) %></td>
         <td><%= h(FileUtils.byteCountToDisplaySize(archiveFile.length())) %></td>
-        <td><%= h(formatDateTime(new Date(archiveFile.lastModified())))%></td>
+        <td><%= formatDateTime(new Date(archiveFile.lastModified()))%></td>
     </tr>
 <%
         }
@@ -63,7 +65,7 @@
         {
 %><tr>
     <td><%= i %></td>
-    <td><%= h(ChromatogramLibraryUtils.getDownloadFileName(getViewContext().getContainer(), i)) %></td>
+    <td><%= h(ChromatogramLibraryUtils.getDownloadFileName(c, i)) %></td>
     <td>unavailable</td>
     <td></td>
 </tr><%
