@@ -15,15 +15,13 @@
  * limitations under the License.
  */
 %>
+<%@ page import="org.labkey.api.view.ActionURL"%>
 <%@ page import="org.labkey.api.view.HttpView"%>
-<%@ page import="org.labkey.api.view.ViewContext"%>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    ViewContext context = HttpView.currentContext();
     TargetedMSController.SkylinePipelinePathForm form = (TargetedMSController.SkylinePipelinePathForm)HttpView.currentModel();
-    ActionURL targetURL = new org.labkey.api.view.ActionURL(TargetedMSController.SkylineDocUploadAction.class, context.getContainer());
+    ActionURL targetURL = new org.labkey.api.view.ActionURL(TargetedMSController.SkylineDocUploadAction.class, getContainer());
 %>
 <script type="text/javascript">
     Ext.onReady(function() {
@@ -52,7 +50,7 @@
     </tr>
     <form action="<%= h(targetURL) %>" method="POST">
         <input type="hidden" name="path" value="<%= h(form.getPath() )%>" />
-        <% for (java.io.File file : form.getValidatedFiles(context.getContainer()))
+        <% for (java.io.File file : form.getValidatedFiles(getContainer()))
         { %>
             <tr style="border:1px solid;">
                 <td>
@@ -64,7 +62,7 @@
         } %>
         <tr>
             <td colspan="2" align="center">
-                <%= generateSubmitButton("Import") %> <%= generateButton("Cancel", form.getReturnActionURL(context.getContainer().getStartURL(context.getUser())))%>
+                <%= generateSubmitButton("Import") %> <%= generateButton("Cancel", form.getReturnActionURL(getContainer().getStartURL(getUser())))%>
             </td>
         </tr>
     </form>

@@ -15,14 +15,14 @@
  * limitations under the License.
  */
 %>
+<%@ page import="org.labkey.api.util.UniqueID" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
-<%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.view.ViewContext" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
-<%@ page import="org.labkey.targetedms.search.ModificationSearchBean" %>
-<%@ page import="org.labkey.api.util.UniqueID" %>
+<%@ page import="org.labkey.api.view.ViewContext" %>
 <%@ page import="org.labkey.api.view.template.ClientDependency" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.search.ModificationSearchBean" %>
 <%@ page import="java.util.LinkedHashSet" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
@@ -47,7 +47,7 @@
     boolean initStructuralCheck = (bean.getForm().isStructural() != null && bean.getForm().isStructural()) || initSearchType.equals("deltaMass");
     boolean initIsotopeLabelCheck = (bean.getForm().isIsotopeLabel() != null && bean.getForm().isIsotopeLabel()) || initSearchType.equals("deltaMass");
 
-    ActionURL modificationSearchUrl = new ActionURL(TargetedMSController.ModificationSearchAction.class, getViewContext().getContainer());
+    ActionURL modificationSearchUrl = new ActionURL(TargetedMSController.ModificationSearchAction.class, getContainer());
 
     String renderId = "modification-search-form-" + UniqueID.getRequestScopedUID(HttpView.currentRequest());
 %>

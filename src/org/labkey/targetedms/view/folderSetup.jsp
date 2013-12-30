@@ -22,7 +22,7 @@
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
     boolean isNull = folderType == null;
     boolean isUndefined = folderType == TargetedMSModule.FolderType.Undefined;
     boolean isExperiment = folderType == TargetedMSModule.FolderType.Experiment;
@@ -46,7 +46,7 @@ tr.spaceUnder > td
 </style>
 
 <div id="folder-type-set" <%= text(isUndefined ? "" : "style=\"display:none\"") %> >
-    <form action="<%= h(new ActionURL(TargetedMSController.FolderSetupAction.class, getViewContext().getContainer())) %>" method="post">
+    <form action="<%= h(new ActionURL(TargetedMSController.FolderSetupAction.class, getContainer())) %>" method="post">
         <table cellspacing="7" width="100%">
             <tr class="spaceUnder">
                 <td>

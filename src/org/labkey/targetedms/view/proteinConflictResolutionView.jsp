@@ -15,26 +15,26 @@
  * limitations under the License.
  */
 %>
+<%@ page import="org.labkey.api.data.Container" %>
+<%@ page import="org.labkey.api.settings.AppProps" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.view.ActionURL" %>
-<%@ page import="org.labkey.api.view.ViewContext" %>
 <%@ page import="org.labkey.targetedms.conflict.ConflictProtein" %>
-<%@ page import="org.labkey.api.settings.AppProps" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    ViewContext context = HttpView.currentContext();
+    Container c = getContainer();
     JspView<TargetedMSController.ProteinConflictBean> me = (JspView<TargetedMSController.ProteinConflictBean>) HttpView.currentView();
     TargetedMSController.ProteinConflictBean bean = me.getModelBean();
-    String conflictPeptidesUrl = new ActionURL(TargetedMSController.ProteinConflictPeptidesAjaxAction.class, context.getContainer()).getLocalURIString();
+    String conflictPeptidesUrl = new ActionURL(TargetedMSController.ProteinConflictPeptidesAjaxAction.class, c).getLocalURIString();
 
     String plusImgUrl = request.getContextPath()+"/_images/plus.gif";
     String minusImgUrl = request.getContextPath()+"/_images/minus.gif";
 
-    String runProteinDetailsUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, context.getContainer()).getLocalURIString();
+    String runProteinDetailsUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, c).getLocalURIString();
 
-    String proteinConflictUiUrl = new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, context.getContainer()).getLocalURIString();
+    String proteinConflictUiUrl = new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, c).getLocalURIString();
 %>
 
 <style type="text/css">
@@ -255,7 +255,7 @@ function toggleCheckboxSelection(element)
             <td colspan="8" style="padding:10px;" align="center">
                 <%=generateSubmitButton("Apply Changes")%>
                 &nbsp;
-                <%=generateButton("Cancel", context.getContainer().getStartURL(context.getUser()))%>
+                <%=generateButton("Cancel", getContainer().getStartURL(getUser()))%>
             </td>
         </tr>
     </tbody>

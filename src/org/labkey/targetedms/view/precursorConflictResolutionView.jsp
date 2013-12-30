@@ -15,30 +15,28 @@
  * limitations under the License.
  */
 %>
+<%@ page import="org.labkey.api.settings.AppProps" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.view.ActionURL" %>
-<%@ page import="org.labkey.api.view.ViewContext" %>
-<%@ page import="org.labkey.api.settings.AppProps" %>
 <%@ page import="org.labkey.targetedms.conflict.ConflictPrecursor" %>
-<%@ page import="org.labkey.targetedms.view.ModifiedPeptideHtmlMaker" %>
 <%@ page import="org.labkey.targetedms.query.PrecursorManager" %>
+<%@ page import="org.labkey.targetedms.view.ModifiedPeptideHtmlMaker" %>
 <%@ page import="org.labkey.targetedms.view.PrecursorHtmlMaker" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    ViewContext context = HttpView.currentContext();
     JspView<TargetedMSController.PrecursorConflictBean> me = (JspView<TargetedMSController.PrecursorConflictBean>) HttpView.currentView();
     TargetedMSController.PrecursorConflictBean bean = me.getModelBean();
-    String conflictTransitionsUrl = new ActionURL(TargetedMSController.PrecursorConflictTransitionsAjaxAction.class, context.getContainer()).getLocalURIString();
+    String conflictTransitionsUrl = new ActionURL(TargetedMSController.PrecursorConflictTransitionsAjaxAction.class, getContainer()).getLocalURIString();
 
     String plusImgUrl = request.getContextPath()+"/_images/plus.gif";
     String minusImgUrl = request.getContextPath()+"/_images/minus.gif";
 
     ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker = new ModifiedPeptideHtmlMaker();
 
-    String runPrecursorDetailsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, context.getContainer()).getLocalURIString();
-    String precursorConflictUiUrl = new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, context.getContainer()).getLocalURIString();
+    String runPrecursorDetailsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer()).getLocalURIString();
+    String precursorConflictUiUrl = new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getContainer()).getLocalURIString();
 %>
 
 <style type="text/css">
@@ -256,7 +254,7 @@ function toggleCheckboxSelection(element)
             <td colspan="8" style="padding:10px;" align="center">
                 <%=generateSubmitButton("Apply Changes")%>
                 &nbsp;
-                <%=generateButton("Cancel", context.getContainer().getStartURL(context.getUser()))%>
+                <%=generateButton("Cancel", getContainer().getStartURL(getUser()))%>
             </td>
         </tr>
     </tbody>

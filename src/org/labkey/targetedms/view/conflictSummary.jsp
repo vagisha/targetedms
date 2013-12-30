@@ -24,11 +24,11 @@
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
 
-    long conflictCount = ConflictResultsManager.getConflictCount(getViewContext().getUser(), getViewContext().getContainer());
-    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+    long conflictCount = ConflictResultsManager.getConflictCount(getUser(), getContainer());
+    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
     String conflictViewUrl = (folderType == TargetedMSModule.FolderType.LibraryProtein) ?
-                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getViewContext().getContainer()).getLocalURIString() :
-                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
+                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getContainer()).getLocalURIString() :
+                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getContainer()).getLocalURIString();
 %>
 
 <%

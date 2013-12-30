@@ -16,6 +16,7 @@
  */
 %>
 <%@ page import="org.labkey.api.settings.AppProps" %>
+<%@ page import="org.labkey.api.util.Formats" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
@@ -25,7 +26,6 @@
 <%@ page import="org.labkey.targetedms.view.PrecursorHtmlMaker" %>
 <%@ page import="java.util.HashMap" %>
 <%@ page import="java.util.Map" %>
-<%@ page import="org.labkey.api.util.Formats" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.PeptideChromatogramsViewBean> me = (JspView<TargetedMSController.PeptideChromatogramsViewBean>) HttpView.currentView();
@@ -35,7 +35,7 @@
     {
         labelIdMap.put(label.getId(), label.getName());
     }
-    ActionURL precursorChromsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getViewContext().getContainer());
+    ActionURL precursorChromsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer());
     String imgUrl = AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroup.gif";
 %>
 
@@ -50,7 +50,7 @@
             boolean isProtein = seqId  != null;
             String fieldLabel =  isProtein ? "Protein" : "Group";
             
-            ActionURL showProteinUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, getViewContext().getContainer());
+            ActionURL showProteinUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer());
             showProteinUrl.addParameter("id", bean.getPeptideGroup().getId());
         %>
         <td class="labkey-form-label"><%=h(fieldLabel)%></td>

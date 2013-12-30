@@ -16,10 +16,10 @@
  */
 %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page import="org.labkey.api.ms2.MS2Urls" %>
+<%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
-<form action="<%= h(PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getViewContext().getContainer())) %>" method="get">
+<form action="<%= h(PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())) %>" method="get">
 
     <table>
         <tr>

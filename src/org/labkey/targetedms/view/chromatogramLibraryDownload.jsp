@@ -26,21 +26,25 @@
 <%@ page import="org.labkey.targetedms.query.ConflictResultsManager" %>
 <%@ page import="java.io.File" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ page import="org.labkey.api.data.Container" %>
+<%@ page import="org.labkey.api.security.User" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+    Container c = getContainer();
+    User user = getUser();
+    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(c);
 
-    long peptideGroupCount = TargetedMSController.getNumRepresentativeProteins(getViewContext().getUser(), getViewContext().getContainer());
-    long peptideCount = TargetedMSController.getNumRepresentativePeptides(getViewContext().getContainer());
-    long transitionCount = TargetedMSController.getNumRankedTransitions(getViewContext().getContainer());
+    long peptideGroupCount = TargetedMSController.getNumRepresentativeProteins(user, c);
+    long peptideCount = TargetedMSController.getNumRepresentativePeptides(c);
+    long transitionCount = TargetedMSController.getNumRankedTransitions(c);
     DecimalFormat format = new DecimalFormat("#,###");
-    int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(getViewContext().getContainer());
-    File archiveFile = ChromatogramLibraryUtils.getChromLibFile(getViewContext().getContainer(), currentRevision);
+    int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c);
+    File archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, currentRevision);
 
-    long conflictCount = ConflictResultsManager.getConflictCount(getViewContext().getUser(), getViewContext().getContainer());
+    long conflictCount = ConflictResultsManager.getConflictCount(user, c);
     String conflictViewUrl = (folderType == TargetedMSModule.FolderType.LibraryProtein) ?
-                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getViewContext().getContainer()).getLocalURIString() :
-                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getViewContext().getContainer()).getLocalURIString();
+                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, c).getLocalURIString() :
+                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, c).getLocalURIString();
 %>
 
 <div class="labkey-download"><style type="text/css">
@@ -107,17 +111,17 @@ div.labkey-download h3 {
 <table>
 <tr>
     <! -- graph # of proteins and peptides in the library -->
-<td><img src="<%= h(new ActionURL(TargetedMSController.GraphLibraryStatisticsAction.class, getViewContext().getContainer())) %>"></td>
+<td><img src="<%= h(new ActionURL(TargetedMSController.GraphLibraryStatisticsAction.class, c)) %>"></td>
 <td valign="top" align="center">
 <br>
-<h3><%= h(getViewContext().getContainer().getName())%> Library</h3>
-<a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, getViewContext().getContainer())) %>" class="banner-button">Download</a> <br/>
-        <%= h(ChromatogramLibraryUtils.getDownloadFileName(getViewContext().getContainer(), currentRevision)) %>
+<h3><%= h(c.getName())%> Library</h3>
+<a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, c)) %>" class="banner-button">Download</a> <br/>
+        <%= h(ChromatogramLibraryUtils.getDownloadFileName(c, currentRevision)) %>
     <%= h(archiveFile.isFile() ? "(" + FileUtils.byteCountToDisplaySize(archiveFile.length()) + ")" : "") %>
     <br/>
     Revision <%= h(currentRevision)%><br/>
     <br/>
-<%= PageFlowUtil.textLink("Archived Revisions", new ActionURL(TargetedMSController.ArchivedRevisionsAction.class, getViewContext().getContainer()))%>
+<%= PageFlowUtil.textLink("Archived Revisions", new ActionURL(TargetedMSController.ArchivedRevisionsAction.class, c))%>
 </tr>
 </table>
 </div>

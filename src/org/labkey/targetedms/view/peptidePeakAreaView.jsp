@@ -15,13 +15,13 @@
  * limitations under the License.
  */
 %>
+<%@ page import="org.labkey.api.view.ActionURL"%>
 <%@ page import="org.labkey.api.view.HttpView"%>
-<%@ page import="org.labkey.api.view.JspView"%>
+<%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="java.util.List" %>
-<%@ page import="org.labkey.targetedms.parser.Replicate" %>
-<%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.parser.Peptide" %>
+<%@ page import="org.labkey.targetedms.parser.Replicate" %>
+<%@ page import="java.util.List" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.PeakAreaGraphBean> me = (JspView<TargetedMSController.PeakAreaGraphBean>) HttpView.currentView();
@@ -33,7 +33,7 @@
     List<String> replicateAnnotationNameList = bean.getReplicateAnnotationNameList();
     List<Peptide> peptideList = bean.getPeptideList();
 
-    ActionURL peakAreaUrl = new ActionURL(TargetedMSController.ShowPeptidePeakAreasAction.class, getViewContext().getContainer());
+    ActionURL peakAreaUrl = new ActionURL(TargetedMSController.ShowPeptidePeakAreasAction.class, getContainer());
     if(peptideGroupId != 0)
         peakAreaUrl.addParameter("peptideGroupId", peptideGroupId);
     else if(peptideId != 0)

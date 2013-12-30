@@ -15,22 +15,22 @@
  * limitations under the License.
  */
 %>
+<%@ page import="org.labkey.api.data.Container" %>
+<%@ page import="org.labkey.api.security.permissions.UpdatePermission" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSRun" %>
-<%@ page import="org.labkey.api.data.Container" %>
-<%@ page import="org.labkey.api.security.permissions.UpdatePermission" %>
 <%@ page import="java.text.DecimalFormat" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
     TargetedMSController.RunDetailsBean bean = me.getModelBean();
-    ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getViewContext().getContainer());
+    ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
     downloadAction.addParameter("runId", bean.getRun().getId());
     TargetedMSRun run = bean.getRun();
-    Container c = me.getViewContext().getContainer();
+    Container c = getContainer();
     DecimalFormat decimalFormat = new DecimalFormat("#,###");
 %>
 
@@ -60,9 +60,9 @@
     <tr><td colspan="4">
         <div>
             <%
-             if (c.hasPermission(me.getViewContext().getUser(), UpdatePermission.class))
+             if (c.hasPermission(getUser(), UpdatePermission.class))
              { %>
-                 <%=textLink("Rename", TargetedMSController.getRenameRunURL(c, run, me.getViewContext().getActionURL()))%> <%
+                 <%=textLink("Rename", TargetedMSController.getRenameRunURL(c, run, getActionURL()))%> <%
              } %>
         </div>
     </td></tr>
