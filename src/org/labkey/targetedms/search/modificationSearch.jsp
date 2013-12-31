@@ -19,7 +19,6 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
-<%@ page import="org.labkey.api.view.ViewContext" %>
 <%@ page import="org.labkey.api.view.template.ClientDependency" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.search.ModificationSearchBean" %>
@@ -27,17 +26,16 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
-  public LinkedHashSet<ClientDependency> getClientDependencies()
-  {
-      LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-      resources.add(ClientDependency.fromFilePath("Ext4ClientApi"));
-      return resources;
-  }
+    public LinkedHashSet<ClientDependency> getClientDependencies()
+    {
+        LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
+        resources.add(ClientDependency.fromFilePath("Ext4ClientApi"));
+        return resources;
+    }
 %>
 <%
     JspView<ModificationSearchBean> me = (JspView<ModificationSearchBean>) HttpView.currentView();
     ModificationSearchBean bean = me.getModelBean();
-    ViewContext ctx = me.getViewContext();
 
     String initSearchType = bean.getForm().getSearchType() != null ? bean.getForm().getSearchType() : "deltaMass";
     String initAminoAcids = bean.getForm().getAminoAcids() != null ? bean.getForm().getAminoAcids() : "";
