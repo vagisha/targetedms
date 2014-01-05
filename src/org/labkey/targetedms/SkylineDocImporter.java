@@ -175,9 +175,9 @@ public class SkylineDocImporter
 
             // If this is a zip file extract the contents to a folder
             String ext = FileUtil.getExtension(f.getName());
-            if("zip".equalsIgnoreCase(ext))
+            if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(ext))
             {
-                zipDir = new File(f.getParent()+File.separator+FileUtil.getBaseName(f));
+                zipDir = new File(f.getParent(), SkylineFileUtils.getBaseName(f.getName()));
                 List<File> files = ZipUtil.unzipToDirectory(f, zipDir, _log);
                 File skyFile = null;
                 for(File file: files)

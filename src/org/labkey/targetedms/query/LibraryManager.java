@@ -21,8 +21,8 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
+import org.labkey.targetedms.SkylineFileUtils;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.PeptideSettings;
@@ -79,12 +79,7 @@ public class LibraryManager
         }
 
         File file = expData.getFile();
-        String path = file.getParent();
-        String ext = FileUtil.getExtension(file.getName());
-        if("zip".equalsIgnoreCase(ext))
-        {
-            path = FileUtil.getBaseName(file.getPath());
-        }
+        String path = new File(file.getParent(),  SkylineFileUtils.getBaseName(file.getName())).getAbsolutePath();
 
         Map<PeptideSettings.SpectrumLibrary, String> libraryPathsMap = new HashMap<>();
         for(PeptideSettings.SpectrumLibrary library: libraries)

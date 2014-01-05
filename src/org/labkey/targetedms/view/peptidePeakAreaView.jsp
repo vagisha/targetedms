@@ -168,7 +168,7 @@
 
         var logValuesCheckbox = Ext4.create('Ext.form.Checkbox', {
                                             id: 'logCheckbox',
-                                               fieldLabel: 'Log Values'
+                                               fieldLabel: 'Log Scale'
         });
 
         // peak areas graph
