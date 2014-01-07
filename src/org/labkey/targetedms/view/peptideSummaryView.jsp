@@ -26,6 +26,8 @@
 <%@ page import="org.labkey.targetedms.view.PrecursorHtmlMaker" %>
 <%@ page import="java.util.HashMap" %>
 <%@ page import="java.util.Map" %>
+<%@ page import="org.labkey.targetedms.view.ModifiedPeptideHtmlMaker" %>
+<%@ page import="org.labkey.targetedms.view.IconFactory" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.PeptideChromatogramsViewBean> me = (JspView<TargetedMSController.PeptideChromatogramsViewBean>) HttpView.currentView();
@@ -35,8 +37,7 @@
     {
         labelIdMap.put(label.getId(), label.getName());
     }
-    ActionURL precursorChromsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer());
-    String imgUrl = AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroup.gif";
+    ActionURL precursorDetailsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer());
 %>
 
 <table>
@@ -58,7 +59,7 @@
     </tr>
     <tr>
         <td class="labkey-form-label">Sequence</td>
-        <td><%=h(bean.getPeptide().getSequence())%></td>
+        <td><%=text(new ModifiedPeptideHtmlMaker().getHtml(bean.getPeptide()))%></td>
     </tr>
     <tr>
         <td class="labkey-form-label">NeutralMass</td>
@@ -99,8 +100,9 @@
                                                     bean.getLightIsotopeLableId()
                      ))%>
 
-                     <a href="<%=precursorChromsUrl+"id="+precursor.getId()%>">
-                        <img src="<%=imgUrl%>" alt="Precursor Chromatogram"/>
+                     <% String imgUrl = IconFactory.getPrecursorIconPath(precursor.getId()); %>
+                     <a href="<%=precursorDetailsUrl+"id="+precursor.getId()%>">
+                        <img src="<%=imgUrl%>" alt="Click to view details"/>
                      </a>
 
                  </div>

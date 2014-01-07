@@ -20,11 +20,11 @@ import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.view.ActionURL;
+import org.labkey.targetedms.view.IconFactory;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Set;
 
 
 /**
@@ -67,13 +67,28 @@ public class ModifiedPeptideDisplayColumn extends DataColumn
 
     private String getPeptideHtml(int id)
     {
-        String html = _isPeptide ? _htmlMaker.getHtml(PeptideManager.get(id)) : _htmlMaker.getHtml(PrecursorManager.get(id));
+        String peptideHtml = _isPeptide ? _htmlMaker.getHtml(PeptideManager.get(id)) : _htmlMaker.getHtml(PrecursorManager.get(id));
 
-        if(_linkUrl != null)
+         _linkUrl.replaceParameter("id", String.valueOf(id));
+
+        String iconPath = "";
+        String title = "";
+        if(_isPeptide)
         {
-            _linkUrl.replaceParameter("id", String.valueOf(id));
-            html = "<a href=\""+_linkUrl.getLocalURIString()+"\" style=\"color: #000000\">" + html + "</a>";
+            title = "Peptide Details";
+            iconPath = IconFactory.getPeptideIconPath(id);
         }
-        return html;
+        else
+        {
+            title = "Precursor Details";
+            iconPath = IconFactory.getPrecursorIconPath(id);
+        }
+        StringBuilder imgHtml = new StringBuilder();
+        imgHtml.append("<a href=\"").append(_linkUrl.getLocalURIString()).append("\" title=\"").append(title).append("\">");
+        imgHtml.append("<img src=\"").append(iconPath).append("\"").append(" width=\"18\" height=\"16\" style=\"margin-right: 5px;\"/>");
+        imgHtml.append("</a>");
+
+
+        return imgHtml.toString() + "<a href=\""+_linkUrl.getLocalURIString()+"\" style=\"color: #000000\">" + peptideHtml + "</a>";
     }
 }

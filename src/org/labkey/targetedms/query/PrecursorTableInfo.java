@@ -18,7 +18,6 @@ package org.labkey.targetedms.query;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
-import org.labkey.api.data.IconDisplayColumn;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
@@ -27,7 +26,6 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
-import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
@@ -110,19 +108,6 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
         });
         addColumn(modSeqCol);
 
-        ColumnInfo chromatogramsLinkCol = wrapColumn("Chromatograms", getRealTable().getColumn("Id"));
-        chromatogramsLinkCol.setIsUnselectable(true);
-        chromatogramsLinkCol.setDisplayColumnFactory(new DisplayColumnFactory()
-        {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                ActionURL url = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer());
-                return new IconDisplayColumn(colInfo, 18, 18, url, "id",
-                                             AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroup.gif");
-            }
-        });
-        addColumn(chromatogramsLinkCol);
 
         //only display a subset of the columns by default
         ArrayList<FieldKey> visibleColumns = new ArrayList<>();
@@ -147,7 +132,6 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("TransitionCount"));
         visibleColumns.add(FieldKey.fromParts("CollisionEnergy"));
         visibleColumns.add(FieldKey.fromParts("DeclusteringPotential"));
-        visibleColumns.add(FieldKey.fromParts("Chromatograms"));
 
         setDefaultVisibleColumns(visibleColumns);
 

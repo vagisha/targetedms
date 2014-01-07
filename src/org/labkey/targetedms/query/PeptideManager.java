@@ -147,4 +147,20 @@ public class PeptideManager
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
+
+    public static boolean hasSpectrumLibraryInformation(int peptideId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+        sql.append(" WHERE ");
+        sql.append("pre.Id=pcilib.PrecursorId");
+        sql.append(" AND ");
+        sql.append("pre.PeptideId=?");
+        sql.add(peptideId);
+
+        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+        return count != null ? count > 0 : false;
+    }
 }

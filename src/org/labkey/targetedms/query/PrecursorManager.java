@@ -485,4 +485,28 @@ public class PrecursorManager
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
+
+     public static boolean hasChromatogramInformation(int precursorId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(" WHERE ");
+        sql.append("pci.PrecursorId=?");
+        sql.add(precursorId);
+
+        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+        return count != null ? count > 0 : false;
+    }
+
+    public static boolean hasSpectrumLibraryInformation(int precursorId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
+        sql.append(" WHERE ");
+        sql.append("pcilib.PrecursorId=?");
+        sql.add(precursorId);
+
+        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+        return count != null ? count > 0 : false;
+    }
 }
