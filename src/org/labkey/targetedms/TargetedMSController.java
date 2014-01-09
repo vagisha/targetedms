@@ -1237,7 +1237,7 @@ public class TargetedMSController extends SpringActionController
         {
             //this action requires that a specific experiment run has been specified
             if(!form.hasRunId())
-                throw new RedirectException(new ActionURL(ShowListAction.class, getViewContext().getContainer()));
+                throw new RedirectException(new ActionURL(ShowListAction.class, getContainer()));
 
             //ensure that the experiment run is valid and exists within the current container
             _run = validateRun(form.getId());
@@ -2891,7 +2891,7 @@ public class TargetedMSController extends SpringActionController
         private DefaultCategoryDataset getNumProteinsNumPeptidesByDate() {
             final DefaultCategoryDataset dataset = new DefaultCategoryDataset();
             // determine the folder type
-            final FolderType folderType = TargetedMSManager.getFolderType(getViewContext().getContainer());
+            final FolderType folderType = TargetedMSManager.getFolderType(getContainer());
 
             final String proteinLabel = "Proteins";
             final String peptideLabel = "Peptides";

@@ -42,7 +42,7 @@
     span.label {text-decoration: underline; cursor: pointer;}
 </style>
 
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath()%>/TargetedMS/jquery/jquery-1.8.3.min.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/jquery/jquery-1.8.3.min.js"></script>
 
 <script type="text/javascript">
 

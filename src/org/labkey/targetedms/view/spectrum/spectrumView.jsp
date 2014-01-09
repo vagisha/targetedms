@@ -34,18 +34,18 @@ if (bean.getSpectrum() != null)
     float[] intensities = bean.getSpectrum().getIntensity();
 %>
 
-<!--[if IE]><script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/excanvas.min.js"></script><![endif]-->
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath()%>/MS2/lorikeet_0.3/js/jquery-1.4.2.min.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath()%>/MS2/lorikeet_0.3/js/jquery-ui-1.8.4.min.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/specview.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/peptide.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/aminoacid.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/ion.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/jquery.flot.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/jquery.flot.selection.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/peptide.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/peptide.js"></script>
-<script type="text/javascript" src="<%= AppProps.getInstance().getContextPath() %>/TargetedMS/lorikeet_0.3/js/peptide.js"></script>
+<!--[if IE]><script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/excanvas.min.js"></script><![endif]-->
+<script type="text/javascript" src="<%=getContextPath()%>/MS2/lorikeet_0.3/js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/MS2/lorikeet_0.3/js/jquery-ui-1.8.4.min.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/specview.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/peptide.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/aminoacid.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/ion.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/jquery.flot.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/jquery.flot.selection.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/peptide.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/peptide.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/peptide.js"></script>
 
 <!-- PLACE HOLDER DIV FOR THE SPECTRUM -->
 <div id="<%=bean.getLorikeetId()%>"></div>
