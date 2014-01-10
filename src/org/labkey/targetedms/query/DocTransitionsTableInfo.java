@@ -130,7 +130,7 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
 
     public void addRunFilter(int runId)
     {
-        getFilter().deleteConditions("Run");
+        getFilter().deleteConditions(FieldKey.fromParts("Run"));
         SQLFragment sql = new SQLFragment();
         sql.append("Id IN ");
 

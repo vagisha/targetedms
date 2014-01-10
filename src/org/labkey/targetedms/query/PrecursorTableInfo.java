@@ -156,7 +156,7 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
 
     private void addRunFilter(int runId)
     {
-        getFilter().deleteConditions("Run");
+        getFilter().deleteConditions(FieldKey.fromParts("Run"));
         SQLFragment sql = new SQLFragment();
         sql.append("Id IN ");
         sql.append("(SELECT prec.Id FROM ");
