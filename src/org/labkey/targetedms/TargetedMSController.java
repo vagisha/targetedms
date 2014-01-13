@@ -1318,6 +1318,17 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermissionClass(ReadPermission.class)
     public class ShowPrecursorListAction extends ShowRunDetailsAction<DocumentPrecursorsView>
     {
+        // Invoked via reflection
+        @SuppressWarnings("UnusedDeclaration")
+        public ShowPrecursorListAction()
+        {
+        }
+
+        public ShowPrecursorListAction(ViewContext ctx)
+        {
+            setViewContext(ctx);
+        }
+
         @Override
         protected DocumentPrecursorsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
         {
@@ -1544,7 +1555,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return new ShowPrecursorListAction().appendNavTrail(root, _run)
+            return new ShowPrecursorListAction(getViewContext()).appendNavTrail(root, _run)
                                                 .addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()))
                                                 .addChild(_proteinLabel);
         }
