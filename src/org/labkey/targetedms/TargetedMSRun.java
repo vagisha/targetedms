@@ -70,7 +70,7 @@ public class TargetedMSRun implements Serializable
 
     public TargetedMSRun()
     {
-        assert MemTracker.put(this);
+        MemTracker.getInstance().put(this);
     }
 
     public String toString()
