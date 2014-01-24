@@ -688,10 +688,14 @@
     <ns:table tableName="retentiontimepredictionsettings" tableDbType="TABLE">
       <ns:columns>
         <ns:column columnName="runid"/>
-        <ns:column columnName="calculatorname"/>
-        <ns:column columnName="isirt"/>
-        <ns:column columnName="regressionslope"/>
-        <ns:column columnName="regressionintercept"/>
+        <ns:column columnName="CalculatorName"/>
+        <ns:column columnName="IsIrt"/>
+        <ns:column columnName="RegressionSlope"/>
+        <ns:column columnName="RegressionIntercept"/>
+        <ns:column columnName="PredictorName"/>
+        <ns:column columnName="TimeWindow"/>
+        <ns:column columnName="UseMeasuredRTs"/>
+        <ns:column columnName="MeasuredRTWindow"/>
       </ns:columns>
     </ns:table>
     <ns:table tableName="runenzyme" tableDbType="TABLE">

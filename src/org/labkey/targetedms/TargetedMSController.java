@@ -492,6 +492,8 @@ public class TargetedMSController extends SpringActionController
             ChromatogramsDataRegion dRegion = new ChromatogramsDataRegion(getViewContext(), tableInfo,
                                                                    ChromatogramsDataRegion.PRECURSOR_CHROM_DATA_REGION);
             GridView gridView = new GridView(dRegion, errors);
+            gridView.setFrame(WebPartView.FrameType.PORTAL);
+            gridView.setTitle("Chromatograms");
 
             VBox vbox = new VBox();
             vbox.addView(precursorInfo);

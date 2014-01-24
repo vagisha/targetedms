@@ -807,6 +807,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_MODIFICATION_SETTINGS);
         hs.add(TABLE_ISOTOPE_LABEL);
         hs.add(TABLE_STRUCTURAL_MODIFICATION);
+        hs.add(TABLE_STRUCTURAL_MOD_LOSS);
         hs.add(TABLE_ISOTOPE_MODIFICATION);
         hs.add(TABLE_RUN_STRUCTURAL_MODIFICATION);
         hs.add(TABLE_RUN_ISOTOPE_MODIFICATION);
@@ -821,6 +822,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_RESPRESENTATIVE_DATA_STATE);
         hs.add(TABLE_IRT_PEPTIDE);
         hs.add(TABLE_IRT_SCALE);
+        hs.add(TABLE_RETENTION_TIME_PREDICTION_SETTINGS);
         return hs;
     }
 }

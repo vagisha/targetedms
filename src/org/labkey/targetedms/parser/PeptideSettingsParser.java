@@ -61,6 +61,15 @@ class PeptideSettingsParser
     private static final String ID = "id";
     private static final String REVISION = "revision";
     private static final String DOCUMENT_LIBRARY = "document_library";
+    private static final String USE_MEASURED_RTS = "use_measured_rts";
+    private static final String MEASURED_RT_WINDOW = "measured_rt_window";
+    private static final String PREDICT_RETENTION_TIME = "predict_retention_time";
+    private static final String TIME_WINDOW = "time_window";
+    private static final String CALCULATOR = "calculator";
+    private static final String REGRESSION_RT = "regression_rt";
+    private static final String SLOPE = "slope";
+    private static final String INTERCEPT = "intercept";
+    private static final String IRT_CALCULATOR = "irt_calculator";
 
     private String _documentName;
 
@@ -88,7 +97,7 @@ class PeptideSettingsParser
              }
              else if(XmlUtil.isStartElement(reader, evtType, PEPTIDE_PREDICTION))
              {
-                 // TODO: read peptide prediction settings
+                 settings.setPeptidePredictionSettings(getPeptidePredictionSettings(reader));
              }
              else if(XmlUtil.isStartElement(reader, evtType, PEPTIDE_LIBRARIES))
              {
@@ -257,7 +266,6 @@ class PeptideSettingsParser
             }
         }
         
-        // TODO: read potential losses
         return mod;
     }
 
@@ -313,7 +321,6 @@ class PeptideSettingsParser
         mod.setLabel2H(XmlUtil.readBooleanAttribute(reader, "label_2H"));
         mod.setRelativeRt(reader.getAttributeValue(null, "relative_rt"));
 
-        // TODO: read potential losses
         return mod;
     }
 
@@ -390,5 +397,61 @@ class PeptideSettingsParser
             library.setSkylineLibraryId(skylineLibraryId.length() > 200 ? skylineLibraryId.substring(0, 200) : skylineLibraryId);
         }
         return library;
+    }
+
+    private PeptideSettings.PeptidePredictionSettings getPeptidePredictionSettings(XMLStreamReader reader) throws XMLStreamException
+    {
+        PeptideSettings.PeptidePredictionSettings settings = new PeptideSettings.PeptidePredictionSettings();
+        settings.setUseMeasuredRts(XmlUtil.readBooleanAttribute(reader, USE_MEASURED_RTS));
+        settings.setMeasuredRtWindow(XmlUtil.readDoubleAttribute(reader, MEASURED_RT_WINDOW));
+
+        while(reader.hasNext())
+        {
+            int evtType = reader.next();
+            if(XmlUtil.isEndElement(reader, evtType, PEPTIDE_PREDICTION))
+            {
+                break;
+            }
+
+            if(XmlUtil.isStartElement(evtType))
+            {
+                if(XmlUtil.isElement(reader, PREDICT_RETENTION_TIME))
+                {
+                    readRetentionTimePredictorSettings(reader, settings);
+                }
+            }
+        }
+
+        return settings;
+    }
+
+    private void readRetentionTimePredictorSettings(XMLStreamReader reader, PeptideSettings.PeptidePredictionSettings settings) throws XMLStreamException
+    {
+        settings.setPredictorName(XmlUtil.readAttribute(reader, NAME));
+        settings.setTimeWindow(XmlUtil.readDoubleAttribute(reader, TIME_WINDOW));
+        settings.setCalculatorName(XmlUtil.readAttribute(reader, CALCULATOR));
+
+        while(reader.hasNext())
+        {
+            int evtType = reader.next();
+            if(XmlUtil.isEndElement(reader, evtType, PREDICT_RETENTION_TIME))
+            {
+                break;
+            }
+
+            if(XmlUtil.isStartElement(evtType))
+            {
+                if(XmlUtil.isElement(reader, IRT_CALCULATOR))
+                {
+                    settings.setIsIrt(Boolean.TRUE);
+                    settings.setCalculatorName(XmlUtil.readAttribute(reader, NAME));
+                }
+                else if(XmlUtil.isElement(reader, REGRESSION_RT))
+                {
+                    settings.setRegressionSlope(XmlUtil.readDoubleAttribute(reader, SLOPE));
+                    settings.setRegressionIntercept(XmlUtil.readDoubleAttribute(reader, INTERCEPT));
+                }
+            }
+        }
     }
 }

@@ -28,6 +28,7 @@ public class PeptideSettings
     private PeptideModifications _modifications;
     private SpectrumLibrarySettings _librarySettings;
     private EnzymeDigestionSettings _enzymeDigestionSettings;
+    private PeptidePredictionSettings _peptidePredictionSettings;
 
     public static final String HEAVY_LABEL = "heavy";
 
@@ -69,6 +70,16 @@ public class PeptideSettings
     public EnzymeDigestionSettings getEnzymeDigestionSettings()
     {
         return _enzymeDigestionSettings;
+    }
+
+    public PeptidePredictionSettings getPeptidePredictionSettings()
+    {
+        return _peptidePredictionSettings;
+    }
+
+    public void setPeptidePredictionSettings(PeptidePredictionSettings peptidePredictionSettings)
+    {
+        _peptidePredictionSettings = peptidePredictionSettings;
     }
 
     // ------------------------------------------------------------------------
@@ -779,6 +790,112 @@ public class PeptideSettings
         public void setLibraryType(String libraryType)
         {
             _libraryType = libraryType;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Peptide Prediction Settings
+    // ------------------------------------------------------------------------
+    public static final class PeptidePredictionSettings
+    {
+        private int _runId;
+        private Boolean _useMeasuredRts;
+        private Double _measuredRtWindow;
+        private String _predictorName;
+        private Double _timeWindow;
+        private Double _regressionSlope;
+        private Double _regressionIntercept;
+        private Boolean _isIrt;
+        private String _calculatorName;
+
+        public int getRunId()
+        {
+            return _runId;
+        }
+
+        public void setRunId(int runId)
+        {
+            _runId = runId;
+        }
+
+        public Boolean getUseMeasuredRts()
+        {
+            return _useMeasuredRts;
+        }
+
+        public void setUseMeasuredRts(Boolean useMeasuredRts)
+        {
+            _useMeasuredRts = useMeasuredRts;
+        }
+
+        public Double getMeasuredRtWindow()
+        {
+            return _measuredRtWindow;
+        }
+
+        public void setMeasuredRtWindow(Double measuredRtWindow)
+        {
+            _measuredRtWindow = measuredRtWindow;
+        }
+
+        public String getPredictorName()
+        {
+            return _predictorName;
+        }
+
+        public void setPredictorName(String predictorName)
+        {
+            _predictorName = predictorName;
+        }
+
+        public Double getTimeWindow()
+        {
+            return _timeWindow;
+        }
+
+        public void setTimeWindow(Double timeWindow)
+        {
+            _timeWindow = timeWindow;
+        }
+
+        public Double getRegressionSlope()
+        {
+            return _regressionSlope;
+        }
+
+        public void setRegressionSlope(Double regressionSlope)
+        {
+            _regressionSlope = regressionSlope;
+        }
+
+        public Double getRegressionIntercept()
+        {
+            return _regressionIntercept;
+        }
+
+        public void setRegressionIntercept(Double regressionIntercept)
+        {
+            _regressionIntercept = regressionIntercept;
+        }
+
+        public Boolean getIsIrt()
+        {
+            return _isIrt;
+        }
+
+        public void setIsIrt(Boolean irt)
+        {
+            _isIrt = irt;
+        }
+
+        public String getCalculatorName()
+        {
+            return _calculatorName;
+        }
+
+        public void setCalculatorName(String calculatorName)
+        {
+            _calculatorName = calculatorName;
         }
     }
 }

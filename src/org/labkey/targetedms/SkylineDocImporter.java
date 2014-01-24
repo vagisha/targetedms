@@ -449,6 +449,14 @@ public class SkylineDocImporter
                 digestSettings = Table.insert(_user, TargetedMSManager.getTableInfoRunEnzyme(), digestSettings);
             }
 
+            // Peptide prediction settings
+            PeptideSettings.PeptidePredictionSettings peptidePredictionSettings = pepSettings.getPeptidePredictionSettings();
+            if(peptidePredictionSettings != null)
+            {
+                peptidePredictionSettings.setRunId(_runId);
+                Table.insert(_user, TargetedMSManager.getTableInfoRetentionTimePredictionSettings(), peptidePredictionSettings);
+            }
+
             // Data settings -- these are the annotation settings
             DataSettings dataSettings = parser.getDataSettings();
             for(AnnotationSetting annotSetting: dataSettings.getAnnotationSettings())
