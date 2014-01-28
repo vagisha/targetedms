@@ -352,4 +352,9 @@ public class SkylineBinaryParser
                 version == FORMAT_VERSION_CACHE_4 ||
                 version == FORMAT_VERSION_CACHE_3);
     }
+
+    final int getCacheFileSize()
+    {
+        return _cacheFiles != null ? _cacheFiles.length : 0;
+    }
 }

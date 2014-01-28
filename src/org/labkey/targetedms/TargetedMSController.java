@@ -17,6 +17,7 @@
 package org.labkey.targetedms;
 
 
+import com.keypoint.PngEncoder;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
@@ -70,7 +71,12 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
-import org.labkey.api.security.*;
+import org.labkey.api.security.ActionNames;
+import org.labkey.api.security.MutableSecurityPolicy;
+import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresSiteAdmin;
+import org.labkey.api.security.SecurityPolicyManager;
+import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
@@ -142,6 +148,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -424,7 +431,27 @@ public class TargetedMSController extends SpringActionController
             throws IOException
     {
         response.setContentType("image/png");
-        ChartUtilities.writeChartAsPNG(response.getOutputStream(), chart, form.getChartWidth(), form.getChartHeight());
+
+        if(!form.hasDpi())
+        {
+            ChartUtilities.writeChartAsPNG(response.getOutputStream(), chart, form.getChartWidth(), form.getChartHeight());
+        }
+        else
+        {
+            int dpi = form.getDpi();
+            double scaleFactor = (double)dpi/(double)AbstractChartForm.SCREEN_RES;
+            int w = form.getChartWidth();
+            int h = form.getChartHeight();
+            int desiredWidth = (int) (w * scaleFactor);
+            int desiredHeight = (int) (h * scaleFactor);
+
+            BufferedImage image = chart.createBufferedImage(desiredWidth, desiredHeight, w, h, null);
+
+            PngEncoder encoder = new PngEncoder(image);
+            encoder.setDpi(dpi, dpi);
+            byte[] bytes = encoder.pngEncode();
+            response.getOutputStream().write(bytes);
+        }
     }
 
     @RequiresPermissionClass(ReadPermission.class)
@@ -561,6 +588,8 @@ public class TargetedMSController extends SpringActionController
             ChromatogramsDataRegion dRegion = new ChromatogramsDataRegion(getViewContext(), tableInfo,
                                                               ChromatogramsDataRegion.PEPTIDE_CHROM_DATA_REGION);
             GridView gridView = new GridView(dRegion, errors);
+            gridView.setFrame(WebPartView.FrameType.PORTAL);
+            gridView.setTitle("Chromatograms");
 
             VBox vbox = new VBox();
             vbox.addView(peptideInfo);
@@ -972,8 +1001,11 @@ public class TargetedMSController extends SpringActionController
 
     public abstract static class AbstractChartForm
     {
+        public static final int SCREEN_RES = 72;
+
         private int _chartWidth = 600;
         private int _chartHeight = 400;
+        private int _dpi = SCREEN_RES;
 
         public int getChartWidth()
         {
@@ -993,6 +1025,21 @@ public class TargetedMSController extends SpringActionController
         public void setChartHeight(int chartHeight)
         {
             _chartHeight = chartHeight;
+        }
+
+        public int getDpi()
+        {
+            return _dpi;
+        }
+
+        public void setDpi(int dpi)
+        {
+            _dpi = dpi;
+        }
+
+        public boolean hasDpi()
+        {
+            return _dpi > SCREEN_RES;
         }
     }
 

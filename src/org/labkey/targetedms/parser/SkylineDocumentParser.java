@@ -1190,7 +1190,7 @@ public class SkylineDocumentParser
             Chromatogram chromatogram = filePathChromatogramMap.get(filePath);
             if (chromatogram == null)
             {
-                _log.warn("Unable to find chromatograms for file path " + filePath);
+                _log.warn("Unable to find chromatograms for file path " + filePath + ". Precursor " + precursor.getModifiedSequence() + ", " +precursor.getCharge());
                 i.remove();
             }
             else
@@ -1211,7 +1211,7 @@ public class SkylineDocumentParser
                 Chromatogram c = filePathChromatogramMap.get(filePath);
                 if (c == null)
                 {
-                    _log.warn("Unable to find chromatograms for file path " + filePath);
+                    _log.warn("Unable to find chromatograms for file path " + filePath + ". Transition " + transition.getLabel() + ", " + precursor.getModifiedSequence() + ", " +precursor.getCharge());
                     iter.remove();
                 }
                 else
@@ -1629,9 +1629,8 @@ public class SkylineDocumentParser
         // TODO: But it messes up when there are 2 sets of transitions for
         //       the same precursor covering different numbers of transitions.
         //       Skyline never creates this case, but it has been reported
-        int maxTranMatch = 1;
+        // int maxTranMatch = 1;
 
-        List<Chromatogram> listChrom = new ArrayList<>();
         if (_binaryParser != null)
         {
             // Filter the list of chromatograms based on our precursor mZ
@@ -1655,6 +1654,14 @@ public class SkylineDocumentParser
                 listChromatograms.add(chrom);
             }
 
+            // Since we are reading and returning chromatograms for all replicates we need to maintain
+            // the number of maximum transition matches for each replicate.
+            // MeasuredResults.TryLoadChromatogram in Skyline reads and returns chromatograms for a single replicate.
+            int[] maxTranMatches = new int[_binaryParser.getCacheFileSize()];
+            for(int m = 0; m < maxTranMatches.length; m++) maxTranMatches[m] = 1;
+
+            Chromatogram[] chromArray = new Chromatogram[_binaryParser.getCacheFileSize()];
+
             for (Chromatogram chromInfo : listChromatograms)
             {
 //                if (containsInfo(chromatogram, chromInfo))
@@ -1665,41 +1672,43 @@ public class SkylineDocumentParser
                 // matching.  Otherwise, we only expect one match per transition.
                 // TODO - do we need this on the Java side?
                 boolean multiMatch = false;//chromatogram.OptimizationFunction != null;
+
                 int tranMatch = chromInfo.matchTransitions(transitions, tolerance, multiMatch);
-                if (tranMatch >= maxTranMatch)
-                {
-                    // If new maximum, clear anything collected at the previous maximum
-                    if (tranMatch > maxTranMatch)
-                        listChrom.clear();
 
-                    maxTranMatch = tranMatch;
-                    listChrom.add(chromInfo);
+                int fileIndex = chromInfo.getFileIndex();
+                Chromatogram currentChromForFileIndex = chromArray[fileIndex];
+                int maxTranMatch = maxTranMatches[fileIndex];
+
+                if (currentChromForFileIndex == null || tranMatch > maxTranMatch)
+                {
+                    maxTranMatches[fileIndex] = tranMatch;
+                    chromArray[fileIndex] = chromInfo;
+                }
+                else if(tranMatch == maxTranMatch)
+                {
+                    // If more than one value was found, ensure that there
+                    // is only one precursor match per file.
+                    // Use the entry with the m/z closest to the target
+                    if (Math.abs(precursorMz - chromInfo.getPrecursorMz()) <
+                                 Math.abs(precursorMz - currentChromForFileIndex.getPrecursorMz()))
+                    {
+                        chromArray[fileIndex] = chromInfo;
+                    }
                 }
             }
-        }
 
-        // If more than one value was found, make a final pass to ensure that there
-        // is only one precursor match per file.
-        if (listChrom.size() > 1)
-        {
-            List<Chromatogram> listChromFinal = new ArrayList<>();
-            for (Chromatogram chromInfo : listChrom)
+            List<Chromatogram> finalList = new ArrayList<>();
+            for(int c = 0; c < chromArray.length; c++)
             {
-                String filePath = chromInfo.getFilePath();
-
-                int fileIndex = findIndex(listChromFinal, filePath);
-                if (fileIndex == -1)
-                    listChromFinal.add(chromInfo);
-                // Use the entry with the m/z closest to the target
-                else if (Math.abs(precursorMz - chromInfo.getPrecursorMz()) <
-                         Math.abs(precursorMz - listChromFinal.get(fileIndex).getPrecursorMz()))
+                if(chromArray[c] != null)
                 {
-                    listChromFinal.set(fileIndex, chromInfo);
+                    finalList.add(chromArray[c]);
                 }
             }
-            return listChromFinal;
+            return finalList;
         }
-        return listChrom;
+
+        return Collections.emptyList();
     }
 
     private int findIndex(List<Chromatogram> listChromFinal, String filePath)
