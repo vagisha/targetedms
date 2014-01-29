@@ -50,6 +50,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
+import org.labkey.targetedms.query.ExperimentAnnotationsTableInfo;
 import org.labkey.targetedms.query.ModifiedPeptideDisplayColumn;
 import org.labkey.targetedms.query.PrecursorTableInfo;
 import org.labkey.targetedms.query.RepresentativeStateDisplayColumn;
@@ -127,6 +128,9 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_RESPRESENTATIVE_DATA_STATE = "RepresentativeDataState";
     public static final String TABLE_IRT_PEPTIDE = "iRTPeptide";
     public static final String TABLE_IRT_SCALE = "iRTScale";
+
+    public static final String TABLE_EXPERIMENT_ANNOTATIONS = "ExperimentAnnotations";
+    public static final String TABLE_EXPERIMENT_ANNOTATIONS_RUN = "ExperimentAnnotationsRun";
 
     private static final String PROTOCOL_PATTERN_PREFIX = "urn:lsid:%:Protocol.%:";
 
@@ -417,6 +421,16 @@ public class TargetedMSSchema extends UserSchema
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.iRTScaleFK.getSQL());
         }
+
+        if(TABLE_EXPERIMENT_ANNOTATIONS.equalsIgnoreCase(name))
+        {
+            return new ExperimentAnnotationsTableInfo(this, getUser());
+        }
+        if(TABLE_EXPERIMENT_ANNOTATIONS_RUN.equalsIgnoreCase(name))
+        {
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL());
+        }
+
         if (TABLE_RESPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
         {
             return new EnumTableInfo<>(

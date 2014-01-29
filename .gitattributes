@@ -45,6 +45,7 @@ resources/schemas/dbscripts/postgresql/targetedms-13.21-13.22.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.22-13.23.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.30-13.31.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.31-13.32.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-13.32-13.33.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.19-0.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.20-0.21.sql -text
@@ -75,6 +76,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-13.21-13.22.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.22-13.23.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.30-13.31.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.31-13.32.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-13.32-13.33.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text
@@ -135,6 +137,7 @@ src/org/labkey/targetedms/conflict/ConflictPeptide.java -text
 src/org/labkey/targetedms/conflict/ConflictPrecursor.java -text
 src/org/labkey/targetedms/conflict/ConflictProtein.java -text
 src/org/labkey/targetedms/conflict/ConflictTransition.java -text
+src/org/labkey/targetedms/model/ExperimentAnnotations.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoPlus.java -text
 src/org/labkey/targetedms/parser/AbstractAnnotation.java -text
 src/org/labkey/targetedms/parser/AnnotatedEntity.java -text
@@ -183,6 +186,8 @@ src/org/labkey/targetedms/query/ChromatogramDisplayColumnFactory.java -text
 src/org/labkey/targetedms/query/ChromatogramGridQuerySettings.java -text
 src/org/labkey/targetedms/query/ConflictResultsManager.java -text
 src/org/labkey/targetedms/query/DocTransitionsTableInfo.java -text
+src/org/labkey/targetedms/query/ExperimentAnnotationsManager.java -text
+src/org/labkey/targetedms/query/ExperimentAnnotationsTableInfo.java -text
 src/org/labkey/targetedms/query/InstrumentManager.java -text
 src/org/labkey/targetedms/query/IsotopeLabelManager.java -text
 src/org/labkey/targetedms/query/LibraryManager.java -text
@@ -214,6 +219,8 @@ src/org/labkey/targetedms/view/PeptideGroupViewWebPart.java -text
 src/org/labkey/targetedms/view/PeptidePrecursorChromatogramsView.java -text
 src/org/labkey/targetedms/view/PeptideViewWebPart.java -text
 src/org/labkey/targetedms/view/PrecursorHtmlMaker.java -text
+src/org/labkey/targetedms/view/TargetedMSRunsWebPartView.java -text
+src/org/labkey/targetedms/view/TargetedMsRunListView.java -text
 src/org/labkey/targetedms/view/TransitionPeptideSearchViewProvider.java -text
 src/org/labkey/targetedms/view/TransitionProteinSearchViewProvider.java -text
 src/org/labkey/targetedms/view/archivedRevisionsDownload.jsp -text
@@ -221,6 +228,9 @@ src/org/labkey/targetedms/view/chromatogramLibraryDownload.jsp -text
 src/org/labkey/targetedms/view/chromatogramsForm.jsp -text
 src/org/labkey/targetedms/view/confirmImport.jsp -text
 src/org/labkey/targetedms/view/conflictSummary.jsp -text
+src/org/labkey/targetedms/view/expannotations/ExperimentAnnotationsFormDataRegion.java -text
+src/org/labkey/targetedms/view/expannotations/TargetedMSExperimentsWebPart.java -text
+src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -text
 src/org/labkey/targetedms/view/folderSetup.jsp -text
 src/org/labkey/targetedms/view/peptidePeakAreaView.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text

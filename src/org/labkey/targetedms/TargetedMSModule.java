@@ -31,14 +31,11 @@ import org.labkey.api.module.SpringModule;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.protein.ProteomicsModule;
-import org.labkey.api.query.QueryView;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.Portal;
-import org.labkey.api.view.VBox;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
@@ -50,8 +47,10 @@ import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.view.LibraryPrecursorViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.PeptideViewWebPart;
+import org.labkey.targetedms.view.TargetedMSRunsWebPartView;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
+import org.labkey.targetedms.view.expannotations.TargetedMSExperimentsWebPart;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -104,7 +103,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public double getVersion()
     {
-        return 13.32;
+        return 13.33;
     }
 
     @Override
@@ -156,8 +155,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         {
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
             {
-                QueryView view = new PeptideViewWebPart(portalCtx);
-                return view;
+                return new PeptideViewWebPart(portalCtx);
             }
         };
 
@@ -165,8 +163,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         {
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
             {
-                QueryView view = new PeptideGroupViewWebPart(portalCtx);
-                return view;
+                return new PeptideGroupViewWebPart(portalCtx);
             }
         };
 
@@ -174,15 +171,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         {
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
             {
-                QueryView gridView = ExperimentService.get().createExperimentRunWebPart(new ViewContext(portalCtx), EXP_RUN_TYPE);
-                gridView.setFrame(WebPartView.FrameType.NONE);
-                VBox vbox = new VBox();
-                vbox.addView(new JspView("/org/labkey/targetedms/view/conflictSummary.jsp"));
-                vbox.addView(gridView);
-                vbox.setFrame(WebPartView.FrameType.PORTAL);
-                vbox.setTitle(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME);
-                vbox.setTitleHref(new ActionURL(TargetedMSController.ShowListAction.class, portalCtx.getContainer()));
-                return vbox;
+
+                return new TargetedMSRunsWebPartView(portalCtx);
             }
         };
 
@@ -204,6 +194,15 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             }
         };
 
+        BaseWebPartFactory experimentAnnotationsListFactory = new BaseWebPartFactory(TargetedMSExperimentsWebPart.WEB_PART_NAME)
+        {
+            @Override
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart) throws Exception
+            {
+                return new TargetedMSExperimentsWebPart(portalCtx);
+            }
+        };
+
         List<WebPartFactory> webpartFactoryList = new ArrayList<>();
         webpartFactoryList.add(setupFactory);
         webpartFactoryList.add(chromatogramLibraryDownload);
@@ -213,6 +212,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         webpartFactoryList.add(runsFactory);
         webpartFactoryList.add(proteinSearchFactory);
         webpartFactoryList.add(modificationSearchFactory);
+        webpartFactoryList.add(experimentAnnotationsListFactory);
         return webpartFactoryList;
     }
 

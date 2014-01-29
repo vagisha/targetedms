@@ -100,6 +100,16 @@ public class TargetedMSManager
         return getSchema().getSqlDialect();
     }
 
+    public static TableInfo getTableInfoExperimentAnnotations()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_EXPERIMENT_ANNOTATIONS);
+    }
+
+    public static TableInfo getTableInfoExperimentAnnotationsRun()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_EXPERIMENT_ANNOTATIONS_RUN);
+    }
+
     public static TableInfo getTableInfoRuns()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_RUNS);
@@ -483,6 +493,20 @@ public class TargetedMSManager
             return runs[0];
         }
         throw new IllegalStateException("There is more than one non-deleted Targeted MS Run for dataId " + dataId);
+    }
+
+    public static TargetedMSRun getRunByLsid(String lsid, Container c)
+    {
+        TargetedMSRun[] runs = getRuns("experimentrunlsid = ? AND container = ?", lsid, c.getId());
+        if(runs == null || runs.length == 0)
+        {
+            return null;
+        }
+        if(runs.length == 1)
+        {
+            return runs[0];
+        }
+        throw new IllegalArgumentException("More than one TargetedMS runs found for LSID "+lsid);
     }
 
     private static TargetedMSRun[] getRuns(String whereClause, Object... params)
@@ -898,6 +922,8 @@ public class TargetedMSManager
         deleteRunDependent(getTableInfoRunEnzyme());
         // Delete from AnnotationSettings
         deleteRunDependent(getTableInfoAnnotationSettings());
+        // Delete from ExperimentAnnotationsRun
+        deleteRunDependent(getTableInfoExperimentAnnotationsRun());
 
         // Delete from runs
         execute("DELETE FROM " + getTableInfoRuns() + " WHERE Deleted = ?", true);

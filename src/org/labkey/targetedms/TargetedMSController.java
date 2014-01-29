@@ -18,6 +18,8 @@ package org.labkey.targetedms;
 
 
 import com.keypoint.PngEncoder;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jfree.chart.ChartFactory;
@@ -32,6 +34,7 @@ import org.labkey.api.action.ApiAction;
 import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
+import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.FormHandlerAction;
 import org.labkey.api.action.FormViewAction;
@@ -42,12 +45,15 @@ import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.data.ActionButton;
+import org.labkey.api.data.BeanViewForm;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DataRegion;
+import org.labkey.api.data.DataRegionSelection;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.SQLFragment;
@@ -59,6 +65,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.jsp.FormPage;
 import org.labkey.api.module.DefaultFolderType;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
@@ -69,6 +76,7 @@ import org.labkey.api.pipeline.browse.PipelinePathForm;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
@@ -78,6 +86,7 @@ import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.security.SecurityPolicyManager;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
@@ -92,7 +101,9 @@ import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DetailsView;
 import org.labkey.api.view.GridView;
+import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.HttpView;
+import org.labkey.api.view.InsertView;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
@@ -100,9 +111,11 @@ import org.labkey.api.view.Portal;
 import org.labkey.api.view.RedirectException;
 import org.labkey.api.view.ShortURLRecord;
 import org.labkey.api.view.ShortURLService;
+import org.labkey.api.view.UpdateView;
 import org.labkey.api.view.VBox;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.view.ViewContext;
+import org.labkey.api.view.ViewForm;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
@@ -112,6 +125,7 @@ import org.labkey.targetedms.conflict.ConflictPeptide;
 import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.conflict.ConflictTransition;
+import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.PeptideGroup;
@@ -122,6 +136,7 @@ import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.ConflictResultsManager;
+import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ModifiedPeptideDisplayColumn;
@@ -139,6 +154,8 @@ import org.labkey.targetedms.view.DocumentPrecursorsView;
 import org.labkey.targetedms.view.DocumentTransitionsView;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 import org.labkey.targetedms.view.PeptidePrecursorChromatogramsView;
+import org.labkey.targetedms.view.TargetedMsRunListView;
+import org.labkey.targetedms.view.expannotations.ExperimentAnnotationsFormDataRegion;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatch;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 import org.labkey.targetedms.view.spectrum.PeptideSpectrumView;
@@ -146,6 +163,7 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -166,7 +184,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.labkey.targetedms.TargetedMSModule.EXP_RUN_TYPE;
 import static org.labkey.targetedms.TargetedMSModule.FolderType;
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD;
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
@@ -367,12 +384,10 @@ public class TargetedMSController extends SpringActionController
     {
         public ModelAndView getView(Object o, BindException errors) throws Exception
         {
-            QueryView gridView = ExperimentService.get().createExperimentRunWebPart(getViewContext(), EXP_RUN_TYPE);
-            gridView.setTitle(TARGETED_MS_RUNS_WEBPART_NAME);
-            gridView.setTitleHref(new ActionURL(TargetedMSController.ShowListAction.class, getContainer()));
+            TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext());
             VBox vbox = new VBox();
             vbox.addView(new JspView("/org/labkey/targetedms/view/conflictSummary.jsp"));
-            vbox.addView(gridView);
+            vbox.addView(runListView);
             return vbox;
         }
 
@@ -3394,4 +3409,681 @@ public class TargetedMSController extends SpringActionController
     /*
      * END RENAME CODE BLOCK
      */
+
+    // ------------------------------------------------------------------------
+    // BEGIN Experiment annotation actions
+    // ------------------------------------------------------------------------
+    private static final String ADD_SELECTED_RUNS = "addSelectedRuns";
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ShowNewExperimentAnnotationFormAction extends SimpleViewAction<NewExperimentAnnotationsForm>
+    {
+
+        @Override
+        public ModelAndView getView(NewExperimentAnnotationsForm form, BindException errors) throws Exception
+        {
+            DataRegion drg = createNewTargetedMsExperimentDataRegion(form, getViewContext());
+            return new InsertView(drg, errors);
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return null;
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class SaveNewExperimentAnnotationAction extends FormViewAction<NewExperimentAnnotationsForm>
+    {
+        private ExperimentAnnotations _expAnnot;
+
+        @Override
+        public void validateCommand(NewExperimentAnnotationsForm target, Errors errors)
+        {
+        }
+
+        @Override
+        public ModelAndView getView(NewExperimentAnnotationsForm form, boolean reshow, BindException errors) throws Exception
+        {
+            // We are here either because handlePost failed or there were errors in the form (e.g. missing required values)
+            ExperimentAnnotations expAnnot = form.getBean();
+
+            if (expAnnot.getTitle() == null || expAnnot.getTitle().trim().length() == 0)
+            {
+                errors.reject(ERROR_MSG, "You must specify a title for the experiment");
+            }
+
+            DataRegion drg = createNewTargetedMsExperimentDataRegion(form, getViewContext());
+            return new InsertView(drg, errors);
+        }
+
+        @Override
+        public boolean handlePost(NewExperimentAnnotationsForm form, BindException errors) throws Exception
+        {
+            _expAnnot = form.getBean();
+
+            if(!StringUtils.isBlank(_expAnnot.getPublicationLink()))
+            {
+                if(!new UrlValidator().isValid(_expAnnot.getPublicationLink()))
+                {
+                    errors.reject(ERROR_MSG, "Publication Link does not appear to be valid. Links should begin with either http or https.");
+                    return false;
+                }
+            }
+
+            // These two values are not set automatically in the form.  They have to be set explicitly.
+            form.setAddSelectedRuns("true".equals(getViewContext().getRequest().getParameter(ADD_SELECTED_RUNS)));
+            form.setDataRegionSelectionKey(getViewContext().getRequest().getParameter(DataRegionSelection.DATA_REGION_SELECTION_KEY));
+
+
+
+            if (errors.getErrorCount() == 0)
+            {
+
+                _expAnnot = ExperimentAnnotationsManager.save(getContainer(), _expAnnot, getUser());
+
+                if(form.isAddSelectedRuns())
+                {
+                    int[] runIds = PageFlowUtil.toInts(DataRegionSelection.getSelected(getViewContext(), true));
+                    TargetedMSController.addSelectedRunsToExperiment(_expAnnot, runIds, getContainer(), getUser());
+                }
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(NewExperimentAnnotationsForm form)
+        {
+            if(_expAnnot != null && _expAnnot.getId() > 0)
+            {
+                return getViewExperimentDetailsURL(_expAnnot.getId(), getContainer());
+            }
+            else
+                return form.getReturnURLHelper();
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    public static DataRegion createNewTargetedMsExperimentDataRegion(NewExperimentAnnotationsForm form, ViewContext viewContext)
+    {
+        DataRegion drg = new ExperimentAnnotationsFormDataRegion(viewContext, form, DataRegion.MODE_INSERT);
+
+        drg.addHiddenFormField(ActionURL.Param.returnUrl, viewContext.getRequest().getParameter(ActionURL.Param.returnUrl.name()));
+        drg.addHiddenFormField(ADD_SELECTED_RUNS, Boolean.toString("true".equals(viewContext.getRequest().getParameter(ADD_SELECTED_RUNS))));
+
+        for (String rowId : DataRegionSelection.getSelected(viewContext, false))
+        {
+            drg.addHiddenFormField(DataRegion.SELECT_CHECKBOX_NAME, rowId);
+        }
+        drg.addHiddenFormField(DataRegionSelection.DATA_REGION_SELECTION_KEY, viewContext.getRequest().getParameter(DataRegionSelection.DATA_REGION_SELECTION_KEY));
+
+        return drg;
+    }
+
+    public static class NewExperimentAnnotationsForm extends ExperimentAnnotationsForm implements DataRegionSelection.DataSelectionKeyForm
+    {
+        private boolean _addSelectedRuns;
+        private String _dataRegionSelectionKey;
+
+        public boolean isAddSelectedRuns()
+        {
+            return _addSelectedRuns;
+        }
+
+        public void setAddSelectedRuns(boolean addSelectedRuns)
+        {
+            _addSelectedRuns = addSelectedRuns;
+        }
+
+        public String getDataRegionSelectionKey()
+        {
+            return _dataRegionSelectionKey;
+        }
+
+        public void setDataRegionSelectionKey(String dataRegionSelectionKey)
+        {
+            _dataRegionSelectionKey = dataRegionSelectionKey;
+        }
+    }
+
+    public static class ExperimentAnnotationsForm extends BeanViewForm<ExperimentAnnotations>
+    {
+        public ExperimentAnnotationsForm()
+        {
+            super(ExperimentAnnotations.class, TargetedMSManager.getTableInfoExperimentAnnotations());
+        }
+    }
+
+    @RequiresPermissionClass(ReadPermission.class)
+    public class ShowExperimentAnnotationsAction extends SimpleViewAction<ViewExperimentAnnotationsForm>
+    {
+        @Override
+        public ModelAndView getView(final ViewExperimentAnnotationsForm form, BindException errors) throws Exception
+        {
+            ExperimentAnnotations exptAnnotations = ExperimentAnnotationsManager.get(form.getId());
+            if (exptAnnotations == null)
+            {
+                throw new NotFoundException("Could not find experiment with ID " + form.getId());
+            }
+
+            // Check container
+            ensureCorrectContainer(getContainer(), exptAnnotations.getContainer(), getViewContext());
+
+
+            // Experiment details
+            DataRegion experimentDetails = new DataRegion();
+            TableInfo tableInfo = TargetedMSManager.getTableInfoExperimentAnnotations();
+            experimentDetails.setColumns(tableInfo.getColumns("Title",
+                                                            "Organism",
+                                                            "Instrument",
+                                                            "SpikeIn",
+                                                            "Abstract",
+                                                            "Citation",
+                                                            "PublicationLink",
+                                                            "ExperimentDescription",
+                                                            "SampleDescription",
+                                                            "Container",
+                                                            "CreatedBy",
+                                                            "Created",
+                                                            "ModifiedBy",
+                                                            "Modified"));
+
+            ButtonBar bbar = new ButtonBar();
+            ActionURL editUrl = getEditExperimentDetailsURL(getContainer(),
+                                                            form.getId(),
+                                                            TargetedMSController.getViewExperimentDetailsURL(form.getId(), getContainer()));
+            ActionButton editButton = new ActionButton("Edit", editUrl);
+            editButton.setDisplayPermission(UpdatePermission.class);
+            bbar.add(editButton);
+            bbar.setStyle(ButtonBar.Style.separateButtons);
+            experimentDetails.setButtonBar(bbar);
+
+            DetailsView exptDetailsView = new DetailsView(experimentDetails, form.getId());
+            exptDetailsView.setTitle("Experiment Details");
+
+            VBox result = new VBox(exptDetailsView);
+
+            TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext(), exptAnnotations, TargetedMsRunListView.ButtonBarType.EXPERIMENT_DETAILS_VIEW);
+            TableInfo tinfo = runListView.getTable();
+            if(tinfo instanceof FilteredTable)
+            {
+                SQLFragment sql = new SQLFragment();
+
+                sql.append("lsid IN (SELECT run.experimentrunlsid FROM ");
+                sql.append(TargetedMSManager.getTableInfoRuns(), "run").append(", ");
+                sql.append(TargetedMSManager.getTableInfoExperimentAnnotationsRun(), "eRun").append(" ");
+                sql.append("WHERE eRun.ExperimentAnnotationsId = ? AND eRun.runId = run.id) ");
+                sql.add(exptAnnotations.getId());
+                ((FilteredTable) tinfo).addCondition(sql);
+            }
+            runListView.setShowAddToRunGroupButton(false);
+            runListView.setShowMoveRunsButton(false);
+            runListView.setShowDeleteButton(false);
+            runListView.setShowExportButtons(false);
+            result.addView(runListView);
+
+            return result;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+
+    }
+    public static class ViewExperimentAnnotationsForm
+    {
+        private int _id;
+
+        public int getId()
+        {
+            return _id;
+        }
+
+        public void setId(int id)
+        {
+            _id = id;
+        }
+    }
+
+    public static void ensureCorrectContainer(Container requestContainer, Container expAnnotContainer, ViewContext viewContext) throws ServletException
+    {
+        if (!requestContainer.equals(expAnnotContainer))
+        {
+            ActionURL url = viewContext.cloneActionURL();
+            url.setContainer(expAnnotContainer);
+            throw new RedirectException(url);
+        }
+    }
+
+    @RequiresPermissionClass(UpdatePermission.class)
+    public class ShowUpdateExperimentAnnotationsAction extends SimpleViewAction<ExperimentAnnotationsForm>
+    {
+        public ModelAndView getView(ExperimentAnnotationsForm form, BindException errors) throws Exception
+        {
+            form.refreshFromDb();
+            ExperimentAnnotations experimentAnnotations = form.getBean();
+            if(experimentAnnotations == null)
+            {
+                throw new NotFoundException("Could not find requested experiment annotations");
+            }
+            ensureCorrectContainer(getContainer(), experimentAnnotations.getContainer(), getViewContext());
+
+            return new UpdateView(new ExperimentAnnotationsFormDataRegion(getViewContext(), form, DataRegion.MODE_UPDATE), form, errors);
+        }
+
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    @RequiresPermissionClass(UpdatePermission.class)
+    public class UpdateExperimentAnnotationsAction extends FormViewAction<ExperimentAnnotationsForm>
+    {
+        private int _experimentAnnotationsId;
+        public void validateCommand(ExperimentAnnotationsForm target, Errors errors)
+        {}
+
+        @Override
+        public ModelAndView getView(ExperimentAnnotationsForm form, boolean reshow, BindException errors) throws Exception
+        {
+            return new UpdateView(new ExperimentAnnotationsFormDataRegion(getViewContext(), form, DataRegion.MODE_UPDATE), form, errors);
+        }
+
+        public boolean handlePost(ExperimentAnnotationsForm form, BindException errors) throws Exception
+        {
+            _experimentAnnotationsId = form.getBean().getId();
+            ExperimentAnnotations exptAnnotations = ExperimentAnnotationsManager.get(_experimentAnnotationsId);
+            if (exptAnnotations == null)
+            {
+                throw new NotFoundException("Could not find experiment with ID " + _experimentAnnotationsId);
+            }
+
+            // Check container
+            ensureCorrectContainer(getContainer(), exptAnnotations.getContainer(), getViewContext());
+
+            if(!StringUtils.isBlank(form.getBean().getPublicationLink()))
+            {
+                UrlValidator urlValidator = new UrlValidator(new String[] {"http", "https"});
+                if(!urlValidator.isValid(form.getBean().getPublicationLink()))
+                {
+                    errors.reject(ERROR_MSG, "Publication Link does not appear to be valid.");
+                    return false;
+                }
+            }
+
+            form.doUpdate();
+            return true;
+        }
+
+        public ActionURL getSuccessURL(ExperimentAnnotationsForm form)
+        {
+            return getViewExperimentDetailsURL(_experimentAnnotationsId, getContainer());
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    @RequiresPermissionClass(DeletePermission.class)
+    public class DeleteSelectedExperimentAnnotationsAction extends ConfirmAction<SelectedIdsForm>
+    {
+        @Override
+        public ModelAndView getConfirmView(SelectedIdsForm deleteForm, BindException errors) throws Exception
+        {
+            return FormPage.getView(TargetedMSController.class, deleteForm, "view/expannotations/deleteExperimentAnnotations.jsp");
+        }
+
+        @Override
+        public boolean handlePost(SelectedIdsForm deleteForm, BindException errors) throws Exception
+        {
+            int[] experimentAnnotationIds = deleteForm.getIds(false);
+            User user = getUser();
+            for(int experimentAnnotationId: experimentAnnotationIds)
+            {
+                ExperimentAnnotations exp = ExperimentAnnotationsManager.get(experimentAnnotationId);
+                if(!exp.getContainer().hasPermission(user, DeletePermission.class))
+                {
+                    errors.reject(ERROR_MSG, "You do not have permissions to delete experiments in folder " + exp.getContainer().getPath());
+                }
+            }
+
+            if(!errors.hasErrors())
+            {
+                ExperimentAnnotationsManager.deleteExperimentAnnotations(experimentAnnotationIds);
+                return true;
+            }
+            return false;
+        }
+
+        @Override
+        public void validateCommand(SelectedIdsForm deleteForm, Errors errors)
+        {
+            return;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(SelectedIdsForm deleteExperimentAnnotationForm)
+        {
+            return getContainer().getStartURL(getUser());
+        }
+    }
+
+    public static class SelectedIdsForm extends ViewForm implements DataRegionSelection.DataSelectionKeyForm
+    {
+        private String _dataRegionSelectionKey;
+
+        public SelectedIdsForm() {super();}
+
+        public int[] getIds(boolean clear)
+        {
+            return PageFlowUtil.toInts(DataRegionSelection.getSelected(getViewContext(), getDataRegionSelectionKey(), false, clear));
+        }
+
+        public String getDataRegionSelectionKey()
+        {
+            return _dataRegionSelectionKey;
+        }
+
+        public void setDataRegionSelectionKey(String dataRegionSelectionKey)
+        {
+            _dataRegionSelectionKey = dataRegionSelectionKey;
+        }
+    }
+
+    private static void addSelectedRunsToExperiment(ExperimentAnnotations expAnnot, int[] rowIds, Container container, User user)
+    {
+        List<TargetedMSRun> runs = getTargetedMSRunsForExpRunRowIds(rowIds);
+        if(runs.size() > 0)
+        {
+            ExperimentAnnotationsManager.addRunIds(expAnnot, runs, container, user);
+        }
+    }
+
+    private static List<TargetedMSRun> getTargetedMSRunsForExpRunRowIds(int[] rowIds)
+    {
+        ExperimentService.Interface expService = ExperimentService.get();
+        List<TargetedMSRun> runs = new ArrayList<>();
+        for(int rowId: rowIds)
+        {
+            ExpRun run = expService.getExpRun(rowId);
+            if(run == null)
+            {
+                throw new NotFoundException("Could not find run with rowId " + rowId);
+            }
+            TargetedMSRun targetedMSRun = TargetedMSManager.getRunByLsid(run.getLSID(), run.getContainer());
+            if(targetedMSRun == null)
+            {
+                throw new NotFoundException("could not find targetedMS run with lsid " + run.getLSID() + " in container " + run.getContainer());
+            }
+            runs.add(targetedMSRun);
+        }
+        return runs;
+    }
+
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class AddSelectedRunsAction extends FormHandlerAction<ExperimentRunListForm>
+    {
+        public void validateCommand(ExperimentRunListForm target, Errors errors)
+        {
+        }
+
+        public boolean handlePost(ExperimentRunListForm form, BindException errors) throws Exception
+        {
+            ExperimentAnnotations experimentAnnotations = form.lookupExperiment();
+            if(experimentAnnotations == null)
+            {
+                errors.reject(ERROR_MSG, "Failed to lookup experiment annotations with ID " + form.getExpAnnotId());
+                return false;
+            }
+
+            ensureCorrectContainer(getContainer(), experimentAnnotations.getContainer(), getViewContext());
+
+            if(!experimentAnnotations.getContainer().hasPermission(getUser(), InsertPermission.class))
+            {
+                errors.reject(ERROR_MSG, "User does not have permissions to perform the requested action.");
+                return false;
+            }
+
+            int[] rowIds = form.getIds(false);
+            addSelectedRunsToExperiment(experimentAnnotations, rowIds, getContainer(), getUser());
+            return true;
+        }
+
+        public ActionURL getSuccessURL(ExperimentRunListForm form)
+        {
+           return getViewExperimentDetailsURL(form.lookupExperiment().getId(), getContainer());
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class AddAllFolderRunsToExperimentAction extends FormHandlerAction<AddAllRunsForm>
+    {
+        private ExperimentAnnotations _expAnnot;
+
+        public void validateCommand(AddAllRunsForm form, Errors errors)
+        {
+        }
+
+        public boolean handlePost(AddAllRunsForm form, BindException errors) throws Exception
+        {
+            _expAnnot = form.lookupExperiment();
+            if(_expAnnot == null)
+            {
+                errors.reject(ERROR_MSG, "Failed to lookup experiment annotations with ID " + form.getId());
+                return false;
+            }
+
+            ensureCorrectContainer(getContainer(), _expAnnot.getContainer(), getViewContext());
+
+            if(!_expAnnot.getContainer().hasPermission(getUser(), InsertPermission.class))
+            {
+                errors.reject(ERROR_MSG, "User does not have permissions to perform the requested action.");
+                return false;
+            }
+
+            ExpRun[] runs = ExperimentService.get().getExpRuns(_expAnnot.getContainer(), null, null);
+            int[] rowIds = new int[runs.length];
+            int i = 0;
+            for(ExpRun run: runs)
+            {
+                rowIds[i++] = run.getRowId();
+            }
+            addSelectedRunsToExperiment(form.lookupExperiment(), rowIds, getContainer(), getUser());
+            return true;
+        }
+
+        public ActionURL getSuccessURL(AddAllRunsForm form)
+        {
+            return getViewExperimentDetailsURL(_expAnnot.getId(), getContainer());
+        }
+    }
+
+    public static class AddAllRunsForm
+    {
+        private Integer _id;
+
+        public Integer getId()
+        {
+            return _id;
+        }
+
+        public void setId(Integer id)
+        {
+            _id = id;
+        }
+
+        public ExperimentAnnotations lookupExperiment()
+        {
+            return getId() == null ? null : ExperimentAnnotationsManager.get(getId().intValue());
+        }
+    }
+
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ShowAvailableRunsAction extends SimpleViewAction<AddAllRunsForm>
+    {
+        ExperimentAnnotations _experimentAnnotations;
+
+        @Override
+        public ModelAndView getView(AddAllRunsForm form, BindException errors) throws Exception
+        {
+           _experimentAnnotations = form.lookupExperiment();
+            if(_experimentAnnotations == null)
+            {
+                errors.reject(ERROR_MSG, "Failed to lookup experiment annotations with ID " + form.getId());
+                return new SimpleErrorView(errors, true);
+            }
+
+            ensureCorrectContainer(getContainer(), _experimentAnnotations.getContainer(), getViewContext());
+
+            TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext(), _experimentAnnotations, TargetedMsRunListView.ButtonBarType.ALL_AVAILABLE_RUNS_VIEW);
+
+            HtmlView htmlView = new HtmlView("Select runs in the table below and click on <span style=\"font-weight:bold\">ADD TO EXPERIMENT</span>. "
+                    + "Runs will be added to experiment <span style=\"font-weight:bold\">" +  _experimentAnnotations.getTitle() + "</span>.");
+
+            VBox vbox = new VBox();
+            vbox.addView(htmlView);
+            vbox.addView(runListView);
+
+            return vbox;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            if(_experimentAnnotations != null)
+            {
+                root.addChild("Experiment Details", getViewExperimentDetailsURL(_experimentAnnotations.getId(), getContainer()));
+                root.addChild("Add Runs to Experiment");
+            }
+            return root;
+        }
+    }
+
+    @RequiresPermissionClass(UpdatePermission.class)
+    public class RemoveSelectedRunsAction extends FormHandlerAction<ExperimentRunListForm>
+    {
+        private ExperimentAnnotations _experimentAnnotations;
+        public void validateCommand(ExperimentRunListForm target, Errors errors)
+        {
+        }
+
+        public boolean handlePost(ExperimentRunListForm form, BindException errors) throws Exception
+        {
+            _experimentAnnotations = form.lookupExperiment();
+            if (_experimentAnnotations == null)
+            {
+                throw new NotFoundException("Could not find experiment with id " + form.getExpAnnotId());
+            }
+            if(!_experimentAnnotations.getContainer().hasPermission(getUser(), UpdatePermission.class))
+            {
+                errors.reject(ERROR_MSG, "You do not have permissions to update experiments in folder " + _experimentAnnotations.getContainer().getPath());
+            }
+
+            if(!errors.hasErrors())
+            {
+                int[] rowIds = form.getIds(true);
+                List<TargetedMSRun> runList = getTargetedMSRunsForExpRunRowIds(rowIds);
+                ExperimentAnnotationsManager.removeRunIds(_experimentAnnotations, runList, getContainer());
+                return true;
+            }
+
+            return false;
+        }
+
+        public ActionURL getSuccessURL(ExperimentRunListForm form)
+        {
+            return getViewExperimentDetailsURL(_experimentAnnotations.getId(), getContainer());
+        }
+    }
+
+    public static class ExperimentRunListForm extends SelectedIdsForm
+    {
+        private Integer _expAnnotId;
+
+        public Integer getExpAnnotId()
+        {
+            return _expAnnotId;
+        }
+
+        public void setExpAnnotId(Integer expRowId)
+        {
+            _expAnnotId = expRowId;
+        }
+
+        public ExperimentAnnotations lookupExperiment()
+        {
+            return getExpAnnotId() == null ? null : ExperimentAnnotationsManager.get(getExpAnnotId().intValue());
+        }
+    }
+
+    public static ActionURL getNewExperimentAnnotationURL(Container container, URLHelper returnURL, boolean addSelectedRuns)
+    {
+        ActionURL result = new ActionURL(ShowNewExperimentAnnotationFormAction.class, container);
+        if (returnURL != null)
+        {
+            result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());
+        }
+        if (addSelectedRuns)
+        {
+            result.addParameter("addSelectedRuns", addSelectedRuns);
+        }
+        return result;
+    }
+
+    public static ActionURL getEditExperimentDetailsURL(Container c, int experimentAnnotationsId, URLHelper returnURL)
+    {
+        ActionURL url = new ActionURL(ShowUpdateExperimentAnnotationsAction.class, c);
+        url.addParameter("id", experimentAnnotationsId);  // The name of the parameter is important. This is used to populate the TableViewForm (refreshFromDb())
+        if(returnURL != null)
+        {
+            url.addReturnURL(returnURL);
+        }
+        return url;
+    }
+
+    public static ActionURL getAddAllRunsToExperimentURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
+    {
+        ActionURL result = new ActionURL(AddAllFolderRunsToExperimentAction.class, container);
+        if (returnURL != null)
+        {
+            result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());
+        }
+        result.addParameter("id", experimentAnnotationsId);
+        return result;
+    }
+
+    public static ActionURL getShowAvailableRunsURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
+    {
+        ActionURL result = new ActionURL(TargetedMSController.ShowAvailableRunsAction.class, container);
+        if (returnURL != null)
+        {
+            result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());
+        }
+        result.addParameter("id", experimentAnnotationsId);
+        return result;
+    }
+
+    public static ActionURL getViewExperimentDetailsURL(int experimentAnnotationsId, Container container)
+    {
+        ActionURL result = new ActionURL(TargetedMSController.ShowExperimentAnnotationsAction.class, container);
+        result.addParameter("id", experimentAnnotationsId);
+        return result;
+    }
+    // ------------------------------------------------------------------------
+    // END Actions to create, delete, edit and view experiment annotations.
+    // ------------------------------------------------------------------------
 }

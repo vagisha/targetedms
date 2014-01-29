@@ -903,4 +903,82 @@
         </ns:columns>
     </ns:table>
 
+    <ns:table tableName="ExperimentAnnotations" tableDbType="TABLE">
+        <ns:titleColumn>Title</ns:titleColumn>
+        <ns:columns>
+            <ns:column columnName="_ts">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Id">
+                <ns:description>Contains a unique id for this targeted MS experiment</ns:description>
+            </ns:column>
+            <ns:column columnName="Container">
+                <ns:columnTitle>Folder</ns:columnTitle>
+                <ns:isReadOnly>false</ns:isReadOnly>
+                <ns:fk>
+                    <ns:fkColumnName>EntityId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>containers</ns:fkTable>
+                </ns:fk>
+                <ns:description>Folder or project in which this targeted MS experiment was created</ns:description>
+            </ns:column>
+            <ns:column columnName="Created"/>
+            <ns:column columnName="CreatedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="Modified"/>
+            <ns:column columnName="ModifiedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="Title">
+                <ns:description>Title for this targeted MS experiment</ns:description>
+                <ns:nullable>false</ns:nullable>
+            </ns:column>
+            <ns:column columnName="Organism">
+                <ns:description>Name of the organism studied in the experiment</ns:description>
+            </ns:column>
+            <ns:column columnName="Instrument">
+                <ns:description>Mass Spectrometry Instrument on which the data were acquired</ns:description>
+            </ns:column>
+            <ns:column columnName="SpikeIn">
+                <ns:description>Spike-in experiment</ns:description>
+            </ns:column>
+            <ns:column columnName="ExperimentDescription">
+                <ns:description>Details about the experiment</ns:description>
+            </ns:column>
+            <ns:column columnName="SampleDescription">
+                <ns:description></ns:description>
+            </ns:column>
+            <ns:column columnName="Abstract"/>
+            <ns:column columnName="Citation">
+                <ns:displayWidth>0</ns:displayWidth>
+            </ns:column>
+            <ns:column columnName="PublicationLink"/>
+        </ns:columns>
+    </ns:table>
+
+    <ns:table tableName="ExperimentAnnotationsRun" tableDbType="TABLE">
+        <ns:columns>
+            <ns:column columnName="Id"/>
+            <ns:column columnName="RunId"/>
+            <ns:column columnName="ExperimentAnnotationsId"/>
+            <ns:column columnName="Created"/>
+            <ns:column columnName="CreatedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+
 </ns:tables>
