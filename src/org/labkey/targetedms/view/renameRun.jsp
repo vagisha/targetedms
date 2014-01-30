@@ -23,7 +23,7 @@
     TargetedMSController.RenameBean bean = ((JspView<TargetedMSController.RenameBean>) HttpView.currentView()).getModelBean();
 %>
 <form action="<%=h(buildURL(TargetedMSController.RenameRunAction.class))%>" method="post">
-<%=text(generateReturnUrlFormField(bean.returnURL))%>
+<%=generateReturnUrlFormField(bean.returnURL)%>
 <input type="hidden" name="run" value="<%=bean.run.getRunId()%>"/>
 <table class="labkey-data-region">
     <tr>
