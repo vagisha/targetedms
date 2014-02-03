@@ -80,10 +80,7 @@ import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
-import org.labkey.api.security.MutableSecurityPolicy;
 import org.labkey.api.security.RequiresPermissionClass;
-import org.labkey.api.security.RequiresSiteAdmin;
-import org.labkey.api.security.SecurityPolicyManager;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
@@ -109,8 +106,6 @@ import org.labkey.api.view.NavTree;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.Portal;
 import org.labkey.api.view.RedirectException;
-import org.labkey.api.view.ShortURLRecord;
-import org.labkey.api.view.ShortURLService;
 import org.labkey.api.view.UpdateView;
 import org.labkey.api.view.VBox;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -3235,93 +3230,6 @@ public class TargetedMSController extends SpringActionController
         public void setDescription(String description)
         {
             this.description = description;
-        }
-    }
-
-    public static class ShortURLForm
-    {
-        private String _shortURL;
-        private String _fullURL;
-        private boolean _delete;
-
-        public void setShortURL(String shortURL)
-        {
-            _shortURL = shortURL;
-        }
-
-        public void setFullURL(String fullURL)
-        {
-            _fullURL = fullURL;
-        }
-
-        public void setDelete(boolean delete)
-        {
-            _delete = delete;
-        }
-
-        public String getShortURL()
-        {
-            return _shortURL;
-        }
-
-        public String getFullURL()
-        {
-            return _fullURL;
-        }
-
-        public boolean isDelete()
-        {
-            return _delete;
-        }
-    }
-
-    @RequiresSiteAdmin
-    public class ShortURLAdminAction extends FormViewAction<ShortURLForm>
-    {
-        @Override
-        public void validateCommand(ShortURLForm target, Errors errors) {}
-
-        @Override
-        public ModelAndView getView(ShortURLForm form, boolean reshow, BindException errors) throws Exception
-        {
-            return new JspView<>("/org/labkey/targetedms/view/shortURL.jsp", form, errors);
-        }
-
-        @Override
-        public boolean handlePost(ShortURLForm form, BindException errors) throws Exception
-        {
-            ShortURLService service = ServiceRegistry.get(ShortURLService.class);
-            if (form.isDelete())
-            {
-                ShortURLRecord shortURLRecord = service.resolveShortURL(form.getShortURL());
-                if (shortURLRecord == null)
-                {
-                    throw new NotFoundException("No such short URL: " + form.getShortURL());
-                }
-                service.deleteShortURL(shortURLRecord, getUser());
-            }
-            else
-            {
-                ShortURLRecord shortURLRecord = service.saveShortURL(form.getShortURL(), new URLHelper(form.getFullURL()), getUser());
-                MutableSecurityPolicy policy = new MutableSecurityPolicy(SecurityPolicyManager.getPolicy(shortURLRecord));
-                // Add a role assignment to let another group manage the URL. This grants permission to the journal
-                // to change where the URL redirects you to after they copy the data
-//                policy.addRoleAssignment(org.labkey.api.security.SecurityManager.getGroupId(c, "SomeGroup"));
-                SecurityPolicyManager.savePolicy(policy);
-            }
-            return true;
-        }
-
-        @Override
-        public URLHelper getSuccessURL(ShortURLForm form)
-        {
-            return new ActionURL(ShortURLAdminAction.class, getContainer());
-        }
-
-        @Override
-        public NavTree appendNavTrail(NavTree root)
-        {
-            return root.addChild("Short URL Test UI");
         }
     }
 
