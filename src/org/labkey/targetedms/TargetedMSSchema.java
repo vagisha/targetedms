@@ -538,8 +538,8 @@ public class TargetedMSSchema extends UserSchema
                     };
                 }
             });
-            result.getColumn("RunId").setFk(new QueryForeignKey(this, TABLE_TARGETED_MS_RUNS, "File", null));
-            result.getColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE, "RowId", null));
+            result.getColumn("RunId").setFk(new QueryForeignKey(this, null, TABLE_TARGETED_MS_RUNS, "File", null));
+            result.getColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, null, TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE, "RowId", null));
             result.getColumn("RepresentativeDataState").setHidden(true);
 
             // Create a WrappedColumn for Note & Annotations
