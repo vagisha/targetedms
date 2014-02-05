@@ -16,7 +16,6 @@
  */
 %>
 <%@ page import="org.labkey.api.data.Container" %>
-<%@ page import="org.labkey.api.settings.AppProps" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
@@ -29,12 +28,8 @@
     TargetedMSController.ProteinConflictBean bean = me.getModelBean();
     String conflictPeptidesUrl = new ActionURL(TargetedMSController.ProteinConflictPeptidesAjaxAction.class, c).getLocalURIString();
 
-    String plusImgUrl = request.getContextPath()+"/_images/plus.gif";
-    String minusImgUrl = request.getContextPath()+"/_images/minus.gif";
-
-    String runProteinDetailsUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, c).getLocalURIString();
-
-    String proteinConflictUiUrl = new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, c).getLocalURIString();
+    ActionURL runProteinDetailsUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, c);
+    ActionURL proteinConflictUiUrl = new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, c);
 %>
 
 <style type="text/css">
@@ -127,14 +122,14 @@ function toggleProteinDetails(element, newProteinId, oldProteinId)
     if($(element).hasClass('open'))
     {
         $(element).removeClass('open').addClass('closed');
-        $(element).children('img').attr('src', "<%=plusImgUrl%>");
+        $(element).children('img').attr('src', "<%=getWebappURL("_images/plus.gif")%>");
         $("#"+newProteinId+"_details").hide();
         $("#"+oldProteinId+"_details").hide();
     }
     else
     {
         $(element).removeClass('closed').addClass('open');
-        $(element).children('img').attr('src', "<%=minusImgUrl%>");
+        $(element).children('img').attr('src', "<%=getWebappURL("_images/minus.gif")%>");
         $("#"+newProteinId+"_details").show();
         $("#"+oldProteinId+"_details").show();
     }
@@ -165,7 +160,7 @@ function toggleCheckboxSelection(element)
         <ul>
             <%for(String conflictRun: bean.getAllConflictRunFiles().keySet()) {%>
                  <li>
-                     <a href="<%=proteinConflictUiUrl%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=conflictRun%></a>
+                     <a href="<%=h(proteinConflictUiUrl)%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=conflictRun%></a>
                  </li>
             <%}%>
         </ul>
@@ -217,12 +212,12 @@ function toggleCheckboxSelection(element)
              <!--<td class="representative newProtein <%=protein.getNewProteinId()%>"><%=protein.getNewProteinId()%></td>-->
              <td class="representative newProtein label <%=protein.getNewProteinId()%>">
                  <span class="label" id="<%=protein.getNewProteinId()%>_<%=protein.getOldProteinId()%>">
-                     <img src="<%=plusImgUrl%>"/>
+                     <img src="<%=getWebappURL("_images/plus.gif")%>"/>
                      <%=protein.getNewProteinLabel()%>
                  </span>
              </td>
              <td class="representative newProtein <%=protein.getNewProteinId()%>">
-                 <a href="<%=runProteinDetailsUrl%>id=<%=protein.getNewProteinId()%>"><%=protein.getNewRunFile()%></a>
+                 <a href="<%=h(runProteinDetailsUrl)%>id=<%=protein.getNewProteinId()%>"><%=protein.getNewRunFile()%></a>
              </td>
 
              <!-- Old representative protein -->
@@ -233,12 +228,12 @@ function toggleCheckboxSelection(element)
              <!--<td class="oldProtein <%=protein.getNewProteinId()%>"><%=protein.getOldProteinId()%></td>-->
              <td class="oldProtein label <%=protein.getNewProteinId()%>">
                  <span class="label" id="<%=protein.getNewProteinId()%>_<%=protein.getOldProteinId()%>">
-                     <img src="<%=plusImgUrl%>"/>
+                     <img src="<%=getWebappURL("_images/plus.gif")%>"/>
                      <%=protein.getOldProteinLabel()%>
                  </span>
              </td>
              <td class="oldProtein <%=protein.getNewProteinId()%>">
-                 <a href="<%=runProteinDetailsUrl%>id=<%=protein.getOldProteinId()%>"><%=protein.getOldRunFile()%></a>
+                 <a href="<%=h(runProteinDetailsUrl)%>id=<%=protein.getOldProteinId()%>"><%=protein.getOldRunFile()%></a>
              </td>
          </tr>
         <!-- This is a hidden table row where peptide and transition details will be displayed -->

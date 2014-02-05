@@ -30,9 +30,6 @@
     TargetedMSController.PrecursorConflictBean bean = me.getModelBean();
     String conflictTransitionsUrl = new ActionURL(TargetedMSController.PrecursorConflictTransitionsAjaxAction.class, getContainer()).getLocalURIString();
 
-    String plusImgUrl = request.getContextPath()+"/_images/plus.gif";
-    String minusImgUrl = request.getContextPath()+"/_images/minus.gif";
-
     ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker = new ModifiedPeptideHtmlMaker();
 
     String runPrecursorDetailsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer()).getLocalURIString();
@@ -127,14 +124,14 @@ function togglePrecursorDetails(element, newPrecursorId, oldPrecursorId)
     if($(element).hasClass('open'))
     {
         $(element).removeClass('open').addClass('closed');
-        $(element).children('img').attr('src', "<%=plusImgUrl%>");
+        $(element).children('img').attr('src', "<%=getWebappURL("_images/plus.gif")%>");
         $("#"+newPrecursorId+"_details").hide();
         $("#"+oldPrecursorId+"_details").hide();
     }
     else
     {
         $(element).removeClass('closed').addClass('open');
-        $(element).children('img').attr('src', "<%=minusImgUrl%>");
+        $(element).children('img').attr('src', "<%=getWebappURL("_images/minus.gif")%>");
         $("#"+newPrecursorId+"_details").show();
         $("#"+oldPrecursorId+"_details").show();
     }
@@ -216,7 +213,7 @@ function toggleCheckboxSelection(element)
              <!--<td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>"><%=precursor.getNewPrecursorId()%></td>-->
              <td class="representative newPrecursor label <%=precursor.getNewPrecursorId()%>">
                  <span class="label" id="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
-                     <img src="<%=plusImgUrl%>"/>
+                     <img src="<%=getWebappURL("_images/plus.gif")%>"/>
                      <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getNewPrecursorId()))%>
                  </span>
              </td>
@@ -232,7 +229,7 @@ function toggleCheckboxSelection(element)
              <!--<td class="oldPrecursor <%=precursor.getNewPrecursorId()%>"><%=precursor.getOldPrecursorId()%></td>-->
              <td class="oldPrecursor label <%=precursor.getNewPrecursorId()%>">
                  <span class="label" id="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
-                     <img src="<%=plusImgUrl%>"/>
+                     <img src="<%=getWebappURL("_images/plus.gif")%>"/>
                      <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getOldPrecursorId()))%>
                  </span>
              </td>
