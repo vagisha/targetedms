@@ -681,7 +681,7 @@ public class TargetedMSSchema extends UserSchema
         }
 
         // Tables that have a FK to targetedms.peptidechrominfo
-        if (TABLE_PEPTIDE_AREA_RATIO.equals(name))
+        if (TABLE_PEPTIDE_AREA_RATIO.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideChromInfoFK.getSQL());
         }

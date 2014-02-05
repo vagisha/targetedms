@@ -148,6 +148,7 @@ src/org/labkey/targetedms/parser/Chromatogram.java -text
 src/org/labkey/targetedms/parser/ChromatogramTran.java -text
 src/org/labkey/targetedms/parser/DataSettings.java -text
 src/org/labkey/targetedms/parser/Instrument.java -text
+src/org/labkey/targetedms/parser/PeakAreaRatioCalculator.java -text
 src/org/labkey/targetedms/parser/Peptide.java -text
 src/org/labkey/targetedms/parser/PeptideAnnotation.java -text
 src/org/labkey/targetedms/parser/PeptideAreaRatio.java -text

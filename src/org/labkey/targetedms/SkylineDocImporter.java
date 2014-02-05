@@ -240,7 +240,7 @@ public class SkylineDocImporter
                     Table.insert(_user, TargetedMSManager.getTableInfoPredictorSettings(), s);
                 }
             }
-            predictionSettings = Table.insert(_user, TargetedMSManager.getTableInfoTransitionPredictionSettings(), predictionSettings);
+            Table.insert(_user, TargetedMSManager.getTableInfoTransitionPredictionSettings(), predictionSettings);
 
             TransitionSettings.FullScanSettings fullScanSettings = transSettings.getFullScanSettings();
             if (fullScanSettings != null)
@@ -299,7 +299,7 @@ public class SkylineDocImporter
                 for (ReplicateAnnotation annotation : replicate.getAnnotations())
                 {
                     annotation.setReplicateId(replicate.getId());
-                    annotation = Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
+                    Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
                 }
             }
 
@@ -446,7 +446,7 @@ public class SkylineDocImporter
                 }
                 digestSettings.setRunId(_runId);
                 digestSettings.setEnzymeId(enzyme.getId());
-                digestSettings = Table.insert(_user, TargetedMSManager.getTableInfoRunEnzyme(), digestSettings);
+                Table.insert(_user, TargetedMSManager.getTableInfoRunEnzyme(), digestSettings);
             }
 
             // Peptide prediction settings
@@ -626,7 +626,7 @@ public class SkylineDocImporter
         for (PeptideGroupAnnotation annotation : pepGroup.getAnnotations())
         {
             annotation.setPeptideGroupId(pepGroup.getId());
-            annotation = Table.insert(_user, TargetedMSManager.getTableInfoPeptideGroupAnnotation(), annotation);
+            Table.insert(_user, TargetedMSManager.getTableInfoPeptideGroupAnnotation(), annotation);
         }
 
         // Read peptides for this protein
@@ -656,7 +656,7 @@ public class SkylineDocImporter
         for (PeptideAnnotation annotation : peptide.getAnnotations())
         {
             annotation.setPeptideId(peptide.getId());
-            annotation = Table.insert(_user, TargetedMSManager.getTableInfoPeptideAnnotation(), annotation);
+            Table.insert(_user, TargetedMSManager.getTableInfoPeptideAnnotation(), annotation);
         }
 
         for(Peptide.StructuralModification mod: peptide.getStructuralMods())
@@ -678,13 +678,6 @@ public class SkylineDocImporter
 
         Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap = new HashMap<>();
 
-        // Store the peak areas of the peptides labeled with different isotope labels  (in different sample files)
-        // The key is the sample file key (getSampleFileKey()). The value is also a map with the isotope label ID as the key
-        // Peak areas are the sum of the areas of the precursors of this peptide
-        // labeleled with a specific isotope label
-        Map<String, Map<Integer, InternalStdArea>> intStandardPeptideAreas = new HashMap<>();
-        Map<String, Map<Integer, InternalStdArea>> lightPeptideAreas = new HashMap<>();
-
         for(PeptideChromInfo peptideChromInfo: peptide.getPeptideChromInfoList())
         {
             String sampleFileKey = getSampleFileKey(peptideChromInfo);
@@ -699,153 +692,85 @@ public class SkylineDocImporter
             peptideChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPeptideChromInfo(), peptideChromInfo);
 
             sampleFileIdPeptideChromInfoIdMap.put(sampleFileId, peptideChromInfo.getId());
-
-            // We will have one PeptideChromInfo for each file
-            // Iterate over the isotope labels
-            for(Integer labelId: isotopeLabelIdMap.values())
-            {
-                // this is a heavy label
-                if(internalStandardLabelIds.contains(labelId))
-                {
-                    Map<Integer, InternalStdArea> areasForFile = intStandardPeptideAreas.get(sampleFileKey);
-                    if(areasForFile == null)
-                    {
-                        areasForFile = new HashMap<>();
-                        intStandardPeptideAreas.put(sampleFileKey, areasForFile);
-                    }
-                    areasForFile.put(labelId,  new InternalStdArea(labelId,
-                                                                   peptideChromInfo.getId(),
-                                                                   0)); // Add areas later when we iterate over the precursors
-                }
-                // this is a light label
-                else
-                {
-                   Map<Integer, InternalStdArea> areasForFile = lightPeptideAreas.get(sampleFileKey);
-                    if(areasForFile == null)
-                    {
-                        areasForFile = new HashMap<>();
-                        lightPeptideAreas.put(sampleFileKey, areasForFile);
-                    }
-                    areasForFile.put(labelId,  new InternalStdArea(labelId,
-                                                                   peptideChromInfo.getId(),
-                                                                   0)); // Add areas later when we iterate over the precursors
-                }
-            }
         }
-
-        // Store the peak areas of precursors (in different sample files) labeled with an internal standard.
-        // The key in the map is the precursor charge + sample file key (getSampleFileKey()). Value is also a map with the
-        // isotope label id as the key
-        Map<String, Map<Integer, InternalStdArea>> intStandardPrecursorAreas = new HashMap<>();
-        // Store the peak areas of the transitions (in different sample files) labeled with an internal standard.
-        // The key in the map is the precursor charge + transitiontype+transitionOrdinal + sample file key (getSampleFileKey()).
-        // Value is also a map with the isotope label id as the key
-        Map<String,  Map<Integer, InternalStdArea>> intStandardTransitionAreas = new HashMap<>();
-
 
         // 3. precursor
         for(Precursor precursor: peptide.getPrecursorList())
         {
-            insertPrecursor(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, libraryNameIdMap, peptide, sampleFileIdPeptideChromInfoIdMap, intStandardPeptideAreas, lightPeptideAreas, intStandardPrecursorAreas, intStandardTransitionAreas, precursor);
+            insertPrecursor(insertCEOptmizations, insertDPOptmizations,
+                           skylineIdSampleFileIdMap,
+                           isotopeLabelIdMap,
+                           structuralModNameIdMap,
+                           structuralModLossesMap,
+                           libraryNameIdMap,
+                           peptide,
+                           sampleFileIdPeptideChromInfoIdMap,
+                           precursor);
         }
 
-        // Calculate the peak area ratios of the peaks not labeled with an internal standard
-        if(internalStandardLabelIds.size() > 0) {
-            for(String sampleFile: lightPeptideAreas.keySet())
+        // 4. Calculate and insert peak area ratios
+        PeakAreaRatioCalculator areaRatioCalculator = new PeakAreaRatioCalculator(peptide);
+        areaRatioCalculator.init();
+        // Insert area ratios for each combination of 2 isotope labels
+        for(Integer numLabelId: isotopeLabelIdMap.values())
+        {
+            for(Integer denomLabelId: isotopeLabelIdMap.values())
             {
-                Map<Integer, InternalStdArea> intStdSampleFileAreas = intStandardPeptideAreas.get(sampleFile);
-                Map<Integer, InternalStdArea> lightSampleFileAreas = lightPeptideAreas.get(sampleFile);
+                if(!internalStandardLabelIds.contains(denomLabelId))
+                    continue;
 
-                for(Map.Entry<Integer, InternalStdArea> lightLabelArea: lightSampleFileAreas.entrySet())
+                if(numLabelId.equals(denomLabelId))
+                    continue;
+
+                for(Integer sampleFileId: skylineIdSampleFileIdMap.values())
                 {
-                    for(Map.Entry<Integer, InternalStdArea> heavyLabelArea: intStdSampleFileAreas.entrySet())
+                    PeptideAreaRatio ratio = areaRatioCalculator.getPeptideAreaRatio(sampleFileId, numLabelId, denomLabelId);
+                    if(ratio != null)
                     {
-                        // Skip if there were no heavy labeled peaks for this peptide.
-                        if(heavyLabelArea.getValue().getArea() == 0)
+                         Table.insert(_user, TargetedMSManager.getTableInfoPeptideAreaRatio(), ratio);
+                    }
+
+                    for(Precursor precursor: peptide.getPrecursorList())
+                    {
+                        if(precursor.getIsotopeLabelId() != numLabelId)
                             continue;
 
-                        PeptideAreaRatio peptideAreaRatio = new PeptideAreaRatio();
-                        peptideAreaRatio.setIsotopeLabelId(lightLabelArea.getKey());
-                        peptideAreaRatio.setIsotopeLabelStdId(heavyLabelArea.getKey());
-                        peptideAreaRatio.setPeptideChromInfoId(lightLabelArea.getValue().getChromInfoId());
-                        peptideAreaRatio.setPeptideChromInfoStdId(heavyLabelArea.getValue().getChromInfoId());
-                        peptideAreaRatio.setAreaRatio(getAreaRatio(lightLabelArea.getValue().getArea(),
-                                                                   heavyLabelArea.getValue().getArea()));
-                        Table.insert(_user, TargetedMSManager.getTableInfoPeptideAreaRatio(), peptideAreaRatio);
+                        PrecursorAreaRatio pRatio = areaRatioCalculator.getPrecursorAreaRatio(sampleFileId,
+                                                                                              precursor,
+                                                                                              numLabelId,
+                                                                                              denomLabelId);
+                        if(pRatio != null)
+                        {
+                            Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAreaRatio(), pRatio);
+                        }
+
+                        for(Transition transition: precursor.getTransitionList())
+                        {
+                            TransitionAreaRatio tRatio = areaRatioCalculator.getTransitionAreaRatio(sampleFileId,
+                                                                                                    precursor,
+                                                                                                    transition,
+                                                                                                    numLabelId,
+                                                                                                    denomLabelId);
+                            if(tRatio != null)
+                            {
+                                Table.insert(_user, TargetedMSManager.getTableInfoTransitionAreaRatio(), tRatio);
+                            }
+                        }
                     }
                 }
             }
-
-            for(Precursor precursor: peptide.getPrecursorList())
-            {
-                int labelId = precursor.getIsotopeLabelId();
-
-                if(!internalStandardLabelIds.contains(labelId))
-                {
-                    // For the precursors
-                    for(PrecursorChromInfo precChromInfo: precursor.getChromInfoList())
-                    {
-                        if(precChromInfo.getTotalArea() == null)
-                            continue;
-
-                        String key = getPrecChromInfoKey(precursor, precChromInfo);
-                        Map<Integer, InternalStdArea> areasForStdLabels = intStandardPrecursorAreas.get(key);
-
-                        if(areasForStdLabels == null)
-                        {
-                            _log.debug("No internal standard precursor area found for precursor key "+key+" and peptide "+peptide.getSequence());
-                            continue;
-                        }
-
-                        for(Integer stdIsotopeLabelId: areasForStdLabels.keySet())
-                        {
-                            InternalStdArea internalStdArea = areasForStdLabels.get(stdIsotopeLabelId);
-                            PrecursorAreaRatio precAreaRatio = new PrecursorAreaRatio();
-                            precAreaRatio.setPrecursorChromInfoId(precChromInfo.getId());
-                            precAreaRatio.setPrecursorChromInfoStdId(internalStdArea.getChromInfoId());
-                            precAreaRatio.setIsotopeLabelId(labelId);
-                            precAreaRatio.setIsotopeLabelStdId(internalStdArea.getInternalStdLabelId());
-                            precAreaRatio.setAreaRatio(getAreaRatio(precChromInfo.getTotalArea(), internalStdArea.getArea()));
-                            Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAreaRatio(), precAreaRatio);
-                        }
-                    }
-
-                    // For the transitions
-                    for(Transition transition: precursor.getTransitionList())
-                    {
-                        for(TransitionChromInfo transChromInfo: transition.getChromInfoList())
-                        {
-                            if(transChromInfo.getArea() == null)
-                                continue;
-
-                            String key = getTransitionChromInfoKey(precursor, transition, transChromInfo);
-                            Map<Integer, InternalStdArea> areasForStdLabels = intStandardTransitionAreas.get(key);
-
-                            if(areasForStdLabels == null)
-                            {
-                                _log.debug("No internal standard transition area found for transition key "+key+ " precursor "+precursor.getModifiedSequence());
-                                continue;
-                            }
-
-                            for(Integer stdIsotopeLabelId: areasForStdLabels.keySet())
-                            {
-                                InternalStdArea internalStdArea = areasForStdLabels.get(stdIsotopeLabelId);
-                                TransitionAreaRatio transAreaRatio = new TransitionAreaRatio();
-                                transAreaRatio.setTransitionChromInfoId(transChromInfo.getId());
-                                transAreaRatio.setTransitionChromInfoStdId(internalStdArea.getChromInfoId());
-                                transAreaRatio.setIsotopeLabelId(labelId);
-                                transAreaRatio.setIsotopeLabelStdId(internalStdArea.getInternalStdLabelId());
-                                transAreaRatio.setAreaRatio(getAreaRatio(transChromInfo.getArea(), internalStdArea.getArea()));
-                                Table.insert(_user, TargetedMSManager.getTableInfoTransitionAreaRatio(), transAreaRatio);
-                            }
-                        }
-                    }
-                }
-            } // End for(Precursor precursor: peptide.getPrecursorList())
-        } // End if(internalStandardLabelIds.size() > 0)
+        }
     }
 
-    private void insertPrecursor(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> libraryNameIdMap, Peptide peptide, Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap, Map<String, Map<Integer, InternalStdArea>> intStandardPeptideAreas, Map<String, Map<Integer, InternalStdArea>> lightPeptideAreas, Map<String, Map<Integer, InternalStdArea>> intStandardPrecursorAreas, Map<String, Map<Integer, InternalStdArea>> intStandardTransitionAreas, Precursor precursor)
+    private void insertPrecursor(boolean insertCEOptmizations, boolean insertDPOptmizations,
+                                 Map<String, Integer> skylineIdSampleFileIdMap,
+                                 Map<String, Integer> isotopeLabelIdMap,
+                                 Map<String, Integer> structuralModNameIdMap,
+                                 Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap,
+                                 Map<String, Integer> libraryNameIdMap,
+                                 Peptide peptide,
+                                 Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap,
+                                 Precursor precursor)
             throws SQLException
     {
         if(_isPeptideLibraryDoc)
@@ -869,7 +794,7 @@ public class SkylineDocImporter
         for (PrecursorAnnotation annotation : precursor.getAnnotations())
         {
             annotation.setPrecursorId(precursor.getId());
-            annotation = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
+            Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
         }
 
         Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap = new HashMap<>();
@@ -911,68 +836,18 @@ public class SkylineDocImporter
             for (PrecursorChromInfoAnnotation annotation : precursorChromInfo.getAnnotations())
             {
                 annotation.setPrecursorChromInfoId(precursorChromInfo.getId());
-                annotation = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), annotation);
-            }
-
-            // This precursor chrom info may not have a peak area
-            if(precursorChromInfo.getTotalArea() == null || precursorChromInfo.getTotalArea() == 0)
-                continue;
-
-            // If this precursor is labeled with an internal standard store the peak areas for the
-            // individual sample files
-            String sampleFileKey = getSampleFileKey(precursorChromInfo);
-            if(internalStandardLabelIds.contains(precursor.getIsotopeLabelId()))
-            {
-                // key is charge + sample file key (getSampleFileKey())
-                String key = getPrecChromInfoKey(precursor, precursorChromInfo);
-                Map<Integer, InternalStdArea> areasForPrecKey = intStandardPrecursorAreas.get(key);
-                if(areasForPrecKey == null)
-                {
-                    areasForPrecKey = new HashMap<>();
-                    intStandardPrecursorAreas.put(key, areasForPrecKey);
-                }
-
-                if(areasForPrecKey.containsKey(precursor.getIsotopeLabelId()))
-                {
-                    throw new IllegalStateException("Duplicate area information found for label "+precursor.getIsotopeLabel()+
-                                                    " and precursor chrom info key, "+key+", while calculating peak area ratios.");
-                }
-                InternalStdArea internalStdArea = new InternalStdArea(precursor.getIsotopeLabelId(),
-                        precursorChromInfo.getId(), precursorChromInfo.getTotalArea());
-                areasForPrecKey.put(precursor.getIsotopeLabelId(), internalStdArea);
-
-                // Add the precursor area to the peptide peak areas for this sample file and heavy label type
-                Map<Integer, InternalStdArea> areasForFile = intStandardPeptideAreas.get(sampleFileKey);
-                if(areasForFile == null)
-                {
-                    throw new IllegalStateException("Peptide peak areas not found for file "+
-                                                     sampleFileKey+" and peptide "+peptide.getSequence());
-                }
-                InternalStdArea areaForLabel = areasForFile.get(precursor.getIsotopeLabelId());
-                areaForLabel.addArea(precursorChromInfo.getTotalArea());
-            }
-            else
-            {
-                // Add the precursor area to the peptide peak areas for this sample file and light label type
-                Map<Integer, InternalStdArea> areasForFile = lightPeptideAreas.get(sampleFileKey);
-                if(areasForFile == null)
-                {
-                    throw new IllegalStateException("Peptide peak areas not found for file "+
-                                                     sampleFileKey+" and peptide "+peptide.getSequence());
-                }
-                InternalStdArea areaForLabel = areasForFile.get(precursor.getIsotopeLabelId());
-                areaForLabel.addArea(precursorChromInfo.getTotalArea());
+                Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), annotation);
             }
         }
 
         // 4. transition
         for(Transition transition: precursor.getTransitionList())
         {
-            insertTransition(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, intStandardTransitionAreas, precursor, sampleFileIdPrecursorChromInfoIdMap, transition);
+            insertTransition(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, structuralModNameIdMap, structuralModLossesMap, precursor, sampleFileIdPrecursorChromInfoIdMap, transition);
         }
     }
 
-    private void insertTransition(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Map<Integer, InternalStdArea>> intStandardTransitionAreas, Precursor precursor, Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap, Transition transition)
+    private void insertTransition(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Precursor precursor, Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap, Transition transition)
             throws SQLException
     {
         transition.setPrecursorId(precursor.getId());
@@ -982,7 +857,7 @@ public class SkylineDocImporter
         for (TransitionAnnotation annotation : transition.getAnnotations())
         {
             annotation.setTransitionId(transition.getId());
-            annotation = Table.insert(_user, TargetedMSManager.getTableInfoTransitionAnnotation(), annotation);
+            Table.insert(_user, TargetedMSManager.getTableInfoTransitionAnnotation(), annotation);
         }
 
         // Insert appropriate CE and DP transition optimizations
@@ -1019,35 +894,7 @@ public class SkylineDocImporter
             for (TransitionChromInfoAnnotation annotation : transChromInfo.getAnnotations())
             {
                 annotation.setTransitionChromInfoId(transChromInfo.getId());
-                annotation = Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
-            }
-
-            // If this transition is labeled with an internal standard store the peak areas for the
-            // individual sample files
-            if(internalStandardLabelIds.contains(precursor.getIsotopeLabelId()))
-            {
-                // There may not be any area associated with this transition chrom info.
-                if(transChromInfo.getArea() == null || transChromInfo.getArea() == 0)
-                    continue;
-
-                // Key is charge + fragmentType+fragmentOrdinal + fragment_charge + sample file name
-                String key = getTransitionChromInfoKey(precursor, transition, transChromInfo);
-                Map<Integer, InternalStdArea> areasForLabels = intStandardTransitionAreas.get(key);
-                if(areasForLabels == null)
-                {
-                    areasForLabels = new HashMap<>();
-                    intStandardTransitionAreas.put(key, areasForLabels);
-                }
-
-                if(areasForLabels.containsKey(precursor.getIsotopeLabelId()))
-                {
-                    throw new IllegalStateException("Duplicate area information found for label "+precursor.getIsotopeLabel()+
-                                                    " and transition chrom info key, "+key+", while calculating peak area ratios.");
-                }
-
-                InternalStdArea internalStdArea = new InternalStdArea(precursor.getIsotopeLabelId(),
-                        transChromInfo.getId(), transChromInfo.getArea());
-                areasForLabels.put(precursor.getIsotopeLabelId(), internalStdArea);
+                Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
             }
         }
 
@@ -1103,42 +950,6 @@ public class SkylineDocImporter
         }
     }
 
-    private static double getAreaRatio(double numerator, double denominator)
-    {
-        return (denominator == 0 ? Double.MAX_VALUE : (numerator / denominator));
-    }
-
-    private static String getPrecChromInfoKey(Precursor precursor, PrecursorChromInfo chromInfo)
-    {
-        StringBuilder key = new StringBuilder();
-           key.append(precursor.getCharge())
-           .append("_")
-           .append(getSampleFileKey(chromInfo));
-       return key.toString();
-    }
-
-    private static String getTransitionChromInfoKey(Precursor precursor, Transition transition, TransitionChromInfo chromInfo)
-    {
-        StringBuilder key = new StringBuilder();
-           key.append(precursor.getCharge())
-           .append("_")
-           .append(transition.getFragmentType())
-           .append(transition.isPrecursorIon() ? transition.getMassIndex() : transition.getFragmentOrdinal())
-           .append("_")
-           .append(transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge())
-           .append("_")
-           .append(getSampleFileKey(chromInfo));
-        List<TransitionLoss> transitionLosses = transition.getNeutralLosses();
-        if(transitionLosses != null && transitionLosses.size() > 0)
-        {
-            for(TransitionLoss loss: transitionLosses)
-            {
-                key.append("_").append(loss.toString());
-            }
-        }
-       return key.toString();
-    }
-
     private static String getSampleFileKey(ChromInfo chromInfo)
     {
         return getSampleFileKey(chromInfo.getReplicateName(), chromInfo.getSkylineSampleFileId());
@@ -1152,40 +963,6 @@ public class SkylineDocImporter
     private static String getSampleFileKey(String replicateName, String skylineSampleFileId)
     {
         return new StringBuilder(replicateName).append("_").append(skylineSampleFileId).toString();
-    }
-
-    private static final class InternalStdArea
-    {
-        private int _internalStdLabelId;
-        private double _area;
-        private int _chromInfoId;
-
-        public InternalStdArea(int labelId, int chromInfoId, double totalArea)
-        {
-            _internalStdLabelId = labelId;
-            _chromInfoId = chromInfoId;
-            _area = totalArea;
-        }
-
-        public int getInternalStdLabelId()
-        {
-            return _internalStdLabelId;
-        }
-
-        public int getChromInfoId()
-        {
-            return _chromInfoId;
-        }
-
-        public double getArea()
-        {
-            return _area;
-        }
-
-        public void addArea(double area)
-        {
-           _area += area;
-        }
     }
 
     private PeptideSettings.StructuralModification findExistingStructuralModification(PeptideSettings.RunStructuralModification mod)
