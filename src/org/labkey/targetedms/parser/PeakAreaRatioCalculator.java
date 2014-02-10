@@ -77,13 +77,7 @@ public class PeakAreaRatioCalculator
 
     private PeptideAreaRatioCalculator getPeptideAreaRatioCalculator(int sampleFileId)
     {
-        PeptideAreaRatioCalculator calculator = _peptideAreaRatioCalculatorMap.get(sampleFileId);
-        if(calculator == null)
-        {
-            _log.warn("No peptide area ratio calculator found for sample " + getSampleFileName(sampleFileId)
-                                            + " and peptide " + _peptide.getPeptideModifiedSequence());
-        }
-        return calculator;
+        return  _peptideAreaRatioCalculatorMap.get(sampleFileId);
     }
 
     public PeptideAreaRatio getPeptideAreaRatio(Integer sampleFileId, Integer numLabelId, Integer denomLabelId)
