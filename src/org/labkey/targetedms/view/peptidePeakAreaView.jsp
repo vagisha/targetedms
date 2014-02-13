@@ -73,11 +73,11 @@
         });
 
         var replicateAnnotNameValueStore = Ext4.create('Ext.data.Store', {
-            fields: ['name', 'value', 'name-value'],
+            fields: ['name-value'],
             data:   [
                 {"name-value":"None"}
                 <%for(int i = 0; i < replicateAnnotationValueList.size(); i++){%>
-                ,{"name-value":"<%=replicateAnnotationValueList.get(i).getDisplayName()%>}
+                ,{"name-value":"<%=replicateAnnotationValueList.get(i).getDisplayName()%>"}
 
                 <%}%>
             ]
