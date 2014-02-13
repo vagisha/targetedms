@@ -62,8 +62,8 @@ import java.util.Map;
  */
 public class PrecursorPeakAreaChartMaker
 {
-    public JFreeChart make(PeptideGroup peptideGroup, int replicateId,
-                                  Peptide peptide, String groupByAnnotation,
+    public JFreeChart make(int replicateId, PeptideGroup peptideGroup, Peptide peptide,
+                                  String groupByAnnotation, String filterByAnnotation,
                                   boolean cvValues, boolean logValues)
     {
 
@@ -87,6 +87,7 @@ public class PrecursorPeakAreaChartMaker
         }
 
         inputMaker.setGroupByAnnotationName(groupByAnnotation);
+        inputMaker.setFilterByAnnotationValue(filterByAnnotation);
         inputMaker.setPrecursorChromInfoList(pciPlusList);
         inputMaker.setCvValues(cvValues);
         inputMaker.setLogValues(logValues);
@@ -108,11 +109,11 @@ public class PrecursorPeakAreaChartMaker
         String xLabel;
         if(peptide == null)
         {
-            xLabel = noAnnotation(groupByAnnotation) ? "Peptide" : "Annotation, Peptide";
+            xLabel = noAnnotation(groupByAnnotation) ? "Peptide" : groupByAnnotation + ", Peptide";
         }
         else
         {
-            xLabel = noAnnotation(groupByAnnotation) ? "Replicate" : "Annotation";
+            xLabel = noAnnotation(groupByAnnotation) ? "Replicate" : groupByAnnotation;
         }
 
         JFreeChart chart = ChartFactory.createBarChart(

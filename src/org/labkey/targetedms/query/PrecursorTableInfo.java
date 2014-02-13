@@ -84,7 +84,6 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
                 return getUserSchema().getTable(TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE);
             }
         });
-        getColumn("RepresentativeDataState").setConditionalFormats(null);
 
 
         SQLFragment transitionCountSQL = new SQLFragment("(SELECT COUNT(t.Id) FROM ");

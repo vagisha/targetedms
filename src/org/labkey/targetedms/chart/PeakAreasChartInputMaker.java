@@ -48,6 +48,7 @@ public class PeakAreasChartInputMaker
     private int _runId;
     private List<PrecursorChromInfoPlus> _pciPlusList;  // precursor = modified sequence + charge + isotope label
     private String _groupByAnnotationName;
+    private String _filterByAnnotationValue;
     private boolean _cvValues = false;
     private boolean _logValues = false;
 
@@ -76,6 +77,12 @@ public class PeakAreasChartInputMaker
             _groupByAnnotationName = groupByAnnotationName;
     }
 
+    public void setFilterByAnnotationValue(String filterByAnnotationValue)
+    {
+        if(!"None".equalsIgnoreCase(filterByAnnotationValue))
+            _filterByAnnotationValue = filterByAnnotationValue;
+    }
+
     public void setCvValues(boolean cvValues)
     {
         _cvValues = cvValues;
@@ -87,6 +94,12 @@ public class PeakAreasChartInputMaker
 
     public PeakAreaDataset make()
     {
+
+        if(_filterByAnnotationValue != null)
+        {
+            _pciPlusList = filterInputList();
+        }
+
         // If we are grouping by an annotation, create a map of sample fileID and annotation value
         Map<Integer, String> sampleFileAnnotMap = getSampleAnnotationMap();
 
@@ -156,6 +169,36 @@ public class PeakAreasChartInputMaker
             }
             return dataset;
         }
+    }
+
+    private List<PrecursorChromInfoPlus> filterInputList()
+    {
+        List<SampleFile> sampleFileList = ReplicateManager.getSampleFilesForRun(_runId);
+        Map<Integer, Integer> sampleFileReplicateMap = new HashMap<>();
+        for(SampleFile file: sampleFileList)
+        {
+            sampleFileReplicateMap.put(file.getId(), file.getReplicateId());
+        }
+
+        List<ReplicateAnnotation> annotationList = ReplicateManager.getReplicateAnnotationsForRun(_runId);
+        Set<Integer> replicateIdsToKeep = new HashSet<>();
+        for(ReplicateAnnotation annotation: annotationList)
+        {
+            if(_filterByAnnotationValue.equalsIgnoreCase(annotation.getDisplayName()))
+            {
+                replicateIdsToKeep.add(annotation.getReplicateId());
+            }
+        }
+
+        List<PrecursorChromInfoPlus> listToKeep =  new ArrayList<>();
+        for(PrecursorChromInfoPlus pci: _pciPlusList)
+        {
+            if(replicateIdsToKeep.contains(sampleFileReplicateMap.get(pci.getSampleFileId())))
+            {
+                listToKeep.add(pci);
+            }
+        }
+        return listToKeep;
     }
 
     private Map<Integer, String> getSampleFileReplicateMap()

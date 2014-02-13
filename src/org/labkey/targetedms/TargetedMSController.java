@@ -128,6 +128,7 @@ import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
+import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.ConflictResultsManager;
@@ -849,7 +850,7 @@ public class TargetedMSController extends SpringActionController
             PeakAreaGraphBean peakAreasBean = new PeakAreaGraphBean();
             peakAreasBean.setPeptideId(peptideId);
             peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
-
+            peakAreasBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
 
             JspView<PeakAreaGraphBean> peakAreaView = new JspView<>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
                                                                                                    peakAreasBean);
@@ -985,10 +986,12 @@ public class TargetedMSController extends SpringActionController
                 }
             }
 
-            JFreeChart chart = new PrecursorPeakAreaChartMaker().make(peptideGrp,
+            JFreeChart chart = new PrecursorPeakAreaChartMaker().make(
                                                                  form.getReplicateId(),
+                                                                 peptideGrp,
                                                                  peptide,
                                                                  form.getGroupByReplicateAnnotName(),
+                                                                 form.getFilterByReplicateAnnotName(),
                                                                  form.isCvValues(),
                                                                  form.isLogValues());
             if (null == chart)
@@ -1059,6 +1062,8 @@ public class TargetedMSController extends SpringActionController
         private int _replicateId = 0; // A value of 0 means all replicates should be included in the plot.
         private int _peptideId = 0;
         private String _groupByReplicateAnnotName;
+        private ReplicateAnnotation _annotationFilter;
+        private String _filterByReplicateAnnotName;
         private boolean _cvValues;
         private boolean _logValues;
 
@@ -1092,6 +1097,16 @@ public class TargetedMSController extends SpringActionController
             _groupByReplicateAnnotName = groupByReplicateAnnotName;
         }
 
+        public String getFilterByReplicateAnnotName()
+        {
+            return _filterByReplicateAnnotName;
+        }
+
+        public void setFilterByReplicateAnnotName(String filterByReplicateAnnotName)
+        {
+            _filterByReplicateAnnotName = filterByReplicateAnnotName;
+        }
+
         public int getPeptideId()
         {
             return _peptideId;
@@ -1120,6 +1135,16 @@ public class TargetedMSController extends SpringActionController
         public void setLogValues(boolean logValues)
         {
             _logValues = logValues;
+        }
+
+        public ReplicateAnnotation getAnnotationFilter()
+        {
+            return _annotationFilter;
+        }
+
+        public void setAnnotationFilter(ReplicateAnnotation annotationFilter)
+        {
+            _annotationFilter = annotationFilter;
         }
     }
 
@@ -1597,6 +1622,7 @@ public class TargetedMSController extends SpringActionController
             peakAreasBean.setPeptideGroupId(form.getId());
             peakAreasBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
             peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
+            peakAreasBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
             peakAreasBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId())));
 
 
@@ -1641,6 +1667,7 @@ public class TargetedMSController extends SpringActionController
         private int _peptideId;
         private List<Replicate> _replicateList;
         private List<String> _replicateAnnotationNameList;
+        private List<ReplicateAnnotation> _replicateAnnotationValueList;
         private List<Peptide> _peptideList;
 
         public int getPeptideGroupId()
@@ -1681,6 +1708,16 @@ public class TargetedMSController extends SpringActionController
         public void setReplicateAnnotationNameList(List<String> replicateAnnotationNameList)
         {
             _replicateAnnotationNameList = replicateAnnotationNameList;
+        }
+
+        public List<ReplicateAnnotation> getReplicateAnnotationValueList()
+        {
+            return _replicateAnnotationValueList != null ? _replicateAnnotationValueList : Collections.<ReplicateAnnotation>emptyList();
+        }
+
+        public void setReplicateAnnotationValueList(List<ReplicateAnnotation> replicateAnnotationValueList)
+        {
+            _replicateAnnotationValueList = replicateAnnotationValueList;
         }
 
         public List<Peptide> getPeptideList()

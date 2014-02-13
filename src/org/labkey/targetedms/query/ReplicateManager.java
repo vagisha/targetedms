@@ -27,7 +27,11 @@ import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.SampleFile;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: vsharma
@@ -126,5 +130,43 @@ public class ReplicateManager
         sql.add(runId);
 
         return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(ReplicateAnnotation.class));
+    }
+
+    public static List<ReplicateAnnotation> getUniqueSortedAnnotationNameValue(int runId)
+    {
+        List<ReplicateAnnotation> allAnnotationsList = getReplicateAnnotationsForRun(runId);
+        Map<String, ReplicateAnnotation> uniqueAnnotationsMap = new HashMap<>();
+
+        for(ReplicateAnnotation annotation: allAnnotationsList)
+        {
+            uniqueAnnotationsMap.put(annotation.getDisplayName(), annotation);
+        }
+
+        List<ReplicateAnnotation> uniqueAnnotationsList = new ArrayList<>(uniqueAnnotationsMap.values());
+
+        //Sorts alphabetically by Name then value if names are same
+        Collections.sort(uniqueAnnotationsList, new Comparator<ReplicateAnnotation>()
+        {
+            public int compare(ReplicateAnnotation o1, ReplicateAnnotation o2)
+            {
+                //If ReplicateAnnotation.getName() for o1 and o2 are the same sorts by .getValue()
+                if (o1.getName().equals(o2.getName()))
+                {
+                    if (o1.getValue().matches("[-+]?\\d*\\.?\\d+") && o2.getValue().matches("[-+]?\\d*\\.?\\d+"))
+                    {
+                        return Double.valueOf(o1.getValue()).compareTo(Double.valueOf(o2.getValue()));
+                    }
+                    else
+                    {
+                        return o1.getValue().compareTo(o2.getValue());
+                    }
+                }
+                else
+                {
+                    return o1.getName().compareTo(o2.getName());
+                }
+            }
+        });
+        return uniqueAnnotationsList;
     }
 }

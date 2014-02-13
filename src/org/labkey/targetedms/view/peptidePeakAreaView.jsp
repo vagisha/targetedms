@@ -22,6 +22,7 @@
 <%@ page import="org.labkey.targetedms.parser.Peptide" %>
 <%@ page import="org.labkey.targetedms.parser.Replicate" %>
 <%@ page import="java.util.List" %>
+<%@ page import="org.labkey.targetedms.parser.ReplicateAnnotation" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.PeakAreaGraphBean> me = (JspView<TargetedMSController.PeakAreaGraphBean>) HttpView.currentView();
@@ -31,6 +32,7 @@
                                          // or grouped by replicate annotation.
     List<Replicate> replicateList = bean.getReplicateList();
     List<String> replicateAnnotationNameList = bean.getReplicateAnnotationNameList();
+    List<ReplicateAnnotation> replicateAnnotationValueList = bean.getReplicateAnnotationValueList();
     List<Peptide> peptideList = bean.getPeptideList();
 
     ActionURL peakAreaUrl = new ActionURL(TargetedMSController.ShowPeptidePeakAreasAction.class, getContainer());
@@ -39,6 +41,13 @@
     else if(peptideId != 0)
         peakAreaUrl.addParameter("peptideId", peptideId);
 %>
+
+<style>
+    .x4-form-trigger {
+    margin-left:8px !important;
+    }
+</style>
+
 <script type="text/javascript">
     Ext.onReady(function() {
 
@@ -63,12 +72,23 @@
             ]
         });
 
+        var replicateAnnotNameValueStore = Ext4.create('Ext.data.Store', {
+            fields: ['name', 'value', 'name-value'],
+            data:   [
+                {"name-value":"None"}
+                <%for(int i = 0; i < replicateAnnotationValueList.size(); i++){%>
+                ,{"name-value":"<%=replicateAnnotationValueList.get(i).getDisplayName()%>}
+
+                <%}%>
+            ]
+        });
+
         var peptideStore = Ext4.create('Ext.data.Store', {
             fields: ['sequence', 'peptideId'],
             data: [
                 {"sequence":"All", "peptideId":"0"}
                 <%for(int i = 0; i < peptideList.size(); i++) {%>
-                ,{"sequence":"<%=peptideList.get(i).getSequence()%>", "peptideId":"<%=peptideList.get(i).getId()%>"}
+                ,{"sequence":"<%=peptideList.get(i).getPeptideModifiedSequence()%>", "peptideId":"<%=peptideList.get(i).getId()%>"}
                 <%}%>
             ]
         });
@@ -87,6 +107,7 @@
                                             allowBlank: 'false',
                                             value: replicateStore.getAt(0),
                                             width: 400,
+                                            height: 23,
                                             listeners:{
                                                 select: function(combo, record, index){
                                                     var selected = combo.getValue();
@@ -96,11 +117,14 @@
                                                         replicateAnnotNameComboBox.setValue(replicateAnnotNameStore.getAt(0));
                                                         peptideComboBox.disable();
                                                         peptideComboBox.setValue(peptideStore.getAt(0));
+                                                        replicateAnnotNameValueComboBox.disable();
+                                                        replicateAnnotNameValueComboBox.setValue(replicateAnnotNameValueStore.get(0));
                                                     }
                                                     else
                                                     {
                                                         replicateAnnotNameComboBox.enable();
                                                         peptideComboBox.enable();
+                                                        replicateAnnotNameValueComboBox.enable();
                                                     }
                                                     updateCvCheckbox();
                                                 }
@@ -121,6 +145,7 @@
                                                     allowBlank: 'false',
                                                     value: replicateAnnotNameStore.getAt(0),
                                                     width: 400,
+                                                    height: 23,
                                                     listeners:{
                                                         select: function(combo, record, index) {
                                                             updateCvCheckbox();
@@ -128,6 +153,36 @@
                                                     }
             });
         }
+
+        var replicateAnnotNameValueComboBox;
+        if(replicateAnnotNameValueStore.count() > 0)
+        {
+            replicateAnnotNameValueComboBox = Ext4.create('Ext.form.ComboBox',{
+                fieldLabel: 'Filter',
+                lazyRender: true,
+                store: replicateAnnotNameValueStore ,
+                queryMode: 'local',
+                displayField: 'name-value',
+                valueField: 'name-value',
+                forceSelection: 'true',
+                allowBlank: 'false',
+                value: replicateAnnotNameValueStore.getAt(0),
+                width: 400,
+                height: 23,
+                listeners:{
+                    select: function(combo, record, index){
+                        var selected = combo.getValue();
+                        if(selected != 0)
+                        {
+                            updateCvCheckbox();
+                        }
+                    }
+                }
+            });
+        }
+
+
+
 
         var peptideComboBox;
         if(peptideStore.count() > 0)
@@ -189,6 +244,7 @@
                                     peptideGroupId: <%=peptideGroupId%>,
                                     replicateId: replicateComboBox.getValue(),
                                     groupByReplicateAnnotName: replicateAnnotNameComboBox.getValue(),
+                                    filterByReplicateAnnotName: replicateAnnotNameValueComboBox.getValue(),
                                     peptideId: peptideStore.count() > 1 ? peptideComboBox.getValue() : <%=peptideId%>,
                                     cvValues: cvValuesCheckbox.getValue(),
                                     logValues: logValuesCheckbox.getValue(),
@@ -224,6 +280,7 @@
         var items = [];
         if(replicateStore.count() > 2) items.push(replicateComboBox);
         if(replicateAnnotNameStore.count() > 1) items.push(replicateAnnotNameComboBox);
+        if(replicateAnnotNameValueStore.count() > 1) items.push(replicateAnnotNameValueComboBox);
         if(peptideStore.count() > 2) items.push(peptideComboBox);
         if(replicateStore.count() > 2 || replicateAnnotNameStore.count() > 1)
         {
@@ -237,11 +294,15 @@
         {
             Ext4.create('Ext.form.Panel', {
                 renderTo: Ext.get('peakAreasFormDiv'),
-                // resizable: true,
-                border: false,
+//                resizable: true,
+                border: false, frame: false,
                 buttonAlign: 'left',
                 items: items,
-                buttons: [updateBtn]
+                buttons: [updateBtn],
+                defaults: {
+                    labelWidth: 150,
+                    labelStyle: 'background-color: #E0E6EA; padding: 6px; margin-top:0px;'
+                }
             });
         }
         updateCvCheckbox();

@@ -46,4 +46,9 @@ public class AbstractAnnotation extends SkylineEntity
     {
         _value = value;
     }
+
+    public String getDisplayName()
+    {
+        return (_name != null ? _name : "") + " : " + (_value != null ? _value : "");
+    }
 }
