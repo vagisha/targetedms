@@ -278,7 +278,6 @@ public class PeakAreasChartInputMaker
                                                     Map<Integer, String> sampleFileAnnotMap)
     {
         return new PeptideCategory(pciPlus.getPeptideModifiedSequence(),
-                                   pciPlus.getSequence(),
                                    pciPlus.getCharge(),
                                    pciPlus.getIsotopeLabel(),
                                    sampleFileAnnotMap.get(pciPlus.getSampleFileId()));
@@ -389,14 +388,34 @@ public class PeakAreasChartInputMaker
         private String _seqPrefix;
         private boolean _useChargeInDisplayLabel = true;
 
-        public PeptideCategory(String modifiedSequence, String sequence, int charge, String isotopeLabel, String annotValue)
+        public PeptideCategory(String modifiedSequence, int charge, String isotopeLabel, String annotValue)
         {
             _modifiedSequence = modifiedSequence;
-            _sequence = sequence;
-            _seqPrefix = sequence;
+            _sequence = makeSequenceWithLowerCaseMods(modifiedSequence);
+            _seqPrefix = _sequence;
             _charge = charge;
             _isotopeLabel = isotopeLabel;
             _annotationValue = annotValue;
+        }
+
+        private String makeSequenceWithLowerCaseMods(String modifiedSequence)
+        {
+            StringBuilder sb = new StringBuilder(modifiedSequence.length());
+            int index = 0;
+            while (true)
+            {
+                int modificationIndex = modifiedSequence.indexOf('[', index);
+                if (modificationIndex < 0)
+                {
+                    sb.append(modifiedSequence.substring(index));
+                    return sb.toString();
+                }
+                sb.append(modifiedSequence.substring(index, modificationIndex - 1));
+                sb.append(Character.toLowerCase(modifiedSequence.charAt(modificationIndex - 1)));
+                index = modifiedSequence.indexOf(']', modificationIndex + 1) + 1;
+                if (index == 0)
+                    return sb.toString();
+            }
         }
 
         public String getModifiedSequence()
@@ -857,16 +876,18 @@ public class PeakAreasChartInputMaker
         @Test
         public void testTrimPeptideCategoryLabels() throws Exception
         {
-            PeptideCategory category1 = new PeptideCategory("A", "A", 2, "light", null);
-            PeptideCategory category2 = new PeptideCategory("AB", "AB", 2, "light", null);
-            PeptideCategory category3 = new PeptideCategory("ABCXYZ", "ABCXYZ", 2, "light", null);
-            PeptideCategory category4 = new PeptideCategory("ABCXYZ", "ABCXYZ", 3, "light", null);
-            PeptideCategory category5 = new PeptideCategory("ABCXYZ", "ABCXYZ", 2, "heavy", null);
-            PeptideCategory category6 = new PeptideCategory("ABCXYZ", "ABCXYZ", 3, "heavy", null);
-            PeptideCategory category7 = new PeptideCategory("ABDAAA", "ABDAAA", 2, "light", null);
-            PeptideCategory category8 = new PeptideCategory("ABDEEEE", "ABDEEEE", 2, "light", null);
-            PeptideCategory category9 = new PeptideCategory("ABDFAAA", "ABDFAAA", 2, "light", null);
-            PeptideCategory category10 = new PeptideCategory("UVWXYZ", "UVWXYZ", 2, "light", null);
+            PeptideCategory category1 = new PeptideCategory("A", 2, "light", null);
+            PeptideCategory category2 = new PeptideCategory("AB", 2, "light", null);
+            PeptideCategory category3 = new PeptideCategory("ABCXYZ", 2, "light", null);
+            PeptideCategory category4 = new PeptideCategory("ABCXYZ", 3, "light", null);
+            PeptideCategory category5 = new PeptideCategory("ABCXYZ", 2, "heavy", null);
+            PeptideCategory category6 = new PeptideCategory("ABCXYZ", 3, "heavy", null);
+            PeptideCategory category7 = new PeptideCategory("ABDAAA", 2, "light", null);
+            PeptideCategory category8 = new PeptideCategory("ABDEEEE", 2, "light", null);
+            PeptideCategory category9 = new PeptideCategory("ABDFAAA", 2, "light", null);
+            PeptideCategory category10 = new PeptideCategory("UVWXYZ", 2, "light", null);
+            PeptideCategory category11 = new PeptideCategory("S[+122.0]DKPDM[+16.0]AEIEKFDK", 2, "light", null);
+            PeptideCategory category12 = new PeptideCategory("S[+122.0]DKPDMAEIEKFDK", 2, "light", null);
 
 
             Set<PeptideCategory> peptideCategoryList = new HashSet<PeptideCategory>(1);
@@ -880,6 +901,8 @@ public class PeakAreasChartInputMaker
             peptideCategoryList.add(category8);
             peptideCategoryList.add(category9);
             peptideCategoryList.add(category10);
+            peptideCategoryList.add(category11);
+            peptideCategoryList.add(category12);
 
             PeakAreasChartInputMaker.trimPeptideCategoryLabels(peptideCategoryList);
             assertTrue(category1.getCategoryLabel().equals("A++"));
@@ -902,6 +925,10 @@ public class PeakAreasChartInputMaker
             assertTrue(category9.getDisplayLabel().equals("ABDF"));
             assertTrue(category10.getCategoryLabel().equals("UVWXYZ++"));
             assertTrue(category10.getDisplayLabel().equals("UVW"));
+            assertTrue(category11.getCategoryLabel().equals("S[+122.0]DKPDM[+16.0]AEIEKFDK++"));
+            assertTrue(category11.getDisplayLabel().equals("sDKPDm"));
+            assertTrue(category12.getCategoryLabel().equals("S[+122.0]DKPDMAEIEKFDK++"));
+            assertTrue(category12.getDisplayLabel().equals("sDKPDM"));
         }
     }
 }
