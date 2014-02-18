@@ -120,7 +120,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertElementPresent(Locator.xpath("//tr[(td[1] ='Decoy') and (td[2]='false')]"));
         assertElementPresent(Locator.xpath("//tr[(td[1] ='File') and (td[2] = '" + SKY_FILE1 + "')]"));
         assertElementPresent(Locator.xpath("//table[contains(@id, 'peptideMap')]"));
-        assertElementPresent(Locator.xpath("//div[img[contains(@id, 'image-1012')]]"));
+        assertElementPresent(Locator.xpath("//div[@id = 'peakAreasGraphImg']/img"));
 
         log("Testing chart interactivity");
         WebElement height= getDriver().findElement(By.xpath("//input[contains(@id, 'chartHeight-inputEl')]"));
