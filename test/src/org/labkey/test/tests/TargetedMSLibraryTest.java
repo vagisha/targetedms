@@ -130,7 +130,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         width.clear();
         width.sendKeys("500");
         click(Locator.xpath("//a[contains(@class, 'x4-btn x-unselectable x4-box-item x4-toolbar-item x4-btn-default-small x4-noicon x4-btn-noicon x4-btn-default-small-noicon')]"));
-        assertElementPresent(Locator.xpath("//div[img[contains(@id, 'image-1012')]]"));
+        assertElementPresent(Locator.xpath("//div[@id = 'peakAreasGraphImg']/img"));
     }
 
     @LogMethod(category = LogMethod.MethodType.VERIFICATION)
