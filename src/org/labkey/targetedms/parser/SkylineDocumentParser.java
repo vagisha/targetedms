@@ -18,8 +18,13 @@ package org.labkey.targetedms.parser;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.data.Container;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
+import org.labkey.targetedms.chromlib.ConnectionSource;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -28,10 +33,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -125,21 +135,27 @@ public class SkylineDocumentParser
     // that do not have the "file" attribute.  The "file" attribute is missing only if the replicate has a single
     // sample file.
     private Map<String, String> _replicateSampleFileIdMap;
+    private List<HashMap<String, Object>> _iRTScaleSettings;
 
     private double _matchTolerance = DEFAULT_TOLERANCE;
 
     private final XMLStreamReader _reader;
     private InputStream _inputStream;
     private final File _file;
+    private User _user;
+    private Container _container;
     private Logger _log;
 
-    public SkylineDocumentParser(File file, Logger log) throws XMLStreamException, IOException
+    public SkylineDocumentParser(File file, User user, Container container, Logger log) throws XMLStreamException, IOException
     {
         _file = file;
         _inputStream = new FileInputStream(_file);
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         _reader = inputFactory.createXMLStreamReader(_inputStream);
         _log = log;
+        _user = user;
+        _container = container;
+        _iRTScaleSettings = new LinkedList<>();
         readDocumentVersion(_reader);
     }
 
@@ -174,8 +190,52 @@ public class SkylineDocumentParser
         _replicateSampleFileIdMap = new HashMap<>();
 
         readDocumentSettings(_reader);
-
+        parseiRTFile();
         parseChromatograms();
+    }
+
+    private void parseiRTFile()
+    {
+        String baseFileName = _peptideSettings.getPeptidePredictionSettings().getPredictorName();
+        String iRTFileName = baseFileName + ".irtdb";
+        PipeRoot root = PipelineService.get().getPipelineRootSetting(_container);
+        File iRTFile = new File(root.getRootPath(), iRTFileName);
+        if (! iRTFile.exists() ) {
+            _log.error("Input iRT database does not exist " + iRTFileName);
+        }
+        else
+        {
+            Statement stmt = null;
+            ResultSet rs = null;
+            try
+            {
+                ConnectionSource connectionSource = new ConnectionSource(iRTFile.getPath());
+                Connection connection = connectionSource.getConnection();
+                StringBuilder sql = new StringBuilder();
+                sql.append("SELECT * FROM IrtLibrary ORDER BY Irt,PeptideModSeq");
+
+                stmt = connection.createStatement();
+                rs = stmt.executeQuery(sql.toString());
+
+                while(rs.next())
+                {
+                    HashMap<String, Object> iRTPeptideRow = new HashMap<>();
+                    iRTPeptideRow.put("ModifiedSequence", rs.getString("PeptideModSeq"));
+                    iRTPeptideRow.put("iRTStandard", rs.getBoolean("Standard"));
+                    iRTPeptideRow.put("iRTValue", rs.getDouble("Irt"));
+                    _iRTScaleSettings.add(iRTPeptideRow);
+                }
+            }
+            catch (SQLException e)
+            {
+                _log.error("Error importing iRT file " + e.getMessage());
+            }
+            finally
+            {
+                if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
+                if(rs != null) try {rs.close();} catch(SQLException ignored){}
+            }
+        }
     }
 
     private void parseChromatograms() throws IOException
@@ -187,6 +247,11 @@ public class SkylineDocumentParser
             _binaryParser = new SkylineBinaryParser(file, _log);
             _binaryParser.parse();
         }
+    }
+
+    public List<HashMap<String, Object>> getiRTScaleSettings()
+    {
+        return _iRTScaleSettings;
     }
 
     public List<Replicate> getReplicates()

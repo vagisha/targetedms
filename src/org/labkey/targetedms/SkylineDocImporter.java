@@ -18,10 +18,10 @@ package org.labkey.targetedms;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.labkey.api.data.DbScope;
-import org.labkey.api.protein.ProteinService;
+import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -31,6 +31,7 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
@@ -48,8 +49,10 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -174,6 +177,7 @@ public class SkylineDocImporter
             NetworkDrive.ensureDrive(f.getPath());
 
             // If this is a zip file extract the contents to a folder
+            // TODO: refactor this block to a seperate method
             String ext = FileUtil.getExtension(f.getName());
             if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(ext))
             {
@@ -199,10 +203,14 @@ public class SkylineDocImporter
 
             ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
 
-            parser = new SkylineDocumentParser(f, _log);
+            parser = new SkylineDocumentParser(f, _user, _container, _log);
             parser.readSettings();
 
             // Store the document settings
+            // 0. iRT information
+            insertiRTData(parser);
+
+
             // 1. Transition settings
             TransitionSettings transSettings = parser.getTransitionSettings();
             TransitionSettings.InstrumentSettings instrumentSettings = transSettings.getInstrumentSettings();
@@ -516,6 +524,82 @@ public class SkylineDocImporter
 //                FileUtil.deleteDir(zipDir);
 //            }
         }
+    }
+
+    private String CONTAINER = "container";
+    private String ID = "Id";
+    private String IRTSCALEID = "iRTScaleId";
+
+    private void insertiRTData(SkylineDocumentParser parser) throws SQLException
+    {
+        // check to see if the iRT Scale returned already exists
+        // get a list of all scale Id's
+        boolean newScale = true;
+        int iRTScaleId = 0;
+        List<HashMap<String, Object>> iRTScaleSettings = parser.getiRTScaleSettings();
+
+        if (! iRTScaleSettings.isEmpty())
+        {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("container"), _container, CompareType.EQUAL);
+            TableSelector selector = new TableSelector(TargetedMSManager.getTableInfoiRTScale(), filter, null);
+            Collection<Map<String, Object>> scaleIds = selector.getMapCollection();
+            for (Map<String, Object> iRTScaleMap : scaleIds)
+            {
+                iRTScaleId = (int) iRTScaleMap.get("Id");
+                SimpleFilter iRTFilter = new SimpleFilter(FieldKey.fromParts("iRTScaleId"), iRTScaleId);
+                Sort sort = new Sort("iRTValue,ModifiedSequence");
+                TableSelector selector2 = new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(), iRTFilter, sort);
+                Collection<Map<String, Object>> iRTPeptides = selector2.getMapCollection();
+
+                // test equality
+                if ( compareiRTScales( iRTScaleSettings, iRTPeptides))
+                {
+                    _log.info("Pre-existing iRTScale found, skipping import");
+                    newScale = false;
+                    break;
+                }
+            }
+
+            if (newScale)
+            {
+                // first insert the iRTScale and get the Id
+                Map<String, Object> iRTScaleRow = new CaseInsensitiveHashMap<>();
+                iRTScaleRow.put(CONTAINER, _container);
+                Map<String, Object> iRTScaleResult = Table.insert(_user, TargetedMSManager.getTableInfoiRTScale(), iRTScaleRow);
+                iRTScaleId = (int) iRTScaleResult.get(ID);
+
+                // insert the new iRT Peptides into the database
+                for (HashMap<String,Object> iRTPeptideRow : iRTScaleSettings)
+                {
+                    iRTPeptideRow.put(IRTSCALEID, iRTScaleId);
+                    Table.insert(_user, TargetedMSManager.getTableInfoiRTPeptide(), iRTPeptideRow);
+                }
+            }
+            // update the Runs table to point the iRTScaleId
+            if (iRTScaleId != 0)
+            {
+                new SqlExecutor(TargetedMSManager.getSchema()).execute("UPDATE " + TargetedMSManager.getTableInfoRuns() + " SET iRTScaleId = ? WHERE Id = ?",
+                                iRTScaleId, _runId);
+            }
+        }
+    }
+
+    private boolean compareiRTScales(List<HashMap<String, Object>> col1, Collection<Map<String, Object>> col2)
+    {
+        if (col1.size() != col2.size())
+            return false;
+
+        Iterator itr1 = col1.iterator();
+        Iterator itr2 = col2.iterator();
+        while (itr1.hasNext() && itr2.hasNext())
+        {
+            HashMap<String, Object> input1 = (HashMap<String,Object>) itr1.next();
+            Map<String, Object> input2 = (Map<String,Object>) itr2.next();
+            if ( (double) input1.get("iRTValue") != (double) input2.get("iRTValue") ||
+                    ! input1.get("ModifiedSequence").equals(input2.get("modifiedsequence")))
+                return false;
+        }
+        return true;
     }
 
     // Skyline documents may contain multiple <instrument_info> elements that contain
