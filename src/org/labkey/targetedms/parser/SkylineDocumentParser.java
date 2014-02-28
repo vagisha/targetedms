@@ -197,43 +197,46 @@ public class SkylineDocumentParser
     private void parseiRTFile()
     {
         String baseFileName = _peptideSettings.getPeptidePredictionSettings().getPredictorName();
-        String iRTFileName = baseFileName + ".irtdb";
-        PipeRoot root = PipelineService.get().getPipelineRootSetting(_container);
-        File iRTFile = new File(root.getRootPath(), iRTFileName);
-        if (! iRTFile.exists() ) {
-            _log.error("Input iRT database does not exist " + iRTFileName);
-        }
-        else
+        if (null != baseFileName)
         {
-            Statement stmt = null;
-            ResultSet rs = null;
-            try
+            String iRTFileName = baseFileName + ".irtdb";
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(_container);
+            File iRTFile = new File(root.getRootPath(), iRTFileName);
+            if (! iRTFile.exists() ) {
+                _log.error("Input iRT database does not exist " + iRTFileName);
+            }
+            else
             {
-                ConnectionSource connectionSource = new ConnectionSource(iRTFile.getPath());
-                Connection connection = connectionSource.getConnection();
-                StringBuilder sql = new StringBuilder();
-                sql.append("SELECT * FROM IrtLibrary ORDER BY Irt,PeptideModSeq");
-
-                stmt = connection.createStatement();
-                rs = stmt.executeQuery(sql.toString());
-
-                while(rs.next())
+                Statement stmt = null;
+                ResultSet rs = null;
+                try
                 {
-                    HashMap<String, Object> iRTPeptideRow = new HashMap<>();
-                    iRTPeptideRow.put("ModifiedSequence", rs.getString("PeptideModSeq"));
-                    iRTPeptideRow.put("iRTStandard", rs.getBoolean("Standard"));
-                    iRTPeptideRow.put("iRTValue", rs.getDouble("Irt"));
-                    _iRTScaleSettings.add(iRTPeptideRow);
+                    ConnectionSource connectionSource = new ConnectionSource(iRTFile.getPath());
+                    Connection connection = connectionSource.getConnection();
+                    StringBuilder sql = new StringBuilder();
+                    sql.append("SELECT * FROM IrtLibrary ORDER BY Irt,PeptideModSeq");
+
+                    stmt = connection.createStatement();
+                    rs = stmt.executeQuery(sql.toString());
+
+                    while(rs.next())
+                    {
+                        HashMap<String, Object> iRTPeptideRow = new HashMap<>();
+                        iRTPeptideRow.put("ModifiedSequence", rs.getString("PeptideModSeq"));
+                        iRTPeptideRow.put("iRTStandard", rs.getBoolean("Standard"));
+                        iRTPeptideRow.put("iRTValue", rs.getDouble("Irt"));
+                        _iRTScaleSettings.add(iRTPeptideRow);
+                    }
                 }
-            }
-            catch (SQLException e)
-            {
-                _log.error("Error importing iRT file " + e.getMessage());
-            }
-            finally
-            {
-                if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
-                if(rs != null) try {rs.close();} catch(SQLException ignored){}
+                catch (SQLException e)
+                {
+                    _log.error("Error importing iRT file " + e.getMessage());
+                }
+                finally
+                {
+                    if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
+                    if(rs != null) try {rs.close();} catch(SQLException ignored){}
+                }
             }
         }
     }
