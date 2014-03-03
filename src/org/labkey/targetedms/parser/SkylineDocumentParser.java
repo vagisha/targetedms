@@ -190,7 +190,7 @@ public class SkylineDocumentParser
         _replicateSampleFileIdMap = new HashMap<>();
 
         readDocumentSettings(_reader);
-        parseiRTFile();
+        // parseiRTFile();  // disabled in 14.1, not tested
         parseChromatograms();
     }
 

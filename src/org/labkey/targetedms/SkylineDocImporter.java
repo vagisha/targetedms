@@ -208,7 +208,7 @@ public class SkylineDocImporter
 
             // Store the document settings
             // 0. iRT information
-            insertiRTData(parser);
+            // insertiRTData(parser);
 
 
             // 1. Transition settings
