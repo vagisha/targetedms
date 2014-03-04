@@ -45,7 +45,6 @@ import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
-import org.labkey.api.data.ActionButton;
 import org.labkey.api.data.BeanViewForm;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.CompareType;
@@ -3523,37 +3522,10 @@ public class TargetedMSController extends SpringActionController
 
 
             // Experiment details
-            DataRegion experimentDetails = new DataRegion();
-            TableInfo tableInfo = TargetedMSManager.getTableInfoExperimentAnnotations();
-            experimentDetails.setColumns(tableInfo.getColumns("Title",
-                                                            "Organism",
-                                                            "Instrument",
-                                                            "SpikeIn",
-                                                            "Abstract",
-                                                            "Citation",
-                                                            "PublicationLink",
-                                                            "ExperimentDescription",
-                                                            "SampleDescription",
-                                                            "Container",
-                                                            "CreatedBy",
-                                                            "Created",
-                                                            "ModifiedBy",
-                                                            "Modified"));
-
-            ButtonBar bbar = new ButtonBar();
-            ActionURL editUrl = getEditExperimentDetailsURL(getContainer(),
-                                                            form.getId(),
-                                                            TargetedMSController.getViewExperimentDetailsURL(form.getId(), getContainer()));
-            ActionButton editButton = new ActionButton("Edit", editUrl);
-            editButton.setDisplayPermission(UpdatePermission.class);
-            bbar.add(editButton);
-            bbar.setStyle(ButtonBar.Style.separateButtons);
-            experimentDetails.setButtonBar(bbar);
-
-            DetailsView exptDetailsView = new DetailsView(experimentDetails, form.getId());
-            exptDetailsView.setTitle("Experiment Details");
-
-            VBox result = new VBox(exptDetailsView);
+            JspView<ExperimentAnnotations> experimentDetailsView = new JspView<ExperimentAnnotations>("/org/labkey/targetedms/view/expannotations/experimentDetails.jsp", exptAnnotations);
+            VBox result = new VBox(experimentDetailsView);
+            experimentDetailsView.setFrame(WebPartView.FrameType.PORTAL);
+            experimentDetailsView.setTitle("Experiment Details");
 
             TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext(), exptAnnotations, TargetedMsRunListView.ButtonBarType.EXPERIMENT_DETAILS_VIEW);
             TableInfo tinfo = runListView.getTable();

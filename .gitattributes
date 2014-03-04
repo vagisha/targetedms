@@ -234,6 +234,7 @@ src/org/labkey/targetedms/view/conflictSummary.jsp -text
 src/org/labkey/targetedms/view/expannotations/ExperimentAnnotationsFormDataRegion.java -text
 src/org/labkey/targetedms/view/expannotations/TargetedMSExperimentsWebPart.java -text
 src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -text
+src/org/labkey/targetedms/view/expannotations/experimentDetails.jsp -text
 src/org/labkey/targetedms/view/folderSetup.jsp -text
 src/org/labkey/targetedms/view/peptidePeakAreaView.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
