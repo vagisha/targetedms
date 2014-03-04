@@ -147,7 +147,7 @@ public class Chromatogram extends SkylineEntity
     private byte[] uncompress(byte[] compressedBytes) throws DataFormatException
     {
         int uncompressedSize = (Integer.SIZE / 8) * _numPoints * (_numTransitions + 1);
-        if(uncompressedSize == _compressedSize)
+        if(uncompressedSize == compressedBytes.length)
             return compressedBytes;
 
         Inflater inflater = new Inflater();
