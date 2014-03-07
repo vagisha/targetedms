@@ -249,9 +249,9 @@ function toggleCheckboxSelection(element)
         </tr>
         <tr>
             <td colspan="8" style="padding:10px;" align="center">
-                <%=generateSubmitButton("Apply Changes")%>
+                <%= button("Apply Changes").submit(true) %>
                 &nbsp;
-                <%=generateButton("Cancel", getContainer().getStartURL(getUser()))%>
+                <%= button("Cancel").href(getContainer().getStartURL(getUser())) %>
             </td>
         </tr>
     </tbody>

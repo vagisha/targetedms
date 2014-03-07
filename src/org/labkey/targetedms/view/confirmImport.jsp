@@ -62,7 +62,7 @@
         } %>
         <tr>
             <td colspan="2" align="center">
-                <%= generateSubmitButton("Import") %> <%= generateButton("Cancel", form.getReturnActionURL(getContainer().getStartURL(getUser())))%>
+                <%= button("Import").submit(true) %> <%= button("Cancel").href(form.getReturnActionURL(getContainer().getStartURL(getUser()))) %>
             </td>
         </tr>
     </form>
