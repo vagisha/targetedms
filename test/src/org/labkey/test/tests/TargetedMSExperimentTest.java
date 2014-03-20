@@ -20,7 +20,7 @@ import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.Ext4HelperWD;
+import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.UIContainerHelper;
 
@@ -143,7 +143,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertElementNotVisible(Locator.name("deltaMass"));
         assertElementNotVisible(Locator.name("customName"));
         assertElementVisible(Locator.name("unimodName"));
-        _ext4Helper.selectComboBoxItem(Ext4HelperWD.Locators.formItemWithLabelContaining("Unimod Name:"), "Label:13C(6)15N(4) (C-term R)");
+        _ext4Helper.selectComboBoxItem(Ext4Helper.Locators.formItemWithLabelContaining("Unimod Name:"), "Label:13C(6)15N(4) (C-term R)");
         waitAndClickAndWait(Locator.ext4Button("Search"));
         //waitForText("1 - 13 of 13");
         assertEquals(13, getElementCount( Locator.xpath("//td/a/span[contains(@title, 'R[+10]')]")));
