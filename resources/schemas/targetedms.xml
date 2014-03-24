@@ -164,7 +164,9 @@
                 <ns:columnTitle>Representative State</ns:columnTitle>
             </ns:column>
             <ns:column columnName="DataId"/>
-            <ns:column columnName="iRTScaleId"/>
+            <ns:column columnName="iRTScaleId">
+                <ns:columnTitle>iRT Scale Id</ns:columnTitle>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideGroup">
@@ -886,11 +888,18 @@
         <ns:columns>
             <ns:column columnName="Id"/>
             <ns:column columnName="ModifiedSequence"/>
-            <ns:column columnName="iRTStandard"/>
-            <ns:column columnName="iRTValue"/>
-            <ns:column columnName="iRTScaleId"/>
+            <ns:column columnName="iRTStandard">
+                <ns:columnTitle>iRT Standard</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="iRTValue">
+                <ns:columnTitle>iRT Value</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="iRTScaleId">
+                <ns:columnTitle>iRT Scale Id</ns:columnTitle>
+            </ns:column>
             <ns:column columnName="Created"/>
             <ns:column columnName="CreatedBy"/>
+            <ns:column columnName="ImportCount"/>
         </ns:columns>
     </ns:table>
 

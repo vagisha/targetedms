@@ -72,6 +72,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         {
             TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container, user);
             TargetedMSManager.purgeDeletedRuns();
+            TargetedMSManager.deleteiRTscales(container);
         }
     }
 
@@ -87,7 +88,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     @Override
     public void runMoved(ExpData newData, Container container, Container targetContainer, String oldRunLSID, String newRunLSID, User user, int oldDataRowID) throws ExperimentException
     {
-        // TODO
+        throw new UnsupportedOperationException();
     }
 
     @Override

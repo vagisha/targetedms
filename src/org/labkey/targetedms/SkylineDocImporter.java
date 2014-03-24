@@ -18,6 +18,7 @@ package org.labkey.targetedms;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
@@ -31,6 +32,7 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
@@ -49,7 +51,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -118,7 +119,7 @@ public class SkylineDocImporter
         _log = (null == log ? _systemLog : log);
     }
 
-    public TargetedMSRun importRun(RunInfo runInfo) throws IOException, SQLException, XMLStreamException, DataFormatException
+    public TargetedMSRun importRun(RunInfo runInfo) throws IOException, SQLException, XMLStreamException, DataFormatException, PipelineJobException
     {
         _runId = runInfo.getRunId();
 
@@ -148,7 +149,7 @@ public class SkylineDocImporter
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
             throw fnfe;
         }
-        catch (SQLException | DataFormatException | IOException | XMLStreamException | RuntimeException e)
+        catch (SQLException | DataFormatException | IOException | XMLStreamException | RuntimeException | PipelineJobException e)
         {
             logError("Skyline document import failed", e);
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
@@ -164,7 +165,7 @@ public class SkylineDocImporter
     }
 
 
-    private void importSkylineDoc(TargetedMSRun run) throws XMLStreamException, IOException, SQLException, DataFormatException
+    private void importSkylineDoc(TargetedMSRun run) throws XMLStreamException, IOException, SQLException, DataFormatException, PipelineJobException
     {
         // TODO - Consider if this is too big to fit in a single transaction. If so, need to blow away all existing
         // data for this run before restarting the import in the case of a retry
@@ -176,30 +177,7 @@ public class SkylineDocImporter
 
             NetworkDrive.ensureDrive(f.getPath());
 
-            // If this is a zip file extract the contents to a folder
-            // TODO: refactor this block to a seperate method
-            String ext = FileUtil.getExtension(f.getName());
-            if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(ext))
-            {
-                zipDir = new File(f.getParent(), SkylineFileUtils.getBaseName(f.getName()));
-                List<File> files = ZipUtil.unzipToDirectory(f, zipDir, _log);
-                File skyFile = null;
-                for(File file: files)
-                {
-                    ext = FileUtil.getExtension(file.getName());
-                    if("sky".equalsIgnoreCase(ext))
-                    {
-                        skyFile = file;
-                        break;
-                    }
-                }
-
-                if(skyFile == null)
-                {
-                    throw new IOException("zip file "+skyFile+" does not contain a .sky file");
-                }
-                f = skyFile;
-            }
+            f = extractIfZip(f);
 
             ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
 
@@ -208,7 +186,7 @@ public class SkylineDocImporter
 
             // Store the document settings
             // 0. iRT information
-            // insertiRTData(parser);
+            run.setiRTscaleId(insertiRTData(parser));
 
 
             // 1. Transition settings
@@ -526,37 +504,61 @@ public class SkylineDocImporter
         }
     }
 
-    private String CONTAINER = "container";
-    private String ID = "Id";
-    private String IRTSCALEID = "iRTScaleId";
-
-    private void insertiRTData(SkylineDocumentParser parser) throws SQLException
+    private File extractIfZip(File f) throws IOException
     {
-        // check to see if the iRT Scale returned already exists
-        // get a list of all scale Id's
-        boolean newScale = true;
-        int iRTScaleId = 0;
-        List<HashMap<String, Object>> iRTScaleSettings = parser.getiRTScaleSettings();
-
-        if (! iRTScaleSettings.isEmpty())
+        String ext = FileUtil.getExtension(f.getName());
+        if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(ext))
         {
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("container"), _container, CompareType.EQUAL);
-            TableSelector selector = new TableSelector(TargetedMSManager.getTableInfoiRTScale(), filter, null);
-            Collection<Map<String, Object>> scaleIds = selector.getMapCollection();
-            for (Map<String, Object> iRTScaleMap : scaleIds)
+            File zipDir = new File(f.getParent(), SkylineFileUtils.getBaseName(f.getName()));
+            List<File> files = ZipUtil.unzipToDirectory(f, zipDir, _log);
+            File skyFile = null;
+            for(File file: files)
             {
-                iRTScaleId = (int) iRTScaleMap.get("Id");
-                SimpleFilter iRTFilter = new SimpleFilter(FieldKey.fromParts("iRTScaleId"), iRTScaleId);
-                Sort sort = new Sort("iRTValue,ModifiedSequence");
-                TableSelector selector2 = new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(), iRTFilter, sort);
-                Collection<Map<String, Object>> iRTPeptides = selector2.getMapCollection();
-
-                // test equality
-                if ( compareiRTScales( iRTScaleSettings, iRTPeptides))
+                ext = FileUtil.getExtension(file.getName());
+                if("sky".equalsIgnoreCase(ext))
                 {
-                    _log.info("Pre-existing iRTScale found, skipping import");
-                    newScale = false;
+                    skyFile = file;
                     break;
+                }
+            }
+
+            if(skyFile == null)
+            {
+                throw new IOException("zip file "+skyFile+" does not contain a .sky file");
+            }
+            f = skyFile;
+        }
+        return f;
+    }
+
+    private @Nullable Integer insertiRTData(SkylineDocumentParser parser) throws SQLException, PipelineJobException
+    {
+
+        Integer iRTScaleId = null; // Not all imports are expected to have iRT data
+        ArrayList<IrtPeptide> importScale = parser.getiRTScaleSettings();
+
+        if (! importScale.isEmpty())
+        {
+            boolean newScale = false;
+            ArrayList<Integer> scaleIds = TargetedMSManager.getIrtScaleIds(_container);
+
+            // Experiment folders get a new scale for every imported run
+            // Library folders have a single scale which gets updated with a weighted average of observed values on each import.
+            if (scaleIds.isEmpty() || TargetedMSManager.getFolderType(_container) == TargetedMSModule.FolderType.Experiment)
+                newScale = true;
+            else
+            {
+                iRTScaleId = scaleIds.get(0);
+                SimpleFilter iRTFilter = new SimpleFilter(FieldKey.fromParts("iRTScaleId"), iRTScaleId);
+                Sort sort = new Sort("iRTValue,ModifiedSequence");    // This matches the sort which was performed in the import.
+                ArrayList<IrtPeptide> existingScale = new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(), iRTFilter, sort).getArrayList(IrtPeptide.class);
+
+                List<IrtPeptide> updatedPeptides = reconcileIrtImportWithExisting(existingScale, importScale);
+
+                // Write the new weighted average values
+                for (IrtPeptide peptide : updatedPeptides)
+                {
+                    Table.update(_user, TargetedMSManager.getTableInfoiRTPeptide(), peptide, peptide.getId());
                 }
             }
 
@@ -564,42 +566,103 @@ public class SkylineDocImporter
             {
                 // first insert the iRTScale and get the Id
                 Map<String, Object> iRTScaleRow = new CaseInsensitiveHashMap<>();
-                iRTScaleRow.put(CONTAINER, _container);
+                iRTScaleRow.put("container", _container);
                 Map<String, Object> iRTScaleResult = Table.insert(_user, TargetedMSManager.getTableInfoiRTScale(), iRTScaleRow);
-                iRTScaleId = (int) iRTScaleResult.get(ID);
-
-                // insert the new iRT Peptides into the database
-                for (HashMap<String,Object> iRTPeptideRow : iRTScaleSettings)
-                {
-                    iRTPeptideRow.put(IRTSCALEID, iRTScaleId);
-                    Table.insert(_user, TargetedMSManager.getTableInfoiRTPeptide(), iRTPeptideRow);
-                }
+                iRTScaleId = (int) iRTScaleResult.get("id");
             }
-            // update the Runs table to point the iRTScaleId
-            if (iRTScaleId != 0)
+
+            // insert any new iRT Peptides into the database
+            for (IrtPeptide peptide : importScale)
             {
-                new SqlExecutor(TargetedMSManager.getSchema()).execute("UPDATE " + TargetedMSManager.getTableInfoRuns() + " SET iRTScaleId = ? WHERE Id = ?",
-                                iRTScaleId, _runId);
+                peptide.setiRTScaleId(iRTScaleId);
+                Table.insert(_user, TargetedMSManager.getTableInfoiRTPeptide(), peptide);
             }
         }
+        return iRTScaleId;
     }
 
-    private boolean compareiRTScales(List<HashMap<String, Object>> col1, Collection<Map<String, Object>> col2)
+    /**
+     * Verify the standards of the imported scale match the existing standards, and determine which of the import peptides are new
+     * to be inserted vs. updates to existing values.
+     * @param existingScale
+     * @param importScale
+     * @return The list of existing peptides which have recalculated weighted average values.
+     * @throws DataFormatException
+     */
+    private List<IrtPeptide> reconcileIrtImportWithExisting(ArrayList<IrtPeptide> existingScale, ArrayList<IrtPeptide> importScale) throws PipelineJobException
     {
-        if (col1.size() != col2.size())
+        ArrayList<IrtPeptide> existingStandards = new ArrayList<>();
+        CaseInsensitiveHashMap<IrtPeptide> existingTargets = new CaseInsensitiveHashMap<>();
+        ArrayList<IrtPeptide> importStandards = new ArrayList<>();
+        CaseInsensitiveHashMap<IrtPeptide> importTargets = new CaseInsensitiveHashMap<>();
+
+        separateIrtScale(existingScale, existingStandards, existingTargets);
+        separateIrtScale(importScale, importStandards, importTargets);
+
+        if (!compareIrtStandards(existingStandards, importStandards))
+            throw new PipelineJobException("Imported iRT peptide standards do not match existing standards (iRT Scale Id = " + existingScale.get(0).getiRTScaleId() + ") for this folder: " + _container.getPath());
+
+        // For each of the imported peptides, determine if it is new to be inserted, or already exists to have a new weighted average value calculated
+        List<IrtPeptide> recalcedPeptides = new ArrayList<>();
+        Iterator<Map.Entry<String, IrtPeptide>> iter = importTargets.entrySet().iterator();
+        while (iter.hasNext())
+        {
+            Map.Entry<String, IrtPeptide> imported = iter.next();
+            IrtPeptide entryToUpdate = existingTargets.get(imported.getKey());
+            if (entryToUpdate != null)
+            {
+                entryToUpdate.reweighValue(imported.getValue().getiRTValue());
+                recalcedPeptides.add(entryToUpdate);
+                iter.remove(); // Take it out of the import list
+            }
+        }
+
+        // Replace the full import scale with the list that's now just the new peptides to be inserted.
+        importScale.clear();
+        importScale.addAll(importTargets.values());
+
+        return recalcedPeptides;
+    }
+
+    /**
+     * Ensure the lists of standards match identically on size, sequences and value
+     * @param existingStandards
+     * @param importStandards
+     * @return true if standards match, false if they do not
+     */
+    private boolean compareIrtStandards(ArrayList<IrtPeptide> existingStandards, ArrayList<IrtPeptide> importStandards)
+    {
+        if (existingStandards.size() != importStandards.size())
             return false;
 
-        Iterator itr1 = col1.iterator();
-        Iterator itr2 = col2.iterator();
-        while (itr1.hasNext() && itr2.hasNext())
+        Iterator<IrtPeptide> existingIter = existingStandards.iterator();
+        Iterator<IrtPeptide> importIter = importStandards.iterator();
+
+        while (existingIter.hasNext() && importIter.hasNext())
         {
-            HashMap<String, Object> input1 = (HashMap<String,Object>) itr1.next();
-            Map<String, Object> input2 = (Map<String,Object>) itr2.next();
-            if ( (double) input1.get("iRTValue") != (double) input2.get("iRTValue") ||
-                    ! input1.get("ModifiedSequence").equals(input2.get("modifiedsequence")))
+            IrtPeptide existing = existingIter.next();
+            IrtPeptide imported = importIter.next();
+            if (existing.getiRTValue() != imported.getiRTValue() || !existing.getModifiedSequence().equalsIgnoreCase(imported.getModifiedSequence()))
                 return false;
         }
+
         return true;
+    }
+
+    /**
+     * Separate an iRT scale into a list of standard peptides and a map of the other sequences
+     * @param scale
+     * @param standards
+     * @param targets
+     */
+    private void separateIrtScale(List<IrtPeptide> scale, List<IrtPeptide> standards, CaseInsensitiveHashMap<IrtPeptide> targets)
+    {
+        for (IrtPeptide peptide : scale)
+        {
+            if (peptide.isiRTStandard())
+                standards.add(peptide);
+            else targets.put(peptide.getModifiedSequence(), peptide);
+        }
     }
 
     // Skyline documents may contain multiple <instrument_info> elements that contain

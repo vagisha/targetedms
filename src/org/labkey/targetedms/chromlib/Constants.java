@@ -48,7 +48,8 @@ class Constants
         Precursor,
         PrecursorIsotopeModification,
         PrecursorRetentionTime,
-        Transition
+        Transition,
+        IrtLibrary
     }
 
     public static enum Column
@@ -134,7 +135,11 @@ class Constants
         Height("DOUBLE"),
         Fwhm("DOUBLE"),
         MassErrorPPM("DOUBLE"),
-        ChromatogramIndex("INTEGER");
+        ChromatogramIndex("INTEGER"),
+
+        IrtLibraryId("INTEGER NOT NULL", Table.IrtLibrary, Id),
+        IrtValue("DOUBLE"),
+        IrtStandard("TINYINT");
 
         private final String definition;
         private final Table _fkTable;
@@ -592,6 +597,39 @@ class Constants
         {
             return _column;
         }
+        public String definition()
+        {
+            return _definition;
+        }
+    }
+
+    public static enum IrtLibraryColumn implements ColumnDef
+    {
+        Id(Column.Id),
+        ModifiedSequence(Column.ModifiedSequence),
+        IrtStandard(Column.IrtStandard),
+        IrtValue(Column.IrtValue);
+
+        private final Column _column;
+        private final String _definition;
+
+        private IrtLibraryColumn(Column column)
+        {
+            _column = column;
+            _definition = column.definition;
+        }
+        private IrtLibraryColumn(Column column, String definition)
+        {
+            _column = column;
+            _definition = definition;
+        }
+
+        @Override
+        public Column baseColumn()
+        {
+            return _column;
+        }
+
         public String definition()
         {
             return _definition;

@@ -76,6 +76,8 @@ public class ChromLibSqliteSchemaCreator
 
         // Create Transition table.
         createTransitionTable(conn);
+
+        createIrtLibraryTable(conn);
     }
 
     private void createLibInfoTable(Connection conn) throws SQLException
@@ -136,6 +138,11 @@ public class ChromLibSqliteSchemaCreator
     private void createTransitionTable(Connection conn) throws SQLException
     {
         createTable(conn, Table.Transition, Constants.TransitionColumn.values());
+    }
+
+    private void createIrtLibraryTable(Connection conn) throws SQLException
+    {
+        createTable(conn, Table.IrtLibrary, Constants.IrtLibraryColumn.values());
     }
 
     private String getColumnSql(Constants.ColumnDef[] columns)

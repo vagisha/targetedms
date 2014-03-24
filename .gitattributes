@@ -47,6 +47,7 @@ resources/schemas/dbscripts/postgresql/targetedms-13.20-13.30.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.30-14.10.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.31-13.32.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-13.32-13.33.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-14.10-14.11.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.19-0.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.20-0.21.sql -text
@@ -79,7 +80,9 @@ resources/schemas/dbscripts/sqlserver/targetedms-13.20-13.30.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.30-14.10.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.31-13.32.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-13.32-13.33.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-14.10-14.11.sql -text
 resources/schemas/targetedms.xml -text
+src/org/labkey/targetedms/IrtPeptide.java -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text
 src/org/labkey/targetedms/SkylineFileUtils.java -text
@@ -112,6 +115,8 @@ src/org/labkey/targetedms/chromlib/ContainerChromatogramLibraryWriter.java -text
 src/org/labkey/targetedms/chromlib/Dao.java -text
 src/org/labkey/targetedms/chromlib/LibInfo.java -text
 src/org/labkey/targetedms/chromlib/LibInfoDao.java -text
+src/org/labkey/targetedms/chromlib/LibIrtLibrary.java -text
+src/org/labkey/targetedms/chromlib/LibIrtLibraryDao.java -text
 src/org/labkey/targetedms/chromlib/LibIsotopeModification.java -text
 src/org/labkey/targetedms/chromlib/LibIsotopeModificationDao.java -text
 src/org/labkey/targetedms/chromlib/LibPeptide.java -text

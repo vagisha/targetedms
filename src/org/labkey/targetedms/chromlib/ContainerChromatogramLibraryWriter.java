@@ -16,8 +16,12 @@
 package org.labkey.targetedms.chromlib;
 
 import org.apache.commons.io.FileUtils;
+import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.protein.ProteinService;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.targetedms.TargetedMSManager;
@@ -115,6 +119,8 @@ public class ContainerChromatogramLibraryWriter
                 writeRepresentativeDataInRun(runId);
             }
 
+            writeIrtLibrary();
+
             writeLibInfo(libraryRevision);
 
         }
@@ -201,6 +207,24 @@ public class ContainerChromatogramLibraryWriter
         {   // Otherwise, write the representative precursors in the run.
             saveRepresentativePrecursors(runId);
         }
+    }
+
+    private void writeIrtLibrary() throws SQLException
+    {
+        // Retrieve the values from the database to hand off to be written into the SQLite Db
+        // Many other tables get their values by way of static methods on their own Manager classes,
+        // but that's overkill here.
+        List<Integer> scaleIds = TargetedMSManager.getIrtScaleIds(_container);
+
+        List<LibIrtLibrary> irtPeptides = new ArrayList<>();
+        for (Integer scaleId : scaleIds)
+        {
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("iRTScaleId"), scaleId);
+            CaseInsensitiveHashSet columns = new CaseInsensitiveHashSet("ModifiedSequence", "iRTStandard", "iRTValue");
+            irtPeptides.addAll(new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(),columns,filter,null).getArrayList(LibIrtLibrary.class));
+        }
+
+        _libWriter.writeIrtLibrary(irtPeptides);
     }
 
     private void saveRunIsotopeModifications(Integer runId) throws SQLException

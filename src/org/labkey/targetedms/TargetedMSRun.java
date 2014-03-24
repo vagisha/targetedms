@@ -67,6 +67,7 @@ public class TargetedMSRun implements Serializable
     protected int _precursorCount;
     protected int _transitionCount;
     protected Integer _dataId; // FK to exp.data's RowId column
+    protected Integer _iRTscaleId;
 
     public TargetedMSRun()
     {
@@ -264,5 +265,15 @@ public class TargetedMSRun implements Serializable
     public void setDataId(Integer dataId)
     {
         _dataId = dataId;
+    }
+
+    public Integer getiRTscaleId()
+    {
+        return _iRTscaleId;
+    }
+
+    public void setiRTscaleId(Integer iRTscaleId)
+    {
+        _iRTscaleId = iRTscaleId;
     }
 }

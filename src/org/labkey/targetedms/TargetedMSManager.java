@@ -31,6 +31,7 @@ import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
 import org.labkey.api.exp.AbstractFileXarSource;
 import org.labkey.api.exp.ExperimentException;
@@ -1039,6 +1040,35 @@ public class TargetedMSManager
     private static void execute(String sql, @NotNull Object... parameters)
     {
         new SqlExecutor(getSchema()).execute(sql, parameters);
+    }
+
+    public static void deleteiRTscales(Container c)
+    {
+        // Check every iRT scale in the container to see if we can delete that scale. This is brute force, but
+        // it avoids a situation seen during development in which a Work In Progress bug caused a broken reference to iRTScale from a run,
+        // which resulted in an undeleteable container.
+        for (Integer scaleId : getIrtScaleIds(c))
+        {
+            // Only delete if no runs still reference this iRT scale
+            if (!(new TableSelector(getTableInfoRuns(), new SimpleFilter(FieldKey.fromParts("iRTScaleId"), scaleId), null).exists()))
+            {
+                try
+                {
+                    Table.delete(getTableInfoiRTPeptide(), new SimpleFilter(FieldKey.fromParts("iRTScaleId"), scaleId));
+                    Table.delete(getTableInfoiRTScale(), new SimpleFilter(FieldKey.fromParts("id"), scaleId));
+                }
+                catch (SQLException e)
+                {
+                    throw new RuntimeSQLException(e);
+                }
+            }
+        }
+    }
+
+    public static ArrayList<Integer> getIrtScaleIds(Container c)
+    {
+        SimpleFilter conFil = SimpleFilter.createContainerFilter(c);
+        return new TableSelector(TargetedMSManager.getTableInfoiRTScale().getColumn(FieldKey.fromParts("id")), conFil , null).getArrayList(Integer.class);
     }
 
     // return the ModuleProperty value for "TARGETED_MS_FOLDER_TYPE"

@@ -38,6 +38,7 @@ public class ChromatogramLibraryWriter
     private Dao<LibIsotopeModification> _isotopeModificationDao;
     private Dao<LibProtein> _proteinDao;
     private Dao<LibPeptide> _peptideDao;
+    private Dao<LibIrtLibrary> _irtLibraryDao;
 
     private List<LibPeptide> _libPeptideCache;
     private List<LibProtein> _libProteinCache;
@@ -89,6 +90,8 @@ public class ChromatogramLibraryWriter
         _peptideDao = new LibPeptideDao(new LibPeptideStructuralModDao(), precursorDao);
 
         _proteinDao = new LibProteinDao(_peptideDao);
+
+        _irtLibraryDao = new LibIrtLibraryDao();
     }
 
     private Connection getConnection() throws SQLException
@@ -145,6 +148,11 @@ public class ChromatogramLibraryWriter
     public void writeIsotopeModification(LibIsotopeModification isotopeMod) throws SQLException
     {
         saveEntry(_isotopeModificationDao, isotopeMod);
+    }
+
+    public void writeIrtLibrary(List<LibIrtLibrary> irtLibraries) throws SQLException
+    {
+        saveList(_irtLibraryDao, irtLibraries);
     }
 
     public void writeProtein(LibProtein protein) throws SQLException
