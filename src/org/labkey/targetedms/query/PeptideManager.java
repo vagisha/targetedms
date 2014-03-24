@@ -15,7 +15,11 @@
 
 package org.labkey.targetedms.query;
 
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.cache.CacheLoader;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DatabaseCache;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
@@ -26,6 +30,9 @@ import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * User: vsharma
@@ -34,6 +41,9 @@ import java.util.Collection;
  */
 public class PeptideManager
 {
+    private static final int CACHE_SIZE = 10;
+    private static PeptideIdsWithSpectra _peptideIdsWithSpectra = new PeptideIdsWithSpectra();
+
     private PeptideManager() {}
 
     public static Peptide get(int peptideId)
@@ -148,19 +158,64 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
-    public static boolean hasSpectrumLibraryInformation(int peptideId)
+    public static boolean hasSpectrumLibraryInformation(int peptideId, Integer runId)
     {
-        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
-        sql.append(" WHERE ");
-        sql.append("pre.Id=pcilib.PrecursorId");
-        sql.append(" AND ");
-        sql.append("pre.PeptideId=?");
-        sql.add(peptideId);
+        if(runId == null)
+        {
+            SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
+            sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
+            sql.append(", ");
+            sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+            sql.append(" WHERE ");
+            sql.append("pre.Id=pcilib.PrecursorId");
+            sql.append(" AND ");
+            sql.append("pre.PeptideId=?");
+            sql.add(peptideId);
 
-        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null ? count > 0 : false;
+            Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+            return count != null ? count > 0 : false;
+        }
+        else
+        {
+            Set<Integer> peptideIds = _peptideIdsWithSpectra.get(String.valueOf(runId), null, new CacheLoader<String, Set<Integer>>() {
+                @Override
+                public Set<Integer> load(String runId, @Nullable Object argument)
+                {
+                    SQLFragment sql = new SQLFragment("SELECT DISTINCT pre.PeptideId FROM ");
+                    sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
+                    sql.append(" , ");
+                    sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                    sql.append(", ");
+                    sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+                    sql.append(" WHERE ");
+                    sql.append(" pcilib.SpectrumLibraryId = specLib.Id ");
+                    sql.append(" AND ");
+                    sql.append(" pcilib.PrecursorId = pre.Id ");
+                    sql.append(" AND ");
+                    sql.append(" specLib.RunId = ? ");
+                    sql.add(Integer.valueOf(runId));
+                    Collection<Integer> results = new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class);
+                    return new HashSet<>(results);
+                }
+            });
+
+            return peptideIds.contains(peptideId);
+        }
+    }
+
+    public static void removeRunCachedResults(List<Integer> deletedRunIds)
+    {
+        for(Integer runId: deletedRunIds)
+        {
+            _peptideIdsWithSpectra.remove(String.valueOf(runId));
+        }
+    }
+
+    private static class PeptideIdsWithSpectra extends DatabaseCache<Set<Integer>>
+    {
+        public PeptideIdsWithSpectra()
+        {
+            super(TargetedMSManager.getSchema().getScope(), CACHE_SIZE, CacheManager.DAY, "Peptide IDs with library spectra");
+        }
     }
 }

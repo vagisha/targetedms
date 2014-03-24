@@ -87,6 +87,7 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HelpTopic;
@@ -134,7 +135,7 @@ import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.ModificationManager;
-import org.labkey.targetedms.query.ModifiedPeptideDisplayColumn;
+import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
 import org.labkey.targetedms.query.PeptideChromatogramsTableInfo;
 import org.labkey.targetedms.query.PeptideGroupManager;
 import org.labkey.targetedms.query.PeptideManager;
@@ -642,7 +643,7 @@ public class TargetedMSController extends SpringActionController
 
         public String getModifiedPeptideHtml()
         {
-           return new ModifiedPeptideHtmlMaker().getHtml(getPrecursor());
+           return new ModifiedPeptideHtmlMaker().getPrecursorHtml(getPrecursor());
         }
 
         public PeptideSettings.IsotopeLabel getIsotopeLabel()
@@ -662,7 +663,6 @@ public class TargetedMSController extends SpringActionController
         private Peptide _peptide;
         private PeptideGroup _peptideGroup;
         private List<Precursor> _precursorList;
-        private int _lightIsotopeLableId;
         private List<PeptideSettings.IsotopeLabel> labels;
         private TargetedMSRun _run;
         protected String _resultsUri;
@@ -724,16 +724,6 @@ public class TargetedMSController extends SpringActionController
         public void setPrecursorList(List<Precursor> precursorList)
         {
             _precursorList = precursorList;
-        }
-
-        public int getLightIsotopeLableId()
-        {
-            return _lightIsotopeLableId;
-        }
-
-        public void setLightIsotopeLableId(int lightIsotopeLableId)
-        {
-            _lightIsotopeLableId = lightIsotopeLableId;
         }
 
         public List<PeptideSettings.IsotopeLabel> getLabels()
@@ -827,7 +817,6 @@ public class TargetedMSController extends SpringActionController
             bean.setPeptide(peptide);
             bean.setPeptideGroup(pepGroup);
             bean.setPrecursorList(precursorList);
-            bean.setLightIsotopeLableId(labels.get(0).getId());
             bean.setLabels(labels);
             bean.setRun(_run);
 
@@ -1600,7 +1589,7 @@ public class TargetedMSController extends SpringActionController
                     TargetedMSTable result = (TargetedMSTable) super.createTable();
                     result.addCondition(new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), form.getId()));
                     List<FieldKey> visibleColumns = new ArrayList<>();
-                    visibleColumns.add(FieldKey.fromParts(ModifiedPeptideDisplayColumn.PEPTIDE_COLUMN_NAME));
+                    visibleColumns.add(FieldKey.fromParts(ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
                     visibleColumns.add(FieldKey.fromParts("CalcNeutralMass"));
                     visibleColumns.add(FieldKey.fromParts("NumMissedCleavages"));
                     visibleColumns.add(FieldKey.fromParts("AvgMeasuredRetentionTime"));
@@ -2631,7 +2620,7 @@ public class TargetedMSController extends SpringActionController
                     List<FieldKey> visibleColumns = new ArrayList<>();
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
-                    visibleColumns.add(FieldKey.fromParts(ModifiedPeptideDisplayColumn.PRECURSOR_COLUMN_NAME));
+                    visibleColumns.add(FieldKey.fromParts(ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME));
                     if (form.isIncludeSubfolders())
                     {
                         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Folder", "Path"));

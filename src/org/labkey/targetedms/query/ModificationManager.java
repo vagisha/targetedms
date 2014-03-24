@@ -15,12 +15,17 @@
 
 package org.labkey.targetedms.query;
 
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.cache.CacheLoader;
+import org.labkey.api.cache.CacheManager;
+import org.labkey.api.data.DatabaseCache;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.Pair;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
@@ -28,8 +33,10 @@ import org.labkey.targetedms.parser.PeptideSettings;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.labkey.targetedms.TargetedMSManager.getSchema;
 
@@ -40,6 +47,10 @@ import static org.labkey.targetedms.TargetedMSManager.getSchema;
  */
 public class ModificationManager
 {
+    private static int CACHE_SIZE = 10; // Cache results for upto 10 runs.
+    private static PeptideStrModIndexes _peptideStrModIndexes = new PeptideStrModIndexes();
+    private static PeptideIsotopeModIndexes _peptideIsotopeModIndexes = new PeptideIsotopeModIndexes();
+
     private ModificationManager() {}
 
     /**
@@ -65,7 +76,7 @@ public class ModificationManager
                 double massDiff = rs.getDouble("MassDiff");
 
                 Double diffAtIndex = strModIndexMassDiff.get(index);
-                if(diffAtIndex != null)
+                if (diffAtIndex != null)
                 {
                     massDiff += diffAtIndex;
                 }
@@ -188,5 +199,176 @@ public class ModificationManager
     public static PeptideSettings.ModificationSettings getSettings(int runId)
     {
         return new TableSelector(TargetedMSManager.getTableInfoModificationSettings()).getObject(runId, PeptideSettings.ModificationSettings.class);
+    }
+
+
+    /**
+     * @param runId
+     * @return    PeptideId -> (Set of indexes where the peptide has structural modifications)
+     */
+    private static Map<Integer, Set<Integer>> getPeptideStructuralModIndexMap(int runId)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append(" SELECT mod.PeptideId AS peptideId, mod.IndexAA AS indexAA ");
+        sql.append(" FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptideStructuralModification(), "mod");
+        sql.append(" , ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(" , ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(" , ");
+        sql.append(TargetedMSManager.getTableInfoRuns(), "run");
+        sql.append(" WHERE run.id = ? ");
+        sql.add(runId);
+        sql.append(" AND ");
+        sql.append(" pg.runId = run.id ");
+        sql.append(" AND ");
+        sql.append(" pep.peptideGroupId = pg.id ");
+        sql.append(" AND ");
+        sql.append(" mod.peptideId = pep.id ");
+
+        final Map<Integer, Set<Integer>> peptideModIndexMap = new HashMap<>();
+
+        new SqlSelector(getSchema(), sql).forEach(new Selector.ForEachBlock<ResultSet>()
+        {
+            @Override
+            public void exec(ResultSet rs) throws SQLException
+            {
+                int peptideId = rs.getInt("peptideId");
+                int index = rs.getInt("indexAa");
+
+                Set<Integer> modIndexes = peptideModIndexMap.get(peptideId);
+                if(modIndexes == null)
+                {
+                    modIndexes = new HashSet<>();
+                    peptideModIndexMap.put(peptideId, modIndexes);
+                }
+                modIndexes.add(index);
+            }
+        });
+
+        return peptideModIndexMap;
+    }
+
+    /**
+     * @param runId
+     * @return  PeptideId/IsotopeLabelId -> Set of indexes where the PeptideId/IsotopeLabelId has a isotope modification
+     */
+    private static Map<Pair<Integer,Integer>, Set<Integer>> getPeptideIsotopeModIndexMap(int runId)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append(" SELECT mod.PeptideId AS peptideId, rmod.isotopeLabelId AS isotopeLabelId, mod.IndexAA AS indexAA ");
+        sql.append(" FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptideIsotopeModification(), "mod");
+        sql.append(" , ");
+        sql.append(TargetedMSManager.getTableInfoRunIsotopeModification(), "rmod");
+        sql.append(" , ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(" , ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(" WHERE rmod.runId = ? ");
+        sql.add(runId);
+        sql.append(" AND ");
+        sql.append(" pg.runId = rmod.runId ");
+        sql.append(" AND ");
+        sql.append(" pep.peptideGroupId = pg.id ");
+        sql.append(" AND ");
+        sql.append(" mod.peptideId = pep.id ");
+        sql.append(" AND ");
+        sql.append(" mod.isotopeModId = rmod.isotopeModId ");
+
+        final Map<Pair<Integer, Integer>, Set<Integer>> peptideModIndexMap = new HashMap<>();
+
+        new SqlSelector(getSchema(), sql).forEach(new Selector.ForEachBlock<ResultSet>()
+        {
+            @Override
+            public void exec(ResultSet rs) throws SQLException
+            {
+                Pair<Integer, Integer> key = new Pair<>(rs.getInt("peptideId"), rs.getInt("isotopeLabelId"));
+                int index = rs.getInt("indexAa");
+
+                Set<Integer> modIndexes = peptideModIndexMap.get(key);
+                if(modIndexes == null)
+                {
+                    modIndexes = new HashSet<>();
+                    peptideModIndexMap.put(key, modIndexes);
+                }
+                modIndexes.add(index);
+            }
+        });
+
+        return peptideModIndexMap;
+    }
+
+    public static Set<Integer> getStructuralModIndexes(int peptideId, Integer runId)
+    {
+        if(runId == null)
+        {
+            Map<Integer, Double> modMap = getPeptideStructuralModsMap(peptideId);
+            return new HashSet<>(modMap.keySet());
+        }
+        else
+        {
+            Map<Integer, Set<Integer>> modIndexesForRun = _peptideStrModIndexes.get(String.valueOf(runId), null, new CacheLoader<String, Map<Integer, Set<Integer>>>()
+            {
+                @Override
+                public Map<Integer, Set<Integer>> load(String runId, @Nullable Object argument)
+                {
+                     return getPeptideStructuralModIndexMap(Integer.valueOf(runId));
+                }
+            });
+
+            return modIndexesForRun.get(peptideId);
+        }
+    }
+
+    public static Set<Integer> getIsotopeModIndexes(int peptideId, int isotopeLabelId, Integer runId)
+    {
+        if(runId == null)
+        {
+            Map<Integer, Double> modMap = ModificationManager.getPeptideIsotopeModsMap(peptideId, isotopeLabelId);
+            return new HashSet<>(modMap.keySet());
+        }
+        else
+        {
+            Map<Pair<Integer,Integer>, Set<Integer>> modIndexesForRun = _peptideIsotopeModIndexes.get(String.valueOf(runId), null,
+                    new CacheLoader<String, Map<Pair<Integer,Integer>, Set<Integer>>>(){
+                        @Override
+                        public Map<Pair<Integer, Integer>, Set<Integer>> load(String runId, @Nullable Object argument)
+                        {
+                            return getPeptideIsotopeModIndexMap(Integer.valueOf(runId));
+                        }
+                    });
+
+            return modIndexesForRun.get(new Pair<>(peptideId, isotopeLabelId));
+        }
+    }
+
+    public static void removeRunCachedResults(List<Integer> deletedRunIds)
+    {
+        if(deletedRunIds == null)
+            return;
+
+        for(Integer runId: deletedRunIds)
+        {
+            _peptideIsotopeModIndexes.remove(String.valueOf(runId));
+            _peptideStrModIndexes.remove(String.valueOf(runId));
+        }
+    }
+
+    private static class PeptideIsotopeModIndexes extends DatabaseCache<Map<Pair<Integer,Integer>, Set<Integer>>>
+    {
+        public PeptideIsotopeModIndexes()
+        {
+            super(TargetedMSManager.getSchema().getScope(), CACHE_SIZE, CacheManager.DAY, "Peptide isotope modification indexes");
+        }
+    }
+
+    private static class PeptideStrModIndexes extends DatabaseCache<Map<Integer, Set<Integer>>>
+    {
+        public PeptideStrModIndexes()
+        {
+            super(TargetedMSManager.getSchema().getScope(), CACHE_SIZE, CacheManager.DAY, "Peptide structural modification indexes");
+        }
     }
 }

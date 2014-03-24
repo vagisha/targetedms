@@ -54,6 +54,9 @@ import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
+import org.labkey.targetedms.query.ModificationManager;
+import org.labkey.targetedms.query.PeptideManager;
+import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
 
 import java.io.File;
@@ -927,6 +930,22 @@ public class TargetedMSManager
 
         // Delete from runs
         execute("DELETE FROM " + getTableInfoRuns() + " WHERE Deleted = ?", true);
+
+        // Remove any cached results for the deleted runs
+        removeCachedResults();
+    }
+
+    private static void removeCachedResults()
+    {
+        // Get a list of deleted runs
+        SQLFragment sql = new SQLFragment("SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted =  ?", true);
+        List<Integer> deletedRunIds = new SqlSelector(getSchema(), sql).getArrayList(Integer.class);
+        if(deletedRunIds != null && deletedRunIds.size() > 0)
+        {
+            ModificationManager.removeRunCachedResults(deletedRunIds);
+            PeptideManager.removeRunCachedResults(deletedRunIds);
+            PrecursorManager.removeRunCachedResults(deletedRunIds);
+        }
     }
 
     public static void deleteTransitionChromInfoDependent(TableInfo tableInfo)

@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 %>
-<%@ page import="org.labkey.api.settings.AppProps" %>
 <%@ page import="org.labkey.api.util.Formats" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
@@ -59,7 +58,7 @@
     </tr>
     <tr>
         <td class="labkey-form-label">Sequence</td>
-        <td><%=text(new ModifiedPeptideHtmlMaker().getHtml(bean.getPeptide()))%></td>
+        <td><%=text(new ModifiedPeptideHtmlMaker().getPeptideHtml(bean.getPeptide()))%></td>
     </tr>
     <tr>
         <td class="labkey-form-label">NeutralMass</td>
@@ -96,8 +95,7 @@
                  <div>
                      <%=text(PrecursorHtmlMaker.getHtml(bean.getPeptide(),
                                                     precursor,
-                                                    labelIdMap.get(precursor.getIsotopeLabelId()),
-                                                    bean.getLightIsotopeLableId()
+                                                    labelIdMap.get(precursor.getIsotopeLabelId())
                      ))%>
 
                      <% String imgUrl = IconFactory.getPrecursorIconPath(precursor.getId()); %>

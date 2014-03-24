@@ -40,10 +40,10 @@ public class PrecursorHtmlMaker
                                            "++++++++",
                                            "+++++++++"};
 
-    public static String getHtml(Peptide peptide, Precursor precursor, String isotopeLabel, int lightLabelId)
+    public static String getHtml(Peptide peptide, Precursor precursor, String isotopeLabel)
     {
         StringBuilder html = new StringBuilder();
-        html.append(new ModifiedPeptideHtmlMaker().getHtml(peptide, precursor, lightLabelId));
+        html.append(new ModifiedPeptideHtmlMaker().getPrecursorHtml(peptide, precursor));
         html.append("<span>");
         html.append(" - ").append(Formats.f4.format(precursor.getMz()));
         html.append(CHARGE[precursor.getCharge()]);
@@ -59,7 +59,7 @@ public class PrecursorHtmlMaker
     public static String getModSeqChargeHtml( ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker, Precursor precursor)
     {
         StringBuilder html = new StringBuilder();
-        html.append(modifiedPeptideHtmlMaker.getHtml(precursor));
+        html.append(modifiedPeptideHtmlMaker.getPrecursorHtml(precursor));
         html.append("<span>");
         html.append(CHARGE[precursor.getCharge()]);
         html.append("</span>");

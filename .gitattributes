@@ -195,7 +195,7 @@ src/org/labkey/targetedms/query/InstrumentManager.java -text
 src/org/labkey/targetedms/query/IsotopeLabelManager.java -text
 src/org/labkey/targetedms/query/LibraryManager.java -text
 src/org/labkey/targetedms/query/ModificationManager.java -text
-src/org/labkey/targetedms/query/ModifiedPeptideDisplayColumn.java -text
+src/org/labkey/targetedms/query/ModifiedSequenceDisplayColumn.java -text
 src/org/labkey/targetedms/query/PeptideChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideGroupManager.java -text
 src/org/labkey/targetedms/query/PeptideManager.java -text

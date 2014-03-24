@@ -28,11 +28,11 @@ public class IconFactory
 {
     private IconFactory(){}
 
-    public static String getPeptideIconPath(int peptideId)
+    public static String getPeptideIconPath(int peptideId, Integer runId)
     {
         String iconPath = AppProps.getInstance().getContextPath() + "/TargetedMS/images/Peptide.gif";
 
-        if(PeptideManager.hasSpectrumLibraryInformation(peptideId))
+        if(PeptideManager.hasSpectrumLibraryInformation(peptideId, runId))
         {
             iconPath =  AppProps.getInstance().getContextPath() + "/TargetedMS/images/PeptideLib.gif";
         }
@@ -42,10 +42,15 @@ public class IconFactory
 
     public static String getPrecursorIconPath(int precursorId)
     {
+        return getPrecursorIconPath(precursorId, null);
+    }
+
+    public static String getPrecursorIconPath(int precursorId, Integer runId)
+    {
         String iconPath = AppProps.getInstance().getContextPath() + "/TargetedMS/images/blank.gif";
 
-        boolean hasLibSpectrum = PrecursorManager.hasSpectrumLibraryInformation(precursorId);
-        boolean hasChromatograms = PrecursorManager.hasChromatogramInformation(precursorId);
+        boolean hasLibSpectrum = PrecursorManager.hasLibrarySpectra(precursorId, runId);
+        boolean hasChromatograms = PrecursorManager.hasChromatograms(precursorId, runId);
         if(hasLibSpectrum && hasChromatograms)
         {
             iconPath =  AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroupLib.gif";

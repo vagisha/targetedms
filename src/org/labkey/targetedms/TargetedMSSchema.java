@@ -22,6 +22,7 @@ import org.labkey.api.data.AJAXDetailsDisplayColumn;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
@@ -46,12 +47,13 @@ import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
 import org.labkey.targetedms.query.ExperimentAnnotationsTableInfo;
-import org.labkey.targetedms.query.ModifiedPeptideDisplayColumn;
+import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
 import org.labkey.targetedms.query.PrecursorTableInfo;
 import org.labkey.targetedms.query.RepresentativeStateDisplayColumn;
 import org.labkey.targetedms.query.TargetedMSTable;
@@ -360,6 +362,7 @@ public class TargetedMSSchema extends UserSchema
         ColumnInfo skyDocDetailColumn = new ExprColumn(result, "File", sql, JdbcType.INTEGER);
 
         ActionURL url = TargetedMSController.getShowRunURL(getContainer());
+        final ActionURL downloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
         skyDocDetailColumn.setFk(new LookupForeignKey(url, "id", "Id", "Description")
         {
             public TableInfo getLookupTableInfo()
@@ -383,6 +386,24 @@ public class TargetedMSSchema extends UserSchema
                         return getTable(TABLE_RESPRESENTATIVE_DATA_STATE_RUN);
                     }
                 });
+                ColumnInfo downloadLinkColumn = result.addWrapColumn("Download", result.getRealTable().getColumn("Id"));
+                downloadLinkColumn.setLabel("");
+                downloadLinkColumn.setDisplayColumnFactory(new DisplayColumnFactory()
+                {
+                    @Override
+                    public DisplayColumn createRenderer(ColumnInfo colInfo)
+                    {
+                        return new DataColumn(colInfo)
+                        {
+                            public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+                            {
+                                String runId = String.valueOf(ctx.get("File"));
+                                downloadUrl.replaceParameter("runId", runId);
+                                out.write(PageFlowUtil.textLink("Download", downloadUrl));
+                            }
+                        };
+                    }
+                });
 
                 return result;
             }
@@ -404,6 +425,7 @@ public class TargetedMSSchema extends UserSchema
         columns.add(FieldKey.fromParts("File", "PeptideCount"));
         columns.add(FieldKey.fromParts("File", "PrecursorCount"));
         columns.add(FieldKey.fromParts("File", "TransitionCount"));
+        columns.add(FieldKey.fromParts("File", "Download"));
 
         result.setDefaultVisibleColumns(columns);
 
@@ -630,7 +652,7 @@ public class TargetedMSSchema extends UserSchema
             ColumnInfo sequenceColumn = result.getColumn("Sequence");
             sequenceColumn.setURL(detailsURL);
 
-            WrappedColumn modSeqCol = new WrappedColumn(result.getColumn("Id"), ModifiedPeptideDisplayColumn.PEPTIDE_COLUMN_NAME);
+            WrappedColumn modSeqCol = new WrappedColumn(result.getColumn("PeptideModifiedSequence"), ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME);
             modSeqCol.setLabel("Peptide");
             modSeqCol.setDescription("Modified peptide sequence");
             modSeqCol.setDisplayColumnFactory( new DisplayColumnFactory()
@@ -638,11 +660,11 @@ public class TargetedMSSchema extends UserSchema
                 @Override
                 public DisplayColumn createRenderer(ColumnInfo colInfo)
                 {
-                    return new ModifiedPeptideDisplayColumn(colInfo, detailsURL.getActionURL(), true);
+                    return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo, detailsURL.getActionURL());
                 }
             });
             result.addColumn(modSeqCol);
-            defaultCols.add(3, FieldKey.fromParts(ModifiedPeptideDisplayColumn.PEPTIDE_COLUMN_NAME));
+            defaultCols.add(3, FieldKey.fromParts(ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
 
             SQLFragment currentLibPrecursorCountSQL = new SQLFragment("(SELECT COUNT(p.Id) FROM ");
             currentLibPrecursorCountSQL.append(TargetedMSManager.getTableInfoPrecursor(), "p");
@@ -837,6 +859,9 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_IRT_PEPTIDE);
         hs.add(TABLE_IRT_SCALE);
         hs.add(TABLE_RETENTION_TIME_PREDICTION_SETTINGS);
+        hs.add(TABLE_EXPERIMENT_PRECURSOR);
+        hs.add(TABLE_LIBRARY_PRECURSOR);
+        hs.add(TABLE_LIBRARY_DOC_PRECURSOR);
         return hs;
     }
 }

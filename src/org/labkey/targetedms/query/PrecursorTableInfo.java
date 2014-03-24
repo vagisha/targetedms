@@ -94,7 +94,7 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
         ExprColumn transitionCountCol = new ExprColumn(this, "TransitionCount", transitionCountSQL, JdbcType.INTEGER);
         addColumn(transitionCountCol);
 
-        WrappedColumn modSeqCol = new WrappedColumn(getColumn("Id"), ModifiedPeptideDisplayColumn.PRECURSOR_COLUMN_NAME);
+        WrappedColumn modSeqCol = new WrappedColumn(getColumn("ModifiedSequence"), ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME);
         modSeqCol.setLabel("Precursor");
         modSeqCol.setDescription("Modified precursor sequence");
         modSeqCol.setDisplayColumnFactory( new DisplayColumnFactory()
@@ -102,7 +102,7 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
             @Override
             public DisplayColumn createRenderer(ColumnInfo colInfo)
             {
-                return new ModifiedPeptideDisplayColumn(colInfo, detailsURLs.getActionURL(), false);
+                return new ModifiedSequenceDisplayColumn.PrecursorCol(colInfo, detailsURLs.getActionURL());
             }
         });
         addColumn(modSeqCol);
@@ -115,14 +115,14 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Description"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "NoteAnnotations"));
 
-        visibleColumns.add(FieldKey.fromParts("PeptideId", ModifiedPeptideDisplayColumn.PEPTIDE_COLUMN_NAME));
+        visibleColumns.add(FieldKey.fromParts("PeptideId", ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "NoteAnnotations"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "NumMissedCleavages"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "CalcNeutralMass"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "Rank"));
 
 
-        visibleColumns.add(FieldKey.fromParts(ModifiedPeptideDisplayColumn.PRECURSOR_COLUMN_NAME));
+        visibleColumns.add(FieldKey.fromParts(ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME));
         visibleColumns.add(FieldKey.fromParts("NoteAnnotations"));
         visibleColumns.add(FieldKey.fromParts("IsotopeLabelId", "Name"));
         visibleColumns.add(FieldKey.fromParts("Charge"));

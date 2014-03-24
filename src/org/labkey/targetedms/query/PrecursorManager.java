@@ -15,7 +15,11 @@
 
 package org.labkey.targetedms.query;
 
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.cache.CacheLoader;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DatabaseCache;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -33,11 +37,14 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -47,6 +54,11 @@ import java.util.Map;
  */
 public class PrecursorManager
 {
+    private static final int CACHE_SIZE = 10; // Cache results for upto 10 runs.
+    private static PrecursorIdsWithChromatograms _precursorIdsWithChromatograms = new PrecursorIdsWithChromatograms();
+    private static PrecursorIdsWithSpectra _precursorIdsWithSpectra = new PrecursorIdsWithSpectra();
+
+
     private PrecursorManager() {}
 
     public static Precursor get(int precursorId)
@@ -486,27 +498,120 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
-     public static boolean hasChromatogramInformation(int precursorId)
+    public static boolean hasChromatograms(int precursorId)
     {
-        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
-        sql.append(" WHERE ");
-        sql.append("pci.PrecursorId=?");
-        sql.add(precursorId);
-
-        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null ? count > 0 : false;
+        return hasChromatograms(precursorId, null);
     }
 
-    public static boolean hasSpectrumLibraryInformation(int precursorId)
+    public static boolean hasChromatograms(int precursorId, Integer runId)
     {
-        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
-        sql.append(" WHERE ");
-        sql.append("pcilib.PrecursorId=?");
-        sql.add(precursorId);
+        if(runId == null)
+        {
+            SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
+            sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+            sql.append(" WHERE ");
+            sql.append("pci.PrecursorId=?");
+            sql.add(precursorId);
 
-        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null ? count > 0 : false;
+            Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+            return count != null ? count > 0 : false;
+        }
+        else
+        {
+            Set<Integer> precursorIds = _precursorIdsWithChromatograms.get(String.valueOf(runId), null, new CacheLoader<String, Set<Integer>>() {
+                @Override
+                public Set<Integer> load(String runId, @Nullable Object argument)
+                {
+                    SQLFragment sql = new SQLFragment("SELECT DISTINCT pci.PrecursorId FROM ");
+                    sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+                    sql.append(" , ");
+                    sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+                    sql.append(" , ");
+                    sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+                    sql.append(" , ");
+                    sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+                    sql.append(" WHERE ");
+                    sql.append(" pci.PrecursorId = prec.Id ");
+                    sql.append(" AND ");
+                    sql.append(" prec.PeptideId = pep.Id ");
+                    sql.append(" AND ");
+                    sql.append(" pep.PeptideGroupId = pg.Id ");
+                    sql.append(" AND ");
+                    sql.append("pg.RunId = ?");
+                    sql.add(Integer.valueOf(runId));
+                    Collection<Integer> results = new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class);
+                    return new HashSet<>(results);
+                }
+            });
+
+            return precursorIds.contains(precursorId);
+        }
+    }
+
+    public static boolean hasLibrarySpectra(int precursorId)
+    {
+        return hasLibrarySpectra(precursorId, null);
+    }
+
+    public static boolean hasLibrarySpectra(int precursorId, Integer runId)
+    {
+        if(runId == null)
+        {
+            SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
+            sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
+            sql.append(" WHERE ");
+            sql.append("pcilib.PrecursorId=?");
+            sql.add(precursorId);
+
+            Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+            return count != null ? count > 0 : false;
+        }
+        else
+        {
+            Set<Integer> precursorIds = _precursorIdsWithSpectra.get(String.valueOf(runId), null, new CacheLoader<String, Set<Integer>>(){
+                @Override
+                public Set<Integer> load(String runId, @Nullable Object argument)
+                {
+                    SQLFragment sql = new SQLFragment("SELECT DISTINCT pcilib.PrecursorId FROM ");
+                    sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
+                    sql.append(" , ");
+                    sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                    sql.append(" WHERE ");
+                    sql.append("pcilib.SpectrumLibraryId = specLib.Id");
+                    sql.append(" AND ");
+                    sql.append("specLib.RunId = ?");
+                    sql.add(Integer.valueOf(runId));
+                    Collection<Integer> results = new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class);
+                    return new HashSet<>(results);
+                }
+            });
+
+            return precursorIds.contains(precursorId);
+        }
+    }
+
+    public static void removeRunCachedResults(List<Integer> deletedRunIds)
+    {
+        for(Integer runId: deletedRunIds)
+        {
+            _precursorIdsWithChromatograms.remove(String.valueOf(runId));
+            _precursorIdsWithSpectra.remove(String.valueOf(runId));
+        }
+    }
+
+    private static class PrecursorIdsWithSpectra extends DatabaseCache<Set<Integer>>
+    {
+       public PrecursorIdsWithSpectra()
+        {
+            super(TargetedMSManager.getSchema().getScope(), CACHE_SIZE, CacheManager.DAY, "Precursors having library spectra");
+        }
+    }
+
+    private static class PrecursorIdsWithChromatograms extends DatabaseCache<Set<Integer>>
+    {
+        public PrecursorIdsWithChromatograms()
+        {
+            super(TargetedMSManager.getSchema().getScope(), CACHE_SIZE, CacheManager.DAY, "Precursors having chromatograms");
+        }
     }
 }

@@ -3,7 +3,7 @@
     <columns>
         <column name="PeptideGroupId/RunId/File" />
         <column name="PeptideGroupId/Label" />
-        <column name="ModifiedPeptideDisplayColumn" /> <!-- Defined in ModifiedPeptideDisplayColumn.java -->
+        <column name="ModifiedPeptideDisplayColumn" /> <!-- Defined in ModifiedSequenceDisplayColumn.java -->
         <column name="StartIndex" />
         <column name="EndIndex" />
         <column name="CalcNeutralMass" />
