@@ -33,7 +33,7 @@ class Constants
     public static final String CHROM_LIB_FILE_NAME = "chromlib";
     public static final String CHROM_LIB_FILE_EXT = "clib";
 
-    public static final String SCHEMA_VERSION = "1.0";
+    public static final String SCHEMA_VERSION = "1.1";
 
     public static enum Table
     {
