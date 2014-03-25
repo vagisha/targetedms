@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
@@ -479,10 +478,6 @@ public class TargetedMSManager
             transaction.commit();
             return expRun;
         }
-        catch (SQLException e)
-        {
-            throw new ExperimentException(e);
-        }
     }
 
     public static TargetedMSRun getRunByDataId(int dataId, Container c)
@@ -697,7 +692,7 @@ public class TargetedMSManager
         return new SqlSelector(TargetedMSManager.getSchema(), reprRunIdSql).getArrayList(Integer.class);
     }
 
-    public static void updateRun(TargetedMSRun run, User user) throws SQLException
+    public static void updateRun(TargetedMSRun run, User user)
     {
         Table.update(user, getTableInfoRuns(), run, run.getRunId());
     }
@@ -746,21 +741,14 @@ public class TargetedMSManager
     // pulled out into separate method so could be called by itself from data handlers
     public static void markDeleted(List<Integer> runIds, Container c, User user)
     {
-        try
+        for(int runId: runIds)
         {
-            for(int runId: runIds)
+            TargetedMSRun run = getRun(runId);
+            // Revert the representative state if any of the runs are representative at the protein or peptide level.
+            if(run.isRepresentative())
             {
-                TargetedMSRun run = getRun(runId);
-                // Revert the representative state if any of the runs are representative at the protein or peptide level.
-                if(run.isRepresentative())
-                {
-                    RepresentativeStateManager.setRepresentativeState(user, c, run, TargetedMSRun.RepresentativeDataState.NotRepresentative);
-                }
+                RepresentativeStateManager.setRepresentativeState(user, c, run, TargetedMSRun.RepresentativeDataState.NotRepresentative);
             }
-        }
-        catch(SQLException e)
-        {
-            throw new RuntimeSQLException(e);
         }
 
         SQLFragment markDeleted = new SQLFragment("UPDATE " + getTableInfoRuns() + " SET ExperimentRunLSID = NULL, Deleted=?, Modified=? ", Boolean.TRUE, new Date());

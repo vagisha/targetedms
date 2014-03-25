@@ -704,7 +704,7 @@ public class SkylineDocImporter
     }
 
 
-    private void resolveRepresentativeData(TargetedMSRun run) throws SQLException
+    private void resolveRepresentativeData(TargetedMSRun run)
     {
         RepresentativeStateManager.setRepresentativeState(_user, _container, run, run.getRepresentativeDataState());
     }
@@ -1253,7 +1253,7 @@ public class SkylineDocImporter
         }
     }
 
-    protected RunInfo prepareRun() throws SQLException
+    protected RunInfo prepareRun()
     {
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction(_schemaLock))
         {
@@ -1285,7 +1285,7 @@ public class SkylineDocImporter
         return run != null ? run.getId() : -1;
     }
 
-    protected int createRun() throws SQLException
+    protected int createRun()
     {
         TargetedMSRun run = TargetedMSManager.getRunByDataId(_expData.getRowId(), _container);
         if (run != null)

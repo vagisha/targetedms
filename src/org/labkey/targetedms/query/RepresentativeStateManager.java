@@ -29,7 +29,6 @@ import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 
-import java.sql.SQLException;
 import java.util.List;
 
 /**
@@ -43,7 +42,6 @@ public class RepresentativeStateManager
 
     public static void setRepresentativeState(User user, Container container,
                                              TargetedMSRun run, TargetedMSRun.RepresentativeDataState state)
-                                             throws SQLException
     {
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
         {
@@ -72,7 +70,6 @@ public class RepresentativeStateManager
                 throw new IllegalArgumentException("Unrecognized representative data state: "+state);
 
             run.setRepresentativeDataState(state);
-            Table.update(user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
             // Increment the chromatogram library revision number for this container.
             ChromatogramLibraryUtils.incrementLibraryRevision(container);
@@ -83,9 +80,10 @@ public class RepresentativeStateManager
 
             transaction.commit();
         }
+        Table.update(user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
     }
 
-    private static void revertProteinRepresentativeState(User user, Container container, TargetedMSRun run) throws SQLException
+    private static void revertProteinRepresentativeState(User user, Container container, TargetedMSRun run)
     {
         // Get a list of proteins in this run that are marked as representative.
         List<PeptideGroup> representativeGroups = PeptideGroupManager.getRepresentativePeptideGroups(run.getRunId());
@@ -114,7 +112,7 @@ public class RepresentativeStateManager
         updatePrecursorRepresentativeState(run);
     }
 
-    private static void revertPeptideRepresentativeState(User user, Container container, TargetedMSRun run) throws SQLException
+    private static void revertPeptideRepresentativeState(User user, Container container, TargetedMSRun run)
     {
         // Get a list of precursors in this run that are marked as representative.
         List<Precursor> representativePrecursors = PrecursorManager.getRepresentativePrecursors(run.getRunId());
@@ -136,7 +134,7 @@ public class RepresentativeStateManager
         PrecursorManager.setRepresentativeState(run.getId(), RepresentativeDataState.NotRepresentative);
     }
 
-    private static int resolveRepresentativeProteinState(Container container, TargetedMSRun run) throws SQLException
+    private static int resolveRepresentativeProteinState(Container container, TargetedMSRun run)
     {
         // Mark everything in this run that doesn't already have representative data in this container as being active
         SQLFragment makeActiveSQL = new SQLFragment("UPDATE " + TargetedMSManager.getTableInfoPeptideGroup());
@@ -211,7 +209,7 @@ public class RepresentativeStateManager
         new SqlExecutor(TargetedMSManager.getSchema()).execute(updatePrecursorStateSQL);
     }
 
-    private static int resolveRepresentativePeptideState(Container container, TargetedMSRun run) throws SQLException
+    private static int resolveRepresentativePeptideState(Container container, TargetedMSRun run)
     {
         // Mark everything in this run that doesn't already have representative data in this container as being active
         SQLFragment makeActiveSQL = new SQLFragment("UPDATE " + TargetedMSManager.getTableInfoPrecursor());
