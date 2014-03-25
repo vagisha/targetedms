@@ -1052,15 +1052,8 @@ public class TargetedMSManager
             // Only delete if no runs still reference this iRT scale
             if (!(new TableSelector(getTableInfoRuns(), new SimpleFilter(FieldKey.fromParts("iRTScaleId"), scaleId), null).exists()))
             {
-                try
-                {
-                    Table.delete(getTableInfoiRTPeptide(), new SimpleFilter(FieldKey.fromParts("iRTScaleId"), scaleId));
-                    Table.delete(getTableInfoiRTScale(), new SimpleFilter(FieldKey.fromParts("id"), scaleId));
-                }
-                catch (SQLException e)
-                {
-                    throw new RuntimeSQLException(e);
-                }
+                Table.delete(getTableInfoiRTPeptide(), new SimpleFilter(FieldKey.fromParts("iRTScaleId"), scaleId));
+                Table.delete(getTableInfoiRTScale(), new SimpleFilter(FieldKey.fromParts("id"), scaleId));
             }
         }
     }
