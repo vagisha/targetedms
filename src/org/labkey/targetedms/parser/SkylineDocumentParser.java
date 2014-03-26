@@ -132,7 +132,7 @@ public class SkylineDocumentParser
     // that do not have the "file" attribute.  The "file" attribute is missing only if the replicate has a single
     // sample file.
     private Map<String, String> _replicateSampleFileIdMap;
-    private ArrayList<IrtPeptide> _iRTScaleSettings;
+    private List<IrtPeptide> _iRTScaleSettings;
 
     private double _matchTolerance = DEFAULT_TOLERANCE;
 
@@ -203,7 +203,7 @@ public class SkylineDocumentParser
             }
             else
             {
-                String sql = "SELECT * FROM IrtLibrary ORDER BY Irt,PeptideModSeq";
+                String sql = "SELECT * FROM IrtLibrary";
                 try (Connection conn = new ConnectionSource(iRTFile.getPath()).getConnection();
                     ResultSet rs = conn.createStatement().executeQuery(sql))
                 {
@@ -232,7 +232,7 @@ public class SkylineDocumentParser
         }
     }
 
-    public ArrayList<IrtPeptide> getiRTScaleSettings()
+    public List<IrtPeptide> getiRTScaleSettings()
     {
         return _iRTScaleSettings;
     }

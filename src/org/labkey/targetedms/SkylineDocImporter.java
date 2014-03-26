@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -531,16 +532,23 @@ public class SkylineDocImporter
         return f;
     }
 
-    private @Nullable Integer insertiRTData(SkylineDocumentParser parser) throws SQLException, PipelineJobException
+    /**
+     * Insert new iRT scale/peptides, or update existing scale for library folders
+     *
+     * @param parser
+     * @return The existing or new iRT Scale Id for the imported iRT Peptide set. null if no iRT Data for this run.
+     * @throws PipelineJobException
+     */
+    private @Nullable Integer insertiRTData(SkylineDocumentParser parser) throws PipelineJobException
     {
 
         Integer iRTScaleId = null; // Not all imports are expected to have iRT data
-        ArrayList<IrtPeptide> importScale = parser.getiRTScaleSettings();
+        List<IrtPeptide> importScale = parser.getiRTScaleSettings();
 
         if (! importScale.isEmpty())
         {
             boolean newScale = false;
-            ArrayList<Integer> scaleIds = TargetedMSManager.getIrtScaleIds(_container);
+            List<Integer> scaleIds = TargetedMSManager.getIrtScaleIds(_container);
 
             // Experiment folders get a new scale for every imported run
             // Library folders have a single scale which gets updated with a weighted average of observed values on each import.
@@ -550,8 +558,7 @@ public class SkylineDocImporter
             {
                 iRTScaleId = scaleIds.get(0);
                 SimpleFilter iRTFilter = new SimpleFilter(FieldKey.fromParts("iRTScaleId"), iRTScaleId);
-                Sort sort = new Sort("iRTValue,ModifiedSequence");    // This matches the sort which was performed in the import.
-                ArrayList<IrtPeptide> existingScale = new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(), iRTFilter, sort).getArrayList(IrtPeptide.class);
+                ArrayList<IrtPeptide> existingScale = new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(), iRTFilter, null).getArrayList(IrtPeptide.class);
 
                 List<IrtPeptide> updatedPeptides = reconcileIrtImportWithExisting(existingScale, importScale);
 
@@ -589,7 +596,7 @@ public class SkylineDocImporter
      * @return The list of existing peptides which have recalculated weighted average values.
      * @throws DataFormatException
      */
-    private List<IrtPeptide> reconcileIrtImportWithExisting(ArrayList<IrtPeptide> existingScale, ArrayList<IrtPeptide> importScale) throws PipelineJobException
+    private List<IrtPeptide> reconcileIrtImportWithExisting(List<IrtPeptide> existingScale, List<IrtPeptide> importScale) throws PipelineJobException
     {
         ArrayList<IrtPeptide> existingStandards = new ArrayList<>();
         CaseInsensitiveHashMap<IrtPeptide> existingTargets = new CaseInsensitiveHashMap<>();
@@ -630,11 +637,13 @@ public class SkylineDocImporter
      * @param importStandards
      * @return true if standards match, false if they do not
      */
-    private boolean compareIrtStandards(ArrayList<IrtPeptide> existingStandards, ArrayList<IrtPeptide> importStandards)
+    private boolean compareIrtStandards(List<IrtPeptide> existingStandards, List<IrtPeptide> importStandards)
     {
         if (existingStandards.size() != importStandards.size())
             return false;
 
+        Collections.sort(existingStandards);
+        Collections.sort(importStandards);
         Iterator<IrtPeptide> existingIter = existingStandards.iterator();
         Iterator<IrtPeptide> importIter = importStandards.iterator();
 

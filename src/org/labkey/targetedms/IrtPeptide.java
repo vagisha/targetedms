@@ -1,30 +1,21 @@
 package org.labkey.targetedms;
 
 
+import org.labkey.targetedms.parser.SkylineEntity;
+
 /**
  * User: tgaluhn
  * Date: 3/21/2014
  *
  * Simple bean to represent the iRTPeptide table fields
  */
-public class IrtPeptide
+public class IrtPeptide extends SkylineEntity implements Comparable<IrtPeptide>
 {
-    private int id;
     private String modifiedSequence;
     private boolean iRTStandard;
     private double iRTValue;
     private int iRTScaleId;
     private int importCount;
-
-    public int getId()
-    {
-        return id;
-    }
-
-    public void setId(int id)
-    {
-        this.id = id;
-    }
 
     public String getModifiedSequence()
     {
@@ -74,6 +65,12 @@ public class IrtPeptide
     public void setImportCount(int importCount)
     {
         this.importCount = importCount;
+    }
+
+    @Override
+    public int compareTo(IrtPeptide pep)
+    {
+        return modifiedSequence.compareTo(pep.getModifiedSequence());
     }
 
     /**
