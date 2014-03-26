@@ -259,6 +259,7 @@ test/src/org/labkey/test/tests/TargetedMSGetDataAPITest.java -text
 test/src/org/labkey/test/tests/TargetedMSLibraryIrtTest.java -text
 test/src/org/labkey/test/tests/TargetedMSLibraryTest.java -text
 test/src/org/labkey/test/tests/TargetedMSTest.java -text
+test/test_targetedms.iml -text
 webapp/TargetedMS/images/ChromatogramLibraryScreenshot.png -text
 webapp/TargetedMS/images/Fragment.gif -text
 webapp/TargetedMS/images/Peptide.gif -text
