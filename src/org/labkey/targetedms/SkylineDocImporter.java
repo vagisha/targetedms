@@ -726,24 +726,25 @@ public class SkylineDocImporter
         String pepGrpLabel = pepGroup.getLabel();
         if(!StringUtils.isBlank(pepGrpLabel))
         {
-            // targetedms.peptidegroup table limits the label to 255 characters
-            pepGrpLabel = pepGrpLabel.length() > 255 ? pepGrpLabel.substring(0, 255) : pepGrpLabel;
-            pepGroup.setLabel(pepGrpLabel);
-
             if(pepGroup.isProtein())
             {
+                Map<String, Set<String>> identifierMap = getIdentifiers(proteinService, pepGroup);
+
                 // prot.sequences table limits the name to 50 characters
                 String protName = pepGrpLabel.length() > 50 ? pepGrpLabel.substring(0, 50) : pepGrpLabel;
-                int seqId = proteinService.ensureProteinAndIdentifier(pepGroup.getSequence(), null, protName, pepGroup.getDescription(), "Skyline");
+                int seqId = proteinService.ensureProtein(pepGroup.getSequence(), null, protName, pepGroup.getDescription());
+
                 pepGroup.setSequenceId(seqId);
 
-                String otherProtName = pepGroup.getName();
-                if(!StringUtils.isBlank(otherProtName))
-                {
-                    otherProtName = otherProtName.substring(0, Math.min(otherProtName.length(), 50));
-                    proteinService.ensureProteinAndIdentifier(pepGroup.getSequence(), null, otherProtName, pepGroup.getDescription(), "Skyline");
-                }
+                proteinService.ensureIdentifiers(seqId, identifierMap);
             }
+
+            // targetedms.peptidegroup table limits the label and name to 255 characters.
+            // Truncate to 255 characters after we have parsed identifiers.
+            pepGroup.setLabel(pepGrpLabel.substring(0, Math.min(255, pepGrpLabel.length())));
+            String pepGrpName = pepGroup.getName();
+            pepGrpName = pepGrpName != null ? pepGrpName.substring(0, Math.min(255, pepGrpName.length())) : null;
+            pepGroup.setName(pepGrpName);
         }
         else
         {
@@ -791,6 +792,44 @@ public class SkylineDocImporter
             Peptide peptide = parser.nextPeptide();
             insertPeptide(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap, libraryNameIdMap, pepGroup, peptide);
         }
+    }
+
+    private static final String SKYLINE_IDENT_TYPE = "Skyline";
+    private Map<String, Set<String>> getIdentifiers(ProteinService proteinService, PeptideGroup pepGroup)
+    {
+        String label = StringUtils.trimToNull(pepGroup.getLabel());
+        String name = StringUtils.trimToNull(pepGroup.getName());
+        String description = pepGroup.getDescription();
+
+        Map<String, Set<String>> identifierMap;
+        if(description != null && description.startsWith("IPI") && description.contains("|"))
+        {
+            // org.labkey.ms2.protein.fasta.Protein.identParse() parses the fastaIdentifierString
+            // and wholeHeader differently
+            // Here is an example from a Skyline document where all the identifiers are in the description
+            //   <protein name="ABAT.IPI00009532" description="IPI:IPI00009532.5|SWISS-PROT:P80404|TREMBL:B7Z1V4|ENSEMBL:ENSP00000268251;ENSP00000379845;ENSP00000411916|REFSEQ:NP_000654;NP_001120920;NP_065737|H-INV:HIT000272519|VEGA:OTTHUMP00000045876;OTTHUMP00000080085;OTTHUMP00000080086 Tax_Id=9606 Gene_Symbol=ABAT cDNA FLJ56034, highly similar to 4-aminobutyrate aminotransferase, mitochondrial">
+            // In this case we want to parse the description as fastaIdentifierString
+            identifierMap = proteinService.getIdentifiers(null, name, label, description);
+        }
+        else
+        {
+            identifierMap = proteinService.getIdentifiers(description, name, label);
+        }
+
+        Set<String> skylineIdentifiers = new HashSet<>();
+        if(label != null)
+        {
+            // prot.identifers table limits the name to 50 characters
+            skylineIdentifiers.add(label.substring(0, Math.min(50, label.length())));
+        }
+        if(name != null)
+        {
+            skylineIdentifiers.add(name.substring(0, Math.min(50, name.length())));
+        }
+
+        identifierMap.put(SKYLINE_IDENT_TYPE, skylineIdentifiers);
+
+        return identifierMap;
     }
 
     private void insertPeptide(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<String, Integer> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, Peptide peptide)
