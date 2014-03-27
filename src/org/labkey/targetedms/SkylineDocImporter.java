@@ -607,7 +607,7 @@ public class SkylineDocImporter
         separateIrtScale(importScale, importStandards, importTargets);
 
         if (!compareIrtStandards(existingStandards, importStandards))
-            throw new PipelineJobException("Imported iRT peptide standards do not match existing standards (iRT Scale Id = " + existingScale.get(0).getiRTScaleId() + ") for this folder: " + _container.getPath());
+            throw new PipelineJobException(makeIrtStandardsErrorMsg(existingScale.get(0).getiRTScaleId(), existingStandards, importStandards));
 
         // For each of the imported peptides, determine if it is new to be inserted, or already exists to have a new weighted average value calculated
         List<IrtPeptide> recalcedPeptides = new ArrayList<>();
@@ -631,6 +631,26 @@ public class SkylineDocImporter
         return recalcedPeptides;
     }
 
+    private String makeIrtStandardsErrorMsg(int scaleId, List<IrtPeptide> existingStandards, List<IrtPeptide> importStandards)
+    {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Imported iRT peptide standards do not match existing standards (iRT Scale Id = " + scaleId + ") for this folder: " + _container.getPath() +"\n");
+        sb.append("Existing standards:\n");
+        int i = 0;
+        for (IrtPeptide pep : existingStandards)
+        {
+            sb.append(++i + ")  " + pep.getModifiedSequence() + "\t" + pep.getiRTValue() + "\n");
+        }
+        i = 0;
+        sb.append("Imported standards:\n");
+        for (IrtPeptide pep : importStandards)
+        {
+            sb.append(++i + ")  " + pep.getModifiedSequence() + "\t" + pep.getiRTValue());
+            sb.append("\n");
+        }
+        return sb.toString();
+    }
+
     /**
      * Ensure the lists of standards match identically on size, sequences and value
      * @param existingStandards
@@ -639,23 +659,26 @@ public class SkylineDocImporter
      */
     private boolean compareIrtStandards(List<IrtPeptide> existingStandards, List<IrtPeptide> importStandards)
     {
+        boolean result = true;
+
         if (existingStandards.size() != importStandards.size())
-            return false;
-
-        Collections.sort(existingStandards);
-        Collections.sort(importStandards);
-        Iterator<IrtPeptide> existingIter = existingStandards.iterator();
-        Iterator<IrtPeptide> importIter = importStandards.iterator();
-
-        while (existingIter.hasNext() && importIter.hasNext())
+            result = false;
+        else
         {
-            IrtPeptide existing = existingIter.next();
-            IrtPeptide imported = importIter.next();
-            if (existing.getiRTValue() != imported.getiRTValue() || !existing.getModifiedSequence().equalsIgnoreCase(imported.getModifiedSequence()))
-                return false;
-        }
+            Collections.sort(existingStandards);
+            Collections.sort(importStandards);
+            Iterator<IrtPeptide> existingIter = existingStandards.iterator();
+            Iterator<IrtPeptide> importIter = importStandards.iterator();
 
-        return true;
+            while (existingIter.hasNext())
+            {
+                IrtPeptide existing = existingIter.next();
+                IrtPeptide imported = importIter.next();
+                if (existing.getiRTValue() != imported.getiRTValue() || !existing.getModifiedSequence().equalsIgnoreCase(imported.getModifiedSequence()))
+                    result = false;
+            }
+        }
+        return result;
     }
 
     /**
