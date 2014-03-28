@@ -49,7 +49,7 @@ import java.util.zip.DataFormatException;
  * Date: 4/2/12
  * Time: 10:58 AM
  */
-public class SkylineDocumentParser
+public class SkylineDocumentParser implements AutoCloseable
 {
     public static final float DEFAULT_TOLERANCE = 0.055f;
 
@@ -204,7 +204,8 @@ public class SkylineDocumentParser
             else
             {
                 String sql = "SELECT * FROM IrtLibrary";
-                try (Connection conn = new ConnectionSource(iRTFile.getPath()).getConnection();
+                try (ConnectionSource cs = new ConnectionSource(iRTFile.getPath());
+                     Connection conn = cs.getConnection();
                     ResultSet rs = conn.createStatement().executeQuery(sql))
                 {
                     while(rs.next())

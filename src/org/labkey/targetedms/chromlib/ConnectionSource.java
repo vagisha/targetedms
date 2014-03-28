@@ -31,7 +31,7 @@ import java.sql.SQLException;
  * Date: 1/6/13
  * Time: 3:30 PM
  */
-public class ConnectionSource
+public class ConnectionSource implements AutoCloseable
 {
     private String _libraryFilePath;
     private final DataSource _dataSource;

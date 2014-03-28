@@ -170,19 +170,15 @@ public class SkylineDocImporter
     {
         // TODO - Consider if this is too big to fit in a single transaction. If so, need to blow away all existing
         // data for this run before restarting the import in the case of a retry
-        SkylineDocumentParser parser = null;
-        File zipDir;
-        try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
+
+        File f = _expData.getFile();
+        NetworkDrive.ensureDrive(f.getPath());
+        f = extractIfZip(f);
+
+        try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction();
+             SkylineDocumentParser parser = new SkylineDocumentParser(f, _user, _container, _log))
         {
-            File f = _expData.getFile();
-
-            NetworkDrive.ensureDrive(f.getPath());
-
-            f = extractIfZip(f);
-
             ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
-
-            parser = new SkylineDocumentParser(f, _user, _container, _log);
             parser.readSettings();
 
             // Store the document settings
@@ -491,8 +487,6 @@ public class SkylineDocImporter
         }
         finally
         {
-            if (parser != null)
-                parser.close();
             // TODO: We are not deleting the directory so that we can query any Bibliospec spectrum library
             //       files contained in the zip file.
             //       Think about adding tables either in the TargetedMS schema or another LabKey schema
