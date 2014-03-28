@@ -25,7 +25,7 @@ import org.labkey.test.util.UIContainerHelper;
 import org.labkey.test.util.WikiHelper;
 
 @Category({DailyB.class, MS2.class})
-public class TargetedMSGetDataAPITest extends TargetedMSTest
+public class GetDataAPITest extends TargetedMSTest
 {
     String CLIENT_API_CORE1 = "{"+
 "   source: {"+
@@ -51,7 +51,7 @@ public class TargetedMSGetDataAPITest extends TargetedMSTest
 "    }"+
 "}";
 
-    public TargetedMSGetDataAPITest()
+    public GetDataAPITest()
     {
         // We want to use the UI when creating the project/folder so that we can verify that we get the wizard
         // that has the extra steps
