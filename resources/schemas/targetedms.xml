@@ -898,7 +898,13 @@
                 <ns:columnTitle>iRT Scale Id</ns:columnTitle>
             </ns:column>
             <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy"/>
+            <ns:column columnName="CreatedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>Users</ns:fkTable>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="ImportCount"/>
         </ns:columns>
     </ns:table>
@@ -908,7 +914,13 @@
             <ns:column columnName="Id"/>
             <ns:column columnName="Container"/>
             <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy"/>
+            <ns:column columnName="CreatedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>Users</ns:fkTable>
+                </ns:fk>
+            </ns:column>
         </ns:columns>
     </ns:table>
 
