@@ -1,5 +1,6 @@
 package org.labkey.test.tests;
 
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.query.Filter;
 import org.labkey.test.Locator;
@@ -15,10 +16,6 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**
- * User: tgaluhn
- * Date: 3/24/14
- */
 @Category({DailyB.class, MS2.class})
 public class TargetedMSLibraryIrtTest extends TargetedMSTest
 {
@@ -57,8 +54,8 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         return "TargetedMS" + "_iRT Test";
     }
 
-    @Override
-    protected void doTestSteps() throws Exception
+    @Test
+    public void testSteps()
     {
         setupFolder(FolderType.LibraryProtein);
         importData(SKY_FILE);
@@ -84,7 +81,7 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         downloadLibraryExport();
     }
 
-    private void downloadLibraryExport() throws Exception
+    private void downloadLibraryExport()
     {
         // Very basic sanity check- can we get a download file with expected name and a reasonable file length.
         // We're not attempting to verify its contents.

@@ -20,11 +20,6 @@ import org.labkey.test.Locator;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.util.LogMethod;
 
-/**
- * User: elvan
- * Date: 6/14/12
- * Time: 1:58 PM
- */
 public abstract class TargetedMSTest extends BaseWebDriverTest
 {
     public enum FolderType {

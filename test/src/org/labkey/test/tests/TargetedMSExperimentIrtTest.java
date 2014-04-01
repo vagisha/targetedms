@@ -1,10 +1,6 @@
 package org.labkey.test.tests;
 
-/**
- * User: tgaluhn
- * Date: 3/24/14
- */
-
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
@@ -19,8 +15,8 @@ public class TargetedMSExperimentIrtTest extends TargetedMSLibraryIrtTest
         super();
     }
 
-    @Override
-    protected void doTestSteps() throws Exception
+    @Test
+    public void testSteps()
     {
         setupFolder(FolderType.Experiment);
         importData(SKY_FILE);

@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests;
 
+import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
@@ -58,8 +59,8 @@ public class GetDataAPITest extends TargetedMSTest
         setContainerHelper(new UIContainerHelper(this));
     }
 
-    @Override
-    protected void doTestSteps() throws Exception
+    @Test
+    public void testSteps()
     {
         setupFolder(FolderType.Experiment);
         importData("MRMer.zip");
