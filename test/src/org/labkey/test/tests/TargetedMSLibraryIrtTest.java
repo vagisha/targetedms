@@ -86,9 +86,18 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         // Very basic sanity check- can we get a download file with expected name and a reasonable file length.
         // We're not attempting to verify its contents.
         goToProjectHome();
-        File exportFile = clickAndWaitForDownload(Locator.linkWithText("Download"), 1)[0];
-        assertEquals(exportFile.getName(), getProjectName() + "_rev2.clib");
-        assertTrue("Error downloading chromatogram library export file.", exportFile.length() > 1E+6);
+        final File exportFile = clickAndWaitForDownload(Locator.linkWithText("Download"), 1)[0];
+        assertEquals(getProjectName() + "_rev2.clib", exportFile.getName());
+        Checker fileSize = new Checker()
+        {
+            @Override
+            public boolean check()
+            {
+                return exportFile.length() > 1E+6;
+            }
+        };
+        doesElementAppear(fileSize, WAIT_FOR_JAVASCRIPT);
+        assertTrue("Chromatogram library export file is too small: " + exportFile.length() + " bytes", fileSize.check());
     }
 
     protected int getRowCount()
