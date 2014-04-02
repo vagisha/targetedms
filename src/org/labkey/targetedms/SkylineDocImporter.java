@@ -143,6 +143,9 @@ public class SkylineDocImporter
             _log.info("Starting to import Skyline document from " + run.getFileName());
             importSkylineDoc(run);
             _log.info("Completed import of Skyline document from " + run.getFileName());
+
+            updateRunStatus(IMPORT_SUCCEEDED, STATUS_SUCCESS);
+            return TargetedMSManager.getRun(_runId);
         }
         catch (FileNotFoundException fnfe)
         {
@@ -152,7 +155,6 @@ public class SkylineDocImporter
         }
         catch (SQLException | DataFormatException | IOException | XMLStreamException | RuntimeException | PipelineJobException e)
         {
-            logError("Skyline document import failed", e);
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
             throw e;
         }
@@ -160,9 +162,6 @@ public class SkylineDocImporter
         {
             close();
         }
-
-        updateRunStatus(IMPORT_SUCCEEDED, STATUS_SUCCESS);
-        return TargetedMSManager.getRun(_runId);
     }
 
 
