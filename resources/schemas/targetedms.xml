@@ -906,6 +906,7 @@
                 </ns:fk>
             </ns:column>
             <ns:column columnName="ImportCount"/>
+            <ns:column columnName="TimeSource"/>
         </ns:columns>
     </ns:table>
 

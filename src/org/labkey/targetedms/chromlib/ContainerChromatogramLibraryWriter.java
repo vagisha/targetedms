@@ -220,7 +220,7 @@ public class ContainerChromatogramLibraryWriter
         for (Integer scaleId : scaleIds)
         {
             SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("iRTScaleId"), scaleId);
-            CaseInsensitiveHashSet columns = new CaseInsensitiveHashSet("ModifiedSequence", "iRTStandard", "iRTValue");
+            CaseInsensitiveHashSet columns = new CaseInsensitiveHashSet("ModifiedSequence", "iRTStandard", "iRTValue", "TimeSource");
             irtPeptides.addAll(new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(),columns,filter,null).getArrayList(LibIrtLibrary.class));
         }
 

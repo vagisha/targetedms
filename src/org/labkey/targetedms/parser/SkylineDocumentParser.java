@@ -215,6 +215,7 @@ public class SkylineDocumentParser implements AutoCloseable
                         iRTPeptideRow.setiRTStandard(rs.getBoolean("Standard"));
                         iRTPeptideRow.setiRTValue(rs.getDouble("Irt"));
                         iRTPeptideRow.setImportCount(1);
+                        iRTPeptideRow.setTimeSource(rs.getInt("TimeSource"));
                         _iRTScaleSettings.add(iRTPeptideRow);
                     }
                 }

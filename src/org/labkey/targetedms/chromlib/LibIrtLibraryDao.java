@@ -51,9 +51,10 @@ public class LibIrtLibraryDao extends  BaseDaoImpl<LibIrtLibrary>
         {
             LibIrtLibrary irtLibrary = new LibIrtLibrary();
             irtLibrary.setId(rs.getInt(IrtLibraryColumn.Id.baseColumn().name()));
-            irtLibrary.setModifiedSequence(rs.getString(IrtLibraryColumn.IrtStandard.baseColumn().name()));
-            irtLibrary.setIrtStandard(rs.getBoolean(IrtLibraryColumn.IrtStandard.baseColumn().name()));
-            irtLibrary.setIrtValue(rs.getDouble(IrtLibraryColumn.IrtValue.baseColumn().name()));
+            irtLibrary.setModifiedSequence(rs.getString(IrtLibraryColumn.PeptideModSeq.baseColumn().name()));
+            irtLibrary.setIrtStandard(rs.getBoolean(IrtLibraryColumn.Standard.baseColumn().name()));
+            irtLibrary.setIrtValue(rs.getDouble(IrtLibraryColumn.Irt.baseColumn().name()));
+            irtLibrary.setTimeSource(rs.getInt(IrtLibraryColumn.TimeSource.baseColumn().name()));
 
             irtLibraries.add(irtLibrary);
         }
@@ -68,7 +69,8 @@ public class LibIrtLibraryDao extends  BaseDaoImpl<LibIrtLibrary>
         int colIndex = 1;
         stmt.setObject(colIndex++, irtLibrary.getModifiedSequence(), Types.VARCHAR);
         stmt.setObject(colIndex++, irtLibrary.getIrtStandard(), Types.TINYINT);
-        stmt.setObject(colIndex, irtLibrary.getIrtValue(), Types.DOUBLE);
+        stmt.setObject(colIndex++, irtLibrary.getIrtValue(), Types.DOUBLE);
+        stmt.setObject(colIndex++, irtLibrary.getTimeSource(), Types.INTEGER);
     }
 
     @Override

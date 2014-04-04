@@ -26,9 +26,12 @@ package org.labkey.targetedms.chromlib;
 public class LibIrtLibrary implements ObjectWithId
 {
     private int _id;
+
+
     private String _modifiedSequence;
     private Double _irtValue;
     private Boolean _irtStandard;
+    private Integer _timeSource;
 
     public int getId()
     {
@@ -69,6 +72,16 @@ public class LibIrtLibrary implements ObjectWithId
     public void setIrtStandard(Boolean irtStandard)
     {
         _irtStandard = irtStandard;
+    }
+
+    public Integer getTimeSource()
+    {
+        return _timeSource;
+    }
+
+    public void setTimeSource(Integer timeSource)
+    {
+        _timeSource = timeSource;
     }
 
     @Override

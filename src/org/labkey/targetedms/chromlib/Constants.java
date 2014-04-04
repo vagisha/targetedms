@@ -138,8 +138,10 @@ class Constants
         ChromatogramIndex("INTEGER"),
 
         IrtLibraryId("INTEGER NOT NULL", Table.IrtLibrary, Id),
-        IrtValue("DOUBLE"),
-        IrtStandard("TINYINT");
+        PeptideModSeq("TEXT NOT NULL"),
+        Irt("DOUBLE"),
+        Standard("BOOL"),
+        TimeSource("INT");
 
         private final String definition;
         private final Table _fkTable;
@@ -470,7 +472,7 @@ class Constants
         Mz(Column.Mz, "DOUBLE NOT NULL"),
         Charge(Column.Charge, "INTEGER NOT NULL"),
         NeutralMass(Column.NeutralMass, "DOUBLE NOT NULL"),
-        ModifiedSequence(Column.ModifiedSequence),
+        ModifiedSequence(Column.PeptideModSeq),
         CollisionEnergy(Column.CollisionEnergy),
         DeclusteringPotential(Column.DeclusteringPotential),
         TotalArea(Column.TotalArea),
@@ -606,9 +608,10 @@ class Constants
     public static enum IrtLibraryColumn implements ColumnDef
     {
         Id(Column.Id),
-        ModifiedSequence(Column.ModifiedSequence),
-        IrtStandard(Column.IrtStandard),
-        IrtValue(Column.IrtValue);
+        PeptideModSeq(Column.PeptideModSeq),
+        Standard(Column.Standard),
+        Irt(Column.Irt),
+        TimeSource(Column.TimeSource);
 
         private final Column _column;
         private final String _definition;

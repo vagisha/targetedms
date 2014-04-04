@@ -31,6 +31,7 @@ public class IrtPeptide extends SkylineEntity implements Comparable<IrtPeptide>
     private double iRTValue;
     private int iRTScaleId;
     private int importCount;
+    private int timeSource;
 
     public String getModifiedSequence()
     {
@@ -80,6 +81,16 @@ public class IrtPeptide extends SkylineEntity implements Comparable<IrtPeptide>
     public void setImportCount(int importCount)
     {
         this.importCount = importCount;
+    }
+
+    public int getTimeSource()
+    {
+        return timeSource;
+    }
+
+    public void setTimeSource(int timeSource)
+    {
+        this.timeSource = timeSource;
     }
 
     @Override
