@@ -91,7 +91,7 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         // and aborts the import.
         importData(SKY_FILE_BAD_STANDARDS, 3);
         assertTextPresent("ERROR");
-        checkExpectedErrors(3);
+        checkExpectedErrors(1);
 
         downloadLibraryExport();
     }
