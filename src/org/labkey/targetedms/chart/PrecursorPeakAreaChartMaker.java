@@ -41,6 +41,7 @@ import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
+import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.PrecursorManager;
@@ -62,7 +63,7 @@ import java.util.Map;
  */
 public class PrecursorPeakAreaChartMaker
 {
-    public JFreeChart make(int replicateId, PeptideGroup peptideGroup, Peptide peptide,
+    public JFreeChart make(int replicateId, PeptideGroup peptideGroup, Peptide peptide, Precursor precursor,
                                   String groupByAnnotation, String filterByAnnotation,
                                   boolean cvValues, boolean logValues)
     {
@@ -77,7 +78,7 @@ public class PrecursorPeakAreaChartMaker
         }
         else
         {
-            pciPlusList = getPrecursorChromInfo(peptide);
+            pciPlusList = getPrecursorChromInfo(peptide, precursor);
             inputMaker.setChartType(PeakAreasChartInputMaker.ChartType.REPLICATE_COMPARISON, peptideGroup.getRunId());
         }
 
@@ -237,9 +238,10 @@ public class PrecursorPeakAreaChartMaker
         }
     }
 
-    private List<PrecursorChromInfoPlus> getPrecursorChromInfo(Peptide peptide)
+    private List<PrecursorChromInfoPlus> getPrecursorChromInfo(Peptide peptide, Precursor precursor)
     {
-        return PrecursorManager.getPrecursorChromInfosForPeptide(peptide.getId());
+        return precursor == null ? PrecursorManager.getPrecursorChromInfosForPeptide(peptide.getId()) :
+                                   PrecursorManager.getPrecursorChromInfosForPrecursor(precursor.getId());
     }
 
     private Map<String, Color> getLabelColors(int runId, PeakAreasChartInputMaker.PeakAreaDataset peakAreaDataset)

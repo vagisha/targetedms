@@ -87,7 +87,6 @@ import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.services.ServiceRegistry;
-import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HelpTopic;
@@ -521,7 +520,7 @@ public class TargetedMSController extends SpringActionController
 
             JspView<PrecursorChromatogramsViewBean> precursorInfo = new JspView<>("/org/labkey/targetedms/view/precursorChromatogramsView.jsp", bean);
             precursorInfo.setFrame(WebPartView.FrameType.PORTAL);
-            precursorInfo.setTitle("Precursor");
+            precursorInfo.setTitle("Precursor Summary");
 
             PrecursorChromatogramsTableInfo tableInfo = new PrecursorChromatogramsTableInfo(new TargetedMSSchema(getUser(), getContainer()));
             tableInfo.setPrecursorId(precursorId);
@@ -536,6 +535,40 @@ public class TargetedMSController extends SpringActionController
             VBox vbox = new VBox();
             vbox.addView(precursorInfo);
             vbox.addView(gridView);
+
+
+
+            // Peak area graph for the precursor
+            PeakAreaGraphBean peakAreasBean = new PeakAreaGraphBean();
+            peakAreasBean.setPeptideId(precursor.getPeptideId());
+            peakAreasBean.setPrecursorId(precursor.getId());
+            peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
+            peakAreasBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
+
+            JspView<PeakAreaGraphBean> peakAreaView = new JspView<>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
+                                                                                                   peakAreasBean);
+            peakAreaView.setTitle("Peak Areas");
+            peakAreaView.enableExpandCollapse("PeakAreasView", false);
+
+            vbox.addView(peakAreaView);
+
+
+            // library spectrum
+            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(precursor);
+            PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(_run.getRunId());
+            int idx = 0;
+            for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
+            {
+                libSpecMatch.setLorikeetId(idx++);
+                if(modSettings != null)
+                {
+                    libSpecMatch.setMaxNeutralLosses(modSettings.getMaxNeutralLosses());
+                }
+                PeptideSpectrumView spectrumView = new PeptideSpectrumView(libSpecMatch, errors);
+                spectrumView.enableExpandCollapse("PeptideSpectrumView", false);
+                vbox.addView(spectrumView);
+            }
+
             return vbox;
         }
 
@@ -548,9 +581,9 @@ public class TargetedMSController extends SpringActionController
 
                 root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
 
-                ActionURL precChromUrl = new ActionURL(PeptideAllChromatogramsChartAction.class, getContainer());
-                precChromUrl.addParameter("id", String.valueOf(_peptideId));
-                root.addChild("Peptide Chromatograms", precChromUrl);
+                ActionURL pepDetailsUrl = new ActionURL(ShowPeptideAction.class, getContainer());
+                pepDetailsUrl.addParameter("id", String.valueOf(_peptideId));
+                root.addChild("Peptide Details", pepDetailsUrl);
 
                 root.addChild("Precursor Chromatograms");
             }
@@ -960,6 +993,7 @@ public class TargetedMSController extends SpringActionController
             }
 
             Peptide peptide = null;
+            Precursor precursor = null;
             if(form.getPeptideId() != 0)
             {
                 peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
@@ -972,12 +1006,22 @@ public class TargetedMSController extends SpringActionController
                 {
                     peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), peptide.getPeptideGroupId());
                 }
+
+                if(form.getPrecursorId() != 0)
+                {
+                    precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId());
+                    if(precursor == null)
+                    {
+                        throw new NotFoundException(String.format("No precursor found in this folder for precursorId: %d", form.getPrecursorId()));
+                    }
+                }
             }
 
             JFreeChart chart = new PrecursorPeakAreaChartMaker().make(
                                                                  form.getReplicateId(),
                                                                  peptideGrp,
                                                                  peptide,
+                                                                 precursor,
                                                                  form.getGroupByReplicateAnnotName(),
                                                                  form.getFilterByReplicateAnnotName(),
                                                                  form.isCvValues(),
@@ -1049,6 +1093,7 @@ public class TargetedMSController extends SpringActionController
         private int _peptideGroupId;
         private int _replicateId = 0; // A value of 0 means all replicates should be included in the plot.
         private int _peptideId = 0;
+        private int _precursorId = 0;
         private String _groupByReplicateAnnotName;
         private ReplicateAnnotation _annotationFilter;
         private String _filterByReplicateAnnotName;
@@ -1103,6 +1148,16 @@ public class TargetedMSController extends SpringActionController
         public void setPeptideId(int peptideId)
         {
             _peptideId = peptideId;
+        }
+
+        public int getPrecursorId()
+        {
+            return _precursorId;
+        }
+
+        public void setPrecursorId(int precursorId)
+        {
+            _precursorId = precursorId;
         }
 
         public boolean isCvValues()
@@ -1653,6 +1708,7 @@ public class TargetedMSController extends SpringActionController
     {
         private int _peptideGroupId;
         private int _peptideId;
+        private int _precursorId;
         private List<Replicate> _replicateList;
         private List<String> _replicateAnnotationNameList;
         private List<ReplicateAnnotation> _replicateAnnotationValueList;
@@ -1676,6 +1732,16 @@ public class TargetedMSController extends SpringActionController
         public void setPeptideId(int peptideId)
         {
             _peptideId = peptideId;
+        }
+
+        public int getPrecursorId()
+        {
+            return _precursorId;
+        }
+
+        public void setPrecursorId(int precursorId)
+        {
+            _precursorId = precursorId;
         }
 
         public List<Replicate> getReplicateList()

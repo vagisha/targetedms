@@ -86,7 +86,7 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Annotations"));
 
         // Peptide level information
-        visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideModifiedSequence"));  // Modified peptide column
+        visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "Annotations"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "NumMissedCleavages"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "CalcNeutralMass"));
@@ -94,7 +94,7 @@ public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
 
 
         // Precursor level information
-        visibleColumns.add(FieldKey.fromParts("PrecursorId", "ModifiedSequence")); // Modified precursor column
+        visibleColumns.add(FieldKey.fromParts("PrecursorId", ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "Annotations"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "IsotopeLabelId", "Name"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "NeutralMass"));

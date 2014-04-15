@@ -796,7 +796,8 @@ public class TargetedMSSchema extends UserSchema
     {
         if(TABLE_PRECURSOR.equalsIgnoreCase(queryName)
            || TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(queryName)
-           || TABLE_LIBRARY_DOC_PRECURSOR.equalsIgnoreCase(queryName))
+           || TABLE_LIBRARY_DOC_PRECURSOR.equalsIgnoreCase(queryName)
+           || TABLE_TRANSITION.equalsIgnoreCase(queryName))
         {
             return new QuerySettings(dataRegionName)
             {

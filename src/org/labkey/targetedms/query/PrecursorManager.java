@@ -249,20 +249,30 @@ public class PrecursorManager
 
     public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptideGroup(int peptideGroupId, int sampleFileId)
     {
-        return getPrecursorChromInfoList(peptideGroupId, true, sampleFileId);
+        return getPrecursorChromInfoList(peptideGroupId, true, false, sampleFileId);
     }
 
     public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId)
     {
-        return getPrecursorChromInfoList(peptideId, false, 0);
+        return getPrecursorChromInfoList(peptideId, false, false, 0);
     }
 
     public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId, int sampleFileId)
     {
-        return getPrecursorChromInfoList(peptideId, false, sampleFileId);
+        return getPrecursorChromInfoList(peptideId, false, false, sampleFileId);
     }
 
-    private static List<PrecursorChromInfoPlus> getPrecursorChromInfoList(int id, boolean forPeptideGroup, int sampleFileId)
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPrecursor(int precursorId)
+    {
+        return getPrecursorChromInfoList(precursorId, false, true, 0);
+    }
+
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPrecursor(int precursorId, int sampleFileId)
+    {
+        return getPrecursorChromInfoList(precursorId, false, true, sampleFileId);
+    }
+
+    private static List<PrecursorChromInfoPlus> getPrecursorChromInfoList(int id, boolean forPeptideGroup, boolean forPrecursor, int sampleFileId)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.*, pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
@@ -289,6 +299,11 @@ public class PrecursorManager
         {
             sql.append("AND ");
             sql.append("pg.Id=? ");
+        }
+        else if(forPrecursor)
+        {
+            sql.append("AND ");
+            sql.append("prec.Id=? ");
         }
         else
         {

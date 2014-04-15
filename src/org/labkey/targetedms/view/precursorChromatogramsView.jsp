@@ -40,7 +40,7 @@
         <td><%= h(bean.getPeptideGroup().getLabel())%></td>
     </tr>
     <tr>
-        <td class="labkey-form-label">Peptide</td>
+        <td class="labkey-form-label">Precursor</td>
         <td><%= text(bean.getModifiedPeptideHtml())%></td>
     </tr>
 

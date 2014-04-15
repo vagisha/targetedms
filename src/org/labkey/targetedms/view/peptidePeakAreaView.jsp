@@ -118,7 +118,7 @@
                                                         peptideComboBox.disable();
                                                         peptideComboBox.setValue(peptideStore.getAt(0));
                                                         replicateAnnotNameValueComboBox.disable();
-                                                        replicateAnnotNameValueComboBox.setValue(replicateAnnotNameValueStore.get(0));
+                                                        replicateAnnotNameValueComboBox.setValue(replicateAnnotNameValueStore.getAt(0));
                                                     }
                                                     else
                                                     {

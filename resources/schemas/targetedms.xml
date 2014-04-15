@@ -362,6 +362,7 @@
             </ns:column>
             <ns:column columnName="TotalAreaNormalized">
                 <ns:formatString>0.0000</ns:formatString>
+                <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="TotalBackground">
                 <ns:formatString>0.0000</ns:formatString>

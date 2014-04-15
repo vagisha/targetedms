@@ -139,7 +139,7 @@ public class TargetedMSRun implements Serializable
     {
         if(_fileName != null)
         {
-            return FileUtil.getBaseName(_fileName);
+            return SkylineFileUtils.getBaseName(_fileName);
         }
         return null;
     }
