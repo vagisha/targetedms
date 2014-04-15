@@ -87,7 +87,7 @@ public class ContainerChromatogramLibraryWriter
     private ProteinService _proteinService;
 
     private TargetedMSRun.RepresentativeDataState _libraryType = null;
-    private Integer _bestSampleFileIdForCurrentPeptideGroup;
+    private Integer _bestReplicateIdForCurrentPeptideGroup;
 
     public ContainerChromatogramLibraryWriter(String panoramaServer, Container container, List<Integer> representativeRunIds)
     {
@@ -372,8 +372,8 @@ public class ContainerChromatogramLibraryWriter
             libProtein.setSequence(_proteinService.getProteinSequence(pepGroup.getSequenceId()));
         }
 
-        // Get the sample file that has the maximum overall peak area for this protein
-        getBestSampleFileForPeptideGroup(pepGroup);
+        // Get the replicate that has the maximum overall peak area for this protein
+        getBestReplicateIdForPeptideGroup(pepGroup);
 
         // Add peptides.
         addPeptides(pepGroup, libProtein);
@@ -383,9 +383,9 @@ public class ContainerChromatogramLibraryWriter
         _libWriter.writeProtein(libProtein);
     }
 
-    private void getBestSampleFileForPeptideGroup(PeptideGroup pepGroup)
+    private void getBestReplicateIdForPeptideGroup(PeptideGroup pepGroup)
     {
-        _bestSampleFileIdForCurrentPeptideGroup = PeptideGroupManager.getBestSampleFile(pepGroup);
+        _bestReplicateIdForCurrentPeptideGroup = PeptideGroupManager.getBestReplicateId(pepGroup);
     }
 
     private void addPeptides(PeptideGroup pepGroup, LibProtein protein)
@@ -484,9 +484,9 @@ public class ContainerChromatogramLibraryWriter
         }
         else if(_libraryType == TargetedMSRun.RepresentativeDataState.Representative_Protein)
         {
-            if(_bestSampleFileIdForCurrentPeptideGroup != null)
+            if(_bestReplicateIdForCurrentPeptideGroup != null)
             {
-                return PrecursorManager.getPrecursorChromInfoForSampleFile(precursor.getId(), _bestSampleFileIdForCurrentPeptideGroup);
+                return PrecursorManager.getBestPrecursorChromInfoForPrecursorAndReplicate(precursor.getId(), _bestReplicateIdForCurrentPeptideGroup);
             }
         }
         return null;

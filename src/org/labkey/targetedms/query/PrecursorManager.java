@@ -108,14 +108,6 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(PrecursorChromInfo.class);
     }
 
-    public static PrecursorChromInfo getPrecursorChromInfoForSampleFile(int precursorId, int sampleFileId)
-    {
-        SimpleFilter filter = new SimpleFilter();
-        filter.addCondition(FieldKey.fromParts("PrecursorId"), precursorId);
-        filter.addCondition(FieldKey.fromParts("SampleFileId"), sampleFileId);
-        return new TableSelector(TargetedMSManager.getTableInfoPrecursorChromInfo(), filter, null).getObject(PrecursorChromInfo.class);
-    }
-
     public static List<Precursor> getPrecursorsForPeptide(int peptideId)
     {
         SimpleFilter filter = new SimpleFilter();
@@ -146,6 +138,11 @@ public class PrecursorManager
 
     public static PrecursorChromInfo getBestPrecursorChromInfoForPrecursor(int precursorId)
     {
+        return getBestPrecursorChromInfoForPrecursorAndReplicate(precursorId, -1);
+    }
+
+    public static PrecursorChromInfo getBestPrecursorChromInfoForPrecursorAndReplicate(int precursorId, int replicateId)
+    {
         // Get a list of chrom infos sorted by peak area (descending).
         List<PrecursorChromInfo> chromInfos = getSortedPrecursorChromInfosForPrecursor(precursorId);
 
@@ -155,12 +152,20 @@ public class PrecursorManager
         }
         else
         {
+            // If we only want the best sample file from a replicate, get a list of sample file Ids for the
+            // given replicate.
+            Set<Integer> sampleFileIds = getSampleFileIdsForReplicate(replicateId);
+
             // Look for one that has area information and the peaks are not truncated
             for (PrecursorChromInfo chromInfo : chromInfos)
             {
+
                 if (chromInfo.getTotalArea() != null && (chromInfo.getNumTruncated() == null || chromInfo.getNumTruncated().intValue() == 0))
                 {
-                    return chromInfo;
+                    if(sampleFileIds.size() == 0 || sampleFileIds.contains(chromInfo.getSampleFileId()))
+                    {
+                        return chromInfo;
+                    }
                 }
             }
 
@@ -173,6 +178,22 @@ public class PrecursorManager
             }
             return chromInfos.get(0);
         }
+    }
+
+    public static Set<Integer> getSampleFileIdsForReplicate(int replicateId)
+    {
+        if(replicateId <= 0)
+            return Collections.emptySet();
+
+        SimpleFilter filter = new SimpleFilter();
+        filter.addCondition(FieldKey.fromParts("ReplicateId"), replicateId);
+
+        Collection<Integer> result =  new TableSelector(TargetedMSManager.getTableInfoSampleFile(),
+                                   Collections.singleton("Id"),
+                                   filter,
+                                   null)
+                                  .getCollection(Integer.class);
+        return new HashSet<>(result);
     }
 
     public static PrecursorChromInfo getBestPrecursorChromInfoForPeptide(int peptideId)

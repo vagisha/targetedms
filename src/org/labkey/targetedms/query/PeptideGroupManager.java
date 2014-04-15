@@ -214,13 +214,13 @@ public class PeptideGroupManager
         return count != null && count == peptideGroupIds.length;
     }
 
-    public static Integer getBestSampleFile(PeptideGroup peptideGroup)
+    public static Integer getBestReplicateId(PeptideGroup peptideGroup)
     {
         if(peptideGroup == null)
             return null;
 
         SQLFragment sql = new SQLFragment();
-        sql.append(" SELECT pepgrp.Id, pci.SampleFileId SampleFileId, SUM(pci.TotalArea) areaSum");
+        sql.append(" SELECT pepgrp.Id, sfile.ReplicateId ReplicateId, SUM(pci.TotalArea) areaSum");
         sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
         sql.append(", ");
@@ -229,7 +229,11 @@ public class PeptideGroupManager
         sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoSampleFile(), "sfile");
         sql.append(" WHERE");
+        sql.append(" sfile.Id = pci.SampleFileId");
+        sql.append(" AND");
         sql.append(" pci.PrecursorId = prec.Id");
         sql.append(" AND");
         sql.append(" prec.PeptideId = pep.Id");
@@ -242,14 +246,14 @@ public class PeptideGroupManager
         sql.append(" AND");
         sql.append(" pepgrp.Id = ?");
         sql.add(peptideGroup.getId());
-        sql.append(" GROUP BY pepgrp.Id, pci.SampleFileId");
+        sql.append(" GROUP BY pepgrp.Id, sfile.ReplicateId");
         sql.append(" ORDER BY areaSUM DESC");
         // sql.append(" LIMIT 1");
 
         Map<String, Object>[] mapArray = new SqlSelector(TargetedMSManager.getSchema(), sql).getMapArray();
         if(mapArray != null && mapArray.length > 0)
         {
-            return (Integer) mapArray[0].get("SampleFileId");
+            return (Integer) mapArray[0].get("ReplicateId");
         }
         return null;
     }
