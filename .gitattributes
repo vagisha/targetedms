@@ -264,6 +264,7 @@ test/src/org/labkey/test/tests/TargetedMSLibraryIrtTest.java -text
 test/src/org/labkey/test/tests/TargetedMSLibraryTest.java -text
 test/src/org/labkey/test/tests/TargetedMSTest.java -text
 test/test_targetedms.iml -text
+webapp/TargetedMS/css/dropDown.css -text
 webapp/TargetedMS/images/ChromatogramLibraryScreenshot.png -text
 webapp/TargetedMS/images/Fragment.gif -text
 webapp/TargetedMS/images/Peptide.gif -text
@@ -273,6 +274,7 @@ webapp/TargetedMS/images/TransitionGroupLib.gif -text
 webapp/TargetedMS/images/blank.gif -text
 webapp/TargetedMS/images/spectrum.gif -text
 webapp/TargetedMS/jquery/jquery-1.8.3.min.js -text
+webapp/TargetedMS/js/dropDownUtil.js -text
 webapp/TargetedMS/lorikeet_0.3/css/lorikeet.css -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_lorikeet.png -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_scan.png -text
