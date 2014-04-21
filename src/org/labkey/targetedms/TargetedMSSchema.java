@@ -89,6 +89,8 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PEPTIDE_GROUP_ANNOTATION = "PeptideGroupAnnotation";
     public static final String TABLE_INSTRUMENT = "Instrument";
     public static final String TABLE_ISOTOPE_ENRICHMENT = "IsotopeEnrichment";
+    public static final String TABLE_ISOLATION_SCHEME = "IsolationScheme";
+    public static final String TABLE_ISOLATION_WINDOW = "IsolationWindow";
     public static final String TABLE_PROTEIN = "Protein";
     public static final String TABLE_PEPTIDE = "Peptide";
     public static final String TABLE_PEPTIDE_ANNOTATION = "PeptideAnnotation";
@@ -339,6 +341,19 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(" WHERE s.Id = iRTScaleId)");
                 return sql;
             }
+        },
+        IsolationSchemeFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
+                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoIsolationScheme(), "ischeme");
+                sql.append(" WHERE r.Id = ischeme.RunId AND ischeme.Id = IsolationSchemeId)");
+                return sql;
+            }
         };
 
         public abstract SQLFragment getSQL();
@@ -585,6 +600,7 @@ public class TargetedMSSchema extends UserSchema
             TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name) ||
             TABLE_INSTRUMENT.equalsIgnoreCase(name) ||
             TABLE_ISOTOPE_ENRICHMENT.equalsIgnoreCase(name) ||
+            TABLE_ISOLATION_SCHEME.equalsIgnoreCase(name) ||
             TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name) ||
             TABLE_REPLICATE.equalsIgnoreCase(name) ||
             TABLE_TRANSITION_FULL_SCAN_SETTINGS.equalsIgnoreCase(name) ||
@@ -782,6 +798,12 @@ public class TargetedMSSchema extends UserSchema
 
         // TODO - handle filtering for annotation, predictor
 
+        // Tables that have a FK to targetedms.isolationScheme
+        if (TABLE_ISOLATION_WINDOW.equalsIgnoreCase(name))
+        {
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.IsolationSchemeFK.getSQL());
+        }
+
         if (getTableNames().contains(name))
         {
             FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this);
@@ -863,6 +885,10 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_EXPERIMENT_PRECURSOR);
         hs.add(TABLE_LIBRARY_PRECURSOR);
         hs.add(TABLE_LIBRARY_DOC_PRECURSOR);
+        hs.add(TABLE_ISOLATION_SCHEME);
+        hs.add(TABLE_ISOLATION_WINDOW);
+        hs.add(TABLE_PREDICTOR);
+        hs.add(TABLE_PREDICTOR_SETTINGS);
         return hs;
     }
 }

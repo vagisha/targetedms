@@ -54,6 +54,7 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
     private List<IsotopeModification> _isotopeMods;
     private String _note;
 
+    private String _standardType;
 
     public int getPeptideGroupId()
     {
@@ -243,6 +244,16 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
     public String getNote()
     {
         return _note;
+    }
+
+    public String getStandardType()
+    {
+        return _standardType;
+    }
+
+    public void setStandardType(String standardType)
+    {
+        _standardType = standardType;
     }
 
     public static class Modification extends SkylineEntity

@@ -73,8 +73,12 @@ public class TransitionSettings
         private Double _precursorRes;
         private Double _precursorResMz;
         private Boolean _scheduleFilter;
+        private String _acquisitionMethod;
+        private String _retentionTimeFilterType;
+        private Double _retentionTimeFilterLength;
 
         private List<IsotopeEnrichment> _isotopeEnrichmentList;
+        private IsolationScheme _isolationScheme;
 
         public int getRunId()
         {
@@ -215,6 +219,46 @@ public class TransitionSettings
         {
             _isotopeEnrichmentList = isotopeEnrichmentList;
         }
+
+        public String getAcquisitionMethod()
+        {
+            return _acquisitionMethod;
+        }
+
+        public void setAcquisitionMethod(String acquisitionMethod)
+        {
+            _acquisitionMethod = acquisitionMethod;
+        }
+
+        public String getRetentionTimeFilterType()
+        {
+            return _retentionTimeFilterType;
+        }
+
+        public void setRetentionTimeFilterType(String retentionTimeFilterType)
+        {
+            _retentionTimeFilterType = retentionTimeFilterType;
+        }
+
+        public Double getRetentionTimeFilterLength()
+        {
+            return _retentionTimeFilterLength;
+        }
+
+        public void setRetentionTimeFilterLength(Double retentionTimeFilterLength)
+        {
+            _retentionTimeFilterLength = retentionTimeFilterLength;
+        }
+
+        public IsolationScheme getIsolationScheme()
+        {
+            return _isolationScheme;
+        }
+
+        public void setIsolationScheme(IsolationScheme isolationScheme)
+        {
+            _isolationScheme = isolationScheme;
+        }
     }
 
     public static final class IsotopeEnrichment extends SkylineEntity
@@ -222,6 +266,7 @@ public class TransitionSettings
         private int _runId;
         private String _symbol;
         private Double _percentEnrichment;
+        private String _name;
 
         public int getRunId()
         {
@@ -251,6 +296,16 @@ public class TransitionSettings
         public void setPercentEnrichment(Double percentEnrichment)
         {
             _percentEnrichment = percentEnrichment;
+        }
+
+        public String getName()
+        {
+            return _name;
+        }
+
+        public void setName(String name)
+        {
+            _name = name;
         }
     }
 
@@ -534,6 +589,181 @@ public class TransitionSettings
         public void setPredictorId(int predictorId)
         {
             _predictorId = predictorId;
+        }
+    }
+
+    public static final class IsolationScheme extends SkylineEntity
+    {
+        private int _runId;
+        private String _name;
+        private Double _precursorFilter;
+        private Double _precursorLeftFilter;
+        private Double _precursorRightFilter;
+        private String _specialHandling;
+        private Integer _windowsPerScan;
+
+        private List<IsolationWindow> _isolationWindowList;
+
+        public int getRunId()
+        {
+            return _runId;
+        }
+
+        public void setRunId(int runId)
+        {
+            _runId = runId;
+        }
+
+        public String getName()
+        {
+            return _name;
+        }
+
+        public void setName(String name)
+        {
+            _name = name;
+        }
+
+        public Double getPrecursorFilter()
+        {
+            return _precursorFilter;
+        }
+
+        public void setPrecursorFilter(Double precursorFilter)
+        {
+            _precursorFilter = precursorFilter;
+        }
+
+        public Double getPrecursorLeftFilter()
+        {
+            return _precursorLeftFilter;
+        }
+
+        public void setPrecursorLeftFilter(Double precursorLeftFilter)
+        {
+            _precursorLeftFilter = precursorLeftFilter;
+        }
+
+        public Double getPrecursorRightFilter()
+        {
+            return _precursorRightFilter;
+        }
+
+        public void setPrecursorRightFilter(Double precursorRightFilter)
+        {
+            _precursorRightFilter = precursorRightFilter;
+        }
+
+        public String getSpecialHandling()
+        {
+            return _specialHandling;
+        }
+
+        public void setSpecialHandling(String specialHandling)
+        {
+            _specialHandling = specialHandling;
+        }
+
+        public Integer getWindowsPerScan()
+        {
+            return _windowsPerScan;
+        }
+
+        public void setWindowsPerScan(Integer windowsPerScan)
+        {
+            _windowsPerScan = windowsPerScan;
+        }
+
+        public List<IsolationWindow> getIsolationWindowList()
+        {
+            return _isolationWindowList;
+        }
+
+        public void setIsolationWindowList(List<IsolationWindow> isolationWindowList)
+        {
+            _isolationWindowList = isolationWindowList;
+        }
+    }
+
+    public static final class IsolationWindow extends SkylineEntity
+    {
+
+        private int _isolationSchemeId;
+        private Double _windowStart;
+        private Double _windowEnd;
+        private Double _target;
+        private Double _marginLeft;
+        private Double _marginRight;
+        private Double _margin;
+
+        public int getIsolationSchemeId()
+        {
+            return _isolationSchemeId;
+        }
+
+        public void setIsolationSchemeId(int isolationSchemeId)
+        {
+            _isolationSchemeId = isolationSchemeId;
+        }
+
+        public Double getWindowStart()
+        {
+            return _windowStart;
+        }
+
+        public void setWindowStart(Double windowStart)
+        {
+            _windowStart = windowStart;
+        }
+
+        public Double getWindowEnd()
+        {
+            return _windowEnd;
+        }
+
+        public void setWindowEnd(Double windowEnd)
+        {
+            _windowEnd = windowEnd;
+        }
+
+        public Double getTarget()
+        {
+            return _target;
+        }
+
+        public void setTarget(Double target)
+        {
+            _target = target;
+        }
+
+        public Double getMarginLeft()
+        {
+            return _marginLeft;
+        }
+
+        public void setMarginLeft(Double marginLeft)
+        {
+            _marginLeft = marginLeft;
+        }
+
+        public Double getMarginRight()
+        {
+            return _marginRight;
+        }
+
+        public void setMarginRight(Double marginRight)
+        {
+            _marginRight = marginRight;
+        }
+
+        public Double getMargin()
+        {
+            return _margin;
+        }
+
+        public void setMargin(Double margin)
+        {
+            _margin = margin;
         }
     }
 }

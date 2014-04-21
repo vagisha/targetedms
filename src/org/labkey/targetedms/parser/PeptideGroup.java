@@ -30,6 +30,10 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
     private String _label;
     private String _name;
     private String _description;
+    private String _accession;
+    private String _preferredName;
+    private String _gene;
+    private String _species;
 
     private String _sequence;
     private boolean _protein;
@@ -151,4 +155,43 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
         _representativeDataState = representativeDataState;
     }
 
+    public String getAccession()
+    {
+        return _accession;
+    }
+
+    public void setAccession(String accession)
+    {
+        _accession = accession;
+    }
+
+    public String getPreferredName()
+    {
+        return _preferredName;
+    }
+
+    public void setPreferredName(String preferredName)
+    {
+        _preferredName = preferredName;
+    }
+
+    public String getGene()
+    {
+        return _gene;
+    }
+
+    public void setGene(String gene)
+    {
+        _gene = gene;
+    }
+
+    public String getSpecies()
+    {
+        return _species;
+    }
+
+    public void setSpecies(String species)
+    {
+        _species = species;
+    }
 }

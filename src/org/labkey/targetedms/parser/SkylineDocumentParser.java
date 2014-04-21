@@ -105,6 +105,8 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String PROCESSED_INTENSITY =  "processed_intensity";
     private static final String TOTAL_INTENSITY = "total_intensity";
     private static final String TFRATIO = "tfratio";
+    private static final String ISOLATION_SCHEME = "isolation_scheme";
+    private static final String ISOLATION_WINDOW = "isolation_window";
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
 
@@ -142,6 +144,9 @@ public class SkylineDocumentParser implements AutoCloseable
     private User _user;
     private Container _container;
     private Logger _log;
+
+    private String _formatVersion;
+    private String _softwareVersion;
 
     public SkylineDocumentParser(File file, User user, Container container, Logger log) throws XMLStreamException, IOException
     {
@@ -269,15 +274,29 @@ public class SkylineDocumentParser implements AutoCloseable
                 Double version = XmlUtil.readRequiredDoubleAttribute(reader, "format_version", "srm_settings");
                 if(version < MIN_SUPPORTED_VERSION)
                 {
-                    throw new IllegalStateException("The version of this Skyline document is "+version+
+                    throw new IllegalStateException("The version of this Skyline document is " +
+                                                    version +
                                                     ". Version less than " + MIN_SUPPORTED_VERSION +
                                                     " is not supported.");
                 }
+
+                _formatVersion = String.valueOf(version);
+                _softwareVersion = reader.getAttributeValue(null, "software_version");
                 return;
             }
         }
 
         throw new IllegalStateException("Not a valid Skyline document. <srm_settings> element was not found.");
+    }
+
+    public String getFormatVersion()
+    {
+        return _formatVersion;
+    }
+
+    public String getSoftwareVersion()
+    {
+        return _softwareVersion;
     }
 
     private void readDocumentSettings(XMLStreamReader reader) throws XMLStreamException
@@ -417,13 +436,19 @@ public class SkylineDocumentParser implements AutoCloseable
         result.setPrecursorIsotopes(reader.getAttributeValue(null, "precursor_isotopes"));
         result.setPrecursorIsotopeFilter(XmlUtil.readDoubleAttribute(reader, "precursor_isotope_filter"));
         result.setPrecursorRes(XmlUtil.readDoubleAttribute(reader, "precursor_res"));
+        result.setPrecursorResMz(XmlUtil.readDoubleAttribute(reader, "precursor_res_mz")); // Guessed at attribute value name
         result.setPrecursorMassAnalyzer(reader.getAttributeValue(null, "precursor_mass_analyzer"));
 
         result.setPrecursorFilter(XmlUtil.readDoubleAttribute(reader, "precursor_filter")); // Guessed at attribute value name
         result.setPrecursorLeftFilter(XmlUtil.readDoubleAttribute(reader, "precursor_left_filter")); // Guessed at attribute value name
         result.setPrecursorRightFilter(XmlUtil.readDoubleAttribute(reader, "precursor_right_filter")); // Guessed at attribute value name
-        result.setPrecursorResMz(XmlUtil.readDoubleAttribute(reader, "precursor_res_mz")); // Guessed at attribute value name
+        result.setProductRes(XmlUtil.readDoubleAttribute(reader, "product_res"));
+        result.setProductResMz(XmlUtil.readDoubleAttribute(reader, "product_res_mz"));
         result.setProductMassAnalyzer(reader.getAttributeValue(null, "product_mass_analyzer")); // Guessed at attribute value name
+
+        result.setAcquisitionMethod(XmlUtil.readAttribute(reader, "acquisition_method"));
+        result.setRetentionTimeFilterType(XmlUtil.readAttribute(reader, "retention_time_filter_type"));
+        result.setRetentionTimeFilterLength(XmlUtil.readDoubleAttribute(reader, "retention_time_filter_length"));
 
         List<TransitionSettings.IsotopeEnrichment> enrichments = new ArrayList<>();
         result.setIsotopeEnrichmentList(enrichments);
@@ -440,13 +465,61 @@ public class SkylineDocumentParser implements AutoCloseable
             {
                 enrichments.addAll(readIsotopeEnrichments(reader));
             }
+
+            else if (XmlUtil.isStartElement(reader, evtType, ISOLATION_SCHEME))
+            {
+                result.setIsolationScheme(readIsolationScheme(reader));
+            }
         }
 
         return result;
     }
 
+    private TransitionSettings.IsolationScheme readIsolationScheme(XMLStreamReader reader) throws XMLStreamException
+    {
+        TransitionSettings.IsolationScheme iScheme = new TransitionSettings.IsolationScheme();
+        iScheme.setName(XmlUtil.readRequiredAttribute(reader, "name", ISOLATION_SCHEME));
+        iScheme.setPrecursorFilter(XmlUtil.readDoubleAttribute(reader, "precursor_filter"));
+        iScheme.setPrecursorLeftFilter(XmlUtil.readDoubleAttribute(reader, "precursor_left_filter"));
+        iScheme.setPrecursorRightFilter(XmlUtil.readDoubleAttribute(reader, "precursor_right_filter"));
+        iScheme.setSpecialHandling(XmlUtil.readAttribute(reader, "special_handling"));
+        iScheme.setWindowsPerScan(XmlUtil.readIntegerAttribute(reader, "windows_per_scan"));
+
+
+        List<TransitionSettings.IsolationWindow> iWindows = new ArrayList<>();
+        iScheme.setIsolationWindowList(iWindows);
+        while(reader.hasNext())
+        {
+            int evtType = reader.next();
+            if (XmlUtil.isEndElement(reader, evtType, ISOLATION_SCHEME))
+            {
+                break;
+            }
+
+            if (XmlUtil.isStartElement(reader, evtType, ISOLATION_WINDOW))
+            {
+                iWindows.add(readIsolationWindow(reader));
+            }
+        }
+        return iScheme;
+    }
+
+    private TransitionSettings.IsolationWindow readIsolationWindow(XMLStreamReader reader) throws XMLStreamException
+    {
+        TransitionSettings.IsolationWindow iWindow = new TransitionSettings.IsolationWindow();
+        iWindow.setWindowStart(XmlUtil.readRequiredDoubleAttribute(reader, "start", ISOLATION_WINDOW));
+        iWindow.setWindowEnd(XmlUtil.readRequiredDoubleAttribute(reader, "end", ISOLATION_WINDOW));
+        iWindow.setTarget(XmlUtil.readDoubleAttribute(reader, "target"));
+        iWindow.setMarginLeft(XmlUtil.readDoubleAttribute(reader, "margin_left"));
+        iWindow.setMarginRight(XmlUtil.readDoubleAttribute(reader, "margin_right"));
+        iWindow.setMargin(XmlUtil.readDoubleAttribute(reader, "margin"));
+        return iWindow;
+    }
+
     private List<TransitionSettings.IsotopeEnrichment> readIsotopeEnrichments(XMLStreamReader reader) throws XMLStreamException
     {
+        String name = reader.getAttributeValue(null, "name");
+
         List<TransitionSettings.IsotopeEnrichment> result = new ArrayList<>();
         while(reader.hasNext())
         {
@@ -458,7 +531,9 @@ public class SkylineDocumentParser implements AutoCloseable
 
             if (XmlUtil.isStartElement(reader, evtType, ATOM_PERCENT_ENRICHMENT))
             {
-                result.add(readAtomPercentEnrichment(reader));
+                TransitionSettings.IsotopeEnrichment enrichment = readAtomPercentEnrichment(reader);
+                enrichment.setName(name);
+                result.add(enrichment);
             }
         }
         return result;
@@ -829,6 +904,11 @@ public class SkylineDocumentParser implements AutoCloseable
 
             pepGroup.setDescription(reader.getAttributeValue(null, "description"));
             pepGroup.setDecoy(Boolean.parseBoolean(reader.getAttributeValue(null, "decoy")));
+
+            pepGroup.setAccession(reader.getAttributeValue(null, "accession"));
+            pepGroup.setPreferredName(reader.getAttributeValue(null, "preferred_name"));
+            pepGroup.setGene(reader.getAttributeValue(null, "gene"));
+            pepGroup.setSpecies(reader.getAttributeValue(null, "species"));
             pepGroup.setProtein(true);
         }
         else
@@ -964,6 +1044,8 @@ public class SkylineDocumentParser implements AutoCloseable
         String rtCalculatorScore = reader.getAttributeValue(null, "rt_calculator_score");
         if(null != rtCalculatorScore)
             peptide.setRtCalculatorScore(Double.parseDouble(rtCalculatorScore));
+
+        peptide.setStandardType(XmlUtil.readAttribute(reader, "standard_type"));
 
         List<Peptide.StructuralModification> structuralMods = new ArrayList<>();
         List<Peptide.IsotopeModification> isotopeMods = new ArrayList<>();

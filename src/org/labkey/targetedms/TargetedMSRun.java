@@ -17,7 +17,6 @@
 package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.MemTracker;
 
 import java.io.Serializable;
@@ -68,6 +67,9 @@ public class TargetedMSRun implements Serializable
     protected int _transitionCount;
     protected Integer _dataId; // FK to exp.data's RowId column
     protected Integer _iRTscaleId;
+
+    private String _softwareVersion;
+    private String _formatVersion;
 
     public TargetedMSRun()
     {
@@ -275,5 +277,25 @@ public class TargetedMSRun implements Serializable
     public void setiRTscaleId(Integer iRTscaleId)
     {
         _iRTscaleId = iRTscaleId;
+    }
+
+    public String getSoftwareVersion()
+    {
+        return _softwareVersion;
+    }
+
+    public void setSoftwareVersion(String softwareVersion)
+    {
+        _softwareVersion = softwareVersion;
+    }
+
+    public String getFormatVersion()
+    {
+        return _formatVersion;
+    }
+
+    public void setFormatVersion(String formatVersion)
+    {
+        _formatVersion = formatVersion;
     }
 }

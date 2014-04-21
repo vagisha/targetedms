@@ -167,6 +167,8 @@
             <ns:column columnName="iRTScaleId">
                 <ns:columnTitle>iRT Scale Id</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="SoftwareVersion"/>
+            <ns:column columnName="FormatVersion"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideGroup">
@@ -204,6 +206,10 @@
                 <ns:columnTitle>Library State</ns:columnTitle>
             </ns:column>
             <ns:column columnName="Name" />
+            <ns:column columnName="Accession" />
+            <ns:column columnName="PreferredName" />
+            <ns:column columnName="Gene" />
+            <ns:column columnName="Species" />
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Peptide">
@@ -248,6 +254,7 @@
             <ns:column columnName="PeptideModifiedSequence">
                 <ns:columnTitle>Modified Peptide</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="StandardType"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideChromInfo">
@@ -524,6 +531,7 @@
         <ns:column columnName="RunId"/>
         <ns:column columnName="Symbol"/>
         <ns:column columnName="PercentEnrichment"/>
+        <ns:column columnName="Name"/>
       </ns:columns>
     </ns:table>
     <ns:table tableName="IsotopeModification" tableDbType="TABLE">
@@ -812,6 +820,9 @@
         <ns:column columnName="precursorres"/>
         <ns:column columnName="precursorresmz"/>
         <ns:column columnName="schedulefilter"/>
+        <ns:column columnName="AcquisitionMethod"/>
+        <ns:column columnName="RetentionTimeFilterType"/>
+        <ns:column columnName="RetentionTimeFilterLength"/>
       </ns:columns>
     </ns:table>
     <ns:table tableName="transitioninstrumentsettings" tableDbType="TABLE">
@@ -1001,6 +1012,37 @@
                     <ns:fkTable>UsersData</ns:fkTable>
                 </ns:fk>
             </ns:column>
+        </ns:columns>
+    </ns:table>
+
+    <ns:table tableName="IsolationScheme" tableDbType="TABLE">
+        <ns:columns>
+            <ns:column columnName="Id"/>
+            <ns:column columnName="RunId"/>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="PrecursorFilter"/>
+            <ns:column columnName="PrecursorLeftFilter"/>
+            <ns:column columnName="PrecursorRightFilter"/>
+            <ns:column columnName="SpecialHandling"/>
+            <ns:column columnName="WindowsPerScan"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="IsolationWindow" tableDbType="TABLE">
+        <ns:columns>
+            <ns:column columnName="Id"/>
+            <ns:column columnName="IsolationSchemeId">
+                    <ns:fk>
+                    <ns:fkColumnName>Id</ns:fkColumnName>
+                    <ns:fkDbSchema>targetedms</ns:fkDbSchema>
+                    <ns:fkTable>IsolationScheme</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="WindowEnd"/>
+            <ns:column columnName="WindowStart"/>
+            <ns:column columnName="Target"/>
+            <ns:column columnName="MarginLeft"/>
+            <ns:column columnName="MarginRight"/>
+            <ns:column columnName="Margin"/>
         </ns:columns>
     </ns:table>
 

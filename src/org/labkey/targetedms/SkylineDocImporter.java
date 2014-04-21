@@ -177,6 +177,13 @@ public class SkylineDocImporter
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction();
              SkylineDocumentParser parser = new SkylineDocumentParser(f, _user, _container, _log))
         {
+            run.setFormatVersion(parser.getFormatVersion());
+            run.setSoftwareVersion(parser.getSoftwareVersion());
+
+            new SqlExecutor(TargetedMSManager.getSchema()).execute("UPDATE " + TargetedMSManager.getTableInfoRuns() +
+                    " SET formatVersion = ?, softwareVersion = ? WHERE Id = ?",
+                    parser.getFormatVersion(), parser.getSoftwareVersion(), run.getId());
+
             ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
             parser.readSettings();
 
@@ -234,6 +241,18 @@ public class SkylineDocImporter
                 {
                     isotopeEnrichment.setRunId(_runId);
                     Table.insert(_user, TargetedMSManager.getTableInfoIsotopeEnrichment(), isotopeEnrichment);
+                }
+
+                TransitionSettings.IsolationScheme isolationScheme = fullScanSettings.getIsolationScheme();
+                if(isolationScheme != null)
+                {
+                    isolationScheme.setRunId(_runId);
+                    Table.insert(_user, TargetedMSManager.getTableInfoIsolationScheme(), isolationScheme);
+                    for(TransitionSettings.IsolationWindow iWindow: isolationScheme.getIsolationWindowList())
+                    {
+                        iWindow.setIsolationSchemeId(isolationScheme.getId());
+                        Table.insert(_user, TargetedMSManager.getTableInfoIsolationWindow(), iWindow);
+                    }
                 }
             }
 

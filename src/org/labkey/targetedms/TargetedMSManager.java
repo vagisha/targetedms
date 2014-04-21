@@ -233,6 +233,16 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_ISOTOPE_ENRICHMENT);
     }
 
+    public static TableInfo getTableInfoIsolationScheme()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_ISOLATION_SCHEME);
+    }
+
+    public static TableInfo getTableInfoIsolationWindow()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_ISOLATION_WINDOW);
+    }
+
     public static TableInfo getTableInfoRetentionTimePredictionSettings()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_RETENTION_TIME_PREDICTION_SETTINGS);
@@ -879,6 +889,9 @@ public class TargetedMSManager
         // Delete from ReplicateAnnotation
         deleteReplicateDependent(getTableInfoReplicateAnnotation());
 
+        // Delete from IsolationWindow
+        deleteIsolationSchemeDependent(getTableInfoIsolationWindow());
+
         // Delete from PredictorSettings and Predictor
         deleteTransitionPredictionSettingsDependent();
 
@@ -916,6 +929,8 @@ public class TargetedMSManager
         deleteRunDependent(getTableInfoAnnotationSettings());
         // Delete from ExperimentAnnotationsRun
         deleteRunDependent(getTableInfoExperimentAnnotationsRun());
+        // Delete from IsolationScheme
+        deleteRunDependent(getTableInfoIsolationScheme());
 
         // Delete from runs
         execute("DELETE FROM " + getTableInfoRuns() + " WHERE Deleted = ?", true);
@@ -1023,6 +1038,12 @@ public class TargetedMSManager
                 "Id IN (SELECT CePredictorId FROM " + getTableInfoTransitionPredictionSettings() + " tps, " + getTableInfoRuns() + " r WHERE r.Id = tps.RunId AND r.Deleted = ?)" +
                 "OR Id IN (SELECT DpPredictorId FROM " + getTableInfoTransitionPredictionSettings() + " tps, " + getTableInfoRuns() + " r WHERE r.Id = tps.RunId AND r.Deleted = ?)"
                 , true, true);
+    }
+
+    private static void deleteIsolationSchemeDependent(TableInfo tableInfo)
+    {
+        execute("DELETE FROM " + tableInfo + " WHERE IsolationSchemeId IN (SELECT Id FROM " +
+                getTableInfoIsolationScheme() + " WHERE RunId IN (SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted = ?))", true);
     }
 
     private static void execute(String sql, @NotNull Object... parameters)
