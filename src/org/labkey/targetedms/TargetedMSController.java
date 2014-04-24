@@ -699,6 +699,9 @@ public class TargetedMSController extends SpringActionController
         private List<PeptideSettings.IsotopeLabel> labels;
         private TargetedMSRun _run;
         protected String _resultsUri;
+        private List<String> _replicateAnnotationNameList;
+        private List<ReplicateAnnotation> _replicateAnnotationValueList;
+        private List<Replicate> _replicatesFilter;
 
         public PeptideChromatogramsViewBean(String resultsUri)
         {
@@ -707,6 +710,35 @@ public class TargetedMSController extends SpringActionController
         public String getResultsUri()
         {
             return _resultsUri;
+        }
+
+        public List<Replicate> getReplicatesFilter()
+        {
+            return _replicatesFilter != null ? _replicatesFilter : Collections.<Replicate>emptyList();
+        }
+        public void setReplicatesFilter(List<Replicate> replciates)
+        {
+          _replicatesFilter = replciates;
+        }
+
+        public List<String> getReplicateAnnotationNameList()
+        {
+            return _replicateAnnotationNameList != null ? _replicateAnnotationNameList : Collections.<String>emptyList();
+        }
+
+        public void setReplicateAnnotationNameList(List<String> replicateAnnotationNameList)
+        {
+            _replicateAnnotationNameList = replicateAnnotationNameList;
+        }
+
+        public List<ReplicateAnnotation> getReplicateAnnotationValueList()
+        {
+            return _replicateAnnotationValueList != null ? _replicateAnnotationValueList : Collections.<ReplicateAnnotation>emptyList();
+        }
+
+        public void setReplicateAnnotationValueList(List<ReplicateAnnotation> replicateAnnotationValueList)
+        {
+            _replicateAnnotationValueList = replicateAnnotationValueList;
         }
 
         public ChromatogramForm getForm()
@@ -775,6 +807,8 @@ public class TargetedMSController extends SpringActionController
         private int _id;
         private boolean _syncY = false;
         private boolean _syncX = false;
+        private String _annotationsFilter;
+        private String _replicatesFilter;
 
         public ChromatogramForm()
         {
@@ -790,6 +824,78 @@ public class TargetedMSController extends SpringActionController
         {
             _id = id;
         }
+
+
+        public String getReplicatesFilter()
+        {
+            return _replicatesFilter;
+        }
+
+        public void setReplicatesFilter(String replicatesFilter)
+        {
+            _replicatesFilter = replicatesFilter;
+        }
+
+        public List<Integer> getReplicatesFilterList()
+        {
+            List<Integer> replicatesList = new ArrayList<>();
+            if(_replicatesFilter == null)
+            {
+                return null;
+            }
+            else {
+
+                String filterReps[] = _replicatesFilter.split(",");
+                for(String rep: filterReps)
+                {
+                    try
+                    {
+                        replicatesList.add(Integer.parseInt(rep));
+
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        LOG.debug("Error parsing replicate Id: "+rep,e);
+                    }
+                }
+
+                return replicatesList;
+            }
+        }
+
+        public String getAnnotationsFilter()
+        {
+            return _annotationsFilter;
+        }
+
+        public List<ReplicateAnnotation> getAnnotationFilter()
+        {
+            List<ReplicateAnnotation> replicateList = new ArrayList<>();
+            if(_annotationsFilter == null)
+            {
+                return null;
+            }
+            else {
+
+                String filterReps[] = _annotationsFilter.split(",");
+                for(int repCounter = 0; repCounter < filterReps.length; repCounter++)
+                {
+                    String filterNameValue[] = filterReps[repCounter].split(" : ");
+                    ReplicateAnnotation rep = new ReplicateAnnotation();
+                    rep.setName(filterNameValue[0]);
+                    rep.setValue(filterNameValue[1]);
+                    replicateList.add(rep);
+                }
+
+                return replicateList;
+            }
+        }
+
+        public void setAnnotationsFilter(String annotationsFilter)
+        {
+            _annotationsFilter = annotationsFilter;
+        }
+
 
         public boolean isSyncY()
         {
@@ -835,7 +941,7 @@ public class TargetedMSController extends SpringActionController
             _sequence = peptide.getSequence();
 
             VBox vbox = new VBox();
-
+            VBox chromatogramsBox = new VBox();
             _run = TargetedMSManager.getRunForPeptide(peptideId);
 
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
@@ -860,12 +966,17 @@ public class TargetedMSController extends SpringActionController
             vbox.addView(peptideInfo);
 
             // precursor and transition chromatograms. One row per replicate
+
+            PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),form, errors);
             JspView<PeptideChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
-            PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),
-                                                                                                form, errors);
+
             chromView.enableExpandCollapse(PeptidePrecursorChromatogramsView.TITLE, false);
-            vbox.addView(chartForm);
-            vbox.addView(chromView);
+            chromatogramsBox.addView(chartForm);
+            chromatogramsBox.addView(chromView);
+            chromatogramsBox.setTitle("Chromatograms");
+            chromatogramsBox.setShowTitle(true);
+            chromatogramsBox.setFrame(WebPartView.FrameType.PORTAL);
+            vbox.addView(chromatogramsBox);
 
              // Peak area graph for the peptide
             PeakAreaGraphBean peakAreasBean = new PeakAreaGraphBean();

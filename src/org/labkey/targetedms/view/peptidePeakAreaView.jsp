@@ -42,12 +42,6 @@
         peakAreaUrl.addParameter("peptideId", peptideId);
 %>
 
-<style>
-    .x4-form-trigger {
-    margin-left:8px !important;
-    }
-</style>
-
 <script type="text/javascript">
     Ext.onReady(function() {
 

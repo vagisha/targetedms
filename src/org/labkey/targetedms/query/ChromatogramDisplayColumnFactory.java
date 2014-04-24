@@ -23,10 +23,12 @@ import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
+import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.SampleFile;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.List;
 
 /**
  * User: vsharma
@@ -41,6 +43,8 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
     private int _chart_height;
     private boolean _syncY = false;
     private boolean _syncX = false;
+    private String _annotationsFilter;
+    private String _replicatesFilter;
 
     public static enum TYPE
     {
@@ -51,12 +55,12 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type)
     {
-        this(container, type, 400, 400, false, false);
+        this(container, type, 400, 400, false, false, null, null);
     }
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type,
                                             int chartWidth, int chartHeight,
-                                            boolean syncIntensity, boolean syncMz)
+                                            boolean syncIntensity, boolean syncMz, String annotationsFilter, String replicatesFilter)
     {
         _container = container;
         _type = type;
@@ -64,6 +68,8 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
         _chart_height = chartHeight;
         _syncY = syncIntensity;
         _syncX = syncMz;
+        _annotationsFilter = annotationsFilter;
+        _replicatesFilter = replicatesFilter;
     }
 
     public DisplayColumn createRenderer(ColumnInfo colInfo)
@@ -101,6 +107,8 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                     chromAction.addParameter("chartHeight", String.valueOf(_chart_height));
                     chromAction.addParameter("syncY", String.valueOf(_syncY));
                     chromAction.addParameter("syncX", String.valueOf(_syncX));
+                    chromAction.addParameter("annotationsFilter", String.valueOf(_annotationsFilter));
+                    chromAction.addParameter("replicatesFilter", String.valueOf(_replicatesFilter));
 
                     String imgLink = "<img src=\""+chromAction.getLocalURIString()+"\" alt=\"Chromatogram "+sampleFile.getSampleName()+"\">";
                     out.write(imgLink);

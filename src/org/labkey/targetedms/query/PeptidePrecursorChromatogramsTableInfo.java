@@ -15,6 +15,8 @@
 
 package org.labkey.targetedms.query;
 
+import com.drew.lang.annotations.Nullable;
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableInfo;
@@ -28,6 +30,7 @@ import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
+import org.labkey.targetedms.parser.ReplicateAnnotation;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,19 +47,21 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
     public PeptidePrecursorChromatogramsTableInfo(TargetedMSSchema schema, Peptide peptide,
                                                   TargetedMSController.ChromatogramForm form)
     {
-        super(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), peptide), schema);
+        super(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), peptide, form.getAnnotationFilter(), form.getReplicatesFilterList()), schema);
         wrapAllColumns(true);
-
         ColumnInfo pepChromCol = getColumn("pepciId");
         pepChromCol.setLabel("");
+
         pepChromCol.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(
                                                         schema.getContainer(),
                                                         ChromatogramDisplayColumnFactory.TYPE.PEPTIDE,
                                                         form.getChartWidth(),
                                                         form.getChartHeight(),
                                                         form.isSyncY(),
-                                                        form.isSyncX())
-                                            );
+                                                        form.isSyncX(),
+                                                        form.getAnnotationsFilter(),
+                                                        form.getReplicatesFilter()
+                                                        ));
 
 
         for(ColumnInfo colInfo: getPrecursorChromInfoColumns())
@@ -67,8 +72,10 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
                                                         form.getChartWidth(),
                                                         form.getChartHeight(),
                                                         form.isSyncY(),
-                                                        form.isSyncX())
-                                            );
+                                                        form.isSyncX(),
+                                                        form.getAnnotationsFilter(),
+                                                        form.getReplicatesFilter()
+                                            ));
             colInfo.setLabel("");
         }
     }
@@ -114,8 +121,9 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
         return colNames;
     }
 
-    private static TableInfo getPivotByPrecursorChromInfoTable(Container container, User user, Peptide peptide)
+    private static TableInfo getPivotByPrecursorChromInfoTable(Container container, User user, Peptide peptide,@Nullable List<ReplicateAnnotation> filterAnnotations, @Nullable List<Integer> replicatesFilter)
     {
+
         String sql =
             "SELECT replicate, sample, isotopecharge, pepciId, peptideId, MIN(pid) AS preciId FROM \n"+
             "  (SELECT\n"+
@@ -144,12 +152,38 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
             "  AND\n" +
             "  pre.IsotopeLabelId = label.Id\n" +
             "  AND\n" +
-            "  pre.PeptideId = "+peptide.getId()+"\n"+
+            "  pre.PeptideId = "+peptide.getId()+"\n";
+       if(replicatesFilter != null && replicatesFilter.size() != 0)
+       {
+           sql+="AND\n";
+           sql+="( ";
+           String replicateIds = StringUtils.join(replicatesFilter,",");
+           sql+="rep.Id IN ("+replicateIds+")";
+           sql += ")"+"\n";
+       }
+        if(filterAnnotations != null)
+        {
+            sql += "  AND\n" +
+                    " rep.Id IN (SELECT replicateid FROM " +
+                    TargetedMSManager.getTableInfoReplicateAnnotation()
+                    + " WHERE ";
+            boolean first = true;
+            for(ReplicateAnnotation annotation: filterAnnotations)
+            {
+                if(!first)
+                {
+                    sql += " OR ";
+                }
+                sql+= " (name = '" + annotation.getName() +"'  " +
+                      "  AND value = '" + annotation.getValue()+"')";
 
-            " ) X\n"+
+                first = false;
+            }
+            sql += ")"+"\n";
+        }
+        sql += " ) X\n"+
             "GROUP BY replicate, sample, pepciId, peptideId, isotopecharge\n" +
             "PIVOT preciId BY isotopecharge";
-
 
         QueryDefinition qdef = QueryService.get().createQueryDef(user, container, TargetedMSSchema.SCHEMA_NAME,
                                                                  "PeptideChromInfo_pivotByIsotopeLabelCharge");
@@ -169,6 +203,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
             }
             throw new IllegalStateException(sb.toString());
         }
+
         return tableInfo;
     }
 }

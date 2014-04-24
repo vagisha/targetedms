@@ -39,14 +39,11 @@ public class PeptidePrecursorChromatogramsView extends GridView
                                              TargetedMSController.ChromatogramForm form,
                                              Errors errors)
     {
+
         super(makeDataRegion(peptide, schema, form), errors);
         QuerySettings settings = new QuerySettings(getViewContext(), "Peptide and Precursor chromatograms");
         settings.setMaxRows(10);
         getDataRegion().setSettings(settings);
-
-        setIsWebPart(true);
-        setTitle(TITLE);
-        setShowTitle(true);
     }
 
     private static DataRegion makeDataRegion(Peptide peptide, TargetedMSSchema schema,
