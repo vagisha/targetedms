@@ -104,7 +104,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         waitForElement(Locator.name("aminoAcids"));
         setFormElement(Locator.name("aminoAcids"), "R");
         setFormElement(Locator.name("deltaMass"), "10");
-        waitAndClickAndWait(Locator.ext4Button("Search"));
+        waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         waitForText("Modification Search Results");
         //waitForText("1 - 13 of 13");
         assertTextPresentInThisOrder("Targeted MS Modification Search", "Targeted MS Peptides");
@@ -115,7 +115,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         // search for K[+8] modification
         setFormElement(Locator.name("aminoAcids"), "k R, N"); // should be split into just chars
         setFormElement(Locator.name("deltaMass"), "8.01"); // should be rounded to a whole number
-        waitAndClickAndWait(Locator.ext4Button("Search"));
+        waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
         assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
         assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
@@ -128,12 +128,12 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertElementVisible(Locator.name("customName"));
         _ext4Helper.selectRadioButton("Type:", "Names used in imported experiments");
         _ext4Helper.selectComboBoxItem("Custom Name:", "Label:13C(6)15N(4) (C-term R)");
-        waitAndClickAndWait(Locator.ext4Button("Search"));
+        waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 13 of 13");
         assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
         assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
         _ext4Helper.selectComboBoxItem("Custom Name:", "Label:13C(6)15N(2) (C-term K)");
-        waitAndClickAndWait(Locator.ext4Button("Search"));
+        waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
         assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
         assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
@@ -145,7 +145,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertElementNotVisible(Locator.name("customName"));
         assertElementVisible(Locator.name("unimodName"));
         _ext4Helper.selectComboBoxItem(Ext4Helper.Locators.formItemWithLabelContaining("Unimod Name:"), "Label:13C(6)15N(4) (C-term R)");
-        waitAndClickAndWait(Locator.ext4Button("Search"));
+        waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 13 of 13");
         assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
         assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
@@ -154,7 +154,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         _ext4Helper.selectRadioButton("Search By:", "Delta Mass");
         setFormElement(Locator.name("aminoAcids"), "]");
         setFormElement(Locator.name("deltaMass"), "8");
-        waitAndClickAndWait(Locator.ext4Button("Search"));
+        waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
         assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
         assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
