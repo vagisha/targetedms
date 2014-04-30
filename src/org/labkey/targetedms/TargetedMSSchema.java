@@ -182,6 +182,25 @@ public class TargetedMSSchema extends UserSchema
         return DbSchema.get(SCHEMA_NAME);
     }
 
+    private static final SQLFragment getJoinToRunsTable(String tableAlias)
+    {
+        tableAlias = tableAlias == null ? "" : tableAlias + ".";
+        return makeInnerJoin(TargetedMSManager.getTableInfoRuns(),
+                TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, tableAlias + "RunId");
+    }
+
+    private static final SQLFragment makeInnerJoin(TableInfo table, String alias, String colRight)
+    {
+        SQLFragment sql = new SQLFragment("INNER JOIN ");
+        sql.append(table, alias);
+        sql.append(" ON ( ");
+        sql.append(alias).append(".id");
+        sql.append(" = ");
+        sql.append(colRight);
+        sql.append(" ) ");
+        return sql;
+    }
+
     public enum ContainerJoinType
     {
         PeptideFK
@@ -189,13 +208,10 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
-                sql.append(" WHERE r.Id = pg.RunId AND pg.Id = pep.PeptideGroupId AND pep.Id = PeptideId)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "PeptideId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
         },
@@ -204,15 +220,11 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptideChromInfo(), "pci");
-                sql.append(" WHERE r.Id = pg.RunId AND pg.Id = pep.PeptideGroupId AND pep.Id = pci.PeptideId AND pci.Id = PeptideChromInfoId)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideChromInfo(), "pci", "PeptideChromInfoId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "pci.PeptideId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
         },
@@ -221,17 +233,12 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoTransition(), "t");
-                sql.append(" WHERE r.Id = pg.RunId AND pg.Id = pep.PeptideGroupId AND pep.Id = pre.PeptideId AND pre.Id = t.PrecursorId AND TransitionId = t.Id)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoTransition(), "tr", "TransitionId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPrecursor(), "pre", "tr.PrecursorId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "pre.PeptideId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
         },
@@ -240,17 +247,11 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
-                sql.append(" WHERE r.Id = pg.RunId AND pg.Id = pep.PeptideGroupId AND pep.Id = pre.PeptideId AND pre.Id = pci.PrecursorId AND pci.Id = PrecursorChromInfoId)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci", "PrecursorChromInfoId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSampleFile(), "sfile", "pci.SampleFileId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoReplicate(), "rep", "sfile.ReplicateId"));
+                sql.append(getJoinToRunsTable("rep"));
                 return sql;
             }
         },
@@ -259,9 +260,8 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(" WHERE r.Id = RunId)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(getJoinToRunsTable(null));
                 return sql;
             }
         },
@@ -270,11 +270,9 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-                sql.append(" WHERE r.Id = pg.RunId AND pg.Id = PeptideGroupId)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
         },
@@ -283,11 +281,9 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoReplicate(), "rep");
-                sql.append(" WHERE r.Id = rep.RunId AND rep.Id = ReplicateId)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoReplicate(), "rep", "ReplicateId"));
+                sql.append(getJoinToRunsTable("rep"));
                 return sql;
             }
         },
@@ -296,15 +292,11 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
-                sql.append(" WHERE r.Id = pg.RunId AND pg.Id = pep.PeptideGroupId AND pep.Id = pre.PeptideId AND pre.Id = PrecursorId)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPrecursor(), "pre", "PrecursorId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "pre.PeptideId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
                 return sql;
 
             }
@@ -314,20 +306,11 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoTransition(), "t");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
-                sql.append(" WHERE r.Id = pg.RunId AND pg.Id = pep.PeptideGroupId AND pep.Id = pre.PeptideId AND ");
-                sql.append("pre.Id = t.PrecursorId AND tci.TransitionId = t.Id AND tci.Id = TransitionChromInfoId)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci", "TransitionChromInfoId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSampleFile(), "sfile", "tci.SampleFileId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoReplicate(), "rep", "sfile.ReplicateId"));
+                sql.append(getJoinToRunsTable("rep"));
                 return sql;
             }
         },
@@ -336,10 +319,8 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT s.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoiRTScale(), "s");
-                sql.append(" WHERE s.Id = iRTScaleId)");
-                return sql;
+                return makeInnerJoin(TargetedMSManager.getTableInfoiRTScale(),
+                        TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "iRTScaleId");
             }
         },
         IsolationSchemeFK
@@ -347,11 +328,9 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getSQL()
             {
-                SQLFragment sql = new SQLFragment("(SELECT r.Container FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-                sql.append(", ");
-                sql.append(TargetedMSManager.getTableInfoIsolationScheme(), "ischeme");
-                sql.append(" WHERE r.Id = ischeme.RunId AND ischeme.Id = IsolationSchemeId)");
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoIsolationScheme(), "ischeme", "IsolationSchemeId"));
+                sql.append(getJoinToRunsTable("ischeme"));
                 return sql;
             }
         };
@@ -610,8 +589,8 @@ public class TargetedMSSchema extends UserSchema
             TABLE_RUN_ISOTOPE_MODIFICATION.equalsIgnoreCase(name) ||
             TABLE_ISOTOPE_LABEL.equalsIgnoreCase(name) ||
             TABLE_MODIFICATION_SETTINGS.equalsIgnoreCase(name) ||
-            TABLE_LIBRARY_SETTINGS.equals(name) ||
-            TABLE_RUN_ENZYME.equals(name) ||
+            TABLE_LIBRARY_SETTINGS.equalsIgnoreCase(name) ||
+            TABLE_RUN_ENZYME.equalsIgnoreCase(name) ||
             TABLE_SPECTRUM_LIBRARY.equalsIgnoreCase(name) ||
             TABLE_ANNOTATION_SETTINGS.equalsIgnoreCase(name) )
         {

@@ -28,13 +28,15 @@ import org.labkey.targetedms.TargetedMSSchema;
  */
 public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
 {
-    private final SQLFragment _containerSQL;
-    private static final FieldKey CONTAINER_FAKE_COLUMN_NAME = FieldKey.fromParts("Container");
+    public static final String CONTAINER_COL_TABLE_ALIAS = "r";
+    private static final SQLFragment _containerSQL = new SQLFragment(CONTAINER_COL_TABLE_ALIAS).append(".Container");
 
-    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment containerSQL)
+    private final SQLFragment _joinSQL;
+
+    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL)
     {
         super(table, schema);
-        _containerSQL = containerSQL;
+        _joinSQL = joinSQL;
         wrapAllColumns(true);
         applyContainerFilter(getContainerFilter());
     }
@@ -42,10 +44,19 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
     @Override
     protected void applyContainerFilter(ContainerFilter filter)
     {
-        clearConditions(CONTAINER_FAKE_COLUMN_NAME);
-        if (_containerSQL != null)
-        {
-            addCondition(filter.getSQLFragment(getSchema(), _containerSQL, getContainer()), CONTAINER_FAKE_COLUMN_NAME);
-        }
+        // Don't apply the container filter normally, let us apply it in our wrapper around the normally generated SQL
+    }
+
+    public SQLFragment getFromSQL(String alias)
+    {
+        SQLFragment sql = new SQLFragment("(SELECT X.* FROM ");
+        sql.append(super.getFromSQL("X"));
+        sql.append(" ");
+        sql.append(_joinSQL);
+        sql.append(" WHERE ");
+        sql.append(getContainerFilter().getSQLFragment(getSchema(), _containerSQL, getContainer()));
+        sql.append(") ");
+        sql.append(alias);
+        return sql;
     }
 }
