@@ -83,6 +83,11 @@ public class DataSettings
         return annot != null && annot.getType() == AnnotationType.true_false;
     }
 
+    public boolean annotationExists(String name)
+    {
+        return _annotationDefinitions.get(name) != null;
+    }
+
     public <AnnotationTargetType extends AbstractAnnotation> List<String> getMissingBooleanAnnotations(List<AnnotationTargetType> annotations, AnnotationTarget target)
     {
         Set<String> annotNames = new HashSet<>();

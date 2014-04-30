@@ -343,7 +343,7 @@ public class SkylineDocumentParser implements AutoCloseable
             return;
         for(Replicate replicate: _replicateList) {
 
-            List<ReplicateAnnotation> annotations = replicate.getAnnotations();
+            List<ReplicateAnnotation> annotations = removeUnusedAnnotations(replicate);
 
             for(ReplicateAnnotation annot: annotations)
             {
@@ -373,6 +373,24 @@ public class SkylineDocumentParser implements AutoCloseable
                 replicate.setAnnotations(combinedAnnotations);
             }
         }
+    }
+
+    private List<ReplicateAnnotation> removeUnusedAnnotations(Replicate replicate)
+    {
+        // 04/30/14 Skyline writes replicate annotation values for annotations
+        // that have been deleted/unchecked from annotation settings.
+        // Do not save unused / deleted annotations.
+        List<ReplicateAnnotation> annotations = replicate.getAnnotations();
+        List<ReplicateAnnotation> toReturn = new ArrayList<ReplicateAnnotation>();
+        for(ReplicateAnnotation annotation: annotations)
+        {
+            if(_dataSettings.annotationExists(annotation.getName()))
+            {
+                toReturn.add(annotation);
+            }
+        }
+        replicate.setAnnotations(toReturn);
+        return toReturn;
     }
 
     private void readDataSettings(XMLStreamReader reader) throws XMLStreamException
