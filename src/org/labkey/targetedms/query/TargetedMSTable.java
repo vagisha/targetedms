@@ -15,10 +15,10 @@
  */
 package org.labkey.targetedms.query;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.targetedms.TargetedMSSchema;
 
@@ -47,6 +47,7 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
         // Don't apply the container filter normally, let us apply it in our wrapper around the normally generated SQL
     }
 
+    @NotNull
     public SQLFragment getFromSQL(String alias)
     {
         SQLFragment sql = new SQLFragment("(SELECT X.* FROM ");
@@ -57,6 +58,7 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
         sql.append(getContainerFilter().getSQLFragment(getSchema(), _containerSQL, getContainer()));
         sql.append(") ");
         sql.append(alias);
+
         return sql;
     }
 }
