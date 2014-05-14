@@ -136,15 +136,14 @@ public class ChromatogramChartMakerFactory
         int seriesIndex = 0;
         for(TransChromInfoPlusTransition chromInfoPlusTransition: tciList)
         {
-            addTransitionAsSeries(dataset, chromatogram, chromInfoPlusTransition.getTransChromInfo().getChromatogramIndex(),
+            double height = addTransitionAsSeries(dataset, chromatogram, chromInfoPlusTransition.getTransChromInfo().getChromatogramIndex(),
                                   (syncMz || pciMinStartTime == null ? minPrecAllReplRt : pciMinStartTime.floatValue()),
                                   (syncMz || pciMaxStartTime == null ? maxPrecAllReplRt : pciMaxStartTime.floatValue()),
                                   LabelFactory.transitionLabel(chromInfoPlusTransition.getTransition()));
 
-            TransitionChromInfo tChromInfo = chromInfoPlusTransition.getTransChromInfo();
-            if(tChromInfo.getHeight() != null && tChromInfo.getHeight() > bestTransitionHeight)
+            if(height > bestTransitionHeight)
             {
-                bestTransitionHeight = tChromInfo.getHeight();
+                bestTransitionHeight = height;
                 bestTransitionSeriesIndex = seriesIndex;
             }
             seriesIndex++;
@@ -253,7 +252,7 @@ public class ChromatogramChartMakerFactory
         }
     }
 
-    private static void addTransitionAsSeries(XYSeriesCollection dataset, Chromatogram chromatogram, int seriesIndex,
+    private static double addTransitionAsSeries(XYSeriesCollection dataset, Chromatogram chromatogram, int seriesIndex,
                                               float minTime, float maxTime, String label)
     {
         float[] times = chromatogram.getTimes();
@@ -267,6 +266,7 @@ public class ChromatogramChartMakerFactory
         minTime = minTime - displayWidth;
         maxTime = maxTime + displayWidth;
 
+        double maxHeight = 0;
         for (int i = 0; i < times.length; i++)
         {
             if(times[i] < minTime)
@@ -274,8 +274,11 @@ public class ChromatogramChartMakerFactory
             if(times[i] > maxTime)
                 break;
             series.add(times[i], intensities[i] / 1000);
+
+            maxHeight = Math.max(maxHeight, intensities[i]);
         }
         dataset.addSeries(series);
+        return maxHeight;
     }
 
     public static JFreeChart createPeptideChromChart(PeptideChromInfo pepChromInfo, boolean syncIntensity, boolean syncMz)
