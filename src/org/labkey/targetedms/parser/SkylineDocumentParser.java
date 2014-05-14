@@ -976,15 +976,9 @@ public class SkylineDocumentParser implements AutoCloseable
 
     public boolean hasNextPeptide() throws XMLStreamException
     {
-        int evtType = _reader.getEventType();
-        if(XmlUtil.isStartElement(_reader, evtType, PEPTIDE))
+        while(true)
         {
-            return true;
-        }
-
-        while (_reader.hasNext())
-        {
-            evtType = _reader.next();
+            int evtType = _reader.getEventType();
             if(XmlUtil.isStartElement(_reader, evtType, PEPTIDE))
             {
                 return true;
@@ -993,6 +987,10 @@ public class SkylineDocumentParser implements AutoCloseable
             {
                 return false;
             }
+            if(_reader.hasNext())
+                _reader.next();
+            else
+                break;
         }
         return false;
     }
