@@ -175,17 +175,17 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import static org.labkey.targetedms.TargetedMSModule.EXPERIMENT_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.FolderType;
-import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD;
+import static org.labkey.targetedms.TargetedMSModule.LIBRARY_FOLDER_WEB_PARTS;
+import static org.labkey.targetedms.TargetedMSModule.PROTEIN_LIBRARY_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
-import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_PEPTIDE_GROUP_VIEW;
-import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_PEPTIDE_VIEW;
-import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_PRECURSOR_VIEW;
-import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME;
 
 public class TargetedMSController extends SpringActionController
 {
@@ -224,7 +224,6 @@ public class TargetedMSController extends SpringActionController
     {
         public static final String DATA_PINELINE_TAB = "Data Pipeline";
 
-        public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
         public static final String DATA_PIPELINE_WEBPART = "Data Pipeline";
 
         @Override
@@ -264,15 +263,9 @@ public class TargetedMSController extends SpringActionController
                 moduleProperty.saveValue(getUser(), c, FolderType.Experiment.toString());
 
                 // setup the EXPERIMENTAL_DATA default webparts
-                ArrayList<Portal.WebPart> tab1 = new ArrayList<>();
-                tab1.add(Portal.getPortalPart(MASS_SPEC_SEARCH_WEBPART).createWebPart());
-                tab1.add(Portal.getPortalPart(TARGETED_MS_RUNS_WEBPART_NAME).createWebPart());
-                Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, tab1);
+                addDashboardTab(c, EXPERIMENT_FOLDER_WEB_PARTS);
                 // Add a second portal page (tab) and webparts
-                ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
-                tab2.add(Portal.getPortalPart(DATA_PIPELINE_WEBPART).createWebPart());
-                Portal.saveParts(c, DATA_PINELINE_TAB, tab2);
-                Portal.addProperty(c, DATA_PINELINE_TAB, Portal.PROP_CUSTOMTAB);
+                addDataPipelineTab(c);
 
                 return true;
             }
@@ -290,24 +283,17 @@ public class TargetedMSController extends SpringActionController
 
 
                 // Add the appropriate web parts to the page
-                ArrayList<Portal.WebPart> tab1 = new ArrayList<>();
-                tab1.add(Portal.getPortalPart(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD).createWebPart());
-                tab1.add(Portal.getPortalPart(MASS_SPEC_SEARCH_WEBPART).createWebPart());
-
                 if(folderSetupForm.isPrecursorNormalized())
                 {
-                    tab1.add(Portal.getPortalPart(TARGETED_MS_PEPTIDE_GROUP_VIEW).createWebPart());
+                    addDashboardTab(c, PROTEIN_LIBRARY_FOLDER_WEB_PARTS);
+                }
+                else
+                {
+                    addDashboardTab(c, LIBRARY_FOLDER_WEB_PARTS);
                 }
 
-                tab1.add(Portal.getPortalPart(TARGETED_MS_PEPTIDE_VIEW).createWebPart());
-                tab1.add(Portal.getPortalPart(TARGETED_MS_PRECURSOR_VIEW).createWebPart());
-                tab1.add(Portal.getPortalPart(TARGETED_MS_RUNS_WEBPART_NAME).createWebPart());
-                Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, tab1);
                 // Add a second portal page (tab) and webparts
-                ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
-                tab2.add(Portal.getPortalPart(DATA_PIPELINE_WEBPART).createWebPart());
-                Portal.saveParts(c, DATA_PINELINE_TAB, tab2);
-                Portal.addProperty(c, DATA_PINELINE_TAB, Portal.PROP_CUSTOMTAB);
+                addDataPipelineTab(c);
 
                 return true;
             }
@@ -315,6 +301,54 @@ public class TargetedMSController extends SpringActionController
             {
                 return true;  // no option selected - do nothing
             }
+        }
+
+        private void addDashboardTab(Container c, String[] includeWebParts)
+        {
+
+            // If this folder was created from a template folder, keep any webparts that were copied
+            // during the folder creating process.
+            List<Portal.WebPart> oldWebParts = new ArrayList<>(Portal.getParts(c, DefaultFolderType.DEFAULT_DASHBOARD));
+            Collections.sort(oldWebParts,  new Comparator<Portal.WebPart>()
+            {
+                public int compare(Portal.WebPart wp1, Portal.WebPart wp2)
+                {
+                    return wp1.getIndex() - wp2.getIndex();
+                }
+            });
+
+            ArrayList<Portal.WebPart> newWebParts = new ArrayList<>();
+            Set<String> added = new HashSet<>();
+            int i = 0;
+            for(Portal.WebPart webPart: oldWebParts)
+            {
+                // Issue 17966: Setup webpart is added by default in the folder creation process. Do not include it.
+                if(TargetedMSModule.TARGETED_MS_SETUP.equalsIgnoreCase(webPart.getName()))
+                    continue;
+                webPart.setIndex(i++);
+                newWebParts.add(webPart);
+                added.add(webPart.getName());
+            }
+
+
+            for(String name: includeWebParts)
+            {
+                if(added.contains(name))
+                    continue;
+                Portal.WebPart webPart = Portal.getPortalPart(name).createWebPart();
+                webPart.setIndex(i++);
+                newWebParts.add(webPart);
+            }
+
+            Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, newWebParts);
+        }
+
+        private void addDataPipelineTab(Container c)
+        {
+            ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
+            tab2.add(Portal.getPortalPart(DATA_PIPELINE_WEBPART).createWebPart());
+            Portal.saveParts(c, DATA_PINELINE_TAB, tab2);
+            Portal.addProperty(c, DATA_PINELINE_TAB, Portal.PROP_CUSTOMTAB);
         }
 
         @Override
@@ -381,7 +415,11 @@ public class TargetedMSController extends SpringActionController
         {
             TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext());
             VBox vbox = new VBox();
-            vbox.addView(new JspView("/org/labkey/targetedms/view/conflictSummary.jsp"));
+            TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
+            if(folderType == TargetedMSModule.FolderType.Library || folderType == TargetedMSModule.FolderType.LibraryProtein)
+            {
+                vbox.addView(new JspView("/org/labkey/targetedms/view/conflictSummary.jsp"));
+            }
             vbox.addView(runListView);
             return vbox;
         }

@@ -119,11 +119,14 @@ public class ChromatogramChartMakerFactory
 
         for(int chromatogramIndex = 0; chromatogramIndex < chromatogram.getTransitionsCount(); chromatogramIndex++)
         {
-            TransitionChromInfo tChromInfo = TransitionManager.getTransitionChromInfo(pChromInfo.getId(), chromatogramIndex);
-            if(tChromInfo == null)
+            List<TransitionChromInfo> tChromInfoList = TransitionManager.getTransitionChromInfoList(pChromInfo.getId(), chromatogramIndex);
+            if(tChromInfoList == null || tChromInfoList.size() == 0)
                 continue;
-            Transition transition = TransitionManager.get(tChromInfo.getTransitionId());
-            tciList.add(new TransChromInfoPlusTransition(tChromInfo, transition));
+            for(TransitionChromInfo tChromInfo: tChromInfoList)
+            {
+                Transition transition = TransitionManager.get(tChromInfo.getTransitionId());
+                tciList.add(new TransChromInfoPlusTransition(tChromInfo, transition));
+            }
         }
 
         Collections.sort(tciList, new TransitionComparator());

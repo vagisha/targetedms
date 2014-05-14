@@ -76,6 +76,24 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String TARGETED_MS_PEPTIDE_GROUP_VIEW = "Targeted MS Protein View";
     public static final String TARGETED_MS_RUNS_WEBPART_NAME = "Targeted MS Runs";
     public static final String TARGETED_MS_PROTEIN_SEARCH = "Targeted MS Protein Search";
+    public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
+
+    public static final String[] EXPERIMENT_FOLDER_WEB_PARTS = new String[] {MASS_SPEC_SEARCH_WEBPART,
+                                                                           TARGETED_MS_RUNS_WEBPART_NAME};
+
+    public static final String[] LIBRARY_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD,
+                                                                          MASS_SPEC_SEARCH_WEBPART,
+                                                                          TARGETED_MS_PEPTIDE_VIEW,
+                                                                          TARGETED_MS_PRECURSOR_VIEW,
+                                                                          TARGETED_MS_RUNS_WEBPART_NAME};
+
+    public static final String[] PROTEIN_LIBRARY_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD,
+                                                                          MASS_SPEC_SEARCH_WEBPART,
+                                                                          TARGETED_MS_PEPTIDE_GROUP_VIEW,
+                                                                          TARGETED_MS_PEPTIDE_VIEW,
+                                                                          TARGETED_MS_PRECURSOR_VIEW,
+                                                                          TARGETED_MS_RUNS_WEBPART_NAME};
+
 
     public static final String TARGETED_MS_FOLDER_TYPE = "TargetedMS Folder Type";
     public static ModuleProperty FOLDER_TYPE_PROPERTY;

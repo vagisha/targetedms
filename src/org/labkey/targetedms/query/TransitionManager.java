@@ -28,6 +28,7 @@ import org.labkey.targetedms.parser.TransitionChromInfo;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -68,19 +69,15 @@ public class TransitionManager
     }
 
     // Returns null if an entry for the given precursorChromInfoId and chromatogramIndex is not found.
-    public static TransitionChromInfo getTransitionChromInfo(int precursorChromInfoId, int chromatogramIndex)
+    public static List<TransitionChromInfo> getTransitionChromInfoList(int precursorChromInfoId, int chromatogramIndex)
     {
-        String sql = "SELECT tci.* FROM "+
-                     TargetedMSManager.getTableInfoTransitionChromInfo()+" AS tci, "+
-                     TargetedMSManager.getTableInfoPrecursorChromInfo()+" AS pci "+
-                     "WHERE tci.PrecursorChromInfoId=pci.Id "+
-                     "AND pci.Id=? "+
-                     "AND tci.ChromatogramIndex=?";
-        SQLFragment sf = new SQLFragment(sql);
-        sf.add(precursorChromInfoId);
-        sf.add(chromatogramIndex);
-
-        return new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(TransitionChromInfo.class);
+        SimpleFilter filter = new SimpleFilter();
+        filter.addCondition(FieldKey.fromParts("PrecursorChromInfoId"),precursorChromInfoId);
+        filter.addCondition(FieldKey.fromParts("ChromatogramIndex"), chromatogramIndex);
+        return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(),
+                                 filter,
+                                 null)
+                                .getArrayList(TransitionChromInfo.class);
     }
 
     public static TransitionChromInfo getTransitionChromInfoForTransition(int transitionId, int precursorChromInfoId)
