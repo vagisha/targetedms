@@ -17,32 +17,15 @@
 package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager.ContainerListener;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.security.User;
 
-import java.beans.PropertyChangeEvent;
-
-public class TargetedMSContainerListener implements ContainerListener
+public class TargetedMSContainerListener extends ContainerManager.AbstractContainerListener
 {
-    @Override
-    public void containerCreated(Container c, User user)
-    {
-    }
-
     @Override
     public void containerDeleted(Container c, User user)
     {
         TargetedMSManager.markAsDeleted(c, user);
         TargetedMSManager.purgeDeletedRuns();
-    }
-
-    @Override
-    public void propertyChange(PropertyChangeEvent evt)
-    {
-    }
-
-    @Override
-    public void containerMoved(Container c, Container oldParent, User user)
-    {
     }
 }

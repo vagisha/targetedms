@@ -744,7 +744,7 @@ public class TargetedMSManager
 
     public static void markAsDeleted(Container c, User user)
     {
-        List<Integer> runIds = new SqlSelector(getSchema(), "SELECT Run FROM " + getTableInfoRuns() + " WHERE Container = ?", c).getArrayList(Integer.class);
+        List<Integer> runIds = new SqlSelector(getSchema(), "SELECT Id FROM " + getTableInfoRuns() + " WHERE Container = ?", c).getArrayList(Integer.class);
         markAsDeleted(runIds, c, user);
     }
 

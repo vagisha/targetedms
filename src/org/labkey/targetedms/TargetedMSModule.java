@@ -19,6 +19,7 @@ package org.labkey.targetedms;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.EnumConverter;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
@@ -253,6 +254,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         addController("targetedms", TargetedMSController.class);
         TargetedMSSchema.register(this);
+        ContainerManager.addContainerListener(new TargetedMSContainerListener());
         EnumConverter.registerEnum(TargetedMSRun.RepresentativeDataState.class);
         EnumConverter.registerEnum(RepresentativeDataState.class);
     }
