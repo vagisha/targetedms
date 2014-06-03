@@ -40,6 +40,9 @@ import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.writer.ZipUtil;
+import org.labkey.targetedms.SkylinePort.Irt.IRegressionFunction;
+import org.labkey.targetedms.SkylinePort.Irt.IrtRegressionCalculator;
+import org.labkey.targetedms.SkylinePort.Irt.RetentionTimeProviderImpl;
 import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
@@ -55,6 +58,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -572,7 +576,7 @@ public class SkylineDocImporter
                 SimpleFilter iRTFilter = new SimpleFilter(FieldKey.fromParts("iRTScaleId"), iRTScaleId);
                 ArrayList<IrtPeptide> existingScale = new TableSelector(TargetedMSManager.getTableInfoiRTPeptide(), iRTFilter, null).getArrayList(IrtPeptide.class);
 
-                List<IrtPeptide> updatedPeptides = reconcileIrtImportWithExisting(existingScale, importScale);
+                List<IrtPeptide> updatedPeptides = normalizeIrtImportAndReweighValues(existingScale, importScale);
 
                 // Write the new weighted average values
                 for (IrtPeptide peptide : updatedPeptides)
@@ -593,6 +597,8 @@ public class SkylineDocImporter
             // insert any new iRT Peptides into the database
             for (IrtPeptide peptide : importScale)
             {
+                if (!newScale)
+                    peptide.setiRTStandard(false);
                 peptide.setiRTScaleId(iRTScaleId);
                 Table.insert(_user, TargetedMSManager.getTableInfoiRTPeptide(), peptide);
             }
@@ -606,41 +612,54 @@ public class SkylineDocImporter
      * @param existingScale
      * @param importScale
      * @return The list of existing peptides which have recalculated weighted average values.
-     * @throws DataFormatException
+     * @throws PipelineJobException
      */
-    private List<IrtPeptide> reconcileIrtImportWithExisting(List<IrtPeptide> existingScale, List<IrtPeptide> importScale) throws PipelineJobException
+    private ArrayList<IrtPeptide> normalizeIrtImportAndReweighValues(ArrayList<IrtPeptide> existingScale, List<IrtPeptide> importScale) throws PipelineJobException
     {
         ArrayList<IrtPeptide> existingStandards = new ArrayList<>();
-        CaseInsensitiveHashMap<IrtPeptide> existingTargets = new CaseInsensitiveHashMap<>();
-        ArrayList<IrtPeptide> importStandards = new ArrayList<>();
-        CaseInsensitiveHashMap<IrtPeptide> importTargets = new CaseInsensitiveHashMap<>();
+        LinkedHashMap<String, IrtPeptide> existingLibraryMap = new LinkedHashMap<>(existingScale.size());
 
-        separateIrtScale(existingScale, existingStandards, existingTargets);
-        separateIrtScale(importScale, importStandards, importTargets);
+        separateIrtScale(existingScale, existingStandards, existingLibraryMap);
 
-        if (!compareIrtStandards(existingStandards, importStandards))
-            throw new PipelineJobException(makeIrtStandardsErrorMsg(existingScale.get(0).getiRTScaleId(), existingStandards, importStandards));
+        IRegressionFunction regressionLine = IrtRegressionCalculator.calcRegressionLine(new RetentionTimeProviderImpl(importScale), existingStandards, new ArrayList<>(existingLibraryMap.values()), _log);
+
+        if (regressionLine == null)
+            throw new PipelineJobException("TODO: FIX THIS ERROR MESSAGE. Report unable to calculate sufficient regression to standards/shared peptides");//makeIrtStandardsErrorMsg(existingScale.get(0).getiRTScaleId(), existingStandards, importStandards));   //TODO: fix error message
+
+        applyIrtRegressionLine(regressionLine, importScale);
+
 
         // For each of the imported peptides, determine if it is new to be inserted, or already exists to have a new weighted average value calculated
-        List<IrtPeptide> recalcedPeptides = new ArrayList<>();
-        Iterator<Map.Entry<String, IrtPeptide>> iter = importTargets.entrySet().iterator();
+        ArrayList<IrtPeptide> recalcedPeptides = new ArrayList<>();
+        Iterator<IrtPeptide> iter = importScale.iterator();
         while (iter.hasNext())
         {
-            Map.Entry<String, IrtPeptide> imported = iter.next();
-            IrtPeptide entryToUpdate = existingTargets.get(imported.getKey());
+            IrtPeptide imported = iter.next();
+            IrtPeptide entryToUpdate = existingLibraryMap.get(imported.getModifiedSequence());
             if (entryToUpdate != null)
             {
-                entryToUpdate.reweighValue(imported.getValue().getiRTValue());
-                recalcedPeptides.add(entryToUpdate);
+                if (!entryToUpdate.isiRTStandard())
+                {
+                    entryToUpdate.reweighValue(imported.getiRTValue());
+                    recalcedPeptides.add(entryToUpdate);
+                }
                 iter.remove(); // Take it out of the import list
             }
         }
 
-        // Replace the full import scale with the list that's now just the new peptides to be inserted.
-        importScale.clear();
-        importScale.addAll(importTargets.values());
+//        // Replace the full import scale with the list that's now just the new peptides to be inserted.
+//        importScale.clear();
+//        importScale.addAll(importScale.values());
 
         return recalcedPeptides;
+    }
+
+    private void applyIrtRegressionLine(IRegressionFunction regressionLine, List<IrtPeptide> importScale)
+    {
+        for (IrtPeptide importPeptide : importScale)
+        {
+            importPeptide.setiRTValue(regressionLine.GetY(importPeptide.getiRTValue()));
+        }
     }
 
     private String makeIrtStandardsErrorMsg(int scaleId, List<IrtPeptide> existingStandards, List<IrtPeptide> importStandards)
@@ -694,18 +713,18 @@ public class SkylineDocImporter
     }
 
     /**
-     * Separate an iRT scale into a list of standard peptides and a map of the other sequences
+     * Separate list of standards from iRT scale, and populate map of full libary (including standards)
      * @param scale
      * @param standards
-     * @param targets
+     * @param library
      */
-    private void separateIrtScale(List<IrtPeptide> scale, List<IrtPeptide> standards, CaseInsensitiveHashMap<IrtPeptide> targets)
+    private void separateIrtScale(List<IrtPeptide> scale, List<IrtPeptide> standards, LinkedHashMap<String, IrtPeptide> library)
     {
         for (IrtPeptide peptide : scale)
         {
             if (peptide.isiRTStandard())
                 standards.add(peptide);
-            else targets.put(peptide.getModifiedSequence(), peptide);
+            else library.put(peptide.getModifiedSequence(), peptide);
         }
     }
 

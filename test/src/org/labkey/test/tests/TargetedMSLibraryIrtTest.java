@@ -87,11 +87,14 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         assertEquals("Import count is incorrect for peptide " + OMITTED_PEPTIDE, getImportCount(OMITTED_PEPTIDE), 1);
         assertEquals("Import count is incorrect for peptide " + NEW_PEPTIDE, getImportCount(NEW_PEPTIDE), 1);
 
-        // Import another copy which doesn't match the same set of standards as the first import. For library folders, this is an error condition
-        // and aborts the import.
-        importData(SKY_FILE_BAD_STANDARDS, 3);
-        assertTextPresent("ERROR");
-        checkExpectedErrors(1);
+
+        // TODO: Disabling this test case as it's not longer valid now that we're allowing incomplete standards and applying normalization calculations
+        // /based on shared peptides. Need additional test cases to cover this.
+//        // Import another copy which doesn't match the same set of standards as the first import. For library folders, this is an error condition
+//        // and aborts the import.
+//        importData(SKY_FILE_BAD_STANDARDS, 3);
+//        assertTextPresent("ERROR");
+//        checkExpectedErrors(1);
 
         downloadLibraryExport();
     }
