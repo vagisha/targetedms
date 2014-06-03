@@ -713,7 +713,7 @@ public class SkylineDocImporter
     }
 
     /**
-     * Separate list of standards from iRT scale, and populate map of full libary (including standards)
+     * Separate list of standards from iRT scale, and populate map of library (excluding standards)
      * @param scale
      * @param standards
      * @param library
