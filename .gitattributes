@@ -107,7 +107,6 @@ src/org/labkey/targetedms/SkylinePort/Irt/RetentionTimeRegression.java -text
 src/org/labkey/targetedms/SkylinePort/Irt/RetentionTimeScoreCache.java -text
 src/org/labkey/targetedms/SkylinePort/Irt/RetentionTimeStatistics.java -text
 src/org/labkey/targetedms/SkylinePort/Irt/Statistics.java -text
-src/org/labkey/targetedms/TargetedMSContainerListener.java -text
 src/org/labkey/targetedms/TargetedMSController.java -text
 src/org/labkey/targetedms/TargetedMSDataHandler.java -text
 src/org/labkey/targetedms/TargetedMSExperimentRunType.java -text
