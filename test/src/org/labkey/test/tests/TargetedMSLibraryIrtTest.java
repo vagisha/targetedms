@@ -21,6 +21,7 @@ import org.labkey.remoteapi.query.Filter;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.util.PipelineStatusTable;
 import org.labkey.test.util.UIContainerHelper;
 
 import java.io.File;
@@ -42,6 +43,12 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
     protected static final int PEPTIDE_COUNT = 716;
     private static final double DELTA = 0.00001;
 
+    // Same iRT standards, but one value has been badly skewed
+    protected static final String SKY_FILE_ONE_BAD_STANDARD = "iRT Human+Standard Calibrate_ONE_BAD_STANDARD.zip";
+
+    // No iRT standards, and all retention times multiplied by 2
+    protected static final String SKY_FILE_DOUBLE_TIMES_NO_STANDARDS = "iRT Human_ DOUBLE_TIMES_NO_STANDARDS.zip";
+
     // One of the sequences for a standard peptide has been changed in DIEFERENT_STANDARDS
     protected static final String SKY_FILE_BAD_STANDARDS = "iRT Human+Standard Calibrate_DIFFERENT_STANDARDS.zip";
 
@@ -52,11 +59,19 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
     // This peptide has been hand edited in the "FOR_UPDATE" test dataset.
     protected static final String UPDATE_PEPTIDE = "ASTEGVAIQGQQGTR";
     private static final double ORIGINAL_VALUE = -6.9907960408018255;
-    private static final double REWEIGHED_VALUE = 0.0;
+    private static final double REWEIGHED_VALUE = -3.49539802;
 
 //  The changed sequence in "FOR_UPDATE"
     private static final String OMITTED_PEPTIDE = "AQYEDIANR";
     private static final String NEW_PEPTIDE = "ZZZZZZ";
+
+
+    private static final String IGNORE_ONE_STANDARD_MSG = "Calculated iRT regression line by ignoring import value for standard: ADVTPADFSEWSK";
+    private static final String CALCULATED_FROM_SHARED_MSG = "Successfully calculated iRT regression line from 705 shared peptides";
+    private static final String CALCULATED_FROM_FULL_STANDARD_LIST = "Calculated iRT regression line from full standard list";
+    private static final String COULDNT_CALCULATE_CORRELATION_MSG = "Unable to find sufficient correlation in standard or shared library peptides";
+
+    private int goodImport = 0;
 
     public TargetedMSLibraryIrtTest()
     {
@@ -75,26 +90,38 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         setupFolder(FolderType.LibraryProtein);
         importData(SKY_FILE);
 
-        // Quick sanity check
+        // 1. Quick sanity check
         assertEquals("Imported iRT Peptide count is incorrect.", getRowCount(), PEPTIDE_COUNT);
         assertEquals("Imported iRT value is incorrect for peptide " + UPDATE_PEPTIDE , getIrtValue(UPDATE_PEPTIDE), ORIGINAL_VALUE, DELTA);
+        goodImport++;
 
-        // Import another copy which has been modified with a different value for one of the peptides (sign flipped so average should be 0),
+        // 2. Correlation throwing out one standard.
+        importData(SKY_FILE_ONE_BAD_STANDARD, 2);
+        checkLogMessage(IGNORE_ONE_STANDARD_MSG);
+        goodImport++;
+
+        // 3. Correlation on shared peptides / scale values
+        importData(SKY_FILE_DOUBLE_TIMES_NO_STANDARDS, 3);
+        checkLogMessage(CALCULATED_FROM_SHARED_MSG);
+        assertEquals("Normalized, weighted value is incorrect for peptide  " + UPDATE_PEPTIDE , getIrtValue(UPDATE_PEPTIDE), ORIGINAL_VALUE, DELTA);
+        goodImport++;
+
+        // 4. Correlation on all standards / weighted average / new library peptide test. Import another copy which has been modified with a different value for one of the peptides (sign flipped so average should be 0),
         // and has a new peptide added to it.
-        importData(SKY_FILE_UPDATE_SCALE, 2);
+        importData(SKY_FILE_UPDATE_SCALE, 4);
+        checkLogMessage(CALCULATED_FROM_FULL_STANDARD_LIST);
         assertEquals("Reweighed value is incorrect for peptide " + UPDATE_PEPTIDE, getIrtValue(UPDATE_PEPTIDE), REWEIGHED_VALUE, DELTA);
-        assertEquals("Import count is incorrect for peptide " + UPDATE_PEPTIDE, getImportCount(UPDATE_PEPTIDE), 2);
-        assertEquals("Import count is incorrect for peptide " + OMITTED_PEPTIDE, getImportCount(OMITTED_PEPTIDE), 1);
+        assertEquals("Import count is incorrect for peptide " + UPDATE_PEPTIDE, getImportCount(UPDATE_PEPTIDE), 4);
+        assertEquals("Import count is incorrect for peptide " + OMITTED_PEPTIDE, getImportCount(OMITTED_PEPTIDE), 3);
         assertEquals("Import count is incorrect for peptide " + NEW_PEPTIDE, getImportCount(NEW_PEPTIDE), 1);
+        goodImport++;
 
-
-        // TODO: Disabling this test case as it's not longer valid now that we're allowing incomplete standards and applying normalization calculations
-        // /based on shared peptides. Need additional test cases to cover this.
-//        // Import another copy which doesn't match the same set of standards as the first import. For library folders, this is an error condition
-//        // and aborts the import.
-//        importData(SKY_FILE_BAD_STANDARDS, 3);
-//        assertTextPresent("ERROR");
-//        checkExpectedErrors(1);
+        // 5. Shared peptide failed correlation test. Import another copy which doesn't match the same set of standards as the first import. Because of the update done in test 2, this will
+        // attempt to calculate a correlation from shared peptides, and fail to find one.
+        importData(SKY_FILE_BAD_STANDARDS, 5);
+        assertTextPresent("ERROR");
+        checkLogMessage(COULDNT_CALCULATE_CORRELATION_MSG);
+        checkExpectedErrors(1);
 
         downloadLibraryExport();
     }
@@ -105,7 +132,7 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         // We're not attempting to verify its contents.
         goToProjectHome();
         final File exportFile = clickAndWaitForDownload(Locator.linkWithText("Download"), 1)[0];
-        assertEquals(getProjectName() + "_rev2.clib", exportFile.getName());
+        assertEquals(getProjectName() + "_rev" + goodImport + ".clib", exportFile.getName());
         Checker fileSize = new Checker()
         {
             @Override
@@ -141,5 +168,11 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
     protected int getImportCount(String peptide)
     {
         return (int) getIrtPeptide(peptide).get("ImportCount");
+    }
+
+    private void checkLogMessage(String message)
+    {
+        new PipelineStatusTable(this, true, false).clickStatusLink(0);
+        assertTextPresent(message);
     }
 }

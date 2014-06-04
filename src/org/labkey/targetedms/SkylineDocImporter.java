@@ -624,7 +624,7 @@ public class SkylineDocImporter
         IRegressionFunction regressionLine = IrtRegressionCalculator.calcRegressionLine(new RetentionTimeProviderImpl(importScale), existingStandards, new ArrayList<>(existingLibraryMap.values()), _log);
 
         if (regressionLine == null)
-            throw new PipelineJobException("TODO: FIX THIS ERROR MESSAGE. Report unable to calculate sufficient regression to standards/shared peptides");//makeIrtStandardsErrorMsg(existingScale.get(0).getiRTScaleId(), existingStandards, importStandards));   //TODO: fix error message
+            throw new PipelineJobException(makeIrtStandardsErrorMsg(existingScale.get(0).getiRTScaleId(), existingStandards));//, importScale));   //TODO: fix error message
 
         applyIrtRegressionLine(regressionLine, importScale);
 
@@ -662,23 +662,23 @@ public class SkylineDocImporter
         }
     }
 
-    private String makeIrtStandardsErrorMsg(int scaleId, List<IrtPeptide> existingStandards, List<IrtPeptide> importStandards)
+    private String makeIrtStandardsErrorMsg(int scaleId, List<IrtPeptide> existingStandards)//, List<IrtPeptide> importStandards)
     {
         StringBuilder sb = new StringBuilder();
-        sb.append("Imported iRT peptide standards do not match existing standards (iRT Scale Id = " + scaleId + ") for this folder: " + _container.getPath() +"\n");
-        sb.append("Existing standards:\n");
+        sb.append("Unable to find sufficient correlation in standard or shared library peptides (iRT Scale Id = " + scaleId + ") for this folder: " + _container.getPath() +"\n");
+        sb.append("Standards:\n");
         int i = 0;
         for (IrtPeptide pep : existingStandards)
         {
             sb.append(++i + ")  " + pep.getModifiedSequence() + "\t" + pep.getiRTValue() + "\n");
         }
-        i = 0;
-        sb.append("Imported standards:\n");
-        for (IrtPeptide pep : importStandards)
-        {
-            sb.append(++i + ")  " + pep.getModifiedSequence() + "\t" + pep.getiRTValue());
-            sb.append("\n");
-        }
+//        i = 0;
+//        sb.append("Imported standards:\n");
+//        for (IrtPeptide pep : importStandards)
+//        {
+//            sb.append(++i + ")  " + pep.getModifiedSequence() + "\t" + pep.getiRTValue());
+//            sb.append("\n");
+//        }
         return sb.toString();
     }
 
