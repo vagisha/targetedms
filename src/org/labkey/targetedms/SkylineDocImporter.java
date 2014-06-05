@@ -54,7 +54,6 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -647,10 +646,6 @@ public class SkylineDocImporter
             }
         }
 
-//        // Replace the full import scale with the list that's now just the new peptides to be inserted.
-//        importScale.clear();
-//        importScale.addAll(importScale.values());
-
         return recalcedPeptides;
     }
 
@@ -689,36 +684,6 @@ public class SkylineDocImporter
 
         }
         return sb.toString();
-    }
-
-    /**
-     * Ensure the lists of standards match identically on size, sequences and value
-     * @param existingStandards
-     * @param importStandards
-     * @return true if standards match, false if they do not
-     */
-    private boolean compareIrtStandards(List<IrtPeptide> existingStandards, List<IrtPeptide> importStandards)
-    {
-        boolean result = true;
-
-        if (existingStandards.size() != importStandards.size())
-            result = false;
-        else
-        {
-            Collections.sort(existingStandards);
-            Collections.sort(importStandards);
-            Iterator<IrtPeptide> existingIter = existingStandards.iterator();
-            Iterator<IrtPeptide> importIter = importStandards.iterator();
-
-            while (existingIter.hasNext())
-            {
-                IrtPeptide existing = existingIter.next();
-                IrtPeptide imported = importIter.next();
-                if (existing.getiRTValue() != imported.getiRTValue() || !existing.getModifiedSequence().equalsIgnoreCase(imported.getModifiedSequence()))
-                    result = false;
-            }
-        }
-        return result;
     }
 
     /**
