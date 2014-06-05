@@ -624,7 +624,7 @@ public class SkylineDocImporter
         IRegressionFunction regressionLine = IrtRegressionCalculator.calcRegressionLine(new RetentionTimeProviderImpl(importScale), existingStandards, new ArrayList<>(existingLibraryMap.values()), _log);
 
         if (regressionLine == null)
-            throw new PipelineJobException(makeIrtStandardsErrorMsg(existingScale.get(0).getiRTScaleId(), existingStandards));//, importScale));   //TODO: fix error message
+            throw new PipelineJobException(makeIrtStandardsErrorMsg(existingScale.get(0).getiRTScaleId(), existingStandards, importScale));
 
         applyIrtRegressionLine(regressionLine, importScale);
 
@@ -662,23 +662,32 @@ public class SkylineDocImporter
         }
     }
 
-    private String makeIrtStandardsErrorMsg(int scaleId, List<IrtPeptide> existingStandards)//, List<IrtPeptide> importStandards)
+    private String makeIrtStandardsErrorMsg(int scaleId, List<IrtPeptide> existingStandards, List<IrtPeptide> importScale)
     {
         StringBuilder sb = new StringBuilder();
+        Map<String, Double> importStandards = new LinkedHashMap<>();
+        RetentionTimeProviderImpl rtp = new RetentionTimeProviderImpl(importScale);
         sb.append("Unable to find sufficient correlation in standard or shared library peptides (iRT Scale Id = " + scaleId + ") for this folder: " + _container.getPath() +"\n");
         sb.append("Standards:\n");
         int i = 0;
         for (IrtPeptide pep : existingStandards)
         {
             sb.append(++i + ")  " + pep.getModifiedSequence() + "\t" + pep.getiRTValue() + "\n");
+            importStandards.put(pep.getModifiedSequence(), rtp.GetRetentionTime(pep.getModifiedSequence()));
         }
-//        i = 0;
-//        sb.append("Imported standards:\n");
-//        for (IrtPeptide pep : importStandards)
-//        {
-//            sb.append(++i + ")  " + pep.getModifiedSequence() + "\t" + pep.getiRTValue());
-//            sb.append("\n");
-//        }
+        i = 0;
+        sb.append("Standards in import:\n"); // The library standards the import had, not what's flagged as standard
+        for (Map.Entry<String, Double> pep : importStandards.entrySet())
+        {
+            if (pep.getValue() != null)
+            {
+                sb.append(++i + ")  " + pep.getKey() + "\t" + pep.getValue());
+                sb.append("\n");
+            }
+            if (i == 0) // Import didn't contain any of the standards for the library
+                sb.append("NONE\n");
+
+        }
         return sb.toString();
     }
 
