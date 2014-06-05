@@ -116,7 +116,7 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         assertEquals("Import count is incorrect for peptide " + NEW_PEPTIDE, getImportCount(NEW_PEPTIDE), 1);
         goodImport++;
 
-        // 5. Shared peptide failed correlation test. Import another copy which doesn't match the same set of standards as the first import. Because of the update done in test 2, this will
+        // 5. Shared peptide failed correlation test. Import another copy which doesn't match the same set of standards as the first import. Because of the update done in test 4, this will
         // attempt to calculate a correlation from shared peptides, and fail to find one.
         importData(SKY_FILE_BAD_STANDARDS, 5);
         assertTextPresent("ERROR");
