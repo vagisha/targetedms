@@ -56,6 +56,8 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
     // Another one of the sequences has been changed altogether to verify import counts and new inserts.
     private static final String SKY_FILE_UPDATE_SCALE = "iRT Human+Standard Calibrate_FOR_UPDATE.zip";
 
+    private static final String STANDARD_PEPTIDE = "TPVITGAPYEYR";
+
     // This peptide has been hand edited in the "FOR_UPDATE" test dataset.
     protected static final String UPDATE_PEPTIDE = "ASTEGVAIQGQQGTR";
     private static final double ORIGINAL_VALUE = -6.9907960408018255;
@@ -99,6 +101,10 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         importData(SKY_FILE_ONE_BAD_STANDARD, 2);
         checkLogMessage(IGNORE_ONE_STANDARD_MSG);
         goodImport++;
+
+        // 2.a. Verify standard peptides were excluded from new insert/update
+        assertEquals("More than one row for standard peptide " + STANDARD_PEPTIDE, getRowsForPeptide(STANDARD_PEPTIDE).size(), 1);
+        assertEquals("Import count should only be 1 for standard peptide " + STANDARD_PEPTIDE, getImportCount(STANDARD_PEPTIDE), 1);
 
         // 3. Correlation on shared peptides / scale values
         importData(SKY_FILE_DOUBLE_TIMES_NO_STANDARDS, 3);
