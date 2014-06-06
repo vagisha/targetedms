@@ -18,6 +18,8 @@ package org.labkey.targetedms;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
+import org.labkey.api.module.Module;
+import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.module.MultiPortalFolderType;
 import org.labkey.api.util.HelpTopic;
 import org.labkey.api.view.ActionURL;
@@ -59,7 +61,21 @@ public class TargetedMSFolderType extends MultiPortalFolderType
     @Override
     public List<NavTree> getExtraSetupSteps(Container c)
     {
-        return Collections.singletonList(new NavTree(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER, new ActionURL(TargetedMSController.SetupAction.class, c)));
+        // If the TargetedMS folder type has already been set (e.g. if this folder was created from a template folder),
+        // we don't need any extra steps.
+        for(Module module: c.getActiveModules())
+        {
+            if (module instanceof TargetedMSModule)
+            {
+                ModuleProperty moduleProperty = module.getModuleProperties().get(TargetedMSModule.TARGETED_MS_FOLDER_TYPE);
+                if(TargetedMSModule.FolderType.valueOf(moduleProperty.getValueContainerSpecific(c)) == TargetedMSModule.FolderType.Undefined)
+                {
+                    return Collections.singletonList(new NavTree(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER, new ActionURL(TargetedMSController.SetupAction.class, c)));
+                }
+                break;
+            }
+        }
+        return Collections.emptyList();
     }
 
     @Override

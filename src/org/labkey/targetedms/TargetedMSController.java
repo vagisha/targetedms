@@ -175,11 +175,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static org.labkey.targetedms.TargetedMSModule.EXPERIMENT_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.FolderType;
@@ -305,42 +303,19 @@ public class TargetedMSController extends SpringActionController
 
         private void addDashboardTab(Container c, String[] includeWebParts)
         {
-
-            // If this folder was created from a template folder, keep any webparts that were copied
-            // during the folder creating process.
-            List<Portal.WebPart> oldWebParts = new ArrayList<>(Portal.getParts(c, DefaultFolderType.DEFAULT_DASHBOARD));
-            Collections.sort(oldWebParts,  new Comparator<Portal.WebPart>()
-            {
-                public int compare(Portal.WebPart wp1, Portal.WebPart wp2)
-                {
-                    return wp1.getIndex() - wp2.getIndex();
-                }
-            });
-
             ArrayList<Portal.WebPart> newWebParts = new ArrayList<>();
-            Set<String> added = new HashSet<>();
-            int i = 0;
-            for(Portal.WebPart webPart: oldWebParts)
-            {
-                // Issue 17966: Setup webpart is added by default in the folder creation process. Do not include it.
-                if(TargetedMSModule.TARGETED_MS_SETUP.equalsIgnoreCase(webPart.getName()))
-                    continue;
-                webPart.setIndex(i++);
-                newWebParts.add(webPart);
-                added.add(webPart.getName());
-            }
-
-
             for(String name: includeWebParts)
             {
-                if(added.contains(name))
-                    continue;
                 Portal.WebPart webPart = Portal.getPortalPart(name).createWebPart();
-                webPart.setIndex(i++);
                 newWebParts.add(webPart);
             }
 
+            // Save webparts to both pages, otherwise the TARGETED_MS_SETUP webpart gets copied over from
+            // portal.default to DefaultDashboard
             Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, newWebParts);
+            Portal.saveParts(c, Portal.DEFAULT_PORTAL_PAGE_ID, newWebParts); // this will remove the TARGETED_MS_SETUP
+                                                                             // webpart added to portal.default during
+                                                                             // the initial folder creation.
         }
 
         private void addDataPipelineTab(Container c)
