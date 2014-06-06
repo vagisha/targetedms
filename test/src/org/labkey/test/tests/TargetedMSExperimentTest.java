@@ -85,7 +85,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         // as the bestname. MRMer_renamed_protein is imported second, and an entry is created in prot.identifiers
         // for YAL038W_renamed. A search for YAL038W_renamed should return one protein result.
         setFormElement(Locator.name("identifier"), "YAL038W_renamed");
-        waitAndClickAndWait(Locator.navButton("Search"));
+        waitAndClickAndWait(Locator.lkButton("Search"));
         waitForText("Protein Search Results");
         //waitForText("1 - 7 of 7");
         assertTextPresentInThisOrder("Protein Search", "Matching Proteins (1)", "Targeted MS Peptides");
