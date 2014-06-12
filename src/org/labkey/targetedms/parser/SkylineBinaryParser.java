@@ -44,6 +44,7 @@ public class SkylineBinaryParser
     private Chromatogram[] _chromatograms;
     private ChromatogramTran[] _transitions;
 
+    public static final int FORMAT_VERSION_CACHE_7 = 7;
     public static final int FORMAT_VERSION_CACHE_6 = 6;
     public static final int FORMAT_VERSION_CACHE_5 = 5;
     public static final int FORMAT_VERSION_CACHE_4 = 4;
@@ -51,7 +52,7 @@ public class SkylineBinaryParser
     public static final int FORMAT_VERSION_CACHE_2 = 2;
 
     /** Newest supported version */
-    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_6;
+    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_7;
 
     private CachedFile[] _cacheFiles;
 
@@ -200,16 +201,16 @@ public class SkylineBinaryParser
         {
             switch (formatVersion)
             {
-                case FORMAT_VERSION_CACHE_6:
-                    return FileHeader.count.ordinal() * 4;
-                case FORMAT_VERSION_CACHE_5:
-                    return FileHeader.max_retention_time.ordinal() * 4;
+                case FORMAT_VERSION_CACHE_2:
+                    return FileHeader.runstart_lo.ordinal() * 4;
+                case FORMAT_VERSION_CACHE_3:
+                    return FileHeader.len_instrument_info.ordinal() * 4;
                 case FORMAT_VERSION_CACHE_4:
                     return FileHeader.flags.ordinal() * 4;
-                case (FORMAT_VERSION_CACHE_3):
-                    return FileHeader.len_instrument_info.ordinal() * 4;
+                case FORMAT_VERSION_CACHE_5:
+                    return FileHeader.max_retention_time.ordinal() * 4;
                 default:
-                    return FileHeader.runstart_lo.ordinal() * 4;
+                    return FileHeader.count.ordinal() * 4;
             }
         }
     }
@@ -262,6 +263,7 @@ public class SkylineBinaryParser
 
             long modifiedBinary = buffer.getLong();
             int lenPath = buffer.getInt();
+
             long runstartBinary = (isVersionCurrent() ? buffer.getLong() : 0);
             int lenInstrumentInfo = formatVersion > FORMAT_VERSION_CACHE_3 ? buffer.getInt() : -1;
             int flags = formatVersion > FORMAT_VERSION_CACHE_4 ? buffer.getInt() : 0;
@@ -270,7 +272,9 @@ public class SkylineBinaryParser
             buffer = _channel.map(FileChannel.MapMode.READ_ONLY, offset, lenPath);
             offset += lenPath;
             buffer.get(filePathBuffer);
-            String filePath = new String(filePathBuffer, 0, lenPath);
+            String filePath = formatVersion > FORMAT_VERSION_CACHE_6 ?
+											  new String(filePathBuffer, 0, lenPath, Charset.forName("UTF8"))
+											: new String(filePathBuffer, 0, lenPath);
 
             String instrumentInfoStr = null;
             if (lenInstrumentInfo >= 0)
@@ -347,10 +351,7 @@ public class SkylineBinaryParser
     public boolean isVersionCurrent()
     {
         long version = Header.format_version.getHeaderValueInt(_headers);
-        return (version == FORMAT_VERSION_CACHE_6 ||
-                version == FORMAT_VERSION_CACHE_5 ||
-                version == FORMAT_VERSION_CACHE_4 ||
-                version == FORMAT_VERSION_CACHE_3);
+        return (version >= FORMAT_VERSION_CACHE_3 && FORMAT_VERSION_CACHE >= version);
     }
 
     final int getCacheFileSize()
