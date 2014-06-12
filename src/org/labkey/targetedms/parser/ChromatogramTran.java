@@ -26,10 +26,12 @@ public class ChromatogramTran
     public static final int SIZE4 = Float.SIZE / 8;
     // Grown slightly in format version 5
     public static final int SIZE5 = (Double.SIZE + Float.SIZE + Short.SIZE*2) / 8;
+    public static final int SIZE8 = (Double.SIZE + Float.SIZE * 3 + Short.SIZE*2) / 8;
 
     public static int getSize(int formatVersion)
     {
-        return (formatVersion > SkylineBinaryParser.FORMAT_VERSION_CACHE_4 ? SIZE5 : SIZE4);
+        return (formatVersion > SkylineBinaryParser.FORMAT_VERSION_CACHE_7 ? SIZE8 :
+                (formatVersion > SkylineBinaryParser.FORMAT_VERSION_CACHE_4 ? SIZE5 : SIZE4));
     }
 
     public enum Source
@@ -55,6 +57,8 @@ public class ChromatogramTran
 
     private double _product;
     private float _extractionWidth;
+    private float _ionMobilityValue;
+    private float _ionMobilityExtractionWidth;
     private Source _source;
 
     public ChromatogramTran(double product)
@@ -64,8 +68,17 @@ public class ChromatogramTran
 
     public ChromatogramTran(double product, float extractionWidth, Source source)
     {
+       this(product, extractionWidth, 0, 0, source);
+    }
+
+    public ChromatogramTran(double product, float extractionWidth,
+                            float ionMobilityValue, float ionMobilityExtractionWidth,
+                            Source source)
+    {
         _product = product;
         _extractionWidth = extractionWidth;
+        _ionMobilityValue = ionMobilityValue;
+        _ionMobilityExtractionWidth = ionMobilityExtractionWidth;
         _source = source;
     }
 
@@ -82,5 +95,15 @@ public class ChromatogramTran
     public Source getSource()
     {
         return _source;
+    }
+
+    public float getIonMobilityValue()
+    {
+        return _ionMobilityValue;
+    }
+
+    public float getIonMobilityExtractionWidth()
+    {
+        return _ionMobilityExtractionWidth;
     }
 }

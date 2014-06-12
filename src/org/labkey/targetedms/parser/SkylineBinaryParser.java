@@ -44,6 +44,7 @@ public class SkylineBinaryParser
     private Chromatogram[] _chromatograms;
     private ChromatogramTran[] _transitions;
 
+    public static final int FORMAT_VERSION_CACHE_8 = 8;
     public static final int FORMAT_VERSION_CACHE_7 = 7;
     public static final int FORMAT_VERSION_CACHE_6 = 6;
     public static final int FORMAT_VERSION_CACHE_5 = 5;
@@ -52,7 +53,7 @@ public class SkylineBinaryParser
     public static final int FORMAT_VERSION_CACHE_2 = 2;
 
     /** Newest supported version */
-    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_7;
+    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_8;
 
     private CachedFile[] _cacheFiles;
 
@@ -304,10 +305,22 @@ public class SkylineBinaryParser
         _transitions = new ChromatogramTran[numTransitions];
         for (int i = 0; i< numTransitions; i++)
         {
+
             if (formatVersion > FORMAT_VERSION_CACHE_4)
             {
-                _transitions[i] = new ChromatogramTran(buffer.getDouble(),
-                        buffer.getFloat(), ChromatogramTran.Source.fromBits(buffer.getShort()));
+                double product = buffer.getDouble();
+                float extractionWidth = buffer.getFloat();
+                float ionMobilityValue = 0;
+                float ionMobilityExtractionWidth = 0;
+                if(formatVersion > FORMAT_VERSION_CACHE_7)
+                {
+                    ionMobilityValue = buffer.getFloat();
+                    ionMobilityExtractionWidth = buffer.getFloat();
+                }
+
+                _transitions[i] = new ChromatogramTran(product, extractionWidth,
+                                                       ionMobilityValue, ionMobilityExtractionWidth,
+                                                       ChromatogramTran.Source.fromBits(buffer.getShort()));
                 buffer.getShort();  // read padding
             }
             else
