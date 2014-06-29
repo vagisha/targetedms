@@ -24,6 +24,8 @@ import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideManager;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -33,8 +35,9 @@ import java.util.Set;
  */
 public class ModifiedPeptideHtmlMaker
 {
-    // The database ID of the first isotope label type in the document. Used to get the display color for label types.
-    private Integer _firstIsotopeLabelIdInDoc;
+    // RunId -> IsotopeLabelId (The database ID of the first isotope label type for the run).
+    // Used to get the display color for label types.
+    private Map<Integer, Integer> _firstIsotopeLabelIdInDocMap;
 
     private final static String[] HEX_PADDING = new String[] {
                                                         "",
@@ -46,22 +49,20 @@ public class ModifiedPeptideHtmlMaker
                                                         "000000"
     };
 
-    public ModifiedPeptideHtmlMaker() {}
+    public ModifiedPeptideHtmlMaker()
+    {
+        _firstIsotopeLabelIdInDocMap = new HashMap<>();
+    }
 
-    public String getPrecursorHtml(Precursor precursor)
+    public String getPrecursorHtml(Precursor precursor, Integer runId)
     {
         Peptide peptide = PeptideManager.get(precursor.getPeptideId());
-        return getPrecursorHtml(peptide, precursor);
+        return getPrecursorHtml(peptide, precursor, runId);
     }
 
-    public String getPrecursorHtml(Peptide peptide, Precursor precursor)
+    public String getPrecursorHtml(Peptide peptide, Precursor precursor, Integer runId)
     {
-        return getPrecursorHtml(peptide.getId(), precursor.getIsotopeLabelId(), peptide.getSequence(), precursor.getModifiedSequence());
-    }
-
-    public String getPrecursorHtml(int peptideId, int isotopeLabelId, String peptideSequence, String precursorModifiedSequence)
-    {
-        return getPrecursorHtml(peptideId, isotopeLabelId, peptideSequence, precursorModifiedSequence, null);
+        return getPrecursorHtml(peptide.getId(), precursor.getIsotopeLabelId(), peptide.getSequence(), precursor.getModifiedSequence(), runId);
     }
 
     public String getPrecursorHtml(int peptideId, int isotopeLabelId, String peptideSequence, String precursorModifiedSequence, Integer runId)
@@ -69,9 +70,9 @@ public class ModifiedPeptideHtmlMaker
         return getHtml(peptideId, isotopeLabelId, peptideSequence, precursorModifiedSequence, runId);
     }
 
-    public String getPeptideHtml(Peptide peptide)
+    public String getPeptideHtml(Peptide peptide, Integer runId)
     {
-        return getPeptideHtml(peptide.getId(), peptide.getSequence(), peptide.getPeptideModifiedSequence(), null);
+        return getPeptideHtml(peptide.getId(), peptide.getSequence(), peptide.getPeptideModifiedSequence(), runId);
     }
 
     public String getPeptideHtml(int peptideId, String sequence, String peptideModifiedSequence, Integer runId)
@@ -85,18 +86,27 @@ public class ModifiedPeptideHtmlMaker
         return getHtml(peptideId, null, sequence, altSequence, runId);
     }
 
-    private String getHtml(int peptideId, @Nullable Integer isotopteLabelId, String sequence, String altSequence, @Nullable Integer runId)
+    private String getHtml(int peptideId, @Nullable Integer isotopeLabelId, String sequence, String altSequence, Integer runId)
     {
-        if (_firstIsotopeLabelIdInDoc == null)
+        Integer firstIsotopeLabelIdInDoc = null;
+        if(runId != null)
         {
-            _firstIsotopeLabelIdInDoc = IsotopeLabelManager.getLightIsotopeLabelId(peptideId);
+            _firstIsotopeLabelIdInDocMap.get(runId);
+        }
+        if (firstIsotopeLabelIdInDoc == null)
+        {
+            firstIsotopeLabelIdInDoc = IsotopeLabelManager.getLightIsotopeLabelId(peptideId);
+            if(runId != null)
+            {
+                _firstIsotopeLabelIdInDocMap.put(runId, firstIsotopeLabelIdInDoc);
+            }
         }
 
         Set<Integer> strModIndices = ModificationManager.getStructuralModIndexes(peptideId, runId);
         Set<Integer> isotopeModIndices = null;
-        if(isotopteLabelId != null)
+        if(isotopeLabelId != null)
         {
-            isotopeModIndices = ModificationManager.getIsotopeModIndexes(peptideId, isotopteLabelId, runId);
+            isotopeModIndices = ModificationManager.getIsotopeModIndexes(peptideId, isotopeLabelId, runId);
         }
 
 
@@ -104,9 +114,17 @@ public class ModifiedPeptideHtmlMaker
 
         result.append("<span title='").append(altSequence).append("'>");
         String labelModColor = "black";
-        if(_firstIsotopeLabelIdInDoc != null && isotopteLabelId != null)
+        StringBuilder error = new StringBuilder("");
+        if(firstIsotopeLabelIdInDoc != null && isotopeLabelId != null)
         {
-            labelModColor = toHex(ChartColors.getIsotopeColor(isotopteLabelId - _firstIsotopeLabelIdInDoc).getRGB());
+            if(isotopeLabelId >= firstIsotopeLabelIdInDoc)
+            {
+                labelModColor = toHex(ChartColors.getIsotopeColor(isotopeLabelId - firstIsotopeLabelIdInDoc).getRGB());
+            }
+            else
+            {
+                error.append("Error getting color for isotope label.");
+            }
         }
 
         for(int i = 0; i < sequence.length(); i++)
@@ -135,6 +153,10 @@ public class ModifiedPeptideHtmlMaker
             }
         }
         result.append("</span>");
+        if(error.length() > 0)
+        {
+            result.append("<div style='color:red;'>" + error.toString() + "</div>");
+        }
         return result.toString();
     }
 

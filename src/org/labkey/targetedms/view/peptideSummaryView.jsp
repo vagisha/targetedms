@@ -58,7 +58,7 @@
     </tr>
     <tr>
         <td class="labkey-form-label">Sequence</td>
-        <td><%=text(new ModifiedPeptideHtmlMaker().getPeptideHtml(bean.getPeptide()))%></td>
+        <td><%=text(new ModifiedPeptideHtmlMaker().getPeptideHtml(bean.getPeptide(), bean.getRun().getId()))%></td>
     </tr>
     <tr>
         <td class="labkey-form-label">NeutralMass</td>
@@ -95,8 +95,9 @@
                  <div>
                      <%=text(PrecursorHtmlMaker.getHtml(bean.getPeptide(),
                                                     precursor,
-                                                    labelIdMap.get(precursor.getIsotopeLabelId())
-                     ))%>
+                                                    labelIdMap.get(precursor.getIsotopeLabelId()),
+                                                    bean.getRun().getId())
+                     )%>
 
                      <% String imgUrl = IconFactory.getPrecursorIconPath(precursor.getId()); %>
                      <a href="<%=precursorDetailsUrl+"id="+precursor.getId()%>">
