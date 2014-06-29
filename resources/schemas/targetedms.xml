@@ -1045,5 +1045,29 @@
             <ns:column columnName="Margin"/>
         </ns:columns>
     </ns:table>
-
+    <ns:table tableName="DriftTimePredictionSettings" tableDbType="TABLE">
+        <ns:columns>
+            <ns:column columnName="Id"/>
+            <ns:column columnName="RunId"/>
+            <ns:column columnName="UseSpectralLibraryDriftTimes"/>
+            <ns:column columnName="SpectralLibraryDriftTimesResolvingPower"/>
+            <ns:column columnName="PredictorName"/>
+            <ns:column columnName="ResolvingPower"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableName="MeasuredDriftTime" tableDbType="TABLE">
+        <ns:columns>
+            <ns:column columnName="Id"/>
+            <ns:column columnName="DriftTimePredictionSettingsId">
+                <ns:fk>
+                    <ns:fkColumnName>Id</ns:fkColumnName>
+                    <ns:fkDbSchema>targetedms</ns:fkDbSchema>
+                    <ns:fkTable>DriftTimePredictionSettings</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="ModifiedSequence"/>
+            <ns:column columnName="Charge"/>
+            <ns:column columnName="DriftTime"/>
+        </ns:columns>
+    </ns:table>
 </ns:tables>

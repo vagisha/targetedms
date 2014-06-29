@@ -39,7 +39,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     private Integer _peakRank;
     private Boolean _identified;
     private Integer _optimizationStep;
-    private Boolean _userSet;
+    private String _userSet;
     private String _note;
     private int _chromatogramIndex;
 
@@ -204,12 +204,12 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
         this._optimizationStep = optimizationStep;
     }
 
-    public Boolean getUserSet()
+    public String getUserSet()
     {
         return _userSet;
     }
 
-    public void setUserSet(Boolean userSet)
+    public void setUserSet(String userSet)
     {
         this._userSet = userSet;
     }

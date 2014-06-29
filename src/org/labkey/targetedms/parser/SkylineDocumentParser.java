@@ -1462,7 +1462,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setLibraryDotP(XmlUtil.readDoubleAttribute(reader, "library_dotp"));
         chromInfo.setIsotopeDotP(XmlUtil.readDoubleAttribute(reader, "isotope_dotp"));
         chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
-        chromInfo.setUserSet(XmlUtil.readBooleanAttribute(reader, "user_set"));
+        chromInfo.setUserSet(XmlUtil.readAttribute(reader, "user_set"));
 
         while(reader.hasNext())
         {
@@ -1704,7 +1704,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setTruncated(XmlUtil.readBooleanAttribute(reader, "truncated"));
         chromInfo.setIdentified(XmlUtil.readBooleanAttribute(reader, "identified"));
         chromInfo.setPeakRank(XmlUtil.readIntegerAttribute(reader, "rank"));
-        chromInfo.setUserSet(XmlUtil.readBooleanAttribute(reader, "user_set"));
+        chromInfo.setUserSet(XmlUtil.readAttribute(reader, "user_set"));
 
         while(reader.hasNext())
         {

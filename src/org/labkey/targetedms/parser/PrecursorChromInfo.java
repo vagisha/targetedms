@@ -40,7 +40,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     private Double _libraryDotP;
     private Double _isotopeDotP;
     private Integer _optimizationStep;
-    private Boolean _userSet;
+    private String _userSet;
     private String _note;
 
     private byte[] _chromatogram;
@@ -218,12 +218,12 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         this._optimizationStep = optimizationStep;
     }
 
-    public Boolean getUserSet()
+    public String getUserSet()
     {
         return _userSet;
     }
 
-    public void setUserSet(Boolean userSet)
+    public void setUserSet(String userSet)
     {
         this._userSet = userSet;
     }
