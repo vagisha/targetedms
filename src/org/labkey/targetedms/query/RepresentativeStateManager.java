@@ -15,10 +15,12 @@
  */
 package org.labkey.targetedms.query;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlExecutor;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
@@ -136,12 +138,19 @@ public class RepresentativeStateManager
 
     private static int resolveRepresentativeProteinState(Container container, TargetedMSRun run)
     {
+        // Get a list of peptide group ids that only have either decoy or standard peptides
+        List<Integer> peptideGroupIdsToExclude = getPeptideGroupIdsToExclude(run);
+
         // Mark everything in this run that doesn't already have representative data in this container as being active
         SQLFragment makeActiveSQL = new SQLFragment("UPDATE " + TargetedMSManager.getTableInfoPeptideGroup());
         makeActiveSQL.append(" SET RepresentativeDataState = ?");
         makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
         makeActiveSQL.append(" WHERE RunId=? ");
         makeActiveSQL.add(run.getId());
+        if(peptideGroupIdsToExclude.size() > 0)
+        {
+            makeActiveSQL.append(" AND Id NOT IN (" + StringUtils.join(peptideGroupIdsToExclude, ',') + ")");
+        }
         makeActiveSQL.append(" AND( ");
         // If this peptide group has a SequenceId make sure we don't have another peptide group in this container
         // with the same SequenceId that has been previously marked as representative
@@ -170,6 +179,10 @@ public class RepresentativeStateManager
         makeConflictedSQL.add(RepresentativeDataState.Conflicted.ordinal());
         makeConflictedSQL.append(" WHERE RunId=?");
         makeConflictedSQL.add(run.getId());
+        if(peptideGroupIdsToExclude.size() > 0)
+        {
+            makeConflictedSQL.append(" AND Id NOT IN (" + StringUtils.join(peptideGroupIdsToExclude, ',') + ")");
+        }
         makeConflictedSQL.append(" AND RepresentativeDataState != ?");
         makeConflictedSQL.add(RepresentativeDataState.Representative.ordinal());
         int conflictCount = new SqlExecutor(TargetedMSManager.getSchema()).execute(makeConflictedSQL);
@@ -180,6 +193,29 @@ public class RepresentativeStateManager
 
 
         return conflictCount;
+    }
+
+    private static List<Integer> getPeptideGroupIdsToExclude(TargetedMSRun run)
+    {
+        // Get a list of peptide group ids that only have either decoy or standard peptides
+        SQLFragment sql = new SQLFragment("SELECT DISTINCT Id FROM " + TargetedMSManager.getTableInfoPeptideGroup());
+        sql.append(" WHERE RunId = ? ");
+        sql.add(run.getId());
+        sql.append(" AND Id NOT IN (");
+        sql.append(" SELECT pg.Id FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(" WHERE ");
+        sql.append("pep.PeptideGroupId = pg.Id");
+        sql.append(" AND pg.RunId = ?");
+        sql.add(run.getId());
+        sql.append(" AND (pep.Decoy IS NULL OR pep.Decoy = " +
+                   TargetedMSManager.getSqlDialect().getBooleanFALSE() +  ")");
+        sql.append(" AND pep.StandardType IS NULL ");
+        sql.append(")");
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Integer.class);
     }
 
     private static void updatePrecursorRepresentativeState(TargetedMSRun run)
@@ -204,6 +240,13 @@ public class RepresentativeStateManager
         updatePrecursorStateSQL.append(" WHERE pg.Id = pep.peptideGroupId");
         updatePrecursorStateSQL.append(" AND pep.Id = "+TargetedMSManager.getTableInfoPrecursor()+".peptideId");
         updatePrecursorStateSQL.append(" AND " + refCol + " = ?");
+        // Ignore decoy peptides
+        updatePrecursorStateSQL.append(" AND ( pep.Decoy IS NULL ");
+        updatePrecursorStateSQL.append(" OR ");
+        updatePrecursorStateSQL.append( "pep.Decoy = " + TargetedMSManager.getSqlDialect().getBooleanFALSE());
+        updatePrecursorStateSQL.append(") ");
+        // Ignore standard (e.g. iRT) peptides
+        updatePrecursorStateSQL.append(" AND pep.StandardType IS NULL");
         updatePrecursorStateSQL.add(refId);
 
         new SqlExecutor(TargetedMSManager.getSchema()).execute(updatePrecursorStateSQL);
@@ -211,17 +254,26 @@ public class RepresentativeStateManager
 
     private static int resolveRepresentativePeptideState(Container container, TargetedMSRun run)
     {
+        String sqlFalse = TargetedMSManager.getSqlDialect().getBooleanFALSE();
+
         // Mark everything in this run that doesn't already have representative data in this container as being active
         SQLFragment makeActiveSQL = new SQLFragment("UPDATE " + TargetedMSManager.getTableInfoPrecursor());
         makeActiveSQL.append(" SET RepresentativeDataState = ?");
         makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
-        makeActiveSQL.append(" FROM "+TargetedMSManager.getTableInfoPeptide());
+        makeActiveSQL.append(" FROM " + TargetedMSManager.getTableInfoPeptide());
         makeActiveSQL.append(", "+TargetedMSManager.getTableInfoPeptideGroup());
         makeActiveSQL.append(", "+TargetedMSManager.getTableInfoRuns());
-        makeActiveSQL.append(" WHERE "+TargetedMSManager.getTableInfoPeptideGroup()+".RunId=? ");
+        makeActiveSQL.append(" WHERE " + TargetedMSManager.getTableInfoPeptideGroup() + ".RunId=? ");
         makeActiveSQL.add(run.getId());
         makeActiveSQL.append(" AND "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId = "+TargetedMSManager.getTableInfoPeptide()+".Id");
         makeActiveSQL.append(" AND "+TargetedMSManager.getTableInfoPeptide()+".PeptideGroupId = "+TargetedMSManager.getTableInfoPeptideGroup()+".Id");
+        // Ignore decoy peptides
+        makeActiveSQL.append(" AND ( " + TargetedMSManager.getTableInfoPeptide() + ".Decoy IS NULL ");
+        makeActiveSQL.append(" OR ");
+        makeActiveSQL.append(TargetedMSManager.getTableInfoPeptide() + ".Decoy = " + sqlFalse);
+        makeActiveSQL.append(") ");
+        // Ignore standard (e.g. iRT) peptides
+        makeActiveSQL.append(" AND " + TargetedMSManager.getTableInfoPeptide() + ".StandardType IS NULL");
         makeActiveSQL.append(" AND ");
         makeActiveSQL.append(TargetedMSManager.getSqlDialect().concatenate("ModifiedSequence", "CAST(Charge AS varchar)"));
         makeActiveSQL.append(" NOT IN (SELECT ");
@@ -258,6 +310,13 @@ public class RepresentativeStateManager
         makeConflictedSQL.add(run.getId());
         makeConflictedSQL.append(" AND " + TargetedMSManager.getTableInfoPrecursor() + ".RepresentativeDataState != ?");
         makeConflictedSQL.add(RepresentativeDataState.Representative.ordinal());
+        // Ignore decoy peptides
+        makeConflictedSQL.append(" AND ( " + TargetedMSManager.getTableInfoPeptide() + ".Decoy IS NULL ");
+        makeConflictedSQL.append(" OR ");
+        makeConflictedSQL.append(TargetedMSManager.getTableInfoPeptide() + ".Decoy = " + sqlFalse);
+        makeConflictedSQL.append(") ");
+        // Ignore standard (e.g. iRT) peptides
+        makeConflictedSQL.append(" AND " + TargetedMSManager.getTableInfoPeptide() + ".StandardType IS NULL");
         makeConflictedSQL.append(" AND "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId = "+TargetedMSManager.getTableInfoPeptide()+".Id");
         makeConflictedSQL.append(" AND "+TargetedMSManager.getTableInfoPeptide()+".PeptideGroupId = "+TargetedMSManager.getTableInfoPeptideGroup()+".Id");
         int conflictCount = new SqlExecutor(TargetedMSManager.getSchema()).execute(makeConflictedSQL);

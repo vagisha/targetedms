@@ -196,6 +196,11 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
         _decoy = decoy;
     }
 
+    public boolean isDecoyPeptide()
+    {
+        return _decoy != null && _decoy.equals(Boolean.TRUE);
+    }
+
     public List<Precursor> getPrecursorList()
     {
         return _precursorList;
@@ -254,6 +259,11 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
     public void setStandardType(String standardType)
     {
         _standardType = standardType;
+    }
+
+    public boolean isStandardTypePeptide()
+    {
+        return _standardType != null;
     }
 
     public static class Modification extends SkylineEntity

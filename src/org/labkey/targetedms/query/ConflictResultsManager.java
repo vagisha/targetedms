@@ -202,6 +202,10 @@ public class ConflictResultsManager
         List<BestPrecursorPeptide> proteinPeptides = new ArrayList<>();
         for(Peptide peptide: peptides)
         {
+            if(peptide.isDecoyPeptide() || peptide.isStandardTypePeptide())
+            {
+                continue;
+            }
             BestPrecursorPeptide bestPrecursor = getBestPrecursor(peptide);
             proteinPeptides.add(bestPrecursor);
         }

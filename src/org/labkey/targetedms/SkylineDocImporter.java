@@ -792,7 +792,7 @@ public class SkylineDocImporter
                     throw new IllegalStateException("Duplicate protein found: "+pepGroup.getLabel()+", seqId "+pepGroup.getSequenceId()
                     + ". Documents uploaded to a protein library folder should contain unique proteins.");
                 }
-                else
+                else if(!pepGroup.isDecoy())
                 {
                     _libProteinSequenceIds.add(pepGroup.getSequenceId());
                 }
@@ -802,7 +802,7 @@ public class SkylineDocImporter
                 throw new IllegalStateException("Duplicate protein label found: "+pepGroup.getLabel()
                 + ". Documents uploaded to a protein library folder should contain unique proteins.");
             }
-            else
+            else if(!pepGroup.isDecoy())
             {
                 _libProteinLabels.add(pepGroup.getLabel());
             }
@@ -1007,7 +1007,7 @@ public class SkylineDocImporter
                 throw new IllegalStateException("Duplicate precursor found: " + precursorKey
                 + ". Documents uploaded to a peptide library folder should contain unique precursors.");
             }
-            else
+            else if(!(peptide.isDecoyPeptide() || peptide.isStandardTypePeptide()))
             {
                 _libPrecursors.add(precursorKey);
             }

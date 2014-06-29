@@ -921,7 +921,6 @@ public class SkylineDocumentParser implements AutoCloseable
             pepGroup.setName((!StringUtils.isBlank(labelName) && !StringUtils.isBlank(name)) ? name : null);
 
             pepGroup.setDescription(reader.getAttributeValue(null, "description"));
-            pepGroup.setDecoy(Boolean.parseBoolean(reader.getAttributeValue(null, "decoy")));
 
             pepGroup.setAccession(reader.getAttributeValue(null, "accession"));
             pepGroup.setPreferredName(reader.getAttributeValue(null, "preferred_name"));
@@ -935,6 +934,8 @@ public class SkylineDocumentParser implements AutoCloseable
             pepGroup.setLabel(reader.getAttributeValue(null, "label_name"));
             pepGroup.setDescription(reader.getAttributeValue(null, "label_description"));
         }
+
+        pepGroup.setDecoy(Boolean.parseBoolean(reader.getAttributeValue(null, "decoy")));
 
         while(reader.hasNext())
         {
