@@ -100,3 +100,53 @@ CREATE INDEX IX_SampleFile_InstrumentId ON targetedms.SampleFile(InstrumentId);
 /* targetedms-14.14-14.15.sql */
 
 ALTER TABLE targetedms.iRTPeptide ADD CONSTRAINT UQ_iRTPeptide_SequenceAndScale UNIQUE (irtScaleId, ModifiedSequence);
+
+/* targetedms-14.15-14.16.sql */
+
+--TransitionChromInfo UserSet can now be one of 'TRUE', 'FALSE', 'IMPORTED', 'REINTEGRATE'
+ALTER TABLE targetedms.TransitionChromInfo ADD UserSet_temp VARCHAR(20);
+UPDATE targetedms.TransitionChromInfo SET UserSet_temp =(CASE WHEN UserSet THEN 'TRUE'
+                                                              WHEN UserSet IS FALSE THEN 'FALSE'
+                                                              ELSE NULL END);
+ALTER TABLE targetedms.TransitionChromInfo DROP COLUMN UserSet;
+ALTER TABLE targetedms.TransitionChromInfo RENAME UserSet_temp TO UserSet;
+
+
+
+--PrecursorChromInfo UserSet can now be one of 'TRUE', 'FALSE', 'IMPORTED', 'REINTEGRATE'
+ALTER TABLE targetedms.PrecursorChromInfo ADD UserSet_temp VARCHAR(20);
+UPDATE targetedms.PrecursorChromInfo SET UserSet_temp =(CASE WHEN UserSet THEN 'TRUE'
+                                                         WHEN UserSet IS FALSE THEN 'FALSE'
+                                                         ELSE NULL END);
+ALTER TABLE targetedms.PrecursorChromInfo DROP COLUMN UserSet;
+ALTER TABLE targetedms.PrecursorChromInfo RENAME UserSet_temp TO UserSet;
+
+
+
+-- Add ion mobility settings tables
+CREATE TABLE targetedms.DriftTimePredictionSettings
+(
+    Id SERIAL NOT NULL,
+    RunId INT NOT NULL,
+    UseSpectralLibraryDriftTimes BOOLEAN,
+    SpectralLibraryDriftTimesResolvingPower REAL,
+    PredictorName VARCHAR(200),
+    ResolvingPower REAL,
+
+    CONSTRAINT PK_DriftTimePredictionSettings PRIMARY KEY (Id),
+    CONSTRAINT FK_DriftTimePredictionSettings_Runs FOREIGN KEY (RunId) REFERENCES targetedms.Runs(Id)
+);
+CREATE INDEX IX_DriftTimePredictionSettings_RunId ON targetedms.DriftTimePredictionSettings(RunId);
+
+CREATE TABLE targetedms.MeasuredDriftTime
+(
+    Id SERIAL NOT NULL,
+    DriftTimePredictionSettingsId INT NOT NULL,
+    ModifiedSequence VARCHAR(255) NOT NULL,
+    Charge INT NOT NULL,
+    DriftTime REAL NOT NULL,
+
+    CONSTRAINT PK_MeasuredDriftTime PRIMARY KEY (Id),
+    CONSTRAINT FK_MeasuredDriftTime_DriftTimePredictionSettings FOREIGN KEY (DriftTimePredictionSettingsId) REFERENCES targetedms.DriftTimePredictionSettings(Id)
+);
+CREATE INDEX IX_MeasuredDriftTime_DriftTimePredictionSettingsId ON targetedms.MeasuredDriftTime(DriftTimePredictionSettingsId);
