@@ -91,7 +91,7 @@ public class ModifiedPeptideHtmlMaker
         Integer firstIsotopeLabelIdInDoc = null;
         if(runId != null)
         {
-            _firstIsotopeLabelIdInDocMap.get(runId);
+            firstIsotopeLabelIdInDoc = _firstIsotopeLabelIdInDocMap.get(runId);
         }
         if (firstIsotopeLabelIdInDoc == null)
         {
