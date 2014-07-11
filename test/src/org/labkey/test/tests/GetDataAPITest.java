@@ -18,6 +18,7 @@ package org.labkey.test.tests;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
+import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.LogMethod;
@@ -98,7 +99,7 @@ public class GetDataAPITest extends TargetedMSTest
         PortalHelper portalHelper = new PortalHelper(this);
         portalHelper.addWebPart("Wiki");
 
-        String scriptText = getFileContents("server/test/data/api/" + "getDataTest.html");
+        String scriptText = TestFileUtils.getFileContents("server/test/data/api/" + "getDataTest.html");
         scriptText = scriptText.replace("REPLACEMENT_STRING", request_core);
 
         WikiHelper wikiHelper = new WikiHelper(this);

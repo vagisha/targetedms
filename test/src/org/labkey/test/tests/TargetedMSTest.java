@@ -17,6 +17,7 @@ package org.labkey.test.tests;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.util.LogMethod;
 
@@ -37,7 +38,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     {
         _containerHelper.createProject(getProjectName(), "Panorama");
         selectFolderType(folderType);
-        setPipelineRoot(getSampledataPath() + "/TargetedMS");
+        setPipelineRoot(TestFileUtils.getSampledataPath() + "/TargetedMS");
     }
 
     @LogMethod(category = LogMethod.MethodType.SETUP)
