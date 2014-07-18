@@ -114,12 +114,15 @@ import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
 import org.labkey.targetedms.chart.PrecursorPeakAreaChartMaker;
+import org.labkey.targetedms.chart.RetentionTimesChartMaker;
 import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.conflict.ConflictPeptide;
 import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.model.ExperimentAnnotations;
+import org.labkey.targetedms.model.PrecursorChromInfoPlus;
+import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.PeptideGroup;
@@ -445,7 +448,8 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("No PrecursorChromInfo found in this folder for precursorChromInfoId: " + form.getId());
             }
 
-            JFreeChart chart = ChromatogramChartMakerFactory.createPrecursorChromChart(pChromInfo, form.isSyncY(), form.isSyncX());
+            JFreeChart chart = ChromatogramChartMakerFactory.createPrecursorChromChart(pChromInfo, form.isSyncY(), form.isSyncX(), form.isSplitGraph());
+
             writePNG(form, response, chart);
         }
     }
@@ -820,6 +824,7 @@ public class TargetedMSController extends SpringActionController
         private int _id;
         private boolean _syncY = false;
         private boolean _syncX = false;
+        private boolean _splitGraph = false;
         private String _annotationsFilter;
         private String _replicatesFilter;
 
@@ -928,6 +933,16 @@ public class TargetedMSController extends SpringActionController
         public void setSyncX(boolean syncX)
         {
             _syncX = syncX;
+        }
+
+        public boolean isSplitGraph()
+        {
+            return _splitGraph;
+        }
+
+        public void setSplitGraph(boolean splitGraph)
+        {
+            _splitGraph = splitGraph;
         }
     }
 

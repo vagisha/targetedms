@@ -16,6 +16,9 @@
 package org.labkey.targetedms.chart;
 
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.CombinedDomainXYPlot;
+import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
@@ -31,6 +34,7 @@ import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.TransitionManager;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -85,12 +89,90 @@ public class ChromatogramChartMakerFactory
         return chartMaker.make();
     }
 
-    public static JFreeChart createPrecursorChromChart(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncMz)
+    public static JFreeChart createPrecursorChromChart(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncMz, boolean isSplitGraph)
     {
-        XYSeriesCollection dataset = new XYSeriesCollection();
-
         Chromatogram chromatogram = pChromInfo.createChromatogram();
+        Precursor precursor = PrecursorManager.get(pChromInfo.getPrecursorId());
 
+        List<TransChromInfoPlusTransition> tciList = new ArrayList<>(chromatogram.getTransitionsCount());
+
+        for(int chromatogramIndex = 0; chromatogramIndex < chromatogram.getTransitionsCount(); chromatogramIndex++)
+        {
+            List<TransitionChromInfo> tChromInfoList = TransitionManager.getTransitionChromInfoList(pChromInfo.getId(), chromatogramIndex);
+            if(tChromInfoList == null || tChromInfoList.size() == 0)
+            continue;
+            for(TransitionChromInfo tChromInfo: tChromInfoList)
+            {
+                Transition transition = TransitionManager.get(tChromInfo.getTransitionId());
+                tciList.add(new TransChromInfoPlusTransition(tChromInfo, transition));
+            }
+        }
+
+        Collections.sort(tciList, new TransitionComparator());
+        List<TransitionChromDataset> datasets = getTransitionChromDatasets(pChromInfo, syncMz,syncIntensity, isSplitGraph);
+        // If the split graph setting is unchecked returns chart with full tciList/dataset.
+        if(datasets.size() == 1)
+        {
+            JFreeChart chart =  getChart(pChromInfo, datasets.get(0), syncIntensity,syncMz, tciList,precursor,isSplitGraph,0);
+            return chart;
+        }
+        else
+        {
+        List<TransChromInfoPlusTransition> tciPrecursor = new ArrayList<>();
+        List<TransChromInfoPlusTransition> tciFragment = new ArrayList<>();
+        for(TransChromInfoPlusTransition tci:tciList)
+        {
+            if(tci.getTransition().isPrecursorIon())
+            {
+                tciPrecursor.add(tci);
+            } else
+            {
+                tciFragment.add(tci);
+            }
+        }
+
+        // datasets.get(x) contains a TransitionChromDataset with all the necesary information to build the chart.
+        JFreeChart chartPrecursor = getChart(pChromInfo,datasets.get(0),syncIntensity,syncMz, tciPrecursor,precursor, isSplitGraph, 0);
+        JFreeChart chartFragment = getChart(pChromInfo,datasets.get(1),syncIntensity,syncMz, tciFragment,precursor, isSplitGraph,tciPrecursor.size());
+
+        if(tciFragment.size() == 0 && tciPrecursor.size() != 0)
+            return chartPrecursor;
+        if(tciPrecursor.size() == 0 && tciFragment.size() != 0)
+            return  chartFragment;
+        else
+        {
+            NumberAxis domain = (NumberAxis) chartFragment.getXYPlot().getDomainAxis();
+            domain.setVerticalTickLabels(true);
+
+            double upperMargin = 0.10; // Upper margin added to current upper margin to ensure that the point on the graphs doesn't go off the graph.
+            chartFragment.getXYPlot().getRangeAxis().setUpperMargin(chartFragment.getXYPlot().getRangeAxis().getUpperMargin() + upperMargin);
+            chartPrecursor.getXYPlot().getRangeAxis().setUpperMargin(chartPrecursor.getXYPlot().getRangeAxis().getUpperMargin() + upperMargin);
+
+            // Sets label font for both plots.
+            chartFragment.getXYPlot().getRangeAxis().setLabelFont(new Font("Tahoma", Font.BOLD, 11));
+            chartPrecursor.getXYPlot().getRangeAxis().setLabelFont(new Font("Tahoma", Font.BOLD, 11));
+
+            // Create Plot and Combine both XYPlots.
+            final CombinedDomainXYPlot plot = new CombinedDomainXYPlot();
+            plot.setGap(4.0);
+            plot.setDomainAxis(domain);
+
+            // Combines both charts into one plot.
+            plot.add(chartPrecursor.getXYPlot(), 1);
+            plot.add(chartFragment.getXYPlot(), 1);
+
+            plot.setOrientation(PlotOrientation.VERTICAL);
+            JFreeChart jchart = new JFreeChart(chartFragment.getTitle().getText(),
+                    ChromatogramChartMaker.DefaultTitleFont, plot, true);
+            jchart.setBackgroundPaint(Color.WHITE);
+            return jchart;
+        }
+    }
+    }
+
+    private static List<TransitionChromDataset> getTransitionChromDatasets(PrecursorChromInfo pChromInfo, boolean syncMz, boolean syncIntensity, boolean splitGraph)
+    {
+        Chromatogram chromatogram = pChromInfo.createChromatogram();
         Precursor precursor = PrecursorManager.get(pChromInfo.getPrecursorId());
 
         // get the min and max retention times of the transitions for this precursor, over all replicates
@@ -108,11 +190,11 @@ public class ChromatogramChartMakerFactory
         // get the minimum minStartTime and maximum maxEndTime for all precursors of this peptide in this replicate.
         if(pciMinStartTime == null)
         {
-           pciMinStartTime = PeptideManager.getMinRetentionTime(precursor.getPeptideId(), pChromInfo.getSampleFileId());
+            pciMinStartTime = PeptideManager.getMinRetentionTime(precursor.getPeptideId(), pChromInfo.getSampleFileId());
         }
         if(pciMaxStartTime == null)
         {
-           pciMaxStartTime = PeptideManager.getMaxRetentionTime(precursor.getPeptideId(), pChromInfo.getSampleFileId());
+            pciMaxStartTime = PeptideManager.getMaxRetentionTime(precursor.getPeptideId(), pChromInfo.getSampleFileId());
         }
 
         List<TransChromInfoPlusTransition> tciList = new ArrayList<>(chromatogram.getTransitionsCount());
@@ -129,17 +211,54 @@ public class ChromatogramChartMakerFactory
             }
         }
 
-        Collections.sort(tciList, new TransitionComparator());
+        // If is split graph is set to true this will return list of two charts, otherwise list with one chart.
+        if(!splitGraph)
+        {
+            TransitionChromDataset dataset = getDataset(chromatogram, tciList, syncMz, minPrecAllReplRt, maxPrecAllReplRt, pciMinStartTime, pciMaxStartTime, 0);
+            List<TransitionChromDataset> list = new ArrayList<>();
+            list.add(dataset);
+            return list;
+        }
+        else
+        {
+            List<TransChromInfoPlusTransition> tciPrecursor = new ArrayList<>();
+            List<TransChromInfoPlusTransition> tciFragment = new ArrayList<>();
+            for(TransChromInfoPlusTransition tci:tciList)
+            {
+                if(tci.getTransition().isPrecursorIon())
+                {
+                    tciPrecursor.add(tci);
+                    continue;
+                }
+                tciFragment.add(tci);
+            }
 
+            Collections.sort(tciList, new TransitionComparator());
+
+            TransitionChromDataset precursorDataset = getDataset(chromatogram, tciPrecursor, syncMz, minPrecAllReplRt, maxPrecAllReplRt, pciMinStartTime, pciMaxStartTime, 0);
+            TransitionChromDataset productDataset = getDataset(chromatogram, tciFragment, syncMz, minPrecAllReplRt, maxPrecAllReplRt, pciMinStartTime, pciMaxStartTime, precursorDataset.getJfreeDataset().getSeriesCount());
+
+            List<TransitionChromDataset> list = new ArrayList<>();
+            list.add(precursorDataset);
+            list.add(productDataset);
+            return list;
+        }
+    }
+
+    // Generates the TransitionChromDataset and all including information for each tciList passed in.  Doesn't seperate precursor and product ions.
+    private static  TransitionChromDataset getDataset(Chromatogram chromatogram, List<TransChromInfoPlusTransition> tciList, boolean syncMz, float minPrecAllReplRt,
+                                  float maxPrecAllReplRt, Double pciMinStartTime, Double pciMaxStartTime, int transitionColorOffset)
+    {
+        XYSeriesCollection dataset = new XYSeriesCollection();
         Double bestTransitionHeight = 0.0;
         int bestTransitionSeriesIndex = 0;
         int seriesIndex = 0;
         for(TransChromInfoPlusTransition chromInfoPlusTransition: tciList)
         {
-            double height = addTransitionAsSeries(dataset, chromatogram, chromInfoPlusTransition.getTransChromInfo().getChromatogramIndex(),
-                                  (syncMz || pciMinStartTime == null ? minPrecAllReplRt : pciMinStartTime.floatValue()),
-                                  (syncMz || pciMaxStartTime == null ? maxPrecAllReplRt : pciMaxStartTime.floatValue()),
-                                  LabelFactory.transitionLabel(chromInfoPlusTransition.getTransition()));
+            Double height = addTransitionAsSeries(dataset, chromatogram, chromInfoPlusTransition.getTransChromInfo().getChromatogramIndex(),
+                    (syncMz || pciMinStartTime == null ? minPrecAllReplRt : pciMinStartTime.floatValue()),
+                        (syncMz || pciMaxStartTime == null ? maxPrecAllReplRt : pciMaxStartTime.floatValue()),
+                    LabelFactory.transitionLabel(chromInfoPlusTransition.getTransition()));
 
             if(height > bestTransitionHeight)
             {
@@ -149,8 +268,90 @@ public class ChromatogramChartMakerFactory
             seriesIndex++;
         }
 
+        // Creates and sets values for the new TransitionChromDataset.
+        TransitionChromDataset tcDataset = new TransitionChromDataset(dataset);
+        tcDataset.setBestTransitionHeight(bestTransitionHeight);
+        tcDataset.setBestTransitionSeriesIndex(bestTransitionSeriesIndex+transitionColorOffset);
+        tcDataset.setMaxPrecAllReplRt(maxPrecAllReplRt);
+        tcDataset.setMinPrecAllReplRt(minPrecAllReplRt);
+
+        return tcDataset;
+    }
+
+    // Contains dataset as well as the color offset, and the min/max precursor replicate retention times.
+    static class TransitionChromDataset
+    {
+        private final XYSeriesCollection _jfreeDataset;
+        private float _minPrecAllReplRt;
+        private float _maxPrecAllReplRt;
+        private int _bestTransitionSeriesIndex;
+
+        Double getBestTransitionHeight()
+        {
+            return _bestTransitionHeight;
+        }
+
+        void setBestTransitionHeight(Double bestTransitionHeight)
+        {
+            _bestTransitionHeight = bestTransitionHeight;
+        }
+
+        private Double _bestTransitionHeight;
+
+        int getBestTransitionSeriesIndex()
+        {
+            return _bestTransitionSeriesIndex;
+        }
+
+        void setBestTransitionSeriesIndex(int bestTransitionSeriesIndex)
+        {
+            _bestTransitionSeriesIndex = bestTransitionSeriesIndex;
+        }
+
+
+        public TransitionChromDataset(XYSeriesCollection jfreeDataset)
+        {
+            _jfreeDataset = jfreeDataset;
+        }
+
+        XYSeriesCollection getJfreeDataset()
+        {
+            return _jfreeDataset;
+        }
+
+        float getMinPrecAllReplRt()
+        {
+            return _minPrecAllReplRt;
+        }
+
+        void setMinPrecAllReplRt(float minPrecAllReplRt)
+        {
+            _minPrecAllReplRt = minPrecAllReplRt;
+        }
+
+        float getMaxPrecAllReplRt()
+        {
+            return _maxPrecAllReplRt;
+        }
+
+        void setMaxPrecAllReplRt(float maxPrecAllReplRt)
+        {
+            _maxPrecAllReplRt = maxPrecAllReplRt;
+        }
+    }
+
+    private static JFreeChart getChart(PrecursorChromInfo pChromInfo,
+                                       TransitionChromDataset dataset,
+                                       boolean syncIntensity,
+                                       boolean syncMz,
+                                       List<TransChromInfoPlusTransition> tciList,
+                                       Precursor precursor,
+                                       boolean isSplitGraph, int offset)
+    {
+        int bestTransitionSeriesIndex = dataset.getBestTransitionSeriesIndex(); // Split Graph mode, sets color index of annotation point.
+
         ChromatogramChartMaker chartMaker = new ChromatogramChartMaker(ChromatogramChartMaker.TYPE.PRECURSOR);
-        chartMaker.setDataset(dataset);
+        chartMaker.setDataset(dataset.getJfreeDataset());
         chartMaker.setTitle(LabelFactory.precursorChromInfoChartLabel(pChromInfo));
         if(pChromInfo.getMinStartTime() != null)
             chartMaker.setPeakStartTime(pChromInfo.getMinStartTime());
@@ -158,23 +359,32 @@ public class ChromatogramChartMakerFactory
             chartMaker.setPeakEndtime(pChromInfo.getMaxEndTime());
         if(pChromInfo.getBestRetentionTime() != null)
             chartMaker.addRetentionTimeAnnotation(pChromInfo.getBestRetentionTime(),
-                                                  pChromInfo.getAverageMassErrorPPM(),
-                                                  (bestTransitionHeight) / 1000,
-                                                  bestTransitionSeriesIndex);
+                    pChromInfo.getAverageMassErrorPPM(),
+                    (dataset.getBestTransitionHeight()) / 1000,
+                    bestTransitionSeriesIndex);
 
         if(syncIntensity)
         {
             // get the height of the tallest transition peak for this peptide over all replicates
-            double maxIntensity = TransitionManager.getMaxTransitionIntensity(precursor.getPeptideId());
+            double maxIntensity;
+            if(isSplitGraph && tciList.get(0).getTransition().isPrecursorIon())
+            {
+                maxIntensity =  TransitionManager.getMaxTransitionIntensity(precursor.getPeptideId(), Transition.Type.PRECURSOR);
+            }
+            else if(isSplitGraph && !tciList.get(0).getTransition().isPrecursorIon())
+            {maxIntensity = TransitionManager.getMaxTransitionIntensity(precursor.getPeptideId(), Transition.Type.PRODUCT);}
+            else
+            {
+                maxIntensity = TransitionManager.getMaxTransitionIntensity(precursor.getPeptideId(), Transition.Type.ALL);
+            }
             chartMaker.setMaxIntensity(maxIntensity);
         }
         if(syncMz)
         {
-            chartMaker.setMinRt(minPrecAllReplRt);
-            chartMaker.setMaxRt(maxPrecAllReplRt);
+            chartMaker.setMinRt(dataset.getMinPrecAllReplRt());
+            chartMaker.setMaxRt(dataset.getMaxPrecAllReplRt());
         }
-
-        return chartMaker.make();
+        return chartMaker.make(offset);
     }
 
     private static class TransChromInfoPlusTransition

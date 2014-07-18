@@ -59,6 +59,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
                                                         form.getChartHeight(),
                                                         form.isSyncY(),
                                                         form.isSyncX(),
+                                                        form.isSplitGraph(),
                                                         form.getAnnotationsFilter(),
                                                         form.getReplicatesFilter()
                                                         ));
@@ -73,6 +74,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
                                                         form.getChartHeight(),
                                                         form.isSyncY(),
                                                         form.isSyncX(),
+                                                        form.isSplitGraph(),
                                                         form.getAnnotationsFilter(),
                                                         form.getReplicatesFilter()
                                             ));

@@ -94,17 +94,38 @@ public class TransitionManager
 
     public static double getMaxTransitionIntensity(int peptideId)
     {
+        return getMaxTransitionIntensity(peptideId, Transition.Type.ALL);
+    }
+
+    public static double getMaxTransitionIntensity(int peptideId, Transition.Type fragmentType)
+    {
         SQLFragment sql = new SQLFragment("SELECT MAX(tci.Height) FROM ");
         sql.append(TargetedMSManager.getTableInfoPeptideChromInfo(), "pepci");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
+        if(fragmentType != Transition.Type.ALL)
+        {
+            sql.append(", ");
+            sql.append(TargetedMSManager.getTableInfoTransition(), "tran");
+        }
         sql.append(" WHERE ");
         sql.append("pepci.Id = preci.PeptideChromInfoId ");
         sql.append("AND ");
         sql.append("preci.Id = tci.PrecursorChromInfoId ");
-        sql.append("AND ");
+
+        if(fragmentType != Transition.Type.ALL)
+        {
+            sql.append("AND ");
+            sql.append("tran.Id = tci.TransitionId");
+
+            String condition = fragmentType == Transition.Type.PRECURSOR ? "=" : "!=";
+
+            sql.append(" AND ");
+            sql.append("tran.FragmentType " + condition +  " 'precursor' ");
+        }
+        sql.append(" AND ");
         sql.append("pepci.PeptideId=?");
         sql.add(peptideId);
 

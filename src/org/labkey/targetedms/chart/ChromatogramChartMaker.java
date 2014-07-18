@@ -57,6 +57,7 @@ class ChromatogramChartMaker
     private double _maxIntensity = 0;
     private double _minRt = 0;
     private double _maxRt = 0;
+    public static Font DefaultTitleFont = new java.awt.Font("SansSerif", java.awt.Font.BOLD, 12);
 
     public ChromatogramChartMaker(TYPE chromatogramType)
     {
@@ -131,13 +132,16 @@ class ChromatogramChartMaker
     {
         _maxRt = maxRt;
     }
-
     public JFreeChart make()
+    {
+        return make(0);
+    }
+    public JFreeChart make(int offset)
     {
         JFreeChart chart = ChartFactory.createXYLineChart(_title, "Retention Time", "Intensity (10^3)",
                  _dataset, PlotOrientation.VERTICAL, true, false, false);
 
-        setupSeriesColors(chart);
+         setupSeriesColors(chart, offset);
 
         // hide grid lines
         chart.getXYPlot().setRangeGridlinesVisible(false);
@@ -175,12 +179,12 @@ class ChromatogramChartMaker
             chart.getXYPlot().getDomainAxis().setLowerBound(_minRt  - margin);
             chart.getXYPlot().getDomainAxis().setUpperBound(_maxRt  + margin);
         }
-        chart.getTitle().setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 12));
+        chart.getTitle().setFont(DefaultTitleFont);
 
         return chart;
     }
 
-    private void setupSeriesColors(JFreeChart chart)
+    private void setupSeriesColors(JFreeChart chart, int offset)
     {
         XYPlot plot = chart.getXYPlot();
         XYItemRenderer renderer = plot.getRenderer();
@@ -195,7 +199,7 @@ class ChromatogramChartMaker
         {
             for(int i = 0; i < plot.getSeriesCount(); i++)
             {
-                renderer.setSeriesPaint(i, ChartColors.getTransitionColor(i));
+                renderer.setSeriesPaint(i, ChartColors.getTransitionColor(i + offset));
                 renderer.setSeriesStroke(i, new BasicStroke(2.0f));
             }
         }
@@ -203,7 +207,7 @@ class ChromatogramChartMaker
         {
             for(int i = 0; i < plot.getSeriesCount(); i++)
             {
-                renderer.setSeriesPaint(i, ChartColors.getPrecursorColor(i));
+                renderer.setSeriesPaint(i, ChartColors.getPrecursorColor(i + offset));
                 renderer.setSeriesStroke(i, new BasicStroke(2.0f));
             }
         }

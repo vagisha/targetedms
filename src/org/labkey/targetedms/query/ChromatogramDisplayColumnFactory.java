@@ -43,6 +43,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
     private int _chart_height;
     private boolean _syncY = false;
     private boolean _syncX = false;
+    private boolean _splitGraph = true;
     private String _annotationsFilter;
     private String _replicatesFilter;
 
@@ -55,12 +56,12 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type)
     {
-        this(container, type, 400, 400, false, false, null, null);
+        this(container, type, 400, 400, false, false, true, null, null);
     }
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type,
                                             int chartWidth, int chartHeight,
-                                            boolean syncIntensity, boolean syncMz, String annotationsFilter, String replicatesFilter)
+                                            boolean syncIntensity, boolean syncMz, boolean splitGraph, String annotationsFilter, String replicatesFilter)
     {
         _container = container;
         _type = type;
@@ -68,6 +69,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
         _chart_height = chartHeight;
         _syncY = syncIntensity;
         _syncX = syncMz;
+        _splitGraph = splitGraph;
         _annotationsFilter = annotationsFilter;
         _replicatesFilter = replicatesFilter;
     }
@@ -107,6 +109,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                     chromAction.addParameter("chartHeight", String.valueOf(_chart_height));
                     chromAction.addParameter("syncY", String.valueOf(_syncY));
                     chromAction.addParameter("syncX", String.valueOf(_syncX));
+                    chromAction.addParameter("splitGraph", String.valueOf(_splitGraph));
                     chromAction.addParameter("annotationsFilter", String.valueOf(_annotationsFilter));
                     chromAction.addParameter("replicatesFilter", String.valueOf(_replicatesFilter));
 

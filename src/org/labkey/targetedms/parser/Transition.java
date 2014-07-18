@@ -28,6 +28,13 @@ import java.util.List;
  */
 public class Transition extends AnnotatedEntity<TransitionAnnotation>
 {
+    public enum Type
+    {
+        PRECURSOR,
+        PRODUCT,
+        ALL
+    }
+
     private int precursorId;
 
     private String fragmentType;  // 'a', 'b', 'c', 'x', 'y', 'z' or 'precursor'

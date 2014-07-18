@@ -153,6 +153,14 @@
                     style:"margin-left:-"+syncMargin+"px;"
                 },
                 {
+                    xtype: 'checkbox',
+                    name: 'splitGraph',
+                    fieldLabel: 'Split Graphs',
+                    inputValue: true,
+                    checked: <%=bean.getForm().isSplitGraph()%>,
+                    colspan:3
+                },
+                {
                     xtype: 'combobox',
                     name: 'replicatesFilter',
                     multiSelect: true,
