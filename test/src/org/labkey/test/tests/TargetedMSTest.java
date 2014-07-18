@@ -21,6 +21,8 @@ import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.util.LogMethod;
 
+import java.util.Arrays;
+
 public abstract class TargetedMSTest extends BaseWebDriverTest
 {
     public enum FolderType {
@@ -95,9 +97,9 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     }
 
     @Override
-    public String getAssociatedModuleDirectory()
+    public java.util.List<String> getAssociatedModules()
     {
-        return "server/customModules/targetedms";
+        return Arrays.asList("targetedms");
     }
 
     @Override
