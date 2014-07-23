@@ -19,7 +19,10 @@ package org.labkey.targetedms.parser;
 
 import org.labkey.targetedms.chart.LabelFactory;
 
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: vsharma
@@ -288,5 +291,56 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
     public String getLabel()
     {
         return LabelFactory.transitionLabel(this);
+    }
+
+    public static class TransitionComparator implements Comparator<Transition>
+    {
+        private static Map<String, Integer> ionOrder;
+        static{
+            ionOrder = new HashMap<>();
+            ionOrder.put("precursor", 1);
+            ionOrder.put("y", 2);
+            ionOrder.put("b", 3);
+            ionOrder.put("z", 4);
+            ionOrder.put("c", 5);
+            ionOrder.put("x", 6);
+            ionOrder.put("a", 7);
+        }
+
+        @Override
+        public int compare(Transition t1, Transition t2)
+        {
+            int result = ionOrder.get(t1.getFragmentType()).compareTo(ionOrder.get(t2.getFragmentType()));
+            if(result == 0)
+            {
+                if(t1.isPrecursorIon() && t2.isPrecursorIon())
+                {
+                    // Precursor ions are ordered M, M+1, M+2.
+                    return t1.getMassIndex().compareTo(t2.getMassIndex());
+                }
+                else
+                {
+                    result = t1.getCharge().compareTo(t2.getCharge());
+                    if(result == 0)
+                    {
+                        // c-term fragment ions are displayed in reverse order -- y9, y8, y7 etc.
+                        // n-term fragment ions are displayed in forward order -- b1, b2, b3 etc.
+                        if(t1.isNterm() && t2.isNterm())
+                        {
+                            result = t1.getFragmentOrdinal().compareTo(t2.getFragmentOrdinal());
+                            if(result != 0)  return result;
+                        }
+                        else if(t1.isCterm() && t2.isCterm())
+                        {
+                            result = t2.getFragmentOrdinal().compareTo(t1.getFragmentOrdinal());
+                            if(result != 0)  return result;
+                        }
+                        return Double.valueOf(t2.getMz()).compareTo(t1.getMz());
+                    }
+                    return result;
+                }
+            }
+            return result;
+        }
     }
 }
