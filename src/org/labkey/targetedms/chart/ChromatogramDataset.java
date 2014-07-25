@@ -116,7 +116,7 @@ public interface ChromatogramDataset
 
         public Double getMaxDisplayIntensity()
         {
-            return _maxDisplayIntensity == null ? null : _maxDisplayIntensity / getIntensityScale();
+            return _maxDisplayIntensity == null ? null : _maxDisplayIntensity;
         }
 
         public Double getMinDisplayRetentionTime()
