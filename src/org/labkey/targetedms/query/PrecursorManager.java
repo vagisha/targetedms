@@ -575,8 +575,7 @@ public class PrecursorManager
                     sql.append(" AND ");
                     sql.append("pg.RunId = ?");
                     sql.add(Integer.valueOf(runId));
-                    Collection<Integer> results = new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class);
-                    return new HashSet<>(results);
+                    return Collections.unmodifiableSet(new HashSet<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class)));
                 }
             });
 
@@ -617,8 +616,7 @@ public class PrecursorManager
                     sql.append(" AND ");
                     sql.append("specLib.RunId = ?");
                     sql.add(Integer.valueOf(runId));
-                    Collection<Integer> results = new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class);
-                    return new HashSet<>(results);
+                    return Collections.unmodifiableSet(new HashSet<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class)));
                 }
             });
 

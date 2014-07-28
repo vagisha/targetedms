@@ -30,6 +30,7 @@ import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -194,8 +195,7 @@ public class PeptideManager
                     sql.append(" AND ");
                     sql.append(" specLib.RunId = ? ");
                     sql.add(Integer.valueOf(runId));
-                    Collection<Integer> results = new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class);
-                    return new HashSet<>(results);
+                    return Collections.unmodifiableSet(new HashSet<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class)));
                 }
             });
 
