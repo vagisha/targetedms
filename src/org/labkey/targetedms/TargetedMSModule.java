@@ -39,8 +39,8 @@ import org.labkey.api.view.Portal;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
-import org.labkey.targetedms.chart.PeakAreasChartInputMaker;
-import org.labkey.targetedms.chart.PrecursorPeakAreaChartMaker;
+import org.labkey.targetedms.chart.ComparisonCategory;
+import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
@@ -295,8 +295,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         Set<Class> set = new HashSet<>();
         set.add(TargetedMSController.TestCase.class);
-        set.add(PeakAreasChartInputMaker.TestCase.class);
-        set.add(PrecursorPeakAreaChartMaker.TestCase.class);
+        set.add(ComparisonCategory.TestCase.class);
+        set.add(ReplicateLabelMinimizer.TestCase.class);
         return set;
 
     }

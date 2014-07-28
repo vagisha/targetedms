@@ -23,12 +23,10 @@ import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
-import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.SampleFile;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.util.List;
 
 /**
  * User: vsharma
@@ -51,7 +49,6 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
     {
         PEPTIDE,
         PRECURSOR
-        //TRANSITION
     }
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type)
@@ -61,14 +58,14 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type,
                                             int chartWidth, int chartHeight,
-                                            boolean syncIntensity, boolean syncMz, boolean splitGraph, String annotationsFilter, String replicatesFilter)
+                                            boolean syncIntensity, boolean syncRt, boolean splitGraph, String annotationsFilter, String replicatesFilter)
     {
         _container = container;
         _type = type;
         _chartWidth = chartWidth;
         _chart_height = chartHeight;
         _syncY = syncIntensity;
-        _syncX = syncMz;
+        _syncX = syncRt;
         _splitGraph = splitGraph;
         _annotationsFilter = annotationsFilter;
         _replicatesFilter = replicatesFilter;
@@ -96,26 +93,19 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                         chromAction = new ActionURL(TargetedMSController.PrecursorChromatogramChartAction.class, _container);
                         sampleFile = ReplicateManager.getSampleFileForPrecursorChromInfo((Integer) Id);
                         break;
-//                    case TRANSITION:
-//                        chromAction = new ActionURL(TargetedMSController.TransitionChromatogramChartAction.class, _container);
-//                        sampleFile = ReplicateManager.getSampleFileForTransitionChromInfo((Integer) Id);
-//                        break;
                 }
 
-                if (chromAction != null)
-                {
-                    chromAction.addParameter("id", String.valueOf(Id));
-                    chromAction.addParameter("chartWidth", String.valueOf(_chartWidth));
-                    chromAction.addParameter("chartHeight", String.valueOf(_chart_height));
-                    chromAction.addParameter("syncY", String.valueOf(_syncY));
-                    chromAction.addParameter("syncX", String.valueOf(_syncX));
-                    chromAction.addParameter("splitGraph", String.valueOf(_splitGraph));
-                    chromAction.addParameter("annotationsFilter", String.valueOf(_annotationsFilter));
-                    chromAction.addParameter("replicatesFilter", String.valueOf(_replicatesFilter));
+                chromAction.addParameter("id", String.valueOf(Id));
+                chromAction.addParameter("chartWidth", String.valueOf(_chartWidth));
+                chromAction.addParameter("chartHeight", String.valueOf(_chart_height));
+                chromAction.addParameter("syncY", String.valueOf(_syncY));
+                chromAction.addParameter("syncX", String.valueOf(_syncX));
+                chromAction.addParameter("splitGraph", String.valueOf(_splitGraph));
+                chromAction.addParameter("annotationsFilter", String.valueOf(_annotationsFilter));
+                chromAction.addParameter("replicatesFilter", String.valueOf(_replicatesFilter));
 
-                    String imgLink = "<img src=\""+chromAction.getLocalURIString()+"\" alt=\"Chromatogram "+sampleFile.getSampleName()+"\">";
-                    out.write(imgLink);
-                }
+                String imgLink = "<img src=\""+chromAction.getLocalURIString()+"\" alt=\"Chromatogram "+sampleFile.getSampleName()+"\">";
+                out.write(imgLink);
             }
         };
     }

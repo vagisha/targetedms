@@ -113,15 +113,13 @@ import org.labkey.api.view.ViewForm;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
-import org.labkey.targetedms.chart.PrecursorPeakAreaChartMaker;
+import org.labkey.targetedms.chart.ComparisonChartMaker;
 import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.conflict.ConflictPeptide;
 import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.model.ExperimentAnnotations;
-import org.labkey.targetedms.model.PrecursorChromInfoPlus;
-import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.PeptideGroup;
@@ -968,7 +966,7 @@ public class TargetedMSController extends SpringActionController
             _sequence = peptide.getSequence();
 
             VBox vbox = new VBox();
-            VBox chromatogramsBox = new VBox();
+
             _run = TargetedMSManager.getRunForPeptide(peptideId);
 
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
@@ -986,21 +984,21 @@ public class TargetedMSController extends SpringActionController
             bean.setLabels(labels);
             bean.setRun(_run);
 
-            // summary for this peptide
+            // Summary for this peptide
             JspView<PeptideChromatogramsViewBean> peptideInfo = new JspView<>("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
             peptideInfo.setFrame(WebPartView.FrameType.PORTAL);
             peptideInfo.setTitle("Peptide Summary");
             vbox.addView(peptideInfo);
 
-            // precursor and transition chromatograms. One row per replicate
-
+            // Precursor and transition chromatograms. One row per replicate
+            VBox chromatogramsBox = new VBox();
             PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),form, errors);
             JspView<PeptideChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
 
-            chromView.enableExpandCollapse(PeptidePrecursorChromatogramsView.TITLE, false);
+            chromatogramsBox.setTitle(PeptidePrecursorChromatogramsView.TITLE);
+            chromatogramsBox.enableExpandCollapse(PeptidePrecursorChromatogramsView.TITLE, false);
             chromatogramsBox.addView(chartForm);
             chromatogramsBox.addView(chromView);
-            chromatogramsBox.setTitle("Chromatograms");
             chromatogramsBox.setShowTitle(true);
             chromatogramsBox.setFrame(WebPartView.FrameType.PORTAL);
             vbox.addView(chromatogramsBox);
@@ -1112,7 +1110,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     // ------------------------------------------------------------------------
-    // Action to display a peak areas for peptides of a protein
+    // Action to display a peak areas chart
     // ------------------------------------------------------------------------
     @RequiresPermissionClass(ReadPermission.class)
     public class ShowPeptidePeakAreasAction extends ExportAction<ShowPeakAreaForm>
@@ -1155,7 +1153,7 @@ public class TargetedMSController extends SpringActionController
                 }
             }
 
-            JFreeChart chart = new PrecursorPeakAreaChartMaker().make(
+            JFreeChart chart = new ComparisonChartMaker().makePeakAreasChart(
                                                                  form.getReplicateId(),
                                                                  peptideGrp,
                                                                  peptide,
@@ -1181,6 +1179,78 @@ public class TargetedMSController extends SpringActionController
             return chart;
         }
     }
+
+    // ------------------------------------------------------------------------
+    // Action to display retention times chart.
+    // ------------------------------------------------------------------------
+    @RequiresPermissionClass(ReadPermission.class)
+    public class ShowRetentionTimesChartAction extends ExportAction<ShowPeakAreaForm>
+    {
+        @Override
+        public void export(ShowPeakAreaForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            PeptideGroup peptideGrp = null;
+            if(form.getPeptideGroupId() != 0)
+            {
+                peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), form.getPeptideGroupId());
+                if(peptideGrp == null)
+                {
+                    throw new NotFoundException(String.format("No peptide group found in this folder for peptideGroupId: %d", form.getPeptideGroupId()));
+                }
+            }
+
+            Peptide peptide = null;
+            Precursor precursor = null;
+            if(form.getPeptideId() != 0)
+            {
+                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
+                if(peptide == null)
+                {
+                    throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", form.getPeptideId()));
+                }
+
+                if(peptideGrp == null)
+                {
+                    peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), peptide.getPeptideGroupId());
+                }
+
+                if(form.getPrecursorId() != 0)
+                {
+                    precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId());
+                    if(precursor == null)
+                    {
+                        throw new NotFoundException(String.format("No precursor found in this folder for precursorId: %d", form.getPrecursorId()));
+                    }
+                }
+            }
+
+            JFreeChart chart = new ComparisonChartMaker().makeRetentionTimesChart(
+                    form.getReplicateId(),
+                    peptideGrp,
+                    peptide,
+                    precursor,
+                    form.getGroupByReplicateAnnotName(),
+                    form.getFilterByReplicateAnnotName());
+//                    form.isCvValues(),
+//                    form.isLogValues());
+            if (null == chart)
+            {
+                chart = createEmptyChart();
+                form.setChartHeight(20);
+                form.setChartWidth(300);
+            }
+
+            writePNG(form, response, chart);
+        }
+
+        private JFreeChart createEmptyChart()
+        {
+            JFreeChart chart = ChartFactory.createBarChart("", "", "", null, PlotOrientation.VERTICAL, false, false, false);
+            chart.setTitle(new TextTitle("No chromatogram data found.", new java.awt.Font("SansSerif", Font.PLAIN, 12)));
+            return chart;
+        }
+    }
+
 
     public abstract static class AbstractChartForm
     {

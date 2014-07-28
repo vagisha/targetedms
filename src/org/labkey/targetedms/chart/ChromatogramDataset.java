@@ -1,11 +1,9 @@
 package org.labkey.targetedms.chart;
 
 import org.jfree.data.xy.XYSeriesCollection;
-import org.labkey.api.action.ApiResponseWriter;
 import org.labkey.api.util.Formats;
 
 import java.awt.*;
-import java.text.DecimalFormat;
 import java.util.List;
 
 /**

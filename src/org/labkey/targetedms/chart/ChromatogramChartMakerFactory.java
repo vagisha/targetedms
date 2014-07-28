@@ -19,6 +19,8 @@ import org.jfree.chart.ChartColor;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.PeptideChromInfo;
@@ -36,7 +38,9 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -89,6 +93,9 @@ public class ChromatogramChartMakerFactory
         private double _maxPeakRt;
         private double _maxIntensity;
 
+        private PrecursorColorIndexer _colorIndexer;
+        private Map<Integer, Color> _seriesColors;
+
         public PeptideChromatogramDataset(PeptideChromInfo pepChromInfo, boolean syncIntensity, boolean syncRt)
         {
             _pepChromInfo = pepChromInfo;
@@ -117,6 +124,11 @@ public class ChromatogramChartMakerFactory
 
             _jfreeDataset = new XYSeriesCollection();
 
+            // Create a map of colors to be used for drawing the peaks.
+            _seriesColors = new HashMap<>();
+            TargetedMSRun run = TargetedMSManager.getRunForPeptide(_pepChromInfo.getPeptideId());
+           _colorIndexer = new PrecursorColorIndexer(run.getId(), _pepChromInfo.getPeptideId());
+
             for(int i = 0; i < precursorChromInfoList.size(); i++)
             {
                 PrecursorChromInfo pChromInfo = precursorChromInfoList.get(i);
@@ -125,10 +137,11 @@ public class ChromatogramChartMakerFactory
 
                 // Instead of displaying separate peaks for each transition of this precursor,
                 // we will sum up the intensities and display a single peak for the precursor
-                _maxIntensity = addPrecursorAsSeries(_jfreeDataset, chromatogram, pChromInfo.getId(),
+                _maxIntensity = addPrecursorAsSeries(_jfreeDataset, chromatogram, pChromInfo,
                         chromatogramRange.getMinRt(),
                         chromatogramRange.getMaxRt(),
-                        LabelFactory.precursorLabel(pChromInfo.getPrecursorId()));
+                        LabelFactory.precursorLabel(pChromInfo.getPrecursorId()),
+                        i);
 
                 if(pChromInfo.getBestRetentionTime() != null)
                     _annotations.add(makePeakApexAnnotation(pChromInfo.getBestRetentionTime(),
@@ -163,8 +176,9 @@ public class ChromatogramChartMakerFactory
         }
 
         private double addPrecursorAsSeries(XYSeriesCollection dataset, Chromatogram chromatogram,
-                                            int precursorChromId,
-                                            double minTime, double maxTime, String label)
+                                            PrecursorChromInfo pChromInfo,
+                                            double minTime, double maxTime, String label,
+                                            int seriesIndex)
         {
             float[] times = chromatogram.getTimes();
 
@@ -175,7 +189,7 @@ public class ChromatogramChartMakerFactory
             minTime = minTime - displayWidth;
             maxTime = maxTime + displayWidth;
 
-            Set<Integer> transitionChromIndexes = TransitionManager.getTransitionChromatogramIndexes(precursorChromId);
+            Set<Integer> transitionChromIndexes = TransitionManager.getTransitionChromatogramIndexes(pChromInfo.getId());
 
             // sum up the intensities of all transitions of this precursor
             double[] totalIntensities = new double[times.length];
@@ -210,6 +224,8 @@ public class ChromatogramChartMakerFactory
             }
             dataset.addSeries(series);
 
+            _seriesColors.put(seriesIndex,ChartColors.getPrecursorColor(_colorIndexer.getColorIndex(pChromInfo.getPrecursorId())));
+
             return maxHeight;
         }
 
@@ -240,7 +256,7 @@ public class ChromatogramChartMakerFactory
         @Override
         public Color getSeriesColor(int seriesIndex)
         {
-            return ChartColors.getPrecursorColor(seriesIndex);
+           return  _seriesColors.get(seriesIndex);
         }
 
         @Override

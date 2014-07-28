@@ -130,9 +130,15 @@ src/org/labkey/targetedms/chart/ChartColors.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMaker.java -text
 src/org/labkey/targetedms/chart/ChromatogramChartMakerFactory.java -text
 src/org/labkey/targetedms/chart/ChromatogramDataset.java -text
+src/org/labkey/targetedms/chart/ComparisonAxis.java -text
+src/org/labkey/targetedms/chart/ComparisonCategory.java -text
+src/org/labkey/targetedms/chart/ComparisonChartInputMaker.java -text
+src/org/labkey/targetedms/chart/ComparisonChartMaker.java -text
+src/org/labkey/targetedms/chart/ComparisonDataset.java -text
 src/org/labkey/targetedms/chart/LabelFactory.java -text
-src/org/labkey/targetedms/chart/PeakAreasChartInputMaker.java -text
-src/org/labkey/targetedms/chart/PrecursorPeakAreaChartMaker.java -text
+src/org/labkey/targetedms/chart/PrecursorColorIndexer.java -text
+src/org/labkey/targetedms/chart/ReplicateLabelMinimizer.java -text
+src/org/labkey/targetedms/chart/RetentionTimeBoxAndWhiskerRenderer.java -text
 src/org/labkey/targetedms/chromlib/BaseDaoImpl.java -text
 src/org/labkey/targetedms/chromlib/ChromLibSqliteSchemaCreator.java -text
 src/org/labkey/targetedms/chromlib/ChromatogramLibraryReader.java -text
