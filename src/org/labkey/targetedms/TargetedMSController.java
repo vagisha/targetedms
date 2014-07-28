@@ -129,8 +129,6 @@ import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.RepresentativeDataState;
-import org.labkey.targetedms.parser.SampleFile;
-import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;

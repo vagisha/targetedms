@@ -66,7 +66,7 @@ public interface ChromatogramDataset
             return _intensity;
         }
 
-        public List<String> getText()
+        public List<String> getLabels()
         {
             return _labels;
         }

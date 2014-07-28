@@ -20,7 +20,6 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.annotations.XYPointerAnnotation;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.axis.NumberTickUnit;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.IntervalMarker;
 import org.jfree.chart.plot.PlotOrientation;
@@ -48,18 +47,17 @@ class ChromatogramChartMaker
     private void addAnnotation(ChromatogramDataset.ChartAnnotation annotation, JFreeChart chart)
     {
         //TODO: Draw sublable under label
-        String label = annotation.getText().get(0);
-        String sublable = annotation.getText().get(1);
+        String label = annotation.getLabels().get(0);
+        String sublable = annotation.getLabels().get(1);
 
-        XYPointerAnnotation pointer = new XYPointerAnnotation(label + sublable, annotation.getRetentionTime(),
-                annotation.getIntensity(), Math.PI);
+        XYPointerAnnotation pointer = new XYPointerAnnotation(label + sublable, annotation.getRetentionTime(), annotation.getIntensity(), Math.PI);
         pointer.setTipRadius(3.0);  // The radius from the (x, y) point to the tip of the arrow
-            pointer.setBaseRadius(13.0); // The radius from the (x, y) point to the start of the arrow line
-            pointer.setArrowLength(13.0);  //The length of the arrow head
-            pointer.setLabelOffset(-5.0);
-            pointer.setFont(new Font("SansSerif", Font.PLAIN, 10));
-            pointer.setPaint(annotation.getColor());
-            pointer.setTextAnchor(TextAnchor.BOTTOM_LEFT);
+        pointer.setBaseRadius(13.0); // The radius from the (x, y) point to the start of the arrow line
+        pointer.setArrowLength(13.0);  //The length of the arrow head
+        pointer.setLabelOffset(-5.0);
+        pointer.setFont(new Font("SansSerif", Font.PLAIN, 10));
+        pointer.setPaint(annotation.getColor());
+        pointer.setTextAnchor(TextAnchor.BOTTOM_LEFT);
 
         chart.getXYPlot().addAnnotation(pointer);
     }
