@@ -633,6 +633,27 @@ public class PrecursorManager
         }
     }
 
+    public static boolean canBeSplitView(int id)
+    {
+        SQLFragment sql = new SQLFragment("SELECT DISTINCT tra.fragmenttype FROM ");
+        sql.append(TargetedMSManager.getTableInfoTransition(), "tra");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+        sql.append(" WHERE tra.precursorid = pre.Id AND  ");
+        sql.append("pre.peptideid = "+id);
+        String[] sqls = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(String.class);
+
+        if(sqls.length > 1)
+        {
+            for(String result: sqls)
+            {
+                if(result.equals("precursor"))
+                    return true;
+            }
+        }
+        return false;
+    }
+
     private static class PrecursorIdsWithSpectra extends DatabaseCache<Set<Integer>>
     {
        public PrecursorIdsWithSpectra()

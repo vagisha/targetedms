@@ -158,7 +158,8 @@
                     fieldLabel: 'Split Graphs',
                     inputValue: true,
                     checked: <%=bean.getForm().isSplitGraph()%>,
-                    colspan:3
+                    colspan:3,
+                    hidden:<%=!bean.canBeSplitView()%>
                 },
                 {
                     xtype: 'combobox',

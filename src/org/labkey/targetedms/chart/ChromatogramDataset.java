@@ -4,6 +4,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.labkey.api.util.Formats;
 
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -44,14 +45,14 @@ public interface ChromatogramDataset
     {
         private double _retentionTime;
         private double _intensity;
-        private String _label;
+        private List<String> _labels;
         private Color _color;
 
-        public ChartAnnotation(double retentionTime, double intensity, String label, Color color)
+        public ChartAnnotation(double retentionTime, double intensity, List<String> labels, Color color)
         {
             _retentionTime = retentionTime;
             _intensity = intensity;
-            _label = label;
+            _labels = labels;
             _color = color;
         }
 
@@ -65,9 +66,9 @@ public interface ChromatogramDataset
             return _intensity;
         }
 
-        public String getText()
+        public List<String> getText()
         {
-            return _label;
+            return _labels;
         }
 
         public Color getColor()
@@ -131,12 +132,13 @@ public interface ChromatogramDataset
                                                                    double intensity, int seriesIndex)
         {
             String label = Formats.f1.format(retentionTime);
-            // TODO: Can we make this 2-line formatting like in Skyline?
-            if (averageMassErrorPPM != null)
-                label += " (" + Formats.f1.format(averageMassErrorPPM) + " ppm)";
 
+            List<String> labels = new ArrayList<>();
+            labels.add(label);
+            if (averageMassErrorPPM != null)
+                labels.add(" (" + Formats.f1.format(averageMassErrorPPM) + " ppm)");
             return new ChromatogramDataset.ChartAnnotation(retentionTime, intensity,
-                    label, getSeriesColor(seriesIndex));
+                    labels, getSeriesColor(seriesIndex));
         }
 
         abstract double getMaxDatasetIntensity();

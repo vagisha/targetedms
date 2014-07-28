@@ -533,7 +533,7 @@ public class ChromatogramChartMakerFactory
         }
     }
 
-    private static class TransChromInfoPlusTransition
+    public static class TransChromInfoPlusTransition
     {
         private TransitionChromInfo _transChromInfo;
         private Transition _transition;

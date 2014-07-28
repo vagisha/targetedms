@@ -129,6 +129,8 @@ import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
@@ -717,6 +719,18 @@ public class TargetedMSController extends SpringActionController
         private List<ReplicateAnnotation> _replicateAnnotationValueList;
         private List<Replicate> _replicatesFilter;
 
+        public boolean canBeSplitView()
+        {
+            return _canBeSplitView;
+        }
+
+        public void setCanBeSplitView(boolean canBeSplitView)
+        {
+            _canBeSplitView = canBeSplitView;
+        }
+
+        private boolean _canBeSplitView;
+
         public PeptideChromatogramsViewBean(String resultsUri)
         {
             _resultsUri = resultsUri;
@@ -992,6 +1006,7 @@ public class TargetedMSController extends SpringActionController
 
             // Precursor and transition chromatograms. One row per replicate
             VBox chromatogramsBox = new VBox();
+            bean.setCanBeSplitView(PrecursorManager.canBeSplitView(form.getId()));
             PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),form, errors);
             JspView<PeptideChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
 
