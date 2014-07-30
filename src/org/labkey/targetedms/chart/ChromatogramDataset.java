@@ -136,7 +136,7 @@ public interface ChromatogramDataset
             List<String> labels = new ArrayList<>();
             labels.add(label);
             if (averageMassErrorPPM != null)
-                labels.add(" (" + Formats.f1.format(averageMassErrorPPM) + " ppm)");
+                labels.add(Formats.f1.format(averageMassErrorPPM) + " ppm");
             return new ChromatogramDataset.ChartAnnotation(retentionTime, intensity,
                     labels, getSeriesColor(seriesIndex));
         }
@@ -147,7 +147,7 @@ public interface ChromatogramDataset
         {
             if(_intensityScale == null)
             {
-                double quotient = getMaxDatasetIntensity() / 1000;
+                double quotient = _maxDisplayIntensity == null ? (getMaxDatasetIntensity() / 1000) : (_maxDisplayIntensity / 1000);
                 _intensityScale = quotient < 1 ? 1 : (quotient > 1000 ? 1000000 : 1000);
             }
             return _intensityScale;

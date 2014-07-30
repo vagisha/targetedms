@@ -18,7 +18,6 @@ package org.labkey.targetedms.chart;
 import org.jfree.chart.ChartColor;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
-import org.jfree.chart.annotations.XYPointerAnnotation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.IntervalMarker;
@@ -46,14 +45,10 @@ class ChromatogramChartMaker
 
     private void addAnnotation(ChromatogramDataset.ChartAnnotation annotation, JFreeChart chart)
     {
-        //TODO: Draw sublable under label
-        String label = annotation.getLabels().get(0);
-        String sublable = annotation.getLabels().get(1);
-
-        XYPointerAnnotation pointer = new XYPointerAnnotation(label + sublable, annotation.getRetentionTime(), annotation.getIntensity(), Math.PI);
+        MultiLineXYPointerAnnotation pointer = new MultiLineXYPointerAnnotation(annotation.getLabels(), annotation.getRetentionTime(), annotation.getIntensity());
         pointer.setTipRadius(3.0);  // The radius from the (x, y) point to the tip of the arrow
-        pointer.setBaseRadius(13.0); // The radius from the (x, y) point to the start of the arrow line
-        pointer.setArrowLength(13.0);  //The length of the arrow head
+        pointer.setBaseRadius(11.0); // The radius from the (x, y) point to the start of the arrow line
+        pointer.setArrowLength(11.0);  //The length of the arrow head
         pointer.setLabelOffset(-5.0);
         pointer.setFont(new Font("SansSerif", Font.PLAIN, 10));
         pointer.setPaint(annotation.getColor());
@@ -93,10 +88,13 @@ class ChromatogramChartMaker
             chart.getXYPlot().addDomainMarker(marker, Layer.BACKGROUND);
         }
 
+        boolean isMulitLineAnnotation = false;
         // Add annotations
         for(ChromatogramDataset.ChartAnnotation annotation: chromatogramDataset.getChartAnnotations())
         {
             addAnnotation(annotation, chart);
+            if(annotation.getLabels().size() > 1)
+                isMulitLineAnnotation = true;
         }
 
         // Limit labels to one decimal place on the x-axis (retention time).
@@ -110,7 +108,7 @@ class ChromatogramChartMaker
             public StringBuffer format(double number, StringBuffer toAppendTo, FieldPosition pos)
             {
                 // Display the scaled value in the tick label.
-                return toAppendTo.append(NumberFormat.getIntegerInstance().format(number / chromatogramDataset.getIntensityScale()));
+                return toAppendTo.append(new DecimalFormat("0.0").format(number / chromatogramDataset.getIntensityScale()));
             }
 
             @Override
@@ -126,14 +124,18 @@ class ChromatogramChartMaker
             }
         });
 
-
-        // TODO Calculate margin amount based on peak apex annotations.
-        chart.getXYPlot().getRangeAxis().setUpperMargin(0.15);
+        double smallMargin = 0.15;
+        double largeMargin = 0.32;
+        chart.getXYPlot().getRangeAxis().setUpperMargin(smallMargin);
+        if(isMulitLineAnnotation)
+            chart.getXYPlot().getRangeAxis().setUpperMargin(largeMargin);
 
         if(chromatogramDataset.getMaxDisplayIntensity() != null)
         {
             double intensity = chromatogramDataset.getMaxDisplayIntensity();
-            double margin = intensity * 0.15;
+            double margin = intensity * smallMargin;
+            if(isMulitLineAnnotation)
+                margin = intensity * largeMargin;
             chart.getXYPlot().getRangeAxis().setUpperBound(intensity + margin);
         }
 
