@@ -44,8 +44,9 @@ public class SkylineBinaryParser
     private Chromatogram[] _chromatograms;
     private ChromatogramTran[] _transitions;
 
-    public static final int FORMAT_VERSION_CACHE_8 = 8;
-    public static final int FORMAT_VERSION_CACHE_7 = 7;
+    public static final int FORMAT_VERSION_CACHE_9 = 9; // Introduces abbreviated scan ids
+    public static final int FORMAT_VERSION_CACHE_8 = 8; // Introduces ion mobility data
+    public static final int FORMAT_VERSION_CACHE_7 = 7; // Introduces UTF8 character support
     public static final int FORMAT_VERSION_CACHE_6 = 6;
     public static final int FORMAT_VERSION_CACHE_5 = 5;
     public static final int FORMAT_VERSION_CACHE_4 = 4;
@@ -53,7 +54,7 @@ public class SkylineBinaryParser
     public static final int FORMAT_VERSION_CACHE_2 = 2;
 
     /** Newest supported version */
-    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_8;
+    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_9;
 
     private CachedFile[] _cacheFiles;
 
@@ -83,6 +84,10 @@ public class SkylineBinaryParser
     /** File-level header fields */
     private enum Header
     {
+        // Version 9 header addition
+        location_scan_ids_lo,
+        location_scan_ids_hi,
+
         // Version 5 header addition
         num_score_types,
         num_scores,
@@ -195,6 +200,10 @@ public class SkylineBinaryParser
         // Version 6 file header addition
         max_retention_time,
         max_intensity,
+        // Version 9 file header addition
+        size_scan_ids,
+        location_scan_ids_lo,
+        location_scan_ids_hi,
 
         count;
 
@@ -210,6 +219,10 @@ public class SkylineBinaryParser
                     return FileHeader.flags.ordinal() * 4;
                 case FORMAT_VERSION_CACHE_5:
                     return FileHeader.max_retention_time.ordinal() * 4;
+                case FORMAT_VERSION_CACHE_6:
+                case FORMAT_VERSION_CACHE_7:
+                case FORMAT_VERSION_CACHE_8:
+                    return FileHeader.size_scan_ids.ordinal() * 4;
                 default:
                     return FileHeader.count.ordinal() * 4;
             }
