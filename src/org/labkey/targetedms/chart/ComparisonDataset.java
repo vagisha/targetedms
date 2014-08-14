@@ -42,6 +42,10 @@ import java.util.Set;
 public class ComparisonDataset
 {
     public static enum ChartType {PEPTIDE_COMPARISON, REPLICATE_COMPARISON}
+    public enum ValueType
+    {
+        RT_ALL, RETENTIONTIME, FWHM, FWB, PEAKAREA
+    }
 
     private Map<String, ComparisonCategoryItem> _categoryItemMap;
     private List<String> _sortedCategoryLabels;
@@ -429,7 +433,7 @@ public class ComparisonDataset
         }
         else
         {
-            if(_seriesItemMaker instanceof PeakAreasSeriesItemMaker)
+            if(_seriesItemMaker instanceof BarChartSeriesItemMaker)
             {
                 DefaultCategoryDataset dataset = new DefaultCategoryDataset();
                 for (String categoryLabel : this.getSortedCategoryLabels())
@@ -605,8 +609,10 @@ public class ComparisonDataset
         public SeriesItemData make(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues);
     }
 
-    public static class PeakAreasSeriesItemMaker implements SeriesItemMaker
+    public static abstract class BarChartSeriesItemMaker implements SeriesItemMaker
     {
+        public abstract Double getValue(PrecursorChromInfoPlus pciPlus);
+
         public BarChartSeriesItemData make(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues)
         {
             double value = 0.0;
@@ -615,7 +621,7 @@ public class ComparisonDataset
 
             if(pciPlusList.size() == 1)
             {
-                Double peakArea = pciPlusList.get(0).getTotalArea();
+                Double peakArea = getValue(pciPlusList.get(0));
                 if(peakArea != null && !cvValues)
                 {
                     value = peakArea;
@@ -647,11 +653,18 @@ public class ComparisonDataset
         }
     }
 
+    public static class PeakAreasSeriesItemMaker extends BarChartSeriesItemMaker
+    {
+        @Override
+        public Double getValue(PrecursorChromInfoPlus pciPlus)
+        {
+            return pciPlus.getTotalArea();
+        }
+    }
+
     // Makes a series item with the min, max and peak apex retention times as well as fwhm.
     public static class RetentionTimesAllValuesSeriesItemMaker implements SeriesItemMaker
     {
-
-        @Override
         public BoxAndWhisterSeriesItemData make(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues)
         {
             if(pciPlusList.size() == 1)
@@ -675,12 +688,13 @@ public class ComparisonDataset
             int count = 0;
             for(PrecursorChromInfoPlus pciPlus: pciPlusList)
             {
+                // TODO: Confirm this
                 if(pciPlus.getBestRetentionTime() == null)
                     continue;
                 rtAtPeakApex += pciPlus.getBestRetentionTime();
-                minStartTime += pciPlus.getMinStartTime();
-                maxEndTime += pciPlus.getMaxEndTime();
-                fwhm += pciPlus.getMaxFwhm();
+                if(pciPlus.getMinStartTime() != null) minStartTime += pciPlus.getMinStartTime();
+                if(pciPlus.getMaxEndTime() != null) maxEndTime += pciPlus.getMaxEndTime();
+                if(pciPlus.getMaxFwhm() != null) fwhm += pciPlus.getMaxFwhm();
                 count++;
             }
 
@@ -691,6 +705,33 @@ public class ComparisonDataset
                     minStartTime / count,
                     maxEndTime / count,
                     fwhm / count);
+        }
+    }
+
+    public static class RetentionTimesRTSeriesItemMaker extends BarChartSeriesItemMaker
+    {
+        @Override
+        public Double getValue(PrecursorChromInfoPlus pciPlus)
+        {
+            return pciPlus.getBestRetentionTime();
+        }
+    }
+
+    public static class RetentionTimesFWHMSeriesItemMaker extends BarChartSeriesItemMaker
+    {
+        @Override
+        public Double getValue(PrecursorChromInfoPlus pciPlus)
+        {
+            return pciPlus.getMaxFwhm();
+        }
+    }
+
+    public static class RetentionTimesFWBSeriesItemMaker extends BarChartSeriesItemMaker
+    {
+        @Override
+        public Double getValue(PrecursorChromInfoPlus pciPlus)
+        {
+            return pciPlus.getMaxEndTime() - pciPlus.getMinStartTime();
         }
     }
 

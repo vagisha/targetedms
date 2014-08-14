@@ -552,19 +552,19 @@ public class TargetedMSController extends SpringActionController
 
 
 
-            // Peak area graph for the precursor
-            PeakAreaGraphBean peakAreasBean = new PeakAreaGraphBean();
-            peakAreasBean.setPeptideId(precursor.getPeptideId());
-            peakAreasBean.setPrecursorId(precursor.getId());
-            peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
-            peakAreasBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
+            // Summary charts for the precursor
+            SummaryChartBean summaryChartBean = new SummaryChartBean();
+            summaryChartBean.setPeptideId(precursor.getPeptideId());
+            summaryChartBean.setPrecursorId(precursor.getId());
+            summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
+            summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
 
-            JspView<PeakAreaGraphBean> peakAreaView = new JspView<>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
-                                                                                                   peakAreasBean);
-            peakAreaView.setTitle("Peak Areas");
-            peakAreaView.enableExpandCollapse("PeakAreasView", false);
+            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp",
+                    summaryChartBean);
+            summaryChartView.setTitle("Summary Charts");
+            summaryChartView.enableExpandCollapse("SummaryChartsView", false);
 
-            vbox.addView(peakAreaView);
+            vbox.addView(summaryChartView);
 
 
             // library spectrum
@@ -1016,18 +1016,18 @@ public class TargetedMSController extends SpringActionController
             chromatogramsBox.setFrame(WebPartView.FrameType.PORTAL);
             vbox.addView(chromatogramsBox);
 
-             // Peak area graph for the peptide
-            PeakAreaGraphBean peakAreasBean = new PeakAreaGraphBean();
-            peakAreasBean.setPeptideId(peptideId);
-            peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
-            peakAreasBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
+             // Summary charts for the peptide
+            SummaryChartBean summaryChartBean = new SummaryChartBean();
+            summaryChartBean.setPeptideId(peptideId);
+            summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
+            summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
 
-            JspView<PeakAreaGraphBean> peakAreaView = new JspView<>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
-                                                                                                   peakAreasBean);
-            peakAreaView.setTitle("Peak Areas");
-            peakAreaView.enableExpandCollapse("PeakAreasView", false);
+            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp",
+                    summaryChartBean);
+            summaryChartView.setTitle("Summary Charts");
+            summaryChartView.enableExpandCollapse("SummaryChartsView", false);
 
-            vbox.addView(peakAreaView);
+            vbox.addView(summaryChartView);
 
             PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(_run.getRunId());
 
@@ -1126,10 +1126,10 @@ public class TargetedMSController extends SpringActionController
     // Action to display a peak areas chart
     // ------------------------------------------------------------------------
     @RequiresPermissionClass(ReadPermission.class)
-    public class ShowPeptidePeakAreasAction extends ExportAction<ShowPeakAreaForm>
+    public class ShowPeptidePeakAreasAction extends ExportAction<SummaryChartForm>
     {
         @Override
-        public void export(ShowPeakAreaForm form, HttpServletResponse response, BindException errors) throws Exception
+        public void export(SummaryChartForm form, HttpServletResponse response, BindException errors) throws Exception
         {
             PeptideGroup peptideGrp = null;
             if(form.getPeptideGroupId() != 0)
@@ -1197,10 +1197,10 @@ public class TargetedMSController extends SpringActionController
     // Action to display retention times chart.
     // ------------------------------------------------------------------------
     @RequiresPermissionClass(ReadPermission.class)
-    public class ShowRetentionTimesChartAction extends ExportAction<ShowPeakAreaForm>
+    public class ShowRetentionTimesChartAction extends ExportAction<SummaryChartForm>
     {
         @Override
-        public void export(ShowPeakAreaForm form, HttpServletResponse response, BindException errors) throws Exception
+        public void export(SummaryChartForm form, HttpServletResponse response, BindException errors) throws Exception
         {
             PeptideGroup peptideGrp = null;
             if(form.getPeptideGroupId() != 0)
@@ -1236,16 +1236,16 @@ public class TargetedMSController extends SpringActionController
                     }
                 }
             }
-
+             if(form.getValue() == null)
+                form.setValue("All");
             JFreeChart chart = new ComparisonChartMaker().makeRetentionTimesChart(
                     form.getReplicateId(),
                     peptideGrp,
                     peptide,
                     precursor,
                     form.getGroupByReplicateAnnotName(),
-                    form.getFilterByReplicateAnnotName());
-//                    form.isCvValues(),
-//                    form.isLogValues());
+                    form.getFilterByReplicateAnnotName(),
+                    form.getValue(), form.isCvValues());
             if (null == chart)
             {
                 chart = createEmptyChart();
@@ -1309,7 +1309,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    public static class ShowPeakAreaForm extends AbstractChartForm
+    public static class SummaryChartForm extends AbstractChartForm
     {
         private int _peptideGroupId;
         private int _replicateId = 0; // A value of 0 means all replicates should be included in the plot.
@@ -1320,6 +1320,17 @@ public class TargetedMSController extends SpringActionController
         private String _filterByReplicateAnnotName;
         private boolean _cvValues;
         private boolean _logValues;
+        private String _value;
+
+        public String getValue()
+        {
+            return _value;
+        }
+
+        public void setValue(String value)
+        {
+            _value = value;
+        }
 
         public int getPeptideGroupId()
         {
@@ -1881,22 +1892,20 @@ public class TargetedMSController extends SpringActionController
             result.addView(peptidesView);
 
 
-            // Peptide peak areas
-            PeakAreaGraphBean peakAreasBean = new PeakAreaGraphBean();
-            peakAreasBean.setPeptideGroupId(form.getId());
-            peakAreasBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
-            peakAreasBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
-            peakAreasBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
-            peakAreasBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId())));
+            // Peptide summary charts
+            SummaryChartBean summaryChartBean = new SummaryChartBean();
+            summaryChartBean.setPeptideGroupId(form.getId());
+            summaryChartBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
+            summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
+            summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
+            summaryChartBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId())));
 
+            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp",
+                    summaryChartBean);
+            summaryChartView.setTitle("Summary Charts");
+            summaryChartView.enableExpandCollapse("SummaryChartsView", false);
 
-            //peakAreaUrl.addParameter("sampleFileId", sampleFiles.get(0).getId());
-            JspView<PeakAreaGraphBean> peakAreaView = new JspView<>("/org/labkey/targetedms/view/peptidePeakAreaView.jsp",
-                                                                                      peakAreasBean);
-            peakAreaView.setTitle("Peak Areas");
-            peakAreaView.enableExpandCollapse("PeakAreasView", false);
-
-            result.addView(peakAreaView);
+            result.addView(summaryChartView);
 
             return result;
         }
@@ -1925,7 +1934,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    public static class PeakAreaGraphBean
+    public static class SummaryChartBean
     {
         private int _peptideGroupId;
         private int _peptideId;

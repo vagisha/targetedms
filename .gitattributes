@@ -277,7 +277,6 @@ src/org/labkey/targetedms/view/expannotations/TargetedMSExperimentsWebPart.java 
 src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -text
 src/org/labkey/targetedms/view/expannotations/experimentDetails.jsp -text
 src/org/labkey/targetedms/view/folderSetup.jsp -text
-src/org/labkey/targetedms/view/peptidePeakAreaView.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
 src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/precursorConflictResolutionView.jsp -text
@@ -289,6 +288,7 @@ src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatch.java -text
 src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatchGetter.java -text
 src/org/labkey/targetedms/view/spectrum/PeptideSpectrumView.java -text
 src/org/labkey/targetedms/view/spectrum/spectrumView.jsp -text
+src/org/labkey/targetedms/view/summaryChartsView.jsp -text
 test/src/org/labkey/test/tests/GetDataAPITest.java -text
 test/src/org/labkey/test/tests/TargetedMSExperimentIrtTest.java -text
 test/src/org/labkey/test/tests/TargetedMSExperimentTest.java -text

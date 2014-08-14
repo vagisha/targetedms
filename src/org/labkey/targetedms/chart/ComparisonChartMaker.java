@@ -26,6 +26,7 @@ import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CategoryPlot;
+import org.labkey.targetedms.chart.ComparisonDataset.ValueType;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.renderer.category.BarRenderer;
@@ -72,21 +73,52 @@ public class ComparisonChartMaker
                                      groupByAnnotation, filterByAnnotation,
                                      cvValues, logValues,
                                      new ComparisonDataset.PeakAreasSeriesItemMaker(),
-                                     yLabel, true);
+                                     yLabel, true, ValueType.PEAKAREA);
     }
 
     public JFreeChart makeRetentionTimesChart(int replicateId, PeptideGroup peptideGroup,
                                          Peptide peptide, Precursor precursor,
-                                         String groupByAnnotation, String filterByAnnotation)
+                                         String groupByAnnotation, String filterByAnnotation, String value, boolean cvValues)
     {
 
         String yLabel = "Retention Time";
 
-        return makeChart(peptideGroup, replicateId, peptide, precursor,
-                groupByAnnotation, filterByAnnotation,
-                false, false,
-                new ComparisonDataset.RetentionTimesAllValuesSeriesItemMaker(),
-                yLabel, false);
+        ValueType type = ValueType.RT_ALL;
+        ComparisonDataset.SeriesItemMaker seriesItemMaker = new ComparisonDataset.RetentionTimesAllValuesSeriesItemMaker();
+        switch (value)
+        {
+            case "All":
+                type = ValueType.RT_ALL;
+                break;
+            case "Retention Time":
+                type = ValueType.RETENTIONTIME;
+                seriesItemMaker = new ComparisonDataset.RetentionTimesRTSeriesItemMaker();
+                break;
+            case "FWHM" :
+                type = ValueType.FWHM;
+                yLabel = "FWHM Time";
+                seriesItemMaker = new ComparisonDataset.RetentionTimesFWHMSeriesItemMaker();
+                break;
+            case "FWB":
+                type = ValueType.FWB;
+                yLabel = "FWB Time";
+                seriesItemMaker = new ComparisonDataset.RetentionTimesFWBSeriesItemMaker();
+                break;
+        }
+         if(type != ValueType.RT_ALL)
+         {
+             return makeChart(peptideGroup, replicateId, peptide, precursor,
+                     groupByAnnotation, filterByAnnotation,
+                     cvValues, false,
+                     seriesItemMaker,
+                     yLabel, true, type);
+         }
+         return makeChart(peptideGroup, replicateId, peptide, precursor,
+                 groupByAnnotation, filterByAnnotation,
+                 false, false,
+                 seriesItemMaker,
+                 yLabel, false, type);
+
     }
 
     private JFreeChart makeChart(PeptideGroup peptideGroup, int replicateId,
@@ -94,7 +126,7 @@ public class ComparisonChartMaker
                                          String groupByAnnotation, String filterByAnnotation,
                                          boolean cvValues, boolean logValues,
                                          ComparisonDataset.SeriesItemMaker seriesItemMaker,
-                                         String yLabel, boolean barChart)
+                                         String yLabel, boolean barChart, ValueType type)
     {
 
         ComparisonDataset.ChartType chartType;
@@ -220,6 +252,7 @@ public class ComparisonChartMaker
                 yAxis.setLowerBound(0.0);
             }
         }
+        chart.getTitle().setFont(new Font("SansSerif", Font.BOLD, 14));
         return chart;
 
     }
