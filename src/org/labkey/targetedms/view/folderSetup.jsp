@@ -46,7 +46,7 @@ tr.spaceUnder > td
 </style>
 
 <div id="folder-type-set" <%= text(isUndefined ? "" : "style=\"display:none\"") %> >
-    <form action="<%= h(new ActionURL(TargetedMSController.FolderSetupAction.class, getContainer())) %>" method="post">
+    <labkey:form action="<%= new ActionURL(TargetedMSController.FolderSetupAction.class, getContainer()) %>" method="post">
         <table cellspacing="7" width="100%">
             <tr class="spaceUnder">
                 <td>
@@ -69,7 +69,7 @@ tr.spaceUnder > td
                 </td>
             </tr>
         </table>
-    </form>
+    </labkey:form>
 </div>
 
 <div id="folder-type-unset" <%= text(isSet ? "" : "style=\"display:none\"") %> >

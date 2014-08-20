@@ -21,6 +21,7 @@
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.conflict.ConflictProtein" %>
+<%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     Container c = getContainer();
@@ -178,7 +179,7 @@ function toggleCheckboxSelection(element)
 
 
 <%int colspan=3;%>
-<form <%=formAction(TargetedMSController.ResolveConflictAction.class, Method.Post)%>>
+<form <%=formAction(TargetedMSController.ResolveConflictAction.class, Method.Post)%>><labkey:csrf/>
 <input type="hidden" name="conflictLevel" value="protein"/>
 <table class="labkey-data-region labkey-show-borders">
     <thead>

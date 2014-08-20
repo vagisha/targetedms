@@ -18,6 +18,7 @@
 <%@ page import="org.labkey.api.view.ActionURL"%>
 <%@ page import="org.labkey.api.view.HttpView"%>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     TargetedMSController.SkylinePipelinePathForm form = (TargetedMSController.SkylinePipelinePathForm)HttpView.currentModel();
@@ -48,7 +49,7 @@
         <th>Representative</th>
         <th>File Name</th>
     </tr>
-    <form action="<%= h(targetURL) %>" method="POST">
+    <labkey:form action="<%= h(targetURL) %>" method="POST">
         <input type="hidden" name="path" value="<%= h(form.getPath() )%>" />
         <% for (java.io.File file : form.getValidatedFiles(getContainer()))
         { %>
@@ -65,5 +66,5 @@
                 <%= button("Import").submit(true) %> <%= button("Cancel").href(form.getReturnActionURL(getContainer().getStartURL(getUser()))) %>
             </td>
         </tr>
-    </form>
+    </labkey:form>
 </table>

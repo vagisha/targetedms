@@ -19,7 +19,7 @@
 <%@ page import="org.labkey.api.ms2.MS2Urls" %>
 <%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
-<form action="<%= h(PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())) %>" method="get">
+<labkey:form action="<%= h(PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())) %>" method="get">
 
     <table>
         <tr>
@@ -35,5 +35,5 @@
         </tr>
     </table>
 
-</form>
+</labkey:form>
 
