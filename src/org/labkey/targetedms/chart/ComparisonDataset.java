@@ -274,7 +274,7 @@ public class ComparisonDataset
             for(ComparisonSeriesItem seriesDataset: _seriesDatasetsMap.values())
             {
                 SeriesItemData seriesItemData = seriesDataset.getSeriesItemData();
-                if(seriesItemData.isStatistical())
+                if(null != seriesItemData && seriesItemData.isStatistical())
                     return true;
             }
             return false;
