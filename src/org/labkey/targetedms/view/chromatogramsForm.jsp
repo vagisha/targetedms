@@ -114,6 +114,7 @@
                 type: 'table',
                 columns: 3
             }, items: [
+                { xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF },
                 {
                     xtype:'hidden',
                     name: 'id',

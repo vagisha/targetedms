@@ -88,6 +88,7 @@
                 labelStyle: 'background-color: #E0E6EA; padding: 5px;'
             },
             items: [
+                { xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF },
                 {
                     xtype: 'radiogroup',
                     fieldLabel: 'Search By',
