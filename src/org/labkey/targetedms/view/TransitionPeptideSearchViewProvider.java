@@ -15,12 +15,13 @@
  */
 package org.labkey.targetedms.view;
 
-import org.labkey.api.protein.ProteinService;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
@@ -45,6 +46,7 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
         return "TargetedMSMatches";
     }
 
+    @Nullable
     @Override
     public QueryView createView(ViewContext viewContext, final ProteinService.PeptideSearchForm form, BindException errors)
     {
