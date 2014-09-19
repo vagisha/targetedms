@@ -507,8 +507,12 @@
           </ns:column>
         <ns:column columnName="Name"/>
         <ns:column columnName="Cut"/>
-        <ns:column columnName="Nocut"/>
+        <ns:column columnName="NoCut"/>
         <ns:column columnName="Sense"/>
+          <ns:column columnName="CutC"/>
+          <ns:column columnName="NoCutC"/>
+          <ns:column columnName="CutN"/>
+          <ns:column columnName="NoCutN"/>
       </ns:columns>
     </ns:table>
     <ns:table tableName="Instrument" tableDbType="TABLE">

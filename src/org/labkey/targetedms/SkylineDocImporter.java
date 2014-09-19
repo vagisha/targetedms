@@ -422,17 +422,15 @@ public class SkylineDocImporter
             PeptideSettings.Enzyme enzyme = pepSettings.getEnzyme();
             if (enzyme != null)
             {
-                SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("cut"), enzyme.getCut());
-                if (enzyme.getNoCut() == null)
-                {
-                    filter.addCondition(FieldKey.fromParts("nocut"), null, CompareType.ISBLANK);
-                }
-                else
-                {
-                    filter.addCondition(FieldKey.fromParts("nocut"), enzyme.getNoCut());
-                }
-                filter.addCondition(FieldKey.fromParts("sense"), enzyme.getSense());
+                SimpleFilter filter = new SimpleFilter();
+                filter.addCondition(FieldKey.fromParts("cut"), enzyme.getCut(), (enzyme.getCut() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                filter.addCondition(FieldKey.fromParts("nocut"), enzyme.getNoCut(), (enzyme.getNoCut() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                filter.addCondition(FieldKey.fromParts("sense"), enzyme.getSense(), (enzyme.getSense() == null ? CompareType.ISBLANK : CompareType.EQUAL));
                 filter.addCondition(FieldKey.fromParts("name"), enzyme.getName());
+                filter.addCondition(FieldKey.fromParts("cutC"), enzyme.getCutC(), (enzyme.getCutC() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                filter.addCondition(FieldKey.fromParts("noCutC"), enzyme.getNoCutC(), (enzyme.getNoCutC() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                filter.addCondition(FieldKey.fromParts("cutN"), enzyme.getCutN(), (enzyme.getCutN() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                filter.addCondition(FieldKey.fromParts("noCutN"), enzyme.getNoCutN(), (enzyme.getNoCutN() == null ? CompareType.ISBLANK : CompareType.EQUAL));
                 PeptideSettings.Enzyme existingEnzyme = new TableSelector(TargetedMSManager.getTableInfoEnzyme(), filter, null).getObject(PeptideSettings.Enzyme.class);
                 if (existingEnzyme == null)
                 {

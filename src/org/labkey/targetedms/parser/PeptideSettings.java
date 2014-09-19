@@ -607,6 +607,10 @@ public class PeptideSettings
         private String _cut; // amino acids at which this _enzyme cleaves the peptide
         private String _noCut;
         private String _sense; // 'N' or  'C'
+        private String _cutC;
+        private String _noCutC;
+        private String _cutN;
+        private String _noCutN;
 
         public String getName()
         {
@@ -646,6 +650,46 @@ public class PeptideSettings
         public void setSense(String sense)
         {
             _sense = sense;
+        }
+
+        public String getCutC()
+        {
+            return _cutC;
+        }
+
+        public void setCutC(String cutC)
+        {
+            _cutC = cutC;
+        }
+
+        public String getNoCutC()
+        {
+            return _noCutC;
+        }
+
+        public void setNoCutC(String noCutC)
+        {
+            _noCutC = noCutC;
+        }
+
+        public String getCutN()
+        {
+            return _cutN;
+        }
+
+        public void setCutN(String cutN)
+        {
+            _cutN = cutN;
+        }
+
+        public String getNoCutN()
+        {
+            return _noCutN;
+        }
+
+        public void setNoCutN(String noCutN)
+        {
+            _noCutN = noCutN;
         }
     }
 

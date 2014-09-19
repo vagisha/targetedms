@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.apache.commons.lang3.StringUtils;
+
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import java.util.ArrayList;
@@ -124,9 +126,13 @@ class PeptideSettingsParser
     {
         PeptideSettings.Enzyme enzyme = new PeptideSettings.Enzyme();
         enzyme.setName(XmlUtil.readRequiredAttribute(reader, NAME, ENZYME));
-        enzyme.setCut(XmlUtil.readRequiredAttribute(reader, "cut", ENZYME));
-        enzyme.setNoCut(reader.getAttributeValue(null, "no_cut"));
-        enzyme.setSense(XmlUtil.readRequiredAttribute(reader, "sense", ENZYME));
+        enzyme.setCut(StringUtils.trimToNull(reader.getAttributeValue(null, "cut")));
+        enzyme.setNoCut(StringUtils.trimToNull(reader.getAttributeValue(null, "no_cut")));
+        enzyme.setSense(StringUtils.trimToNull(reader.getAttributeValue(null, "sense")));
+        enzyme.setCutC(StringUtils.trimToNull(reader.getAttributeValue(null, "cut_c")));
+        enzyme.setNoCutC(StringUtils.trimToNull(reader.getAttributeValue(null, "no_cut_c")));
+        enzyme.setCutN(StringUtils.trimToNull(reader.getAttributeValue(null, "cut_n")));
+        enzyme.setNoCutN(StringUtils.trimToNull(reader.getAttributeValue(null, "no_cut_n")));
         return enzyme;
     }
 
