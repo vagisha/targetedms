@@ -66,6 +66,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.DataFormatException;
 
 /**
+ * Drives import of the Skyline document, and handles the high-level iteration for inserting the document's contents into the database
  * User: vsharma
  * Date: 4/1/12
  * Time: 10:58 AM
