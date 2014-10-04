@@ -55,6 +55,7 @@ resources/schemas/dbscripts/postgresql/targetedms-14.13-14.14.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.14-14.15.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.15-14.16.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.20-14.21.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-14.21-14.22.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.19-0.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.20-0.21.sql -text
@@ -95,6 +96,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-14.13-14.14.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.14-14.15.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.15-14.16.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.20-14.21.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-14.21-14.22.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/IrtPeptide.java -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text

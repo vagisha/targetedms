@@ -18,8 +18,6 @@ package org.labkey.targetedms.parser;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.labkey.api.data.Container;
-import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.targetedms.IrtPeptide;
@@ -141,22 +139,18 @@ public class SkylineDocumentParser implements AutoCloseable
     private final XMLStreamReader _reader;
     private InputStream _inputStream;
     private final File _file;
-    private User _user;
-    private Container _container;
     private Logger _log;
 
     private String _formatVersion;
     private String _softwareVersion;
 
-    public SkylineDocumentParser(File file, User user, Container container, Logger log) throws XMLStreamException, IOException
+    public SkylineDocumentParser(File file, Logger log) throws XMLStreamException, IOException
     {
         _file = file;
         _inputStream = new FileInputStream(_file);
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         _reader = inputFactory.createXMLStreamReader(_inputStream);
         _log = log;
-        _user = user;
-        _container = container;
         _iRTScaleSettings = new ArrayList<>();
         readDocumentVersion(_reader);
     }
@@ -198,7 +192,11 @@ public class SkylineDocumentParser implements AutoCloseable
 
     private void parseiRTFile() throws SQLException
     {
-        String baseFileName = _peptideSettings.getPeptidePredictionSettings().getPredictorName();
+        PeptideSettings.RetentionTimePredictionSettings rtPredictionSettings = _peptideSettings.getPeptidePredictionSettings().getRtPredictionSettings();
+        if(rtPredictionSettings == null)
+            return;
+
+        String baseFileName = rtPredictionSettings.getPredictorName();
         if (null != baseFileName)
         {
             String iRTFileName = baseFileName + ".irtdb";
@@ -381,7 +379,7 @@ public class SkylineDocumentParser implements AutoCloseable
         // that have been deleted/unchecked from annotation settings.
         // Do not save unused / deleted annotations.
         List<ReplicateAnnotation> annotations = replicate.getAnnotations();
-        List<ReplicateAnnotation> toReturn = new ArrayList<ReplicateAnnotation>();
+        List<ReplicateAnnotation> toReturn = new ArrayList<>();
         for(ReplicateAnnotation annotation: annotations)
         {
             if(_dataSettings.annotationExists(annotation.getName()))
@@ -920,12 +918,11 @@ public class SkylineDocumentParser implements AutoCloseable
             pepGroup.setLabel(StringUtils.isBlank(labelName) ? name : labelName);
             pepGroup.setName((!StringUtils.isBlank(labelName) && !StringUtils.isBlank(name)) ? name : null);
 
-            pepGroup.setDescription(reader.getAttributeValue(null, "description"));
+            String description = reader.getAttributeValue(null, "description");
+            String labelDescription = reader.getAttributeValue(null, "label_description");
+            pepGroup.setDescription(StringUtils.isBlank(labelDescription) ? description : labelDescription);
+            pepGroup.setAltDescription((!StringUtils.isBlank(labelDescription) && !StringUtils.isBlank(description)) ? description : null);
 
-            pepGroup.setAccession(reader.getAttributeValue(null, "accession"));
-            pepGroup.setPreferredName(reader.getAttributeValue(null, "preferred_name"));
-            pepGroup.setGene(reader.getAttributeValue(null, "gene"));
-            pepGroup.setSpecies(reader.getAttributeValue(null, "species"));
             pepGroup.setProtein(true);
         }
         else
@@ -934,6 +931,11 @@ public class SkylineDocumentParser implements AutoCloseable
             pepGroup.setLabel(reader.getAttributeValue(null, "label_name"));
             pepGroup.setDescription(reader.getAttributeValue(null, "label_description"));
         }
+
+        pepGroup.setAccession(reader.getAttributeValue(null, "accession"));
+        pepGroup.setPreferredName(reader.getAttributeValue(null, "preferred_name"));
+        pepGroup.setGene(reader.getAttributeValue(null, "gene"));
+        pepGroup.setSpecies(reader.getAttributeValue(null, "species"));
 
         pepGroup.setDecoy(Boolean.parseBoolean(reader.getAttributeValue(null, "decoy")));
 
@@ -1542,6 +1544,7 @@ public class SkylineDocumentParser implements AutoCloseable
         if(decoyMassShift != null)
             transition.setDecoyMassShift(Double.parseDouble(decoyMassShift));
 
+        transition.setMeasuredIonName(reader.getAttributeValue(null, "measured_ion_name"));
 
         if(transition.isPrecursorIon() && transition.getMassIndex() == null)
         {
@@ -1858,20 +1861,6 @@ public class SkylineDocumentParser implements AutoCloseable
         }
 
         return Collections.emptyList();
-    }
-
-    private int findIndex(List<Chromatogram> listChromFinal, String filePath)
-    {
-        int i = 0;
-        for (Chromatogram chromatogram : listChromFinal)
-        {
-            if (chromatogram.getFilePath().equals(filePath))
-            {
-                return i;
-            }
-            i++;
-        }
-        return -1;
     }
 
     public int getPeptideGroupCount()

@@ -43,6 +43,8 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
 
     private String _note;
 
+    private String _altDescription;
+
     protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
 
     public int getRunId()
@@ -193,5 +195,15 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
     public void setSpecies(String species)
     {
         _species = species;
+    }
+
+    public String getAltDescription()
+    {
+        return _altDescription;
+    }
+
+    public void setAltDescription(String altDescription)
+    {
+        _altDescription = altDescription;
     }
 }

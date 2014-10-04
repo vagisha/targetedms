@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 
+<!--
 
  * Copyright (c) 2012-2014 LabKey Corporation
  *
@@ -18,22 +18,22 @@
  -->
 <ns:tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd"
            xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <ns:table tableDbType="TABLE" tableName="IsotopeLabel">
-    <ns:titleColumn>Name</ns:titleColumn>
-    <ns:description>Contains a row for each Isotope label in a targeted MS run.</ns:description>
-    <ns:columns>
-        <ns:column columnName="Id">
-            <ns:isHidden>true</ns:isHidden>
-        </ns:column>
-        <ns:column columnName="Standard"/>
-        <ns:column columnName="RunId">
-            <ns:columnTitle>File</ns:columnTitle>
-        </ns:column>
-        <ns:column columnName="Name">
-            <ns:columnTitle>Label</ns:columnTitle>
-            <ns:displayWidth>15</ns:displayWidth>
-        </ns:column>
-    </ns:columns>
+    <ns:table tableDbType="TABLE" tableName="IsotopeLabel">
+        <ns:titleColumn>Name</ns:titleColumn>
+        <ns:description>Contains a row for each Isotope label in a targeted MS run.</ns:description>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Standard"/>
+            <ns:column columnName="RunId">
+                <ns:columnTitle>File</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="Name">
+                <ns:columnTitle>Label</ns:columnTitle>
+                <ns:displayWidth>15</ns:displayWidth>
+            </ns:column>
+        </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Replicate">
         <ns:titleColumn>Name</ns:titleColumn>
@@ -55,14 +55,14 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="ReplicateAnnotation" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="Value"/>
-        <ns:column columnName="ReplicateId"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="Value"/>
+            <ns:column columnName="ReplicateId"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="SampleFile">
         <ns:titleColumn>SampleName</ns:titleColumn>
@@ -210,6 +210,7 @@
             <ns:column columnName="PreferredName" />
             <ns:column columnName="Gene" />
             <ns:column columnName="Species" />
+            <ns:column columnName="AltDescription"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Peptide">
@@ -444,6 +445,7 @@
             <ns:column columnName="Decoy"/>
             <ns:column columnName="Note"/>
             <ns:column columnName="MassIndex"/>
+            <ns:column columnName="MeasuredIonName"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="TransitionChromInfo">
@@ -501,374 +503,374 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="Enzyme" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="Cut"/>
-        <ns:column columnName="NoCut"/>
-        <ns:column columnName="Sense"/>
-          <ns:column columnName="CutC"/>
-          <ns:column columnName="NoCutC"/>
-          <ns:column columnName="CutN"/>
-          <ns:column columnName="NoCutN"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="Cut"/>
+            <ns:column columnName="NoCut"/>
+            <ns:column columnName="Sense"/>
+            <ns:column columnName="CutC"/>
+            <ns:column columnName="NoCutC"/>
+            <ns:column columnName="CutN"/>
+            <ns:column columnName="NoCutN"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="Instrument" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="RunId"/>
-        <ns:column columnName="Model"/>
-        <ns:column columnName="IonizationType"/>
-        <ns:column columnName="Analyzer"/>
-        <ns:column columnName="Detector"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="RunId"/>
+            <ns:column columnName="Model"/>
+            <ns:column columnName="IonizationType"/>
+            <ns:column columnName="Analyzer"/>
+            <ns:column columnName="Detector"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="IsotopeEnrichment" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="RunId"/>
-        <ns:column columnName="Symbol"/>
-        <ns:column columnName="PercentEnrichment"/>
-        <ns:column columnName="Name"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="RunId"/>
+            <ns:column columnName="Symbol"/>
+            <ns:column columnName="PercentEnrichment"/>
+            <ns:column columnName="Name"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="IsotopeModification" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="AminoAcid"/>
-        <ns:column columnName="Terminus"/>
-        <ns:column columnName="Formula"/>
-        <ns:column columnName="MassDiffMono"/>
-        <ns:column columnName="MassDiffAvg"/>
-        <ns:column columnName="Label13C"/>
-        <ns:column columnName="Label15N"/>
-        <ns:column columnName="Label18O"/>
-        <ns:column columnName="Label2H"/>
-        <ns:column columnName="UnimodId"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="AminoAcid"/>
+            <ns:column columnName="Terminus"/>
+            <ns:column columnName="Formula"/>
+            <ns:column columnName="MassDiffMono"/>
+            <ns:column columnName="MassDiffAvg"/>
+            <ns:column columnName="Label13C"/>
+            <ns:column columnName="Label15N"/>
+            <ns:column columnName="Label18O"/>
+            <ns:column columnName="Label2H"/>
+            <ns:column columnName="UnimodId"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="LibrarySettings" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="RunId"/>
-        <ns:column columnName="Pick"/>
-        <ns:column columnName="RankType"/>
-        <ns:column columnName="PeptideCount"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="RunId"/>
+            <ns:column columnName="Pick"/>
+            <ns:column columnName="RankType"/>
+            <ns:column columnName="PeptideCount"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="LibrarySource" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Type"/>
-        <ns:column columnName="Score1Name"/>
-        <ns:column columnName="Score2Name"/>
-        <ns:column columnName="Score3Name"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Type"/>
+            <ns:column columnName="Score1Name"/>
+            <ns:column columnName="Score2Name"/>
+            <ns:column columnName="Score3Name"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="ModificationSettings" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="RunId"/>
-        <ns:column columnName="MaxVariableMods"/>
-        <ns:column columnName="MaxNeutralLosses"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="RunId"/>
+            <ns:column columnName="MaxVariableMods"/>
+            <ns:column columnName="MaxNeutralLosses"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="PeptideAnnotation" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="Value"/>
-        <ns:column columnName="PeptideId"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="Value"/>
+            <ns:column columnName="PeptideId"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="PeptideAreaRatio" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="PeptideChrominfoId"/>
-        <ns:column columnName="PeptideChrominfoStdId"/>
-        <ns:column columnName="IsotopeLabelId"/>
-        <ns:column columnName="IsotopeLabelStdId"/>
-        <ns:column columnName="AreaRatio"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="PeptideChrominfoId"/>
+            <ns:column columnName="PeptideChrominfoStdId"/>
+            <ns:column columnName="IsotopeLabelId"/>
+            <ns:column columnName="IsotopeLabelStdId"/>
+            <ns:column columnName="AreaRatio"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="PeptideGroupAnnotation" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="Value"/>
-        <ns:column columnName="PeptideGroupId"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="Value"/>
+            <ns:column columnName="PeptideGroupId"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="PrecursorAnnotation" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="Value"/>
-        <ns:column columnName="PrecursorId"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="Value"/>
+            <ns:column columnName="PrecursorId"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="PeptideIsotopeModification" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="PeptideId"/>
-        <ns:column columnName="IsotopeModId"/>
-        <ns:column columnName="IndexAA"/>
-        <ns:column columnName="MassDiff"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="PeptideId"/>
+            <ns:column columnName="IsotopeModId"/>
+            <ns:column columnName="IndexAA"/>
+            <ns:column columnName="MassDiff"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="PeptideStructuralModification" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="PeptideId"/>
-        <ns:column columnName="StructuralModId"/>
-        <ns:column columnName="IndexAA"/>
-        <ns:column columnName="MassDiff"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="PeptideId"/>
+            <ns:column columnName="StructuralModId"/>
+            <ns:column columnName="IndexAA"/>
+            <ns:column columnName="MassDiff"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="precursorarearatio" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="precursorchrominfoid"/>
-        <ns:column columnName="precursorchrominfostdid"/>
-        <ns:column columnName="isotopelabelid"/>
-        <ns:column columnName="isotopelabelstdid"/>
-        <ns:column columnName="arearatio"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="precursorchrominfoid"/>
+            <ns:column columnName="precursorchrominfostdid"/>
+            <ns:column columnName="isotopelabelid"/>
+            <ns:column columnName="isotopelabelstdid"/>
+            <ns:column columnName="arearatio"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="precursorchrominfoannotation" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="Value"/>
-        <ns:column columnName="precursorchrominfoid"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="Value"/>
+            <ns:column columnName="precursorchrominfoid"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="predictor" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="name"/>
-        <ns:column columnName="stepsize"/>
-        <ns:column columnName="stepcount"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="name"/>
+            <ns:column columnName="stepsize"/>
+            <ns:column columnName="stepcount"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="predictorsettings" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-          <ns:column columnName="PredictorId"/>
-          <ns:column columnName="Charge"/>
-          <ns:column columnName="Slope"/>
-          <ns:column columnName="Intercept"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="PredictorId"/>
+            <ns:column columnName="Charge"/>
+            <ns:column columnName="Slope"/>
+            <ns:column columnName="Intercept"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="protein" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="peptidegroupid"/>
-        <ns:column columnName="labkeysequenceid"/>
-        <ns:column columnName="name"/>
-        <ns:column columnName="description"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="peptidegroupid"/>
+            <ns:column columnName="labkeysequenceid"/>
+            <ns:column columnName="name"/>
+            <ns:column columnName="description"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="retentiontimepredictionsettings" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="runid"/>
-        <ns:column columnName="CalculatorName"/>
-        <ns:column columnName="IsIrt"/>
-        <ns:column columnName="RegressionSlope"/>
-        <ns:column columnName="RegressionIntercept"/>
-        <ns:column columnName="PredictorName"/>
-        <ns:column columnName="TimeWindow"/>
-        <ns:column columnName="UseMeasuredRTs"/>
-        <ns:column columnName="MeasuredRTWindow"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="runid"/>
+            <ns:column columnName="CalculatorName"/>
+            <ns:column columnName="IsIrt"/>
+            <ns:column columnName="RegressionSlope"/>
+            <ns:column columnName="RegressionIntercept"/>
+            <ns:column columnName="PredictorName"/>
+            <ns:column columnName="TimeWindow"/>
+            <ns:column columnName="UseMeasuredRTs"/>
+            <ns:column columnName="MeasuredRTWindow"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="runenzyme" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="enzymeid"/>
-        <ns:column columnName="runid"/>
-        <ns:column columnName="maxmissedcleavages"/>
-        <ns:column columnName="excluderaggedends"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="enzymeid"/>
+            <ns:column columnName="runid"/>
+            <ns:column columnName="maxmissedcleavages"/>
+            <ns:column columnName="excluderaggedends"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="runisotopemodification" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="isotopemodid"/>
-        <ns:column columnName="runid"/>
-        <ns:column columnName="isotopelabelid"/>
-        <ns:column columnName="explicitmod"/>
-        <ns:column columnName="relativert"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="isotopemodid"/>
+            <ns:column columnName="runid"/>
+            <ns:column columnName="isotopelabelid"/>
+            <ns:column columnName="explicitmod"/>
+            <ns:column columnName="relativert"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="runstructuralmodification" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="structuralmodid"/>
-        <ns:column columnName="runid"/>
-        <ns:column columnName="explicitmod"/>
-        <ns:column columnName="variable"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="structuralmodid"/>
+            <ns:column columnName="runid"/>
+            <ns:column columnName="explicitmod"/>
+            <ns:column columnName="variable"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="spectrumlibrary" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="runid"/>
-        <ns:column columnName="librarysourceid"/>
-        <ns:column columnName="librarytype"/>
-        <ns:column columnName="name"/>
-        <ns:column columnName="filenamehint"/>
-        <ns:column columnName="SkylineLibraryId"/>
-        <ns:column columnName="revision"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="runid"/>
+            <ns:column columnName="librarysourceid"/>
+            <ns:column columnName="librarytype"/>
+            <ns:column columnName="name"/>
+            <ns:column columnName="filenamehint"/>
+            <ns:column columnName="SkylineLibraryId"/>
+            <ns:column columnName="revision"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="structuralmodification" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="name"/>
-        <ns:column columnName="aminoacid"/>
-        <ns:column columnName="terminus"/>
-        <ns:column columnName="formula"/>
-        <ns:column columnName="massdiffmono"/>
-        <ns:column columnName="massdiffavg"/>
-        <ns:column columnName="unimodid"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="name"/>
+            <ns:column columnName="aminoacid"/>
+            <ns:column columnName="terminus"/>
+            <ns:column columnName="formula"/>
+            <ns:column columnName="massdiffmono"/>
+            <ns:column columnName="massdiffavg"/>
+            <ns:column columnName="unimodid"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="structuralmodloss" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="structuralmodid"/>
-        <ns:column columnName="formula"/>
-        <ns:column columnName="massdiffmono"/>
-        <ns:column columnName="massdiffavg"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="structuralmodid"/>
+            <ns:column columnName="formula"/>
+            <ns:column columnName="massdiffmono"/>
+            <ns:column columnName="massdiffavg"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="transitionannotation" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="Value"/>
-        <ns:column columnName="transitionid"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="Value"/>
+            <ns:column columnName="transitionid"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="transitionarearatio" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="transitionchrominfoid"/>
-        <ns:column columnName="transitionchrominfostdid"/>
-        <ns:column columnName="isotopelabelid"/>
-        <ns:column columnName="isotopelabelstdid"/>
-        <ns:column columnName="arearatio"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="transitionchrominfoid"/>
+            <ns:column columnName="transitionchrominfostdid"/>
+            <ns:column columnName="isotopelabelid"/>
+            <ns:column columnName="isotopelabelstdid"/>
+            <ns:column columnName="arearatio"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="transitionchrominfoannotation" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="Name"/>
-        <ns:column columnName="Value"/>
-        <ns:column columnName="transitionchrominfoid"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="Value"/>
+            <ns:column columnName="transitionchrominfoid"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="transitionfullscansettings" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="runid"/>
-        <ns:column columnName="precursorfilter"/>
-        <ns:column columnName="precursorleftfilter"/>
-        <ns:column columnName="precursorrightfilter"/>
-        <ns:column columnName="productmassanalyzer"/>
-        <ns:column columnName="productres"/>
-        <ns:column columnName="productresmz"/>
-        <ns:column columnName="precursorisotopes"/>
-        <ns:column columnName="precursorisotopefilter"/>
-        <ns:column columnName="precursormassanalyzer"/>
-        <ns:column columnName="precursorres"/>
-        <ns:column columnName="precursorresmz"/>
-        <ns:column columnName="schedulefilter"/>
-        <ns:column columnName="AcquisitionMethod"/>
-        <ns:column columnName="RetentionTimeFilterType"/>
-        <ns:column columnName="RetentionTimeFilterLength"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="runid"/>
+            <ns:column columnName="precursorfilter"/>
+            <ns:column columnName="precursorleftfilter"/>
+            <ns:column columnName="precursorrightfilter"/>
+            <ns:column columnName="productmassanalyzer"/>
+            <ns:column columnName="productres"/>
+            <ns:column columnName="productresmz"/>
+            <ns:column columnName="precursorisotopes"/>
+            <ns:column columnName="precursorisotopefilter"/>
+            <ns:column columnName="precursormassanalyzer"/>
+            <ns:column columnName="precursorres"/>
+            <ns:column columnName="precursorresmz"/>
+            <ns:column columnName="schedulefilter"/>
+            <ns:column columnName="AcquisitionMethod"/>
+            <ns:column columnName="RetentionTimeFilterType"/>
+            <ns:column columnName="RetentionTimeFilterLength"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="transitioninstrumentsettings" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="runid"/>
-        <ns:column columnName="dynamicmin"/>
-        <ns:column columnName="minmz"/>
-        <ns:column columnName="maxmz"/>
-        <ns:column columnName="mzmatchtolerance"/>
-        <ns:column columnName="mintime"/>
-        <ns:column columnName="maxtime"/>
-        <ns:column columnName="maxtransitions"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="runid"/>
+            <ns:column columnName="dynamicmin"/>
+            <ns:column columnName="minmz"/>
+            <ns:column columnName="maxmz"/>
+            <ns:column columnName="mzmatchtolerance"/>
+            <ns:column columnName="mintime"/>
+            <ns:column columnName="maxtime"/>
+            <ns:column columnName="maxtransitions"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="transitionloss" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="transitionid"/>
-        <ns:column columnName="structuralmodlossid"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="transitionid"/>
+            <ns:column columnName="structuralmodlossid"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="transitionoptimization" tableDbType="TABLE">
-      <ns:columns>
-          <ns:column columnName="Id">
-              <ns:isHidden>true</ns:isHidden>
-          </ns:column>
-        <ns:column columnName="transitionid"/>
-        <ns:column columnName="optimizationtype"/>
-        <ns:column columnName="optvalue"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="transitionid"/>
+            <ns:column columnName="optimizationtype"/>
+            <ns:column columnName="optvalue"/>
+        </ns:columns>
     </ns:table>
     <ns:table tableName="transitionpredictionsettings" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="runid"/>
-        <ns:column columnName="precursormasstype"/>
-        <ns:column columnName="productmasstype"/>
-        <ns:column columnName="optimizeby"/>
-        <ns:column columnName="cepredictorid"/>
-        <ns:column columnName="dppredictorid"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="runid"/>
+            <ns:column columnName="precursormasstype"/>
+            <ns:column columnName="productmasstype"/>
+            <ns:column columnName="optimizeby"/>
+            <ns:column columnName="cepredictorid"/>
+            <ns:column columnName="dppredictorid"/>
+        </ns:columns>
     </ns:table>
 
     <ns:table tableName="DocumentPrecursors" tableDbType="NOT_IN_DB">
@@ -880,14 +882,14 @@
     </ns:table>
 
     <ns:table tableName="PrecursorLibInfo" tableDbType="TABLE">
-      <ns:columns>
-        <ns:column columnName="Id"/>
-        <ns:column columnName="PrecursorId"/>
-        <ns:column columnName="SpectrumLibraryId"/>
-        <ns:column columnName="Score1"/>
-        <ns:column columnName="Score2"/>
-        <ns:column columnName="Score3"/>
-      </ns:columns>
+        <ns:columns>
+            <ns:column columnName="Id"/>
+            <ns:column columnName="PrecursorId"/>
+            <ns:column columnName="SpectrumLibraryId"/>
+            <ns:column columnName="Score1"/>
+            <ns:column columnName="Score2"/>
+            <ns:column columnName="Score3"/>
+        </ns:columns>
     </ns:table>
 
     <ns:table tableName="AnnotationSettings" tableDbType="TABLE">
@@ -1035,7 +1037,7 @@
         <ns:columns>
             <ns:column columnName="Id"/>
             <ns:column columnName="IsolationSchemeId">
-                    <ns:fk>
+                <ns:fk>
                     <ns:fkColumnName>Id</ns:fkColumnName>
                     <ns:fkDbSchema>targetedms</ns:fkDbSchema>
                     <ns:fkTable>IsolationScheme</ns:fkTable>

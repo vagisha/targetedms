@@ -248,6 +248,16 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_RETENTION_TIME_PREDICTION_SETTINGS);
     }
 
+    public static TableInfo getTableInfoDriftTimePredictionSettings()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_DRIFT_TIME_PREDICTION_SETTINGS);
+    }
+
+    public static TableInfo getTableInfoMeasuredDriftTime()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_MEASURED_DRIFT_TIME);
+    }
+
     public static TableInfo getTableInfoTransitionPredictionSettings()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_PREDICITION_SETTINGS);
@@ -812,23 +822,6 @@ public class TargetedMSManager
         return run;
     }
 
-    public static boolean runHasProteins(int runId)
-    {
-        SQLFragment sql = new SQLFragment();
-        sql.append("SELECT COUNT(*) ");
-        sql.append("FROM ");
-        sql.append(getTableInfoPeptideGroup()+" pg ");
-        sql.append("WHERE ");
-        sql.append("pg.RunId=? ");
-        sql.append("AND ");
-        sql.append("pg.SequenceID IS NOT NULL");
-        sql.add(runId);
-
-        Integer count = new SqlSelector(getSchema(), sql).getObject(Integer.class);
-
-        return count > 0;
-    }
-
     /** Actually delete runs that have been marked as deleted from the database */
     public static void purgeDeletedRuns()
     {
@@ -895,6 +888,9 @@ public class TargetedMSManager
         // Delete from PredictorSettings and Predictor
         deleteTransitionPredictionSettingsDependent();
 
+        // Delete from MeasuredDriftTime
+        deleteDriftTimePredictionSettingsDependent(getTableInfoMeasuredDriftTime());
+
         // Delete from PeptideGroup
         deleteRunDependent(getTableInfoPeptideGroup());
         // Delete from Replicate
@@ -905,6 +901,8 @@ public class TargetedMSManager
         deleteRunDependent(getTableInfoInstrument());
         // Delete from RetentionTimePredictionSettings
         deleteRunDependent(getTableInfoRetentionTimePredictionSettings());
+        // Delete from DriftTimePredictionSettings
+        deleteRunDependent(getTableInfoDriftTimePredictionSettings());
         // Delete from TransitionPredictionSettings
         deleteRunDependent(getTableInfoTransitionPredictionSettings());
         // Delete from TransitionFullScanSettings
@@ -1044,6 +1042,12 @@ public class TargetedMSManager
     {
         execute("DELETE FROM " + tableInfo + " WHERE IsolationSchemeId IN (SELECT Id FROM " +
                 getTableInfoIsolationScheme() + " WHERE RunId IN (SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted = ?))", true);
+    }
+
+    private static void deleteDriftTimePredictionSettingsDependent(TableInfo tableInfo)
+    {
+        execute("DELETE FROM " + tableInfo + " WHERE DriftTimePredictionSettingsId IN (SELECT Id FROM " +
+                getTableInfoDriftTimePredictionSettings() + " WHERE RunId IN (SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted = ?))", true);
     }
 
     private static void execute(String sql, @NotNull Object... parameters)

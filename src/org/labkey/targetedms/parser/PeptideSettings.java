@@ -840,7 +840,33 @@ public class PeptideSettings
     // ------------------------------------------------------------------------
     // Peptide Prediction Settings
     // ------------------------------------------------------------------------
-    public static final class PeptidePredictionSettings
+    public static class PeptidePredictionSettings
+    {
+        private RetentionTimePredictionSettings _rtPredictionSettings;
+        private DriftTimePredictionSettings _dtPredictionSettings;
+
+        public RetentionTimePredictionSettings getRtPredictionSettings()
+        {
+            return _rtPredictionSettings;
+        }
+
+        public void setRtPredictionSettings(RetentionTimePredictionSettings rtPredictionSettings)
+        {
+            _rtPredictionSettings = rtPredictionSettings;
+        }
+
+        public DriftTimePredictionSettings getDtPredictionSettings()
+        {
+            return _dtPredictionSettings;
+        }
+
+        public void setDtPredictionSettings(DriftTimePredictionSettings dtPredictionSettings)
+        {
+            _dtPredictionSettings = dtPredictionSettings;
+        }
+    }
+
+    public static final class RetentionTimePredictionSettings
     {
         private int _runId;
         private Boolean _useMeasuredRts;
@@ -940,6 +966,131 @@ public class PeptideSettings
         public void setCalculatorName(String calculatorName)
         {
             _calculatorName = calculatorName;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Peptide Prediction Settings -- drift time prediction settings
+    // ------------------------------------------------------------------------
+    public static final class DriftTimePredictionSettings extends SkylineEntity
+    {
+        private int _runId;
+
+        private Boolean _useSpectralLibraryDriftTimes;
+        private Double _spectralLibraryDriftTimesResolvingPower;
+        private String _predictorName;
+        private Double _resolvingPower;
+        private List<MeasuredDriftTime> _measuredDriftTimes;
+
+        public int getRunId()
+        {
+            return _runId;
+        }
+
+        public void setRunId(int runId)
+        {
+            _runId = runId;
+        }
+
+        public Boolean getUseSpectralLibraryDriftTimes()
+        {
+            return _useSpectralLibraryDriftTimes;
+        }
+
+        public void setUseSpectralLibraryDriftTimes(Boolean useSpectralLibraryDriftTimes)
+        {
+            _useSpectralLibraryDriftTimes = useSpectralLibraryDriftTimes;
+        }
+
+        public Double getSpectralLibraryDriftTimesResolvingPower()
+        {
+            return _spectralLibraryDriftTimesResolvingPower;
+        }
+
+        public void setSpectralLibraryDriftTimesResolvingPower(Double spectralLibraryDriftTimesResolvingPower)
+        {
+            _spectralLibraryDriftTimesResolvingPower = spectralLibraryDriftTimesResolvingPower;
+        }
+
+        public String getPredictorName()
+        {
+            return _predictorName;
+        }
+
+        public void setPredictorName(String predictorName)
+        {
+            _predictorName = predictorName;
+        }
+
+        public Double getResolvingPower()
+        {
+            return _resolvingPower;
+        }
+
+        public void setResolvingPower(Double resolvingPower)
+        {
+            _resolvingPower = resolvingPower;
+        }
+
+        public List<MeasuredDriftTime> getMeasuredDriftTimes()
+        {
+            return _measuredDriftTimes;
+        }
+
+        public void setMeasuredDriftTimes(List<MeasuredDriftTime> measuredDriftTimes)
+        {
+            _measuredDriftTimes = measuredDriftTimes;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Peptide Prediction Settings -- measured drift times
+    // ------------------------------------------------------------------------
+    public static final class MeasuredDriftTime extends SkylineEntity
+    {
+        private int _driftTimePredictionSettingsId;
+        private String _modifiedSequence;
+        private int _charge;
+        private Double _driftTime;
+
+        public int getDriftTimePredictionSettingsId()
+        {
+            return _driftTimePredictionSettingsId;
+        }
+
+        public void setDriftTimePredictionSettingsId(int driftTimePredictionSettingsId)
+        {
+            _driftTimePredictionSettingsId = driftTimePredictionSettingsId;
+        }
+
+        public String getModifiedSequence()
+        {
+            return _modifiedSequence;
+        }
+
+        public void setModifiedSequence(String modifiedSequence)
+        {
+            _modifiedSequence = modifiedSequence;
+        }
+
+        public int getCharge()
+        {
+            return _charge;
+        }
+
+        public void setCharge(int charge)
+        {
+            _charge = charge;
+        }
+
+        public Double getDriftTime()
+        {
+            return _driftTime;
+        }
+
+        public void setDriftTime(Double driftTime)
+        {
+            _driftTime = driftTime;
         }
     }
 }

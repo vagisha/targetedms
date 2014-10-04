@@ -179,7 +179,7 @@ public class SkylineDocImporter
         f = extractIfZip(f);
 
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction();
-             SkylineDocumentParser parser = new SkylineDocumentParser(f, _user, _container, _log))
+             SkylineDocumentParser parser = new SkylineDocumentParser(f, _log))
         {
             run.setFormatVersion(parser.getFormatVersion());
             run.setSoftwareVersion(parser.getSoftwareVersion());
@@ -454,10 +454,26 @@ public class SkylineDocImporter
 
             // Peptide prediction settings
             PeptideSettings.PeptidePredictionSettings peptidePredictionSettings = pepSettings.getPeptidePredictionSettings();
-            if(peptidePredictionSettings != null)
+            PeptideSettings.RetentionTimePredictionSettings rtPredictionSettings = peptidePredictionSettings == null ? null : peptidePredictionSettings.getRtPredictionSettings();
+            if(rtPredictionSettings != null)
             {
-                peptidePredictionSettings.setRunId(_runId);
-                Table.insert(_user, TargetedMSManager.getTableInfoRetentionTimePredictionSettings(), peptidePredictionSettings);
+                rtPredictionSettings.setRunId(_runId);
+                Table.insert(_user, TargetedMSManager.getTableInfoRetentionTimePredictionSettings(), rtPredictionSettings);
+            }
+
+            // Drift time prediction settings.
+            PeptideSettings.DriftTimePredictionSettings dtPredictionSettings = peptidePredictionSettings == null ? null : peptidePredictionSettings.getDtPredictionSettings();
+            if(dtPredictionSettings != null)
+            {
+                dtPredictionSettings.setRunId(_runId);
+                Table.insert(_user, TargetedMSManager.getTableInfoDriftTimePredictionSettings(), dtPredictionSettings);
+
+                List<PeptideSettings.MeasuredDriftTime> driftTimes = dtPredictionSettings.getMeasuredDriftTimes();
+                for(PeptideSettings.MeasuredDriftTime dt: driftTimes)
+                {
+                    dt.setDriftTimePredictionSettingsId(dtPredictionSettings.getId());
+                    Table.insert(_user, TargetedMSManager.getTableInfoMeasuredDriftTime(), dt);
+                }
             }
 
             // Data settings -- these are the annotation settings

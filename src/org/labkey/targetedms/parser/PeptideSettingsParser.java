@@ -72,6 +72,11 @@ class PeptideSettingsParser
     private static final String SLOPE = "slope";
     private static final String INTERCEPT = "intercept";
     private static final String IRT_CALCULATOR = "irt_calculator";
+    private static final String PREDICT_DRIFT_TIME = "predict_drift_time";
+    private static final String USE_SPECTRAL_LIBRARY_DRIFT_TIMES = "use_spectral_library_drift_times";
+    private static final String SPECTRAL_LIBRARY_DRIFT_TIMES_RESOLVING_POWER = "spectral_library_drift_times_resolving_power";
+    private static final String RESOLVING_POWER = "resolving_power";
+    private static final String MEASURED_DT = "measured_dt";
 
     private String _documentName;
 
@@ -408,8 +413,11 @@ class PeptideSettingsParser
     private PeptideSettings.PeptidePredictionSettings getPeptidePredictionSettings(XMLStreamReader reader) throws XMLStreamException
     {
         PeptideSettings.PeptidePredictionSettings settings = new PeptideSettings.PeptidePredictionSettings();
-        settings.setUseMeasuredRts(XmlUtil.readBooleanAttribute(reader, USE_MEASURED_RTS));
-        settings.setMeasuredRtWindow(XmlUtil.readDoubleAttribute(reader, MEASURED_RT_WINDOW));
+        Boolean useMeasuredRt = XmlUtil.readBooleanAttribute(reader, USE_MEASURED_RTS);
+        Double measuredRtWindow = XmlUtil.readDoubleAttribute(reader, MEASURED_RT_WINDOW);
+        Boolean useSpectralLibraryDriftTimes = XmlUtil.readBooleanAttribute(reader, USE_SPECTRAL_LIBRARY_DRIFT_TIMES);
+        Double resolvingPower = XmlUtil.readDoubleAttribute(reader, SPECTRAL_LIBRARY_DRIFT_TIMES_RESOLVING_POWER);
+
 
         while(reader.hasNext())
         {
@@ -423,7 +431,23 @@ class PeptideSettingsParser
             {
                 if(XmlUtil.isElement(reader, PREDICT_RETENTION_TIME))
                 {
-                    readRetentionTimePredictorSettings(reader, settings);
+                    PeptideSettings.RetentionTimePredictionSettings rtPredictionSettings = new PeptideSettings.RetentionTimePredictionSettings();
+                    rtPredictionSettings.setUseMeasuredRts(useMeasuredRt);
+                    rtPredictionSettings.setMeasuredRtWindow(measuredRtWindow);
+                    settings.setRtPredictionSettings(rtPredictionSettings);
+                    readRetentionTimePredictorSettings(reader, rtPredictionSettings);
+                }
+            }
+
+            if(XmlUtil.isStartElement(evtType))
+            {
+                if(XmlUtil.isElement(reader, PREDICT_DRIFT_TIME))
+                {
+                    PeptideSettings.DriftTimePredictionSettings dtPredictionSettings = new PeptideSettings.DriftTimePredictionSettings();
+                    dtPredictionSettings.setUseSpectralLibraryDriftTimes(useSpectralLibraryDriftTimes);
+                    dtPredictionSettings.setSpectralLibraryDriftTimesResolvingPower(resolvingPower);
+                    settings.setDtPredictionSettings(dtPredictionSettings);
+                    readDriftTimePredictorSettings(reader, dtPredictionSettings);
                 }
             }
         }
@@ -431,7 +455,36 @@ class PeptideSettingsParser
         return settings;
     }
 
-    private void readRetentionTimePredictorSettings(XMLStreamReader reader, PeptideSettings.PeptidePredictionSettings settings) throws XMLStreamException
+    private void readDriftTimePredictorSettings(XMLStreamReader reader, PeptideSettings.DriftTimePredictionSettings settings) throws XMLStreamException
+    {
+        settings.setPredictorName(XmlUtil.readAttribute(reader, NAME));
+        settings.setResolvingPower(XmlUtil.readDoubleAttribute(reader, RESOLVING_POWER));
+        List<PeptideSettings.MeasuredDriftTime> measuredDriftTimes = new ArrayList<>();
+        settings.setMeasuredDriftTimes(measuredDriftTimes);
+
+        while(reader.hasNext())
+        {
+            int evtType = reader.next();
+            if(XmlUtil.isEndElement(reader, evtType, PREDICT_DRIFT_TIME))
+            {
+                break;
+            }
+
+            if(XmlUtil.isStartElement(evtType))
+            {
+                if(XmlUtil.isElement(reader, MEASURED_DT))
+                {
+                    PeptideSettings.MeasuredDriftTime measuredDt = new PeptideSettings.MeasuredDriftTime();
+                    measuredDt.setModifiedSequence(XmlUtil.readRequiredAttribute(reader, "modified_sequence", MEASURED_DT));
+                    measuredDt.setCharge(XmlUtil.readRequiredIntegerAttribute(reader, "charge", MEASURED_DT));
+                    measuredDt.setDriftTime(XmlUtil.readRequiredDoubleAttribute(reader, "drift_time", MEASURED_DT));
+                    measuredDriftTimes.add(measuredDt);
+                }
+            }
+        }
+    }
+
+    private void readRetentionTimePredictorSettings(XMLStreamReader reader, PeptideSettings.RetentionTimePredictionSettings settings) throws XMLStreamException
     {
         settings.setPredictorName(XmlUtil.readAttribute(reader, NAME));
         settings.setTimeWindow(XmlUtil.readDoubleAttribute(reader, TIME_WINDOW));

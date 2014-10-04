@@ -121,7 +121,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public double getVersion()
     {
-        return 14.21;
+        return 14.22;
     }
 
     @Override

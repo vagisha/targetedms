@@ -68,6 +68,8 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
 
     private List<TransitionChromInfo> _chromInfoList;
     private List<TransitionLoss> _neutralLosses;
+    // The name of the measured ion that this transition uses (Only for reporter ions and other non proteomic transitions)
+    private String measuredIonName;
 
     private static final String PRECURSOR = "precursor";
     private static final String Y_ION = "y";
@@ -265,6 +267,16 @@ public class Transition extends AnnotatedEntity<TransitionAnnotation>
     public void setNeutralLosses(List<TransitionLoss> neutralLosses)
     {
         _neutralLosses = neutralLosses;
+    }
+
+    public String getMeasuredIonName()
+    {
+        return measuredIonName;
+    }
+
+    public void setMeasuredIonName(String measuredIonName)
+    {
+        this.measuredIonName = measuredIonName;
     }
 
     public boolean isPrecursorIon()

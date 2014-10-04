@@ -49,6 +49,7 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
@@ -82,6 +83,8 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_REPLICATE = "Replicate";
     public static final String TABLE_REPLICATE_ANNOTATION = "ReplicateAnnotation";
     public static final String TABLE_RETENTION_TIME_PREDICTION_SETTINGS = "RetentionTimePredictionSettings";
+    public static final String TABLE_DRIFT_TIME_PREDICTION_SETTINGS = "DriftTimePredictionSettings";
+    public static final String TABLE_MEASURED_DRIFT_TIME = "MeasuredDriftTime";
     public static final String TABLE_TRANSITION_FULL_SCAN_SETTINGS = "TransitionFullScanSettings";
     public static final String TABLE_TRANSITION_PREDICITION_SETTINGS = "TransitionPredictionSettings";
     public static final String TABLE_SAMPLE_FILE = "SampleFile";
@@ -331,6 +334,18 @@ public class TargetedMSSchema extends UserSchema
                 SQLFragment sql = new SQLFragment();
                 sql.append(makeInnerJoin(TargetedMSManager.getTableInfoIsolationScheme(), "ischeme", "IsolationSchemeId"));
                 sql.append(getJoinToRunsTable("ischeme"));
+                return sql;
+            }
+        },
+
+        DriftTimePredictionSettingsFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoDriftTimePredictionSettings(), "driftTimeSettings", "DriftTimePredictionSettingsId"));
+                sql.append(getJoinToRunsTable("driftTimeSettings"));
                 return sql;
             }
         };
@@ -592,7 +607,8 @@ public class TargetedMSSchema extends UserSchema
             TABLE_LIBRARY_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_RUN_ENZYME.equalsIgnoreCase(name) ||
             TABLE_SPECTRUM_LIBRARY.equalsIgnoreCase(name) ||
-            TABLE_ANNOTATION_SETTINGS.equalsIgnoreCase(name) )
+            TABLE_ANNOTATION_SETTINGS.equalsIgnoreCase(name) ||
+            TABLE_DRIFT_TIME_PREDICTION_SETTINGS.equalsIgnoreCase(name) )
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL());
         }
@@ -783,6 +799,12 @@ public class TargetedMSSchema extends UserSchema
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.IsolationSchemeFK.getSQL());
         }
 
+        // Tables that have a FT to targetesms.DriftTimePredictionSettings
+        if(TABLE_MEASURED_DRIFT_TIME.equalsIgnoreCase(name))
+        {
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.DriftTimePredictionSettingsFK.getSQL());
+        }
+
         if (getTableNames().contains(name))
         {
             FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this);
@@ -868,6 +890,8 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_ISOLATION_WINDOW);
         hs.add(TABLE_PREDICTOR);
         hs.add(TABLE_PREDICTOR_SETTINGS);
+        hs.add(TABLE_DRIFT_TIME_PREDICTION_SETTINGS);
+        hs.add(TABLE_MEASURED_DRIFT_TIME);
         return hs;
     }
 }
