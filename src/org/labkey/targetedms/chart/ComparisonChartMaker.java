@@ -35,7 +35,7 @@ import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.chart.renderer.category.StatisticalBarRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.statistics.BoxAndWhiskerCategoryDataset;
-import org.labkey.targetedms.model.PrecursorChromInfoPlus;
+import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.Precursor;
@@ -139,7 +139,7 @@ public class ComparisonChartMaker
             chartType = ComparisonDataset.ChartType.REPLICATE_COMPARISON;
         }
 
-        List<PrecursorChromInfoPlus> pciPlusList = getInputData(peptideGroup, replicateId, peptide, precursor, chartType);
+        List<PrecursorChromInfoLitePlus> pciPlusList = getInputData(peptideGroup, replicateId, peptide, precursor, chartType);
         if (pciPlusList == null || pciPlusList.size() == 0)
         {
             return null;
@@ -257,9 +257,9 @@ public class ComparisonChartMaker
 
     }
 
-    private List<PrecursorChromInfoPlus> getInputData(PeptideGroup peptideGroup, int replicateId, Peptide peptide, Precursor precursor, ComparisonDataset.ChartType chartType)
+    private List<PrecursorChromInfoLitePlus> getInputData(PeptideGroup peptideGroup, int replicateId, Peptide peptide, Precursor precursor, ComparisonDataset.ChartType chartType)
     {
-        List<PrecursorChromInfoPlus> pciPlusList;
+        List<PrecursorChromInfoLitePlus> pciPlusList;
         if(chartType == ComparisonDataset.ChartType.PEPTIDE_COMPARISON)
         {
             pciPlusList = getPrecursorChromInfo(peptideGroup, replicateId);
@@ -280,15 +280,15 @@ public class ComparisonChartMaker
         return "None".equalsIgnoreCase(groupByAnnotation) || StringUtils.isBlank(groupByAnnotation);
     }
 
-    private List<PrecursorChromInfoPlus> getPrecursorChromInfo(PeptideGroup peptideGroup, int replicateId)
+    private List<PrecursorChromInfoLitePlus> getPrecursorChromInfo(PeptideGroup peptideGroup, int replicateId)
     {
         if(replicateId == 0)
         {
-            return PrecursorManager.getPrecursorChromInfosForPeptideGroup(peptideGroup.getId());
+            return PrecursorManager.getChromInfosLitePlusForPeptideGroup(peptideGroup.getId());
         }
         else
         {
-            List<PrecursorChromInfoPlus> pciPlusList = new ArrayList<>();
+            List<PrecursorChromInfoLitePlus> pciPlusList = new ArrayList<>();
 
             // Returns the chrom infos only for the sample files with the given replicate ID.
             List<SampleFile> sampleFiles = ReplicateManager.getSampleFilesForRun(peptideGroup.getRunId());
@@ -298,7 +298,7 @@ public class ComparisonChartMaker
                     continue;
 
                 // chromatograms for this precursor from a single sample file.
-                List<PrecursorChromInfoPlus> samplePrecChromInfos = PrecursorManager.getPrecursorChromInfosForPeptideGroup(
+                List<PrecursorChromInfoLitePlus> samplePrecChromInfos = PrecursorManager.getChromInfosLitePlusForPeptideGroup(
                                                                                 peptideGroup.getId(),
                                                                                 file.getId());
                 pciPlusList.addAll(samplePrecChromInfos);
@@ -307,10 +307,10 @@ public class ComparisonChartMaker
         }
     }
 
-    private List<PrecursorChromInfoPlus> getPrecursorChromInfo(Peptide peptide, Precursor precursor)
+    private List<PrecursorChromInfoLitePlus> getPrecursorChromInfo(Peptide peptide, Precursor precursor)
     {
-        return precursor == null ? PrecursorManager.getPrecursorChromInfosForPeptide(peptide.getId()) :
-                                   PrecursorManager.getPrecursorChromInfosForPrecursor(precursor.getId());
+        return precursor == null ? PrecursorManager.getChromInfosLitePlusForPeptide(peptide.getId()) :
+                                   PrecursorManager.getChromInfosLitePlusForPrecursor(precursor.getId());
     }
 
     private void setRenderer(JFreeChart chart, ComparisonDataset dataset, boolean barChart)

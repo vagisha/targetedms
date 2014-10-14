@@ -22,6 +22,7 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
+import org.labkey.targetedms.model.PrecursorComparator;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.Precursor;
@@ -111,7 +112,7 @@ public class ChromatogramChartMakerFactory
             // Get the precursor chrom infos for the peptide
             List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptide(_pepChromInfo.getPeptideId(),
                                                                                                                     _pepChromInfo.getSampleFileId());
-            Collections.sort(precursorChromInfoList, new PrecursorChromInfoPlus.PrecursorChromInfoComparator());
+            Collections.sort(precursorChromInfoList, new PrecursorComparator());
 
             // Get the retention time range that should be displayed for the chromatogram
             Range chromatogramRange = getChromatogramRange(precursorChromInfoList);

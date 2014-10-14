@@ -16,7 +16,8 @@
 package org.labkey.targetedms.chart;
 
 import org.apache.commons.lang3.StringUtils;
-import org.labkey.targetedms.model.PrecursorChromInfoPlus;
+import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
+import org.labkey.targetedms.model.PrecursorComparator;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.SampleFile;
@@ -39,20 +40,20 @@ public class ComparisonChartInputMaker
 {
     private final ComparisonDataset.ChartType _chartType;
     private final int _runId;
-    private List<PrecursorChromInfoPlus> _pciPlusList;  // precursor = modified sequence + charge + isotope label
+    private List<PrecursorChromInfoLitePlus> _pciPlusList;  // precursor = modified sequence + charge + isotope label
     private String _groupByAnnotationName;
     private String _filterByAnnotationValue;
     private boolean _cvValues = false;
     private boolean _logValues = false;
 
-    public ComparisonChartInputMaker(int runId, List<PrecursorChromInfoPlus> pciPlusList, ComparisonDataset.ChartType chartType)
+    public ComparisonChartInputMaker(int runId, List<PrecursorChromInfoLitePlus> pciPlusList, ComparisonDataset.ChartType chartType)
     {
         _runId = runId;
         _chartType = chartType;
         if(pciPlusList != null)
         {
             _pciPlusList = pciPlusList;
-            Collections.sort(_pciPlusList, new PrecursorChromInfoPlus.PrecursorChromInfoComparator());
+            Collections.sort(_pciPlusList, new PrecursorComparator());
         }
         else
         {
@@ -94,15 +95,15 @@ public class ComparisonChartInputMaker
 
         if (_chartType == ComparisonDataset.ChartType.PEPTIDE_COMPARISON)
         {
-            Map<ComparisonCategory.PeptideCategory, List<PrecursorChromInfoPlus>> datasetMap = new HashMap<>();
+            Map<ComparisonCategory.PeptideCategory, List<PrecursorChromInfoLitePlus>> datasetMap = new HashMap<>();
 
-            for (PrecursorChromInfoPlus pciPlus : _pciPlusList)
+            for (PrecursorChromInfoLitePlus pciPlus : _pciPlusList)
             {
                 ComparisonCategory.PeptideCategory categoryLabel = getPeptideCategoryLabel(pciPlus, sampleFileAnnotMap);
                 if (!StringUtils.isBlank(_groupByAnnotationName) && !categoryLabel.hasAnnotationValue())
                     continue;
 
-                List<PrecursorChromInfoPlus> categoryPciList = datasetMap.get(categoryLabel);
+                List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.get(categoryLabel);
                 if (categoryPciList == null)
                 {
                     categoryPciList = new ArrayList<>();
@@ -128,9 +129,9 @@ public class ComparisonChartInputMaker
         {
             Map<Integer, String> sampleFileReplicateMap = getSampleFileReplicateMap();
 
-            Map<String, List<PrecursorChromInfoPlus>> datasetMap = new HashMap<>();
+            Map<String, List<PrecursorChromInfoLitePlus>> datasetMap = new HashMap<>();
 
-            for (PrecursorChromInfoPlus pciPlus : _pciPlusList)
+            for (PrecursorChromInfoLitePlus pciPlus : _pciPlusList)
             {
                 String categoryLabel = StringUtils.isBlank(_groupByAnnotationName) ?
                         sampleFileReplicateMap.get(pciPlus.getSampleFileId()) :
@@ -139,7 +140,7 @@ public class ComparisonChartInputMaker
                     continue;
 
 
-                List<PrecursorChromInfoPlus> categoryPciList = datasetMap.get(categoryLabel);
+                List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.get(categoryLabel);
                 if (categoryPciList == null)
                 {
                     categoryPciList = new ArrayList<>();
@@ -160,7 +161,7 @@ public class ComparisonChartInputMaker
         }
     }
 
-    private List<PrecursorChromInfoPlus> filterInputList()
+    private List<PrecursorChromInfoLitePlus> filterInputList()
     {
         List<SampleFile> sampleFileList = ReplicateManager.getSampleFilesForRun(_runId);
         Map<Integer, Integer> sampleFileReplicateMap = new HashMap<>();
@@ -179,8 +180,8 @@ public class ComparisonChartInputMaker
             }
         }
 
-        List<PrecursorChromInfoPlus> listToKeep =  new ArrayList<>();
-        for(PrecursorChromInfoPlus pci: _pciPlusList)
+        List<PrecursorChromInfoLitePlus> listToKeep =  new ArrayList<>();
+        for(PrecursorChromInfoLitePlus pci: _pciPlusList)
         {
             if(replicateIdsToKeep.contains(sampleFileReplicateMap.get(pci.getSampleFileId())))
             {
@@ -233,7 +234,7 @@ public class ComparisonChartInputMaker
         return sampleFileAnnotMap;
     }
 
-    private ComparisonCategory.PeptideCategory getPeptideCategoryLabel(PrecursorChromInfoPlus pciPlus,
+    private ComparisonCategory.PeptideCategory getPeptideCategoryLabel(PrecursorChromInfoLitePlus pciPlus,
                                                     Map<Integer, String> sampleFileAnnotMap)
     {
         return new ComparisonCategory.PeptideCategory(pciPlus.getPeptideModifiedSequence(),

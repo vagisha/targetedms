@@ -24,7 +24,7 @@ import java.util.Comparator;
  * Date: 5/8/12
  * Time: 4:30 PM
  */
-public class PrecursorChromInfoPlus extends PrecursorChromInfo
+public class PrecursorChromInfoPlus extends PrecursorChromInfo implements PrecursorComparator.Comparable
 {
     private String _groupName;
     private String _sequence;
@@ -103,19 +103,5 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo
     public void setIsotopeLabelId(int isotopeLabelId)
     {
         _isotopeLabelId = isotopeLabelId;
-    }
-
-    public static class PrecursorChromInfoComparator implements Comparator<PrecursorChromInfoPlus>
-    {
-         @Override
-        public int compare(PrecursorChromInfoPlus o1, PrecursorChromInfoPlus o2)
-        {
-            int result = Integer.valueOf(o1.getCharge()).compareTo(o2.getCharge());
-            if(result == 0)
-            {
-                return Integer.valueOf(o1.getIsotopeLabelId()).compareTo(o2.getIsotopeLabelId());
-            }
-            return result;
-        }
     }
 }

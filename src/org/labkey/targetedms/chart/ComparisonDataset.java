@@ -22,7 +22,7 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.statistics.BoxAndWhiskerItem;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
-import org.labkey.targetedms.model.PrecursorChromInfoPlus;
+import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -216,10 +216,10 @@ public class ComparisonDataset
             return _category;
         }
 
-        public void setData(SeriesItemMaker seriesItemMaker, List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues, ChartType chartType)
+        public void setData(SeriesItemMaker seriesItemMaker, List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues, ChartType chartType)
         {
-            Map<SeriesLabel, List<PrecursorChromInfoPlus>> seriesDataMap = new HashMap<>();
-            for(PrecursorChromInfoPlus pciPlus: pciPlusList)
+            Map<SeriesLabel, List<PrecursorChromInfoLitePlus>> seriesDataMap = new HashMap<>();
+            for(PrecursorChromInfoLitePlus pciPlus: pciPlusList)
             {
                 SeriesLabel seriesLabel = new SeriesLabel();
                 if(chartType == ChartType.REPLICATE_COMPARISON)
@@ -233,7 +233,7 @@ public class ComparisonDataset
                 seriesLabel.setIsotopeLabel(pciPlus.getIsotopeLabel());
                 seriesLabel.setIsotopeLabelId(pciPlus.getIsotopeLabelId());
 
-                List<PrecursorChromInfoPlus> seriesData = seriesDataMap.get(seriesLabel);
+                List<PrecursorChromInfoLitePlus> seriesData = seriesDataMap.get(seriesLabel);
                 if(seriesData == null)
                 {
                     seriesData = new ArrayList<>();
@@ -296,7 +296,7 @@ public class ComparisonDataset
 //            return _seriesLabel;
 //        }
 
-        public void setData(SeriesItemMaker seriesItemMaker, List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues)
+        public void setData(SeriesItemMaker seriesItemMaker, List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues)
         {
             _seriesItemData = seriesItemMaker.make(pciPlusList, cvValues);
         }
@@ -606,14 +606,14 @@ public class ComparisonDataset
 
     static interface SeriesItemMaker
     {
-        public SeriesItemData make(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues);
+        public SeriesItemData make(List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues);
     }
 
     public static abstract class BarChartSeriesItemMaker implements SeriesItemMaker
     {
-        public abstract Double getValue(PrecursorChromInfoPlus pciPlus);
+        public abstract Double getValue(PrecursorChromInfoLitePlus pciPlus);
 
-        public BarChartSeriesItemData make(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues)
+        public BarChartSeriesItemData make(List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues)
         {
             double value = 0.0;
             double sdev = 0;
@@ -630,7 +630,7 @@ public class ComparisonDataset
             else
             {
                 SummaryStatistics stats = new SummaryStatistics();
-                for(PrecursorChromInfoPlus chromInfo: pciPlusList)
+                for(PrecursorChromInfoLitePlus chromInfo: pciPlusList)
                 {
                     if(chromInfo.getTotalArea() == null)
                         continue;
@@ -656,7 +656,7 @@ public class ComparisonDataset
     public static class PeakAreasSeriesItemMaker extends BarChartSeriesItemMaker
     {
         @Override
-        public Double getValue(PrecursorChromInfoPlus pciPlus)
+        public Double getValue(PrecursorChromInfoLitePlus pciPlus)
         {
             return pciPlus.getTotalArea();
         }
@@ -665,11 +665,11 @@ public class ComparisonDataset
     // Makes a series item with the min, max and peak apex retention times as well as fwhm.
     public static class RetentionTimesAllValuesSeriesItemMaker implements SeriesItemMaker
     {
-        public BoxAndWhisterSeriesItemData make(List<PrecursorChromInfoPlus> pciPlusList, boolean cvValues)
+        public BoxAndWhisterSeriesItemData make(List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues)
         {
             if(pciPlusList.size() == 1)
             {
-                PrecursorChromInfoPlus pciPlus = pciPlusList.get(0);
+                PrecursorChromInfoLitePlus pciPlus = pciPlusList.get(0);
                 if(pciPlus.getBestRetentionTime() == null)
                 {
                     return null;
@@ -686,7 +686,7 @@ public class ComparisonDataset
             double maxEndTime = 0;
             double fwhm = 0;
             int count = 0;
-            for(PrecursorChromInfoPlus pciPlus: pciPlusList)
+            for(PrecursorChromInfoLitePlus pciPlus: pciPlusList)
             {
                 // TODO: Confirm this
                 if(pciPlus.getBestRetentionTime() == null)
@@ -711,7 +711,7 @@ public class ComparisonDataset
     public static class RetentionTimesRTSeriesItemMaker extends BarChartSeriesItemMaker
     {
         @Override
-        public Double getValue(PrecursorChromInfoPlus pciPlus)
+        public Double getValue(PrecursorChromInfoLitePlus pciPlus)
         {
             return pciPlus.getBestRetentionTime();
         }
@@ -720,7 +720,7 @@ public class ComparisonDataset
     public static class RetentionTimesFWHMSeriesItemMaker extends BarChartSeriesItemMaker
     {
         @Override
-        public Double getValue(PrecursorChromInfoPlus pciPlus)
+        public Double getValue(PrecursorChromInfoLitePlus pciPlus)
         {
             return pciPlus.getMaxFwhm();
         }
@@ -729,7 +729,7 @@ public class ComparisonDataset
     public static class RetentionTimesFWBSeriesItemMaker extends BarChartSeriesItemMaker
     {
         @Override
-        public Double getValue(PrecursorChromInfoPlus pciPlus)
+        public Double getValue(PrecursorChromInfoLitePlus pciPlus)
         {
             return pciPlus.getMaxEndTime() - pciPlus.getMinStartTime();
         }

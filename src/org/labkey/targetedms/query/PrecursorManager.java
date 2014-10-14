@@ -30,6 +30,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
@@ -198,7 +199,7 @@ public class PrecursorManager
 
     public static PrecursorChromInfo getBestPrecursorChromInfoForPeptide(int peptideId)
     {
-        List<PrecursorChromInfoPlus> chromInfos = getPrecursorChromInfosForPeptide(peptideId);
+        List<PrecursorChromInfo> chromInfos = getPrecursorChromInfosForPeptide(peptideId);
 
         if(chromInfos == null || chromInfos.size() == 0)
         {
@@ -206,10 +207,10 @@ public class PrecursorManager
         }
         else
         {
-            Collections.sort(chromInfos, new Comparator<PrecursorChromInfoPlus>()
+            Collections.sort(chromInfos, new Comparator<PrecursorChromInfo>()
             {
                 @Override
-                public int compare(PrecursorChromInfoPlus o1, PrecursorChromInfoPlus o2)
+                public int compare(PrecursorChromInfo o1, PrecursorChromInfo o2)
                 {
                     if( (o1 == o2 ) || (o1.getTotalArea() == o2.getTotalArea()) ) { return 0; }
                     else if(o1.getTotalArea() == null) {return 1;}
@@ -228,6 +229,23 @@ public class PrecursorManager
             }
             return chromInfos.get(0);
         }
+    }
+
+    public static List<PrecursorChromInfo> getPrecursorChromInfosForPeptide(int peptideId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT ");
+        sql.append("pci.*");
+        sql.append(" FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(" ON ");
+        sql.append("prec.Id = pci.PrecursorId ");
+        sql.append(" WHERE ");
+        sql.append("prec.PeptideId=? ");
+        sql.add(peptideId);
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfo.class);
     }
 
     public static Map<String, Object> getPrecursorSummary(int precursorId)
@@ -263,72 +281,85 @@ public class PrecursorManager
         throw new IllegalStateException("Cannot get summary for precursor "+precursorId);
     }
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptideGroup(int peptideGroupId)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId)
     {
-        return getPrecursorChromInfosForPeptideGroup(peptideGroupId, 0);
+        return getChromInfosLitePlusForPeptideGroup(peptideGroupId, 0);
     }
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptideGroup(int peptideGroupId, int sampleFileId)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId, int sampleFileId)
     {
-        return getPrecursorChromInfoList(peptideGroupId, true, false, sampleFileId);
+        return getPrecursorChromInfoLitePlusList(peptideGroupId, true, false, sampleFileId);
     }
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptide(int peptideId)
     {
-        return getPrecursorChromInfoList(peptideId, false, false, 0);
+        return getPrecursorChromInfoLitePlusList(peptideId, false, false, 0);
+    }
+
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPrecursor(int precursorId)
+    {
+        return getPrecursorChromInfoLitePlusList(precursorId, false, true, 0);
     }
 
     public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId, int sampleFileId)
     {
-        return getPrecursorChromInfoList(peptideId, false, false, sampleFileId);
-    }
-
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPrecursor(int precursorId)
-    {
-        return getPrecursorChromInfoList(precursorId, false, true, 0);
-    }
-
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPrecursor(int precursorId, int sampleFileId)
-    {
-        return getPrecursorChromInfoList(precursorId, false, true, sampleFileId);
-    }
-
-    private static List<PrecursorChromInfoPlus> getPrecursorChromInfoList(int id, boolean forPeptideGroup, boolean forPrecursor, int sampleFileId)
-    {
         SQLFragment sql = new SQLFragment("SELECT ");
-        sql.append("pci.*, pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
+        sql.append("pci.* , pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
         sql.append(" FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoIsotopeLabel(), "label");
+        joinTablesForPrecursorChromInfo(sql);
         sql.append(" WHERE ");
-        sql.append("pg.Id = pep.PeptideGroupId ");
-        sql.append("AND ");
-        sql.append("pep.Id = prec.PeptideId ");
-        sql.append("AND ");
-        sql.append("prec.Id = pci.PrecursorId ");
-        sql.append("AND ");
-        sql.append("prec.IsotopeLabelId = label.Id ");
+        sql.append("pep.Id=? ");
+        sql.add(peptideId);
 
-        if(forPeptideGroup)
+        if(sampleFileId != 0)
         {
             sql.append("AND ");
+            sql.append("pci.SampleFileId=?");
+            sql.add(sampleFileId);
+        }
+
+        return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
+    }
+
+    private static void joinTablesForPrecursorChromInfo(SQLFragment sql)
+    {
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(" ON ");
+        sql.append("pg.Id = pep.PeptideGroupId ");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(" ON ");
+        sql.append("pep.Id = prec.PeptideId ");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(" ON ");
+        sql.append("prec.Id = pci.PrecursorId ");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoIsotopeLabel(), "label");
+        sql.append(" ON ");
+        sql.append("prec.IsotopeLabelId = label.Id ");
+    }
+
+    private static List<PrecursorChromInfoLitePlus> getPrecursorChromInfoLitePlusList(int id, boolean forPeptideGroup, boolean forPrecursor, int sampleFileId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT ");
+        sql.append("pci.id, pci.precursorId, pci.sampleFileId, pci.bestRetentionTime, pci.minStartTime, pci.maxEndTime, pci.TotalArea, pci.maxfwhm, pci.maxHeight");
+        sql.append(", pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
+        sql.append(" FROM ");
+        joinTablesForPrecursorChromInfo(sql);
+        sql.append(" WHERE ");
+        if(forPeptideGroup)
+        {
             sql.append("pg.Id=? ");
         }
         else if(forPrecursor)
         {
-            sql.append("AND ");
             sql.append("prec.Id=? ");
         }
         else
         {
-            sql.append("AND ");
             sql.append("pep.Id=? ");
         }
         sql.add(id);
@@ -340,9 +371,7 @@ public class PrecursorManager
             sql.add(sampleFileId);
         }
 
-        PrecursorChromInfoPlus[] precChromInfos = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(PrecursorChromInfoPlus.class);
-
-        return Arrays.asList(precChromInfos);
+        return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoLitePlus.class);
     }
 
     public static List<Precursor> getRepresentativePrecursors(int runId)
@@ -534,11 +563,6 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
-    public static boolean hasChromatograms(int precursorId)
-    {
-        return hasChromatograms(precursorId, null);
-    }
-
     public static boolean hasChromatograms(int precursorId, Integer runId)
     {
         if(runId == null)
@@ -581,11 +605,6 @@ public class PrecursorManager
 
             return precursorIds.contains(precursorId);
         }
-    }
-
-    public static boolean hasLibrarySpectra(int precursorId)
-    {
-        return hasLibrarySpectra(precursorId, null);
     }
 
     public static boolean hasLibrarySpectra(int precursorId, Integer runId)
