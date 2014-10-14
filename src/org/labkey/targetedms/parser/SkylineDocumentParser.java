@@ -1350,6 +1350,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 chromInfo.setChromatogram(chromatogram.readChromatogram(_binaryParser));
                 chromInfo.setNumPoints(chromatogram.getNumPoints());
                 chromInfo.setNumTransitions(chromatogram.getNumTransitions());
+                chromInfo.setUncompressedSize(chromatogram.getUncompressedSize());
             }
         }
 

@@ -55,6 +55,7 @@ public class Chromatogram extends SkylineEntity
     private int _maxPeakIndex;
     private int _numPoints;
     private int _compressedSize;
+    private int _uncompressedSize;
     private short _flags;
     private long _locationPoints;
 
@@ -108,8 +109,62 @@ public class Chromatogram extends SkylineEntity
             _locationPoints = buffer.getLong();
         }
 
+        boolean hasErrors = hasMassErrors(_flags);
+        boolean hasMs1ScanIds = hasMs1ScanIds(_flags);
+        boolean hasFragmentScanIds = hasFragmentScanIds(_flags);
+        boolean hasSimScanIds = hasSimScanIds(_flags);
+
+        _uncompressedSize = getChromatogramsByteCount(_numTransitions, _numPoints, hasErrors,
+                hasMs1ScanIds, hasFragmentScanIds, hasSimScanIds);
+
         _cachedFiles = cachedFiles;
         _transitions = transitions;
+    }
+
+    private int getChromatogramsByteCount(int numTransitions, int numPoints, boolean hasErrors, boolean hasMs1ScanIds, boolean hasFragmentScanIds, boolean hasSimScanIds)
+    {
+        int sizeArray = (Integer.SIZE / 8)*numPoints;
+        int sizeArrayErrors = (Short.SIZE / 8)*numPoints;
+        int sizeTotal = sizeArray*(numTransitions + 1);
+        if (hasErrors)
+            sizeTotal += sizeArrayErrors*numTransitions;
+        if (hasMs1ScanIds)
+            sizeTotal += (Integer.SIZE / 8)*numPoints;
+        if (hasFragmentScanIds)
+            sizeTotal += (Integer.SIZE / 8)*numPoints;
+        if (hasSimScanIds)
+            sizeTotal += (Integer.SIZE / 8)*numPoints;
+        return sizeTotal;
+    }
+
+    /*
+    From ChromGroupHeaderInfo5 in Skyline code:
+
+    has_mass_errors = 0x01,
+    has_calculated_mzs = 0x02,
+    extracted_base_peak = 0x04,
+    has_ms1_scan_ids = 0x08,
+    has_sim_scan_ids = 0x10,
+    has_frag_scan_ids = 0x20,
+     */
+    private boolean hasSimScanIds(short flags)
+    {
+        return (flags & 0x10) != 0;
+    }
+
+    private boolean hasFragmentScanIds(short flags)
+    {
+        return (flags & 0x20) != 0;
+    }
+
+    private boolean hasMs1ScanIds(short flags)
+    {
+        return (flags & 0x08) != 0;
+    }
+
+    private boolean hasMassErrors(short flags)
+    {
+        return (flags & 0x01) != 0;
     }
 
     public double getPrecursorMz()
@@ -146,8 +201,12 @@ public class Chromatogram extends SkylineEntity
     /** Use zlib to inflate the compressed bytes to their original content */
     private byte[] uncompress(byte[] compressedBytes) throws DataFormatException
     {
-        int uncompressedSize = (Integer.SIZE / 8) * _numPoints * (_numTransitions + 1);
-        if(uncompressedSize == compressedBytes.length)
+        int uncompressedSize = _uncompressedSize;
+        if(uncompressedSize == 0)
+        {
+            uncompressedSize = (Integer.SIZE / 8) * _numPoints * (_numTransitions + 1);
+        }
+        if(uncompressedSize <= compressedBytes.length)
             return compressedBytes;
 
         Inflater inflater = new Inflater();
@@ -316,6 +375,16 @@ public class Chromatogram extends SkylineEntity
     public void setNumTransitions(int numTransitions)
     {
         _numTransitions = numTransitions;
+    }
+
+    public int getUncompressedSize()
+    {
+        return _uncompressedSize;
+    }
+
+    public void setUncompressedSize(int uncompressedSize)
+    {
+        _uncompressedSize = uncompressedSize;
     }
 
     public double[] getTransitions()

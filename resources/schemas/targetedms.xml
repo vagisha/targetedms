@@ -404,6 +404,9 @@
             <ns:column columnName="Note"/>
             <ns:column columnName="MaxHeight"/>
             <ns:column columnName="AverageMassErrorPPM"/>
+            <ns:column columnName="UncompressedSize">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Transition">
