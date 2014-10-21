@@ -57,6 +57,7 @@ resources/schemas/dbscripts/postgresql/targetedms-14.15-14.16.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.20-14.21.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.21-14.22.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.22-14.23.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-14.23-14.24.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.19-0.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.20-0.21.sql -text
@@ -99,8 +100,10 @@ resources/schemas/dbscripts/sqlserver/targetedms-14.15-14.16.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.20-14.21.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.21-14.22.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.22-14.23.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-14.23-14.24.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/IrtPeptide.java -text
+src/org/labkey/targetedms/PublishTargetedMSExperimentsController.java -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text
 src/org/labkey/targetedms/SkylineFileUtils.java -text
@@ -125,6 +128,7 @@ src/org/labkey/targetedms/TargetedMSController.java -text
 src/org/labkey/targetedms/TargetedMSDataHandler.java -text
 src/org/labkey/targetedms/TargetedMSExperimentRunType.java -text
 src/org/labkey/targetedms/TargetedMSFolderType.java -text
+src/org/labkey/targetedms/TargetedMSListener.java -text
 src/org/labkey/targetedms/TargetedMSManager.java -text
 src/org/labkey/targetedms/TargetedMSModule.java -text
 src/org/labkey/targetedms/TargetedMSRun.java -text
@@ -187,6 +191,8 @@ src/org/labkey/targetedms/conflict/ConflictPrecursor.java -text
 src/org/labkey/targetedms/conflict/ConflictProtein.java -text
 src/org/labkey/targetedms/conflict/ConflictTransition.java -text
 src/org/labkey/targetedms/model/ExperimentAnnotations.java -text
+src/org/labkey/targetedms/model/Journal.java -text
+src/org/labkey/targetedms/model/JournalExperiment.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoLitePlus.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoPlus.java -text
 src/org/labkey/targetedms/model/PrecursorComparator.java -text
@@ -231,6 +237,12 @@ src/org/labkey/targetedms/parser/TransitionSettings.java -text
 src/org/labkey/targetedms/parser/XmlUtil.java -text
 src/org/labkey/targetedms/parser/blib/BlibSpectrum.java -text
 src/org/labkey/targetedms/parser/blib/BlibSpectrumReader.java -text
+src/org/labkey/targetedms/pipeline/CopyExperimentFinalTask.java -text
+src/org/labkey/targetedms/pipeline/CopyExperimentJobSupport.java -text
+src/org/labkey/targetedms/pipeline/CopyExperimentPipelineJob.java -text
+src/org/labkey/targetedms/pipeline/CopyExperimentPipelineProvider.java -text
+src/org/labkey/targetedms/pipeline/ExperimentExportTask.java -text
+src/org/labkey/targetedms/pipeline/ExperimentImportTask.java -text
 src/org/labkey/targetedms/pipeline/TargetedMSImportPipelineJob.java -text
 src/org/labkey/targetedms/pipeline/TargetedMSPipelineProvider.java -text
 src/org/labkey/targetedms/query/AnnotatedTargetedMSTable.java -text
@@ -242,6 +254,8 @@ src/org/labkey/targetedms/query/ExperimentAnnotationsManager.java -text
 src/org/labkey/targetedms/query/ExperimentAnnotationsTableInfo.java -text
 src/org/labkey/targetedms/query/InstrumentManager.java -text
 src/org/labkey/targetedms/query/IsotopeLabelManager.java -text
+src/org/labkey/targetedms/query/JournalExperimentTableInfo.java -text
+src/org/labkey/targetedms/query/JournalManager.java -text
 src/org/labkey/targetedms/query/LibraryManager.java -text
 src/org/labkey/targetedms/query/ModificationManager.java -text
 src/org/labkey/targetedms/query/ModifiedSequenceDisplayColumn.java -text
@@ -260,6 +274,7 @@ src/org/labkey/targetedms/query/TransitionManager.java -text
 src/org/labkey/targetedms/search/ModificationSearchBean.java -text
 src/org/labkey/targetedms/search/ModificationSearchWebPart.java -text
 src/org/labkey/targetedms/search/modificationSearch.jsp -text
+src/org/labkey/targetedms/security/CopyTargetedMSExperimentRole.java -text
 src/org/labkey/targetedms/view/AnnotationUIDisplayColumn.java -text
 src/org/labkey/targetedms/view/ChromatogramsDataRegion.java -text
 src/org/labkey/targetedms/view/DocumentPrecursorsView.java -text
@@ -281,6 +296,7 @@ src/org/labkey/targetedms/view/chromatogramsForm.jsp -text
 src/org/labkey/targetedms/view/confirmImport.jsp -text
 src/org/labkey/targetedms/view/conflictSummary.jsp -text
 src/org/labkey/targetedms/view/expannotations/ExperimentAnnotationsFormDataRegion.java -text
+src/org/labkey/targetedms/view/expannotations/TargetedMSExperimentWebPart.java -text
 src/org/labkey/targetedms/view/expannotations/TargetedMSExperimentsWebPart.java -text
 src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -text
 src/org/labkey/targetedms/view/expannotations/experimentDetails.jsp -text
@@ -290,6 +306,11 @@ src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/precursorConflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/proteinConflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/proteinSearch.jsp -text
+src/org/labkey/targetedms/view/publish/ShortUrlDisplayColumnFactory.java -text
+src/org/labkey/targetedms/view/publish/copyExperimentForm.jsp -text
+src/org/labkey/targetedms/view/publish/createJournalGroup.jsp -text
+src/org/labkey/targetedms/view/publish/deleteJournal.jsp -text
+src/org/labkey/targetedms/view/publish/publishExperimentForm.jsp -text
 src/org/labkey/targetedms/view/renameRun.jsp -text
 src/org/labkey/targetedms/view/runSummaryView.jsp -text
 src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatch.java -text
@@ -333,3 +354,4 @@ webapp/TargetedMS/lorikeet_0.3/js/specview.js -text
 webapp/TargetedMS/unimod/unimod_NO_NAMESPACE.xml -text
 webapp/TargetedMS/unimod/unimod_ORIG.xml -text
 webapp/TargetedMS/unimod/unimod_PARSED.xml -text
+webapp/WEB-INF/targetedms/targetedmsContext.xml -text

@@ -62,6 +62,7 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpExperiment;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.jsp.FormPage;
@@ -120,6 +121,7 @@ import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.model.ExperimentAnnotations;
+import org.labkey.targetedms.model.Journal;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.PeptideGroup;
@@ -133,6 +135,7 @@ import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
+import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
 import org.labkey.targetedms.query.PeptideChromatogramsTableInfo;
@@ -189,7 +192,8 @@ public class TargetedMSController extends SpringActionController
 {
     private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
     
-    private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(TargetedMSController.class);
+    private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(TargetedMSController.class,
+                                                                                           PublishTargetedMSExperimentsController.getActions());
     public static final String CONFIGURE_TARGETED_MS_FOLDER = "Configure Panorama Folder";
 
     public TargetedMSController()
@@ -302,25 +306,25 @@ public class TargetedMSController extends SpringActionController
         }
 
         private void addDashboardTab(Container c, String[] includeWebParts)
+    {
+        ArrayList<Portal.WebPart> newWebParts = new ArrayList<>();
+        for(String name: includeWebParts)
         {
-            ArrayList<Portal.WebPart> newWebParts = new ArrayList<>();
-            for(String name: includeWebParts)
-            {
-                Portal.WebPart webPart = Portal.getPortalPart(name).createWebPart();
-                newWebParts.add(webPart);
-            }
-
-            // Save webparts to both pages, otherwise the TARGETED_MS_SETUP webpart gets copied over from
-            // portal.default to DefaultDashboard
-            Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, newWebParts);
-            Portal.saveParts(c, Portal.DEFAULT_PORTAL_PAGE_ID, newWebParts); // this will remove the TARGETED_MS_SETUP
-                                                                             // webpart added to portal.default during
-                                                                             // the initial folder creation.
+            Portal.WebPart webPart = Portal.getPortalPart(name).createWebPart();
+            newWebParts.add(webPart);
         }
 
+        // Save webparts to both pages, otherwise the TARGETED_MS_SETUP webpart gets copied over from
+        // portal.default to DefaultDashboard
+        Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, newWebParts);
+        Portal.saveParts(c, Portal.DEFAULT_PORTAL_PAGE_ID, newWebParts); // this will remove the TARGETED_MS_SETUP
+        // webpart added to portal.default during
+        // the initial folder creation.
+    }
+
         private void addDataPipelineTab(Container c)
-        {
-            ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
+    {
+        ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
             tab2.add(Portal.getPortalPart(DATA_PIPELINE_WEBPART).createWebPart());
             Portal.saveParts(c, DATA_PINELINE_TAB, tab2);
             Portal.addProperty(c, DATA_PINELINE_TAB, Portal.PROP_CUSTOMTAB);
@@ -3684,7 +3688,12 @@ public class TargetedMSController extends SpringActionController
             }
 
             DataRegion drg = createNewTargetedMsExperimentDataRegion(form, getViewContext());
-            return new InsertView(drg, errors);
+            InsertView view = new InsertView(drg, errors);
+            if(reshow)
+            {
+                view.setInitialValues(form.getRequest().getParameterMap());
+            }
+            return view;
         }
 
         @Override
@@ -3692,9 +3701,10 @@ public class TargetedMSController extends SpringActionController
         {
             _expAnnot = form.getBean();
 
-            if(!StringUtils.isBlank(_expAnnot.getPublicationLink()))
+            if (!StringUtils.isBlank(_expAnnot.getPublicationLink()))
             {
-                if(!new UrlValidator().isValid(_expAnnot.getPublicationLink()))
+                UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
+                if (!urlValidator.isValid(form.getBean().getPublicationLink()))
                 {
                     errors.reject(ERROR_MSG, "Publication Link does not appear to be valid. Links should begin with either http or https.");
                     return false;
@@ -3710,13 +3720,30 @@ public class TargetedMSController extends SpringActionController
             if (errors.getErrorCount() == 0)
             {
 
-                _expAnnot = ExperimentAnnotationsManager.save(getContainer(), _expAnnot, getUser());
-
-                if(form.isAddSelectedRuns())
+                try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
                 {
-                    int[] runIds = PageFlowUtil.toInts(DataRegionSelection.getSelected(getViewContext(), true));
-                    TargetedMSController.addSelectedRunsToExperiment(_expAnnot, runIds, getContainer(), getUser());
+                    // Create a new experiment
+                    ExpExperiment experiment = ExperimentService.get().createExpExperiment(getContainer(), _expAnnot.getTitle());
+                    experiment.save(getUser());
+
+                    // Create a new entry in targetedms.experimentannotations
+                    _expAnnot.setExperimentId(experiment.getRowId());
+                    _expAnnot.setContainer(experiment.getContainer());
+                    _expAnnot = ExperimentAnnotationsManager.save(_expAnnot, getUser());
+
+                    // Add all runs in the folder
+                    List<? extends ExpRun> runsInFolder = ExperimentService.get().getExpRuns(getContainer(), null, null);
+                    int[] runIds = new int[runsInFolder.size()];
+                    int i = 0;
+                    for(ExpRun run: runsInFolder)
+                    {
+                        runIds[i++] = run.getRowId();
+                    }
+                    ExperimentAnnotationsManager.addSelectedRunsToExperiment(experiment, runIds, getUser());
+
+                    transaction.commit();
                 }
+
                 return true;
             }
             return false;
@@ -3799,7 +3826,13 @@ public class TargetedMSController extends SpringActionController
             ExperimentAnnotations exptAnnotations = ExperimentAnnotationsManager.get(form.getId());
             if (exptAnnotations == null)
             {
-                throw new NotFoundException("Could not find experiment with ID " + form.getId());
+                throw new NotFoundException("Could not find experiment annotations with ID " + form.getId());
+            }
+
+            ExpExperiment experiment = exptAnnotations.getExperiment();
+            if(experiment == null)
+            {
+                throw new NotFoundException("Could not find the base experiment experimentAnnotations with ID " + exptAnnotations.getId());
             }
 
             // Check container
@@ -3812,25 +3845,40 @@ public class TargetedMSController extends SpringActionController
             experimentDetailsView.setFrame(WebPartView.FrameType.PORTAL);
             experimentDetailsView.setTitle("Experiment Details");
 
-            TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext(), exptAnnotations, TargetedMsRunListView.ButtonBarType.EXPERIMENT_DETAILS_VIEW);
+            // List of runs in the experiment.
+            TargetedMsRunListView.ViewType viewType = exptAnnotations.isJournalCopy() ? TargetedMsRunListView.ViewType.EXPERIMENT_VIEW :
+                    TargetedMsRunListView.ViewType.EDITABLE_EXPERIMENT_VIEW;
+            TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext(), exptAnnotations, viewType);
             TableInfo tinfo = runListView.getTable();
             if(tinfo instanceof FilteredTable)
             {
                 SQLFragment sql = new SQLFragment();
 
-                sql.append("lsid IN (SELECT run.experimentrunlsid FROM ");
-                sql.append(TargetedMSManager.getTableInfoRuns(), "run").append(", ");
-                sql.append(TargetedMSManager.getTableInfoExperimentAnnotationsRun(), "eRun").append(" ");
-                sql.append("WHERE eRun.ExperimentAnnotationsId = ? AND eRun.runId = run.id) ");
-                sql.add(exptAnnotations.getId());
+                sql.append("lsid IN (SELECT run.lsid FROM ");
+                sql.append(ExperimentService.get().getTinfoExperimentRun(), "run").append(", ");
+                sql.append(ExperimentService.get().getTinfoRunList(), "runlist").append(" ");
+                sql.append("WHERE runlist.experimentId = ? AND runlist.experimentRunId = run.rowid) ");
+                sql.add(experiment.getRowId());
                 ((FilteredTable) tinfo).addCondition(sql);
             }
-            runListView.setShowAddToRunGroupButton(false);
-            runListView.setShowMoveRunsButton(false);
-            runListView.setShowDeleteButton(false);
-            runListView.setShowExportButtons(false);
             result.addView(runListView);
 
+            // List of journals have been provided access to this experiment.
+            List<Journal> journals = JournalManager.getJournalsForExperiment(exptAnnotations.getId());
+            if(journals.size() > 0)
+            {
+                QuerySettings qSettings = new QuerySettings(getViewContext(), "Journals", "JournalExperiment");
+                qSettings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("ExperimentAnnotationsId"), exptAnnotations.getId()));
+                QueryView journalListView = new QueryView(new TargetedMSSchema(getUser(), getContainer()), qSettings, errors);
+                journalListView.setShowRecordSelectors(false);
+                journalListView.setButtonBarPosition(DataRegion.ButtonBarPosition.NONE);
+                VBox journalsBox = new VBox();
+                journalsBox.setTitle("Journals");
+                journalsBox.setFrame(WebPartView.FrameType.PORTAL);
+                journalsBox.addView(new HtmlView("<div>The following journals have access to this experiment.</div>"));
+                journalsBox.addView(journalListView);
+                result.addView(journalsBox);
+            }
             return result;
         }
 
@@ -3918,7 +3966,7 @@ public class TargetedMSController extends SpringActionController
                 UrlValidator urlValidator = new UrlValidator(new String[] {"http", "https"});
                 if(!urlValidator.isValid(form.getBean().getPublicationLink()))
                 {
-                    errors.reject(ERROR_MSG, "Publication Link does not appear to be valid.");
+                    errors.reject(ERROR_MSG, "Publication Link does not appear to be valid. Links should begin with either http or https.");
                     return false;
                 }
             }
@@ -3953,18 +4001,26 @@ public class TargetedMSController extends SpringActionController
         {
             int[] experimentAnnotationIds = deleteForm.getIds(false);
             User user = getUser();
+            ExperimentAnnotations[] experimentAnnotations = new ExperimentAnnotations[experimentAnnotationIds.length];
+            int i = 0;
             for(int experimentAnnotationId: experimentAnnotationIds)
             {
                 ExperimentAnnotations exp = ExperimentAnnotationsManager.get(experimentAnnotationId);
-                if(!exp.getContainer().hasPermission(user, DeletePermission.class))
+                Container container = exp.getContainer();
+                if(!container.hasPermission(user, DeletePermission.class))
                 {
-                    errors.reject(ERROR_MSG, "You do not have permissions to delete experiments in folder " + exp.getContainer().getPath());
+                    errors.reject(ERROR_MSG, "You do not have permissions to delete experiments in folder " + container.getPath());
                 }
+                experimentAnnotations[i++] = exp;
             }
 
             if(!errors.hasErrors())
             {
-                ExperimentAnnotationsManager.deleteExperimentAnnotations(experimentAnnotationIds);
+                ExperimentService.Interface experimentService = ExperimentService.get();
+                for(ExperimentAnnotations experiment: experimentAnnotations)
+                {
+                    experimentService.deleteExpExperimentByRowId(experiment.getContainer(), getUser(), experiment.getExperimentId());
+                }
                 return true;
             }
             return false;
@@ -4005,82 +4061,16 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    private static void addSelectedRunsToExperiment(ExperimentAnnotations expAnnot, int[] rowIds, Container container, User user)
-    {
-        List<TargetedMSRun> runs = getTargetedMSRunsForExpRunRowIds(rowIds);
-        if(runs.size() > 0)
-        {
-            ExperimentAnnotationsManager.addRunIds(expAnnot, runs, container, user);
-        }
-    }
-
-    private static List<TargetedMSRun> getTargetedMSRunsForExpRunRowIds(int[] rowIds)
-    {
-        ExperimentService.Interface expService = ExperimentService.get();
-        List<TargetedMSRun> runs = new ArrayList<>();
-        for(int rowId: rowIds)
-        {
-            ExpRun run = expService.getExpRun(rowId);
-            if(run == null)
-            {
-                throw new NotFoundException("Could not find run with rowId " + rowId);
-            }
-            TargetedMSRun targetedMSRun = TargetedMSManager.getRunByLsid(run.getLSID(), run.getContainer());
-            if(targetedMSRun == null)
-            {
-                throw new NotFoundException("could not find targetedMS run with lsid " + run.getLSID() + " in container " + run.getContainer());
-            }
-            runs.add(targetedMSRun);
-        }
-        return runs;
-    }
-
-
     @RequiresPermissionClass(InsertPermission.class)
-    public class AddSelectedRunsAction extends FormHandlerAction<ExperimentRunListForm>
-    {
-        public void validateCommand(ExperimentRunListForm target, Errors errors)
-        {
-        }
-
-        public boolean handlePost(ExperimentRunListForm form, BindException errors) throws Exception
-        {
-            ExperimentAnnotations experimentAnnotations = form.lookupExperiment();
-            if(experimentAnnotations == null)
-            {
-                errors.reject(ERROR_MSG, "Failed to lookup experiment annotations with ID " + form.getExpAnnotId());
-                return false;
-            }
-
-            ensureCorrectContainer(getContainer(), experimentAnnotations.getContainer(), getViewContext());
-
-            if(!experimentAnnotations.getContainer().hasPermission(getUser(), InsertPermission.class))
-            {
-                errors.reject(ERROR_MSG, "User does not have permissions to perform the requested action.");
-                return false;
-            }
-
-            int[] rowIds = form.getIds(false);
-            addSelectedRunsToExperiment(experimentAnnotations, rowIds, getContainer(), getUser());
-            return true;
-        }
-
-        public ActionURL getSuccessURL(ExperimentRunListForm form)
-        {
-           return getViewExperimentDetailsURL(form.lookupExperiment().getId(), getContainer());
-        }
-    }
-
-    @RequiresPermissionClass(InsertPermission.class)
-    public class AddAllFolderRunsToExperimentAction extends FormHandlerAction<AddAllRunsForm>
+    public class IncludeSubFoldersInExperimentAction extends FormHandlerAction<ExperimentForm>
     {
         private ExperimentAnnotations _expAnnot;
 
-        public void validateCommand(AddAllRunsForm form, Errors errors)
+        public void validateCommand(ExperimentForm form, Errors errors)
         {
         }
 
-        public boolean handlePost(AddAllRunsForm form, BindException errors) throws Exception
+        public boolean handlePost(ExperimentForm form, BindException errors) throws Exception
         {
             _expAnnot = form.lookupExperiment();
             if(_expAnnot == null)
@@ -4089,32 +4079,82 @@ public class TargetedMSController extends SpringActionController
                 return false;
             }
 
-            ensureCorrectContainer(getContainer(), _expAnnot.getContainer(), getViewContext());
+            ExpExperiment experiment = _expAnnot.getExperiment();
+            if(experiment == null)
+            {
+                errors.reject(ERROR_MSG, "Failed to lookup base experiment for experimentAnnotations with ID " + _expAnnot.getTitle());
+                return false;
+            }
 
-            if(!_expAnnot.getContainer().hasPermission(getUser(), InsertPermission.class))
+            ensureCorrectContainer(getContainer(), experiment.getContainer(), getViewContext());
+
+            if(!experiment.getContainer().hasPermission(getUser(), InsertPermission.class))
             {
                 errors.reject(ERROR_MSG, "User does not have permissions to perform the requested action.");
                 return false;
             }
 
-            List<? extends ExpRun> runs = ExperimentService.get().getExpRuns(_expAnnot.getContainer(), null, null);
-            int[] rowIds = new int[runs.size()];
-            int i = 0;
-            for(ExpRun run: runs)
+            if(ExperimentAnnotationsManager.hasExperimentsInSubfolders(_expAnnot.getContainer(), getUser()))
             {
-                rowIds[i++] = run.getRowId();
+                errors.reject(ERROR_MSG, "At least one of the subfolders contains an experiment. Cannot add subfolder data to this experiment.");
+                return false;
             }
-            addSelectedRunsToExperiment(form.lookupExperiment(), rowIds, getContainer(), getUser());
+
+            ExperimentAnnotationsManager.includeSubfoldersInExperiment(_expAnnot, getUser());
             return true;
         }
 
-        public ActionURL getSuccessURL(AddAllRunsForm form)
+        public ActionURL getSuccessURL(ExperimentForm form)
         {
             return getViewExperimentDetailsURL(_expAnnot.getId(), getContainer());
         }
     }
 
-    public static class AddAllRunsForm
+    @RequiresPermissionClass(InsertPermission.class)
+    public class ExcludeSubFoldersInExperimentAction extends FormHandlerAction<ExperimentForm>
+    {
+        private ExperimentAnnotations _expAnnot;
+
+        public void validateCommand(ExperimentForm form, Errors errors)
+        {
+        }
+
+        public boolean handlePost(ExperimentForm form, BindException errors) throws Exception
+        {
+            _expAnnot = form.lookupExperiment();
+            if(_expAnnot == null)
+            {
+                errors.reject(ERROR_MSG, "Failed to lookup experiment annotations with ID " + form.getId());
+                return false;
+            }
+
+            ExpExperiment experiment = _expAnnot.getExperiment();
+            if(experiment == null)
+            {
+                errors.reject(ERROR_MSG, "Failed to lookup base experiment for experimentAnnotations with ID " + _expAnnot.getTitle());
+                return false;
+            }
+
+            ensureCorrectContainer(getContainer(), experiment.getContainer(), getViewContext());
+
+            if(!experiment.getContainer().hasPermission(getUser(), InsertPermission.class))
+            {
+                errors.reject(ERROR_MSG, "User does not have permissions to perform the requested action.");
+                return false;
+            }
+
+            ExperimentAnnotationsManager.excludeSubfoldersFromExperiment(_expAnnot, getUser());
+
+            return true;
+        }
+
+        public ActionURL getSuccessURL(ExperimentForm form)
+        {
+            return getViewExperimentDetailsURL(_expAnnot.getId(), getContainer());
+        }
+    }
+
+    public static class ExperimentForm
     {
         private Integer _id;
 
@@ -4130,120 +4170,8 @@ public class TargetedMSController extends SpringActionController
 
         public ExperimentAnnotations lookupExperiment()
         {
-            return getId() == null ? null : ExperimentAnnotationsManager.get(getId().intValue());
+            return getId() == null ? null : ExperimentAnnotationsManager.get(getId());
         }
-    }
-
-    @RequiresPermissionClass(InsertPermission.class)
-    public class ShowAvailableRunsAction extends SimpleViewAction<AddAllRunsForm>
-    {
-        ExperimentAnnotations _experimentAnnotations;
-
-        @Override
-        public ModelAndView getView(AddAllRunsForm form, BindException errors) throws Exception
-        {
-           _experimentAnnotations = form.lookupExperiment();
-            if(_experimentAnnotations == null)
-            {
-                errors.reject(ERROR_MSG, "Failed to lookup experiment annotations with ID " + form.getId());
-                return new SimpleErrorView(errors, true);
-            }
-
-            ensureCorrectContainer(getContainer(), _experimentAnnotations.getContainer(), getViewContext());
-
-            TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext(), _experimentAnnotations, TargetedMsRunListView.ButtonBarType.ALL_AVAILABLE_RUNS_VIEW);
-
-            HtmlView htmlView = new HtmlView("Select runs in the table below and click on <span style=\"font-weight:bold\">ADD TO EXPERIMENT</span>. "
-                    + "Runs will be added to experiment <span style=\"font-weight:bold\">" +  _experimentAnnotations.getTitle() + "</span>.");
-
-            VBox vbox = new VBox();
-            vbox.addView(htmlView);
-            vbox.addView(runListView);
-
-            return vbox;
-        }
-
-        @Override
-        public NavTree appendNavTrail(NavTree root)
-        {
-            if(_experimentAnnotations != null)
-            {
-                root.addChild("Experiment Details", getViewExperimentDetailsURL(_experimentAnnotations.getId(), getContainer()));
-                root.addChild("Add Runs to Experiment");
-            }
-            return root;
-        }
-    }
-
-    @RequiresPermissionClass(UpdatePermission.class)
-    public class RemoveSelectedRunsAction extends FormHandlerAction<ExperimentRunListForm>
-    {
-        private ExperimentAnnotations _experimentAnnotations;
-        public void validateCommand(ExperimentRunListForm target, Errors errors)
-        {
-        }
-
-        public boolean handlePost(ExperimentRunListForm form, BindException errors) throws Exception
-        {
-            _experimentAnnotations = form.lookupExperiment();
-            if (_experimentAnnotations == null)
-            {
-                throw new NotFoundException("Could not find experiment with id " + form.getExpAnnotId());
-            }
-            if(!_experimentAnnotations.getContainer().hasPermission(getUser(), UpdatePermission.class))
-            {
-                errors.reject(ERROR_MSG, "You do not have permissions to update experiments in folder " + _experimentAnnotations.getContainer().getPath());
-            }
-
-            if(!errors.hasErrors())
-            {
-                int[] rowIds = form.getIds(true);
-                List<TargetedMSRun> runList = getTargetedMSRunsForExpRunRowIds(rowIds);
-                ExperimentAnnotationsManager.removeRunIds(_experimentAnnotations, runList, getContainer());
-                return true;
-            }
-
-            return false;
-        }
-
-        public ActionURL getSuccessURL(ExperimentRunListForm form)
-        {
-            return getViewExperimentDetailsURL(_experimentAnnotations.getId(), getContainer());
-        }
-    }
-
-    public static class ExperimentRunListForm extends SelectedIdsForm
-    {
-        private Integer _expAnnotId;
-
-        public Integer getExpAnnotId()
-        {
-            return _expAnnotId;
-        }
-
-        public void setExpAnnotId(Integer expRowId)
-        {
-            _expAnnotId = expRowId;
-        }
-
-        public ExperimentAnnotations lookupExperiment()
-        {
-            return getExpAnnotId() == null ? null : ExperimentAnnotationsManager.get(getExpAnnotId().intValue());
-        }
-    }
-
-    public static ActionURL getNewExperimentAnnotationURL(Container container, URLHelper returnURL, boolean addSelectedRuns)
-    {
-        ActionURL result = new ActionURL(ShowNewExperimentAnnotationFormAction.class, container);
-        if (returnURL != null)
-        {
-            result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());
-        }
-        if (addSelectedRuns)
-        {
-            result.addParameter("addSelectedRuns", addSelectedRuns);
-        }
-        return result;
     }
 
     public static ActionURL getEditExperimentDetailsURL(Container c, int experimentAnnotationsId, URLHelper returnURL)
@@ -4257,9 +4185,9 @@ public class TargetedMSController extends SpringActionController
         return url;
     }
 
-    public static ActionURL getAddAllRunsToExperimentURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
+    public static ActionURL getIncludeSubfoldersInExperimentURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
     {
-        ActionURL result = new ActionURL(AddAllFolderRunsToExperimentAction.class, container);
+        ActionURL result = new ActionURL(IncludeSubFoldersInExperimentAction.class, container);
         if (returnURL != null)
         {
             result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());
@@ -4268,9 +4196,9 @@ public class TargetedMSController extends SpringActionController
         return result;
     }
 
-    public static ActionURL getShowAvailableRunsURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
+    public static ActionURL getExcludeSubfoldersInExperimentURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
     {
-        ActionURL result = new ActionURL(TargetedMSController.ShowAvailableRunsAction.class, container);
+        ActionURL result = new ActionURL(ExcludeSubFoldersInExperimentAction.class, container);
         if (returnURL != null)
         {
             result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());

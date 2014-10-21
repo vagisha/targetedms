@@ -17,8 +17,18 @@ package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.CoreSchema;
+import org.labkey.api.data.DbScope;
+import org.labkey.api.data.Table;
+import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.UpgradeCode;
+import org.labkey.api.exp.api.ExpExperiment;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.ModuleContext;
+import org.labkey.api.security.UserManager;
+import org.labkey.targetedms.model.ExperimentAnnotations;
+
+import java.util.List;
 
 /**
  * User: jeckels
@@ -51,5 +61,47 @@ public class TargetedMSUpgradeCode implements UpgradeCode
         {
             setContainersToExperimentType(child);
         }
+    }
+
+    // Called at 14.23->14.24
+    @SuppressWarnings({"UnusedDeclaration"})
+    public void updateExperimentAnnotations(final ModuleContext moduleContext)
+    {
+        try (DbScope.Transaction transaction = CoreSchema.getInstance().getSchema().getScope().ensureTransaction())
+        {
+            // Get a list of all the entries in targetedms.ExperimentAnnotations
+            List<ExperimentAnnotations> expAnnotations = new TableSelector(TargetedMSManager.getTableInfoExperimentAnnotations()).getArrayList(ExperimentAnnotations.class);
+
+            for(ExperimentAnnotations expAnnot: expAnnotations)
+            {
+                // Create an entry in exp.experiment
+                ExpExperiment experiment = ExperimentService.get().createExpExperiment(expAnnot.getContainer(),expAnnot.getTitle());
+                ensureUniqueLSID(experiment);
+                experiment.save(UserManager.getUser(expAnnot.getCreatedBy()));
+                // Save the rowId
+                expAnnot.setExperimentId(experiment.getRowId());
+                Table.update(null, TargetedMSManager.getTableInfoExperimentAnnotations(), expAnnot, expAnnot.getId());
+            }
+
+            transaction.commit();
+        }
+    }
+
+    private void ensureUniqueLSID(ExpExperiment experiment)
+    {
+        String lsid;
+        int suffix = 1;
+        String name = experiment.getName();
+        do
+        {
+            if(suffix > 1)
+            {
+                name = experiment.getName() + "_" + suffix;
+            }
+            suffix++;
+            lsid = ExperimentService.get().generateLSID(experiment.getContainer(), ExpExperiment.class, name);
+        }
+        while (ExperimentService.get().getExpExperiment(lsid) != null);
+        experiment.setLSID(lsid);
     }
 }

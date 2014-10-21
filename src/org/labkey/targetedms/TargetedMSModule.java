@@ -19,6 +19,7 @@ package org.labkey.targetedms;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.EnumConverter;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
@@ -31,8 +32,11 @@ import org.labkey.api.module.SpringModule;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.protein.ProteomicsModule;
+import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.Portal;
@@ -42,14 +46,17 @@ import org.labkey.api.view.WebPartView;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
+import org.labkey.targetedms.security.CopyTargetedMSExperimentRole;
 import org.labkey.targetedms.view.LibraryPrecursorViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.PeptideViewWebPart;
 import org.labkey.targetedms.view.TargetedMSRunsWebPartView;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
+import org.labkey.targetedms.view.expannotations.TargetedMSExperimentWebPart;
 import org.labkey.targetedms.view.expannotations.TargetedMSExperimentsWebPart;
 
 import java.util.ArrayList;
@@ -121,7 +128,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public double getVersion()
     {
-        return 14.23;
+        return 14.24;
     }
 
     @Override
@@ -221,6 +228,14 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             }
         };
 
+        BaseWebPartFactory containerExperimentFactory = new BaseWebPartFactory(TargetedMSExperimentWebPart.WEB_PART_NAME)
+        {
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            {
+                return new TargetedMSExperimentWebPart(portalCtx);
+            }
+        };
+
         List<WebPartFactory> webpartFactoryList = new ArrayList<>();
         webpartFactoryList.add(setupFactory);
         webpartFactoryList.add(chromatogramLibraryDownload);
@@ -231,6 +246,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         webpartFactoryList.add(proteinSearchFactory);
         webpartFactoryList.add(modificationSearchFactory);
         webpartFactoryList.add(experimentAnnotationsListFactory);
+        webpartFactoryList.add(containerExperimentFactory);
         return webpartFactoryList;
     }
 
@@ -262,6 +278,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         PipelineService service = PipelineService.get();
         service.registerPipelineProvider(new TargetedMSPipelineProvider(this));
+        service.registerPipelineProvider(new CopyExperimentPipelineProvider(this));
 
         ExperimentService.get().registerExperimentDataHandler(new TargetedMSDataHandler());
         ExperimentService.get().registerExperimentDataHandler(new SkylineBinaryDataHandler());
@@ -287,6 +304,16 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         AuditLogService.get().addAuditViewFactory(TargetedMsRepresentativeStateAuditViewFactory.getInstance());
         AuditLogService.registerAuditType(new TargetedMsRepresentativeStateAuditProvider());
+
+        TargetedMSListener listener = new TargetedMSListener();
+        ExperimentService.get().addExperimentListener(listener);
+
+        // Register the CopyExperimentRole
+        RoleManager.registerRole(new CopyTargetedMSExperimentRole());
+
+		// Add a link in the admin console to manage journals.
+		ActionURL url =  new ActionURL(PublishTargetedMSExperimentsController.JournalGroupsAdminViewAction.class, ContainerManager.getRoot());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "targeted ms",url);
     }
 
     @NotNull

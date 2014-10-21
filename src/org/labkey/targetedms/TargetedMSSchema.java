@@ -21,7 +21,6 @@ import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AJAXDetailsDisplayColumn;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DisplayColumn;
@@ -49,11 +48,11 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
-import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
 import org.labkey.targetedms.query.ExperimentAnnotationsTableInfo;
+import org.labkey.targetedms.query.JournalExperimentTableInfo;
 import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
 import org.labkey.targetedms.query.PrecursorTableInfo;
 import org.labkey.targetedms.query.RepresentativeStateDisplayColumn;
@@ -137,14 +136,13 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_IRT_SCALE = "iRTScale";
 
     public static final String TABLE_EXPERIMENT_ANNOTATIONS = "ExperimentAnnotations";
-    public static final String TABLE_EXPERIMENT_ANNOTATIONS_RUN = "ExperimentAnnotationsRun";
+
+    public static final String TABLE_JOURNAL = "Journal";
+    public static final String TABLE_JOURNAL_EXPERIMENT = "JournalExperiment";
 
     private static final String PROTOCOL_PATTERN_PREFIX = "urn:lsid:%:Protocol.%:";
 
     private ExpSchema _expSchema;
-    private boolean _restrictContainer = true;
-    private final ContainerFilter _containerFilter;
-
 
     static public void register(Module module)
     {
@@ -159,25 +157,8 @@ public class TargetedMSSchema extends UserSchema
 
     public TargetedMSSchema(User user, Container container)
     {
-         this(user, container, true);
-    }
-
-    public TargetedMSSchema(User user, Container container, boolean restrictContainer)
-    {
         super(SCHEMA_NAME, SCHEMA_DESCR, user, container, TargetedMSManager.getSchema());
-        _restrictContainer = restrictContainer;
-
         _expSchema = new ExpSchema(user, container);
-
-        if (_restrictContainer)
-        {
-            _containerFilter = ContainerFilter.CURRENT;
-        }
-        else
-        {
-            _containerFilter = new ContainerFilter.CurrentAndSubfolders(user);
-            _expSchema.setContainerFilter(_containerFilter);
-        }
     }
 
     public static DbSchema getSchema()
@@ -185,14 +166,14 @@ public class TargetedMSSchema extends UserSchema
         return DbSchema.get(SCHEMA_NAME);
     }
 
-    private static final SQLFragment getJoinToRunsTable(String tableAlias)
+    private static SQLFragment getJoinToRunsTable(String tableAlias)
     {
         tableAlias = tableAlias == null ? "" : tableAlias + ".";
         return makeInnerJoin(TargetedMSManager.getTableInfoRuns(),
                 TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, tableAlias + "RunId");
     }
 
-    private static final SQLFragment makeInnerJoin(TableInfo table, String alias, String colRight)
+    private static SQLFragment makeInnerJoin(TableInfo table, String alias, String colRight)
     {
         SQLFragment sql = new SQLFragment("INNER JOIN ");
         sql.append(table, alias);
@@ -348,6 +329,15 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("driftTimeSettings"));
                 return sql;
             }
+        },
+        ExperimentAnnotationsFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                return makeInnerJoin(TargetedMSManager.getTableInfoExperimentAnnotations(),
+                        TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "ExperimentAnnotationsId");
+            }
         };
 
         public abstract SQLFragment getSQL();
@@ -456,10 +446,6 @@ public class TargetedMSSchema extends UserSchema
         if(TABLE_EXPERIMENT_ANNOTATIONS.equalsIgnoreCase(name))
         {
             return new ExperimentAnnotationsTableInfo(this, getUser());
-        }
-        if(TABLE_EXPERIMENT_ANNOTATIONS_RUN.equalsIgnoreCase(name))
-        {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL());
         }
 
         if (TABLE_RESPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
@@ -805,6 +791,11 @@ public class TargetedMSSchema extends UserSchema
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.DriftTimePredictionSettingsFK.getSQL());
         }
 
+        if(TABLE_JOURNAL_EXPERIMENT.equalsIgnoreCase(name))
+        {
+            return new JournalExperimentTableInfo(this, getContainer(), ContainerJoinType.ExperimentAnnotationsFK.getSQL());
+        }
+
         if (getTableNames().contains(name))
         {
             FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this);
@@ -892,6 +883,9 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_PREDICTOR_SETTINGS);
         hs.add(TABLE_DRIFT_TIME_PREDICTION_SETTINGS);
         hs.add(TABLE_MEASURED_DRIFT_TIME);
+        hs.add(TABLE_JOURNAL);
+        hs.add(TABLE_JOURNAL_EXPERIMENT);
+        hs.add(TABLE_EXPERIMENT_ANNOTATIONS);
         return hs;
     }
 }

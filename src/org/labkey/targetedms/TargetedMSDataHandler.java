@@ -24,14 +24,21 @@ import org.labkey.api.exp.api.AbstractExperimentDataHandler;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.model.ExperimentAnnotations;
+import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 
+import javax.xml.stream.XMLStreamException;
 import java.io.File;
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.zip.DataFormatException;
 
 /**
  * User: vsharma
@@ -49,8 +56,28 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     @Override
     public void importFile(ExpData data, File dataFile, ViewBackgroundInfo info, Logger log, XarContext context) throws ExperimentException
     {
-        // TODO
-        ExpRun expRun = data.getRun();
+        String description = data.getFile().getName();
+        SkylineDocImporter importer = new SkylineDocImporter(info.getUser(), context.getContainer(), description,
+                                                             data, log, context, TargetedMSRun.RepresentativeDataState.NotRepresentative);
+        try
+        {
+            SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
+            TargetedMSRun run = importer.importRun(runInfo);
+
+            ExpRun expRun = data.getRun();
+            if(expRun == null)
+            {
+                // At this point expRun should not be null
+                throw new ExperimentException("ExpRun was null. An entry in the ExperimentRun table should already exist for this data.");
+            }
+            run.setExperimentRunLSID(expRun.getLSID());
+
+            TargetedMSManager.updateRun(run, info.getUser());
+        }
+        catch (IOException | SQLException | DataFormatException | XMLStreamException | PipelineJobException e)
+        {
+            throw new ExperimentException(e);
+        }
     }
 
     @Override

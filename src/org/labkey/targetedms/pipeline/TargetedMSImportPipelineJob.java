@@ -18,8 +18,10 @@ package org.labkey.targetedms.pipeline;
 
 import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -27,6 +29,8 @@ import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.model.ExperimentAnnotations;
+import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 
 import java.sql.SQLException;
 
@@ -80,7 +84,16 @@ public class TargetedMSImportPipelineJob extends PipelineJob
             SkylineDocImporter importer = new SkylineDocImporter(getUser(), getContainer(), context.getJobDescription(), _expData, getLogger(), context, _representative);
             TargetedMSRun run = importer.importRun(_runInfo);
 
-            TargetedMSManager.ensureWrapped(run, getUser());
+            ExpRun expRun = TargetedMSManager.ensureWrapped(run, getUser());
+
+            // Check if an experiment is defined in the current folder, or if an experiment defined in a parent folder
+            // has been configured to include subfolders.
+            ExperimentAnnotations expAnnotations = ExperimentAnnotationsManager.getExperimentIncludesContainer(getContainer());
+            if(expAnnotations != null)
+            {
+                ExperimentAnnotationsManager.addSelectedRunsToExperiment(expAnnotations.getExperiment(), new int[]{expRun.getRowId()}, getUser());
+            }
+
             setStatus(TaskStatus.complete);
             completeStatus = true;
         }

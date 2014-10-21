@@ -108,11 +108,6 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_EXPERIMENT_ANNOTATIONS);
     }
 
-    public static TableInfo getTableInfoExperimentAnnotationsRun()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_EXPERIMENT_ANNOTATIONS_RUN);
-    }
-
     public static TableInfo getTableInfoRuns()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_RUNS);
@@ -376,6 +371,16 @@ public class TargetedMSManager
     public static TableInfo getTableInfoiRTScale()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_IRT_SCALE);
+    }
+
+    public static TableInfo getTableInfoJournal()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_JOURNAL);
+    }
+
+    public static TableInfo getTableInfoJournalExperiment()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_JOURNAL_EXPERIMENT);
     }
 
     public static Integer addRunToQueue(ViewBackgroundInfo info,
@@ -925,8 +930,6 @@ public class TargetedMSManager
         deleteRunDependent(getTableInfoRunEnzyme());
         // Delete from AnnotationSettings
         deleteRunDependent(getTableInfoAnnotationSettings());
-        // Delete from ExperimentAnnotationsRun
-        deleteRunDependent(getTableInfoExperimentAnnotationsRun());
         // Delete from IsolationScheme
         deleteRunDependent(getTableInfoIsolationScheme());
 

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
+
+    <bean id="studyPipelineRegistry" class="org.labkey.api.pipeline.TaskPipelineRegistrar">
+        <property name="factoryImpls">
+            <list>
+                <bean class="org.labkey.targetedms.pipeline.ExperimentExportTask$Factory"/>
+                <bean class="org.labkey.targetedms.pipeline.ExperimentImportTask$Factory"/>
+                <bean class="org.labkey.targetedms.pipeline.CopyExperimentFinalTask$Factory"/>
+            </list>
+        </property>
+
+        <property name="pipelines">
+            <list>
+                <!-- Study import job pipeline -->
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.targetedms.pipeline.CopyExperimentPipelineJob"/>
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <bean id="exportTask" class="org.labkey.api.pipeline.TaskId">
+                                <constructor-arg><value type="java.lang.Class">org.labkey.targetedms.pipeline.ExperimentExportTask</value></constructor-arg>
+                            </bean>
+                            <bean id="importTask" class="org.labkey.api.pipeline.TaskId">
+                                <constructor-arg><value type="java.lang.Class">org.labkey.targetedms.pipeline.ExperimentImportTask</value></constructor-arg>
+                            </bean>
+                            <bean id="finalTask" class="org.labkey.api.pipeline.TaskId">
+                                <constructor-arg><value type="java.lang.Class">org.labkey.targetedms.pipeline.CopyExperimentFinalTask</value></constructor-arg>
+                            </bean>
+                        </list>
+                    </property>
+                </bean>
+            </list>
+        </property>
+    </bean>
+</beans>
