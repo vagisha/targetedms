@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.EnumConverter;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
@@ -45,7 +44,6 @@ import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
-import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
@@ -269,8 +267,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         addController("targetedms", TargetedMSController.class);
         TargetedMSSchema.register(this);
-        EnumConverter.registerEnum(TargetedMSRun.RepresentativeDataState.class);
-        EnumConverter.registerEnum(RepresentativeDataState.class);
     }
 
     @Override
