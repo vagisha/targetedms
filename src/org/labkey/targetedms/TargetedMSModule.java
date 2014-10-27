@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import com.drew.lang.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
@@ -281,9 +282,10 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         ExperimentService.get().registerExperimentRunTypeSource(new ExperimentRunTypeSource()
         {
-            public Set<ExperimentRunType> getExperimentRunTypes(Container container)
+            @NotNull
+            public Set<ExperimentRunType> getExperimentRunTypes(@Nullable Container container)
             {
-                if (container.getActiveModules().contains(TargetedMSModule.this))
+                if (container == null || container.getActiveModules().contains(TargetedMSModule.this))
                 {
                     return Collections.singleton(EXP_RUN_TYPE);
                 }
