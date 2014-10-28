@@ -20,6 +20,10 @@ ALTER TABLE targetedms.ExperimentAnnotations ADD JournalCopy BOOLEAN NOT NULL DE
 ALTER TABLE targetedms.ExperimentAnnotations ADD IncludeSubfolders BOOLEAN NOT NULL DEFAULT FALSE;
 CREATE INDEX IX_ExperimentAnnotations_ExperimentId ON targetedms.ExperimentAnnotations(ExperimentId);
 
+DROP TABLE targetedms.ExperimentAnnotationsRun;
+DELETE FROM targetedms.ExperimentAnnotations WHERE Id NOT IN
+(SELECT ea.Id from targetedms.ExperimentAnnotations AS ea INNER JOIN core.Containers AS c ON ea.Container = c.entityId);
+
 /* Run Java code to create a new entry in exp.experiment for each entry in targetedms.ExperimentAnnotations */
 SELECT core.executeJavaUpgradeCode('updateExperimentAnnotations');
 
@@ -33,7 +37,7 @@ FROM targetedms.ExperimentAnnotations ea
 INNER JOIN exp.experiment e ON (e.rowid = ea.ExperimentId)
 INNER JOIN exp.experimentrun er ON (er.container = ea.Container));
 
-DROP TABLE targetedms.ExperimentAnnotationsRun;
+
 
 
 CREATE TABLE targetedms.Journal
