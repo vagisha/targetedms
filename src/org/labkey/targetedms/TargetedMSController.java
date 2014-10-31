@@ -80,6 +80,7 @@ import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
+import org.labkey.api.security.RequiresLogin;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -131,6 +132,8 @@ import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.targetedms.parser.SkylineBinaryParser;
+import org.labkey.targetedms.parser.SkylineDocumentParser;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
@@ -1579,6 +1582,18 @@ public class TargetedMSController extends SpringActionController
                 }
             }
             response.put("UploadedJobDetails", jobDetailsList);
+            return response;
+        }
+    }
+
+    @RequiresLogin
+    public class GetMaxSupportedVersionsAction extends ApiAction
+    {
+        public ApiResponse execute(Object object, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            response.put("SKY_version", SkylineDocumentParser.MAX_SUPPORTED_VERSION);
+            response.put("SKYD_version", SkylineBinaryParser.FORMAT_VERSION_CACHE);
             return response;
         }
     }

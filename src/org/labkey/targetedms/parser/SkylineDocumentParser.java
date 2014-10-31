@@ -107,6 +107,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String ISOLATION_WINDOW = "isolation_window";
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
+    public static final double MAX_SUPPORTED_VERSION = 1.9;
 
     private static final Pattern XML_ID_REGEX = Pattern.compile("\"/^[:_A-Za-z][-.:_A-Za-z0-9]*$/\"");
     private static final String XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -276,6 +277,12 @@ public class SkylineDocumentParser implements AutoCloseable
                                                     version +
                                                     ". Version less than " + MIN_SUPPORTED_VERSION +
                                                     " is not supported.");
+                }
+                else if(version > MAX_SUPPORTED_VERSION)
+                {
+                    // We will log a warning but continue with the import.
+                    _log.warn("The version of this Skyline document is " + version +
+                              ". This is newer than the highest supported version " + MAX_SUPPORTED_VERSION);
                 }
 
                 _formatVersion = String.valueOf(version);
