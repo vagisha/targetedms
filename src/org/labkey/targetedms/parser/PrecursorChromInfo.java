@@ -36,7 +36,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     private Double _averageMassErrorPPM;
     private Double _peakCountRatio;
     private Integer _numTruncated;
-    private Boolean _identified;
+    private String _identified;
     private Double _libraryDotP;
     private Double _isotopeDotP;
     private Integer _optimizationStep;
@@ -179,12 +179,12 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         this._numTruncated = numTruncated;
     }
 
-    public Boolean getIdentified()
+    public String getIdentified()
     {
         return _identified;
     }
 
-    public void setIdentified(Boolean identified)
+    public void setIdentified(String identified)
     {
         this._identified = identified;
     }

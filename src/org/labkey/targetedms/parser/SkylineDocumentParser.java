@@ -1468,7 +1468,7 @@ public class SkylineDocumentParser implements AutoCloseable
         fwhm = (fwhm != null && fwhm.isNaN()) ? null : fwhm;
         chromInfo.setMaxFwhm(fwhm);
         chromInfo.setNumTruncated(XmlUtil.readIntegerAttribute(reader, "truncated"));
-        chromInfo.setIdentified(XmlUtil.readBooleanAttribute(reader, "identified"));
+        chromInfo.setIdentified(XmlUtil.readAttribute(reader, "identified"));
         chromInfo.setLibraryDotP(XmlUtil.readDoubleAttribute(reader, "library_dotp"));
         chromInfo.setIsotopeDotP(XmlUtil.readDoubleAttribute(reader, "isotope_dotp"));
         chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
@@ -1713,7 +1713,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setFwhm(fwhm);
         chromInfo.setFwhmDegenerate(XmlUtil.readBooleanAttribute(reader, "fwhm_degenerate"));
         chromInfo.setTruncated(XmlUtil.readBooleanAttribute(reader, "truncated"));
-        chromInfo.setIdentified(XmlUtil.readBooleanAttribute(reader, "identified"));
+        chromInfo.setIdentified(XmlUtil.readAttribute(reader, "identified"));
         chromInfo.setPeakRank(XmlUtil.readIntegerAttribute(reader, "rank"));
         chromInfo.setUserSet(XmlUtil.readAttribute(reader, "user_set"));
 

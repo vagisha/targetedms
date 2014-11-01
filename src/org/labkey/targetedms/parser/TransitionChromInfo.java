@@ -37,7 +37,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     private Boolean _fwhmDegenerate;
     private Boolean _truncated;
     private Integer _peakRank;
-    private Boolean _identified;
+    private String _identified;
     private Integer _optimizationStep;
     private String _userSet;
     private String _note;
@@ -184,12 +184,12 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
         this._peakRank = peakRank;
     }
 
-    public Boolean getIdentified()
+    public String getIdentified()
     {
         return _identified;
     }
 
-    public void setIdentified(Boolean identified)
+    public void setIdentified(String identified)
     {
         this._identified = identified;
     }
