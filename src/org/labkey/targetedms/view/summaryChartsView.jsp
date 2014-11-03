@@ -30,6 +30,8 @@
     int peptideGroupId = bean.getPeptideGroupId(); // Used when displaying peak areas for all peptides of a protein
     int peptideId = bean.getPeptideId(); // Used when displaying peak areas for a single peptide in multiple replicates
                                          // or grouped by replicate annotation.
+    int precursorId = bean.getPrecursorId(); // Used when displaying peak areas for a single precursor
+
     List<Replicate> replicateList = bean.getReplicateList();
     List<String> replicateAnnotationNameList = bean.getReplicateAnnotationNameList();
     List<ReplicateAnnotation> replicateAnnotationValueList = bean.getReplicateAnnotationValueList();
@@ -46,6 +48,11 @@
     {
         peakAreaUrl.addParameter("peptideId", peptideId);
         retentionTimesUrl.addParameter("peptideId", peptideId);
+    }
+    if(precursorId != 0)
+    {
+        peakAreaUrl.addParameter("precursorId", precursorId);
+        retentionTimesUrl.addParameter("precursorId", precursorId);
     }
 %>
 <style>
