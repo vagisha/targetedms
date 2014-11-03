@@ -46,7 +46,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     private byte[] _chromatogram;
     private int _numPoints;
     private int _numTransitions;
-    private int _uncompressedSize;
+    private Integer _uncompressedSize;
 
 
     public int getPrecursorId()
@@ -269,12 +269,12 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         _numTransitions = numTransitions;
     }
 
-    public int getUncompressedSize()
+    public Integer getUncompressedSize()
     {
         return _uncompressedSize;
     }
 
-    public void setUncompressedSize(int uncompressedSize)
+    public void setUncompressedSize(Integer uncompressedSize)
     {
         _uncompressedSize = uncompressedSize;
     }
@@ -285,7 +285,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         result.setChromatogram(_chromatogram);
         result.setNumPoints(_numPoints);
         result.setNumTransitions(_numTransitions);
-        result.setUncompressedSize(_uncompressedSize);
+        result.setUncompressedSize(_uncompressedSize == null ? 0 : _uncompressedSize);
         return result;
     }
 }

@@ -26,6 +26,7 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
+import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
@@ -84,6 +85,8 @@ public class PrecursorTableInfo extends AnnotatedTargetedMSTable
                 return getUserSchema().getTable(TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE);
             }
         });
+
+        getColumn("IsotopeLabelId").setFk(new QueryForeignKey(getUserSchema(), null, TargetedMSSchema.TABLE_ISOTOPE_LABEL, "Id", null));
 
 
         SQLFragment transitionCountSQL = new SQLFragment("(SELECT COUNT(t.Id) FROM ");

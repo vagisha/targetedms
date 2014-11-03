@@ -432,14 +432,14 @@ public class SkylineDocImporter
                 filter.addCondition(FieldKey.fromParts("noCutC"), enzyme.getNoCutC(), (enzyme.getNoCutC() == null ? CompareType.ISBLANK : CompareType.EQUAL));
                 filter.addCondition(FieldKey.fromParts("cutN"), enzyme.getCutN(), (enzyme.getCutN() == null ? CompareType.ISBLANK : CompareType.EQUAL));
                 filter.addCondition(FieldKey.fromParts("noCutN"), enzyme.getNoCutN(), (enzyme.getNoCutN() == null ? CompareType.ISBLANK : CompareType.EQUAL));
-                PeptideSettings.Enzyme existingEnzyme = new TableSelector(TargetedMSManager.getTableInfoEnzyme(), filter, null).getObject(PeptideSettings.Enzyme.class);
-                if (existingEnzyme == null)
+                PeptideSettings.Enzyme[] existingEnzymes = new TableSelector(TargetedMSManager.getTableInfoEnzyme(), filter, null).getArray(PeptideSettings.Enzyme.class);
+                if (existingEnzymes == null || existingEnzymes.length == 0)
                 {
                     enzyme = Table.insert(_user, TargetedMSManager.getTableInfoEnzyme(), enzyme);
                 }
                 else
                 {
-                    enzyme = existingEnzyme;
+                    enzyme = existingEnzymes[0];
                 }
 
                 PeptideSettings.EnzymeDigestionSettings digestSettings = pepSettings.getEnzymeDigestionSettings();
