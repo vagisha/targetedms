@@ -26,6 +26,8 @@ import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.UIContainerHelper;
 import org.labkey.test.util.WikiHelper;
 
+import static org.junit.Assert.assertTrue;
+
 @Category({DailyB.class, MS2.class})
 public class GetDataAPITest extends TargetedMSTest
 {
@@ -79,18 +81,20 @@ public class GetDataAPITest extends TargetedMSTest
     protected void clientApiTest()
     {
         runClientAPITestCore(CLIENT_API_CORE1);
-        assertElementContains(Locator.id("jsonWrapperTest"),"Sequence");
-        assertElementContains(Locator.id("jsonWrapperTest"),"My Charge");
+        waitForElement(Locator.id("jsonWrapperTest").append("/table"));
+        String getDataTable = getText(Locator.id("jsonWrapperTest"));
 
-        assertElementContains(Locator.id("jsonWrapperTest"),"LLPYWQDVIAK");
-        assertElementContains(Locator.id("jsonWrapperTest"),"LLSEEALPAIR");
-        assertElementContains(Locator.id("jsonWrapperTest"),"LLTTIADAAK");
-        assertElementContains(Locator.id("jsonWrapperTest"),"LSVQDLDLK");
-        assertElementContains(Locator.id("jsonWrapperTest"),"LTSLNVVAGSDLR");
-        assertElementContains(Locator.id("jsonWrapperTest"),"LVEAFQWTDK");
-        assertElementContains(Locator.id("jsonWrapperTest"),"LVEDPQVIAPFLGK");
-        assertElementContains(Locator.id("jsonWrapperTest"),"LWDVATGETYQR");
-        assertElementContains(Locator.id("jsonWrapperTest"), "2");
+        assertTrue(getDataTable.contains("Sequence"));
+        assertTrue(getDataTable.contains("My Charge"));
+        assertTrue(getDataTable.contains("LLPYWQDVIAK"));
+        assertTrue(getDataTable.contains("LLSEEALPAIR"));
+        assertTrue(getDataTable.contains("LLTTIADAAK"));
+        assertTrue(getDataTable.contains("LSVQDLDLK"));
+        assertTrue(getDataTable.contains("LTSLNVVAGSDLR"));
+        assertTrue(getDataTable.contains("LVEAFQWTDK"));
+        assertTrue(getDataTable.contains("LVEDPQVIAPFLGK"));
+        assertTrue(getDataTable.contains("LWDVATGETYQR"));
+        assertTrue(getDataTable.contains("2"));
     }
 
     private void runClientAPITestCore(String request_core)
