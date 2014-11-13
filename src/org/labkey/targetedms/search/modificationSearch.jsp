@@ -91,12 +91,12 @@
                 { xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF },
                 {
                     xtype: 'radiogroup',
-                    fieldLabel: 'Search By',
+                    fieldLabel: 'Search by',
                     columns: 2,
                     width: 460,
                     items: [
-                        { boxLabel: 'Delta Mass', name: 'searchType', inputValue: 'deltaMass', checked: <%=initSearchType.equals("deltaMass")%> },
-                        { boxLabel: 'Modification Name', name: 'searchType', inputValue: 'modificationName', checked: <%=initSearchType.equals("modificationName")%>}
+                        { boxLabel: 'Delta mass', name: 'searchType', inputValue: 'deltaMass', checked: <%=initSearchType.equals("deltaMass")%> },
+                        { boxLabel: 'Modification name', name: 'searchType', inputValue: 'modificationName', checked: <%=initSearchType.equals("modificationName")%>}
                     ],
                     listeners: {
                         scope: this,
@@ -120,20 +120,36 @@
                                 form.down('hiddenfield[name=modSearchPairsStr]').setValue(null);
                                 form.down('combo[name=customName]').setValue(null);
                                 form.down('combo[name=unimodName]').setValue(null);
+
+
+                                var elToUpdate = document.getElementById(<%=q(renderId)%>);
+                                // Find the closest Ext.Component and call doComponentLayout()
+                                while(elToUpdate && elToUpdate !== document.body)
+                                {
+                                    var cmp = Ext4.getCmp(elToUpdate.id);
+                                    console.log(elToUpdate.id);
+                                    console.log(cmp);
+                                    if(cmp)
+                                    {
+                                        cmp.doComponentLayout();
+                                        break;
+                                    }
+                                    elToUpdate = elToUpdate.parentNode;
+                                }
                             }
                         }
                     }
                 },
                 {
                     xtype: 'textfield',
-                    fieldLabel: 'Amino Acids',
+                    fieldLabel: 'Amino acids',
                     name: 'aminoAcids',
                     hidden: <%=!initSearchType.equals("deltaMass")%>,
                     value: <%=q(initAminoAcids)%>
                 },
                 {
                     xtype: 'numberfield',
-                    fieldLabel: 'Delta Mass',
+                    fieldLabel: 'Delta mass',
                     name: 'deltaMass',
                     hideTrigger: true,
                     allowDecimal: true,
@@ -183,7 +199,7 @@
                     hidden: <%=!initSearchType.equals("modificationName")%>,
                     items: [
                         { boxLabel: 'Structural', name: 'structural', inputValue: true, checked: <%=initStructuralCheck%> },
-                        { boxLabel: 'Isotope Label', name: 'isotopeLabel', inputValue: true, checked: <%=initIsotopeLabelCheck%> }
+                        { boxLabel: 'Isotope label', name: 'isotopeLabel', inputValue: true, checked: <%=initIsotopeLabelCheck%> }
                     ],
                     listeners: {
                         change: function(cmp, newValue, oldValue) {
@@ -197,7 +213,7 @@
                 },
                 {
                     xtype: 'combo',
-                    fieldLabel: 'Custom Name',
+                    fieldLabel: 'Custom name',
                     name: 'customName',
                     width: 500,
                     hidden: <%=!initSearchType.equals("modificationName") || !initNameType.equals("custom")%>,
@@ -273,7 +289,7 @@
                 },
                 {
                     xtype: 'combo',
-                    fieldLabel: 'Unimod Name:<%= helpPopup("Unimod", "Unimod is a public domain database, distributed under a copyleft licence: a copyright notice that permits unrestricted redistribution and modification, provided that all copies and derivatives retain the same permissions.") %>',
+                    fieldLabel: 'Unimod name:<%= helpPopup("Unimod", "Unimod is a public domain database, distributed under a copyleft licence: a copyright notice that permits unrestricted redistribution and modification, provided that all copies and derivatives retain the same permissions.") %>',
                     labelSeparator: '',
                     name: 'unimodName',
                     width: 500,
@@ -341,7 +357,7 @@
                 {
                     xtype: 'checkbox',
                     name: 'includeSubfolders',
-                    fieldLabel: 'Search in Subfolders',
+                    fieldLabel: 'Search in subfolders',
                     inputValue: true,
                     checked: <%=bean.getForm().isIncludeSubfolders()%>,
                     listeners: {
@@ -384,7 +400,7 @@
                     if (record.get("Type"))
                     {
                         include = (values["structural"] && record.get("Type") == "Structural")
-                            || (values["isotopeLabel"] && record.get("Type") == "Isotope Label");
+                            || (values["isotopeLabel"] && record.get("Type") == "Isotope label");
                     }
                     else if (record.get("Structural"))
                     {
