@@ -29,8 +29,6 @@ import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.targetedms.model.ExperimentAnnotations;
-import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -81,12 +79,12 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     }
 
     @Override
-    public ActionURL getContentURL(Container container, ExpData data)
+    public ActionURL getContentURL(ExpData data)
     {
-        TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId(), container);
+        TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId(), data.getContainer());
         if (run != null)
         {
-            return TargetedMSController.getShowRunURL(container, run.getRunId());
+            return TargetedMSController.getShowRunURL(data.getContainer(), run.getRunId());
         }
         return null;
     }
