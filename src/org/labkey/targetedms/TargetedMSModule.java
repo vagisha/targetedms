@@ -100,13 +100,14 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                                                                           TARGETED_MS_PRECURSOR_VIEW,
                                                                           TARGETED_MS_RUNS_WEBPART_NAME};
 
+    public static final String[] QC_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_RUNS_WEBPART_NAME}; // Placeholder for real list
 
     public static final String TARGETED_MS_FOLDER_TYPE = "TargetedMS Folder Type";
     public static ModuleProperty FOLDER_TYPE_PROPERTY;
 
     public enum FolderType
     {
-        Experiment, Library, LibraryProtein, Undefined
+        Experiment, Library, LibraryProtein, QC, Undefined
     }
 
     public TargetedMSModule()

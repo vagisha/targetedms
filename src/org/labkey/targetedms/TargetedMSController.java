@@ -190,6 +190,7 @@ import static org.labkey.targetedms.TargetedMSModule.FolderType;
 import static org.labkey.targetedms.TargetedMSModule.LIBRARY_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.PROTEIN_LIBRARY_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
+import static org.labkey.targetedms.TargetedMSModule.QC_FOLDER_WEB_PARTS;
 
 public class TargetedMSController extends SpringActionController
 {
@@ -258,12 +259,13 @@ public class TargetedMSController extends SpringActionController
                 case Experiment:
                 case Library:
                 case LibraryProtein:
+                case QC:
                     return true;  // Module type already set to LibraryProtein
                 case Undefined:
                     // continue with the remainder of the function
                     break;
             }
-            if (folderSetupForm.getFolderType() != null && folderSetupForm.getFolderType().equals(FolderType.Experiment.toString()))
+            if (FolderType.Experiment.toString().equals(folderSetupForm.getFolderType()))
             {
                 moduleProperty.saveValue(getUser(), c, FolderType.Experiment.toString());
 
@@ -274,7 +276,7 @@ public class TargetedMSController extends SpringActionController
 
                 return true;
             }
-            else if (folderSetupForm.getFolderType() != null && folderSetupForm.getFolderType().equals(FolderType.Library.toString()))
+            else if (FolderType.Library.toString().equals(folderSetupForm.getFolderType()))
             {
                 // setup the CHROMATOGRAM_LIBRARY default webparts
                 if (folderSetupForm.isPrecursorNormalized())
@@ -302,10 +304,16 @@ public class TargetedMSController extends SpringActionController
 
                 return true;
             }
-            else
+            else if (FolderType.QC.toString().equals(folderSetupForm.getFolderType()))
             {
-                return true;  // no option selected - do nothing
+                moduleProperty.saveValue(getUser(), c, FolderType.QC.toString());
+                addDashboardTab(c, QC_FOLDER_WEB_PARTS); // Placeholder. per spec, runs should be on a separate tab
+                addDataPipelineTab(c);
+                return true;
             }
+            else
+                return true;  // no option selected - do nothing
+
         }
 
     private void addDashboardTab(Container c, String[] includeWebParts)

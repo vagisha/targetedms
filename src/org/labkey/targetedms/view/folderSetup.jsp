@@ -28,7 +28,8 @@
     boolean isExperiment = folderType == TargetedMSModule.FolderType.Experiment;
     boolean isSet = ( isExperiment ||
             folderType == TargetedMSModule.FolderType.Library ||
-            folderType == TargetedMSModule.FolderType.LibraryProtein );
+            folderType == TargetedMSModule.FolderType.LibraryProtein ||
+            folderType == TargetedMSModule.FolderType.QC);
 
     if (isNull)
     {
@@ -50,17 +51,23 @@ tr.spaceUnder > td
         <table cellspacing="7" width="100%">
             <tr class="spaceUnder">
                 <td>
-                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>"<%=checked(isUndefined || isExperiment)%>> <b>Experimental data</b> - a collection of published Skyline documents for various experimental designs</br>
+                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>"<%=checked(isUndefined || isExperiment)%>> <b>Experimental data</b>
+                    - A collection of published Skyline documents for various experimental designs
                 </td>
             </tr>
             <tr>
                 <td>
-                <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSModule.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - curated precursor and product ion expression data for use in designing and validating future experiments</br>
+                <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSModule.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - Curated precursor and product ion expression data for use in designing and validating future experiments
                 </td>
             </tr>
             <tr>
                 <td>
-                &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp &nbsp  <input type="checkbox" name="precursorNormalized" value="true">Rank peptides within proteins by peak area<br>
+                <blockquote><input type="checkbox" name="precursorNormalized" value="true">Rank peptides within proteins by peak area</blockquote>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="radio" name="folderType" id="QC" value="<%= h(TargetedMSModule.FolderType.QC.toString()) %>"> <b>QC</b> - Quality control metrics of reagents and instruments
                 </td>
             </tr>
             <tr>
