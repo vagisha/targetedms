@@ -308,7 +308,7 @@ public class TargetedMSController extends SpringActionController
             }
         }
 
-        private void addDashboardTab(Container c, String[] includeWebParts)
+    private void addDashboardTab(Container c, String[] includeWebParts)
     {
         ArrayList<Portal.WebPart> newWebParts = new ArrayList<>();
         for(String name: includeWebParts)
@@ -361,6 +361,23 @@ public class TargetedMSController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             return root;
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Action to show QC reports
+    // ------------------------------------------------------------------------
+    @RequiresPermissionClass(ReadPermission.class)
+    public class LeveyJenningsAction extends SimpleViewAction
+    {
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            return new JspView("/org/labkey/targetedms/view/leveyJenningsReport.jsp");
+        }
+
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root.addChild("QC Reports");
         }
     }
 

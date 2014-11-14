@@ -8,6 +8,7 @@ resources/queries/targetedms/peptide/FolderPeptides.qview.xml -text
 resources/queries/targetedms/peptide/LibraryPeptides.qview.xml -text
 resources/queries/targetedms/peptidegroup/FolderProteins.qview.xml -text
 resources/queries/targetedms/peptidegroup/LibraryProteins.qview.xml -text
+resources/reports/schemas/LeveyJenningsTrendPlot.r -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.11-0.12.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.12-0.13.sql -text
@@ -305,6 +306,7 @@ src/org/labkey/targetedms/view/expannotations/TargetedMSExperimentsWebPart.java 
 src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -text
 src/org/labkey/targetedms/view/expannotations/experimentDetails.jsp -text
 src/org/labkey/targetedms/view/folderSetup.jsp -text
+src/org/labkey/targetedms/view/leveyJenningsReport.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
 src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/precursorConflictResolutionView.jsp -text
@@ -339,6 +341,7 @@ webapp/TargetedMS/images/TransitionGroupLib.gif -text
 webapp/TargetedMS/images/blank.gif -text
 webapp/TargetedMS/images/spectrum.gif -text
 webapp/TargetedMS/jquery/jquery-1.8.3.min.js -text
+webapp/TargetedMS/js/LeveyJenningsTrendPlotPanel.js -text
 webapp/TargetedMS/js/dropDownUtil.js -text
 webapp/TargetedMS/lorikeet_0.3/css/lorikeet.css -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_lorikeet.png -text
