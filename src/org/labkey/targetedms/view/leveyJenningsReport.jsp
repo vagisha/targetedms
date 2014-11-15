@@ -31,20 +31,13 @@
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
         resources.add(ClientDependency.fromFilePath("clientapi/ext3"));
         resources.add(ClientDependency.fromFilePath("targetedms/js/LeveyJenningsTrendPlotPanel.js"));
-        resources.add(ClientDependency.fromFilePath("targetedms/LeveyJenningsReport.css"));
         return resources;
     }
 %>
 
-<table cellpadding="0" cellspacing="15">
-    <tr>
-        <td rowspan="2"><div id="graphParamsPanel"></div></td>
-        <td><div id="guideSetOverviewPanel"></div></td>
-    </tr>
-    <tr>
-        <td><div id="rPlotPanel"></div></td>
-    </tr>
-</table>
+<div id="graphParamsPanel"></div>
+<div id="rPlotPanel"></div>
+
 <div id="trackingDataPanelTitle" style="margin-left:15px"></div>
 <div id="trackingDataPanel" style="margin-left:15px"></div>
 
@@ -60,12 +53,11 @@
             LABKEY.Query.selectRows({
                 schemaName: 'targetedms',
                 queryName: 'peptidechrominfo',
-                columns: "PeptideId/Sequence,SampleFileId/AcquisitionTime",
-                maxRows: 1,
+                columns: "PeptideId/Sequence,SampleFileId/AcquiredTime",
                 success: function(data) {
                     if (data.rows.length == 0)
                         Ext.get('graphParamsPanel').update("Error: there were no records found.");
-                    initializeReportPanels();
+                    initializeReportPanels(data);
                 },
                 failure: function(response) {
                     Ext.get('graphParamsPanel').update("Error: " + response.exception);
@@ -73,12 +65,27 @@
             });
         }
 
-        function initializeReportPanels()
-        {
+        function initializeReportPanels(data) {
+            var startDate = null;
+            var endDate = null;
+            var peptides = {};
+            for (var i = 0; i < data.rows.length; i++) {
+                peptides[data.rows[i]["PeptideId/Sequence"]] = true;
+                var date = new Date(data.rows[i]["SampleFileId/AcquiredTime"]);
+                if (startDate == null || startDate > date) {
+                    startDate = date;
+                }
+                if (endDate == null || endDate < date) {
+                    endDate = date;
+                }
+            }
             // initialize the panel that displays the R plot for the trend plotting of EC50, AUC, and High MFI
             var trendPlotPanel = new LABKEY.LeveyJenningsTrendPlotPanel({
                 renderTo: 'rPlotPanel',
                 cls: 'extContainer',
+                peptides: peptides,
+                startDate: startDate,
+                endDate: endDate,
                 listeners: {
                     'reportFilterApplied': function (startDate, endDate)
                     {

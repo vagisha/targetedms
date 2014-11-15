@@ -70,10 +70,10 @@ for (typeIndex in 1:length(peptides))
 
 	# determine if the request is for log scale or not
 	asLog = "";
-	yAxisLabel = "Retention Time";
+#	yAxisLabel = "Retention Time";
 	if (!is.null(labkey.url.params$AsLog)) {
 	    asLog = "y";
-	    yAxisLabel = paste(yAxisLabel, "(log)", sep=" ");
+#	    yAxisLabel = paste(yAxisLabel, "(log)", sep=" ");
 	}
 
 	# if there is no data for the selection, display a blank plot
@@ -171,25 +171,21 @@ for (typeIndex in 1:length(peptides))
 	  # add the axis labels and tick marks
 	  par(las=2);
 	  axis(2, col="black");
-	  mtext(yAxisLabel, side=2, line=4, las=0, font=2);
+#	  mtext(yAxisLabel, side=2, line=4, las=0, font=2);
 	  axis(1, col="black", at=xtcks, labels=FALSE, cex.axis=0.8);
 	  staxlab(1, xtcks, xlabels, srt=25)
-	  mtext("Assay", side=1, line=4, las=0, font=2);	  
 	  box();
 
 	} else {
 	  par(mar=c(5.5,5,2,0.2));
 	  plot(NA, NA, type = c("b"), ylim=c(1,1), xlim=c(1,30), xlab="", ylab="", axes=F, log=asLog);
-	  mtext(mainTitle, side=3, line=0.75, font=2, las=1, cex=1.2);
+#	  mtext(mainTitle, side=3, line=0.75, font=2, las=1, cex=1.2);
 	  text(15,1,"No Data Available for Selected Graph Parameters");
 	  axis(1, at=seq(0,30,by=5), labels=matrix("",1,7), cex.axis=0.8);
 	  mtext(yAxisLabel, side=2, line=4, las=0, font=2);
-	  mtext("Assay", side=1, line=4, las=0, font=2);
 	  box();
 	}
 }
 
 # close the graphing device
 dev.off();
-
-

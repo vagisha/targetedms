@@ -11,8 +11,6 @@ Ext.namespace('LABKEY');
 * Date: Sept 20, 2011
 */
 
-LABKEY.requiresCss("targetedms/LeveyJenningsReport.css");
-
 /**
  * Class to create a tab panel for displaying the R plot for the trending of EC50, AUC, and High MFI values for the selected graph parameters.
  *
@@ -28,10 +26,10 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             bodyStyle: 'background-color:#EEEEEE',
             labelAlign: 'left',
             width: 850,
-            height: 370,
+            height: 350 * config.peptides.length,
             border: false,
             cls: 'extContainer',
-            disabled: true,
+//            disabled: true,
             yAxisScale: 'linear'
         });
 
@@ -45,8 +43,10 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
 
         this.plotRenderedHtml = null;
         this.pdfHref = null;
-        this.startDate = null;
-        this.endDate = null;
+        if (!this.startDate)
+            this.startDate = null;
+        if (!this.endDate)
+            this.endDate = null;
 
         // initialize the y-axis scale combo for the top toolbar
         this.scaleLabel = new Ext.form.Label({text: 'Y-Axis Scale:'});
@@ -78,6 +78,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         this.startDateLabel = new Ext.form.Label({text: 'Start Date:'});
         this.startDateField = new Ext.form.DateField({
             id: 'start-date-field',
+            value: this.startDate,
             format:  'Y-m-d',
             listeners: {
                 scope: this,
@@ -93,6 +94,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         this.endDateLabel = new Ext.form.Label({text: 'End Date:'});
         this.endDateField = new Ext.form.DateField({
             id: 'end-date-field',
+            value: this.endDate,
             format:  'Y-m-d',
             listeners: {
                 scope: this,
@@ -332,5 +334,5 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             storeData.push([value, value == null ? '[Blank]' : value]);
         });
         return storeData;
-    },
+    }
 });
