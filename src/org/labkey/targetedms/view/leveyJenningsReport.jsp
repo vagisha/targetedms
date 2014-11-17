@@ -30,16 +30,15 @@
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
         resources.add(ClientDependency.fromFilePath("clientapi/ext3"));
+        resources.add(ClientDependency.fromFilePath("targetedms/css/LeveyJenningsReport.css"));
         resources.add(ClientDependency.fromFilePath("targetedms/js/LeveyJenningsTrendPlotPanel.js"));
         return resources;
     }
 %>
 
-<div id="graphParamsPanel"></div>
 <div id="rPlotPanel"></div>
-
-<div id="trackingDataPanelTitle" style="margin-left:15px"></div>
-<div id="trackingDataPanel" style="margin-left:15px"></div>
+<div id="hiddenPlotPanel" style="display: none"></div>
+<div id="tiledPlotPanel"></div>
 
 <script type="text/javascript">
 
@@ -50,52 +49,31 @@
 
         function init()
         {
-            LABKEY.Query.selectRows({
+            LABKEY.Query.executeSql({
                 schemaName: 'targetedms',
-                queryName: 'peptidechrominfo',
-                columns: "PeptideId/Sequence,SampleFileId/AcquiredTime",
+                sql: 'SELECT MIN(SampleFileId.AcquiredTime) AS StartDate, MAX(SampleFileId.AcquiredTime) AS EndDate FROM peptidechrominfo',
                 success: function(data) {
-                    if (data.rows.length == 0)
-                        Ext.get('graphParamsPanel').update("Error: there were no records found.");
-                    initializeReportPanels(data);
+                    if (data.rows.length == 0 || !data.rows[0].StartDate)
+                        Ext.get('tiledPlotPanel').update("No data found. Please upload runs using the Data Pipeline or directly from Skyline.");
+                    else
+                        initializeReportPanels(data);
                 },
                 failure: function(response) {
-                    Ext.get('graphParamsPanel').update("Error: " + response.exception);
+                    Ext.get('tiledPlotPanel').update("Error: " + response.exception);
                 }
             });
         }
 
         function initializeReportPanels(data) {
-            var startDate = null;
-            var endDate = null;
-            var peptides = {};
-            for (var i = 0; i < data.rows.length; i++) {
-                peptides[data.rows[i]["PeptideId/Sequence"]] = true;
-                var date = new Date(data.rows[i]["SampleFileId/AcquiredTime"]);
-                if (startDate == null || startDate > date) {
-                    startDate = date;
-                }
-                if (endDate == null || endDate < date) {
-                    endDate = date;
-                }
-            }
+            var startDate = new Date(data.rows[0].StartDate);
+            var endDate = new Date(data.rows[0].EndDate);
+
             // initialize the panel that displays the R plot for the trend plotting of EC50, AUC, and High MFI
             var trendPlotPanel = new LABKEY.LeveyJenningsTrendPlotPanel({
                 renderTo: 'rPlotPanel',
                 cls: 'extContainer',
-                peptides: peptides,
                 startDate: startDate,
-                endDate: endDate,
-                listeners: {
-                    'reportFilterApplied': function (startDate, endDate)
-                    {
-//                        trackingDataPanel.graphParamsSelected(startDate, endDate);
-                    },
-                    'togglePdfBtn': function (toEnable)
-                    {
-//                        guideSetPanel.toggleExportBtn(toEnable);
-                    }
-                }
+                endDate: endDate
             });
         }
 

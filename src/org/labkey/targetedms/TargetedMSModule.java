@@ -82,6 +82,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String TARGETED_MS_PEPTIDE_GROUP_VIEW = "Targeted MS Protein View";
     public static final String TARGETED_MS_RUNS_WEBPART_NAME = "Targeted MS Runs";
     public static final String TARGETED_MS_PROTEIN_SEARCH = "Targeted MS Protein Search";
+    public static final String TARGETED_MS_QC_SUMMARY = "Targeted MS QC Summary";
+    public static final String TARGETED_MS_QC_PLOTS = "Targeted MS QC Plots";
     public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
 
     public static final String[] EXPERIMENT_FOLDER_WEB_PARTS = new String[] {MASS_SPEC_SEARCH_WEBPART,
@@ -100,7 +102,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                                                                           TARGETED_MS_PRECURSOR_VIEW,
                                                                           TARGETED_MS_RUNS_WEBPART_NAME};
 
-    public static final String[] QC_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_RUNS_WEBPART_NAME}; // Placeholder for real list
+    public static final String[] QC_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_QC_SUMMARY, TARGETED_MS_QC_PLOTS};
 
     public static final String TARGETED_MS_FOLDER_TYPE = "TargetedMS Folder Type";
     public static ModuleProperty FOLDER_TYPE_PROPERTY;
@@ -196,7 +198,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         {
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
             {
-
                 return new TargetedMSRunsWebPartView(portalCtx);
             }
         };
@@ -236,6 +237,28 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             }
         };
 
+        BaseWebPartFactory qcPlotsFactory = new BaseWebPartFactory(TARGETED_MS_QC_PLOTS)
+        {
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            {
+                JspView result = new JspView("/org/labkey/targetedms/view/leveyJenningsReport.jsp");
+                result.setTitle("QC Plots");
+                result.setFrame(WebPartView.FrameType.PORTAL);
+                return result;
+            }
+        };
+
+        BaseWebPartFactory qcSummaryFactory = new BaseWebPartFactory(TARGETED_MS_QC_SUMMARY)
+        {
+            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            {
+                JspView result = new JspView("/org/labkey/targetedms/view/qcSummary.jsp");
+                result.setTitle("QC Summary");
+                result.setFrame(WebPartView.FrameType.PORTAL);
+                return result;
+            }
+        };
+
         List<WebPartFactory> webpartFactoryList = new ArrayList<>();
         webpartFactoryList.add(setupFactory);
         webpartFactoryList.add(chromatogramLibraryDownload);
@@ -247,6 +270,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         webpartFactoryList.add(modificationSearchFactory);
         webpartFactoryList.add(experimentAnnotationsListFactory);
         webpartFactoryList.add(containerExperimentFactory);
+        webpartFactoryList.add(qcPlotsFactory);
+        webpartFactoryList.add(qcSummaryFactory);
         return webpartFactoryList;
     }
 

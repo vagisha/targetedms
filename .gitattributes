@@ -319,6 +319,7 @@ src/org/labkey/targetedms/view/publish/copyExperimentForm.jsp -text
 src/org/labkey/targetedms/view/publish/createJournalGroup.jsp -text
 src/org/labkey/targetedms/view/publish/deleteJournal.jsp -text
 src/org/labkey/targetedms/view/publish/publishExperimentForm.jsp -text
+src/org/labkey/targetedms/view/qcSummary.jsp -text
 src/org/labkey/targetedms/view/renameRun.jsp -text
 src/org/labkey/targetedms/view/runSummaryView.jsp -text
 src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatch.java -text
@@ -333,6 +334,7 @@ test/src/org/labkey/test/tests/TargetedMSLibraryIrtTest.java -text
 test/src/org/labkey/test/tests/TargetedMSLibraryTest.java -text
 test/src/org/labkey/test/tests/TargetedMSTest.java -text
 test/test_targetedms.iml -text
+webapp/TargetedMS/css/LeveyJenningsReport.css -text
 webapp/TargetedMS/css/dropDown.css -text
 webapp/TargetedMS/images/ChromatogramLibraryScreenshot.png -text
 webapp/TargetedMS/images/Fragment.gif -text

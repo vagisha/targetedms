@@ -12,7 +12,7 @@ Ext.namespace('LABKEY');
 */
 
 /**
- * Class to create a tab panel for displaying the R plot for the trending of EC50, AUC, and High MFI values for the selected graph parameters.
+ * Class to create a panel for displaying the R plot for the trending of EC50, AUC, and High MFI values for the selected graph parameters.
  *
  * @params titration
  * @params assayName
@@ -26,11 +26,11 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             bodyStyle: 'background-color:#EEEEEE',
             labelAlign: 'left',
             width: 850,
-            height: 350 * config.peptides.length,
             border: false,
             cls: 'extContainer',
 //            disabled: true,
-            yAxisScale: 'linear'
+            yAxisScale: 'linear',
+            chartType: 'retentionTime'
         });
 
         this.addEvents('reportFilterApplied', 'togglePdfBtn');
@@ -108,6 +108,36 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             }
         });
 
+        this.chartTypeLabel = new Ext.form.Label({text: 'Chart Type:'});
+        this.chartTypeField = new Ext.form.ComboBox({
+            id: 'chart-type-field',
+            value: 'Retention Time',
+            triggerAction: 'all',
+            mode: 'local',
+            store: new Ext.data.ArrayStore({
+                fields: ['value', 'display'],
+                data: [
+                    ['retentionTime', 'Retention Time']
+                    , ['peakArea', 'Peak Area']
+                    , ['fwhm', 'Full Width at Half Minimum (FWHM)']
+//                    , ['fwb', 'FWB']
+                ]
+            }),
+            valueField: 'value',
+            displayField: 'display',
+            value: 'retentionTime',
+            forceSelection: true,
+            editable: false,
+            listeners: {
+                scope: this,
+                'select': function(cmp, newVal, oldVal) {
+                    this.chartType = cmp.getValue();
+                    this.setTabsToRender();
+                    this.displayTrendPlot();
+                }
+            }
+        });
+
         // initialize the refesh graph button
         this.applyFilterButton = new Ext.Button({
             disabled: true,
@@ -133,7 +163,9 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             this.startDateLabel, tbspacer,
             this.startDateField, tbspacer,
             this.endDateLabel, tbspacer,
-            this.endDateField, tbspacer
+            this.endDateField, tbspacer,
+            this.chartTypeLabel, tbspacer,
+            this.chartTypeField, tbspacer
         ];
         items.push(this.applyFilterButton);
         items.push(tbspacer);
@@ -145,34 +177,36 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             items: items
         });
 
-        // initialize the tab panel that will show the trend plots
-        this.ec504plPanel = new Ext.Panel({
-            itemId: "retentionTimes",
-            title: "Retention Times",
-            html: "<div id='retentionTimesTrendPlotDiv' class='retentionTimesTrendPlot'>To begin, choose an Antigen, Isotype, and Conjugate from the panel to the left and click the Apply button.</div>",
-            deferredRender: false,
-            listeners: {
-                scope: this,
-                'activate': this.activateTrendPlotPanel
-            }
-        });
-
-        this.trendTabPanel = new Ext.TabPanel({
-            autoScroll: true,
-            activeTab: 0,
-            defaults: {
-                height: 308,
-                padding: 5
-            },
-            items: [this.ec504plPanel]
-        });
-        this.items.push(this.trendTabPanel);
+//        // initialize the tab panel that will show the trend plots
+//        this.ec504plPanel = new Ext.Panel({
+//            itemId: "retentionTimes",
+//            title: "Retention Times",
+//            html: "<div id='retentionTimesTrendPlotDiv' class='retentionTimesTrendPlot'>To begin, choose an Antigen, Isotype, and Conjugate from the panel to the left and click the Apply button.</div>",
+//            deferredRender: false,
+//            listeners: {
+//                scope: this,
+//                'activate': this.activateTrendPlotPanel
+//            }
+//        });
+//
+//        this.trendTabPanel = new Ext.TabPanel({
+//            autoScroll: true,
+//            activeTab: 0,
+//            defaults: {
+//                height: 308,
+//                padding: 5
+//            },
+//            items: [this.ec504plPanel]
+//        });
+//        this.items.push(this.trendTabPanel);
 
         // add an additional panel to render the PDF export link HTML to (this will always be hidden)
         this.pdfPanel = new Ext.Panel({hidden: true});
         this.items.push(this.pdfPanel);
 
         LABKEY.LeveyJenningsTrendPlotPanel.superclass.initComponent.call(this);
+
+        this.displayTrendPlot();
     },
 
     // function called by the JSP when the graph params are selected and the "Apply" button is clicked
@@ -201,8 +235,8 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
 
     displayTrendPlot: function() {
         // determine which tab is selected to know which div to update
-        var plotType = this.trendTabPanel.getActiveTab().itemId;
-        var trendDiv = plotType + 'TrendPlotDiv';
+//        var plotType = this.trendTabPanel.getActiveTab().itemId;
+        var trendDiv = 'hiddenPlotPanel';
         Ext.get(trendDiv).update('Loading...');
 
         if (this.plotRenderedHtml)
@@ -212,45 +246,98 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         else
         {
             // build the config object of the properties that will be needed by the R report
-            var config = {reportId: 'module:targetedms/LeveyJenningsTrendPlot.r', showSection: 'Levey-Jennings Trend Plot'};
+            var config = {
+                reportId: 'module:targetedms/LeveyJenningsTrendPlot.r',
+                showSection: 'Levey-Jennings Trend Plot',
+                chartType: this.chartType
+            };
             // provide either a start and end date or the max number of rows to display
             if (!this.startDate && !this.endDate){
                 config['MaxRows'] = this.defaultRowSize;
             } else {
                 if (this.startDate) {
-                    config['StartDate'] = this.startDate;
+                    config['StartDate'] = Ext.util.Format.date(this.startDate, 'Y-m-d');
                 }
                 if (this.endDate) {
-                    config['EndDate'] = this.endDate;
+                    config['EndDate'] = Ext.util.Format.date(this.endDate, 'Y-m-d');
                 }
             }
             // add config for plotting in log scale
             if (this.yAxisScale == 'log')
                 config['AsLog'] =  true;
 
-            // call and display the Report webpart
-            new LABKEY.WebPart({
-                   partName: 'Report',
-                   renderTo: trendDiv,
-                   frame: 'none',
-                   partConfig: config,
-                   success: function() {
-                       // store the HTML for the src plot image (image will be shifted to the relevant plot for other plot types)
-                       this.plotRenderedHtml = Ext.getDom(trendDiv).innerHTML;
-                   },
-                   failure: function(response) {
-                        Ext.get(trendDiv).update("Error: " + response.statusText);
-                   },
-                   scope: this
-            }).render();
+            var sql = 'SELECT DISTINCT PeptideId.Sequence AS Peptide FROM peptidechrominfo';
+            var separator = ' WHERE ';
+            if (this.startDate)
+            {
+                sql += separator + "SampleFileId.AcquiredTime >= '" + Ext.util.Format.date(this.startDate, 'Y-m-d') + "'";
+                separator = " AND ";
+            }
+            if (this.endDate)
+            {
+                sql += separator + "SampleFileId.AcquiredTime <= '" + Ext.util.Format.date(this.endDate, 'Y-m-d') + "'";
+                separator = " AND ";
+            }
+
+            LABKEY.Query.executeSql({
+                schemaName: 'targetedms',
+                sql: sql,
+                scope: this,
+                success: function(data) {
+                    if (data.rows.length == 0)
+                        Ext.get(trendDiv).update("Error: there were no records found.");
+
+                    this.peptides = [];
+
+                    for (var i = 0; i < data.rows.length; i++) {
+                        this.peptides.push(data.rows[i].Peptide);
+                    }
+
+                    // call and display the Report webpart
+                    new LABKEY.WebPart({
+                        partName: 'Report',
+                        renderTo: trendDiv,
+                        frame: 'none',
+                        partConfig: config,
+                        success: function() {
+                            // store the HTML for the src plot image (image will be shifted to the relevant plot for other plot types)
+                            this.plotRenderedHtml = Ext.getDom(trendDiv).innerHTML;
+
+                            var parentPanel = Ext.get('tiledPlotPanel');
+                            var childElement;
+                            while (childElement = parentPanel.first()) {
+                                childElement.remove();
+                            }
+
+                            for (var i = 0; i < this.peptides.length; i++)
+                            {
+                                var peptide = this.peptides[i];
+                                var styleId = "peptidePlot" + i;
+                                Ext.util.CSS.removeStyleSheet(styleId);
+                                Ext.util.CSS.createStyleSheet('.peptideGraph' + i +' img { top: ' + (-300 * i) + 'px; clip: rect(' + (300 * i) + 'px, 810px, ' + ((i + 1) * 300) + 'px, 0px)}', styleId);
+                                parentPanel.insertHtml('beforeEnd', '<br/><table id="PeptideGraph' + peptide +'" class="labkey-wp"><tr class="labkey-wp-header"><th class="labkey-wp-title-left"><span class="labkey-wp-title-text">' + peptide + '</span></th></tr><tr><td class="labkey-wp-body"><div class="peptideGraphHolder peptideGraph' + i + '">' + this.plotRenderedHtml + '</div></</td></tr></table>');
+                            }
+                        },
+                        failure: function(response) {
+                            Ext.get(trendDiv).update("Error: " + response.statusText);
+                        },
+                        scope: this
+                    }).render();
+                },
+                failure: function(response) {
+                    Ext.get(trendDiv).update("Error: " + response.exception);
+                }
+            });
 
             // call the R plot code again to get a PDF output version of the plot
-            config['PdfOut'] = true;
+            var pdfConfig = {};
+            Ext.apply(pdfConfig, config);
+            pdfConfig['PdfOut'] = true;
             new LABKEY.WebPart({
                    partName: 'Report',
                    renderTo: this.pdfPanel.getId(),
                    frame: 'none',
-                   partConfig: config,
+                   partConfig: pdfConfig,
                    success: function() {
                        // ugly way of getting the href for the pdf file (to be used when the user clicks the export pdf button)
                        if (Ext.getDom(this.pdfPanel.getId()))
@@ -260,6 +347,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                            this.pdfHref = this.pdfHref.replace(/&amp;/g, "&");
                            this.fireEvent('togglePdfBtn', true);
                        }
+
                    },
                    failure: function(response){},
                    scope: this

@@ -1,0 +1,10 @@
+
+.peptideGraphHolder {
+    position: relative;
+    width: 100%;
+    height: 300px;
+}
+
+.peptideGraphHolder img {
+    position: absolute;
+}

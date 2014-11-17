@@ -228,7 +228,8 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermissionClass(ReadPermission.class)
     public class FolderSetupAction extends FormHandlerAction<FolderSetupForm>
     {
-        public static final String DATA_PINELINE_TAB = "Data Pipeline";
+        public static final String DATA_PIPELINE_TAB = "Data Pipeline";
+        public static final String RUNS_TAB = "Runs";
 
         public static final String DATA_PIPELINE_WEBPART = "Data Pipeline";
 
@@ -307,7 +308,13 @@ public class TargetedMSController extends SpringActionController
             else if (FolderType.QC.toString().equals(folderSetupForm.getFolderType()))
             {
                 moduleProperty.saveValue(getUser(), c, FolderType.QC.toString());
-                addDashboardTab(c, QC_FOLDER_WEB_PARTS); // Placeholder. per spec, runs should be on a separate tab
+                addDashboardTab(c, QC_FOLDER_WEB_PARTS);
+
+                ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
+                tab2.add(Portal.getPortalPart(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME).createWebPart());
+                Portal.saveParts(c, RUNS_TAB, tab2);
+                Portal.addProperty(c, RUNS_TAB, Portal.PROP_CUSTOMTAB);
+
                 addDataPipelineTab(c);
                 return true;
             }
@@ -316,29 +323,29 @@ public class TargetedMSController extends SpringActionController
 
         }
 
-    private void addDashboardTab(Container c, String[] includeWebParts)
-    {
-        ArrayList<Portal.WebPart> newWebParts = new ArrayList<>();
-        for(String name: includeWebParts)
+        private void addDashboardTab(Container c, String[] includeWebParts)
         {
-            Portal.WebPart webPart = Portal.getPortalPart(name).createWebPart();
-            newWebParts.add(webPart);
+            ArrayList<Portal.WebPart> newWebParts = new ArrayList<>();
+            for(String name: includeWebParts)
+            {
+                Portal.WebPart webPart = Portal.getPortalPart(name).createWebPart();
+                newWebParts.add(webPart);
+            }
+
+            // Save webparts to both pages, otherwise the TARGETED_MS_SETUP webpart gets copied over from
+            // portal.default to DefaultDashboard
+            Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, newWebParts);
+            Portal.saveParts(c, Portal.DEFAULT_PORTAL_PAGE_ID, newWebParts); // this will remove the TARGETED_MS_SETUP
+            // webpart added to portal.default during
+            // the initial folder creation.
         }
 
-        // Save webparts to both pages, otherwise the TARGETED_MS_SETUP webpart gets copied over from
-        // portal.default to DefaultDashboard
-        Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, newWebParts);
-        Portal.saveParts(c, Portal.DEFAULT_PORTAL_PAGE_ID, newWebParts); // this will remove the TARGETED_MS_SETUP
-        // webpart added to portal.default during
-        // the initial folder creation.
-    }
-
         private void addDataPipelineTab(Container c)
-    {
-        ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
+        {
+            ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
             tab2.add(Portal.getPortalPart(DATA_PIPELINE_WEBPART).createWebPart());
-            Portal.saveParts(c, DATA_PINELINE_TAB, tab2);
-            Portal.addProperty(c, DATA_PINELINE_TAB, Portal.PROP_CUSTOMTAB);
+            Portal.saveParts(c, DATA_PIPELINE_TAB, tab2);
+            Portal.addProperty(c, DATA_PIPELINE_TAB, Portal.PROP_CUSTOMTAB);
         }
 
         @Override

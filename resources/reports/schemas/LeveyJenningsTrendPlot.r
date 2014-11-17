@@ -13,39 +13,44 @@ library(Rlabkey, quietly=TRUE);
 library(Cairo, quietly=TRUE);
 library(plotrix, quietly=TRUE);
 
-# option for Titration vs. SinglePointControl
-isTitration = labkey.url.params$isTitration
+chartType = 'retentionTime';
 
-# create a list of the columns that are needed for the trending plot
-colSelect = paste("PeptideId/Sequence", "SampleFileId/AcquiredTime", "RetentionTime", sep=",");
-
-colFilter = rbind();
-
-# either filter on start and end date or on max number of rows
-maxRows = NA;
-if (!is.null(labkey.url.params$MaxRows)) {
-	maxRows = labkey.url.params$MaxRows;
-} else {
-    if (!is.null(labkey.url.params$StartDate)) {
-	    colFilter=rbind(colFilter,makeFilter(c("SampleFileId/AcquiredTime","DATE_GREATER_THAN_OR_EQUAL",labkey.url.params$StartDate)));
-    }
-    if (!is.null(labkey.url.params$EndDate)) {
-	    colFilter=rbind(colFilter,makeFilter(c("SampleFileId/AcquiredTime","DATE_LESS_THAN_OR_EQUAL",labkey.url.params$EndDate)));
-    }
+if (!is.null(labkey.url.params$chartType)) {
+    chartType = labkey.url.params$chartType;
 }
 
+# Default to retention time
+sql = "SELECT * FROM (SELECT PeptideId.Sequence AS Sequence, SampleFileId.AcquiredTime AS AcquiredTime, RetentionTime AS Value FROM peptidechrominfo) X";
+
+if (chartType == "peakArea") {
+    sql = "SELECT * FROM (SELECT PeptideChromInfoId.PeptideId.Sequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, TotalArea AS Value FROM precursorchrominfo) X";
+}
+if (chartType == "fwhm") {
+    sql = "SELECT * FROM (SELECT PeptideChromInfoId.PeptideId.Sequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, MaxFWHM AS Value FROM precursorchrominfo) X";
+}
+
+separator = " WHERE ";
+
+# Filter on start/end dates
+if (!is.null(labkey.url.params$StartDate)) {
+    sql=paste(sql, separator, "AcquiredTime >= '", labkey.url.params$StartDate, "'");
+    separator = " AND ";
+}
+if (!is.null(labkey.url.params$EndDate)) {
+    sql=paste(sql, separator, "AcquiredTime <= '", labkey.url.params$EndDate, "'");
+    separator = " AND ";
+}
+
+sql =  paste(sql, " ORDER BY Sequence, AcquiredTime DESC");
+
 # call the selectRows function to get the data from the server
-labkey.data <- labkey.selectRows(baseUrl=labkey.url.base,
+labkey.data <- labkey.executeSql(baseUrl=labkey.url.base,
                             folderPath=labkey.url.path,
                             schemaName="targetedms",
-                            queryName="peptidechrominfo",
-                            colSelect=colSelect,
-                            colFilter=colFilter,
-                            colSort="PeptideId/Sequence,-SampleFileId/AcquiredTime",
-                            colNameOpt="rname",
-                            maxRows=maxRows);
+                            sql=sql,
+                            colNameOpt="rname");
 
-peptides = unique(labkey.data$peptideid_sequence)
+peptides = unique(labkey.data$sequence)
 
 # setup the png or pdf for the plot
 if (!is.null(labkey.url.params$PdfOut)) {
@@ -58,13 +63,13 @@ if (!is.null(labkey.url.params$PdfOut)) {
 
 for (typeIndex in 1:length(peptides))
 {
-	dat = subset(labkey.data, peptideid_sequence == peptides[typeIndex]);
+    # Grab the rows that are for this specific peptide
+	dat = subset(labkey.data, sequence == peptides[typeIndex]);
 
 	mainTitle = peptides[typeIndex];
 
-    dat$plottype_value = dat$retentiontime;
-    dat$average = mean(dat$plottype_value);
-    dat$stddev = sd(dat$plottype_value);
+    dat$average = mean(dat$value);
+    dat$stddev = sd(dat$value);
     dat$ptcolor = 1;
 
 
@@ -88,11 +93,11 @@ for (typeIndex in 1:length(peptides))
 	  dat$minus3stddev = dat$average - (3 * dat$stddev);
 
 	  # get the y axis min and max based on the data
-	  if (any(!is.na(dat$plottype_value))) {
-	      ymin = min(dat$plottype_value, na.rm=TRUE);
+	  if (any(!is.na(dat$value))) {
+	      ymin = min(dat$value, na.rm=TRUE);
 	      if (min(dat$minus3stddev, na.rm=TRUE) < ymin)
 		    ymin = min(dat$minus3stddev, na.rm=TRUE);
-	      ymax = max(dat$plottype_value, na.rm=TRUE);
+	      ymax = max(dat$value, na.rm=TRUE);
 	      if (max(dat$plus3stddev, na.rm=TRUE) > ymax)
             ymax = max(dat$plus3stddev, na.rm=TRUE);
 	  } else {
@@ -114,13 +119,13 @@ for (typeIndex in 1:length(peptides))
 	  }
 
 	  # set the sequence value for the records (in reverse order since they are sorted in DESC order)
-	  dat$seq = length(dat$samplefileid_acquiredtime):1;
+	  dat$seq = length(dat$acquiredtime):1;
 	  dat = dat[order(dat$seq),];
 
 	  # determine the x-axis max
 	  xmax= 10;
-	  if(length(dat$plottype_value) > xmax)
-	     xmax = length(dat$plottype_value);
+	  if(length(dat$value) > xmax)
+	     xmax = length(dat$value);
 
 	  # get the scaling factor to determine how many tick marks to show
 	  tckFactor = ceiling(xmax/30);
@@ -128,7 +133,7 @@ for (typeIndex in 1:length(peptides))
 	  xtcks = seq(1, xmax, by = tckFactor);
 
       # set the column labels to 'AcquiredTime'
-      xlabels = as.character(dat$samplefileid_acquiredtime[xtcks])
+      xlabels = as.character(dat$acquiredtime[xtcks])
 
 	  # set some parameters and variables based on whether or not a legend is to be shown
 	  par(mar=c(5.5,5,2,0.2));
@@ -136,7 +141,7 @@ for (typeIndex in 1:length(peptides))
 
 	  # create an empty plotting area with a title
 	  plot(NA, NA, type = c("b"), ylim=c(ymin,ymax), xlim=c(1,xmax), xlab="", ylab="", axes=F, log=asLog);
-	  mtext(mainTitle, side=3, line=mainTitleLine, font=2, las=1, cex=1.2); 
+#	  mtext(mainTitle, side=3, line=mainTitleLine, font=2, las=1, cex=1.2);
 
 	  # if creating a pdf, increase the line width and layout position offset
 	  yLegendOffset = -0.5;
@@ -146,7 +151,7 @@ for (typeIndex in 1:length(peptides))
 	  }
 
 	  # draw the guide set ranges for each of the records
-	  for (i in 1:length(dat$retentiontime))
+	  for (i in 1:length(dat$value))
 	  {
 		# draw a vertial line to connect the min and max of the range
 		lines(c(dat$seq[i], dat$seq[i]), c(dat$plus3stddev[i], dat$minus3stddev[i]), col='grey60', lty='solid');
@@ -166,7 +171,7 @@ for (typeIndex in 1:length(peptides))
 	  }
 
 	  # draw points for the trend values for each record
-	  points(dat$seq, dat$plottype_value, col=dat$ptcolor, pch=15);
+	  points(dat$seq, dat$value, col=dat$ptcolor, pch=15);
 
 	  # add the axis labels and tick marks
 	  par(las=2);
