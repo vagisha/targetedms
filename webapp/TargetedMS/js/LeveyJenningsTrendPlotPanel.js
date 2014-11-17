@@ -119,7 +119,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 data: [
                     ['retentionTime', 'Retention Time']
                     , ['peakArea', 'Peak Area']
-                    , ['fwhm', 'Full Width at Half Minimum (FWHM)']
+                    , ['fwhm', 'Full Width at Half Max (FWHM)']
 //                    , ['fwb', 'FWB']
                 ]
             }),
