@@ -7,15 +7,11 @@
 Ext.namespace('LABKEY');
 
 /**
-* User: cnathe
-* Date: Sept 20, 2011
-*/
-
-/**
- * Class to create a panel for displaying the R plot for the trending of EC50, AUC, and High MFI values for the selected graph parameters.
+ * Class to create a panel for displaying the R plot for the trending of retention times, peak areas, and other
+ * values for the selected graph parameters.
  *
- * @params titration
- * @params assayName
+ * PDF export support (retained from cloning this code from the original Luminex version) is not attached in the UI, but
+ * might be desired later.
  */
 LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     constructor : function(config){
@@ -166,29 +162,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             items: items
         });
 
-//        // initialize the tab panel that will show the trend plots
-//        this.ec504plPanel = new Ext.Panel({
-//            itemId: "retentionTimes",
-//            title: "Retention Times",
-//            html: "<div id='retentionTimesTrendPlotDiv' class='retentionTimesTrendPlot'>To begin, choose an Antigen, Isotype, and Conjugate from the panel to the left and click the Apply button.</div>",
-//            deferredRender: false,
-//            listeners: {
-//                scope: this,
-//                'activate': this.activateTrendPlotPanel
-//            }
-//        });
-//
-//        this.trendTabPanel = new Ext.TabPanel({
-//            autoScroll: true,
-//            activeTab: 0,
-//            defaults: {
-//                height: 308,
-//                padding: 5
-//            },
-//            items: [this.ec504plPanel]
-//        });
-//        this.items.push(this.trendTabPanel);
-
         // add an additional panel to render the PDF export link HTML to (this will always be hidden)
         this.pdfPanel = new Ext.Panel({hidden: true});
         this.items.push(this.pdfPanel);
@@ -223,16 +196,10 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     },
 
     displayTrendPlot: function() {
-        // determine which tab is selected to know which div to update
-//        var plotType = this.trendTabPanel.getActiveTab().itemId;
-        var trendDiv = 'hiddenPlotPanel';
-        Ext.get(trendDiv).update('Loading...');
+        Ext.get('tiledPlotPanel').update('<span>Loading...</span>');
 
-        if (this.plotRenderedHtml)
-        {
-            Ext.get(trendDiv).update(this.plotRenderedHtml);
-        }
-        else
+        var trendDiv = 'hiddenPlotPanel';
+        if (!this.plotRenderedHtml)
         {
             // build the config object of the properties that will be needed by the R report
             var config = {

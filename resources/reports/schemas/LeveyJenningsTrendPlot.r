@@ -144,7 +144,6 @@ for (typeIndex in 1:length(peptides))
 
 	  # create an empty plotting area with a title
 	  plot(NA, NA, type = c("b"), ylim=c(ymin,ymax), xlim=c(1,xmax), xlab="", ylab="", axes=F, log=asLog);
-#	  mtext(mainTitle, side=3, line=mainTitleLine, font=2, las=1, cex=1.2);
 
 	  # if creating a pdf, increase the line width and layout position offset
 	  yLegendOffset = -0.5;
@@ -179,7 +178,6 @@ for (typeIndex in 1:length(peptides))
 	  # add the axis labels and tick marks
 	  par(las=2);
 	  axis(2, col="black");
-#	  mtext(yAxisLabel, side=2, line=4, las=0, font=2);
 	  axis(1, col="black", at=xtcks, labels=FALSE, cex.axis=0.8);
 	  staxlab(1, xtcks, xlabels, srt=25)
 	  box();
@@ -187,7 +185,6 @@ for (typeIndex in 1:length(peptides))
 	} else {
 	  par(mar=c(5.5,5,2,0.2));
 	  plot(NA, NA, type = c("b"), ylim=c(1,1), xlim=c(1,30), xlab="", ylab="", axes=F, log=asLog);
-#	  mtext(mainTitle, side=3, line=0.75, font=2, las=1, cex=1.2);
 	  text(15,1,"No Data Available for Selected Graph Parameters");
 	  axis(1, at=seq(0,30,by=5), labels=matrix("",1,7), cex.axis=0.8);
 	  mtext(yAxisLabel, side=2, line=4, las=0, font=2);
