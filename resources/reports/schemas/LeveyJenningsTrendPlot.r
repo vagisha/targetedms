@@ -20,13 +20,16 @@ if (!is.null(labkey.url.params$chartType)) {
 }
 
 # Default to retention time
-sql = "SELECT * FROM (SELECT PeptideId.Sequence AS Sequence, SampleFileId.AcquiredTime AS AcquiredTime, RetentionTime AS Value FROM peptidechrominfo) X";
+sql = "SELECT * FROM (SELECT DISTINCT PeptideChromInfoId.PeptideId.Sequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, BestRetentionTime AS Value FROM precursorchrominfo) X";
 
 if (chartType == "peakArea") {
-    sql = "SELECT * FROM (SELECT PeptideChromInfoId.PeptideId.Sequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, TotalArea AS Value FROM precursorchrominfo) X";
+    sql = "SELECT * FROM (SELECT DISTINCT PeptideChromInfoId.PeptideId.Sequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, TotalArea AS Value FROM precursorchrominfo) X";
 }
 if (chartType == "fwhm") {
-    sql = "SELECT * FROM (SELECT PeptideChromInfoId.PeptideId.Sequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, MaxFWHM AS Value FROM precursorchrominfo) X";
+    sql = "SELECT * FROM (SELECT DISTINCT PeptideChromInfoId.PeptideId.Sequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, MaxFWHM AS Value FROM precursorchrominfo) X";
+}
+if (chartType == "fwb") {
+    sql = "SELECT * FROM (SELECT DISTINCT PeptideChromInfoId.PeptideId.Sequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, (MaxEndTime - MinStartTime) AS Value FROM precursorchrominfo) X";
 }
 
 separator = " WHERE ";
