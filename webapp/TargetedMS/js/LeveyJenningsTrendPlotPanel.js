@@ -25,10 +25,9 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             header: false,
             bodyStyle: 'background-color:#EEEEEE',
             labelAlign: 'left',
-            width: 850,
+            width: 900,
             border: false,
             cls: 'extContainer',
-//            disabled: true,
             yAxisScale: 'linear',
             chartType: 'retentionTime'
         });
@@ -111,7 +110,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         this.chartTypeLabel = new Ext.form.Label({text: 'Chart Type:'});
         this.chartTypeField = new Ext.form.ComboBox({
             id: 'chart-type-field',
-            value: 'Retention Time',
             triggerAction: 'all',
             mode: 'local',
             store: new Ext.data.ArrayStore({
@@ -119,13 +117,14 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 data: [
                     ['retentionTime', 'Retention Time']
                     , ['peakArea', 'Peak Area']
-                    , ['fwhm', 'FWHM Time']
-                    , ['fwb', 'FWB Time']
+                    , ['fwhm', 'Full Width at Half Maximum (FWHM)']
+                    , ['fwb', 'Full Width at Base (FWB)']
                 ]
             }),
             valueField: 'value',
             displayField: 'display',
             value: 'retentionTime',
+            width: 270,
             forceSelection: true,
             editable: false,
             listeners: {
@@ -146,14 +145,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             scope: this
         });
 
-        // initialize the clear graph button
-        this.clearFilterButton = new Ext.Button({
-            disabled: true,
-            text: 'Clear',
-            handler: this.clearGraphFilter,
-            scope: this
-        });
-
         var tbspacer = {xtype: 'tbspacer', width: 5};
 
         var items = [
@@ -168,8 +159,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             this.chartTypeField, tbspacer
         ];
         items.push(this.applyFilterButton);
-        items.push(tbspacer);
-        items.push(this.clearFilterButton);
 
         this.tbar = new Ext.Toolbar({
             height: 30,
@@ -266,16 +255,16 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             if (this.yAxisScale == 'log')
                 config['AsLog'] =  true;
 
-            var sql = 'SELECT DISTINCT PeptideId.Sequence AS Peptide FROM peptidechrominfo';
+            var sql = 'SELECT DISTINCT PrecursorId.ModifiedSequence AS Sequence FROM PrecursorChromInfo';
             var separator = ' WHERE ';
             if (this.startDate)
             {
-                sql += separator + "SampleFileId.AcquiredTime >= '" + Ext.util.Format.date(this.startDate, 'Y-m-d') + "'";
+                sql += separator + "PeptideChromInfoId.SampleFileId.AcquiredTime >= '" + Ext.util.Format.date(this.startDate, 'Y-m-d') + "'";
                 separator = " AND ";
             }
             if (this.endDate)
             {
-                sql += separator + "SampleFileId.AcquiredTime <= '" + Ext.util.Format.date(this.endDate, 'Y-m-d') + "'";
+                sql += separator + "PeptideChromInfoId.SampleFileId.AcquiredTime <= '" + Ext.util.Format.date(this.endDate, 'Y-m-d') + "'";
                 separator = " AND ";
             }
 
@@ -287,10 +276,10 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                     if (data.rows.length == 0)
                         Ext.get(trendDiv).update("Error: there were no records found.");
 
-                    this.peptides = [];
+                    this.precursors = [];
 
                     for (var i = 0; i < data.rows.length; i++) {
-                        this.peptides.push(data.rows[i].Peptide);
+                        this.precursors.push(data.rows[i].Sequence);
                     }
 
                     // call and display the Report webpart
@@ -309,13 +298,13 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                                 childElement.remove();
                             }
 
-                            for (var i = 0; i < this.peptides.length; i++)
+                            for (var i = 0; i < this.precursors.length; i++)
                             {
-                                var peptide = this.peptides[i];
-                                var styleId = "peptidePlot" + i;
+                                var precursor = this.precursors[i];
+                                var styleId = "precursorPlot" + i;
                                 Ext.util.CSS.removeStyleSheet(styleId);
-                                Ext.util.CSS.createStyleSheet('.peptideGraph' + i +' img { top: ' + (-300 * i) + 'px; clip: rect(' + (300 * i) + 'px, 810px, ' + ((i + 1) * 300) + 'px, 0px)}', styleId);
-                                parentPanel.insertHtml('beforeEnd', '<br/><table id="PeptideGraph' + peptide +'" class="labkey-wp"><tr class="labkey-wp-header"><th class="labkey-wp-title-left"><span class="labkey-wp-title-text">' + peptide + '</span></th></tr><tr><td class="labkey-wp-body"><div class="peptideGraphHolder peptideGraph' + i + '">' + this.plotRenderedHtml + '</div></</td></tr></table>');
+                                Ext.util.CSS.createStyleSheet('.precursorGraph' + i +' img { top: ' + (-300 * i) + 'px; clip: rect(' + (300 * i) + 'px, 810px, ' + ((i + 1) * 300) + 'px, 0px)}', styleId);
+                                parentPanel.insertHtml('beforeEnd', '<br/><table class="labkey-wp"><tr class="labkey-wp-header"><th class="labkey-wp-title-left"><span class="labkey-wp-title-text">' + Ext.util.Format.htmlEncode(precursor) + '</span></th></tr><tr><td class="labkey-wp-body"><div class="precursorGraphHolder precursorGraph' + i + '">' + this.plotRenderedHtml + '</div></</td></tr></table>');
                             }
                         },
                         failure: function(response) {
@@ -382,7 +371,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             // get date values without the time zone info
             this.startDate = this.startDateField.getRawValue();
             this.endDate = this.endDateField.getRawValue();
-            this.clearFilterButton.enable();
 
             this.setTabsToRender();
             this.displayTrendPlot();
@@ -396,7 +384,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         this.endDate = null;
         this.endDateField.reset();
         this.applyFilterButton.disable();
-        this.clearFilterButton.disable();
 
         this.setTabsToRender();
         this.displayTrendPlot();
