@@ -43,6 +43,7 @@ import org.labkey.api.view.Portal;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
@@ -242,6 +243,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
             {
                 JspView result = new JspView("/org/labkey/targetedms/view/leveyJenningsReport.jsp");
+                result.addClientDependency(ClientDependency.fromFilePath("Ext4"));
                 result.setTitle("QC Plots");
                 result.setFrame(WebPartView.FrameType.PORTAL);
                 return result;
@@ -253,6 +255,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
             {
                 JspView result = new JspView("/org/labkey/targetedms/view/qcSummary.jsp");
+                result.addClientDependency(ClientDependency.fromFilePath("Ext4"));
                 result.setTitle("QC Summary");
                 result.setFrame(WebPartView.FrameType.PORTAL);
                 return result;

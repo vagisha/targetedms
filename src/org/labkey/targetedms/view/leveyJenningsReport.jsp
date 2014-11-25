@@ -44,9 +44,6 @@
 
         var $h = Ext.util.Format.htmlEncode;
 
-        // the default number of records to return for the report when no start and end date are provided
-        var defaultRowSize = 30;
-
         function init()
         {
             LABKEY.Query.executeSql({

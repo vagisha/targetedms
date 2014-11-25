@@ -36,14 +36,14 @@
                 var docSummaryLine = docCount + " Skyline document" + (docCount == 1 ? "" : "s") + " uploaded containing " + fileCount + " sample file";
                 if (fileCount != 1)
                     docSummaryLine += "s";
-                Ext.get('docSummary').update(docSummaryLine);
-                Ext.get('precursorSummary').update(precursorCount + " precursor" + (precursorCount == 1 ? "" : "s") + " tracked");
+                Ext4.get('docSummary').update(docSummaryLine);
+                Ext4.get('precursorSummary').update(precursorCount + " precursor" + (precursorCount == 1 ? "" : "s") + " tracked");
             },
             failure: function (response)
             {
-                Ext.get('docSummary').update("Error: " + response.exception);
+                Ext4.get('docSummary').update("Error: " + response.exception);
             }
         });
     }
-    Ext.onReady(init);
+    Ext4.onReady(init);
 </script>

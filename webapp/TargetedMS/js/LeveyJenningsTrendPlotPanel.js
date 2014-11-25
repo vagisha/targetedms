@@ -34,8 +34,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     },
 
     initComponent : function() {
-        this.ANY_FIELD = '[ANY]';  // constant value used for turning filtering off
-
         this.plotRenderedHtml = null;
         this.pdfHref = null;
         if (!this.startDate)
@@ -171,23 +169,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         this.displayTrendPlot();
     },
 
-    // function called by the JSP when the graph params are selected and the "Apply" button is clicked
-    graphParamsSelected: function() {
-        // remove any previously entered values from the start date, end date, etc. fields
-        this.clearGraphFilter();
-
-        // show the trending tab panel and date range selection toolbar
-        this.enable();
-
-        this.setTabsToRender();
-        this.displayTrendPlot();
-    },
-
-    activateTrendPlotPanel: function(panel) {
-        // if the graph params have been selected and the trend plot for this panel hasn't been loaded, then call displayTrendPlot
-        this.displayTrendPlot();
-    },
-
     setTabsToRender: function() {
         // something about the report has changed and the plot needs to be set to re-render
         this.plotRenderedHtml = null;
@@ -208,16 +189,13 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 chartType: this.chartType
             };
             // provide either a start and end date or the max number of rows to display
-            if (!this.startDate && !this.endDate){
-                config['MaxRows'] = this.defaultRowSize;
-            } else {
-                if (this.startDate) {
-                    config['StartDate'] = Ext.util.Format.date(this.startDate, 'Y-m-d');
-                }
-                if (this.endDate) {
-                    config['EndDate'] = Ext.util.Format.date(this.endDate, 'Y-m-d');
-                }
+            if (this.startDate) {
+                config['StartDate'] = Ext.util.Format.date(this.startDate, 'Y-m-d');
             }
+            if (this.endDate) {
+                config['EndDate'] = Ext.util.Format.date(this.endDate, 'Y-m-d');
+            }
+
             // add config for plotting in log scale
             if (this.yAxisScale == 'log')
                 config['AsLog'] =  true;
@@ -360,21 +338,4 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     getPdfHref: function() {
         return this.pdfHref ? this.pdfHref : null;
     },
-
-    getStartDate: function() {
-        return this.startDate ? this.startDate : null;
-    },
-
-    getEndDate: function() {
-        return this.endDate ? this.endDate : null;
-    },
-
-    getArrayStoreData: function(rows, colName) {
-        var storeData = [ [this.ANY_FIELD, this.ANY_FIELD] ];
-        Ext.each(rows, function(row){
-            var value = row[colName];
-            storeData.push([value, value == null ? '[Blank]' : value]);
-        });
-        return storeData;
-    }
 });
