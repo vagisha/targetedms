@@ -80,6 +80,6 @@ tr.spaceUnder > td
 </div>
 
 <div id="folder-type-unset" <%= text(isSet ? "" : "style=\"display:none\"") %> >
-    This Panorama folder has already been configured with the following folder type: '<%= h(folderType.toString())%>'.<br>
+    This Panorama folder has already been configured with the following folder type: '<%= h(folderType == null ? "none" : folderType.toString())%>'.<br>
 </div>
 
