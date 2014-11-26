@@ -20,13 +20,19 @@ import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.UIContainerHelper;
 
 import java.util.Arrays;
 
 public abstract class TargetedMSTest extends BaseWebDriverTest
 {
     public enum FolderType {
-        Experiment, Library, LibraryProtein, Undefined
+        Experiment, Library, LibraryProtein, QC, Undefined
+    }
+
+    public TargetedMSTest()
+    {
+        setContainerHelper(new UIContainerHelper(this));
     }
 
     @Override
@@ -85,6 +91,9 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
             case LibraryProtein:
                 click(Locator.radioButtonById("chromatogramLibrary")); // click the 2nd radio button - Library
                 click(Locator.checkboxByName("precursorNormalized")); // check the normalization checkbox.
+                break;
+            case QC:
+                click(Locator.radioButtonById("QC")); // click the 3rd radio button - QC
                 break;
         }
         clickButton("Finish");
