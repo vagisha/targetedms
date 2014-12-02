@@ -205,12 +205,12 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             // CAST as DATE to ignore time portion of value
             if (this.startDate)
             {
-                sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + Ext.util.Format.date(this.startDate, 'Y-m-d') + "'";
+                sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + (this.startDate instanceof Date ? Ext.util.Format.date(this.startDate, 'Y-m-d') : this.startDate) + "'";
                 separator = " AND ";
             }
             if (this.endDate)
             {
-                sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + Ext.util.Format.date(this.endDate, 'Y-m-d') + "'";
+                sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + (this.endDate instanceof Date ? Ext.util.Format.date(this.endDate, 'Y-m-d') : this.endDate) + "'";
                 separator = " AND ";
             }
 
