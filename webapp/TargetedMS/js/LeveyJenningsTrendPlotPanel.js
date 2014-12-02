@@ -188,12 +188,12 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 showSection: 'Levey-Jennings Trend Plot',
                 chartType: this.chartType
             };
-            // provide either a start and end date or the max number of rows to display
+
             if (this.startDate) {
-                config['StartDate'] = Ext.util.Format.date(this.startDate, 'Y-m-d');
+                config['StartDate'] = this.startDate instanceof Date ? Ext.util.Format.date(this.startDate, 'Y-m-d') : this.startDate;
             }
             if (this.endDate) {
-                config['EndDate'] = Ext.util.Format.date(this.endDate, 'Y-m-d');
+                config['EndDate'] = this.endDate instanceof Date ? Ext.util.Format.date(this.endDate, 'Y-m-d') : this.endDate;
             }
 
             // add config for plotting in log scale
@@ -202,14 +202,15 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
 
             var sql = 'SELECT DISTINCT PrecursorId.ModifiedSequence AS Sequence FROM PrecursorChromInfo';
             var separator = ' WHERE ';
+            // CAST as DATE to ignore time portion of value
             if (this.startDate)
             {
-                sql += separator + "PeptideChromInfoId.SampleFileId.AcquiredTime >= '" + Ext.util.Format.date(this.startDate, 'Y-m-d') + "'";
+                sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + Ext.util.Format.date(this.startDate, 'Y-m-d') + "'";
                 separator = " AND ";
             }
             if (this.endDate)
             {
-                sql += separator + "PeptideChromInfoId.SampleFileId.AcquiredTime <= '" + Ext.util.Format.date(this.endDate, 'Y-m-d') + "'";
+                sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + Ext.util.Format.date(this.endDate, 'Y-m-d') + "'";
                 separator = " AND ";
             }
 

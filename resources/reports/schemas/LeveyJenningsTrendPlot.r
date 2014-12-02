@@ -34,13 +34,13 @@ if (chartType == "fwb") {
 
 separator = " WHERE ";
 
-# Filter on start/end dates
+# Filter on start/end dates, casting as DATE to ignore the time part
 if (!is.null(labkey.url.params$StartDate)) {
-    sql=paste(sql, separator, "AcquiredTime >= '", labkey.url.params$StartDate, "'");
+    sql=paste(sql, separator, "CAST(AcquiredTime AS DATE) >= '", labkey.url.params$StartDate, "'");
     separator = " AND ";
 }
 if (!is.null(labkey.url.params$EndDate)) {
-    sql=paste(sql, separator, "AcquiredTime <= '", labkey.url.params$EndDate, "'");
+    sql=paste(sql, separator, "CAST(AcquiredTime AS DATE) <= '", labkey.url.params$EndDate, "'");
     separator = " AND ";
 }
 
