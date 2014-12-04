@@ -79,10 +79,12 @@ public class TargetedMsRunListView extends ExperimentRunListView
         }
         if(viewType == ViewType.EDITABLE_EXPERIMENT_VIEW)
         {
-            setShowDeleteButton(true);
             setShowExportButtons(false);
-            setShowRecordSelectors(true);
             setShowPagination(false);
+        }
+        else
+        {
+            setShowMoveRunsButton(true);
         }
     }
 

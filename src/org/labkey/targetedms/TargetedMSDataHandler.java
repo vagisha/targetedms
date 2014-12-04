@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.ExperimentException;
@@ -24,11 +25,15 @@ import org.labkey.api.exp.api.AbstractExperimentDataHandler;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.api.writer.ZipUtil;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -95,10 +100,15 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId(), container);
         if (run != null)
         {
-            TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container, user);
-            TargetedMSManager.purgeDeletedRuns();
-            TargetedMSManager.deleteiRTscales(container);
+            deleteRun(container, user, run);
         }
+    }
+
+    private void deleteRun(Container container, User user, TargetedMSRun run)
+    {
+        TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container, user);
+        TargetedMSManager.purgeDeletedRuns();
+        TargetedMSManager.deleteiRTscales(container);
     }
 
     @Override
@@ -106,14 +116,104 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     {
         for (ExpData expData : data)
         {
-            deleteData(expData, expData.getContainer(), null);
+            Container container = expData.getContainer();
+            TargetedMSRun run = TargetedMSManager.getRunByDataId(expData.getRowId(), container);
+            // r26691 (jeckels@labkey.com  5/30/2013 1:28:42 PM) -- Fix container delete when a TargetedMS run failed to import correctly.
+            //        -- FK violation happens if a container with failed targeted ms run imports is deleted.
+            //
+            // Issue #21935 Add support to move targeted MS runs between folders
+            // beforeDeleteData() is called prior to actual deletion of data. It is also called when moving a run
+            // to another container: ExperimentServiceImpl.deleteExperimentRunForMove() -> deleteRun() -> deleteProtocolApplications()
+            // Do not delete the run if it was successfully imported.  If the run was successfully imported
+            // it will be deleted via the deleteData() method, in the case of actual run deletion.
+            if (run != null && run.getStatusId() != SkylineDocImporter.STATUS_SUCCESS)
+            {
+                deleteRun(container, null, run);
+            }
         }
     }
 
     @Override
     public void runMoved(ExpData newData, Container container, Container targetContainer, String oldRunLSID, String newRunLSID, User user, int oldDataRowID) throws ExperimentException
     {
-        throw new UnsupportedOperationException();
+        File sourceFile = newData.getFile();
+
+        // Fail if a Skyline document with the same source file name exists in the new location.
+        if(skylineDocExistsInTarget(sourceFile.getName(), targetContainer))
+        {
+            throw new ExperimentException("A run with filename " + sourceFile.getName() + " already exists in the target container " + targetContainer.getPath());
+        }
+
+        TargetedMSRun run = TargetedMSManager.getRunByLsid(oldRunLSID, container);
+        if(run == null)
+        {
+            throw new ExperimentException("Run with lsid " + oldRunLSID + " was not found in container " + container.getPath());
+        }
+
+        NetworkDrive.ensureDrive(sourceFile.getPath());
+
+        PipeRoot targetRoot = PipelineService.get().findPipelineRoot(targetContainer);
+        if(targetRoot == null)
+        {
+            throw new ExperimentException("Could not find pipeline root for target container " + targetContainer.getPath());
+        }
+
+        String srcFileExt = FileUtil.getExtension(sourceFile.getName());
+
+        if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(srcFileExt))
+        {
+            // Copy the source Skyline zip file to the new location.
+            File destFile = new File(targetRoot.getRootPath(), sourceFile.getName());
+            // It is only meaningful to copy the file it is a shared zip file that may contain spectrum and/or irt libraries.
+            // When rendering the MS/MS spectrum we read scan peaks directly from the .blib (spectrum library) files.
+            // The contents of these files are not stored in the database.
+            // TODO: Should we only allow import of shared zip files?  If a user uploads and imports a .sky file they have to upload
+            //       the .skyd file and any .blib files as well to the same folder. This use case must be quite rare.
+            try
+            {
+                FileUtils.copyFile(sourceFile, destFile);
+            }
+            catch (IOException e)
+            {
+                throw new ExperimentException("Could not copy " + sourceFile + " to destination directory " + targetRoot.getRootPath());
+            }
+
+            // Expand the zip file in the new location
+            File zipDir = new File(destFile.getParent(), SkylineFileUtils.getBaseName(destFile.getName()));
+            try
+            {
+                ZipUtil.unzipToDirectory(destFile, zipDir, null);
+            }
+            catch (IOException e)
+            {
+                throw new ExperimentException("Unable to unzip file " + destFile.getPath(), e);
+            }
+
+            // Update the file path in ExpData
+            newData.setDataFileURI(destFile.toURI());
+            newData.save(user);
+        }
+
+        // Update the run
+        run.setExperimentRunLSID(newRunLSID);
+        run.setDataId(newData.getRowId());
+        run.setContainer(targetContainer);
+        TargetedMSManager.updateRun(run, user);
+
+        if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(srcFileExt))
+        {
+            // Delete the Skyline file in the old location
+            sourceFile.delete();
+
+            // Delete the unzipped directory in the old location
+            File oldZipDir = new File(sourceFile.getParent(), SkylineFileUtils.getBaseName(sourceFile.getName()));
+            FileUtil.deleteDir(oldZipDir);
+        }
+    }
+
+    private boolean skylineDocExistsInTarget(String fileName, Container targetContainer)
+    {
+        return TargetedMSManager.getRunByFileName(fileName, targetContainer) != null;
     }
 
     @Override
@@ -127,6 +227,6 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             return null;
         ext = ext.toLowerCase();
         // we handle only *.sky or .zip files
-        return "sky".equals(ext) || "zip".equals(ext) ? Priority.HIGH : null;
+        return SkylineFileUtils.EXT_SKY.equals(ext) || SkylineFileUtils.EXT_ZIP.equals(ext) ? Priority.HIGH : null;
     }
 }

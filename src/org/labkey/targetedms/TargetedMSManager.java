@@ -557,6 +557,13 @@ public class TargetedMSManager
         return run;
     }
 
+    public static TargetedMSRun getRunByFileName(String fileName, Container container)
+    {
+        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("Container"), container.getId());
+        filter.addCondition(FieldKey.fromParts("FileName"), fileName);
+        return new TableSelector(TargetedMSManager.getTableInfoRuns(), filter, null).getObject(TargetedMSRun.class);
+    }
+
     public static boolean isRunConflicted(TargetedMSRun run)
     {
         if(run == null)
