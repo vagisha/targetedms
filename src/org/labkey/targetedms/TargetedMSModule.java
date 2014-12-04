@@ -334,6 +334,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         TargetedMSListener listener = new TargetedMSListener();
         ExperimentService.get().addExperimentListener(listener);
+        ContainerManager.addContainerListener(listener);
 
         // Register the CopyExperimentRole
         RoleManager.registerRole(new CopyTargetedMSExperimentRole());
