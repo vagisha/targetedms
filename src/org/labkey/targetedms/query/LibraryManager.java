@@ -21,6 +21,7 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.SkylineFileUtils;
 import org.labkey.targetedms.TargetedMSManager;
@@ -28,6 +29,7 @@ import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.PeptideSettings;
 
 import java.io.File;
+import java.io.FilenameFilter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -79,14 +81,49 @@ public class LibraryManager
         }
 
         File file = expData.getFile();
-        String path = new File(file.getParent(),  SkylineFileUtils.getBaseName(file.getName())).getAbsolutePath();
+        File skyFilesDir = new File(file.getParent(), SkylineFileUtils.getBaseName(file.getName()));
 
         Map<PeptideSettings.SpectrumLibrary, String> libraryPathsMap = new HashMap<>();
         for(PeptideSettings.SpectrumLibrary library: libraries)
         {
-            libraryPathsMap.put(library, path + File.separator + library.getFileNameHint());
+            String libFileName = library.getFileNameHint();
+            if(libFileName == null)
+            {
+                // This could be a "document" library. Skyline xml does not include a "file_name_hint"
+                // attribute for these libraries.  They have the same name as the Skyline document.
+                // We are now adding a FileNameHint for "document" libraries during import.
+                // But we need to be able to display library spectra for Skyline documents imported before the fix.
+                // If the FileNameHint is null we assume that this is a document library.
+                // Documents libraries have the same name as the .sky file, with a .blib extension.
+                libFileName = getDocumentLibFileName(skyFilesDir);
+            }
+            if(libFileName != null)
+            {
+                libraryPathsMap.put(library, skyFilesDir.getAbsolutePath() + File.separator + libFileName);
+            }
         }
-
         return libraryPathsMap;
     }
+
+    private static String getDocumentLibFileName(File skyFilesDir)
+    {
+        // Get the name of the .sky file in the directory
+        String[] skyFile = skyFilesDir.list(new FilenameFilter()
+        {
+            @Override
+            public boolean accept(File dir, String name)
+            {
+                return name.toLowerCase().endsWith(SkylineFileUtils.EXT_SKY_W_DOT);
+            }
+        });
+
+        if(skyFile != null && skyFile.length > 0)
+        {
+            // Documents libraries have the same name as the .sky file, with a .blib extension.
+            return skyFile[0].substring(0, skyFile[0].lastIndexOf('.')) + SkylineFileUtils.EXT_BLIB_W_DOT;
+        }
+
+        return null;
+    }
+
 }

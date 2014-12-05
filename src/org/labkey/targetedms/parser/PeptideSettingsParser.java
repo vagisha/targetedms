@@ -16,6 +16,7 @@
 package org.labkey.targetedms.parser;
 
 import org.apache.commons.lang3.StringUtils;
+import org.labkey.targetedms.SkylineFileUtils;
 
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -381,6 +382,9 @@ class PeptideSettingsParser
         PeptideSettings.SpectrumLibrary library = new PeptideSettings.SpectrumLibrary();
         library.setName(_documentName);
         library.setLibraryType(BIBLIOSPEC_LITE_LIB.substring(0, BIBLIOSPEC_LITE_LIB.indexOf("_library")));
+        // "document" libraries are built using "import peptide search results" in Skyline.  Skyline xml does not
+        // include a "file_name_hint" attribute for these libraries.  They have the same name as the Skyline document.
+        library.setFileNameHint(_documentName + SkylineFileUtils.EXT_BLIB_W_DOT);
         return library;
     }
 

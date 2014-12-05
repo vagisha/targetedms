@@ -26,6 +26,9 @@ public class SkylineFileUtils
 {
     public static final String EXT_ZIP = "zip";
     private static final String EXT_SKY_ZIP_W_DOT = ".sky.zip";
+    public static final String EXT_SKY = "sky";
+    public static final String EXT_SKY_W_DOT = ".sky";
+    public static final String EXT_BLIB_W_DOT = ".blib";
 
     public static String getBaseName(String fileName)
     {
