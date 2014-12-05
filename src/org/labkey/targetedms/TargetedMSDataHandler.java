@@ -227,6 +227,6 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             return null;
         ext = ext.toLowerCase();
         // we handle only *.sky or .zip files
-        return SkylineFileUtils.EXT_SKY.equals(ext) || SkylineFileUtils.EXT_ZIP.equals(ext) ? Priority.HIGH : null;
+        return "sky".equals(ext) || "zip".equals(ext) ? Priority.HIGH : null;
     }
 }
