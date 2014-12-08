@@ -8,6 +8,8 @@ resources/queries/targetedms/peptide/FolderPeptides.qview.xml -text
 resources/queries/targetedms/peptide/LibraryPeptides.qview.xml -text
 resources/queries/targetedms/peptidegroup/FolderProteins.qview.xml -text
 resources/queries/targetedms/peptidegroup/LibraryProteins.qview.xml -text
+resources/queries/targetedms/qcannotation/.qview.xml -text
+resources/queries/targetedms/qcannotationtype/.qview.xml -text
 resources/reports/schemas/LeveyJenningsTrendPlot.r -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-12.20.sql -text
@@ -62,6 +64,7 @@ resources/schemas/dbscripts/postgresql/targetedms-14.21-14.22.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.22-14.23.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.23-14.24.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.24-14.25.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-14.30-14.31.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.19-0.20.sql -text
@@ -108,6 +111,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-14.21-14.22.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.22-14.23.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.23-14.24.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.24-14.25.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-14.30-14.31.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/IrtPeptide.java -text
 src/org/labkey/targetedms/PublishTargetedMSExperimentsController.java -text
@@ -273,6 +277,8 @@ src/org/labkey/targetedms/query/PeptidePrecursorChromatogramsTableInfo.java -tex
 src/org/labkey/targetedms/query/PrecursorChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PrecursorManager.java -text
 src/org/labkey/targetedms/query/PrecursorTableInfo.java -text
+src/org/labkey/targetedms/query/QCAnnotationTable.java -text
+src/org/labkey/targetedms/query/QCAnnotationTypeTable.java -text
 src/org/labkey/targetedms/query/ReplicateManager.java -text
 src/org/labkey/targetedms/query/RepresentativeStateDisplayColumn.java -text
 src/org/labkey/targetedms/query/RepresentativeStateManager.java -text

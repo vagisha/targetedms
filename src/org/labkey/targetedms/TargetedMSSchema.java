@@ -55,6 +55,8 @@ import org.labkey.targetedms.query.ExperimentAnnotationsTableInfo;
 import org.labkey.targetedms.query.JournalExperimentTableInfo;
 import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
 import org.labkey.targetedms.query.PrecursorTableInfo;
+import org.labkey.targetedms.query.QCAnnotationTable;
+import org.labkey.targetedms.query.QCAnnotationTypeTable;
 import org.labkey.targetedms.query.RepresentativeStateDisplayColumn;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
@@ -136,6 +138,9 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_IRT_SCALE = "iRTScale";
 
     public static final String TABLE_EXPERIMENT_ANNOTATIONS = "ExperimentAnnotations";
+
+    public static final String TABLE_QC_ANNOTATION_TYPE = "QCAnnotationType";
+    public static final String TABLE_QC_ANNOTATION = "QCAnnotation";
 
     public static final String TABLE_JOURNAL = "Journal";
     public static final String TABLE_JOURNAL_EXPERIMENT = "JournalExperiment";
@@ -307,6 +312,15 @@ public class TargetedMSSchema extends UserSchema
                         TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "iRTScaleId");
             }
         },
+        QCAnnotationTypeFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                return makeInnerJoin(TargetedMSManager.getTableInfoQCAnnotationType(),
+                        TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "QCAnnotationTypeId");
+            }
+        },
         IsolationSchemeFK
         {
             @Override
@@ -377,14 +391,8 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn(result.getRealTable().getColumn("TransitionCount"));
                 result.addWrapColumn(result.getRealTable().getColumn("Status"));
                 ColumnInfo stateColumn = result.addWrapColumn(result.getRealTable().getColumn("RepresentativeDataState"));
-                stateColumn.setFk(new LookupForeignKey("RowId")
-                {
-                    @Override
-                    public TableInfo getLookupTableInfo()
-                    {
-                        return getTable(TABLE_RESPRESENTATIVE_DATA_STATE_RUN);
-                    }
-                });
+                stateColumn.setFk(new QueryForeignKey(TargetedMSSchema.this, null, TABLE_RESPRESENTATIVE_DATA_STATE_RUN, "RowId", null));
+
                 ColumnInfo downloadLinkColumn = result.addWrapColumn("Download", result.getRealTable().getColumn("Id"));
                 downloadLinkColumn.setLabel("");
                 downloadLinkColumn.setDisplayColumnFactory(new DisplayColumnFactory()
@@ -441,6 +449,14 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_IRT_PEPTIDE.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.iRTScaleFK.getSQL());
+        }
+        if (TABLE_QC_ANNOTATION_TYPE.equalsIgnoreCase(name))
+        {
+            return new QCAnnotationTypeTable(this);
+        }
+        if (TABLE_QC_ANNOTATION.equalsIgnoreCase(name))
+        {
+            return new QCAnnotationTable(this);
         }
 
         if(TABLE_EXPERIMENT_ANNOTATIONS.equalsIgnoreCase(name))
@@ -886,6 +902,9 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_JOURNAL);
         hs.add(TABLE_JOURNAL_EXPERIMENT);
         hs.add(TABLE_EXPERIMENT_ANNOTATIONS);
+        hs.add(TABLE_QC_ANNOTATION_TYPE);
+        hs.add(TABLE_QC_ANNOTATION);
         return hs;
     }
+
 }

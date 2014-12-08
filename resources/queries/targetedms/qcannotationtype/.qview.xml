@@ -1,0 +1,13 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" containerFilter="CurrentPlusProjectAndShared">
+    <columns>
+        <column name="Name" />
+        <column name="Description" />
+        <column name="Color" />
+        <column name="Container" />
+        <column name="Created" />
+        <column name="Modified" />
+    </columns>
+    <sorts>
+        <sort column="Name" />
+    </sorts>
+</customView>

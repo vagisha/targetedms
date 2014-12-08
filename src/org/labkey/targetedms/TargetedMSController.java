@@ -77,6 +77,7 @@ import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
+import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
@@ -230,6 +231,7 @@ public class TargetedMSController extends SpringActionController
     {
         public static final String DATA_PIPELINE_TAB = "Data Pipeline";
         public static final String RUNS_TAB = "Runs";
+        public static final String ANNOTATIONS_TAB = "Annotations";
 
         public static final String DATA_PIPELINE_WEBPART = "Data Pipeline";
 
@@ -310,10 +312,22 @@ public class TargetedMSController extends SpringActionController
                 moduleProperty.saveValue(getUser(), c, FolderType.QC.toString());
                 addDashboardTab(c, QC_FOLDER_WEB_PARTS);
 
-                ArrayList<Portal.WebPart> tab2 = new ArrayList<>();
-                tab2.add(Portal.getPortalPart(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME).createWebPart());
-                Portal.saveParts(c, RUNS_TAB, tab2);
+                ArrayList<Portal.WebPart> runsTab = new ArrayList<>();
+                runsTab.add(Portal.getPortalPart(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME).createWebPart());
+                Portal.saveParts(c, RUNS_TAB, runsTab);
                 Portal.addProperty(c, RUNS_TAB, Portal.PROP_CUSTOMTAB);
+
+                ArrayList<Portal.WebPart> annotationsTab = new ArrayList<>();
+                Portal.WebPart annotationsPart = Portal.getPortalPart("Query").createWebPart();
+                annotationsPart.setProperty(QueryParam.schemaName.toString(), "targetedms");
+                annotationsPart.setProperty(QueryParam.queryName.toString(), "qcannotation");
+                annotationsTab.add(annotationsPart);
+                Portal.WebPart annotationTypesPart = Portal.getPortalPart("Query").createWebPart();
+                annotationTypesPart.setProperty(QueryParam.schemaName.toString(), "targetedms");
+                annotationTypesPart.setProperty(QueryParam.queryName.toString(), "qcannotationtype");
+                annotationsTab.add(annotationTypesPart);
+                Portal.saveParts(c, ANNOTATIONS_TAB, annotationsTab);
+                Portal.addProperty(c, ANNOTATIONS_TAB, Portal.PROP_CUSTOMTAB);
 
                 addDataPipelineTab(c);
                 return true;

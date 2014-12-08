@@ -383,6 +383,16 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_JOURNAL_EXPERIMENT);
     }
 
+    public static TableInfo getTableInfoQCAnnotationType()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_QC_ANNOTATION_TYPE);
+    }
+
+    public static TableInfo getTableInfoQCAnnotation()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_QC_ANNOTATION);
+    }
+
     public static Integer addRunToQueue(ViewBackgroundInfo info,
                                      final File file,
                                      PipeRoot root) throws SQLException, IOException, XarFormatException

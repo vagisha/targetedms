@@ -1,0 +1,13 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <columns>
+        <column name="Description" />
+        <column name="Date" />
+        <column name="QCAnnotationTypeId" />
+        <column name="Container" />
+        <column name="Created" />
+        <column name="Modified" />
+    </columns>
+    <sorts>
+        <sort column="Date" descending="true" />
+    </sorts>
+</customView>

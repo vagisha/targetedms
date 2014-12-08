@@ -1184,4 +1184,68 @@
         </ns:columns>
     </ns:table>
 
+    <ns:table tableName="QCAnnotationType" tableDbType="TABLE">
+        <ns:tableTitle>QC Annotation Type</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="Created"/>
+            <ns:column columnName="CreatedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="Modified"/>
+            <ns:column columnName="ModifiedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Container">
+                <ns:columnTitle>Folder</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="Name"/>
+            <ns:column columnName="Description"/>
+            <ns:column columnName="Color"/>
+        </ns:columns>
+    </ns:table>
+
+    <ns:table tableName="QCAnnotation" tableDbType="TABLE">
+        <ns:tableTitle>QC Annotation</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="Created"/>
+            <ns:column columnName="CreatedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="Modified"/>
+            <ns:column columnName="ModifiedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Container">
+                <ns:columnTitle>Folder</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="Description"/>
+            <ns:column columnName="Date"/>
+            <ns:column columnName="QCAnnotationTypeId">
+                <ns:columnTitle>Annotation Type</ns:columnTitle>
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+
 </ns:tables>
