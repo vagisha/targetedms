@@ -219,6 +219,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 sql: sql,
                 scope: this,
                 success: function(data) {
+
                     if (data.rows.length == 0)
                         Ext.get(trendDiv).update("Error: there were no records found.");
 
@@ -322,21 +323,5 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             this.displayTrendPlot();
             this.fireEvent('reportFilterApplied', this.startDate, this.endDate);
         }
-    },
-
-    clearGraphFilter: function() {
-        this.startDate = null;
-        this.startDateField.reset();
-        this.endDate = null;
-        this.endDateField.reset();
-        this.applyFilterButton.disable();
-
-        this.setTabsToRender();
-        this.displayTrendPlot();
-        this.fireEvent('reportFilterApplied', this.startDate, this.endDate);
-    },
-
-    getPdfHref: function() {
-        return this.pdfHref ? this.pdfHref : null;
-    },
+    }
 });
