@@ -56,10 +56,11 @@ peptides = unique(labkey.data$sequence)
 
 qcannotations.data <- labkey.executeSql(baseUrl=labkey.url.base, folderPath=labkey.url.path, schemaName="targetedms", sql=qcannotation.sql, containerFilter="CurrentPlusProjectAndShared");
 
-qcannotations.data$Color = paste("#", qcannotations.data$Color, sep="");
-
-# get legend data now from set of qc annotations that apply to this graph
-qcannotations.legend = qcannotations.data[match(unique(qcannotations.data$Name), qcannotations.data$Name),];
+if (nrow(qcannotations.data) > 0) {
+    qcannotations.data$Color = paste("#", qcannotations.data$Color, sep="");
+    # get legend data now from set of qc annotations that apply to this graph
+    qcannotations.legend = qcannotations.data[match(unique(qcannotations.data$Name), qcannotations.data$Name),];
+}
 
 # setup the png or pdf for the plot
 if (!is.null(labkey.url.params$PdfOut)) {
@@ -80,7 +81,6 @@ for (typeIndex in 1:length(peptides))
     dat$average = mean(dat$value);
     dat$stddev = sd(dat$value);
     dat$ptcolor = 1;
-
 
     # determine if the request is for log scale or not
     asLog = "";
@@ -179,12 +179,12 @@ for (typeIndex in 1:length(peptides))
       # draw points for the trend values for each record
       points(dat$seq, dat$value, col=dat$ptcolor, pch=15);
 
-      # add QC annotations
-      qcannotations.values = dat[match(qcannotations.data$Date, dat$acquiredtime),];
-
-      points(qcannotations.values$seq, qcannotations.values$value, col=qcannotations.data$Color, pch=15);
-
-      legend("topright", legend=qcannotations.legend$Name, text.col=qcannotations.legend$Color, col=qcannotations.legend$Color, pch=15);
+      if (nrow(qcannotations.data) > 0) {
+        # add QC annotations
+        qcannotations.values = dat[match(qcannotations.data$Date, dat$acquiredtime),];
+        points(qcannotations.values$seq, qcannotations.values$value, col=qcannotations.data$Color, pch=15);
+        legend("topright", legend=qcannotations.legend$Name, text.col=qcannotations.legend$Color, col=qcannotations.legend$Color, pch=15);
+      }
 
       # add the axis labels and tick marks
       par(las=2);
