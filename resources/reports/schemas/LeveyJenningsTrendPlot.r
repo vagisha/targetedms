@@ -118,6 +118,12 @@ for (typeIndex in 1:length(peptides))
           ymax = ymax + 1;
       }
 
+      # adjust plot if annotations are being viewed
+      if (nrow(qcannotations.data) > 0) {
+          ystep = (ymax-ymin) * 0.1;
+          ymin = floor(min(dat$minus3stddev, na.rm=TRUE)) - ( ystep * length(qcannotations.legend$Color) );
+      }
+
       # if the plot is in log scale, make sure we don't have values <= 0
       if (asLog == "y") {
           if (ymin <= 0) { ymin = 1; }
@@ -125,8 +131,17 @@ for (typeIndex in 1:length(peptides))
           dat$minus3stddev[dat$minus3stddev <= 0] = 1;
       }
 
+      # adding missing dates from QC annotations to our date vector
+      dates <- c(dat$acquiredtime, qcannotations.data$Date[!(qcannotations.data$Date %in% dat$acquiredtime)]);
+      # reorder dates and cast
+      dates <- as.Date(dates[order(dates)], origin="1970-01-01");
       # set the sequence value for the records (in reverse order since they are sorted in DESC order)
-      dat$seq = length(dat$acquiredtime):1;
+      seq = length(dates):1;
+      dates <- data.frame(date=dates,seq=seq);
+      matches = pmatch(dat$acquiredtime, dates$date);
+      dat$seq = dates[matches,]$seq
+
+      dates = dates[order(dates$seq),];
       dat = dat[order(dat$seq),];
 
       # determine the x-axis max
@@ -140,7 +155,7 @@ for (typeIndex in 1:length(peptides))
       xtcks = seq(1, xmax, by = tckFactor);
 
       # set the column labels to 'AcquiredTime'
-      xlabels = as.character(dat$acquiredtime[xtcks])
+      xlabels = as.character(dates$date[xtcks])
 
       # set some parameters and variables based on whether or not a legend is to be shown
       par(mar=c(5.5,5,2,0.2));
@@ -181,9 +196,18 @@ for (typeIndex in 1:length(peptides))
 
       if (nrow(qcannotations.data) > 0) {
         # add QC annotations
-        qcannotations.values = dat[match(qcannotations.data$Date, dat$acquiredtime),];
-        points(qcannotations.values$seq, qcannotations.values$value, col=qcannotations.data$Color, pch=15);
-        legend("topright", legend=qcannotations.legend$Name, text.col=qcannotations.legend$Color, col=qcannotations.legend$Color, pch=15);
+        qcannotations.data$seq = dates[pmatch(qcannotations.data$Date, dates$date),]$seq;
+        # initialize yvalues
+        qcannotations.data$yvalues = rep(0, length(qcannotations.data$seq) );
+
+        i=0;
+        for (color in qcannotations.legend$Color) {
+          qcannotations.data[which(qcannotations.data$Color == color),]$yvalues = ymin + (i*ystep);
+          i=i+1;
+        }
+
+        points(qcannotations.data$seq, qcannotations.data$yvalues, col=qcannotations.data$Color, pch=8);
+        legend("topright", legend=qcannotations.legend$Name, text.col=qcannotations.legend$Color, col=qcannotations.legend$Color, pch=8);
       }
 
       # add the axis labels and tick marks
