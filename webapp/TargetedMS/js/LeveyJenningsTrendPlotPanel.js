@@ -214,6 +214,9 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 separator = " AND ";
             }
 
+            // Cap the peptide count at 50. Keep this in sync with limit in LeveyJenningsTrendPlot.r
+            sql += " ORDER BY Sequence LIMIT 50";
+
             LABKEY.Query.executeSql({
                 schemaName: 'targetedms',
                 sql: sql,

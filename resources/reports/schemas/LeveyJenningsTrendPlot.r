@@ -62,16 +62,22 @@ if (nrow(qcannotations.data) > 0) {
     qcannotations.legend = qcannotations.data[match(unique(qcannotations.data$Name), qcannotations.data$Name),];
 }
 
+# Cap the number of plotted peptides at 50. Keep this in sync with limit in LeveyJenningsTrendPlotPanel.js
+peptideCount = length(peptides);
+if (peptideCount > 50) {
+    peptideCount = 50;
+}
+
 # setup the png or pdf for the plot
 if (!is.null(labkey.url.params$PdfOut)) {
     pdf(file="${pdfout:Levey-Jennings Trend Plot}", width=10, height=6);
 } else {
-    CairoPNG(filename="${imgout:Levey-Jennings Trend Plot}", width=810, height=300 * length(peptides));
-    layout(matrix(1:length(peptides), length(peptides), 1));
+    CairoPNG(filename="${imgout:Levey-Jennings Trend Plot}", width=810, height=300 * peptideCount);
+    layout(matrix(1:peptideCount, peptideCount, 1));
     par(cex=1);
 }
 
-for (typeIndex in 1:length(peptides))
+for (typeIndex in 1:peptideCount)
 {
     # Grab the rows that are for this specific peptide
     dat = subset(labkey.data, sequence == peptides[typeIndex]);
