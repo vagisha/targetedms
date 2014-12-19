@@ -15,16 +15,21 @@
  */
 package org.labkey.test.tests;
 
-import org.apache.commons.collections.ListUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
+import org.labkey.test.components.targetedms.QCAnnotationWebPart;
 import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.components.targetedms.QCSummaryWebPart;
+import org.labkey.test.pages.targetedms.PanoramaAnnotations;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
+import org.labkey.test.pages.targetedms.PanoramaInsertAnnotation;
+import org.labkey.test.pages.targetedms.PanoramaInsertAnnotationType;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.RReportHelper;
 
@@ -88,6 +93,32 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         assertEquals("Wrong precursors", Arrays.asList(PRECURSORS), qcPlotsWebPart.getPlotTitles());
+    }
+
+    @Test
+    public void testQCAnnotations()
+    {
+        List<String> expectedWebParts = Arrays.asList("QC Annotation", "QC Annotation Type");
+
+        click(Locator.linkContainingText("Annotations"));
+
+        PortalHelper portalHelper = new PortalHelper(this);
+        assertEquals("Wrong WebParts", expectedWebParts, portalHelper.getWebPartTitles());
+
+        PanoramaAnnotations qcAnnotations = new PanoramaAnnotations(this);
+
+        QCAnnotationWebPart qcAnnotationWebPart = qcAnnotations.getQcAnnotationWebPart();
+
+        qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.INSTUMENT_CHANGE, "We changed it", "2013-08-22");
+        qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.REAGENT_CHANGE, "New reagents", "2013-08-10");
+        qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.TECHNICIAN_CHANGE, "New guy on the scene", "2013-08-10");
+
+        QCAnnotationTypeWebPart qcAnnotationTypeWebPart = qcAnnotations.getQcAnnotationTypeWebPart();
+
+        qcAnnotationTypeWebPart.getInsertPage().insert("Candy Change", "This happens anytime we get new candies", "0F0F0F");
+
+        qcAnnotationWebPart.getInsertPage().insert("Candy Change", "New candies!", "2013-08-21");
+
     }
 
     @Test
