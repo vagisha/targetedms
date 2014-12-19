@@ -8,7 +8,7 @@ public class PanoramaInsertAnnotation extends InsertPage
 {
     private static final String DEFAULT_TITLE = "Insert qcannotationtype";
 
-    public static final String INSTUMENT_CHANGE = "Instrumentation Change";
+    public static final String INSTRUMENT_CHANGE = "Instrumentation Change";
     public static final String REAGENT_CHANGE = "Reagent Change";
     public static final String TECHNICIAN_CHANGE = "Technician Change";
 

@@ -29,7 +29,6 @@ import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaAnnotations;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.pages.targetedms.PanoramaInsertAnnotation;
-import org.labkey.test.pages.targetedms.PanoramaInsertAnnotationType;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.RReportHelper;
 
@@ -98,7 +97,7 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testQCAnnotations()
     {
-        List<String> expectedWebParts = Arrays.asList("QC Annotation", "QC Annotation Type");
+        List<String> expectedWebParts = Arrays.asList(QCAnnotationWebPart.DEFAULT_TITLE, QCAnnotationTypeWebPart.DEFAULT_TITLE);
 
         click(Locator.linkContainingText("Annotations"));
 
@@ -109,7 +108,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         QCAnnotationWebPart qcAnnotationWebPart = qcAnnotations.getQcAnnotationWebPart();
 
-        qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.INSTUMENT_CHANGE, "We changed it", "2013-08-22");
+        qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.INSTRUMENT_CHANGE, "We changed it", "2013-08-22");
         qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.REAGENT_CHANGE, "New reagents", "2013-08-10");
         qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.TECHNICIAN_CHANGE, "New guy on the scene", "2013-08-10");
 
@@ -119,6 +118,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         qcAnnotationWebPart.getInsertPage().insert("Candy Change", "New candies!", "2013-08-21");
 
+        // TODO: we need to add more validation of the plots after we switch over to the labkey viz api
     }
 
     @Test

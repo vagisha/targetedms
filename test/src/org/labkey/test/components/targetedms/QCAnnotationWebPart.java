@@ -7,7 +7,7 @@ import org.labkey.test.util.DataRegionTable;
 
 public class QCAnnotationWebPart extends WebPart
 {
-    private static final String DEFAULT_TITLE = "QC Annotation";
+    public static final String DEFAULT_TITLE = "QC Annotation";
 
     public QCAnnotationWebPart(BaseWebDriverTest test)
     {
