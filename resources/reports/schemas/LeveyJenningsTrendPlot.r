@@ -132,7 +132,7 @@ for (typeIndex in 1:length(peptides))
       }
 
       # adding missing dates from QC annotations to our date vector
-      dates <- c(dat$acquiredtime, qcannotations.data$Date[!(qcannotations.data$Date %in% dat$acquiredtime)]);
+      dates <- c(dat$acquiredtime, unique(qcannotations.data$Date[!(qcannotations.data$Date %in% dat$acquiredtime)]));
       # reorder dates and cast
       dates <- as.Date(dates[order(dates)], origin="1970-01-01");
       # set the sequence value for the records (in reverse order since they are sorted in DESC order)
@@ -196,7 +196,7 @@ for (typeIndex in 1:length(peptides))
 
       if (nrow(qcannotations.data) > 0) {
         # add QC annotations
-        qcannotations.data$seq = dates[pmatch(qcannotations.data$Date, dates$date),]$seq;
+        qcannotations.data$seq = dates[match(qcannotations.data$Date, dates$date),]$seq;
         # initialize yvalues
         qcannotations.data$yvalues = rep(0, length(qcannotations.data$seq) );
 
