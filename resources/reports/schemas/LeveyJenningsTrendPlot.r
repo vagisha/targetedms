@@ -142,7 +142,8 @@ for (typeIndex in 1:peptideCount)
       # reorder dates and cast
       dates <- as.Date(dates[order(dates)], origin="1970-01-01");
       # set the sequence value for the records (in reverse order since they are sorted in DESC order)
-      seq = length(dates):1;
+#      seq = length(dates):1;
+      seq = 1:length(dates);
       dates <- data.frame(date=dates,seq=seq);
       matches = pmatch(dat$acquiredtime, dates$date);
       dat$seq = dates[matches,]$seq
