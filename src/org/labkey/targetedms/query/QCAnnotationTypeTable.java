@@ -18,8 +18,11 @@ package org.labkey.targetedms.query;
 import org.apache.commons.beanutils.ConversionException;
 import org.apache.commons.beanutils.ConvertUtils;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerForeignKey;
+import org.labkey.api.data.DisplayColumn;
+import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.FilteredTable;
@@ -29,6 +32,7 @@ import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.Permission;
+import org.labkey.api.view.ColorPickerDisplayColumn;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 
@@ -46,6 +50,14 @@ public class QCAnnotationTypeTable extends FilteredTable<TargetedMSSchema>
         super(TargetedMSManager.getTableInfoQCAnnotationType(), schema);
         wrapAllColumns(true);
         getColumn("Container").setFk(new ContainerForeignKey(schema));
+        getColumn("Color").setDisplayColumnFactory(new DisplayColumnFactory()
+        {
+            @Override
+            public DisplayColumn createRenderer(ColumnInfo colInfo)
+            {
+                return new ColorPickerDisplayColumn(colInfo);
+            }
+        });
     }
 
     @Override

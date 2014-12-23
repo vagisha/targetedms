@@ -114,7 +114,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         QCAnnotationTypeWebPart qcAnnotationTypeWebPart = qcAnnotations.getQcAnnotationTypeWebPart();
 
-        qcAnnotationTypeWebPart.getInsertPage().insert("Candy Change", "This happens anytime we get new candies", "0F0F0F");
+        qcAnnotationTypeWebPart.getInsertPage().insert("Candy Change", "This happens anytime we get new candies", "808080");
 
         qcAnnotationWebPart.getInsertPage().insert("Candy Change", "New candies!", "2013-08-21");
 

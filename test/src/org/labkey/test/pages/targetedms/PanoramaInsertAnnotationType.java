@@ -33,7 +33,7 @@ public class PanoramaInsertAnnotationType extends InsertPage
         Elements elements = elements();
         _test.setFormElement(elements.name, name);
         _test.setFormElement(elements.description, description);
-        _test.setFormElement(elements.color, color);
+        _test.click(Locator.xpath("//a[contains(@class, " + Locator.xq("color-" + color) + ")]"));
         _test.clickAndWait(elements.submit);
     }
 
