@@ -127,7 +127,7 @@ for (typeIndex in 1:peptideCount)
       # adjust plot if annotations are being viewed
       if (nrow(qcannotations.data) > 0) {
           ystep = (ymax-ymin) * 0.1;
-          ymin = floor(min(dat$minus3stddev, na.rm=TRUE)) - ( ystep * length(qcannotations.legend$Color) );
+          ymin = ymin - ( ystep * length(qcannotations.legend$Color) );
       }
 
       # if the plot is in log scale, make sure we don't have values <= 0
