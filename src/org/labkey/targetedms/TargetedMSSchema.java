@@ -404,7 +404,7 @@ public class TargetedMSSchema extends UserSchema
                         {
                             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {
-                                String runId = String.valueOf(ctx.get("File"));
+                                String runId = String.valueOf(ctx.get("_File"));
                                 downloadUrl.replaceParameter("runId", runId);
                                 out.write(PageFlowUtil.textLink("Download", downloadUrl));
                             }
