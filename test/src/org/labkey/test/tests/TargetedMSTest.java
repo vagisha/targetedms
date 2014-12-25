@@ -23,6 +23,7 @@ import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.UIContainerHelper;
 
 import java.util.Arrays;
+import java.util.List;
 
 public abstract class TargetedMSTest extends BaseWebDriverTest
 {
@@ -106,7 +107,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     }
 
     @Override
-    public java.util.List<String> getAssociatedModules()
+    public List<String> getAssociatedModules()
     {
         return Arrays.asList("targetedms");
     }
