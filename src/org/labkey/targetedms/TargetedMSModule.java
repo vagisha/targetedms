@@ -146,7 +146,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         BaseWebPartFactory setupFactory = new BaseWebPartFactory(TARGETED_MS_SETUP)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 JspView view = new JspView("/org/labkey/targetedms/view/folderSetup.jsp");
                 view.setTitle(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER);
@@ -162,7 +162,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         BaseWebPartFactory chromatogramLibraryDownload = new BaseWebPartFactory(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 JspView view = new JspView("/org/labkey/targetedms/view/chromatogramLibraryDownload.jsp");
                 view.setTitle(TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD);
@@ -173,7 +173,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         BaseWebPartFactory precursorView = new BaseWebPartFactory(TARGETED_MS_PRECURSOR_VIEW)
         {
             @Override
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart) throws Exception
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                return new LibraryPrecursorViewWebPart(portalCtx);
             }
@@ -181,7 +181,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         BaseWebPartFactory peptideView  = new BaseWebPartFactory(TARGETED_MS_PEPTIDE_VIEW)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 return new PeptideViewWebPart(portalCtx);
             }
@@ -189,7 +189,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         BaseWebPartFactory peptideGroupView  = new BaseWebPartFactory(TARGETED_MS_PEPTIDE_GROUP_VIEW)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 return new PeptideGroupViewWebPart(portalCtx);
             }
@@ -197,7 +197,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         BaseWebPartFactory runsFactory = new BaseWebPartFactory(TARGETED_MS_RUNS_WEBPART_NAME)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 return new TargetedMSRunsWebPartView(portalCtx);
             }
@@ -205,7 +205,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         BaseWebPartFactory proteinSearchFactory = new BaseWebPartFactory(TARGETED_MS_PROTEIN_SEARCH)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 JspView view = new JspView("/org/labkey/targetedms/view/proteinSearch.jsp");
                 view.setTitle("Protein Search");
@@ -215,7 +215,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         BaseWebPartFactory modificationSearchFactory = new BaseWebPartFactory(ModificationSearchWebPart.NAME)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 return new ModificationSearchWebPart(TargetedMSController.ModificationSearchForm.createDefault());
             }
@@ -224,7 +224,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         BaseWebPartFactory experimentAnnotationsListFactory = new BaseWebPartFactory(TargetedMSExperimentsWebPart.WEB_PART_NAME)
         {
             @Override
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart) throws Exception
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 return new TargetedMSExperimentsWebPart(portalCtx);
             }
@@ -232,7 +232,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         BaseWebPartFactory containerExperimentFactory = new BaseWebPartFactory(TargetedMSExperimentWebPart.WEB_PART_NAME)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 return new TargetedMSExperimentWebPart(portalCtx);
             }
@@ -240,7 +240,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         BaseWebPartFactory qcPlotsFactory = new BaseWebPartFactory(TARGETED_MS_QC_PLOTS)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 JspView result = new JspView("/org/labkey/targetedms/view/leveyJenningsReport.jsp");
                 result.addClientDependency(ClientDependency.fromPath("Ext4"));
@@ -252,7 +252,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         BaseWebPartFactory qcSummaryFactory = new BaseWebPartFactory(TARGETED_MS_QC_SUMMARY)
         {
-            public WebPartView getWebPartView(ViewContext portalCtx, Portal.WebPart webPart)
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
                 JspView result = new JspView("/org/labkey/targetedms/view/qcSummary.jsp");
                 result.addClientDependency(ClientDependency.fromPath("Ext4"));
