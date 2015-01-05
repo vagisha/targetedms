@@ -135,8 +135,7 @@ public class TransitionManager
     public static Set<Integer> getTransitionChromatogramIndexes(int precursorChromInfoId)
     {
         TableInfo tinfo = TargetedMSManager.getTableInfoTransitionChromInfo();
-        Collection tranChromIndexes = new TableSelector(tinfo,
-                                                        tinfo.getColumns("ChromatogramIndex"),
+        Collection tranChromIndexes = new TableSelector(tinfo.getColumn("ChromatogramIndex"),
                                                         new SimpleFilter(FieldKey.fromParts("PrecursorChromInfoId"), precursorChromInfoId),
                                                         null
                                                         ).getCollection(Integer.class);
