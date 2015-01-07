@@ -20,7 +20,6 @@ import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.exp.ExperimentRunListView;
-import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.permissions.InsertPermission;
@@ -31,9 +30,6 @@ import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.ExperimentAnnotations;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * User: vsharma
@@ -132,22 +128,6 @@ public class TargetedMsRunListView extends ExperimentRunListView
             // If we are looking at the details of an experiment, set the container filter to CurrentAndSubfolders so that
             // runs in subfolders are visible (if the experiment includes subfolders).
             querySettings.setContainerFilterName(ContainerFilter.Type.CurrentAndSubfolders.name());
-
-            List<FieldKey> fieldKeys = new ArrayList<>();
-            fieldKeys.add(FieldKey.fromParts("Flag"));
-            fieldKeys.add(FieldKey.fromParts("File"));
-
-            fieldKeys.add(FieldKey.fromParts("File", "Created"));
-
-            fieldKeys.add(FieldKey.fromParts("File", "PeptideGroupCount"));
-            fieldKeys.add(FieldKey.fromParts("File", "PeptideCount"));
-            fieldKeys.add(FieldKey.fromParts("File", "PrecursorCount"));
-            fieldKeys.add(FieldKey.fromParts("File", "TransitionCount"));
-            // Show the "Container" column.
-            fieldKeys.add(FieldKey.fromParts("Container"));
-            fieldKeys.add(FieldKey.fromParts("File", "Download"));
-            querySettings.setFieldKeys(fieldKeys);
-
             view.setExpAnnotations(expAnnotations);
         }
         return view;

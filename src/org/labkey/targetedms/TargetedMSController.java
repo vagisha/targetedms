@@ -158,6 +158,7 @@ import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 import org.labkey.targetedms.view.PeptidePrecursorChromatogramsView;
 import org.labkey.targetedms.view.TargetedMsRunListView;
 import org.labkey.targetedms.view.expannotations.ExperimentAnnotationsFormDataRegion;
+import org.labkey.targetedms.view.expannotations.TargetedMSExperimentWebPart;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatch;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 import org.labkey.targetedms.view.spectrum.PeptideSpectrumView;
@@ -3717,7 +3718,9 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(NewExperimentAnnotationsForm form, BindException errors) throws Exception
         {
             DataRegion drg = createNewTargetedMsExperimentDataRegion(form, getViewContext());
-            return new InsertView(drg, errors);
+            InsertView view = new InsertView(drg, errors);
+            view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
+            return view;
         }
 
         @Override
@@ -3750,6 +3753,7 @@ public class TargetedMSController extends SpringActionController
 
             DataRegion drg = createNewTargetedMsExperimentDataRegion(form, getViewContext());
             InsertView view = new InsertView(drg, errors);
+            view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
             if(reshow)
             {
                 view.setInitialValues(form.getRequest().getParameterMap());
@@ -3988,7 +3992,9 @@ public class TargetedMSController extends SpringActionController
             }
             ensureCorrectContainer(getContainer(), experimentAnnotations.getContainer(), getViewContext());
 
-            return new UpdateView(new ExperimentAnnotationsFormDataRegion(getViewContext(), form, DataRegion.MODE_UPDATE), form, errors);
+            UpdateView view = new UpdateView(new ExperimentAnnotationsFormDataRegion(getViewContext(), form, DataRegion.MODE_UPDATE), form, errors);
+            view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
+            return view;
         }
 
         public NavTree appendNavTrail(NavTree root)
@@ -4007,7 +4013,9 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(ExperimentAnnotationsForm form, boolean reshow, BindException errors) throws Exception
         {
-            return new UpdateView(new ExperimentAnnotationsFormDataRegion(getViewContext(), form, DataRegion.MODE_UPDATE), form, errors);
+            UpdateView view = new UpdateView(new ExperimentAnnotationsFormDataRegion(getViewContext(), form, DataRegion.MODE_UPDATE), form, errors);
+            view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
+            return view;
         }
 
         public boolean handlePost(ExperimentAnnotationsForm form, BindException errors) throws Exception

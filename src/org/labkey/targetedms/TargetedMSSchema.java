@@ -21,6 +21,7 @@ import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AJAXDetailsDisplayColumn;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerForeignKey;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DisplayColumn;
@@ -404,7 +405,7 @@ public class TargetedMSSchema extends UserSchema
                         {
                             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {
-                                String runId = String.valueOf(ctx.get("_File"));
+                                String runId = String.valueOf(ctx.get(this.getColumnInfo().getFieldKey()));
                                 downloadUrl.replaceParameter("runId", runId);
                                 out.write(PageFlowUtil.textLink("Download", downloadUrl));
                             }
@@ -810,6 +811,15 @@ public class TargetedMSSchema extends UserSchema
         if(TABLE_JOURNAL_EXPERIMENT.equalsIgnoreCase(name))
         {
             return new JournalExperimentTableInfo(this, getContainer(), ContainerJoinType.ExperimentAnnotationsFK.getSQL());
+        }
+
+        if(TABLE_JOURNAL.equalsIgnoreCase(name))
+        {
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<TargetedMSSchema>(getSchema().getTable(name), this);
+            result.wrapAllColumns(true);
+            ColumnInfo projectCol = result.getColumn(FieldKey.fromParts("Project"));
+            ContainerForeignKey.initColumn(projectCol, this);
+            return result;
         }
 
         if (getTableNames().contains(name))
