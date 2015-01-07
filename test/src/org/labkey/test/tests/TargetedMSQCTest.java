@@ -19,7 +19,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
@@ -28,7 +27,6 @@ import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaAnnotations;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
-import org.labkey.test.pages.targetedms.PanoramaInsertAnnotation;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.RReportHelper;
 
@@ -97,9 +95,14 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testQCAnnotations()
     {
+        final String INSTRUMENT_CHANGE = "Instrumentation Change";
+        final String REAGENT_CHANGE = "Reagent Change";
+        final String TECHNICIAN_CHANGE = "Technician Change";
+        final String annotationTypeCandy = "Candy Change";
+
         List<String> expectedWebParts = Arrays.asList(QCAnnotationWebPart.DEFAULT_TITLE, QCAnnotationTypeWebPart.DEFAULT_TITLE);
 
-        click(Locator.linkContainingText("Annotations"));
+        clickTab("Annotations");
 
         PortalHelper portalHelper = new PortalHelper(this);
         assertEquals("Wrong WebParts", expectedWebParts, portalHelper.getWebPartTitles());
@@ -108,15 +111,15 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         QCAnnotationWebPart qcAnnotationWebPart = qcAnnotations.getQcAnnotationWebPart();
 
-        qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.INSTRUMENT_CHANGE, "We changed it", "2013-08-22");
-        qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.REAGENT_CHANGE, "New reagents", "2013-08-10");
-        qcAnnotationWebPart.getInsertPage().insert(PanoramaInsertAnnotation.TECHNICIAN_CHANGE, "New guy on the scene", "2013-08-10");
+        qcAnnotationWebPart.startInsert().insert(INSTRUMENT_CHANGE, "We changed it", "2013-08-22");
+        qcAnnotationWebPart.startInsert().insert(REAGENT_CHANGE, "New reagents", "2013-08-10");
+        qcAnnotationWebPart.startInsert().insert(TECHNICIAN_CHANGE, "New guy on the scene", "2013-08-10");
 
         QCAnnotationTypeWebPart qcAnnotationTypeWebPart = qcAnnotations.getQcAnnotationTypeWebPart();
 
-        qcAnnotationTypeWebPart.getInsertPage().insert("Candy Change", "This happens anytime we get new candies", "808080");
+        qcAnnotationTypeWebPart.startInsert().insert(annotationTypeCandy, "This happens anytime we get new candies", "808080");
 
-        qcAnnotationWebPart.getInsertPage().insert("Candy Change", "New candies!", "2013-08-21");
+        qcAnnotationWebPart.startInsert().insert(annotationTypeCandy, "New candies!", "2013-08-21");
 
         // TODO: we need to add more validation of the plots after we switch over to the labkey viz api
     }

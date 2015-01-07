@@ -340,10 +340,10 @@ test/src/org/labkey/test/components/targetedms/QCAnnotationTypeWebPart.java -tex
 test/src/org/labkey/test/components/targetedms/QCAnnotationWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCPlotsWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCSummaryWebPart.java -text
+test/src/org/labkey/test/pages/targetedms/AnnotationInsertPage.java -text
+test/src/org/labkey/test/pages/targetedms/AnnotationTypeInsertPage.java -text
 test/src/org/labkey/test/pages/targetedms/PanoramaAnnotations.java -text
 test/src/org/labkey/test/pages/targetedms/PanoramaDashboard.java -text
-test/src/org/labkey/test/pages/targetedms/PanoramaInsertAnnotation.java -text
-test/src/org/labkey/test/pages/targetedms/PanoramaInsertAnnotationType.java -text
 test/src/org/labkey/test/tests/GetDataAPITest.java -text
 test/src/org/labkey/test/tests/TargetedMSExperimentIrtTest.java -text
 test/src/org/labkey/test/tests/TargetedMSExperimentTest.java -text

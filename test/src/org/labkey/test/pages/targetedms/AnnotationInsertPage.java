@@ -19,21 +19,22 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.InsertPage;
 
-public class PanoramaInsertAnnotationType extends InsertPage
+public class AnnotationInsertPage extends InsertPage
 {
-    private static final String DEFAULT_TITLE = "Insert qcannotation";
+    private static final String DEFAULT_TITLE = "Insert QCAannotation";
 
-    public PanoramaInsertAnnotationType(BaseWebDriverTest test)
+    public AnnotationInsertPage(BaseWebDriverTest test)
     {
         super(test, DEFAULT_TITLE);
     }
 
-    public void insert(String name, String description, String color)
+    // consider value returning...
+    public void insert(String annotationType, String description, String date)
     {
         Elements elements = elements();
-        _test.setFormElement(elements.name, name);
+        _test.selectOptionByText(elements.annotationType, annotationType);
         _test.setFormElement(elements.description, description);
-        _test.click(Locator.xpath("//a[contains(@class, " + Locator.xq("color-" + color) + ")]"));
+        _test.setFormElement(elements.date, date);
         _test.clickAndWait(elements.submit);
     }
 
@@ -45,8 +46,8 @@ public class PanoramaInsertAnnotationType extends InsertPage
 
     private class Elements extends InsertPage.Elements
     {
-        public Locator.XPathLocator name = body.append(Locator.tagWithName("input", "quf_Name"));
+        public Locator.XPathLocator annotationType = body.append(Locator.tagWithName("select", "quf_QCAnnotationTypeId"));
         public Locator.XPathLocator description = body.append(Locator.tagWithName("textarea", "quf_Description"));
-        public Locator.XPathLocator color = body.append(Locator.tagWithName("input", "quf_Color"));
+        public Locator.XPathLocator date = body.append(Locator.tagWithName("input", "quf_Date"));
     }
 }

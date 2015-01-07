@@ -17,12 +17,13 @@ package org.labkey.test.components.targetedms;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.components.WebPart;
-import org.labkey.test.pages.targetedms.PanoramaInsertAnnotationType;
+import org.labkey.test.pages.targetedms.AnnotationTypeInsertPage;
 import org.labkey.test.util.DataRegionTable;
 
 public class QCAnnotationTypeWebPart extends WebPart
 {
     public static final String DEFAULT_TITLE = "QC Annotation Type";
+    private DataRegionTable _dataRegionTable;
 
     public QCAnnotationTypeWebPart(BaseWebDriverTest test)
     {
@@ -34,10 +35,16 @@ public class QCAnnotationTypeWebPart extends WebPart
         super(test, DEFAULT_TITLE, index);
     }
 
-    public PanoramaInsertAnnotationType getInsertPage()
+    public DataRegionTable getDataRegion()
     {
-        DataRegionTable dataRegionTable = new DataRegionTable("qwp2", _test);
-        dataRegionTable.clickHeaderButtonByText("Insert New");
-        return new PanoramaInsertAnnotationType(_test);
+        if (_dataRegionTable == null)
+            _dataRegionTable = DataRegionTable.findDataRegionWithin(_test, elements().webPart.findElement(_test.getDriver()));
+        return _dataRegionTable;
+    }
+
+    public AnnotationTypeInsertPage startInsert()
+    {
+        getDataRegion().clickHeaderButtonByText("Insert New");
+        return new AnnotationTypeInsertPage(_test);
     }
 }
