@@ -1,10 +1,9 @@
 
-.precursorGraphHolder {
-    position: relative;
-    width: 100%;
-    height: 300px;
+#tiledPlotPanel {
+    min-height: 50px;
+    width: 900px;
 }
 
-.precursorGraphHolder img {
-    position: absolute;
+.annotation:hover {
+    cursor: pointer;
 }

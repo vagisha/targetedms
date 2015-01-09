@@ -30,14 +30,14 @@
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
         resources.add(ClientDependency.fromPath("clientapi/ext3"));
+        resources.add(ClientDependency.fromPath("vis/vis"));
         resources.add(ClientDependency.fromPath("targetedms/css/LeveyJenningsReport.css"));
         resources.add(ClientDependency.fromPath("targetedms/js/LeveyJenningsTrendPlotPanel.js"));
         return resources;
     }
 %>
 
-<div id="rPlotPanel"></div>
-<div id="hiddenPlotPanel" style="display: none"></div>
+<div id="reportHeaderPanel"></div>
 <div id="tiledPlotPanel"></div>
 
 <script type="text/javascript">
@@ -46,6 +46,11 @@
 
         function init()
         {
+            if (Ext.isIE8) {
+                Ext.get('tiledPlotPanel').update("Unable to render plots in Internet Explorer 8.");
+                return;
+            }
+
             LABKEY.Query.executeSql({
                 schemaName: 'targetedms',
                 sql: 'SELECT MIN(SampleFileId.AcquiredTime) AS StartDate, MAX(SampleFileId.AcquiredTime) AS EndDate FROM peptidechrominfo',
@@ -65,9 +70,9 @@
             var startDate = new Date(data.rows[0].StartDate);
             var endDate = new Date(data.rows[0].EndDate);
 
-            // initialize the panel that displays the R plot for the trend plotting of EC50, AUC, and High MFI
+            // initialize the panel that displays the Levey-Jennings plot for trend plotting
             var trendPlotPanel = new LABKEY.LeveyJenningsTrendPlotPanel({
-                renderTo: 'rPlotPanel',
+                renderTo: 'reportHeaderPanel',
                 cls: 'extContainer',
                 startDate: startDate,
                 endDate: endDate

@@ -28,7 +28,6 @@ import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaAnnotations;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.PortalHelper;
-import org.labkey.test.util.RReportHelper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -59,9 +58,6 @@ public class TargetedMSQCTest extends TargetedMSTest
     public static void initProject()
     {
         TargetedMSQCTest init = (TargetedMSQCTest)getCurrentTest();
-
-        RReportHelper rReportHelper = new RReportHelper(init);
-        rReportHelper.ensureRConfig();
 
         init.setupFolder(FolderType.QC);
         init.importData(SProCoP_FILE);
@@ -142,16 +138,28 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         for (QCPlotsWebPart.Scale scale : QCPlotsWebPart.Scale.values())
         {
-            long initialCRC = qcPlotsWebPart.getPlotImageCRC();
-            qcPlotsWebPart.setScale(scale);
-            assertFalse(initialCRC == qcPlotsWebPart.getPlotImageCRC());
+            //long initialCRC = qcPlotsWebPart.getPlotImageCRC();
+            //qcPlotsWebPart.setScale(scale);
+            //assertFalse(initialCRC == qcPlotsWebPart.getPlotImageCRC());
+            if (scale != qcPlotsWebPart.getCurrentScale())
+            {
+                String initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
+                qcPlotsWebPart.setScale(scale);
+                assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
+            }
         }
 
         for (QCPlotsWebPart.ChartType type : QCPlotsWebPart.ChartType.values())
         {
-            long initialCRC = qcPlotsWebPart.getPlotImageCRC();
-            qcPlotsWebPart.setChartType(type);
-            assertFalse(initialCRC == qcPlotsWebPart.getPlotImageCRC());
+            //long initialCRC = qcPlotsWebPart.getPlotImageCRC();
+            //qcPlotsWebPart.setChartType(type);
+            //assertFalse(initialCRC == qcPlotsWebPart.getPlotImageCRC());
+            if (type != qcPlotsWebPart.getCurrentChartType())
+            {
+                String initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
+                qcPlotsWebPart.setChartType(type);
+                assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
+            }
         }
     }
 }

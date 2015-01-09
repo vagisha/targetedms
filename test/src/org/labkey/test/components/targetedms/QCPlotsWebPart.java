@@ -177,6 +177,13 @@ public final class QCPlotsWebPart extends WebPart
         }
     }
 
+    public String getSVGPlotText(String id)
+    {
+        Locator loc = Locator.tagWithId("div", id).withDescendant(Locator.xpath("//*[local-name() = 'svg']"));
+        WebElement svg = loc.findElement(_test.getDriver());
+        return svg.getText();
+    }
+
     public List<String> getPlotTitles()
     {
         List<WebElement> titleEls = elements().plotTitle.findElements(_test.getDriver());

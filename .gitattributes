@@ -10,7 +10,6 @@ resources/queries/targetedms/peptidegroup/FolderProteins.qview.xml -text
 resources/queries/targetedms/peptidegroup/LibraryProteins.qview.xml -text
 resources/queries/targetedms/qcannotation/.qview.xml -text
 resources/queries/targetedms/qcannotationtype/.qview.xml -text
-resources/reports/schemas/LeveyJenningsTrendPlot.r -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-0.01.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.11-0.12.sql -text
