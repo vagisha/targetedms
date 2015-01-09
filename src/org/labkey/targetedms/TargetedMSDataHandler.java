@@ -38,7 +38,6 @@ import org.labkey.api.writer.ZipUtil;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.DataFormatException;
@@ -77,7 +76,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
 
             TargetedMSManager.updateRun(run, info.getUser());
         }
-        catch (IOException | SQLException | DataFormatException | XMLStreamException | PipelineJobException e)
+        catch (IOException | DataFormatException | XMLStreamException | PipelineJobException e)
         {
             throw new ExperimentException(e);
         }

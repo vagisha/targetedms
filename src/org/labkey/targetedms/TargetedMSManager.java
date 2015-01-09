@@ -1144,4 +1144,20 @@ public class TargetedMSManager
             }
         }
     }
+
+    /** @return true if the container has already imported data for the sample file */
+    public static boolean hasSampleFile(String filePath, Date acquiredTime, Container container)
+    {
+        SQLFragment sql = new SQLFragment("SELECT sf.* FROM ");
+        sql.append(getTableInfoSampleFile(), "sf");
+        sql.append(", ");
+        sql.append(getTableInfoReplicate(), "rep");
+        sql.append(", ");
+        sql.append(getTableInfoRuns(), "r");
+        sql.append( " WHERE r.Id = rep.RunId AND rep.Id = sf.ReplicateId AND r.Container = ? AND sf.FilePath = ? AND sf.AcquiredTime = ?");
+        sql.add(container);
+        sql.add(filePath);
+        sql.add(acquiredTime);
+        return new SqlSelector(getSchema(), sql).exists();
+    }
 }

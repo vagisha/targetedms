@@ -33,6 +33,7 @@ public class SampleFile extends SkylineEntity
     private Date _modifiedTime;
 
     private List<Instrument> _instrumentInfoList;
+    private boolean _skip;
 
     public int getReplicateId()
     {
@@ -112,5 +113,17 @@ public class SampleFile extends SkylineEntity
     public void setInstrumentInfoList(List<Instrument> instrumentInfoList)
     {
         _instrumentInfoList = instrumentInfoList;
+    }
+
+    /** Used to track if we should skip import of this data because it's already been imported (for QC folders only) */
+    public void setSkip(boolean skip)
+    {
+        _skip = skip;
+    }
+
+    /** Used to track if we should skip import of this data because it's already been imported (for QC folders only) */
+    public boolean isSkip()
+    {
+        return _skip;
     }
 }

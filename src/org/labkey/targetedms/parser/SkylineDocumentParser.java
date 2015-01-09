@@ -18,6 +18,7 @@ package org.labkey.targetedms.parser;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.targetedms.IrtPeptide;
@@ -180,7 +181,7 @@ public class SkylineDocumentParser implements AutoCloseable
         }
     }
 
-    public void readSettings() throws XMLStreamException, IOException, SQLException
+    public void readSettings() throws XMLStreamException, IOException
     {
         _replicateList = new ArrayList<>();
         _sampleFileIdToFilePathMap = new HashMap<>();
@@ -191,7 +192,7 @@ public class SkylineDocumentParser implements AutoCloseable
         parseChromatograms();
     }
 
-    private void parseiRTFile() throws SQLException
+    private void parseiRTFile()
     {
         PeptideSettings.RetentionTimePredictionSettings rtPredictionSettings = _peptideSettings.getPeptidePredictionSettings().getRtPredictionSettings();
         if(rtPredictionSettings == null)
@@ -207,21 +208,28 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else
             {
-                String sql = "SELECT * FROM IrtLibrary";
-                try (ConnectionSource cs = new ConnectionSource(iRTFile.getPath());
-                     Connection conn = cs.getConnection();
-                    ResultSet rs = conn.createStatement().executeQuery(sql))
+                try
                 {
-                    while(rs.next())
+                    String sql = "SELECT * FROM IrtLibrary";
+                    try (ConnectionSource cs = new ConnectionSource(iRTFile.getPath());
+                         Connection conn = cs.getConnection();
+                         ResultSet rs = conn.createStatement().executeQuery(sql))
                     {
-                        IrtPeptide iRTPeptideRow = new IrtPeptide();
-                        iRTPeptideRow.setModifiedSequence(rs.getString("PeptideModSeq"));
-                        iRTPeptideRow.setiRTStandard(rs.getBoolean("Standard"));
-                        iRTPeptideRow.setiRTValue(rs.getDouble("Irt"));
-                        iRTPeptideRow.setImportCount(1);
-                        iRTPeptideRow.setTimeSource(rs.getInt("TimeSource"));
-                        _iRTScaleSettings.add(iRTPeptideRow);
+                        while (rs.next())
+                        {
+                            IrtPeptide iRTPeptideRow = new IrtPeptide();
+                            iRTPeptideRow.setModifiedSequence(rs.getString("PeptideModSeq"));
+                            iRTPeptideRow.setiRTStandard(rs.getBoolean("Standard"));
+                            iRTPeptideRow.setiRTValue(rs.getDouble("Irt"));
+                            iRTPeptideRow.setImportCount(1);
+                            iRTPeptideRow.setTimeSource(rs.getInt("TimeSource"));
+                            _iRTScaleSettings.add(iRTPeptideRow);
+                        }
                     }
+                }
+                catch (SQLException e)
+                {
+                    throw new RuntimeSQLException(e);
                 }
             }
         }
