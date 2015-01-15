@@ -324,6 +324,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
 
             this.sequencePlotData[sequence].data.push({
                 AcquiredTime: row['AcquiredTime'], // keep in data for hover text display
+                FilePath: row['FilePath'], // keep in data for hover text display
                 label: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
                 value: row['Value'],
                 mean: row['Mean'],
@@ -423,7 +424,9 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                     yAxisDomain: [precursorInfo.plotMin, precursorInfo.max],
                     yAxisScale: this.yAxisScale,
                     hoverTextFn: function(row){
-                        return 'Acquired: ' + row['AcquiredTime'] + '\nValue: ' + row.value;
+                        return 'Acquired: ' + row['AcquiredTime']
+                                + '\nValue: ' + row.value
+                                + '\nFile Path: ' + row['FilePath'];
                     }
                 },
                 gridLineColor: 'white',
