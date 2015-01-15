@@ -190,7 +190,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             success: function(data) {
 
                 if (data.rows.length == 0) {
-                    this.failureHandler({message: "there were no records found."});
+                    this.failureHandler({message: "There were no records found. The date filter applied may be too restrictive."});
                     return;
                 }
 
@@ -534,7 +534,13 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     },
 
     failureHandler: function(response) {
-        Ext.get(this.trendDiv).update("Error: " + (response.exception || response.message));
+        if (response.message) {
+            Ext.get(this.trendDiv).update(response.message);
+        }
+        else {
+            Ext.get(this.trendDiv).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
+        }
+
         Ext.get(this.trendDiv).unmask();
     },
 

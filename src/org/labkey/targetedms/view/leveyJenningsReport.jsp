@@ -47,7 +47,7 @@
         function init()
         {
             if (Ext.isIE8) {
-                Ext.get('tiledPlotPanel').update("Unable to render plots in Internet Explorer 8.");
+                Ext.get('tiledPlotPanel').update("<span class='labkey-error'>Unable to render report in Internet Explorer < 9.</span>");
                 return;
             }
 
@@ -61,7 +61,7 @@
                         initializeReportPanels(data);
                 },
                 failure: function(response) {
-                    Ext.get('tiledPlotPanel').update("Error: " + response.exception);
+                    Ext.get('tiledPlotPanel').update("<span class='labkey-error'>Error: " + response.exception + "</span>");
                 }
             });
         }
