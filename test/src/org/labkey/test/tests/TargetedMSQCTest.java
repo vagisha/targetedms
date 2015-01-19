@@ -19,6 +19,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
@@ -118,11 +119,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcAnnotationWebPart.startInsert().insert(annotationTypeCandy, "New candies!", "2013-08-21");
 
         // TODO: we need to add more validation of the plots after we switch over to the labkey viz api
-    }
-
-    @Test
-    public void testQCPlots()
-    {
+        clickTab("Panorama Dashboard");
+        sleep(10000);
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
 
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
@@ -135,7 +133,23 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals(QCPlotsWebPart.ChartType.RETENTION, initialType);
         assertEquals("2013-08-09", initialStartDate);
         assertEquals("2013-08-27", initialEndDate);
-
+        assertElementPresent(Locator.css(".annotation"));
+        assertTextPresent("ATEEQLK");
+        assertTextPresent("FFVAPFPEVFGK");
+        assertTextPresent("GASIVEDK");
+        assertTextPresent("LVNELTEFAK");
+        assertTextPresent("VLDALDSIK");
+        assertTextPresent("VLVLDTDYK");
+        assertTextPresent("VYVEELKPTPEGDLEILLQK");
+        qcPlotsWebPart.setStartDate("2014-08-09");
+        qcPlotsWebPart.setEndDate("2014-08-27");
+        clickButton("Apply",0);
+        sleep(2000);
+        assertTextPresent("There were no records found. The date filter applied may be too restrictive.");
+        qcPlotsWebPart.setStartDate("2013-08-09");
+        qcPlotsWebPart.setEndDate("2013-08-27");
+        clickButton("Apply",0);
+        sleep(2000);
         for (QCPlotsWebPart.Scale scale : QCPlotsWebPart.Scale.values())
         {
             //long initialCRC = qcPlotsWebPart.getPlotImageCRC();
@@ -161,5 +175,6 @@ public class TargetedMSQCTest extends TargetedMSTest
                 assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
             }
         }
+
     }
 }
