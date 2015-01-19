@@ -16,11 +16,10 @@
 package org.labkey.test.components.targetedms;
 
 import org.apache.http.HttpException;
-import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebTestHelper;
-import org.labkey.test.components.WebPart;
+import org.labkey.test.components.BodyWebPart;
 import org.labkey.test.util.LogMethod;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
@@ -30,7 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.CRC32;
 
-public final class QCPlotsWebPart extends WebPart
+public final class QCPlotsWebPart extends BodyWebPart
 {
     private static final String DEFAULT_TITLE = "QC Plots";
 
@@ -203,7 +202,7 @@ public final class QCPlotsWebPart extends WebPart
         return new Elements();
     }
 
-    private class Elements extends WebPart.Elements
+    private class Elements extends BodyWebPart.Elements
     {
         Locator.XPathLocator scaleCombo = webPart.append(Locator.id("scale-combo-box")).parent();
         Locator.XPathLocator startDate = webPart.append(Locator.id("start-date-field"));

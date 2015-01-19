@@ -16,11 +16,11 @@
 package org.labkey.test.components.targetedms;
 
 import org.labkey.test.BaseWebDriverTest;
-import org.labkey.test.components.WebPart;
+import org.labkey.test.components.BodyWebPart;
 import org.labkey.test.pages.targetedms.AnnotationInsertPage;
 import org.labkey.test.util.DataRegionTable;
 
-public class QCAnnotationWebPart extends WebPart
+public class QCAnnotationWebPart extends BodyWebPart
 {
     public static final String DEFAULT_TITLE = "QC Annotation";
     private DataRegionTable _dataRegionTable;

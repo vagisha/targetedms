@@ -18,12 +18,12 @@ package org.labkey.test.components.targetedms;
 import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
-import org.labkey.test.components.WebPart;
+import org.labkey.test.components.BodyWebPart;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public final class QCSummaryWebPart extends WebPart
+public final class QCSummaryWebPart extends BodyWebPart
 {
     private static final String DEFAULT_TITLE = "QC Summary";
 
@@ -92,7 +92,7 @@ public final class QCSummaryWebPart extends WebPart
         return new Elements();
     }
 
-    private class Elements extends WebPart.Elements
+    private class Elements extends BodyWebPart.Elements
     {
         public Locator.XPathLocator docSummary = webPart.append(Locator.tagWithId("div", "docSummary"));
         public Locator.XPathLocator precursorSummary = webPart.append(Locator.tagWithId("div", "precursorSummary"));
