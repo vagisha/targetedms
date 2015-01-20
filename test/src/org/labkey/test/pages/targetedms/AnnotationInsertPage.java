@@ -18,6 +18,7 @@ package org.labkey.test.pages.targetedms;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.InsertPage;
+import org.labkey.test.util.targetedms.QCHelper;
 
 public class AnnotationInsertPage extends InsertPage
 {
@@ -28,13 +29,12 @@ public class AnnotationInsertPage extends InsertPage
         super(test, DEFAULT_TITLE);
     }
 
-    // consider value returning...
-    public void insert(String annotationType, String description, String date)
+    public void insert(QCHelper.Annotation annotation)
     {
         Elements elements = elements();
-        _test.selectOptionByText(elements.annotationType, annotationType);
-        _test.setFormElement(elements.description, description);
-        _test.setFormElement(elements.date, date);
+        _test.selectOptionByText(elements.annotationType, annotation.getType());
+        _test.setFormElement(elements.description, annotation.getDescription());
+        _test.setFormElement(elements.date, annotation.getDate());
         _test.clickAndWait(elements.submit);
     }
 

@@ -15,19 +15,15 @@
  */
 package org.labkey.test.components.targetedms;
 
-import org.apache.http.HttpException;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
-import org.labkey.test.WebTestHelper;
 import org.labkey.test.components.BodyWebPart;
 import org.labkey.test.util.LogMethod;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.CRC32;
 
 public final class QCPlotsWebPart extends BodyWebPart
 {
@@ -153,27 +149,32 @@ public final class QCPlotsWebPart extends BodyWebPart
         return ChartType.getEnum(typeInput.getAttribute("value"));
     }
 
-    public void applyPlot()
+    public void applyRange()
     {
-
+        WebElement plotPanel = elements().plotPanel.findElement(_test.getDriver());
+        _test.click(Locator.button("Apply"));
+        _test.shortWait().until(ExpectedConditions.stalenessOf(plotPanel));
     }
 
-    public long getPlotImageCRC()
+    public void waitForPlots(Integer plotCount)
     {
-        WebElement resultImage = Locator.name("resultImage").findElement(_test.getDriver());
-        String src = resultImage.getAttribute("src");
+        if (plotCount > 0)
+            _test.waitForElements(elements().plot, plotCount);
+        else
+            _test.waitForElement(Locator.id("tiledPlotPanel").withText("There were no records found. The date filter applied may be too restrictive."));
+    }
 
-        try
+    public List<QCPlot> getPlots()
+    {
+        List<WebElement> plotEls = elements().plot.findElements(_test.getDriver());
+        List<QCPlot> plots = new ArrayList<>();
+
+        for (WebElement plotEl : plotEls)
         {
-            String response = WebTestHelper.getHttpGetResponseBody(src);
-            CRC32 crc = new CRC32();
-            crc.update(response.getBytes());
-            return crc.getValue();
+            plots.add(new QCPlot(plotEl));
         }
-        catch (IOException|HttpException ex)
-        {
-            throw new RuntimeException(ex);
-        }
+
+        return plots;
     }
 
     public String getSVGPlotText(String id)
@@ -188,9 +189,9 @@ public final class QCPlotsWebPart extends BodyWebPart
         List<WebElement> titleEls = elements().plotTitle.findElements(_test.getDriver());
         List<String> titles = new ArrayList<>();
 
-        for (WebElement titleEl : titleEls)
+        for (QCPlot plot : getPlots())
         {
-            titles.add(titleEl.getText());
+            titles.add(plot.getPrecursor());
         }
 
         return titles;
@@ -212,5 +213,53 @@ public final class QCPlotsWebPart extends BodyWebPart
         Locator.XPathLocator plotPanel = webPart.append(Locator.tagWithId("div", "tiledPlotPanel"));
         Locator.XPathLocator plot = plotPanel.append(Locator.tagWithClass("table", "labkey-wp"));
         Locator.XPathLocator plotTitle = plot.append(Locator.tagWithClass("span", "labkey-wp-title-text"));
+    }
+
+    public class QCPlot
+    {
+        WebElement plot;
+        String precursor;
+
+        QCPlot(WebElement plot)
+        {
+            this.plot = plot;
+            this.precursor = elements().precursor.findElement(plot).getText();
+        }
+
+        public String getPrecursor()
+        {
+            return precursor;
+        }
+
+        public List<String> getAnnotations()
+        {
+            List<WebElement> annotations = elements().annotation.findElements(plot);
+            List<String> annotationStrings = new ArrayList<>();
+
+            for (WebElement annotation : annotations)
+            {
+                annotationStrings.add(annotation.getText());
+            }
+
+            return annotationStrings;
+        }
+
+        public String getSvgText()
+        {
+            WebElement svg = elements().svg.findElement(plot);
+            return svg.getText();
+        }
+
+        private Elements elements()
+        {
+            return new Elements();
+        }
+
+        private class Elements
+        {
+            Locator precursor = Locator.css(".labkey-wp-title-text");
+            Locator svg = Locator.css("svg");
+            Locator annotation = Locator.css(".annotation");
+        }
     }
 }

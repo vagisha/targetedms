@@ -19,7 +19,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
@@ -29,6 +28,7 @@ import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaAnnotations;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.PortalHelper;
+import org.labkey.test.util.targetedms.QCHelper;
 
 import java.util.Arrays;
 import java.util.List;
@@ -92,10 +92,10 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testQCAnnotations()
     {
-        final String INSTRUMENT_CHANGE = "Instrumentation Change";
-        final String REAGENT_CHANGE = "Reagent Change";
-        final String TECHNICIAN_CHANGE = "Technician Change";
-        final String annotationTypeCandy = "Candy Change";
+        QCHelper.Annotation instrumentChange = new QCHelper.Annotation("Instrumentation Change", "We changed it", "2013-08-22");
+        QCHelper.Annotation reagentChange = new QCHelper.Annotation("Reagent Change", "New reagents", "2013-08-10");
+        QCHelper.Annotation technicianChange = new QCHelper.Annotation("Technician Change", "New guy on the scene", "2013-08-10");
+        QCHelper.Annotation candyChange = new QCHelper.Annotation("Candy Change", "New candies!", "2013-08-21");
 
         List<String> expectedWebParts = Arrays.asList(QCAnnotationWebPart.DEFAULT_TITLE, QCAnnotationTypeWebPart.DEFAULT_TITLE);
 
@@ -108,19 +108,30 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         QCAnnotationWebPart qcAnnotationWebPart = qcAnnotations.getQcAnnotationWebPart();
 
-        qcAnnotationWebPart.startInsert().insert(INSTRUMENT_CHANGE, "We changed it", "2013-08-22");
-        qcAnnotationWebPart.startInsert().insert(REAGENT_CHANGE, "New reagents", "2013-08-10");
-        qcAnnotationWebPart.startInsert().insert(TECHNICIAN_CHANGE, "New guy on the scene", "2013-08-10");
+        qcAnnotationWebPart.startInsert().insert(instrumentChange);
+        qcAnnotationWebPart.startInsert().insert(reagentChange);
+        qcAnnotationWebPart.startInsert().insert(technicianChange);
 
         QCAnnotationTypeWebPart qcAnnotationTypeWebPart = qcAnnotations.getQcAnnotationTypeWebPart();
 
-        qcAnnotationTypeWebPart.startInsert().insert(annotationTypeCandy, "This happens anytime we get new candies", "808080");
+        qcAnnotationTypeWebPart.startInsert().insert(candyChange.getType(), "This happens anytime we get new candies", "808080");
 
-        qcAnnotationWebPart.startInsert().insert(annotationTypeCandy, "New candies!", "2013-08-21");
+        qcAnnotationWebPart.startInsert().insert(candyChange);
 
-        // TODO: we need to add more validation of the plots after we switch over to the labkey viz api
         clickTab("Panorama Dashboard");
-        sleep(10000);
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        List<QCPlotsWebPart.QCPlot> qcPlots = qcPlotsWebPart.getPlots();
+
+        for (QCPlotsWebPart.QCPlot plot : qcPlots)
+        {
+            List<String> annotations = plot.getAnnotations();
+        }
+    }
+
+    @Test
+    public void testQCPlots()
+    {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
 
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
@@ -133,23 +144,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals(QCPlotsWebPart.ChartType.RETENTION, initialType);
         assertEquals("2013-08-09", initialStartDate);
         assertEquals("2013-08-27", initialEndDate);
-        assertElementPresent(Locator.css(".annotation"));
-        assertTextPresent("ATEEQLK");
-        assertTextPresent("FFVAPFPEVFGK");
-        assertTextPresent("GASIVEDK");
-        assertTextPresent("LVNELTEFAK");
-        assertTextPresent("VLDALDSIK");
-        assertTextPresent("VLVLDTDYK");
-        assertTextPresent("VYVEELKPTPEGDLEILLQK");
-        qcPlotsWebPart.setStartDate("2014-08-09");
-        qcPlotsWebPart.setEndDate("2014-08-27");
-        clickButton("Apply",0);
-        sleep(2000);
-        assertTextPresent("There were no records found. The date filter applied may be too restrictive.");
-        qcPlotsWebPart.setStartDate("2013-08-09");
-        qcPlotsWebPart.setEndDate("2013-08-27");
-        clickButton("Apply",0);
-        sleep(2000);
+
         for (QCPlotsWebPart.Scale scale : QCPlotsWebPart.Scale.values())
         {
             //long initialCRC = qcPlotsWebPart.getPlotImageCRC();
@@ -175,6 +170,22 @@ public class TargetedMSQCTest extends TargetedMSTest
                 assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
             }
         }
+    }
 
+    @Test
+    public void testBadPlotRange()
+    {
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+
+        qcPlotsWebPart.setStartDate("2014-08-09");
+        qcPlotsWebPart.setEndDate("2014-08-27");
+        qcPlotsWebPart.applyRange();
+        qcPlotsWebPart.waitForPlots(0);
+
+        qcPlotsWebPart.setStartDate("2013-08-09");
+        qcPlotsWebPart.setEndDate("2013-08-27");
+        qcPlotsWebPart.applyRange();
+        qcPlotsWebPart.waitForPlots(PRECURSORS.length);
     }
 }
