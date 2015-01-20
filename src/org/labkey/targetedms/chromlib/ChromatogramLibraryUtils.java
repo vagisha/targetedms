@@ -86,7 +86,7 @@ public class ChromatogramLibraryUtils
         }
 
         propMap.put(propMapKey, Integer.toString(newRevision));
-        PropertyManager.saveProperties(propMap);
+        propMap.save();
 
         // write the library to a file every time there is an increment
         writeLibrary(container, newRevision);
