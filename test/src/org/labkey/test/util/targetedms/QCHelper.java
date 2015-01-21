@@ -24,28 +24,10 @@ public class QCHelper
             this.date = date;
         }
 
-        @Override
-        public boolean equals(Object o)
+        public Annotation(String type, String description)
         {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Annotation that = (Annotation) o;
-
-            if (!date.equals(that.date)) return false;
-            if (!description.equals(that.description)) return false;
-            if (!type.equals(that.type)) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = type.hashCode();
-            result = 31 * result + description.hashCode();
-            result = 31 * result + date.hashCode();
-            return result;
+            this.type = type;
+            this.description = description;
         }
 
         public String getType()
@@ -61,6 +43,31 @@ public class QCHelper
         public String getDate()
         {
             return date;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Annotation that = (Annotation) o;
+
+            if (!description.equals(that.description)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return description.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return getDescription();
         }
     }
 
@@ -83,28 +90,6 @@ public class QCHelper
             this.color = color;
         }
 
-        @Override
-        public boolean equals(Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            AnnotationType that = (AnnotationType) o;
-
-            if (!color.equals(that.color)) return false;
-            if (!name.equals(that.name)) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = name.hashCode();
-            result = 31 * result + color.hashCode();
-            return result;
-        }
-
         public String getName()
         {
             return name;
@@ -118,6 +103,31 @@ public class QCHelper
         public String getColor()
         {
             return color;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            AnnotationType that = (AnnotationType) o;
+
+            if (!name.equals(that.name)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return name.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return getName();
         }
     }
 }

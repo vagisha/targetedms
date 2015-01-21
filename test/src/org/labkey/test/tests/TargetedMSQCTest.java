@@ -15,6 +15,8 @@
  */
 package org.labkey.test.tests;
 
+import org.apache.commons.collections15.Bag;
+import org.apache.commons.collections15.bag.HashBag;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -23,6 +25,7 @@ import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
 import org.labkey.test.components.targetedms.QCAnnotationWebPart;
+import org.labkey.test.components.targetedms.QCPlot;
 import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaAnnotations;
@@ -121,11 +124,17 @@ public class TargetedMSQCTest extends TargetedMSTest
         clickTab("Panorama Dashboard");
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        List<QCPlotsWebPart.QCPlot> qcPlots = qcPlotsWebPart.getPlots();
+        List<QCPlot> qcPlots = qcPlotsWebPart.getPlots();
 
-        for (QCPlotsWebPart.QCPlot plot : qcPlots)
+        Bag<QCHelper.Annotation> expectedAnnotations = new HashBag<>();
+        expectedAnnotations.add(instrumentChange);
+        expectedAnnotations.add(reagentChange);
+        expectedAnnotations.add(technicianChange);
+        expectedAnnotations.add(candyChange);
+        for (QCPlot plot : qcPlots)
         {
-            List<String> annotations = plot.getAnnotations();
+            Bag<QCHelper.Annotation> plotAnnotations = new HashBag<>(plot.getAnnotations());
+            assertEquals("Wrong annotations in plot: " + plot.getPrecursor(), expectedAnnotations, plotAnnotations);
         }
     }
 
@@ -147,9 +156,6 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         for (QCPlotsWebPart.Scale scale : QCPlotsWebPart.Scale.values())
         {
-            //long initialCRC = qcPlotsWebPart.getPlotImageCRC();
-            //qcPlotsWebPart.setScale(scale);
-            //assertFalse(initialCRC == qcPlotsWebPart.getPlotImageCRC());
             if (scale != qcPlotsWebPart.getCurrentScale())
             {
                 String initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
@@ -160,9 +166,6 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         for (QCPlotsWebPart.ChartType type : QCPlotsWebPart.ChartType.values())
         {
-            //long initialCRC = qcPlotsWebPart.getPlotImageCRC();
-            //qcPlotsWebPart.setChartType(type);
-            //assertFalse(initialCRC == qcPlotsWebPart.getPlotImageCRC());
             if (type != qcPlotsWebPart.getCurrentChartType())
             {
                 String initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
