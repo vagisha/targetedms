@@ -1,6 +1,6 @@
-// LastChangedDate: 2012-12-21 16:04:41 -0800 (Fri, 21 Dec 2012) 
-// LastChangedBy: vagisha@gmail.com 
-// LastChangedRevision: 49 
+// $LastChangedDate: 2012-12-21 16:04:41 -0800 (Fri, 21 Dec 2012) $
+// $LastChangedBy: vagisha@gmail.com $
+// $LastChangedRevision: 49 $
 
 /* Javascript plotting library for jQuery, v. 0.6.
  *
@@ -1676,7 +1676,7 @@
                 
                 ctx.fillStyle = series.color;
                 ctx.textAlign = "center";
-        		ctx.font = '12px Arial';
+        		ctx.font = '11px Arial';
         		if(series.labelType == 'mz')
         			ctx.font = '11px Arial';
         		

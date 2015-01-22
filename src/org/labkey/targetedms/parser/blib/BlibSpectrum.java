@@ -15,6 +15,10 @@
 
 package org.labkey.targetedms.parser.blib;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * User: vsharma
  * Date: 5/5/12
@@ -34,8 +38,7 @@ public class BlibSpectrum
     private int _copies;
     private int _numPeaks;
 
-    private double[] _mz;
-    private float[] _intensity;
+    private List<Peak> _peakList;
 
     public int getBlibId()
     {
@@ -117,26 +120,6 @@ public class BlibSpectrum
         _copies = copies;
     }
 
-    public double[] getMz()
-    {
-        return _mz;
-    }
-
-    public void setMz(double[] mz)
-    {
-        _mz = mz;
-    }
-
-    public float[] getIntensity()
-    {
-        return _intensity;
-    }
-
-    public void setIntensity(float[] intensity)
-    {
-        _intensity = intensity;
-    }
-
     public int getNumPeaks()
     {
         return _numPeaks;
@@ -145,5 +128,52 @@ public class BlibSpectrum
     public void setNumPeaks(int numPeaks)
     {
         _numPeaks = numPeaks;
+    }
+
+    void setMzAndIntensity (double[] mzArr, float[] intensityArr)
+    {
+
+        _peakList = new ArrayList<>(mzArr.length);
+
+        for(int i = 0; i < mzArr.length; i++)
+        {
+            _peakList.add(new Peak(mzArr[i], intensityArr[i]));
+        }
+
+        // Sort the list
+        Collections.sort(_peakList);
+    }
+
+    public List<Peak> getPeaks()
+    {
+        return Collections.unmodifiableList(_peakList);
+    }
+
+    public static class Peak implements Comparable<Peak>
+    {
+        private final double _mz;
+        private final float _intensity;
+
+        public Peak(double mz, float intensity)
+        {
+            _mz = mz;
+            _intensity = intensity;
+        }
+
+        public double getMz()
+        {
+            return _mz;
+        }
+
+        public float getIntensity()
+        {
+            return _intensity;
+        }
+
+        @Override
+        public int compareTo(Peak o)
+        {
+            return Double.valueOf(this.getMz()).compareTo(o.getMz());
+        }
     }
 }

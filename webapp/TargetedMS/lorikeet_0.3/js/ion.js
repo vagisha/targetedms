@@ -1,6 +1,6 @@
-// $LastChangedDate: 2013-09-02 02:53:37 -0700 (Mon, 02 Sep 2013) $
-// $LastChangedBy: vagisha@gmail.com $
-// $LastChangedRevision: 56 $
+// $LastChangedDate: 2014-07-07 09:25:30 -0700 (Mon, 07 Jul 2014) $
+// $LastChangedBy: mriffle@uw.edu $
+// $LastChangedRevision: 64 $
 
 function Ion (t, color, charge, terminus) {
 	this.type = t;
@@ -88,7 +88,7 @@ var MASS_O_16 = 15.99491461956;  // O(16) Source: http://en.wikipedia.org/wiki/I
 var MASS_O_18 = 17.9991610;      // O(18) Source: http://en.wikipedia.org/wiki/Isotopes_of_oxygen
 
 // average masses
-var MASS_H = 1.00782504; // Source: http://en.wikipedia.org/wiki/Isotopes_of_hydrogen
+var MASS_H = 1.00794; 	 // Source: http://www.unimod.org/masses.html
 var MASS_C = 12.0107;    // Source: http://en.wikipedia.org/wiki/Isotopes_of_carbon
 var MASS_N = 14.0067;	 // Source: http://en.wikipedia.org/wiki/Isotopes_of_nitrogen
 var MASS_O = 15.9994;	 // Source: http://en.wikipedia.org/wiki/Isotopes_of_oxygen

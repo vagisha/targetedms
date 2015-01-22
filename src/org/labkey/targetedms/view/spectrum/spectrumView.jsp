@@ -30,8 +30,7 @@
 
 if (bean.getSpectrum() != null)
 {
-    double[] mzs = bean.getSpectrum().getMz();
-    float[] intensities = bean.getSpectrum().getIntensity();
+
 %>
 
 <!--[if IE]><script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/lorikeet_0.3/js/excanvas.min.js"></script><![endif]-->

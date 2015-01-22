@@ -136,8 +136,7 @@ public class BlibSpectrumReader
                 double[] peakMzs = uncompressPeakMz(mzsCompressed, spectrum.getNumPeaks());
                 float[] peakIntensities = uncompressPeakIntensities(intensCompressed, spectrum.getNumPeaks());
 
-                spectrum.setMz(peakMzs);
-                spectrum.setIntensity(peakIntensities);
+                spectrum.setMzAndIntensity(peakMzs, peakIntensities);
             }
         }
         catch (DataFormatException e)

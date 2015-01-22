@@ -1,6 +1,6 @@
-// $LastChangedDate: 2013-09-02 02:53:37 -0700 (Mon, 02 Sep 2013) $
+// $LastChangedDate: 2015-01-15 22:09:18 -0800 (Thu, 15 Jan 2015) $
 // $LastChangedBy: vagisha@gmail.com $
-// $LastChangedRevision: 56 $
+// $LastChangedRevision: 65 $
 
 (function($) {
 
@@ -37,7 +37,13 @@
                 showIonTable: true,
                 showViewingOptions: true,
                 showOptionsTable: true,
-                showSequenceInfo: true
+                showSequenceInfo: true,
+                labelImmoniumIons: true,
+                labelPrecursorPeak: true,
+                labelReporters: false,
+				tooltipZIndex: null,
+                showMassErrorPlot: false,
+                massErrorPlotDefaultUnit: massErrorType_Da
         };
 			
 	    var options = $.extend(true, {}, defaults, opts); // this is a deep copy
@@ -51,10 +57,15 @@
 	};
 
     var index = 0;
+    var massErrorType_Da = 'Da';
+    var massErrorType_ppm = 'ppm';
 
     var elementIds = {
             massError: "massError",
             msPlot: "msPlot",
+            massErrorPlot: "massErrorPlot",
+            massErrorPlot_unit: "massErrorPlot_unit",
+            massErrorPlot_option: "massErrorPlot_option",
             msmsplot: "msmsplot",
             ms1plot_zoom_out: "ms1plot_zoom_out",
             ms1plot_zoom_in: "ms1plot_zoom_in",
@@ -84,7 +95,9 @@
             ionTable: "ionTable",
             fileinfo: "fileinfo",
             seqinfo: "seqinfo",
-            peakDetect: "peakDetect"
+            peakDetect: "peakDetect",
+            immoniumIons: "immoniumIons",
+            reporterIons: "reporterIons"
 	};
 
     function getElementId(container, elementId){
@@ -156,6 +169,15 @@
             showModInfo(container, options);
         }
 
+        // calculate precursor peak label
+        calculatePrecursorPeak(container);
+
+        // calculate immonium ions
+        calculateImmoniumIons(container);
+
+        // Calculate reporter ion labels, if required
+        calculateReporterIons(container);
+
         createPlot(container, getDatasets(container)); // Initial MS/MS Plot
 
         if(options.ms1peaks && options.ms1peaks.length > 0) {
@@ -220,7 +242,7 @@
             setupMs1PlotInteractions(container);
         }
 
-        setupInteractions(container);
+        setupInteractions(container, options);
 
         if(options.showIonTable) {
             makeIonTable(container);
@@ -266,10 +288,8 @@
         container.data("massError", options.massError);
 
         var maxInt = getMaxInt(options);
-        var xmin = options.peaks[0][0];
-        var xmax = options.peaks[options.peaks.length - 1][0];
-        var padding = (xmax - xmin) * 0.025;
-        // console.log("x-axis padding: "+padding);
+        var __xrange = getPlotXRange(options);
+
         var plotOptions =  {
                 series: {
                     peaks: { show: true, lineWidth: 1, shadowSize: 0},
@@ -283,8 +303,8 @@
                         borderWidth: 1,
                         labelMargin: 1},
                 xaxis: { tickLength: 3, tickColor: "#000",
-                         min: xmin - padding,
-                         max: xmax + padding},
+                         min: __xrange.xmin,
+                         max: __xrange.xmax},
                 yaxis: { tickLength: 0, tickColor: "#000",
                          max: maxInt*1.1,
                          ticks: [0, maxInt*0.1, maxInt*0.2, maxInt*0.3, maxInt*0.4, maxInt*0.5,
@@ -475,6 +495,7 @@
                 resetZoom(container);
 			});
     	}
+
     	// we have re-calculated and re-drawn everything..
     	container.data("massTypeChanged", false);
     	container.data("massErrorChanged",false);
@@ -482,12 +503,139 @@
     	container.data("peakLabelTypeChanged", false);
     	container.data("selectedNeutralLossChanged", false);
         container.data("plot", plot);
+
+        // Draw the peak mass error plot
+        plotPeakMassErrorPlot(container, datasets);
+        if(container.data("options").showMassErrorPlot === false)
+        {
+            $(getElementSelector(container, elementIds.massErrorPlot)).hide();
+        }
+    }
+
+    function getPlotXRange(options) {
+        var xmin = options.peaks[0][0];
+        var xmax = options.peaks[options.peaks.length - 1][0];
+        var xpadding = (xmax - xmin) * 0.025;
+        // console.log("x-axis padding: "+xpadding);
+        return {xmin:xmin - xpadding, xmax:xmax + xpadding};
+    }
+
+    function plotPeakMassErrorPlot(container, datasets) {
+        var data = [];
+        var options = container.data("options");
+
+        var daError = options.massErrorPlotDefaultUnit === 'Da';
+
+        var minMassError = 0;
+        var maxMassError = 0;
+        for (var i = 0; i < datasets.length; i += 1) {
+            var series = datasets[i];
+            var seriesType = series.labelType;
+            if (seriesType && seriesType === 'ion') {
+                var seriesData = series.data;
+                var s_data = [];
+                for (var j = 0; j < seriesData.length; j += 1) {
+                    var observedMz = seriesData[j][0];
+                    var theoreticalMz = seriesData[j][2];
+                    var massError = theoreticalMz - observedMz;
+                    if (!daError) {
+                        massError = ((massError) / observedMz) * 1000000;
+                    }
+                    minMassError = Math.min(minMassError, massError);
+                    maxMassError = Math.max(maxMassError, massError);
+                    s_data.push([seriesData[j][0], massError]);
+                }
+                data.push({data:s_data, color:series.color, labelType:'none'});
+            }
+        }
+        var placeholder = $(getElementSelector(container, elementIds.massErrorPlot));
+
+        var __xrange = getPlotXRange(options);
+
+        var ypadding = Math.abs(maxMassError - minMassError) * 0.025;
+
+        // the MS/MS plot should have been created by now.  This is a hack to get the plots aligned.
+        // We will set the y-axis labelWidth to this value.
+        var labelWidth = container.data("plot").getAxes().yaxis.labelWidth;
+
+        var massErrorPlotOptions = {
+            series:{data:data, points:{show:true, fill:true, radius:1}, shadowSize:0},
+            grid:{ show:true,
+                hoverable:true,
+                autoHighlight:false,
+                clickable:false,
+                borderWidth:1,
+                labelMargin:1,
+                markings:[
+                    {yaxis:{from:0, to:0}, color:"#555555", lineWidth:0.5}
+                ]  // draw a horizontal line at y=0
+            },
+            selection:{ mode:"xy", color:"#F0E68C" },
+            xaxis:{ tickLength:3, tickColor:"#000",
+                min:__xrange.xmin,
+                max:__xrange.xmax},
+            yaxis:{ tickLength:0, tickColor:"#fff",
+                min:minMassError - ypadding,
+                max:maxMassError + ypadding,
+                labelWidth:labelWidth }
+        };
+
+
+        // TOOLTIPS
+        $(getElementSelector(container, elementIds.massErrorPlot)).bind("plothover", function (event, pos, item) {
+
+            displayTooltip(item, container, options, "m/z", "error");
+        });
+
+        // CHECKBOX TO SHOW OR HIDE MASS ERROR PLOT
+        var massErrorPlot = $.plot(placeholder, data, massErrorPlotOptions);
+        var o = massErrorPlot.getPlotOffset();
+        placeholder.append('<div id="' + getElementId(container, elementIds.massErrorPlot_unit) + '" class="link"  '
+            + 'style="position:absolute; left:'
+            + (o.left + 5) + 'px;top:' + (o.top + 4) + 'px;'
+            + 'background-color:yellow; font-style:italic">'
+            + options.massErrorPlotDefaultUnit + '</div>');
+        $(getElementSelector(container, elementIds.massErrorPlot_unit)).click(function () {
+            var unit = $(this).text();
+
+            if (unit === massErrorType_Da) {
+                $(this).text(massErrorType_ppm);
+                options.massErrorPlotDefaultUnit = massErrorType_ppm;
+            }
+            else if (unit === massErrorType_ppm) {
+                $(this).text(massErrorType_Da);
+                options.massErrorPlotDefaultUnit = massErrorType_Da;
+            }
+            plotPeakMassErrorPlot(container, datasets);
+        });
+    }
+
+    function displayTooltip(item, container, options, tooltip_xlabel, tooltip_ylabel) {
+
+        if ($(getElementSelector(container, elementIds.enableTooltip) + ":checked").length > 0) {
+            if (item) {
+                if (container.data("previousPoint") != item.datapoint) {
+                    container.data("previousPoint", item.datapoint);
+
+                    $(getElementSelector(container, elementIds.msmstooltip)).remove();
+                    var x = item.datapoint[0].toFixed(2),
+                        y = item.datapoint[1].toFixed(2);
+
+                    showTooltip(container, item.pageX, item.pageY,
+                        tooltip_xlabel + ": " + x + "<br>" + tooltip_ylabel + ": " + y, options);
+                }
+            }
+            else {
+                $(getElementSelector(container, elementIds.msmstooltip)).remove();
+                container.data("previousPoint", null);
+            }
+        }
     }
 	
 	// -----------------------------------------------
 	// SET UP INTERACTIVE ACTIONS FOR MS/MS PLOT
 	// -----------------------------------------------
-	function setupInteractions (container) {
+	function setupInteractions (container, options) {
 
 		// ZOOMING
 	    $(getElementSelector(container, elementIds.msmsplot)).bind("plotselected", function (event, ranges) {
@@ -512,6 +660,9 @@
 		$(getElementSelector(container, elementIds.update)).click(function() {
 			container.data("zoomRange", null); // zoom out fully
 			setMassError(container);
+            calculatePrecursorPeak(container);
+            calculateImmoniumIons(container);
+            calculateReporterIons(container);
 			createPlot(container, getDatasets(container));
 			makeIonTable(container);
 	   	});
@@ -519,28 +670,25 @@
 		// TOOLTIPS
 		$(getElementSelector(container, elementIds.msmsplot)).bind("plothover", function (event, pos, item) {
 
-	        if($(getElementSelector(container, elementIds.enableTooltip)+":checked").length > 0) {
-	            if (item) {
-	                if (container.data("previousPoint") != item.datapoint) {
-	                    container.data("previousPoint", item.datapoint);
-	                    
-	                    $(getElementSelector(container, elementIds.msmstooltip)).remove();
-	                    var x = item.datapoint[0].toFixed(2),
-	                        y = item.datapoint[1].toFixed(2);
-	                    
-	                    showTooltip(container, item.pageX, item.pageY,
-	                                "m/z: " + x + "<br>intensity: " + y);
-	                }
-	            }
-	            else {
-	                $(getElementSelector(container, elementIds.msmstooltip)).remove();
-	                container.data("previousPoint", null);
-	            }
-	        }
+            displayTooltip(item, container, options, "m/z", "intensity");
 	    });
 		$(getElementSelector(container, elementIds.enableTooltip)).click(function() {
 			$(getElementSelector(container, elementIds.msmstooltip)).remove();
 		});
+
+        // PLOT MASS ERROR CHECKBOX
+        $(getElementSelector(container, elementIds.massErrorPlot_option)).click(function() {
+            var plotDiv = $(getElementSelector(container, elementIds.massErrorPlot));
+            if($(this).is(':checked'))
+            {
+                plotDiv.show();
+            }
+            else
+            {
+                plotDiv.hide();
+            }
+        });
+
 		
 		// SHOW / HIDE ION SERIES; UPDATE ON MASS TYPE CHANGE; 
 		// PEAK ASSIGNMENT TYPE CHANGED; PEAK LABEL TYPE CHANGED
@@ -548,6 +696,15 @@
 		ionChoiceContainer.find("input").click(function() {
             plotAccordingToChoices(container)
         });
+
+        $(getElementSelector(container, elementIds.immoniumIons)).click(function() {
+            plotAccordingToChoices(container);
+        });
+
+        $(getElementSelector(container, elementIds.reporterIons)).click(function() {
+            plotAccordingToChoices(container);
+        });
+
 		
 		var neutralLossContainer = $(getElementSelector(container, elementIds.nl_choice));
 		neutralLossContainer.find("input").click(function() {
@@ -568,6 +725,9 @@
 
 	    container.find("input[name='"+getRadioName(container, "peakAssignOpt")+"']").click(function() {
 	    	container.data("peakAssignmentTypeChanged", true);
+            calculatePrecursorPeak(container);
+            calculateImmoniumIons(container);
+            calculateReporterIons(container);
 	    	plotAccordingToChoices(container);
 	    });
 
@@ -587,7 +747,7 @@
 	    
 	    
 	    // MOVING THE ION TABLE
-	    makeIonTableMovable(container);
+	    makeIonTableMovable(container, options);
 	    
 	    // CHANGING THE PLOT SIZE
 	    makePlotResizable(container);
@@ -638,8 +798,9 @@
 		}
 	}
 	
-	function showTooltip(container, x, y, contents) {
-        $('<div id="'+getElementId(container, elementIds.msmstooltip)+'">' + contents + '</div>').css( {
+	function showTooltip(container, x, y, contents, options) {
+	
+		var tooltipCSS = {
             position: 'absolute',
             display: 'none',
             top: y + 5,
@@ -647,8 +808,15 @@
             border: '1px solid #fdd',
             padding: '2px',
             'background-color': '#F0E68C',
-            opacity: 0.80
-        }).appendTo("body").fadeIn(200);
+            opacity: 0.80 };
+			
+		if ( options.tooltipZIndex !== undefined && options.tooltipZIndex !== null ) {
+		
+			tooltipCSS["z-index"] = options.tooltipZIndex;
+		}
+	
+        $('<div id="'+getElementId(container, elementIds.msmstooltip)+'">' + contents + '</div>')
+				.css( tooltipCSS ).appendTo("body").fadeIn(200);
     }
 	
 	function makePlotResizable(container) {
@@ -665,12 +833,17 @@
 				//console.log(ui.value);
 				options.width = width;
 				$(getElementSelector(container, elementIds.msmsplot)).css({width: width});
+                $(getElementSelector(container, elementIds.massErrorPlot)).css({width: width});
+
 				plotAccordingToChoices(container);
 				if(options.ms1peaks && options.ms1peaks.length > 0) {
 					$(getElementSelector(container, elementIds.msPlot)).css({width: width});
 					createMs1Plot(container);
 				}
 				$(getElementSelector(container, elementIds.slider_width_val)).text(width);
+				if ( options.sizeChangeCallbackFunction ) {
+					options.sizeChangeCallbackFunction();
+				}
 			}
 		});
 		
@@ -686,6 +859,9 @@
 				$(getElementSelector(container, elementIds.msmsplot)).css({height: height});
 				plotAccordingToChoices(container);
 				$(getElementSelector(container, elementIds.slider_height_val)).text(height);
+				if ( options.sizeChangeCallbackFunction ) {
+					options.sizeChangeCallbackFunction();
+				}
 			}
 		});
 	}
@@ -771,14 +947,154 @@
 		for(var i = 0; i < seriesMatches.length; i += 1) {
 			data.push(seriesMatches[i]);
 		}
-		
+
+        // add immonium ions
+        if(labelImmoniumIons(container))
+        {
+            data.push(container.data("immoniumIons"));
+        }
+
+        // add precursor peak
+        if(container.data("precursorPeak"))
+        {
+            data.push(container.data("precursorPeak"));
+        }
+
+        // add reporter ions
+        if(labelReporterIons(container))
+        {
+            var reporterSeries = container.data("reporterSeries");
+            for(var i = 0; i < reporterSeries.length; i += 1)
+            {
+                var matches = reporterSeries[i].matches;
+                if(matches)  data.push(matches);
+            }
+        }
+
 		// add any user specified extra peaks
 		for(var i = 0; i < options.extraPeakSeries.length; i += 1) {
 			data.push(options.extraPeakSeries[i]);
 		}
 		return data;
 	}
-	
+
+    function labelImmoniumIons(container)
+    {
+        return $(getElementSelector(container, elementIds.immoniumIons)).is(":checked")
+    }
+
+    function labelReporterIons(container)
+    {
+        return $(getElementSelector(container, elementIds.reporterIons)).is(":checked");
+    }
+
+    function calculateImmoniumIons(container)
+    {
+        var options = container.data("options");
+
+        var peaks = options.peaks;
+
+        // immonium ions (70 P, 72 V, 86 I/L, 110 H, 120 F, 136 Y, 159 W)
+        var immoniumIonTypes = [{mass:70.0, aa:'P'},
+                                {mass:72.0, aa:'V'},
+                                {mass:86.0, aa:'I/L'},
+                                {mass:110.0, aa:'H'},
+                                {mass:120.0, aa:'F'},
+                                {mass:136.0, aa:'Y'},
+                                {mass:159.0, aa:'W'}]
+
+        var immoniumIonMatches = [];
+        var labels = [];
+        for(var i = 0; i < immoniumIonTypes.length; i += 1)
+        {
+            var ion = immoniumIonTypes[i];
+            var match = getMatchingPeakForMz(container, peaks, ion.mass);
+            if(match.bestPeak)
+            {
+                immoniumIonMatches.push([match.bestPeak[0], match.bestPeak[1]]);
+                labels.push(ion.aa + '-' + match.bestPeak[0].toFixed(1));
+            }
+        }
+        container.data("immoniumIons", {data: immoniumIonMatches, labels: labels, color: "#008000"});
+    }
+
+    function calculatePrecursorPeak(container)
+    {
+        var options = container.data("options");
+        if(options.labelPrecursorPeak && options.theoreticalMz)
+        {
+            var peaks = options.peaks;
+            var precursorMz = options.theoreticalMz;
+            var match = getMatchingPeakForMz(container, peaks, precursorMz);
+            if(match.bestPeak)
+            {
+                var label = 'M';
+                if(options.charge)
+                {
+                    for(var i = 0; i < options.charge; i += 1) label += "+";
+                }
+                container.data("precursorPeak", {data: [[match.bestPeak[0], match.bestPeak[1]]], labels: [label], color: "#ffd700"})
+            }
+        }
+    }
+
+    function calculateReporterIons(container)
+    {
+        var options = container.data("options");
+
+        // m/z: 113, 114, 115, 116, 117, 118, 119, and 121
+        var itraqIons = [113.0, 114.0, 115.0, 116.0, 117.0, 118.0, 119.0, 121.0];
+
+        var tmtIons = [126.0, 127.0, 128.0, 129.0, 130.0, 131.0];
+
+        var reporterSeries = [];
+        reporterSeries.push({color: "#2f4f4f", ions: itraqIons});  // DarkSlateBlue
+        reporterSeries.push({color: "#556b2f", ions: tmtIons});  // DarkOliveGreen
+
+        for(var i = 0; i < reporterSeries.length; i += 1)
+        {
+            var series = reporterSeries[i];
+            var matches = calculateReporters(series.ions, series.color, container);
+            reporterSeries[i].matches = matches;
+        }
+
+            container.data("reporterSeries", reporterSeries);
+    }
+
+    function calculateReporters(ionMzArray, color, container)
+    {
+        var options = container.data("options");
+        var peaks = options.peaks;
+        var matches = [];
+        for(var i = 0; i < ionMzArray.length; i += 1)
+        {
+            var match = getMatchingPeakForMz(container, peaks, ionMzArray[i]);
+            if(match.bestPeak)
+            {
+                matches.push([match.bestPeak[0], match.bestPeak[1]]);
+            }
+        }
+        var labels = [];
+        if(matches.length > 0)
+        {
+            var maxIntensity = 0;
+            for(var i = 0; i < matches.length; i += 1)
+            {
+                maxIntensity = Math.max(maxIntensity, matches[i][1]);
+            }
+
+            for(var i = 0; i < matches.length; i += 1)
+            {
+                var intensity = matches[i][1];
+                var rank = Math.round(((intensity/maxIntensity) * 100.0));
+                var mzRounded = matches[i][0].toFixed(1);
+                labels.push(mzRounded + " (" + rank + "%)");
+            }
+            return {data: matches, labels: labels, color:color};
+        }
+    }
+
+
 	//-----------------------------------------------
 	// SELECTED ION TYPES
 	// -----------------------------------------------
@@ -841,7 +1157,7 @@
 	}
 	
 	// ---------------------------------------------------------
-	// CALCUALTE THEORETICAL MASSES FOR THE SELECTED ION SERIES
+	// CALCULATE THEORETICAL MASSES FOR THE SELECTED ION SERIES
 	// ---------------------------------------------------------
 	function calculateTheoreticalSeries(container, selectedIons) {
 
@@ -927,6 +1243,11 @@
         return container.find("input[name='"+getRadioName(container, "massTypeOpt")+"']:checked").val();
     }
 
+    function getPeakAssignmentType(container)
+    {
+        return container.find("input[name='"+getRadioName(container, "peakAssignOpt")+"']:checked").val();
+    }
+
 	// -----------------------------------------------
 	// MATCH THEORETICAL MASSES WITH PEAKS IN THE SCAN
 	// -----------------------------------------------
@@ -941,7 +1262,7 @@
 		
 		var dataSeries = [];
 		
-		var peakAssignmentType = container.find("input[name='"+getRadioName(container, "peakAssignOpt")+"']:checked").val();
+		var peakAssignmentType = getPeakAssignmentType(container);
 		var peakLabelType = container.find("input[name='"+getRadioName(container, "peakLabelOpt")+"']:checked").val();
         var massType = getMassType(container);
 
@@ -1109,69 +1430,87 @@
 	// allPeaks -- array with all the scan peaks
 	// peakIndex -- current index in peaks array
 	// Returns the index of the matching peak, if one is found
-	function getMatchForIon(sion, matchData, allPeaks, peakIndex, massTolerance, peakAssignmentType, neutralLosses, massType) {
+    function getMatchForIon(sion, matchData, allPeaks, peakIndex, massTolerance, peakAssignmentType, neutralLosses, massType) {
 		
-		var bestPeak = null;
 		if(!neutralLosses)
 			sion.match = false; // reset;
 		var ionmz = ionMz(sion, neutralLosses, massType);
         var peakLabel = getLabel(sion, neutralLosses);
-		var bestDistance;
-		
-		for(var j = peakIndex; j < allPeaks.length; j += 1) {
-			 
-			var peak = allPeaks[j];
-			
-			// peak is before the current ion we are looking at
-			if(peak[0] < ionmz - massTolerance)
-				continue;
-				
-			// peak is beyond the current ion we are looking at
-			if(peak[0] > ionmz + massTolerance) {
-			
-				// if we found a matching peak for the current ion, save it
-				if(bestPeak) {
-					//console.log("found match "+sion.label+", "+ionmz+";  peak: "+bestPeak[0]);
-					matchData[0].push([bestPeak[0], bestPeak[1]]);
-					matchData[1].push(peakLabel);
-					if(!neutralLosses) {
-						sion.match = true;
-					}
-				}
-				peakIndex = j;
-				break;
-			}
-				
-			// peak is within +/- massTolerance of the current ion we are looking at
-			
-			// if this is the first peak in the range
-			if(!bestPeak) {
-				//console.log("found a peak in range, "+peak.mz);
-				bestPeak = peak;
-				bestDistance = Math.abs(ionmz - peak[0]);
-				continue;
-			}
-			
-			// if peak assignment method is Most Intense
-			if(peakAssignmentType == "intense") {
-				if(peak[1] > bestPeak[1]) {
-					bestPeak = peak;
-					continue;
-				}
-			}
-			
-			// if peak assignment method is Closest Peak
-			if(peakAssignmentType == "close") {
-				var dist = Math.abs(ionmz - peak[0]);
-				if(!bestDistance || dist < bestDistance) {
-					bestPeak = peak;
-					bestDistance = dist;
-				}
-			}
-		}
-		
+
+		var __ret = getMatchingPeak(peakIndex, allPeaks, ionmz, massTolerance, peakAssignmentType);
+
+        peakIndex = __ret.peakIndex;
+        var bestPeak = __ret.bestPeak;
+
+        // if we found a matching peak for the current ion, save it
+        if(bestPeak) {
+            // console.log("found match "+sion.label+", "+ionmz+";  peak: "+bestPeak[0] + "; theoreticalMz: " + __ret.theoreticalMz);
+            matchData[0].push([bestPeak[0], bestPeak[1], __ret.theoreticalMz]);
+            matchData[1].push(peakLabel);
+            if(!neutralLosses) {
+                sion.match = true;
+            }
+        }
+
 		return peakIndex;
 	}
+
+    function getMatchingPeakForMz(container, allPeaks, ionMz)
+    {
+        var massError = container.data("massError");
+        var peakAssignmentType = getPeakAssignmentType(container);
+        return getMatchingPeak(0, allPeaks, ionMz, massError, peakAssignmentType);
+    }
+
+    function getMatchingPeak(peakIndex, allPeaks, ionmz, massTolerance, peakAssignmentType) {
+
+        var bestDistance;
+        var bestPeak;
+        for (var j = peakIndex; j < allPeaks.length; j += 1) {
+
+            var peak = allPeaks[j];
+
+            // peak is before the current ion we are looking at
+            if (peak[0] < ionmz - massTolerance)
+                continue;
+
+            // peak is beyond the current ion we are looking at
+            if (peak[0] > ionmz + massTolerance) {
+                peakIndex = j;
+                break;
+            }
+
+            // peak is within +/- massTolerance of the current ion we are looking at
+
+            // if this is the first peak in the range
+            if (!bestPeak) {
+                //console.log("found a peak in range, "+peak.mz);
+                bestPeak = peak;
+                bestDistance = Math.abs(ionmz - peak[0]);
+                continue;
+            }
+
+            // if peak assignment method is Most Intense
+            if (peakAssignmentType == "intense") {
+                if (peak[1] > bestPeak[1]) {
+                    bestPeak = peak;
+                    continue;
+                }
+            }
+
+            // if peak assignment method is Closest Peak
+            if (peakAssignmentType == "close") {
+                var dist = Math.abs(ionmz - peak[0]);
+                if (!bestDistance || dist < bestDistance) {
+                    bestPeak = peak;
+                    bestDistance = dist;
+                }
+            }
+        }
+
+        return {peakIndex:peakIndex, bestPeak:bestPeak, theoreticalMz:ionmz};
+    }
+
 	
 
     function getPeaks(container)
@@ -1198,39 +1537,63 @@
         var peaks = container.data("options").peaks;
         var sparsePeaks = [];
 
+        var intensities = [];
+        for(var i = 0; i < peaks.length; i+= 1)
+        {
+            intensities.push(peaks[i][1]);
+        }
+        intensities.sort(function(a,b){return b-a});
+        var max_50_intensity = intensities[Math.min(intensities.length - 1, 49)];
+
+
+        var window = 50.0;
         for(var i = 0; i < peaks.length; i += 1) {
 
 			var peak = peaks[i];
 
             var intensity = peak[1];
+
+            // If this is one of the 50 most intense peaks, add it to sparse peaks
+            if(intensity >= max_50_intensity)
+            {
+                sparsePeaks.push(peak);
+                continue;
+            }
+
             var mz = peak[0];
-            var minMz = mz;
-            var maxMz = mz;
             var j = i-1;
             var totalIntensity = intensity;
             var peakCount = 1;
             // sum up the intensities in the +/- 50Da window of this peak
             var maxIntensity = intensity;
-            while((minMz >= mz - 50.0) && j >= 0)
+            var minIndex = i;
+            var maxIndex = i;
+            while(j >= 0)
             {
+                if(peaks[j][0] < mz - window)
+                    break;
+
                 if(peaks[j][1] > maxIntensity)
                 {
                     maxIntensity = peaks[j][1];
                 }
                 totalIntensity += peaks[j][1];
-                minMz = peaks[j][0];
+                minIndex = j;
                 j -= 1;
                 peakCount += 1;
             }
             j = i+1;
-            while(maxMz <= mz + 50.0 && j < peaks.length)
+            while(j < peaks.length)
             {
+                if(peaks[j][0] > mz + window)
+                    break;
+
                 if(peaks[j][1] > maxIntensity)
                 {
                     maxIntensity = peaks[j][1];
                 }
                 totalIntensity += peaks[j][1];
-                maxMz = peaks[j][0];
+                maxIndex = j;
                 j += 1;
                 peakCount += 1;
             }
@@ -1245,19 +1608,9 @@
             {
                 // calculate the standard deviation
                 var sdev = 0;
-                j = i - 1;
-                while((minMz >= mz - 50.0) && j >= 0)
+                for(var k = minIndex; k <= maxIndex; k += 1)
                 {
-                    sdev += Math.pow((peaks[j][1] - mean), 2);
-                    minMz = peaks[j][0];
-                    j -= 1;
-                }
-                j = i+1;
-                while(maxMz <= mz + 50.0 && j < peaks.length)
-                {
-                    sdev += Math.pow((peaks[j][1] - mean), 2);
-                    maxMz = peaks[j][0];
-                    j += 1;
+                    sdev += Math.pow((peaks[k][1] - mean), 2);
                 }
                 sdev = Math.sqrt(sdev / peakCount);
 
@@ -1265,7 +1618,7 @@
                 {
                     sparsePeaks.push(peak);
                 }
-                //console.log(intensity+"  "+mean+"  "+sdev);
+                // console.log(intensity+"  "+mean+"  "+sdev);
             }
 		}
         // console.log("Sparse Peak count: "+sparsePeaks.length);
@@ -1290,7 +1643,7 @@
 
         var rowspan = 2;
 
-		var parentTable = '<table cellpadding="0" cellspacing="5"> ';
+		var parentTable = '<table cellpadding="0" cellspacing="5" class="lorikeet-outer-table"> ';
 		parentTable += '<tbody> ';
 		parentTable += '<tr> ';
 
@@ -1335,6 +1688,9 @@
 
 		// placeholder for viewing options (zoom, plot size etc.)
 		parentTable += '<div id="'+getElementId(container, elementIds.viewOptionsDiv)+'" align="top" style="margin-top:15px;"></div> ';
+
+        // placeholder for peak mass error plot
+        parentTable += '<div id="'+getElementId(container, elementIds.massErrorPlot)+'" style="width:'+options.width+'px;height:100px;"></div> ';
 
 		// placeholder for ms1 plot (if data is available)
 		if(options.ms1peaks && options.ms1peaks.length > 0) {
@@ -1468,7 +1824,7 @@
 			return ionSeries.z[ion.charge];
 	}
 	
-	function makeIonTableMovable(container) {
+	function makeIonTableMovable(container, options) {
 
 		$(getElementSelector(container, elementIds.moveIonTable)).hover(
 			function(){
@@ -1487,6 +1843,10 @@
 				ionTableDiv.addClass("moved");
 				ionTableDiv.detach();
 				$(getElementSelector(container, elementIds.ionTableLoc2)).append(ionTableDiv);
+			}
+			
+			if ( options.sizeChangeCallbackFunction ) {
+				options.sizeChangeCallbackFunction();
 			}
 		});
 	}
@@ -1516,6 +1876,9 @@
 			if(options.charge) {
 				mz = Ion.getMz(neutralMass, options.charge);
 			}
+
+            // save the theoretical m/z in the options
+            options.theoreticalMz = mz;
 			
 			var mass = neutralMass + Ion.MASS_PROTON;
 			specinfo += ', MH+ '+mass.toFixed(4);
@@ -1561,6 +1924,9 @@
 			if(options.scanNum) {
 				fileinfo += ', Scan: '+options.scanNum;
 			}
+         if(options.precursorMz) {
+            fileinfo += ', Exp. m/z: '+options.precursorMz;
+         }
 			if(options.charge) {
 				fileinfo += ', Charge: '+options.charge;
 			}
@@ -1680,6 +2046,16 @@
 		myContent += '<nobr> ';
 		myContent += '<input id="'+getElementId(container, elementIds.enableTooltip)+'" type="checkbox">Enable tooltip ';
 		myContent += '</nobr> ';
+
+        // mass error plot option
+        myContent += '<nobr>';
+        myContent += '<input id="'+getElementId(container, elementIds.massErrorPlot_option)+'" type="checkbox" ';
+        if(options.showMassErrorPlot === true)
+        {
+            myContent += 'checked="checked"';
+        }
+        myContent += '>Plot mass error ';
+        myContent += '</nobr>';
 		
 		myContent += '<br>';
 		
@@ -1794,7 +2170,24 @@
             myTable += '</nobr> ';
         }
 		myTable += '</div> ';
-		
+
+        // Immonium ions
+        myTable+= '<input type="checkbox" value="true" ';
+        if(options.labelImmoniumIons == true)
+        {
+            myTable+=checked="checked"
+        }
+        myTable+= ' id="'+getElementId(container, elementIds.immoniumIons)+'"/><span style="font-weight:bold;">Immonium ions</span>';
+
+        // Reporter ions
+        myTable += "<br/>"
+        myTable+= '<input type="checkbox" value="true" ';
+        if(options.labelReporters == true)
+        {
+            myTable+=checked="checked";
+        }
+        myTable+= ' id="'+getElementId(container, elementIds.reporterIons)+'"/><span style="font-weight:bold;">Reporter ions</span>';
+
 		myTable += '</td> </tr> ';
 		
 		// mass type, mass tolerance etc.

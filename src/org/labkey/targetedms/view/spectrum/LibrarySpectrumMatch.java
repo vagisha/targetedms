@@ -118,17 +118,16 @@ public class LibrarySpectrumMatch
         if(getSpectrum() == null)
             return "[]";
 
-        double[] mzs = getSpectrum().getMz();
-        float[] intensities = getSpectrum().getIntensity();
+        List<BlibSpectrum.Peak> peakList = getSpectrum().getPeaks();
 
         StringBuilder peaks = new StringBuilder();
         peaks.append("[\n");
         boolean firstPeak = true;
-        for (int i = 0; i < mzs.length; i++)
+        for (BlibSpectrum.Peak peak: peakList)
         {
             if(!firstPeak)
                 peaks.append(",\n");
-            peaks.append("[").append(mzs[i]).append(",").append(intensities[i]).append("]");
+            peaks.append("[").append(peak.getMz()).append(",").append(peak.getIntensity()).append("]");
             firstPeak = false;
         }
         peaks.append("\n]\n");
