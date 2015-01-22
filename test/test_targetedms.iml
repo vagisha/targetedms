@@ -8,6 +8,15 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="test" />
+        <orderEntry type="module-library">
+          <library>
+            <CLASSES>
+              <root url="jar://$MODULE_DIR$/../../../../external/lib/server/collections-generic-4.01.jar!/" />
+            </CLASSES>
+            <JAVADOC />
+            <SOURCES />
+          </library>
+        </orderEntry>
   </component>
 </module>
 
