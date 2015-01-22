@@ -20,6 +20,9 @@ import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FilteredTable;
+import org.labkey.api.security.UserPrincipal;
+import org.labkey.api.security.permissions.Permission;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.targetedms.TargetedMSSchema;
 
 /**
@@ -60,5 +63,11 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
         sql.append(alias);
 
         return sql;
+    }
+
+    @Override
+    public boolean hasPermission(@NotNull UserPrincipal user, @NotNull Class<? extends Permission> perm)
+    {
+        return ReadPermission.class.equals(perm) && getContainer().hasPermission(user, perm);
     }
 }
