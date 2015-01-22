@@ -25,6 +25,7 @@ import org.labkey.api.exp.api.AbstractExperimentDataHandler;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
@@ -101,6 +102,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         {
             deleteRun(container, user, run);
         }
+        data.delete(user);
     }
 
     private void deleteRun(Container container, User user, TargetedMSRun run)
@@ -199,6 +201,13 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         run.setContainer(targetContainer);
         TargetedMSManager.updateRun(run, user);
 
+        // Delete the old entry in exp.data -- it is no longer linked to the run.
+        ExpData oldData = ExperimentService.get().getExpData(oldDataRowID);
+        if(oldData != null)
+        {
+            oldData.delete(user);
+        }
+
         if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(srcFileExt))
         {
             // Delete the Skyline file in the old location
@@ -208,6 +217,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             File oldZipDir = new File(sourceFile.getParent(), SkylineFileUtils.getBaseName(sourceFile.getName()));
             FileUtil.deleteDir(oldZipDir);
         }
+
     }
 
     private boolean skylineDocExistsInTarget(String fileName, Container targetContainer)
