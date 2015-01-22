@@ -152,8 +152,10 @@ public final class QCPlotsWebPart extends BodyWebPart
     public void applyRange()
     {
         WebElement plotPanel = elements().plotPanel.findElement(_test.getDriver());
+        WebElement panelChild = Locator.css("*").findElement(plotPanel); // The panel itself doesn't become stale, but its children do
         _test.click(Locator.button("Apply"));
-        _test.shortWait().until(ExpectedConditions.stalenessOf(plotPanel));
+        _test.shortWait().until(ExpectedConditions.stalenessOf(panelChild));
+        _test._extHelper.waitForExt3MaskToDisappear(BaseWebDriverTest.WAIT_FOR_PAGE);
     }
 
     public void waitForPlots(Integer plotCount)

@@ -535,7 +535,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
 
     failureHandler: function(response) {
         if (response.message) {
-            Ext.get(this.trendDiv).update(response.message);
+            Ext.get(this.trendDiv).update("<span>" + response.message +"</span>");
         }
         else {
             Ext.get(this.trendDiv).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
