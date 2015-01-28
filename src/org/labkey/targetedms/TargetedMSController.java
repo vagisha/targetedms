@@ -47,6 +47,7 @@ import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.BeanViewForm;
 import org.labkey.api.data.ButtonBar;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
@@ -3788,7 +3789,8 @@ public class TargetedMSController extends SpringActionController
                 try (DbScope.Transaction transaction = ExperimentService.get().ensureTransaction())
                 {
                     // Create a new experiment
-                    ExpExperiment experiment = ExperimentService.get().createExpExperiment(getContainer(), _expAnnot.getTitle());
+                    ExpExperiment experiment = ExperimentService.get().createExpExperiment(getContainer(), makeExpExperimentName(_expAnnot.getTitle()));
+                    ensureUniqueLSID(experiment);
                     experiment.save(getUser());
 
                     // Create a new entry in targetedms.experimentannotations
@@ -3812,6 +3814,35 @@ public class TargetedMSController extends SpringActionController
                 return true;
             }
             return false;
+        }
+
+        private String makeExpExperimentName(String name)
+        {
+            ColumnInfo nameCol = ExperimentService.get().getTinfoExperiment().getColumn(FieldKey.fromParts("Name"));
+            if (nameCol != null)
+            {
+                // Truncate name to the max length allowed by Experiment.Name column.
+                int maxNameLen = nameCol.getScale();
+                if (name != null && name.length() > maxNameLen)
+                {
+                    String ellipsis = "...";
+                    return name.substring(0, maxNameLen - ellipsis.length()) + ellipsis;
+                }
+            }
+
+            return name;
+        }
+
+        private void ensureUniqueLSID(ExpExperiment experiment)
+        {
+            String lsid = ExperimentService.get().generateLSID(experiment.getContainer(), ExpExperiment.class, experiment.getName());
+            int suffix = 1;
+            while(ExperimentService.get().getExpExperiment(lsid) != null)
+            {
+                String name = experiment.getName() + "_" + suffix++;
+                lsid =  ExperimentService.get().generateLSID(experiment.getContainer(), ExpExperiment.class, name);
+            }
+            experiment.setLSID(lsid);
         }
 
         @Override
