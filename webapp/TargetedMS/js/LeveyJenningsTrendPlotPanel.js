@@ -221,11 +221,10 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             annotationSql += separator + "Date <= '" + config.EndDate + "'";
         }
 
-        annotationSql += " ORDER BY qca.Date, qcat.Name";
-
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: annotationSql,
+            sort: 'Name, Date, Created',
             containerFilter: LABKEY.Query.containerFilter.currentPlusProjectAndShared,
             scope: this,
             success: this.processAnnotationData,
@@ -299,11 +298,11 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG(BestRetentionTime) AS Mean, STDDEV(BestRetentionTime) AS StandardDev FROM precursorchrominfo" + whereClause
                 + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
         }
-        sql += " ORDER BY Sequence, AcquiredTime";
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: sql,
+            sort: 'Sequence, AcquiredTime',
             scope: this,
             success: this.processPlotData,
             failure: this.failureHandler
@@ -334,24 +333,16 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             this.setSequenceMinMax(this.sequencePlotData[sequence], row);
         }
 
-        // merge in the annotation data to make room on the x and y axis accordingly
-        var maxStackedAnnotations = Math.max.apply(Math, (Ext.pluck(this.annotationData, "yStepIndex"))) + 1.35;
+        // merge in the annotation data to make room on the y axis
         for (var i = 0; i < this.precursors.length; i++)
         {
             var precursorInfo = this.sequencePlotData[this.precursors[i]];
 
-            // adjust plot min to make room for rendering QC annotations
-            if (this.annotationData.length > 0)
-            {
-                precursorInfo.ystep = (precursorInfo.max - precursorInfo.min) * 0.06;
-                precursorInfo.plotMin = precursorInfo.min - (precursorInfo.ystep * maxStackedAnnotations);
-            }
-
             // if the min and max are the same, or very close, increase the range
-            if (precursorInfo.max - precursorInfo.plotMin < 0.0001)
+            if (precursorInfo.max - precursorInfo.min < 0.0001)
             {
                 precursorInfo.max += 1;
-                precursorInfo.plotMin -= 1;
+                precursorInfo.min -= 1;
             }
 
             // add any missing dates from the QC annotation data to the plot data
@@ -393,6 +384,11 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     },
 
     renderPlots: function() {
+        var maxStackedAnnotations = 0;
+        if (this.annotationData.length > 0) {
+            maxStackedAnnotations = Math.max.apply(Math, (Ext.pluck(this.annotationData, "yStepIndex"))) + 1;
+        }
+
         for (var i = 0; i < this.precursors.length; i++)
         {
             var precursorInfo = this.sequencePlotData[this.precursors[i]];
@@ -409,6 +405,12 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 '</table>'
             );
 
+            var yAxisScale = this.yAxisScale;
+            if (yAxisScale == "log" && precursorInfo.min <= 0) {
+                Ext.get(id).update("<span class='labkey-error'>Unable to use log scale because of negative values. Reverting y-axis back to linear scale.</span>");
+                yAxisScale = 'linear';
+            }
+
             // create plot using the JS Vis API
             var plot = LABKEY.vis.LeveyJenningsPlot({
                 renderTo: id,
@@ -420,12 +422,13 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                     value: 'value',
                     mean: 'mean',
                     stdDev: 'stdDev',
+                    topMargin: 10 + maxStackedAnnotations * 12,
                     xTickLabel: 'label',
-                    yAxisDomain: [precursorInfo.plotMin, precursorInfo.max],
-                    yAxisScale: this.yAxisScale,
+                    yAxisDomain: [precursorInfo.min, precursorInfo.max],
+                    yAxisScale: yAxisScale,
                     hoverTextFn: function(row){
-                        return 'Acquired: ' + row['AcquiredTime']
-                                + '\nValue: ' + row.value
+                        return 'Acquired: ' + row['AcquiredTime'] + ", "
+                                + '\nValue: ' + row.value + ", "
                                 + '\nFile Path: ' + row['FilePath'];
                     }
                 },
@@ -450,7 +453,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             return plot.scales.x.scale(xAxisLabels.indexOf(annotationDate));
         };
         var yAcc = function(d) {
-            return plot.scales.yLeft.scale(precursorInfo.plotMin + (precursorInfo.ystep * (d['yStepIndex']+0.5)));
+            return plot.scales.yLeft.scale(precursorInfo.max) - (d['yStepIndex'] * 12) - 12;
         };
         var transformAcc = function(d){
             return 'translate(' + xAcc(d) + ',' + yAcc(d) + ')';
@@ -466,8 +469,8 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         // add hover text for the annotation details
         annotations.append("title")
             .text(function(d) {
-                return "Created By: " + d['DisplayName']
-                    + "\nCreated: " + me.formatDate(new Date(d['Created']))
+                return "Created By: " + d['DisplayName'] + ", "
+                    + "\nDate: " + me.formatDate(new Date(d['Date'])) + ", "
                     + "\nDescription: " + d['Description'];
             });
 
