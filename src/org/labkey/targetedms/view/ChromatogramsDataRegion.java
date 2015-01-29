@@ -122,7 +122,7 @@ public class ChromatogramsDataRegion extends DataRegion
     protected void renderTableRow(RenderContext ctx, Writer out, boolean showRecordSelectors, List<DisplayColumn> renderers, int rowIndex) throws SQLException, IOException
     {
         if (showRecordSelectors)
-            renderRecordSelector(ctx, out);
+            renderRecordSelector(ctx, out, rowIndex);
 
         for (DisplayColumn renderer : renderers)
             if (renderer.isVisible(ctx))
