@@ -170,13 +170,19 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             // The contents of these files are not stored in the database.
             // TODO: Should we only allow import of shared zip files?  If a user uploads and imports a .sky file they have to upload
             //       the .skyd file and any .blib files as well to the same folder. This use case must be quite rare.
-            try
+
+            // When using a pipeline root, it's possible that both the source and destination containers are pointing
+            // at the same file system
+            if (!sourceFile.equals(destFile))
             {
-                FileUtils.copyFile(sourceFile, destFile);
-            }
-            catch (IOException e)
-            {
-                throw new ExperimentException("Could not copy " + sourceFile + " to destination directory " + targetRoot.getRootPath());
+                try
+                {
+                    FileUtils.copyFile(sourceFile, destFile);
+                }
+                catch (IOException e)
+                {
+                    throw new ExperimentException("Could not copy " + sourceFile + " to destination directory " + targetRoot.getRootPath());
+                }
             }
 
             // Expand the zip file in the new location

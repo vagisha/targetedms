@@ -53,8 +53,7 @@ public class TargetedMSFolderType extends MultiPortalFolderType
     @Override
     public HelpTopic getHelpTopic()
     {
-        // TODO:
-        return new HelpTopic("targetedms");
+        return new HelpTopic("panorama");
     }
 
     @NotNull
