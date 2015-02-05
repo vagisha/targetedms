@@ -1,3 +1,4 @@
+<%@ page import="org.labkey.targetedms.SkylineDocImporter" %>
 <%
 /*
  * Copyright (c) 2014 LabKey Corporation
@@ -26,7 +27,7 @@
             schemaName: 'targetedms',
             sql: 'SELECT '
                 + '(SELECT COUNT(DISTINCT ModifiedSequence) FROM targetedms.Precursor) as precursorCount '
-                + ',(SELECT COUNT(Id) FROM targetedms.Runs) as docCount '
+                + ',(SELECT COUNT(Id) FROM targetedms.Runs WHERE StatusId = ' + <%=SkylineDocImporter.STATUS_SUCCESS%> + ') as docCount '
                 + ',(SELECT COUNT(Id) FROM targetedms.SampleFile) as fileCount',
             success: function (data)
             {

@@ -273,7 +273,7 @@ public class SkylineDocImporter
 
                 for(SampleFile sampleFile: replicate.getSampleFileList())
                 {
-                    SampleFileKey sampleFileKey = getSampleFileKey(replicate, sampleFile);
+                    SampleFileKey sampleFileKey = SampleFileKey.getKey(replicate, sampleFile);
                     if(skylineIdSampleFileIdMap.containsKey(sampleFileKey))
                     {
                         throw new IllegalStateException("Sample file id '" + sampleFile.getSkylineId() + "' for replicate '" + replicate.getName() + "' has already been seen in the document.");
@@ -924,7 +924,7 @@ public class SkylineDocImporter
 
         for(PeptideChromInfo peptideChromInfo: peptide.getPeptideChromInfoList())
         {
-            SampleFileKey sampleFileKey = getSampleFileKey(peptideChromInfo);
+            SampleFileKey sampleFileKey = SampleFileKey.getKey(peptideChromInfo);
             SampleFile sampleFile = skylineIdSampleFileIdMap.get(sampleFileKey);
             if(sampleFile == null)
             {
@@ -933,6 +933,7 @@ public class SkylineDocImporter
 
             if (!sampleFile.isSkip())
             {
+                // Only for QC folders: ignore this chrom info if data from this sample file is not being imported.
                 peptideChromInfo.setPeptideId(peptide.getId());
                 peptideChromInfo.setSampleFileId(sampleFile.getId());
                 peptideChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPeptideChromInfo(), peptideChromInfo);
@@ -957,7 +958,7 @@ public class SkylineDocImporter
 
         // 4. Calculate and insert peak area ratios
         PeakAreaRatioCalculator areaRatioCalculator = new PeakAreaRatioCalculator(peptide);
-        areaRatioCalculator.init();
+        areaRatioCalculator.init(skylineIdSampleFileIdMap);
         // Insert area ratios for each combination of 2 isotope labels
         for(Integer numLabelId: isotopeLabelIdMap.values())
         {
@@ -971,6 +972,12 @@ public class SkylineDocImporter
 
                 for(SampleFile sampleFile: skylineIdSampleFileIdMap.values())
                 {
+                    if(sampleFile.isSkip())
+                    {
+                        // Only for QC folders: do not try to calculate area ratios if data from this sample file is not being imported.
+                        continue;
+                    }
+
                     PeptideAreaRatio ratio = areaRatioCalculator.getPeptideAreaRatio(sampleFile.getId(), numLabelId, denomLabelId);
                     if(ratio != null)
                     {
@@ -1061,7 +1068,7 @@ public class SkylineDocImporter
 
         for (PrecursorChromInfo precursorChromInfo: precursor.getChromInfoList())
         {
-            SampleFile sampleFile = skylineIdSampleFileIdMap.get(getSampleFileKey(precursorChromInfo));
+            SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(precursorChromInfo));
             if (sampleFile == null)
             {
                 throw new IllegalStateException("Database ID not found for Skyline samplefile id "+precursorChromInfo.getSkylineSampleFileId() + " in replicate " + precursorChromInfo.getReplicateName());
@@ -1075,6 +1082,7 @@ public class SkylineDocImporter
 
             if (!sampleFile.isSkip())
             {
+                // Only for QC folders: Ignore this chrom info if data from the sample file is not being imported.
                 precursorChromInfo.setPrecursorId(precursor.getId());
                 precursorChromInfo.setSampleFileId(sampleFile.getId());
                 precursorChromInfo.setPeptideChromInfoId(sampleFileIdPeptideChromInfoIdMap.get(sampleFile.getId()));
@@ -1130,13 +1138,14 @@ public class SkylineDocImporter
         // transition results
         for(TransitionChromInfo transChromInfo: transition.getChromInfoList())
         {
-            SampleFile sampleFile = skylineIdSampleFileIdMap.get(getSampleFileKey(transChromInfo));
+            SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(transChromInfo));
             if(sampleFile == null)
             {
                 throw new IllegalStateException("Database ID not found for Skyline samplefile id "+transChromInfo.getSkylineSampleFileId() + " in replicate " + transChromInfo.getReplicateName());
             }
             if (!sampleFile.isSkip())
             {
+                // Only for QC folders: ignore this chrom info if data from the sample file is not being imported.
                 transChromInfo.setTransitionId(transition.getId());
                 transChromInfo.setSampleFileId(sampleFile.getId());
                 transChromInfo.setPrecursorChromInfoId(sampleFileIdPrecursorChromInfoIdMap.get(sampleFile.getId()));
@@ -1202,17 +1211,7 @@ public class SkylineDocImporter
         }
     }
 
-    private static SampleFileKey getSampleFileKey(ChromInfo chromInfo)
-    {
-        return new SampleFileKey(chromInfo.getReplicateName(), chromInfo.getSkylineSampleFileId());
-    }
-
-    private SampleFileKey getSampleFileKey(Replicate replicate, SampleFile sampleFile)
-    {
-        return new SampleFileKey(replicate.getName(), sampleFile.getSkylineId());
-    }
-
-    private static class SampleFileKey
+    public static class SampleFileKey
     {
         private final String _replicate;
         private final String _skylineSampleFileId;
@@ -1221,6 +1220,16 @@ public class SkylineDocImporter
         {
             _replicate = replicate;
             _skylineSampleFileId = skylineSampleFileId;
+        }
+
+        public static SampleFileKey getKey(ChromInfo chromInfo)
+        {
+            return new SampleFileKey(chromInfo.getReplicateName(), chromInfo.getSkylineSampleFileId());
+        }
+
+        public static SampleFileKey getKey(Replicate replicate, SampleFile sampleFile)
+        {
+            return new SampleFileKey(replicate.getName(), sampleFile.getSkylineId());
         }
 
         @Override

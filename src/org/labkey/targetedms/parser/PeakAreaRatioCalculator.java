@@ -44,10 +44,17 @@ public class PeakAreaRatioCalculator
         _peptideAreaRatioCalculatorMap = new HashMap<>();
     }
 
-    public void init()
+    public void init(Map<SkylineDocImporter.SampleFileKey, SampleFile> skylineIdSampleFileMap)
     {
         for(PeptideChromInfo peptideChromInfo: _peptide.getPeptideChromInfoList())
         {
+            SampleFile sampleFile = skylineIdSampleFileMap.get(SkylineDocImporter.SampleFileKey.getKey(peptideChromInfo));
+            if(sampleFile.isSkip())
+            {
+                // For QC folders only:  we do not need an area ratio calculator if the data from this sample file is being skipped.
+                continue;
+            }
+
             int sampleFileId = peptideChromInfo.getSampleFileId();
             _peptideAreaRatioCalculatorMap.put(sampleFileId, new PeptideAreaRatioCalculator(peptideChromInfo));
         }
@@ -58,8 +65,11 @@ public class PeakAreaRatioCalculator
             {
                 int sampleFileId = precursorChromInfo.getSampleFileId();
                 PeptideAreaRatioCalculator calculator = getPeptideAreaRatioCalculator(sampleFileId);
-                PrecursorAreaRatioCalculator precursorCalculator = calculator.getPrecursorAreaRatioCalculator(_peptide, precursor);
-                precursorCalculator.addChromInfo(precursor.getIsotopeLabelId(), precursorChromInfo);
+                if(calculator != null)
+                {
+                    PrecursorAreaRatioCalculator precursorCalculator = calculator.getPrecursorAreaRatioCalculator(_peptide, precursor);
+                    precursorCalculator.addChromInfo(precursor.getIsotopeLabelId(), precursorChromInfo);
+                }
             }
 
             for(Transition transition: precursor.getTransitionList())
@@ -68,12 +78,16 @@ public class PeakAreaRatioCalculator
                 {
                     int sampleFileId = transitionChromInfo.getSampleFileId();
                     PeptideAreaRatioCalculator calculator = getPeptideAreaRatioCalculator(sampleFileId);
-                    TransitionAreaRatioCalculator transitionCalculator = calculator.getTransitionAreaRatioCalculator(_peptide, precursor, transition);
-                    transitionCalculator.addChromInfo(precursor.getIsotopeLabelId(), transitionChromInfo);
+                    if(calculator != null)
+                    {
+                        TransitionAreaRatioCalculator transitionCalculator = calculator.getTransitionAreaRatioCalculator(_peptide, precursor, transition);
+                        transitionCalculator.addChromInfo(precursor.getIsotopeLabelId(), transitionChromInfo);
+                    }
                 }
             }
         }
     }
+
 
     private PeptideAreaRatioCalculator getPeptideAreaRatioCalculator(int sampleFileId)
     {
