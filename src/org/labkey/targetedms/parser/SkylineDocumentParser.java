@@ -244,6 +244,10 @@ public class SkylineDocumentParser implements AutoCloseable
             _binaryParser = new SkylineBinaryParser(file, _log);
             _binaryParser.parse();
         }
+        else
+        {
+            _log.warn("Unable to find file " + file + ", unable to import chromatograms");
+        }
     }
 
     public List<IrtPeptide> getiRTScaleSettings()
