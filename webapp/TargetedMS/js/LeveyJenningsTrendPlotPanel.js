@@ -433,38 +433,36 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                         '</table>'
                 );
 
-                var yAxisScale = this.yAxisScale;
-                if (yAxisScale == "log" && precursorInfo.min <= 0)
-                {
-                    Ext.get(id).update("<span class='labkey-error'>Unable to use log scale because of zero or negative values. Reverting y-axis back to linear scale.</span>");
-                    yAxisScale = 'linear';
+                if (precursorInfo.showLogWarning) {
+                    Ext.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below the mean with negative values have been omitted.</span>");
                 }
 
-            // create plot using the JS Vis API
-            var plot = LABKEY.vis.LeveyJenningsPlot({
-                renderTo: id,
-                rendererType: 'd3',
-                width: 870,
-                height: 300,
-                data: precursorInfo.data,
-                properties: {
-                    value: 'value',
-                    mean: 'mean',
-                    stdDev: 'stdDev',
-                    topMargin: 10 + maxStackedAnnotations * 12,
-                    xTickLabel: 'label',
-                    yAxisDomain: [precursorInfo.min, precursorInfo.max],
-                    yAxisScale: yAxisScale,
-                    hoverTextFn: function(row){
-                        return 'Acquired: ' + row['AcquiredTime'] + ", "
-                                + '\nValue: ' + row.value + ", "
-                                + '\nFile Path: ' + row['FilePath'];
-                    }
-                },
-                gridLineColor: 'white',
-                legendData: this.legendData.length > 0 ? this.legendData : undefined
-            });
-            plot.render();
+                // create plot using the JS Vis API
+                var plot = LABKEY.vis.LeveyJenningsPlot({
+                    renderTo: id,
+                    rendererType: 'd3',
+                    width: 870,
+                    height: 300,
+                    data: precursorInfo.data,
+                    properties: {
+                        value: 'value',
+                        mean: 'mean',
+                        stdDev: 'stdDev',
+                        topMargin: 10 + maxStackedAnnotations * 12,
+                        xTickLabel: 'label',
+                        yAxisDomain: [precursorInfo.min, precursorInfo.max],
+                        yAxisScale: this.yAxisScale,
+                        showTrendLine: true,
+                        hoverTextFn: function(row){
+                            return 'Acquired: ' + row['AcquiredTime'] + ", "
+                                    + '\nValue: ' + row.value + ", "
+                                    + '\nFile Path: ' + row['FilePath'];
+                        }
+                    },
+                    gridLineColor: 'white',
+                    legendData: this.legendData.length > 0 ? this.legendData : undefined
+                });
+                plot.render();
 
                 this.addAnnotationsToPlot(plot, precursorInfo);
             }
@@ -560,15 +558,27 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
 
             var mean = row['Mean'];
             var sd = LABKEY.vis.isValid(row['StandardDev']) ? row['StandardDev'] : 0;
-            if (LABKEY.vis.isValid(mean)) {
-                if ((dataObject.min == null || (mean-(3*sd)) < dataObject.min)) {
-                    // Try to avoid setting our scale to be negative based on the three standard deviations to avoid messing up log plots
-                    if (this.yAxisScale == 'linear' || dataObject.min <= 0 || (mean-(3*sd)) > 0) {
-                        dataObject.min = (mean - (3 * sd));
+            if (LABKEY.vis.isValid(mean))
+            {
+                var minSd = (mean - (3 * sd));
+                if (this.yAxisScale == 'log' && minSd <= 0)
+                {
+                    // Avoid setting our scale to be negative based on the three standard deviations to avoid messing up log plots
+                    dataObject.showLogWarning = true;
+                    for (var i = 2; i >= 0; i--)
+                    {
+                        minSd = (mean - (i * sd));
+                        if (minSd > 0) {
+                            break;
+                        }
                     }
                 }
-                if (dataObject.max == null || (mean+(3*sd)) > dataObject.max) {
-                    dataObject.max = (mean+(3*sd));
+                if (dataObject.min == null || minSd < dataObject.min) {
+                    dataObject.min = minSd;
+                }
+
+                if (dataObject.max == null || (mean + (3 * sd)) > dataObject.max) {
+                    dataObject.max = (mean + (3 * sd));
                 }
             }
         }
