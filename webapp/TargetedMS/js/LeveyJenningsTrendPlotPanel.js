@@ -106,6 +106,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                     , ['peakArea', 'Peak Area']
                     , ['fwhm', 'Full Width at Half Maximum (FWHM)']
                     , ['fwb', 'Full Width at Base (FWB)']
+                    , ['ratio', 'Light/Heavy Ratio']
                 ]
             }),
             valueField: 'value',
@@ -293,6 +294,22 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG((MaxEndTime - MinStartTime)) AS Mean, STDDEV((MaxEndTime - MinStartTime)) AS StandardDev FROM precursorchrominfo" + whereClause
                 + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
         }
+        else if (this.chartType == "ratio") {
+            // Need to tweak the WHERE clause because we're selecting from the precursorarearatio table instead
+            whereClause = " WHERE ";
+            separator = "";
+            if (config.StartDate) {
+                whereClause += separator + "CAST(PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
+                separator = " AND ";
+            }
+            if (config.EndDate) {
+                whereClause += separator + "CAST(PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
+            }
+
+            sql = "SELECT * FROM (SELECT PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.FilePath AS FilePath, AreaRatio AS Value FROM precursorarearatio " + whereClause + ") X"
+                + " JOIN (SELECT PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence2, AVG(AreaRatio) AS Mean, STDDEV(AreaRatio) AS StandardDev FROM precursorarearatio" + whereClause
+                + " GROUP BY PrecursorChromInfoId.PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
+        }
         else {
             sql = "SELECT * FROM (SELECT PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, BestRetentionTime AS Value FROM precursorchrominfo" + whereClause + ") X "
                 + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG(BestRetentionTime) AS Mean, STDDEV(BestRetentionTime) AS StandardDev FROM precursorchrominfo" + whereClause
@@ -338,43 +355,48 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         {
             var precursorInfo = this.sequencePlotData[this.precursors[i]];
 
-            // if the min and max are the same, or very close, increase the range
-            if (precursorInfo.max - precursorInfo.min < 0.0001)
+            // We don't necessarily have info for all possible precursors, depending on the filters and plot type
+            if (precursorInfo)
             {
-                precursorInfo.max += 1;
-                precursorInfo.min -= 1;
-            }
-
-            // add any missing dates from the QC annotation data to the plot data
-            var precursorDates = Ext.pluck(precursorInfo.data, "label");
-            var datesToAdd = [];
-            for (var j = 0; j < this.annotationData.length; j++)
-            {
-                var annotationDate = this.formatDate(new Date(this.annotationData[j].Date));
-                if (precursorDates.indexOf(annotationDate) == -1 && datesToAdd.indexOf(annotationDate) == -1)
+                // if the min and max are the same, or very close, increase the range
+                if (precursorInfo.max - precursorInfo.min < 0.0001)
                 {
-                    datesToAdd.push(annotationDate);
+                    precursorInfo.max += 1;
+                    precursorInfo.min -= 1;
                 }
-            }
-            if (datesToAdd.length > 0)
-            {
-                var index = 0;
-                for (var k = 0; k < datesToAdd.length; k++)
+
+                // add any missing dates from the QC annotation data to the plot data
+                var precursorDates = Ext.pluck(precursorInfo.data, "label");
+                var datesToAdd = [];
+                for (var j = 0; j < this.annotationData.length; j++)
                 {
-                    var added = false;
-                    for (var l = index; l < precursorInfo.data.length; l++)
+                    var annotationDate = this.formatDate(new Date(this.annotationData[j].Date));
+                    if (precursorDates.indexOf(annotationDate) == -1 && datesToAdd.indexOf(annotationDate) == -1)
                     {
-                        if (precursorInfo.data[l].label > datesToAdd[k])
-                        {
-                            precursorInfo.data.splice(l, 0, {label: datesToAdd[k]});
-                            added = true;
-                            index = l;
-                            break;
-                        }
+                        datesToAdd.push(annotationDate);
                     }
-                    // tack on any remaining dates to the end
-                    if (!added) {
-                        precursorInfo.data.push({label: datesToAdd[k]});
+                }
+                if (datesToAdd.length > 0)
+                {
+                    var index = 0;
+                    for (var k = 0; k < datesToAdd.length; k++)
+                    {
+                        var added = false;
+                        for (var l = index; l < precursorInfo.data.length; l++)
+                        {
+                            if (precursorInfo.data[l].label > datesToAdd[k])
+                            {
+                                precursorInfo.data.splice(l, 0, {label: datesToAdd[k]});
+                                added = true;
+                                index = l;
+                                break;
+                            }
+                        }
+                        // tack on any remaining dates to the end
+                        if (!added)
+                        {
+                            precursorInfo.data.push({label: datesToAdd[k]});
+                        }
                     }
                 }
             }
@@ -389,27 +411,34 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             maxStackedAnnotations = Math.max.apply(Math, (Ext.pluck(this.annotationData, "yStepIndex"))) + 1;
         }
 
+        var addedPlot = false;
+
         for (var i = 0; i < this.precursors.length; i++)
         {
             var precursorInfo = this.sequencePlotData[this.precursors[i]];
 
-            // add a new panel for each plot so we can add the title to the frame
-            var id = "precursorPlot" + i;
-            Ext.get(this.trendDiv).insertHtml('beforeEnd', '<br/>' +
-                '<table class="labkey-wp">' +
-                ' <tr class="labkey-wp-header">' +
-                '     <th class="labkey-wp-title-left"><span class="labkey-wp-title-text">' + Ext.util.Format.htmlEncode(this.precursors[i]) + '</span></th>' +
-                ' </tr><tr>' +
-                '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
-                ' </tr>' +
-                '</table>'
-            );
+            // We don't necessarily have info for all possible precursors, depending on the filters and plot type
+            if (precursorInfo)
+            {
+                addedPlot = true;
+                // add a new panel for each plot so we can add the title to the frame
+                var id = "precursorPlot" + i;
+                Ext.get(this.trendDiv).insertHtml('beforeEnd', '<br/>' +
+                        '<table class="labkey-wp">' +
+                        ' <tr class="labkey-wp-header">' +
+                        '     <th class="labkey-wp-title-left"><span class="labkey-wp-title-text">' + Ext.util.Format.htmlEncode(this.precursors[i]) + '</span></th>' +
+                        ' </tr><tr>' +
+                        '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
+                        ' </tr>' +
+                        '</table>'
+                );
 
-            var yAxisScale = this.yAxisScale;
-            if (yAxisScale == "log" && precursorInfo.min <= 0) {
-                Ext.get(id).update("<span class='labkey-error'>Unable to use log scale because of negative values. Reverting y-axis back to linear scale.</span>");
-                yAxisScale = 'linear';
-            }
+                var yAxisScale = this.yAxisScale;
+                if (yAxisScale == "log" && precursorInfo.min <= 0)
+                {
+                    Ext.get(id).update("<span class='labkey-error'>Unable to use log scale because of zero or negative values. Reverting y-axis back to linear scale.</span>");
+                    yAxisScale = 'linear';
+                }
 
             // create plot using the JS Vis API
             var plot = LABKEY.vis.LeveyJenningsPlot({
@@ -426,7 +455,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                     xTickLabel: 'label',
                     yAxisDomain: [precursorInfo.min, precursorInfo.max],
                     yAxisScale: yAxisScale,
-                    showTrendLine: true,
                     hoverTextFn: function(row){
                         return 'Acquired: ' + row['AcquiredTime'] + ", "
                                 + '\nValue: ' + row.value + ", "
@@ -438,7 +466,13 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             });
             plot.render();
 
-            this.addAnnotationsToPlot(plot, precursorInfo);
+                this.addAnnotationsToPlot(plot, precursorInfo);
+            }
+        }
+
+        if (!addedPlot)
+        {
+            Ext.get(this.trendDiv).insertHtml('beforeEnd', '<div>No data to plot</div>');
         }
 
         Ext.get(this.trendDiv).unmask();
@@ -527,8 +561,11 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             var mean = row['Mean'];
             var sd = LABKEY.vis.isValid(row['StandardDev']) ? row['StandardDev'] : 0;
             if (LABKEY.vis.isValid(mean)) {
-                if (dataObject.min == null || (mean-(3*sd)) < dataObject.min) {
-                    dataObject.min = (mean-(3*sd));
+                if ((dataObject.min == null || (mean-(3*sd)) < dataObject.min)) {
+                    // Try to avoid setting our scale to be negative based on the three standard deviations to avoid messing up log plots
+                    if (this.yAxisScale == 'linear' || dataObject.min <= 0 || (mean-(3*sd)) > 0) {
+                        dataObject.min = (mean - (3 * sd));
+                    }
                 }
                 if (dataObject.max == null || (mean+(3*sd)) > dataObject.max) {
                     dataObject.max = (mean+(3*sd));
