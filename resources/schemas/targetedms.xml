@@ -1240,10 +1240,17 @@
             <ns:column columnName="Container">
                 <ns:columnTitle>Folder</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="Description"/>
-            <ns:column columnName="Date"/>
+            <ns:column columnName="Description">
+                <ns:description>A short description of what happened</ns:description>
+            </ns:column>
+            <ns:column columnName="Date">
+                <ns:columnTitle>Date and Time</ns:columnTitle>
+                <ns:description>The date and time at which the event happened</ns:description>
+                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
+            </ns:column>
             <ns:column columnName="QCAnnotationTypeId">
                 <ns:columnTitle>Annotation Type</ns:columnTitle>
+                <ns:description>The category of the event</ns:description>
             </ns:column>
         </ns:columns>
     </ns:table>

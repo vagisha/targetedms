@@ -225,7 +225,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: annotationSql,
-            sort: 'Name, Date, Created',
+            sort: 'Date',
             containerFilter: LABKEY.Query.containerFilter.currentPlusProjectAndShared,
             scope: this,
             success: this.processAnnotationData,
@@ -341,6 +341,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             this.sequencePlotData[sequence].data.push({
                 AcquiredTime: row['AcquiredTime'], // keep in data for hover text display
                 FilePath: row['FilePath'], // keep in data for hover text display
+                fullDate: row['AcquiredTime'] ? this.formatDateTime(new Date(row['AcquiredTime'])) : null,
                 label: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
                 value: row['Value'],
                 mean: row['Mean'],
@@ -366,14 +367,14 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 }
 
                 // add any missing dates from the QC annotation data to the plot data
-                var precursorDates = Ext.pluck(precursorInfo.data, "label");
+                var precursorDates = Ext.pluck(precursorInfo.data, "fullDate");
                 var datesToAdd = [];
                 for (var j = 0; j < this.annotationData.length; j++)
                 {
-                    var annotationDate = this.formatDate(new Date(this.annotationData[j].Date));
-                    if (precursorDates.indexOf(annotationDate) == -1 && datesToAdd.indexOf(annotationDate) == -1)
+                    var annotationDate = this.formatDateTime(new Date(this.annotationData[j].Date));
+                    if (precursorDates.indexOf(annotationDate) == -1 && Ext.pluck(datesToAdd, "fullDate").indexOf(annotationDate) == -1)
                     {
-                        datesToAdd.push(annotationDate);
+                        datesToAdd.push({ fullDate: annotationDate, label: this.formatDate(new Date(this.annotationData[j].Date)) });
                     }
                 }
                 if (datesToAdd.length > 0)
@@ -384,9 +385,9 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                         var added = false;
                         for (var l = index; l < precursorInfo.data.length; l++)
                         {
-                            if (precursorInfo.data[l].label > datesToAdd[k])
+                            if (precursorInfo.data[l].fullDate > datesToAdd[k].fullDate)
                             {
-                                precursorInfo.data.splice(l, 0, {label: datesToAdd[k]});
+                                precursorInfo.data.splice(l, 0, datesToAdd[k]);
                                 added = true;
                                 index = l;
                                 break;
@@ -395,7 +396,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                         // tack on any remaining dates to the end
                         if (!added)
                         {
-                            precursorInfo.data.push({label: datesToAdd[k]});
+                            precursorInfo.data.push(datesToAdd[k]);
                         }
                     }
                 }
@@ -480,9 +481,9 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         var me = this;
 
         // use direct D3 code to inject the annotation icons to the rendered SVG
-        var xAxisLabels = Ext.pluck(precursorInfo.data, "label");
+        var xAxisLabels = Ext.pluck(precursorInfo.data, "fullDate");
         var xAcc = function(d) {
-            var annotationDate = me.formatDate(new Date(d['Date']));
+            var annotationDate = me.formatDateTime(new Date(d['Date']));
             return plot.scales.x.scale(xAxisLabels.indexOf(annotationDate));
         };
         var yAcc = function(d) {
@@ -503,7 +504,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         annotations.append("title")
             .text(function(d) {
                 return "Created By: " + d['DisplayName'] + ", "
-                    + "\nDate: " + me.formatDate(new Date(d['Date'])) + ", "
+                    + "\nDate: " + me.formatDateTime(new Date(d['Date'])) + ", "
                     + "\nDescription: " + d['Description'];
             });
 
@@ -526,6 +527,15 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     formatDate: function(d) {
         if (d instanceof Date) {
             return Ext.util.Format.date(d, 'Y-m-d');
+        }
+        else {
+            return d;
+        }
+    },
+
+    formatDateTime: function(d) {
+        if (d instanceof Date) {
+            return Ext.util.Format.date(d, 'Y-m-d H:i');
         }
         else {
             return d;
