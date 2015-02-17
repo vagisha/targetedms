@@ -517,11 +517,6 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         };
         annotations.on("mouseover", function(){ return mouseOn(this, 3); });
         annotations.on("mouseout", function(){ return mouseOff(this); });
-
-        // add the same mouseover effects for the data points
-        var points = d3.select('#' + plot.renderTo + ' svg').selectAll("a.point path");
-        points.on("mouseover", function(){ return mouseOn(this, 5); });
-        points.on("mouseout", function(){ return mouseOff(this); });
     },
 
     formatDate: function(d) {
