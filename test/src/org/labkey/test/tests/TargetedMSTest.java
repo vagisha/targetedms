@@ -62,7 +62,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         log("Importing file " + file);
         goToModule("Pipeline");
         clickButton("Process and Import Data");
-        waitForText(file, 5*defaultWaitForPage);
+        waitForText(5*defaultWaitForPage, file);
         _fileBrowserHelper.importFile(file, "Import Skyline Results");
         waitForText("Skyline document import");
         waitForPipelineJobsToFinish(jobCount);
