@@ -147,7 +147,7 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
                 return exportFile.length() > 1E+6;
             }
         };
-        doesElementAppear(fileSize, WAIT_FOR_JAVASCRIPT);
+        waitFor(fileSize, WAIT_FOR_JAVASCRIPT);
         assertTrue("Chromatogram library export file is too small: " + exportFile.length() + " bytes", fileSize.check());
     }
 
