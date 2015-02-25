@@ -26,8 +26,6 @@ public class PeptideChromInfo extends ChromInfo
 
     private double _peakCountRatio;
     private Double _retentionTime;
-    private Double _predictedRetentionTime;
-    private double _ratioToStandard;
 
     public int getPeptideId()
     {
@@ -57,25 +55,5 @@ public class PeptideChromInfo extends ChromInfo
     public void setRetentionTime(Double retentionTime)
     {
         this._retentionTime = retentionTime;
-    }
-
-    public Double getPredictedRetentionTime()
-    {
-        return _predictedRetentionTime;
-    }
-
-    public void setPredictedRetentionTime(Double predictedRetentionTime)
-    {
-        this._predictedRetentionTime = predictedRetentionTime;
-    }
-
-    public double getRatioToStandard()
-    {
-        return _ratioToStandard;
-    }
-
-    public void setRatioToStandard(double ratioToStandard)
-    {
-        this._ratioToStandard = ratioToStandard;
     }
 }

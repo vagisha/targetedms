@@ -168,7 +168,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText(targetProtein));
         //Verify it’s associated with the right protein and other values from details view.
         //protein name, portien, neutral mass, avg. RT , precursor
-        assertTextPresent(targetProtein, "YAL038W", "1343.7408", "27.9232", "677.8818++ (heavy)");
+        assertTextPresent(targetProtein, "YAL038W", "1343.7409", "27.9232", "677.8818++ (heavy)");
 
         //Verify the spectrum shows up correctly.
 
@@ -204,12 +204,12 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals("1353.7491", drt.getDataAsText(5, "Precursor Neutral Mass"));
         assertEquals("677.8818", drt.getDataAsText(5, "Q1 m/z"));
         assertEquals("y7", drt.getDataAsText(5, "Fragment"));
-        assertEquals("727.3973", drt.getDataAsText(5, "Q3 m/z"));
+        assertEquals("727.3972", drt.getDataAsText(5, "Q3 m/z"));
         // We don't find these values based on their column headers because DataRegionTable gets confused with the
         // nested data regions having the same id in the HTML. The checks above happen to work because
         // they correspond to columns that aren't in the parent table, so the XPath flips to the second table with
         // that id, which has enough columns to satisfy the Locator
-        assertTextPresent("1343.7408", "1226.6619", "1001.5505");
+        assertTextPresent("1343.7409", "1226.6619", "1001.5506");
 
         //Click down arrow next to protein name. Click "Search for other references to this protein"
         Locator l = Locator.xpath("//span[a[text()='YAL038W']]/span/img");

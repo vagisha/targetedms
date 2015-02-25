@@ -168,6 +168,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_PEPTIDE);
     }
 
+    public static TableInfo getTableInfoMolecule()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_MOLECULE);
+    }
+
     public static TableInfo getTableInfoPeptideAnnotation()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_PEPTIDE_ANNOTATION);
@@ -266,6 +271,11 @@ public class TargetedMSManager
     public static TableInfo getTableInfoTransition()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION);
+    }
+
+    public static TableInfo getTableInfoMoleculeTransition()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_MOLECULE_TRANSITION);
     }
 
     public static TableInfo getTableInfoTransitionLoss()
@@ -868,6 +878,8 @@ public class TargetedMSManager
         deleteTransitionDependent(getTableInfoTransitionLoss());
         // Delete from TransitionOptimization
         deleteTransitionDependent(getTableInfoTransitionOptimization());
+        // Delete from MoleculeTransition
+        deleteTransitionDependent(getTableInfoMoleculeTransition());
 
         // Delete from Transition
         deletePrecursorDependent(getTableInfoTransition());
@@ -889,6 +901,8 @@ public class TargetedMSManager
         deletePeptideDependent(getTableInfoPeptideStructuralModification());
         // Delete from PeptideIsotopeModification
         deletePeptideDependent(getTableInfoPeptideIsotopeModification());
+        // Delete from Molecule
+        deletePeptideDependent(getTableInfoMolecule());
 
 
         // Delete from Peptide

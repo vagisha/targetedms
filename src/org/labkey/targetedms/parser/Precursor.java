@@ -39,6 +39,10 @@ public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
 
     private Double _decoyMassShift;
 
+    private Double _explicitCollisionEnergy;
+    private Double _explicitDriftTimeMsec;
+    private Double _explicitDriftTimeHighEnergyOffsetMsec;
+
     private LibraryInfo _libraryInfo;
 
     private List<Transition> _transitionList;
@@ -195,6 +199,36 @@ public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
     public void setRepresentativeDataState(RepresentativeDataState representativeDataState)
     {
         _representativeDataState = representativeDataState;
+    }
+
+    public Double getExplicitCollisionEnergy()
+    {
+        return _explicitCollisionEnergy;
+    }
+
+    public void setExplicitCollisionEnergy(Double explicitCollisionEnergy)
+    {
+        _explicitCollisionEnergy = explicitCollisionEnergy;
+    }
+
+    public Double getExplicitDriftTimeMsec()
+    {
+        return _explicitDriftTimeMsec;
+    }
+
+    public void setExplicitDriftTimeMsec(Double explicitDriftTimeMsec)
+    {
+        _explicitDriftTimeMsec = explicitDriftTimeMsec;
+    }
+
+    public Double getExplicitDriftTimeHighEnergyOffsetMsec()
+    {
+        return _explicitDriftTimeHighEnergyOffsetMsec;
+    }
+
+    public void setExplicitDriftTimeHighEnergyOffsetMsec(Double explicitDriftTimeHighEnergyOffsetMsec)
+    {
+        _explicitDriftTimeHighEnergyOffsetMsec = explicitDriftTimeHighEnergyOffsetMsec;
     }
 
     public static final class LibraryInfo extends SkylineEntity

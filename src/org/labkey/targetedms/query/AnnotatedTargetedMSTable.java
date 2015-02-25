@@ -53,6 +53,17 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                                     String annotationFKName,
                                     String columnName)
     {
+        this(table, schema, containerSQL, annotationTableInfo, annotationFKName, columnName, "Id");
+    }
+
+    public AnnotatedTargetedMSTable(TableInfo table,
+                                    TargetedMSSchema schema,
+                                    SQLFragment containerSQL,
+                                    TableInfo annotationTableInfo,
+                                    String annotationFKName,
+                                    String columnName,
+                                    String pkColumnName)
+    {
         super(table, schema, containerSQL);
 
         SQLFragment annotationsSQL = new SQLFragment("(SELECT ");
@@ -67,7 +78,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         annotationsSQL.append(annotationFKName);
         annotationsSQL.append(" = ");
         annotationsSQL.append(ExprColumn.STR_TABLE_ALIAS);
-        annotationsSQL.append(".Id)");
+        annotationsSQL.append(".").append(pkColumnName).append(")");
         ExprColumn annotationsColumn = new ExprColumn(this, "Annotations", annotationsSQL, JdbcType.VARCHAR);
         annotationsColumn.setLabel(columnName);
         annotationsColumn.setTextAlign("left");

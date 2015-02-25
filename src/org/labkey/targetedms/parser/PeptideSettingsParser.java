@@ -274,6 +274,7 @@ class PeptideSettingsParser
                 potentialLoss.setFormula(reader.getAttributeValue(null, "formula"));
                 potentialLoss.setMassDiffAvg(XmlUtil.readDoubleAttribute(reader, "massdiff_average"));
                 potentialLoss.setMassDiffMono(XmlUtil.readDoubleAttribute(reader, "massdiff_monoisotopic"));
+                potentialLoss.setInclusion(XmlUtil.readAttribute(reader, "inclusion"));
                 potentialLosses.add(potentialLoss);
             }
         }
@@ -482,6 +483,7 @@ class PeptideSettingsParser
                     measuredDt.setModifiedSequence(XmlUtil.readRequiredAttribute(reader, "modified_sequence", MEASURED_DT));
                     measuredDt.setCharge(XmlUtil.readRequiredIntegerAttribute(reader, "charge", MEASURED_DT));
                     measuredDt.setDriftTime(XmlUtil.readRequiredDoubleAttribute(reader, "drift_time", MEASURED_DT));
+                    measuredDt.setHighEnergyDriftTimeOffset(XmlUtil.readDoubleAttribute(reader, "high_energy_drift_time_offset"));
                     measuredDriftTimes.add(measuredDt);
                 }
             }

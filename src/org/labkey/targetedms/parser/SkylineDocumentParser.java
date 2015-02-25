@@ -72,6 +72,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String PEPTIDE_LIST = "peptide_list";
     private static final String PROTEIN = "protein";
     private static final String PEPTIDE = "peptide";
+    private static final String MOLECULE = "molecule";
     private static final String NOTE = "note";
     private static final String PRECURSOR = "precursor";
     private static final String TRANSITION = "transition";
@@ -106,9 +107,13 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String TFRATIO = "tfratio";
     private static final String ISOLATION_SCHEME = "isolation_scheme";
     private static final String ISOLATION_WINDOW = "isolation_window";
+    private static final String ION_FORMULA = "ion_formula";
+    private static final String CUSTOM_ION_NAME = "custom_ion_name";
+    private static final String MASS_MONOISOTOPIC = "mass_monoisotopic";
+    private static final String MASS_AVERAGE = "mass_average";
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
-    public static final double MAX_SUPPORTED_VERSION = 1.9;
+    public static final double MAX_SUPPORTED_VERSION = 2.62;
 
     private static final Pattern XML_ID_REGEX = Pattern.compile("\"/^[:_A-Za-z][-.:_A-Za-z0-9]*$/\"");
     private static final String XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -973,9 +978,10 @@ public class SkylineDocumentParser implements AutoCloseable
             {
                 annotations.add(readAnnotation(reader, new PeptideGroupAnnotation()));
             }
-            else if (XmlUtil.isStartElement(reader, evtType, PEPTIDE))
+            else if (XmlUtil.isStartElement(reader, evtType, PEPTIDE) ||
+                     XmlUtil.isStartElement(reader, evtType, MOLECULE))
             {
-                break; // We will read peptides one by one
+                break; // We will read peptides / molecules one by one
             }
             else if (XmlUtil.isStartElement(reader, evtType, NOTE))
             {
@@ -996,35 +1002,60 @@ public class SkylineDocumentParser implements AutoCloseable
         return pepGroup;
     }
 
-    public boolean hasNextPeptide() throws XMLStreamException
+    public enum MoleculeType
+    {
+        PEPTIDE,
+        MOLECULE
+    }
+    public MoleculeType hasNextPeptideOrMolecule() throws XMLStreamException
     {
         while(true)
         {
             int evtType = _reader.getEventType();
             if(XmlUtil.isStartElement(_reader, evtType, PEPTIDE))
             {
-                return true;
+                return MoleculeType.PEPTIDE;
+            }
+            if(XmlUtil.isStartElement(_reader, evtType, MOLECULE))
+            {
+                return MoleculeType.MOLECULE;
             }
             if(XmlUtil.isEndElement(_reader, evtType, PEPTIDE_LIST) || XmlUtil.isEndElement(_reader, evtType, PROTEIN))
             {
-                return false;
+                return null;
             }
             if(_reader.hasNext())
                 _reader.next();
             else
                 break;
         }
-        return false;
+        return null;
     }
 
     public Peptide nextPeptide() throws XMLStreamException, DataFormatException, IOException
     {
-        return readPeptide(_reader);
+        Peptide peptide = new Peptide();
+        readPeptide(_reader, peptide, false);
+        return peptide;
     }
 
-    private Peptide readPeptide(XMLStreamReader reader) throws XMLStreamException, IOException
+    public Molecule nextMolecule() throws XMLStreamException, DataFormatException, IOException
     {
-        Peptide peptide = new Peptide();
+        Molecule molecule = new Molecule();
+
+        // read molecule-specific attributes
+        molecule.setIonFormula(_reader.getAttributeValue(null, ION_FORMULA));
+        molecule.setCustomIonName(_reader.getAttributeValue(null, CUSTOM_ION_NAME));
+        molecule.setMassMonoisotopic(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_MONOISOTOPIC, MOLECULE));
+        molecule.setMassAverage(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_AVERAGE, MOLECULE));
+
+        readPeptide(_reader, molecule, true);
+
+        return molecule;
+    }
+
+    private void readPeptide(XMLStreamReader reader, Peptide peptide, boolean isCustomMolecule) throws XMLStreamException, IOException
+    {
         List<Precursor> precursorList = new ArrayList<>();
         peptide.setPrecursorList(precursorList);
         List<PeptideAnnotation> annotations = new ArrayList<>();
@@ -1085,6 +1116,8 @@ public class SkylineDocumentParser implements AutoCloseable
 
         peptide.setStandardType(XmlUtil.readAttribute(reader, "standard_type"));
 
+        peptide.setExplicitRetentionTime(XmlUtil.readDoubleAttribute(reader, "explicit_retention_time"));
+
         List<Peptide.StructuralModification> structuralMods = new ArrayList<>();
         List<Peptide.IsotopeModification> isotopeMods = new ArrayList<>();
         peptide.setStructuralMods(structuralMods);
@@ -1092,13 +1125,13 @@ public class SkylineDocumentParser implements AutoCloseable
         while(reader.hasNext())
         {
            int evtType = reader.next();
-            if(XmlUtil.isEndElement(reader, evtType, PEPTIDE))
+            if(XmlUtil.isEndElement(reader, evtType, PEPTIDE) || XmlUtil.isEndElement(reader, evtType, MOLECULE))
             {
                 break;
             }
             else if (XmlUtil.isStartElement(reader, evtType, PRECURSOR))
             {
-                precursorList.add(readPrecursor(reader, modifiedSequenceLight));
+                precursorList.add(readPrecursor(reader, modifiedSequenceLight, isCustomMolecule));
             }
             else if (XmlUtil.isStartElement(reader, evtType, NOTE))
             {
@@ -1144,7 +1177,6 @@ public class SkylineDocumentParser implements AutoCloseable
         }
 
         _peptideCount++;
-        return peptide;
     }
 
     private String readNote(XMLStreamReader reader) throws XMLStreamException
@@ -1241,7 +1273,6 @@ public class SkylineDocumentParser implements AutoCloseable
         setSkylineSampleFileId(reader, chromInfo);
         chromInfo.setRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
         chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
-        // TODO: read predicted retention time and ratio to standard
         return chromInfo;
     }
 
@@ -1259,7 +1290,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setSkylineSampleFileId(skylineSampleFileId);
     }
 
-    private Precursor readPrecursor(XMLStreamReader reader, String modifiedSequenceLight) throws XMLStreamException, IOException
+    private Precursor readPrecursor(XMLStreamReader reader, String modifiedSequenceLight, boolean isCustomMolecule) throws XMLStreamException, IOException
     {
         Precursor precursor = new Precursor();
         List<Transition> transitionList = new ArrayList<>();
@@ -1294,6 +1325,10 @@ public class SkylineDocumentParser implements AutoCloseable
         if(null != declustPotential)
             precursor.setDeclusteringPotential(Double.parseDouble(declustPotential));
 
+        precursor.setExplicitCollisionEnergy(XmlUtil.readDoubleAttribute(reader, "explicit_collision_energy"));
+        precursor.setExplicitDriftTimeMsec(XmlUtil.readDoubleAttribute(reader, "explicit_drift_time_msec"));
+        precursor.setExplicitDriftTimeHighEnergyOffsetMsec(XmlUtil.readDoubleAttribute(reader, "explicit_drift_time_high_energy_offset_msec"));
+
         while(reader.hasNext()) {
 
             int evtType = reader.next();
@@ -1320,7 +1355,7 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, TRANSITION))
             {
-                transitionList.add(readTransition(reader));
+                transitionList.add(readTransition(reader, isCustomMolecule));
             }
             else if(XmlUtil.isStartElement(reader, evtType, PRECURSOR_PEAK))
             {
@@ -1515,9 +1550,39 @@ public class SkylineDocumentParser implements AutoCloseable
         return chromInfo;
     }
 
-    private Transition readTransition(XMLStreamReader reader) throws XMLStreamException
+    private Transition readTransition(XMLStreamReader reader, boolean isCustomMolecule) throws XMLStreamException
+    {
+        if(isCustomMolecule)
+        {
+            return readMoleculeTransition(reader);
+        }
+        else
+        {
+            return readProteomicTransition(reader);
+        }
+    }
+
+    private MoleculeTransition readMoleculeTransition(XMLStreamReader reader) throws XMLStreamException
+    {
+        MoleculeTransition transition = new MoleculeTransition();
+        // read molecule transition-specific attributes
+        transition.setIonFormula(_reader.getAttributeValue(null, ION_FORMULA));
+        transition.setCustomIonName(_reader.getAttributeValue(null, CUSTOM_ION_NAME));
+        transition.setMassMonoisotopic(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_MONOISOTOPIC, MOLECULE));
+        transition.setMassAverage(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_AVERAGE, MOLECULE));
+        readTransition(reader, transition);
+        return transition;
+    }
+
+    private Transition readProteomicTransition(XMLStreamReader reader) throws XMLStreamException
     {
         Transition transition = new Transition();
+        readTransition(reader, transition);
+        return transition;
+    }
+
+    private void readTransition(XMLStreamReader reader, Transition transition) throws XMLStreamException
+    {
         List<TransitionAnnotation> annotations = new ArrayList<>();
         transition.setAnnotations(annotations);
 
@@ -1638,7 +1703,6 @@ public class SkylineDocumentParser implements AutoCloseable
         }
 
         _transitionCount++;
-        return transition;
     }
 
     private List<TransitionLoss> readLosses(XMLStreamReader reader) throws XMLStreamException

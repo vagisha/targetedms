@@ -256,6 +256,27 @@
                 <ns:columnTitle>Modified Peptide</ns:columnTitle>
             </ns:column>
             <ns:column columnName="StandardType"/>
+            <ns:column columnName="ExplicitRetentionTime">
+                <ns:columnTitle>Explicit RT</ns:columnTitle>
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableDbType="TABLE" tableName="Molecule">
+        <ns:titleColumn>MassMonoisotopic</ns:titleColumn>
+        <ns:description>Contains a row for each non-proteomic molecule loaded in a targeted MS run.</ns:description>
+        <ns:columns>
+            <ns:column columnName="PeptideId">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="IonFormula" />
+            <ns:column columnName="CustomIonName" />
+            <ns:column columnName="MassMonoisotopic">
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+            <ns:column columnName="MassAverage">
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideChromInfo">
@@ -278,15 +299,6 @@
                 <ns:columnTitle>RT</ns:columnTitle>
                 <ns:description>Retention Time</ns:description>
                 <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="PredictedRetentionTime">
-                <ns:columnTitle>Predicted RT</ns:columnTitle>
-                <ns:description>Predicted Retention Time</ns:description>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="RatioToStandard">
-                <ns:columnTitle>RatioToStandard</ns:columnTitle>
-                <ns:formatString>0.00</ns:formatString>
             </ns:column>
         </ns:columns>
     </ns:table>
@@ -338,6 +350,13 @@
             <ns:column columnName="RepresentativeDataState">
                 <ns:columnTitle>Library State</ns:columnTitle>
             </ns:column>
+            <ns:column columnName="ExplicitCollisionEnergy">
+                <ns:columnTitle>Explicit CE</ns:columnTitle>
+                <ns:description>Explicit Collision Energy</ns:description>
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+            <ns:column columnName="ExplicitDriftTimeMsec" />
+            <ns:column columnName="ExplicitDriftTimeHighEnergyOffsetMsec" />
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PrecursorChromInfo">
@@ -449,6 +468,23 @@
             <ns:column columnName="Note"/>
             <ns:column columnName="MassIndex"/>
             <ns:column columnName="MeasuredIonName"/>
+        </ns:columns>
+    </ns:table>
+    <ns:table tableDbType="TABLE" tableName="MoleculeTransition">
+        <ns:titleColumn>MassMonoisotopic</ns:titleColumn>
+        <ns:description>Contains a row for each non-proteomic molecule transition loaded in a targeted MS run.</ns:description>
+        <ns:columns>
+            <ns:column columnName="TransitionId">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="IonFormula"/>
+            <ns:column columnName="CustomIonName"/>
+            <ns:column columnName="MassMonoisotopic">
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+            <ns:column columnName="MassAverage">
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="TransitionChromInfo">
@@ -780,6 +816,7 @@
             <ns:column columnName="formula"/>
             <ns:column columnName="massdiffmono"/>
             <ns:column columnName="massdiffavg"/>
+            <ns:column columnName="Inclusion"/>
         </ns:columns>
     </ns:table>
     <ns:table tableName="transitionannotation" tableDbType="TABLE">
@@ -1076,6 +1113,7 @@
             <ns:column columnName="ModifiedSequence"/>
             <ns:column columnName="Charge"/>
             <ns:column columnName="DriftTime"/>
+            <ns:column columnName="HighEnergyDriftTimeOffset" />
         </ns:columns>
     </ns:table>
 

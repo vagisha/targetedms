@@ -56,6 +56,8 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
 
     private String _standardType;
 
+    private Double _explicitRetentionTime;
+
     public int getPeptideGroupId()
     {
         return _peptideGroupId;
@@ -264,6 +266,16 @@ public class Peptide extends AnnotatedEntity<PeptideAnnotation>
     public boolean isStandardTypePeptide()
     {
         return _standardType != null;
+    }
+
+    public Double getExplicitRetentionTime()
+    {
+        return _explicitRetentionTime;
+    }
+
+    public void setExplicitRetentionTime(Double explicitRetentionTime)
+    {
+        _explicitRetentionTime = explicitRetentionTime;
     }
 
     public static class Modification extends SkylineEntity

@@ -828,6 +828,7 @@ public class SkylineDocImporter
         }
 
         // CONSIDER: If there is already an identical entry in the PeptideGroup table re-use it.
+        _log.info("Inserting " + pepGroup.getLabel());
         pepGroup = Table.insert(_user, TargetedMSManager.getTableInfoPeptideGroup(), pepGroup);
 
         for (PeptideGroupAnnotation annotation : pepGroup.getAnnotations())
@@ -837,10 +838,21 @@ public class SkylineDocImporter
         }
 
         // Read peptides for this protein
-        while(parser.hasNextPeptide())
+        SkylineDocumentParser.MoleculeType molType;
+        while((molType = parser.hasNextPeptideOrMolecule()) != null)
         {
-            Peptide peptide = parser.nextPeptide();
+            Peptide peptide = null;
+            switch(molType)
+            {
+                case PEPTIDE:
+                    peptide = parser.nextPeptide();
+                    break;
+                case MOLECULE:
+                    peptide = parser.nextMolecule();
+                    break;
+            }
             insertPeptide(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap, libraryNameIdMap, pepGroup, peptide);
+
         }
     }
 
@@ -886,7 +898,7 @@ public class SkylineDocImporter
     {
         peptide.setPeptideGroupId(pepGroup.getId());
         // If the peptide modified sequence has not been set, use the light precursor sequence
-        if (peptide.getPeptideModifiedSequence() == null )
+        if (!(peptide instanceof Molecule) && peptide.getPeptideModifiedSequence() == null )
         {
             for(Precursor precursor: peptide.getPrecursorList())
             {
@@ -896,6 +908,12 @@ public class SkylineDocImporter
         }
 
         peptide = Table.insert(_user, TargetedMSManager.getTableInfoPeptide(), peptide);
+
+        if(peptide instanceof Molecule)
+        {
+            ((Molecule)peptide).setPeptideId(peptide.getId());
+            Table.insert(_user, TargetedMSManager.getTableInfoMolecule(), (Molecule)peptide);
+        }
 
         for (PeptideAnnotation annotation : peptide.getAnnotations())
         {
@@ -1109,6 +1127,13 @@ public class SkylineDocImporter
     {
         transition.setPrecursorId(precursor.getId());
         Table.insert(_user, TargetedMSManager.getTableInfoTransition(), transition);
+
+        // If this is a MoleculeTransition insert to MoleculeTransition Table
+        if(transition instanceof MoleculeTransition)
+        {
+            ((MoleculeTransition)transition).setTransitionId(transition.getId());
+            Table.insert(_user, TargetedMSManager.getTableInfoMoleculeTransition(), (MoleculeTransition)transition);
+        }
 
         // transition annotations
         for (TransitionAnnotation annotation : transition.getAnnotations())

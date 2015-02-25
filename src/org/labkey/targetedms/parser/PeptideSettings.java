@@ -336,6 +336,7 @@ public class PeptideSettings
         private String _formula;
         private Double _massDiffMono;
         private Double _massDiffAvg;
+        private String _inclusion;
 
         public int getStructuralModId()
         {
@@ -377,6 +378,16 @@ public class PeptideSettings
             _massDiffAvg = massDiffAvg;
         }
 
+        public String getInclusion()
+        {
+            return _inclusion;
+        }
+
+        public void setInclusion(String inclusion)
+        {
+            _inclusion = inclusion;
+        }
+
         @Override
         /** NOT using the Id in the equality check - just the other fields */
         public boolean equals(Object o)
@@ -387,6 +398,7 @@ public class PeptideSettings
             PotentialLoss that = (PotentialLoss) o;
 
             if (_formula != null ? !_formula.equals(that._formula) : that._formula != null) return false;
+            if (_inclusion != null ? !_inclusion.equals(that._inclusion) : that._inclusion != null) return false;
             if (_massDiffAvg != null ? !_massDiffAvg.equals(that._massDiffAvg) : that._massDiffAvg != null)
                 return false;
             if (_massDiffMono != null ? !_massDiffMono.equals(that._massDiffMono) : that._massDiffMono != null)
@@ -401,6 +413,7 @@ public class PeptideSettings
             int result = _formula != null ? _formula.hashCode() : 0;
             result = 31 * result + (_massDiffMono != null ? _massDiffMono.hashCode() : 0);
             result = 31 * result + (_massDiffAvg != null ? _massDiffAvg.hashCode() : 0);
+            result = 31 * result + (_inclusion != null ? _inclusion.hashCode() : 0);
             return result;
         }
     }
@@ -1052,6 +1065,7 @@ public class PeptideSettings
         private String _modifiedSequence;
         private int _charge;
         private Double _driftTime;
+        private Double _highEnergyDriftTimeOffset;
 
         public int getDriftTimePredictionSettingsId()
         {
@@ -1091,6 +1105,16 @@ public class PeptideSettings
         public void setDriftTime(Double driftTime)
         {
             _driftTime = driftTime;
+        }
+
+        public Double getHighEnergyDriftTimeOffset()
+        {
+            return _highEnergyDriftTimeOffset;
+        }
+
+        public void setHighEnergyDriftTimeOffset(Double highEnergyDriftTimeOffset)
+        {
+            _highEnergyDriftTimeOffset = highEnergyDriftTimeOffset;
         }
     }
 }
