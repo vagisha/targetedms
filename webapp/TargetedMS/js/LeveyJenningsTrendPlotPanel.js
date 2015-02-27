@@ -21,8 +21,13 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             labelAlign: 'left',
             width: 900,
             border: false,
+            defaults: {
+                xtype: 'panel',
+                border: false
+            },
             yAxisScale: 'linear',
-            chartType: 'retentionTime'
+            chartType: 'retentionTime',
+            groupedX: false
         });
 
         LABKEY.LeveyJenningsTrendPlotPanel.superclass.constructor.call(this, config);
@@ -132,27 +137,50 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             scope: this
         });
 
+        // initialize the checkbox to toggle separate vs groups x-values
+        this.groupedXLabel = new Ext.form.Label({text: 'Group X-Axis Values by Date'});
+        this.groupedXCheckbox = new Ext.form.Checkbox({
+            id: 'grouped-x-field',
+            style: 'margin: 0px',
+            listeners: {
+                scope: this,
+                check: function(cb, checked) {
+                    this.groupedX = checked;
+                    this.displayTrendPlot();
+                }
+            }
+        });
+
         var tbspacer = {xtype: 'tbspacer', width: 5};
 
-        var items = [
-            this.scaleLabel, tbspacer,
-            this.scaleCombo, tbspacer,
-            {xtype: 'tbseparator'}, tbspacer,
-            this.startDateLabel, tbspacer,
-            this.startDateField, tbspacer,
-            this.endDateLabel, tbspacer,
-            this.endDateField, tbspacer,
-            this.applyFilterButton, tbspacer,
-            {xtype: 'tbseparator'}, tbspacer,
-            this.chartTypeLabel, tbspacer,
-            this.chartTypeField
-        ];
-
-        this.tbar = new Ext.Toolbar({
+        var toolbar1 = new Ext.Toolbar({
             height: 30,
             buttonAlign: 'center',
-            items: items
+            items: [
+                this.chartTypeLabel, tbspacer,
+                this.chartTypeField, tbspacer,
+                {xtype: 'tbseparator'}, tbspacer,
+                this.startDateLabel, tbspacer,
+                this.startDateField, tbspacer,
+                this.endDateLabel, tbspacer,
+                this.endDateField, tbspacer,
+               this.applyFilterButton
+            ]
         });
+
+        var toolbar2 = new Ext.Toolbar({
+            height: 30,
+            buttonAlign: 'center',
+            items: [
+                this.scaleLabel, tbspacer,
+                this.scaleCombo, tbspacer,
+                {xtype: 'tbseparator'}, tbspacer,
+                this.groupedXCheckbox,
+                this.groupedXLabel
+            ]
+        });
+
+        this.items = [{ tbar: toolbar1 }, { tbar: toolbar2 }];
 
         LABKEY.LeveyJenningsTrendPlotPanel.superclass.initComponent.call(this);
 
@@ -241,13 +269,15 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         this.legendData = [];
         for (var i = 0; i < this.annotationData.length; i++)
         {
-            // track if we need to stack annotations that fall on the same date
             var annotation = this.annotationData[i];
-            if (!dateCount[annotation['Date']]) {
-                dateCount[annotation['Date']] = 0;
+            var annotationDate = this.formatDate(new Date(annotation['Date']), !this.groupedX);
+
+            // track if we need to stack annotations that fall on the same date
+            if (!dateCount[annotationDate]) {
+                dateCount[annotationDate] = 0;
             }
-            annotation.yStepIndex = dateCount[annotation['Date']];
-            dateCount[annotation['Date']]++;
+            annotation.yStepIndex = dateCount[annotationDate];
+            dateCount[annotationDate]++;
 
             // get unique annotation names and colors for the legend
             if (Ext.pluck(this.legendData, "text").indexOf(annotation['Name']) == -1)
@@ -341,8 +371,8 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             this.sequencePlotData[sequence].data.push({
                 AcquiredTime: row['AcquiredTime'], // keep in data for hover text display
                 FilePath: row['FilePath'], // keep in data for hover text display
-                fullDate: row['AcquiredTime'] ? this.formatDateTime(new Date(row['AcquiredTime'])) : null,
-                label: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
+                fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
+                date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
                 value: row['Value'],
                 mean: row['Mean'],
                 stdDev: row['StandardDev']
@@ -367,14 +397,22 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 }
 
                 // add any missing dates from the QC annotation data to the plot data
-                var precursorDates = Ext.pluck(precursorInfo.data, "fullDate");
+                var precursorDates = Ext.pluck(precursorInfo.data, (this.groupedX ? "date" : "fullDate"));
                 var datesToAdd = [];
                 for (var j = 0; j < this.annotationData.length; j++)
                 {
-                    var annotationDate = this.formatDateTime(new Date(this.annotationData[j].Date));
-                    if (precursorDates.indexOf(annotationDate) == -1 && Ext.pluck(datesToAdd, "fullDate").indexOf(annotationDate) == -1)
-                    {
-                        datesToAdd.push({ fullDate: annotationDate, label: this.formatDate(new Date(this.annotationData[j].Date)) });
+                    var annFullDate = this.formatDate(new Date(this.annotationData[j].Date), true);
+                    var annDate = this.formatDate(new Date(this.annotationData[j].Date));
+
+                    if (this.groupedX) {
+                        if (precursorDates.indexOf(annDate) == -1 && Ext.pluck(datesToAdd, "date").indexOf(annDate) == -1) {
+                            datesToAdd.push({ fullDate: annDate, date: annDate }); // we don't need full date if grouping x-values
+                        }
+                    }
+                    else {
+                        if (precursorDates.indexOf(annFullDate) == -1 && Ext.pluck(datesToAdd, "fullDate").indexOf(annFullDate) == -1) {
+                            datesToAdd.push({ fullDate: annFullDate, date: annDate });
+                        }
                     }
                 }
                 if (datesToAdd.length > 0)
@@ -385,7 +423,8 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                         var added = false;
                         for (var l = index; l < precursorInfo.data.length; l++)
                         {
-                            if (precursorInfo.data[l].fullDate > datesToAdd[k].fullDate)
+                            if ((this.groupedX && precursorInfo.data[l].date > datesToAdd[k].date)
+                                || (!this.groupedX && precursorInfo.data[l].fullDate > datesToAdd[k].fullDate))
                             {
                                 precursorInfo.data.splice(l, 0, datesToAdd[k]);
                                 added = true;
@@ -450,10 +489,11 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                         mean: 'mean',
                         stdDev: 'stdDev',
                         topMargin: 10 + maxStackedAnnotations * 12,
-                        xTickLabel: 'label',
+                        xTick: this.groupedX ? 'date' : undefined,
+                        xTickLabel: 'date',
                         yAxisDomain: [precursorInfo.min, precursorInfo.max],
                         yAxisScale: this.yAxisScale,
-                        showTrendLine: true,
+                        showTrendLine: !this.groupedX,
                         hoverTextFn: function(row){
                             return 'Acquired: ' + row['AcquiredTime'] + ", "
                                     + '\nValue: ' + row.value + ", "
@@ -480,10 +520,14 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     addAnnotationsToPlot: function(plot, precursorInfo) {
         var me = this;
 
+        var xAxisLabels = Ext.pluck(precursorInfo.data, (this.groupedX ? "date" : "fullDate"));
+        if (this.groupedX) {
+            xAxisLabels = Ext.unique(xAxisLabels);
+        }
+
         // use direct D3 code to inject the annotation icons to the rendered SVG
-        var xAxisLabels = Ext.pluck(precursorInfo.data, "fullDate");
         var xAcc = function(d) {
-            var annotationDate = me.formatDateTime(new Date(d['Date']));
+            var annotationDate = me.formatDate(new Date(d['Date']), !me.groupedX);
             return plot.scales.x.scale(xAxisLabels.indexOf(annotationDate));
         };
         var yAcc = function(d) {
@@ -504,7 +548,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         annotations.append("title")
             .text(function(d) {
                 return "Created By: " + d['DisplayName'] + ", "
-                    + "\nDate: " + me.formatDateTime(new Date(d['Date'])) + ", "
+                    + "\nDate: " + me.formatDate(new Date(d['Date']), true) + ", "
                     + "\nDescription: " + d['Description'];
             });
 
@@ -519,18 +563,14 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         annotations.on("mouseout", function(){ return mouseOff(this); });
     },
 
-    formatDate: function(d) {
+    formatDate: function(d, includeTime) {
         if (d instanceof Date) {
-            return Ext.util.Format.date(d, 'Y-m-d');
-        }
-        else {
-            return d;
-        }
-    },
-
-    formatDateTime: function(d) {
-        if (d instanceof Date) {
-            return Ext.util.Format.date(d, 'Y-m-d H:i');
+            if (includeTime) {
+                return Ext.util.Format.date(d, 'Y-m-d H:i');
+            }
+            else {
+                return Ext.util.Format.date(d, 'Y-m-d');
+            }
         }
         else {
             return d;
