@@ -51,7 +51,7 @@ public final class QCSummaryWebPart extends BodyWebPart
     private void readSummary()
     {
         String docSummary = _test.getText(elements().docSummary);
-        Pattern docPattern = Pattern.compile("(\\d+) Skyline document uploaded containing (\\d+) sample files");
+        Pattern docPattern = Pattern.compile("(\\d+) Skyline documents? uploaded containing (\\d+) sample files");
         Matcher docMatcher = docPattern.matcher(docSummary);
         Assert.assertTrue(docSummary, docMatcher.find());
         _docCount = Integer.parseInt(docMatcher.group(1));

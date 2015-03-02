@@ -21,6 +21,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.Locator;
+import org.labkey.test.SortDirection;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
@@ -30,10 +32,13 @@ import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaAnnotations;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
+import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.targetedms.QCHelper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -43,6 +48,9 @@ import static org.junit.Assert.assertFalse;
 public class TargetedMSQCTest extends TargetedMSTest
 {
     private static final String SProCoP_FILE = "SProCoPTutorial.zip";
+    private static final String QC_1_FILE = "QC_1.sky.zip";
+    private static final String QC_2_FILE = "QC_2.sky.zip";
+
     private static final String[] PRECURSORS = {
             "ATEEQLK",
             "FFVAPFPEVFGK",
@@ -67,14 +75,23 @@ public class TargetedMSQCTest extends TargetedMSTest
         init.importData(SProCoP_FILE);
     }
 
+    @Test
+    public void testSteps()
+    {
+        testQCDashboard();
+        testQCAnnotations();
+        testQCPlots();
+        testBadPlotRange();
+        testDocsWithOverlappingSampleFiles();
+    }
+
     @Before
     public void preTest()
     {
         goToProjectHome();
     }
 
-    @Test
-    public void testQCDashboard()
+    private void testQCDashboard()
     {
         List<String> expectedWebParts = Arrays.asList("QC Summary", "QC Plots");
 
@@ -84,16 +101,13 @@ public class TargetedMSQCTest extends TargetedMSTest
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
 
         QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
-        assertEquals("Wrong number of Skyline documents uploaded", 1, qcSummaryWebPart.getDocCount());
-        assertEquals("Wrong number sample files", 47, qcSummaryWebPart.getFileCount());
-        assertEquals("Wrong number of precursors tracked", 7, qcSummaryWebPart.getPrecursorCount());
+        verifyQcSummary(1, 47, 7);
 
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         assertEquals("Wrong precursors", Arrays.asList(PRECURSORS), qcPlotsWebPart.getPlotTitles());
     }
 
-    @Test
-    public void testQCAnnotations()
+    private void testQCAnnotations()
     {
         QCHelper.Annotation instrumentChange = new QCHelper.Annotation("Instrumentation Change", "We changed it", "2013-08-22 14:43");
         QCHelper.Annotation reagentChange = new QCHelper.Annotation("Reagent Change", "New reagents", "2013-08-10 15:34");
@@ -138,8 +152,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         }
     }
 
-    @Test
-    public void testQCPlots()
+    private void testQCPlots()
     {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
 
@@ -175,8 +188,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         }
     }
 
-    @Test
-    public void testBadPlotRange()
+    private void testBadPlotRange()
     {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
@@ -190,5 +202,76 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.setEndDate("2013-08-27");
         qcPlotsWebPart.applyRange();
         qcPlotsWebPart.waitForPlots(PRECURSORS.length);
+    }
+
+    private void testDocsWithOverlappingSampleFiles()
+    {
+        // Upload QC_1.sky.zip
+        // File has results from 3 sample files.
+        importData(QC_1_FILE, 2);
+        goToProjectHome();
+        verifyQcSummary(2, 50, 9);
+
+        // Upload QC_2.sky.zip
+        // File has results from 3 sample files but two of these are the same as the ones in QC_1.sky.zip.
+        // Results from these two sample files will not get imported to the QC folder.
+        // This is a test for the fix implemented for issue 22455:
+        // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=22455
+        // Importing a file containing two or more sample files that had already been imported from an earlier document
+        // in a QC folder was causing an exception in the code that calculates area ratios.
+        importData(QC_2_FILE, 3);
+        goToProjectHome();
+        verifyQcSummary(3, 51, 9);
+
+        // Check for the newly added precursors.
+        List<String> precursors = new ArrayList<>(Arrays.asList(PRECURSORS));
+        precursors.add("AGGSSEPVTGLADK");
+        precursors.add("VEATFGVDESANK");
+        Collections.sort(precursors);
+        QCPlotsWebPart qcPlotsWebPart = new PanoramaDashboard(this).getQcPlotsWebPart();
+        assertEquals("Wrong precursors", precursors, qcPlotsWebPart.getPlotTitles());
+
+        // Filter the grid to a single peptide
+        goToSchemaBrowser();
+        selectQuery("targetedms", "peptidechrominfo");
+        waitForText("view data");
+        clickAndWait(Locator.linkWithText("view data"));
+        DataRegionTable drt = new DataRegionTable("query", this);
+        drt.setFilter("PeptideId", "Equals", "AGGSSEPVTGLADK");
+
+        // Verify number of expected rows in the filtered grid
+        assertEquals("Unexpected number of rows", 4, drt.getDataRowCount());
+
+        // Add the RunId (Skyline document name) column
+        _customizeViewsHelper.openCustomizeViewPanel();
+        _customizeViewsHelper.addCustomizeViewColumn("SampleFileId/ReplicateId/RunId");
+        _customizeViewsHelper.saveCustomView();
+
+        // Sort the grid by the sample file name
+        String columnName = "SampleFileId";
+        drt.setSort(columnName, SortDirection.ASC);
+
+        // Verify values in the rows.
+        // Sample files 25fmol_Pepmix_spike_SRM_1601_02 and 25fmol_Pepmix_spike_SRM_1601_02
+        // are common to the two docs. They hould have only 1 row each since they were imported
+        // only from the first document (QC_1.sky.zip).
+        verifyRow(drt, 0, "25fmol_Pepmix_spike_SRM_1601_01", "QC_1.sky.zip");
+        verifyRow(drt, 1, "25fmol_Pepmix_spike_SRM_1601_02", "QC_1.sky.zip");
+        verifyRow(drt, 2, "25fmol_Pepmix_spike_SRM_1601_03", "QC_1.sky.zip");
+        verifyRow(drt, 3, "25fmol_Pepmix_spike_SRM_1601_04", "QC_2.sky.zip");
+    }
+
+    private void verifyRow(DataRegionTable drt, int row, String sampleName, String skylineDocName)
+    {
+        assertEquals(sampleName, drt.getDataAsText(row, 1));
+        assertEquals(skylineDocName, drt.getDataAsText(row, 4));
+    }
+
+    private void verifyQcSummary(int docCount, int sampleFileCount, int precursorCount)
+    {
+        QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
+        assertEquals("Wrong number of Skyline documents uploaded", docCount, qcSummaryWebPart.getDocCount());
+        assertEquals("Wrong number sample files", sampleFileCount, qcSummaryWebPart.getFileCount());
+        assertEquals("Wrong number of precursors tracked", precursorCount, qcSummaryWebPart.getPrecursorCount());
     }
 }
