@@ -167,11 +167,17 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals("2013-08-09", initialStartDate);
         assertEquals("2013-08-27", initialEndDate);
 
+        // test option to "Group X-Axis values by Date"
+        String initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
+        qcPlotsWebPart.setGroupXAxisValuesByDate(true);
+        assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
+        qcPlotsWebPart.setGroupXAxisValuesByDate(false);
+
         for (QCPlotsWebPart.Scale scale : QCPlotsWebPart.Scale.values())
         {
             if (scale != qcPlotsWebPart.getCurrentScale())
             {
-                String initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
+                initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
                 qcPlotsWebPart.setScale(scale);
                 assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
             }
@@ -181,7 +187,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         {
             if (type != qcPlotsWebPart.getCurrentChartType())
             {
-                String initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
+                initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
                 qcPlotsWebPart.setChartType(type);
                 assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
             }

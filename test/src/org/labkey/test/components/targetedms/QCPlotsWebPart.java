@@ -149,6 +149,17 @@ public final class QCPlotsWebPart extends BodyWebPart
         return ChartType.getEnum(typeInput.getAttribute("value"));
     }
 
+    public void setGroupXAxisValuesByDate(boolean check)
+    {
+        WebElement plot = elements().plot.findElement(_test.getDriver());
+        if (check)
+            _test.checkCheckbox(Locator.id("grouped-x-field"));
+        else
+            _test.uncheckCheckbox(Locator.id("grouped-x-field"));
+        _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
+        _test.waitForElement(elements().plot);
+    }
+
     public void applyRange()
     {
         WebElement plotPanel = elements().plotPanel.findElement(_test.getDriver());
