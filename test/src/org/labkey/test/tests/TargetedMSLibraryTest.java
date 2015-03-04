@@ -66,9 +66,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         verifyChromatogramLibraryDownloadWebPart(3, 38, 280, 1);
 
         // Verify proteins in the library
-        assertTextPresent("CTCF");
-        assertTextPresent("MAX");
-        assertTextPresent("TAF11");
+        assertTextPresent("CTCF", "MAX", "TAF11");
 
         // Verify the the protein MAX is present in this revision of the library
         assertElementPresent(Locator.xpath("//tr[(td[1]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
@@ -86,11 +84,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         verifyChromatogramLibraryDownloadWebPart(5, 68, 495, 2);
 
         // Verify proteins in the library
-        assertTextPresent("CTCF");
-        assertTextPresent("GATA3");
-        assertTextPresent("MAX");
-        assertTextPresent("TAF11");
-        assertTextPresent("TP53");
+        assertTextPresent("CTCF", "GATA3", "MAX", "TAF11", "TP53");
 
         //check MAX is from Stergachis-SupplementaryData_2_a.zip
         assertElementPresent(Locator.xpath("//tr[(td[1]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
@@ -102,9 +96,9 @@ public class TargetedMSLibraryTest extends TargetedMSTest
     {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
         assertElementPresent(Locator.xpath("//img[contains(@src, 'graphLibraryStatistics.view')]"));
-        assertTextPresent(proteinCount + " proteins");
-        assertTextPresent(peptideCount + " ranked peptides");
-        assertTextPresent(transitionCount + " ranked transitions");
+        assertTextPresent(
+                proteinCount + " proteins", peptideCount + " ranked peptides",
+                transitionCount + " ranked transitions");
         assertElementPresent(Locator.linkWithText("Download"));
         assertTextPresent("Revision " + revision);
     }
@@ -140,10 +134,10 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         log("Verifying that expexted conflicts exist");
         assertElementPresent(Locator.xpath("//tr[td[div[a[contains(@style,'color:red; text-decoration:underline;') and text()='Resolve conflicts']]]]"));
         clickAndWait(Locator.linkContainingText("Resolve conflicts"));
-        assertTextPresent("Conflicting Proteins in Document");
-        assertTextPresent("Current Library Proteins");
-        assertTextPresent("MAX");
-        assertTextPresent("Resolve conflicts for " + SKY_FILE2 + ".");
+        assertTextPresent(
+                "Conflicting Proteins in Document",
+                "Current Library Proteins",
+                "MAX", "Resolve conflicts for " + SKY_FILE2 + ".");
 
         clickButton("Apply Changes");
     }

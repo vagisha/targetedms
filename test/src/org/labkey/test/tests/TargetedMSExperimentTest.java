@@ -74,8 +74,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
     protected void verifyProteinSearch()
     {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
-        assertTextPresent("Mass Spec Search");
-        assertTextPresent("Protein Search");
+        assertTextPresent("Mass Spec Search", "Protein Search");
         _ext4Helper.clickExt4Tab("Protein Search");
         waitForElement(Locator.name("identifier"));
 
@@ -90,7 +89,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //waitForText("1 - 7 of 7");
         assertTextPresentInThisOrder("Protein Search", "Matching Proteins (1)", "Targeted MS Peptides");
         assertEquals(1, getElementCount(Locator.xpath("id('dataregion_PotentialProteins')/tbody/tr/td/a[contains(text(),'YAL038W')]")));
-        assertEquals(7, getElementCount( Locator.xpath("//td/span/a[contains(text(), 'YAL038W')]")));
+        assertEquals(7, getElementCount(Locator.xpath("//td/span/a[contains(text(), 'YAL038W')]")));
         assertEquals(1, getElementCount(Locator.xpath("//td/span/a[contains(text(), 'YAL038W_renamed')]")));
     }
 
@@ -164,7 +163,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
     protected void verifyPeptide()
     {
         // Click on a peptide.
-        String targetProtein  = "LTSLNVVAGSDLR";
+        String targetProtein = "LTSLNVVAGSDLR";
         clickAndWait(Locator.linkContainingText(targetProtein));
         //Verify it’s associated with the right protein and other values from details view.
         //protein name, portien, neutral mass, avg. RT , precursor
@@ -173,30 +172,28 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //Verify the spectrum shows up correctly.
 
         //Verify we get the expected number of chromatogram graphs.
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'peptideChromatogramChart.view')]"),1);
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"),2);
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'peptideChromatogramChart.view')]"), 1);
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 2);
         assertElementPresent(Locator.xpath("//img[contains(@alt, 'Chromatogram')]"), 3);
 
         //Click on a precursor icon link.
         clickAndWait(Locator.linkWithHref("precursorAllChromatogramsChart.view?"));
         //Verify expected values in detail view. Verify chromatogram.
-        assertTextPresentInThisOrder("Precursor Chromatograms", "YAL038W",  "LTSLNVVAGSDLR", "672.8777");
+        assertTextPresentInThisOrder("Precursor Chromatograms", "YAL038W", "LTSLNVVAGSDLR", "672.8777");
         assertElementPresent(Locator.xpath("//img[contains(@src, 'Chromatogram')]"));
 
         goBack();
         clickAndWait(Locator.linkContainingText("YAL038W"));
         //Verify summary info
-        assertTextPresent("CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, \"Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate,");
-
-        assertTextPresent("Sequence Coverage", "Peptides", "LTSLNVVAGSDLR", "TNNPETLVALR", "GVNLPGTDVDLPALSEK", "TANDVLTIR",
-                "GDLGIEIPAPEVLAVQK", "EPVSDWTDDVEAR",
-                "Peak Areas");
+        assertTextPresent("CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, \"Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate,",
+                "Sequence Coverage", "Peptides", "LTSLNVVAGSDLR", "TNNPETLVALR", "GVNLPGTDVDLPALSEK", "TANDVLTIR",
+                "GDLGIEIPAPEVLAVQK", "EPVSDWTDDVEAR", "Peak Areas");
 
         goBack();
         clickAndWait(Locator.linkContainingText(SKY_FILE));
         //Toggle to Transition view (click on down arrow in Precursor List webpart header)
         click(Locator.xpath("//th[span[contains(text(), 'Precursor List')]]/span/a/img"));
-        clickAndWait(Locator.tagContainingText("span","Transition List"));
+        clickAndWait(Locator.tagContainingText("span", "Transition List"));
         waitForText("Transition List");
         DataRegionTable drt = new DataRegionTable("transitions_view", this);
         drt.getDataAsText(5, "Label");
@@ -221,9 +218,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //Verify Targeted MS Peptides section of page.
         //Click on Details link.
         //Spot check some values.
-        assertTextPresent("Protein Search Results", "Targeted MS Peptides","LTSLNVVAGSDLR",
-               "TNNPETLVALR",  "GVNLPGTDVDLPALSEK",  "TANDVLTIR",
-                "GDLGIEIPAPEVLAVQK", "EPVSDWTDDVEAR");
+        assertTextPresent("Protein Search Results", "Targeted MS Peptides", "LTSLNVVAGSDLR", "TNNPETLVALR",
+                "GVNLPGTDVDLPALSEK", "TANDVLTIR", "GDLGIEIPAPEVLAVQK", "EPVSDWTDDVEAR");
         click(Locator.imageWithSrc("plus.gif", true));
         assertTextPresent("I from 71787-73289, Verified ORF, \"Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cyc...");
     }
