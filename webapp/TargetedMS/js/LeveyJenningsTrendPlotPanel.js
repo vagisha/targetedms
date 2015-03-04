@@ -310,17 +310,17 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         // Build query to get the values and mean/stdDev ranges for each data point. Default to retention time
         var sql = "";
         if (this.chartType == "peakArea") {
-            sql = "SELECT * FROM (SELECT PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, TotalArea AS Value FROM precursorchrominfo" + whereClause + ") X"
+            sql = "SELECT * FROM (SELECT PrecursorId AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, TotalArea AS Value FROM precursorchrominfo" + whereClause + ") X"
                 + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG(TotalArea) AS Mean, STDDEV(TotalArea) AS StandardDev FROM precursorchrominfo" + whereClause
                 + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
         }
         else if (this.chartType == "fwhm") {
-            sql = "SELECT * FROM (SELECT PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, MaxFWHM AS Value FROM precursorchrominfo" + whereClause + ") X"
+            sql = "SELECT * FROM (SELECT PrecursorId AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, MaxFWHM AS Value FROM precursorchrominfo" + whereClause + ") X"
                 + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG(MaxFWHM) AS Mean, STDDEV(MaxFWHM) AS StandardDev FROM precursorchrominfo" + whereClause
                 + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
         }
         else if (this.chartType == "fwb") {
-            sql = "SELECT * FROM (SELECT PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, (MaxEndTime - MinStartTime) AS Value FROM precursorchrominfo" + whereClause + ") X"
+            sql = "SELECT * FROM (SELECT PrecursorId AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, (MaxEndTime - MinStartTime) AS Value FROM precursorchrominfo" + whereClause + ") X"
                 + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG((MaxEndTime - MinStartTime)) AS Mean, STDDEV((MaxEndTime - MinStartTime)) AS StandardDev FROM precursorchrominfo" + whereClause
                 + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
         }
@@ -336,12 +336,12 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 whereClause += separator + "CAST(PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
             }
 
-            sql = "SELECT * FROM (SELECT PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.FilePath AS FilePath, AreaRatio AS Value FROM precursorarearatio " + whereClause + ") X"
+            sql = "SELECT * FROM (SELECT PrecursorChromInfoId.PrecursorId AS PrecursorId, PrecursorChromInfoId AS PrecursorChromInfoId, PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.FilePath AS FilePath, AreaRatio AS Value FROM precursorarearatio " + whereClause + ") X"
                 + " JOIN (SELECT PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence2, AVG(AreaRatio) AS Mean, STDDEV(AreaRatio) AS StandardDev FROM precursorarearatio" + whereClause
                 + " GROUP BY PrecursorChromInfoId.PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
         }
         else {
-            sql = "SELECT * FROM (SELECT PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, BestRetentionTime AS Value FROM precursorchrominfo" + whereClause + ") X "
+            sql = "SELECT * FROM (SELECT PrecursorId AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, BestRetentionTime AS Value FROM precursorchrominfo" + whereClause + ") X "
                 + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG(BestRetentionTime) AS Mean, STDDEV(BestRetentionTime) AS StandardDev FROM precursorchrominfo" + whereClause
                 + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
         }
@@ -370,6 +370,8 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
 
             this.sequencePlotData[sequence].data.push({
                 AcquiredTime: row['AcquiredTime'], // keep in data for hover text display
+                PrecursorId: row['PrecursorId'], // keep in data for click handler
+                PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
                 FilePath: row['FilePath'], // keep in data for hover text display
                 fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
                 date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
@@ -498,6 +500,9 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                             return 'Acquired: ' + row['AcquiredTime'] + ", "
                                     + '\nValue: ' + row.value + ", "
                                     + '\nFile Path: ' + row['FilePath'];
+                        },
+                        pointClickFn: function(event, row) {
+                            window.location = LABKEY.ActionURL.buildURL('targetedms', "precursorAllChromatogramsChart", LABKEY.ActionURL.getContainer(), { id: row.PrecursorId, chromInfoId: row.PrecursorChromInfoId }) + '#ChromInfo' + row.PrecursorChromInfoId;
                         }
                     },
                     gridLineColor: 'white',

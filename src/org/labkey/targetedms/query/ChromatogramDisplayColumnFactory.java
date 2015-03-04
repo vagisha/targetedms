@@ -22,6 +22,7 @@ import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.HttpView;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.parser.SampleFile;
 
@@ -104,7 +105,14 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                 chromAction.addParameter("annotationsFilter", String.valueOf(_annotationsFilter));
                 chromAction.addParameter("replicatesFilter", String.valueOf(_replicatesFilter));
 
-                String imgLink = "<img src=\""+chromAction.getLocalURIString()+"\" alt=\"Chromatogram "+sampleFile.getSampleName()+"\">";
+                // Figure out if we should highlight this chromatogram
+                boolean highlight = false;
+                if (HttpView.hasCurrentView())
+                {
+                    highlight = String.valueOf(Id).equals(HttpView.currentRequest().getParameter("chromInfoId"));
+                }
+
+                String imgLink = "<a name=\"ChromInfo" + Id + "\"><img style=\"border: " + (highlight ? "beige" : "white") + " solid 8px\" src=\"" + chromAction.getLocalURIString() + "\" alt=\"Chromatogram "+sampleFile.getSampleName()+"\"></a>";
                 out.write(imgLink);
             }
         };

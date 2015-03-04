@@ -15,7 +15,10 @@
 
 package org.labkey.targetedms.chart;
 
+import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.Formats;
+import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.PeptideSettings;
@@ -128,6 +131,7 @@ public class LabelFactory
     {
         SampleFile sampleFile = ReplicateManager.getSampleFile(pChromInfo.getSampleFileId());
         Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
+        TargetedMSRun run = TargetedMSManager.getRun(replicate.getRunId());
         String precursorLabel = precursorLabel(pChromInfo.getPrecursorId());
 
         StringBuilder label = new StringBuilder();
@@ -135,6 +139,11 @@ public class LabelFactory
         if(!sampleFile.getSampleName().contains(replicate.getName()))
         {
             label.append(" (").append(sampleFile.getSampleName()).append(')');
+        }
+        if (run != null)
+        {
+            label.append(", ");
+            label.append(DateUtil.formatDateTime(run.getContainer(), sampleFile.getAcquiredTime()));
         }
         label.append('\n');
         label.append(precursorLabel);
