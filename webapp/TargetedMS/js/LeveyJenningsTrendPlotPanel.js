@@ -495,7 +495,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                         xTickLabel: 'date',
                         yAxisDomain: [precursorInfo.min, precursorInfo.max],
                         yAxisScale: this.yAxisScale,
-                        showTrendLine: !this.groupedX,
+                        showTrendLine: true,
                         hoverTextFn: function(row){
                             return 'Acquired: ' + row['AcquiredTime'] + ", "
                                     + '\nValue: ' + row.value + ", "
