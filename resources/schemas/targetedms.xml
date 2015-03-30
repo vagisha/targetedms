@@ -1021,6 +1021,7 @@
             <ns:column columnName="Title">
                 <ns:description>Title for this targeted MS experiment</ns:description>
                 <ns:nullable>false</ns:nullable>
+                <ns:inputRows>2</ns:inputRows>
             </ns:column>
             <ns:column columnName="Organism">
                 <ns:description>Name of the organism studied in the experiment</ns:description>
@@ -1186,7 +1187,7 @@
                 </ns:fk>
             </ns:column>
             <ns:column columnName="JournalId">
-                <ns:columnTitle>Journal</ns:columnTitle>
+                <ns:columnTitle>Target</ns:columnTitle>
                 <ns:fk>
                     <ns:fkColumnName>Id</ns:fkColumnName>
                     <ns:fkDbSchema>targetedms</ns:fkDbSchema>
@@ -1203,7 +1204,7 @@
                 <ns:url>/targetedms/showExperimentAnnotations.view?id=${ExperimentAnnotationsId}</ns:url>
             </ns:column>
             <ns:column columnName="ShortAccessURL">
-                <ns:columnTitle>Access URL</ns:columnTitle>
+                <ns:columnTitle>Access Link</ns:columnTitle>
                 <ns:fk>
                     <ns:fkColumnName>EntityId</ns:fkColumnName>
                     <ns:fkDbSchema>core</ns:fkDbSchema>
@@ -1211,7 +1212,7 @@
                 </ns:fk>
             </ns:column>
             <ns:column columnName="ShortCopyURL">
-                <ns:columnTitle>Copy URL</ns:columnTitle>
+                <ns:columnTitle>Copy Link</ns:columnTitle>
                 <ns:fk>
                     <ns:fkColumnName>EntityId</ns:fkColumnName>
                     <ns:fkDbSchema>core</ns:fkDbSchema>

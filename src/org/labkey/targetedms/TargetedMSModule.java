@@ -25,6 +25,7 @@ import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
@@ -360,5 +361,25 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public UpgradeCode getUpgradeCode()
     {
         return new TargetedMSUpgradeCode();
+    }
+
+    public static FolderType getFolderType(@NotNull Container container)
+    {
+        TargetedMSModule targetedMSModule = null;
+        for (Module m : container.getActiveModules())
+        {
+            if (m instanceof TargetedMSModule)
+            {
+                targetedMSModule = (TargetedMSModule) m;
+                break;
+            }
+        }
+        if (targetedMSModule != null)
+        {
+            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
+            return FolderType.valueOf(moduleProperty.getValueContainerSpecific(container));
+        }
+
+        return null;
     }
 }

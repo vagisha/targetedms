@@ -3767,6 +3767,12 @@ public class TargetedMSController extends SpringActionController
         {
             _expAnnot = form.getBean();
 
+            if(ExperimentAnnotationsManager.getExperimentIncludesContainer(getContainer()) != null)
+            {
+                errors.reject(ERROR_MSG, "Failed to create new experiment.  Data in this folder is already part of an experiment.");
+                return false;
+            }
+
             if (!StringUtils.isBlank(_expAnnot.getPublicationLink()))
             {
                 UrlValidator urlValidator = new UrlValidator(new String[]{"http", "https"});
@@ -3936,7 +3942,8 @@ public class TargetedMSController extends SpringActionController
 
 
             // Experiment details
-            JspView<ExperimentAnnotations> experimentDetailsView = new JspView<ExperimentAnnotations>("/org/labkey/targetedms/view/expannotations/experimentDetails.jsp", exptAnnotations);
+            ExperimentAnnotationsDetails exptDetails = new ExperimentAnnotationsDetails(getUser(), exptAnnotations, true);
+            JspView<ExperimentAnnotationsDetails> experimentDetailsView = new JspView<>("/org/labkey/targetedms/view/expannotations/experimentDetails.jsp", exptDetails);
             VBox result = new VBox(experimentDetailsView);
             experimentDetailsView.setFrame(WebPartView.FrameType.PORTAL);
             experimentDetailsView.setTitle("Experiment Details");
@@ -3969,9 +3976,9 @@ public class TargetedMSController extends SpringActionController
                 journalListView.setShowRecordSelectors(false);
                 journalListView.setButtonBarPosition(DataRegion.ButtonBarPosition.NONE);
                 VBox journalsBox = new VBox();
-                journalsBox.setTitle("Journals");
+                journalsBox.setTitle("Publication Activity");
                 journalsBox.setFrame(WebPartView.FrameType.PORTAL);
-                journalsBox.addView(new HtmlView("<div>The following journals have access to this experiment.</div>"));
+                journalsBox.addView(new HtmlView("<div>This experiment has been published to the following targets</div>"));
                 journalsBox.addView(journalListView);
                 result.addView(journalsBox);
             }
@@ -3985,6 +3992,58 @@ public class TargetedMSController extends SpringActionController
         }
 
     }
+
+    public static class ExperimentAnnotationsDetails
+    {
+        private ExperimentAnnotations _experimentAnnotations;
+        private boolean _fullDetails = false;
+        private boolean _canPublish = false;
+
+        public ExperimentAnnotationsDetails(){}
+        public ExperimentAnnotationsDetails(User user, ExperimentAnnotations exptAnnotations, boolean fullDetails)
+        {
+            _experimentAnnotations = exptAnnotations;
+            _fullDetails = fullDetails;
+
+            Container c = _experimentAnnotations.getContainer();
+            FolderType folderType = TargetedMSModule.getFolderType(c);
+            if(folderType == FolderType.Experiment)
+            {
+                // User needs to be the folder admin to publish an experiment.
+                _canPublish = !_experimentAnnotations.isJournalCopy() && c.hasPermission(user, AdminPermission.class);
+            }
+        }
+        public ExperimentAnnotations getExperimentAnnotations()
+        {
+            return _experimentAnnotations;
+        }
+
+        public void setExperimentAnnotations(ExperimentAnnotations experimentAnnotations)
+        {
+            _experimentAnnotations = experimentAnnotations;
+        }
+
+        public boolean isFullDetails()
+        {
+            return _fullDetails;
+        }
+
+        public void setFullDetails(boolean fullDetails)
+        {
+            _fullDetails = fullDetails;
+        }
+
+        public boolean isCanPublish()
+        {
+            return _canPublish;
+        }
+
+        public void setCanPublish(boolean canPublish)
+        {
+            _canPublish = canPublish;
+        }
+    }
+
     public static class ViewExperimentAnnotationsForm
     {
         private int _id;
@@ -4099,31 +4158,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public boolean handlePost(SelectedIdsForm deleteForm, BindException errors) throws Exception
         {
-            int[] experimentAnnotationIds = deleteForm.getIds(false);
-            User user = getUser();
-            ExperimentAnnotations[] experimentAnnotations = new ExperimentAnnotations[experimentAnnotationIds.length];
-            int i = 0;
-            for(int experimentAnnotationId: experimentAnnotationIds)
-            {
-                ExperimentAnnotations exp = ExperimentAnnotationsManager.get(experimentAnnotationId);
-                Container container = exp.getContainer();
-                if(!container.hasPermission(user, DeletePermission.class))
-                {
-                    errors.reject(ERROR_MSG, "You do not have permissions to delete experiments in folder " + container.getPath());
-                }
-                experimentAnnotations[i++] = exp;
-            }
-
-            if(!errors.hasErrors())
-            {
-                ExperimentService.Interface experimentService = ExperimentService.get();
-                for(ExperimentAnnotations experiment: experimentAnnotations)
-                {
-                    experimentService.deleteExpExperimentByRowId(experiment.getContainer(), getUser(), experiment.getExperimentId());
-                }
-                return true;
-            }
-            return false;
+            return deleteExperimentAnnotations(errors, deleteForm.getIds(), getUser());
         }
 
         @Override
@@ -4139,15 +4174,42 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    public static class SelectedIdsForm extends ViewForm implements DataRegionSelection.DataSelectionKeyForm
+    private static boolean deleteExperimentAnnotations(BindException errors, int[] experimentAnnotationIds, User user)
+    {
+        ExperimentAnnotations[] experimentAnnotations = new ExperimentAnnotations[experimentAnnotationIds.length];
+        int i = 0;
+        for(int experimentAnnotationId: experimentAnnotationIds)
+        {
+            ExperimentAnnotations exp = ExperimentAnnotationsManager.get(experimentAnnotationId);
+            Container container = exp.getContainer();
+            if(!container.hasPermission(user, DeletePermission.class))
+            {
+                errors.reject(ERROR_MSG, "You do not have permissions to delete experiments in folder " + container.getPath());
+            }
+            experimentAnnotations[i++] = exp;
+        }
+
+        if(!errors.hasErrors())
+        {
+            ExperimentService.Interface experimentService = ExperimentService.get();
+            for(ExperimentAnnotations experiment: experimentAnnotations)
+            {
+                experimentService.deleteExpExperimentByRowId(experiment.getContainer(), user, experiment.getExperimentId());
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public static class SelectedIdsForm extends ViewForm implements DataRegionSelection.DataSelectionKeyForm, SelectedExperimentIds
     {
         private String _dataRegionSelectionKey;
 
         public SelectedIdsForm() {super();}
 
-        public int[] getIds(boolean clear)
+        public int[] getIds()
         {
-            return PageFlowUtil.toInts(DataRegionSelection.getSelected(getViewContext(), getDataRegionSelectionKey(), false, clear));
+            return PageFlowUtil.toInts(DataRegionSelection.getSelected(getViewContext(), getDataRegionSelectionKey(), false, false));
         }
 
         public String getDataRegionSelectionKey()
@@ -4158,6 +4220,56 @@ public class TargetedMSController extends SpringActionController
         public void setDataRegionSelectionKey(String dataRegionSelectionKey)
         {
             _dataRegionSelectionKey = dataRegionSelectionKey;
+        }
+    }
+
+    public static interface SelectedExperimentIds
+    {
+        public int[] getIds();
+    }
+
+    public static class DeleteExperimentAnnotationsForm extends ExperimentAnnotationsForm implements SelectedExperimentIds
+    {
+        public int[] getIds()
+        {
+            return new int[]{this.getBean().getId()};
+        }
+    }
+
+    @RequiresPermissionClass(DeletePermission.class)
+    public class DeleteExperimentAnnotationsAction extends ConfirmAction<DeleteExperimentAnnotationsForm>
+    {
+        @Override
+        public ModelAndView getConfirmView(DeleteExperimentAnnotationsForm deleteForm, BindException errors) throws Exception
+        {
+            return FormPage.getView(TargetedMSController.class, deleteForm, "view/expannotations/deleteExperimentAnnotations.jsp");
+        }
+
+        public boolean handlePost(DeleteExperimentAnnotationsForm form, BindException errors) throws Exception
+        {
+            int _experimentAnnotationsId = form.getBean().getId();
+            ExperimentAnnotations exptAnnotations = ExperimentAnnotationsManager.get(_experimentAnnotationsId);
+            if (exptAnnotations == null)
+            {
+                throw new NotFoundException("Could not find experiment with ID " + _experimentAnnotationsId);
+            }
+
+            // Check container
+            ensureCorrectContainer(getContainer(), exptAnnotations.getContainer(), getViewContext());
+
+            return deleteExperimentAnnotations(errors, form.getIds(), getUser());
+        }
+
+        @Override
+        public void validateCommand(DeleteExperimentAnnotationsForm deleteForm, Errors errors)
+        {
+            return;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(DeleteExperimentAnnotationsForm deleteExperimentAnnotationForm)
+        {
+            return getContainer().getStartURL(getUser());
         }
     }
 
@@ -4278,6 +4390,17 @@ public class TargetedMSController extends SpringActionController
     {
         ActionURL url = new ActionURL(ShowUpdateExperimentAnnotationsAction.class, c);
         url.addParameter("id", experimentAnnotationsId);  // The name of the parameter is important. This is used to populate the TableViewForm (refreshFromDb())
+        if(returnURL != null)
+        {
+            url.addReturnURL(returnURL);
+        }
+        return url;
+    }
+
+    public static ActionURL getDeleteExperimentURL(Container c, int experimentAnnotationsId, URLHelper returnURL)
+    {
+        ActionURL url = new ActionURL(DeleteExperimentAnnotationsAction.class, c);
+        url.addParameter("id", experimentAnnotationsId);
         if(returnURL != null)
         {
             url.addReturnURL(returnURL);
