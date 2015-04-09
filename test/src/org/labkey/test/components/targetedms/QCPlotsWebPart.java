@@ -75,14 +75,14 @@ public final class QCPlotsWebPart extends BodyWebPart
     public void setScale(Scale scale)
     {
         WebElement plot = elements().plot.findElement(_test.getDriver());
-        _test._extHelper.selectComboBoxItem(elements().scaleCombo, scale.toString());
+        _test._ext4Helper.selectComboBoxItem(elements().scaleCombo, scale.toString());
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
         _test.waitForElement(elements().plot);
     }
 
     public Scale getCurrentScale()
     {
-        WebElement scaleInput = elements().scaleCombo.append("/input").findElement(_test.getDriver());
+        WebElement scaleInput = elements().scaleCombo.append("//input").findElement(_test.getDriver());
         return Scale.getEnum(scaleInput.getAttribute("value"));
     }
 
@@ -138,14 +138,14 @@ public final class QCPlotsWebPart extends BodyWebPart
     public void setChartType(ChartType chartType)
     {
         WebElement plot = elements().plot.findElement(_test.getDriver());
-        _test._extHelper.selectComboBoxItem(elements().chartTypeCombo, chartType.toString());
+        _test._ext4Helper.selectComboBoxItem(elements().chartTypeCombo, chartType.toString());
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
         _test.waitForElement(elements().plot);
     }
 
     public ChartType getCurrentChartType()
     {
-        WebElement typeInput = elements().chartTypeCombo.append("/input").findElement(_test.getDriver());
+        WebElement typeInput = elements().chartTypeCombo.append("//input").findElement(_test.getDriver());
         return ChartType.getEnum(typeInput.getAttribute("value"));
     }
 
@@ -153,9 +153,9 @@ public final class QCPlotsWebPart extends BodyWebPart
     {
         WebElement plot = elements().plot.findElement(_test.getDriver());
         if (check)
-            _test.checkCheckbox(Locator.id("grouped-x-field"));
+            _test._ext4Helper.checkCheckbox(elements().groupedXCheckbox);
         else
-            _test.uncheckCheckbox(Locator.id("grouped-x-field"));
+            _test._ext4Helper.uncheckCheckbox(elements().groupedXCheckbox);
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
         _test.waitForElement(elements().plot);
     }
@@ -164,9 +164,9 @@ public final class QCPlotsWebPart extends BodyWebPart
     {
         WebElement plotPanel = elements().plotPanel.findElement(_test.getDriver());
         WebElement panelChild = Locator.css("*").findElement(plotPanel); // The panel itself doesn't become stale, but its children do
-        _test.click(Locator.button("Apply"));
+        _test.clickButton("Apply", 0);
         _test.shortWait().until(ExpectedConditions.stalenessOf(panelChild));
-        _test._extHelper.waitForExt3MaskToDisappear(BaseWebDriverTest.WAIT_FOR_PAGE);
+        _test._ext4Helper.waitForMaskToDisappear(BaseWebDriverTest.WAIT_FOR_PAGE);
     }
 
     public void waitForPlots(Integer plotCount)
@@ -218,13 +218,14 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     private class Elements extends BodyWebPart.Elements
     {
-        Locator.XPathLocator scaleCombo = webPart.append(Locator.id("scale-combo-box")).parent();
-        Locator.XPathLocator startDate = webPart.append(Locator.id("start-date-field"));
-        Locator.XPathLocator endDate = webPart.append(Locator.id("end-date-field"));
-        Locator.XPathLocator chartTypeCombo = webPart.append(Locator.id("chart-type-field")).parent();
+        Locator.XPathLocator scaleCombo = webPart.append(Locator.id("scale-combo-box"));
+        Locator.XPathLocator startDate = webPart.append(Locator.id("start-date-field")).append("//input");
+        Locator.XPathLocator endDate = webPart.append(Locator.id("end-date-field")).append("//input");
+        Locator.XPathLocator chartTypeCombo = webPart.append(Locator.id("chart-type-field"));
+        Locator.XPathLocator groupedXCheckbox = webPart.append(Locator.id("grouped-x-field")).append("//input");
 
         Locator.XPathLocator plotPanel = webPart.append(Locator.tagWithId("div", "tiledPlotPanel"));
-        Locator.XPathLocator plot = plotPanel.append(Locator.tagWithClass("table", "labkey-wp"));
-        Locator.XPathLocator plotTitle = plot.append(Locator.tagWithClass("span", "labkey-wp-title-text"));
+        Locator.XPathLocator plot = plotPanel.append(Locator.tagWithClass("table", "qc-plot-wp"));
+        Locator.XPathLocator plotTitle = plot.append(Locator.tagWithClass("span", "qc-plot-wp-title"));
     }
 }

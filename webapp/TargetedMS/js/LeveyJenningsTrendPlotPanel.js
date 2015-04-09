@@ -4,34 +4,30 @@
  * Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
  */
 
-Ext.namespace('LABKEY');
-
 /**
  * Class to create a panel for displaying the R plot for the trending of retention times, peak areas, and other
  * values for the selected graph parameters.
  *
  * To add PDF export support use LABKEY.vis.SVGConverter.convert.
  */
-LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
-    constructor : function(config){
-        // apply some Ext panel specific properties to the config
-        Ext.apply(config, {
-            items: [],
-            header: false,
-            labelAlign: 'left',
-            width: 900,
-            border: false,
-            defaults: {
-                xtype: 'panel',
-                border: false
-            },
-            yAxisScale: 'linear',
-            chartType: 'retentionTime',
-            groupedX: false
-        });
+Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
-        LABKEY.LeveyJenningsTrendPlotPanel.superclass.constructor.call(this, config);
+    extend: 'Ext.form.Panel',
+
+    header: false,
+    border: false,
+    labelAlign: 'left',
+    items: [],
+    defaults: {
+        xtype: 'panel',
+        border: false
     },
+
+    // properties specific to this TargetedMS Levey-Jennings plot implementation
+    yAxisScale: 'linear',
+    chartType: 'retentionTime',
+    groupedX: false,
+    plotWidth: null,
 
     initComponent : function() {
         this.trendDiv = 'tiledPlotPanel';
@@ -41,13 +37,14 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             this.endDate = null;
 
         // initialize the y-axis scale combo for the top toolbar
-        this.scaleLabel = new Ext.form.Label({text: 'Y-Axis Scale:'});
-        this.scaleCombo = new Ext.form.ComboBox({
+        this.scaleCombo = Ext4.create('Ext.form.field.ComboBox', {
             id: 'scale-combo-box',
-            width: 75,
+            width: 155,
+            labelWidth: 80,
+            fieldLabel: 'Y-Axis Scale',
             triggerAction: 'all',
             mode: 'local',
-            store: new Ext.data.ArrayStore({
+            store: Ext4.create('Ext.data.ArrayStore', {
                 fields: ['value', 'display'],
                 data: [['linear', 'Linear'], ['log', 'Log']]
             }),
@@ -58,53 +55,54 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             editable: false,
             listeners: {
                 scope: this,
-                'select': function(cmp, newVal, oldVal) {
-                    this.yAxisScale = cmp.getValue();
+                change: function(cmp, newVal, oldVal) {
+                    this.yAxisScale = newVal;
                     this.displayTrendPlot();
                 }
             }
         });
 
         // initialize the date range selection fields for the top toolbar
-        this.startDateLabel = new Ext.form.Label({text: 'Start Date:'});
-        this.startDateField = new Ext.form.DateField({
+        this.startDateField = Ext4.create('Ext.form.field.Date', {
             id: 'start-date-field',
+            width: 180,
+            labelWidth: 65,
+            fieldLabel: 'Start Date',
             value: this.startDate,
+            allowBlank: false,
             format:  'Y-m-d',
             listeners: {
                 scope: this,
-                'valid': function (df) {
-                    if (df.getValue() != '')
-                        this.applyFilterButton.enable();
-                },
-                'invalid': function (df, msg) {
-                    this.applyFilterButton.disable();
-                }
-            }
-        });
-        this.endDateLabel = new Ext.form.Label({text: 'End Date:'});
-        this.endDateField = new Ext.form.DateField({
-            id: 'end-date-field',
-            value: this.endDate,
-            format:  'Y-m-d',
-            listeners: {
-                scope: this,
-                'valid': function (df) {
-                    if (df.getValue() != '')
-                        this.applyFilterButton.enable();
-                },
-                'invalid': function (df, msg) {
-                    this.applyFilterButton.disable();
+                validitychange: function (df, isValid) {
+                    this.applyFilterButton.setDisabled(!isValid);
                 }
             }
         });
 
-        this.chartTypeLabel = new Ext.form.Label({text: 'Chart Type:'});
-        this.chartTypeField = new Ext.form.ComboBox({
+        this.endDateField = Ext4.create('Ext.form.field.Date', {
+            id: 'end-date-field',
+            width: 175,
+            labelWidth: 60,
+            fieldLabel: 'End Date',
+            value: this.endDate,
+            allowBlank: false,
+            format:  'Y-m-d',
+            listeners: {
+                scope: this,
+                validitychange: function (df, isValid) {
+                    this.applyFilterButton.setDisabled(!isValid);
+                }
+            }
+        });
+
+        this.chartTypeField = Ext4.create('Ext.form.field.ComboBox', {
             id: 'chart-type-field',
+            width: 340,
+            labelWidth: 70,
+            fieldLabel: 'Chart Type',
             triggerAction: 'all',
             mode: 'local',
-            store: new Ext.data.ArrayStore({
+            store: Ext4.create('Ext.data.ArrayStore', {
                 fields: ['value', 'display'],
                 data: [
                     ['retentionTime', 'Retention Time']
@@ -117,20 +115,19 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             valueField: 'value',
             displayField: 'display',
             value: 'retentionTime',
-            width: 270,
             forceSelection: true,
             editable: false,
             listeners: {
                 scope: this,
-                'select': function(cmp, newVal, oldVal) {
-                    this.chartType = cmp.getValue();
+                change: function(cmp, newVal, oldVal) {
+                    this.chartType = newVal;
                     this.displayTrendPlot();
                 }
             }
         });
 
         // initialize the refesh graph button
-        this.applyFilterButton = new Ext.Button({
+        this.applyFilterButton = Ext4.create('Ext.button.Button', {
             disabled: true,
             text: 'Apply',
             handler: this.applyGraphFilter,
@@ -138,58 +135,56 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         });
 
         // initialize the checkbox to toggle separate vs groups x-values
-        this.groupedXLabel = new Ext.form.Label({text: 'Group X-Axis Values by Date'});
-        this.groupedXCheckbox = new Ext.form.Checkbox({
+        this.groupedXCheckbox = Ext4.create('Ext.form.field.Checkbox', {
             id: 'grouped-x-field',
-            style: 'margin: 0px',
+            boxLabel: 'Group X-Axis Values by Date',
             listeners: {
                 scope: this,
-                check: function(cb, checked) {
-                    this.groupedX = checked;
+                change: function(cb, newValue, oldValue) {
+                    this.groupedX = newValue;
                     this.displayTrendPlot();
                 }
             }
         });
 
-        var tbspacer = {xtype: 'tbspacer', width: 5};
+        var tbspacer = {xtype: 'tbspacer'};
 
-        var toolbar1 = new Ext.Toolbar({
-            height: 30,
-            buttonAlign: 'center',
+        var toolbar1 = Ext4.create('Ext.toolbar.Toolbar', {
+            //height: 30,
+            ui: 'footer',
+            layout: { pack: 'center' },
+            padding: 10,
             items: [
-                this.chartTypeLabel, tbspacer,
                 this.chartTypeField, tbspacer,
                 {xtype: 'tbseparator'}, tbspacer,
-                this.startDateLabel, tbspacer,
                 this.startDateField, tbspacer,
-                this.endDateLabel, tbspacer,
                 this.endDateField, tbspacer,
-               this.applyFilterButton
+                this.applyFilterButton
             ]
         });
 
-        var toolbar2 = new Ext.Toolbar({
-            height: 30,
-            buttonAlign: 'center',
+        var toolbar2 = Ext4.create('Ext.toolbar.Toolbar', {
+            //height: 30,
+            ui: 'footer',
+            layout: { pack: 'center' },
+            padding: '0 10px 10px 10px',
             items: [
-                this.scaleLabel, tbspacer,
                 this.scaleCombo, tbspacer,
                 {xtype: 'tbseparator'}, tbspacer,
-                this.groupedXCheckbox,
-                this.groupedXLabel
+                this.groupedXCheckbox
             ]
         });
 
         this.items = [{ tbar: toolbar1 }, { tbar: toolbar2 }];
 
-        LABKEY.LeveyJenningsTrendPlotPanel.superclass.initComponent.call(this);
+        this.callParent();
 
         this.displayTrendPlot();
     },
 
     displayTrendPlot: function() {
-        Ext.get(this.trendDiv).update("");
-        Ext.get(this.trendDiv).mask("Loading...");
+        Ext4.get(this.trendDiv).update("");
+        Ext4.get(this.trendDiv).mask("Loading...");
 
         this.getDistinctPrecursors();
     },
@@ -201,12 +196,12 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
         // CAST as DATE to ignore time portion of value
         if (this.startDate)
         {
-            sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + (this.startDate instanceof Date ? Ext.util.Format.date(this.startDate, 'Y-m-d') : this.startDate) + "'";
+            sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + (this.startDate instanceof Date ? Ext4.util.Format.date(this.startDate, 'Y-m-d') : this.startDate) + "'";
             separator = " AND ";
         }
         if (this.endDate)
         {
-            sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + (this.endDate instanceof Date ? Ext.util.Format.date(this.endDate, 'Y-m-d') : this.endDate) + "'";
+            sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + (this.endDate instanceof Date ? Ext4.util.Format.date(this.endDate, 'Y-m-d') : this.endDate) + "'";
         }
 
         // Cap the peptide count at 50
@@ -280,7 +275,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             dateCount[annotationDate]++;
 
             // get unique annotation names and colors for the legend
-            if (Ext.pluck(this.legendData, "text").indexOf(annotation['Name']) == -1)
+            if (Ext4.Array.pluck(this.legendData, "text").indexOf(annotation['Name']) == -1)
             {
                 this.legendData.push({
                     text: annotation['Name'],
@@ -399,7 +394,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 }
 
                 // add any missing dates from the QC annotation data to the plot data
-                var precursorDates = Ext.pluck(precursorInfo.data, (this.groupedX ? "date" : "fullDate"));
+                var precursorDates = Ext4.Array.pluck(precursorInfo.data, (this.groupedX ? "date" : "fullDate"));
                 var datesToAdd = [];
                 for (var j = 0; j < this.annotationData.length; j++)
                 {
@@ -407,12 +402,12 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                     var annDate = this.formatDate(new Date(this.annotationData[j].Date));
 
                     if (this.groupedX) {
-                        if (precursorDates.indexOf(annDate) == -1 && Ext.pluck(datesToAdd, "date").indexOf(annDate) == -1) {
+                        if (precursorDates.indexOf(annDate) == -1 && Ext4.Array.pluck(datesToAdd, "date").indexOf(annDate) == -1) {
                             datesToAdd.push({ fullDate: annDate, date: annDate }); // we don't need full date if grouping x-values
                         }
                     }
                     else {
-                        if (precursorDates.indexOf(annFullDate) == -1 && Ext.pluck(datesToAdd, "fullDate").indexOf(annFullDate) == -1) {
+                        if (precursorDates.indexOf(annFullDate) == -1 && Ext4.Array.pluck(datesToAdd, "fullDate").indexOf(annFullDate) == -1) {
                             datesToAdd.push({ fullDate: annFullDate, date: annDate });
                         }
                     }
@@ -450,7 +445,7 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     renderPlots: function() {
         var maxStackedAnnotations = 0;
         if (this.annotationData.length > 0) {
-            maxStackedAnnotations = Math.max.apply(Math, (Ext.pluck(this.annotationData, "yStepIndex"))) + 1;
+            maxStackedAnnotations = Math.max.apply(Math, (Ext4.Array.pluck(this.annotationData, "yStepIndex"))) + 1;
         }
 
         var addedPlot = false;
@@ -463,12 +458,24 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
             if (precursorInfo)
             {
                 addedPlot = true;
+
+                if (this.plotWidth == null) {
+                    // set the width of the plot webparts based on the first labkey-wp-body element (i.e. QC Summary webpart in this case)
+                    this.plotWidth = 900;
+                    var wp = document.querySelector('.labkey-wp-body');
+                    if (wp && (wp.clientWidth - 20) > this.plotWidth) {
+                        this.plotWidth = wp.clientWidth - 20;
+                    }
+
+                    Ext4.get(this.trendDiv).setWidth(this.plotWidth);
+                }
+
                 // add a new panel for each plot so we can add the title to the frame
                 var id = "precursorPlot" + i;
-                Ext.get(this.trendDiv).insertHtml('beforeEnd', '<br/>' +
-                        '<table class="labkey-wp">' +
+                Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<br/>' +
+                        '<table class="labkey-wp qc-plot-wp">' +
                         ' <tr class="labkey-wp-header">' +
-                        '     <th class="labkey-wp-title-left"><span class="labkey-wp-title-text">' + Ext.util.Format.htmlEncode(this.precursors[i]) + '</span></th>' +
+                        '     <th class="labkey-wp-title-left"><span class="labkey-wp-title-text qc-plot-wp-title">' + Ext4.util.Format.htmlEncode(this.precursors[i]) + '</span></th>' +
                         ' </tr><tr>' +
                         '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
                         ' </tr>' +
@@ -476,14 +483,14 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
                 );
 
                 if (precursorInfo.showLogWarning) {
-                    Ext.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below the mean with negative values have been omitted.</span>");
+                    Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below the mean with negative values have been omitted.</span>");
                 }
 
                 // create plot using the JS Vis API
                 var plot = LABKEY.vis.LeveyJenningsPlot({
                     renderTo: id,
                     rendererType: 'd3',
-                    width: 870,
+                    width: this.plotWidth - 30,
                     height: 300,
                     data: precursorInfo.data,
                     properties: {
@@ -516,18 +523,18 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
 
         if (!addedPlot)
         {
-            Ext.get(this.trendDiv).insertHtml('beforeEnd', '<div>No data to plot</div>');
+            Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<div>No data to plot</div>');
         }
 
-        Ext.get(this.trendDiv).unmask();
+        Ext4.get(this.trendDiv).unmask();
     },
 
     addAnnotationsToPlot: function(plot, precursorInfo) {
         var me = this;
 
-        var xAxisLabels = Ext.pluck(precursorInfo.data, (this.groupedX ? "date" : "fullDate"));
+        var xAxisLabels = Ext4.Array.pluck(precursorInfo.data, (this.groupedX ? "date" : "fullDate"));
         if (this.groupedX) {
-            xAxisLabels = Ext.unique(xAxisLabels);
+            xAxisLabels = Ext4.Array.unique(xAxisLabels);
         }
 
         // use direct D3 code to inject the annotation icons to the rendered SVG
@@ -571,10 +578,10 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
     formatDate: function(d, includeTime) {
         if (d instanceof Date) {
             if (includeTime) {
-                return Ext.util.Format.date(d, 'Y-m-d H:i');
+                return Ext4.util.Format.date(d, 'Y-m-d H:i');
             }
             else {
-                return Ext.util.Format.date(d, 'Y-m-d');
+                return Ext4.util.Format.date(d, 'Y-m-d');
             }
         }
         else {
@@ -636,34 +643,34 @@ LABKEY.LeveyJenningsTrendPlotPanel = Ext.extend(Ext.FormPanel, {
 
     failureHandler: function(response) {
         if (response.message) {
-            Ext.get(this.trendDiv).update("<span>" + response.message +"</span>");
+            Ext4.get(this.trendDiv).update("<span>" + response.message +"</span>");
         }
         else {
-            Ext.get(this.trendDiv).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
+            Ext4.get(this.trendDiv).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
         }
 
-        Ext.get(this.trendDiv).unmask();
+        Ext4.get(this.trendDiv).unmask();
     },
 
     applyGraphFilter: function() {
         // make sure that at least one filter field is not null
         if (this.startDateField.getRawValue() == '' && this.endDateField.getRawValue() == '')
         {
-            Ext.Msg.show({
+            Ext4.Msg.show({
                 title:'ERROR',
                 msg: 'Please enter a value for filtering.',
-                buttons: Ext.Msg.OK,
-                icon: Ext.MessageBox.ERROR
+                buttons: Ext4.Msg.OK,
+                icon: Ext4.MessageBox.ERROR
             });
         }
         // verify that the start date is not after the end date
         else if (this.startDateField.getValue() > this.endDateField.getValue() && this.endDateField.getValue() != '')
         {
-            Ext.Msg.show({
+            Ext4.Msg.show({
                 title:'ERROR',
                 msg: 'Please enter an end date that does not occur before the start date.',
-                buttons: Ext.Msg.OK,
-                icon: Ext.MessageBox.ERROR
+                buttons: Ext4.Msg.OK,
+                icon: Ext4.MessageBox.ERROR
             });
         }
         else

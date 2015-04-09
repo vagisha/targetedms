@@ -29,7 +29,7 @@
     public LinkedHashSet<ClientDependency> getClientDependencies()
     {
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-        resources.add(ClientDependency.fromPath("clientapi/ext3"));
+        resources.add(ClientDependency.fromPath("Ext4"));
         resources.add(ClientDependency.fromPath("vis/vis"));
         resources.add(ClientDependency.fromPath("targetedms/css/LeveyJenningsReport.css"));
         resources.add(ClientDependency.fromPath("targetedms/js/LeveyJenningsTrendPlotPanel.js"));
@@ -42,12 +42,10 @@
 
 <script type="text/javascript">
 
-        var $h = Ext.util.Format.htmlEncode;
-
         function init()
         {
-            if (Ext.isIE8) {
-                Ext.get('tiledPlotPanel').update("<span class='labkey-error'>Unable to render report in Internet Explorer < 9.</span>");
+            if (Ext4.isIE8) {
+                Ext4.get('tiledPlotPanel').update("<span class='labkey-error'>Unable to render report in Internet Explorer < 9.</span>");
                 return;
             }
 
@@ -56,12 +54,12 @@
                 sql: 'SELECT MIN(SampleFileId.AcquiredTime) AS StartDate, MAX(SampleFileId.AcquiredTime) AS EndDate FROM peptidechrominfo',
                 success: function(data) {
                     if (data.rows.length == 0 || !data.rows[0].StartDate)
-                        Ext.get('tiledPlotPanel').update("No data found. Please upload runs using the Data Pipeline or directly from Skyline.");
+                        Ext4.get('tiledPlotPanel').update("No data found. Please upload runs using the Data Pipeline or directly from Skyline.");
                     else
                         initializeReportPanels(data);
                 },
                 failure: function(response) {
-                    Ext.get('tiledPlotPanel').update("<span class='labkey-error'>Error: " + response.exception + "</span>");
+                    Ext4.get('tiledPlotPanel').update("<span class='labkey-error'>Error: " + response.exception + "</span>");
                 }
             });
         }
@@ -71,13 +69,13 @@
             var endDate = new Date(data.rows[0].EndDate);
 
             // initialize the panel that displays the Levey-Jennings plot for trend plotting
-            var trendPlotPanel = new LABKEY.LeveyJenningsTrendPlotPanel({
+            Ext4.create('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 renderTo: 'reportHeaderPanel',
-                cls: 'extContainer',
+                cls: 'themed-panel2',
                 startDate: startDate,
                 endDate: endDate
             });
         }
 
-        Ext.onReady(init);
+        Ext4.onReady(init);
 </script>
