@@ -3068,7 +3068,7 @@ public class TargetedMSController extends SpringActionController
         {
             // use ! as the escape character in the SQL LIKE clause with brackets (i.e. ModifiedSequence LIKE '%![+8!]' ESCAPE '!' )
             DecimalFormat df = new DecimalFormat("0.#");
-            return (withEscapeChar ? "!" : "") + "[" + (deltaMass != null && deltaMass > 0 ? "+" : "") + df.format(deltaMass) + (withEscapeChar ? "!" : "") + "]";
+            return (withEscapeChar ? "!" : "") + "[" + (deltaMass != null && deltaMass > 0 ? "+" : "") + (deltaMass == null ? "" : df.format(deltaMass)) + (withEscapeChar ? "!" : "") + "]";
         }
 
         public char[] splitAminoAcidString(String aminoAcids)
