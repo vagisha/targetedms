@@ -114,7 +114,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }),
             valueField: 'value',
             displayField: 'display',
-            value: 'retentionTime',
+            value: this.chartType,
             forceSelection: true,
             editable: false,
             listeners: {
@@ -285,42 +285,48 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
         }
 
+        this.getGuideSetData();
+    },
+
+    getGuideSetData : function() {
+        var config = this.getReportConfig();
+
+        // Filter on start/end dates from the QC plot form
+        var guideSetSql = "SELECT RowId, TrainingStart, TrainingEnd, Comment FROM GuideSet";
+        var separator = " WHERE ";
+        if (config.StartDate) {
+            guideSetSql += separator + "TrainingEnd >= '" + config.StartDate + "'";
+            separator = " AND ";
+        }
+        if (config.EndDate) {
+            guideSetSql += separator + "TrainingStart <= '" + config.EndDate + "'";
+        }
+
+        LABKEY.Query.executeSql({
+            schemaName: 'targetedms',
+            sql: guideSetSql,
+            sort: 'TrainingStart',
+            scope: this,
+            success: this.processGuideSetData,
+            failure: this.failureHandler
+        });
+    },
+
+    processGuideSetData : function(data) {
+        this.guideSetTrainingData = data.rows;
         this.getPlotData();
     },
 
     getPlotData: function() {
         var config = this.getReportConfig();
 
-        // Filter on start/end dates, casting as DATE to ignore the time part
-        var whereClause = " WHERE ";
-        var separator = "";
-        if (config.StartDate) {
-            whereClause += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
-            separator = " AND ";
-        }
-        if (config.EndDate) {
-            whereClause += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
-        }
+        var guideSetStatsJoinClause = "ON X.Sequence = stats.Sequence AND ((X.AcquiredTime >= stats.TrainingStart "
+                + "AND X.AcquiredTime < stats.ReferenceEnd) OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))";
 
         // Build query to get the values and mean/stdDev ranges for each data point. Default to retention time
         var sql = "";
-        if (this.chartType == "peakArea") {
-            sql = "SELECT * FROM (SELECT PrecursorId AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, TotalArea AS Value FROM precursorchrominfo" + whereClause + ") X"
-                + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG(TotalArea) AS Mean, STDDEV(TotalArea) AS StandardDev FROM precursorchrominfo" + whereClause
-                + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
-        }
-        else if (this.chartType == "fwhm") {
-            sql = "SELECT * FROM (SELECT PrecursorId AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, MaxFWHM AS Value FROM precursorchrominfo" + whereClause + ") X"
-                + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG(MaxFWHM) AS Mean, STDDEV(MaxFWHM) AS StandardDev FROM precursorchrominfo" + whereClause
-                + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
-        }
-        else if (this.chartType == "fwb") {
-            sql = "SELECT * FROM (SELECT PrecursorId AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, (MaxEndTime - MinStartTime) AS Value FROM precursorchrominfo" + whereClause + ") X"
-                + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG((MaxEndTime - MinStartTime)) AS Mean, STDDEV((MaxEndTime - MinStartTime)) AS StandardDev FROM precursorchrominfo" + whereClause
-                + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
-        }
-        else if (this.chartType == "ratio") {
-            // Need to tweak the WHERE clause because we're selecting from the precursorarearatio table instead
+        if (this.chartType == "ratio") {
+            // Special case the Light/Heavy Ratio metric because it selects from precursorarearatio instead of precursorchrominfo
             whereClause = " WHERE ";
             separator = "";
             if (config.StartDate) {
@@ -331,14 +337,49 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 whereClause += separator + "CAST(PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
             }
 
-            sql = "SELECT * FROM (SELECT PrecursorChromInfoId.PrecursorId AS PrecursorId, PrecursorChromInfoId AS PrecursorChromInfoId, PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.FilePath AS FilePath, AreaRatio AS Value FROM precursorarearatio " + whereClause + ") X"
-                + " JOIN (SELECT PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence2, AVG(AreaRatio) AS Mean, STDDEV(AreaRatio) AS StandardDev FROM precursorarearatio" + whereClause
-                + " GROUP BY PrecursorChromInfoId.PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
+            sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence, X.AcquiredTime, X.FilePath, X.Value, "
+                + " stats.GuideSetId, stats.Mean, stats.StandardDev "
+                + " FROM (SELECT PrecursorChromInfoId.PrecursorId AS PrecursorId, PrecursorChromInfoId AS PrecursorChromInfoId, PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence, "
+                + "       PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.FilePath AS FilePath, "
+                + "       AreaRatio AS Value FROM precursorarearatio" + whereClause + ") X "
+                + " LEFT JOIN GuideSetLHRatioStats stats " + guideSetStatsJoinClause;
         }
         else {
-            sql = "SELECT * FROM (SELECT PrecursorId AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, BestRetentionTime AS Value FROM precursorchrominfo" + whereClause + ") X "
-                + " JOIN (SELECT PrecursorId.ModifiedSequence AS Sequence2, AVG(BestRetentionTime) AS Mean, STDDEV(BestRetentionTime) AS StandardDev FROM precursorchrominfo" + whereClause
-                + " GROUP BY PrecursorId.ModifiedSequence) AS stats ON X.Sequence = stats.Sequence2";
+            // Filter on start/end dates, casting as DATE to ignore the time part
+            var whereClause = " WHERE ";
+            var separator = "";
+            if (config.StartDate) {
+                whereClause += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
+                separator = " AND ";
+            }
+            if (config.EndDate) {
+                whereClause += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
+            }
+
+            var typeColName, statsTableName;
+            if (this.chartType == "peakArea") {
+                typeColName = "TotalArea";
+                statsTableName = "GuideSetPeakAreaStats";
+            }
+            else if (this.chartType == "fwhm") {
+                typeColName = "MaxFWHM";
+                statsTableName = "GuideSetFWHMStats";
+            }
+            else if (this.chartType == "fwb") {
+                typeColName = "(MaxEndTime - MinStartTime)";
+                statsTableName = "GuideSetFWBStats";
+            }
+            else { // chartType == retentionTime
+                typeColName = "BestRetentionTime";
+                statsTableName = "GuideSetRetentionTimeStats";
+            }
+
+            sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence, X.AcquiredTime, X.FilePath, X.Value, "
+                + " stats.GuideSetId, stats.Mean, stats.StandardDev "
+                + " FROM (SELECT PrecursorId.Id AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, "
+                + "       PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, "
+                + "       "  + typeColName + " AS Value FROM precursorchrominfo" + whereClause + ") X "
+                + " LEFT JOIN " + statsTableName + " stats " + guideSetStatsJoinClause;
         }
 
         LABKEY.Query.executeSql({
@@ -364,6 +405,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
 
             this.sequencePlotData[sequence].data.push({
+                type: 'data',
                 AcquiredTime: row['AcquiredTime'], // keep in data for hover text display
                 PrecursorId: row['PrecursorId'], // keep in data for click handler
                 PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
@@ -372,7 +414,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
                 value: row['Value'],
                 mean: row['Mean'],
-                stdDev: row['StandardDev']
+                stdDev: row['StandardDev'],
+                guideSetId: row['GuideSetId']
             });
 
             this.setSequenceMinMax(this.sequencePlotData[sequence], row);
@@ -403,12 +446,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                     if (this.groupedX) {
                         if (precursorDates.indexOf(annDate) == -1 && Ext4.Array.pluck(datesToAdd, "date").indexOf(annDate) == -1) {
-                            datesToAdd.push({ fullDate: annDate, date: annDate }); // we don't need full date if grouping x-values
+                            datesToAdd.push({ type: 'annotation', fullDate: annDate, date: annDate }); // we don't need full date if grouping x-values
                         }
                     }
                     else {
                         if (precursorDates.indexOf(annFullDate) == -1 && Ext4.Array.pluck(datesToAdd, "fullDate").indexOf(annFullDate) == -1) {
-                            datesToAdd.push({ fullDate: annFullDate, date: annDate });
+                            datesToAdd.push({ type: 'annotation', fullDate: annFullDate, date: annDate });
                         }
                     }
                 }
@@ -502,6 +545,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         xTickLabel: 'date',
                         yAxisDomain: [precursorInfo.min, precursorInfo.max],
                         yAxisScale: this.yAxisScale,
+                        shape: 'guideSetId',
                         showTrendLine: true,
                         hoverTextFn: function(row){
                             return 'Acquired: ' + row['AcquiredTime'] + ", "
@@ -513,11 +557,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         }
                     },
                     gridLineColor: 'white',
-                    legendData: this.legendData.length > 0 ? this.legendData : undefined
+                    legendData: this.legendData
                 });
                 plot.render();
 
                 this.addAnnotationsToPlot(plot, precursorInfo);
+                this.addGuideSetTrainingRangeToPlot(plot, precursorInfo);
             }
         }
 
@@ -527,6 +572,86 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         Ext4.get(this.trendDiv).unmask();
+    },
+
+    addGuideSetTrainingRangeToPlot : function(plot, precursorInfo) {
+        var me = this;
+        var guideSetTrainingData = [];
+
+        // find the x-axis starting and ending index based on the training start/end dates
+        for (var i = 0; i < this.guideSetTrainingData.length; i++)
+        {
+            var gs = Ext4.clone(this.guideSetTrainingData[i]);
+
+            for (var j = 0; j < precursorInfo.data.length; j++)
+            {
+                // only compare to data points that match the GuideSet RowId
+                if (precursorInfo.data[j].guideSetId != gs.RowId) {
+                    if (precursorInfo.data[j].type == 'empty' && gs.EndIndex == undefined) {
+                        gs.EndIndex = precursorInfo.data[j].seqValue;
+                    }
+
+                    continue;
+                }
+
+                if (gs.StartIndex == undefined && new Date(precursorInfo.data[j].AcquiredTime) >= new Date(gs.TrainingStart)) {
+                    gs.StartIndex = precursorInfo.data[j].seqValue;
+                }
+
+                if (new Date(precursorInfo.data[j].AcquiredTime) > new Date(gs.TrainingEnd)) {
+                    gs.EndIndex = precursorInfo.data[j].seqValue;
+                    break;
+                }
+            }
+
+            if (gs.StartIndex != undefined) {
+                guideSetTrainingData.push(gs);
+            }
+        }
+
+        if (guideSetTrainingData.length > 0)
+        {
+            // add a "shaded" rect to indicate which points in the plot are part of the guide set training range
+            var binWidth = (plot.grid.rightEdge - plot.grid.leftEdge) / (plot.scales.x.scale.domain().length);
+            var yRange = plot.scales.yLeft.range;
+            var xAcc = function (d) {
+                return plot.scales.x.scale(d.StartIndex) - (binWidth/2);
+            };
+            var widthAcc = function (d) {
+                if (d.EndIndex != undefined) {
+                    return plot.scales.x.scale(d.EndIndex) - plot.scales.x.scale(d.StartIndex);
+                }
+                else {
+                    return plot.scales.x.range[1] - plot.scales.x.scale(d.StartIndex);
+                }
+            };
+
+            var guideSetTrainingRange = d3.select('#' + plot.renderTo + ' svg').selectAll("rect.training").data(guideSetTrainingData)
+                .enter().append("rect").attr("class", "training")
+                .attr('x', xAcc).attr('y', yRange[1])
+                .attr('width', widthAcc).attr('height', yRange[0] - yRange[1])
+                .attr('fill', '#000000').attr('fill-opacity', 0.1);
+
+            guideSetTrainingRange.append("title")
+                .text(function (d)
+                {
+                    return "Guide Set ID: " + d['RowId']
+                        + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true)
+                        + "\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true)
+                        + "\nComment: " + (d['Comment'] || "");
+                });
+
+            this.bringSvgElementToFront(plot, "g.error-bar");
+            this.bringSvgElementToFront(plot, "path");
+            this.bringSvgElementToFront(plot, "a.point");
+        }
+    },
+
+    bringSvgElementToFront: function(plot, selector) {
+        d3.select('#' + plot.renderTo + ' svg').selectAll(selector)
+            .each(function() {
+               this.parentNode.parentNode.appendChild(this.parentNode);
+            });
     },
 
     addAnnotationsToPlot: function(plot, precursorInfo) {

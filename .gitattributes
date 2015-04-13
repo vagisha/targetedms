@@ -1,6 +1,12 @@
 * text=auto !eol
 /TargetedMS.iml -text
 /module.properties -text
+resources/queries/targetedms/GuideSetFWBStats.sql -text
+resources/queries/targetedms/GuideSetFWHMStats.sql -text
+resources/queries/targetedms/GuideSetLHRatioStats.sql -text
+resources/queries/targetedms/GuideSetPeakAreaStats.sql -text
+resources/queries/targetedms/GuideSetRetentionTimeStats.sql -text
+resources/queries/targetedms/guideset/.qview.xml -text
 resources/queries/targetedms/librarydocprecursor/AllPrecursors.qview.xml -text
 resources/queries/targetedms/libraryprecursor/FolderPrecursors.qview.xml -text
 resources/queries/targetedms/libraryprecursor/LibraryPrecursors.qview.xml -text
@@ -36,6 +42,7 @@ resources/schemas/dbscripts/postgresql/targetedms-14.33-14.34.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.34-14.35.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.35-14.36.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.36-14.37.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-15.10-15.11.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-14.10-14.11.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-14.11-14.12.sql -text
@@ -63,6 +70,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-14.33-14.34.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.34-14.35.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.35-14.36.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.36-14.37.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-15.10-15.11.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/IrtPeptide.java -text
 src/org/labkey/targetedms/PublishTargetedMSExperimentsController.java -text
@@ -153,6 +161,7 @@ src/org/labkey/targetedms/conflict/ConflictPrecursor.java -text
 src/org/labkey/targetedms/conflict/ConflictProtein.java -text
 src/org/labkey/targetedms/conflict/ConflictTransition.java -text
 src/org/labkey/targetedms/model/ExperimentAnnotations.java -text
+src/org/labkey/targetedms/model/GuideSet.java -text
 src/org/labkey/targetedms/model/Journal.java -text
 src/org/labkey/targetedms/model/JournalExperiment.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoLitePlus.java -text
@@ -216,6 +225,7 @@ src/org/labkey/targetedms/query/ConflictResultsManager.java -text
 src/org/labkey/targetedms/query/DocTransitionsTableInfo.java -text
 src/org/labkey/targetedms/query/ExperimentAnnotationsManager.java -text
 src/org/labkey/targetedms/query/ExperimentAnnotationsTableInfo.java -text
+src/org/labkey/targetedms/query/GuideSetTable.java -text
 src/org/labkey/targetedms/query/InstrumentManager.java -text
 src/org/labkey/targetedms/query/IsotopeLabelManager.java -text
 src/org/labkey/targetedms/query/JournalExperimentTableInfo.java -text
@@ -286,6 +296,7 @@ src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatchGetter.java -text
 src/org/labkey/targetedms/view/spectrum/PeptideSpectrumView.java -text
 src/org/labkey/targetedms/view/spectrum/spectrumView.jsp -text
 src/org/labkey/targetedms/view/summaryChartsView.jsp -text
+test/src/org/labkey/test/components/targetedms/GuideSetWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCAnnotationTypeWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCAnnotationWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCPlot.java -text
@@ -293,6 +304,7 @@ test/src/org/labkey/test/components/targetedms/QCPlotsWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCSummaryWebPart.java -text
 test/src/org/labkey/test/pages/targetedms/AnnotationInsertPage.java -text
 test/src/org/labkey/test/pages/targetedms/AnnotationTypeInsertPage.java -text
+test/src/org/labkey/test/pages/targetedms/GuideSetPage.java -text
 test/src/org/labkey/test/pages/targetedms/PanoramaAnnotations.java -text
 test/src/org/labkey/test/pages/targetedms/PanoramaDashboard.java -text
 test/src/org/labkey/test/tests/GetDataAPITest.java -text

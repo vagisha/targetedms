@@ -25,6 +25,7 @@ import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.components.targetedms.GuideSetWebPart;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
 import org.labkey.test.components.targetedms.QCAnnotationWebPart;
 import org.labkey.test.components.targetedms.QCPlot;
@@ -72,7 +73,15 @@ public class TargetedMSQCTest extends TargetedMSTest
         TargetedMSQCTest init = (TargetedMSQCTest)getCurrentTest();
 
         init.setupFolder(FolderType.QC);
+        init.setupTempGuideSet();
         init.importData(SProCoP_FILE);
+    }
+
+    private void setupTempGuideSet()
+    {
+        clickTab("Guide Sets");
+        GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this);
+        guideSetWebPart.startInsert().insert("2013-08-09", "2015-01-17", "Temp guide set (to be replaced).");
     }
 
     @Test

@@ -234,6 +234,7 @@ public class TargetedMSController extends SpringActionController
         public static final String DATA_PIPELINE_TAB = "Data Pipeline";
         public static final String RUNS_TAB = "Runs";
         public static final String ANNOTATIONS_TAB = "Annotations";
+        public static final String GUIDE_SETS_TAB = "Guide Sets";
 
         public static final String DATA_PIPELINE_WEBPART = "Data Pipeline";
 
@@ -330,6 +331,14 @@ public class TargetedMSController extends SpringActionController
                 annotationsTab.add(annotationTypesPart);
                 Portal.saveParts(c, ANNOTATIONS_TAB, annotationsTab);
                 Portal.addProperty(c, ANNOTATIONS_TAB, Portal.PROP_CUSTOMTAB);
+
+                ArrayList<Portal.WebPart> guideSetsTab = new ArrayList<>();
+                Portal.WebPart guideSetsPart = Portal.getPortalPart("Query").createWebPart();
+                guideSetsPart.setProperty(QueryParam.schemaName.toString(), "targetedms");
+                guideSetsPart.setProperty(QueryParam.queryName.toString(), "guideset");
+                guideSetsTab.add(guideSetsPart);
+                Portal.saveParts(c, GUIDE_SETS_TAB, guideSetsTab);
+                Portal.addProperty(c, GUIDE_SETS_TAB, Portal.PROP_CUSTOMTAB);
 
                 addDataPipelineTab(c);
                 return true;

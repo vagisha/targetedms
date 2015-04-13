@@ -403,6 +403,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_QC_ANNOTATION);
     }
 
+    public static TableInfo getTableInfoGuideSet()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_GUIDE_SET);
+    }
+
     public static Integer addRunToQueue(ViewBackgroundInfo info,
                                      final File file,
                                      PipeRoot root) throws SQLException, IOException, XarFormatException

@@ -53,6 +53,7 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
 import org.labkey.targetedms.query.ExperimentAnnotationsTableInfo;
+import org.labkey.targetedms.query.GuideSetTable;
 import org.labkey.targetedms.query.JournalExperimentTableInfo;
 import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
 import org.labkey.targetedms.query.PrecursorTableInfo;
@@ -144,6 +145,8 @@ public class TargetedMSSchema extends UserSchema
 
     public static final String TABLE_QC_ANNOTATION_TYPE = "QCAnnotationType";
     public static final String TABLE_QC_ANNOTATION = "QCAnnotation";
+
+    public static final String TABLE_GUIDE_SET = "GuideSet";
 
     public static final String TABLE_JOURNAL = "Journal";
     public static final String TABLE_JOURNAL_EXPERIMENT = "JournalExperiment";
@@ -488,7 +491,10 @@ public class TargetedMSSchema extends UserSchema
         {
             return new QCAnnotationTable(this);
         }
-
+        if (TABLE_GUIDE_SET.equalsIgnoreCase(name))
+        {
+            return new GuideSetTable(this);
+        }
         if(TABLE_EXPERIMENT_ANNOTATIONS.equalsIgnoreCase(name))
         {
             return new ExperimentAnnotationsTableInfo(this, getUser());
@@ -1019,6 +1025,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_EXPERIMENT_ANNOTATIONS);
         hs.add(TABLE_QC_ANNOTATION_TYPE);
         hs.add(TABLE_QC_ANNOTATION);
+        hs.add(TABLE_GUIDE_SET);
         return hs;
     }
 

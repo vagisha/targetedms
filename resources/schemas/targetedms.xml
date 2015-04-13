@@ -1294,4 +1294,41 @@
         </ns:columns>
     </ns:table>
 
+    <ns:table tableName="GuideSet" tableDbType="TABLE">
+        <ns:tableTitle>Guide Set</ns:tableTitle>
+        <ns:columns>
+            <ns:column columnName="RowId">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="Container">
+                <ns:columnTitle>Folder</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="Created"/>
+            <ns:column columnName="CreatedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="Modified"/>
+            <ns:column columnName="ModifiedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="TrainingStart">
+                <ns:description>The start date and time for the runs to include in the training set for this guide set.</ns:description>
+                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
+            </ns:column>
+            <ns:column columnName="TrainingEnd">
+                <ns:description>The end date and time for the runs to include in the training set for this guide set.</ns:description>
+                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
+            </ns:column>
+            <ns:column columnName="Comment"/>
+        </ns:columns>
+    </ns:table>
+
 </ns:tables>
