@@ -29,6 +29,45 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     groupedX: false,
     plotWidth: null,
 
+    // properties used for the various data queries based on chart metric type
+    chartTypePropMap: {
+        retentionTime: {
+            title: 'Retention Time',
+            baseTableName: 'PrecursorChromInfo',
+            baseLkFieldKey: '',
+            colName: 'BestRetentionTime',
+            statsTableName: 'GuideSetRetentionTimeStats'
+        },
+        peakArea: {
+            title: 'Peak Area',
+            baseTableName: 'PrecursorChromInfo',
+            baseLkFieldKey: '',
+            colName: 'TotalArea',
+            statsTableName: 'GuideSetPeakAreaStats'
+        },
+        fwhm: {
+            title: 'Full Width at Half Maximum (FWHM)',
+            baseTableName: 'PrecursorChromInfo',
+            baseLkFieldKey: '',
+            colName: 'MaxFWHM',
+            statsTableName: 'GuideSetFWHMStats'
+        },
+        fwb: {
+            title: 'Full Width at Base (FWB)',
+            baseTableName: 'PrecursorChromInfo',
+            baseLkFieldKey: '',
+            colName: '(MaxEndTime - MinStartTime)',
+            statsTableName: 'GuideSetFWBStats'
+        },
+        ratio: {
+            title: 'Light/Heavy Ratio',
+            baseTableName: 'PrecursorAreaRatio',
+            baseLkFieldKey: 'PrecursorChromInfoId.',
+            colName: 'AreaRatio',
+            statsTableName: 'GuideSetLHRatioStats'
+        }
+    },
+
     initComponent : function() {
         this.trendDiv = 'tiledPlotPanel';
         if (!this.startDate)
@@ -105,11 +144,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             store: Ext4.create('Ext.data.ArrayStore', {
                 fields: ['value', 'display'],
                 data: [
-                    ['retentionTime', 'Retention Time']
-                    , ['peakArea', 'Peak Area']
-                    , ['fwhm', 'Full Width at Half Maximum (FWHM)']
-                    , ['fwb', 'Full Width at Base (FWB)']
-                    , ['ratio', 'Light/Heavy Ratio']
+                    ['retentionTime', this.chartTypePropMap['retentionTime'].title],
+                    ['peakArea', this.chartTypePropMap['peakArea'].title],
+                    ['fwhm', this.chartTypePropMap['fwhm'].title],
+                    ['fwb', this.chartTypePropMap['fwb'].title],
+                    ['ratio', this.chartTypePropMap['ratio'].title]
                 ]
             }),
             valueField: 'value',
@@ -191,17 +230,22 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     getDistinctPrecursors: function() {
 
-        var sql = 'SELECT DISTINCT PrecursorId.ModifiedSequence AS Sequence FROM PrecursorChromInfo';
+        var baseTableName = this.chartTypePropMap[this.chartType].baseTableName;
+        var baseLkFieldKey = this.chartTypePropMap[this.chartType].baseLkFieldKey;
+
+        var sql = "SELECT DISTINCT " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence FROM " + baseTableName;
         var separator = ' WHERE ';
         // CAST as DATE to ignore time portion of value
         if (this.startDate)
         {
-            sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + (this.startDate instanceof Date ? Ext4.util.Format.date(this.startDate, 'Y-m-d') : this.startDate) + "'";
+            var startDate = this.startDate instanceof Date ? Ext4.util.Format.date(this.startDate, 'Y-m-d') : this.startDate;
+            sql += separator + "CAST(" + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + startDate + "'";
             separator = " AND ";
         }
         if (this.endDate)
         {
-            sql += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + (this.endDate instanceof Date ? Ext4.util.Format.date(this.endDate, 'Y-m-d') : this.endDate) + "'";
+            var endDate = this.endDate instanceof Date ? Ext4.util.Format.date(this.endDate, 'Y-m-d') : this.endDate;
+            sql += separator + "CAST(" + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + endDate + "'";
         }
 
         // Cap the peptide count at 50
@@ -320,67 +364,35 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     getPlotData: function() {
         var config = this.getReportConfig();
 
+        var baseTableName = this.chartTypePropMap[this.chartType].baseTableName;
+        var baseLkFieldKey = this.chartTypePropMap[this.chartType].baseLkFieldKey;
+        var typeColName = this.chartTypePropMap[this.chartType].colName;
+        var statsTableName = this.chartTypePropMap[this.chartType].statsTableName;
+
+        // Filter on start/end dates, casting as DATE to ignore the time part
+        var whereClause = " WHERE ";
+        var separator = "";
+        if (config.StartDate) {
+            whereClause += separator + "CAST(" + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
+            separator = " AND ";
+        }
+        if (config.EndDate) {
+            whereClause += separator + "CAST(" + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
+        }
+
         var guideSetStatsJoinClause = "ON X.Sequence = stats.Sequence AND ((X.AcquiredTime >= stats.TrainingStart "
                 + "AND X.AcquiredTime < stats.ReferenceEnd) OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))";
 
-        // Build query to get the values and mean/stdDev ranges for each data point. Default to retention time
-        var sql = "";
-        if (this.chartType == "ratio") {
-            // Special case the Light/Heavy Ratio metric because it selects from precursorarearatio instead of precursorchrominfo
-            whereClause = " WHERE ";
-            separator = "";
-            if (config.StartDate) {
-                whereClause += separator + "CAST(PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
-                separator = " AND ";
-            }
-            if (config.EndDate) {
-                whereClause += separator + "CAST(PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
-            }
-
-            sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence, X.AcquiredTime, X.FilePath, X.Value, "
-                + " stats.GuideSetId, stats.Mean, stats.StandardDev "
-                + " FROM (SELECT PrecursorChromInfoId.PrecursorId AS PrecursorId, PrecursorChromInfoId AS PrecursorChromInfoId, PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence, "
-                + "       PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.FilePath AS FilePath, "
-                + "       AreaRatio AS Value FROM precursorarearatio" + whereClause + ") X "
-                + " LEFT JOIN GuideSetLHRatioStats stats " + guideSetStatsJoinClause;
-        }
-        else {
-            // Filter on start/end dates, casting as DATE to ignore the time part
-            var whereClause = " WHERE ";
-            var separator = "";
-            if (config.StartDate) {
-                whereClause += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
-                separator = " AND ";
-            }
-            if (config.EndDate) {
-                whereClause += separator + "CAST(PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
-            }
-
-            var typeColName, statsTableName;
-            if (this.chartType == "peakArea") {
-                typeColName = "TotalArea";
-                statsTableName = "GuideSetPeakAreaStats";
-            }
-            else if (this.chartType == "fwhm") {
-                typeColName = "MaxFWHM";
-                statsTableName = "GuideSetFWHMStats";
-            }
-            else if (this.chartType == "fwb") {
-                typeColName = "(MaxEndTime - MinStartTime)";
-                statsTableName = "GuideSetFWBStats";
-            }
-            else { // chartType == retentionTime
-                typeColName = "BestRetentionTime";
-                statsTableName = "GuideSetRetentionTimeStats";
-            }
-
-            sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence, X.AcquiredTime, X.FilePath, X.Value, "
-                + " stats.GuideSetId, stats.Mean, stats.StandardDev "
-                + " FROM (SELECT PrecursorId.Id AS PrecursorId, Id AS PrecursorChromInfoId, PrecursorId.ModifiedSequence AS Sequence, "
-                + "       PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, PeptideChromInfoId.SampleFileId.FilePath AS FilePath, "
-                + "       "  + typeColName + " AS Value FROM precursorchrominfo" + whereClause + ") X "
-                + " LEFT JOIN " + statsTableName + " stats " + guideSetStatsJoinClause;
-        }
+        // Build query to get the values and mean/stdDev ranges for each data point
+        var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence, X.AcquiredTime, X.FilePath, X.Value, "
+            + " stats.GuideSetId, stats.Mean, stats.StandardDev "
+            + " FROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId, "
+            + "       " + baseLkFieldKey + "Id AS PrecursorChromInfoId, "
+            + "       " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence, "
+            + "       " + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, "
+            + "       " + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.FilePath AS FilePath, "
+            + "       "  + typeColName + " AS Value FROM " + baseTableName + whereClause + ") X "
+            + " LEFT JOIN " + statsTableName + " stats " + guideSetStatsJoinClause;
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
