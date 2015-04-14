@@ -2,18 +2,18 @@ package org.labkey.targetedms.model;
 
 import org.labkey.api.data.Entity;
 
-import java.sql.Timestamp;
+import java.util.Date;
 
 /**
- * Created by Cory on 4/9/2015.
+ * Created by cnathe on 4/9/2015.
  */
 public class GuideSet extends Entity
 {
     private int _rowId;
 
     private String _comment;
-    private Timestamp _trainingStart;
-    private Timestamp _trainingEnd;
+    private Date _trainingStart;
+    private Date _trainingEnd;
 
     public int getRowId()
     {
@@ -35,22 +35,22 @@ public class GuideSet extends Entity
         _comment = comment;
     }
 
-    public Timestamp getTrainingStart()
+    public Date getTrainingStart()
     {
         return _trainingStart;
     }
 
-    public void setTrainingStart(Timestamp trainingStart)
+    public void setTrainingStart(Date trainingStart)
     {
         _trainingStart = trainingStart;
     }
 
-    public Timestamp getTrainingEnd()
+    public Date getTrainingEnd()
     {
         return _trainingEnd;
     }
 
-    public void setTrainingEnd(Timestamp trainingEnd)
+    public void setTrainingEnd(Date trainingEnd)
     {
         _trainingEnd = trainingEnd;
     }

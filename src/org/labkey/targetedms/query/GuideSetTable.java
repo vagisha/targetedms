@@ -125,8 +125,8 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
             }
 
             // check to make sure this training date range doesn't overlap any other guide set training date ranges (overlap if StartA < EndB and EndA > StartB)
-            Integer numberOfOverlaps = new SqlSelector(TargetedMSManager.getSchema(), getOverlappingTrainingDateRangeSql(bean, container)).getObject(Integer.class);
-            if (numberOfOverlaps != null && numberOfOverlaps > 0)
+            SqlSelector selector = new SqlSelector(TargetedMSManager.getSchema(), getOverlappingTrainingDateRangeSql(bean, container));
+            if (selector.getRowCount() > 0)
             {
                 throw new ValidationException("The training date range overlaps with an existing guide set's training date range.");
             }
@@ -134,11 +134,11 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
 
         private SQLFragment getOverlappingTrainingDateRangeSql(GuideSet bean, Container container)
         {
-            SQLFragment sql = new SQLFragment("SELECT SUM(CASE WHEN ? < gs.TrainingEnd AND ? > gs.TrainingStart THEN 1 ELSE 0 END) FROM ");
+            SQLFragment sql = new SQLFragment("SELECT RowId FROM ");
+            sql.append(TargetedMSManager.getTableInfoGuideSet(), "gs");
+            sql.append(" WHERE ? < gs.TrainingEnd AND ? > gs.TrainingStart AND Container = ? ");
             sql.add(bean.getTrainingStart());
             sql.add(bean.getTrainingEnd());
-            sql.append(TargetedMSManager.getTableInfoGuideSet(), "gs");
-            sql.append(" WHERE Container = ?");
             sql.add(container.getId());
             if (bean.getRowId() != 0)
             {

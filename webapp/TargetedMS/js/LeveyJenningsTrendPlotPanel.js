@@ -30,43 +30,42 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     plotWidth: null,
 
     // properties used for the various data queries based on chart metric type
-    chartTypePropMap: {
-        retentionTime: {
-            title: 'Retention Time',
-            baseTableName: 'PrecursorChromInfo',
-            baseLkFieldKey: '',
-            colName: 'BestRetentionTime',
-            statsTableName: 'GuideSetRetentionTimeStats'
-        },
-        peakArea: {
-            title: 'Peak Area',
-            baseTableName: 'PrecursorChromInfo',
-            baseLkFieldKey: '',
-            colName: 'TotalArea',
-            statsTableName: 'GuideSetPeakAreaStats'
-        },
-        fwhm: {
-            title: 'Full Width at Half Maximum (FWHM)',
-            baseTableName: 'PrecursorChromInfo',
-            baseLkFieldKey: '',
-            colName: 'MaxFWHM',
-            statsTableName: 'GuideSetFWHMStats'
-        },
-        fwb: {
-            title: 'Full Width at Base (FWB)',
-            baseTableName: 'PrecursorChromInfo',
-            baseLkFieldKey: '',
-            colName: '(MaxEndTime - MinStartTime)',
-            statsTableName: 'GuideSetFWBStats'
-        },
-        ratio: {
-            title: 'Light/Heavy Ratio',
-            baseTableName: 'PrecursorAreaRatio',
-            baseLkFieldKey: 'PrecursorChromInfoId.',
-            colName: 'AreaRatio',
-            statsTableName: 'GuideSetLHRatioStats'
-        }
-    },
+    chartTypePropArr: [{
+        name: 'retentionTime',
+        title: 'Retention Time',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'BestRetentionTime',
+        statsTableName: 'GuideSetRetentionTimeStats'
+    },{
+        name: 'peakArea',
+        title: 'Peak Area',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'TotalArea',
+        statsTableName: 'GuideSetPeakAreaStats'
+    },{
+        name: 'fwhm',
+        title: 'Full Width at Half Maximum (FWHM)',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'MaxFWHM',
+        statsTableName: 'GuideSetFWHMStats'
+    },{
+        name: 'fwb',
+        title: 'Full Width at Base (FWB)',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: '(MaxEndTime - MinStartTime)',
+        statsTableName: 'GuideSetFWBStats'
+    },{
+        name: 'ratio',
+        title: 'Light/Heavy Ratio',
+        baseTableName: 'PrecursorAreaRatio',
+        baseLkFieldKey: 'PrecursorChromInfoId.',
+        colName: 'AreaRatio',
+        statsTableName: 'GuideSetLHRatioStats'
+    }],
 
     initComponent : function() {
         this.trendDiv = 'tiledPlotPanel';
@@ -141,18 +140,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             fieldLabel: 'Chart Type',
             triggerAction: 'all',
             mode: 'local',
-            store: Ext4.create('Ext.data.ArrayStore', {
-                fields: ['value', 'display'],
-                data: [
-                    ['retentionTime', this.chartTypePropMap['retentionTime'].title],
-                    ['peakArea', this.chartTypePropMap['peakArea'].title],
-                    ['fwhm', this.chartTypePropMap['fwhm'].title],
-                    ['fwb', this.chartTypePropMap['fwb'].title],
-                    ['ratio', this.chartTypePropMap['ratio'].title]
-                ]
+            store: Ext4.create('Ext.data.Store', {
+                fields: ['name', 'title'],
+                data: this.chartTypePropArr
             }),
-            valueField: 'value',
-            displayField: 'display',
+            valueField: 'name',
+            displayField: 'title',
             value: this.chartType,
             forceSelection: true,
             editable: false,
@@ -228,10 +221,20 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.getDistinctPrecursors();
     },
 
+    getChartTypePropsByName: function(name) {
+        for (var i = 0; i < this.chartTypePropArr.length; i++) {
+            if (this.chartTypePropArr[i].name == name) {
+                return this.chartTypePropArr[i];
+            }
+        }
+        return {};
+    },
+
     getDistinctPrecursors: function() {
 
-        var baseTableName = this.chartTypePropMap[this.chartType].baseTableName;
-        var baseLkFieldKey = this.chartTypePropMap[this.chartType].baseLkFieldKey;
+        var chartTypeProps = this.getChartTypePropsByName(this.chartType);
+        var baseTableName = chartTypeProps.baseTableName;
+        var baseLkFieldKey = chartTypeProps.baseLkFieldKey;
 
         var sql = "SELECT DISTINCT " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence FROM " + baseTableName;
         var separator = ' WHERE ';
@@ -364,10 +367,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     getPlotData: function() {
         var config = this.getReportConfig();
 
-        var baseTableName = this.chartTypePropMap[this.chartType].baseTableName;
-        var baseLkFieldKey = this.chartTypePropMap[this.chartType].baseLkFieldKey;
-        var typeColName = this.chartTypePropMap[this.chartType].colName;
-        var statsTableName = this.chartTypePropMap[this.chartType].statsTableName;
+        var chartTypeProps = this.getChartTypePropsByName(this.chartType);
+        var baseTableName = chartTypeProps.baseTableName;
+        var baseLkFieldKey = chartTypeProps.baseLkFieldKey;
+        var typeColName = chartTypeProps.colName;
+        var statsTableName = chartTypeProps.statsTableName;
 
         // Filter on start/end dates, casting as DATE to ignore the time part
         var whereClause = " WHERE ";

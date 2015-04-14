@@ -1,0 +1,2 @@
+
+ALTER TABLE targetedms.GuideSet ALTER COLUMN Comment NVARCHAR(MAX);
