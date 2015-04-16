@@ -29,6 +29,12 @@ public class AnnotationInsertPage extends InsertPage
         super(test, DEFAULT_TITLE);
     }
 
+    @Override
+    protected void waitForReady()
+    {
+        _test.waitForElement(elements().annotationType);
+    }
+
     public void insert(QCHelper.Annotation annotation)
     {
         Elements elements = elements();
