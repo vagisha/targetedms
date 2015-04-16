@@ -337,22 +337,24 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     getGuideSetData : function() {
         var config = this.getReportConfig();
+        var chartTypeProps = this.getChartTypePropsByName(this.chartType);
 
         // Filter on start/end dates from the QC plot form
-        var guideSetSql = "SELECT RowId, TrainingStart, TrainingEnd, Comment FROM GuideSet";
+        var guideSetSql = "SELECT s.*, g.Comment FROM " + chartTypeProps.statsTableName + " s"
+                + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
         var separator = " WHERE ";
         if (config.StartDate) {
-            guideSetSql += separator + "TrainingEnd >= '" + config.StartDate + "'";
+            guideSetSql += separator + "s.TrainingEnd >= '" + config.StartDate + "'";
             separator = " AND ";
         }
         if (config.EndDate) {
-            guideSetSql += separator + "TrainingStart <= '" + config.EndDate + "'";
+            guideSetSql += separator + "s.TrainingStart <= '" + config.EndDate + "'";
         }
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: guideSetSql,
-            sort: 'TrainingStart',
+            sort: 'TrainingStart,Sequence',
             scope: this,
             success: this.processGuideSetData,
             failure: this.failureHandler
@@ -417,7 +419,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             var sequence = row['Sequence'];
 
             if (!this.sequencePlotData[sequence]) {
-                this.sequencePlotData[sequence] = {data: [], min: null, max: null};
+                this.sequencePlotData[sequence] = {sequence: sequence, data: [], min: null, max: null};
             }
 
             this.sequencePlotData[sequence].data.push({
@@ -597,12 +599,17 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         // find the x-axis starting and ending index based on the training start/end dates
         for (var i = 0; i < this.guideSetTrainingData.length; i++)
         {
+            // only compare guide set info for matching precursor sequence
+            if (precursorInfo.sequence != this.guideSetTrainingData[i].Sequence) {
+                continue;
+            }
+
             var gs = Ext4.clone(this.guideSetTrainingData[i]);
 
             for (var j = 0; j < precursorInfo.data.length; j++)
             {
                 // only compare to data points that match the GuideSet RowId
-                if (precursorInfo.data[j].guideSetId != gs.RowId) {
+                if (precursorInfo.data[j].guideSetId != gs.GuideSetId) {
                     if (precursorInfo.data[j].type == 'empty' && gs.EndIndex == undefined) {
                         gs.EndIndex = precursorInfo.data[j].seqValue;
                     }
@@ -649,11 +656,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 .attr('fill', '#000000').attr('fill-opacity', 0.1);
 
             guideSetTrainingRange.append("title")
-                .text(function (d)
-                {
-                    return "Guide Set ID: " + d['RowId']
-                        + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true)
-                        + "\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true)
+                .text(function (d) {
+                    return "Guide Set ID: " + d['GuideSetId'] + ","
+                        + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true) + ","
+                        + "\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true) + ","
+                        + "\n# Runs: " + d['NumRecords'] + ","
+                        + "\nMean: " + me.formatNumeric(d['Mean']) + ","
+                        + "\nStd Dev: " + me.formatNumeric(d['StandardDev']) + ","
                         + "\nComment: " + (d['Comment'] || "");
                 });
 
@@ -728,6 +737,16 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         else {
             return d;
         }
+    },
+
+    formatNumeric: function(val) {
+        if (LABKEY.vis.isValid(val)) {
+            if (val > 100000 || val < -100000) {
+                return val.toExponential(3);
+            }
+            return parseFloat(val.toFixed(3));
+        }
+        return "N/A";
     },
 
     getReportConfig: function() {
