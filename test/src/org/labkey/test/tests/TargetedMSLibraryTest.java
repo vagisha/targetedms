@@ -57,7 +57,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         super.selectFolderType(folderType);
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     protected void verifyRevision1()
     {
         log("Verifying expected protein/peptide counts in library revision 1");
@@ -75,7 +75,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         verifyProteinDetailsPage();
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     protected void verifyRevision2()
     {
         log("Verifying expected protein/peptide counts in library revision 2");
@@ -103,7 +103,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertTextPresent("Revision " + revision);
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     private void verifyProteinDetailsPage()
     {
         //Checks that important elements are present.
@@ -128,7 +128,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertElementPresent(Locator.xpath("//div[@id = 'peakAreasGraphImg']/img"));
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     private void verifyAndResolveConflicts()
     {
         log("Verifying that expexted conflicts exist");
@@ -142,7 +142,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         clickButton("Apply Changes");
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     private void verifyRevision3()
     {
         log("Verifying expected protein/peptide counts in library revision 3");

@@ -51,7 +51,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         verifyProteinSearch();
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     protected void verifyImportedData()
     {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
@@ -61,7 +61,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         verifyPeptide();
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     protected void verifyDocumentDetails()
     {
         assertTextPresent("CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, \"Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration");
@@ -70,7 +70,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertElementPresent(Locator.xpath("//tr//td//a[span[text()='LTSLNVVAGSDL'][span[contains(@style,'font-weight:bold;color:#0000ff;') and text()='R']]]"));
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     protected void verifyProteinSearch()
     {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
@@ -93,7 +93,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals(1, getElementCount(Locator.xpath("//td/span/a[contains(text(), 'YAL038W_renamed')]")));
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     protected void verifyModificationSearch()
     {
         // add modificaiton search webpart and do an initial search by AminoAcid and DeltaMass
@@ -159,7 +159,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     protected void verifyPeptide()
     {
         // Click on a peptide.

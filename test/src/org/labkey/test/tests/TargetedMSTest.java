@@ -42,7 +42,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         return "TargetedMS" + TRICKY_CHARACTERS_FOR_PROJECT_NAMES;
     }
 
-    @LogMethod(category = LogMethod.MethodType.SETUP)
+    @LogMethod
     protected void setupFolder(FolderType folderType)
     {
         _containerHelper.createProject(getProjectName(), "Panorama");
@@ -50,13 +50,13 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         setPipelineRoot(TestFileUtils.getSampledataPath() + "/TargetedMS");
     }
 
-    @LogMethod(category = LogMethod.MethodType.SETUP)
+    @LogMethod
     protected void importData(String file)
     {
         importData(file, 1);
     }
 
-    @LogMethod(category = LogMethod.MethodType.SETUP)
+    @LogMethod
     protected void importData(String file, int jobCount)
     {
         log("Importing file " + file);
@@ -68,7 +68,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         waitForPipelineJobsToFinish(jobCount);
     }
 
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int precursorCount, int transitionCount)
     {
         log("Verifying expected summary counts");

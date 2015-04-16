@@ -77,7 +77,7 @@ public class GetDataAPITest extends TargetedMSTest
      * the source input of a wiki page that is run to generate a brief
      * set of output.
      */
-    @LogMethod(category = LogMethod.MethodType.VERIFICATION)
+    @LogMethod
     protected void clientApiTest()
     {
         runClientAPITestCore(CLIENT_API_CORE1);
