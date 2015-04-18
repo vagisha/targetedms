@@ -17,7 +17,7 @@ package org.labkey.test.pages.targetedms;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
-import org.labkey.test.components.InsertPage;
+import org.labkey.test.pages.InsertPage;
 
 /**
  * Created by cnathe on 4/13/2015.
