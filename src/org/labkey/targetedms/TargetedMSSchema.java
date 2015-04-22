@@ -504,7 +504,7 @@ public class TargetedMSSchema extends UserSchema
         {
             return new EnumTableInfo<>(
                     TargetedMSRun.RepresentativeDataState.class,
-                    getSchema(),
+                    this,
                     new EnumTableInfo.EnumValueGetter<TargetedMSRun.RepresentativeDataState>() {
 
                         @Override
@@ -521,7 +521,7 @@ public class TargetedMSSchema extends UserSchema
         {
             EnumTableInfo tableInfo = new EnumTableInfo<>(
                     RepresentativeDataState.class,
-                    getSchema(),
+                    this,
                     new EnumTableInfo.EnumValueGetter<RepresentativeDataState>() {
 
                         @Override
