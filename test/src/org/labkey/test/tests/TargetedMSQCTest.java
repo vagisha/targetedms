@@ -51,7 +51,7 @@ public class TargetedMSQCTest extends TargetedMSTest
     private static final String SProCoP_FILE = "SProCoPTutorial.zip";
     private static final String QC_1_FILE = "QC_1.sky.zip";
     private static final String QC_2_FILE = "QC_2.sky.zip";
-
+    private static final int INIT_DATA_SAMPLE_FILE_COUNT = 47;
     private static final String[] PRECURSORS = {
             "ATEEQLK",
             "FFVAPFPEVFGK",
@@ -73,25 +73,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         TargetedMSQCTest init = (TargetedMSQCTest)getCurrentTest();
 
         init.setupFolder(FolderType.QC);
-        init.setupTempGuideSet();
         init.importData(SProCoP_FILE);
-    }
-
-    private void setupTempGuideSet()
-    {
-        clickTab("Guide Sets");
-        GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this);
-        guideSetWebPart.startInsert().insert("2013-08-09", "2015-01-17", "Temp guide set (to be replaced).");
-    }
-
-    @Test
-    public void testSteps()
-    {
-        testQCDashboard();
-        testQCAnnotations();
-        testQCPlots();
-        testBadPlotRange();
-        testDocsWithOverlappingSampleFiles();
     }
 
     @Before
@@ -100,23 +82,21 @@ public class TargetedMSQCTest extends TargetedMSTest
         goToProjectHome();
     }
 
-    private void testQCDashboard()
+    @Test
+    public void testQCDashboard()
     {
-        List<String> expectedWebParts = Arrays.asList("QC Summary", "QC Plots");
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length);
 
+        List<String> expectedWebParts = Arrays.asList("QC Summary", "QC Plots");
         PortalHelper portalHelper = new PortalHelper(this);
         assertEquals("Wrong WebParts", expectedWebParts, portalHelper.getWebPartTitles());
-
-        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
-
-        QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
-        verifyQcSummary(1, 47, 7);
-
-        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         assertEquals("Wrong precursors", Arrays.asList(PRECURSORS), qcPlotsWebPart.getPlotTitles());
     }
 
-    private void testQCAnnotations()
+    @Test
+    public void testQCAnnotations()
     {
         QCHelper.Annotation instrumentChange = new QCHelper.Annotation("Instrumentation Change", "We changed it", "2013-08-22 14:43");
         QCHelper.Annotation reagentChange = new QCHelper.Annotation("Reagent Change", "New reagents", "2013-08-10 15:34");
@@ -161,20 +141,16 @@ public class TargetedMSQCTest extends TargetedMSTest
         }
     }
 
-    private void testQCPlots()
+    @Test
+    public void testQCPlotInputs()
     {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
-
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        QCPlotsWebPart.Scale initialScale = qcPlotsWebPart.getCurrentScale();
-        QCPlotsWebPart.ChartType initialType = qcPlotsWebPart.getCurrentChartType();
-        String initialStartDate = qcPlotsWebPart.getCurrentStartDate();
-        String initialEndDate = qcPlotsWebPart.getCurrentEndDate();
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length);
 
-        assertEquals(QCPlotsWebPart.Scale.LINEAR, initialScale);
-        assertEquals(QCPlotsWebPart.ChartType.RETENTION, initialType);
-        assertEquals("2013-08-09", initialStartDate);
-        assertEquals("2013-08-27", initialEndDate);
+        // verify the initial values of the form inputs
+        assertEquals(QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
+        assertEquals(QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
 
         // test option to "Group X-Axis values by Date"
         String initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
@@ -182,6 +158,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
         qcPlotsWebPart.setGroupXAxisValuesByDate(false);
 
+        // test that plot0 changes based on scale (log/linear)
         for (QCPlotsWebPart.Scale scale : QCPlotsWebPart.Scale.values())
         {
             if (scale != qcPlotsWebPart.getCurrentScale())
@@ -192,6 +169,7 @@ public class TargetedMSQCTest extends TargetedMSTest
             }
         }
 
+        // test that plot0 changes based on chart type
         for (QCPlotsWebPart.ChartType type : QCPlotsWebPart.ChartType.values())
         {
             if (type != qcPlotsWebPart.getCurrentChartType())
@@ -203,29 +181,32 @@ public class TargetedMSQCTest extends TargetedMSTest
         }
     }
 
-    private void testBadPlotRange()
+    @Test
+    public void testBadPlotDateRange()
     {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length);
 
         qcPlotsWebPart.setStartDate("2014-08-09");
         qcPlotsWebPart.setEndDate("2014-08-27");
         qcPlotsWebPart.applyRange();
         qcPlotsWebPart.waitForPlots(0);
-
-        qcPlotsWebPart.setStartDate("2013-08-09");
-        qcPlotsWebPart.setEndDate("2013-08-27");
-        qcPlotsWebPart.applyRange();
-        qcPlotsWebPart.waitForPlots(PRECURSORS.length);
     }
 
-    private void testDocsWithOverlappingSampleFiles()
+    @Test
+    public void testDocsWithOverlappingSampleFiles()
     {
+        List<String> precursors = new ArrayList<>(Arrays.asList(PRECURSORS));
+        precursors.add("AGGSSEPVTGLADK");
+        precursors.add("VEATFGVDESANK");
+        Collections.sort(precursors);
+
         // Upload QC_1.sky.zip
         // File has results from 3 sample files.
         importData(QC_1_FILE, 2);
         goToProjectHome();
-        verifyQcSummary(2, 50, 9);
+        verifyQcSummary(2, INIT_DATA_SAMPLE_FILE_COUNT + 3, precursors.size());
 
         // Upload QC_2.sky.zip
         // File has results from 3 sample files but two of these are the same as the ones in QC_1.sky.zip.
@@ -236,14 +217,15 @@ public class TargetedMSQCTest extends TargetedMSTest
         // in a QC folder was causing an exception in the code that calculates area ratios.
         importData(QC_2_FILE, 3);
         goToProjectHome();
-        verifyQcSummary(3, 51, 9);
+        verifyQcSummary(3, INIT_DATA_SAMPLE_FILE_COUNT + 4, precursors.size());
+
+        // verify if the new start/stop date ranges based on the runs added in this test
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        assertEquals("2013-08-09", qcPlotsWebPart.getCurrentStartDate());
+        assertEquals("2015-01-16", qcPlotsWebPart.getCurrentEndDate());
 
         // Check for the newly added precursors.
-        List<String> precursors = new ArrayList<>(Arrays.asList(PRECURSORS));
-        precursors.add("AGGSSEPVTGLADK");
-        precursors.add("VEATFGVDESANK");
-        Collections.sort(precursors);
-        QCPlotsWebPart qcPlotsWebPart = new PanoramaDashboard(this).getQcPlotsWebPart();
         assertEquals("Wrong precursors", precursors, qcPlotsWebPart.getPlotTitles());
 
         // Filter the grid to a single peptide
@@ -288,5 +270,12 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals("Wrong number of Skyline documents uploaded", docCount, qcSummaryWebPart.getDocCount());
         assertEquals("Wrong number sample files", sampleFileCount, qcSummaryWebPart.getFileCount());
         assertEquals("Wrong number of precursors tracked", precursorCount, qcSummaryWebPart.getPrecursorCount());
+    }
+
+    private void createGuideSet(String startDate, String endDate, String comment)
+    {
+        clickTab("Guide Sets");
+        GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this);
+        guideSetWebPart.startInsert().insert(startDate, endDate, comment);
     }
 }

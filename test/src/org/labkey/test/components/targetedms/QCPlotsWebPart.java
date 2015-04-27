@@ -210,6 +210,14 @@ public final class QCPlotsWebPart extends BodyWebPart
         return titles;
     }
 
+    public void filterQCPlotsToInitialData(int expectedPlotCount)
+    {
+        setStartDate("2013-08-09");
+        setEndDate("2013-08-27");
+        applyRange();
+        waitForPlots(expectedPlotCount);
+    }
+
     @Override
     protected Elements elements()
     {
