@@ -348,7 +348,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             separator = " AND ";
         }
         if (config.EndDate) {
-            guideSetSql += separator + "s.TrainingStart <= '" + config.EndDate + "'";
+            guideSetSql += separator + "s.TrainingStart <= TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP))";
         }
 
         LABKEY.Query.executeSql({

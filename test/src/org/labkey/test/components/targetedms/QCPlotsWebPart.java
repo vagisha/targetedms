@@ -212,10 +212,30 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public void filterQCPlotsToInitialData(int expectedPlotCount)
     {
-        setStartDate("2013-08-09");
-        setEndDate("2013-08-27");
+        filterQCPlots("2013-08-09", "2013-08-27", expectedPlotCount);
+    }
+
+    public void filterQCPlots(String startDate, String endDate, int expectedPlotCount)
+    {
+        setStartDate(startDate);
+        setEndDate(endDate);
         applyRange();
         waitForPlots(expectedPlotCount);
+    }
+
+    public int getGuideSetTrainingRectCount()
+    {
+        return _test.getElementCount(Locator.css("svg rect.training"));
+    }
+
+    public int getGuideSetErrorBarPathCount(String cls)
+    {
+        return _test.getElementCount(Locator.css("svg g g.error-bar path." + cls));
+    }
+
+    public List<WebElement> getPointElements()
+    {
+        return Locator.css("svg g a.point path").findElements(_test.getDriver());
     }
 
     @Override

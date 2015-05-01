@@ -17,6 +17,7 @@ package org.labkey.test.pages.targetedms;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.pages.InsertPage;
 
 /**
@@ -31,12 +32,12 @@ public class GuideSetPage extends InsertPage
         super(test, DEFAULT_TITLE);
     }
 
-    public void insert(String trainingStart, String trainingEnd, String comment)
+    public void insert(GuideSet guideSet)
     {
         Elements elements = elements();
-        _test.setFormElement(elements.trainingStartDate, trainingStart);
-        _test.setFormElement(elements.trainingEndDate, trainingEnd);
-        _test.setFormElement(elements.comment, comment);
+        _test.setFormElement(elements.trainingStartDate, guideSet.getStartDate());
+        _test.setFormElement(elements.trainingEndDate, guideSet.getEndDate());
+        _test.setFormElement(elements.comment, guideSet.getComment());
         _test.clickAndWait(elements.submit);
     }
 

@@ -25,7 +25,6 @@ import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
-import org.labkey.test.components.targetedms.GuideSetWebPart;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
 import org.labkey.test.components.targetedms.QCAnnotationWebPart;
 import org.labkey.test.components.targetedms.QCPlot;
@@ -270,12 +269,5 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals("Wrong number of Skyline documents uploaded", docCount, qcSummaryWebPart.getDocCount());
         assertEquals("Wrong number sample files", sampleFileCount, qcSummaryWebPart.getFileCount());
         assertEquals("Wrong number of precursors tracked", precursorCount, qcSummaryWebPart.getPrecursorCount());
-    }
-
-    private void createGuideSet(String startDate, String endDate, String comment)
-    {
-        clickTab("Guide Sets");
-        GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this);
-        guideSetWebPart.startInsert().insert(startDate, endDate, comment);
     }
 }
