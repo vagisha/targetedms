@@ -821,6 +821,16 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_PRECURSOR_CHROM_INFO.equalsIgnoreCase(name))
         {
             TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorFK.getSQL());
+
+            // Add a calculated column - the ratio of the transitions' areas to the precursor's area
+            SQLFragment sql = new SQLFragment("(CASE WHEN TotalArea = 0 THEN NULL ELSE (SELECT SUM(Area) FROM ");
+            sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
+            sql.append(" WHERE tci.PrecursorChromInfoId = ");
+            sql.append(ExprColumn.STR_TABLE_ALIAS);
+            sql.append(".Id) / TotalArea END)");
+            ExprColumn transitionPrecursorRatioCol = new ExprColumn(result, "TransitionPrecursorRatio", sql, JdbcType.DOUBLE);
+            result.addColumn(transitionPrecursorRatioCol);
+
             // Add a link to view the chromatogram for all of the precursor's transitions
             result.setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.PrecursorChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
             return result;

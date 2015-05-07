@@ -65,6 +65,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         baseLkFieldKey: 'PrecursorChromInfoId.',
         colName: 'AreaRatio',
         statsTableName: 'GuideSetLHRatioStats'
+    },{
+        name: 'transitionPrecursorRatio',
+        title: 'Transition/Precursor Area Ratio',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'transitionPrecursorRatio',
+        statsTableName: 'GuideSetTPRatioStats'
     }],
 
     initComponent : function() {

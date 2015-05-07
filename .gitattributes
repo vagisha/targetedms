@@ -6,6 +6,7 @@ resources/queries/targetedms/GuideSetFWHMStats.sql -text
 resources/queries/targetedms/GuideSetLHRatioStats.sql -text
 resources/queries/targetedms/GuideSetPeakAreaStats.sql -text
 resources/queries/targetedms/GuideSetRetentionTimeStats.sql -text
+resources/queries/targetedms/GuideSetTPRatioStats.sql -text
 resources/queries/targetedms/guideset/.qview.xml -text
 resources/queries/targetedms/librarydocprecursor/AllPrecursors.qview.xml -text
 resources/queries/targetedms/libraryprecursor/FolderPrecursors.qview.xml -text

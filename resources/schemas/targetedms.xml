@@ -385,18 +385,18 @@
                 <ns:formatString>0.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="TotalArea">
-                <ns:formatString>0.0000</ns:formatString>
+                <ns:formatString>0,000.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="TotalAreaNormalized">
-                <ns:formatString>0.0000</ns:formatString>
+                <ns:formatString>0,000.0000</ns:formatString>
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="TotalBackground">
-                <ns:formatString>0.0000</ns:formatString>
+                <ns:formatString>0,000.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="MaxFwhm">
                 <ns:columnTitle>Max FWHM</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
+                <ns:formatString>0,000.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="PeakCountRatio">
                 <ns:formatString>0.00</ns:formatString>
