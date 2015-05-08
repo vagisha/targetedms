@@ -151,7 +151,7 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
         {
             SQLFragment sql = new SQLFragment("SELECT RowId FROM ");
             sql.append(TargetedMSManager.getTableInfoGuideSet(), "gs");
-            sql.append(" WHERE ? < gs.TrainingEnd AND ? > gs.TrainingStart AND Container = ? ");
+            sql.append(" WHERE ? <= gs.TrainingEnd AND ? >= gs.TrainingStart AND Container = ? ");
             sql.add(bean.getTrainingStart());
             sql.add(bean.getTrainingEnd());
             sql.add(container.getId());

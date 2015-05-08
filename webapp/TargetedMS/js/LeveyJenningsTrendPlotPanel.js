@@ -169,7 +169,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.applyFilterButton = Ext4.create('Ext.button.Button', {
             disabled: true,
             text: 'Apply',
-            handler: this.applyGraphFilter,
+            handler: this.applyGraphFilterBtnClick,
             scope: this
         });
 
@@ -181,15 +181,23 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 scope: this,
                 change: function(cb, newValue, oldValue) {
                     this.groupedX = newValue;
+                    this.creatGuideSetButton.disable();
                     this.displayTrendPlot();
                 }
             }
         });
 
+        // initialize the create guide set button
+        this.creatGuideSetButton = Ext4.create('Ext.button.Button', {
+            text: 'Create Guide Set',
+            disabled: true,
+            handler: this.createGuideSetBtnClick,
+            scope: this
+        });
+
         var tbspacer = {xtype: 'tbspacer'};
 
         var toolbar1 = Ext4.create('Ext.toolbar.Toolbar', {
-            //height: 30,
             ui: 'footer',
             layout: { pack: 'center' },
             padding: 10,
@@ -202,16 +210,22 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             ]
         });
 
+        var toolbar2Items = [
+            this.scaleCombo, tbspacer,
+            {xtype: 'tbseparator'}, tbspacer,
+            this.groupedXCheckbox, tbspacer
+        ];
+
+        // only add the create guide set button if the user has the proper permissions to insert/update guide sets
+        if (this.canCreateGuideSets()) {
+            toolbar2Items.push({xtype: 'tbseparator'}, tbspacer, this.creatGuideSetButton);
+        }
+
         var toolbar2 = Ext4.create('Ext.toolbar.Toolbar', {
-            //height: 30,
             ui: 'footer',
             layout: { pack: 'center' },
             padding: '0 10px 10px 10px',
-            items: [
-                this.scaleCombo, tbspacer,
-                {xtype: 'tbseparator'}, tbspacer,
-                this.groupedXCheckbox
-            ]
+            items: toolbar2Items
         });
 
         this.items = [{ tbar: toolbar1 }, { tbar: toolbar2 }];
@@ -219,6 +233,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.callParent();
 
         this.displayTrendPlot();
+    },
+
+    canCreateGuideSets : function() {
+        return LABKEY.user.canInsert && LABKEY.user.canUpdate;
     },
 
     displayTrendPlot: function() {
@@ -398,6 +416,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         // Build query to get the values and mean/stdDev ranges for each data point
         var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence, X.AcquiredTime, X.FilePath, X.Value, "
+            + " CASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange, "
             + " stats.GuideSetId, stats.Mean, stats.StandardDev "
             + " FROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId, "
             + "       " + baseLkFieldKey + "Id AS PrecursorChromInfoId, "
@@ -440,7 +459,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 value: row['Value'],
                 mean: row['Mean'],
                 stdDev: row['StandardDev'],
-                guideSetId: row['GuideSetId']
+                guideSetId: row['GuideSetId'],
+                inGuideSetTrainingRange: row['InGuideSetTrainingRange']
             });
 
             this.setSequenceMinMax(this.sequencePlotData[sequence], row);
@@ -554,6 +574,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below the mean with negative values have been omitted.</span>");
                 }
 
+                var me = this; // for plot brushing
+
                 // create plot using the JS Vis API
                 var plot = LABKEY.vis.LeveyJenningsPlot({
                     renderTo: id,
@@ -582,7 +604,22 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         }
                     },
                     gridLineColor: 'white',
-                    legendData: this.legendData
+                    legendData: this.legendData,
+                    brushing: this.groupedX || !this.canCreateGuideSets() ? undefined : {
+                        dimension: 'x',
+                        brushstart: function(event, data, extent, plot, layerSelections) {
+                            me.plotBrushStartEvent(plot);
+                        },
+                        brush: function(event, data, extent, plot, layerSelections) {
+                            me.plotBrushEvent(extent, plot, layerSelections);
+                        },
+                        brushend: function(event, data, extent, plot, layerSelections) {
+                            me.plotBrushEndEvent(data[0], plot);
+                        },
+                        brushclear: function(event, data, plot, layerSelections) {
+                            me.plotBrushClearEvent(data[0], plot);
+                        }
+                    }
                 });
                 plot.render();
 
@@ -599,11 +636,45 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         Ext4.get(this.trendDiv).unmask();
     },
 
+    plotBrushStartEvent : function(plot) {
+        // clear any brush areas from other plots
+        if (this.plotBrushSelection && this.plotBrushSelection.plot != plot) {
+            this.plotBrushSelection.plot.clearBrush();
+        }
+    },
+
+    plotBrushEvent : function(extent, plot, layers) {
+        Ext4.each(layers, function(layer){
+            var points = layer.selectAll('.point path');
+            if (points[0].length > 0)
+            {
+                var colorAcc = function(d) {
+                    var x = plot.scales.x.scale(d.seqValue);
+                    d.isInSelection = (x > extent[0][0] && x < extent[1][0]);
+                    return d.isInSelection ? '#14C9CC' : '#000000';
+                };
+
+                points.attr('fill', colorAcc).attr('stroke', colorAcc);
+            }
+        });
+    },
+
+    plotBrushEndEvent : function(data, plot) {
+        var selectedPoints = Ext4.Array.filter(data, function(point){ return point.isInSelection; });
+        this.plotBrushSelection = {plot: plot, points: selectedPoints};
+        this.creatGuideSetButton.setDisabled(selectedPoints.length == 0)
+    },
+
+    plotBrushClearEvent : function(data, plot) {
+        this.plotBrushSelection = undefined;
+        this.creatGuideSetButton.disable();
+    },
+
     addGuideSetTrainingRangeToPlot : function(plot, precursorInfo) {
         var me = this;
         var guideSetTrainingData = [];
 
-        // find the x-axis starting and ending index based on the training start/end dates
+        // find the x-axis starting and ending index based on the guide set information attached to each data point
         for (var i = 0; i < this.guideSetTrainingData.length; i++)
         {
             // only compare guide set info for matching precursor sequence
@@ -615,22 +686,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
             for (var j = 0; j < precursorInfo.data.length; j++)
             {
-                // only compare to data points that match the GuideSet RowId
-                if (precursorInfo.data[j].guideSetId != gs.GuideSetId) {
-                    if (precursorInfo.data[j].type == 'empty' && gs.EndIndex == undefined) {
-                        gs.EndIndex = precursorInfo.data[j].seqValue;
+                // only use data points that match the GuideSet RowId and are in the training set range
+                if (precursorInfo.data[j].guideSetId == gs.GuideSetId && precursorInfo.data[j].inGuideSetTrainingRange) {
+                    if (gs.StartIndex == undefined) {
+                        gs.StartIndex = precursorInfo.data[j].seqValue;
                     }
-
-                    continue;
-                }
-
-                if (gs.StartIndex == undefined && new Date(precursorInfo.data[j].AcquiredTime) >= new Date(gs.TrainingStart)) {
-                    gs.StartIndex = precursorInfo.data[j].seqValue;
-                }
-
-                if (new Date(precursorInfo.data[j].AcquiredTime) > new Date(gs.TrainingEnd)) {
                     gs.EndIndex = precursorInfo.data[j].seqValue;
-                    break;
                 }
             }
 
@@ -644,22 +705,20 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             // add a "shaded" rect to indicate which points in the plot are part of the guide set training range
             var binWidth = (plot.grid.rightEdge - plot.grid.leftEdge) / (plot.scales.x.scale.domain().length);
             var yRange = plot.scales.yLeft.range;
+
             var xAcc = function (d) {
                 return plot.scales.x.scale(d.StartIndex) - (binWidth/2);
             };
+
             var widthAcc = function (d) {
-                if (d.EndIndex != undefined) {
-                    return plot.scales.x.scale(d.EndIndex) - plot.scales.x.scale(d.StartIndex);
-                }
-                else {
-                    return plot.scales.x.range[1] - plot.scales.x.scale(d.StartIndex);
-                }
+                return plot.scales.x.scale(d.EndIndex) - plot.scales.x.scale(d.StartIndex) + binWidth;
             };
 
             var guideSetTrainingRange = d3.select('#' + plot.renderTo + ' svg').selectAll("rect.training").data(guideSetTrainingData)
                 .enter().append("rect").attr("class", "training")
                 .attr('x', xAcc).attr('y', yRange[1])
                 .attr('width', widthAcc).attr('height', yRange[0] - yRange[1])
+                .attr('stroke', '#000000').attr('stroke-opacity', 0.1)
                 .attr('fill', '#000000').attr('fill-opacity', 0.1);
 
             guideSetTrainingRange.append("title")
@@ -819,7 +878,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         Ext4.get(this.trendDiv).unmask();
     },
 
-    applyGraphFilter: function() {
+    applyGraphFilterBtnClick: function() {
         // make sure that at least one filter field is not null
         if (this.startDateField.getRawValue() == '' && this.endDateField.getRawValue() == '')
         {
@@ -848,5 +907,55 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
             this.displayTrendPlot();
         }
+    },
+
+    createGuideSetBtnClick: function() {
+        var minGuideSetPointCount = 5; // to warn user if less than this many points are selected for the new guide set
+
+        if (this.plotBrushSelection && this.plotBrushSelection.points.length > 0)
+        {
+            var startDate = this.plotBrushSelection.points[0].AcquiredTime;
+            var endDate = this.plotBrushSelection.points[this.plotBrushSelection.points.length - 1].AcquiredTime;
+
+            if (this.plotBrushSelection.points.length < minGuideSetPointCount) {
+                Ext4.Msg.show({
+                    title:'Create Guide Set Warning',
+                    icon: Ext4.MessageBox.WARNING,
+                    msg: 'Fewer than ' + minGuideSetPointCount + ' data points were selected for the new guide set. Would you like to proceed?',
+                    buttons: Ext4.Msg.YESNO,
+                    scope: this,
+                    fn: function(btnId, text, opt){
+                        if(btnId == 'yes'){
+                            this.insertNewGuideSet(startDate, endDate);
+                        }
+                    }
+                });
+            }
+            else {
+                this.insertNewGuideSet(startDate, endDate);
+            }
+        }
+    },
+
+    insertNewGuideSet : function(startDate, endDate) {
+        LABKEY.Query.insertRows({
+            schemaName: 'targetedms',
+            queryName: 'GuideSet',
+            rows: [{TrainingStart: startDate, TrainingEnd: endDate}],
+            success: function(data) {
+                this.plotBrushSelection = undefined;
+                this.creatGuideSetButton.disable();
+                this.displayTrendPlot();
+            },
+            failure: function(response) {
+                Ext4.Msg.show({
+                    title:'Error Creating Guide Set',
+                    icon: Ext4.MessageBox.ERROR,
+                    msg: response.exception,
+                    buttons: Ext4.Msg.OK
+                });
+            },
+            scope: this
+        })
     }
 });
