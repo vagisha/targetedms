@@ -25,9 +25,9 @@ import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
-import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.module.SpringModule;
 import org.labkey.api.pipeline.PipelineService;
@@ -324,7 +324,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         });
 
         //register the Targeted MS folder type
-        ModuleLoader.getInstance().registerFolderType(this, new TargetedMSFolderType(this));
+        FolderTypeManager.get().registerFolderType(this, new TargetedMSFolderType(this));
 
         ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
         proteinService.registerProteinSearchView(new TransitionProteinSearchViewProvider());
