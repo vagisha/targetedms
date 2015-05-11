@@ -4,6 +4,22 @@
     width: 900px;
 }
 
-.annotation:hover {
+.annotation:hover, .guideset-svg-button:hover,
+.guideset-svg-button rect:hover,
+.guideset-svg-button text:hover
+{
     cursor: pointer;
+}
+
+.guideset-toolbar-msg {
+    padding: 0 10px 10px 10px;
+    background-color: rgba(20, 204, 201, 0.4) !important;
+}
+
+.guideset-toolbar-msg .x4-box-item {
+    padding-top: 7px;
+    font-weight: bold;
+    font-size: 11px;
+    color: #126495;
+    text-transform: uppercase;
 }

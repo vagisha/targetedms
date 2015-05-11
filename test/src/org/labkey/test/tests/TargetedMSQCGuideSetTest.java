@@ -125,7 +125,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         // check box for group x-axis values by date and verify
         qcPlotsWebPart.setGroupXAxisValuesByDate(true);
-        verifyGuideSetRelatedElementsForPlots(qcPlotsWebPart, 4, shapeCounts, 17);
+        verifyGuideSetRelatedElementsForPlots(qcPlotsWebPart, 0, shapeCounts, 17);
         qcPlotsWebPart.setGroupXAxisValuesByDate(false);
 
         // filter plot by start/end date to check reference points without training points in view
