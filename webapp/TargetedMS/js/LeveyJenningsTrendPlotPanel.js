@@ -189,6 +189,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     this.createGuideSetToggleButton.setDisabled(this.groupedX);
                     this.createGuideSetToggleButton.toggle(false);
                     this.enableBrushing = false;
+                    this.toggleGuideSetMsgDisplay();
 
                     this.displayTrendPlot();
                 }
@@ -204,9 +205,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 this.enableBrushing = btn.pressed;
                 this.clearPlotBrush();
                 this.setPlotBrushingDisplayStyle();
-
-                var toolbarMsg = this.down('#GuideSetMessageToolBar');
-                toolbarMsg.up('toolbar').setVisible(this.enableBrushing);
+                this.toggleGuideSetMsgDisplay();
             },
             scope: this
         });
@@ -767,6 +766,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     getSvgElForPlot : function(plot) {
         return d3.select('#' + plot.renderTo + ' svg');
+    },
+
+    toggleGuideSetMsgDisplay : function() {
+        var toolbarMsg = this.down('#GuideSetMessageToolBar');
+        toolbarMsg.up('toolbar').setVisible(this.enableBrushing);
     },
 
     addGuideSetTrainingRangeToPlot : function(plot, precursorInfo) {
