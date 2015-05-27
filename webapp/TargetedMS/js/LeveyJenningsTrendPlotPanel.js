@@ -196,16 +196,20 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
         });
 
+        this.setBrushingEnabled = function(enabled) {
+            this.enableBrushing = enabled;
+            this.clearPlotBrush();
+            this.setPlotBrushingDisplayStyle();
+            this.toggleGuideSetMsgDisplay();
+        }
+
         // initialize the create guide set button
         this.createGuideSetToggleButton = Ext4.create('Ext.button.Button', {
             text: 'Create Guide Set',
             tooltip: 'Enable/disable guide set creation mode',
             enableToggle: true,
             handler: function(btn) {
-                this.enableBrushing = btn.pressed;
-                this.clearPlotBrush();
-                this.setPlotBrushingDisplayStyle();
-                this.toggleGuideSetMsgDisplay();
+                this.setBrushingEnabled(btn.pressed);
             },
             scope: this
         });
@@ -702,6 +706,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             createBtn.on('click', function ()
             {
                 me.createGuideSetBtnClick();
+                me.createGuideSetToggleButton.toggle();
+                me.setBrushingEnabled(false);
             });
 
             var cancelBtn = this.createGuideSetSvgButton(plot, 'Cancel', xMid + 3, 53);
@@ -709,6 +715,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             {
                 me.clearPlotBrush(plot);
                 plot.clearBrush();
+                me.createGuideSetToggleButton.toggle();
+                me.setBrushingEnabled(false);
             });
 
             this.bringSvgElementToFront(plot, "g.guideset-svg-button");
@@ -831,8 +839,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         + "\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true) + ","
                         + "\n# Runs: " + d['NumRecords'] + ","
                         + "\nMean: " + me.formatNumeric(d['Mean']) + ","
-                        + "\nStd Dev: " + me.formatNumeric(d['StandardDev']) + ","
-                        + "\nComment: " + (d['Comment'] || "");
+                        + "\nStd Dev: " + me.formatNumeric(d['StandardDev'])
+                        + (d['Comment'] ? ("," + "\nComment: " + d['Comment']) : "");
                 });
         }
 
