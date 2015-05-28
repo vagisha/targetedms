@@ -187,21 +187,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                     // we don't allow creation of guide sets in grouped x-axis mode
                     this.createGuideSetToggleButton.setDisabled(this.groupedX);
-                    this.createGuideSetToggleButton.toggle(false);
-                    this.enableBrushing = false;
-                    this.toggleGuideSetMsgDisplay();
+                    this.setBrushingEnabled(false);
 
                     this.displayTrendPlot();
                 }
             }
         });
-
-        this.setBrushingEnabled = function(enabled) {
-            this.enableBrushing = enabled;
-            this.clearPlotBrush();
-            this.setPlotBrushingDisplayStyle();
-            this.toggleGuideSetMsgDisplay();
-        }
 
         // initialize the create guide set button
         this.createGuideSetToggleButton = Ext4.create('Ext.button.Button', {
@@ -264,6 +255,14 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.callParent();
 
         this.displayTrendPlot();
+    },
+
+    setBrushingEnabled : function(enabled) {
+        this.enableBrushing = enabled;
+        this.clearPlotBrush();
+        this.setPlotBrushingDisplayStyle();
+        this.toggleGuideSetMsgDisplay();
+        this.createGuideSetToggleButton.toggle(enabled);
     },
 
     displayTrendPlot: function() {
@@ -703,19 +702,14 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             var xMid = extent[0][0] + (extent[1][0] - extent[0][0]) / 2;
 
             var createBtn = this.createGuideSetSvgButton(plot, 'Create', xMid - 57, 54);
-            createBtn.on('click', function ()
-            {
+            createBtn.on('click', function() {
                 me.createGuideSetBtnClick();
-                me.createGuideSetToggleButton.toggle();
-                me.setBrushingEnabled(false);
             });
 
             var cancelBtn = this.createGuideSetSvgButton(plot, 'Cancel', xMid + 3, 53);
-            cancelBtn.on('click', function ()
-            {
+            cancelBtn.on('click', function () {
                 me.clearPlotBrush(plot);
                 plot.clearBrush();
-                me.createGuideSetToggleButton.toggle();
                 me.setBrushingEnabled(false);
             });
 
@@ -1056,6 +1050,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             rows: [{TrainingStart: startDate, TrainingEnd: endDate}],
             success: function(data) {
                 this.plotBrushSelection = undefined;
+                this.setBrushingEnabled(false);
                 this.displayTrendPlot();
             },
             failure: function(response) {

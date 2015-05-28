@@ -20,16 +20,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.GuideSetStats;
 import org.labkey.test.components.targetedms.GuideSetWebPart;
 import org.labkey.test.components.targetedms.QCPlotsWebPart;
+import org.labkey.test.pages.targetedms.GuideSetPage;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.DataRegionTable;
-import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -53,11 +52,11 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
             "VLVLDTDYK",
             "VYVEELKPTPEGDLEILLQK"};
 
-    private static GuideSet gs1 = new GuideSet("2013-08-01", "2013-08-01 00:00:01", "first guide set, entirely before initial data with no data points in range");
-    private static GuideSet gs2 = new GuideSet("2013-08-02", "2013-08-11", "second guide set, starts before initial data start date with only one data point in range");
-    private static GuideSet gs3 = new GuideSet("2013-08-14 22:48:37", "2013-08-16 20:26:28", "third guide set, ten data points in range");
-    private static GuideSet gs4 = new GuideSet("2013-08-21 07:00", "2013-08-21 14:00", "fourth guide set, four data points in range");
-    private static GuideSet gs5 = new GuideSet("2013-08-27 03:19:45", "2013-08-31 00:00:00", "fifth guide set, extends beyond last initial data point with two data points in range");
+    private static GuideSet gs1 = new GuideSet("2013/08/01", "2013/08/01 00:00:01", "first guide set, entirely before initial data with no data points in range");
+    private static GuideSet gs2 = new GuideSet("2013/08/02", "2013/08/11", "second guide set, starts before initial data start date with only one data point in range");
+    private static GuideSet gs3 = new GuideSet("2013/08/14 22:48:37", "2013/08/16 20:26:28", "third guide set, ten data points in range", 10);
+    private static GuideSet gs4 = new GuideSet("2013/08/21 07:56:12", "2013/08/21 13:15:01", "fourth guide set, four data points in range", 4);
+    private static GuideSet gs5 = new GuideSet("2013/08/27 03:00", "2013/08/31 00:00", "fifth guide set, extends beyond last initial data point with two data points in range");
 
 
     @Override
@@ -99,12 +98,20 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     }
 
     @Test
-    public void testGuideSetTableValidation()
+    public void testGuideSetCreateValidation()
     {
-        createGuideSet(new GuideSet("2013-08-10 00:00:01", "2013-08-10 00:00:00", null), "The training start date/time must be before the training end date/time.");
-        createGuideSet(new GuideSet("2013-08-01", "2013-08-12", null), "The training date range overlaps with an existing guide set's training date range.");
-        createGuideSet(new GuideSet("2013-08-01", "2013-08-03", null), "The training date range overlaps with an existing guide set's training date range.");
-        createGuideSet(new GuideSet("2013-08-10", "2013-08-12", null), "The training date range overlaps with an existing guide set's training date range.");
+        String overlapErrorMsg = "The training date range overlaps with an existing guide set's training date range.";
+
+        // test validation error message from Guide Set Insert New page
+        createGuideSet(new GuideSet("2013/08/10 00:00:01", "2013/08/10 00:00:00", null), "The training start date/time must be before the training end date/time.");
+        createGuideSet(new GuideSet("2013/08/01", "2013/08/12", null), overlapErrorMsg);
+        createGuideSet(new GuideSet("2013/08/01", "2013/08/03", null), overlapErrorMsg);
+        createGuideSet(new GuideSet("2013/08/10", "2013/08/12", null), overlapErrorMsg);
+
+        // test validation error message from QC plot guide set creation mode
+        createGuideSet(new GuideSet("2013/08/09 11:39:00", "2013/08/11 18:34:14", null, 2), overlapErrorMsg);
+        createGuideSet(new GuideSet("2013/08/21 01:12:00", "2013/08/21 07:56:12", null, 5), overlapErrorMsg);
+        createGuideSet(new GuideSet("2013/08/09 11:39:00", "2013/08/27 14:45:49", null, 47), overlapErrorMsg);
     }
 
     @Test
@@ -140,24 +147,13 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     {
         for (Pair<String, Integer> shapeCount : shapeCounts)
         {
-            verifyGuideSetPointShapeCounts(qcPlotsWebPart, shapeCount.getRight() * PRECURSORS.length, shapeCount.getLeft());
+            String pathPrefix = shapeCount.getLeft();
+            int count = qcPlotsWebPart.getPointElements("d", pathPrefix, true).size();
+            assertEquals("Unexpected guide set shape count for " + pathPrefix, shapeCount.getRight() * PRECURSORS.length, count);
         }
 
         assertEquals("Unexpected number of training range rects visible", visibleTrainingRanges * PRECURSORS.length, qcPlotsWebPart.getGuideSetTrainingRectCount());
         assertEquals("Unexpected number of error bar elements", axisTickCount * PRECURSORS.length * 4, qcPlotsWebPart.getGuideSetErrorBarPathCount("error-bar-vert"));
-    }
-
-    private void verifyGuideSetPointShapeCounts(QCPlotsWebPart qcPlot, int expectedCount, String pathPrefix)
-    {
-        List<WebElement> points = qcPlot.getPointElements();
-        int count = 0;
-        for (WebElement p : points)
-        {
-            if (p.getAttribute("d").startsWith(pathPrefix))
-                count++;
-        }
-
-        assertEquals("Unexpected guide set shape count for " + pathPrefix, expectedCount, count);
     }
 
     private void validateGuideSetStats(GuideSet gs)
@@ -250,28 +246,37 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
     private void createGuideSet(GuideSet guideSet, String expectErrorMsg)
     {
+        if (guideSet.getBrushSelectedPoints() != null)
+        {
+            // create the guide set from the QC plot brush selection
+            if (null != getUrlParam("pageId"))
+                clickTab("Panorama Dashboard");
+
+            PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+            QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+            qcPlotsWebPart.createGuideSet(guideSet, expectErrorMsg);
+        }
+        else
+        {
+            // create the guide set via the table insert view
+            if (!"Guide Sets".equals(getUrlParam("pageId", true)))
+                clickTab("Guide Sets");
+
+            GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this);
+            GuideSetPage guideSetPage = guideSetWebPart.startInsert();
+            guideSetPage.insert(guideSet, expectErrorMsg);
+        }
+
+        if (expectErrorMsg == null)
+            addRowIdForCreatedGuideSet(guideSet);
+    }
+
+    private void addRowIdForCreatedGuideSet(GuideSet guideSet)
+    {
         if (!"Guide Sets".equals(getUrlParam("pageId", true)))
             clickTab("Guide Sets");
 
         GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this);
-        guideSetWebPart.startInsert().insert(guideSet);
-
-        if (expectErrorMsg != null)
-        {
-            assertElementPresent(Locator.tagWithClass("font", "labkey-error").withText(expectErrorMsg));
-            return;
-        }
-
-        // get the new guide set RowIds
-        DataRegionTable table = guideSetWebPart.getDataRegion();
-        if (table.getColumn("RowId") == -1)
-        {
-            _customizeViewsHelper.openCustomizeViewPanel();
-            _customizeViewsHelper.showHiddenItems();
-            _customizeViewsHelper.addCustomizeViewColumn("RowId");
-            _customizeViewsHelper.applyCustomView();
-        }
-        String rowIdStr = table.getDataAsText(table.getRow("Comment", guideSet.getComment()), "RowId");
-        guideSet.setRowId(Integer.parseInt(rowIdStr));
+        guideSet.setRowId(guideSetWebPart.getRowId(guideSet));
     }
 }

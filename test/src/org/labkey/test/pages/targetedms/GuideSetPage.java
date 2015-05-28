@@ -32,13 +32,19 @@ public class GuideSetPage extends InsertPage
         super(test, DEFAULT_TITLE);
     }
 
-    public void insert(GuideSet guideSet)
+    public void insert(GuideSet guideSet, String expectErrorMsg)
     {
         Elements elements = elements();
         _test.setFormElement(elements.trainingStartDate, guideSet.getStartDate());
         _test.setFormElement(elements.trainingEndDate, guideSet.getEndDate());
         _test.setFormElement(elements.comment, guideSet.getComment());
         _test.clickAndWait(elements.submit);
+
+        if (expectErrorMsg != null)
+        {
+            _test.assertElementPresent(elements.error.withText(expectErrorMsg));
+            _test.clickAndWait(elements.cancel);
+        }
     }
 
     @Override
@@ -52,5 +58,6 @@ public class GuideSetPage extends InsertPage
         public Locator.XPathLocator trainingStartDate = body.append(Locator.tagWithName("input", "quf_TrainingStart"));
         public Locator.XPathLocator trainingEndDate = body.append(Locator.tagWithName("input", "quf_TrainingEnd"));
         public Locator.XPathLocator comment = body.append(Locator.tagWithName("textarea", "quf_Comment"));
+        public Locator.XPathLocator error = body.append(Locator.tagWithClass("font", "labkey-error"));
     }
 }

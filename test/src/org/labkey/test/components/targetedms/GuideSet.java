@@ -28,6 +28,13 @@ public class GuideSet
     private String _endDate;
     private String _comment;
     private List<GuideSetStats> _stats;
+    private Integer _brushSelectedPoints;
+
+    public GuideSet(String startDate, String endDate, String comment, Integer brushSelectedPoints)
+    {
+        this(startDate, endDate, comment);
+        _brushSelectedPoints = brushSelectedPoints;
+    }
 
     public GuideSet(String startDate, String endDate, String comment)
     {
@@ -70,5 +77,10 @@ public class GuideSet
     public List<GuideSetStats> getStats()
     {
         return _stats;
+    }
+
+    public Integer getBrushSelectedPoints()
+    {
+        return _brushSelectedPoints;
     }
 }

@@ -190,7 +190,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.setStartDate("2014-08-09");
         qcPlotsWebPart.setEndDate("2014-08-27");
         qcPlotsWebPart.applyRange();
-        qcPlotsWebPart.waitForPlots(0);
+        qcPlotsWebPart.waitForPlots(0, true);
     }
 
     @Test

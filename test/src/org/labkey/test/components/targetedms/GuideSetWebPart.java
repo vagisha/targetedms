@@ -50,4 +50,28 @@ public class GuideSetWebPart extends BodyWebPart
         getDataRegion().clickHeaderButtonByText("Insert New");
         return new GuideSetPage(_test);
     }
+
+    public Integer getRowId(GuideSet guideSet)
+    {
+        DataRegionTable table = getDataRegion();
+        if (table.getColumn("RowId") == -1)
+        {
+            _test._customizeViewsHelper.openCustomizeViewPanel();
+            _test._customizeViewsHelper.showHiddenItems();
+            _test._customizeViewsHelper.addCustomizeViewColumn("RowId");
+            _test._customizeViewsHelper.applyCustomView();
+        }
+
+        // guide sets created from brushing in the QC plot will not have a comment
+        String rowIdStr = table.getDataAsText(table.getRow("Comment", guideSet.getComment()), "RowId");
+        if (rowIdStr == null || "".equals(rowIdStr))
+        {
+            table.setFilter("TrainingStart", "Equals", guideSet.getStartDate());
+            table.setFilter("TrainingEnd", "Equals", guideSet.getEndDate());
+            rowIdStr = table.getDataAsText(0, "RowId");
+            table.clearAllFilters("TrainingStart");
+        }
+
+        return Integer.parseInt(rowIdStr);
+    }
 }
