@@ -115,7 +115,8 @@ public final class QCPlotsWebPart extends BodyWebPart
         RETENTION("Retention Time"),
         PEAK("Peak Area"),
         FWHM("Full Width at Half Maximum (FWHM)"),
-        FWB("Full Width at Base (FWB)");
+        FWB("Full Width at Base (FWB)"),
+        TPAREARATIO("Transition/Precursor Area Ratio");
 
         private String _text;
 
