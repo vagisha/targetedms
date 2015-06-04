@@ -168,7 +168,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
         });
 
-        // initialize the refesh graph button
+        // initialize the refresh graph button
         this.applyFilterButton = Ext4.create('Ext.button.Button', {
             disabled: true,
             text: 'Apply',
@@ -191,6 +191,18 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                     this.displayTrendPlot();
                 }
+            }
+        });
+
+        // initialize the checkbox to show peptides in a single plot
+        this.peptidesInSinglePlotCheckbox = Ext4.create('Ext.form.field.Checkbox', {
+            id: 'peptides-single-plot',
+            boxLabel: 'Show all peptides in single plot',
+            listeners: {
+                scope: this
+                //change: function() {
+                    //this.displaySinglePlot();
+                //}
             }
         });
 
@@ -223,7 +235,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var toolbar2Items = [
             this.scaleCombo, tbspacer,
             {xtype: 'tbseparator'}, tbspacer,
-            this.groupedXCheckbox, tbspacer
+            this.groupedXCheckbox, tbspacer,
+            {xtype: 'tbseparator'}, tbspacer,
+            this.peptidesInSinglePlotCheckbox
         ];
 
         // only add the create guide set button if the user has the proper permissions to insert/update guide sets
