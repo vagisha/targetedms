@@ -502,7 +502,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.sequencePlotData[sequence].data.push({
                 type: 'data',
                 sequence: sequence,
-                AcquiredTime: row['AcquiredTime'], // keep in data for hover text display
                 PrecursorId: row['PrecursorId'], // keep in data for click handler
                 PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
                 FilePath: row['FilePath'], // keep in data for hover text display
@@ -676,7 +675,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         mean: 'mean',
                         stdDev: 'stdDev',
                         topMargin: 10 + this.getMaxStackedAnnotations() * 12,
-                        xTick: this.groupedX ? 'date' : undefined,
+                        xTick: this.groupedX ? 'date' : 'fullDate',
                         xTickLabel: 'date',
                         yAxisDomain: [precursorInfo.min, precursorInfo.max],
                         yAxisScale: this.yAxisScale,
@@ -749,14 +748,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var id = 'combinedPlot';
         this.addPlotWebPartToTrendDiv(id, 'All');
 
-        // TODO support groupedX with singlePlot
-        // TODO fix x-axis index seqValue in plot.js
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data);
         var plotConfig = Ext4.apply(basePlotConfig, {
             properties: {
                 value: 'value',
                 topMargin: 10 + this.getMaxStackedAnnotations() * 12,
-                //xTick: this.groupedX ? 'date' : undefined,
+                xTick: this.groupedX ? 'date' : 'fullDate',
                 xTickLabel: 'date',
                 yAxisDomain: [combinePlotData.min, combinePlotData.max],
                 yAxisScale: this.yAxisScale,
@@ -777,7 +774,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     plotHoverTextDisplay : function(row){
-        return 'Acquired: ' + row['AcquiredTime'] + ", "
+        return 'Acquired: ' + row['fullDate'] + ", "
             + '\nValue: ' + row.value + ", "
             + '\nFile Path: ' + row['FilePath'];
     },
@@ -1015,7 +1012,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     formatDate: function(d, includeTime) {
         if (d instanceof Date) {
             if (includeTime) {
-                return Ext4.util.Format.date(d, 'Y-m-d H:i');
+                return Ext4.util.Format.date(d, 'Y-m-d H:i:s');
             }
             else {
                 return Ext4.util.Format.date(d, 'Y-m-d');
@@ -1135,8 +1132,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         if (this.plotBrushSelection && this.plotBrushSelection.points.length > 0)
         {
-            var startDate = this.plotBrushSelection.points[0].AcquiredTime;
-            var endDate = this.plotBrushSelection.points[this.plotBrushSelection.points.length - 1].AcquiredTime;
+            var startDate = this.plotBrushSelection.points[0]['fullDate'];
+            var endDate = this.plotBrushSelection.points[this.plotBrushSelection.points.length - 1]['fullDate'];
 
             if (this.plotBrushSelection.points.length < minGuideSetPointCount) {
                 Ext4.Msg.show({

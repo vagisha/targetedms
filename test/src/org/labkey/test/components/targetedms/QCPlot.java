@@ -61,7 +61,7 @@ public class QCPlot
     {
         String annotationString = annotationEl.getText();
         String annotationRegex = "Created By: (.+)\\s*, " +
-                "Date: (\\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d)\\s*, " +
+                "Date: (\\d\\d\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d:\\d\\d)\\s*, " +
                 "Description: (.+)";
         Pattern annotationPattern = Pattern.compile(annotationRegex, Pattern.MULTILINE);
         Matcher annotationMatcher = annotationPattern.matcher(annotationString);

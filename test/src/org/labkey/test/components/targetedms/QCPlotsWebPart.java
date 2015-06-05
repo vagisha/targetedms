@@ -262,6 +262,7 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public WebElement getPointByAcquiredDate(String dateStr)
     {
+        dateStr = dateStr.replaceAll("/", "-"); // convert 2013/08/14 -> 2013-08-14
         List<WebElement> points = elements().svgPoint.findElements(_test.getDriver());
         for (WebElement p : points)
         {
