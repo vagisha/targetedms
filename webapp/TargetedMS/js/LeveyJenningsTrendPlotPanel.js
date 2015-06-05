@@ -27,6 +27,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     yAxisScale: 'linear',
     chartType: 'retentionTime',
     groupedX: false,
+    singlePlot: false,
     plotWidth: null,
     enableBrushing: false,
 
@@ -105,7 +106,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 scope: this,
                 change: function(cmp, newVal, oldVal) {
                     this.yAxisScale = newVal;
-                    this.displayTrendPlot();
+                    this.renderPlots();
                 }
             }
         });
@@ -186,10 +187,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     this.groupedX = newValue;
 
                     // we don't allow creation of guide sets in grouped x-axis mode
-                    this.createGuideSetToggleButton.setDisabled(this.groupedX);
+                    this.createGuideSetToggleButton.setDisabled(this.groupedX || this.singlePlot);
                     this.setBrushingEnabled(false);
 
-                    this.displayTrendPlot();
+                    //TODO this should be this.renderPlots() but there is a bug with the yStepIndex being reset on grouping of x-axis
+                    this.getAnnotationData();
                 }
             }
         });
@@ -199,10 +201,16 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             id: 'peptides-single-plot',
             boxLabel: 'Show all peptides in single plot',
             listeners: {
-                scope: this
-                //change: function() {
-                    //this.displaySinglePlot();
-                //}
+                scope: this,
+                change: function(cb, newValue, oldValue) {
+                    this.singlePlot = newValue;
+
+                    // we don't currently allow creation of guide sets in single plot mode
+                    this.createGuideSetToggleButton.setDisabled(this.groupedX || this.singlePlot);
+                    this.setBrushingEnabled(false);
+
+                    this.renderPlots();
+                }
             }
         });
 
@@ -279,10 +287,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.createGuideSetToggleButton.toggle(enabled);
     },
 
-    displayTrendPlot: function() {
+    setLoadingMsg : function() {
         Ext4.get(this.trendDiv).update("");
         Ext4.get(this.trendDiv).mask("Loading...");
+    },
 
+    displayTrendPlot: function() {
+        this.setLoadingMsg();
         this.getDistinctPrecursors();
     },
 
@@ -490,6 +501,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
             this.sequencePlotData[sequence].data.push({
                 type: 'data',
+                sequence: sequence,
                 AcquiredTime: row['AcquiredTime'], // keep in data for hover text display
                 PrecursorId: row['PrecursorId'], // keep in data for click handler
                 PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
@@ -571,9 +583,16 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     renderPlots: function() {
+        this.setLoadingMsg();
         this.setPlotWidth();
 
-        var addedPlot = this.addIndividualPrecursorPlots();
+        var addedPlot = false;
+        if (this.singlePlot) {
+            addedPlot = this.addCombinedPeptideSinglePlot();
+        }
+        else {
+            addedPlot = this.addIndividualPrecursorPlots();
+        }
 
         if (!addedPlot) {
             Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<div>No data to plot</div>');
@@ -619,11 +638,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return {
             rendererType : 'd3',
             renderTo : id,
-            data : data,
+            data : Ext4.Array.clone(data),
             width : this.plotWidth - 30,
             height : 300,
             gridLineColor : 'white',
-            legendData : this.legendData
+            legendData : Ext4.Array.clone(this.legendData)
         };
     },
 
@@ -664,9 +683,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         shape: 'guideSetId',
                         showTrendLine: true,
                         hoverTextFn: this.plotHoverTextDisplay,
-                        pointClickFn: function(event, row) {
-                            window.location = LABKEY.ActionURL.buildURL('targetedms', "precursorAllChromatogramsChart", LABKEY.ActionURL.getContainer(), { id: row.PrecursorId, chromInfoId: row.PrecursorChromInfoId }) + '#ChromInfo' + row.PrecursorChromInfoId;
-                        }
+                        pointClickFn: this.plotPointClick
                     },
                     brushing: !this.allowGuideSetBrushing() ? undefined : {
                         dimension: 'x',
@@ -705,10 +722,68 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return addedPlot;
     },
 
+    addCombinedPeptideSinglePlot : function() {
+        //var groupColors = LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete());
+
+        var combinePlotData = {min: null, max: null, data: []};
+        for (var i = 0; i < this.precursors.length; i++)
+        {
+            var precursorInfo = this.sequencePlotData[this.precursors[i]];
+
+            // for combined plot, concat all data together into a single array and track min/max for all
+            combinePlotData.data = combinePlotData.data.concat(precursorInfo.data);
+            if (combinePlotData.min == null || combinePlotData.min > precursorInfo.min) {
+                combinePlotData.min = precursorInfo.min;
+            }
+            if (combinePlotData.max == null || combinePlotData.max < precursorInfo.max) {
+                combinePlotData.max = precursorInfo.max;
+            }
+
+            // add the sequence name for each group to the legend
+            //this.legendData.push({
+            //    text: precursorInfo.sequence,
+            //    color: groupColors[i % groupColors.length]
+            //});
+        }
+
+        var id = 'combinedPlot';
+        this.addPlotWebPartToTrendDiv(id, 'All');
+
+        // TODO support groupedX with singlePlot
+        // TODO fix x-axis index seqValue in plot.js
+        var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data);
+        var plotConfig = Ext4.apply(basePlotConfig, {
+            properties: {
+                value: 'value',
+                topMargin: 10 + this.getMaxStackedAnnotations() * 12,
+                //xTick: this.groupedX ? 'date' : undefined,
+                xTickLabel: 'date',
+                yAxisDomain: [combinePlotData.min, combinePlotData.max],
+                yAxisScale: this.yAxisScale,
+                shape: 'guideSetId',
+                groupBy: 'sequence',
+                color: 'sequence',
+                showTrendLine: true,
+                disableRangeDisplay: true,
+                hoverTextFn: this.plotHoverTextDisplay,
+                pointClickFn: this.plotPointClick
+            }
+        });
+
+        var plot = LABKEY.vis.LeveyJenningsPlot(plotConfig);
+        plot.render();
+
+        return true;
+    },
+
     plotHoverTextDisplay : function(row){
         return 'Acquired: ' + row['AcquiredTime'] + ", "
             + '\nValue: ' + row.value + ", "
             + '\nFile Path: ' + row['FilePath'];
+    },
+
+    plotPointClick : function(event, row) {
+        window.location = LABKEY.ActionURL.buildURL('targetedms', "precursorAllChromatogramsChart", LABKEY.ActionURL.getContainer(), { id: row.PrecursorId, chromInfoId: row.PrecursorChromInfoId }) + '#ChromInfo' + row.PrecursorChromInfoId;
     },
 
     plotBrushStartEvent : function(plot) {
