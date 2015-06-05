@@ -571,11 +571,63 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     renderPlots: function() {
-        var maxStackedAnnotations = 0;
-        if (this.annotationData.length > 0) {
-            maxStackedAnnotations = Math.max.apply(Math, (Ext4.Array.pluck(this.annotationData, "yStepIndex"))) + 1;
+        this.setPlotWidth();
+
+        var addedPlot = this.addIndividualPrecursorPlots();
+
+        if (!addedPlot) {
+            Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<div>No data to plot</div>');
         }
 
+        Ext4.get(this.trendDiv).unmask();
+    },
+
+    setPlotWidth : function() {
+        if (this.plotWidth == null)
+        {
+            // set the width of the plot webparts based on the first labkey-wp-body element (i.e. QC Summary webpart in this case)
+            this.plotWidth = 900;
+            var wp = document.querySelector('.labkey-wp-body');
+            if (wp && (wp.clientWidth - 20) > this.plotWidth) {
+                this.plotWidth = wp.clientWidth - 20;
+            }
+
+            Ext4.get(this.trendDiv).setWidth(this.plotWidth);
+        }
+    },
+
+    addPlotWebPartToTrendDiv : function(id, title) {
+        Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<br/>' +
+            '<table class="labkey-wp qc-plot-wp">' +
+            ' <tr class="labkey-wp-header">' +
+            '     <th class="labkey-wp-title-left"><span class="labkey-wp-title-text qc-plot-wp-title">' + Ext4.util.Format.htmlEncode(title) + '</span></th>' +
+            ' </tr><tr>' +
+            '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
+            ' </tr>' +
+            '</table>'
+        );
+    },
+
+    getMaxStackedAnnotations : function() {
+        if (this.annotationData.length > 0) {
+            return Math.max.apply(Math, (Ext4.Array.pluck(this.annotationData, "yStepIndex"))) + 1;
+        }
+        return 0;
+    },
+
+    getBasePlotConfig : function(id, data) {
+        return {
+            rendererType : 'd3',
+            renderTo : id,
+            data : data,
+            width : this.plotWidth - 30,
+            height : 300,
+            gridLineColor : 'white',
+            legendData : this.legendData
+        };
+    },
+
+    addIndividualPrecursorPlots : function() {
         var addedPlot = false;
 
         for (var i = 0; i < this.precursors.length; i++)
@@ -587,28 +639,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             {
                 addedPlot = true;
 
-                if (this.plotWidth == null) {
-                    // set the width of the plot webparts based on the first labkey-wp-body element (i.e. QC Summary webpart in this case)
-                    this.plotWidth = 900;
-                    var wp = document.querySelector('.labkey-wp-body');
-                    if (wp && (wp.clientWidth - 20) > this.plotWidth) {
-                        this.plotWidth = wp.clientWidth - 20;
-                    }
-
-                    Ext4.get(this.trendDiv).setWidth(this.plotWidth);
-                }
-
                 // add a new panel for each plot so we can add the title to the frame
                 var id = "precursorPlot" + i;
-                Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<br/>' +
-                        '<table class="labkey-wp qc-plot-wp">' +
-                        ' <tr class="labkey-wp-header">' +
-                        '     <th class="labkey-wp-title-left"><span class="labkey-wp-title-text qc-plot-wp-title">' + Ext4.util.Format.htmlEncode(this.precursors[i]) + '</span></th>' +
-                        ' </tr><tr>' +
-                        '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
-                        ' </tr>' +
-                        '</table>'
-                );
+                this.addPlotWebPartToTrendDiv(id, this.precursors[i]);
 
                 if (precursorInfo.showLogWarning) {
                     Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below the mean with negative values have been omitted.</span>");
@@ -617,34 +650,24 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 var me = this; // for plot brushing
 
                 // create plot using the JS Vis API
-                var plot = LABKEY.vis.LeveyJenningsPlot({
-                    renderTo: id,
-                    rendererType: 'd3',
-                    width: this.plotWidth - 30,
-                    height: 300,
-                    data: precursorInfo.data,
+                var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data);
+                var plotConfig = Ext4.apply(basePlotConfig, {
                     properties: {
                         value: 'value',
                         mean: 'mean',
                         stdDev: 'stdDev',
-                        topMargin: 10 + maxStackedAnnotations * 12,
+                        topMargin: 10 + this.getMaxStackedAnnotations() * 12,
                         xTick: this.groupedX ? 'date' : undefined,
                         xTickLabel: 'date',
                         yAxisDomain: [precursorInfo.min, precursorInfo.max],
                         yAxisScale: this.yAxisScale,
                         shape: 'guideSetId',
                         showTrendLine: true,
-                        hoverTextFn: function(row){
-                            return 'Acquired: ' + row['AcquiredTime'] + ", "
-                                    + '\nValue: ' + row.value + ", "
-                                    + '\nFile Path: ' + row['FilePath'];
-                        },
+                        hoverTextFn: this.plotHoverTextDisplay,
                         pointClickFn: function(event, row) {
                             window.location = LABKEY.ActionURL.buildURL('targetedms', "precursorAllChromatogramsChart", LABKEY.ActionURL.getContainer(), { id: row.PrecursorId, chromInfoId: row.PrecursorChromInfoId }) + '#ChromInfo' + row.PrecursorChromInfoId;
                         }
                     },
-                    gridLineColor: 'white',
-                    legendData: this.legendData,
                     brushing: !this.allowGuideSetBrushing() ? undefined : {
                         dimension: 'x',
                         fillOpacity: 0.4,
@@ -664,6 +687,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         }
                     }
                 });
+
+                var plot = LABKEY.vis.LeveyJenningsPlot(plotConfig);
                 plot.render();
 
                 this.addAnnotationsToPlot(plot, precursorInfo);
@@ -677,12 +702,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         this.setPlotBrushingDisplayStyle();
 
-        if (!addedPlot)
-        {
-            Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<div>No data to plot</div>');
-        }
+        return addedPlot;
+    },
 
-        Ext4.get(this.trendDiv).unmask();
+    plotHoverTextDisplay : function(row){
+        return 'Acquired: ' + row['AcquiredTime'] + ", "
+            + '\nValue: ' + row.value + ", "
+            + '\nFile Path: ' + row['FilePath'];
     },
 
     plotBrushStartEvent : function(plot) {
