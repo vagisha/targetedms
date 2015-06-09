@@ -639,7 +639,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             renderTo : id,
             data : Ext4.Array.clone(data),
             width : this.plotWidth - 30,
-            height : 300,
+            height : this.singlePlot ? 500 : 300,
             gridLineColor : 'white',
             legendData : Ext4.Array.clone(legenddata)
         };
@@ -784,6 +784,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         var plot = LABKEY.vis.LeveyJenningsPlot(plotConfig);
         plot.render();
+
+        this.addAnnotationsToPlot(plot, precursorInfo);
 
         return true;
     },
