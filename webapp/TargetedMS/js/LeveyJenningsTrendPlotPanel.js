@@ -199,7 +199,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         // initialize the checkbox to show peptides in a single plot
         this.peptidesInSinglePlotCheckbox = Ext4.create('Ext.form.field.Checkbox', {
             id: 'peptides-single-plot',
-            boxLabel: 'Show all peptides in single plot',
+            boxLabel: 'Show All Peptides in Single Plot',
             listeners: {
                 scope: this,
                 change: function(cb, newValue, oldValue) {
@@ -245,7 +245,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             {xtype: 'tbseparator'}, tbspacer,
             this.groupedXCheckbox, tbspacer,
             {xtype: 'tbseparator'}, tbspacer,
-            this.peptidesInSinglePlotCheckbox
+            this.peptidesInSinglePlotCheckbox, tbspacer
         ];
 
         // only add the create guide set button if the user has the proper permissions to insert/update guide sets
@@ -633,7 +633,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return 0;
     },
 
-    getBasePlotConfig : function(id, data) {
+    getBasePlotConfig : function(id, data, legenddata) {
         return {
             rendererType : 'd3',
             renderTo : id,
@@ -641,7 +641,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             width : this.plotWidth - 30,
             height : 300,
             gridLineColor : 'white',
-            legendData : Ext4.Array.clone(this.legendData)
+            legendData : Ext4.Array.clone(legenddata)
         };
     },
 
@@ -668,7 +668,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 var me = this; // for plot brushing
 
                 // create plot using the JS Vis API
-                var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data);
+                var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, this.legendData);
                 var plotConfig = Ext4.apply(basePlotConfig, {
                     properties: {
                         value: 'value',
@@ -722,12 +722,21 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     addCombinedPeptideSinglePlot : function() {
-        //var groupColors = LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete());
+        var groupColors = LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete());
+
+        var newLegendData = Ext4.Array.clone(this.legendData);
 
         var combinePlotData = {min: null, max: null, data: []};
+
+        var lengthOfLongestPeptide = 1;
+
         for (var i = 0; i < this.precursors.length; i++)
         {
             var precursorInfo = this.sequencePlotData[this.precursors[i]];
+
+            if (precursorInfo.sequence.length > lengthOfLongestPeptide) {
+                lengthOfLongestPeptide = precursorInfo.sequence.length;
+            }
 
             // for combined plot, concat all data together into a single array and track min/max for all
             combinePlotData.data = combinePlotData.data.concat(precursorInfo.data);
@@ -738,21 +747,27 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 combinePlotData.max = precursorInfo.max;
             }
 
-            // add the sequence name for each group to the legend
-            //this.legendData.push({
-            //    text: precursorInfo.sequence,
-            //    color: groupColors[i % groupColors.length]
-            //});
+            //add the sequence name for each group to the legend
+            if(this.singlePlot)
+            {
+                newLegendData.push({
+                    text: precursorInfo.sequence,
+                    color: groupColors[i % groupColors.length]
+                });
+            }
         }
 
         var id = 'combinedPlot';
         this.addPlotWebPartToTrendDiv(id, 'All');
 
-        var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data);
+        var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, newLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
+            margins : {
+                top: 10 + this.getMaxStackedAnnotations() * 12,
+                right: 10*lengthOfLongestPeptide
+            },
             properties: {
                 value: 'value',
-                topMargin: 10 + this.getMaxStackedAnnotations() * 12,
                 xTick: this.groupedX ? 'date' : 'fullDate',
                 xTickLabel: 'date',
                 yAxisDomain: [combinePlotData.min, combinePlotData.max],
