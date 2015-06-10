@@ -15,10 +15,17 @@
  */
 package org.labkey.test.components.targetedms;
 
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.query.Filter;
+import org.labkey.remoteapi.query.SelectRowsCommand;
+import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.components.BodyWebPart;
 import org.labkey.test.pages.targetedms.GuideSetPage;
 import org.labkey.test.util.DataRegionTable;
+
+import java.io.IOException;
 
 /**
  * Created by cnathe on 4/13/2015.
@@ -27,10 +34,12 @@ public class GuideSetWebPart extends BodyWebPart
 {
     public static final String DEFAULT_TITLE = "Guide Set";
     private DataRegionTable _dataRegionTable;
+    private String _projectName;
 
-    public GuideSetWebPart(BaseWebDriverTest test)
+    public GuideSetWebPart(BaseWebDriverTest test, String projectName)
     {
         this(test, 0);
+        _projectName = projectName;
     }
 
     public GuideSetWebPart(BaseWebDriverTest test, int index)
@@ -53,25 +62,32 @@ public class GuideSetWebPart extends BodyWebPart
 
     public Integer getRowId(GuideSet guideSet)
     {
-        DataRegionTable table = getDataRegion();
-        if (table.getColumn("RowId") == -1)
+        try {
+            Connection cn = _test.createDefaultConnection(false);
+            SelectRowsCommand selectCmd = new SelectRowsCommand("targetedms", "GuideSet");
+            selectCmd.addFilter(new Filter("Comment", guideSet.getComment()));
+            SelectRowsResponse selResp = selectCmd.execute(cn, _projectName);
+
+            // guide sets created from brushing in the QC plot will not have a comment
+            if (selResp.getRows().size() == 0)
+            {
+                selectCmd = new SelectRowsCommand("targetedms", "GuideSet");
+                selectCmd.addFilter(new Filter("TrainingStart", guideSet.getStartDate()));
+                selectCmd.addFilter(new Filter("TrainingEnd", guideSet.getEndDate()));
+                selResp = selectCmd.execute(cn, _projectName);
+            }
+
+            if (selResp.getRows().size() > 0)
+            {
+                String rowIdStr = selResp.getRows().get(0).get("RowId").toString();
+                return Integer.parseInt(rowIdStr);
+            }
+        }
+        catch (IOException | CommandException rethrow)
         {
-            _test._customizeViewsHelper.openCustomizeViewPanel();
-            _test._customizeViewsHelper.showHiddenItems();
-            _test._customizeViewsHelper.addCustomizeViewColumn("RowId");
-            _test._customizeViewsHelper.applyCustomView();
+            throw new RuntimeException(rethrow);
         }
 
-        // guide sets created from brushing in the QC plot will not have a comment
-        String rowIdStr = table.getDataAsText(table.getRow("Comment", guideSet.getComment()), "RowId");
-        if (rowIdStr == null || "".equals(rowIdStr))
-        {
-            table.setFilter("TrainingStart", "Equals", guideSet.getStartDate());
-            table.setFilter("TrainingEnd", "Equals", guideSet.getEndDate());
-            rowIdStr = table.getDataAsText(0, "RowId");
-            table.clearAllFilters("TrainingStart");
-        }
-
-        return Integer.parseInt(rowIdStr);
+        return null;
     }
 }

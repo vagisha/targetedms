@@ -267,7 +267,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
             if (!"Guide Sets".equals(getUrlParam("pageId", true)))
                 clickTab("Guide Sets");
 
-            GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this);
+            GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this, getProjectName());
             GuideSetPage guideSetPage = guideSetWebPart.startInsert();
             guideSetPage.insert(guideSet, expectErrorMsg);
         }
@@ -281,7 +281,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         if (!"Guide Sets".equals(getUrlParam("pageId", true)))
             clickTab("Guide Sets");
 
-        GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this);
+        GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this, getProjectName());
         guideSet.setRowId(guideSetWebPart.getRowId(guideSet));
     }
 }

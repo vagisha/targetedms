@@ -670,11 +670,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 // create plot using the JS Vis API
                 var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, this.legendData);
                 var plotConfig = Ext4.apply(basePlotConfig, {
+                    margins : {
+                        top: 10 + this.getMaxStackedAnnotations() * 12
+                    },
                     properties: {
                         value: 'value',
                         mean: 'mean',
                         stdDev: 'stdDev',
-                        topMargin: 10 + this.getMaxStackedAnnotations() * 12,
                         xTick: this.groupedX ? 'date' : 'fullDate',
                         xTickLabel: 'date',
                         yAxisDomain: [precursorInfo.min, precursorInfo.max],
