@@ -760,7 +760,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         var id = 'combinedPlot';
-        this.addPlotWebPartToTrendDiv(id, 'All');
+        this.addPlotWebPartToTrendDiv(id, 'All Peptides');
 
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, newLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
@@ -787,7 +787,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var plot = LABKEY.vis.LeveyJenningsPlot(plotConfig);
         plot.render();
 
-        this.addAnnotationsToPlot(plot, precursorInfo);
+        this.addAnnotationsToPlot(plot, combinePlotData);
+        this.addGuideSetTrainingRangeToPlot(plot, combinePlotData);
 
         return true;
     },
@@ -910,29 +911,63 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var me = this;
         var guideSetTrainingData = [];
 
-        // find the x-axis starting and ending index based on the guide set information attached to each data point
-        for (var i = 0; i < this.guideSetTrainingData.length; i++)
-        {
-            // only compare guide set info for matching precursor sequence
-            if (precursorInfo.sequence != this.guideSetTrainingData[i].Sequence) {
-                continue;
-            }
+        if(this.singlePlot) {
 
-            var gs = Ext4.clone(this.guideSetTrainingData[i]);
+            var combinedPlotData = Ext4.Array.sort(Ext4.Array.unique(precursorInfo.data));
 
-            for (var j = 0; j < precursorInfo.data.length; j++)
-            {
-                // only use data points that match the GuideSet RowId and are in the training set range
-                if (precursorInfo.data[j].guideSetId == gs.GuideSetId && precursorInfo.data[j].inGuideSetTrainingRange) {
-                    if (gs.StartIndex == undefined) {
-                        gs.StartIndex = precursorInfo.data[j].seqValue;
+
+            for(var m = 0; m < combinedPlotData.length; m++) {
+
+                for(var k = 0; k < this.guideSetTrainingData.length; k++) {
+
+                    if(combinedPlotData[m].sequence != this.guideSetTrainingData[k].Sequence) {
+                        continue;
                     }
-                    gs.EndIndex = precursorInfo.data[j].seqValue;
+
+                    var gs = Ext4.clone(this.guideSetTrainingData[k]);
+
+                    for (var j = 0; j < combinedPlotData.length; j++)
+                    {
+                        // only use data points that match the GuideSet RowId and are in the training set range
+                        if (combinedPlotData[j].guideSetId == gs.GuideSetId && combinedPlotData[j].inGuideSetTrainingRange) {
+                            if (gs.StartIndex == undefined) {
+                                gs.StartIndex = combinedPlotData[j].seqValue;
+                            }
+                            gs.EndIndex = combinedPlotData[j].seqValue;
+                        }
+                    }
+
+                    if (gs.StartIndex != undefined) {
+                        guideSetTrainingData.push(gs);
+                    }
                 }
             }
+        }
+        else {
+            // find the x-axis starting and ending index based on the guide set information attached to each data point
+            for (var i = 0; i < this.guideSetTrainingData.length; i++)
+            {
+                // only compare guide set info for matching precursor sequence
+                if (precursorInfo.sequence != this.guideSetTrainingData[i].Sequence) {
+                    continue;
+                }
 
-            if (gs.StartIndex != undefined) {
-                guideSetTrainingData.push(gs);
+                var gs = Ext4.clone(this.guideSetTrainingData[i]);
+
+                for (var j = 0; j < precursorInfo.data.length; j++)
+                {
+                    // only use data points that match the GuideSet RowId and are in the training set range
+                    if (precursorInfo.data[j].guideSetId == gs.GuideSetId && precursorInfo.data[j].inGuideSetTrainingRange) {
+                        if (gs.StartIndex == undefined) {
+                            gs.StartIndex = precursorInfo.data[j].seqValue;
+                        }
+                        gs.EndIndex = precursorInfo.data[j].seqValue;
+                    }
+                }
+
+                if (gs.StartIndex != undefined) {
+                    guideSetTrainingData.push(gs);
+                }
             }
         }
 
@@ -986,10 +1021,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var me = this;
 
         var xAxisLabels = Ext4.Array.pluck(precursorInfo.data, (this.groupedX ? "date" : "fullDate"));
-        if (this.groupedX) {
-            xAxisLabels = Ext4.Array.unique(xAxisLabels);
-        }
 
+        if (this.groupedX || this.singlePlot) {
+            xAxisLabels = Ext4.Array.sort(Ext4.Array.unique(xAxisLabels));
+        }
         // use direct D3 code to inject the annotation icons to the rendered SVG
         var xAcc = function(d) {
             var annotationDate = me.formatDate(new Date(d['Date']), !me.groupedX);
