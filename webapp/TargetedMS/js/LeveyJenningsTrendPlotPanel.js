@@ -796,7 +796,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 showTrendLine: true,
                 disableRangeDisplay: true,
                 hoverTextFn: this.plotHoverTextDisplay,
-                pointClickFn: this.plotPointClick
+                pointClickFn: this.plotPointClick,
+                singlePlotAndGroupedX: (this.singlePlot && this.groupedX)
             }
         });
 
@@ -804,7 +805,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         plot.render();
 
         this.addAnnotationsToPlot(plot, combinePlotData);
-        this.addGuideSetTrainingRangeToPlot(plot, combinePlotData);
+
+        if (!this.groupedX) {
+            this.addGuideSetTrainingRangeToPlot(plot, combinePlotData);
+        }
 
         return true;
     },
