@@ -439,20 +439,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     processGuideSetData : function(data) {
         this.guideSetTrainingData = data.rows;
-        var guideSetTrainingDataUniqueIds = Ext4.Array.toMap(this.guideSetTrainingData , 'GuideSetId');
-        var guideSetTrainingDataUniqueIdsArray = Object.keys(guideSetTrainingDataUniqueIds);
+        var guideSetTrainingDataUniqueIds = Ext4.Array.toValueMap(this.guideSetTrainingData , 'GuideSetId');
+        this.guideSetTrainingDataUniqueObjects = [];
 
-        this.guideSetTrainingDataUniqueObjects = new Array(guideSetTrainingDataUniqueIdsArray.length);
-
-        var k = 0;
-
-        for(var j = 0; j < guideSetTrainingDataUniqueIdsArray.length; j++) {
-            for(var i = 0; i < this.guideSetTrainingData.length; i++) {
-                if(guideSetTrainingDataUniqueIdsArray[j] == this.guideSetTrainingData[i].GuideSetId)
-                {
-                    this.guideSetTrainingDataUniqueObjects[k++] = this.guideSetTrainingData[i];
-                    break;
-                }
+        for(var i in guideSetTrainingDataUniqueIds) {
+            if(guideSetTrainingDataUniqueIds.hasOwnProperty(i)) {
+                this.guideSetTrainingDataUniqueObjects.push(Ext4.clone(guideSetTrainingDataUniqueIds[i]));
             }
         }
       this.getPlotData();
@@ -700,7 +692,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         shape: 'guideSetId',
                         showTrendLine: true,
                         hoverTextFn: this.plotHoverTextDisplay,
-                        pointClickFn: this.plotPointClick
+                        pointClickFn: this.plotPointClick,
+                        position: this.groupedX ? 'jitter' : undefined
                     },
                     brushing: !this.allowGuideSetBrushing() ? undefined : {
                         dimension: 'x',
@@ -797,7 +790,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 disableRangeDisplay: true,
                 hoverTextFn: this.plotHoverTextDisplay,
                 pointClickFn: this.plotPointClick,
-                singlePlotAndGroupedX: (this.singlePlot && this.groupedX)
+                position: this.groupedX ? 'jitter' : undefined
             }
         });
 
@@ -931,9 +924,15 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var me = this;
         var guideSetTrainingData = [];
 
-        for (var i = 0; i < this.guideSetTrainingDataUniqueObjects.length; i++)
+        // find the x-axis starting and ending index based on the guide set information attached to each data point
+        for (var i = 0; i < (this.singlePlot ? this.guideSetTrainingDataUniqueObjects.length : this.guideSetTrainingData.length); i++)
         {
-            var gs = Ext4.clone(this.guideSetTrainingDataUniqueObjects[i]);
+            // only compare guide set info for matching precursor sequence
+            if (!this.singlePlot && precursorInfo.sequence != this.guideSetTrainingData[i].Sequence) {
+                continue;
+            }
+
+            var gs = Ext4.clone(this.singlePlot ? this.guideSetTrainingDataUniqueObjects[i] : this.guideSetTrainingData[i]);
 
             for (var j = 0; j < precursorInfo.data.length; j++)
             {
@@ -972,16 +971,30 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 .attr('stroke', '#000000').attr('stroke-opacity', 0.1)
                 .attr('fill', '#000000').attr('fill-opacity', 0.1);
 
-            guideSetTrainingRange.append("title")
-                .text(function (d) {
-                    return "Guide Set ID: " + d['GuideSetId'] + ","
-                        + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true) + ","
-                        + "\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true) + ","
-                        + "\n# Runs: " + d['NumRecords'] + ","
-                        + "\nMean: " + me.formatNumeric(d['Mean']) + ","
-                        + "\nStd Dev: " + me.formatNumeric(d['StandardDev'])
-                        + (d['Comment'] ? ("," + "\nComment: " + d['Comment']) : "");
-                });
+            if(this.singlePlot)
+            {
+                guideSetTrainingRange.append("title")
+                        .text(function (d)
+                        {
+                            return "Guide Set ID: " + d['GuideSetId'] + ","
+                                    + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true) + ","
+                                    + "\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true);
+                        });
+            }
+            else
+            {
+                guideSetTrainingRange.append("title")
+                        .text(function (d)
+                        {
+                            return "Guide Set ID: " + d['GuideSetId'] + ","
+                                    + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true) + ","
+                                    + "\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true) + ","
+                                    + "\n# Runs: " + d['NumRecords'] + ","
+                                    + "\nMean: " + me.formatNumeric(d['Mean']) + ","
+                                    + "\nStd Dev: " + me.formatNumeric(d['StandardDev'])
+                                    + (d['Comment'] ? ("," + "\nComment: " + d['Comment']) : "");
+                        });
+            }
         }
 
         this.bringSvgElementToFront(plot, "g.error-bar");
