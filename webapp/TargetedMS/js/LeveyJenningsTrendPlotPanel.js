@@ -722,7 +722,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                 // only show the guide set training ranges when not grouping x-axis by date
                 if (!this.groupedX) {
-                    this.addGuideSetTrainingRangeToPlot(plot, precursorInfo);
+                    this.addGuideSetTrainingRangeToPlot(plot, precursorInfo, this.guideSetTrainingData);
                 }
             }
         }
@@ -800,7 +800,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.addAnnotationsToPlot(plot, combinePlotData);
 
         if (!this.groupedX) {
-            this.addGuideSetTrainingRangeToPlot(plot, combinePlotData);
+            this.addGuideSetTrainingRangeToPlot(plot, combinePlotData, this.guideSetTrainingDataUniqueObjects);
         }
 
         return true;
@@ -920,19 +920,19 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         toolbarMsg.up('toolbar').setVisible(this.enableBrushing);
     },
 
-    addGuideSetTrainingRangeToPlot : function(plot, precursorInfo) {
+    addGuideSetTrainingRangeToPlot : function(plot, precursorInfo, guideSetTrainingDataOrig) {
         var me = this;
         var guideSetTrainingData = [];
 
         // find the x-axis starting and ending index based on the guide set information attached to each data point
-        for (var i = 0; i < (this.singlePlot ? this.guideSetTrainingDataUniqueObjects.length : this.guideSetTrainingData.length); i++)
+        for (var i = 0; i < guideSetTrainingDataOrig.length; i++)
         {
             // only compare guide set info for matching precursor sequence
-            if (!this.singlePlot && precursorInfo.sequence != this.guideSetTrainingData[i].Sequence) {
+            if (!this.singlePlot && precursorInfo.sequence != guideSetTrainingDataOrig[i].Sequence) {
                 continue;
             }
 
-            var gs = Ext4.clone(this.singlePlot ? this.guideSetTrainingDataUniqueObjects[i] : this.guideSetTrainingData[i]);
+            var gs = Ext4.clone(guideSetTrainingDataOrig[i]);
 
             for (var j = 0; j < precursorInfo.data.length; j++)
             {
@@ -971,30 +971,15 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 .attr('stroke', '#000000').attr('stroke-opacity', 0.1)
                 .attr('fill', '#000000').attr('fill-opacity', 0.1);
 
-            if(this.singlePlot)
-            {
-                guideSetTrainingRange.append("title")
-                        .text(function (d)
-                        {
-                            return "Guide Set ID: " + d['GuideSetId'] + ","
-                                    + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true) + ","
-                                    + "\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true);
-                        });
-            }
-            else
-            {
-                guideSetTrainingRange.append("title")
-                        .text(function (d)
-                        {
-                            return "Guide Set ID: " + d['GuideSetId'] + ","
-                                    + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true) + ","
-                                    + "\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true) + ","
-                                    + "\n# Runs: " + d['NumRecords'] + ","
-                                    + "\nMean: " + me.formatNumeric(d['Mean']) + ","
-                                    + "\nStd Dev: " + me.formatNumeric(d['StandardDev'])
-                                    + (d['Comment'] ? ("," + "\nComment: " + d['Comment']) : "");
-                        });
-            }
+            guideSetTrainingRange.append("title").text(function (d) {
+                return "Guide Set ID: " + d['GuideSetId'] + ","
+                        + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true)
+                        + ",\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true)
+                        + (!me.singlePlot ? ",\n# Runs: " + d['NumRecords'] : "")
+                        + (!me.singlePlot ? ",\nMean: " + me.formatNumeric(d['Mean']) : "")
+                        + (!me.singlePlot ? ",\nStd Dev: " + me.formatNumeric(d['StandardDev']) : "")
+                        + (d['Comment'] ? (",\nComment: " + d['Comment']) : "");
+            });
         }
 
         this.bringSvgElementToFront(plot, "g.error-bar");
