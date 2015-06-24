@@ -626,7 +626,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<br/>' +
             '<table class="labkey-wp qc-plot-wp">' +
             ' <tr class="labkey-wp-header">' +
-            '     <th class="labkey-wp-title-left"><span class="labkey-wp-title-text qc-plot-wp-title">' + Ext4.util.Format.htmlEncode(title) + '</span></th>' +
+            '     <th class="labkey-wp-title-left"><span class="labkey-wp-title-text qc-plot-wp-title">' + Ext4.util.Format.htmlEncode(title) +
+            ' <div style="display:inline; float:right;" id="' + id + '-exportToPDFbutton"></div></span></th>' +
             ' </tr><tr>' +
             '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
             ' </tr>' +
@@ -651,6 +652,24 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             gridLineColor : 'white',
             legendData : Ext4.Array.clone(legenddata)
         };
+    },
+
+    createExportToPDFButton : function(id, sequence) {
+        new Ext4.Button({
+            renderTo: id+"-exportToPDFbutton",
+            svgDivId: id,
+            sequence: sequence ? sequence : "",
+            icon: LABKEY.contextPath + "/_icons/pdf.gif",
+            tooltip: "Export PDF of this plot",
+            handler: function(btn) {
+                var svgEls = Ext4.get(btn.svgDivId).select('svg');
+                var title = btn.sequence ? 'QC Plot for peptide ' + btn.sequence : 'QC Combined Plot for All Peptides' ;
+                var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[0]);
+                svgStr = svgStr.replace(/visibility="hidden"/g, 'visibility="visible"');
+                LABKEY.vis.SVGConverter.convert(svgStr, LABKEY.vis.SVGConverter.FORMAT_PDF, title);
+            },
+            scope: this
+        });
     },
 
     addIndividualPrecursorPlots : function() {
@@ -679,7 +698,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, this.legendData);
                 var plotConfig = Ext4.apply(basePlotConfig, {
                     margins : {
-                        top: 10 + this.getMaxStackedAnnotations() * 12
+                        top: 45 + this.getMaxStackedAnnotations() * 12,
+                        bottom: 75
+                    },
+                    labels : {
+                        main: {value: this.precursors[i], visibility: 'hidden'},
+                        y: {value: this.getChartTypePropsByName(this.chartType).title, visibility:'hidden'}
                     },
                     properties: {
                         value: 'value',
@@ -724,6 +748,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 if (!this.groupedX) {
                     this.addGuideSetTrainingRangeToPlot(plot, precursorInfo, this.guideSetTrainingData);
                 }
+
+                this.createExportToPDFButton(id, precursorInfo.sequence);
             }
         }
 
@@ -774,8 +800,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, newLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
-                top: 10 + this.getMaxStackedAnnotations() * 12,
-                right: 10*lengthOfLongestPeptide
+                top: 45 + this.getMaxStackedAnnotations() * 12,
+                right: 10*lengthOfLongestPeptide,
+                bottom: 75
+            },
+            labels : {
+                main: {value: "All Peptides", visibility: 'hidden'},
+                y: {value: this.getChartTypePropsByName(this.chartType).title, visibility:'hidden'}
             },
             properties: {
                 value: 'value',
@@ -802,6 +833,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         if (!this.groupedX) {
             this.addGuideSetTrainingRangeToPlot(plot, combinePlotData, this.guideSetTrainingDataUniqueObjects);
         }
+
+        this.createExportToPDFButton(id);
 
         return true;
     },
