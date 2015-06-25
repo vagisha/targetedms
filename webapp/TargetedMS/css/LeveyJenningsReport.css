@@ -22,3 +22,8 @@
     font-size: 11px;
     text-transform: uppercase;
 }
+
+.plot-export-btn {
+    display:inline;
+    float:right;
+}

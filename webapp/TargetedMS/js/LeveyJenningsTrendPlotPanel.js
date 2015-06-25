@@ -626,8 +626,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<br/>' +
             '<table class="labkey-wp qc-plot-wp">' +
             ' <tr class="labkey-wp-header">' +
-            '     <th class="labkey-wp-title-left"><span class="labkey-wp-title-text qc-plot-wp-title">' + Ext4.util.Format.htmlEncode(title) +
-            ' <div style="display:inline; float:right;" id="' + id + '-exportToPDFbutton"></div></span></th>' +
+            '     <th class="labkey-wp-title-left">' +
+            '        <span class="labkey-wp-title-text qc-plot-wp-title">' + Ext4.util.Format.htmlEncode(title) +
+            '           <div class="plot-export-btn" id="' + id + '-exportToPDFbutton"></div>' +
+            '        </span>' +
+            '     </th>' +
             ' </tr><tr>' +
             '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
             ' </tr>' +
