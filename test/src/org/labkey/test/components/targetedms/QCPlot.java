@@ -36,7 +36,7 @@ public class QCPlot
     QCPlot(WebElement plot)
     {
         this.plot = plot;
-        this.precursor = elements().precursor.findElement(plot).getText();
+        this.precursor = elements().precursor.findElement(plot).getText().trim();
     }
 
     public String getPrecursor()
