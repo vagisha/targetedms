@@ -843,7 +843,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     plotHoverTextDisplay : function(row){
-        return 'Acquired: ' + row['fullDate'] + ", "
+        return 'Sequence: ' + row['sequence'] +
+        '\nAcquired: ' + row['fullDate'] + ", "
             + '\nValue: ' + row.value + ", "
             + '\nFile Path: ' + row['FilePath'];
     },
