@@ -336,11 +336,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             scope: this,
             success: function(data) {
 
-                if (data.rows.length == 0) {
-                    this.failureHandler({message: "There were no records found. The date filter applied may be too restrictive."});
-                    return;
-                }
-
                 // stash the set of precursor sequences for use with the plot rendering
                 this.precursors = [];
                 for (var i = 0; i < data.rows.length; i++) {
@@ -590,6 +585,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     renderPlots: function() {
+
+        if (this.precursors.length == 0) {
+            this.failureHandler({message: "There were no records found. The date filter applied may be too restrictive."});
+            return;
+        }
+
         this.setLoadingMsg();
         this.setPlotWidth();
 
