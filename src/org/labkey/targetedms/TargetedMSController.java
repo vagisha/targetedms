@@ -971,11 +971,14 @@ public class TargetedMSController extends SpringActionController
                 String filterReps[] = _annotationsFilter.split(",");
                 for(int repCounter = 0; repCounter < filterReps.length; repCounter++)
                 {
-                    String filterNameValue[] = filterReps[repCounter].split(" : ");
-                    ReplicateAnnotation rep = new ReplicateAnnotation();
-                    rep.setName(filterNameValue[0]);
-                    rep.setValue(filterNameValue[1]);
-                    replicateList.add(rep);
+                    String[] filterNameValue = filterReps[repCounter].split(" : ");
+                    if (filterNameValue.length >= 2)
+                    {
+                        ReplicateAnnotation rep = new ReplicateAnnotation();
+                        rep.setName(filterNameValue[0]);
+                        rep.setValue(filterNameValue[1]);
+                        replicateList.add(rep);
+                    }
                 }
 
                 return replicateList;
