@@ -266,7 +266,7 @@ public final class QCPlotsWebPart extends BodyWebPart
         List<WebElement> points = elements().svgPoint.findElements(_test.getDriver());
         for (WebElement p : points)
         {
-            if (p.getAttribute("title").startsWith("Acquired: " + dateStr))
+            if (p.getAttribute("title").contains("Acquired: " + dateStr))
                 return p;
         }
 
