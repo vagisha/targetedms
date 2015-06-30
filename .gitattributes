@@ -45,6 +45,7 @@ resources/schemas/dbscripts/postgresql/targetedms-14.34-14.35.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.35-14.36.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-14.36-14.37.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-15.10-15.11.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-15.10-15.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-12.30-13.10.sql -text
@@ -74,6 +75,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-14.34-14.35.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.35-14.36.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-14.36-14.37.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-15.10-15.11.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-15.10-15.20.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-15.11-15.12.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/IrtPeptide.java -text
