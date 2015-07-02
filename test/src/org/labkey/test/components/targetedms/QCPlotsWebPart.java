@@ -165,6 +165,20 @@ public final class QCPlotsWebPart extends BodyWebPart
         waitForReady();
     }
 
+    public void setShowAllPeptidesInSinglePlot(boolean check, int expectedPlotCount)
+    {
+        WebElement plot = elements().plot.findElement(_test.getDriver());
+        if (check)
+            _test._ext4Helper.checkCheckbox(elements().singlePlotCheckbox);
+        else
+            _test._ext4Helper.uncheckCheckbox(elements().singlePlotCheckbox);
+        _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
+        waitForReady();
+
+        waitForPlots(expectedPlotCount, true);
+
+    }
+
     public void applyRange()
     {
         WebElement plotPanel = elements().plotPanel.findElement(_test.getDriver());
@@ -322,6 +336,7 @@ public final class QCPlotsWebPart extends BodyWebPart
         Locator.XPathLocator endDate = webPart.append(Locator.id("end-date-field")).append("//input");
         Locator.XPathLocator chartTypeCombo = webPart.append(Locator.id("chart-type-field"));
         Locator.XPathLocator groupedXCheckbox = webPart.append(Locator.id("grouped-x-field")).append("//input");
+        Locator.XPathLocator singlePlotCheckbox = webPart.append(Locator.id("peptides-single-plot")).append("//input");
 
         Locator.XPathLocator plotPanel = webPart.append(Locator.tagWithId("div", "tiledPlotPanel"));
         Locator.XPathLocator plot = plotPanel.append(Locator.tagWithClass("table", "qc-plot-wp"));

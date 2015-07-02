@@ -60,6 +60,11 @@ public class TargetedMSQCTest extends TargetedMSTest
             "VLVLDTDYK",
             "VYVEELKPTPEGDLEILLQK"};
 
+    private static QCHelper.Annotation instrumentChange = new QCHelper.Annotation("Instrumentation Change", "We changed it", "2013-08-22 14:43:00");
+    private static QCHelper.Annotation reagentChange = new QCHelper.Annotation("Reagent Change", "New reagents", "2013-08-10 15:34:00");
+    private static QCHelper.Annotation technicianChange = new QCHelper.Annotation("Technician Change", "New guy on the scene", "2013-08-10 08:43:00");
+    private static QCHelper.Annotation candyChange = new QCHelper.Annotation("Candy Change", "New candies!", "2013-08-21 6:57:00");
+
     @Override
     protected String getProjectName()
     {
@@ -73,6 +78,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         init.setupFolder(FolderType.QC);
         init.importData(SProCoP_FILE);
+        init.createAndInsertAnnotations();
     }
 
     @Before
@@ -97,11 +103,6 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testQCAnnotations()
     {
-        QCHelper.Annotation instrumentChange = new QCHelper.Annotation("Instrumentation Change", "We changed it", "2013-08-22 14:43:00");
-        QCHelper.Annotation reagentChange = new QCHelper.Annotation("Reagent Change", "New reagents", "2013-08-10 15:34:00");
-        QCHelper.Annotation technicianChange = new QCHelper.Annotation("Technician Change", "New guy on the scene", "2013-08-10 08:43:00");
-        QCHelper.Annotation candyChange = new QCHelper.Annotation("Candy Change", "New candies!", "2013-08-21 6:57:00");
-
         List<String> expectedWebParts = Arrays.asList(QCAnnotationWebPart.DEFAULT_TITLE, QCAnnotationTypeWebPart.DEFAULT_TITLE);
 
         clickTab("Annotations");
@@ -109,35 +110,10 @@ public class TargetedMSQCTest extends TargetedMSTest
         PortalHelper portalHelper = new PortalHelper(this);
         assertEquals("Wrong WebParts", expectedWebParts, portalHelper.getWebPartTitles());
 
-        PanoramaAnnotations qcAnnotations = new PanoramaAnnotations(this);
-
-        QCAnnotationWebPart qcAnnotationWebPart = qcAnnotations.getQcAnnotationWebPart();
-
-        qcAnnotationWebPart.startInsert().insert(instrumentChange);
-        qcAnnotationWebPart.startInsert().insert(reagentChange);
-        qcAnnotationWebPart.startInsert().insert(technicianChange);
-
-        QCAnnotationTypeWebPart qcAnnotationTypeWebPart = qcAnnotations.getQcAnnotationTypeWebPart();
-
-        qcAnnotationTypeWebPart.startInsert().insert(candyChange.getType(), "This happens anytime we get new candies", "808080");
-
-        qcAnnotationWebPart.startInsert().insert(candyChange);
-
         clickTab("Panorama Dashboard");
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        List<QCPlot> qcPlots = qcPlotsWebPart.getPlots();
-
-        Bag<QCHelper.Annotation> expectedAnnotations = new HashBag<>();
-        expectedAnnotations.add(instrumentChange);
-        expectedAnnotations.add(reagentChange);
-        expectedAnnotations.add(technicianChange);
-        expectedAnnotations.add(candyChange);
-        for (QCPlot plot : qcPlots)
-        {
-            Bag<QCHelper.Annotation> plotAnnotations = new HashBag<>(plot.getAnnotations());
-            assertEquals("Wrong annotations in plot: " + plot.getPrecursor(), expectedAnnotations, plotAnnotations);
-        }
+        checkForCorrectAnnotations("Individual Plots", qcPlotsWebPart);
     }
 
     @Test
@@ -257,6 +233,68 @@ public class TargetedMSQCTest extends TargetedMSTest
         verifyRow(drt, 3, "25fmol_Pepmix_spike_SRM_1601_04", "QC_2.sky.zip");
     }
 
+    @Test
+    public void testCombinedPlots()
+    {
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length);
+
+        //select "Show All Peptides in Single Plot"
+        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
+
+        //Counts no. of points. Fill color values are taken from 'legend-item' - so this also checks for legend
+        //seq. color and trend line points' color match.
+        int count = qcPlotsWebPart.getPointElements("fill", "#66C2A5", false).size();
+        assertEquals("Unexpected number of points for " + PRECURSORS[0], 47, count);
+
+        count = qcPlotsWebPart.getPointElements("fill", "#FC8D62", false).size();
+        assertEquals("Unexpected number of points for " + PRECURSORS[1], 47, count);
+
+        count = qcPlotsWebPart.getPointElements("fill", "#8DA0CB", false).size();
+        assertEquals("Unexpected number of points for "+ PRECURSORS[2], 47, count);
+
+        count = qcPlotsWebPart.getPointElements("fill", "#E78AC3", false).size();
+        assertEquals("Unexpected number of points for "+ PRECURSORS[3], 47, count);
+
+        count = qcPlotsWebPart.getPointElements("fill", "#A6D854", false).size();
+        assertEquals("Unexpected number of points for "+ PRECURSORS[4], 47, count);
+
+        count = qcPlotsWebPart.getPointElements("fill", "#FFD92F", false).size();
+        assertEquals("Unexpected number of points for " + PRECURSORS[5], 47, count);
+
+        count = qcPlotsWebPart.getPointElements("fill", "#E5C494", false).size();
+        assertEquals("Unexpected number of points for " + PRECURSORS[6], 47, count);
+
+        //annotation check
+        checkForCorrectAnnotations("Combined Plot", qcPlotsWebPart);
+
+        //select "Group X-Axis Values by Date"
+        qcPlotsWebPart.setGroupXAxisValuesByDate(true);
+
+        //Count no. of points
+        count = qcPlotsWebPart.getPointElements("fill", "#FC8D62", false).size();
+        assertEquals("Unexpected number of points", 47, count);
+
+        //deselect "Group X-Axis Values by Date"
+        qcPlotsWebPart.setGroupXAxisValuesByDate(false);
+
+        //Check for clickable pdf button for Combined plot
+//        clickAndWait(Locator.id("combinedPlot-exportToPDFbutton"));
+
+        //deselect "Show All Peptides in Single Plot"
+        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, PRECURSORS.length);
+
+        //Check for no. of pdf buttons for individual plots
+        assertElementPresent(Locator.id("precursorPlot0-exportToPDFbutton"));
+        assertElementPresent(Locator.id("precursorPlot1-exportToPDFbutton"));
+        assertElementPresent(Locator.id("precursorPlot2-exportToPDFbutton"));
+        assertElementPresent(Locator.id("precursorPlot3-exportToPDFbutton"));
+        assertElementPresent(Locator.id("precursorPlot4-exportToPDFbutton"));
+        assertElementPresent(Locator.id("precursorPlot5-exportToPDFbutton"));
+        assertElementPresent(Locator.id("precursorPlot6-exportToPDFbutton"));
+    }
+
     private void verifyRow(DataRegionTable drt, int row, String sampleName, String skylineDocName)
     {
         assertEquals(sampleName, drt.getDataAsText(row, 1));
@@ -270,4 +308,38 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals("Wrong number sample files", sampleFileCount, qcSummaryWebPart.getFileCount());
         assertEquals("Wrong number of precursors tracked", precursorCount, qcSummaryWebPart.getPrecursorCount());
     }
+
+    private void createAndInsertAnnotations()
+    {
+        clickTab("Annotations");
+        PanoramaAnnotations qcAnnotations = new PanoramaAnnotations((TargetedMSQCTest)getCurrentTest());
+
+        QCAnnotationWebPart qcAnnotationWebPart = qcAnnotations.getQcAnnotationWebPart();
+
+        qcAnnotationWebPart.startInsert().insert(instrumentChange);
+        qcAnnotationWebPart.startInsert().insert(reagentChange);
+        qcAnnotationWebPart.startInsert().insert(technicianChange);
+
+        QCAnnotationTypeWebPart qcAnnotationTypeWebPart = qcAnnotations.getQcAnnotationTypeWebPart();
+
+        qcAnnotationTypeWebPart.startInsert().insert(candyChange.getType(), "This happens anytime we get new candies", "808080");
+
+        qcAnnotationWebPart.startInsert().insert(candyChange);
+    }
+
+    private void checkForCorrectAnnotations(String plotType, QCPlotsWebPart qcPlotsWebPart)
+    {
+        List<QCPlot> qcPlots = qcPlotsWebPart.getPlots();
+        Bag<QCHelper.Annotation> expectedAnnotations = new HashBag<>();
+        expectedAnnotations.add(instrumentChange);
+        expectedAnnotations.add(reagentChange);
+        expectedAnnotations.add(technicianChange);
+        expectedAnnotations.add(candyChange);
+        for (QCPlot plot : qcPlots)
+        {
+            Bag<QCHelper.Annotation> plotAnnotations = new HashBag<>(plot.getAnnotations());
+            assertEquals("Wrong annotations in " + plotType + ":" + plot.getPrecursor(), expectedAnnotations, plotAnnotations);
+        }
+    }
+
 }
