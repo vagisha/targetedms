@@ -823,11 +823,14 @@ public class TargetedMSSchema extends UserSchema
             TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorFK.getSQL());
 
             // Add a calculated column - the ratio of the transitions' areas to the precursor's area
-            SQLFragment sql = new SQLFragment("(CASE WHEN TotalArea = 0 THEN NULL ELSE (SELECT SUM(Area) FROM ");
+            SQLFragment sql = new SQLFragment("(SELECT CASE WHEN SUM(PrecursorArea) = 0 THEN NULL ELSE SUM(NonPrecursorArea) / SUM(PrecursorArea) END FROM (SELECT CASE WHEN FragmentType = 'precursor' THEN 0 ELSE Area END AS PrecursorArea, ");
+            sql.append(" CASE WHEN FragmentType != 'precursor' THEN 0 ELSE Area END AS NonPrecursorArea FROM ");
+            sql.append(TargetedMSManager.getTableInfoTransition(), "t");
+            sql.append(", ");
             sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
-            sql.append(" WHERE tci.PrecursorChromInfoId = ");
+            sql.append(" WHERE tci.TransitionId = t.Id AND tci.PrecursorChromInfoId = ");
             sql.append(ExprColumn.STR_TABLE_ALIAS);
-            sql.append(".Id) / TotalArea END)");
+            sql.append(".Id) X)");
             ExprColumn transitionPrecursorRatioCol = new ExprColumn(result, "TransitionPrecursorRatio", sql, JdbcType.DOUBLE);
             result.addColumn(transitionPrecursorRatioCol);
 

@@ -106,7 +106,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 scope: this,
                 change: function(cmp, newVal, oldVal) {
                     this.yAxisScale = newVal;
-                    this.renderPlots();
+                    this.processPlotData(); // call processPlotData instead of renderPlots so that we recalculate min y-axis scale for log
                 }
             }
         });
@@ -485,17 +485,20 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             sql: sql,
             sort: 'Sequence, AcquiredTime',
             scope: this,
-            success: this.processPlotData,
+            success: function(data) {
+                this.plotDataRows = data.rows;
+                this.processPlotData();
+            },
             failure: this.failureHandler
         });
     },
 
-    processPlotData: function(data) {
+    processPlotData: function() {
         // process the data to shape it for the JS LeveyJenningsPlot API call
         this.sequencePlotData = {};
-        for (var i = 0; i < data.rows.length; i++)
+        for (var i = 0; i < this.plotDataRows.length; i++)
         {
-            var row = data.rows[i];
+            var row = this.plotDataRows[i];
             var sequence = row['Sequence'];
 
             if (!this.sequencePlotData[sequence]) {
@@ -529,10 +532,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             if (precursorInfo)
             {
                 // if the min and max are the same, or very close, increase the range
-                if (precursorInfo.max - precursorInfo.min < 0.0001)
-                {
+                if (precursorInfo.max == null && precursorInfo.min == null) {
+                    precursorInfo.max = 1;
+                    precursorInfo.min = 0;
+                }
+                else if (precursorInfo.max - precursorInfo.min < 0.0001) {
                     precursorInfo.max += 1;
-                    precursorInfo.min -= 1;
                 }
 
                 // add any missing dates from the QC annotation data to the plot data
