@@ -87,6 +87,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String TARGETED_MS_QC_SUMMARY = "Targeted MS QC Summary";
     public static final String TARGETED_MS_QC_PLOTS = "Targeted MS QC Plots";
     public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
+    public static final String TARGETED_MS_PARETO_PLOT = "Targeted MS Pareto Plot";
 
     public static final String[] EXPERIMENT_FOLDER_WEB_PARTS = new String[] {MASS_SPEC_SEARCH_WEBPART,
                                                                            TARGETED_MS_RUNS_WEBPART_NAME};
@@ -245,7 +246,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             {
                 JspView result = new JspView("/org/labkey/targetedms/view/leveyJenningsReport.jsp");
                 result.addClientDependency(ClientDependency.fromPath("Ext4"));
-                result.setTitle("QC Plots");
+                result.setTitle("Levey-Jennings QC Plots");
                 result.setFrame(WebPartView.FrameType.PORTAL);
                 return result;
             }
@@ -258,6 +259,18 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 JspView result = new JspView("/org/labkey/targetedms/view/qcSummary.jsp");
                 result.addClientDependency(ClientDependency.fromPath("Ext4"));
                 result.setTitle("QC Summary");
+                result.setFrame(WebPartView.FrameType.PORTAL);
+                return result;
+            }
+        };
+
+        BaseWebPartFactory paretoPlotFactory = new BaseWebPartFactory(TARGETED_MS_PARETO_PLOT)
+        {
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            {
+                JspView result = new JspView("/org/labkey/targetedms/view/paretoPlot.jsp");
+                result.addClientDependency(ClientDependency.fromPath("Ext4"));
+                result.setTitle("Pareto Plot");
                 result.setFrame(WebPartView.FrameType.PORTAL);
                 return result;
             }
@@ -276,6 +289,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         webpartFactoryList.add(containerExperimentFactory);
         webpartFactoryList.add(qcPlotsFactory);
         webpartFactoryList.add(qcSummaryFactory);
+        webpartFactoryList.add(paretoPlotFactory);
         return webpartFactoryList;
     }
 

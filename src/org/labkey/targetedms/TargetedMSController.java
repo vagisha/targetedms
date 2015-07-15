@@ -235,6 +235,7 @@ public class TargetedMSController extends SpringActionController
         public static final String RUNS_TAB = "Runs";
         public static final String ANNOTATIONS_TAB = "Annotations";
         public static final String GUIDE_SETS_TAB = "Guide Sets";
+        public static final String PARETO_PLOT_TAB = "Pareto Plot";
 
         public static final String DATA_PIPELINE_WEBPART = "Data Pipeline";
 
@@ -340,6 +341,14 @@ public class TargetedMSController extends SpringActionController
                 Portal.saveParts(c, GUIDE_SETS_TAB, guideSetsTab);
                 Portal.addProperty(c, GUIDE_SETS_TAB, Portal.PROP_CUSTOMTAB);
 
+                ArrayList<Portal.WebPart> paretoPlotTab = new ArrayList<>();
+                Portal.WebPart paretoPlotPart = Portal.getPortalPart(TargetedMSModule.TARGETED_MS_PARETO_PLOT).createWebPart();
+//                paretoPlotPart.setProperty(QueryParam.schemaName.toString(), "targetedms");
+//                paretoPlotPart.setProperty(QueryParam.queryName.toString(), "paretoPlotPlaceholderQueryName"); //TODO: placeholdername - change this as per actual query name
+                paretoPlotTab.add(paretoPlotPart);
+                Portal.saveParts(c, PARETO_PLOT_TAB, paretoPlotTab);
+                Portal.addProperty(c, PARETO_PLOT_TAB, Portal.PROP_CUSTOMTAB);
+
                 addDataPipelineTab(c);
                 return true;
             }
@@ -408,9 +417,11 @@ public class TargetedMSController extends SpringActionController
     // Action to show QC reports
     // ------------------------------------------------------------------------
     @RequiresPermissionClass(ReadPermission.class)
-    public class LeveyJenningsAction extends SimpleViewAction
+    public class LeveyJenningsAction extends SimpleViewAction<URLParameterBean>
     {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+
+        @Override
+        public ModelAndView getView(URLParameterBean urlParameterBean, BindException errors) throws Exception
         {
             return new JspView("/org/labkey/targetedms/view/leveyJenningsReport.jsp");
         }
@@ -419,7 +430,62 @@ public class TargetedMSController extends SpringActionController
         {
             return root.addChild("QC Reports");
         }
+
     }
+    public static class URLParameterBean
+    {
+        private String chartType;
+        private String startDate;
+        private String endDate;
+
+        public String getChartType()
+        {
+            return chartType;
+        }
+
+        public void setChartType(String chartType)
+        {
+            this.chartType = chartType;
+        }
+
+        public String getStartDate()
+        {
+            return startDate;
+        }
+
+        public void setStartDate(String startDate)
+        {
+            this.startDate = startDate;
+        }
+
+        public String getEndDate()
+        {
+            return endDate;
+        }
+
+        public void setEndDate(String endDate)
+        {
+            this.endDate = endDate;
+        }
+
+    }
+
+//    @RequiresPermissionClass(ReadPermission.class)
+//    public class ParetoPlotAction extends SimpleViewAction
+//    {
+//
+//        @Override
+//        public ModelAndView getView(Object o, BindException errors) throws Exception
+//        {
+//            return new JspView("/org/labkey/targetedms/view/paretoPlot.jsp");
+//        }
+//
+//        @Override
+//        public NavTree appendNavTrail(NavTree root)
+//        {
+//            return null;
+//        }
+//    }
 
     // ------------------------------------------------------------------------
     // Action to show a list of chromatogram library archived revisions
@@ -4451,4 +4517,6 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // END Actions to create, delete, edit and view experiment annotations.
     // ------------------------------------------------------------------------
+
+
 }

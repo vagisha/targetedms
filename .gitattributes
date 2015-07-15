@@ -4,6 +4,7 @@
 resources/queries/targetedms/GuideSetFWBStats.sql -text
 resources/queries/targetedms/GuideSetFWHMStats.sql -text
 resources/queries/targetedms/GuideSetLHRatioStats.sql -text
+resources/queries/targetedms/GuideSetNonConformers.sql -text
 resources/queries/targetedms/GuideSetPeakAreaStats.sql -text
 resources/queries/targetedms/GuideSetRetentionTimeStats.sql -text
 resources/queries/targetedms/GuideSetTPRatioStats.sql -text
@@ -284,6 +285,7 @@ src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -t
 src/org/labkey/targetedms/view/expannotations/experimentDetails.jsp -text
 src/org/labkey/targetedms/view/folderSetup.jsp -text
 src/org/labkey/targetedms/view/leveyJenningsReport.jsp -text
+src/org/labkey/targetedms/view/paretoPlot.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
 src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/precursorConflictResolutionView.jsp -text
@@ -337,6 +339,7 @@ webapp/TargetedMS/images/blank.gif -text
 webapp/TargetedMS/images/spectrum.gif -text
 webapp/TargetedMS/jquery/jquery-1.8.3.min.js -text
 webapp/TargetedMS/js/LeveyJenningsTrendPlotPanel.js -text
+webapp/TargetedMS/js/ParetoPlotPanel.js -text
 webapp/TargetedMS/js/dropDownUtil.js -text
 webapp/TargetedMS/lorikeet_0.3/css/lorikeet.css -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_lorikeet.png -text
