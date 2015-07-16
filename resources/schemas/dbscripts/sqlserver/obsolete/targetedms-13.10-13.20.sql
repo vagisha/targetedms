@@ -16,19 +16,19 @@
 
 /* targetedms-13.10-13.11.sql */
 
-ALTER TABLE targetedms.Peptide ADD COLUMN PeptideModifiedSequence VARCHAR(255);
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN MaxHeight REAL;
-ALTER TABLE targetedms.PrecursorChromInfo RENAME COLUMN LibraryDtop TO LibraryDotp;
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN IsotopeDotp REAL;
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN AverageMassErrorPPM REAL;
-ALTER TABLE targetedms.TransitionChromInfo ADD COLUMN MassErrorPPM REAL;
+ALTER TABLE targetedms.Peptide ADD PeptideModifiedSequence NVARCHAR(255);
+ALTER TABLE targetedms.PrecursorChromInfo ADD MaxHeight REAL;
+ALTER TABLE targetedms.PrecursorChromInfo ADD IsotopeDotp REAL;
+EXEC sp_rename 'targetedms.PrecursorChromInfo.LibraryDtop', 'LibraryDotp', 'COLUMN';
+ALTER TABLE targetedms.PrecursorChromInfo ADD AverageMassErrorPPM REAL;
+ALTER TABLE targetedms.TransitionChromInfo ADD MassErrorPPM REAL;
 
 /* targetedms-13.12-13.13.sql */
 
 UPDATE core.PortalWebParts
-SET Permanent = false
+SET Permanent = 0
 WHERE Name = 'Protein Search' AND Container IN
-(SELECT ObjectId FROM prop.PropertySets ps JOIN prop.Properties p ON ps.Set = p.Set
+(SELECT ObjectId FROM prop.PropertySets ps JOIN prop.Properties p ON ps.[Set] = p.[Set]
 WHERE ps.Category = 'folderType' AND p.Value = 'Targeted MS');
 
 /* targetedms-13.13-13.14.sql */
@@ -37,16 +37,17 @@ WHERE ps.Category = 'folderType' AND p.Value = 'Targeted MS');
 UPDATE targetedms.precursor set representativedatastate = 0;
 UPDATE targetedms.peptidegroup set representativedatastate = 0;
 
-SELECT core.executeJavaUpgradeCode('setContainersToExperimentType');
+EXEC core.executeJavaUpgradeCode 'setContainersToExperimentType'
+GO
 
 /* targetedms-13.14-13.15.sql */
 
--- iRTScale table to store iRT scale information
+-- iRTScale table to store iRT scale information.
 CREATE TABLE targetedms.iRTScale
 (
-    Id SERIAL NOT NULL,
+    Id INT IDENTITY(1, 1) NOT NULL,
     Container ENTITYID NOT NULL,
-    Created TIMESTAMP,
+    Created DATETIME,
     CreatedBy INT,
 
     CONSTRAINT PK_iRTScale PRIMARY KEY (Id),
@@ -58,12 +59,12 @@ CREATE INDEX IX_iRTScale_Container ON targetedms.iRTScale (Container);
 -- ModifiedSequence: the optionally chemically modified peptide sequence
 CREATE TABLE targetedms.iRTPeptide
 (
-    Id SERIAL NOT NULL,
-    ModifiedSequence VARCHAR(100) NOT NULL,
-    iRTStandard BOOLEAN NOT NULL,
+    Id INT IDENTITY(1, 1) NOT NULL,
+    ModifiedSequence NVARCHAR(100) NOT NULL,
+    iRTStandard BIT NOT NULL,
     iRTValue FLOAT NOT NULL,
     iRTScaleId INT NOT NULL,
-    Created TIMESTAMP,
+    Created DATETIME,
     CreatedBy INT,
 
     CONSTRAINT PK_iRTPeptide PRIMARY KEY (Id),
@@ -78,9 +79,9 @@ CREATE INDEX IX_Runs_iRTScaleId ON targetedms.Runs (iRTScaleId);
 /* targetedms-13.15-13.16.sql */
 
 UPDATE core.PortalWebParts
-SET Permanent = false
+SET Permanent = 0
 WHERE Container IN
-(SELECT ObjectId FROM prop.PropertySets ps JOIN prop.Properties p ON ps.Set = p.Set
+(SELECT ObjectId FROM prop.PropertySets ps JOIN prop.Properties p ON ps.[Set] = p.[Set]
 WHERE ps.Category = 'folderType' AND p.Value = 'Targeted MS');
 
 /* targetedms-13.16-13.17.sql */
