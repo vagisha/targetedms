@@ -71,8 +71,6 @@
 
             // initialize the panel that displays Pareto plot
             Ext4.create('LABKEY.targetedms.ParetoPlotPanel', {
-                renderTo: 'tiledPlotPanel',
-                html: "<div id='paretoPlotDiv'></div>",
                 height: 1000,
                 cls: 'themed-panel',
                 guideSetData: data

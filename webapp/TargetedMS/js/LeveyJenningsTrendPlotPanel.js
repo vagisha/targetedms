@@ -13,7 +13,6 @@
 Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     extend: 'Ext.form.Panel',
-
     header: false,
     border: false,
     labelAlign: 'left',
@@ -84,6 +83,21 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.startDate = null;
         if (!this.endDate)
             this.endDate = null;
+
+        //get parameters from the url
+        if (LABKEY.ActionURL.getParameter("startDate") != undefined)
+        {
+            this.startDate = new Date(LABKEY.ActionURL.getParameter("startDate"));
+        }
+        if (LABKEY.ActionURL.getParameter("endDate") != undefined)
+        {
+            this.endDate = new Date(LABKEY.ActionURL.getParameter("endDate"));
+        }
+        if (LABKEY.ActionURL.getParameter("metric") != undefined)
+        {
+            var t = LABKEY.ActionURL.getParameter("metric");
+            this.chartType = this.getChartTypeName(t);
+        }
 
         // initialize the y-axis scale combo for the top toolbar
         this.scaleCombo = Ext4.create('Ext.form.field.ComboBox', {
@@ -277,6 +291,14 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.callParent();
 
         this.displayTrendPlot();
+    },
+
+    getChartTypeName : function(title) {
+        for (var i = 0; i < this.chartTypePropArr.length; i++) {
+            if (this.chartTypePropArr[i].title == title) {
+                return this.chartTypePropArr[i].name;
+            }
+        }
     },
 
     setBrushingEnabled : function(enabled) {
@@ -1015,12 +1037,17 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 .attr('fill', '#000000').attr('fill-opacity', 0.1);
 
             guideSetTrainingRange.append("title").text(function (d) {
+                var mean = me.formatNumeric(d['Mean']);
+                var stdDev = me.formatNumeric(d['StandardDev']);
+                var percentCV = me.formatNumeric((stdDev/mean) * 100);
+
                 return "Guide Set ID: " + d['GuideSetId'] + ","
                         + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true)
                         + ",\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true)
                         + (!me.singlePlot ? ",\n# Runs: " + d['NumRecords'] : "")
-                        + (!me.singlePlot ? ",\nMean: " + me.formatNumeric(d['Mean']) : "")
-                        + (!me.singlePlot ? ",\nStd Dev: " + me.formatNumeric(d['StandardDev']) : "")
+                        + (!me.singlePlot ? ",\nMean: " + mean : "")
+                        + (!me.singlePlot ? ",\nStd Dev: " + stdDev : "")
+                        + (!me.singlePlot ? ",\n%CV: " + percentCV : "")
                         + (d['Comment'] ? (",\nComment: " + d['Comment']) : "");
             });
         }
