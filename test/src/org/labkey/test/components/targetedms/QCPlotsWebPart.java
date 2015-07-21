@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 
 public final class QCPlotsWebPart extends BodyWebPart
 {
-    private static final String DEFAULT_TITLE = "QC Plots";
+    public static final String DEFAULT_TITLE = "Levey-Jennings QC Plots";
 
     public QCPlotsWebPart(BaseWebDriverTest test)
     {

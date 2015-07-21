@@ -19,6 +19,7 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
+import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.UIContainerHelper;
 
@@ -47,7 +48,6 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     {
         _containerHelper.createProject(getProjectName(), "Panorama");
         selectFolderType(folderType);
-        setPipelineRoot(TestFileUtils.getSampledataPath() + "/TargetedMS");
     }
 
     @LogMethod
@@ -62,7 +62,9 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         log("Importing file " + file);
         goToModule("Pipeline");
         clickButton("Process and Import Data");
-        waitForText(5*defaultWaitForPage, file);
+        _fileBrowserHelper.waitForFileGridReady();
+        if (!isElementPresent(FileBrowserHelper.Locators.gridRow(file)))
+            _fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
         _fileBrowserHelper.importFile(file, "Import Skyline Results");
         waitForText("Skyline document import");
         waitForPipelineJobsToFinish(jobCount);

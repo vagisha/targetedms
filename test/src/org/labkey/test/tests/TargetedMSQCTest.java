@@ -90,13 +90,13 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testQCDashboard()
     {
+        List<String> expectedWebParts = Arrays.asList(QCSummaryWebPart.DEFAULT_TITLE, QCPlotsWebPart.DEFAULT_TITLE);
+        PortalHelper portalHelper = new PortalHelper(this);
+        assertEquals("Wrong WebParts", expectedWebParts, portalHelper.getWebPartTitles());
+
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length);
-
-        List<String> expectedWebParts = Arrays.asList("QC Summary", "QC Plots");
-        PortalHelper portalHelper = new PortalHelper(this);
-        assertEquals("Wrong WebParts", expectedWebParts, portalHelper.getWebPartTitles());
         assertEquals("Wrong precursors", Arrays.asList(PRECURSORS), qcPlotsWebPart.getPlotTitles());
     }
 

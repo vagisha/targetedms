@@ -25,7 +25,7 @@ import java.util.regex.Pattern;
 
 public final class QCSummaryWebPart extends BodyWebPart
 {
-    private static final String DEFAULT_TITLE = "QC Summary";
+    public static final String DEFAULT_TITLE = "QC Summary";
 
     private Integer _docCount;
     private Integer _fileCount;
