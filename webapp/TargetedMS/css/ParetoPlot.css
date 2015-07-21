@@ -1,0 +1,15 @@
+
+#tiledPlotPanel {
+    min-height: 50px;
+    width: 900px;
+}
+
+.tick-text a, .point
+{
+    cursor: default;
+}
+
+.plot-export-btn {
+    display:inline;
+    float:right;
+}

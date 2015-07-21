@@ -49,6 +49,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         var nonConformers = data.rows;
         var guideSetMap = {};
         var guideSetCount = 1;
+        var shortNameLongNameMap = {};
 
         for(var i = 0; i < nonConformers.length; i++)
         {
@@ -64,6 +65,9 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                 metricLong: nonConformers[i]['MetricLongLabel'], count : count, percent: 0,
                 trainingStart: trainingDatesData[0].trainingStart, trainingEnd: trainingDatesData[0].trainingEnd,
                 referenceEnd: trainingDatesData[0].referenceEnd});
+
+            //store short name long name in a map for hover text
+            shortNameLongNameMap[nonConformers[i]['Metric']] = nonConformers[i]['MetricLongLabel'];
         }
 
         for(var key in guideSetMap)
@@ -94,18 +98,19 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             var id = "paretoPlot-GuideSetId-" + key;
 
             this.addPlotWebPartToPlotDiv(id, "Guide Set " + guideSetCount);
+            this.setPlotWidth();
             this.createExportToPDFButton(id, title);
-            this.plotPareto(id, sortedDataset, title);
+            this.plotPareto(id, sortedDataset, title, shortNameLongNameMap);
             guideSetCount++;
         }
     },
 
-    plotPareto: function(id, data, title)
+    plotPareto: function(id, data, title, hoverTextMap)
     {
         var barChart = new LABKEY.vis.Plot({
             renderTo: id,
             rendererType: 'd3',
-            width: 1000,
+            width: this.plotWidth - 30,
             height: 500,
             data: Ext4.Array.clone(data),
             labels: {
@@ -123,17 +128,17 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                 }),
                 new LABKEY.vis.Layer({
                     geom: new LABKEY.vis.Geom.Point({color: 'steelblue'}),
-                    aes: { x: 'metric', yRight: 'percent' }
+                    aes: { x: 'metric', yRight: 'percent', hoverText: function(val){return val.percent.toPrecision(4) + "%"}}
                 })
             ],
             aes: { x: 'metric', y: 'count' },
             scales : {
-                x : { scaleType: 'discrete' },
+                x : { scaleType: 'discrete', tickHoverText: function(val) { return hoverTextMap[val]}},
                 yLeft : { domain: [0, null] },
-                yRight : { domain: [0, 100] }
+                yRight : { domain: [0, 100] },
+
             }
         });
-        Ext4.get(this.plotPanelDiv).setWidth(1500);
         barChart.render();
     },
 
@@ -147,7 +152,6 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                 var svgEls = Ext4.get(btn.svgDivId).select('svg');
                 var title = "Pareto Plot for " + datesTitle;
                 var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[0]);
-                svgStr = svgStr.replace(/visibility="hidden"/g, 'visibility="visible"');
                 LABKEY.vis.SVGConverter.convert(svgStr, LABKEY.vis.SVGConverter.FORMAT_PDF, title);
             },
             scope: this
@@ -160,7 +164,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                 ' <tr class="labkey-wp-header">' +
                 '     <th class="labkey-wp-title-left">' +
                 '        <span class="labkey-wp-title-text pareto-plot-wp-title">' + Ext4.util.Format.htmlEncode(title) +
-                '           <div style="float:right" id="' + id + '-exportToPDFbutton"></div>' +
+                '           <div class="plot-export-btn" id="' + id + '-exportToPDFbutton"></div>' +
                 '        </span>' +
                 '     </th>' +
                 ' </tr><tr>' +
@@ -172,5 +176,22 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
     plotBarClickEvent : function(event, row) {
         window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, {startDate: row.trainingStart, endDate: row.trainingEnd , metric: row.metricLong});
+    },
+
+    setPlotWidth : function()
+    {
+        if (this.plotWidth == null)
+        {
+            // set the width of the plot webparts based on the first labkey-wp-body element (i.e. QC Summary webpart in this case)
+            this.plotWidth = 900;
+            var wp = document.querySelector('.labkey-wp-body');
+            if (wp && (wp.clientWidth - 20) > this.plotWidth)
+            {
+                this.plotWidth = wp.clientWidth - 20;
+            }
+
+            Ext4.get(this.plotPanelDiv).setWidth(this.plotWidth);
+        }
     }
+
 });

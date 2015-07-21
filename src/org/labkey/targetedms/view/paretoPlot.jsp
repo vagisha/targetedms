@@ -31,6 +31,7 @@
         LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
         resources.add(ClientDependency.fromPath("Ext4"));
         resources.add(ClientDependency.fromPath("vis/vis"));
+        resources.add(ClientDependency.fromPath("targetedms/css/ParetoPlot.css"));
         resources.add(ClientDependency.fromPath("targetedms/js/ParetoPlotPanel.js"));
         return resources;
     }

@@ -330,6 +330,7 @@ test/src/org/labkey/test/tests/TargetedMSTest.java -text
 test/src/org/labkey/test/util/targetedms/QCHelper.java -text
 test/test_targetedms.iml -text
 webapp/TargetedMS/css/LeveyJenningsReport.css -text
+webapp/TargetedMS/css/ParetoPlot.css -text
 webapp/TargetedMS/css/dropDown.css -text
 webapp/TargetedMS/images/ChromatogramLibraryScreenshot.png -text
 webapp/TargetedMS/images/Fragment.gif -text
