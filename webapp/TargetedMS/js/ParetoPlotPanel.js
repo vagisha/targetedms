@@ -25,19 +25,20 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         {
             var key = guideSetDataRows[i].RowId;
 
-            if(this.guideSetIdTrainingDatesMap[key] == undefined)
-            {
+            if(this.guideSetIdTrainingDatesMap[key] == undefined) {
                 this.guideSetIdTrainingDatesMap[key] = {data : []};
             }
 
-            this.guideSetIdTrainingDatesMap[key].data.push({trainingStart :  guideSetDataRows[i].TrainingStart , trainingEnd :  guideSetDataRows[i].TrainingEnd, referenceEnd :  guideSetDataRows[i].ReferenceEnd});
+            this.guideSetIdTrainingDatesMap[key].data.push({
+                trainingStart :  guideSetDataRows[i].TrainingStart,
+                trainingEnd :  guideSetDataRows[i].TrainingEnd,
+                referenceEnd :  guideSetDataRows[i].ReferenceEnd
+            });
         }
-
-        var nonConformerSql = "SELECT * FROM GuideSetNonConformers";
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
-            sql: nonConformerSql,
+            sql: 'SELECT * FROM GuideSetNonConformers',
             scope: this,
             success: this.nonConformersForParetoPlot,
             failure: this.failureHandler
@@ -51,33 +52,38 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         var guideSetCount = 1;
         var shortNameLongNameMap = {};
 
-        for(var i = 0; i < nonConformers.length; i++)
+        for (var i = 0; i < nonConformers.length; i++)
         {
             var key = nonConformers[i]['GuideSetId'];
             var count = nonConformers[i]['NonConformers'];
             var trainingDatesData = this.guideSetIdTrainingDatesMap[key].data;
 
-            if(guideSetMap[key] == undefined)
-            {
+            if(guideSetMap[key] == undefined) {
                 guideSetMap[key] = {data : []};
             }
-            guideSetMap[key].data.push({guidesetId: key, metric : nonConformers[i]['Metric'],
-                metricLong: nonConformers[i]['MetricLongLabel'], count : count, percent: 0,
-                trainingStart: trainingDatesData[0].trainingStart, trainingEnd: trainingDatesData[0].trainingEnd,
-                referenceEnd: trainingDatesData[0].referenceEnd});
+
+            guideSetMap[key].data.push({
+                guidesetId: key,
+                metric : nonConformers[i]['Metric'],
+                metricLong: nonConformers[i]['MetricLongLabel'],
+                count : count,
+                percent: 0,
+                trainingStart: trainingDatesData[0].trainingStart,
+                trainingEnd: trainingDatesData[0].trainingEnd,
+                referenceEnd: trainingDatesData[0].referenceEnd
+            });
 
             //store short name long name in a map for hover text
             shortNameLongNameMap[nonConformers[i]['Metric']] = nonConformers[i]['MetricLongLabel'];
         }
 
-        for(var key in guideSetMap)
+        for (var key in guideSetMap)
         {
             var dataSet = guideSetMap[key].data;
             var totalCount = 0;
 
             //find total count per guidesetID
-            for(var i = 0; i < dataSet.length; i++)
-            {
+            for (var i = 0; i < dataSet.length; i++) {
                 totalCount += dataSet[i]['count'];
             }
 
@@ -87,9 +93,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             });
 
             //calculate cumulative percentage on sorted data
-            for(var j = 0; j < sortedDataset.length; j++)
-            {
-                sortedDataset[j]['percent'] = (j == 0 ? 0 : sortedDataset[j-1]['percent']) + (((sortedDataset[j]['count'])/totalCount) * 100);
+            for(var j = 0; j < sortedDataset.length; j++) {
+                sortedDataset[j]['percent'] = (j == 0 ? 0 : sortedDataset[j-1]['percent']) + ((sortedDataset[j]['count'] / totalCount) * 100);
             }
 
             var title = "'Training Start: " + sortedDataset[0].trainingStart;
@@ -182,11 +187,10 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
     {
         if (this.plotWidth == null)
         {
-            // set the width of the plot webparts based on the first labkey-wp-body element (i.e. QC Summary webpart in this case)
+            // set the width of the plot webparts based on the first labkey-wp-body element
             this.plotWidth = 900;
             var wp = document.querySelector('.labkey-wp-body');
-            if (wp && (wp.clientWidth - 20) > this.plotWidth)
-            {
+            if (wp && (wp.clientWidth - 20) > this.plotWidth) {
                 this.plotWidth = wp.clientWidth - 20;
             }
 
