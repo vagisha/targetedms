@@ -32,12 +32,12 @@
         resources.add(ClientDependency.fromPath("Ext4"));
         resources.add(ClientDependency.fromPath("vis/vis"));
         resources.add(ClientDependency.fromPath("targetedms/css/ParetoPlot.css"));
+        resources.add(ClientDependency.fromPath("targetedms/js/BaseQCPlotPanel.js"));
         resources.add(ClientDependency.fromPath("targetedms/js/ParetoPlotPanel.js"));
         return resources;
     }
 %>
 
-<div id="reportHeaderPanel"></div>
 <div id="tiledPlotPanel"></div>
 
 <script type="text/javascript">
@@ -55,7 +55,7 @@
                 success: function(data) {
                     if (data.rows.length == 0)
                     {
-                        Ext4.get('tiledPlotPanel').update("Guidesets not found. Please create a guideset using <a href=" + LABKEY.ActionURL.buildURL('project', 'begin', null, null) + ">Levey-Jennings QC Plots</a>" + ".");
+                        Ext4.get('tiledPlotPanel').update("Guide Sets not found. Please create a Guide Set using <a href=" + LABKEY.ActionURL.buildURL('project', 'begin', null, null) + ">Levey-Jennings QC Plots</a>" + ".");
                     }
                     else
                     {
@@ -72,8 +72,8 @@
 
             // initialize the panel that displays Pareto plot
             Ext4.create('LABKEY.targetedms.ParetoPlotPanel', {
-                height: 1000,
                 cls: 'themed-panel',
+                plotPanelDiv:'tiledPlotPanel',
                 guideSetData: data
             });
         }

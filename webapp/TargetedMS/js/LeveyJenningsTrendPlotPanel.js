@@ -12,7 +12,7 @@
  */
 Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
-    extend: 'Ext.form.Panel',
+    extend: 'LABKEY.targetedms.BaseQCPlotPanel',
     header: false,
     border: false,
     labelAlign: 'left',
@@ -619,7 +619,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         this.setLoadingMsg();
-        this.setPlotWidth();
+        this.setPlotWidth(this.trendDiv);
 
         var addedPlot = false;
         if (this.singlePlot) {
@@ -634,36 +634,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         Ext4.get(this.trendDiv).unmask();
-    },
-
-    setPlotWidth : function() {
-        if (this.plotWidth == null)
-        {
-            // set the width of the plot webparts based on the first labkey-wp-body element (i.e. QC Summary webpart in this case)
-            this.plotWidth = 900;
-            var wp = document.querySelector('.labkey-wp-body');
-            if (wp && (wp.clientWidth - 20) > this.plotWidth) {
-                this.plotWidth = wp.clientWidth - 20;
-            }
-
-            Ext4.get(this.trendDiv).setWidth(this.plotWidth);
-        }
-    },
-
-    addPlotWebPartToTrendDiv : function(id, title) {
-        Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<br/>' +
-            '<table class="labkey-wp qc-plot-wp">' +
-            ' <tr class="labkey-wp-header">' +
-            '     <th class="labkey-wp-title-left">' +
-            '        <span class="labkey-wp-title-text qc-plot-wp-title">' + Ext4.util.Format.htmlEncode(title) +
-            '           <div class="plot-export-btn" id="' + id + '-exportToPDFbutton"></div>' +
-            '        </span>' +
-            '     </th>' +
-            ' </tr><tr>' +
-            '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
-            ' </tr>' +
-            '</table>'
-        );
     },
 
     getMaxStackedAnnotations : function() {
@@ -685,24 +655,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         };
     },
 
-    createExportToPDFButton : function(id, sequence) {
-        new Ext4.Button({
-            renderTo: id+"-exportToPDFbutton",
-            svgDivId: id,
-            sequence: sequence ? sequence : "",
-            icon: LABKEY.contextPath + "/_icons/pdf.gif",
-            tooltip: "Export PDF of this plot",
-            handler: function(btn) {
-                var svgEls = Ext4.get(btn.svgDivId).select('svg');
-                var title = btn.sequence ? 'QC Plot for peptide ' + btn.sequence : 'QC Combined Plot for All Peptides' ;
-                var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[0]);
-                svgStr = svgStr.replace(/visibility="hidden"/g, 'visibility="visible"');
-                LABKEY.vis.SVGConverter.convert(svgStr, LABKEY.vis.SVGConverter.FORMAT_PDF, title);
-            },
-            scope: this
-        });
-    },
-
     addIndividualPrecursorPlots : function() {
         var addedPlot = false;
 
@@ -717,7 +669,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                 // add a new panel for each plot so we can add the title to the frame
                 var id = "precursorPlot" + i;
-                this.addPlotWebPartToTrendDiv(id, this.precursors[i]);
+                this.addPlotWebPartToPlotDiv(id, this.precursors[i], this.trendDiv, 'qc-plot-wp');
 
                 if (precursorInfo.showLogWarning) {
                     Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below the mean with negative values have been omitted.</span>");
@@ -780,7 +732,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     this.addGuideSetTrainingRangeToPlot(plot, precursorInfo, this.guideSetTrainingData);
                 }
 
-                this.createExportToPDFButton(id, precursorInfo.sequence);
+                this.createExportToPDFButton(id, "QC Plot for peptide " + precursorInfo.sequence);
             }
         }
 
@@ -826,7 +778,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         var id = 'combinedPlot';
-        this.addPlotWebPartToTrendDiv(id, 'All Peptides');
+        this.addPlotWebPartToPlotDiv(id, 'All Peptides', this.trendDiv, 'qc-plot-wp');
 
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, newLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
@@ -865,7 +817,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.addGuideSetTrainingRangeToPlot(plot, combinePlotData, this.guideSetTrainingDataUniqueObjects);
         }
 
-        this.createExportToPDFButton(id);
+        this.createExportToPDFButton(id, "QC Combined Plot for All Peptides");
 
         return true;
     },

@@ -9,13 +9,11 @@
 
 Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
-    extend: 'Ext.panel.Panel',
+    extend: 'LABKEY.targetedms.BaseQCPlotPanel',
 
     initComponent : function() {
 
         this.callParent();
-
-        this.plotPanelDiv = 'tiledPlotPanel';
 
         var guideSetDataRows = this.guideSetData.rows;
         this.guideSetIdTrainingDatesMap = {};
@@ -102,8 +100,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             title += "'";
             var id = "paretoPlot-GuideSetId-" + key;
 
-            this.addPlotWebPartToPlotDiv(id, "Guide Set " + guideSetCount);
-            this.setPlotWidth();
+            this.addPlotWebPartToPlotDiv(id, "Guide Set " + guideSetCount, this.plotPanelDiv, 'pareto-plot-wp');
+            this.setPlotWidth(this.plotPanelDiv);
             this.createExportToPDFButton(id, title);
             this.plotPareto(id, sortedDataset, title, shortNameLongNameMap);
             guideSetCount++;
@@ -147,55 +145,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         barChart.render();
     },
 
-    createExportToPDFButton : function(id, datesTitle) {
-        new Ext4.Button({
-            renderTo: id+"-exportToPDFbutton",
-            svgDivId: id,
-            icon: LABKEY.contextPath + "/_icons/pdf.gif",
-            tooltip: "Export PDF of this plot",
-            handler: function(btn) {
-                var svgEls = Ext4.get(btn.svgDivId).select('svg');
-                var title = "Pareto Plot for " + datesTitle;
-                var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[0]);
-                LABKEY.vis.SVGConverter.convert(svgStr, LABKEY.vis.SVGConverter.FORMAT_PDF, title);
-            },
-            scope: this
-        });
-    },
-
-    addPlotWebPartToPlotDiv : function(id, title) {
-        Ext4.get(this.plotPanelDiv).insertHtml('beforeEnd', '<br/>' +
-                '<table class="labkey-wp pareto-plot-wp">' +
-                ' <tr class="labkey-wp-header">' +
-                '     <th class="labkey-wp-title-left">' +
-                '        <span class="labkey-wp-title-text pareto-plot-wp-title">' + Ext4.util.Format.htmlEncode(title) +
-                '           <div class="plot-export-btn" id="' + id + '-exportToPDFbutton"></div>' +
-                '        </span>' +
-                '     </th>' +
-                ' </tr><tr>' +
-                '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
-                ' </tr>' +
-                '</table>'
-        );
-    },
-
     plotBarClickEvent : function(event, row) {
         window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, {startDate: row.trainingStart, endDate: row.trainingEnd , metric: row.metricLong});
-    },
-
-    setPlotWidth : function()
-    {
-        if (this.plotWidth == null)
-        {
-            // set the width of the plot webparts based on the first labkey-wp-body element
-            this.plotWidth = 900;
-            var wp = document.querySelector('.labkey-wp-body');
-            if (wp && (wp.clientWidth - 20) > this.plotWidth) {
-                this.plotWidth = wp.clientWidth - 20;
-            }
-
-            Ext4.get(this.plotPanelDiv).setWidth(this.plotWidth);
-        }
     }
 
 });

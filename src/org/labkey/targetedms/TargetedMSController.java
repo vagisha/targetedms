@@ -343,8 +343,6 @@ public class TargetedMSController extends SpringActionController
 
                 ArrayList<Portal.WebPart> paretoPlotTab = new ArrayList<>();
                 Portal.WebPart paretoPlotPart = Portal.getPortalPart(TargetedMSModule.TARGETED_MS_PARETO_PLOT).createWebPart();
-//                paretoPlotPart.setProperty(QueryParam.schemaName.toString(), "targetedms");
-//                paretoPlotPart.setProperty(QueryParam.queryName.toString(), "paretoPlotPlaceholderQueryName"); //TODO: placeholdername - change this as per actual query name
                 paretoPlotTab.add(paretoPlotPart);
                 Portal.saveParts(c, PARETO_PLOT_TAB, paretoPlotTab);
                 Portal.addProperty(c, PARETO_PLOT_TAB, Portal.PROP_CUSTOMTAB);
@@ -469,23 +467,6 @@ public class TargetedMSController extends SpringActionController
         }
 
     }
-
-//    @RequiresPermissionClass(ReadPermission.class)
-//    public class ParetoPlotAction extends SimpleViewAction
-//    {
-//
-//        @Override
-//        public ModelAndView getView(Object o, BindException errors) throws Exception
-//        {
-//            return new JspView("/org/labkey/targetedms/view/paretoPlot.jsp");
-//        }
-//
-//        @Override
-//        public NavTree appendNavTrail(NavTree root)
-//        {
-//            return null;
-//        }
-//    }
 
     // ------------------------------------------------------------------------
     // Action to show a list of chromatogram library archived revisions

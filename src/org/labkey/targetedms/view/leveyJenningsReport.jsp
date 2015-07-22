@@ -32,6 +32,7 @@
         resources.add(ClientDependency.fromPath("Ext4"));
         resources.add(ClientDependency.fromPath("vis/vis"));
         resources.add(ClientDependency.fromPath("targetedms/css/LeveyJenningsReport.css"));
+        resources.add(ClientDependency.fromPath("targetedms/js/BaseQCPlotPanel.js"));
         resources.add(ClientDependency.fromPath("targetedms/js/LeveyJenningsTrendPlotPanel.js"));
         return resources;
     }

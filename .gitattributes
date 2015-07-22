@@ -341,6 +341,7 @@ webapp/TargetedMS/images/TransitionGroupLib.gif -text
 webapp/TargetedMS/images/blank.gif -text
 webapp/TargetedMS/images/spectrum.gif -text
 webapp/TargetedMS/jquery/jquery-1.8.3.min.js -text
+webapp/TargetedMS/js/BaseQCPlotPanel.js -text
 webapp/TargetedMS/js/LeveyJenningsTrendPlotPanel.js -text
 webapp/TargetedMS/js/ParetoPlotPanel.js -text
 webapp/TargetedMS/js/dropDownUtil.js -text
