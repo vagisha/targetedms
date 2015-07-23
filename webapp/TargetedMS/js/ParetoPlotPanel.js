@@ -148,7 +148,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
     },
 
     plotBarClickEvent : function(event, row) {
-        window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, {startDate: row.trainingStart, endDate: row.trainingEnd , metric: row.metricName});
+        window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, {startDate: row.trainingStart, endDate: row.trainingEnd, metric: row.metricName, pageId: 'DefaultDashboard'});
     }
 
 });
