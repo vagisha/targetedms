@@ -16,6 +16,7 @@
 SELECT stats.GuideSetId,
 'RT' AS Metric,
 'Retention Time' AS MetricLongLabel,
+'retentionTime' AS MetricName,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,
@@ -33,6 +34,7 @@ GROUP BY stats.GuideSetId
 UNION SELECT stats.GuideSetId,
 'PA' AS Metric,
 'Peak Area' AS MetricLongLabel,
+'peakArea' AS MetricName,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,
@@ -50,6 +52,7 @@ GROUP BY stats.GuideSetId
 UNION SELECT stats.GuideSetId,
 'FWHM' AS Metric,
 'Full Width at Half Maximum (FWHM)' AS MetricLongLabel,
+'fwhm' AS MetricName,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,
@@ -67,6 +70,7 @@ GROUP BY stats.GuideSetId
 UNION SELECT stats.GuideSetId,
 'FWB' As Metric,
 'Full Width at Base (FWB)' As MetricLongLabel,
+'fwb' AS MetricName,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,
@@ -84,6 +88,7 @@ GROUP BY stats.GuideSetId
 UNION SELECT stats.GuideSetId,
 'L/H ratio' As Metric,
 'Light/Heavy Ratio' As MetricLongLabel,
+'ratio' AS MetricName,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence,
@@ -101,6 +106,7 @@ GROUP BY stats.GuideSetId
 UNION SELECT stats.GuideSetId,
 'T/PA Ratio' As Metric,
 'Transition/Precursor Area Ratio' As MetricLongLabel,
+'transitionPrecursorRatio' AS MetricName,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,

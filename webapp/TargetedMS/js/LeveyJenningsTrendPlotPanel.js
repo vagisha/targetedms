@@ -84,19 +84,47 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         if (!this.endDate)
             this.endDate = null;
 
+
+        var alertMessage;
+
         //get parameters from the url
-        if (LABKEY.ActionURL.getParameter("startDate") != undefined)
-        {
-            this.startDate = new Date(LABKEY.ActionURL.getParameter("startDate"));
+        if (LABKEY.ActionURL.getParameter("startDate") != undefined) {
+            var sdate = new Date(LABKEY.ActionURL.getParameter("startDate"));
+
+            if(sdate == "Invalid Date")
+            {
+                alertMessage = "Invalid Start Date.";
+            }
+            else
+            {
+                this.startDate = sdate;
+            }
         }
-        if (LABKEY.ActionURL.getParameter("endDate") != undefined)
-        {
-            this.endDate = new Date(LABKEY.ActionURL.getParameter("endDate"));
+        if (LABKEY.ActionURL.getParameter("endDate") != undefined) {
+            var edate = new Date(LABKEY.ActionURL.getParameter("endDate"));
+
+            if(edate == "Invalid Date") {
+                alertMessage = "Invalid End Date.";
+            }
+            else {
+                this.endDate = edate;
+            }
         }
-        if (LABKEY.ActionURL.getParameter("metric") != undefined)
-        {
-            var t = LABKEY.ActionURL.getParameter("metric");
-            this.chartType = this.getChartTypeName(t);
+
+        if(alertMessage != undefined) {
+            LABKEY.Utils.alert('Invalid Date', alertMessage + " Used default dates.");
+        }
+
+        if (LABKEY.ActionURL.getParameter("metric") != undefined) {
+
+            var t = this.validateChartTypeName(LABKEY.ActionURL.getParameter("metric"));
+
+            if(t == "Invalid Chart Type") {
+                LABKEY.Utils.alert(t, LABKEY.ActionURL.getParameter("metric") + " is not a valid Chart Type. Used 'Retention Time'.");
+            }
+            else {
+                this.chartType = t;
+            }
         }
 
         // initialize the y-axis scale combo for the top toolbar
@@ -293,12 +321,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.displayTrendPlot();
     },
 
-    getChartTypeName : function(title) {
+    validateChartTypeName : function(name) {
         for (var i = 0; i < this.chartTypePropArr.length; i++) {
-            if (this.chartTypePropArr[i].title == title) {
+            if (this.chartTypePropArr[i].name == name) {
                 return this.chartTypePropArr[i].name;
             }
         }
+        return 'Invalid Chart Type';
     },
 
     setBrushingEnabled : function(enabled) {
@@ -732,7 +761,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     this.addGuideSetTrainingRangeToPlot(plot, precursorInfo, this.guideSetTrainingData);
                 }
 
-                this.createExportToPDFButton(id, "QC Plot for peptide " + precursorInfo.sequence);
+                this.createExportToPDFButton(id, "QC Plot for peptide " + precursorInfo.sequence, "QC Plot-"+precursorInfo.sequence);
             }
         }
 
@@ -817,7 +846,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.addGuideSetTrainingRangeToPlot(plot, combinePlotData, this.guideSetTrainingDataUniqueObjects);
         }
 
-        this.createExportToPDFButton(id, "QC Combined Plot for All Peptides");
+        this.createExportToPDFButton(id, "QC Combined Plot for All Peptides", "QC Combined Plot");
 
         return true;
     },

@@ -24,19 +24,15 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             var key = guideSetDataRows[i].RowId;
 
             if(this.guideSetIdTrainingDatesMap[key] == undefined) {
-                this.guideSetIdTrainingDatesMap[key] = {data : []};
+                this.guideSetIdTrainingDatesMap[key] = {trainingStart :  guideSetDataRows[i].TrainingStart,
+                    trainingEnd :  guideSetDataRows[i].TrainingEnd,
+                    referenceEnd :  guideSetDataRows[i].ReferenceEnd};
             }
-
-            this.guideSetIdTrainingDatesMap[key].data.push({
-                trainingStart :  guideSetDataRows[i].TrainingStart,
-                trainingEnd :  guideSetDataRows[i].TrainingEnd,
-                referenceEnd :  guideSetDataRows[i].ReferenceEnd
-            });
         }
 
-        LABKEY.Query.executeSql({
+        LABKEY.Query.selectRows({
             schemaName: 'targetedms',
-            sql: 'SELECT * FROM GuideSetNonConformers',
+            queryName: 'GuideSetNonConformers',
             scope: this,
             success: this.nonConformersForParetoPlot,
             failure: this.failureHandler
@@ -54,7 +50,6 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         {
             var key = nonConformers[i]['GuideSetId'];
             var count = nonConformers[i]['NonConformers'];
-            var trainingDatesData = this.guideSetIdTrainingDatesMap[key].data;
 
             if(guideSetMap[key] == undefined) {
                 guideSetMap[key] = {data : []};
@@ -64,11 +59,12 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                 guidesetId: key,
                 metric : nonConformers[i]['Metric'],
                 metricLong: nonConformers[i]['MetricLongLabel'],
+                metricName: nonConformers[i]['MetricName'],
                 count : count,
                 percent: 0,
-                trainingStart: trainingDatesData[0].trainingStart,
-                trainingEnd: trainingDatesData[0].trainingEnd,
-                referenceEnd: trainingDatesData[0].referenceEnd
+                trainingStart: this.guideSetIdTrainingDatesMap[key].trainingStart,
+                trainingEnd: this.guideSetIdTrainingDatesMap[key].trainingEnd,
+                referenceEnd: this.guideSetIdTrainingDatesMap[key].referenceEnd
             });
 
             //store short name long name in a map for hover text
@@ -77,12 +73,18 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
         for (var key in guideSetMap)
         {
+            var maxNumNonConformers = 0;
             var dataSet = guideSetMap[key].data;
             var totalCount = 0;
 
             //find total count per guidesetID
             for (var i = 0; i < dataSet.length; i++) {
                 totalCount += dataSet[i]['count'];
+
+                if(maxNumNonConformers < dataSet[i]['count'])
+                {
+                    maxNumNonConformers = dataSet[i]['count'];
+                }
             }
 
             //sort by count in descending order
@@ -102,13 +104,13 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
             this.addPlotWebPartToPlotDiv(id, "Guide Set " + guideSetCount, this.plotPanelDiv, 'pareto-plot-wp');
             this.setPlotWidth(this.plotPanelDiv);
-            this.createExportToPDFButton(id, title);
-            this.plotPareto(id, sortedDataset, title, shortNameLongNameMap);
+            this.createExportToPDFButton(id, title, "ParetoPlot-Guide Set "+guideSetCount);
+            this.plotPareto(id, sortedDataset, title, shortNameLongNameMap, maxNumNonConformers);
             guideSetCount++;
         }
     },
 
-    plotPareto: function(id, data, title, hoverTextMap)
+    plotPareto: function(id, data, title, hoverTextMap, yAxisMax)
     {
         var barChart = new LABKEY.vis.Plot({
             renderTo: id,
@@ -137,7 +139,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             aes: { x: 'metric', y: 'count' },
             scales : {
                 x : { scaleType: 'discrete', tickHoverText: function(val) { return hoverTextMap[val]}},
-                yLeft : { domain: [0, null] },
+                yLeft : { domain: [0, (yAxisMax==0 ? 1 : yAxisMax)]},
                 yRight : { domain: [0, 100] },
 
             }
@@ -146,7 +148,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
     },
 
     plotBarClickEvent : function(event, row) {
-        window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, {startDate: row.trainingStart, endDate: row.trainingEnd , metric: row.metricLong});
+        window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, {startDate: row.trainingStart, endDate: row.trainingEnd , metric: row.metricName});
     }
 
 });

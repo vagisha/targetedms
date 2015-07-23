@@ -39,7 +39,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         }
     },
 
-    createExportToPDFButton: function (id, title)
+    createExportToPDFButton: function (id, title, filename)
     {
         new Ext4.Button({
             renderTo: id + "-exportToPDFbutton",
@@ -51,7 +51,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 var svgEls = Ext4.get(btn.svgDivId).select('svg');
                 var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[0]);
                 svgStr = svgStr.replace(/visibility="hidden"/g, 'visibility="visible"');
-                LABKEY.vis.SVGConverter.convert(svgStr, LABKEY.vis.SVGConverter.FORMAT_PDF, title);
+                LABKEY.vis.SVGConverter.convert(svgStr, LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
             },
             scope: this
         });
