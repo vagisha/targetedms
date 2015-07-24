@@ -280,7 +280,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.setGroupXAxisValuesByDate(false);
 
         //Check for clickable pdf button for Combined plot
-        clickAndWaitForDownload(Locator.id("combinedPlot-exportToPDFbutton"));
+        clickAndWaitForDownload(Locator.css("#combinedPlot-exportToPDFbutton > a"));
 
         //deselect "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, PRECURSORS.length);
