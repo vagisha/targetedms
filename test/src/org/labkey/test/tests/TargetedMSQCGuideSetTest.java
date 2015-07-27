@@ -203,7 +203,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("GuideSetFWHMStats", 1, PRECURSORS[0], 0.096, null));
         gs.addStats(new GuideSetStats("GuideSetFWBStats", 1, PRECURSORS[0], 0.292, null));
         gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 1, PRECURSORS[0], 1.000, null));
+        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 1, PRECURSORS[0], 15.599830627441406, null));
 
         validateGuideSetStats(gs);
     }
@@ -215,7 +215,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("GuideSetFWHMStats", 10, PRECURSORS[1], 0.11, 0.015));
         gs.addStats(new GuideSetStats("GuideSetFWBStats", 10, PRECURSORS[1], 0.326, 0.025));
         gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 10, PRECURSORS[1], 1.000, 0.000));
+        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 10, PRECURSORS[1], 6.114987802505493, 0.772));
 
         validateGuideSetStats(gs);
     }
@@ -227,7 +227,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("GuideSetFWHMStats", 4, PRECURSORS[2], 0.088, 0.006));
         gs.addStats(new GuideSetStats("GuideSetFWBStats", 4, PRECURSORS[2], 0.259, 0.013));
         gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 4, PRECURSORS[2], 1.000, 0.000));
+        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 0, PRECURSORS[2], null, null));
 
         validateGuideSetStats(gs);
     }
@@ -239,7 +239,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("GuideSetFWHMStats", 2, PRECURSORS[3], 0.072, 0.009));
         gs.addStats(new GuideSetStats("GuideSetFWBStats", 2, PRECURSORS[3], 0.219, 0.011));
         gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 2, PRECURSORS[3], 1.000, 0.000));
+        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 2, PRECURSORS[3], 16.36602020263672, 5.136));
 
         validateGuideSetStats(gs);
     }
