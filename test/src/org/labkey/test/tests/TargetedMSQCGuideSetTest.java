@@ -196,7 +196,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
             e.printStackTrace();
         }
         //compare url Start Date with input form Start Date
-        assertTrue("startDate in the URL is not present in 'Start Date' form", d1.equals(d2));
+        assertTrue("startDate in the URL does not equal 'Start Date' on the page", d1.equals(d2));
 
         try
         {
@@ -216,7 +216,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         }
 
         //compare url End Date with input form End Date
-        assertTrue("endDate in the URL is not present in 'End Date' form", d1.equals(d2));
+        assertTrue("endDate in the URL does not equal 'End Date' on the page", d1.equals(d2));
 
     }
 
