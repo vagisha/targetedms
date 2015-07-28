@@ -51,6 +51,13 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     }
 
     @LogMethod
+    protected void setupFolder(String folderName, FolderType folderType)
+    {
+        _containerHelper.createProject(folderName, "Panorama");
+        selectFolderType(folderType);
+    }
+
+    @LogMethod
     protected void importData(String file)
     {
         importData(file, 1);

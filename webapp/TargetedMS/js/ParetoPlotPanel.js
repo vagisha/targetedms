@@ -100,7 +100,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             var title = "'Training Start: " + sortedDataset[0].trainingStart;
             title += (sortedDataset[0].referenceEnd) ? (" - Reference End: " + sortedDataset[0].referenceEnd) : (" - Training End: " + sortedDataset[0].trainingEnd);
             title += "'";
-            var id = "paretoPlot-GuideSetId-" + key;
+            var id = "paretoPlot-GuideSet-"+guideSetCount;
 
             this.addPlotWebPartToPlotDiv(id, "Guide Set " + guideSetCount, this.plotPanelDiv, 'pareto-plot-wp');
             this.setPlotWidth(this.plotPanelDiv);

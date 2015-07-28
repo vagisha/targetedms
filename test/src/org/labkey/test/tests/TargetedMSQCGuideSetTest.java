@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.GuideSet;
@@ -30,11 +31,15 @@ import org.labkey.test.pages.targetedms.GuideSetPage;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.DataRegionTable;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by cnathe on 4/30/15.
@@ -141,6 +146,96 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         shapeCounts.add(Pair.of(circle, 2));
         shapeCounts.add(Pair.of(triangle, 0));
         verifyGuideSetRelatedElementsForPlots(qcPlotsWebPart, 0, shapeCounts, 2);
+    }
+
+    @Test
+    public void testParetoPlot()
+    {
+        clickTab("Pareto Plot"); //go to Pareto Plot tab
+
+        //testing on Guide Set 3, assert x-axis tick text exists
+        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(1) text"), "PA");
+        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(2) text"), "RT");
+        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(3) text"), "FWHM");
+        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(4) text"), "T/PA Ratio");
+        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(5) text"), "FWB");
+
+        //Check for clickable pdf button for Pareto Plot
+        clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-3-exportToPDFbutton"));
+
+        //click on "Peak Area" bar
+        clickAndWait(Locator.css("#paretoPlot-GuideSet-3-0 > a:nth-child(1) > rect"));
+
+        //check navigation to 'Panorama Dashboard' tab
+        assertEquals(getText(Locator.css(".tab-nav-active")), "Panorama Dashboard");
+
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+
+        //test for correct chart type
+        assertEquals(QCPlotsWebPart.ChartType.PEAK, qcPlotsWebPart.getCurrentChartType());
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+        Date d1 = null;
+        try
+        {
+            d1 = dateFormat.parse(getUrlParam("startDate", true));
+        }
+        catch (ParseException e)
+        {
+            e.printStackTrace();
+        }
+        SimpleDateFormat dateFormat2 = new SimpleDateFormat("yyyy-MM-dd");
+        Date d2 = null;
+        try
+        {
+            d2 = dateFormat2.parse(qcPlotsWebPart.getCurrentStartDate());
+        }
+        catch (ParseException e)
+        {
+            e.printStackTrace();
+        }
+        //compare url Start Date with input form Start Date
+        assertTrue("startDate in the URL is not present in 'Start Date' form", d1.equals(d2));
+
+        try
+        {
+            d1 = dateFormat.parse(getUrlParam("endDate", true));
+        }
+        catch (ParseException e)
+        {
+            e.printStackTrace();
+        }
+        try
+        {
+            d2 = dateFormat2.parse(qcPlotsWebPart.getCurrentEndDate());
+        }
+        catch (ParseException e)
+        {
+            e.printStackTrace();
+        }
+
+        //compare url End Date with input form End Date
+        assertTrue("endDate in the URL is not present in 'End Date' form", d1.equals(d2));
+
+    }
+
+    @Test
+    public void testEmptyParetoPlot()
+    {
+        String emptyParetoPlotFolder = "Empty Pareto Plot Test";
+
+        setupFolder(emptyParetoPlotFolder, FolderType.QC); //create a Panorama folder of type QC
+
+        clickTab("Pareto Plot"); //go to Pareto Plot tab
+
+        waitForText(10000, "Guide Sets not found."); //Check for no guide sets
+
+        click(Locator.linkContainingText("Levey-Jennings QC Plots")); //click on the link to take user to Levey-Jennings plot
+
+        assertTextPresent("Levey-Jennings QC Plots"); // test the link - should take user to Levey-Jennings QC Plots
+
+        deleteProject(emptyParetoPlotFolder, true); //delete the project for this test
     }
 
     private void verifyGuideSetRelatedElementsForPlots(QCPlotsWebPart qcPlotsWebPart, int visibleTrainingRanges, List<Pair<String, Integer>> shapeCounts, int axisTickCount)
