@@ -34,6 +34,7 @@ import org.labkey.test.util.DataRegionTable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -153,6 +154,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     {
         clickTab("Pareto Plot"); //go to Pareto Plot tab
 
+        waitForElement(Locator.css("svg"));
         //testing on Guide Set 3, assert x-axis tick text exists
         assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(1) text"), "PA");
         assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(2) text"), "RT");
