@@ -21,6 +21,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
+import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.GuideSet;
@@ -63,6 +64,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     private static GuideSet gs5 = new GuideSet("2013/08/27 03:00", "2013/08/31 00:00", "fifth guide set, extends beyond last initial data point with two data points in range");
 
     private static String emptyParetoPlotFolder = "Empty Pareto Plot Test";
+    private static boolean emptyParetoPlotFolderTest;
 
 
     @Override
@@ -74,6 +76,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     @BeforeClass
     public static void initProject()
     {
+        emptyParetoPlotFolderTest = false;
+
         TargetedMSQCGuideSetTest init = (TargetedMSQCGuideSetTest)getCurrentTest();
 
         init.setupFolder(FolderType.QC);
@@ -92,12 +96,14 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         goToProjectHome();
     }
 
-//    @Override
-//    protected void doCleanup(boolean afterTest) throws TestTimeoutException
-//    {
-//        _containerHelper.deleteProject(getProjectName(), true);
-//        _containerHelper.deleteProject(emptyParetoPlotFolder, true);
-//    }
+    @Override
+    protected void doCleanup(boolean afterTest) throws TestTimeoutException
+    {
+        _containerHelper.deleteProject(getProjectName(), afterTest);
+
+        if(emptyParetoPlotFolderTest)
+            _containerHelper.deleteProject(emptyParetoPlotFolder, afterTest);
+    }
 
     @Test
     public void testGuideSetStats()
@@ -176,6 +182,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     @Test
     public void testEmptyParetoPlot()
     {
+        emptyParetoPlotFolderTest = true;
+
         setupFolder(emptyParetoPlotFolder, FolderType.QC); //create a Panorama folder of type QC
 
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
@@ -186,9 +194,6 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         paretoPlotsWebPart.clickLeveyJenningsLink(this);
 
         assertElementPresent(Locator.tagWithClass("span", "labkey-wp-title-text").withText(QCPlotsWebPart.DEFAULT_TITLE));
-
-        _containerHelper.deleteProject(emptyParetoPlotFolder, true);
-
     }
 
     private void verifyGuideSetRelatedElementsForPlots(QCPlotsWebPart qcPlotsWebPart, int visibleTrainingRanges, List<Pair<String, Integer>> shapeCounts, int axisTickCount)
