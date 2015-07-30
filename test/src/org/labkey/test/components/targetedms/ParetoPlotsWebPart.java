@@ -4,8 +4,8 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.LinkedList;
+import java.util.List;
 
 public class ParetoPlotsWebPart extends BodyWebPart
 {
@@ -16,7 +16,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
         super(test, DEFAULT_TITLE);
     }
 
-    public static enum ChartTypeTicks
+    public enum ChartTypeTicks
     {
         TPAREARATIO("T/PA Ratio"),
         RETENTION("RT"),
@@ -26,7 +26,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
         private String _text;
 
-        private ChartTypeTicks(String text)
+        ChartTypeTicks(String text)
         {
             _text = text;
         }
@@ -52,37 +52,53 @@ public class ParetoPlotsWebPart extends BodyWebPart
             return chartTypeTick;
         }
     }
-    public Map<Locator, String> getTicks(int guideSetNum, BaseWebDriverTest test)
+    public List<String> getTicks(int guideSetNum)
     {
-        Map<Locator, String> tickMap = new HashMap<>();
+        List<String> ticks = new LinkedList<>();
         int maxIndex = 5;
         int minIndex = 1;
 
         while(minIndex <= maxIndex)
         {
-            Locator key = Locator.css("#paretoPlot-GuideSet-"+ guideSetNum +" > svg > g:nth-child(1) > g.tick-text > a:nth-child("+ minIndex+")");
-            String val = test.getElement(key).getText();
-            tickMap.put(key, val);
+            String tickText = _test.getElement(Locator.css("#paretoPlot-GuideSet-"+ guideSetNum +
+                    " > svg > g:nth-child(1) > g.tick-text > a:nth-child("+ minIndex+")")).getText();
+            ticks.add(tickText);
             minIndex++;
         }
-        return tickMap;
+        return ticks;
     }
 
-    public int getNumOfParetoPlots(BaseWebDriverTest test)
+    public int getNumOfParetoPlots()
     {
-        return test.getElementCount(Locator.xpath("//div[contains(@id, 'tiledPlotPanel')]/table[contains(@class, 'labkey-wp pareto-plot-wp')]"));
+        return _test.getElementCount(Locator.xpath("//div[contains(@id, 'tiledPlotPanel')]/table[contains(@class, 'labkey-wp pareto-plot-wp')]"));
     }
 
     public boolean isChartTypeTickValid(String chartType)
     {
-        if(ChartTypeTicks.getChartTypeTick(chartType) != null)
-            return true;
+        return ChartTypeTicks.getChartTypeTick(chartType) != null;
 
-        return false;
     }
 
-    public int getPlotBarHeight(BaseWebDriverTest test, int guideSetId, int barPlotNum)
+    public int getPlotBarHeight(int guideSetId, int barPlotNum)
     {
-       return Integer.valueOf(test.getText(Locator.css("#paretoPlot-GuideSet-" + guideSetId + "-" + barPlotNum + " > a:nth-child(1)")));
+       return Integer.valueOf(_test.getText(Locator.css("#paretoPlot-GuideSet-" + guideSetId + "-" + barPlotNum + " > a:nth-child(1)")));
+    }
+
+    public void clickLeveyJenningsLink(BaseWebDriverTest test)
+    {
+        test.assertElementPresent(elements().notFound); //Check for no guide sets
+        test.clickAndWait(elements().leveyJenningsLink); //click on the link to take user to Levey-Jennings plot
+    }
+
+    @Override
+    protected Elements elements()
+    {
+        return new Elements();
+    }
+
+    private class Elements extends BodyWebPart.Elements
+    {
+        Locator.XPathLocator notFound = webPart.append(Locator.id("tiledPlotPanel").startsWith("Guide Sets not found."));
+        Locator.XPathLocator leveyJenningsLink = webPart.append(Locator.linkWithText("Levey-Jennings QC Plots"));
     }
 }

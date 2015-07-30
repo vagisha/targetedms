@@ -38,7 +38,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -92,6 +91,13 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     {
         goToProjectHome();
     }
+
+//    @Override
+//    protected void doCleanup(boolean afterTest) throws TestTimeoutException
+//    {
+//        _containerHelper.deleteProject(getProjectName(), true);
+//        _containerHelper.deleteProject(emptyParetoPlotFolder, true);
+//    }
 
     @Test
     public void testGuideSetStats()
@@ -153,15 +159,15 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     @Test
     public void testParetoPlot()
     {
-        clickAndWait(Locator.linkContainingText("Pareto Plot")); //go to Pareto Plot tab
+        clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
 
         waitForElement(Locator.css("svg"));
 
         ParetoPlotPage paretoPage = new ParetoPlotPage(this);
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
-        assertEquals("Wrong number of Pareto plots", 4, paretoPlotsWebPart.getNumOfParetoPlots(this));
-        assertEquals("Wrong number of non-conformers", 69, paretoPlotsWebPart.getPlotBarHeight(this, 3, 0));
+        assertEquals("Wrong number of Pareto plots", 4, paretoPlotsWebPart.getNumOfParetoPlots());
+        assertEquals("Wrong number of non-conformers", 69, paretoPlotsWebPart.getPlotBarHeight(3, 0));
         verifyTicksOnPlots(paretoPlotsWebPart, 3);
         verifyDownloadableParetoPlotPdf();
         verifyNavigationToPanoramaDashboard(3, 0);
@@ -174,13 +180,15 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
 
-        assertTextPresent("Guide Sets not found."); //Check for no guide sets
+        ParetoPlotPage paretoPage = new ParetoPlotPage(this);
+        ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
-        clickAndWait(Locator.linkWithText("Levey-Jennings QC Plots")); //click on the link to take user to Levey-Jennings plot
+        paretoPlotsWebPart.clickLeveyJenningsLink(this);
 
-        assertTextPresent(QCPlotsWebPart.DEFAULT_TITLE);
+        assertElementPresent(Locator.tagWithClass("span", "labkey-wp-title-text").withText(QCPlotsWebPart.DEFAULT_TITLE));
 
-        _containerHelper.deleteProject(emptyParetoPlotFolder);
+        _containerHelper.deleteProject(emptyParetoPlotFolder, true);
+
     }
 
     private void verifyGuideSetRelatedElementsForPlots(QCPlotsWebPart qcPlotsWebPart, int visibleTrainingRanges, List<Pair<String, Integer>> shapeCounts, int axisTickCount)
@@ -327,13 +335,10 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
     private void verifyTicksOnPlots(ParetoPlotsWebPart paretoPlotsWebPart, int guideSetNum)
     {
-        Map<Locator, String> ticks = paretoPlotsWebPart.getTicks(guideSetNum, this);
+        List<String> ticks = paretoPlotsWebPart.getTicks(guideSetNum);
 
-        for(Locator locator : ticks.keySet())
-        {
-            String chartType = ticks.get(locator);
+        for(String chartType : ticks)
             assertTrue("Chart Type tick '" + chartType + "' is not valid", paretoPlotsWebPart.isChartTypeTickValid(chartType));
-        }
     }
 
     private void verifyDownloadableParetoPlotPdf()
