@@ -44,9 +44,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-/**
- * Created by cnathe on 4/30/15.
- */
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCGuideSetTest extends TargetedMSTest
 {
@@ -163,8 +160,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         ParetoPlotPage paretoPage = new ParetoPlotPage(this);
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
-        verifyExpectedNumberOfPlots(paretoPlotsWebPart, 4);
-        verifyPlotBarHeight(paretoPlotsWebPart, 3, 0, 69);
+        assertEquals("Wrong number of Pareto plots", 4, paretoPlotsWebPart.getNumOfParetoPlots(this));
+        assertEquals("Wrong number of non-conformers", 69, paretoPlotsWebPart.getPlotBarHeight(this, 3, 0));
         verifyTicksOnPlots(paretoPlotsWebPart, 3);
         verifyDownloadableParetoPlotPdf();
         verifyNavigationToPanoramaDashboard(3, 0);
@@ -328,22 +325,6 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         guideSet.setRowId(guideSetWebPart.getRowId(guideSet));
     }
 
-    private void verifyExpectedNumberOfPlots(ParetoPlotsWebPart paretoPlotsWebPart, int expectedNumOfGuideSets)
-    {
-        int numOfParetoPlots = paretoPlotsWebPart.getNumOfParetoPlots(this);
-        String msg = "Expected number of Pareto Plots is " + expectedNumOfGuideSets +". Found "
-                + numOfParetoPlots + " plots.";
-        assertEquals(msg, numOfParetoPlots, expectedNumOfGuideSets);
-    }
-
-    private void verifyPlotBarHeight(ParetoPlotsWebPart paretoPlotsWebPart, int guideSetNum, int barPlotNum, int expectedNumConformers)
-    {
-        int numNonConformersFound = paretoPlotsWebPart.getPlotBarHeight(this, guideSetNum, barPlotNum);
-        String msg = "Expected number of Non-Conformers is " + expectedNumConformers + ". Found "
-                + numNonConformersFound + " Non-Conformers.";
-        assertEquals(msg, numNonConformersFound, expectedNumConformers);
-    }
-
     private void verifyTicksOnPlots(ParetoPlotsWebPart paretoPlotsWebPart, int guideSetNum)
     {
         Map<Locator, String> ticks = paretoPlotsWebPart.getTicks(guideSetNum, this);
@@ -358,7 +339,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     private void verifyDownloadableParetoPlotPdf()
     {
         //Check for clickable pdf button for Pareto Plot
-        clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-3-exportToPDFbutton"));
+        clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-3-exportToPDFbutton > a"));
     }
 
     private void verifyNavigationToPanoramaDashboard(int guideSetNum, int barPlotNum)
@@ -367,7 +348,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         clickAndWait(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + "-" + barPlotNum + " > a:nth-child(1) > rect"));
 
         //check navigation to 'Panorama Dashboard' tab
-        assertEquals(getText(Locator.css(".tab-nav-active")), "Panorama Dashboard");
+        assertEquals("Panorama Dashboard", getText(Locator.css(".tab-nav-active")));
 
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
@@ -376,35 +357,35 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         assertEquals(QCPlotsWebPart.ChartType.PEAK, qcPlotsWebPart.getCurrentChartType());
 
         //compare url Start Date with input form Start Date
-        assertTrue("startDate in the URL does not equal 'Start Date' on the page", areDatesEqual(getUrlParam("startDate", true), qcPlotsWebPart.getCurrentStartDate()));
+        assertEquals("startDate in the URL does not equal 'Start Date' on the page", parseUrlDate(getUrlParam("startDate", true)), parseFormDate(qcPlotsWebPart.getCurrentStartDate()));
 
         //compare url End Date with input form End Date
-        assertTrue("endDate in the URL does not equal 'End Date' on the page", areDatesEqual(getUrlParam("endDate", true), qcPlotsWebPart.getCurrentEndDate()));
+        assertEquals("endDate in the URL does not equal 'End Date' on the page", parseUrlDate(getUrlParam("endDate", true)), parseFormDate(qcPlotsWebPart.getCurrentEndDate()));
     }
 
-    private boolean areDatesEqual(String dateFromUrl, String dateFromForm )
+    private Date parseUrlDate(String urlDate)
     {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
-        Date d1 = null;
+        SimpleDateFormat urlDateFormat = new SimpleDateFormat("yyyy/MM/dd");
         try
         {
-            d1 = dateFormat.parse(dateFromUrl);
+            return urlDateFormat.parse(urlDate);
         }
-        catch (ParseException e)
+        catch (ParseException fail)
         {
-            e.printStackTrace();
+            throw new RuntimeException(fail);
         }
-        SimpleDateFormat dateFormat2 = new SimpleDateFormat("yyyy-MM-dd");
-        Date d2 = null;
-        try
-        {
-            d2 = dateFormat2.parse(dateFromForm);
-        }
-        catch (ParseException e)
-        {
-            e.printStackTrace();
-        }
+    }
 
-        return d1.equals(d2);
+    private Date parseFormDate(String formDate)
+    {
+        SimpleDateFormat formDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        try
+        {
+            return formDateFormat.parse(formDate);
+        }
+        catch (ParseException fail)
+        {
+            throw new RuntimeException(fail);
+        }
     }
 }
