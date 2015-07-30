@@ -81,7 +81,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public int getPlotBarHeight(int guideSetId, int barPlotNum)
     {
-       return Integer.valueOf(_test.getText(Locator.css("#paretoPlot-GuideSet-" + guideSetId + "-" + barPlotNum + " > a:nth-child(1)")));
+       return Integer.parseInt(_test.getText(Locator.css("#paretoPlot-GuideSet-" + guideSetId + "-" + barPlotNum + " > a:nth-child(1)")));
     }
 
     public void clickLeveyJenningsLink(BaseWebDriverTest test)
