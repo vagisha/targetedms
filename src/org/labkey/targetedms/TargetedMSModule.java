@@ -270,7 +270,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             {
                 JspView result = new JspView("/org/labkey/targetedms/view/paretoPlot.jsp");
                 result.addClientDependency(ClientDependency.fromPath("Ext4"));
-                result.setTitle("Pareto Plot");
+                result.setTitle("Pareto Plots");
                 result.setFrame(WebPartView.FrameType.PORTAL);
                 return result;
             }

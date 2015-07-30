@@ -26,17 +26,19 @@ import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.GuideSetStats;
 import org.labkey.test.components.targetedms.GuideSetWebPart;
+import org.labkey.test.components.targetedms.ParetoPlotsWebPart;
 import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.pages.targetedms.GuideSetPage;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
+import org.labkey.test.pages.targetedms.ParetoPlotPage;
 import org.labkey.test.util.DataRegionTable;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -63,6 +65,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     private static GuideSet gs3 = new GuideSet("2013/08/14 22:48:37", "2013/08/16 20:26:28", "third guide set, ten data points in range", 10);
     private static GuideSet gs4 = new GuideSet("2013/08/21 07:56:12", "2013/08/21 13:15:01", "fourth guide set, four data points in range", 4);
     private static GuideSet gs5 = new GuideSet("2013/08/27 03:00", "2013/08/31 00:00", "fifth guide set, extends beyond last initial data point with two data points in range");
+
+    private static String emptyParetoPlotFolder = "Empty Pareto Plot Test";
 
 
     @Override
@@ -152,92 +156,34 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     @Test
     public void testParetoPlot()
     {
-        clickTab("Pareto Plot"); //go to Pareto Plot tab
+        clickAndWait(Locator.linkContainingText("Pareto Plot")); //go to Pareto Plot tab
 
         waitForElement(Locator.css("svg"));
-        //testing on Guide Set 3, assert x-axis tick text exists
-        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(1) text"), "PA");
-        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(2) text"), "RT");
-        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(3) text"), "FWHM");
-        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(4) text"), "T/PA Ratio");
-        assertElementContains(Locator.css("#paretoPlot-GuideSet-3 g.axis:nth-child(1) g.tick-text a:nth-child(5) text"), "FWB");
 
-        //Check for clickable pdf button for Pareto Plot
-        clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-3-exportToPDFbutton"));
+        ParetoPlotPage paretoPage = new ParetoPlotPage(this);
+        ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
-        //click on "Peak Area" bar
-        clickAndWait(Locator.css("#paretoPlot-GuideSet-3-0 > a:nth-child(1) > rect"));
-
-        //check navigation to 'Panorama Dashboard' tab
-        assertEquals(getText(Locator.css(".tab-nav-active")), "Panorama Dashboard");
-
-        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
-        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-
-        //test for correct chart type
-        assertEquals(QCPlotsWebPart.ChartType.PEAK, qcPlotsWebPart.getCurrentChartType());
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
-        Date d1 = null;
-        try
-        {
-            d1 = dateFormat.parse(getUrlParam("startDate", true));
-        }
-        catch (ParseException e)
-        {
-            e.printStackTrace();
-        }
-        SimpleDateFormat dateFormat2 = new SimpleDateFormat("yyyy-MM-dd");
-        Date d2 = null;
-        try
-        {
-            d2 = dateFormat2.parse(qcPlotsWebPart.getCurrentStartDate());
-        }
-        catch (ParseException e)
-        {
-            e.printStackTrace();
-        }
-        //compare url Start Date with input form Start Date
-        assertTrue("startDate in the URL does not equal 'Start Date' on the page", d1.equals(d2));
-
-        try
-        {
-            d1 = dateFormat.parse(getUrlParam("endDate", true));
-        }
-        catch (ParseException e)
-        {
-            e.printStackTrace();
-        }
-        try
-        {
-            d2 = dateFormat2.parse(qcPlotsWebPart.getCurrentEndDate());
-        }
-        catch (ParseException e)
-        {
-            e.printStackTrace();
-        }
-
-        //compare url End Date with input form End Date
-        assertTrue("endDate in the URL does not equal 'End Date' on the page", d1.equals(d2));
-
+        verifyExpectedNumberOfPlots(paretoPlotsWebPart, 4);
+        verifyPlotBarHeight(paretoPlotsWebPart, 3, 0, 69);
+        verifyTicksOnPlots(paretoPlotsWebPart, 3);
+        verifyDownloadableParetoPlotPdf();
+        verifyNavigationToPanoramaDashboard(3, 0);
     }
 
     @Test
     public void testEmptyParetoPlot()
     {
-        String emptyParetoPlotFolder = "Empty Pareto Plot Test";
-
         setupFolder(emptyParetoPlotFolder, FolderType.QC); //create a Panorama folder of type QC
 
-        clickTab("Pareto Plot"); //go to Pareto Plot tab
+        clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
 
-        waitForText(10000, "Guide Sets not found."); //Check for no guide sets
+        assertTextPresent("Guide Sets not found."); //Check for no guide sets
 
-        click(Locator.linkContainingText("Levey-Jennings QC Plots")); //click on the link to take user to Levey-Jennings plot
+        clickAndWait(Locator.linkWithText("Levey-Jennings QC Plots")); //click on the link to take user to Levey-Jennings plot
 
-        assertTextPresent("Levey-Jennings QC Plots"); // test the link - should take user to Levey-Jennings QC Plots
+        assertTextPresent(QCPlotsWebPart.DEFAULT_TITLE);
 
-        deleteProject(emptyParetoPlotFolder, true); //delete the project for this test
+        _containerHelper.deleteProject(emptyParetoPlotFolder);
     }
 
     private void verifyGuideSetRelatedElementsForPlots(QCPlotsWebPart qcPlotsWebPart, int visibleTrainingRanges, List<Pair<String, Integer>> shapeCounts, int axisTickCount)
@@ -380,5 +326,85 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this, getProjectName());
         guideSet.setRowId(guideSetWebPart.getRowId(guideSet));
+    }
+
+    private void verifyExpectedNumberOfPlots(ParetoPlotsWebPart paretoPlotsWebPart, int expectedNumOfGuideSets)
+    {
+        int numOfParetoPlots = paretoPlotsWebPart.getNumOfParetoPlots(this);
+        String msg = "Expected number of Pareto Plots is " + expectedNumOfGuideSets +". Found "
+                + numOfParetoPlots + " plots.";
+        assertEquals(msg, numOfParetoPlots, expectedNumOfGuideSets);
+    }
+
+    private void verifyPlotBarHeight(ParetoPlotsWebPart paretoPlotsWebPart, int guideSetNum, int barPlotNum, int expectedNumConformers)
+    {
+        int numNonConformersFound = paretoPlotsWebPart.getPlotBarHeight(this, guideSetNum, barPlotNum);
+        String msg = "Expected number of Non-Conformers is " + expectedNumConformers + ". Found "
+                + numNonConformersFound + " Non-Conformers.";
+        assertEquals(msg, numNonConformersFound, expectedNumConformers);
+    }
+
+    private void verifyTicksOnPlots(ParetoPlotsWebPart paretoPlotsWebPart, int guideSetNum)
+    {
+        Map<Locator, String> ticks = paretoPlotsWebPart.getTicks(guideSetNum, this);
+
+        for(Locator locator : ticks.keySet())
+        {
+            String chartType = ticks.get(locator);
+            assertTrue("Chart Type tick '" + chartType + "' is not valid", paretoPlotsWebPart.isChartTypeTickValid(chartType));
+        }
+    }
+
+    private void verifyDownloadableParetoPlotPdf()
+    {
+        //Check for clickable pdf button for Pareto Plot
+        clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-3-exportToPDFbutton"));
+    }
+
+    private void verifyNavigationToPanoramaDashboard(int guideSetNum, int barPlotNum)
+    {
+        //click on "Peak Area" bar
+        clickAndWait(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + "-" + barPlotNum + " > a:nth-child(1) > rect"));
+
+        //check navigation to 'Panorama Dashboard' tab
+        assertEquals(getText(Locator.css(".tab-nav-active")), "Panorama Dashboard");
+
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+
+        //test for correct chart type
+        assertEquals(QCPlotsWebPart.ChartType.PEAK, qcPlotsWebPart.getCurrentChartType());
+
+        //compare url Start Date with input form Start Date
+        assertTrue("startDate in the URL does not equal 'Start Date' on the page", areDatesEqual(getUrlParam("startDate", true), qcPlotsWebPart.getCurrentStartDate()));
+
+        //compare url End Date with input form End Date
+        assertTrue("endDate in the URL does not equal 'End Date' on the page", areDatesEqual(getUrlParam("endDate", true), qcPlotsWebPart.getCurrentEndDate()));
+    }
+
+    private boolean areDatesEqual(String dateFromUrl, String dateFromForm )
+    {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
+        Date d1 = null;
+        try
+        {
+            d1 = dateFormat.parse(dateFromUrl);
+        }
+        catch (ParseException e)
+        {
+            e.printStackTrace();
+        }
+        SimpleDateFormat dateFormat2 = new SimpleDateFormat("yyyy-MM-dd");
+        Date d2 = null;
+        try
+        {
+            d2 = dateFormat2.parse(dateFromForm);
+        }
+        catch (ParseException e)
+        {
+            e.printStackTrace();
+        }
+
+        return d1.equals(d2);
     }
 }
