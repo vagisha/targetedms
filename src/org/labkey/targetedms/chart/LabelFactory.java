@@ -140,7 +140,7 @@ public class LabelFactory
         {
             label.append(" (").append(sampleFile.getSampleName()).append(')');
         }
-        if (run != null)
+        if (run != null && sampleFile.getAcquiredTime() != null)
         {
             label.append(", ");
             label.append(DateUtil.formatDateTime(run.getContainer(), sampleFile.getAcquiredTime()));

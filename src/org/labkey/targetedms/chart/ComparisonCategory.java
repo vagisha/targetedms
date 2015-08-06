@@ -38,13 +38,23 @@ public interface ComparisonCategory
 
     public String getDisplayLabel();
 
+    public String getSortingLabel();
+
     public class ReplicateCategory implements ComparisonCategory
     {
         private final String _label;
+        private final String _sortingLabel;
 
         public ReplicateCategory(String label)
         {
             _label = label;
+            _sortingLabel = _label;
+        }
+
+        public ReplicateCategory(String label, String sortingLabel)
+        {
+            _label = label;
+            _sortingLabel = sortingLabel;
         }
 
         @Override
@@ -56,7 +66,13 @@ public interface ComparisonCategory
         @Override
         public String getDisplayLabel()
         {
-            return _label;
+            return getCategoryLabel();
+        }
+
+        @Override
+        public String getSortingLabel()
+        {
+            return _sortingLabel;
         }
     }
 
@@ -122,9 +138,14 @@ public interface ComparisonCategory
 
         public String getCategoryLabel()
         {
+            return makeLabel(false);
+        }
+
+        private String makeLabel(boolean makeSortingLabel)
+        {
             StringBuilder label = new StringBuilder();
 
-            if (hasAnnotationValue())
+            if (!makeSortingLabel && hasAnnotationValue())
             {
                 label.append(_annotationValue).append(", ");
             }
@@ -138,6 +159,10 @@ public interface ComparisonCategory
                 label.append(" (").append(_isotopeLabel).append(")");
             }
 
+            if (makeSortingLabel && hasAnnotationValue())
+            {
+                label.append(", ").append(_annotationValue);
+            }
             return label.toString();
         }
 
@@ -199,6 +224,12 @@ public interface ComparisonCategory
                 label.append(LabelFactory.getChargeLabel(_charge));
             }
             return label.toString();
+        }
+
+        @Override
+        public String getSortingLabel()
+        {
+            return makeLabel(true);
         }
 
         public static void trimPeptideCategoryLabels(Set<ComparisonCategory.PeptideCategory> peptideCategories)

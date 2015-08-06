@@ -141,6 +141,11 @@
                     value: <%=bean.getForm().getId()%>
                 },
                 {
+                    xtype:'hidden',
+                    name: 'update',
+                    value: <%=bean.getForm().isUpdate()%>
+                },
+                {
                     xtype: 'textfield',
                     fieldLabel: 'Chart Width',
                     name: 'chartWidth',
@@ -241,6 +246,7 @@
                 handler: function(btn) {
                     form.getForm().findField("annotationsFilter").setValue(form.getForm().findField("annotationsFilter").getValue().join(","));
                     form.getForm().findField("replicatesFilter").setValue(form.getForm().findField("replicatesFilter").getValue().join(","));
+                    form.getForm().findField("update").setValue(true);
                     form.submit({
                     url: <%=q(bean.getResultsUri())%>,
                         method: 'GET'

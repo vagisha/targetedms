@@ -127,18 +127,22 @@ public class ComparisonChartInputMaker
         }
         else
         {
-            Map<Integer, String> sampleFileReplicateMap = getSampleFileReplicateMap();
+            // REPLICATE COMPARISON
+            Map<Integer, Replicate> sampleFileReplicateMap = getSampleFileReplicateMap();
 
             Map<String, List<PrecursorChromInfoLitePlus>> datasetMap = new HashMap<>();
+
+            Map<String, Integer> categoryLabelToSampleFileId = new HashMap<>();
 
             for (PrecursorChromInfoLitePlus pciPlus : _pciPlusList)
             {
                 String categoryLabel = StringUtils.isBlank(_groupByAnnotationName) ?
-                        sampleFileReplicateMap.get(pciPlus.getSampleFileId()) :
+                        sampleFileReplicateMap.get(pciPlus.getSampleFileId()).getName() :
                         sampleFileAnnotMap.get(pciPlus.getSampleFileId());
                 if (categoryLabel == null)
                     continue;
 
+                categoryLabelToSampleFileId.put(categoryLabel, pciPlus.getSampleFileId());
 
                 List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.get(categoryLabel);
                 if (categoryPciList == null)
@@ -153,7 +157,20 @@ public class ComparisonChartInputMaker
 
             for (String categoryLabel : datasetMap.keySet())
             {
-                ComparisonDataset.ComparisonCategoryItem categoryDataset = new ComparisonDataset.ComparisonCategoryItem(new ComparisonCategory.ReplicateCategory(categoryLabel));
+                ComparisonCategory.ReplicateCategory replicateCategory = null;
+                if(StringUtils.isBlank(_groupByAnnotationName))
+                {
+                    // Display replicates in document order (replicate.getId()) if we are not grouping by annotations.
+                    Integer sampleFileId = categoryLabelToSampleFileId.get(categoryLabel);
+                    Replicate replicate = sampleFileReplicateMap.get(sampleFileId);
+                    replicateCategory = new ComparisonCategory.ReplicateCategory(categoryLabel, String.valueOf(replicate.getId()));
+                }
+                else
+                {
+                    replicateCategory = new ComparisonCategory.ReplicateCategory(categoryLabel);
+                }
+
+                ComparisonDataset.ComparisonCategoryItem categoryDataset = new ComparisonDataset.ComparisonCategoryItem(replicateCategory);
                 categoryDataset.setData(seriesItemMaker, datasetMap.get(categoryLabel), _cvValues, _chartType);
                 dataset.addCategory(categoryDataset);
             }
@@ -191,19 +208,19 @@ public class ComparisonChartInputMaker
         return listToKeep;
     }
 
-    private Map<Integer, String> getSampleFileReplicateMap()
+    private Map<Integer, Replicate> getSampleFileReplicateMap()
     {
-        Map<Integer, String> sampleFileReplicateMap = new HashMap<>();
+        Map<Integer, Replicate> sampleFileReplicateMap = new HashMap<>();
         List<SampleFile> sampleFiles = ReplicateManager.getSampleFilesForRun(_runId);
         List<Replicate> replicates = ReplicateManager.getReplicatesForRun(_runId);
-        Map<Integer, String> replicateNameMap = new HashMap<>();
+        Map<Integer, Replicate> replicateMap = new HashMap<>();
         for(Replicate replicate: replicates)
         {
-            replicateNameMap.put(replicate.getId(), replicate.getName());
+            replicateMap.put(replicate.getId(), replicate);
         }
         for(SampleFile sFile: sampleFiles)
         {
-            sampleFileReplicateMap.put(sFile.getId(), replicateNameMap.get(sFile.getReplicateId()));
+            sampleFileReplicateMap.put(sFile.getId(), replicateMap.get(sFile.getReplicateId()));
         }
         return sampleFileReplicateMap;
     }

@@ -38,7 +38,7 @@
                 showViewingOptions: true,
                 showOptionsTable: true,
                 showSequenceInfo: true,
-                labelImmoniumIons: true,
+                labelImmoniumIons: false,
                 labelPrecursorPeak: true,
                 labelReporters: false,
 				tooltipZIndex: null,

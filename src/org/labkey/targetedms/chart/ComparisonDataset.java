@@ -94,7 +94,7 @@ public class ComparisonDataset
         {
             for(ComparisonCategoryItem categoryDataset: _categoryItemMap.values())
             {
-                if(!categoryDataset.getCategoryLabel().matches("-?\\d+(\\.\\d+)?"))  //match a number with optional '-' and decimal.)
+                if(!categoryDataset.getSortingLabel().matches("-?\\d+(\\.\\d+)?")) //match a number with optional '-' and decimal.)
                 {
                     _numericSort = false;
                     break;
@@ -112,9 +112,9 @@ public class ComparisonDataset
                 else
                 {
                     if (_numericSort)
-                        return Float.valueOf(o1.getCategoryLabel()).compareTo(Float.valueOf(o2.getCategoryLabel()));
+                        return Float.valueOf(o1.getSortingLabel()).compareTo(Float.valueOf(o2.getSortingLabel()));
                     else
-                        return o1.getCategoryLabel().compareTo(o2.getCategoryLabel());
+                        return o1.getSortingLabel().compareTo(o2.getSortingLabel());
                 }
             }
         });
@@ -209,6 +209,11 @@ public class ComparisonDataset
         public String getCategoryLabel()
         {
             return _category.getCategoryLabel();
+        }
+
+        public String getSortingLabel()
+        {
+            return _category.getSortingLabel();
         }
 
         public ComparisonCategory getCategory()
@@ -632,9 +637,9 @@ public class ComparisonDataset
                 SummaryStatistics stats = new SummaryStatistics();
                 for(PrecursorChromInfoLitePlus chromInfo: pciPlusList)
                 {
-                    if(chromInfo.getTotalArea() == null)
+                    if(getValue(chromInfo) == null)
                         continue;
-                    stats.addValue(chromInfo.getTotalArea());
+                    stats.addValue(getValue(chromInfo));
                 }
 
                 value = stats.getMean();

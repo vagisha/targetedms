@@ -947,6 +947,7 @@ public class TargetedMSController extends SpringActionController
         private boolean _splitGraph = false;
         private String _annotationsFilter;
         private String _replicatesFilter;
+        private boolean _update;
 
         public ChromatogramForm()
         {
@@ -1067,6 +1068,16 @@ public class TargetedMSController extends SpringActionController
         {
             _splitGraph = splitGraph;
         }
+
+        public boolean isUpdate()
+        {
+            return _update;
+        }
+
+        public void setUpdate(boolean update)
+        {
+            _update = update;
+        }
     }
 
 
@@ -1118,7 +1129,12 @@ public class TargetedMSController extends SpringActionController
 
             // Precursor and transition chromatograms. One row per replicate
             VBox chromatogramsBox = new VBox();
-            bean.setCanBeSplitView(PrecursorManager.canBeSplitView(form.getId()));
+            boolean canBeSplitView = PrecursorManager.canBeSplitView(form.getId());
+            bean.setCanBeSplitView(canBeSplitView);
+            if(canBeSplitView && !form.isUpdate())
+            {
+                form.setSplitGraph(true);
+            }
             PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),form, errors);
             JspView<PeptideChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
 
@@ -1915,6 +1931,12 @@ public class TargetedMSController extends SpringActionController
     @NotNull
     private TargetedMSRun validateRun(int runId)
     {
+        return validateRun(runId, true);
+    }
+
+    @NotNull
+    private TargetedMSRun validateRun(int runId, boolean redirect)
+    {
         Container c = getContainer();
         TargetedMSRun run = TargetedMSManager.getRun(runId);
 
@@ -1931,9 +1953,16 @@ public class TargetedMSController extends SpringActionController
 
         if (null == container || !container.equals(c))
         {
+            if(redirect)
+            {
             ActionURL url = getViewContext().getActionURL().clone();
             url.setContainer(run.getContainer());
             throw new RedirectException(url);
+        }
+            else
+            {
+                throw new NotFoundException("Run " + runId +" does not exist in folder " + c.getPath());
+            }
         }
 
         return run;
@@ -4498,6 +4527,4 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // END Actions to create, delete, edit and view experiment annotations.
     // ------------------------------------------------------------------------
-
-
 }

@@ -144,10 +144,8 @@ class ChromatogramChartMaker
 
         if(minRt != null && maxRt != null)
         {
-            double range = maxRt - minRt;
-            double margin = range * 3  * 0.05;
-            chart.getXYPlot().getDomainAxis().setLowerBound(minRt  - margin);
-            chart.getXYPlot().getDomainAxis().setUpperBound(maxRt  + margin);
+            chart.getXYPlot().getDomainAxis().setLowerBound(minRt);
+            chart.getXYPlot().getDomainAxis().setUpperBound(maxRt);
         }
 
         chart.getTitle().setFont(TITLE_FONT);
