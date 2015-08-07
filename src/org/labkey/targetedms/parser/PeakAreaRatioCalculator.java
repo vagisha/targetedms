@@ -402,8 +402,16 @@ public class PeakAreaRatioCalculator
 
     private static String getTransitionKey(Transition transition, Precursor precursor)
     {
-        String fragment = transition.getFragmentType() +
-                          (transition.isPrecursorIon() ? transition.getMassIndex() : transition.getFragmentOrdinal());
+        String fragment;
+        if(transition instanceof MoleculeTransition)
+        {
+            fragment = ((MoleculeTransition) transition).getMassMonoisotopic().toString();
+        }
+        else
+        {
+            fragment = transition.getFragmentType()
+                + (transition.isPrecursorIon() ? transition.getMassIndex() : transition.getFragmentOrdinal());
+        }
 
         int fragmentCharge = transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge();
         StringBuilder key = new StringBuilder();
@@ -424,8 +432,15 @@ public class PeakAreaRatioCalculator
     private static String getPrecursorKey(Peptide peptide, Precursor precursor)
     {
         StringBuilder key = new StringBuilder();
-        key.append(peptide.getPeptideModifiedSequence())
-       .append("_")
+        if(peptide instanceof Molecule)
+        {
+            key.append(((Molecule) peptide).getMassMonoisotopic());
+        }
+        else
+        {
+            key.append(peptide.getPeptideModifiedSequence());
+        }
+        key.append("_")
        .append(precursor.getCharge());
        //.append("_")
        //.append(precursor.getIsotopeLabelId());
