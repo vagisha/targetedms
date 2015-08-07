@@ -23,13 +23,16 @@ import org.labkey.api.exp.ExperimentRunListView;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.permissions.InsertPermission;
+import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
-import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.ExperimentAnnotations;
+
+import static org.labkey.targetedms.TargetedMSController.getExcludeSubfoldersInExperimentURL;
+import static org.labkey.targetedms.TargetedMSController.getIncludeSubfoldersInExperimentURL;
 
 /**
  * User: vsharma
@@ -88,8 +91,21 @@ public class TargetedMsRunListView extends ExperimentRunListView
     {
         super.populateButtonBar(view, bar);
 
+        addLinkVersionButton(view, bar);
+
         if(_viewType == ViewType.EDITABLE_EXPERIMENT_VIEW)
             addExperimentDetailsViewButtons(bar);
+    }
+
+    private void addLinkVersionButton(DataView view, ButtonBar bar)
+    {
+//        view.addClientDependency();//pass in name of the js file
+        ActionButton versionButton = new ActionButton("Link Versions");
+        versionButton.setActionType(ActionButton.Action.SCRIPT);
+        versionButton.setRequiresSelection(true, 2, null);
+        versionButton.setDisplayPermission(UpdatePermission.class);
+//        versionButton.setScript();//lauches the dialog
+        bar.add(versionButton);
     }
 
     private void addExperimentDetailsViewButtons(ButtonBar bar)
@@ -99,8 +115,8 @@ public class TargetedMsRunListView extends ExperimentRunListView
 
         String buttonText = _expAnnotations.isIncludeSubfolders() ? "Exclude Subfolders" : "Include Subfolders";
         ActionURL url = _expAnnotations.isIncludeSubfolders() ?
-                TargetedMSController.getExcludeSubfoldersInExperimentURL(_expAnnotations.getId(), getViewContext().getContainer(), getReturnURL()) :
-                TargetedMSController.getIncludeSubfoldersInExperimentURL(_expAnnotations.getId(), getViewContext().getContainer(), getReturnURL());
+                getExcludeSubfoldersInExperimentURL(_expAnnotations.getId(), getViewContext().getContainer(), getReturnURL()) :
+                getIncludeSubfoldersInExperimentURL(_expAnnotations.getId(), getViewContext().getContainer(), getReturnURL());
 
         ActionButton includeSubfoldersBtn = new ActionButton(buttonText, url);
         includeSubfoldersBtn.setDisplayPermission(InsertPermission.class);
