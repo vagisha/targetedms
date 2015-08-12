@@ -28,8 +28,8 @@ import org.openqa.selenium.WebElement;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSLibraryTest extends TargetedMSTest
 {
-    private static final String SKY_FILE1 = "Stergachis-SupplementaryData_2_a.zip";
-    private static final String SKY_FILE2 = "Stergachis-SupplementaryData_2_b.zip";
+    private static final String SKY_FILE1 = "Stergachis-SupplementaryData_2_a.sky.zip";
+    private static final String SKY_FILE2 = "Stergachis-SupplementaryData_2_b.sky.zip";
 
     public TargetedMSLibraryTest()
     {
@@ -63,10 +63,10 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         log("Verifying expected protein/peptide counts in library revision 1");
 
         // Download link, library statistics and revision in the ChromatogramLibraryDownloadWebpart
-        verifyChromatogramLibraryDownloadWebPart(3, 38, 280, 1);
+        verifyChromatogramLibraryDownloadWebPart(4, 49, 313, 1);
 
         // Verify proteins in the library
-        assertTextPresent("CTCF", "MAX", "TAF11");
+        assertTextPresent("CTCF", "MAX", "TAF11", "iRT-C18 Standard Peptides");
 
         // Verify the the protein MAX is present in this revision of the library
         assertElementPresent(Locator.xpath("//tr[(td[1]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
@@ -81,13 +81,16 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         log("Verifying expected protein/peptide counts in library revision 2");
 
         // Download link, library statistics and revision in the ChromatogramLibraryDownloadWebpart
-        verifyChromatogramLibraryDownloadWebPart(5, 68, 495, 2);
+        verifyChromatogramLibraryDownloadWebPart(6, 79, 528, 2);
 
         // Verify proteins in the library
-        assertTextPresent("CTCF", "GATA3", "MAX", "TAF11", "TP53");
+        assertTextPresent("CTCF", "GATA3", "MAX", "TAF11", "TP53", "iRT-C18 Standard Peptides");
 
         //check MAX is from Stergachis-SupplementaryData_2_a.zip
         assertElementPresent(Locator.xpath("//tr[(td[1]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
+
+        // "iRT-C18 Standard Peptides" should now be from Stergachis-SupplementaryData_2_b.sky.zip
+        assertElementPresent(Locator.xpath("//tr[(td[1]='" + SKY_FILE2 + "') and (td[span[a[text()='iRT-C18 Standard Peptides']]])]"));
 
         verifyAndResolveConflicts();
     }
@@ -131,7 +134,8 @@ public class TargetedMSLibraryTest extends TargetedMSTest
     @LogMethod
     private void verifyAndResolveConflicts()
     {
-        log("Verifying that expexted conflicts exist");
+        log("Verifying that expected conflicts exist");
+        assertElementPresent(Locator.xpath("//div[contains(text(), \"There are 1 conflicting proteins in this folder.\") and contains(@style, \"color:red; font-weight:bold\")]"));
         assertElementPresent(Locator.xpath("//tr[td[div[a[contains(@style,'color:red; text-decoration:underline;') and text()='Resolve conflicts']]]]"));
         clickAndWait(Locator.linkContainingText("Resolve conflicts"));
         assertTextPresent(
@@ -148,7 +152,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         log("Verifying expected protein/peptide counts in library revision 3");
 
         // Download link, library statistics and revision in the ChromatogramLibraryDownloadWebpart
-        verifyChromatogramLibraryDownloadWebPart(5, 70, 506, 3);
+        verifyChromatogramLibraryDownloadWebPart(6, 81, 539, 3);
 
         assertTextPresent("Archived Revisions");
 

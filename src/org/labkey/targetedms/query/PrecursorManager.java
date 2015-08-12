@@ -15,6 +15,7 @@
 
 package org.labkey.targetedms.query;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
@@ -37,6 +38,7 @@ import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -457,19 +459,24 @@ public class PrecursorManager
         if(precursorIds == null || precursorIds.length == 0)
             return;
 
-        StringBuilder precursorIdsString = new StringBuilder();
-        for(int id: precursorIds)
+        List<Integer> precursorIdList = new ArrayList<>(precursorIds.length);
+        for(int i = 0; i < precursorIds.length; i++)
         {
-            precursorIdsString.append(",").append(id);
+            precursorIdList.add(precursorIds[i]);
         }
-        if(precursorIdsString.length() > 0)
-            precursorIdsString.deleteCharAt(0);
+       updateRepresentativeStatus(precursorIdList, representativeState);
+    }
+
+    public static void updateRepresentativeStatus(List<Integer> precursorIds, RepresentativeDataState representativeState)
+    {
+        if(precursorIds == null || precursorIds.size() == 0)
+            return;
 
         SQLFragment sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
         sql.append(" SET RepresentativeDataState = ? ");
         sql.add(representativeState.ordinal());
         sql.append(" WHERE "+TargetedMSManager.getTableInfoPrecursor()+".Id IN (");
-        sql.append(precursorIdsString.toString());
+        sql.append(StringUtils.join(precursorIds, ","));
         sql.append(")");
 
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
@@ -483,13 +490,18 @@ public class PrecursorManager
         if(precursorIds == null || precursorIds.length == 0)
             return;
 
-        StringBuilder precursorIdsString = new StringBuilder();
-        for(int id: precursorIds)
+        List<Integer> precursorIdList = new ArrayList<>(precursorIds.length);
+        for(int i = 0; i < precursorIds.length; i++)
         {
-            precursorIdsString.append(",").append(id);
+            precursorIdList.add(precursorIds[i]);
         }
-        if(precursorIdsString.length() > 0)
-            precursorIdsString.deleteCharAt(0);
+        updateStatusToDeprecatedOrNotRepresentative(precursorIdList);
+    }
+
+    public static void updateStatusToDeprecatedOrNotRepresentative(List<Integer> precursorIds)
+    {
+        if(precursorIds == null || precursorIds.size() == 0)
+            return;
 
         SQLFragment sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
         sql.append(" SET RepresentativeDataState = ");
@@ -498,7 +510,7 @@ public class PrecursorManager
         sql.append(" ELSE "+RepresentativeDataState.Deprecated.ordinal());
         sql.append(" END");
         sql.append(" WHERE "+TargetedMSManager.getTableInfoPrecursor()+".Id IN (");
-        sql.append(precursorIdsString.toString());
+        sql.append(StringUtils.join(precursorIds, ","));
         sql.append(")");
 
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);

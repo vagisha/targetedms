@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
@@ -66,20 +67,26 @@ public class PeptideGroupManager
     {
         if(peptideGroupIds == null || peptideGroupIds.length == 0)
             return;
-
-        StringBuilder peptideGroupIdsString = new StringBuilder();
-        for(int id: peptideGroupIds)
+        List<Integer> peptideGroupIdList = new ArrayList<>(peptideGroupIds.length);
+        for(int i = 0; i < peptideGroupIds.length; i++)
         {
-            peptideGroupIdsString.append(",").append(id);
+            peptideGroupIdList.add(peptideGroupIds[i]);
         }
-        if(peptideGroupIdsString.length() > 0)
-            peptideGroupIdsString.deleteCharAt(0);
+        updateRepresentativeStatus(peptideGroupIdList, representativeState);
+    }
+
+    public static void updateRepresentativeStatus(List<Integer> peptideGroupIds, RepresentativeDataState representativeState)
+    {
+        if(peptideGroupIds == null || peptideGroupIds.size() == 0)
+            return;
+
+        String peptideGroupIdsString = StringUtils.join(peptideGroupIds, ",");
 
         SQLFragment sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPeptideGroup());
         sql.append(" SET RepresentativeDataState = ? ");
         sql.add(representativeState.ordinal());
         sql.append(" WHERE "+TargetedMSManager.getTableInfoPeptideGroup()+".Id IN (");
-        sql.append(peptideGroupIdsString.toString());
+        sql.append(peptideGroupIdsString);
         sql.append(")");
 
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
@@ -88,7 +95,7 @@ public class PeptideGroupManager
         updatePrecursorRepresentativeState(peptideGroupIdsString);
     }
 
-    private static void updatePrecursorRepresentativeState(StringBuilder peptideGroupIdsString)
+    private static void updatePrecursorRepresentativeState(String peptideGroupIdsString)
     {
         SQLFragment sql;
         sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
@@ -98,7 +105,7 @@ public class PeptideGroupManager
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" WHERE pg.Id IN (");
-        sql.append(peptideGroupIdsString.toString());
+        sql.append(peptideGroupIdsString);
         sql.append(")");
         sql.append(" AND pg.Id = pep.peptideGroupId ");
         sql.append(" AND pep.Id = "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId");
@@ -112,14 +119,21 @@ public class PeptideGroupManager
     {
         if(peptideGroupIds == null || peptideGroupIds.length == 0)
             return;
-
-        StringBuilder peptideGroupIdsString = new StringBuilder();
-        for(int id: peptideGroupIds)
+        List<Integer> peptideGroupIdList = new ArrayList<>(peptideGroupIds.length);
+        for(int i = 0; i < peptideGroupIds.length; i++)
         {
-            peptideGroupIdsString.append(",").append(id);
+            peptideGroupIdList.add(peptideGroupIds[i]);
         }
-        if(peptideGroupIdsString.length() > 0)
-            peptideGroupIdsString.deleteCharAt(0);
+
+        updateStatusToDeprecatedOrNotRepresentative(peptideGroupIdList);
+    }
+
+    public static void updateStatusToDeprecatedOrNotRepresentative(List<Integer> peptideGroupIds)
+    {
+        if(peptideGroupIds == null || peptideGroupIds.size() == 0)
+            return;
+
+        String peptideGroupIdsString = StringUtils.join(peptideGroupIds, ",");
 
         SQLFragment sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPeptideGroup());
         sql.append(" SET RepresentativeDataState = ");
@@ -128,7 +142,7 @@ public class PeptideGroupManager
         sql.append(" ELSE "+RepresentativeDataState.Deprecated.ordinal());
         sql.append(" END");
         sql.append(" WHERE "+TargetedMSManager.getTableInfoPeptideGroup()+".Id IN (");
-        sql.append(peptideGroupIdsString.toString());
+        sql.append(peptideGroupIdsString);
         sql.append(")");
 
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
