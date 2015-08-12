@@ -27,6 +27,7 @@ import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.ExperimentAnnotations;
@@ -59,6 +60,9 @@ public class TargetedMsRunListView extends ExperimentRunListView
         super(schema, settings, TargetedMSModule.EXP_RUN_TYPE);
         setShowAddToRunGroupButton(false);
         setShowMoveRunsButton(false);
+        addClientDependency(ClientDependency.fromPath("Ext4"));
+        addClientDependency(ClientDependency.fromPath("clientapi/ext4"));
+        addClientDependency(ClientDependency.fromPath("TargetedMS/js/LinkVersionsDialog.js"));
     }
 
     private void setExpAnnotations(ExperimentAnnotations expAnnotations)
@@ -99,12 +103,10 @@ public class TargetedMsRunListView extends ExperimentRunListView
 
     private void addLinkVersionButton(DataView view, ButtonBar bar)
     {
-//        view.addClientDependency();//pass in name of the js file
         ActionButton versionButton = new ActionButton("Link Versions");
-        versionButton.setActionType(ActionButton.Action.SCRIPT);
         versionButton.setRequiresSelection(true, 2, null);
+        versionButton.setScript("LABKEY.targetedms.LinkVersionsDialog.showLinkVersionDialog()");
         versionButton.setDisplayPermission(UpdatePermission.class);
-//        versionButton.setScript();//lauches the dialog
         bar.add(versionButton);
     }
 
