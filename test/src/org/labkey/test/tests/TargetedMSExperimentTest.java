@@ -220,7 +220,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //Spot check some values.
         assertTextPresent("Protein Search Results", "Targeted MS Peptides", "LTSLNVVAGSDLR", "TNNPETLVALR",
                 "GVNLPGTDVDLPALSEK", "TANDVLTIR", "GDLGIEIPAPEVLAVQK", "EPVSDWTDDVEAR");
-        click(Locator.imageWithSrc("plus.gif", true));
+        click(Locator.tag("img").withAttributeContaining("src", "plus.gif"));
         assertTextPresent("I from 71787-73289, Verified ORF, \"Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cyc...");
     }
 }
