@@ -54,18 +54,26 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
 
     initComponent : function()
     {
-        LABKEY.Query.selectRows({
-            schemaName: 'targetedms',
-            queryName: 'targetedmsruns',
-            columns: ['File/FileName', 'Created', 'CreatedBy/DisplayName', 'File/PeptideGroupCount', 'File/PrecursorCount', 'File/TransitionCount'],
+        Ext4.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('targetedms', 'linkVersions.api', null, {selectedRowIds: this.selectedRowIds}),
             scope: this,
-            filterArray: [LABKEY.Filter.create('rowId', this.selectedRowIds.join(';'), LABKEY.Filter.Types.IN)],
-            success: this.getLinkedDocuments,
-            failure: this.failureHandler
+            success: function(response) {
+                //console.log("url", url);
+                console.log(Ext4.decode(response.responseText));
+
+                LABKEY.Query.selectRows({
+                    schemaName: 'targetedms',
+                    queryName: 'targetedmsruns',
+                    columns: ['File/FileName', 'Created', 'CreatedBy/DisplayName', 'File/PeptideGroupCount', 'File/PrecursorCount', 'File/TransitionCount'],
+                    scope: this,
+                    filterArray: [LABKEY.Filter.create('rowId', this.selectedRowIds.join(';'), LABKEY.Filter.Types.IN)],
+                    success: this.getLinkedDocuments,
+                    failure: this.failureHandler
+                });
+            }
         });
 
         this.callParent();
-
     },
 
     getLinkedDocuments : function(data)

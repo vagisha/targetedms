@@ -75,14 +75,17 @@ import org.labkey.api.ms2.MS2Urls;
 import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
 import org.labkey.api.protein.ProteinService;
+import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryParam;
+import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
 import org.labkey.api.security.RequiresLogin;
+import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.RequiresPermissionClass;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
@@ -185,15 +188,17 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.labkey.targetedms.TargetedMSModule.EXPERIMENT_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.FolderType;
 import static org.labkey.targetedms.TargetedMSModule.LIBRARY_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.PROTEIN_LIBRARY_FOLDER_WEB_PARTS;
-import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
 import static org.labkey.targetedms.TargetedMSModule.QC_FOLDER_WEB_PARTS;
+import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
 
 public class TargetedMSController extends SpringActionController
 {
@@ -4471,6 +4476,65 @@ public class TargetedMSController extends SpringActionController
         public ExperimentAnnotations lookupExperiment()
         {
             return getId() == null ? null : ExperimentAnnotationsManager.get(getId());
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class LinkVersionsAction extends ApiAction<SelectedRowIdsForm>
+    {
+        @Override
+        public Object execute(SelectedRowIdsForm selectedRowIdsForm, BindException errors) throws Exception
+        {
+            List<Integer> linkedRowIds = new ArrayList<>();
+
+            //get selectedRowIds params
+            final Integer[] selectedRowIdParams = selectedRowIdsForm.getSelectedRowIds();
+
+            //create a filter for non-null ReplacedByRun value
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ReplacedByRun"), null, CompareType.NONBLANK);
+
+            //get targetedmsruns query schema
+            QuerySchema targetedMSRunsQuerySchema = DefaultSchema.get(getUser(), getContainer()).getSchema(TargetedMSSchema.getSchema().getName());
+
+            //create a set of column names with RowId and ReplacedByRun, a pair representing a parent child relationship between any two documents
+            Set<String> idColumnNames = new LinkedHashSet<>();
+            idColumnNames.add("rowId"); //RowId is parent or original document's rowid
+            idColumnNames.add("replacedByRun");//ReplacedByRun is child or modified document's rowid
+
+            //get values from targetedmsruns query table
+            TableSelector selector = new TableSelector(targetedMSRunsQuerySchema.getTable(TargetedMSSchema.TABLE_TARGETED_MS_RUNS), idColumnNames, filter, null);
+
+            //get RowId and ReplacedByRun key value pairs
+            final Map<Integer, Integer> rowIdReplacedByValueMap = selector.getValueMap();
+
+            //collect all the rowIds - for selected rows and its corresponding ReplacedByRun
+            for(int i = 0; i < selectedRowIdParams.length; i++)
+            {
+                Integer replacedBy = rowIdReplacedByValueMap.get(selectedRowIdParams[i]);
+                if(replacedBy != null)
+                    linkedRowIds.add(replacedBy);
+                linkedRowIds.add(selectedRowIdParams[i]);
+            }
+
+            //send selected rowIds and its links to the client
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            response.put("selectedRowIds", linkedRowIds.toArray());
+            return response;
+        }
+    }
+
+    public static class SelectedRowIdsForm
+    {
+        Integer[] selectedRowIds;
+
+        public Integer[] getSelectedRowIds()
+        {
+            return selectedRowIds;
+        }
+
+        public void setSelectedRowIds(Integer[] selectedRowIds)
+        {
+            this.selectedRowIds = selectedRowIds;
         }
     }
 
