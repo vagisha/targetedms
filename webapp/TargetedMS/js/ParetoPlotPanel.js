@@ -147,8 +147,14 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         barChart.render();
     },
 
+
     plotBarClickEvent : function(event, row) {
-        window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, {startDate: row.trainingStart, endDate: row.trainingEnd, metric: row.metricName});
+        var params = {startDate: row.trainingStart, metric: row.metricName};
+        if (row.referenceEnd)
+        {
+            params.endDate = row.referenceEnd;
+        }
+        window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, params);
     }
 
 });
