@@ -58,16 +58,15 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
             url: LABKEY.ActionURL.buildURL('targetedms', 'linkVersions.api', null, {selectedRowIds: this.selectedRowIds}),
             scope: this,
             success: function(response) {
-                //console.log("url", url);
                 console.log(Ext4.decode(response.responseText));
 
                 LABKEY.Query.selectRows({
                     schemaName: 'targetedms',
                     queryName: 'targetedmsruns',
-                    columns: ['File/FileName', 'Created', 'CreatedBy/DisplayName', 'File/PeptideGroupCount', 'File/PrecursorCount', 'File/TransitionCount'],
+                    columns: this.getLinkedDocumentColumnNames(),
                     scope: this,
                     filterArray: [LABKEY.Filter.create('rowId', this.selectedRowIds.join(';'), LABKEY.Filter.Types.IN)],
-                    success: this.getLinkedDocuments,
+                    success: this.showLinkedDocumentWindow,
                     failure: this.failureHandler
                 });
             }
@@ -76,48 +75,94 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
         this.callParent();
     },
 
-    getLinkedDocuments : function(data)
-    {
-        var dataStore = Ext4.create('Ext.data.Store', {
-            fields:['File/FileName',
-            'Created',
-            'CreatedBy/DisplayName',
-            'File/PeptideGroupCount',
-            'File/PrecursorCount',
-            'File/TransitionCount'],
-            data: data
-        });
+    getLinkedDocumentGridCoumns : function(data) {
+        return [
+            {
+                xtype: 'actioncolumn',
+                text: 'Remove',
+                width: 67,
+                align: 'center',
+                menuDisabled: true,
+                sortable: false,
+                draggable: false,
+                icon: LABKEY.contextPath + '/_images/delete.png',
+                hidden: Ext.isDefined(data) ? data.rows.length < 3 : true,
+                handler: function (grid, rowIndex, colIndex, item, e, record) {
+                    var store = grid.getStore();
+                    store.remove(record);
 
-        var grid = Ext4.create('Ext.grid.Panel', {
-            store: dataStore,
-            forcefit: true,
-            columns: [
-                {
-                    xtype: 'actioncolumn',
-                    title: 'Remove',
-                    width: 25,
-                    icon: LABKEY.contextPath + '/_images/delete.png',
-                    tooltip: 'Delete',
-                    handler: function(grid, rowIndex, colIndex) {
-                        console.log('Delete!');
+                    // only allow removing a row if there are > 2 items in the store
+                    if (store.getCount() < 3) {
+                        grid.getHeaderAtIndex(colIndex).hide();
                     }
-                },
-                // These 'dataIndex' look into the model
-                {text: 'Document Name', dataIndex: 'File/FileName'},
-                {text: 'Imported', dataIndex:'Created'},
-                {text: 'Imported By', dataIndex:'CreatedBy/DisplayName'},
-                //{text: 'Note', }
-                {text: 'Proteins', dataIndex: 'File/PeptideGroupCount'},
-                {text: 'Precursors', dataIndex: 'File/PrecursorCount'},
-                {text: 'Transitions', dataIndex: 'File/TransitionCount'}
-            ]
-        });
+                }
+            },
+            // These 'dataIndex' look into the model
+            {text: 'Document Name', dataIndex: 'File/FileName', flex: 3, menuDisabled: true, sortable: false},
+            {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y', width: 90, menuDisabled: true, sortable: false},
+            {text: 'Imported By', dataIndex: 'CreatedBy/DisplayName', width: 100, menuDisabled: true, sortable: false},
+            {text: 'Note', dataIndex: 'Flag/Comment', width: 200, menuDisabled: true, sortable: false},
+            {text: 'Proteins', dataIndex: 'File/PeptideGroupCount', width: 67, menuDisabled: false, sortable: false, align: 'right'},
+            {text: 'Precursors', dataIndex: 'File/PrecursorCount', width: 85, menuDisabled: true, sortable: false, align: 'right'},
+            {text: 'Transitions', dataIndex: 'File/TransitionCount', width: 87, menuDisabled: true, sortable: false, align: 'right'}
+        ];
+    },
 
+    getLinkedDocumentColumnNames : function() {
+        var fields = Ext4.Array.pluck(this.getLinkedDocumentGridCoumns(), 'dataIndex');
+        fields.shift(); // remove the first element as it will be undefined
+        return fields;
+    },
+
+    getLinkedDocumentGrid : function(data) {
+        return Ext4.create('Ext.grid.Panel', {
+            padding: 15,
+            width: 950,
+            maxHeight: 300,
+            autoScoll: true,
+            store: Ext4.create('Ext.data.Store', {
+                fields: this.getLinkedDocumentColumnNames(),
+                data: data
+            }),
+            viewConfig: {
+                plugins: {
+                    ptype: 'gridviewdragdrop',
+                    dragText: 'Drag and drop to reorder.'
+                }
+            },
+            columns: this.getLinkedDocumentGridCoumns(data)
+        });
+    },
+
+    showLinkedDocumentWindow : function(data)
+    {
         var window = Ext4.create('Ext.window.Window', {
+            title: 'Link Versions',
+            border: false,
             autoShow: true,
-            height: 400,
-            width: 1000,
-            items: [grid]
+            items: [this.getLinkedDocumentGrid(data)],
+            dockedItems: [{
+                xtype: 'toolbar',
+                dock: 'bottom',
+                ui: 'footer',
+                padding: '0 10px 15px 15px',
+                items: [{
+                    xtype: 'box',
+                    html: 'Drag and drop the documents to reorder the chain.'
+                },'->',{
+                    text: 'Save',
+                    width: 75,
+                    handler: function() {
+                        console.log('Save!');
+                    }
+                },{
+                    text: 'Cancel',
+                    width: 75,
+                    handler: function() {
+                        window.close();
+                    }
+                }]
+            }]
         });
     }
 });
