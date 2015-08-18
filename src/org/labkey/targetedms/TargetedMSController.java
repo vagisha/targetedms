@@ -184,6 +184,7 @@ import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
@@ -4482,7 +4483,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class LinkVersionsAction extends ApiAction<SelectedRowIdsForm>
+    public class GetLinkVersionsAction extends ApiAction<SelectedRowIdsForm>
     {
         @Override
         public Object execute(SelectedRowIdsForm selectedRowIdsForm, BindException errors) throws Exception
@@ -4510,17 +4511,17 @@ public class TargetedMSController extends SpringActionController
             final Map<Integer, Integer> rowIdReplacedByValueMap = selector.getValueMap();
 
             //get runs that are already chained (represented by replacedByRun ids) with the selected runs
+            linkedRowIds.addAll(Arrays.asList(selectedRowIdParams));
             for(int i = 0; i < selectedRowIdParams.length; i++)
             {
                 Integer replacedBy = rowIdReplacedByValueMap.get(selectedRowIdParams[i]);
-                if(replacedBy != null)
+                if(replacedBy != null && !linkedRowIds.contains(replacedBy))
                     linkedRowIds.add(replacedBy);
-                linkedRowIds.add(selectedRowIdParams[i]);
             }
 
             //send selected rowIds and its links to the client
             ApiSimpleResponse response = new ApiSimpleResponse();
-            response.put("selectedRowIds", linkedRowIds.toArray());
+            response.put("linkedRowIds", linkedRowIds.toArray());
             return response;
         }
     }
@@ -4544,38 +4545,34 @@ public class TargetedMSController extends SpringActionController
     public class SaveLinkVersionsAction extends ApiAction<ChainedVersions>
     {
         @Override
-        public Object execute(ChainedVersions chainedVersions, BindException errors) throws Exception
+        public void validateForm(ChainedVersions form, Errors errors)
         {
-            JSONObject json = chainedVersions.getJsonObject();
+            // verify that the run rowId is valid and matches an existing run
+            for (Integer rowId : form.getRuns().keySet())
+            {
+                if (rowId == null || ExperimentService.get().getExpRun(rowId) == null)
+                {
+                    errors.reject(ERROR_MSG, "No run found for id " + rowId);
+                }
+            }
+        }
 
+        @Override
+        public Object execute(ChainedVersions form, BindException errors) throws Exception
+        {
             DbScope scope = ExperimentService.get().getSchema().getScope();
             try (DbScope.Transaction transaction = scope.ensureTransaction())
             {
-                List<Map<String, Object>> list = json.getJSONArray("runs").toMapList();
-                for(int i = 0; i < list.size(); i++)
+                for (Map.Entry<Integer, Integer> entry : form.getRuns().entrySet())
                 {
-                    Map<String, Object> map = list.get(i);
-                    Integer rowId = (Integer) map.get("RowId");
-                    Integer replacedByRun = (Integer) map.get("ReplacedByRun");
-
-                    ExpRun run = ExperimentService.get().getExpRun(rowId);
-                    ExpRun replacedRun = ExperimentService.get().getExpRun(replacedByRun);
+                    ExpRun run = ExperimentService.get().getExpRun(entry.getKey());
+                    ExpRun replacedRun = entry.getValue() != null ? ExperimentService.get().getExpRun(entry.getValue()) : null;
 
                     run.setReplacedByRun(replacedRun);
                     run.save(getViewContext().getUser());
-
-//                    ExperimentService.get().auditRunEvent(getViewContext().getUser(), run.getBatch().getBatchProtocol(), run, null, "Run id " + run.getRowId() + " was replaced by run id " + replacedRun.getRowId());
-
-                        transaction.addCommitTask(new Runnable()
-                        {
-                            @Override
-                            public void run()
-                            {
-                                run.archiveDataFiles(getViewContext().getUser());
-                            }
-                        }, DbScope.CommitTaskOption.POSTCOMMIT);
-
+                    //ExperimentService.get().auditRunEvent(getViewContext().getUser(), run.getBatch().getBatchProtocol(), run, null, "Run id " + run.getRowId() + " was replaced by run id " + replacedRun.getRowId());
                 }
+
                 transaction.commit();
             }
 
@@ -4585,19 +4582,28 @@ public class TargetedMSController extends SpringActionController
 
     public static class ChainedVersions implements CustomApiForm
     {
-        protected JSONObject json;
+        private Map<Integer, Integer> _runs = new HashMap<>();
 
         public void bindProperties(Map<String,Object> properties)
         {
+            JSONObject json;
             if (properties instanceof JSONObject)
                 json = (JSONObject)properties;
             else
                 json = new JSONObject(properties);
+
+            List<Map<String, Object>> list = json.getJSONArray("runs").toMapList();
+            for (Map<String, Object> entry : list)
+            {
+                Integer rowId = (Integer) entry.get("RowId");
+                Integer replacedByRunId = (Integer) entry.get("ReplacedByRun");
+                _runs.put(rowId, replacedByRunId);
+            }
         }
 
-        public JSONObject getJsonObject()
+        public Map<Integer, Integer> getRuns()
         {
-            return json;
+            return _runs;
         }
     }
 

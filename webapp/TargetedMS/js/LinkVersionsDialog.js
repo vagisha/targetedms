@@ -54,11 +54,12 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
 
     initComponent : function()
     {
+        // query to get all runs associated with the selected runs, i.e. already in a linked chain with the selected runs
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('targetedms', 'linkVersions.api', null, {selectedRowIds: this.selectedRowIds}),
+            url: LABKEY.ActionURL.buildURL('targetedms', 'getLinkVersions.api', null, {selectedRowIds: this.selectedRowIds}),
             scope: this,
-            success: function(response) {
-                console.log(Ext4.decode(response.responseText));
+            success: LABKEY.Utils.getCallbackWrapper(function(response) {
+                this.selectedRowIds = response.linkedRowIds;
 
                 LABKEY.Query.selectRows({
                     schemaName: 'targetedms',
@@ -69,7 +70,7 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                     success: this.showLinkedDocumentWindow,
                     failure: this.failureHandler
                 });
-            }
+            }, this, false)
         });
 
         this.callParent();
@@ -123,6 +124,7 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
             autoScoll: true,
             store: Ext4.create('Ext.data.Store', {
                 fields: this.getLinkedDocumentColumnNames(),
+                sorters: [{property: 'Created', direction: 'ASC'}],
                 data: data
             }),
             viewConfig: {
@@ -137,7 +139,7 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
 
     showLinkedDocumentWindow : function(data)
     {
-        var window = Ext4.create('Ext.window.Window', {
+        var win = Ext4.create('Ext.window.Window', {
             title: 'Link Versions',
             border: false,
             autoShow: true,
@@ -155,31 +157,24 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                     width: 75,
                     scope: this,
                     handler: function() {
-                        this.saveLinkedDocumentVersions(window);
+                        this.saveLinkedDocumentVersions(win);
                     }
                 },{
                     text: 'Cancel',
                     width: 75,
                     handler: function() {
-                        window.close();
+                        win.close();
                     }
                 }]
             }]
         });
     },
 
-    saveLinkedDocumentVersions : function(window) {
+    saveLinkedDocumentVersions : function(win) {
 
-        var store = window.down('grid').getStore(),
+        var store = win.down('grid').getStore(),
             orderedRecords = store.getRange(),
             updateRows = [];
-
-        //sort asc. to identify "parent" document with the earliest date and time
-        orderedRecords.sort(function(d1, d2){
-            var date1 = new Date(d1.data.Created);
-            var date2 = new Date (d2.data.Created);
-            return date1 - date2;
-        });
 
         // traverse the ordered records to get replacedByRunIds, note: must have at least 2 records
         if (orderedRecords.length > 1) {
@@ -192,18 +187,21 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
         }
 
         if (updateRows.length > 0) {
-            console.log(updateRows);
+            win.getEl().mask('Saving...');
             LABKEY.Ajax.request({
                 url: LABKEY.ActionURL.buildURL('targetedms', 'saveLinkVersions.api'),
                 method: 'POST',
                 jsonData: {runs: updateRows},
                 headers: { 'Content-Type' : 'application/json' },
-                success: function(response) {
-                    //close the dialog
-                    window.close();
+                success: LABKEY.Utils.getCallbackWrapper(function(response) {
+                    //close the dialog and reload the page
+                    win.close();
                     window.location.reload();
-
-                }
+                }, this, false),
+                failure: LABKEY.Utils.getCallbackWrapper(function(response) {
+                    LABKEY.Utils.alert("Error", response.exception);
+                    win.getEl().unmask();
+                }, this, true)
             });
         }
     }
