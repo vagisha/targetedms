@@ -63,6 +63,7 @@ public class TargetedMsRunListView extends ExperimentRunListView
         addClientDependency(ClientDependency.fromPath("Ext4"));
         addClientDependency(ClientDependency.fromPath("clientapi/ext4"));
         addClientDependency(ClientDependency.fromPath("TargetedMS/js/LinkVersionsDialog.js"));
+        addClientDependency(ClientDependency.fromPath("TargetedMS/css/LinkVersionsDialog.css"));
     }
 
     private void setExpAnnotations(ExperimentAnnotations expAnnotations)

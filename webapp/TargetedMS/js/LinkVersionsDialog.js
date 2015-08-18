@@ -100,13 +100,13 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
             },
             // These 'dataIndex' look into the model
             {text: 'Document Name', dataIndex: 'File/FileName', flex: 3, menuDisabled: true, sortable: false},
-            {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y', width: 90, menuDisabled: true, sortable: false},
+            {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y', width: 105, menuDisabled: true, sortable: false},
             {text: 'Imported By', dataIndex: 'CreatedBy/DisplayName', width: 100, menuDisabled: true, sortable: false},
-            {text: 'Note', dataIndex: 'Flag/Comment', width: 200, menuDisabled: true, sortable: false},
+            {text: 'Note', dataIndex: 'Flag/Comment', width: 185, menuDisabled: true, sortable: false},
             {text: 'Proteins', dataIndex: 'File/PeptideGroupCount', width: 67, menuDisabled: false, sortable: false, align: 'right'},
             {text: 'Precursors', dataIndex: 'File/PrecursorCount', width: 85, menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Transitions', dataIndex: 'File/TransitionCount', width: 87, menuDisabled: true, sortable: false, align: 'right'},
-            {text: 'Replaced By', dataIndex: 'ReplacedByRun', hidden: true},
+            {text: 'Replaced By', dataIndex: 'ReplacedByRun', hidden: true}
         ];
     },
 
@@ -131,6 +131,13 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                 plugins: {
                     ptype: 'gridviewdragdrop',
                     dragText: 'Drag and drop to reorder.'
+                },
+                getRowClass: function(record, index) {
+                    // add CSS class to those rows that are in an existing chain, so we can style them to stand out
+                    var replacedBy = record.get('ReplacedByRun');
+                    if (Ext4.isDefined(replacedBy) && replacedBy > 0) {
+                        return 'link-version-exists';
+                    }
                 }
             },
             columns: this.getLinkedDocumentGridCoumns(data)
@@ -139,11 +146,19 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
 
     showLinkedDocumentWindow : function(data)
     {
+        var grid = this.getLinkedDocumentGrid(data);
+
+        // if we have a run that is part of an existing chain, the sum of the ReplacedByRun column will be > 0
+        var footerText = 'Drag and drop the documents to reorder the chain.';
+        if (grid.getStore().sum('ReplacedByRun') > 0) {
+            footerText += ' <span>Bold</span> indicates a document that is part of an existing method chain. Saving will replace any existing association.';
+        }
+
         var win = Ext4.create('Ext.window.Window', {
             title: 'Link Versions',
             border: false,
             autoShow: true,
-            items: [this.getLinkedDocumentGrid(data)],
+            items: [grid],
             dockedItems: [{
                 xtype: 'toolbar',
                 dock: 'bottom',
@@ -151,7 +166,9 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                 padding: '0 10px 15px 15px',
                 items: [{
                     xtype: 'box',
-                    html: 'Drag and drop the documents to reorder the chain.'
+                    cls: 'link-version-footer',
+                    width: 750,
+                    html: footerText
                 },'->',{
                     text: 'Save',
                     width: 75,

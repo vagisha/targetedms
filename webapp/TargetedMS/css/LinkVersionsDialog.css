@@ -1,0 +1,12 @@
+
+.link-version-exists .x4-grid-cell {
+    font-weight: bold;
+}
+
+.link-version-footer {
+    font-style: italic;
+}
+
+.link-version-footer span {
+    font-weight: bold;
+}
