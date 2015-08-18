@@ -28,6 +28,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.action.ApiAction;
@@ -35,6 +36,7 @@ import org.labkey.api.action.ApiResponse;
 import org.labkey.api.action.ApiSimpleResponse;
 import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ConfirmAction;
+import org.labkey.api.action.CustomApiForm;
 import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.FormHandlerAction;
 import org.labkey.api.action.FormViewAction;
@@ -4507,7 +4509,7 @@ public class TargetedMSController extends SpringActionController
             //get RowId and ReplacedByRun key value pairs
             final Map<Integer, Integer> rowIdReplacedByValueMap = selector.getValueMap();
 
-            //collect all the rowIds - for selected rows and its corresponding ReplacedByRun
+            //get runs that are already chained (represented by replacedByRun ids) with the selected runs
             for(int i = 0; i < selectedRowIdParams.length; i++)
             {
                 Integer replacedBy = rowIdReplacedByValueMap.get(selectedRowIdParams[i]);
@@ -4535,6 +4537,67 @@ public class TargetedMSController extends SpringActionController
         public void setSelectedRowIds(Integer[] selectedRowIds)
         {
             this.selectedRowIds = selectedRowIds;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class SaveLinkVersionsAction extends ApiAction<ChainedVersions>
+    {
+        @Override
+        public Object execute(ChainedVersions chainedVersions, BindException errors) throws Exception
+        {
+            JSONObject json = chainedVersions.getJsonObject();
+
+            DbScope scope = ExperimentService.get().getSchema().getScope();
+            try (DbScope.Transaction transaction = scope.ensureTransaction())
+            {
+                List<Map<String, Object>> list = json.getJSONArray("runs").toMapList();
+                for(int i = 0; i < list.size(); i++)
+                {
+                    Map<String, Object> map = list.get(i);
+                    Integer rowId = (Integer) map.get("RowId");
+                    Integer replacedByRun = (Integer) map.get("ReplacedByRun");
+
+                    ExpRun run = ExperimentService.get().getExpRun(rowId);
+                    ExpRun replacedRun = ExperimentService.get().getExpRun(replacedByRun);
+
+                    run.setReplacedByRun(replacedRun);
+                    run.save(getViewContext().getUser());
+
+//                    ExperimentService.get().auditRunEvent(getViewContext().getUser(), run.getBatch().getBatchProtocol(), run, null, "Run id " + run.getRowId() + " was replaced by run id " + replacedRun.getRowId());
+
+                        transaction.addCommitTask(new Runnable()
+                        {
+                            @Override
+                            public void run()
+                            {
+                                run.archiveDataFiles(getViewContext().getUser());
+                            }
+                        }, DbScope.CommitTaskOption.POSTCOMMIT);
+
+                }
+                transaction.commit();
+            }
+
+            return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class ChainedVersions implements CustomApiForm
+    {
+        protected JSONObject json;
+
+        public void bindProperties(Map<String,Object> properties)
+        {
+            if (properties instanceof JSONObject)
+                json = (JSONObject)properties;
+            else
+                json = new JSONObject(properties);
+        }
+
+        public JSONObject getJsonObject()
+        {
+            return json;
         }
     }
 

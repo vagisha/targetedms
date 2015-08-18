@@ -54,7 +54,7 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
 
     initComponent : function()
     {
-        Ext4.Ajax.request({
+        LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'linkVersions.api', null, {selectedRowIds: this.selectedRowIds}),
             scope: this,
             success: function(response) {
@@ -104,7 +104,8 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
             {text: 'Note', dataIndex: 'Flag/Comment', width: 200, menuDisabled: true, sortable: false},
             {text: 'Proteins', dataIndex: 'File/PeptideGroupCount', width: 67, menuDisabled: false, sortable: false, align: 'right'},
             {text: 'Precursors', dataIndex: 'File/PrecursorCount', width: 85, menuDisabled: true, sortable: false, align: 'right'},
-            {text: 'Transitions', dataIndex: 'File/TransitionCount', width: 87, menuDisabled: true, sortable: false, align: 'right'}
+            {text: 'Transitions', dataIndex: 'File/TransitionCount', width: 87, menuDisabled: true, sortable: false, align: 'right'},
+            {text: 'Replaced By', dataIndex: 'ReplacedByRun', hidden: true},
         ];
     },
 
@@ -152,8 +153,9 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                 },'->',{
                     text: 'Save',
                     width: 75,
+                    scope: this,
                     handler: function() {
-                        console.log('Save!');
+                        this.saveLinkedDocumentVersions(window);
                     }
                 },{
                     text: 'Cancel',
@@ -164,5 +166,45 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                 }]
             }]
         });
+    },
+
+    saveLinkedDocumentVersions : function(window) {
+
+        var store = window.down('grid').getStore(),
+            orderedRecords = store.getRange(),
+            updateRows = [];
+
+        //sort asc. to identify "parent" document with the earliest date and time
+        orderedRecords.sort(function(d1, d2){
+            var date1 = new Date(d1.data.Created);
+            var date2 = new Date (d2.data.Created);
+            return date1 - date2;
+        });
+
+        // traverse the ordered records to get replacedByRunIds, note: must have at least 2 records
+        if (orderedRecords.length > 1) {
+            for (var i = 0; i < orderedRecords.length - 1; i++) {
+                updateRows.push({
+                    RowId: orderedRecords[i].get('RowId'),
+                    ReplacedByRun: orderedRecords[i+1].get('RowId') // next record in the store
+                });
+            }
+        }
+
+        if (updateRows.length > 0) {
+            console.log(updateRows);
+            LABKEY.Ajax.request({
+                url: LABKEY.ActionURL.buildURL('targetedms', 'saveLinkVersions.api'),
+                method: 'POST',
+                jsonData: {runs: updateRows},
+                headers: { 'Content-Type' : 'application/json' },
+                success: function(response) {
+                    //close the dialog
+                    window.close();
+                    window.location.reload();
+
+                }
+            });
+        }
     }
 });
