@@ -4483,6 +4483,63 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    public static ActionURL getEditExperimentDetailsURL(Container c, int experimentAnnotationsId, URLHelper returnURL)
+    {
+        ActionURL url = new ActionURL(ShowUpdateExperimentAnnotationsAction.class, c);
+        url.addParameter("id", experimentAnnotationsId);  // The name of the parameter is important. This is used to populate the TableViewForm (refreshFromDb())
+        if(returnURL != null)
+        {
+            url.addReturnURL(returnURL);
+        }
+        return url;
+    }
+
+    public static ActionURL getDeleteExperimentURL(Container c, int experimentAnnotationsId, URLHelper returnURL)
+    {
+        ActionURL url = new ActionURL(DeleteExperimentAnnotationsAction.class, c);
+        url.addParameter("id", experimentAnnotationsId);
+        if(returnURL != null)
+        {
+            url.addReturnURL(returnURL);
+        }
+        return url;
+    }
+
+    public static ActionURL getIncludeSubfoldersInExperimentURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
+    {
+        ActionURL result = new ActionURL(IncludeSubFoldersInExperimentAction.class, container);
+        if (returnURL != null)
+        {
+            result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());
+        }
+        result.addParameter("id", experimentAnnotationsId);
+        return result;
+    }
+
+    public static ActionURL getExcludeSubfoldersInExperimentURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
+    {
+        ActionURL result = new ActionURL(ExcludeSubFoldersInExperimentAction.class, container);
+        if (returnURL != null)
+        {
+            result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());
+        }
+        result.addParameter("id", experimentAnnotationsId);
+        return result;
+    }
+
+    public static ActionURL getViewExperimentDetailsURL(int experimentAnnotationsId, Container container)
+    {
+        ActionURL result = new ActionURL(TargetedMSController.ShowExperimentAnnotationsAction.class, container);
+        result.addParameter("id", experimentAnnotationsId);
+        return result;
+    }
+    // ------------------------------------------------------------------------
+    // END Actions to create, delete, edit and view experiment annotations.
+    // ------------------------------------------------------------------------
+
+    // ------------------------------------------------------------------------
+    // BEGIN Method building (link versions) actions
+    // ------------------------------------------------------------------------
     @RequiresPermission(ReadPermission.class)
     public class GetLinkVersionsAction extends ApiAction<SelectedRowIdsForm>
     {
@@ -4649,58 +4706,7 @@ public class TargetedMSController extends SpringActionController
             return _runs;
         }
     }
-
-    public static ActionURL getEditExperimentDetailsURL(Container c, int experimentAnnotationsId, URLHelper returnURL)
-    {
-        ActionURL url = new ActionURL(ShowUpdateExperimentAnnotationsAction.class, c);
-        url.addParameter("id", experimentAnnotationsId);  // The name of the parameter is important. This is used to populate the TableViewForm (refreshFromDb())
-        if(returnURL != null)
-        {
-            url.addReturnURL(returnURL);
-        }
-        return url;
-    }
-
-    public static ActionURL getDeleteExperimentURL(Container c, int experimentAnnotationsId, URLHelper returnURL)
-    {
-        ActionURL url = new ActionURL(DeleteExperimentAnnotationsAction.class, c);
-        url.addParameter("id", experimentAnnotationsId);
-        if(returnURL != null)
-        {
-            url.addReturnURL(returnURL);
-        }
-        return url;
-    }
-
-    public static ActionURL getIncludeSubfoldersInExperimentURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
-    {
-        ActionURL result = new ActionURL(IncludeSubFoldersInExperimentAction.class, container);
-        if (returnURL != null)
-        {
-            result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());
-        }
-        result.addParameter("id", experimentAnnotationsId);
-        return result;
-    }
-
-    public static ActionURL getExcludeSubfoldersInExperimentURL(int experimentAnnotationsId, Container container, URLHelper returnURL)
-    {
-        ActionURL result = new ActionURL(ExcludeSubFoldersInExperimentAction.class, container);
-        if (returnURL != null)
-        {
-            result.addParameter(ActionURL.Param.returnUrl, returnURL.getLocalURIString());
-        }
-        result.addParameter("id", experimentAnnotationsId);
-        return result;
-    }
-
-    public static ActionURL getViewExperimentDetailsURL(int experimentAnnotationsId, Container container)
-    {
-        ActionURL result = new ActionURL(TargetedMSController.ShowExperimentAnnotationsAction.class, container);
-        result.addParameter("id", experimentAnnotationsId);
-        return result;
-    }
     // ------------------------------------------------------------------------
-    // END Actions to create, delete, edit and view experiment annotations.
+    // END Method building (link versions) actions
     // ------------------------------------------------------------------------
 }
