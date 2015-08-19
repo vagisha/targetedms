@@ -10,3 +10,7 @@
 .link-version-footer span {
     font-weight: bold;
 }
+
+.fa-times {
+    cursor: pointer;
+}

@@ -79,24 +79,15 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
     getLinkedDocumentGridCoumns : function(data) {
         return [
             {
-                xtype: 'actioncolumn',
+                xtype: 'templatecolumn',
                 text: 'Remove',
                 width: 67,
                 align: 'center',
                 menuDisabled: true,
                 sortable: false,
                 draggable: false,
-                icon: LABKEY.contextPath + '/_images/delete.png',
-                hidden: Ext.isDefined(data) ? data.rows.length < 3 : true,
-                handler: function (grid, rowIndex, colIndex, item, e, record) {
-                    var store = grid.getStore();
-                    store.remove(record);
-
-                    // only allow removing a row if there are > 2 items in the store
-                    if (store.getCount() < 3) {
-                        grid.getHeaderAtIndex(colIndex).hide();
-                    }
-                }
+                tpl: '<span class="fa fa-times"></span>',
+                hidden: Ext.isDefined(data) ? data.rows.length < 3 : true
             },
             // These 'dataIndex' look into the model
             {text: 'Document Name', dataIndex: 'File/FileName', flex: 3, menuDisabled: true, sortable: false},
@@ -140,7 +131,22 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                     }
                 }
             },
-            columns: this.getLinkedDocumentGridCoumns(data)
+            columns: this.getLinkedDocumentGridCoumns(data),
+            listeners: {
+                scope: this,
+                cellclick: function(grid, td, cellIndex, record, tr, rowIndex, e) {
+                    // 'Remove' column listener to remove a record from the grid store
+                    if (cellIndex == 0 && e.target.className == 'fa fa-times') {
+                        var store = grid.getStore();
+                        store.remove(record);
+
+                        // only allow removing a row if there are > 2 items in the store
+                        if (store.getCount() < 3) {
+                            grid.getHeaderAtIndex(0).hide();
+                        }
+                    }
+                }
+            }
         });
     },
 
