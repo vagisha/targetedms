@@ -183,6 +183,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -4491,38 +4492,80 @@ public class TargetedMSController extends SpringActionController
             List<Integer> linkedRowIds = new ArrayList<>();
 
             //get selectedRowIds params
-            final Integer[] selectedRowIdParams = selectedRowIdsForm.getSelectedRowIds();
+            Integer[] selectedRowIds = selectedRowIdsForm.getSelectedRowIds();
+            linkedRowIds.addAll(Arrays.asList(selectedRowIds));
 
-            //create a filter for non-null ReplacedByRun value
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ReplacedByRun"), null, CompareType.NONBLANK);
-
-            //get targetedmsruns query schema
+            //get related/linked RowIds from TargetedMSRuns table
             QuerySchema targetedMSRunsQuerySchema = DefaultSchema.get(getUser(), getContainer()).getSchema(TargetedMSSchema.getSchema().getName());
-
-            //create a set of column names with RowId and ReplacedByRun, a pair representing a parent child relationship between any two documents
-            Set<String> idColumnNames = new LinkedHashSet<>();
-            idColumnNames.add("rowId"); //RowId is parent or original document's rowid
-            idColumnNames.add("replacedByRun");//ReplacedByRun is child or modified document's rowid
-
-            //get values from targetedmsruns query table
-            TableSelector selector = new TableSelector(targetedMSRunsQuerySchema.getTable(TargetedMSSchema.TABLE_TARGETED_MS_RUNS), idColumnNames, filter, null);
-
-            //get RowId and ReplacedByRun key value pairs
-            final Map<Integer, Integer> rowIdReplacedByValueMap = selector.getValueMap();
-
-            //get runs that are already chained (represented by replacedByRun ids) with the selected runs
-            linkedRowIds.addAll(Arrays.asList(selectedRowIdParams));
-            for(int i = 0; i < selectedRowIdParams.length; i++)
+            if (targetedMSRunsQuerySchema != null)
             {
-                Integer replacedBy = rowIdReplacedByValueMap.get(selectedRowIdParams[i]);
-                if(replacedBy != null && !linkedRowIds.contains(replacedBy))
-                    linkedRowIds.add(replacedBy);
+                //create a filter for non-null ReplacedByRun value
+                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ReplacedByRun"), null, CompareType.NONBLANK);
+
+                //create a set of column names with RowId and ReplacedByRun, a pair representing a parent child relationship between any two documents
+                Set<String> idColumnNames = new LinkedHashSet<>();
+                idColumnNames.add("RowId"); //RowId is parent or original document's rowid
+                idColumnNames.add("ReplacedByRun");//ReplacedByRun is child or modified document's rowid
+
+                TableInfo runsTable = targetedMSRunsQuerySchema.getTable(TargetedMSSchema.TABLE_TARGETED_MS_RUNS);
+                TableSelector selector = new TableSelector(runsTable, idColumnNames, filter, null);
+
+                //get RowId -> ReplacedByRun key value pairs and also populate the opposite direction to get ReplacedByRun -> RowId
+                Map<Integer, Integer> replacedByMap = selector.getValueMap();
+                Map<Integer, Integer> replacesMap = new HashMap<>();
+                for (Map.Entry<Integer, Integer> entry : replacedByMap.entrySet())
+                    replacesMap.put(entry.getValue(), entry.getKey());
+
+                //get full chain for the selected runs to be added to the linkedRowIds list
+                for (int i = 0; i < selectedRowIds.length; i++)
+                {
+                    Integer rowId = selectedRowIds[i];
+                    ArrayDeque<Integer> chainRowIds = new ArrayDeque<>();
+                    addParentRunsToChain(chainRowIds, replacedByMap, rowId);
+                    addChildRunsToChain(chainRowIds, replacesMap, rowId);
+
+                    for (Integer chainRowId : chainRowIds)
+                    {
+                        if (!linkedRowIds.contains(chainRowId))
+                            linkedRowIds.add(chainRowId);
+                    }
+                }
             }
 
             //send selected rowIds and its links to the client
             ApiSimpleResponse response = new ApiSimpleResponse();
             response.put("linkedRowIds", linkedRowIds.toArray());
             return response;
+        }
+    }
+
+    private void addParentRunsToChain(ArrayDeque<Integer> chainRowIds, Map<Integer, Integer> replacedByMap, Integer rowId)
+    {
+        // add all runs rowIds up the chain to the front of the list, recursively
+        Integer replacedBy = replacedByMap.get(rowId);
+        if (replacedBy != null)
+        {
+            if (!chainRowIds.contains(rowId))
+                chainRowIds.addFirst(rowId);
+            if (!chainRowIds.contains(replacedBy))
+                chainRowIds.addFirst(replacedBy);
+
+            addParentRunsToChain(chainRowIds, replacedByMap, replacedBy);
+        }
+    }
+
+    private void addChildRunsToChain(ArrayDeque<Integer> chainRowIds, Map<Integer, Integer> replacesMap, Integer rowId)
+    {
+        // add all runs rowIds down the chain to the end of the list, recursively
+        Integer replaces = replacesMap.get(rowId);
+        if (replaces != null)
+        {
+            if (!chainRowIds.contains(rowId))
+                chainRowIds.addLast(rowId);
+            if (!chainRowIds.contains(replaces))
+                chainRowIds.addLast(replaces);
+
+            addChildRunsToChain(chainRowIds, replacesMap, replaces);
         }
     }
 
