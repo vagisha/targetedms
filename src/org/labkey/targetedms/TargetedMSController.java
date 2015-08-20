@@ -1761,8 +1761,16 @@ public class TargetedMSController extends SpringActionController
             JspView<RunDetailsBean> runSummaryView = new JspView<>("/org/labkey/targetedms/view/runSummaryView.jsp", bean);
             runSummaryView.setFrame(WebPartView.FrameType.PORTAL);
             runSummaryView.setTitle("Document Summary");
-
             vBox.addView(runSummaryView);
+
+            ExpRun expRun = ExperimentService.get().getExpRun(_run.getExperimentRunLSID());
+            if (expRun != null)
+            {
+                JspView<ExpRun> runMethodChain = new JspView<>("/org/labkey/targetedms/view/runMethodChain.jsp", expRun);
+                runMethodChain.setFrame(WebPartView.FrameType.PORTAL);
+                runMethodChain.setTitle("Document Method Chain");
+                vBox.addView(runMethodChain);
+            }
 
             VIEWTYPE view = createInitializedQueryView(form, errors, false, getDataRegionName());
             vBox.addView(view);
@@ -4544,13 +4552,14 @@ public class TargetedMSController extends SpringActionController
     public class GetLinkVersionsAction extends ApiAction<SelectedRowIdsForm>
     {
         @Override
-        public Object execute(SelectedRowIdsForm selectedRowIdsForm, BindException errors) throws Exception
+        public Object execute(SelectedRowIdsForm form, BindException errors) throws Exception
         {
             List<Integer> linkedRowIds = new ArrayList<>();
 
             //get selectedRowIds params
-            Integer[] selectedRowIds = selectedRowIdsForm.getSelectedRowIds();
-            linkedRowIds.addAll(Arrays.asList(selectedRowIds));
+            Integer[] selectedRowIds = form.getSelectedRowIds();
+            if (form.isIncludeSelected())
+                linkedRowIds.addAll(Arrays.asList(selectedRowIds));
 
             //get related/linked RowIds from TargetedMSRuns table
             QuerySchema targetedMSRunsQuerySchema = DefaultSchema.get(getUser(), getContainer()).getSchema(TargetedMSSchema.getSchema().getName());
@@ -4598,14 +4607,14 @@ public class TargetedMSController extends SpringActionController
 
     private void addParentRunsToChain(ArrayDeque<Integer> chainRowIds, Map<Integer, Integer> replacedByMap, Integer rowId)
     {
-        // add all runs rowIds up the chain to the front of the list, recursively
+        // add all runs rowIds up the chain to the end of the list, recursively
         Integer replacedBy = replacedByMap.get(rowId);
         if (replacedBy != null)
         {
             if (!chainRowIds.contains(rowId))
-                chainRowIds.addFirst(rowId);
+                chainRowIds.addLast(rowId);
             if (!chainRowIds.contains(replacedBy))
-                chainRowIds.addFirst(replacedBy);
+                chainRowIds.addLast(replacedBy);
 
             addParentRunsToChain(chainRowIds, replacedByMap, replacedBy);
         }
@@ -4613,14 +4622,14 @@ public class TargetedMSController extends SpringActionController
 
     private void addChildRunsToChain(ArrayDeque<Integer> chainRowIds, Map<Integer, Integer> replacesMap, Integer rowId)
     {
-        // add all runs rowIds down the chain to the end of the list, recursively
+        // add all runs rowIds down the chain to the front of the list, recursively
         Integer replaces = replacesMap.get(rowId);
         if (replaces != null)
         {
             if (!chainRowIds.contains(rowId))
-                chainRowIds.addLast(rowId);
+                chainRowIds.addFirst(rowId);
             if (!chainRowIds.contains(replaces))
-                chainRowIds.addLast(replaces);
+                chainRowIds.addFirst(replaces);
 
             addChildRunsToChain(chainRowIds, replacesMap, replaces);
         }
@@ -4629,6 +4638,7 @@ public class TargetedMSController extends SpringActionController
     public static class SelectedRowIdsForm
     {
         Integer[] selectedRowIds;
+        boolean includeSelected;
 
         public Integer[] getSelectedRowIds()
         {
@@ -4638,6 +4648,16 @@ public class TargetedMSController extends SpringActionController
         public void setSelectedRowIds(Integer[] selectedRowIds)
         {
             this.selectedRowIds = selectedRowIds;
+        }
+
+        public boolean isIncludeSelected()
+        {
+            return includeSelected;
+        }
+
+        public void setIncludeSelected(boolean includeSelected)
+        {
+            this.includeSelected = includeSelected;
         }
     }
 

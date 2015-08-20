@@ -27,9 +27,9 @@
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
     TargetedMSController.RunDetailsBean bean = me.getModelBean();
-    ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
-    downloadAction.addParameter("runId", bean.getRun().getId());
     TargetedMSRun run = bean.getRun();
+    ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
+    downloadAction.addParameter("runId", run.getId());
     Container c = getContainer();
     DecimalFormat decimalFormat = new DecimalFormat("#,###");
 %>
@@ -38,23 +38,23 @@
     <tr>
         <td class="labkey-form-label">Name</td>
         <td>
-            <%= h(bean.getRun().getDescription())%>
+            <%= h(run.getDescription())%>
             <%= textLink("Download", downloadAction)%>
         </td>
     </tr>
     <tr>
         <td class="labkey-form-label">Protein Count</td>
-        <td><%= h(decimalFormat.format(bean.getRun().getPeptideGroupCount())) %></td>
+        <td><%= h(decimalFormat.format(run.getPeptideGroupCount())) %></td>
 
         <td class="labkey-form-label">Peptide Count</td>
-        <td><%= h(decimalFormat.format(bean.getRun().getPeptideCount())) %></td>
+        <td><%= h(decimalFormat.format(run.getPeptideCount())) %></td>
     </tr>
     <tr>
         <td class="labkey-form-label">Precursor Count</td>
-        <td><%= h(decimalFormat.format(bean.getRun().getPrecursorCount())) %></td>
+        <td><%= h(decimalFormat.format(run.getPrecursorCount())) %></td>
 
         <td class="labkey-form-label">Transition Count</td>
-        <td><%= h(decimalFormat.format(bean.getRun().getTransitionCount())) %></td>
+        <td><%= h(decimalFormat.format(run.getTransitionCount())) %></td>
     </tr>
 
     <tr><td colspan="4">

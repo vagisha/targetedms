@@ -61,9 +61,8 @@ public class TargetedMsRunListView extends ExperimentRunListView
         setShowAddToRunGroupButton(false);
         setShowMoveRunsButton(false);
         addClientDependency(ClientDependency.fromPath("Ext4"));
-        addClientDependency(ClientDependency.fromPath("clientapi/ext4"));
-        addClientDependency(ClientDependency.fromPath("TargetedMS/js/LinkVersionsDialog.js"));
-        addClientDependency(ClientDependency.fromPath("TargetedMS/css/LinkVersionsDialog.css"));
+        addClientDependency(ClientDependency.fromPath("targetedms/js/LinkVersionsDialog.js"));
+        addClientDependency(ClientDependency.fromPath("targetedms/css/LinkVersionsDialog.css"));
     }
 
     private void setExpAnnotations(ExperimentAnnotations expAnnotations)
@@ -106,7 +105,7 @@ public class TargetedMsRunListView extends ExperimentRunListView
     {
         ActionButton versionButton = new ActionButton("Link Versions");
         versionButton.setRequiresSelection(true, 2, null);
-        versionButton.setScript("LABKEY.targetedms.LinkVersionsDialog.showLinkVersionDialog()");
+        versionButton.setScript("LABKEY.targetedms.LinkedVersions.showDialog()");
         versionButton.setDisplayPermission(UpdatePermission.class);
         bar.add(versionButton);
     }

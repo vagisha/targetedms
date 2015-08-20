@@ -7,25 +7,21 @@
  * Created by binalpatel on 8/7/15.
  */
 
-Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
+Ext4.define('LABKEY.targetedms.LinkedVersions', {
 
     extend: 'Ext.panel.Panel',
-    title: 'Linked Document Details',
-    modal: true,
-    border: false,
-    width: 800,
-    minHeight: 200,
-    autoScroll: true,
-    resizable: false,
-    layout: 'fit',
+
+    asGrid: false, // used for save dialog to create/update method chains
+    asView: false, // used for displaying method chain information on document details page
 
     statics: {
-        showLinkVersionDialog : function() {
+        showDialog : function() {
             LABKEY.DataRegion.getSelected({
                 selectionKey: LABKEY.DataRegions.TargetedMSRuns.selectionKey,
                 success: function(selection) {
-                    Ext4.create('LABKEY.targetedms.LinkVersionsDialog', {
-                        selectedRowIds : selection.selected
+                    Ext4.create('LABKEY.targetedms.LinkedVersions', {
+                        selectedRowIds: selection.selected,
+                        asGrid: true
                     });
                 }
             });
@@ -33,30 +29,41 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
     },
 
     constructor: function(config) {
-        if(!Ext4.isArray(config.selectedRowIds))
-        {
+        if (!Ext4.isArray(config.selectedRowIds)) {
             console.error("'selectedRowIds' is not an array.");
             return;
         }
-        if(!Ext4.isDefined(config.selectedRowIds))
-        {
+
+        if (!Ext4.isDefined(config.selectedRowIds)) {
             console.error("'selectedRowIds' is not defined.");
             return;
         }
-        if(config.selectedRowIds.length < 2)
-        {
+
+        if (!config.asGrid && !config.asView) {
+            console.error("must be defined as either asGrid: true or asView: true.");
+            return;
+        }
+
+        if (config.asGrid && config.selectedRowIds.length < 2) {
             console.error("'selectedRowIds' array length should be greater than 2. At least two documents should be selected.");
+            return;
+        }
+
+        if (config.asView && !Ext.isString(config.divId)) {
+            console.error("'divId' must be defined for asView.");
             return;
         }
 
         this.callParent([config]);
     },
 
-    initComponent : function()
-    {
+    initComponent : function() {
         // query to get all runs associated with the selected runs, i.e. already in a linked chain with the selected runs
         LABKEY.Ajax.request({
-            url: LABKEY.ActionURL.buildURL('targetedms', 'getLinkVersions.api', null, {selectedRowIds: this.selectedRowIds}),
+            url: LABKEY.ActionURL.buildURL('targetedms', 'getLinkVersions.api', null, {
+                selectedRowIds: this.selectedRowIds,
+                includeSelected: this.asGrid
+            }),
             scope: this,
             success: LABKEY.Utils.getCallbackWrapper(function(response) {
                 this.selectedRowIds = response.linkedRowIds;
@@ -64,10 +71,17 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                 LABKEY.Query.selectRows({
                     schemaName: 'targetedms',
                     queryName: 'targetedmsruns',
-                    columns: this.getLinkedDocumentColumnNames(),
+                    columns: this.getBaseColumnNames(),
                     scope: this,
                     filterArray: [LABKEY.Filter.create('rowId', this.selectedRowIds.join(';'), LABKEY.Filter.Types.IN)],
-                    success: this.showLinkedDocumentWindow,
+                    success: function(data) {
+                        if (this.asGrid) {
+                            this.showGridSaveDialog(data);
+                        }
+                        else if (this.asView) {
+                            this.showDetailsView(data);
+                        }
+                    },
                     failure: this.failureHandler
                 });
             }, this, false)
@@ -76,45 +90,61 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
         this.callParent();
     },
 
-    getLinkedDocumentGridCoumns : function(data) {
+    getBaseColumns : function() {
         return [
-            {
-                xtype: 'templatecolumn',
-                text: 'Remove',
-                width: 67,
-                align: 'center',
-                menuDisabled: true,
-                sortable: false,
-                draggable: false,
-                tpl: '<span class="fa fa-times"></span>',
-                hidden: Ext.isDefined(data) ? data.rows.length < 3 : true
-            },
             // These 'dataIndex' look into the model
-            {text: 'Document Name', dataIndex: 'File/FileName', flex: 3, menuDisabled: true, sortable: false},
+            {text: 'ID', dataIndex: 'File/Id', hidden: true},
+            {text: 'Document Name', dataIndex: 'File/FileName', flex: 3, menuDisabled: true, sortable: false, scope: this, renderer: function(value, metadata, record){
+                var val = Ext4.String.htmlEncode(value),
+                    url = LABKEY.ActionURL.buildURL('targetedms', 'showPrecursorList', null, {id: record.get('File/Id')});
+
+                if (this.asView) {
+                    return '<a href="' + url + '">' + val + '</a>';
+                }
+                return val;
+            }},
             {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y', width: 105, menuDisabled: true, sortable: false},
             {text: 'Imported By', dataIndex: 'CreatedBy/DisplayName', width: 100, menuDisabled: true, sortable: false},
-            {text: 'Note', dataIndex: 'Flag/Comment', width: 185, menuDisabled: true, sortable: false},
-            {text: 'Proteins', dataIndex: 'File/PeptideGroupCount', width: 67, menuDisabled: false, sortable: false, align: 'right'},
+            {text: 'Note', dataIndex: 'Flag/Comment', width: 185, menuDisabled: true, sortable: false, renderer: 'htmlEncode'},
+            {text: 'Proteins', dataIndex: 'File/PeptideGroupCount', width: 67, menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Precursors', dataIndex: 'File/PrecursorCount', width: 85, menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Transitions', dataIndex: 'File/TransitionCount', width: 87, menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Replaced By', dataIndex: 'ReplacedByRun', hidden: true}
         ];
     },
 
-    getLinkedDocumentColumnNames : function() {
-        var fields = Ext4.Array.pluck(this.getLinkedDocumentGridCoumns(), 'dataIndex');
-        fields.shift(); // remove the first element as it will be undefined
-        return fields;
+    getBaseColumnNames : function() {
+        return Ext4.Array.pluck(this.getBaseColumns(), 'dataIndex');
     },
 
-    getLinkedDocumentGrid : function(data) {
+    getGridRemoveColumn : function(data) {
+        return {
+            xtype: 'templatecolumn',
+            text: 'Remove',
+            width: 67,
+            align: 'center',
+            menuDisabled: true,
+            sortable: false,
+            draggable: false,
+            tpl: '<span class="fa fa-times"></span>',
+            hidden: Ext.isDefined(data) ? data.rows.length < 3 : true
+        };
+    },
+
+    getGridColumns : function(data) {
+        var columns = [this.getGridRemoveColumn(data)];
+        return columns.concat(this.getBaseColumns());
+    },
+
+    createGrid : function(data) {
         return Ext4.create('Ext.grid.Panel', {
+            cls: 'link-version-grid',
             padding: 15,
             width: 950,
             maxHeight: 300,
             autoScoll: true,
             store: Ext4.create('Ext.data.Store', {
-                fields: this.getLinkedDocumentColumnNames(),
+                fields: this.getBaseColumnNames(),
                 sorters: [{property: 'Created', direction: 'ASC'}],
                 data: data
             }),
@@ -131,7 +161,7 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                     }
                 }
             },
-            columns: this.getLinkedDocumentGridCoumns(data),
+            columns: this.getGridColumns(data),
             listeners: {
                 scope: this,
                 cellclick: function(grid, td, cellIndex, record, tr, rowIndex, e) {
@@ -150,9 +180,8 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
         });
     },
 
-    showLinkedDocumentWindow : function(data)
-    {
-        var grid = this.getLinkedDocumentGrid(data);
+    showGridSaveDialog : function(data) {
+        var grid = this.createGrid(data);
 
         // if we have a run that is part of an existing chain, the sum of the ReplacedByRun column will be > 0
         var footerText = 'Drag and drop the documents to reorder the chain.';
@@ -180,7 +209,7 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                     width: 75,
                     scope: this,
                     handler: function() {
-                        this.saveLinkedDocumentVersions(win);
+                        this.saveLinkedVersions(win);
                     }
                 },{
                     text: 'Cancel',
@@ -193,7 +222,7 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
         });
     },
 
-    saveLinkedDocumentVersions : function(win) {
+    saveLinkedVersions : function(win) {
 
         var store = win.down('grid').getStore(),
             orderedRecords = store.getRange(),
@@ -225,6 +254,40 @@ Ext4.define('LABKEY.targetedms.LinkVersionsDialog', {
                     LABKEY.Utils.alert("Error", response.exception);
                     win.getEl().unmask();
                 }, this, true)
+            });
+        }
+    },
+
+    showDetailsView : function(data) {
+        var orderMap = {}, columns = this.getBaseColumns();
+
+        if (this.selectedRowIds.length > 0) {
+            // order the grid rows based on the getLinkVersion response
+            columns.push({dataIndex: 'SortOrder', hidden: true});
+            for (var i = 0; i < this.selectedRowIds.length; i++) {
+                orderMap[this.selectedRowIds[i]] = i;
+            }
+            Ext4.each(data.rows, function(row){
+                row.SortOrder = orderMap[row.RowId];
+            });
+
+            Ext4.create('Ext.grid.Panel', {
+                renderTo: this.divId,
+                cls: 'link-version-grid',
+                width: 950,
+                disableSelection: true,
+                columns: columns,
+                store: Ext4.create('Ext.data.Store', {
+                    fields: Ext4.Array.pluck(columns, 'dataIndex'),
+                    sorters: [{property: 'SortOrder', direction: 'ASC'}],
+                    data: data.rows
+                })
+            });
+        }
+        else {
+            Ext4.create('Ext.Component', {
+                renderTo: this.divId,
+                html: 'No data available.'
             });
         }
     }

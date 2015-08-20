@@ -300,6 +300,7 @@ src/org/labkey/targetedms/view/publish/deleteJournal.jsp -text
 src/org/labkey/targetedms/view/publish/publishExperimentForm.jsp -text
 src/org/labkey/targetedms/view/qcSummary.jsp -text
 src/org/labkey/targetedms/view/renameRun.jsp -text
+src/org/labkey/targetedms/view/runMethodChain.jsp -text
 src/org/labkey/targetedms/view/runSummaryView.jsp -text
 src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatch.java -text
 src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatchGetter.java -text
