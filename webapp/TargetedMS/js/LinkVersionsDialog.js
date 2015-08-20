@@ -287,7 +287,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
         else {
             Ext4.create('Ext.Component', {
                 renderTo: this.divId,
-                html: 'No data available.'
+                html: 'No other versions available.'
             });
         }
     }

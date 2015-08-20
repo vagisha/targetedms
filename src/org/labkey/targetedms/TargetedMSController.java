@@ -1768,7 +1768,7 @@ public class TargetedMSController extends SpringActionController
             {
                 JspView<ExpRun> runMethodChain = new JspView<>("/org/labkey/targetedms/view/runMethodChain.jsp", expRun);
                 runMethodChain.setFrame(WebPartView.FrameType.PORTAL);
-                runMethodChain.setTitle("Document Method Chain");
+                runMethodChain.setTitle("Document Versions");
                 vBox.addView(runMethodChain);
             }
 
