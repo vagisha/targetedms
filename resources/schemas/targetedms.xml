@@ -752,6 +752,7 @@
             <ns:column columnName="TimeWindow"/>
             <ns:column columnName="UseMeasuredRTs"/>
             <ns:column columnName="MeasuredRTWindow"/>
+            <ns:column columnName="IrtDatabasePath"/>
         </ns:columns>
     </ns:table>
     <ns:table tableName="runenzyme" tableDbType="TABLE">

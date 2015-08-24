@@ -73,6 +73,7 @@ class PeptideSettingsParser
     private static final String SLOPE = "slope";
     private static final String INTERCEPT = "intercept";
     private static final String IRT_CALCULATOR = "irt_calculator";
+    private static final String IRT_DATABASE_PATH = "database_path";
     private static final String PREDICT_DRIFT_TIME = "predict_drift_time";
     private static final String USE_SPECTRAL_LIBRARY_DRIFT_TIMES = "use_spectral_library_drift_times";
     private static final String SPECTRAL_LIBRARY_DRIFT_TIMES_RESOLVING_POWER = "spectral_library_drift_times_resolving_power";
@@ -510,6 +511,7 @@ class PeptideSettingsParser
                 {
                     settings.setIsIrt(Boolean.TRUE);
                     settings.setCalculatorName(XmlUtil.readAttribute(reader, NAME));
+                    settings.setIrtDatabasePath(XmlUtil.readAttribute(reader, IRT_DATABASE_PATH));
                 }
                 else if(XmlUtil.isElement(reader, REGRESSION_RT))
                 {

@@ -498,7 +498,7 @@ public class TransitionSettings
     public static final class Predictor extends SkylineEntity
     {
         private String _name;
-        private Integer _stepSize;
+        private Float _stepSize;
         private Integer _stepCount;
 
         private List<PredictorSettings> _settings;
@@ -513,12 +513,12 @@ public class TransitionSettings
             _name = name;
         }
 
-        public Integer getStepSize()
+        public Float getStepSize()
         {
             return _stepSize;
         }
 
-        public void setStepSize(Integer stepSize)
+        public void setStepSize(Float stepSize)
         {
             _stepSize = stepSize;
         }

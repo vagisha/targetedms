@@ -890,6 +890,7 @@ public class PeptideSettings
         private Double _regressionIntercept;
         private Boolean _isIrt;
         private String _calculatorName;
+        private String _irtDatabasePath;
 
         public int getRunId()
         {
@@ -979,6 +980,16 @@ public class PeptideSettings
         public void setCalculatorName(String calculatorName)
         {
             _calculatorName = calculatorName;
+        }
+
+        public String getIrtDatabasePath()
+        {
+            return _irtDatabasePath;
+        }
+
+        public void setIrtDatabasePath(String irtDatabasePath)
+        {
+            _irtDatabasePath = irtDatabasePath;
         }
     }
 

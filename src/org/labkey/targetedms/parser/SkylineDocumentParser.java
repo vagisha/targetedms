@@ -203,10 +203,10 @@ public class SkylineDocumentParser implements AutoCloseable
         if(rtPredictionSettings == null)
             return;
 
-        String baseFileName = rtPredictionSettings.getPredictorName();
-        if (null != baseFileName)
+        String irtDatabasePath = rtPredictionSettings.getIrtDatabasePath();
+        if (null != irtDatabasePath)
         {
-            String iRTFileName = baseFileName + ".irtdb";
+            String iRTFileName = new File(irtDatabasePath).getName();
             File iRTFile = new File(_file.getParent(), iRTFileName);
             if (! iRTFile.exists() ) {
                 _log.warn("Input iRT database does not exist " + iRTFileName);
@@ -640,7 +640,7 @@ public class SkylineDocumentParser implements AutoCloseable
         String stepSize = reader.getAttributeValue(null, "step_size");
         if (stepSize != null)
         {
-            predictor.setStepSize(Integer.parseInt(stepSize));
+            predictor.setStepSize(Float.parseFloat(stepSize));
         }
         String stepCount = reader.getAttributeValue(null, "step_count");
         if (stepCount != null)
