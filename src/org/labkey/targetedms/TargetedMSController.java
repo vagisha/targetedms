@@ -88,7 +88,7 @@ import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
 import org.labkey.api.security.RequiresLogin;
 import org.labkey.api.security.RequiresPermission;
-import org.labkey.api.security.RequiresPermissionClass;
+import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
@@ -237,7 +237,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to setup a new folder
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class FolderSetupAction extends FormHandlerAction<FolderSetupForm>
     {
         public static final String DATA_PIPELINE_TAB = "Data Pipeline";
@@ -399,7 +399,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to show a list of uploaded documents
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(AdminPermission.class)
+    @RequiresPermission(AdminPermission.class)
     public class SetupAction extends SimpleViewAction
     {
         public ModelAndView getView(Object o, BindException errors) throws Exception
@@ -423,7 +423,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to show QC reports
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class LeveyJenningsAction extends SimpleViewAction<URLParameterBean>
     {
 
@@ -480,7 +480,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to show a list of chromatogram library archived revisions
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ArchivedRevisionsAction extends SimpleViewAction
     {
         public ModelAndView getView(Object o, BindException errors) throws Exception
@@ -502,7 +502,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to show a list of uploaded documents
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     @ActionNames("showList, begin")
     public class ShowListAction extends SimpleViewAction
     {
@@ -530,7 +530,7 @@ public class TargetedMSController extends SpringActionController
     // Chromatogram actions
     // ------------------------------------------------------------------------
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class TransitionChromatogramChartAction extends ExportAction<ChromatogramForm>
     {
         @Override
@@ -553,7 +553,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class PrecursorChromatogramChartAction extends ExportAction<ChromatogramForm>
     {
         @Override
@@ -598,7 +598,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class PeptideChromatogramChartAction extends ExportAction<ChromatogramForm>
     {
         @Override
@@ -616,7 +616,7 @@ public class TargetedMSController extends SpringActionController
     }
 
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class PrecursorAllChromatogramsChartAction extends SimpleViewAction<ChromatogramForm>
     {
         private TargetedMSRun _run; // save for use in appendNavTrail
@@ -725,7 +725,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class PeptideAllChromatogramsChartAction extends SimpleViewAction<ChromatogramForm>
     {
         private TargetedMSRun _run; // save for use in appendNavTrail
@@ -1093,7 +1093,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to display peptide details page
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ShowPeptideAction extends SimpleViewAction<ChromatogramForm>
     {
         private TargetedMSRun _run; // save for use in appendNavTrail
@@ -1204,7 +1204,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to display a library spectrum
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ShowSpectrumAction extends SimpleViewAction<ShowSpectrumForm>
     {
         @Override
@@ -1264,7 +1264,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to display a peak areas chart
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ShowPeptidePeakAreasAction extends ExportAction<SummaryChartForm>
     {
         @Override
@@ -1335,7 +1335,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to display retention times chart.
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ShowRetentionTimesChartAction extends ExportAction<SummaryChartForm>
     {
         @Override
@@ -1600,7 +1600,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class SkylineDocUploadOptionsAction extends FormViewAction<SkylinePipelinePathForm>
     {
         @Override
@@ -1637,7 +1637,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Document upload action
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class SkylineDocUploadAction extends RedirectAction<SkylinePipelinePathForm>
     {
         public ActionURL getSuccessURL(SkylinePipelinePathForm form)
@@ -1679,7 +1679,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class SkylineDocUploadApiAction extends ApiAction<PipelinePathForm>
     {
         public ApiResponse execute(PipelinePathForm form, BindException errors) throws Exception
@@ -1733,7 +1733,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to display a document's transition or precursor list
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public abstract class ShowRunDetailsAction <VIEWTYPE extends NestableQueryView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
@@ -1801,7 +1801,7 @@ public class TargetedMSController extends SpringActionController
 
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ShowTransitionListAction extends ShowRunDetailsAction<DocumentTransitionsView>
     {
         @Override
@@ -1833,7 +1833,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ShowPrecursorListAction extends ShowRunDetailsAction<DocumentPrecursorsView>
     {
         // Invoked via reflection
@@ -1988,7 +1988,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to show a protein detail page
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ShowProteinAction extends SimpleViewAction<ProteinDetailForm>
     {
         private TargetedMSRun _run; // save for use in appendNavTrail
@@ -2190,7 +2190,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to show a protein detail page
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ShowProteinAJAXAction extends SimpleViewAction<ProteinDetailForm>
     {
         @Override
@@ -2233,7 +2233,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to show representative data conflicts, if any, in a container
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ShowProteinConflictUiAction extends SimpleViewAction<ConflictUIForm>
     {
         @Override
@@ -2361,7 +2361,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ProteinConflictPeptidesAjaxAction extends ApiAction<ProteinPeptidesForm>
     {
         @Override
@@ -2439,7 +2439,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ShowPrecursorConflictUiAction extends SimpleViewAction<ConflictUIForm>
     {
         @Override
@@ -2553,7 +2553,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class PrecursorConflictTransitionsAjaxAction extends ApiAction<ConflictPrecursorsForm>
     {
         @Override
@@ -2628,7 +2628,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ResolveConflictAction extends RedirectAction<ResolveConflictForm>
     {
         @Override
@@ -2801,7 +2801,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     // Action to download a Skyline zip file.
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class DownloadDocumentAction extends SimpleViewAction<DownloadDocumentForm>
     {
         public ModelAndView getView(DownloadDocumentForm form, BindException errors) throws Exception
@@ -2875,7 +2875,7 @@ public class TargetedMSController extends SpringActionController
             this.revision = revision;
         }
     }
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class DownloadChromLibraryAction extends SimpleViewAction<DownloadForm>
     {
         public ModelAndView getView(DownloadForm form, BindException errors) throws Exception
@@ -2920,7 +2920,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class IsLibraryCurrentAction extends ApiAction<LibraryDetailsForm>
     {
         public ApiResponse execute(LibraryDetailsForm form, BindException errors) throws Exception
@@ -3024,7 +3024,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ModificationSearchAction extends QueryViewAction<ModificationSearchForm, QueryView>
     {
         public ModificationSearchAction()
@@ -3419,7 +3419,7 @@ public class TargetedMSController extends SpringActionController
     // Actions to render a graph of library statistics
     // - viewable from the chromatogramLibraryDownload.jsp webpart
     // ------------------------------------------------------------------------
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class GraphLibraryStatisticsAction extends ExportAction
     {
         @Override
@@ -3726,7 +3726,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     public class RenameRunAction extends FormViewAction<RenameForm>
     {
         private TargetedMSRun _run;
@@ -3816,7 +3816,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------
     private static final String ADD_SELECTED_RUNS = "addSelectedRuns";
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ShowNewExperimentAnnotationFormAction extends SimpleViewAction<NewExperimentAnnotationsForm>
     {
 
@@ -3836,7 +3836,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class SaveNewExperimentAnnotationAction extends FormViewAction<NewExperimentAnnotationsForm>
     {
         private ExperimentAnnotations _expAnnot;
@@ -4024,7 +4024,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)
     public class ShowExperimentAnnotationsAction extends SimpleViewAction<ViewExperimentAnnotationsForm>
     {
         @Override
@@ -4174,7 +4174,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     public class ShowUpdateExperimentAnnotationsAction extends SimpleViewAction<ExperimentAnnotationsForm>
     {
         public ModelAndView getView(ExperimentAnnotationsForm form, BindException errors) throws Exception
@@ -4198,7 +4198,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(UpdatePermission.class)
+    @RequiresPermission(UpdatePermission.class)
     public class UpdateExperimentAnnotationsAction extends FormViewAction<ExperimentAnnotationsForm>
     {
         private int _experimentAnnotationsId;
@@ -4251,7 +4251,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(DeletePermission.class)
+    @RequiresPermission(DeletePermission.class)
     public class DeleteSelectedExperimentAnnotationsAction extends ConfirmAction<SelectedIdsForm>
     {
         @Override
@@ -4341,7 +4341,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(DeletePermission.class)
+    @RequiresPermission(DeletePermission.class)
     public class DeleteExperimentAnnotationsAction extends ConfirmAction<DeleteExperimentAnnotationsForm>
     {
         @Override
@@ -4378,7 +4378,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class IncludeSubFoldersInExperimentAction extends FormHandlerAction<ExperimentForm>
     {
         private ExperimentAnnotations _expAnnot;
@@ -4427,7 +4427,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermissionClass(InsertPermission.class)
+    @RequiresPermission(InsertPermission.class)
     public class ExcludeSubFoldersInExperimentAction extends FormHandlerAction<ExperimentForm>
     {
         private ExperimentAnnotations _expAnnot;
