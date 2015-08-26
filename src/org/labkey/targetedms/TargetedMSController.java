@@ -88,7 +88,6 @@ import org.labkey.api.query.QueryView;
 import org.labkey.api.security.ActionNames;
 import org.labkey.api.security.RequiresLogin;
 import org.labkey.api.security.RequiresPermission;
-import org.labkey.api.security.RequiresPermission;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.DeletePermission;
@@ -4681,6 +4680,10 @@ public class TargetedMSController extends SpringActionController
         public Object execute(ChainedVersions form, BindException errors) throws Exception
         {
             DbScope scope = ExperimentService.get().getSchema().getScope();
+
+            int entryCount = 1;
+            int entrySetSize = form.getRuns().entrySet().size();
+
             try (DbScope.Transaction transaction = scope.ensureTransaction())
             {
                 for (Map.Entry<Integer, Integer> entry : form.getRuns().entrySet())
@@ -4690,6 +4693,32 @@ public class TargetedMSController extends SpringActionController
 
                     run.setReplacedByRun(replacedRun);
                     run.save(getViewContext().getUser());
+
+                    //Issue 24131: StackOverfowException when resaving TargetedMS run links
+                    //Issue details:
+                    //existing chain: 1 -> 2 -> 3
+                    //1's replacedRun = 2
+                    //2's replacedRun = 3
+                    //3's replacedRun = null
+                    //reshuffled chain: 3 -> 1 -> 2
+                    //3's replacedRun = 1
+                    //1's replacedRun = 2
+                    //2's replacedRun = 3 (instead of null) (this causes the StackOverflowException)
+                    //Note: entrySetSize is equal to the no. of links (in above example it'd be 2) and not the actual no. of documents; hence, requires this additional step.
+                    if(entrySetSize == entryCount)
+                    {
+                        if(replacedRun != null)
+                        {
+                            ExpRun replacedRunOfLastRunInTheChain = ExperimentService.get().getExpRun(replacedRun.getRowId());
+                            if(replacedRunOfLastRunInTheChain != null)
+                            {
+                                replacedRun.setReplacedByRun(null);
+                                replacedRun.save(getViewContext().getUser());
+                            }
+                        }
+                    }
+                    entryCount++;
+
                     //ExperimentService.get().auditRunEvent(getViewContext().getUser(), run.getBatch().getBatchProtocol(), run, null, "Run id " + run.getRowId() + " was replaced by run id " + replacedRun.getRowId());
                 }
 
