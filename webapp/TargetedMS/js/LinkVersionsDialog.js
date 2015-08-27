@@ -58,6 +58,8 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
     },
 
     initComponent : function() {
+        Ext4.tip.QuickTipManager.init();
+
         // query to get all runs associated with the selected runs, i.e. already in a linked chain with the selected runs
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'getLinkVersions.api', null, {
@@ -67,27 +69,30 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             scope: this,
             success: LABKEY.Utils.getCallbackWrapper(function(response) {
                 this.selectedRowIds = response.linkedRowIds;
-
-                LABKEY.Query.selectRows({
-                    schemaName: 'targetedms',
-                    queryName: 'targetedmsruns',
-                    columns: this.getBaseColumnNames(),
-                    scope: this,
-                    filterArray: [LABKEY.Filter.create('rowId', this.selectedRowIds.join(';'), LABKEY.Filter.Types.IN)],
-                    success: function(data) {
-                        if (this.asGrid) {
-                            this.showGridSaveDialog(data);
-                        }
-                        else if (this.asView) {
-                            this.showDetailsView(data);
-                        }
-                    },
-                    failure: this.failureHandler
-                });
+                this.getDocumentDataForSelectedRowIds();
             }, this, false)
         });
 
         this.callParent();
+    },
+
+    getDocumentDataForSelectedRowIds : function() {
+        LABKEY.Query.selectRows({
+            schemaName: 'targetedms',
+            queryName: 'targetedmsruns',
+            columns: this.getBaseColumnNames(),
+            scope: this,
+            filterArray: [LABKEY.Filter.create('rowId', this.selectedRowIds.join(';'), LABKEY.Filter.Types.IN)],
+            success: function(data) {
+                if (this.asGrid) {
+                    this.showGridSaveDialog(data);
+                }
+                else if (this.asView) {
+                    this.showDetailsView(data);
+                }
+            },
+            failure: this.failureHandler
+        });
     },
 
     getBaseColumns : function() {
@@ -109,7 +114,8 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             {text: 'Proteins', dataIndex: 'File/PeptideGroupCount', width: 67, menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Precursors', dataIndex: 'File/PrecursorCount', width: 85, menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Transitions', dataIndex: 'File/TransitionCount', width: 87, menuDisabled: true, sortable: false, align: 'right'},
-            {text: 'Replaced By', dataIndex: 'ReplacedByRun', hidden: true}
+            {text: 'Replaced By', dataIndex: 'ReplacedByRun', hidden: true},
+            {text: 'Replaces', dataIndex: 'ReplacesRun', hidden: true}
         ];
     },
 
@@ -117,7 +123,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
         return Ext4.Array.pluck(this.getBaseColumns(), 'dataIndex');
     },
 
-    getGridRemoveColumn : function(data) {
+    getGridRemoveColumn : function(store) {
         return {
             xtype: 'templatecolumn',
             text: 'Remove',
@@ -126,28 +132,37 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             menuDisabled: true,
             sortable: false,
             draggable: false,
-            tpl: '<span class="fa fa-times"></span>',
-            hidden: Ext.isDefined(data) ? data.rows.length < 3 : true
+            tpl: new Ext4.XTemplate(
+                '<span class="{[this.getCls(values)]}" data-qtip="Remove the document from its existing document method chain."></span>',
+                {
+                    getCls : function(values) {
+                        return values['ReplacedByRun'] + values['ReplacesRun'] > 0 ? 'fa fa-times' : '';
+                    }
+                }
+            ),
+            hidden: !this.hasDocumentInExistingChain(store)
         };
     },
 
-    getGridColumns : function(data) {
-        var columns = [this.getGridRemoveColumn(data)];
+    getGridColumns : function(store) {
+        var columns = [this.getGridRemoveColumn(store)];
         return columns.concat(this.getBaseColumns());
     },
 
     createGrid : function(data) {
+        var store = Ext4.create('Ext.data.Store', {
+            fields: this.getBaseColumnNames(),
+            sorters: [{property: 'Created', direction: 'ASC'}],
+            data: data
+        });
+
         return Ext4.create('Ext.grid.Panel', {
             cls: 'link-version-grid',
             padding: 15,
             width: 950,
             maxHeight: 300,
             autoScoll: true,
-            store: Ext4.create('Ext.data.Store', {
-                fields: this.getBaseColumnNames(),
-                sorters: [{property: 'Created', direction: 'ASC'}],
-                data: data
-            }),
+            store: store,
             viewConfig: {
                 plugins: {
                     ptype: 'gridviewdragdrop',
@@ -156,36 +171,57 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
                 getRowClass: function(record, index) {
                     // add CSS class to those rows that are in an existing chain, so we can style them to stand out
                     var replacedBy = record.get('ReplacedByRun');
-                    if (Ext4.isDefined(replacedBy) && replacedBy > 0) {
+                    var replaces = record.get('ReplacesRun');
+                    if (replacedBy + replaces > 0) {
                         return 'link-version-exists';
                     }
                 }
             },
-            columns: this.getGridColumns(data),
+            columns: this.getGridColumns(store),
             listeners: {
                 scope: this,
-                cellclick: function(grid, td, cellIndex, record, tr, rowIndex, e) {
-                    // 'Remove' column listener to remove a record from the grid store
-                    if (cellIndex == 0 && e.target.className == 'fa fa-times') {
-                        var store = grid.getStore();
-                        store.remove(record);
-
-                        // only allow removing a row if there are > 2 items in the store
-                        if (store.getCount() < 3) {
-                            grid.getHeaderAtIndex(0).hide();
-                        }
-                    }
-                }
+                cellclick: this.removeColumnCellClick
             }
         });
+    },
+
+    removeColumnCellClick : function(grid, td, cellIndex, record, tr, rowIndex, e) {
+        // 'Remove' column listener to remove a record from an existing method chain
+        if (cellIndex == 0 && e.target.className == 'fa fa-times') {
+            Ext4.Msg.confirm('Remove Confirmation', 'Are you sure you want to remove the selected document from '
+                + 'its existing method chain? This action can not be undone.',
+                function(btnId) {
+                    if (btnId == 'yes') {
+                        var win = grid.up('window');
+
+                        win.getEl().mask('Remove...');
+                        LABKEY.Ajax.request({
+                            url: LABKEY.ActionURL.buildURL('targetedms', 'removeLinkVersion.api', null, {rowId: record.get('RowId')}),
+                            success: LABKEY.Utils.getCallbackWrapper(function(response) {
+                                // close the current window and reload link version data
+                                win.close();
+                                this.getDocumentDataForSelectedRowIds();
+                            }, this, false),
+                            failure: LABKEY.Utils.getCallbackWrapper(function(response) {
+                                LABKEY.Utils.alert("Error", response.exception);
+                                win.getEl().unmask();
+                            }, this, true)
+                        });
+                    }
+                }, this);
+        }
+    },
+
+    hasDocumentInExistingChain: function(store) {
+        return store.sum('ReplacedByRun') + store.sum('ReplacesRun') > 0;
     },
 
     showGridSaveDialog : function(data) {
         var grid = this.createGrid(data);
 
-        // if we have a run that is part of an existing chain, the sum of the ReplacedByRun column will be > 0
+        // if we have a run that is part of an existing chain, the sum of the ReplacedByRun and ReplacesRun columns will be > 0
         var footerText = 'Drag and drop the documents to reorder the chain.';
-        if (grid.getStore().sum('ReplacedByRun') > 0) {
+        if (this.hasDocumentInExistingChain(grid.getStore())) {
             footerText += ' <span>Bold</span> indicates a document that is part of an existing method chain. Saving will replace any existing association.';
         }
 

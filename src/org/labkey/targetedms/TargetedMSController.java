@@ -4661,7 +4661,44 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermission(ReadPermission.class)
+    @RequiresPermission(UpdatePermission.class)
+    public class RemoveLinkVersionAction extends ApiAction<RowIdForm>
+    {
+        @Override
+        public void validateForm(RowIdForm form, Errors errors)
+        {
+            // verify that the run rowId is valid and matches an existing run
+            if (form.getRowId() == null || ExperimentService.get().getExpRun(form.getRowId()) == null)
+                errors.reject(ERROR_MSG, "No run found for id " + form.getRowId());
+        }
+
+        @Override
+        public Object execute(RowIdForm form, BindException errors) throws Exception
+        {
+            ExpRun run = ExperimentService.get().getExpRun(form.getRowId());
+            //ExperimentService.get().getExpRun(form.getRowId())
+            //run.getReplacesRuns().get(0).getRowId()
+            // TODO: implement remove run from link version chain
+            return new ApiSimpleResponse("success", true);
+        }
+    }
+
+    public static class RowIdForm
+    {
+        Integer _rowId;
+
+        public void setRowId(Integer rowId)
+        {
+            _rowId = rowId;
+        }
+
+        public Integer getRowId()
+        {
+            return _rowId;
+        }
+    }
+
+    @RequiresPermission(UpdatePermission.class)
     public class SaveLinkVersionsAction extends ApiAction<ChainedVersions>
     {
         @Override
