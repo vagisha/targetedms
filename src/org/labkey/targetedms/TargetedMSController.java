@@ -192,6 +192,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -4681,52 +4682,126 @@ public class TargetedMSController extends SpringActionController
         {
             DbScope scope = ExperimentService.get().getSchema().getScope();
 
-            int entryCount = 1;
-            int entrySetSize = form.getRuns().entrySet().size();
-
             try (DbScope.Transaction transaction = scope.ensureTransaction())
             {
-                for (Map.Entry<Integer, Integer> entry : form.getRuns().entrySet())
+                List<Integer> chainedDocuments = getLinkedListOfChainedDocuments(form.getRuns().entrySet());
+
+                for(int i = 0; i < chainedDocuments.size(); i++)
                 {
-                    ExpRun run = ExperimentService.get().getExpRun(entry.getKey());
-                    ExpRun replacedRun = entry.getValue() != null ? ExperimentService.get().getExpRun(entry.getValue()) : null;
+                    ExpRun run = ExperimentService.get().getExpRun(chainedDocuments.get(i));
+                    ExpRun replacedRun = null;
+                    if((i+1) != chainedDocuments.size())
+                        replacedRun = ExperimentService.get().getExpRun(chainedDocuments.get(i + 1));
 
                     run.setReplacedByRun(replacedRun);
                     run.save(getViewContext().getUser());
 
-                    //Issue 24131: StackOverfowException when resaving TargetedMS run links
-                    //Issue details:
-                    //existing chain: 1 -> 2 -> 3
-                    //1's replacedRun = 2
-                    //2's replacedRun = 3
-                    //3's replacedRun = null
-                    //reshuffled chain: 3 -> 1 -> 2
-                    //3's replacedRun = 1
-                    //1's replacedRun = 2
-                    //2's replacedRun = 3 (instead of null) (this causes the StackOverflowException)
-                    //Note: entrySetSize is equal to the no. of links (in above example it'd be 2) and not the actual no. of documents; hence, requires this additional step.
-                    if(entrySetSize == entryCount)
-                    {
-                        if(replacedRun != null)
-                        {
-                            ExpRun replacedRunOfLastRunInTheChain = ExperimentService.get().getExpRun(replacedRun.getRowId());
-                            if(replacedRunOfLastRunInTheChain != null)
-                            {
-                                replacedRun.setReplacedByRun(null);
-                                replacedRun.save(getViewContext().getUser());
-                            }
-                        }
-                    }
-                    entryCount++;
-
-                    //ExperimentService.get().auditRunEvent(getViewContext().getUser(), run.getBatch().getBatchProtocol(), run, null, "Run id " + run.getRowId() + " was replaced by run id " + replacedRun.getRowId());
                 }
-
                 transaction.commit();
             }
 
             return new ApiSimpleResponse("success", true);
         }
+
+        private List<Integer> getLinkedListOfChainedDocuments(Set<Map.Entry<Integer, Integer>> entries)
+        {
+            int index = 0;
+            List<Integer> chainedDocumentsList = new LinkedList<>();
+
+
+            for (Map.Entry<Integer, Integer> entry : entries)
+            {
+                ExpRun run = ExperimentService.get().getExpRun(entry.getKey());
+                ExpRun replacedRun = entry.getValue() != null ? ExperimentService.get().getExpRun(entry.getValue()) : null;
+
+                if(chainedDocumentsList.isEmpty())
+                {
+                    chainedDocumentsList.add(index++, run.getRowId());
+                    chainedDocumentsList.add(index++, replacedRun.getRowId());
+                }
+                else
+                {
+                    if(chainedDocumentsList.contains(run.getRowId()) || chainedDocumentsList.contains(replacedRun.getRowId()))
+                    {
+                        addToDocumentChainAtCorrectIndex(run, replacedRun, chainedDocumentsList);
+                    }
+                    else
+                    {
+                        chainedDocumentsList.add(index++, run.getRowId());
+                        chainedDocumentsList.add(index++, replacedRun.getRowId());
+                    }
+                }
+            }
+            return chainedDocumentsList;
+        }
+
+        private void addToDocumentChainAtCorrectIndex(ExpRun run, ExpRun replacedByRun, List<Integer> list)
+        {
+            for(int i = 0; i < list.size(); i++)
+            {
+                final Integer rowid = list.get(i);
+                if(rowid == run.getRowId())
+                {
+                    list.add(i+1, replacedByRun.getRowId());
+                    break;
+                }
+                else if(rowid == replacedByRun.getRowId())
+                {
+                    list.add(i, run.getRowId());
+                    break;
+                }
+            }
+        }
+
+    }
+
+
+
+    private class ChainDocumentNode
+    {
+        boolean _root;
+        ExpRun _parent;
+        ExpRun _child;
+
+
+        public ChainDocumentNode(boolean root, ExpRun parent, ExpRun child)
+        {
+            _root = root;
+            _parent = parent;
+            _child = child;
+
+        }
+
+        public ExpRun getChild()
+        {
+            return _child;
+        }
+
+        public void setChild(ExpRun child)
+        {
+            _child = child;
+        }
+
+        public ExpRun getParent()
+        {
+            return _parent;
+        }
+
+        public void setParent(ExpRun parent)
+        {
+            _parent = parent;
+        }
+
+        public boolean isRoot()
+        {
+            return _root;
+        }
+
+        public void setRoot(boolean root)
+        {
+            _root = root;
+        }
+
     }
 
     public static class ChainedVersions implements CustomApiForm
