@@ -4751,22 +4751,14 @@ public class TargetedMSController extends SpringActionController
                 ExpRun run = ExperimentService.get().getExpRun(entry.getKey());
                 ExpRun replacedRun = entry.getValue() != null ? ExperimentService.get().getExpRun(entry.getValue()) : null;
 
-                if(chainedDocumentsList.isEmpty())
+                if(chainedDocumentsList.contains(run.getRowId()) || chainedDocumentsList.contains(replacedRun.getRowId()))
                 {
-                    chainedDocumentsList.add(index++, run.getRowId());
-                    chainedDocumentsList.add(index++, replacedRun.getRowId());
+                    addToDocumentChainAtCorrectIndex(run, replacedRun, chainedDocumentsList);
                 }
                 else
                 {
-                    if(chainedDocumentsList.contains(run.getRowId()) || chainedDocumentsList.contains(replacedRun.getRowId()))
-                    {
-                        addToDocumentChainAtCorrectIndex(run, replacedRun, chainedDocumentsList);
-                    }
-                    else
-                    {
-                        chainedDocumentsList.add(index++, run.getRowId());
-                        chainedDocumentsList.add(index++, replacedRun.getRowId());
-                    }
+                    chainedDocumentsList.add(index++, run.getRowId());
+                    chainedDocumentsList.add(index++, replacedRun.getRowId());
                 }
             }
             return chainedDocumentsList;
@@ -4788,55 +4780,6 @@ public class TargetedMSController extends SpringActionController
                     break;
                 }
             }
-        }
-
-    }
-
-
-
-    private class ChainDocumentNode
-    {
-        boolean _root;
-        ExpRun _parent;
-        ExpRun _child;
-
-
-        public ChainDocumentNode(boolean root, ExpRun parent, ExpRun child)
-        {
-            _root = root;
-            _parent = parent;
-            _child = child;
-
-        }
-
-        public ExpRun getChild()
-        {
-            return _child;
-        }
-
-        public void setChild(ExpRun child)
-        {
-            _child = child;
-        }
-
-        public ExpRun getParent()
-        {
-            return _parent;
-        }
-
-        public void setParent(ExpRun parent)
-        {
-            _parent = parent;
-        }
-
-        public boolean isRoot()
-        {
-            return _root;
-        }
-
-        public void setRoot(boolean root)
-        {
-            _root = root;
         }
 
     }
