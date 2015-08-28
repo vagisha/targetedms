@@ -47,7 +47,6 @@ import static org.junit.Assert.assertTrue;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCGuideSetTest extends TargetedMSTest
 {
-    private static final String SProCoP_FILE = "SProCoPTutorial.zip";
     private static final String[] PRECURSORS = {
             "ATEEQLK",
             "FFVAPFPEVFGK",

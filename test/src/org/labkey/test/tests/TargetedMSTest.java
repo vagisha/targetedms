@@ -28,6 +28,11 @@ import java.util.List;
 
 public abstract class TargetedMSTest extends BaseWebDriverTest
 {
+    protected static final String SProCoP_FILE = "SProCoPTutorial.zip";
+    protected static final String QC_1_FILE = "QC_1.sky.zip";
+    protected static final String QC_2_FILE = "QC_2.sky.zip";
+    protected static final String QC_3_FILE = "QC_3.sky.zip";
+
     public enum FolderType {
         Experiment, Library, LibraryProtein, QC, Undefined
     }
@@ -66,11 +71,17 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     @LogMethod
     protected void importData(String file, int jobCount)
     {
+        importData(file, jobCount, true);
+    }
+
+    @LogMethod
+    protected void importData(String file, int jobCount, boolean uploadIfDoesntExist)
+    {
         log("Importing file " + file);
         goToModule("Pipeline");
         clickButton("Process and Import Data");
         _fileBrowserHelper.waitForFileGridReady();
-        if (!isElementPresent(FileBrowserHelper.Locators.gridRow(file)))
+        if (uploadIfDoesntExist && !isElementPresent(FileBrowserHelper.Locators.gridRow(file)))
             _fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
         _fileBrowserHelper.importFile(file, "Import Skyline Results");
         waitForText("Skyline document import");

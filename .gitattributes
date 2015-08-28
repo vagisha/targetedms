@@ -312,6 +312,7 @@ src/org/labkey/targetedms/view/summaryChartsView.jsp -text
 test/src/org/labkey/test/components/targetedms/GuideSet.java -text
 test/src/org/labkey/test/components/targetedms/GuideSetStats.java -text
 test/src/org/labkey/test/components/targetedms/GuideSetWebPart.java -text
+test/src/org/labkey/test/components/targetedms/LinkVersionsGrid.java -text
 test/src/org/labkey/test/components/targetedms/ParetoPlotsWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCAnnotationTypeWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCAnnotationWebPart.java -text
@@ -329,6 +330,7 @@ test/src/org/labkey/test/tests/TargetedMSExperimentIrtTest.java -text
 test/src/org/labkey/test/tests/TargetedMSExperimentTest.java -text
 test/src/org/labkey/test/tests/TargetedMSLibraryIrtTest.java -text
 test/src/org/labkey/test/tests/TargetedMSLibraryTest.java -text
+test/src/org/labkey/test/tests/TargetedMSLinkVersionsTest.java -text
 test/src/org/labkey/test/tests/TargetedMSQCGuideSetTest.java -text
 test/src/org/labkey/test/tests/TargetedMSQCTest.java -text
 test/src/org/labkey/test/tests/TargetedMSTest.java -text

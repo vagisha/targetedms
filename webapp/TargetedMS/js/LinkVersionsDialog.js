@@ -25,6 +25,17 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
                     });
                 }
             });
+        },
+
+        // FOR SELENIUM TESTING
+        moveGridRow : function(fromIndex, toIndex) {
+            var store = Ext4.getCmp('LinkVersionsSaveGrid').getStore(),
+                record = store.getAt(fromIndex);
+
+            if (Ext4.isDefined(record)) {
+                store.removeAt(fromIndex);
+                store.insert(toIndex, record);
+            }
         }
     },
 
@@ -157,6 +168,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
         });
 
         return Ext4.create('Ext.grid.Panel', {
+            id: 'LinkVersionsSaveGrid',
             cls: 'link-version-grid',
             padding: 15,
             width: 950,

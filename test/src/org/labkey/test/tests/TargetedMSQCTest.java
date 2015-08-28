@@ -47,9 +47,6 @@ import static org.junit.Assert.assertFalse;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCTest extends TargetedMSTest
 {
-    private static final String SProCoP_FILE = "SProCoPTutorial.zip";
-    private static final String QC_1_FILE = "QC_1.sky.zip";
-    private static final String QC_2_FILE = "QC_2.sky.zip";
     private static final int INIT_DATA_SAMPLE_FILE_COUNT = 47;
     private static final String[] PRECURSORS = {
             "ATEEQLK",
@@ -227,10 +224,10 @@ public class TargetedMSQCTest extends TargetedMSTest
         // Sample files 25fmol_Pepmix_spike_SRM_1601_02 and 25fmol_Pepmix_spike_SRM_1601_02
         // are common to the two docs. They hould have only 1 row each since they were imported
         // only from the first document (QC_1.sky.zip).
-        verifyRow(drt, 0, "25fmol_Pepmix_spike_SRM_1601_01", "QC_1.sky.zip");
-        verifyRow(drt, 1, "25fmol_Pepmix_spike_SRM_1601_02", "QC_1.sky.zip");
-        verifyRow(drt, 2, "25fmol_Pepmix_spike_SRM_1601_03", "QC_1.sky.zip");
-        verifyRow(drt, 3, "25fmol_Pepmix_spike_SRM_1601_04", "QC_2.sky.zip");
+        verifyRow(drt, 0, "25fmol_Pepmix_spike_SRM_1601_01", QC_1_FILE);
+        verifyRow(drt, 1, "25fmol_Pepmix_spike_SRM_1601_02", QC_1_FILE);
+        verifyRow(drt, 2, "25fmol_Pepmix_spike_SRM_1601_03", QC_1_FILE);
+        verifyRow(drt, 3, "25fmol_Pepmix_spike_SRM_1601_04", QC_2_FILE);
     }
 
     @Test
