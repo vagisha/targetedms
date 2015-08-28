@@ -4667,18 +4667,47 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void validateForm(RowIdForm form, Errors errors)
         {
-            // verify that the run rowId is valid and matches an existing run
-            if (form.getRowId() == null || ExperimentService.get().getExpRun(form.getRowId()) == null)
-                errors.reject(ERROR_MSG, "No run found for id " + form.getRowId());
+            if (form.getRowId() == null)
+            {
+                errors.reject(ERROR_MSG, "No run rowId provided.");
+            }
+            else
+            {
+                // verify that the run rowId is valid and matches an existing run
+                // and if the run replaces any other runs, it should only replace one
+                ExpRun run = ExperimentService.get().getExpRun(form.getRowId());
+                if (run == null)
+                    errors.reject(ERROR_MSG, "No run found for id " + form.getRowId() + ".");
+                else if (!run.getReplacesRuns().isEmpty() && run.getReplacesRuns().size() > 1)
+                    errors.reject(ERROR_MSG, "Run " + form.getRowId() + " replaces more than one run.");
+            }
         }
 
         @Override
         public Object execute(RowIdForm form, BindException errors) throws Exception
         {
             ExpRun run = ExperimentService.get().getExpRun(form.getRowId());
-            //ExperimentService.get().getExpRun(form.getRowId())
-            //run.getReplacesRuns().get(0).getRowId()
-            // TODO: implement remove run from link version chain
+            ExpRun replaces = run.getReplacesRuns().isEmpty() ? null : run.getReplacesRuns().get(0);
+            ExpRun replacedBy = run.getReplacedByRun();
+
+            DbScope scope = ExperimentService.get().getSchema().getScope();
+            try (DbScope.Transaction transaction = scope.ensureTransaction())
+            {
+                // if the run is in the middle of a chain, connect its child/parent
+                // then remove any references from the child/parent
+                if (replaces != null) {
+                    replaces.setReplacedByRun(replacedBy);
+                    replaces.save(getViewContext().getUser());
+                }
+                if (replacedBy != null)
+                {
+                    run.setReplacedByRun(null);
+                    run.save(getViewContext().getUser());
+                }
+
+                transaction.commit();
+            }
+
             return new ApiSimpleResponse("success", true);
         }
     }
@@ -4704,13 +4733,13 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void validateForm(ChainedVersions form, Errors errors)
         {
-            // verify that the run rowId is valid and matches an existing run
-            for (Integer rowId : form.getRuns().keySet())
+            // verify that the run and replacedByRun rowIds are valid and match an existing run
+            for (Map.Entry<Integer,Integer> entry : form.getRuns().entrySet())
             {
-                if (rowId == null || ExperimentService.get().getExpRun(rowId) == null)
-                {
-                    errors.reject(ERROR_MSG, "No run found for id " + rowId);
-                }
+                if (entry.getKey() == null || ExperimentService.get().getExpRun(entry.getKey()) == null)
+                    errors.reject(ERROR_MSG, "No run found for id " + entry.getKey());
+                if (entry.getValue() == null || ExperimentService.get().getExpRun(entry.getValue()) == null)
+                    errors.reject(ERROR_MSG, "No run found for id " + entry.getValue());
             }
         }
 

@@ -188,8 +188,8 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
     removeColumnCellClick : function(grid, td, cellIndex, record, tr, rowIndex, e) {
         // 'Remove' column listener to remove a record from an existing method chain
         if (cellIndex == 0 && e.target.className == 'fa fa-times') {
-            Ext4.Msg.confirm('Remove Confirmation', 'Are you sure you want to remove the selected document from '
-                + 'its existing method chain? This action can not be undone.',
+            Ext4.Msg.confirm('Remove Confirmation', 'Are you sure you want to remove <b>' + record.get('File/FileName')
+                    + '</b> from its existing method chain?',
                 function(btnId) {
                     if (btnId == 'yes') {
                         var win = grid.up('window');
@@ -226,6 +226,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
         }
 
         var win = Ext4.create('Ext.window.Window', {
+            modal: true,
             title: 'Link Versions',
             border: false,
             autoShow: true,
