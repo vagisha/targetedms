@@ -1868,6 +1868,7 @@ public class TargetedMSController extends SpringActionController
                                                    forExport);
             view.setShowExportButtons(true);
             view.setShowDetailsColumn(false);
+            view.setButtonBarPosition(DataRegion.ButtonBarPosition.BOTH);
             return view;
         }
 

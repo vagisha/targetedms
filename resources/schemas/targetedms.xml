@@ -234,6 +234,7 @@
             <ns:column columnName="EndIndex" />
             <ns:column columnName="CalcNeutralMass">
                 <ns:columnTitle>Peptide Neutral Mass</ns:columnTitle>
+                <ns:formatString>0.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="NumMissedCleavages">
                 <ns:columnTitle>Missed Cleavages</ns:columnTitle>
