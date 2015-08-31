@@ -36,6 +36,7 @@ import org.labkey.api.protein.ProteomicsModule;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.settings.AdminConsole;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.BaseWebPartFactory;
@@ -343,6 +344,9 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
         proteinService.registerProteinSearchView(new TransitionProteinSearchViewProvider());
         proteinService.registerPeptideSearchView(new TransitionPeptideSearchViewProvider());
+
+        ServiceRegistry svcReg = ServiceRegistry.get();
+        svcReg.registerService(TargetedMSService.class, new TargetedMSServiceImpl());
 
         AuditLogService.get().addAuditViewFactory(TargetedMsRepresentativeStateAuditViewFactory.getInstance());
         AuditLogService.registerAuditType(new TargetedMsRepresentativeStateAuditProvider());

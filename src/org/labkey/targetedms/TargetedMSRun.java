@@ -17,6 +17,7 @@
 package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.util.MemTracker;
 
 import java.io.Serializable;
@@ -27,7 +28,7 @@ import java.util.Date;
  * Date: 4/1/12
  * Time: 10:58 AM
  */
-public class TargetedMSRun implements Serializable
+public class TargetedMSRun implements Serializable, ITargetedMSRun
 {
     /** Don't change the ordering of these enum values without updating the values in targetedms.runs.representativedatastate */
     public enum RepresentativeDataState
