@@ -210,9 +210,9 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
                         LABKEY.Ajax.request({
                             url: LABKEY.ActionURL.buildURL('targetedms', 'removeLinkVersion.api', null, {rowId: record.get('RowId')}),
                             success: LABKEY.Utils.getCallbackWrapper(function(response) {
-                                // close the current window and reload link version data
+                                //close the dialog and reload the page
                                 win.close();
-                                this.getDocumentDataForSelectedRowIds();
+                                window.location.reload();
                             }, this, false),
                             failure: LABKEY.Utils.getCallbackWrapper(function(response) {
                                 LABKEY.Utils.alert("Error", response.exception);

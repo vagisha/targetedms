@@ -1,11 +1,10 @@
 package org.labkey.test.components.targetedms;
 
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.tests.TargetedMSLinkVersionsTest;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 
 import static org.junit.Assert.assertTrue;
 
@@ -13,9 +12,9 @@ import java.util.List;
 
 public class LinkVersionsGrid
 {
-    private BaseWebDriverTest _test;
+    private TargetedMSLinkVersionsTest _test;
 
-    public LinkVersionsGrid(BaseWebDriverTest test)
+    public LinkVersionsGrid(TargetedMSLinkVersionsTest test)
     {
         _test = test;
     }
@@ -101,9 +100,10 @@ public class LinkVersionsGrid
         getRemoveLinkIcons().get(index).click();
         _test.waitForElement(Locator.tagContainingText("div", "Are you sure you want to remove"));
 
-        _test._ext4Helper.clickWindowButton("Remove Confirmation", "Yes", 0, 0);
-        _test.sleep(2000); // TODO: window is closed and reopened, need something better than sleep
+        _test._ext4Helper.clickWindowButton("Remove Confirmation", "Yes", _test.getDefaultWaitForPage(), 0);
 
+        // reopen the link versions dialog to verify it was removed
+        openDialogForDocuments(_test.getQcDocumentNames());
         if (initialRemoveIconCount > 2)
         {
             _test.waitForElements(Locator.tagWithClass("span", "fa-times"), initialRemoveIconCount - 1);
@@ -114,6 +114,7 @@ public class LinkVersionsGrid
             _test.assertElementNotPresent(Locator.tagWithClass("span", "fa-times"));
             _test.assertElementNotPresent(getReplaceExistingTextLocator());
         }
+        clickCancel();
     }
 
     public List<WebElement> getRemoveLinkIcons()
@@ -121,14 +122,9 @@ public class LinkVersionsGrid
         return Locator.tagWithClass("span", "fa-times").findElements(_test.getDriver());
     }
 
-    public void reorderVersions(String documentToMove, String documentToMoveAbove)
+    public void reorderVersions(int rowIndex, int indexToMoveTo)
     {
-        // TODO: I don't know why the above isn't working to actually use drag-and-drop UI
-        //WebElement gridElementToMove = _test.getElement(Ext4Helper.Locators.getGridRow(documentToMove, 0));
-        //WebElement topGridElement = _test.getElement(Ext4Helper.Locators.getGridRow(documentToMoveAbove, 0));
-        //int yOffset = topGridElement.getLocation().getY() - gridElementToMove.getLocation().getY();
-        //_test.dragAndDrop(Ext4Helper.Locators.getGridRow(documentToMove, 0), -1, yOffset-1);
-        //_test.sleep(1000); // give it a sec so the drop animation finishes in the Ext4 grid
-        _test.executeScript("LABKEY.targetedms.LinkedVersions.moveGridRow(2, 0);");
+        // Using drag-and-drop from the UI isn't very reliable, so I added a workaround to reorder via JS
+        _test.executeScript("LABKEY.targetedms.LinkedVersions.moveGridRow(" + rowIndex + ", " + indexToMoveTo + ");");
     }
 }

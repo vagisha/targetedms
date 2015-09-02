@@ -19,7 +19,6 @@ import static org.junit.Assert.assertEquals;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSLinkVersionsTest extends TargetedMSTest
 {
-    private static List<String> QC_DOCUMENT_NAMES = Arrays.asList(QC_1_FILE, QC_2_FILE, QC_3_FILE);
     private static int PIPELINE_JOB_COUNTER = 0;
 
     @Override
@@ -38,7 +37,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         init.goToModule("Pipeline");
         init.clickButton("Process and Import Data");
         init._fileBrowserHelper.waitForFileGridReady();
-        for (String file : QC_DOCUMENT_NAMES)
+        for (String file : init.getQcDocumentNames())
             init._fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
     }
 
@@ -57,12 +56,17 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         clickTab("Runs");
     }
 
+    public List<String> getQcDocumentNames()
+    {
+        return Arrays.asList(QC_1_FILE, QC_2_FILE, QC_3_FILE);
+    }
+
     private void deleteExistingQCRuns()
     {
         boolean hasRunsToDelete = false;
         DataRegionTable table = new DataRegionTable("TargetedMSRuns", this);
 
-        for (String documentName : QC_DOCUMENT_NAMES)
+        for (String documentName : getQcDocumentNames())
         {
             if (table.getRow("File", documentName) > -1)
             {
@@ -95,16 +99,16 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
 
         log("add third document to version chain");
         linkVersionsGrid.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE), 3);
-        linkVersionsGrid.waitForGrid(QC_DOCUMENT_NAMES, true); // verify QC_2 document is pulled in by association
+        linkVersionsGrid.waitForGrid(getQcDocumentNames(), true); // verify QC_2 document is pulled in by association
         assertElementPresent(linkVersionsGrid.getReplaceExistingTextLocator());
         assertEquals(2, linkVersionsGrid.getRemoveLinkIcons().size());
         linkVersionsGrid.clickSave();
-        verifyDocumentDetailsChain(QC_DOCUMENT_NAMES, 2);
+        verifyDocumentDetailsChain(getQcDocumentNames(), 2);
 
         log("re-order documents in the existing chain");
-        linkVersionsGrid.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        linkVersionsGrid.openDialogForDocuments(getQcDocumentNames());
         assertEquals(3, linkVersionsGrid.getRemoveLinkIcons().size());
-        linkVersionsGrid.reorderVersions(QC_3_FILE, QC_1_FILE);
+        linkVersionsGrid.reorderVersions(2, 0);
         linkVersionsGrid.clickSave();
         verifyDocumentDetailsChain(Arrays.asList(QC_3_FILE, QC_1_FILE, QC_2_FILE), 1);
     }
@@ -115,21 +119,19 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(this);
 
         log("setup chain for the 3 runs");
-        linkVersionsGrid.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        linkVersionsGrid.openDialogForDocuments(getQcDocumentNames());
         linkVersionsGrid.clickSave();
 
         log("remove link version from middle of chain");
-        linkVersionsGrid.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        linkVersionsGrid.openDialogForDocuments(getQcDocumentNames());
         assertEquals(3, linkVersionsGrid.getRemoveLinkIcons().size());
         linkVersionsGrid.removeLinkVersion(1);
-        linkVersionsGrid.clickCancel();
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_3_FILE), 0);
 
         log("remove link version from end of chain");
         linkVersionsGrid.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE));
         assertEquals(2, linkVersionsGrid.getRemoveLinkIcons().size());
         linkVersionsGrid.removeLinkVersion(1);
-        linkVersionsGrid.clickCancel();
         linkVersionsGrid.goToDocumentDetails(QC_1_FILE);
         waitForElement(linkVersionsGrid.getNoVersionsLocator());
     }
@@ -140,9 +142,9 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(this);
 
         log("setup chain for the 3 runs");
-        linkVersionsGrid.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        linkVersionsGrid.openDialogForDocuments(getQcDocumentNames());
         linkVersionsGrid.clickSave();
-        verifyDocumentDetailsChain(QC_DOCUMENT_NAMES, 0);
+        verifyDocumentDetailsChain(getQcDocumentNames(), 0);
 
         log("delete the run which is in a chain");
         clickTab("Runs");
