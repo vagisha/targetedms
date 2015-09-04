@@ -28,6 +28,7 @@ import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -93,8 +94,8 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         importData(SKY_FILE);
 
         // 1. Quick sanity check
-        assertEquals("Imported iRT Peptide count is incorrect.", getRowCount(), PEPTIDE_COUNT);
-        assertEquals("Imported iRT value is incorrect for peptide " + UPDATE_PEPTIDE , getIrtValue(UPDATE_PEPTIDE), ORIGINAL_VALUE, DELTA);
+        assertEquals("Imported iRT Peptide count is incorrect.", PEPTIDE_COUNT, getRowCount());
+        assertEquals("Imported iRT value is incorrect for peptide " + UPDATE_PEPTIDE, ORIGINAL_VALUE, getIrtValue(UPDATE_PEPTIDE), DELTA);
         goodImport++;
 
         // 2. Correlation throwing out one standard.
@@ -103,23 +104,23 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         goodImport++;
 
         // 2.a. Verify standard peptides were excluded from new insert/update
-        assertEquals("More than one row for standard peptide " + STANDARD_PEPTIDE, getRowsForPeptide(STANDARD_PEPTIDE).size(), 1);
-        assertEquals("Import count should only be 1 for standard peptide " + STANDARD_PEPTIDE, getImportCount(STANDARD_PEPTIDE), 1);
+        assertEquals("More than one row for standard peptide " + STANDARD_PEPTIDE, 1, getRowsForPeptide(STANDARD_PEPTIDE).size());
+        assertEquals("Import count should only be 1 for standard peptide " + STANDARD_PEPTIDE, 1, getImportCount(STANDARD_PEPTIDE));
 
         // 3. Correlation on shared peptides / scale values
         importData(SKY_FILE_DOUBLE_TIMES_NO_STANDARDS, 3);
         checkLogMessage(CALCULATED_FROM_SHARED_MSG);
-        assertEquals("Normalized, weighted value is incorrect for peptide  " + UPDATE_PEPTIDE , getIrtValue(UPDATE_PEPTIDE), ORIGINAL_VALUE, DELTA);
+        assertEquals("Normalized, weighted value is incorrect for peptide  " + UPDATE_PEPTIDE, ORIGINAL_VALUE, getIrtValue(UPDATE_PEPTIDE), DELTA);
         goodImport++;
 
         // 4. Correlation on all standards / weighted average / new library peptide test. Import another copy which has been modified with a different value for one of the peptides (sign flipped so average should be 0),
         // and has a new peptide added to it.
         importData(SKY_FILE_UPDATE_SCALE, 4);
         checkLogMessage(CALCULATED_FROM_FULL_STANDARD_LIST);
-        assertEquals("Reweighed value is incorrect for peptide " + UPDATE_PEPTIDE, getIrtValue(UPDATE_PEPTIDE), REWEIGHED_VALUE, DELTA);
-        assertEquals("Import count is incorrect for peptide " + UPDATE_PEPTIDE, getImportCount(UPDATE_PEPTIDE), 4);
-        assertEquals("Import count is incorrect for peptide " + OMITTED_PEPTIDE, getImportCount(OMITTED_PEPTIDE), 3);
-        assertEquals("Import count is incorrect for peptide " + NEW_PEPTIDE, getImportCount(NEW_PEPTIDE), 1);
+        assertEquals("Reweighed value is incorrect for peptide " + UPDATE_PEPTIDE, REWEIGHED_VALUE, getIrtValue(UPDATE_PEPTIDE), DELTA);
+        assertEquals("Import count is incorrect for peptide " + UPDATE_PEPTIDE, 4, getImportCount(UPDATE_PEPTIDE));
+        assertEquals("Import count is incorrect for peptide " + OMITTED_PEPTIDE, 3, getImportCount(OMITTED_PEPTIDE));
+        assertEquals("Import count is incorrect for peptide " + NEW_PEPTIDE, 1, getImportCount(NEW_PEPTIDE));
         goodImport++;
 
         // 5. Shared peptide failed correlation test. Import another copy which doesn't match the same set of standards as the first import. Because of the update done in test 4, this will
@@ -139,16 +140,9 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
         goToProjectHome();
         final File exportFile = clickAndWaitForDownload(Locator.linkWithText("Download"), 1)[0];
         assertEquals(getProjectName() + "_rev" + goodImport + ".clib", exportFile.getName());
-        Checker fileSize = new Checker()
-        {
-            @Override
-            public boolean check()
-            {
-                return exportFile.length() > 1E+6;
-            }
-        };
+        Supplier<Boolean> fileSize = () -> exportFile.length() > 1E+6;
         waitFor(fileSize, WAIT_FOR_JAVASCRIPT);
-        assertTrue("Chromatogram library export file is too small: " + exportFile.length() + " bytes", fileSize.check());
+        assertTrue("Chromatogram library export file is too small: " + exportFile.length() + " bytes", fileSize.get());
     }
 
     protected int getRowCount()
