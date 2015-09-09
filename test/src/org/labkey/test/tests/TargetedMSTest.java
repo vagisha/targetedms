@@ -80,7 +80,6 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         log("Importing file " + file);
         goToModule("Pipeline");
         clickButton("Process and Import Data");
-        _fileBrowserHelper.waitForFileGridReady();
         if (uploadIfDoesntExist && !isElementPresent(FileBrowserHelper.Locators.gridRow(file)))
             _fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
         _fileBrowserHelper.importFile(file, "Import Skyline Results");

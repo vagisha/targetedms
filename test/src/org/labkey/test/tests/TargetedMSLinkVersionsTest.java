@@ -51,7 +51,6 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         // pre-upload the files to the pipeline root so that all of the @Test don't have to worry about it
         init.goToModule("Pipeline");
         init.clickButton("Process and Import Data");
-        init._fileBrowserHelper.waitForFileGridReady();
         for (String file : init.getQcDocumentNames())
             init._fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
     }
