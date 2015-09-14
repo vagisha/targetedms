@@ -23,8 +23,7 @@ import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.LinkVersionsGrid;
-import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.FileBrowserHelper;
+import org.labkey.test.components.targetedms.TargetedMSRunsTable;
 
 import java.util.Arrays;
 import java.util.List;
@@ -34,6 +33,8 @@ import static org.junit.Assert.assertEquals;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSLinkVersionsTest extends TargetedMSTest
 {
+    public static List<String> QC_DOCUMENT_NAMES = Arrays.asList(QC_1_FILE, QC_2_FILE, QC_3_FILE);
+
     private static int PIPELINE_JOB_COUNTER = 0;
 
     @Override
@@ -51,7 +52,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         // pre-upload the files to the pipeline root so that all of the @Test don't have to worry about it
         init.goToModule("Pipeline");
         init.clickButton("Process and Import Data");
-        for (String file : init.getQcDocumentNames())
+        for (String file : QC_DOCUMENT_NAMES)
             init._fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
     }
 
@@ -70,17 +71,12 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         clickTab("Runs");
     }
 
-    public List<String> getQcDocumentNames()
-    {
-        return Arrays.asList(QC_1_FILE, QC_2_FILE, QC_3_FILE);
-    }
-
     private void deleteExistingQCRuns()
     {
         boolean hasRunsToDelete = false;
-        DataRegionTable table = new DataRegionTable("TargetedMSRuns", this);
+        TargetedMSRunsTable table = new TargetedMSRunsTable(this);
 
-        for (String documentName : getQcDocumentNames())
+        for (String documentName : QC_DOCUMENT_NAMES)
         {
             if (table.getRow("File", documentName) > -1)
             {
@@ -99,87 +95,86 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
     @Test
     public void testReorderMethodChain()
     {
-        LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(this);
-
         log("verify originally no linked versions");
-        linkVersionsGrid.goToDocumentDetails(QC_1_FILE);
-        waitForElement(linkVersionsGrid.getNoVersionsLocator());
+        TargetedMSRunsTable table = new TargetedMSRunsTable(this);
+        table.goToDocumentDetails(QC_1_FILE);
+        waitForElement(LinkVersionsGrid.Elements.noVersions);
 
         log("link two versions together");
-        linkVersionsGrid.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_2_FILE));
-        assertElementNotPresent(linkVersionsGrid.getReplaceExistingTextLocator());
-        linkVersionsGrid.clickSave();
+        clickTab("Runs");
+        LinkVersionsGrid grid = table.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_2_FILE));
+        assertElementNotPresent(LinkVersionsGrid.Elements.replaceFooter);
+        grid.clickSave();
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_2_FILE), 0);
 
         log("add third document to version chain");
-        linkVersionsGrid.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE), 3);
-        linkVersionsGrid.waitForGrid(getQcDocumentNames(), true); // verify QC_2 document is pulled in by association
-        assertElementPresent(linkVersionsGrid.getReplaceExistingTextLocator());
-        assertEquals(2, linkVersionsGrid.getRemoveLinkIcons().size());
-        linkVersionsGrid.clickSave();
-        verifyDocumentDetailsChain(getQcDocumentNames(), 2);
+        clickTab("Runs");
+        grid = table.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE), 3);
+        grid.waitForGrid(QC_DOCUMENT_NAMES, true); // verify QC_2 document is pulled in by association
+        assertElementPresent(LinkVersionsGrid.Elements.replaceFooter);
+        assertEquals(2, grid.findRemoveLinkIcons().size());
+        grid.clickSave();
+        verifyDocumentDetailsChain(QC_DOCUMENT_NAMES, 2);
 
         log("re-order documents in the existing chain");
-        linkVersionsGrid.openDialogForDocuments(getQcDocumentNames());
-        assertEquals(3, linkVersionsGrid.getRemoveLinkIcons().size());
-        linkVersionsGrid.reorderVersions(2, 0);
-        linkVersionsGrid.clickSave();
+        clickTab("Runs");
+        grid = table.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        assertEquals(3, grid.findRemoveLinkIcons().size());
+        grid.reorderVersions(2, 0);
+        grid.clickSave();
         verifyDocumentDetailsChain(Arrays.asList(QC_3_FILE, QC_1_FILE, QC_2_FILE), 1);
     }
 
     @Test
     public void testRemoveFromMethodChain()
     {
-        LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(this);
-
         log("setup chain for the 3 runs");
-        linkVersionsGrid.openDialogForDocuments(getQcDocumentNames());
-        linkVersionsGrid.clickSave();
+        TargetedMSRunsTable table = new TargetedMSRunsTable(this);
+        LinkVersionsGrid grid = table.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        grid.clickSave();
 
         log("remove link version from middle of chain");
-        linkVersionsGrid.openDialogForDocuments(getQcDocumentNames());
-        assertEquals(3, linkVersionsGrid.getRemoveLinkIcons().size());
-        linkVersionsGrid.removeLinkVersion(1);
+        grid = table.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        assertEquals(3, grid.findRemoveLinkIcons().size());
+        grid.removeLinkVersion(1);
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_3_FILE), 0);
 
         log("remove link version from end of chain");
-        linkVersionsGrid.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE));
-        assertEquals(2, linkVersionsGrid.getRemoveLinkIcons().size());
-        linkVersionsGrid.removeLinkVersion(1);
-        linkVersionsGrid.goToDocumentDetails(QC_1_FILE);
-        waitForElement(linkVersionsGrid.getNoVersionsLocator());
+        clickTab("Runs");
+        grid = table.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE));
+        assertEquals(2, grid.findRemoveLinkIcons().size());
+        grid.removeLinkVersion(1);
+        table.goToDocumentDetails(QC_1_FILE);
+        waitForElement(LinkVersionsGrid.Elements.noVersions);
     }
 
     @Test
     public void testDeleteRunWhenInChain()
     {
-        LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(this);
-
         log("setup chain for the 3 runs");
-        linkVersionsGrid.openDialogForDocuments(getQcDocumentNames());
-        linkVersionsGrid.clickSave();
-        verifyDocumentDetailsChain(getQcDocumentNames(), 0);
+        TargetedMSRunsTable table = new TargetedMSRunsTable(this);
+        LinkVersionsGrid grid = table.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        grid.clickSave();
+        verifyDocumentDetailsChain(QC_DOCUMENT_NAMES, 0);
 
         log("delete the run which is in a chain");
         clickTab("Runs");
-        DataRegionTable table = new DataRegionTable("TargetedMSRuns", this);
-        table.uncheckAll();
-        table.checkCheckbox(table.getRow("File", QC_2_FILE));
-        table.clickHeaderButtonByText("Delete");
-        clickButton("Confirm Delete");
+        table.deleteRun(QC_2_FILE);
 
         log("verify that the chain was updated correctly for remaining runs");
-        linkVersionsGrid.goToDocumentDetails(QC_1_FILE);
-        waitForElement(linkVersionsGrid.getNoVersionsLocator());
+        table.goToDocumentDetails(QC_1_FILE);
+        waitForElement(LinkVersionsGrid.Elements.noVersions);
         clickTab("Runs");
-        linkVersionsGrid.goToDocumentDetails(QC_3_FILE);
-        waitForElement(linkVersionsGrid.getNoVersionsLocator());
+        table.goToDocumentDetails(QC_3_FILE);
+        waitForElement(LinkVersionsGrid.Elements.noVersions);
     }
 
     private void verifyDocumentDetailsChain(List<String> documentNames, int index)
     {
-        LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(this);
-        linkVersionsGrid.goToDocumentDetails(documentNames.get(index));
-        linkVersionsGrid.waitForGrid(documentNames, false);
+        TargetedMSRunsTable table = new TargetedMSRunsTable(this);
+        table.goToDocumentDetails(documentNames.get(index));
+
+        LinkVersionsGrid grid = new LinkVersionsGrid(this);
+        grid.waitForGrid(documentNames, false);
     }
 }

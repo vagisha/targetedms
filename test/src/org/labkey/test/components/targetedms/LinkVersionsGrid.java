@@ -15,9 +15,10 @@
  */
 package org.labkey.test.components.targetedms;
 
+import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.components.Component;
 import org.labkey.test.tests.TargetedMSLinkVersionsTest;
-import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.openqa.selenium.WebElement;
 
@@ -25,43 +26,19 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-public class LinkVersionsGrid
+public class LinkVersionsGrid extends Component
 {
-    private TargetedMSLinkVersionsTest _test;
+    private BaseWebDriverTest _test;
 
-    public LinkVersionsGrid(TargetedMSLinkVersionsTest test)
+    public LinkVersionsGrid(BaseWebDriverTest test)
     {
         _test = test;
     }
 
-    public void goToDocumentDetails(String name)
+    @Override
+    public WebElement getComponentElement()
     {
-        _test.clickAndWait(Locator.linkWithText(name));
-        _test.waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Versions"));
-    }
-
-    public Locator getNoVersionsLocator()
-    {
-        return Locator.tagWithText("div", "No other versions available.");
-    }
-
-    public void openDialogForDocuments(List<String> documentNames)
-    {
-        openDialogForDocuments(documentNames, documentNames.size());
-    }
-
-    public void openDialogForDocuments(List<String> documentNames, int expectedRunCount)
-    {
-        if (!_test.isElementPresent(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Targeted MS Runs")))
-            _test.clickTab("Runs");
-
-        DataRegionTable table = new DataRegionTable("TargetedMSRuns", _test);
-        table.uncheckAll();
-        for (String documentName : documentNames)
-            table.checkCheckbox(table.getRow("File", documentName));
-
-        table.clickHeaderButtonByText("Link Versions");
-        waitForGrid(documentNames, expectedRunCount, true);
+        return null;
     }
 
     public void waitForGrid(List<String> documentNames, boolean isDialog)
@@ -104,42 +81,46 @@ public class LinkVersionsGrid
         _test._ext4Helper.clickWindowButton("Link Versions", "Cancel", 0, 0);
     }
 
-    public Locator getReplaceExistingTextLocator()
-    {
-        return Locator.tagWithClass("div", "link-version-footer").containing("Saving will replace any existing association.");
-    }
-
     public void removeLinkVersion(int index)
     {
-        int initialRemoveIconCount = getRemoveLinkIcons().size();
-        getRemoveLinkIcons().get(index).click();
-        _test.waitForElement(Locator.tagContainingText("div", "Are you sure you want to remove"));
+        int initialRemoveIconCount = findRemoveLinkIcons().size();
+        findRemoveLinkIcons().get(index).click();
+        _test.waitForElement(Elements.removeText);
 
         _test._ext4Helper.clickWindowButton("Remove Confirmation", "Yes", _test.getDefaultWaitForPage(), 0);
 
         // reopen the link versions dialog to verify it was removed
-        openDialogForDocuments(_test.getQcDocumentNames());
+        TargetedMSRunsTable runsTable = new TargetedMSRunsTable(_test);
+        runsTable.openDialogForDocuments(TargetedMSLinkVersionsTest.QC_DOCUMENT_NAMES);
         if (initialRemoveIconCount > 2)
         {
-            _test.waitForElements(Locator.tagWithClass("span", "fa-times"), initialRemoveIconCount - 1);
-            _test.assertElementPresent(getReplaceExistingTextLocator());
+            _test.waitForElements(Elements.removeIcon, initialRemoveIconCount - 1);
+            _test.assertElementPresent(Elements.replaceFooter);
         }
         else
         {
-            _test.assertElementNotPresent(Locator.tagWithClass("span", "fa-times"));
-            _test.assertElementNotPresent(getReplaceExistingTextLocator());
+            _test.assertElementNotPresent(Elements.removeIcon);
+            _test.assertElementNotPresent(Elements.replaceFooter);
         }
         clickCancel();
     }
 
-    public List<WebElement> getRemoveLinkIcons()
+    public List<WebElement> findRemoveLinkIcons()
     {
-        return Locator.tagWithClass("span", "fa-times").findElements(_test.getDriver());
+        return Elements.removeIcon.findElements(_test.getDriver());
     }
 
     public void reorderVersions(int rowIndex, int indexToMoveTo)
     {
         // Using drag-and-drop from the UI isn't very reliable, so I added a workaround to reorder via JS
         _test.executeScript("LABKEY.targetedms.LinkedVersions.moveGridRow(" + rowIndex + ", " + indexToMoveTo + ");");
+    }
+
+    public static class Elements
+    {
+        public static Locator removeIcon = Locator.tagWithClass("span", "fa-times");
+        public static Locator removeText = Locator.tagContainingText("div", "Are you sure you want to remove");
+        public static Locator replaceFooter = Locator.tagWithClass("div", "link-version-footer").containing("Saving will replace any existing association.");
+        public static Locator noVersions = Locator.tagWithText("div", "No other versions available.");
     }
 }

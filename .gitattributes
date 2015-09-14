@@ -323,6 +323,7 @@ test/src/org/labkey/test/components/targetedms/QCAnnotationWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCPlot.java -text
 test/src/org/labkey/test/components/targetedms/QCPlotsWebPart.java -text
 test/src/org/labkey/test/components/targetedms/QCSummaryWebPart.java -text
+test/src/org/labkey/test/components/targetedms/TargetedMSRunsTable.java -text
 test/src/org/labkey/test/pages/targetedms/AnnotationInsertPage.java -text
 test/src/org/labkey/test/pages/targetedms/AnnotationTypeInsertPage.java -text
 test/src/org/labkey/test/pages/targetedms/GuideSetPage.java -text
