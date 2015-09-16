@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms.parser;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.RuntimeSQLException;
@@ -206,7 +207,8 @@ public class SkylineDocumentParser implements AutoCloseable
         String irtDatabasePath = rtPredictionSettings.getIrtDatabasePath();
         if (null != irtDatabasePath)
         {
-            String iRTFileName = new File(irtDatabasePath).getName();
+            // FileNameUtils.getName() will handle a file path in either Unix or Windows format.
+            String iRTFileName = FilenameUtils.getName(irtDatabasePath);
             File iRTFile = new File(_file.getParent(), iRTFileName);
             if (! iRTFile.exists() ) {
                 _log.warn("Input iRT database does not exist " + iRTFileName);
