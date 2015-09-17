@@ -192,7 +192,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         goBack();
         clickAndWait(Locator.linkContainingText(SKY_FILE));
         //Toggle to Transition view (click on down arrow in Precursor List webpart header)
-        click(Locator.xpath("//th[span[contains(text(), 'Precursor List')]]/span/a/img"));
+        click(Locator.xpath("//th[span[contains(text(), 'Precursor List')]]/span/a/span[contains(@class, 'fa-caret-down')]"));
         clickAndWait(Locator.tagContainingText("span", "Transition List"));
         waitForText("Transition List");
         DataRegionTable drt = new DataRegionTable("transitions_view", this);
