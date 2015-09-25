@@ -118,7 +118,7 @@ public class LinkVersionsGrid extends Component
 
     public static class Elements
     {
-        public static Locator removeIcon = Locator.tagWithClass("span", "fa-times");
+        public static Locator removeIcon = Locator.tagWithClass("span", "remove-link-version");
         public static Locator removeText = Locator.tagContainingText("div", "Are you sure you want to remove");
         public static Locator replaceFooter = Locator.tagWithClass("div", "link-version-footer").containing("Saving will replace any existing association.");
         public static Locator noVersions = Locator.tagWithText("div", "No other versions available.");

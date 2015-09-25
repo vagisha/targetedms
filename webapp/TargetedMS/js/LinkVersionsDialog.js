@@ -147,7 +147,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
                 '<span class="{[this.getCls(values)]}" data-qtip="Remove the document from its existing document method chain."></span>',
                 {
                     getCls : function(values) {
-                        return values['ReplacedByRun'] + values['ReplacesRun'] > 0 ? 'fa fa-times' : '';
+                        return values['ReplacedByRun'] + values['ReplacesRun'] > 0 ? 'fa fa-times remove-link-version' : '';
                     }
                 }
             ),
@@ -199,7 +199,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
 
     removeColumnCellClick : function(grid, td, cellIndex, record, tr, rowIndex, e) {
         // 'Remove' column listener to remove a record from an existing method chain
-        if (cellIndex == 0 && e.target.className == 'fa fa-times') {
+        if (cellIndex == 0 && e.target.className.indexOf('remove-link-version') > 0) {
             Ext4.Msg.confirm('Remove Confirmation', 'Are you sure you want to remove <b>' + record.get('File/FileName')
                     + '</b> from its existing method chain?',
                 function(btnId) {
