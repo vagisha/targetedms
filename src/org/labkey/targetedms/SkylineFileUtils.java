@@ -15,7 +15,14 @@
  */
 package org.labkey.targetedms;
 
+import org.apache.log4j.Logger;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.NetworkDrive;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * User: vsharma
@@ -30,6 +37,8 @@ public class SkylineFileUtils
     public static final String EXT_SKY_W_DOT = ".sky";
     public static final String EXT_BLIB_W_DOT = ".blib";
 
+    private static final Logger LOG = Logger.getLogger(SkylineFileUtils.class);
+
     public static String getBaseName(String fileName)
     {
         if(fileName == null)
@@ -38,5 +47,34 @@ public class SkylineFileUtils
             return FileUtil.getBaseName(fileName, 2);
         else
             return FileUtil.getBaseName(fileName, 1);
+    }
+
+    public static File getSkylineFile(int runId)
+    {
+        TargetedMSRun run = TargetedMSManager.getRun(runId);
+        return getSkylineFile(run);
+    }
+
+    public static File getSkylineFile(TargetedMSRun run)
+    {
+        if(run == null)
+        {
+            return null;
+        }
+        PipeRoot root = PipelineService.get().getPipelineRootSetting(run.getContainer());
+        if(root != null)
+        {
+            File skyDocfile = new File(root.getRootPath(), run.getFileName());
+            if(NetworkDrive.exists(skyDocfile))
+            {
+                return skyDocfile;
+            }
+            else
+            {
+                LOG.warn("File does not exist: " + skyDocfile.getPath());
+                return null;
+            }
+        }
+        return null;
     }
 }

@@ -23,11 +23,16 @@
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSRun" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ page import="java.io.File" %>
+<%@ page import="org.labkey.targetedms.SkylineFileUtils" %>
+<%@ page import="org.apache.commons.io.FileUtils" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
     TargetedMSController.RunDetailsBean bean = me.getModelBean();
     TargetedMSRun run = bean.getRun();
+    File skyDocFile = SkylineFileUtils.getSkylineFile(run);
+
     ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
     downloadAction.addParameter("runId", run.getId());
     Container c = getContainer();
@@ -39,7 +44,10 @@
         <td class="labkey-form-label">Name</td>
         <td>
             <%= h(run.getDescription())%>
-            <%= textLink("Download", downloadAction)%>
+            <%
+                String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
+            %>
+            <%= textLink("Download" + size, downloadAction)%>
         </td>
     </tr>
     <tr>

@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import org.apache.commons.io.FileUtils;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AJAXDetailsDisplayColumn;
@@ -63,6 +64,7 @@ import org.labkey.targetedms.query.RepresentativeStateDisplayColumn;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -439,7 +441,10 @@ public class TargetedMSSchema extends UserSchema
                             {
                                 String runId = String.valueOf(ctx.get(this.getColumnInfo().getFieldKey()));
                                 downloadUrl.replaceParameter("runId", runId);
-                                out.write(PageFlowUtil.textLink("Download", downloadUrl));
+
+                                File skyDocFile = SkylineFileUtils.getSkylineFile(Integer.parseInt(runId));
+                                String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
+                                out.write(PageFlowUtil.textLink("Download" + size, downloadUrl));
                             }
                         };
                     }
