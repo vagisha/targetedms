@@ -828,8 +828,8 @@ public class TargetedMSSchema extends UserSchema
             TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorFK.getSQL());
 
             // Add a calculated column - the ratio of the transitions' areas to the precursor's area
-            SQLFragment sql = new SQLFragment("(SELECT CASE WHEN SUM(PrecursorArea) = 0 THEN NULL ELSE SUM(NonPrecursorArea) / SUM(PrecursorArea) END FROM (SELECT CASE WHEN FragmentType = 'precursor' THEN 0 ELSE Area END AS PrecursorArea, ");
-            sql.append(" CASE WHEN FragmentType != 'precursor' THEN 0 ELSE Area END AS NonPrecursorArea FROM ");
+            SQLFragment sql = new SQLFragment("(SELECT CASE WHEN SUM(PrecursorArea) = 0 THEN NULL ELSE SUM(NonPrecursorArea) / SUM(PrecursorArea) END FROM (SELECT CASE WHEN FragmentType = 'precursor' THEN Area ELSE 0 END AS PrecursorArea, ");
+            sql.append(" CASE WHEN FragmentType != 'precursor' THEN Area ELSE 0 END AS NonPrecursorArea FROM ");
             sql.append(TargetedMSManager.getTableInfoTransition(), "t");
             sql.append(", ");
             sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
