@@ -271,6 +271,8 @@ public abstract class ChromatogramDataset
                 // TODO: filter this to currently selected replicates
                 _minDisplayRt = PeptideManager.getMinRetentionTime(_pepChromInfo.getPeptideId());
                 _maxDisplayRt = PeptideManager.getMaxRetentionTime(_pepChromInfo.getPeptideId());
+                if(_minDisplayRt == null) _minDisplayRt = 0.0;
+                if(_maxDisplayRt == null) _maxDisplayRt = 0.0;
 
                 margin = (_maxDisplayRt - _minDisplayRt) * 0.15;
             }
@@ -535,6 +537,8 @@ public abstract class ChromatogramDataset
                 // Get the minimum and maximum RT for the peptide over all the replicates
                 _minDisplayRt = PeptideManager.getMinRetentionTime(precursor.getPeptideId());
                 _maxDisplayRt = PeptideManager.getMaxRetentionTime(precursor.getPeptideId());
+                if(_minDisplayRt == null) _minDisplayRt = 0.0;
+                if(_maxDisplayRt == null) _maxDisplayRt = 0.0;
                 margin = (_maxDisplayRt - _minDisplayRt) * 0.15;
             }
             else
@@ -558,9 +562,16 @@ public abstract class ChromatogramDataset
                     margin = _maxDisplayRt - _minDisplayRt;
                 }
             }
-            _minDisplayRt -= margin;
-            _maxDisplayRt += margin;
-            return new RtRange(_minDisplayRt, _maxDisplayRt);
+            if(_minDisplayRt != null && _maxDisplayRt != null)
+            {
+                _minDisplayRt -= margin;
+                _maxDisplayRt += margin;
+                return new RtRange(_minDisplayRt, _maxDisplayRt);
+            }
+            else
+            {
+                return new RtRange(0.0, 0.0);
+            }
         }
 
         // Adds a transition peak to the dataset and returns a max intensity in the displayed trace as well as the peak
@@ -581,7 +592,7 @@ public abstract class ChromatogramDataset
             double maxTime = rtRange.getMaxRt();
 
             double maxTraceIntensity = 0; // maximum intensity in the displayed range.
-            double tciRt = tci.getRetentionTime() != null ? tci.getRetentionTime() : 0;
+            Double tciRt = tci.getRetentionTime();
             double diff = Double.MAX_VALUE;
 
             double minPeakRt = _pChromInfo.getMinStartTime() != null ? _pChromInfo.getMinStartTime() : 0;
@@ -600,10 +611,10 @@ public abstract class ChromatogramDataset
                     maxTraceIntensity = intensities[i];
                 }
 
-                if(times[i] >= minPeakRt && times[i] <= maxPeakRt)
+                if(tciRt !=  null && times[i] >= minPeakRt && times[i] <= maxPeakRt)
                 {
-                    // Look for the intensity at a point closest to the retention time set on the transition within
-                    // the peak integration boundary.
+                    // If this transitionChromInfo has a RT, look for the intensity at a point closest to the retention
+                    // time set on the transition within the peak integration boundary.
                     double diff_local = Math.abs(tciRt - times[i]);
                     if(diff_local < diff)
                     {

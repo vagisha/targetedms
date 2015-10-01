@@ -93,7 +93,7 @@ public class PeptideManager
                 new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), peptideGroupId), null).getCollection(Peptide.class);
     }
 
-    public static double getMinRetentionTime(int peptideId)
+    public static Double getMinRetentionTime(int peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT MIN(preci.MinStartTime) FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
@@ -108,7 +108,7 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
-    public static double getMaxRetentionTime(int peptideId)
+    public static Double getMaxRetentionTime(int peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(preci.MaxEndTime) FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
