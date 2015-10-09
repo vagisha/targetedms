@@ -25,7 +25,7 @@ FROM guideset gs
 LEFT JOIN (
    SELECT PrecursorId.Id AS PrecursorId,
    PrecursorId.ModifiedSequence AS Sequence,
-   PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
+   SampleFileId.AcquiredTime AS AcquiredTime,
    TransitionPrecursorRatio AS Value
    FROM precursorchrominfo
 ) as p ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd

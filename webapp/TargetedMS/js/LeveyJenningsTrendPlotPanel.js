@@ -369,13 +369,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         if (this.startDate)
         {
             var startDate = this.startDate instanceof Date ? Ext4.util.Format.date(this.startDate, 'Y-m-d') : this.startDate;
-            sql += separator + "CAST(" + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + startDate + "'";
+            sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) >= '" + startDate + "'";
             separator = " AND ";
         }
         if (this.endDate)
         {
             var endDate = this.endDate instanceof Date ? Ext4.util.Format.date(this.endDate, 'Y-m-d') : this.endDate;
-            sql += separator + "CAST(" + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + endDate + "'";
+            sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + endDate + "'";
         }
 
         // Cap the peptide count at 50
@@ -509,11 +509,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var whereClause = " WHERE ";
         var separator = "";
         if (config.StartDate) {
-            whereClause += separator + "CAST(" + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
+            whereClause += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
             separator = " AND ";
         }
         if (config.EndDate) {
-            whereClause += separator + "CAST(" + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
+            whereClause += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
         }
 
         var guideSetStatsJoinClause = "ON X.Sequence = stats.Sequence AND ((X.AcquiredTime >= stats.TrainingStart "
@@ -526,8 +526,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             + " FROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId, "
             + "       " + baseLkFieldKey + "Id AS PrecursorChromInfoId, "
             + "       " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence, "
-            + "       " + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime, "
-            + "       " + baseLkFieldKey + "PeptideChromInfoId.SampleFileId.FilePath AS FilePath, "
+            + "       " + baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime, "
+            + "       " + baseLkFieldKey + "SampleFileId.FilePath AS FilePath, "
             + "       "  + typeColName + " AS Value FROM " + baseTableName + whereClause + ") X "
             + " LEFT JOIN " + statsTableName + " stats " + guideSetStatsJoinClause;
 

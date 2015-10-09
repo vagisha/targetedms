@@ -24,7 +24,7 @@ STDDEV(p.Value) AS StandardDev
 FROM guideset gs
 LEFT JOIN (
    SELECT PrecursorId.ModifiedSequence AS Sequence,
-   PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
+   SampleFileId.AcquiredTime AS AcquiredTime,
    BestRetentionTime AS Value
    FROM precursorchrominfo
 ) as p ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd

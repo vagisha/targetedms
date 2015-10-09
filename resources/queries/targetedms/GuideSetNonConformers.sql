@@ -20,7 +20,7 @@ SELECT stats.GuideSetId,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,
-  PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
+  SampleFileId.AcquiredTime AS AcquiredTime,
   BestRetentionTime AS Value
   FROM PrecursorChromInfo
 ) X
@@ -38,7 +38,7 @@ UNION SELECT stats.GuideSetId,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,
-  PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
+  SampleFileId.AcquiredTime AS AcquiredTime,
   TotalArea AS Value
   FROM PrecursorChromInfo
 ) X
@@ -56,7 +56,7 @@ UNION SELECT stats.GuideSetId,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,
-  PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
+  SampleFileId.AcquiredTime AS AcquiredTime,
   MaxFWHM AS Value
   FROM PrecursorChromInfo
 ) X
@@ -74,7 +74,7 @@ UNION SELECT stats.GuideSetId,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,
-  PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
+  SampleFileId.AcquiredTime AS AcquiredTime,
   (MaxEndTime - MinStartTime) AS Value
   FROM PrecursorChromInfo
 ) X
@@ -92,7 +92,7 @@ UNION SELECT stats.GuideSetId,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence,
-  PrecursorChromInfoId.PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
+  PrecursorChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
   AreaRatio AS Value
   FROM PrecursorAreaRatio
 ) X
@@ -110,7 +110,7 @@ UNION SELECT stats.GuideSetId,
 SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
 FROM (
   SELECT PrecursorId.ModifiedSequence AS Sequence,
-  PeptideChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
+  SampleFileId.AcquiredTime AS AcquiredTime,
   transitionPrecursorRatio AS Value
   FROM PrecursorChromInfo
 ) X
