@@ -16,13 +16,14 @@
 package org.labkey.targetedms;
 
 import org.apache.log4j.Logger;
-import org.labkey.api.pipeline.PipeRoot;
-import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 
 import java.io.File;
-import java.io.IOException;
+import java.util.List;
 
 /**
  * User: vsharma
@@ -57,24 +58,36 @@ public class SkylineFileUtils
 
     public static File getSkylineFile(TargetedMSRun run)
     {
-        if(run == null)
+        if (run == null)
         {
             return null;
         }
-        PipeRoot root = PipelineService.get().getPipelineRootSetting(run.getContainer());
-        if(root != null)
+
+        ExpRun expRun = ExperimentService.get().getExpRun(run.getExperimentRunLSID());
+        if (expRun == null)
         {
-            File skyDocfile = new File(root.getRootPath(), run.getFileName());
-            if(NetworkDrive.exists(skyDocfile))
+            LOG.warn("Run " + run.getExperimentRunLSID() + " does not exist.");
+            return null;
+        }
+
+        List<? extends ExpData> inputDatas = expRun.getAllDataUsedByRun();
+        if (inputDatas != null && !inputDatas.isEmpty())
+        {
+            // The first file will be the .zip file since we only use one file as input data.
+            File skyDocfile = expRun.getAllDataUsedByRun().get(0).getFile();
+            if (NetworkDrive.exists(skyDocfile))
             {
                 return skyDocfile;
             }
             else
             {
-                LOG.warn("File does not exist: " + skyDocfile.getPath());
+                LOG.warn("Skyline file does not exist: " + (skyDocfile != null ? skyDocfile.getPath() : null));
                 return null;
             }
+
+
         }
+        LOG.warn("No input data found for run " + expRun.getRowId());
         return null;
     }
 }

@@ -430,6 +430,7 @@ public class TargetedMSSchema extends UserSchema
 
                 ColumnInfo downloadLinkColumn = result.addWrapColumn("Download", result.getRealTable().getColumn("Id"));
                 downloadLinkColumn.setLabel("");
+                downloadLinkColumn.setTextAlign("left");
                 downloadLinkColumn.setDisplayColumnFactory(new DisplayColumnFactory()
                 {
                     @Override
@@ -444,7 +445,8 @@ public class TargetedMSSchema extends UserSchema
 
                                 File skyDocFile = SkylineFileUtils.getSkylineFile(Integer.parseInt(runId));
                                 String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
-                                out.write(PageFlowUtil.textLink("Download" + size, downloadUrl));
+                                out.write(PageFlowUtil.textLink("Download", downloadUrl));
+                                out.write("<span class=\"labkey-text-link\">" + size + "</span>");
                             }
                         };
                     }

@@ -47,7 +47,7 @@
             <%
                 String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
             %>
-            <%= textLink("Download" + size, downloadAction)%>
+            <%= textLink("Download", downloadAction)%><%=size%>
         </td>
     </tr>
     <tr>
