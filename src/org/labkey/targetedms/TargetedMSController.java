@@ -2887,7 +2887,7 @@ public class TargetedMSController extends SpringActionController
             {
                 //errors.reject(ERROR_MSG, "Folder "+getContainer().getPath()+" does not contain any representative data.");
                 //return new SimpleErrorView(errors, true);
-                throw new NotFoundException("Folder "+getContainer().getPath()+" does not contain any representative data.");
+                throw new NotFoundException("Folder "+getContainer().getPath()+" does not contain a chromatogram library.");
             }
 
             // Get the latest library revision.
@@ -4080,7 +4080,11 @@ public class TargetedMSController extends SpringActionController
                 qSettings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("ExperimentAnnotationsId"), exptAnnotations.getId()));
                 QueryView journalListView = new QueryView(new TargetedMSSchema(getUser(), getContainer()), qSettings, errors);
                 journalListView.setShowRecordSelectors(false);
-                journalListView.setButtonBarPosition(DataRegion.ButtonBarPosition.NONE);
+                journalListView.setButtonBarPosition(DataRegion.ButtonBarPosition.TOP);
+                journalListView.disableContainerFilterSelection();
+                journalListView.setShowExportButtons(false);
+                journalListView.setShowPagination(false);
+                journalListView.setPrintView(false);
                 VBox journalsBox = new VBox();
                 journalsBox.setTitle("Publication Activity");
                 journalsBox.setFrame(WebPartView.FrameType.PORTAL);
