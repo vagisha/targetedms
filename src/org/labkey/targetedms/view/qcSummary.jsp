@@ -1,4 +1,3 @@
-<%@ page import="org.labkey.targetedms.SkylineDocImporter" %>
 <%
 /*
  * Copyright (c) 2014-2015 LabKey Corporation
@@ -16,9 +15,18 @@
  * limitations under the License.
  */
 %>
+<%@ page import="org.labkey.targetedms.SkylineDocImporter" %>
+<%@ page import="org.labkey.api.util.UniqueID" %>
+<%@ page import="org.labkey.api.view.HttpView" %>
+<%@ page extends="org.labkey.api.jsp.JspBase" %>
+<%!
+    int uid = UniqueID.getRequestScopedUID(HttpView.currentRequest());
+    String docSummaryId = "docSummary-" + uid;
+    String precursorSummaryId = "precursorSummary-" + uid;
+%>
 
-<div id="docSummary"></div>
-<div id="precursorSummary"></div>
+<div id=<%=q(docSummaryId)%>></div>
+<div id=<%=q(precursorSummaryId)%>></div>
 
 <script type="text/javascript">
     function init()
@@ -37,12 +45,12 @@
                 var docSummaryLine = docCount + " Skyline document" + (docCount == 1 ? "" : "s") + " uploaded containing " + fileCount + " sample file";
                 if (fileCount != 1)
                     docSummaryLine += "s";
-                Ext4.get('docSummary').update(docSummaryLine);
-                Ext4.get('precursorSummary').update(precursorCount + " precursor" + (precursorCount == 1 ? "" : "s") + " tracked");
+                Ext4.get(<%=q(docSummaryId)%>).update(docSummaryLine);
+                Ext4.get(<%=q(precursorSummaryId)%>).update(precursorCount + " precursor" + (precursorCount == 1 ? "" : "s") + " tracked");
             },
             failure: function (response)
             {
-                Ext4.get('docSummary').update("Error: " + response.exception);
+                Ext4.get(<%=q(docSummaryId)%>).update("Error: " + response.exception);
             }
         });
     }

@@ -1,7 +1,7 @@
 
-#tiledPlotPanel {
+.tiledPlotPanel {
     min-height: 50px;
-    width: 900px;
+    min-width: 900px;
 }
 
 .annotation:hover, .guideset-svg-button:hover,

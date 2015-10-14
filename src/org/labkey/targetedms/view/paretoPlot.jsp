@@ -23,6 +23,8 @@
 %>
 <%@ page import="org.labkey.api.view.template.ClientDependency" %>
 <%@ page import="java.util.LinkedHashSet" %>
+<%@ page import="org.labkey.api.view.HttpView" %>
+<%@ page import="org.labkey.api.util.UniqueID" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
 
@@ -37,15 +39,19 @@
         return resources;
     }
 %>
+<%!
+    String tiledPlotPanelId = "tiledPlotPanel-" + UniqueID.getRequestScopedUID(HttpView.currentRequest());
+%>
 
-<div id="tiledPlotPanel"></div>
+<div id=<%=q(tiledPlotPanelId)%> class="tiledPlotPanel"></div>
 
 <script type="text/javascript">
 
-        function init()
-        {
+        function init() {
+            var tiledPlotPanelId = <%=q(tiledPlotPanelId)%>;
+
             if (Ext4.isIE8) {
-                Ext4.get('tiledPlotPanel').update("<span class='labkey-error'>Unable to render report in Internet Explorer < 9.</span>");
+                Ext4.get(tiledPlotPanelId).update("<span class='labkey-error'>Unable to render report in Internet Explorer < 9.</span>");
                 return;
             }
 
@@ -55,25 +61,25 @@
                 success: function(data) {
                     if (data.rows.length == 0)
                     {
-                        Ext4.get('tiledPlotPanel').update("Guide Sets not found. Please create a Guide Set using <a href=" + LABKEY.ActionURL.buildURL('project', 'begin', null, null) + ">Levey-Jennings QC Plots</a>" + ".");
+                        Ext4.get(tiledPlotPanelId).update("Guide Sets not found. Please create a Guide Set using <a href=" + LABKEY.ActionURL.buildURL('project', 'begin', null, null) + ">Levey-Jennings QC Plots</a>" + ".");
                     }
                     else
                     {
-                        initializeParetoPlotPanel(data);
+                        initializeParetoPlotPanel(data, tiledPlotPanelId);
                     }
                 },
                 failure: function(response) {
-                    Ext4.get('tiledPlotPanel').update("<span class='labkey-error'>Error: " + response.exception + "</span>");
+                    Ext4.get(tiledPlotPanelId).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
                 }
             });
         }
 
-        function initializeParetoPlotPanel(data) {
+        function initializeParetoPlotPanel(data, tiledPlotPanelId) {
 
             // initialize the panel that displays Pareto plot
             Ext4.create('LABKEY.targetedms.ParetoPlotPanel', {
                 cls: 'themed-panel',
-                plotPanelDiv:'tiledPlotPanel',
+                plotPanelDiv: tiledPlotPanelId,
                 guideSetData: data
             });
         }

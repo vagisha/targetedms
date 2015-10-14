@@ -338,7 +338,7 @@ public final class QCPlotsWebPart extends BodyWebPart
         Locator.XPathLocator groupedXCheckbox = webPart.append(Locator.id("grouped-x-field")).append("//input");
         Locator.XPathLocator singlePlotCheckbox = webPart.append(Locator.id("peptides-single-plot")).append("//input");
 
-        Locator.XPathLocator plotPanel = webPart.append(Locator.tagWithId("div", "tiledPlotPanel"));
+        Locator.XPathLocator plotPanel = webPart.append(Locator.tagWithClass("div", "tiledPlotPanel"));
         Locator.XPathLocator plot = plotPanel.append(Locator.tagWithClass("table", "qc-plot-wp"));
         Locator.XPathLocator plotTitle = plot.append(Locator.tagWithClass("span", "qc-plot-wp-title"));
 

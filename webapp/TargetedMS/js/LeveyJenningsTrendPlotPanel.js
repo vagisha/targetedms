@@ -78,16 +78,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     initComponent : function() {
         Ext4.tip.QuickTipManager.init();
 
-        this.trendDiv = 'tiledPlotPanel';
         if (!this.startDate)
             this.startDate = null;
         if (!this.endDate)
             this.endDate = null;
 
-
-        var alertMessage;
-
         //get parameters from the url
+        var alertMessage;
         if (LABKEY.ActionURL.getParameter("startDate") != undefined) {
             var sdate = new Date(LABKEY.ActionURL.getParameter("startDate"));
 
@@ -116,7 +113,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         if (LABKEY.ActionURL.getParameter("metric") != undefined) {
-
             var t = this.validateChartTypeName(LABKEY.ActionURL.getParameter("metric"));
 
             if(t == "Invalid Chart Type") {
@@ -339,8 +335,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     setLoadingMsg : function() {
-        Ext4.get(this.trendDiv).update("");
-        Ext4.get(this.trendDiv).mask("Loading...");
+        Ext4.get(this.plotDivId).update("");
+        Ext4.get(this.plotDivId).mask("Loading...");
     },
 
     displayTrendPlot: function() {
@@ -648,7 +644,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         this.setLoadingMsg();
-        this.setPlotWidth(this.trendDiv);
+        this.setPlotWidth(this.plotDivId);
 
         var addedPlot = false;
         if (this.singlePlot) {
@@ -659,10 +655,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         if (!addedPlot) {
-            Ext4.get(this.trendDiv).insertHtml('beforeEnd', '<div>No data to plot</div>');
+            Ext4.get(this.plotDivId).insertHtml('beforeEnd', '<div>No data to plot</div>');
         }
 
-        Ext4.get(this.trendDiv).unmask();
+        Ext4.get(this.plotDivId).unmask();
     },
 
     getMaxStackedAnnotations : function() {
@@ -687,18 +683,16 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     addIndividualPrecursorPlots : function() {
         var addedPlot = false;
 
-        for (var i = 0; i < this.precursors.length; i++)
-        {
+        for (var i = 0; i < this.precursors.length; i++) {
             var precursorInfo = this.sequencePlotData[this.precursors[i]];
 
             // We don't necessarily have info for all possible precursors, depending on the filters and plot type
-            if (precursorInfo)
-            {
+            if (precursorInfo) {
                 addedPlot = true;
 
                 // add a new panel for each plot so we can add the title to the frame
-                var id = "precursorPlot" + i;
-                this.addPlotWebPartToPlotDiv(id, this.precursors[i], this.trendDiv, 'qc-plot-wp');
+                var id = this.plotDivId + "-precursorPlot" + i;
+                this.addPlotWebPartToPlotDiv(id, this.precursors[i], this.plotDivId, 'qc-plot-wp');
 
                 if (precursorInfo.showLogWarning) {
                     Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below the mean with negative values have been omitted.</span>");
@@ -807,7 +801,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         var id = 'combinedPlot';
-        this.addPlotWebPartToPlotDiv(id, 'All Peptides', this.trendDiv, 'qc-plot-wp');
+        this.addPlotWebPartToPlotDiv(id, 'All Peptides', this.plotDivId, 'qc-plot-wp');
 
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, newLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
@@ -1170,13 +1164,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     failureHandler: function(response) {
         if (response.message) {
-            Ext4.get(this.trendDiv).update("<span>" + response.message +"</span>");
+            Ext4.get(this.plotDivId).update("<span>" + response.message +"</span>");
         }
         else {
-            Ext4.get(this.trendDiv).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
+            Ext4.get(this.plotDivId).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
         }
 
-        Ext4.get(this.trendDiv).unmask();
+        Ext4.get(this.plotDivId).unmask();
     },
 
     applyGraphFilterBtnClick: function() {

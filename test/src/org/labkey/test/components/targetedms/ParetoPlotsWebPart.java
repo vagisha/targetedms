@@ -113,7 +113,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     private class Elements extends BodyWebPart.Elements
     {
-        Locator.XPathLocator notFound = webPart.append(Locator.id("tiledPlotPanel").startsWith("Guide Sets not found."));
+        Locator.XPathLocator notFound = webPart.append(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("Guide Sets not found."));
         Locator.XPathLocator leveyJenningsLink = webPart.append(Locator.linkWithText("Levey-Jennings QC Plots"));
     }
 }
