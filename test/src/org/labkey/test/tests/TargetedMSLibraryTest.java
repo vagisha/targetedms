@@ -69,7 +69,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertTextPresent("CTCF", "MAX", "TAF11", "iRT-C18 Standard Peptides");
 
         // Verify the the protein MAX is present in this revision of the library
-        assertElementPresent(Locator.xpath("//tr[(td[1]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
+        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
 
         // Verify protein details page
         verifyProteinDetailsPage();
