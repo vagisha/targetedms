@@ -12,7 +12,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     addPlotWebPartToPlotDiv: function (id, title, div, wp)
     {
-        var tableClass =  + wp;
         Ext4.get(div).insertHtml('beforeEnd', '<br/>' +
                 '<table class="labkey-wp ' + wp + '">' +
                 ' <tr class="labkey-wp-header">' +

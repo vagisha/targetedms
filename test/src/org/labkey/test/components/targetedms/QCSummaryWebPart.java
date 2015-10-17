@@ -94,7 +94,7 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     private class Elements extends BodyWebPart.Elements
     {
-        public Locator.XPathLocator docSummary = webPart.append(Locator.tagWithId("div", "docSummary"));
-        public Locator.XPathLocator precursorSummary = webPart.append(Locator.tagWithId("div", "precursorSummary"));
+        public Locator.XPathLocator docSummary = webPart.append(Locator.tagWithId("div", "docSummary-1"));
+        public Locator.XPathLocator precursorSummary = webPart.append(Locator.tagWithId("div", "precursorSummary-1"));
     }
 }

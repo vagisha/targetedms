@@ -125,9 +125,9 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals(QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
 
         // test option to "Group X-Axis values by Date"
-        String initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
+        String initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
         qcPlotsWebPart.setGroupXAxisValuesByDate(true);
-        assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
+        assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
         qcPlotsWebPart.setGroupXAxisValuesByDate(false);
 
         // test that plot0 changes based on scale (log/linear)
@@ -135,9 +135,9 @@ public class TargetedMSQCTest extends TargetedMSTest
         {
             if (scale != qcPlotsWebPart.getCurrentScale())
             {
-                initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
+                initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
                 qcPlotsWebPart.setScale(scale);
-                assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
+                assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
             }
         }
 
@@ -146,9 +146,9 @@ public class TargetedMSQCTest extends TargetedMSTest
         {
             if (type != qcPlotsWebPart.getCurrentChartType())
             {
-                initialSVGText = qcPlotsWebPart.getSVGPlotText("precursorPlot0");
+                initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
                 qcPlotsWebPart.setChartType(type);
-                assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("precursorPlot0")));
+                assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
             }
         }
     }
@@ -283,19 +283,19 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, PRECURSORS.length);
 
         //Check for no. of pdf buttons for individual plots
-        assertElementPresent(Locator.id("precursorPlot0-exportToPDFbutton"));
-        assertElementPresent(Locator.id("precursorPlot1-exportToPDFbutton"));
-        assertElementPresent(Locator.id("precursorPlot2-exportToPDFbutton"));
-        assertElementPresent(Locator.id("precursorPlot3-exportToPDFbutton"));
-        assertElementPresent(Locator.id("precursorPlot4-exportToPDFbutton"));
-        assertElementPresent(Locator.id("precursorPlot5-exportToPDFbutton"));
-        assertElementPresent(Locator.id("precursorPlot6-exportToPDFbutton"));
+        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot0-exportToPDFbutton"));
+        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot1-exportToPDFbutton"));
+        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot2-exportToPDFbutton"));
+        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot3-exportToPDFbutton"));
+        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot4-exportToPDFbutton"));
+        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot5-exportToPDFbutton"));
+        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot6-exportToPDFbutton"));
     }
 
     private void verifyRow(DataRegionTable drt, int row, String sampleName, String skylineDocName)
     {
-        assertEquals(sampleName, drt.getDataAsText(row, 1));
-        assertEquals(skylineDocName, drt.getDataAsText(row, 4));
+        assertEquals(sampleName, drt.getDataAsText(row, 2));
+        assertEquals(skylineDocName, drt.getDataAsText(row, 5));
     }
 
     private void verifyQcSummary(int docCount, int sampleFileCount, int precursorCount)
