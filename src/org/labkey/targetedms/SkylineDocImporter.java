@@ -808,7 +808,7 @@ public class SkylineDocImporter
             {
                 if(_libProteinSequenceIds.contains(pepGroup.getSequenceId()))
                 {
-                    throw new IllegalStateException("Duplicate protein found: "+pepGroup.getLabel()+", seqId "+pepGroup.getSequenceId()
+                    throw new IllegalStateException("Duplicate protein sequence found: "+pepGroup.getLabel()+", seqId "+pepGroup.getSequenceId()
                     + ". Documents uploaded to a protein library folder should contain unique proteins.");
                 }
                 else if(!pepGroup.isDecoy())
@@ -839,6 +839,8 @@ public class SkylineDocImporter
 
         // Read peptides for this protein
         SkylineDocumentParser.MoleculeType molType;
+        // Issue 24571: Keep track of the peptides in this protein if this is document is being uploaded to a protein library folder.
+        Set<String> libProteinPeptides = new HashSet<>();
         while((molType = parser.hasNextPeptideOrMolecule()) != null)
         {
             Peptide peptide = null;
@@ -846,6 +848,19 @@ public class SkylineDocImporter
             {
                 case PEPTIDE:
                     peptide = parser.nextPeptide();
+                    if(_isProteinLibraryDoc)
+                    {
+                        // Issue 24571: Proteins in protein library folders should not have duplicate peptides.
+                        if (libProteinPeptides.contains(peptide.getPeptideModifiedSequence()))
+                        {
+                            throw new IllegalStateException("Duplicate peptide ("+ peptide.getPeptideModifiedSequence() + ") found for protein " + pepGroup.getLabel()
+                                    + ". Proteins in documents uploaded to a protein library folder should contain unique peptides.");
+                        }
+                        else
+                        {
+                            libProteinPeptides.add(peptide.getPeptideModifiedSequence());
+                        }
+                    }
                     break;
                 case MOLECULE:
                     peptide = parser.nextMolecule();
