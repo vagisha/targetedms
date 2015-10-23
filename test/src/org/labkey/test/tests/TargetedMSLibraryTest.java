@@ -87,10 +87,10 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertTextPresent("CTCF", "GATA3", "MAX", "TAF11", "TP53", "iRT-C18 Standard Peptides");
 
         //check MAX is from Stergachis-SupplementaryData_2_a.zip
-        assertElementPresent(Locator.xpath("//tr[(td[1]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
+        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
 
         // "iRT-C18 Standard Peptides" should now be from Stergachis-SupplementaryData_2_b.sky.zip
-        assertElementPresent(Locator.xpath("//tr[(td[1]='" + SKY_FILE2 + "') and (td[span[a[text()='iRT-C18 Standard Peptides']]])]"));
+        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE2 + "') and (td[span[a[text()='iRT-C18 Standard Peptides']]])]"));
 
         verifyAndResolveConflicts();
     }
@@ -115,8 +115,8 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("CTCF"));
         assertElementPresent(Locator.xpath("//tr[td[span[a[text()='CTCF']]]]"));
         assertTextPresent("HsCD00078657 (2-D02)");
-        assertElementPresent(Locator.xpath("//tr[(td[1] ='Decoy') and (td[2]='false')]"));
-        assertElementPresent(Locator.xpath("//tr[(td[1] ='File') and (td[2] = '" + SKY_FILE1 + "')]"));
+        assertElementPresent(Locator.xpath("//tr[(td[2] ='Decoy') and (td[3]='false')]"));
+        assertElementPresent(Locator.xpath("//tr[(td[2] ='File') and (td[3] = '" + SKY_FILE1 + "')]"));
         assertElementPresent(Locator.xpath("//table[contains(@id, 'peptideMap')]"));
         assertElementPresent(Locator.xpath("//div[@id = 'peakAreasGraphImg']/img"));
 
@@ -157,7 +157,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertTextPresent("Archived Revisions");
 
         //check MAX is fromStergachis-SupplementaryData_2_b.zip
-        assertElementPresent(Locator.xpath("//tr[(td[1]='" + SKY_FILE2 + "') and (td[span[a[text()='MAX']]])]"));
+        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE2 + "') and (td[span[a[text()='MAX']]])]"));
     }
 
 }
