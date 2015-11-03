@@ -1092,7 +1092,7 @@ public class SkylineDocImporter
             Integer specLibId = libraryNameIdMap.get(libInfo.getLibraryName());
             if(specLibId == null)
             {
-                throw new IllegalStateException(libraryNameIdMap.get(libInfo.getLibraryName()) + " library not found in settings.");
+                throw new IllegalStateException("'" + libInfo.getLibraryName() + "' library not found in settings.");
             }
             libInfo.setSpectrumLibraryId(specLibId);
 
