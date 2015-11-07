@@ -3,7 +3,7 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd">
 
-    <bean id="studyPipelineRegistry" class="org.labkey.api.pipeline.TaskPipelineRegistrar">
+    <bean id="targetedmsPipelineRegistry" class="org.labkey.api.pipeline.TaskPipelineRegistrar">
         <property name="factoryImpls">
             <list>
                 <bean class="org.labkey.targetedms.pipeline.ExperimentExportTask$Factory"/>
@@ -14,7 +14,6 @@
 
         <property name="pipelines">
             <list>
-                <!-- Study import job pipeline -->
                 <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
                     <constructor-arg type="java.lang.Class" value="org.labkey.targetedms.pipeline.CopyExperimentPipelineJob"/>
                     <property name="taskProgressionSpec">
