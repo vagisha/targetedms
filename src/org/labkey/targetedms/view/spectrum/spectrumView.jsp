@@ -59,8 +59,8 @@ $(document).ready(function () {
     /* render the spectrum with the given options */
     $("#<%=bean.getLorikeetId()%>").specview({sequence: <%= PageFlowUtil.jsString(bean.getPeptide()) %>,
                                 precursorMz: 1,
-                                staticMods: [],
-                                variableMods: <%= bean.getStructuralModifications()%>,
+                                staticMods: <%= bean.getStructuralModifications()%>,
+                                variableMods: <%= bean.getVariableModifications()%>,
                                 maxNeutralLossCount: <%= bean.getMaxNeutralLosses()%>,
                                 width: 600,
                                 charge: <%= bean.getCharge()%>,

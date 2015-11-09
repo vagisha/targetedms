@@ -59,6 +59,7 @@ public class LibrarySpectrumMatchGetter
         List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<>();
 
         List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(peptide.getId());
+        List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
         Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
         for(Peptide.StructuralModification mod: structuralModifications)
         {
@@ -90,7 +91,7 @@ public class LibrarySpectrumMatchGetter
                     matchedSpectra.add(pepSpec);
 
                     // Add any structural modifications
-                    pepSpec.setStructuralModifications(structuralModifications);
+                    pepSpec.setStructuralModifications(structuralModifications, runStrMods);
                     // Add any potential losses
                     pepSpec.setPotentialLosses(potentialLossMap);
 
@@ -120,6 +121,7 @@ public class LibrarySpectrumMatchGetter
         List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<>();
 
         List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(precursor.getPeptideId());
+        List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
         Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
         for(Peptide.StructuralModification mod: structuralModifications)
         {
@@ -147,7 +149,7 @@ public class LibrarySpectrumMatchGetter
                 matchedSpectra.add(pepSpec);
 
                 // Add any structural modifications
-                pepSpec.setStructuralModifications(structuralModifications);
+                pepSpec.setStructuralModifications(structuralModifications, runStrMods);
                 // Add any potential losses
                 pepSpec.setPotentialLosses(potentialLossMap);
 

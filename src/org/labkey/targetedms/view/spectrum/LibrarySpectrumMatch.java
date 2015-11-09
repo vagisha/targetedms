@@ -20,8 +20,10 @@ import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.blib.BlibSpectrum;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -39,6 +41,7 @@ public class LibrarySpectrumMatch
     private PeptideSettings.SpectrumLibrary _library;
     private String _lorikeetId;
     List<Peptide.StructuralModification> _structuralModifications;
+    private Set<Integer> _variableStructuralMods = new HashSet<>();
     Map<Integer, List<PeptideSettings.PotentialLoss>> _potentialLossIdMap;
     List<Peptide.IsotopeModification> _isotopeModifications;
     private int _maxNeutralLosses;
@@ -135,9 +138,20 @@ public class LibrarySpectrumMatch
         return peaks.toString();
     }
 
-    public void setStructuralModifications(List<Peptide.StructuralModification> structuralModifications)
+    public void setStructuralModifications(List<Peptide.StructuralModification> structuralModifications,
+                                           List<PeptideSettings.RunStructuralModification> runMods)
     {
         _structuralModifications = structuralModifications;
+        if(runMods != null)
+        {
+            for(PeptideSettings.RunStructuralModification mod: runMods)
+            {
+                if(mod.isVariable())
+                {
+                    _variableStructuralMods.add(mod.getStructuralModId());
+                }
+            }
+        }
     }
 
     public void setPotentialLosses(Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossIdMap)
@@ -152,6 +166,22 @@ public class LibrarySpectrumMatch
 
     public String getStructuralModifications()
     {
+        if(getPeptide() == null || isEmpty(_structuralModifications))
+            return "[]";
+
+        // Example: [{modMass: 42.0, aminoAcid: 'K'}]
+        StringBuilder mods = new StringBuilder();
+        mods.append("[");
+
+        // Return all static (not variable) structural modifications.
+        mods.append(appendStructuralModifications(_structuralModifications, false)); // only static mods
+
+        mods.append("\n]\n");
+        return mods.toString();
+    }
+
+    public String getVariableModifications()
+    {
         if(getPeptide() == null || (isEmpty(_structuralModifications) && isEmpty(_isotopeModifications)))
             return "[]";
 
@@ -159,10 +189,9 @@ public class LibrarySpectrumMatch
         StringBuilder mods = new StringBuilder();
         mods.append("[");
 
-        // Return all modifications (structural and isotopic) in the same set so that the modified residues
-        // show up as highlighed in the spectrum viewer.
-        mods.append(appendModifications(_structuralModifications));
-        mods.append(appendModifications(_isotopeModifications));
+        // Return all isotopic and variable structural modifications.
+        mods.append(appendStructuralModifications(_structuralModifications, true)); // only variable mods
+        mods.append(appendIsotopeModifications(_isotopeModifications));
 
         mods.append("\n]\n");
         return mods.toString();
@@ -173,14 +202,17 @@ public class LibrarySpectrumMatch
         return (list == null || list.isEmpty());
     }
 
-    private String appendModifications(List<? extends Peptide.Modification> modifications)
+    private String appendIsotopeModifications(List<? extends Peptide.Modification> modifications)
     {
         if(modifications == null || modifications.isEmpty())
             return "";
 
         StringBuilder mods = new StringBuilder();
+        String comma = "";
         for(Peptide.Modification mod: modifications)
         {
+            mods.append(comma);
+            comma = ",";
             mods.append("\n");
             mods.append("{index: ")
                 .append(mod.getIndexAa() + 1) // Lorikeet uses a 1-based index
@@ -190,7 +222,48 @@ public class LibrarySpectrumMatch
                 .append(_peptide.charAt(mod.getIndexAa())).append("'")
                 .append(getNeutralLosses(mod))
                 .append("}");
-            mods.append(",");
+        }
+        return mods.toString();
+    }
+
+    private String appendStructuralModifications(List<Peptide.StructuralModification> modifications,
+                                             boolean variable)
+    {
+
+        if(modifications == null || modifications.isEmpty())
+            return "";
+
+        StringBuilder mods = new StringBuilder();
+        String comma = "";
+        for(Peptide.StructuralModification mod: modifications)
+        {
+            if(variable && !_variableStructuralMods.contains(mod.getStructuralModId()))
+            {
+                // This is not a variable modification
+                continue;
+            }
+            if(!variable && _variableStructuralMods.contains(mod.getStructuralModId()))
+            {
+                // This is not a static modification
+                continue;
+            }
+            mods.append(comma);
+            comma = ",";
+            mods.append("\n");
+            mods.append("{");
+            if(variable)
+            {
+                mods.append("index: ")
+                    .append(mod.getIndexAa() + 1) // Lorikeet uses a 1-based index
+                    .append(", ");
+            }
+
+            mods.append("modMass: ")
+                    .append(mod.getMassDiff())
+                    .append(", aminoAcid: '")
+                    .append(_peptide.charAt(mod.getIndexAa())).append("'")
+                    .append(getNeutralLosses(mod))
+                    .append("}");
         }
         return mods.toString();
     }
