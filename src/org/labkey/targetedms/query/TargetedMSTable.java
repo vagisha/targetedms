@@ -16,10 +16,13 @@
 package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.ForeignKey;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FilteredTable;
+import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
@@ -41,6 +44,16 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
         super(table, schema);
         _joinSQL = joinSQL;
         wrapAllColumns(true);
+
+        // Swap out DbSchema FKs with Query FKs so that we get all the extra calculated columns and such
+        for (ColumnInfo columnInfo : getColumns())
+        {
+            ForeignKey fk = columnInfo.getFk();
+            if (fk != null && TargetedMSSchema.SCHEMA_NAME.equalsIgnoreCase(fk.getLookupSchemaName()))
+            {
+                columnInfo.setFk(new QueryForeignKey(schema, null, fk.getLookupTableName(), fk.getLookupColumnName(), fk.getLookupDisplayName()));
+            }
+        }
         applyContainerFilter(getContainerFilter());
     }
 
