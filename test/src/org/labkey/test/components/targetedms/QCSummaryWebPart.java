@@ -50,14 +50,14 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     private void readSummary()
     {
-        String docSummary = _test.getText(elements().docSummary);
+        String docSummary = _test.getText(elements().qcSummary);
         Pattern docPattern = Pattern.compile("(\\d+) Skyline documents? uploaded containing (\\d+) sample files");
         Matcher docMatcher = docPattern.matcher(docSummary);
         Assert.assertTrue(docSummary, docMatcher.find());
         _docCount = Integer.parseInt(docMatcher.group(1));
         _fileCount = Integer.parseInt(docMatcher.group(2));
 
-        String precursorSummary = _test.getText(elements().precursorSummary);
+        String precursorSummary = _test.getText(elements().qcSummary);
         Pattern precurosrPattern = Pattern.compile("(\\d+) precursors tracked");
         Matcher precursorMatcher = precurosrPattern.matcher(precursorSummary);
         Assert.assertTrue(precursorSummary, precursorMatcher.find());
@@ -94,7 +94,6 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     private class Elements extends BodyWebPart.Elements
     {
-        public Locator.XPathLocator docSummary = webPart.append(Locator.tagWithId("div", "docSummary-1"));
-        public Locator.XPathLocator precursorSummary = webPart.append(Locator.tagWithId("div", "precursorSummary-1"));
+        public Locator.XPathLocator qcSummary = webPart.append(Locator.tagWithId("div", "qcSummary-1"));
     }
 }

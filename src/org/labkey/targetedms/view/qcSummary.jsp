@@ -21,37 +21,56 @@
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
     int uid = UniqueID.getRequestScopedUID(HttpView.currentRequest());
-    String docSummaryId = "docSummary-" + uid;
-    String precursorSummaryId = "precursorSummary-" + uid;
+    String qcSummaryId = "qcSummary-" + uid;
 %>
 
-<div id=<%=q(docSummaryId)%>></div>
-<div id=<%=q(precursorSummaryId)%>></div>
+<div id=<%=q(qcSummaryId)%>></div>
 
 <script type="text/javascript">
     function init()
     {
-        LABKEY.Query.executeSql({
-            schemaName: 'targetedms',
-            sql: 'SELECT '
-                + '(SELECT COUNT(DISTINCT ModifiedSequence) FROM targetedms.Precursor) as precursorCount '
-                + ',(SELECT COUNT(Id) FROM targetedms.Runs WHERE StatusId = ' + <%=SkylineDocImporter.STATUS_SUCCESS%> + ') as docCount '
-                + ',(SELECT COUNT(Id) FROM targetedms.SampleFile) as fileCount',
-            success: function (data)
+        var pluralize = function(val)
+        {
+            return val == 1 ? '' : 's';
+        };
+
+        LABKEY.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('targetedms', 'getQCSummary', null, {includeSubfolders: true}),
+            scope: this,
+            success: LABKEY.Utils.getCallbackWrapper(function(response)
             {
-                var docCount = data.rows[0].docCount;
-                var fileCount = data.rows[0].fileCount;
-                var precursorCount = data.rows[0].precursorCount;
-                var docSummaryLine = docCount + " Skyline document" + (docCount == 1 ? "" : "s") + " uploaded containing " + fileCount + " sample file";
-                if (fileCount != 1)
-                    docSummaryLine += "s";
-                Ext4.get(<%=q(docSummaryId)%>).update(docSummaryLine);
-                Ext4.get(<%=q(precursorSummaryId)%>).update(precursorCount + " precursor" + (precursorCount == 1 ? "" : "s") + " tracked");
-            },
-            failure: function (response)
+                var html = '', fileUrl;
+
+                Ext4.each(response['containers'], function(container)
+                {
+                    fileUrl = LABKEY.ActionURL.buildURL('query', 'executeQuery', container['path'],
+                                {schemaName: 'targetedms', 'query.queryName': 'SampleFile'});
+
+                    // it we have subfolders, first write out the container name
+                    html += (container['subfolder'] || response['containers'].length > 1 ?
+                            (container['subfolder'] ? '<br/>' : '') + '<span style="font-weight: bold;">'
+                            + container['name'] + '</span><br/>' : '');
+
+                    // skyline document count and count/link for sample files
+                    html += container['docCount'] + ' Skyline document' + pluralize(container['docCount'])
+                            + ' uploaded containing ' + '<a href="' + fileUrl + '">' + container['fileCount']
+                            + ' sample file' + pluralize(container['fileCount']) + '</a><br/>';
+
+                    // precursor count
+                    html += container['precursorCount'] + ' precursor' + pluralize(container['precursorCount']) + ' tracked<br/>';
+
+                    // date of last import
+                    html += (container['lastImportDate'] != null ? 'Date of last import: '
+                            + Ext4.util.Format.date(container['lastImportDate'], LABKEY.extDefaultDateFormat)
+                            + '<br/>' : '');
+                });
+
+                Ext4.get(<%=q(qcSummaryId)%>).update(html);
+            }, this, false),
+            failure: LABKEY.Utils.getCallbackWrapper(function(response)
             {
-                Ext4.get(<%=q(docSummaryId)%>).update("Error: " + response.exception);
-            }
+                Ext4.get(<%=q(qcSummaryId)%>).update("<span class='labkey-error'>Error: " + response.exception + '</span>');
+            }, this, true)
         });
     }
     Ext4.onReady(init);

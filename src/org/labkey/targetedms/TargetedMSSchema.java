@@ -61,6 +61,7 @@ import org.labkey.targetedms.query.PrecursorTableInfo;
 import org.labkey.targetedms.query.QCAnnotationTable;
 import org.labkey.targetedms.query.QCAnnotationTypeTable;
 import org.labkey.targetedms.query.RepresentativeStateDisplayColumn;
+import org.labkey.targetedms.query.SampleFileTable;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
@@ -781,8 +782,11 @@ public class TargetedMSSchema extends UserSchema
         }
 
         // Tables that have a FK to targetedms.replicate
-        if (TABLE_SAMPLE_FILE.equalsIgnoreCase(name) ||
-            TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(name))
+        if (TABLE_SAMPLE_FILE.equalsIgnoreCase(name))
+        {
+            return new SampleFileTable(getSchema().getTable(name), this, ContainerJoinType.ReplicateFK.getSQL());
+        }
+        if (TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.ReplicateFK.getSQL());
         }

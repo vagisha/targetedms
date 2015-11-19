@@ -477,6 +477,88 @@ public class TargetedMSController extends SpringActionController
 
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class GetQCSummaryAction extends ApiAction<QCSummaryForm>
+    {
+        @Override
+        public Object execute(QCSummaryForm form, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            List<Map<String, Object>> containers = new ArrayList<>();
+
+            // incldue the QC Summary properties for the current container
+            containers.add(getContainerQCSummaryProperties(getContainer(), false));
+
+            // include the QC Summary properties for the direct subfolders, of type QC, that the user has read permission
+            if (form.isIncludeSubfolders())
+            {
+                for (Container container : getContainer().getChildren())
+                {
+                    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
+                    if (container.hasPermission(getUser(), ReadPermission.class) && folderType == TargetedMSModule.FolderType.QC)
+                    {
+                        containers.add(getContainerQCSummaryProperties(container, true));
+                    }
+                }
+            }
+
+            response.put("containers", containers);
+            return response;
+        }
+    }
+
+    private Map<String, Object> getContainerQCSummaryProperties(Container container, boolean isSubfolder)
+    {
+        Map<String, Object> properties = new HashMap<>();
+        SQLFragment sql;
+
+        properties.put("id", container.getId());
+        properties.put("name", container.getName());
+        properties.put("path", container.getPath());
+        properties.put("subfolder", isSubfolder);
+
+        // # Skyline documents, count of rows in targetedms.Runs
+        sql = new SQLFragment("(SELECT COUNT(Id) FROM ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE Container = ? AND StatusId = ?)");
+        sql.add(container.getId()).add(SkylineDocImporter.STATUS_SUCCESS);
+        properties.put("docCount", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class));
+
+        // date of last import, max(created) from targetedms.Runs
+        sql = new SQLFragment("(SELECT MAX(Created) FROM ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE Container = ? AND StatusId = ?)");
+        sql.add(container.getId()).add(SkylineDocImporter.STATUS_SUCCESS);
+        properties.put("lastImportDate", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Date.class));
+
+        // # sample files, count of rows in targetedms.SampleFile
+        sql = new SQLFragment("(SELECT COUNT(s.Id) FROM ").append(TargetedMSManager.getTableInfoSampleFile(), "s");
+        sql.append(" JOIN ").append(TargetedMSManager.getTableInfoReplicate(), "re").append(" ON s.ReplicateId = re.Id");
+        sql.append(" JOIN ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON re.RunId = r.Id");
+        sql.append(" WHERE r.Container = ?)").add(container.getId());
+        properties.put("fileCount", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class));
+
+        // # precursors tracked, count of distinct ModifiedSequence values in targetedms.Precursor
+        sql = new SQLFragment("(SELECT COUNT(DISTINCT p.ModifiedSequence) FROM ").append(TargetedMSManager.getTableInfoPrecursor(), "p");
+        sql.append(" JOIN ").append(TargetedMSManager.getTableInfoIsotopeLabel(), "i").append(" ON p.IsotopeLabelId = i.Id");
+        sql.append(" JOIN ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON i.RunId = r.Id");
+        sql.append(" WHERE r.Container = ?)").add(container.getId());
+        properties.put("precursorCount", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class));
+
+        return properties;
+    }
+
+    public static class QCSummaryForm
+    {
+        boolean includeSubfolders;
+
+        public boolean isIncludeSubfolders()
+        {
+            return includeSubfolders;
+        }
+
+        public void setIncludeSubfolders(boolean includeSubfolders)
+        {
+            this.includeSubfolders = includeSubfolders;
+        }
+    }
+
     // ------------------------------------------------------------------------
     // Action to show a list of chromatogram library archived revisions
     // ------------------------------------------------------------------------
