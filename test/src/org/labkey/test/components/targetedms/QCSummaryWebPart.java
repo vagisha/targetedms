@@ -50,19 +50,22 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     private void readSummary()
     {
-        String docSummary = _test.getText(elements().qcSummary);
-        Pattern docPattern = Pattern.compile("(\\d+) Skyline documents? uploaded containing (\\d+) sample files");
-        Matcher docMatcher = docPattern.matcher(docSummary);
-        Assert.assertTrue(docSummary, docMatcher.find());
+        String qcSummary = _test.getText(elements().qcSummary);
+
+        Pattern docPattern = Pattern.compile("(\\d+) Skyline documents");
+        Matcher docMatcher = docPattern.matcher(qcSummary);
+        Assert.assertTrue(qcSummary, docMatcher.find());
         _docCount = Integer.parseInt(docMatcher.group(1));
-        _fileCount = Integer.parseInt(docMatcher.group(2));
 
-        String precursorSummary = _test.getText(elements().qcSummary);
-        Pattern precurosrPattern = Pattern.compile("(\\d+) precursors tracked");
-        Matcher precursorMatcher = precurosrPattern.matcher(precursorSummary);
-        Assert.assertTrue(precursorSummary, precursorMatcher.find());
+        Pattern filePattern = Pattern.compile("(\\d+) sample files");
+        Matcher fileMatcher = filePattern.matcher(qcSummary);
+        Assert.assertTrue(qcSummary, fileMatcher.find());
+        _fileCount = Integer.parseInt(fileMatcher.group(1));
+
+        Pattern precursorPattern = Pattern.compile("(\\d+) precursors");
+        Matcher precursorMatcher = precursorPattern.matcher(qcSummary);
+        Assert.assertTrue(qcSummary, precursorMatcher.find());
         _precursorCount = Integer.parseInt(precursorMatcher.group(1));
-
     }
 
     public int getDocCount()
