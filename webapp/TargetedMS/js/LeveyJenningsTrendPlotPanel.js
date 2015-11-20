@@ -31,6 +31,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     singlePlot: false,
     plotWidth: null,
     enableBrushing: false,
+    havePlotOptionsChanged: false,
 
     // properties used for the various data queries based on chart metric type
     chartTypePropArr: [{
@@ -80,12 +81,47 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     initComponent : function() {
         Ext4.tip.QuickTipManager.init();
 
-        this.getInitialValuesFromUrlParams();
-
-        this.items = this.initPlotFormToolbars();
+        // format incoming start and end dates so that we are dealing with strings instead of Date objects
+        if (this.startDate)
+            this.startDate = this.formatDate(this.startDate);
+        if (this.endDate)
+            this.endDate = this.formatDate(this.endDate);
 
         this.callParent();
 
+        // Get the initial values for the plot options.
+        // If there are URL parameters (i.e. from Pareto Plot click), set those as initia values as well.
+        LABKEY.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('targetedms', 'leveyJenningsPlotOptions.api'),
+            scope: this,
+            success: LABKEY.Utils.getCallbackWrapper(function(response)
+            {
+                // convert the boolean values from strings
+                var initValues = {};
+                Ext4.iterate(response.properties, function(key, value)
+                {
+                    if (value === "true" || value === "false")
+                    {
+                        value = value === "true";
+                    }
+                    initValues[key] = value;
+                });
+
+                // apply any URL parameters to the initial values
+                Ext4.apply(initValues, this.getInitialValuesFromUrlParams());
+
+                this.initPlotForm(initValues);
+            }, this, false)
+        });
+    },
+
+    initPlotForm : function(initValues)
+    {
+        // apply the initial values to the panel object so they are used in form field initialization
+        Ext4.apply(this, initValues);
+
+        // initialize the form panel toolbars and display the plot
+        this.add(this.initPlotFormToolbars());
         this.displayTrendPlot();
     },
 
@@ -159,6 +195,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     getInitialValuesFromUrlParams : function()
     {
         var urlParams = LABKEY.ActionURL.getParameters(),
+            paramValues = {},
             alertMessage = '', sep = '',
             paramValue,
             chartType;
@@ -174,7 +211,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
             else
             {
-                this.chartType = chartType;
+                paramValues['chartType'] = chartType;
             }
         }
 
@@ -188,7 +225,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
             else
             {
-                this.startDate = paramValue;
+                paramValues['startDate'] = this.formatDate(paramValue);
             }
         }
 
@@ -201,14 +238,21 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
             else
             {
-                this.endDate = paramValue;
+                paramValues['endDate'] = this.formatDate(paramValue);
             }
         }
 
-        if(alertMessage.length > 0)
+        if (alertMessage.length > 0)
         {
-            LABKEY.Utils.alert('Invalid URL Parameter', alertMessage);
+            LABKEY.Utils.alert('Invalid URL Parameter(s)', alertMessage);
         }
+        else if (Object.keys(paramValues).length > 0)
+        {
+            this.havePlotOptionsChanged = true;
+            return paramValues;
+        }
+
+        return null;
     },
 
     validateChartTypeName : function(name)
@@ -240,7 +284,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 }),
                 valueField: 'value',
                 displayField: 'display',
-                value: 'linear',
+                value: this.yAxisScale,
                 forceSelection: true,
                 editable: false,
                 listeners: {
@@ -248,6 +292,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     change: function(cmp, newVal, oldVal)
                     {
                         this.yAxisScale = newVal;
+                        this.havePlotOptionsChanged = true;
 
                         // call processPlotData instead of renderPlots so that we recalculate min y-axis scale for log
                         this.processPlotData();
@@ -349,6 +394,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     change: function(cmp, newVal, oldVal)
                     {
                         this.chartType = newVal;
+                        this.havePlotOptionsChanged = true;
+
                         this.displayTrendPlot();
                     }
                 }
@@ -365,11 +412,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.groupedXCheckbox = Ext4.create('Ext.form.field.Checkbox', {
                 id: 'grouped-x-field',
                 boxLabel: 'Group X-Axis Values by Date',
+                checked: this.groupedX,
                 listeners: {
                     scope: this,
                     change: function(cb, newValue, oldValue)
                     {
                         this.groupedX = newValue;
+                        this.havePlotOptionsChanged = true;
 
                         // we don't allow creation of guide sets in grouped x-axis mode
                         this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot);
@@ -392,11 +441,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.peptidesInSinglePlotCheckbox = Ext4.create('Ext.form.field.Checkbox', {
                 id: 'peptides-single-plot',
                 boxLabel: 'Show All Peptides in Single Plot',
+                checked: this.singlePlot,
                 listeners: {
                     scope: this,
                     change: function(cb, newValue, oldValue)
                     {
                         this.singlePlot = newValue;
+                        this.havePlotOptionsChanged = true;
 
                         // we don't currently allow creation of guide sets in single plot mode
                         this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot);
@@ -418,6 +469,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.createGuideSetToggleButton = Ext4.create('Ext.button.Button', {
                 text: 'Create Guide Set',
                 tooltip: 'Enable/disable guide set creation mode',
+                disabled: this.groupedX || this.singlePlot,
                 enableToggle: true,
                 handler: function(btn) {
                     this.setBrushingEnabled(btn.pressed);
@@ -467,14 +519,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         // CAST as DATE to ignore time portion of value
         if (this.startDate)
         {
-            var startDate = this.startDate instanceof Date ? Ext4.util.Format.date(this.startDate, 'Y-m-d') : this.startDate;
-            sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) >= '" + startDate + "'";
+            sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) >= '" + this.startDate + "'";
             separator = " AND ";
         }
         if (this.endDate)
         {
-            var endDate = this.endDate instanceof Date ? Ext4.util.Format.date(this.endDate, 'Y-m-d') : this.endDate;
-            sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + endDate + "'";
+            sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
         }
 
         // Cap the peptide count at 50
@@ -739,7 +789,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.renderPlots();
     },
 
-    renderPlots: function() {
+    renderPlots: function()
+    {
+        this.persistSelectedFormOptions();
 
         if (this.precursors.length == 0) {
             this.failureHandler({message: "There were no records found. The date filter applied may be too restrictive."});
@@ -762,6 +814,36 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         Ext4.get(this.plotDivId).unmask();
+    },
+
+    persistSelectedFormOptions : function()
+    {
+        if (this.havePlotOptionsChanged)
+        {
+            this.havePlotOptionsChanged = false;
+            LABKEY.Ajax.request({
+                url: LABKEY.ActionURL.buildURL('targetedms', 'leveyJenningsPlotOptions.api'),
+                params: this.getSelectedPlotFormOptions(false)
+            });
+        }
+    },
+
+    getSelectedPlotFormOptions : function(includeDates)
+    {
+        var props = {
+            chartType: this.chartType,
+            yAxisScale: this.yAxisScale,
+            groupedX: this.groupedX,
+            singlePlot: this.singlePlot
+        };
+
+        if (includeDates)
+        {
+            props.startDate = this.formatDate(this.startDate);
+            props.endDate = this.formatDate(this.endDate);
+        }
+
+        return props;
     },
 
     getMaxStackedAnnotations : function() {
@@ -1307,6 +1389,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             // get date values without the time zone info
             this.startDate = startDateRawValue;
             this.endDate = endDateRawValue;
+            this.havePlotOptionsChanged = true;
 
             this.displayTrendPlot();
         }

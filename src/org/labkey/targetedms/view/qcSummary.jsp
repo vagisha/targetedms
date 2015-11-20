@@ -68,7 +68,8 @@
             this.callParent();
 
             LABKEY.Ajax.request({
-                url: LABKEY.ActionURL.buildURL('targetedms', 'getQCSummary', null, {includeSubfolders: true}),
+                url: LABKEY.ActionURL.buildURL('targetedms', 'getQCSummary.api'),
+                params: {includeSubfolders: true},
                 scope: this,
                 success: LABKEY.Utils.getCallbackWrapper(function(response)
                 {

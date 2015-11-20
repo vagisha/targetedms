@@ -58,6 +58,7 @@ import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DataRegionSelection;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.NestableQueryView;
+import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
@@ -478,6 +479,71 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
+    public class LeveyJenningsPlotOptionsAction extends ApiAction<LeveyJenningsPlotOptions>
+    {
+        private static final String CATEGORY = "TargetedMSLeveyJenningsPlotOptions";
+
+        @Override
+        public Object execute(LeveyJenningsPlotOptions form, BindException errors) throws Exception
+        {
+            PropertyManager.PropertyMap properties = PropertyManager.getWritableProperties(getUser(), getContainer(), CATEGORY, true);
+
+            Map<String, String> valuesToPersist = form.getAsMapOfStrings();
+            if (!valuesToPersist.isEmpty())
+            {
+                properties.putAll(valuesToPersist);
+                properties.save();
+            }
+
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            response.put("properties", properties);
+            return response;
+        }
+    }
+
+    private static class LeveyJenningsPlotOptions
+    {
+        private String _chartType;
+        private String _yAxisScale;
+        private Boolean _groupedX;
+        private Boolean _singlePlot;
+
+        public Map<String, String> getAsMapOfStrings()
+        {
+            Map<String, String> valueMap = new HashMap<>();
+            if (_chartType != null)
+                valueMap.put("chartType", _chartType);
+            if (_yAxisScale != null)
+                valueMap.put("yAxisScale", _yAxisScale);
+            if (_groupedX != null)
+                valueMap.put("groupedX", Boolean.toString(_groupedX));
+            if (_singlePlot != null)
+                valueMap.put("singlePlot", Boolean.toString(_singlePlot));
+            return valueMap;
+        }
+
+        public void setChartType(String chartType)
+        {
+            _chartType = chartType;
+        }
+
+        public void setyAxisScale(String yAxisScale)
+        {
+            _yAxisScale = yAxisScale;
+        }
+
+        public void setGroupedX(Boolean groupedX)
+        {
+            _groupedX = groupedX;
+        }
+
+        public void setSinglePlot(Boolean singlePlot)
+        {
+            _singlePlot = singlePlot;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
     public class GetQCSummaryAction extends ApiAction<QCSummaryForm>
     {
         @Override
@@ -544,7 +610,7 @@ public class TargetedMSController extends SpringActionController
         return properties;
     }
 
-    public static class QCSummaryForm
+    private static class QCSummaryForm
     {
         boolean includeSubfolders;
 
