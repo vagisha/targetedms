@@ -25,6 +25,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     // properties specific to this TargetedMS Levey-Jennings plot implementation
     yAxisScale: 'linear',
     chartType: 'retentionTime',
+    startDate: null,
+    endDate: null,
     groupedX: false,
     singlePlot: false,
     plotWidth: null,
@@ -78,231 +80,66 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     initComponent : function() {
         Ext4.tip.QuickTipManager.init();
 
-        if (!this.startDate)
-            this.startDate = null;
-        if (!this.endDate)
-            this.endDate = null;
+        this.getInitialValuesFromUrlParams();
 
-        //get parameters from the url
-        var alertMessage;
-        if (LABKEY.ActionURL.getParameter("startDate") != undefined) {
-            var sdate = new Date(LABKEY.ActionURL.getParameter("startDate"));
+        this.items = this.initPlotFormToolbars();
 
-            if(sdate == "Invalid Date")
-            {
-                alertMessage = "Invalid Start Date.";
-            }
-            else
-            {
-                this.startDate = sdate;
-            }
-        }
-        if (LABKEY.ActionURL.getParameter("endDate") != undefined) {
-            var edate = new Date(LABKEY.ActionURL.getParameter("endDate"));
+        this.callParent();
 
-            if(edate == "Invalid Date") {
-                alertMessage = "Invalid End Date.";
-            }
-            else {
-                this.endDate = edate;
-            }
-        }
+        this.displayTrendPlot();
+    },
 
-        if(alertMessage != undefined) {
-            LABKEY.Utils.alert('Invalid Date', alertMessage + " Used default dates.");
-        }
+    initPlotFormToolbars : function()
+    {
+        var tbspacer = {xtype: 'tbspacer'},
+            tbseparator = {xtype: 'tbseparator'},
+            toolbar1, toolbar2, toolbar3,
+            toolbarItems;
 
-        if (LABKEY.ActionURL.getParameter("metric") != undefined) {
-            var t = this.validateChartTypeName(LABKEY.ActionURL.getParameter("metric"));
-
-            if(t == "Invalid Chart Type") {
-                LABKEY.Utils.alert(t, LABKEY.ActionURL.getParameter("metric") + " is not a valid Chart Type. Used 'Retention Time'.");
-            }
-            else {
-                this.chartType = t;
-            }
-        }
-
-        // initialize the y-axis scale combo for the top toolbar
-        this.scaleCombo = Ext4.create('Ext.form.field.ComboBox', {
-            id: 'scale-combo-box',
-            width: 155,
-            labelWidth: 80,
-            fieldLabel: 'Y-Axis Scale',
-            triggerAction: 'all',
-            mode: 'local',
-            store: Ext4.create('Ext.data.ArrayStore', {
-                fields: ['value', 'display'],
-                data: [['linear', 'Linear'], ['log', 'Log']]
-            }),
-            valueField: 'value',
-            displayField: 'display',
-            value: 'linear',
-            forceSelection: true,
-            editable: false,
-            listeners: {
-                scope: this,
-                change: function(cmp, newVal, oldVal) {
-                    this.yAxisScale = newVal;
-                    this.processPlotData(); // call processPlotData instead of renderPlots so that we recalculate min y-axis scale for log
-                }
-            }
-        });
-
-        // initialize the date range selection fields for the top toolbar
-        this.startDateField = Ext4.create('Ext.form.field.Date', {
-            id: 'start-date-field',
-            width: 180,
-            labelWidth: 65,
-            fieldLabel: 'Start Date',
-            value: this.startDate,
-            allowBlank: false,
-            format:  'Y-m-d',
-            listeners: {
-                scope: this,
-                validitychange: function (df, isValid) {
-                    this.applyFilterButton.setDisabled(!isValid);
-                }
-            }
-        });
-
-        this.endDateField = Ext4.create('Ext.form.field.Date', {
-            id: 'end-date-field',
-            width: 175,
-            labelWidth: 60,
-            fieldLabel: 'End Date',
-            value: this.endDate,
-            allowBlank: false,
-            format:  'Y-m-d',
-            listeners: {
-                scope: this,
-                validitychange: function (df, isValid) {
-                    this.applyFilterButton.setDisabled(!isValid);
-                }
-            }
-        });
-
-        this.chartTypeField = Ext4.create('Ext.form.field.ComboBox', {
-            id: 'chart-type-field',
-            width: 340,
-            labelWidth: 70,
-            fieldLabel: 'Chart Type',
-            triggerAction: 'all',
-            mode: 'local',
-            store: Ext4.create('Ext.data.Store', {
-                fields: ['name', 'title'],
-                data: this.chartTypePropArr
-            }),
-            valueField: 'name',
-            displayField: 'title',
-            value: this.chartType,
-            forceSelection: true,
-            editable: false,
-            listeners: {
-                scope: this,
-                change: function(cmp, newVal, oldVal) {
-                    this.chartType = newVal;
-                    this.displayTrendPlot();
-                }
-            }
-        });
-
-        // initialize the refresh graph button
-        this.applyFilterButton = Ext4.create('Ext.button.Button', {
-            disabled: true,
-            text: 'Apply',
-            handler: this.applyGraphFilterBtnClick,
-            scope: this
-        });
-
-        // initialize the checkbox to toggle separate vs groups x-values
-        this.groupedXCheckbox = Ext4.create('Ext.form.field.Checkbox', {
-            id: 'grouped-x-field',
-            boxLabel: 'Group X-Axis Values by Date',
-            listeners: {
-                scope: this,
-                change: function(cb, newValue, oldValue) {
-                    this.groupedX = newValue;
-
-                    // we don't allow creation of guide sets in grouped x-axis mode
-                    this.createGuideSetToggleButton.setDisabled(this.groupedX || this.singlePlot);
-                    this.setBrushingEnabled(false);
-
-                    //TODO this should be this.renderPlots() but there is a bug with the yStepIndex being reset on grouping of x-axis
-                    this.getAnnotationData();
-                }
-            }
-        });
-
-        // initialize the checkbox to show peptides in a single plot
-        this.peptidesInSinglePlotCheckbox = Ext4.create('Ext.form.field.Checkbox', {
-            id: 'peptides-single-plot',
-            boxLabel: 'Show All Peptides in Single Plot',
-            listeners: {
-                scope: this,
-                change: function(cb, newValue, oldValue) {
-                    this.singlePlot = newValue;
-
-                    // we don't currently allow creation of guide sets in single plot mode
-                    this.createGuideSetToggleButton.setDisabled(this.groupedX || this.singlePlot);
-                    this.setBrushingEnabled(false);
-
-                    this.renderPlots();
-                }
-            }
-        });
-
-        // initialize the create guide set button
-        this.createGuideSetToggleButton = Ext4.create('Ext.button.Button', {
-            text: 'Create Guide Set',
-            tooltip: 'Enable/disable guide set creation mode',
-            enableToggle: true,
-            handler: function(btn) {
-                this.setBrushingEnabled(btn.pressed);
-            },
-            scope: this
-        });
-
-        var tbspacer = {xtype: 'tbspacer'};
-
-        var toolbar1 = Ext4.create('Ext.toolbar.Toolbar', {
+        toolbar1 = Ext4.create('Ext.toolbar.Toolbar', {
             ui: 'footer',
-            layout: { pack: 'center' },
             padding: 10,
+            layout: {
+                pack: 'center'
+            },
             items: [
-                this.chartTypeField, tbspacer,
-                {xtype: 'tbseparator'}, tbspacer,
-                this.startDateField, tbspacer,
-                this.endDateField, tbspacer,
-                this.applyFilterButton
+                this.getChartTypeCombo(), tbspacer,
+                tbseparator, tbspacer,
+                this.getStartDateField(), tbspacer,
+                this.getEndDateField(), tbspacer,
+                this.getApplyDateRangeButton()
             ]
         });
 
-        var toolbar2Items = [
-            this.scaleCombo, tbspacer,
-            {xtype: 'tbseparator'}, tbspacer,
-            this.groupedXCheckbox, tbspacer,
-            {xtype: 'tbseparator'}, tbspacer,
-            this.peptidesInSinglePlotCheckbox, tbspacer
+        toolbarItems = [
+            this.getScaleCombo(), tbspacer,
+            tbseparator, tbspacer,
+            this.getGroupedXCheckbox(), tbspacer,
+            tbseparator, tbspacer,
+            this.getSinglePlotCheckbox(), tbspacer
         ];
 
         // only add the create guide set button if the user has the proper permissions to insert/update guide sets
-        if (this.canUserEdit()) {
-            toolbar2Items.push({xtype: 'tbseparator'}, tbspacer, this.createGuideSetToggleButton);
+        if (this.canUserEdit())
+        {
+            toolbarItems.push(tbseparator, tbspacer);
+            toolbarItems.push(this.getGuideSetCreateButton());
         }
 
-        var toolbar2 = Ext4.create('Ext.toolbar.Toolbar', {
+        toolbar2 = Ext4.create('Ext.toolbar.Toolbar', {
             ui: 'footer',
             layout: { pack: 'center' },
             padding: '0 10px 10px 10px',
-            items: toolbar2Items
+            items: toolbarItems
         });
 
-        var toolbar3 = Ext4.create('Ext.toolbar.Toolbar', {
+        toolbar3 = Ext4.create('Ext.toolbar.Toolbar', {
             ui: 'footer',
-            layout: { pack: 'center' },
             cls: 'guideset-toolbar-msg',
             hidden: true,
+            layout: {
+                pack: 'center'
+            },
             items: [{
                 xtype: 'box',
                 itemId: 'GuideSetMessageToolBar',
@@ -310,20 +147,286 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }]
         });
 
-        this.items = [{ tbar: toolbar1 }, { tbar: toolbar2 }, { tbar: toolbar3 }];
-
-        this.callParent();
-
-        this.displayTrendPlot();
+        return [{
+            tbar: toolbar1
+        },{
+            tbar: toolbar2
+        },{
+            tbar: toolbar3
+        }];
     },
 
-    validateChartTypeName : function(name) {
-        for (var i = 0; i < this.chartTypePropArr.length; i++) {
-            if (this.chartTypePropArr[i].name == name) {
+    getInitialValuesFromUrlParams : function()
+    {
+        var urlParams = LABKEY.ActionURL.getParameters(),
+            alertMessage = '', sep = '',
+            paramValue,
+            chartType;
+
+        paramValue = urlParams['metric'];
+        if (paramValue != undefined)
+        {
+            chartType = this.validateChartTypeName(paramValue);
+            if(chartType == null)
+            {
+                alertMessage += "Invalid Chart Type, reverting to default chart type.";
+                sep = ' ';
+            }
+            else
+            {
+                this.chartType = chartType;
+            }
+        }
+
+        if (urlParams['startDate'] != undefined)
+        {
+            paramValue = new Date(urlParams['startDate']);
+            if(paramValue == "Invalid Date")
+            {
+                alertMessage += sep + "Invalid Start Date, reverting to default start date.";
+                sep = ' ';
+            }
+            else
+            {
+                this.startDate = paramValue;
+            }
+        }
+
+        if (urlParams['endDate'] != undefined)
+        {
+            paramValue = new Date(urlParams['endDate']);
+            if(paramValue == "Invalid Date")
+            {
+                alertMessage += sep + "Invalid End Date, reverting to default end date.";
+            }
+            else
+            {
+                this.endDate = paramValue;
+            }
+        }
+
+        if(alertMessage.length > 0)
+        {
+            LABKEY.Utils.alert('Invalid URL Parameter', alertMessage);
+        }
+    },
+
+    validateChartTypeName : function(name)
+    {
+        for (var i = 0; i < this.chartTypePropArr.length; i++)
+        {
+            if (this.chartTypePropArr[i].name == name)
+            {
                 return this.chartTypePropArr[i].name;
             }
         }
-        return 'Invalid Chart Type';
+        return null;
+    },
+
+    getScaleCombo : function()
+    {
+        if (!this.scaleCombo)
+        {
+            this.scaleCombo = Ext4.create('Ext.form.field.ComboBox', {
+                id: 'scale-combo-box',
+                width: 155,
+                labelWidth: 80,
+                fieldLabel: 'Y-Axis Scale',
+                triggerAction: 'all',
+                mode: 'local',
+                store: Ext4.create('Ext.data.ArrayStore', {
+                    fields: ['value', 'display'],
+                    data: [['linear', 'Linear'], ['log', 'Log']]
+                }),
+                valueField: 'value',
+                displayField: 'display',
+                value: 'linear',
+                forceSelection: true,
+                editable: false,
+                listeners: {
+                    scope: this,
+                    change: function(cmp, newVal, oldVal)
+                    {
+                        this.yAxisScale = newVal;
+
+                        // call processPlotData instead of renderPlots so that we recalculate min y-axis scale for log
+                        this.processPlotData();
+                    }
+                }
+            });
+        }
+
+        return this.scaleCombo;
+    },
+
+    getStartDateField : function()
+    {
+        if (!this.startDateField)
+        {
+            this.startDateField = Ext4.create('Ext.form.field.Date', {
+                id: 'start-date-field',
+                width: 180,
+                labelWidth: 65,
+                fieldLabel: 'Start Date',
+                value: this.startDate,
+                allowBlank: false,
+                format: 'Y-m-d',
+                listeners: {
+                    scope: this,
+                    validitychange: function (df, isValid)
+                    {
+                        this.getApplyDateRangeButton().setDisabled(!isValid);
+                    }
+                }
+            });
+        }
+
+        return this.startDateField;
+    },
+
+    getEndDateField : function()
+    {
+        if (!this.endDateField)
+        {
+            this.endDateField = Ext4.create('Ext.form.field.Date', {
+                id: 'end-date-field',
+                width: 175,
+                labelWidth: 60,
+                fieldLabel: 'End Date',
+                value: this.endDate,
+                allowBlank: false,
+                format: 'Y-m-d',
+                listeners: {
+                    scope: this,
+                    validitychange: function (df, isValid)
+                    {
+                        this.getApplyDateRangeButton().setDisabled(!isValid);
+                    }
+                }
+            });
+        }
+
+        return this.endDateField;
+    },
+
+    getApplyDateRangeButton : function()
+    {
+        if (!this.applyFilterButton)
+        {
+            this.applyFilterButton = Ext4.create('Ext.button.Button', {
+                disabled: true,
+                text: 'Apply',
+                handler: this.applyGraphFilterBtnClick,
+                scope: this
+            });
+        }
+
+        return this.applyFilterButton;
+    },
+
+    getChartTypeCombo : function()
+    {
+        if (!this.chartTypeField)
+        {
+            this.chartTypeField = Ext4.create('Ext.form.field.ComboBox', {
+                id: 'chart-type-field',
+                width: 340,
+                labelWidth: 70,
+                fieldLabel: 'Chart Type',
+                triggerAction: 'all',
+                mode: 'local',
+                store: Ext4.create('Ext.data.Store', {
+                    fields: ['name', 'title'],
+                    data: this.chartTypePropArr
+                }),
+                valueField: 'name',
+                displayField: 'title',
+                value: this.chartType,
+                forceSelection: true,
+                editable: false,
+                listeners: {
+                    scope: this,
+                    change: function(cmp, newVal, oldVal)
+                    {
+                        this.chartType = newVal;
+                        this.displayTrendPlot();
+                    }
+                }
+            });
+        }
+
+        return this.chartTypeField;
+    },
+
+    getGroupedXCheckbox : function()
+    {
+        if (!this.groupedXCheckbox)
+        {
+            this.groupedXCheckbox = Ext4.create('Ext.form.field.Checkbox', {
+                id: 'grouped-x-field',
+                boxLabel: 'Group X-Axis Values by Date',
+                listeners: {
+                    scope: this,
+                    change: function(cb, newValue, oldValue)
+                    {
+                        this.groupedX = newValue;
+
+                        // we don't allow creation of guide sets in grouped x-axis mode
+                        this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot);
+                        this.setBrushingEnabled(false);
+
+                        //TODO this should be this.renderPlots() but there is a bug with the yStepIndex being reset
+                        this.getAnnotationData();
+                    }
+                }
+            });
+        }
+
+        return this.groupedXCheckbox;
+    },
+
+    getSinglePlotCheckbox : function()
+    {
+        if (!this.peptidesInSinglePlotCheckbox)
+        {
+            this.peptidesInSinglePlotCheckbox = Ext4.create('Ext.form.field.Checkbox', {
+                id: 'peptides-single-plot',
+                boxLabel: 'Show All Peptides in Single Plot',
+                listeners: {
+                    scope: this,
+                    change: function(cb, newValue, oldValue)
+                    {
+                        this.singlePlot = newValue;
+
+                        // we don't currently allow creation of guide sets in single plot mode
+                        this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot);
+                        this.setBrushingEnabled(false);
+
+                        this.renderPlots();
+                    }
+                }
+            });
+        }
+
+        return this.peptidesInSinglePlotCheckbox;
+    },
+
+    getGuideSetCreateButton : function()
+    {
+        if (!this.createGuideSetToggleButton)
+        {
+            this.createGuideSetToggleButton = Ext4.create('Ext.button.Button', {
+                text: 'Create Guide Set',
+                tooltip: 'Enable/disable guide set creation mode',
+                enableToggle: true,
+                handler: function(btn) {
+                    this.setBrushingEnabled(btn.pressed);
+                },
+                scope: this
+            });
+        }
+
+        return this.createGuideSetToggleButton;
     },
 
     setBrushingEnabled : function(enabled) {
@@ -331,7 +434,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.clearPlotBrush();
         this.setPlotBrushingDisplayStyle();
         this.toggleGuideSetMsgDisplay();
-        this.createGuideSetToggleButton.toggle(enabled);
+        this.getGuideSetCreateButton().toggle(enabled);
     },
 
     setLoadingMsg : function() {
@@ -1174,8 +1277,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     applyGraphFilterBtnClick: function() {
+        var startDateRawValue = this.getStartDateField().getRawValue(),
+            startDateValue = this.getStartDateField().getValue(),
+            endDateRawValue = this.getEndDateField().getRawValue(),
+            endDateValue = this.getEndDateField().getValue();
+
         // make sure that at least one filter field is not null
-        if (this.startDateField.getRawValue() == '' && this.endDateField.getRawValue() == '')
+        if (startDateRawValue == '' && endDateRawValue == '')
         {
             Ext4.Msg.show({
                 title:'ERROR',
@@ -1185,7 +1293,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             });
         }
         // verify that the start date is not after the end date
-        else if (this.startDateField.getValue() > this.endDateField.getValue() && this.endDateField.getValue() != '')
+        else if (startDateValue > endDateValue && endDateValue != '')
         {
             Ext4.Msg.show({
                 title:'ERROR',
@@ -1197,8 +1305,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         else
         {
             // get date values without the time zone info
-            this.startDate = this.startDateField.getRawValue();
-            this.endDate = this.endDateField.getRawValue();
+            this.startDate = startDateRawValue;
+            this.endDate = endDateRawValue;
 
             this.displayTrendPlot();
         }
