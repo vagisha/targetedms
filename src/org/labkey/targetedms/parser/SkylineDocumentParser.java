@@ -1869,7 +1869,7 @@ public class SkylineDocumentParser implements AutoCloseable
         //       Skyline never creates this case, but it has been reported
         // int maxTranMatch = 1;
 
-        if (_binaryParser != null)
+        if (_binaryParser != null && _binaryParser.getChromatograms() != null)
         {
             // Filter the list of chromatograms based on our precursor mZ
             int i = findEntry(precursorMz, tolerance, _binaryParser.getChromatograms(), 0, _binaryParser.getChromatograms().length - 1);
