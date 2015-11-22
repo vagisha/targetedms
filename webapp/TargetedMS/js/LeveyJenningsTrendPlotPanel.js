@@ -76,6 +76,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         baseLkFieldKey: '',
         colName: 'transitionPrecursorRatio',
         statsTableName: 'GuideSetTPRatioStats'
+    },{
+        name: 'massAccuracy',
+        title: 'Mass Accuracy',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'AverageMassErrorPPM',
+        statsTableName: 'GuideSetMassAccuracyStats'
     }],
 
     initComponent : function() {

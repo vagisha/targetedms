@@ -49,7 +49,7 @@ public final class QCPlotsWebPart extends BodyWebPart
         _test.waitForElement(elements().plot);
     }
 
-    public static enum Scale
+    public enum Scale
     {
         LINEAR("Linear"),
         LOG("Log");
@@ -110,13 +110,15 @@ public final class QCPlotsWebPart extends BodyWebPart
         return _test.getFormElement(elements().endDate);
     }
 
-    public static enum ChartType
+    public enum ChartType
     {
         RETENTION("Retention Time"),
         PEAK("Peak Area"),
         FWHM("Full Width at Half Maximum (FWHM)"),
         FWB("Full Width at Base (FWB)"),
-        TPAREARATIO("Transition/Precursor Area Ratio");
+        //LHRATIO("Light/Heavy Ratio"),
+        TPAREARATIO("Transition/Precursor Area Ratio"),
+        MASSACCURACTY("Mass Accuracy");
 
         private String _text;
 

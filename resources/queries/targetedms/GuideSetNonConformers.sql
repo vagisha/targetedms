@@ -120,3 +120,21 @@ LEFT JOIN GuideSetTPRatioStats stats
     OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))
 WHERE stats.GuideSetId IS NOT NULL
 GROUP BY stats.GuideSetId
+
+UNION SELECT stats.GuideSetId,
+'MA' As Metric,
+'Mass Accuracy' As MetricLongLabel,
+'massAccuracy' AS MetricName,
+SUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers
+FROM (
+  SELECT PrecursorId.ModifiedSequence AS Sequence,
+  SampleFileId.AcquiredTime AS AcquiredTime,
+  AverageMassErrorPPM AS Value
+  FROM PrecursorChromInfo
+) X
+LEFT JOIN GuideSetMassAccuracyStats stats
+  ON X.Sequence = stats.Sequence
+  AND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)
+    OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))
+WHERE stats.GuideSetId IS NOT NULL
+GROUP BY stats.GuideSetId

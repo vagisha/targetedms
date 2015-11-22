@@ -172,7 +172,13 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
         assertEquals("Wrong number of Pareto plots", 4, paretoPlotsWebPart.getNumOfParetoPlots());
-        assertEquals("Wrong number of non-conformers", 69, paretoPlotsWebPart.getPlotBarHeight(3, 0));
+        assertEquals("Wrong number of non-conformers for PA", 69, paretoPlotsWebPart.getPlotBarHeight(3, 0));
+        assertEquals("Wrong number of non-conformers for MA", 57, paretoPlotsWebPart.getPlotBarHeight(3, 1));
+        assertEquals("Wrong number of non-conformers for T/PA Ratio", 29, paretoPlotsWebPart.getPlotBarHeight(3, 2));
+        assertEquals("Wrong number of non-conformers for RT", 16, paretoPlotsWebPart.getPlotBarHeight(3, 3));
+        assertEquals("Wrong number of non-conformers for FWHM", 13, paretoPlotsWebPart.getPlotBarHeight(3, 4));
+        assertEquals("Wrong number of non-conformers for FWB", 7, paretoPlotsWebPart.getPlotBarHeight(3, 5));
+
         verifyTicksOnPlots(paretoPlotsWebPart, 3);
         verifyDownloadableParetoPlotPdf();
         verifyNavigationToPanoramaDashboard(3, 0);
@@ -244,6 +250,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("GuideSetFWBStats", 0));
         gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
         gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 0));
+        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 0));
 
         validateGuideSetStats(gs);
     }
@@ -256,6 +263,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("GuideSetFWBStats", 1, PRECURSORS[0], 0.292, null));
         gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
         gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 1, PRECURSORS[0], 0.06410326063632965, null));
+        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 1, PRECURSORS[0], -0.0025051420088857412, null));
 
         validateGuideSetStats(gs);
     }
@@ -268,6 +276,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("GuideSetFWBStats", 10, PRECURSORS[1], 0.326, 0.025));
         gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
         gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 10, PRECURSORS[1], 0.16636697351932525, 0.024998646348985));
+        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 10, PRECURSORS[1], -0.14503030776977538, 0.5113428116648383));
 
         validateGuideSetStats(gs);
     }
@@ -280,6 +289,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("GuideSetFWBStats", 4, PRECURSORS[2], 0.259, 0.013));
         gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
         gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 4, PRECURSORS[2], 0.0, 0.0));
+        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 4, PRECURSORS[2], 1.7878320217132568, 0.09473514310269647));
 
         validateGuideSetStats(gs);
     }
@@ -292,6 +302,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("GuideSetFWBStats", 2, PRECURSORS[3], 0.219, 0.011));
         gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
         gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 2, PRECURSORS[3], 0.06426714546978474, 0.02016935064728605));
+        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 2, PRECURSORS[3], 1.6756309866905212, 0.23667992679147354));
 
         validateGuideSetStats(gs);
     }

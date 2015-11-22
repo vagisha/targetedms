@@ -7,6 +7,7 @@ api-src/org/labkey/api/targetedms/TargetedMSService.java -text
 resources/queries/targetedms/GuideSetFWBStats.sql -text
 resources/queries/targetedms/GuideSetFWHMStats.sql -text
 resources/queries/targetedms/GuideSetLHRatioStats.sql -text
+resources/queries/targetedms/GuideSetMassAccuracyStats.sql -text
 resources/queries/targetedms/GuideSetNonConformers.sql -text
 resources/queries/targetedms/GuideSetPeakAreaStats.sql -text
 resources/queries/targetedms/GuideSetRetentionTimeStats.sql -text

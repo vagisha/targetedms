@@ -33,11 +33,13 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public enum ChartTypeTicks
     {
-        TPAREARATIO("T/PA Ratio"),
         RETENTION("RT"),
         PEAK("PA"),
         FWHM("FWHM)"),
-        FWB("FWB");
+        FWB("FWB"),
+        LHRATIO("Light/Heavy Ratio"),
+        TPAREARATIO("T/PA Ratio"),
+        MASSACCURACY("MA");
 
         private String _text;
 
@@ -96,7 +98,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public int getPlotBarHeight(int guideSetId, int barPlotNum)
     {
-       return Integer.parseInt(_test.getText(Locator.css("#paretoPlot-GuideSet-" + guideSetId + "-" + barPlotNum + " > a:nth-child(1)")));
+       return Integer.parseInt(_test.getText(Locator.css("#paretoPlot-GuideSet-" + guideSetId + "-0 > a:nth-child(" + (barPlotNum+1) + ")")));
     }
 
     public void clickLeveyJenningsLink(BaseWebDriverTest test)
