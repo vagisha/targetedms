@@ -33,6 +33,7 @@ import org.labkey.test.pages.targetedms.GuideSetPage;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.pages.targetedms.ParetoPlotPage;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.RelativeUrl;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -218,7 +219,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     {
         for (GuideSetStats stats : gs.getStats())
         {
-            navigateToQuery("targetedms", stats.getQueryName());
+            navigateToGuideSetStatsQuery(stats.getMetricName());
 
             DataRegionTable table = new DataRegionTable("query", this);
             table.setFilter("GuideSetId", "Equals", String.valueOf(gs.getRowId()));
@@ -242,67 +243,78 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         }
     }
 
+    private void navigateToGuideSetStatsQuery(String metricName)
+    {
+        RelativeUrl queryURL = new RelativeUrl("query", "executequery");
+        queryURL.setContainerPath(getCurrentContainerPath());
+        queryURL.addParameter("schemaName", "targetedms");
+        queryURL.addParameter("query.queryName", "GuideSetStats");
+        queryURL.addParameter("query.param.METRIC", metricName);
+
+        queryURL.navigate(this);
+    }
+
     private void verifyGuideSet1Stats(GuideSet gs)
     {
-        gs.addStats(new GuideSetStats("GuideSetRetentionTimeStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetPeakAreaStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetFWHMStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetFWBStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 0));
+        gs.addStats(new GuideSetStats("retentionTime", 0));
+        gs.addStats(new GuideSetStats("peakArea", 0));
+        gs.addStats(new GuideSetStats("fwhm", 0));
+        gs.addStats(new GuideSetStats("fwb", 0));
+        gs.addStats(new GuideSetStats("ratio", 0));
+        gs.addStats(new GuideSetStats("transitionPrecursorRatio", 0));
+        gs.addStats(new GuideSetStats("massAccuracy", 0));
 
         validateGuideSetStats(gs);
     }
 
     private void verifyGuideSet2Stats(GuideSet gs)
     {
-        gs.addStats(new GuideSetStats("GuideSetRetentionTimeStats", 1, PRECURSORS[0], 14.880, null));
-        gs.addStats(new GuideSetStats("GuideSetPeakAreaStats", 1, PRECURSORS[0], 1.1613580288E10, null));
-        gs.addStats(new GuideSetStats("GuideSetFWHMStats", 1, PRECURSORS[0], 0.096, null));
-        gs.addStats(new GuideSetStats("GuideSetFWBStats", 1, PRECURSORS[0], 0.292, null));
-        gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 1, PRECURSORS[0], 0.06410326063632965, null));
-        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 1, PRECURSORS[0], -0.0025051420088857412, null));
+        gs.addStats(new GuideSetStats("retentionTime", 1, PRECURSORS[0], 14.880, null));
+        gs.addStats(new GuideSetStats("peakArea", 1, PRECURSORS[0], 1.1613580288E10, null));
+        gs.addStats(new GuideSetStats("fwhm", 1, PRECURSORS[0], 0.096, null));
+        gs.addStats(new GuideSetStats("fwb", 1, PRECURSORS[0], 0.292, null));
+        gs.addStats(new GuideSetStats("ratio", 0));
+        gs.addStats(new GuideSetStats("transitionPrecursorRatio", 1, PRECURSORS[0], 0.06410326063632965, null));
+        gs.addStats(new GuideSetStats("massAccuracy", 1, PRECURSORS[0], -0.0025051420088857412, null));
 
         validateGuideSetStats(gs);
     }
 
     private void verifyGuideSet3Stats(GuideSet gs)
     {
-        gs.addStats(new GuideSetStats("GuideSetRetentionTimeStats", 10, PRECURSORS[1], 32.151, 0.026));
-        gs.addStats(new GuideSetStats("GuideSetPeakAreaStats", 10, PRECURSORS[1], 2.930734907392E11, 6.454531590675328E10));
-        gs.addStats(new GuideSetStats("GuideSetFWHMStats", 10, PRECURSORS[1], 0.11, 0.015));
-        gs.addStats(new GuideSetStats("GuideSetFWBStats", 10, PRECURSORS[1], 0.326, 0.025));
-        gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 10, PRECURSORS[1], 0.16636697351932525, 0.024998646348985));
-        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 10, PRECURSORS[1], -0.14503030776977538, 0.5113428116648383));
+        gs.addStats(new GuideSetStats("retentionTime", 10, PRECURSORS[1], 32.151, 0.026));
+        gs.addStats(new GuideSetStats("peakArea", 10, PRECURSORS[1], 2.930734907392E11, 6.454531590675328E10));
+        gs.addStats(new GuideSetStats("fwhm", 10, PRECURSORS[1], 0.11, 0.015));
+        gs.addStats(new GuideSetStats("fwb", 10, PRECURSORS[1], 0.326, 0.025));
+        gs.addStats(new GuideSetStats("ratio", 0));
+        gs.addStats(new GuideSetStats("transitionPrecursorRatio", 10, PRECURSORS[1], 0.16636697351932525, 0.024998646348985));
+        gs.addStats(new GuideSetStats("massAccuracy", 10, PRECURSORS[1], -0.14503030776977538, 0.5113428116648383));
 
         validateGuideSetStats(gs);
     }
 
     private void verifyGuideSet4Stats(GuideSet gs)
     {
-        gs.addStats(new GuideSetStats("GuideSetRetentionTimeStats", 4, PRECURSORS[2], 14.031, 0.244));
-        gs.addStats(new GuideSetStats("GuideSetPeakAreaStats", 4, PRECURSORS[2], 1.1564451072E10, 1.5713155146840603E9));
-        gs.addStats(new GuideSetStats("GuideSetFWHMStats", 4, PRECURSORS[2], 0.088, 0.006));
-        gs.addStats(new GuideSetStats("GuideSetFWBStats", 4, PRECURSORS[2], 0.259, 0.013));
-        gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 4, PRECURSORS[2], 0.0, 0.0));
-        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 4, PRECURSORS[2], 1.7878320217132568, 0.09473514310269647));
+        gs.addStats(new GuideSetStats("retentionTime", 4, PRECURSORS[2], 14.031, 0.244));
+        gs.addStats(new GuideSetStats("peakArea", 4, PRECURSORS[2], 1.1564451072E10, 1.5713155146840603E9));
+        gs.addStats(new GuideSetStats("fwhm", 4, PRECURSORS[2], 0.088, 0.006));
+        gs.addStats(new GuideSetStats("fwb", 4, PRECURSORS[2], 0.259, 0.013));
+        gs.addStats(new GuideSetStats("ratio", 0));
+        gs.addStats(new GuideSetStats("transitionPrecursorRatio", 4, PRECURSORS[2], 0.0, 0.0));
+        gs.addStats(new GuideSetStats("massAccuracy", 4, PRECURSORS[2], 1.7878320217132568, 0.09473514310269647));
 
         validateGuideSetStats(gs);
     }
 
     private void verifyGuideSet5Stats(GuideSet gs)
     {
-        gs.addStats(new GuideSetStats("GuideSetRetentionTimeStats", 2, PRECURSORS[3], 24.581, 0.011));
-        gs.addStats(new GuideSetStats("GuideSetPeakAreaStats", 2, PRECURSORS[3], 5.6306905088E10, 1.5347948865359387E9));
-        gs.addStats(new GuideSetStats("GuideSetFWHMStats", 2, PRECURSORS[3], 0.072, 0.009));
-        gs.addStats(new GuideSetStats("GuideSetFWBStats", 2, PRECURSORS[3], 0.219, 0.011));
-        gs.addStats(new GuideSetStats("GuideSetLHRatioStats", 0));
-        gs.addStats(new GuideSetStats("GuideSetTPRatioStats", 2, PRECURSORS[3], 0.06426714546978474, 0.02016935064728605));
-        gs.addStats(new GuideSetStats("GuideSetMassAccuracyStats", 2, PRECURSORS[3], 1.6756309866905212, 0.23667992679147354));
+        gs.addStats(new GuideSetStats("retentionTime", 2, PRECURSORS[3], 24.581, 0.011));
+        gs.addStats(new GuideSetStats("peakArea", 2, PRECURSORS[3], 5.6306905088E10, 1.5347948865359387E9));
+        gs.addStats(new GuideSetStats("fwhm", 2, PRECURSORS[3], 0.072, 0.009));
+        gs.addStats(new GuideSetStats("fwb", 2, PRECURSORS[3], 0.219, 0.011));
+        gs.addStats(new GuideSetStats("ratio", 0));
+        gs.addStats(new GuideSetStats("transitionPrecursorRatio", 2, PRECURSORS[3], 0.06426714546978474, 0.02016935064728605));
+        gs.addStats(new GuideSetStats("massAccuracy", 2, PRECURSORS[3], 1.6756309866905212, 0.23667992679147354));
 
         validateGuideSetStats(gs);
     }

@@ -4,14 +4,7 @@
 api-src/org/labkey/api/targetedms/ITargetedMSRun.java -text
 api-src/org/labkey/api/targetedms/TargetedMSService.java -text
 /module.properties -text
-resources/queries/targetedms/GuideSetFWBStats.sql -text
-resources/queries/targetedms/GuideSetFWHMStats.sql -text
-resources/queries/targetedms/GuideSetLHRatioStats.sql -text
-resources/queries/targetedms/GuideSetMassAccuracyStats.sql -text
-resources/queries/targetedms/GuideSetNonConformers.sql -text
-resources/queries/targetedms/GuideSetPeakAreaStats.sql -text
-resources/queries/targetedms/GuideSetRetentionTimeStats.sql -text
-resources/queries/targetedms/GuideSetTPRatioStats.sql -text
+resources/queries/targetedms/GuideSetStats.sql -text
 resources/queries/targetedms/guideset/.qview.xml -text
 resources/queries/targetedms/librarydocprecursor/AllPrecursors.qview.xml -text
 resources/queries/targetedms/libraryprecursor/FolderPrecursors.qview.xml -text
@@ -257,6 +250,7 @@ src/org/labkey/targetedms/query/PeptideChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideGroupManager.java -text
 src/org/labkey/targetedms/query/PeptideManager.java -text
 src/org/labkey/targetedms/query/PeptidePrecursorChromatogramsTableInfo.java -text
+src/org/labkey/targetedms/query/PrecursorChromInfoTable.java -text
 src/org/labkey/targetedms/query/PrecursorChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PrecursorManager.java -text
 src/org/labkey/targetedms/query/PrecursorTableInfo.java -text

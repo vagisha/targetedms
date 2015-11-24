@@ -33,58 +33,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     enableBrushing: false,
     havePlotOptionsChanged: false,
 
-    // properties used for the various data queries based on chart metric type
-    chartTypePropArr: [{
-        name: 'retentionTime',
-        title: 'Retention Time',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'BestRetentionTime',
-        statsTableName: 'GuideSetRetentionTimeStats'
-    },{
-        name: 'peakArea',
-        title: 'Peak Area',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'TotalArea',
-        statsTableName: 'GuideSetPeakAreaStats'
-    },{
-        name: 'fwhm',
-        title: 'Full Width at Half Maximum (FWHM)',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'MaxFWHM',
-        statsTableName: 'GuideSetFWHMStats'
-    },{
-        name: 'fwb',
-        title: 'Full Width at Base (FWB)',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: '(MaxEndTime - MinStartTime)',
-        statsTableName: 'GuideSetFWBStats'
-    },{
-        name: 'ratio',
-        title: 'Light/Heavy Ratio',
-        baseTableName: 'PrecursorAreaRatio',
-        baseLkFieldKey: 'PrecursorChromInfoId.',
-        colName: 'AreaRatio',
-        statsTableName: 'GuideSetLHRatioStats'
-    },{
-        name: 'transitionPrecursorRatio',
-        title: 'Transition/Precursor Area Ratio',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'transitionPrecursorRatio',
-        statsTableName: 'GuideSetTPRatioStats'
-    },{
-        name: 'massAccuracy',
-        title: 'Mass Accuracy',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'AverageMassErrorPPM',
-        statsTableName: 'GuideSetMassAccuracyStats'
-    }],
-
     initComponent : function() {
         Ext4.tip.QuickTipManager.init();
 
@@ -618,7 +566,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var chartTypeProps = this.getChartTypePropsByName(this.chartType);
 
         // Filter on start/end dates from the QC plot form
-        var guideSetSql = "SELECT s.*, g.Comment FROM " + chartTypeProps.statsTableName + " s"
+        var guideSetSql = "SELECT s.*, g.Comment FROM GuideSetStats s"
                 + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
         var separator = " WHERE ";
         if (config.StartDate) {
@@ -632,6 +580,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: guideSetSql,
+            parameters: {METRIC: chartTypeProps.name},
             sort: 'TrainingStart,Sequence',
             scope: this,
             success: this.processGuideSetData,
@@ -639,17 +588,21 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         });
     },
 
-    processGuideSetData : function(data) {
+    processGuideSetData : function(data)
+    {
         this.guideSetTrainingData = data.rows;
         var guideSetTrainingDataUniqueIds = Ext4.Array.toValueMap(this.guideSetTrainingData , 'GuideSetId');
         this.guideSetTrainingDataUniqueObjects = [];
 
-        for(var i in guideSetTrainingDataUniqueIds) {
-            if(guideSetTrainingDataUniqueIds.hasOwnProperty(i)) {
+        for (var i in guideSetTrainingDataUniqueIds)
+        {
+            if (guideSetTrainingDataUniqueIds.hasOwnProperty(i))
+            {
                 this.guideSetTrainingDataUniqueObjects.push(Ext4.clone(guideSetTrainingDataUniqueIds[i]));
             }
         }
-      this.getPlotData();
+
+        this.getPlotData();
     },
 
     getPlotData: function() {
@@ -659,7 +612,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var baseTableName = chartTypeProps.baseTableName;
         var baseLkFieldKey = chartTypeProps.baseLkFieldKey;
         var typeColName = chartTypeProps.colName;
-        var statsTableName = chartTypeProps.statsTableName;
 
         // Filter on start/end dates, casting as DATE to ignore the time part
         var whereClause = " WHERE ";
@@ -676,20 +628,23 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 + "AND X.AcquiredTime < stats.ReferenceEnd) OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))";
 
         // Build query to get the values and mean/stdDev ranges for each data point
-        var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence, X.AcquiredTime, X.FilePath, X.Value, "
-            + " CASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange, "
-            + " stats.GuideSetId, stats.Mean, stats.StandardDev "
-            + " FROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId, "
-            + "       " + baseLkFieldKey + "Id AS PrecursorChromInfoId, "
-            + "       " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence, "
-            + "       " + baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime, "
-            + "       " + baseLkFieldKey + "SampleFileId.FilePath AS FilePath, "
-            + "       "  + typeColName + " AS Value FROM " + baseTableName + whereClause + ") X "
-            + " LEFT JOIN " + statsTableName + " stats " + guideSetStatsJoinClause;
+        var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence,"
+            + "\n    X.AcquiredTime, X.FilePath, X.Value,"
+            + "\nCASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange,"
+            + "\nstats.GuideSetId, stats.Mean, stats.StandardDev"
+            + "\nFROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId,"
+            + "\n      " + baseLkFieldKey + "Id AS PrecursorChromInfoId,"
+            + "\n      " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence,"
+            + "\n      " + baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
+            + "\n      " + baseLkFieldKey + "SampleFileId.FilePath AS FilePath,"
+            + "\n      " + typeColName + " AS Value"
+            + "\n      FROM " + baseTableName + whereClause + ") X "
+            + "\nLEFT JOIN GuideSetStats stats " + guideSetStatsJoinClause;
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: sql,
+            parameters: {METRIC: chartTypeProps.name},
             sort: 'Sequence, AcquiredTime',
             scope: this,
             success: function(data) {
@@ -744,7 +699,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     precursorInfo.min = 0;
                 }
                 else if (precursorInfo.max - precursorInfo.min < 0.0001) {
-                    precursorInfo.max += 1;
+                    var factor = precursorInfo.max < 0.1 ? 0.1 : 1;
+                    precursorInfo.max += factor;
+                    precursorInfo.min -= factor;
                 }
 
                 // add any missing dates from the QC annotation data to the plot data
@@ -961,7 +918,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         var newLegendData = Ext4.Array.clone(this.legendData);
 
-        var combinePlotData = {min: null, max: null, data: []};
+        var combinePlotData = {data: []};
 
         var lengthOfLongestPeptide = 1;
 
@@ -973,14 +930,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 lengthOfLongestPeptide = precursorInfo.sequence.length;
             }
 
-            // for combined plot, concat all data together into a single array and track min/max for all
+            // for combined plot, concat all data together into a single array
             combinePlotData.data = combinePlotData.data.concat(precursorInfo.data);
-            if (combinePlotData.min == null || combinePlotData.min > precursorInfo.min) {
-                combinePlotData.min = precursorInfo.min;
-            }
-            if (combinePlotData.max == null || combinePlotData.max < precursorInfo.max) {
-                combinePlotData.max = precursorInfo.max;
-            }
 
             //add the sequence name for each group to the legend
             if(this.singlePlot)
@@ -1010,7 +961,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 value: 'value',
                 xTick: this.groupedX ? 'date' : 'fullDate',
                 xTickLabel: 'date',
-                yAxisDomain: [combinePlotData.min, combinePlotData.max],
                 yAxisScale: this.yAxisScale,
                 shape: 'guideSetId',
                 groupBy: 'sequence',
@@ -1352,17 +1302,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 }
             }
         }
-    },
-
-    failureHandler: function(response) {
-        if (response.message) {
-            Ext4.get(this.plotDivId).update("<span>" + response.message +"</span>");
-        }
-        else {
-            Ext4.get(this.plotDivId).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
-        }
-
-        Ext4.get(this.plotDivId).unmask();
     },
 
     applyGraphFilterBtnClick: function() {

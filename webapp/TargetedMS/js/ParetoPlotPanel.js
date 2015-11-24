@@ -30,18 +30,55 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             }
         }
 
-        LABKEY.Query.selectRows({
-            schemaName: 'targetedms',
-            queryName: 'GuideSetNonConformers',
-            scope: this,
-            success: this.nonConformersForParetoPlot,
-            failure: this.failureHandler
-        });
+        var queryCounter = this.chartTypePropArr.length;
+        var dataRows = [];
+        Ext4.each(this.chartTypePropArr, function(chartTypeProps)
+        {
+            LABKEY.Query.executeSql({
+                schemaName: 'targetedms',
+                sql: this.getGuideSetNonConformersSql(chartTypeProps),
+                parameters: {METRIC: chartTypeProps.name},
+                sort: 'GuideSetId',
+                scope: this,
+                success: function(data) {
+                    dataRows = dataRows.concat(data.rows);
+                    queryCounter--;
+
+                    if (queryCounter == 0)
+                    {
+                        this.nonConformersForParetoPlot(dataRows);
+                    }
+                },
+                failure: this.failureHandler
+            });
+        }, this);
     },
 
-    nonConformersForParetoPlot : function(data)
+    getGuideSetNonConformersSql : function(chartTypeProps)
     {
-        var nonConformers = data.rows;
+        return "SELECT stats.GuideSetId,"
+            + "\n'" + chartTypeProps.shortName + "' AS Metric,"
+            + "\n'" + chartTypeProps.title + "' AS MetricLongLabel,"
+            + "\n'" + chartTypeProps.name + "' AS MetricName,"
+            + "\nSUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR"
+            + "\n   X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers"
+            + "\nFROM ("
+            + "\n   SELECT " + chartTypeProps.baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence,"
+            + "\n   " + chartTypeProps.baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
+            + "\n   " + chartTypeProps.colName + " AS Value"
+            + "\n   FROM " + chartTypeProps.baseTableName
+            + "\n) X"
+            + "\nLEFT JOIN GuideSetStats stats"
+            + "\n  ON X.Sequence = stats.Sequence"
+            + "\n  AND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
+            + "\n  OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
+            + "\nWHERE stats.GuideSetId IS NOT NULL"
+            + "\nGROUP BY stats.GuideSetId";
+    },
+
+    nonConformersForParetoPlot : function(dataRows)
+    {
+        var nonConformers = dataRows;
         var guideSetMap = {};
         var guideSetCount = 1;
         var shortNameLongNameMap = {};

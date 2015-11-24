@@ -10,6 +10,58 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     extend: 'Ext.panel.Panel',
 
+    // properties used for the various data queries based on chart metric type
+    chartTypePropArr: [{
+        name: 'retentionTime',
+        shortName: 'RT',
+        title: 'Retention Time',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'BestRetentionTime'
+    },{
+        name: 'peakArea',
+        shortName: 'PA',
+        title: 'Peak Area',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'TotalArea'
+    },{
+        name: 'fwhm',
+        shortName: 'FWHM',
+        title: 'Full Width at Half Maximum (FWHM)',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'MaxFWHM'
+    },{
+        name: 'fwb',
+        shortName: 'FWB',
+        title: 'Full Width at Base (FWB)',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'MaxFWB'
+    },{
+        name: 'ratio',
+        shortName: 'L/H ratio',
+        title: 'Light/Heavy Ratio',
+        baseTableName: 'PrecursorAreaRatio',
+        baseLkFieldKey: 'PrecursorChromInfoId.',
+        colName: 'AreaRatio'
+    },{
+        name: 'transitionPrecursorRatio',
+        shortName: 'T/PA Ratio',
+        title: 'Transition/Precursor Area Ratio',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'TransitionPrecursorRatio'
+    },{
+        name: 'massAccuracy',
+        shortName: 'MA',
+        title: 'Mass Accuracy',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'AverageMassErrorPPM'
+    }],
+
     addPlotWebPartToPlotDiv: function (id, title, div, wp)
     {
         Ext4.get(div).insertHtml('beforeEnd', '<br/>' +
@@ -59,6 +111,18 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             },
             scope: this
         });
+    },
+
+    failureHandler: function(response) {
+        console.log(response);
+        if (response.message) {
+            Ext4.get(this.plotDivId).update("<span>" + response.message +"</span>");
+        }
+        else {
+            Ext4.get(this.plotDivId).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
+        }
+
+        Ext4.get(this.plotDivId).unmask();
     }
 });
 
