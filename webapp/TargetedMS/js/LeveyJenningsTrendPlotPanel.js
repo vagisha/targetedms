@@ -918,7 +918,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         var newLegendData = Ext4.Array.clone(this.legendData);
 
-        var combinePlotData = {data: []};
+        var combinePlotData = {min: null, max: null, data: []};
 
         var lengthOfLongestPeptide = 1;
 
@@ -930,8 +930,14 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 lengthOfLongestPeptide = precursorInfo.sequence.length;
             }
 
-            // for combined plot, concat all data together into a single array
+            // for combined plot, concat all data together into a single array and track min/max for all
             combinePlotData.data = combinePlotData.data.concat(precursorInfo.data);
+            if (combinePlotData.min == null || combinePlotData.min > precursorInfo.min) {
+                combinePlotData.min = precursorInfo.min;
+            }
+            if (combinePlotData.max == null || combinePlotData.max < precursorInfo.max) {
+                combinePlotData.max = precursorInfo.max;
+            }
 
             //add the sequence name for each group to the legend
             if(this.singlePlot)
@@ -961,6 +967,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 value: 'value',
                 xTick: this.groupedX ? 'date' : 'fullDate',
                 xTickLabel: 'date',
+                yAxisDomain: [combinePlotData.min, combinePlotData.max],
                 yAxisScale: this.yAxisScale,
                 shape: 'guideSetId',
                 groupBy: 'sequence',
