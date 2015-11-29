@@ -3,9 +3,6 @@
  *
  * Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
  */
-/**
- * Created by binalpatel on 7/22/15.
- */
 Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     extend: 'Ext.panel.Panel',
@@ -17,49 +14,107 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         title: 'Retention Time',
         baseTableName: 'PrecursorChromInfo',
         baseLkFieldKey: '',
-        colName: 'BestRetentionTime'
-    },{
+        colName: 'BestRetentionTime',
+        showInChartTypeCombo: true,
+        showInParetoPlot: true
+    },
+    {
         name: 'peakArea',
         shortName: 'PA',
         title: 'Peak Area',
         baseTableName: 'PrecursorChromInfo',
         baseLkFieldKey: '',
-        colName: 'TotalArea'
-    },{
+        colName: 'TotalArea',
+        showInChartTypeCombo: true,
+        showInParetoPlot: true
+    },
+    {
         name: 'fwhm',
         shortName: 'FWHM',
         title: 'Full Width at Half Maximum (FWHM)',
         baseTableName: 'PrecursorChromInfo',
         baseLkFieldKey: '',
-        colName: 'MaxFWHM'
-    },{
+        colName: 'MaxFWHM',
+        showInChartTypeCombo: true,
+        showInParetoPlot: true
+    },
+    {
         name: 'fwb',
         shortName: 'FWB',
         title: 'Full Width at Base (FWB)',
         baseTableName: 'PrecursorChromInfo',
         baseLkFieldKey: '',
-        colName: 'MaxFWB'
-    },{
+        colName: 'MaxFWB',
+        showInChartTypeCombo: true,
+        showInParetoPlot: true
+    },
+    {
         name: 'ratio',
         shortName: 'L/H ratio',
         title: 'Light/Heavy Ratio',
         baseTableName: 'PrecursorAreaRatio',
         baseLkFieldKey: 'PrecursorChromInfoId.',
-        colName: 'AreaRatio'
-    },{
+        colName: 'AreaRatio',
+        showInChartTypeCombo: true,
+        showInParetoPlot: true
+    },
+    {
         name: 'transitionPrecursorRatio',
-        shortName: 'T/PA Ratio',
+        shortName: 'T/P Ratio',
         title: 'Transition/Precursor Area Ratio',
         baseTableName: 'PrecursorChromInfo',
         baseLkFieldKey: '',
-        colName: 'TransitionPrecursorRatio'
-    },{
+        colName: 'TransitionPrecursorRatio',
+        showInChartTypeCombo: true,
+        showInParetoPlot: true
+    },
+    // in Levey-Jennings plot, we show the 'Transition and Precursor Area' metric, but
+    // we define it as 3 total metrics so that the individual area values can be used
+    // for guide set calculation and pareto plot display.
+    {
+        name: 'transitionAndPrecursorArea',
+        shortName: 'T/P Area',
+        title: 'Transition and Precursor Area',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colNames: [
+            {name: 'TotalNonPrecursorArea', title: 'Transition Area', axis: 'yLeft'},
+            {name: 'TotalPrecursorArea', title: 'Precursor Area', axis: 'yRight'}
+        ],
+        showInChartTypeCombo: true,
+        showInParetoPlot: false
+    },
+    {
+        name: 'nonPrecursorArea',
+        shortName: 'T Area',
+        title: 'Transition Area',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'TotalNonPrecursorArea',
+        showInChartTypeCombo: false,
+        showInParetoPlot: true,
+        altParetoPlotClickName: 'transitionAndPrecursorArea'
+    },
+    {
+        name: 'precursorArea',
+        shortName: 'P Area',
+        title: 'Precursor Area',
+        baseTableName: 'PrecursorChromInfo',
+        baseLkFieldKey: '',
+        colName: 'TotalPrecursorArea',
+        showInChartTypeCombo: false,
+        showInParetoPlot: true,
+        altParetoPlotClickName: 'transitionAndPrecursorArea'
+    },
+    {
         name: 'massAccuracy',
         shortName: 'MA',
         title: 'Mass Accuracy',
         baseTableName: 'PrecursorChromInfo',
         baseLkFieldKey: '',
-        colName: 'AverageMassErrorPPM'
+        colName: 'AverageMassErrorPPM',
+        showInChartTypeCombo: true,
+        showInParetoPlot: true
     }],
 
     addPlotWebPartToPlotDiv: function (id, title, div, wp)
@@ -114,7 +169,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     },
 
     failureHandler: function(response) {
-        console.log(response);
         if (response.message) {
             Ext4.get(this.plotDivId).update("<span>" + response.message +"</span>");
         }

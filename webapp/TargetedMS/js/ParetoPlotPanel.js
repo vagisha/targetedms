@@ -30,9 +30,18 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             }
         }
 
-        var queryCounter = this.chartTypePropArr.length;
-        var dataRows = [];
+        var applicableChartTypes = [];
         Ext4.each(this.chartTypePropArr, function(chartTypeProps)
+        {
+            if (chartTypeProps.showInParetoPlot)
+            {
+                applicableChartTypes.push(chartTypeProps);
+            }
+        });
+
+        var queryCounter = applicableChartTypes.length;
+        var dataRows = [];
+        Ext4.each(applicableChartTypes, function(chartTypeProps)
         {
             LABKEY.Query.executeSql({
                 schemaName: 'targetedms',
@@ -59,7 +68,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         return "SELECT stats.GuideSetId,"
             + "\n'" + chartTypeProps.shortName + "' AS Metric,"
             + "\n'" + chartTypeProps.title + "' AS MetricLongLabel,"
-            + "\n'" + chartTypeProps.name + "' AS MetricName,"
+            + "\n'" + (chartTypeProps.altParetoPlotClickName || chartTypeProps.name) + "' AS MetricName,"
             + "\nSUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR"
             + "\n   X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers"
             + "\nFROM ("

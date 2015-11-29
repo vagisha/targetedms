@@ -174,11 +174,13 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         assertEquals("Wrong number of Pareto plots", 4, paretoPlotsWebPart.getNumOfParetoPlots());
         assertEquals("Wrong number of non-conformers for PA", 69, paretoPlotsWebPart.getPlotBarHeight(3, 0));
-        assertEquals("Wrong number of non-conformers for MA", 57, paretoPlotsWebPart.getPlotBarHeight(3, 1));
-        assertEquals("Wrong number of non-conformers for T/PA Ratio", 29, paretoPlotsWebPart.getPlotBarHeight(3, 2));
-        assertEquals("Wrong number of non-conformers for RT", 16, paretoPlotsWebPart.getPlotBarHeight(3, 3));
-        assertEquals("Wrong number of non-conformers for FWHM", 13, paretoPlotsWebPart.getPlotBarHeight(3, 4));
-        assertEquals("Wrong number of non-conformers for FWB", 7, paretoPlotsWebPart.getPlotBarHeight(3, 5));
+        assertEquals("Wrong number of non-conformers for P Area", 64, paretoPlotsWebPart.getPlotBarHeight(3, 1));
+        assertEquals("Wrong number of non-conformers for T Area", 60, paretoPlotsWebPart.getPlotBarHeight(3, 2));
+        assertEquals("Wrong number of non-conformers for MA", 57, paretoPlotsWebPart.getPlotBarHeight(3, 3));
+        assertEquals("Wrong number of non-conformers for T/P Ratio", 29, paretoPlotsWebPart.getPlotBarHeight(3, 4));
+        assertEquals("Wrong number of non-conformers for RT", 16, paretoPlotsWebPart.getPlotBarHeight(3, 5));
+        assertEquals("Wrong number of non-conformers for FWHM", 13, paretoPlotsWebPart.getPlotBarHeight(3, 6));
+        assertEquals("Wrong number of non-conformers for FWB", 7, paretoPlotsWebPart.getPlotBarHeight(3, 7));
 
         verifyTicksOnPlots(paretoPlotsWebPart, 3);
         verifyDownloadableParetoPlotPdf();

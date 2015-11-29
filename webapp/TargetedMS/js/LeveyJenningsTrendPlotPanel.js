@@ -250,6 +250,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         this.havePlotOptionsChanged = true;
 
                         // call processPlotData instead of renderPlots so that we recalculate min y-axis scale for log
+                        this.setLoadingMsg();
                         this.processPlotData();
                     }
                 }
@@ -328,6 +329,15 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     {
         if (!this.chartTypeField)
         {
+            var chartTypes = [];
+            Ext4.each(this.chartTypePropArr, function(chartType)
+            {
+                if (chartType.showInChartTypeCombo)
+                {
+                    chartTypes.push(chartType);
+                }
+            });
+
             this.chartTypeField = Ext4.create('Ext.form.field.ComboBox', {
                 id: 'chart-type-field',
                 width: 340,
@@ -337,7 +347,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 mode: 'local',
                 store: Ext4.create('Ext.data.Store', {
                     fields: ['name', 'title'],
-                    data: this.chartTypePropArr
+                    data: chartTypes
                 }),
                 valueField: 'name',
                 displayField: 'title',
@@ -350,7 +360,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     {
                         this.chartType = newVal;
                         this.havePlotOptionsChanged = true;
-
+                        this.setBrushingEnabled(false);
                         this.displayTrendPlot();
                     }
                 }
@@ -375,10 +385,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         this.groupedX = newValue;
                         this.havePlotOptionsChanged = true;
 
-                        // we don't allow creation of guide sets in grouped x-axis mode
-                        this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot);
                         this.setBrushingEnabled(false);
-
+                        this.setLoadingMsg();
                         //TODO this should be this.renderPlots() but there is a bug with the yStepIndex being reset
                         this.getAnnotationData();
                     }
@@ -404,10 +412,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         this.singlePlot = newValue;
                         this.havePlotOptionsChanged = true;
 
-                        // we don't currently allow creation of guide sets in single plot mode
-                        this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot);
                         this.setBrushingEnabled(false);
-
+                        this.setLoadingMsg();
                         this.renderPlots();
                     }
                 }
@@ -424,7 +430,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.createGuideSetToggleButton = Ext4.create('Ext.button.Button', {
                 text: 'Create Guide Set',
                 tooltip: 'Enable/disable guide set creation mode',
-                disabled: this.groupedX || this.singlePlot,
+                disabled: this.groupedX || this.singlePlot || this.isMultiSeries(),
                 enableToggle: true,
                 handler: function(btn) {
                     this.setBrushingEnabled(btn.pressed);
@@ -437,6 +443,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     setBrushingEnabled : function(enabled) {
+        // we don't currently allow creation of guide sets in single plot mode, grouped x-axis mode, or multi series mode
+        this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot || this.isMultiSeries());
+
         this.enableBrushing = enabled;
         this.clearPlotBrush();
         this.setPlotBrushingDisplayStyle();
@@ -611,7 +620,23 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var chartTypeProps = this.getChartTypePropsByName(this.chartType);
         var baseTableName = chartTypeProps.baseTableName;
         var baseLkFieldKey = chartTypeProps.baseLkFieldKey;
-        var typeColName = chartTypeProps.colName;
+
+        var valueSelectList = '', valueInnerSelectList = '', sep = '';
+        if (Ext4.isDefined(chartTypeProps.colName))
+        {
+            valueSelectList = ' X.Value,';
+            valueInnerSelectList = chartTypeProps.colName + ' AS Value';
+        }
+        else if (Ext4.isArray(chartTypeProps.colNames))
+        {
+            // if the metric is to show multiple y-axis measures, add the column names to the select list
+            for (var i = 0; i < chartTypeProps.colNames.length; i++)
+            {
+                valueSelectList += ' X.Value' + chartTypeProps.colNames[i].axis + ',';
+                valueInnerSelectList += sep + chartTypeProps.colNames[i].name + ' AS Value' + chartTypeProps.colNames[i].axis;
+                sep = ', ';
+            }
+        }
 
         // Filter on start/end dates, casting as DATE to ignore the time part
         var whereClause = " WHERE ";
@@ -629,7 +654,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         // Build query to get the values and mean/stdDev ranges for each data point
         var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence,"
-            + "\n    X.AcquiredTime, X.FilePath, X.Value,"
+            + "\n    X.AcquiredTime, X.FilePath," + valueSelectList
             + "\nCASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange,"
             + "\nstats.GuideSetId, stats.Mean, stats.StandardDev"
             + "\nFROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId,"
@@ -637,7 +662,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             + "\n      " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence,"
             + "\n      " + baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
             + "\n      " + baseLkFieldKey + "SampleFileId.FilePath AS FilePath,"
-            + "\n      " + typeColName + " AS Value"
+            + "\n      " + valueInnerSelectList
             + "\n      FROM " + baseTableName + whereClause + ") X "
             + "\nLEFT JOIN GuideSetStats stats " + guideSetStatsJoinClause;
 
@@ -656,6 +681,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     processPlotData: function() {
+        var chartTypeProps = this.getChartTypePropsByName(this.chartType);
+
         // process the data to shape it for the JS LeveyJenningsPlot API call
         this.sequencePlotData = {};
         for (var i = 0; i < this.plotDataRows.length; i++)
@@ -667,20 +694,41 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 this.sequencePlotData[sequence] = {sequence: sequence, data: [], min: null, max: null};
             }
 
-            this.sequencePlotData[sequence].data.push({
+            var data = {
                 type: 'data',
                 sequence: sequence,
                 PrecursorId: row['PrecursorId'], // keep in data for click handler
                 PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
                 FilePath: row['FilePath'], // keep in data for hover text display
                 fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
-                date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
-                value: row['Value'],
-                mean: row['Mean'],
-                stdDev: row['StandardDev'],
-                guideSetId: row['GuideSetId'],
-                inGuideSetTrainingRange: row['InGuideSetTrainingRange']
-            });
+                date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null
+            };
+
+            // if a guideSetId is defined for this row, include the guide set stats values in the data object
+            if (Ext4.isDefined(row['GuideSetId']))
+            {
+                data['mean'] = row['Mean'];
+                data['stdDev'] = row['StandardDev'];
+                data['guideSetId'] = row['GuideSetId'];
+                data['inGuideSetTrainingRange'] = row['InGuideSetTrainingRange'];
+            }
+
+            // if the metric defines multiple colNames for the plot, tack on the additional values to the data object
+            // otherwise just add the default 'value' to the data object
+            if (Ext4.isArray(chartTypeProps.colNames))
+            {
+                for (var j = 0; j < chartTypeProps.colNames.length; j++)
+                {
+                    data['value' + chartTypeProps.colNames[j].axis] = row['Value' + chartTypeProps.colNames[j].axis];
+                    data['value' + chartTypeProps.colNames[j].axis + 'Title'] = chartTypeProps.colNames[j].title;
+                }
+            }
+            else
+            {
+                data['value'] = row['Value'];
+            }
+
+            this.sequencePlotData[sequence].data.push(data);
 
             this.setSequenceMinMax(this.sequencePlotData[sequence], row);
         }
@@ -829,14 +877,21 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         };
     },
 
-    addIndividualPrecursorPlots : function() {
-        var addedPlot = false;
+    addIndividualPrecursorPlots : function()
+    {
+        var addedPlot = false,
+            chartTypeProps = this.getChartTypePropsByName(this.chartType),
+            yLeftIndex = this.getYAxisIndex('yLeft'),
+            yRightIndex = this.getYAxisIndex('yRight'),
+            me = this; // for plot brushing
 
-        for (var i = 0; i < this.precursors.length; i++) {
+        for (var i = 0; i < this.precursors.length; i++)
+        {
             var precursorInfo = this.sequencePlotData[this.precursors[i]];
 
             // We don't necessarily have info for all possible precursors, depending on the filters and plot type
-            if (precursorInfo) {
+            if (precursorInfo)
+            {
                 addedPlot = true;
 
                 // add a new panel for each plot so we can add the title to the frame
@@ -847,33 +902,59 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below the mean with negative values have been omitted.</span>");
                 }
 
-                var me = this; // for plot brushing
+                var ljProperties = {
+                    xTick: this.groupedX ? 'date' : 'fullDate',
+                    xTickLabel: 'date',
+                    yAxisScale: this.yAxisScale,
+                    shape: 'guideSetId',
+                    showTrendLine: true,
+                    hoverTextFn: this.plotHoverTextDisplay,
+                    pointClickFn: this.plotPointClick,
+                    position: this.groupedX ? 'jitter' : undefined
+                };
+                // some properties are specific to whether or not we are showing multiple y-axis series
+                if (this.isMultiSeries())
+                {
+                    ljProperties['disableRangeDisplay'] = true;
+                    if (yLeftIndex > -1) {
+                        ljProperties['value'] = 'valueyLeft';
+                    }
+                    if (yRightIndex > -1) {
+                        ljProperties['valueRight'] = 'valueyRight';
+                    }
+                }
+                else
+                {
+                    ljProperties['disableRangeDisplay'] = false;
+                    ljProperties['value'] = 'value';
+                    ljProperties['mean'] = 'mean';
+                    ljProperties['stdDev'] = 'stdDev';
+                    ljProperties['yAxisDomain'] = [precursorInfo.min, precursorInfo.max];
+                }
 
-                // create plot using the JS Vis API
                 var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, this.legendData);
                 var plotConfig = Ext4.apply(basePlotConfig, {
                     margins : {
                         top: 45 + this.getMaxStackedAnnotations() * 12,
+                        right: this.isMultiSeries() ? 75 : undefined,
+                        left: 75,
                         bottom: 75
                     },
                     labels : {
-                        main: {value: this.precursors[i], visibility: 'hidden'},
-                        y: {value: this.getChartTypePropsByName(this.chartType).title, visibility:'hidden'}
+                        main: {
+                            value: this.precursors[i],
+                            visibility: this.isMultiSeries() ? undefined : 'hidden'
+                        },
+                        yLeft: {
+                            value: yLeftIndex > -1 ? chartTypeProps.colNames[yLeftIndex].title : chartTypeProps.title,
+                            visibility: this.isMultiSeries() ? undefined : 'hidden'
+                        },
+                        yRight: {
+                            value: yRightIndex > -1 ? chartTypeProps.colNames[yRightIndex].title : chartTypeProps.title,
+                            visibility: this.isMultiSeries() ? undefined : 'hidden'
+                        }
                     },
-                    properties: {
-                        value: 'value',
-                        mean: 'mean',
-                        stdDev: 'stdDev',
-                        xTick: this.groupedX ? 'date' : 'fullDate',
-                        xTickLabel: 'date',
-                        yAxisDomain: [precursorInfo.min, precursorInfo.max],
-                        yAxisScale: this.yAxisScale,
-                        shape: 'guideSetId',
-                        showTrendLine: true,
-                        hoverTextFn: this.plotHoverTextDisplay,
-                        pointClickFn: this.plotPointClick,
-                        position: this.groupedX ? 'jitter' : undefined
-                    },
+                    properties: ljProperties,
                     brushing: !this.allowGuideSetBrushing() ? undefined : {
                         dimension: 'x',
                         fillOpacity: 0.4,
@@ -894,6 +975,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     }
                 });
 
+                // create plot using the JS Vis API
                 var plot = LABKEY.vis.LeveyJenningsPlot(plotConfig);
                 plot.render();
 
@@ -913,14 +995,43 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return addedPlot;
     },
 
+    isMultiSeries : function()
+    {
+        if (Ext4.isString(this.chartType))
+        {
+            var chartTypeProps = this.getChartTypePropsByName(this.chartType);
+            return Ext4.isArray(chartTypeProps.colNames);
+        }
+        return false;
+    },
+
+    getYAxisIndex : function(axis)
+    {
+        if (Ext4.isString(this.chartType))
+        {
+            var chartTypeProps = this.getChartTypePropsByName(this.chartType);
+            if (Ext4.isArray(chartTypeProps.colNames))
+            {
+                for (var i = 0; i < chartTypeProps.colNames.length; i++)
+                {
+                    if (chartTypeProps.colNames[i].axis == axis)
+                    {
+                        return i;
+                    }
+                }
+            }
+        }
+        return -1;
+    },
+
     addCombinedPeptideSinglePlot : function() {
-        var groupColors = LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete());
-
-        var newLegendData = Ext4.Array.clone(this.legendData);
-
-        var combinePlotData = {min: null, max: null, data: []};
-
-        var lengthOfLongestPeptide = 1;
+        var chartTypeProps = this.getChartTypePropsByName(this.chartType),
+            yLeftIndex = this.getYAxisIndex('yLeft'),
+            yRightIndex = this.getYAxisIndex('yRight'),
+            groupColors = LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete()),
+            newLegendData = Ext4.Array.clone(this.legendData),
+            combinePlotData = {min: null, max: null, data: []},
+            lengthOfLongestPeptide = 1;
 
         for (var i = 0; i < this.precursors.length; i++)
         {
@@ -952,32 +1063,60 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var id = 'combinedPlot';
         this.addPlotWebPartToPlotDiv(id, 'All Peptides', this.plotDivId, 'qc-plot-wp');
 
+        var ljProperties = {
+            disableRangeDisplay: true,
+            xTick: this.groupedX ? 'date' : 'fullDate',
+            xTickLabel: 'date',
+            yAxisScale: this.yAxisScale,
+            shape: 'guideSetId',
+            groupBy: 'sequence',
+            color: 'sequence',
+            showTrendLine: true,
+            hoverTextFn: this.plotHoverTextDisplay,
+            pointClickFn: this.plotPointClick,
+            position: this.groupedX ? 'jitter' : undefined
+        };
+        // some properties are specific to whether or not we are showing multiple y-axis series
+        if (this.isMultiSeries())
+        {
+            if (Ext4.Array.contains(Ext4.Array.pluck(chartTypeProps.colNames, 'axis'), 'yLeft')) {
+                ljProperties['value'] = 'valueyLeft';
+            }
+            if (Ext4.Array.contains(Ext4.Array.pluck(chartTypeProps.colNames, 'axis'), 'yRight')) {
+                ljProperties['valueRight'] = 'valueyRight';
+            }
+        }
+        else
+        {
+            ljProperties['value'] = 'value';
+            ljProperties['mean'] = 'mean';
+            ljProperties['stdDev'] = 'stdDev';
+            ljProperties['yAxisDomain'] = [combinePlotData.min, combinePlotData.max];
+        }
+
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, newLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
                 top: 45 + this.getMaxStackedAnnotations() * 12,
-                right: 10*lengthOfLongestPeptide,
+                right: 10*lengthOfLongestPeptide + (this.isMultiSeries() ? 75 : 0),
+                left: 75,
                 bottom: 75
             },
             labels : {
-                main: {value: "All Peptides", visibility: 'hidden'},
-                y: {value: this.getChartTypePropsByName(this.chartType).title, visibility:'hidden'}
+                main: {
+                    value: "All Peptides",
+                    visibility: 'hidden'
+                },
+                yLeft: {
+                    value: yLeftIndex > -1 ? chartTypeProps.colNames[yLeftIndex].title : chartTypeProps.title,
+                    visibility: this.isMultiSeries() ? undefined : 'hidden'
+                },
+                yRight: {
+                    value: yRightIndex > -1 ? chartTypeProps.colNames[yRightIndex].title : chartTypeProps.title,
+                    visibility: this.isMultiSeries() ? undefined : 'hidden'
+                }
             },
-            properties: {
-                value: 'value',
-                xTick: this.groupedX ? 'date' : 'fullDate',
-                xTickLabel: 'date',
-                yAxisDomain: [combinePlotData.min, combinePlotData.max],
-                yAxisScale: this.yAxisScale,
-                shape: 'guideSetId',
-                groupBy: 'sequence',
-                color: 'sequence',
-                showTrendLine: true,
-                disableRangeDisplay: true,
-                hoverTextFn: this.plotHoverTextDisplay,
-                pointClickFn: this.plotPointClick,
-                position: this.groupedX ? 'jitter' : undefined
-            }
+            properties: ljProperties
         });
 
         var plot = LABKEY.vis.LeveyJenningsPlot(plotConfig);
@@ -994,15 +1133,21 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return true;
     },
 
-    plotHoverTextDisplay : function(row){
-        return 'Sequence: ' + row['sequence'] +
-        '\nAcquired: ' + row['fullDate'] + ", "
-            + '\nValue: ' + row.value + ", "
+    plotHoverTextDisplay : function(row, valueName){
+        return (row[valueName + 'Title'] != undefined ? 'Metric: ' + row[valueName + 'Title'] + '\n' : '')
+            + 'Sequence: ' + row['sequence']
+            + '\nAcquired: ' + row['fullDate'] + ", "
+            + '\nValue: ' + (valueName ? row[valueName] : row.value) + ", "
             + '\nFile Path: ' + row['FilePath'];
     },
 
     plotPointClick : function(event, row) {
-        window.location = LABKEY.ActionURL.buildURL('targetedms', "precursorAllChromatogramsChart", LABKEY.ActionURL.getContainer(), { id: row.PrecursorId, chromInfoId: row.PrecursorChromInfoId }) + '#ChromInfo' + row.PrecursorChromInfoId;
+        var url = LABKEY.ActionURL.buildURL('targetedms', "precursorAllChromatogramsChart", LABKEY.ActionURL.getContainer(), {
+                    id: row.PrecursorId,
+                    chromInfoId: row.PrecursorChromInfoId
+                });
+
+        window.location = url + '#ChromInfo' + row.PrecursorChromInfoId;
     },
 
     plotBrushStartEvent : function(plot) {
@@ -1164,14 +1309,16 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 var mean = me.formatNumeric(d['Mean']);
                 var stdDev = me.formatNumeric(d['StandardDev']);
                 var percentCV = me.formatNumeric((stdDev/mean) * 100);
+                var numRecs = d['NumRecords'];
+                var showGuideSetStats = !me.singlePlot && numRecs > 0;
 
                 return "Guide Set ID: " + d['GuideSetId'] + ","
                         + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true)
                         + ",\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true)
-                        + (!me.singlePlot ? ",\n# Runs: " + d['NumRecords'] : "")
-                        + (!me.singlePlot ? ",\nMean: " + mean : "")
-                        + (!me.singlePlot ? ",\nStd Dev: " + stdDev : "")
-                        + (!me.singlePlot ? ",\n%CV: " + percentCV : "")
+                        + (showGuideSetStats ? ",\n# Runs: " + numRecs : "")
+                        + (showGuideSetStats ? ",\nMean: " + mean : "")
+                        + (showGuideSetStats ? ",\nStd Dev: " + stdDev : "")
+                        + (showGuideSetStats ? ",\n%CV: " + percentCV : "")
                         + (d['Comment'] ? (",\nComment: " + d['Comment']) : "");
             });
         }
@@ -1203,7 +1350,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             return plot.scales.x.scale(xAxisLabels.indexOf(annotationDate));
         };
         var yAcc = function(d) {
-            return plot.scales.yLeft.scale(precursorInfo.max) - (d['yStepIndex'] * 12) - 12;
+            return plot.scales.yLeft.range[1] - (d['yStepIndex'] * 12) - 12;
         };
         var transformAcc = function(d){
             return 'translate(' + xAcc(d) + ',' + yAcc(d) + ')';

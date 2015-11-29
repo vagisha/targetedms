@@ -38,7 +38,9 @@ public class ParetoPlotsWebPart extends BodyWebPart
         FWHM("FWHM)"),
         FWB("FWB"),
         LHRATIO("Light/Heavy Ratio"),
-        TPAREARATIO("T/PA Ratio"),
+        TPAREARATIO("T/P Ratio"),
+        PAREA("P Area"),
+        TAREA("T Area"),
         MASSACCURACY("MA");
 
         private String _text;
