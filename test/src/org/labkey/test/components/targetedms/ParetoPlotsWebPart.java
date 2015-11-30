@@ -105,7 +105,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public void clickLeveyJenningsLink(BaseWebDriverTest test)
     {
-        test.assertElementPresent(elements().notFound); //Check for no guide sets
+        test.waitForElement(elements().notFound); //Check for no guide sets
         test.clickAndWait(elements().leveyJenningsLink); //click on the link to take user to Levey-Jennings plot
     }
 
