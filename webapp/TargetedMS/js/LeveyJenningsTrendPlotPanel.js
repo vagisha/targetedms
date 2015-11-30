@@ -347,6 +347,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 mode: 'local',
                 store: Ext4.create('Ext.data.Store', {
                     fields: ['name', 'title'],
+                    sorters: [{property: 'title'}],
                     data: chartTypes
                 }),
                 valueField: 'name',
@@ -943,7 +944,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     labels : {
                         main: {
                             value: this.precursors[i],
-                            visibility: this.isMultiSeries() ? undefined : 'hidden'
+                            visibility: 'hidden'
                         },
                         yLeft: {
                             value: yLeftIndex > -1 ? chartTypeProps.colNames[yLeftIndex].title : chartTypeProps.title,
@@ -1031,11 +1032,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             groupColors = LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete()),
             newLegendData = Ext4.Array.clone(this.legendData),
             combinePlotData = {min: null, max: null, data: []},
-            lengthOfLongestPeptide = 1;
+            lengthOfLongestPeptide = 1,
+            precursorInfo;
 
+        // traverse the precursor list for: calculating the longest legend string and combine the plot data
         for (var i = 0; i < this.precursors.length; i++)
         {
-            var precursorInfo = this.sequencePlotData[this.precursors[i]];
+            precursorInfo = this.sequencePlotData[this.precursors[i]];
 
             if (precursorInfo.sequence.length > lengthOfLongestPeptide) {
                 lengthOfLongestPeptide = precursorInfo.sequence.length;
@@ -1049,13 +1052,41 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             if (combinePlotData.max == null || combinePlotData.max < precursorInfo.max) {
                 combinePlotData.max = precursorInfo.max;
             }
+        }
 
-            //add the sequence name for each group to the legend
-            if(this.singlePlot)
+        // add the sequence name for each group to the legend, including the metric title if we have multiple series
+        if (this.isMultiSeries())
+        {
+            newLegendData.push({
+                text: chartTypeProps.colNames[yLeftIndex].title,
+                separator: true
+            });
+        }
+        for (var i = 0; i < this.precursors.length; i++)
+        {
+            precursorInfo = this.sequencePlotData[this.precursors[i]];
+            newLegendData.push({
+                name: precursorInfo.sequence + (yLeftIndex > -1 ? '|valueyLeft' : ''),
+                text: precursorInfo.sequence,
+                color: groupColors[i % groupColors.length]
+            });
+        }
+
+        // add the sequence name for each group to the legend again for the yRight axis metric series
+        if (yRightIndex > -1)
+        {
+            newLegendData.push({
+                text: chartTypeProps.colNames[yRightIndex].title,
+                separator: true
+            });
+
+            for (var i = 0; i < this.precursors.length; i++)
             {
+                precursorInfo = this.sequencePlotData[this.precursors[i]];
                 newLegendData.push({
+                    name: precursorInfo.sequence + '|valueyRight',
                     text: precursorInfo.sequence,
-                    color: groupColors[i % groupColors.length]
+                    color: groupColors[(this.precursors.length + i) % groupColors.length]
                 });
             }
         }
@@ -1079,10 +1110,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         // some properties are specific to whether or not we are showing multiple y-axis series
         if (this.isMultiSeries())
         {
-            if (Ext4.Array.contains(Ext4.Array.pluck(chartTypeProps.colNames, 'axis'), 'yLeft')) {
+            if (yLeftIndex > -1) {
                 ljProperties['value'] = 'valueyLeft';
             }
-            if (Ext4.Array.contains(Ext4.Array.pluck(chartTypeProps.colNames, 'axis'), 'yRight')) {
+            if (yRightIndex > -1) {
                 ljProperties['valueRight'] = 'valueyRight';
             }
         }
@@ -1098,7 +1129,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
                 top: 45 + this.getMaxStackedAnnotations() * 12,
-                right: 10*lengthOfLongestPeptide + (this.isMultiSeries() ? 75 : 0),
+                right: 10 * lengthOfLongestPeptide + (this.isMultiSeries() ? 50 : 0),
                 left: 75,
                 bottom: 75
             },

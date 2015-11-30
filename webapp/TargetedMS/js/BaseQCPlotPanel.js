@@ -68,13 +68,13 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         showInChartTypeCombo: true,
         showInParetoPlot: true
     },
-    // in Levey-Jennings plot, we show the 'Transition and Precursor Area' metric, but
+    // in Levey-Jennings plot, we show the 'Transition/Precursor Areas' metric, but
     // we define it as 3 total metrics so that the individual area values can be used
     // for guide set calculation and pareto plot display.
     {
         name: 'transitionAndPrecursorArea',
         shortName: 'T/P Area',
-        title: 'Transition and Precursor Area',
+        title: 'Transition/Precursor Areas',
         baseTableName: 'PrecursorChromInfo',
         baseLkFieldKey: '',
         colNames: [
