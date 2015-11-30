@@ -80,7 +80,7 @@ public class QCAnnotationTypeTable extends FilteredTable<TargetedMSSchema>
                 {
                     try
                     {
-                        // Rely on the superclass implemenation to do the container ownership check. Since
+                        // Rely on the superclass implementation to do the container ownership check. Since
                         // we're transacted, it's OK to do the DELETE first
                         Integer convertedId = (Integer) ConvertUtils.convert(id.toString(), Integer.class);
                         new SqlExecutor(getSchema()).execute("DELETE FROM " + TargetedMSManager.getTableInfoQCAnnotation() + " WHERE QCAnnotationTypeId = ?", convertedId);
