@@ -33,6 +33,25 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     protected static final String QC_2_FILE = "QC_2.sky.zip";
     protected static final String QC_3_FILE = "QC_3.sky.zip";
 
+    protected enum SvgShapes
+    {
+        CIRCLE("M0,3A"),
+        TRIANGLE("M0,3L"),
+        SQUARE("M-3"),
+        DIAMOND("M0 3");
+
+        private String _pathPrefix;
+        SvgShapes(String pathPrefix)
+        {
+            _pathPrefix = pathPrefix;
+        }
+
+        public String getPathPrefix()
+        {
+            return _pathPrefix;
+        }
+    }
+
     public enum FolderType {
         Experiment, Library, LibraryProtein, QC, Undefined
     }

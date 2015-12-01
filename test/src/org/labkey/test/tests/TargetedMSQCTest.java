@@ -43,6 +43,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCTest extends TargetedMSTest
@@ -61,6 +63,7 @@ public class TargetedMSQCTest extends TargetedMSTest
     private static QCHelper.Annotation reagentChange = new QCHelper.Annotation("Reagent Change", "New reagents", "2013-08-10 15:34:00");
     private static QCHelper.Annotation technicianChange = new QCHelper.Annotation("Technician Change", "New guy on the scene", "2013-08-10 08:43:00");
     private static QCHelper.Annotation candyChange = new QCHelper.Annotation("Candy Change", "New candies!", "2013-08-21 6:57:00");
+    protected static final String USER = "qcuser@targetedms.test";
 
     @Override
     protected String getProjectName()
@@ -74,8 +77,16 @@ public class TargetedMSQCTest extends TargetedMSTest
         TargetedMSQCTest init = (TargetedMSQCTest)getCurrentTest();
 
         init.setupFolder(FolderType.QC);
+        init.createUserWithPermissions(USER, init.getProjectName(), "Reader");
         init.importData(SProCoP_FILE);
         init.createAndInsertAnnotations();
+
+        // verify the initial values for the Levey-Jennings plot input form
+        init.goToProjectHome();
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(init);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        assertEquals(QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
+        assertEquals(QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
     }
 
     @Before
@@ -93,7 +104,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length);
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
         assertEquals("Wrong precursors", Arrays.asList(PRECURSORS), qcPlotsWebPart.getPlotTitles());
     }
 
@@ -110,6 +121,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         clickTab("Panorama Dashboard");
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
         checkForCorrectAnnotations("Individual Plots", qcPlotsWebPart);
     }
 
@@ -118,11 +130,7 @@ public class TargetedMSQCTest extends TargetedMSTest
     {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length);
-
-        // verify the initial values of the form inputs
-        assertEquals(QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
-        assertEquals(QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
 
         // test option to "Group X-Axis values by Date"
         String initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
@@ -154,11 +162,50 @@ public class TargetedMSQCTest extends TargetedMSTest
     }
 
     @Test
+    public void testQCPlotInputsPersistence()
+    {
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
+
+        // change all of the plot input fields and filter to a single date
+        String testDateStr = "2013-08-20";
+        qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.PEAK);
+        qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LOG);
+        qcPlotsWebPart.setGroupXAxisValuesByDate(true);
+        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
+        qcPlotsWebPart.filterQCPlots(testDateStr, testDateStr, 1);
+        int count = qcPlotsWebPart.getPointElements("d", SvgShapes.CIRCLE.getPathPrefix(), true).size();
+        assertEquals("Unexpected number of points for '" + testDateStr + "'", 21, count);
+
+        // verify that on refresh, the selections are persisted to the inputs
+        refresh();
+        qcPlotsWebPart.waitForPlots(1, true);
+        assertEquals("Chart Type not round tripped as expected", QCPlotsWebPart.ChartType.PEAK, qcPlotsWebPart.getCurrentChartType());
+        assertEquals("Y-Axis Scale not round tripped as expected", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());
+        assertTrue("Group X-Axis not round tripped as expected", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
+        assertTrue("Show All Peptides not round tripped as expected", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
+        // date range should not persist
+        assertNotEquals("Start Date should not have been persisted", testDateStr, qcPlotsWebPart.getCurrentStartDate());
+        assertNotEquals("End Date should not have been persisted", testDateStr, qcPlotsWebPart.getCurrentEndDate());
+        count = qcPlotsWebPart.getPointElements("d", "M", true).size();
+        assertTrue("Unexpected number of points for initial data date range", count >= 329);
+
+        // impersonate a different user in this container and verify that initial form fields used
+        impersonate(USER);
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, false);
+        assertEquals("Chart Type not set to default value", QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
+        assertEquals("Y-Axis Scale not set to default value", QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
+        assertFalse("Group X-Axis not set to default value", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
+        assertFalse("Show All Peptides not set to default value", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
+    }
+
+    @Test
     public void testBadPlotDateRange()
     {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length);
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
 
         qcPlotsWebPart.setStartDate("2014-08-09");
         qcPlotsWebPart.setEndDate("2014-08-27");
@@ -194,6 +241,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         // verify if the new start/stop date ranges based on the runs added in this test
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.resetInitialQCPlotFields();
         assertEquals("2013-08-09", qcPlotsWebPart.getCurrentStartDate());
         assertEquals("2015-01-16", qcPlotsWebPart.getCurrentEndDate());
 
@@ -233,47 +281,35 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testCombinedPlots()
     {
+        int count;
+        int expectedNumPointsPerSeries = 47;
+        String[] legendItemColors = new String[]{"#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494"};
+
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length);
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
 
         //select "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
 
         //Counts no. of points. Fill color values are taken from 'legend-item' - so this also checks for legend
         //seq. color and trend line points' color match.
-        int count = qcPlotsWebPart.getPointElements("fill", "#66C2A5", false).size();
-        assertEquals("Unexpected number of points for " + PRECURSORS[0], 47, count);
-
-        count = qcPlotsWebPart.getPointElements("fill", "#FC8D62", false).size();
-        assertEquals("Unexpected number of points for " + PRECURSORS[1], 47, count);
-
-        count = qcPlotsWebPart.getPointElements("fill", "#8DA0CB", false).size();
-        assertEquals("Unexpected number of points for "+ PRECURSORS[2], 47, count);
-
-        count = qcPlotsWebPart.getPointElements("fill", "#E78AC3", false).size();
-        assertEquals("Unexpected number of points for "+ PRECURSORS[3], 47, count);
-
-        count = qcPlotsWebPart.getPointElements("fill", "#A6D854", false).size();
-        assertEquals("Unexpected number of points for "+ PRECURSORS[4], 47, count);
-
-        count = qcPlotsWebPart.getPointElements("fill", "#FFD92F", false).size();
-        assertEquals("Unexpected number of points for " + PRECURSORS[5], 47, count);
-
-        count = qcPlotsWebPart.getPointElements("fill", "#E5C494", false).size();
-        assertEquals("Unexpected number of points for " + PRECURSORS[6], 47, count);
+        for (int i = 0; i < PRECURSORS.length; i++)
+        {
+            count = qcPlotsWebPart.getPointElements("fill", legendItemColors[i], false).size();
+            assertEquals("Unexpected number of points for " + PRECURSORS[i], expectedNumPointsPerSeries, count);
+        }
 
         //annotation check
         checkForCorrectAnnotations("Combined Plot", qcPlotsWebPart);
 
-        //select "Group X-Axis Values by Date"
+        //select "Group X-Axis Values by Date" and count no. of points
         qcPlotsWebPart.setGroupXAxisValuesByDate(true);
-
-        //Count no. of points
-        count = qcPlotsWebPart.getPointElements("fill", "#FC8D62", false).size();
-        assertEquals("Unexpected number of points", 47, count);
-
-        //deselect "Group X-Axis Values by Date"
+        for (int i = 0; i < PRECURSORS.length; i++)
+        {
+            count = qcPlotsWebPart.getPointElements("fill", legendItemColors[i], false).size();
+            assertEquals("Unexpected number of points for " + PRECURSORS[i], expectedNumPointsPerSeries, count);
+        }
         qcPlotsWebPart.setGroupXAxisValuesByDate(false);
 
         //Check for clickable pdf button for Combined plot

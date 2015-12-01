@@ -15,6 +15,7 @@
  */
 package org.labkey.test.components.targetedms;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
@@ -167,7 +168,12 @@ public final class QCPlotsWebPart extends BodyWebPart
         waitForReady();
     }
 
-    public void setShowAllPeptidesInSinglePlot(boolean check, int expectedPlotCount)
+    public boolean isGroupXAxisValuesByDateChecked()
+    {
+        return _test._ext4Helper.isChecked(elements().groupedXCheckbox);
+    }
+
+    public void setShowAllPeptidesInSinglePlot(boolean check, @Nullable Integer expectedPlotCount)
     {
         WebElement plot = elements().plot.findElement(_test.getDriver());
         if (check)
@@ -177,14 +183,21 @@ public final class QCPlotsWebPart extends BodyWebPart
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
         waitForReady();
 
-        waitForPlots(expectedPlotCount, true);
+        if (expectedPlotCount != null)
+            waitForPlots(expectedPlotCount, true);
+        else
+            waitForPlots(1, false);
+    }
 
+    public boolean isShowAllPeptidesInSinglePlotChecked()
+    {
+        return _test._ext4Helper.isChecked(elements().singlePlotCheckbox);
     }
 
     public void applyRange()
     {
         WebElement plotPanel = elements().plotPanel.findElement(_test.getDriver());
-        WebElement panelChild = Locator.css("*").findElement(plotPanel); // The panel itself doesn't become stale, but its children do
+        WebElement panelChild = Locator.css("svg").findElement(plotPanel); // The panel itself doesn't become stale, but its children do
         _test.clickButton("Apply", 0);
         _test.shortWait().until(ExpectedConditions.stalenessOf(panelChild));
         _test._ext4Helper.waitForMaskToDisappear(BaseWebDriverTest.WAIT_FOR_PAGE);
@@ -237,9 +250,30 @@ public final class QCPlotsWebPart extends BodyWebPart
         return titles;
     }
 
-    public void filterQCPlotsToInitialData(int expectedPlotCount)
+    public void filterQCPlotsToInitialData(int expectedPlotCount, boolean resetForm)
     {
-        filterQCPlots("2013-08-09", "2013-08-27", expectedPlotCount);
+        if (resetForm)
+        {
+            resetInitialQCPlotFields();
+        }
+
+        if (!"2013-08-09".equals(getCurrentStartDate()) || !"2013-08-27".equals(getCurrentEndDate()))
+        {
+            filterQCPlots("2013-08-09", "2013-08-27", expectedPlotCount);
+        }
+    }
+
+    public void resetInitialQCPlotFields()
+    {
+        // revert to the initial form values if any of them have changed
+        if (getCurrentChartType() != QCPlotsWebPart.ChartType.RETENTION)
+            setChartType(QCPlotsWebPart.ChartType.RETENTION);
+        if (getCurrentScale() != QCPlotsWebPart.Scale.LINEAR)
+            setScale(QCPlotsWebPart.Scale.LINEAR);
+        if (isGroupXAxisValuesByDateChecked())
+            setGroupXAxisValuesByDate(false);
+        if (isShowAllPeptidesInSinglePlotChecked())
+            setShowAllPeptidesInSinglePlot(false, null);
     }
 
     public void filterQCPlots(String startDate, String endDate, int expectedPlotCount)

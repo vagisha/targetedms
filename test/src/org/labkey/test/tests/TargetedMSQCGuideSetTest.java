@@ -136,17 +136,15 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     @Test
     public void testGuideSetPlotDisplay()
     {
-        String circle = "M0,3A", triangle = "M0,3L", square = "M-3", diamond = "M0 3";
-
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
 
         // 4 of the 5 guide sets are visible in plot region based on the initial data
         List<Pair<String, Integer>> shapeCounts = new ArrayList<>();
-        shapeCounts.add(Pair.of(circle, 4));
-        shapeCounts.add(Pair.of(triangle, 23));
-        shapeCounts.add(Pair.of(square, 18));
-        shapeCounts.add(Pair.of(diamond, 2));
+        shapeCounts.add(Pair.of(SvgShapes.CIRCLE.getPathPrefix(), 4));
+        shapeCounts.add(Pair.of(SvgShapes.TRIANGLE.getPathPrefix(), 23));
+        shapeCounts.add(Pair.of(SvgShapes.SQUARE.getPathPrefix(), 18));
+        shapeCounts.add(Pair.of(SvgShapes.DIAMOND.getPathPrefix(), 2));
         verifyGuideSetRelatedElementsForPlots(qcPlotsWebPart, 4, shapeCounts, 47);
 
         // check box for group x-axis values by date and verify
@@ -157,8 +155,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         // filter plot by start/end date to check reference points without training points in view
         qcPlotsWebPart.filterQCPlots("2013-08-19", "2013-08-19", PRECURSORS.length);
         shapeCounts = new ArrayList<>();
-        shapeCounts.add(Pair.of(circle, 2));
-        shapeCounts.add(Pair.of(triangle, 0));
+        shapeCounts.add(Pair.of(SvgShapes.CIRCLE.getPathPrefix(), 2));
+        shapeCounts.add(Pair.of(SvgShapes.TRIANGLE.getPathPrefix(), 0));
         verifyGuideSetRelatedElementsForPlots(qcPlotsWebPart, 0, shapeCounts, 2);
     }
 
