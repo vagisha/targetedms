@@ -388,7 +388,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                         this.setBrushingEnabled(false);
                         this.setLoadingMsg();
-                        //TODO this should be this.renderPlots() but there is a bug with the yStepIndex being reset
                         this.getAnnotationData();
                     }
                 }
@@ -415,7 +414,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                         this.setBrushingEnabled(false);
                         this.setLoadingMsg();
-                        this.renderPlots();
+                        this.getAnnotationData();
                     }
                 }
             });
@@ -545,6 +544,16 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         var dateCount = {};
         this.legendData = [];
+
+        // if we are showing the All Peptides plot, add a legend header for annotations
+        if (this.annotationData.length > 0 && this.singlePlot)
+        {
+            this.legendData.push({
+                text: 'Annotations',
+                separator: true
+            });
+        }
+
         for (var i = 0; i < this.annotationData.length; i++)
         {
             var annotation = this.annotationData[i];
@@ -899,14 +908,20 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 var id = this.plotDivId + "-precursorPlot" + i;
                 this.addPlotWebPartToPlotDiv(id, this.precursors[i], this.plotDivId, 'qc-plot-wp');
 
-                if (precursorInfo.showLogWarning) {
-                    Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below the mean with negative values have been omitted.</span>");
+                if (precursorInfo.showLogInvalid)
+                {
+                    this.showInvalidLogMsg(id, true);
+                }
+                else if (precursorInfo.showLogWarning)
+                {
+                    Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below "
+                            + "the mean with negative values have been omitted.</span>");
                 }
 
                 var ljProperties = {
                     xTick: this.groupedX ? 'date' : 'fullDate',
                     xTickLabel: 'date',
-                    yAxisScale: this.yAxisScale,
+                    yAxisScale: (precursorInfo.showLogInvalid ? 'linear' : this.yAxisScale),
                     shape: 'guideSetId',
                     showTrendLine: true,
                     hoverTextFn: this.plotHoverTextDisplay,
@@ -937,7 +952,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 var plotConfig = Ext4.apply(basePlotConfig, {
                     margins : {
                         top: 45 + this.getMaxStackedAnnotations() * 12,
-                        right: this.isMultiSeries() ? 75 : undefined,
                         left: 75,
                         bottom: 75
                     },
@@ -948,11 +962,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                         },
                         yLeft: {
                             value: yLeftIndex > -1 ? chartTypeProps.colNames[yLeftIndex].title : chartTypeProps.title,
-                            visibility: this.isMultiSeries() ? undefined : 'hidden'
+                            visibility: this.isMultiSeries() ? undefined : 'hidden',
+                            color: this.isMultiSeries() ? this.getColorRange()[0] : undefined
                         },
                         yRight: {
                             value: yRightIndex > -1 ? chartTypeProps.colNames[yRightIndex].title : chartTypeProps.title,
-                            visibility: this.isMultiSeries() ? undefined : 'hidden'
+                            visibility: this.isMultiSeries() ? undefined : 'hidden',
+                            color: this.isMultiSeries() ? this.getColorRange()[1] : undefined
                         }
                     },
                     properties: ljProperties,
@@ -1025,14 +1041,20 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return -1;
     },
 
+    getColorRange: function()
+    {
+        return LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete());
+    },
+
     addCombinedPeptideSinglePlot : function() {
         var chartTypeProps = this.getChartTypePropsByName(this.chartType),
             yLeftIndex = this.getYAxisIndex('yLeft'),
             yRightIndex = this.getYAxisIndex('yRight'),
-            groupColors = LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete()),
+            groupColors = this.getColorRange(),
             newLegendData = Ext4.Array.clone(this.legendData),
             combinePlotData = {min: null, max: null, data: []},
             lengthOfLongestPeptide = 1,
+            showLogInvalid,
             precursorInfo;
 
         // traverse the precursor list for: calculating the longest legend string and combine the plot data
@@ -1052,13 +1074,15 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             if (combinePlotData.max == null || combinePlotData.max < precursorInfo.max) {
                 combinePlotData.max = precursorInfo.max;
             }
+
+            showLogInvalid = showLogInvalid || precursorInfo.showLogInvalid;
         }
 
         // add the sequence name for each group to the legend, including the metric title if we have multiple series
-        if (this.isMultiSeries())
+        if (true || this.isMultiSeries())
         {
             newLegendData.push({
-                text: chartTypeProps.colNames[yLeftIndex].title,
+                text: yLeftIndex > -1 ? chartTypeProps.colNames[yLeftIndex].title : 'Peptide',
                 separator: true
             });
         }
@@ -1093,12 +1117,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         var id = 'combinedPlot';
         this.addPlotWebPartToPlotDiv(id, 'All Peptides', this.plotDivId, 'qc-plot-wp');
+        this.showInvalidLogMsg(id, showLogInvalid);
 
         var ljProperties = {
             disableRangeDisplay: true,
             xTick: this.groupedX ? 'date' : 'fullDate',
             xTickLabel: 'date',
-            yAxisScale: this.yAxisScale,
+            yAxisScale: (showLogInvalid ? 'linear' : this.yAxisScale),
             shape: 'guideSetId',
             groupBy: 'sequence',
             color: 'sequence',
@@ -1162,6 +1187,15 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.createExportToPDFButton(id, "QC Combined Plot for All Peptides", "QC Combined Plot");
 
         return true;
+    },
+
+    showInvalidLogMsg : function(id, toShow)
+    {
+        if (toShow)
+        {
+            Ext4.get(id).update("<span style='font-style: italic;'>Log scale invalid for values &le; 0. "
+                    + "Reverting to linear y-axis scale.</span>");
+        }
     },
 
     plotHoverTextDisplay : function(row, valueName){
@@ -1461,12 +1495,17 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 dataObject.max = row['Value'];
             }
 
+            if (this.yAxisScale == 'log' && row['Value'] <= 0)
+            {
+                dataObject.showLogInvalid = true;
+            }
+
             var mean = row['Mean'];
             var sd = LABKEY.vis.isValid(row['StandardDev']) ? row['StandardDev'] : 0;
             if (LABKEY.vis.isValid(mean))
             {
                 var minSd = (mean - (3 * sd));
-                if (this.yAxisScale == 'log' && minSd <= 0)
+                if (dataObject.showLogInvalid == undefined && this.yAxisScale == 'log' && minSd <= 0)
                 {
                     // Avoid setting our scale to be negative based on the three standard deviations to avoid messing up log plots
                     dataObject.showLogWarning = true;
@@ -1485,6 +1524,22 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 if (dataObject.max == null || (mean + (3 * sd)) > dataObject.max) {
                     dataObject.max = (mean + (3 * sd));
                 }
+            }
+        }
+        else if (this.isMultiSeries())
+        {
+            // check if either of the y-axis metric values are invalid for a log scale,
+            // breaking from the check once we encounter an invalid log scale value on either axis
+            if (dataObject.showLogInvalid == undefined && this.yAxisScale == 'log')
+            {
+                Ext4.each(this.getChartTypePropsByName(this.chartType).colNames, function(col)
+                {
+                    if (LABKEY.vis.isValid(row['Value' + col.axis]) && row['Value' + col.axis] <= 0)
+                    {
+                        dataObject.showLogInvalid = true;
+                        return true;
+                    }
+                });
             }
         }
     },
