@@ -63,9 +63,6 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     private static GuideSet gs4 = new GuideSet("2013/08/21 07:56:12", "2013/08/21 13:15:01", "fourth guide set, four data points in range", 4);
     private static GuideSet gs5 = new GuideSet("2013/08/27 03:00", "2013/08/31 00:00", "fifth guide set, extends beyond last initial data point with two data points in range");
 
-    private static String emptyParetoPlotFolder = "Empty Pareto Plot Test";
-    private static boolean emptyParetoPlotFolderTest;
-
 
     @Override
     protected String getProjectName()
@@ -76,8 +73,6 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     @BeforeClass
     public static void initProject()
     {
-        emptyParetoPlotFolderTest = false;
-
         TargetedMSQCGuideSetTest init = (TargetedMSQCGuideSetTest)getCurrentTest();
 
         init.setupFolder(FolderType.QC);
@@ -100,9 +95,6 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
         _containerHelper.deleteProject(getProjectName(), afterTest);
-
-        if(emptyParetoPlotFolderTest)
-            _containerHelper.deleteProject(emptyParetoPlotFolder, afterTest);
     }
 
     @Test
@@ -122,12 +114,14 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         String overlapErrorMsg = "The training date range overlaps with an existing guide set's training date range.";
 
         // test validation error message from Guide Set Insert New page
+        goToProjectHome();
         createGuideSet(new GuideSet("2013/08/10 00:00:01", "2013/08/10 00:00:00", null), "The training start date/time must be before the training end date/time.");
         createGuideSet(new GuideSet("2013/08/01", "2013/08/12", null), overlapErrorMsg);
         createGuideSet(new GuideSet("2013/08/01", "2013/08/03", null), overlapErrorMsg);
         createGuideSet(new GuideSet("2013/08/10", "2013/08/12", null), overlapErrorMsg);
 
         // test validation error message from QC plot guide set creation mode
+        goToProjectHome();
         createGuideSet(new GuideSet("2013/08/09 11:39:00", "2013/08/11 18:34:14", null, 2), overlapErrorMsg);
         createGuideSet(new GuideSet("2013/08/21 01:12:00", "2013/08/21 07:56:12", null, 5), overlapErrorMsg);
         createGuideSet(new GuideSet("2013/08/09 11:39:00", "2013/08/27 14:45:49", null, 47), overlapErrorMsg);
@@ -188,9 +182,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     @Test
     public void testEmptyParetoPlot()
     {
-        emptyParetoPlotFolderTest = true;
-
-        setupFolder(emptyParetoPlotFolder, FolderType.QC); //create a Panorama folder of type QC
+        setupSubfolder(getProjectName(), "Empty Pareto Plot Test", FolderType.QC); //create a Panorama folder of type QC
 
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
 
@@ -338,13 +330,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         }
         else
         {
-            // create the guide set via the table insert view
-            if (!"Guide Sets".equals(getUrlParam("pageId", true)))
-                clickTab("Guide Sets");
-
-            GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this, getProjectName());
-            GuideSetPage guideSetPage = guideSetWebPart.startInsert();
-            guideSetPage.insert(guideSet, expectErrorMsg);
+            createGuideSetFromTable(guideSet);
         }
 
         if (expectErrorMsg == null)

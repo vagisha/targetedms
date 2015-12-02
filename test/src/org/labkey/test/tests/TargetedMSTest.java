@@ -19,6 +19,12 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
+import org.labkey.test.components.targetedms.GuideSet;
+import org.labkey.test.components.targetedms.GuideSetWebPart;
+import org.labkey.test.components.targetedms.QCSummaryWebPart;
+import org.labkey.test.pages.targetedms.GuideSetPage;
+import org.labkey.test.pages.targetedms.PanoramaDashboard;
+import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.UIContainerHelper;
@@ -26,12 +32,17 @@ import org.labkey.test.util.UIContainerHelper;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
 public abstract class TargetedMSTest extends BaseWebDriverTest
 {
     protected static final String SProCoP_FILE = "SProCoPTutorial.zip";
     protected static final String QC_1_FILE = "QC_1.sky.zip";
     protected static final String QC_2_FILE = "QC_2.sky.zip";
     protected static final String QC_3_FILE = "QC_3.sky.zip";
+    protected static final String USER = "qcuser@targetedms.test";
 
     protected enum SvgShapes
     {
@@ -74,10 +85,15 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         selectFolderType(folderType);
     }
 
-    @LogMethod
-    protected void setupFolder(String folderName, FolderType folderType)
+    protected void setupSubfolder(String projectName, String folderName, FolderType folderType)
     {
-        _containerHelper.createProject(folderName, "Panorama");
+        setupSubfolder(projectName, projectName, folderName, folderType);
+    }
+
+    @LogMethod
+    protected void setupSubfolder(String projectName, String parentFolderName, String folderName, FolderType folderType)
+    {
+        _containerHelper.createSubfolder(projectName, parentFolderName, folderName, "Panorama", null, false);
         selectFolderType(folderType);
     }
 
@@ -138,10 +154,67 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         clickButton("Finish");
     }
 
+    protected void verifyQcSummary(int docCount, int sampleFileCount, int precursorCount)
+    {
+        verifyQcSummary(0, null, docCount, sampleFileCount, precursorCount);
+    }
+
+    protected void verifyQcSummary(int summaryIndex, String folderName)
+    {
+        verifyQcSummary(summaryIndex, folderName, 0, 0, 0);
+    }
+
+    @LogMethod
+    protected void verifyQcSummary(int summaryIndex, String folderName, int docCount, int sampleFileCount, int precursorCount)
+    {
+        QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
+        qcSummaryWebPart.readSummary(summaryIndex);
+
+        assertEquals("Wrong number of Skyline documents uploaded for index " + summaryIndex, docCount, qcSummaryWebPart.getDocCount());
+        assertEquals("Wrong number sample files for index " + summaryIndex, sampleFileCount, qcSummaryWebPart.getFileCount());
+        assertEquals("Wrong number of precursors tracked for index " + summaryIndex, precursorCount, qcSummaryWebPart.getPrecursorCount());
+
+        if (docCount == 0 && sampleFileCount == 0 && precursorCount == 0)
+            assertElementPresent(qcSummaryWebPart.getEmptyTextLocator(summaryIndex));
+        else
+            assertElementNotPresent(qcSummaryWebPart.getEmptyTextLocator(summaryIndex));
+
+        if (folderName != null)
+        {
+            Locator loc = qcSummaryWebPart.getFolderNameLinkLocator(summaryIndex);
+            assertElementPresent(loc);
+            assertEquals("Wrong folder name QC Summary tile title", folderName, getElement(loc).getText());
+        }
+    }
+
+    @LogMethod
+    protected void createGuideSetFromTable(GuideSet guideSet)
+    {
+        if (!"Guide Sets".equals(getUrlParam("pageId", true)))
+            clickTab("Guide Sets");
+
+        GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this, getProjectName());
+        GuideSetPage guideSetPage = guideSetWebPart.startInsert();
+        guideSetPage.insert(guideSet, null);
+    }
+
+    @LogMethod
+    protected void removeAllGuideSets()
+    {
+        if (!"Guide Sets".equals(getUrlParam("pageId", true)))
+            clickTab("Guide Sets");
+
+        DataRegionTable table = new DataRegionTable("qwp1", this);
+        table.checkAll();
+        table.clickHeaderButtonByText("Delete");
+        assertAlertContains("Are you sure you want to delete the selected row");
+    }
+
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
         deleteProject(getProjectName(), afterTest);
+        deleteUsersIfPresent(USER);
     }
 
     @Override

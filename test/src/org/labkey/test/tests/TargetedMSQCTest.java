@@ -23,8 +23,10 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
+import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
 import org.labkey.test.components.targetedms.QCAnnotationWebPart;
 import org.labkey.test.components.targetedms.QCPlot;
@@ -63,7 +65,6 @@ public class TargetedMSQCTest extends TargetedMSTest
     private static QCHelper.Annotation reagentChange = new QCHelper.Annotation("Reagent Change", "New reagents", "2013-08-10 15:34:00");
     private static QCHelper.Annotation technicianChange = new QCHelper.Annotation("Technician Change", "New guy on the scene", "2013-08-10 08:43:00");
     private static QCHelper.Annotation candyChange = new QCHelper.Annotation("Candy Change", "New candies!", "2013-08-21 6:57:00");
-    protected static final String USER = "qcuser@targetedms.test";
 
     @Override
     protected String getProjectName()
@@ -148,6 +149,7 @@ public class TargetedMSQCTest extends TargetedMSTest
                 assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
             }
         }
+        qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LINEAR);
 
         // test that plot0 changes based on chart type
         for (QCPlotsWebPart.ChartType type : QCPlotsWebPart.ChartType.values())
@@ -155,8 +157,12 @@ public class TargetedMSQCTest extends TargetedMSTest
             if (type != qcPlotsWebPart.getCurrentChartType())
             {
                 initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
-                qcPlotsWebPart.setChartType(type);
-                assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
+                qcPlotsWebPart.setChartType(type, type.hasData());
+                if (type.hasData())
+                    assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
+
+                // back to default chart type for baseline comparison of svg plot change
+                qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.RETENTION, true, type.hasData());
             }
         }
     }
@@ -198,6 +204,65 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals("Y-Axis Scale not set to default value", QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
         assertFalse("Group X-Axis not set to default value", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertFalse("Show All Peptides not set to default value", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
+    }
+
+    @Test
+    public void testQCPlotLogMessages()
+    {
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
+
+        // if metric has negative values and we pick log y-axis scale, we should revert to linear scale and show message
+        qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.MASSACCURACTY);
+        qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LOG);
+        assertEquals("Unexpected number of plots with invalid log scale.", 3, qcPlotsWebPart.getLogScaleInvalidCount());
+        assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleWarningCount());
+
+        // if the guide set expected range error bar goes beyond zero, show log plot message about it
+        createGuideSetFromTable(new GuideSet("2013-08-09", "2013-08-27", "all initial data points"));
+        clickTab("Panorama Dashboard");
+        qcPlotsWebPart.waitForPlots(1, false);
+        assertEquals("Y-axis Scale selection wasn't persisted", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());
+        qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.PEAK);
+        assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleInvalidCount());
+        assertEquals("Unexpected number of plots with invalid log scale.", 1, qcPlotsWebPart.getLogScaleWarningCount());
+        removeAllGuideSets();
+    }
+
+    @Test
+    public void testMultiSeriesQCPlot()
+    {
+        String yLeftColor = "#66C2A5";
+        String yRightColor = "#FC8D62";
+        int pointsPerSeries = 47;
+
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
+        qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.TPAREAS);
+
+        // check that there is two series per plot by doing a point count by color
+        int count = qcPlotsWebPart.getPointElements("fill", yLeftColor, false).size();
+        assertEquals("Unexpected number of points for yLeft metric", pointsPerSeries * PRECURSORS.length, count);
+        count = qcPlotsWebPart.getPointElements("fill", yRightColor, false).size();
+        assertEquals("Unexpected number of points for yRight metric", pointsPerSeries * PRECURSORS.length, count);
+
+        // check a few attributes of the multi-series all peptide plot
+        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
+        count = qcPlotsWebPart.getPointElements("d", SvgShapes.CIRCLE.getPathPrefix(), true).size();
+        assertEquals("Unexpected number of points for multi-series all peptide plot", pointsPerSeries * 2 * PRECURSORS.length, count);
+        qcPlotsWebPart.setGroupXAxisValuesByDate(true);
+        count = qcPlotsWebPart.getPointElements("d", SvgShapes.CIRCLE.getPathPrefix(), true).size();
+        assertEquals("Unexpected number of points for multi-series all peptide plot", pointsPerSeries * 2 * PRECURSORS.length, count);
+        assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Annotations", true));
+        assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Change", false), 4);
+        assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Transition Area", true));
+        assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Precursor Area", true));
+        for (String precursor : PRECURSORS)
+        {
+            assertElementPresent(qcPlotsWebPart.getLegendItemLocator(precursor, true), 2);
+        }
     }
 
     @Test
@@ -332,14 +397,6 @@ public class TargetedMSQCTest extends TargetedMSTest
     {
         assertEquals(sampleName, drt.getDataAsText(row, 2));
         assertEquals(skylineDocName, drt.getDataAsText(row, 5));
-    }
-
-    private void verifyQcSummary(int docCount, int sampleFileCount, int precursorCount)
-    {
-        QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
-        assertEquals("Wrong number of Skyline documents uploaded", docCount, qcSummaryWebPart.getDocCount());
-        assertEquals("Wrong number sample files", sampleFileCount, qcSummaryWebPart.getFileCount());
-        assertEquals("Wrong number of precursors tracked", precursorCount, qcSummaryWebPart.getPrecursorCount());
     }
 
     private void createAndInsertAnnotations()

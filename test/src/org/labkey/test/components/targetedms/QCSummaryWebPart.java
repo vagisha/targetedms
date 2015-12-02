@@ -19,7 +19,9 @@ import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
+import org.openqa.selenium.WebElement;
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,22 +52,26 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     private void readSummary()
     {
+        readSummary(0);
+    }
+
+    public void readSummary(int index)
+    {
         String qcSummary = _test.getText(elements().qcSummary);
+        if (index > 0)
+            qcSummary = getQCSummaryDetails().get(index).getText();
 
-        Pattern docPattern = Pattern.compile("(\\d+) Skyline documents");
+        Pattern docPattern = Pattern.compile("(\\d+) Skyline document");
         Matcher docMatcher = docPattern.matcher(qcSummary);
-        Assert.assertTrue(qcSummary, docMatcher.find());
-        _docCount = Integer.parseInt(docMatcher.group(1));
+        _docCount = docMatcher.find() ? Integer.parseInt(docMatcher.group(1)) : 0;
 
-        Pattern filePattern = Pattern.compile("(\\d+) sample files");
+        Pattern filePattern = Pattern.compile("(\\d+) sample file");
         Matcher fileMatcher = filePattern.matcher(qcSummary);
-        Assert.assertTrue(qcSummary, fileMatcher.find());
-        _fileCount = Integer.parseInt(fileMatcher.group(1));
+        _fileCount = fileMatcher.find() ? Integer.parseInt(fileMatcher.group(1)) : 0;
 
-        Pattern precursorPattern = Pattern.compile("(\\d+) precursors");
+        Pattern precursorPattern = Pattern.compile("(\\d+) precursor");
         Matcher precursorMatcher = precursorPattern.matcher(qcSummary);
-        Assert.assertTrue(qcSummary, precursorMatcher.find());
-        _precursorCount = Integer.parseInt(precursorMatcher.group(1));
+        _precursorCount = precursorMatcher.find() ? Integer.parseInt(precursorMatcher.group(1)) : 0;
     }
 
     public int getDocCount()
@@ -89,6 +95,26 @@ public final class QCSummaryWebPart extends BodyWebPart
         return _precursorCount;
     }
 
+    public Locator getFolderNameLinkLocator(int index)
+    {
+        return getQCSummaryIndexLocator(index).append(elements().qcSummaryFolderLink);
+    }
+
+    public Locator getEmptyTextLocator(int index)
+    {
+        return getQCSummaryIndexLocator(index).append(elements().qcSummaryEmptyText);
+    }
+
+    private Locator.XPathLocator getQCSummaryIndexLocator(int index)
+    {
+        return new Locator.XPathLocator("(" + elements().qcSummaryDetails.getPath() + ")[" + (index+1) + "]");
+    }
+
+    public List<WebElement> getQCSummaryDetails()
+    {
+        return elements().qcSummaryDetails.findElements(_test.getDriver());
+    }
+
     @Override
     protected Elements elements()
     {
@@ -98,5 +124,8 @@ public final class QCSummaryWebPart extends BodyWebPart
     private class Elements extends BodyWebPart.Elements
     {
         public Locator.XPathLocator qcSummary = webPart.append(Locator.tagWithId("div", "qcSummary-1"));
+        public Locator.XPathLocator qcSummaryDetails = qcSummary.append(Locator.tagWithClass("div", "summary-view"));
+        public Locator.XPathLocator qcSummaryFolderLink = Locator.tagWithClass("div", "folder-name").append(Locator.tag("a"));
+        public Locator.XPathLocator qcSummaryEmptyText = Locator.tagWithClass("div", "item-text").withText("No Skyline documents");
     }
 }

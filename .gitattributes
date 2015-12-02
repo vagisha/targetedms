@@ -337,6 +337,7 @@ test/src/org/labkey/test/tests/TargetedMSLibraryIrtTest.java -text
 test/src/org/labkey/test/tests/TargetedMSLibraryTest.java -text
 test/src/org/labkey/test/tests/TargetedMSLinkVersionsTest.java -text
 test/src/org/labkey/test/tests/TargetedMSQCGuideSetTest.java -text
+test/src/org/labkey/test/tests/TargetedMSQCSummaryTest.java -text
 test/src/org/labkey/test/tests/TargetedMSQCTest.java -text
 test/src/org/labkey/test/tests/TargetedMSTest.java -text
 test/src/org/labkey/test/util/targetedms/QCHelper.java -text

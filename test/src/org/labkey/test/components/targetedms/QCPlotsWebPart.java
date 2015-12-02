@@ -76,6 +76,11 @@ public final class QCPlotsWebPart extends BodyWebPart
         }
     }
 
+    private void waitForNoRecords()
+    {
+        _test.waitForElement(elements().noRecords);
+    }
+
     @LogMethod
     public void setScale(Scale scale)
     {
@@ -113,24 +118,32 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public enum ChartType
     {
-        RETENTION("Retention Time"),
-        PEAK("Peak Area"),
-        FWHM("Full Width at Half Maximum (FWHM)"),
-        FWB("Full Width at Base (FWB)"),
-        //LHRATIO("Light/Heavy Ratio"),
-        TPAREARATIO("Transition/Precursor Area Ratio"),
-        MASSACCURACTY("Mass Accuracy");
+        RETENTION("Retention Time", true),
+        PEAK("Peak Area", true),
+        FWHM("Full Width at Half Maximum (FWHM)", true),
+        FWB("Full Width at Base (FWB)", true),
+        LHRATIO("Light/Heavy Ratio", false),
+        TPAREARATIO("Transition/Precursor Area Ratio", true),
+        TPAREAS("Transition/Precursor Areas", true),
+        MASSACCURACTY("Mass Accuracy", true);
 
         private String _text;
+        private boolean _hasData;
 
-        private ChartType(String text)
+        ChartType(String text, boolean hasData)
         {
             _text = text;
+            _hasData = hasData;
         }
 
         public String toString()
         {
             return _text;
+        }
+
+        public boolean hasData()
+        {
+            return _hasData;
         }
 
         public static ChartType getEnum(String value)
@@ -142,13 +155,32 @@ public final class QCPlotsWebPart extends BodyWebPart
         }
     }
 
-    @LogMethod
     public void setChartType(ChartType chartType)
     {
-        WebElement plot = elements().plot.findElement(_test.getDriver());
+        setChartType(chartType, true, true);
+    }
+
+    public void setChartType(ChartType chartType, boolean hasData)
+    {
+        setChartType(chartType, hasData, true);
+    }
+
+    @LogMethod
+    public void setChartType(ChartType chartType, boolean hasData, boolean hasExistingPlot)
+    {
+        WebElement plot = null;
+        if (hasExistingPlot)
+            plot = elements().plot.findElement(_test.getDriver());
+
         _test._ext4Helper.selectComboBoxItem(elements().chartTypeCombo, chartType.toString());
-        _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
-        waitForReady();
+
+        if (hasExistingPlot)
+            _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
+
+        if (hasData)
+            waitForReady();
+        else
+            waitForNoRecords();
     }
 
     public ChartType getCurrentChartType()
@@ -359,6 +391,24 @@ public final class QCPlotsWebPart extends BodyWebPart
         }
     }
 
+    public int getLogScaleInvalidCount()
+    {
+        return _test.getElementCount(elements().logScaleInvalid);
+    }
+
+    public int getLogScaleWarningCount()
+    {
+        return _test.getElementCount(elements().logScaleWarning);
+    }
+
+    public Locator getLegendItemLocator(String text, boolean exactMatch)
+    {
+        if (exactMatch)
+            return elements().legendItem.withText(text);
+        else
+            return elements().legendItem.containing(text);
+    }
+
     @Override
     protected Elements elements()
     {
@@ -378,11 +428,16 @@ public final class QCPlotsWebPart extends BodyWebPart
         Locator.XPathLocator plot = plotPanel.append(Locator.tagWithClass("table", "qc-plot-wp"));
         Locator.XPathLocator plotTitle = plot.append(Locator.tagWithClass("span", "qc-plot-wp-title"));
 
+        Locator.XPathLocator noRecords = plotPanel.append(Locator.tagContainingText("span", "There were no records found."));
+        Locator.XPathLocator logScaleInvalid = plotPanel.append(Locator.tagContainingText("span", "Log scale invalid for values"));
+        Locator.XPathLocator logScaleWarning = plotPanel.append(Locator.tagContainingText("span", "For log scale, standard deviations below the mean"));
+
         Locator.XPathLocator extFormDisplay = Locator.tagWithClass("div", "x4-form-display-field");
 
         Locator.CssLocator guideSetTrainingRect = Locator.css("svg rect.training");
         Locator.CssLocator guideSetSvgButton = Locator.css("svg g.guideset-svg-button text");
         Locator.CssLocator svgPoint = Locator.css("svg g a.point");
         Locator.CssLocator svgPointPath = Locator.css("svg g a.point path");
+        Locator.CssLocator legendItem = Locator.css("svg g.legend-item");
     }
 }

@@ -15,14 +15,12 @@
  */
 package org.labkey.test.pages.targetedms;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.pages.InsertPage;
 
-/**
- * Created by cnathe on 4/13/2015.
- */
 public class GuideSetPage extends InsertPage
 {
     private static final String DEFAULT_TITLE = "Insert GuideSet";
@@ -32,7 +30,7 @@ public class GuideSetPage extends InsertPage
         super(test, DEFAULT_TITLE);
     }
 
-    public void insert(GuideSet guideSet, String expectErrorMsg)
+    public void insert(GuideSet guideSet, @Nullable String expectErrorMsg)
     {
         Elements elements = elements();
         _test.setFormElement(elements.trainingStartDate, guideSet.getStartDate());
