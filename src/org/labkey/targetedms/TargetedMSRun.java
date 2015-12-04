@@ -55,7 +55,10 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     protected String _description;
     protected String _fileName;
     protected String _status;
-    protected Date _loaded;
+    private Date _created;
+    private int _createdBy;
+    private Date _modified;
+    private int _modifiedBy;
     protected int _statusId;
     protected boolean _deleted;
     protected String _experimentRunLSID;
@@ -153,15 +156,44 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _fileName = fileName;
     }
 
-    public Date getLoaded()
+    public Date getCreated()
     {
-        return _loaded;
+        return _created;
     }
 
-
-    public void setLoaded(Date loaded)
+    public void setCreated(Date created)
     {
-        _loaded = loaded;
+        _created = created;
+    }
+
+    public int getCreatedBy()
+    {
+        return _createdBy;
+    }
+
+    public void setCreatedBy(int createdBy)
+    {
+        _createdBy = createdBy;
+    }
+
+    public Date getModified()
+    {
+        return _modified;
+    }
+
+    public void setModified(Date modified)
+    {
+        _modified = modified;
+    }
+
+    public int getModifiedBy()
+    {
+        return _modifiedBy;
+    }
+
+    public void setModifiedBy(int modifiedBy)
+    {
+        _modifiedBy = modifiedBy;
     }
 
     public String getStatus()

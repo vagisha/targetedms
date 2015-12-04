@@ -17,6 +17,8 @@ package org.labkey.api.targetedms;
 
 import org.labkey.api.data.Container;
 
+import java.util.Date;
+
 /**
  * User: vsharma
  * Date: 8/26/2015
@@ -27,4 +29,5 @@ public interface ITargetedMSRun
     public Container getContainer();
     public String getBaseName();
     public String getDescription();
+    public Date getCreated();
 }

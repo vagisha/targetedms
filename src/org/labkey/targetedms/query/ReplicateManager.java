@@ -15,6 +15,7 @@
 
 package org.labkey.targetedms.query;
 
+import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
@@ -168,5 +169,22 @@ public class ReplicateManager
             }
         });
         return uniqueAnnotationsList;
+    }
+
+    public static List<ReplicateAnnotation> getReplicateAnnotationNameValues(Container container)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("SELECT DISTINCT annot.Name AS Name, annot.Value AS Value FROM ");
+        sql.append(TargetedMSManager.getTableInfoReplicateAnnotation(), "annot");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoReplicate(), "replicate").append(" ON annot.ReplicateId = replicate.Id");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoRuns(), "runs").append(" ON replicate.RunId = runs.Id");
+        sql.append(" WHERE ");
+        sql.append("runs.Container=?");
+        sql.add(container);
+        sql.append(" ORDER BY Name, Value");
+
+        return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(ReplicateAnnotation.class));
     }
 }

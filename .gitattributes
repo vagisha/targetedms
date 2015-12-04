@@ -2,6 +2,7 @@
 /TargetedMS-API.iml -text
 /TargetedMS.iml -text
 api-src/org/labkey/api/targetedms/ITargetedMSRun.java -text
+api-src/org/labkey/api/targetedms/SkylineAnnotation.java -text
 api-src/org/labkey/api/targetedms/TargetedMSService.java -text
 /module.properties -text
 resources/queries/targetedms/GuideSetStats.sql -text

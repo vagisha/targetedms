@@ -17,16 +17,15 @@ package org.labkey.api.targetedms;
 
 import org.labkey.api.data.Container;
 
-import java.util.List;
+import java.util.Date;
 
 /**
  * User: vsharma
  * Date: 8/26/2015
- * Time: 11:34 AM
+ * Time: 2:13 PM
  */
-public interface TargetedMSService
+public interface SkylineAnnotation
 {
-    public ITargetedMSRun getRun(int runId, Container container);
-    public List<ITargetedMSRun> getRuns(Container container);
-    public List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);
+    public String getName();
+    public String getValue();
 }

@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.labkey.api.targetedms.SkylineAnnotation;
+
 /**
  * Convenient to be a concrete class so that we can use it to fetch rows from the database for any of the specific
  * annotation tables when all we care about is the name/value/id info.
@@ -22,7 +24,7 @@ package org.labkey.targetedms.parser;
  * User: jeckels
  * Date: Jun 4, 2012
  */
-public class AbstractAnnotation extends SkylineEntity
+public class AbstractAnnotation extends SkylineEntity implements SkylineAnnotation
 {
     private String _name;
     private String _value;

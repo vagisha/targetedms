@@ -17,7 +17,12 @@ package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.targetedms.ITargetedMSRun;
+import org.labkey.api.targetedms.SkylineAnnotation;
 import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.targetedms.query.ReplicateManager;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * User: vsharma
@@ -35,5 +40,17 @@ public class TargetedMSServiceImpl implements TargetedMSService
             return run;
         }
         return null;
+    }
+
+    @Override
+    public List<ITargetedMSRun> getRuns(Container container)
+    {
+        return Arrays.asList(TargetedMSManager.getRunsInContainer(container));
+    }
+
+    @Override
+    public List<? extends SkylineAnnotation> getReplicateAnnotations(Container container)
+    {
+        return ReplicateManager.getReplicateAnnotationNameValues(container);
     }
 }

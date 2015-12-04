@@ -582,6 +582,11 @@ public class TargetedMSManager
         return run;
     }
 
+    public static TargetedMSRun[] getRunsInContainer(Container container)
+    {
+        return getRuns("Container=? AND StatusId=? AND deleted=?", container.getId(), 1, Boolean.FALSE);
+    }
+
     public static TargetedMSRun getRunByFileName(String fileName, Container container)
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("Container"), container.getId());
