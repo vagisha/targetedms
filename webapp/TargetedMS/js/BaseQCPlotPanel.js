@@ -159,13 +159,18 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             tooltip: "Export PDF of this plot",
             handler: function (btn)
             {
-                var svgEls = Ext4.get(btn.svgDivId).select('svg');
-                var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[0]);
-                svgStr = svgStr.replace(/visibility="hidden"/g, 'visibility="visible"');
-                LABKEY.vis.SVGConverter.convert(svgStr, LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
+                LABKEY.vis.SVGConverter.convert(this.getExportSVGStr(btn), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
             },
             scope: this
         });
+    },
+
+    getExportSVGStr: function(btn)
+    {
+        var svgEls = Ext4.get(btn.svgDivId).select('svg');
+        var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[0]);
+        svgStr = svgStr.replace(/visibility="hidden"/g, 'visibility="visible"');
+        return svgStr;
     },
 
     failureHandler: function(response) {

@@ -1189,6 +1189,17 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return true;
     },
 
+    getExportSVGStr: function(btn)
+    {
+        var svgStr = this.callParent([btn]);
+
+        // issue 25066: pdf export has artifact of the brush resize handlers
+        svgStr = svgStr.replace('class="e-resize-handle-rect"', 'class="e-resize-handle-rect" visibility="hidden"');
+        svgStr = svgStr.replace('class="w-resize-handle-rect"', 'class="w-resize-handle-rect" visibility="hidden"');
+
+        return svgStr;
+    },
+
     showInvalidLogMsg : function(id, toShow)
     {
         if (toShow)
