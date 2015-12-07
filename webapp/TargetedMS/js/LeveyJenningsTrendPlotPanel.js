@@ -666,7 +666,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence,"
             + "\n    X.AcquiredTime, X.FilePath," + valueSelectList
             + "\nCASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange,"
-            + "\nstats.GuideSetId, stats.Mean, stats.StandardDev"
+            + "\nstats.GuideSetId, stats.Mean, stats.StandardDev, stats.TrainingStart"
             + "\nFROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId,"
             + "\n      " + baseLkFieldKey + "Id AS PrecursorChromInfoId,"
             + "\n      " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence,"
@@ -711,7 +711,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
                 FilePath: row['FilePath'], // keep in data for hover text display
                 fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
-                date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null
+                date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
+                groupedXTick: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null
             };
 
             // if a guideSetId is defined for this row, include the guide set stats values in the data object
@@ -721,6 +722,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 data['stdDev'] = row['StandardDev'];
                 data['guideSetId'] = row['GuideSetId'];
                 data['inGuideSetTrainingRange'] = row['InGuideSetTrainingRange'];
+                data['groupedXTick'] = data['groupedXTick'] + '|' + row['TrainingStart'] + '|' + (row['InGuideSetTrainingRange'] ? 'include' : 'notinclude');
             }
 
             // if the metric defines multiple colNames for the plot, tack on the additional values to the data object
@@ -770,15 +772,17 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     var annFullDate = this.formatDate(new Date(this.annotationData[j].Date), true);
                     var annDate = this.formatDate(new Date(this.annotationData[j].Date));
 
-                    if (this.groupedX) {
-                        if (precursorDates.indexOf(annDate) == -1 && Ext4.Array.pluck(datesToAdd, "date").indexOf(annDate) == -1) {
-                            datesToAdd.push({ type: 'annotation', fullDate: annDate, date: annDate }); // we don't need full date if grouping x-values
-                        }
-                    }
-                    else {
-                        if (precursorDates.indexOf(annFullDate) == -1 && Ext4.Array.pluck(datesToAdd, "fullDate").indexOf(annFullDate) == -1) {
-                            datesToAdd.push({ type: 'annotation', fullDate: annFullDate, date: annDate });
-                        }
+                    var toAddAnnDate = precursorDates.indexOf(annDate) == -1 && Ext4.Array.pluck(datesToAdd, "date").indexOf(annDate) == -1;
+                    var toAddFullAnnDate = precursorDates.indexOf(annFullDate) == -1 && Ext4.Array.pluck(datesToAdd, "fullDate").indexOf(annFullDate) == -1;
+
+                    if ((this.groupedX && toAddAnnDate) || (!this.groupedX && toAddFullAnnDate))
+                    {
+                        datesToAdd.push({
+                            type: 'annotation',
+                            fullDate: annFullDate,
+                            date: annDate,
+                            groupedXTick: annDate
+                        });
                     }
                 }
                 if (datesToAdd.length > 0)
@@ -919,7 +923,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 }
 
                 var ljProperties = {
-                    xTick: this.groupedX ? 'date' : 'fullDate',
+                    xTick: this.groupedX ? 'groupedXTick' : 'fullDate',
                     xTickLabel: 'date',
                     yAxisScale: (precursorInfo.showLogInvalid ? 'linear' : this.yAxisScale),
                     shape: 'guideSetId',
@@ -998,10 +1002,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                 this.addAnnotationsToPlot(plot, precursorInfo);
 
-                // only show the guide set training ranges when not grouping x-axis by date
-                if (!this.groupedX) {
-                    this.addGuideSetTrainingRangeToPlot(plot, precursorInfo, this.guideSetTrainingData);
-                }
+                this.addGuideSetTrainingRangeToPlot(plot, precursorInfo, this.guideSetTrainingData);
 
                 this.createExportToPDFButton(id, "QC Plot for peptide " + precursorInfo.sequence, "QC Plot-"+precursorInfo.sequence);
             }
@@ -1121,7 +1122,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         var ljProperties = {
             disableRangeDisplay: true,
-            xTick: this.groupedX ? 'date' : 'fullDate',
+            xTick: this.groupedX ? 'groupedXTick' : 'fullDate',
             xTickLabel: 'date',
             yAxisScale: (showLogInvalid ? 'linear' : this.yAxisScale),
             shape: 'guideSetId',
@@ -1180,9 +1181,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         this.addAnnotationsToPlot(plot, combinePlotData);
 
-        if (!this.groupedX) {
-            this.addGuideSetTrainingRangeToPlot(plot, combinePlotData, this.guideSetTrainingDataUniqueObjects);
-        }
+        this.addGuideSetTrainingRangeToPlot(plot, combinePlotData, this.guideSetTrainingDataUniqueObjects);
 
         this.createExportToPDFButton(id, "QC Combined Plot for All Peptides", "QC Combined Plot");
 
@@ -1415,11 +1414,23 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     addAnnotationsToPlot: function(plot, precursorInfo) {
         var me = this;
 
-        var xAxisLabels = Ext4.Array.pluck(precursorInfo.data, (this.groupedX ? "date" : "fullDate"));
+        var xAxisLabels = Ext4.Array.pluck(precursorInfo.data, "fullDate");
+        if (this.groupedX)
+        {
+            xAxisLabels = [];
 
-        if (this.groupedX || this.singlePlot) {
-            xAxisLabels = Ext4.Array.sort(Ext4.Array.unique(xAxisLabels));
+            // determine the annotation index based on the "date" but unique values are based on "groupedXTick"
+            var prevGroupedXTick = null;
+            Ext4.each(precursorInfo.data, function(row)
+            {
+                if (row['groupedXTick'] != prevGroupedXTick)
+                {
+                    xAxisLabels.push(row['date']);
+                }
+                prevGroupedXTick = row['groupedXTick'];
+            });
         }
+
         // use direct D3 code to inject the annotation icons to the rendered SVG
         var xAcc = function(d) {
             var annotationDate = me.formatDate(new Date(d['Date']), !me.groupedX);
