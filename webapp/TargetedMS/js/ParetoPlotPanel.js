@@ -46,7 +46,6 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             LABKEY.Query.executeSql({
                 schemaName: 'targetedms',
                 sql: this.getGuideSetNonConformersSql(chartTypeProps),
-                parameters: {METRIC: chartTypeProps.name},
                 sort: 'GuideSetId',
                 scope: this,
                 success: function(data) {
@@ -77,7 +76,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             + "\n   " + chartTypeProps.colName + " AS Value"
             + "\n   FROM " + chartTypeProps.baseTableName
             + "\n) X"
-            + "\nLEFT JOIN GuideSetStats stats"
+            + "\nLEFT JOIN GuideSetStats_" + chartTypeProps.name + " stats"
             + "\n  ON X.Sequence = stats.Sequence"
             + "\n  AND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
             + "\n  OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"

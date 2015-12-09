@@ -243,8 +243,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         RelativeUrl queryURL = new RelativeUrl("query", "executequery");
         queryURL.setContainerPath(getCurrentContainerPath());
         queryURL.addParameter("schemaName", "targetedms");
-        queryURL.addParameter("query.queryName", "GuideSetStats");
-        queryURL.addParameter("query.param.METRIC", metricName);
+        queryURL.addParameter("query.queryName", "GuideSetStats_" + metricName);
 
         queryURL.navigate(this);
     }

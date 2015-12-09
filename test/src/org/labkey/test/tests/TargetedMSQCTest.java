@@ -220,7 +220,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleWarningCount());
 
         // if the guide set expected range error bar goes beyond zero, show log plot message about it
-        createGuideSetFromTable(new GuideSet("2013-08-09", "2013-08-27", "all initial data points"));
+        createGuideSetFromTable(new GuideSet("2013-08-09", "2013-08-28", "all initial data points"));
         clickTab("Panorama Dashboard");
         qcPlotsWebPart.waitForPlots(1, false);
         assertEquals("Y-axis Scale selection wasn't persisted", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());

@@ -585,7 +585,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var chartTypeProps = this.getChartTypePropsByName(this.chartType);
 
         // Filter on start/end dates from the QC plot form
-        var guideSetSql = "SELECT s.*, g.Comment FROM GuideSetStats s"
+        var guideSetSql = "SELECT s.*, g.Comment FROM GuideSetStats_" + chartTypeProps.name + " s"
                 + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
         var separator = " WHERE ";
         if (config.StartDate) {
@@ -596,15 +596,21 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             guideSetSql += separator + "s.TrainingStart <= TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP))";
         }
 
-        LABKEY.Query.executeSql({
-            schemaName: 'targetedms',
-            sql: guideSetSql,
-            parameters: {METRIC: chartTypeProps.name},
-            sort: 'TrainingStart,Sequence',
-            scope: this,
-            success: this.processGuideSetData,
-            failure: this.failureHandler
-        });
+        if (!this.isMultiSeries())
+        {
+            LABKEY.Query.executeSql({
+                schemaName: 'targetedms',
+                sql: guideSetSql,
+                sort: 'TrainingStart,Sequence',
+                scope: this,
+                success: this.processGuideSetData,
+                failure: this.failureHandler
+            });
+        }
+        else
+        {
+            this.processGuideSetData({rows: []});
+        }
     },
 
     processGuideSetData : function(data)
@@ -665,8 +671,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         // Build query to get the values and mean/stdDev ranges for each data point
         var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence,"
             + "\n    X.AcquiredTime, X.FilePath," + valueSelectList
-            + "\nCASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange,"
-            + "\nstats.GuideSetId, stats.Mean, stats.StandardDev, stats.TrainingStart"
+            + (!this.isMultiSeries() ? "\nCASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange," : "")
+            + (!this.isMultiSeries() ? "\nstats.GuideSetId, stats.Mean, stats.StandardDev, stats.TrainingStart" : "")
             + "\nFROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId,"
             + "\n      " + baseLkFieldKey + "Id AS PrecursorChromInfoId,"
             + "\n      " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence,"
@@ -674,12 +680,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             + "\n      " + baseLkFieldKey + "SampleFileId.FilePath AS FilePath,"
             + "\n      " + valueInnerSelectList
             + "\n      FROM " + baseTableName + whereClause + ") X "
-            + "\nLEFT JOIN GuideSetStats stats " + guideSetStatsJoinClause;
+            + (!this.isMultiSeries() ? "\nLEFT JOIN GuideSetStats_" + chartTypeProps.name + " stats " + guideSetStatsJoinClause : "");
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: sql,
-            parameters: {METRIC: chartTypeProps.name},
             sort: 'Sequence, AcquiredTime',
             scope: this,
             success: function(data) {

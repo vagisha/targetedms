@@ -18,6 +18,7 @@ package org.labkey.test.components.targetedms;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.components.BodyWebPart;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
@@ -47,7 +48,7 @@ public final class QCPlotsWebPart extends BodyWebPart
     @Override
     protected void waitForReady()
     {
-        _test.waitForElement(elements().plot);
+        _test.waitForElement(elements().plot, WebDriverWrapper.WAIT_FOR_PAGE);
     }
 
     public enum Scale
@@ -240,13 +241,14 @@ public final class QCPlotsWebPart extends BodyWebPart
         if (plotCount > 0)
         {
             if (exact)
-                _test.waitForElements(elements().plot, plotCount);
+                _test.waitForElements(elements().plot, plotCount, WebDriverWrapper.WAIT_FOR_PAGE);
             else
                 waitForReady();
         }
         else
         {
-            _test.waitForElement(elements().plotPanel.withText("There were no records found. The date filter applied may be too restrictive."));
+            Locator loc = elements().plotPanel.withText("There were no records found. The date filter applied may be too restrictive.");
+            _test.waitForElement(loc, WebDriverWrapper.WAIT_FOR_PAGE);
         }
     }
 
