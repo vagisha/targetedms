@@ -785,7 +785,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.replicate
         if (TABLE_SAMPLE_FILE.equalsIgnoreCase(name))
         {
-            return new SampleFileTable(getSchema().getTable(name), this, ContainerJoinType.ReplicateFK.getSQL());
+            return new SampleFileTable(getSchema().getTable(name), this);
         }
         if (TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(name))
         {
@@ -832,7 +832,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.precursor
         if (TABLE_PRECURSOR_CHROM_INFO.equalsIgnoreCase(name))
         {
-            return new PrecursorChromInfoTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorFK.getSQL());
+            return new PrecursorChromInfoTable(getSchema().getTable(name), this);
         }
         if (TABLE_TRANSITION.equalsIgnoreCase(name))
         {

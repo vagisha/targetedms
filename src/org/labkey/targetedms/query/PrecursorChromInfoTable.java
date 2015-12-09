@@ -13,9 +13,9 @@ import org.labkey.targetedms.TargetedMSSchema;
 
 public class PrecursorChromInfoTable extends TargetedMSTable
 {
-    public PrecursorChromInfoTable(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL)
+    public PrecursorChromInfoTable(TableInfo table, TargetedMSSchema schema)
     {
-        super(table, schema, joinSQL);
+        super(table, schema, TargetedMSSchema.ContainerJoinType.PrecursorFK.getSQL());
 
         // Add a calculated column for Full Width at Base (FWB)
         SQLFragment sql = new SQLFragment("(MaxEndTime - MinStartTime)");

@@ -25,9 +25,9 @@ import java.util.Map;
 
 public class SampleFileTable extends TargetedMSTable
 {
-    public SampleFileTable(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL)
+    public SampleFileTable(TableInfo table, TargetedMSSchema schema)
     {
-        super(table, schema, joinSQL);
+        super(table, schema, TargetedMSSchema.ContainerJoinType.ReplicateFK.getSQL());
     }
 
     @Override
@@ -53,10 +53,7 @@ public class SampleFileTable extends TargetedMSTable
                 if (id != null)
                 {
                     Integer convertedId = Integer.parseInt(id.toString());
-
-                    Table.delete(TargetedMSManager.getTableInfoTransitionChromInfo(), new SimpleFilter(FieldKey.fromParts("SampleFileId"), convertedId));
-                    Table.delete(TargetedMSManager.getTableInfoPrecursorChromInfo(), new SimpleFilter(FieldKey.fromParts("SampleFileId"), convertedId));
-                    Table.delete(TargetedMSManager.getTableInfoPeptideChromInfo(), new SimpleFilter(FieldKey.fromParts("SampleFileId"), convertedId));
+                    TargetedMSManager.purgeDeletedSampleFiles(convertedId);
                 }
                 return super.deleteRow(user, container, oldRowMap);
             }

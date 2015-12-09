@@ -486,17 +486,23 @@ public class TargetedMSController extends SpringActionController
         @Override
         public Object execute(LeveyJenningsPlotOptions form, BindException errors) throws Exception
         {
-            PropertyManager.PropertyMap properties = PropertyManager.getWritableProperties(getUser(), getContainer(), CATEGORY, true);
+            ApiSimpleResponse response = new ApiSimpleResponse();
 
-            Map<String, String> valuesToPersist = form.getAsMapOfStrings();
-            if (!valuesToPersist.isEmpty())
+            // only stash and retrieve plot option properties for logged in users
+            if (!getUser().isGuest())
             {
-                properties.putAll(valuesToPersist);
-                properties.save();
+                PropertyManager.PropertyMap properties = PropertyManager.getWritableProperties(getUser(), getContainer(), CATEGORY, true);
+
+                Map<String, String> valuesToPersist = form.getAsMapOfStrings();
+                if (!valuesToPersist.isEmpty())
+                {
+                    properties.putAll(valuesToPersist);
+                    properties.save();
+                }
+
+                response.put("properties", properties);
             }
 
-            ApiSimpleResponse response = new ApiSimpleResponse();
-            response.put("properties", properties);
             return response;
         }
     }
@@ -552,7 +558,7 @@ public class TargetedMSController extends SpringActionController
             ApiSimpleResponse response = new ApiSimpleResponse();
             List<Map<String, Object>> containers = new ArrayList<>();
 
-            // incldue the QC Summary properties for the current container
+            // include the QC Summary properties for the current container
             containers.add(getContainerQCSummaryProperties(getContainer(), false));
 
             // include the QC Summary properties for the direct subfolders, of type QC, that the user has read permission
@@ -584,14 +590,13 @@ public class TargetedMSController extends SpringActionController
         properties.put("subfolder", isSubfolder);
 
         // # Skyline documents, count of rows in targetedms.Runs
-        sql = new SQLFragment("(SELECT COUNT(Id) FROM ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE Container = ? AND StatusId = ?)");
+        // and date of last import, max(created) from targetedms.Runs
+        sql = new SQLFragment("(SELECT COUNT(Id) As docCount, MAX(Created) AS lastImportDate FROM ");
+        sql.append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE Container = ? AND StatusId = ?)");
         sql.add(container.getId()).add(SkylineDocImporter.STATUS_SUCCESS);
-        properties.put("docCount", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class));
-
-        // date of last import, max(created) from targetedms.Runs
-        sql = new SQLFragment("(SELECT MAX(Created) FROM ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE Container = ? AND StatusId = ?)");
-        sql.add(container.getId()).add(SkylineDocImporter.STATUS_SUCCESS);
-        properties.put("lastImportDate", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Date.class));
+        Map<String, Object> valueMap = new SqlSelector(TargetedMSSchema.getSchema(), sql).getMap();
+        properties.put("docCount", valueMap.get("docCount"));
+        properties.put("lastImportDate", valueMap.get("lastImportDate"));
 
         // # sample files, count of rows in targetedms.SampleFile
         sql = new SQLFragment("(SELECT COUNT(s.Id) FROM ").append(TargetedMSManager.getTableInfoSampleFile(), "s");

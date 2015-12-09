@@ -864,6 +864,38 @@ public class TargetedMSManager
         return run;
     }
 
+    public static void purgeDeletedSampleFiles(int sampleFileId)
+    {
+        // Delete from TransitionChromInfoAnnotation (dependent of TransitionChromInfo)
+        execute(getDependentSampleFileDeleteSql(getTableInfoTransitionChromInfoAnnotation(), "TransitionChromInfoId", getTableInfoTransitionChromInfo()), sampleFileId);
+
+        // Delete from TransitionAreaRatio (dependent of TransitionChromInfo)
+        execute(getDependentSampleFileDeleteSql(getTableInfoTransitionAreaRatio(), "TransitionChromInfoId", getTableInfoTransitionChromInfo()), sampleFileId);
+
+        // Delete from TransitionChromInfo
+        execute("DELETE FROM " + getTableInfoTransitionChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
+
+        // Delete from PrecursorChromInfoAnnotation (dependent of PrecursorChromInfo)
+        execute(getDependentSampleFileDeleteSql(getTableInfoPrecursorChromInfoAnnotation(), "PrecursorChromInfoId", getTableInfoPrecursorChromInfo()), sampleFileId);
+
+        // Delete from PrecursorAreaRatio (dependent of PrecursorChromInfo)
+        execute(getDependentSampleFileDeleteSql(getTableInfoPrecursorAreaRatio(), "PrecursorChromInfoId", getTableInfoPrecursorChromInfo()), sampleFileId);
+
+        // Delete from PrecursorChromInfo
+        execute("DELETE FROM " + getTableInfoPrecursorChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
+
+        // Delete from PeptideAreaRatio (dependent of PeptideChromInfo)
+        execute(getDependentSampleFileDeleteSql(getTableInfoPeptideAreaRatio(), "PeptideChromInfoId", getTableInfoPeptideChromInfo()), sampleFileId);
+
+        // Delete from PeptideChromInfo
+        execute("DELETE FROM " + getTableInfoPeptideChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
+    }
+
+    private static String getDependentSampleFileDeleteSql(TableInfo fromTable, String fromFk, TableInfo dependentTable)
+    {
+        return "DELETE FROM " + fromTable + " WHERE " + fromFk + " IN (SELECT Id FROM " + dependentTable + " WHERE SampleFileId = ?)";
+    }
+
     /** Actually delete runs that have been marked as deleted from the database */
     public static void purgeDeletedRuns()
     {
