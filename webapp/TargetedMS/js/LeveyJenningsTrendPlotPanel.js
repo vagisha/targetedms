@@ -596,21 +596,14 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             guideSetSql += separator + "s.TrainingStart <= TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP))";
         }
 
-        if (!this.isMultiSeries())
-        {
-            LABKEY.Query.executeSql({
-                schemaName: 'targetedms',
-                sql: guideSetSql,
-                sort: 'TrainingStart,Sequence',
-                scope: this,
-                success: this.processGuideSetData,
-                failure: this.failureHandler
-            });
-        }
-        else
-        {
-            this.processGuideSetData({rows: []});
-        }
+        LABKEY.Query.executeSql({
+            schemaName: 'targetedms',
+            sql: guideSetSql,
+            sort: 'TrainingStart,Sequence',
+            scope: this,
+            success: this.processGuideSetData,
+            failure: this.failureHandler
+        });
     },
 
     processGuideSetData : function(data)
@@ -671,8 +664,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         // Build query to get the values and mean/stdDev ranges for each data point
         var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence,"
             + "\n    X.AcquiredTime, X.FilePath," + valueSelectList
-            + (!this.isMultiSeries() ? "\nCASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange," : "")
-            + (!this.isMultiSeries() ? "\nstats.GuideSetId, stats.Mean, stats.StandardDev, stats.TrainingStart" : "")
+            + "\nCASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange,"
+            + "\nstats.GuideSetId, stats.Mean, stats.StandardDev, stats.TrainingStart"
             + "\nFROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId,"
             + "\n      " + baseLkFieldKey + "Id AS PrecursorChromInfoId,"
             + "\n      " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence,"
@@ -680,7 +673,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             + "\n      " + baseLkFieldKey + "SampleFileId.FilePath AS FilePath,"
             + "\n      " + valueInnerSelectList
             + "\n      FROM " + baseTableName + whereClause + ") X "
-            + (!this.isMultiSeries() ? "\nLEFT JOIN GuideSetStats_" + chartTypeProps.name + " stats " + guideSetStatsJoinClause : "");
+            + "\nLEFT JOIN GuideSetStats_" + chartTypeProps.name + " stats " + guideSetStatsJoinClause;
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
@@ -727,7 +720,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 data['stdDev'] = row['StandardDev'];
                 data['guideSetId'] = row['GuideSetId'];
                 data['inGuideSetTrainingRange'] = row['InGuideSetTrainingRange'];
-                data['groupedXTick'] = data['groupedXTick'] + '|' + row['TrainingStart'] + '|' + (row['InGuideSetTrainingRange'] ? 'include' : 'notinclude');
+                data['groupedXTick'] = data['groupedXTick'] + '|'
+                        + (row['TrainingStart'] ? row['TrainingStart'] : '0') + '|'
+                        + (row['InGuideSetTrainingRange'] ? 'include' : 'notinclude');
             }
 
             // if the metric defines multiple colNames for the plot, tack on the additional values to the data object

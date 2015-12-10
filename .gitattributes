@@ -13,6 +13,7 @@ resources/queries/targetedms/GuideSetStats_peakArea.sql -text
 resources/queries/targetedms/GuideSetStats_precursorArea.sql -text
 resources/queries/targetedms/GuideSetStats_ratio.sql -text
 resources/queries/targetedms/GuideSetStats_retentionTime.sql -text
+resources/queries/targetedms/GuideSetStats_transitionAndPrecursorArea.sql -text
 resources/queries/targetedms/GuideSetStats_transitionPrecursorRatio.sql -text
 resources/queries/targetedms/guideset/.qview.xml -text
 resources/queries/targetedms/librarydocprecursor/AllPrecursors.qview.xml -text
