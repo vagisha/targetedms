@@ -16,16 +16,14 @@
 package org.labkey.targetedms;
 
 import org.labkey.api.audit.AbstractAuditTypeProvider;
-import org.labkey.api.audit.AuditLogEvent;
+import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.audit.AuditTypeEvent;
 import org.labkey.api.audit.AuditTypeProvider;
 import org.labkey.api.audit.query.AbstractAuditDomainKind;
-import org.labkey.api.audit.query.DefaultAuditTypeTable;
-import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.Container;
 import org.labkey.api.exp.PropertyDescriptor;
-import org.labkey.api.exp.property.Domain;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.UserSchema;
+import org.labkey.api.security.User;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,20 +75,18 @@ public class TargetedMsRepresentativeStateAuditProvider extends AbstractAuditTyp
     }
 
     @Override
-    public <K extends AuditTypeEvent> K convertEvent(AuditLogEvent event)
-    {
-        AuditTypeEvent bean = new AuditTypeEvent();
-        copyStandardFields(bean, event);
-
-        return (K)bean;
-    }
-
-    @Override
     public <K extends AuditTypeEvent> Class<K> getEventClass()
     {
         return (Class<K>)AuditTypeEvent.class;
     }
 
+    public static void addAuditEntry(Container container, User user, String comment)
+    {
+        AuditTypeEvent event = new AuditTypeEvent(AUDIT_EVENT_TYPE, container.getId(), comment);
+
+        event.setProjectId(container.getProject().getId());
+        AuditLogService.get().addEvent(user, event);
+    }
 
     @Override
     public List<FieldKey> getDefaultVisibleColumns()

@@ -348,7 +348,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         ServiceRegistry svcReg = ServiceRegistry.get();
         svcReg.registerService(TargetedMSService.class, new TargetedMSServiceImpl());
 
-        AuditLogService.get().addAuditViewFactory(TargetedMsRepresentativeStateAuditViewFactory.getInstance());
         AuditLogService.registerAuditType(new TargetedMsRepresentativeStateAuditProvider());
 
         TargetedMSListener listener = new TargetedMSListener();
