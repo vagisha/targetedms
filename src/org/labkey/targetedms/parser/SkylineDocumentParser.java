@@ -1403,7 +1403,14 @@ public class SkylineDocumentParser implements AutoCloseable
             else
             {
                 // Read it out of the file on-demand, so we only load the subset that we need
-                chromInfo.setChromatogram(chromatogram.readChromatogram(_binaryParser));
+                try
+                {
+                    chromInfo.setChromatogram(chromatogram.readChromatogram(_binaryParser));
+                }
+                catch (DataFormatException ignored)
+                {
+                    _log.warn("Failed to extract chromatogram for " + precursor.getModifiedSequence() + " in replicate " + chromInfo.getReplicateName());
+                }
                 chromInfo.setNumPoints(chromatogram.getNumPoints());
                 chromInfo.setNumTransitions(chromatogram.getNumTransitions());
                 chromInfo.setUncompressedSize(chromatogram.getUncompressedSize());

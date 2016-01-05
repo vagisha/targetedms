@@ -323,7 +323,7 @@ public class Chromatogram extends SkylineEntity
     }
 
     /** Read the chromatogram out of the file, but don't hold on to it. This reduces memory usage during import */
-    public byte[] readChromatogram(SkylineBinaryParser parser)
+    public byte[] readChromatogram(SkylineBinaryParser parser) throws DataFormatException
     {
         if (_chromatogram != null)
         {
@@ -343,10 +343,6 @@ public class Chromatogram extends SkylineEntity
             return result;
         }
         catch (IOException e)
-        {
-            throw new UnexpectedException(e);
-        }
-        catch (DataFormatException e)
         {
             throw new UnexpectedException(e);
         }
