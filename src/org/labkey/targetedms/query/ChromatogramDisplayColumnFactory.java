@@ -38,13 +38,14 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 {
     private Container _container;
     private TYPE _type;
-    private int _chartWidth;
-    private int _chart_height;
-    private boolean _syncY = false;
-    private boolean _syncX = false;
-    private boolean _splitGraph = true;
-    private String _annotationsFilter;
-    private String _replicatesFilter;
+    private final int _chartWidth;
+    private final int _chart_height;
+    private final boolean _syncY;
+    private final boolean _syncX;
+    private final boolean _splitGraph;
+    private final boolean _showOptimizationPeaks;
+    private final String _annotationsFilter;
+    private final String _replicatesFilter;
 
     public static enum TYPE
     {
@@ -54,12 +55,14 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type)
     {
-        this(container, type, 400, 400, false, false, true, null, null);
+        this(container, type, 400, 400, false, false, false, false, null, null);
     }
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type,
                                             int chartWidth, int chartHeight,
-                                            boolean syncIntensity, boolean syncRt, boolean splitGraph, String annotationsFilter, String replicatesFilter)
+                                            boolean syncIntensity, boolean syncRt,
+                                            boolean splitGraph, boolean showOptimizationPeaks,
+                                            String annotationsFilter, String replicatesFilter)
     {
         _container = container;
         _type = type;
@@ -68,6 +71,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
         _syncY = syncIntensity;
         _syncX = syncRt;
         _splitGraph = splitGraph;
+        _showOptimizationPeaks = showOptimizationPeaks;
         _annotationsFilter = annotationsFilter;
         _replicatesFilter = replicatesFilter;
     }
@@ -102,6 +106,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                 chromAction.addParameter("syncY", String.valueOf(_syncY));
                 chromAction.addParameter("syncX", String.valueOf(_syncX));
                 chromAction.addParameter("splitGraph", String.valueOf(_splitGraph));
+                chromAction.addParameter("showOptimizationPeaks", String.valueOf(_showOptimizationPeaks));
                 chromAction.addParameter("annotationsFilter", String.valueOf(_annotationsFilter));
                 chromAction.addParameter("replicatesFilter", String.valueOf(_replicatesFilter));
 

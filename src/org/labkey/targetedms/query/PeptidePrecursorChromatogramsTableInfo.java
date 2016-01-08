@@ -64,6 +64,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
                                                         form.isSyncY(),
                                                         form.isSyncX(),
                                                         form.isSplitGraph(),
+                                                        form.isShowOptimizationPeaks(),
                                                         form.getAnnotationsFilter(),
                                                         form.getReplicatesFilter()
                                                         ));
@@ -79,6 +80,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
                                                         form.isSyncY(),
                                                         form.isSyncX(),
                                                         form.isSplitGraph(),
+                                                        form.isShowOptimizationPeaks(),
                                                         form.getAnnotationsFilter(),
                                                         form.getReplicatesFilter()
                                             ));
@@ -140,6 +142,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
         sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
         sql.append(" WHERE PrecursorId.PeptideId=").append(peptide.getId());
+        sql.append(" AND OptimizationStep IS NULL "); // Ignore precursorChromInfos for optimization peaks (e.g. Collision energy optimization)
         if(replicatesFilter != null && replicatesFilter.size() != 0)
         {
             sql.append(" AND ");

@@ -1433,16 +1433,23 @@ public class SkylineDocumentParser implements AutoCloseable
                 {
                     int matchIndex = -1;
                     // Figure out which index into the list of transitions we're inserting.
-                    // If there are multiple matches within the given mz match tolerance return the closest match.
                     double deltaNearestMz = Double.MAX_VALUE;
                     double[] transitions = c.getTransitions();
+                    double transitionMz = transition.getMz();
+                    if(transChromInfo.isOptimizationPeak())
+                    {
+                        // From the CE Optimization tutorial:
+                        // The product m/z value is incremented slightly for each value as first described by Sherwood et al., 2009
+                        transitionMz += 0.01 * transChromInfo.getOptimizationStep();
+                    }
                     for (int i = 0; i < transitions.length; i++)
                     {
-                        double deltaMz = Math.abs(transition.getMz() - transitions[i]);
+                        double deltaMz = Math.abs(transitionMz - transitions[i]);
 
                         if (deltaMz < _transitionSettings.getInstrumentSettings().getMzMatchTolerance() &&
                             deltaMz < deltaNearestMz)
                         {
+                            // If there are multiple matches within the given mz match tolerance return the closest match.
                             matchIndex = i;
                             deltaNearestMz = deltaMz;
                         }

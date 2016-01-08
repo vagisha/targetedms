@@ -700,7 +700,7 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("No such PrecursorChromInfo found in this folder: " + tci.getPrecursorChromInfoId());
             }
 
-            JFreeChart chart = ChromatogramChartMakerFactory.createTransitionChromChart(tci, pci);
+            JFreeChart chart = new ChromatogramChartMakerFactory().createTransitionChromChart(tci, pci);
 
             writePNG(form, response, chart);
         }
@@ -718,7 +718,12 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("No PrecursorChromInfo found in this folder for precursorChromInfoId: " + form.getId());
             }
 
-            JFreeChart chart = ChromatogramChartMakerFactory.createPrecursorChromChart(pChromInfo, form.isSyncY(), form.isSyncX(), form.isSplitGraph());
+            ChromatogramChartMakerFactory factory = new ChromatogramChartMakerFactory();
+            factory.setSyncIntensity(form.isSyncY());
+            factory.setSyncRt(form.isSyncX());
+            factory.setSplitGraph(form.isSplitGraph());
+            factory.setShowOptimizationPeaks(form.isShowOptimizationPeaks());
+            JFreeChart chart = factory.createPrecursorChromChart(pChromInfo);
 
             writePNG(form, response, chart);
         }
@@ -763,7 +768,10 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("No PeptideChromInfo found in this folder for peptideChromInfoId: " + form.getId());
             }
 
-            JFreeChart chart = ChromatogramChartMakerFactory.createPeptideChromChart(pChromInfo, form.isSyncY(), form.isSyncX());
+            ChromatogramChartMakerFactory factory = new ChromatogramChartMakerFactory();
+            factory.setSyncIntensity(form.isSyncY());
+            factory.setSyncRt(form.isSyncX());
+            JFreeChart chart = factory.createPeptideChromChart(pChromInfo);
             writePNG(form, response, chart);
         }
     }
@@ -989,6 +997,8 @@ public class TargetedMSController extends SpringActionController
         private List<String> _replicateAnnotationNameList;
         private List<ReplicateAnnotation> _replicateAnnotationValueList;
         private List<Replicate> _replicatesFilter;
+        private boolean _canBeSplitView;
+        private boolean _showOptPeaksOption;
 
         public boolean canBeSplitView()
         {
@@ -1000,7 +1010,15 @@ public class TargetedMSController extends SpringActionController
             _canBeSplitView = canBeSplitView;
         }
 
-        private boolean _canBeSplitView;
+        public boolean isShowOptPeaksOption()
+        {
+            return _showOptPeaksOption;
+        }
+
+        public void setShowOptPeaksOption(boolean showOptPeaksOption)
+        {
+            _showOptPeaksOption = showOptPeaksOption;
+        }
 
         public PeptideChromatogramsViewBean(String resultsUri)
         {
@@ -1107,6 +1125,7 @@ public class TargetedMSController extends SpringActionController
         private boolean _syncY = false;
         private boolean _syncX = false;
         private boolean _splitGraph = false;
+        private boolean _showOptimizationPeaks = false;
         private String _annotationsFilter;
         private String _replicatesFilter;
         private boolean _update;
@@ -1231,6 +1250,16 @@ public class TargetedMSController extends SpringActionController
             _splitGraph = splitGraph;
         }
 
+        public boolean isShowOptimizationPeaks()
+        {
+            return _showOptimizationPeaks;
+        }
+
+        public void setShowOptimizationPeaks(boolean showOptimizationPeaks)
+        {
+            _showOptimizationPeaks = showOptimizationPeaks;
+        }
+
         public boolean isUpdate()
         {
             return _update;
@@ -1297,6 +1326,9 @@ public class TargetedMSController extends SpringActionController
             {
                 form.setSplitGraph(true);
             }
+            boolean showOptPeaksOption = PrecursorManager.hasOptimizationPeaks(form.getId());
+            bean.setShowOptPeaksOption(showOptPeaksOption);
+
             PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),form, errors);
             JspView<PeptideChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
 

@@ -63,6 +63,11 @@ public class PeakAreaRatioCalculator
         {
             for(PrecursorChromInfo precursorChromInfo : precursor.getChromInfoList())
             {
+                if(precursorChromInfo.isOptimizationPeak())
+                {
+                    continue; // Do not calculate area ratios for precursor peaks where "step" (optimization step) attribute is present
+                }
+
                 int sampleFileId = precursorChromInfo.getSampleFileId();
                 PeptideAreaRatioCalculator calculator = getPeptideAreaRatioCalculator(sampleFileId);
                 if(calculator != null)
@@ -76,6 +81,11 @@ public class PeakAreaRatioCalculator
             {
                 for(TransitionChromInfo transitionChromInfo: transition.getChromInfoList())
                 {
+                    if(transitionChromInfo.isOptimizationPeak())
+                    {
+                        continue; // Do not calculate area ratios for transition peaks where "step" (optimization step) attribute is present
+                    }
+
                     int sampleFileId = transitionChromInfo.getSampleFileId();
                     PeptideAreaRatioCalculator calculator = getPeptideAreaRatioCalculator(sampleFileId);
                     if(calculator != null)

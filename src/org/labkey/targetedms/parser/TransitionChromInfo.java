@@ -204,6 +204,11 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
         this._optimizationStep = optimizationStep;
     }
 
+    public boolean isOptimizationPeak()
+    {
+        return _optimizationStep != null;
+    }
+
     public String getUserSet()
     {
         return _userSet;

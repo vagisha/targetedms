@@ -152,7 +152,7 @@ public interface ComparisonCategory
             label.append(_modifiedSequence);
             if (_charge > 0)
             {
-                label.append(LabelFactory.getChargeLabel(_charge));
+                label.append(LabelFactory.getChargeLabel(_charge, false));
             }
             if (_isotopeLabel != null && !_isotopeLabel.equalsIgnoreCase(PeptideSettings.IsotopeLabel.LIGHT))
             {
@@ -221,7 +221,7 @@ public interface ComparisonCategory
             label.append(_seqPrefix);
             if (_useChargeInDisplayLabel)
             {
-                label.append(LabelFactory.getChargeLabel(_charge));
+                label.append(LabelFactory.getChargeLabel(_charge, false));
             }
             return label.toString();
         }

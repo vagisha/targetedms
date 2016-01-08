@@ -28,23 +28,52 @@ import org.labkey.targetedms.parser.TransitionChromInfo;
  */
 public class ChromatogramChartMakerFactory
 {
-    private ChromatogramChartMakerFactory() {}
+    private boolean _syncIntensity;
+    private boolean _syncRt;
+    private boolean _splitGraph;
+    private boolean _showOptimizationPeaks;
 
-    public static JFreeChart createTransitionChromChart(TransitionChromInfo tChromInfo, PrecursorChromInfo pChromInfo)
+    public void setSyncIntensity(boolean syncIntensity)
+    {
+        _syncIntensity = syncIntensity;
+    }
+
+    public void setSyncRt(boolean syncRt)
+    {
+        _syncRt = syncRt;
+    }
+
+    public void setSplitGraph(boolean splitGraph)
+    {
+        _splitGraph = splitGraph;
+    }
+
+    public void setShowOptimizationPeaks(boolean showOptimizationPeaks)
+    {
+        _showOptimizationPeaks = showOptimizationPeaks;
+    }
+
+    public JFreeChart createTransitionChromChart(TransitionChromInfo tChromInfo, PrecursorChromInfo pChromInfo)
     {
         return new ChromatogramChartMaker().make(new ChromatogramDataset.TransitionDataset(pChromInfo, tChromInfo));
     }
 
-    public static JFreeChart createPrecursorChromChart(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, boolean isSplitGraph)
+    public JFreeChart createPrecursorChromChart(PrecursorChromInfo pChromInfo)
     {
-        if(!isSplitGraph)
+        if(_showOptimizationPeaks)
         {
-            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorDataset(pChromInfo, syncIntensity, syncRt));
+            // Split graph setting will be ignored if we are showing optimization peaks.
+            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorOptimizationPeakDataset(pChromInfo, _syncIntensity, _syncRt));
+
+        }
+        else if(!_splitGraph)
+        {
+            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorDataset(pChromInfo, _syncIntensity, _syncRt));
         }
         else
         {
-            final ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.PrecursorSplitDataset(pChromInfo, syncIntensity, syncRt);
-            ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.ProductSplitDataset(pChromInfo, syncIntensity, syncRt) {
+            ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.PrecursorSplitDataset(pChromInfo, _syncIntensity, _syncRt);
+            ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.ProductSplitDataset(pChromInfo, _syncIntensity, _syncRt) {
                 int getSeriesOffset()
                 {
                     XYSeriesCollection jfreePrecIonDataset = precursorIonDataset.getJFreeDataset();
@@ -55,8 +84,8 @@ public class ChromatogramChartMakerFactory
         }
     }
 
-    public static JFreeChart createPeptideChromChart(PeptideChromInfo pepChromInfo, boolean syncIntensity, boolean syncRt)
+    public JFreeChart createPeptideChromChart(PeptideChromInfo pepChromInfo)
     {
-        return new ChromatogramChartMaker().make(new ChromatogramDataset.PeptideDataset(pepChromInfo, syncIntensity, syncRt));
+        return new ChromatogramChartMaker().make(new ChromatogramDataset.PeptideDataset(pepChromInfo, _syncIntensity, _syncRt));
     }
 }

@@ -1083,7 +1083,7 @@ public class SkylineDocImporter
             Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
         }
 
-        Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap = new HashMap<>();
+        Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = new HashMap<>();
 
         Precursor.LibraryInfo libInfo = precursor.getLibraryInfo();
         if(libInfo != null)
@@ -1106,7 +1106,10 @@ public class SkylineDocImporter
             {
                 throw new IllegalStateException("Database ID not found for Skyline samplefile id "+precursorChromInfo.getSkylineSampleFileId() + " in replicate " + precursorChromInfo.getReplicateName());
             }
-            if (sampleFileIdPrecursorChromInfoIdMap.containsKey(sampleFile.getId()))
+
+            SampleFileOptStepKey sampleFileKey = SampleFileOptStepKey.getKey(precursorChromInfo);
+
+            if (sampleFilePrecursorChromInfoIdMap.containsKey(sampleFileKey))
             {
                 throw new IllegalStateException("Multiple precursor chrom infos found for precursor "+
                            precursor.getModifiedSequence()+" and sample file "+precursorChromInfo.getSkylineSampleFileId()+
@@ -1121,7 +1124,7 @@ public class SkylineDocImporter
                 precursorChromInfo.setPeptideChromInfoId(sampleFileIdPeptideChromInfoIdMap.get(sampleFile.getId()));
 
                 precursorChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfo(), precursorChromInfo);
-                sampleFileIdPrecursorChromInfoIdMap.put(sampleFile.getId(), precursorChromInfo.getId());
+                sampleFilePrecursorChromInfoIdMap.put(sampleFileKey, precursorChromInfo.getId());
 
                 for (PrecursorChromInfoAnnotation annotation : precursorChromInfo.getAnnotations())
                 {
@@ -1134,11 +1137,11 @@ public class SkylineDocImporter
         // 4. transition
         for(Transition transition: precursor.getTransitionList())
         {
-            insertTransition(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, structuralModNameIdMap, structuralModLossesMap, precursor, sampleFileIdPrecursorChromInfoIdMap, transition);
+            insertTransition(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, structuralModNameIdMap, structuralModLossesMap, precursor, sampleFilePrecursorChromInfoIdMap, transition);
         }
     }
 
-    private void insertTransition(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Precursor precursor, Map<Integer, Integer> sampleFileIdPrecursorChromInfoIdMap, Transition transition)
+    private void insertTransition(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Precursor precursor, Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap, Transition transition)
     {
         transition.setPrecursorId(precursor.getId());
         Table.insert(_user, TargetedMSManager.getTableInfoTransition(), transition);
@@ -1188,7 +1191,15 @@ public class SkylineDocImporter
                 // Only for QC folders: ignore this chrom info if data from the sample file is not being imported.
                 transChromInfo.setTransitionId(transition.getId());
                 transChromInfo.setSampleFileId(sampleFile.getId());
-                transChromInfo.setPrecursorChromInfoId(sampleFileIdPrecursorChromInfoIdMap.get(sampleFile.getId()));
+                // Lookup a precursor chrom info measured in the same sample file with the same optimization step
+                SampleFileOptStepKey sampleFileKey = SampleFileOptStepKey.getKey(transChromInfo);
+                Integer precursorChromInfoId = sampleFilePrecursorChromInfoIdMap.get(sampleFileKey);
+                if(precursorChromInfoId == null)
+                {
+                    throw new IllegalStateException("Could not find precursor peak for " + sampleFileKey.toString());
+                }
+
+                transChromInfo.setPrecursorChromInfoId(precursorChromInfoId);
                 Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfo(), transChromInfo);
 
                 for (TransitionChromInfoAnnotation annotation : transChromInfo.getAnnotations())
@@ -1273,6 +1284,12 @@ public class SkylineDocImporter
         }
 
         @Override
+        public String toString()
+        {
+            return "Sample file Id: " + _skylineSampleFileId + ", Replicate: " + _replicate;
+        }
+
+        @Override
         public boolean equals(Object o)
         {
             if (this == o) return true;
@@ -1292,6 +1309,56 @@ public class SkylineDocImporter
         {
             int result = _replicate != null ? _replicate.hashCode() : 0;
             result = 31 * result + (_skylineSampleFileId != null ? _skylineSampleFileId.hashCode() : 0);
+            return result;
+        }
+    }
+
+    public static class SampleFileOptStepKey extends SampleFileKey
+    {
+        private final Integer _optimizationStep;
+
+        public SampleFileOptStepKey(String replicate, String skylineSampleFileId, Integer optimizationStep)
+        {
+            super(replicate, skylineSampleFileId);
+            _optimizationStep = optimizationStep;
+        }
+
+        public static SampleFileOptStepKey getKey(PrecursorChromInfo chromInfo)
+        {
+            return new SampleFileOptStepKey(chromInfo.getReplicateName(), chromInfo.getSkylineSampleFileId(), chromInfo.getOptimizationStep());
+        }
+
+        public static SampleFileOptStepKey getKey(TransitionChromInfo chromInfo)
+        {
+            return new SampleFileOptStepKey(chromInfo.getReplicateName(), chromInfo.getSkylineSampleFileId(), chromInfo.getOptimizationStep());
+        }
+
+        @Override
+        public String toString()
+        {
+            return super.toString() + ", Optimization step: " + _optimizationStep;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+
+            SampleFileOptStepKey that = (SampleFileOptStepKey) o;
+
+            if (_optimizationStep != null ? !_optimizationStep.equals(that._optimizationStep) : that._optimizationStep != null)
+                return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = super.hashCode();
+            result = 31 * result + (_optimizationStep != null ? _optimizationStep.hashCode() : 0);
             return result;
         }
     }

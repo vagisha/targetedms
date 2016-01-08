@@ -184,8 +184,9 @@ public abstract class ChromatogramDataset
 
     static class PeptideDataset extends ChromatogramDataset
     {
-        private final PeptideChromInfo _pepChromInfo;
-
+        private PeptideChromInfo _pepChromInfo;
+        private final int _peptideId;
+        private final int _sampleFileId;
         private List<ChartAnnotation> _annotations;
         private double _minPeakRt;
         private double _maxPeakRt;
@@ -195,20 +196,30 @@ public abstract class ChromatogramDataset
 
         public PeptideDataset(PeptideChromInfo pepChromInfo, boolean syncIntensity, boolean syncRt)
         {
+            this(pepChromInfo.getPeptideId(), pepChromInfo.getSampleFileId(), syncIntensity, syncRt);
             _pepChromInfo = pepChromInfo;
+        }
+
+        PeptideDataset(int peptideId, int sampleFileId, boolean syncIntensity, boolean syncRt)
+        {
+            _peptideId = peptideId;
+            _sampleFileId = sampleFileId;
             _syncIntensity = syncIntensity;
             _syncRt = syncRt;
 
             _annotations = new ArrayList<>();
+
+            // Create a map of colors to be used for drawing the peaks.
+            _seriesColors = new HashMap<>();
+            TargetedMSRun run = TargetedMSManager.getRunForPeptide(_peptideId);
+            _colorIndexer = new PrecursorColorIndexer(run.getId(), _peptideId);
         }
 
         @Override
         public void build()
         {
             // Get the precursor chrom infos for the peptide
-            List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptide(_pepChromInfo.getPeptideId(),
-                    _pepChromInfo.getSampleFileId());
-            Collections.sort(precursorChromInfoList, new PrecursorComparator());
+            List<PrecursorChromInfoPlus> precursorChromInfoList = getPrecursorChromInfos();
 
             // Get the retention time range that should be displayed for the chromatogram
             RtRange chromatogramRtRange = getChromatogramRange(precursorChromInfoList);
@@ -217,15 +228,10 @@ public abstract class ChromatogramDataset
             {
                 // Get the height of the tallest precursor for this peptide over all replicates
                 // TODO: filter this to currently selected replicates
-                _maxDisplayIntensity = PrecursorManager.getMaxPrecursorIntensity(_pepChromInfo.getPeptideId());
+                _maxDisplayIntensity = PrecursorManager.getMaxPrecursorIntensity(_peptideId);
             }
 
             _jfreeDataset = new XYSeriesCollection();
-
-            // Create a map of colors to be used for drawing the peaks.
-            _seriesColors = new HashMap<>();
-            TargetedMSRun run = TargetedMSManager.getRunForPeptide(_pepChromInfo.getPeptideId());
-            _colorIndexer = new PrecursorColorIndexer(run.getId(), _pepChromInfo.getPeptideId());
 
             for(int i = 0; i < precursorChromInfoList.size(); i++)
             {
@@ -237,18 +243,45 @@ public abstract class ChromatogramDataset
                 // we will sum up the intensities and display a single peak for the precursor
                 PeakInChart peakInChart = addPrecursorAsSeries(_jfreeDataset, chromatogram, pChromInfo,
                         chromatogramRtRange,
-                        LabelFactory.precursorLabel(pChromInfo.getPrecursorId()),
+                        getLabel(pChromInfo),
                         i);
                 _maxDatasetIntensity = Math.max(_maxDatasetIntensity, peakInChart.getMaxTraceIntensity());
 
-                if(pChromInfo.getBestRetentionTime() != null)
-                    _annotations.add(makePeakApexAnnotation(
-                            peakInChart.getPeakRt(),
-                            pChromInfo.getAverageMassErrorPPM(),
-                            peakInChart.getPeakIntensity(),
-                            i));
-
+                addAnnotation(pChromInfo, peakInChart, i);
             }
+        }
+
+        protected void addAnnotation(PrecursorChromInfo pChromInfo, PeakInChart peakInChart, int index)
+        {
+            if(pChromInfo.getBestRetentionTime() != null)
+            {
+                _annotations.add(makePeakApexAnnotation(
+                        peakInChart.getPeakRt(),
+                        pChromInfo.getAverageMassErrorPPM(),
+                        peakInChart.getPeakIntensity(),
+                        index));
+            }
+        }
+
+        protected String getLabel(PrecursorChromInfo pChromInfo)
+        {
+            return LabelFactory.precursorLabel(pChromInfo.getPrecursorId());
+        }
+
+        protected List<PrecursorChromInfoPlus> getPrecursorChromInfos()
+        {
+            List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptide(_peptideId, _sampleFileId);
+
+            List<PrecursorChromInfoPlus> nonOptimizationPeaks = new ArrayList<>();
+            for(PrecursorChromInfoPlus pChromInfo: precursorChromInfoList)
+            {
+                if(!pChromInfo.isOptimizationPeak()) // Ignore optimization peaks
+                {
+                    nonOptimizationPeaks.add(pChromInfo);
+                }
+            }
+            Collections.sort(nonOptimizationPeaks, new PrecursorComparator());
+            return nonOptimizationPeaks;
         }
 
         private RtRange getChromatogramRange(List<PrecursorChromInfoPlus> precursorChromInfoList)
@@ -269,8 +302,8 @@ public abstract class ChromatogramDataset
             if(_syncRt){
                 // Get the min and max retention times of the precursors for this peptide, over all replicates.
                 // TODO: filter this to currently selected replicates
-                _minDisplayRt = PeptideManager.getMinRetentionTime(_pepChromInfo.getPeptideId());
-                _maxDisplayRt = PeptideManager.getMaxRetentionTime(_pepChromInfo.getPeptideId());
+                _minDisplayRt = PeptideManager.getMinRetentionTime(_peptideId);
+                _maxDisplayRt = PeptideManager.getMaxRetentionTime(_peptideId);
                 if(_minDisplayRt == null) _minDisplayRt = 0.0;
                 if(_maxDisplayRt == null) _maxDisplayRt = 0.0;
 
@@ -350,15 +383,20 @@ public abstract class ChromatogramDataset
             }
             dataset.addSeries(series);
 
-            _seriesColors.put(seriesIndex,ChartColors.getPrecursorColor(_colorIndexer.getColorIndex(pChromInfo.getPrecursorId())));
+            _seriesColors.put(seriesIndex, getSeriesColor(pChromInfo, seriesIndex));
 
             return new PeakInChart(maxPeakIntensity, rtAtPeakApex, maxTraceIntensity);
+        }
+
+        protected Color getSeriesColor(PrecursorChromInfo pChromInfo, int seriesIndex)
+        {
+            return ChartColors.getPrecursorColor(_colorIndexer.getColorIndex(pChromInfo.getPrecursorId()));
         }
 
         @Override
         public String getChartTitle()
         {
-            return LabelFactory.peptideChromInfoChartLabel(_pepChromInfo);
+            return LabelFactory.peptideChromInfoChartTitle(_pepChromInfo);
         }
 
         @Override
@@ -385,7 +423,7 @@ public abstract class ChromatogramDataset
             return  _seriesColors.get(seriesIndex);
         }
 
-        private class PeakInChart
+        class PeakInChart
         {
             private final double _peakIntensity; // Max intensity within the peak integration boundary
             private final double _peakRt;        // RT at peak apex (within the peak integration boundary)
@@ -412,6 +450,95 @@ public abstract class ChromatogramDataset
             public double getMaxTraceIntensity()
             {
                 return _maxTraceIntensity;
+            }
+        }
+    }
+
+    static class PrecursorOptimizationPeakDataset extends PeptideDataset
+    {
+        private final PrecursorChromInfo _precursorChromInfo;
+        private PeakInChart _bestPeakInChart;
+        private PrecursorChromInfo _bestPrecursorChromInfo;
+        private int _bestPeakSeriesIndex;
+
+        public PrecursorOptimizationPeakDataset(PrecursorChromInfo precursorChromInfo, boolean syncIntensity, boolean syncRt)
+        {
+            super(PrecursorManager.get(precursorChromInfo.getPrecursorId()).getPeptideId(),
+                    precursorChromInfo.getSampleFileId(),
+                  syncIntensity,
+                  syncRt);
+            _precursorChromInfo = precursorChromInfo;
+        }
+
+        @Override
+        public void build()
+        {
+            super.build();
+            // Add a single annotation for the tallest peak.
+            if(_bestPeakInChart != null)
+            {
+                super.addAnnotation(_bestPrecursorChromInfo, _bestPeakInChart, _bestPeakSeriesIndex);
+            }
+        }
+
+        @Override
+        protected List<PrecursorChromInfoPlus> getPrecursorChromInfos()
+        {
+            // We have the ID of the precursorChromInfo that is not an optimization peak.
+            List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptideChromInfo(_precursorChromInfo.getPeptideChromInfoId(),
+                    _precursorChromInfo.getPrecursorId(),
+                    _precursorChromInfo.getSampleFileId());
+
+            Collections.sort(precursorChromInfoList, new Comparator<PrecursorChromInfoPlus>()
+            {
+                @Override
+                public int compare(PrecursorChromInfoPlus o1, PrecursorChromInfoPlus o2)
+                {
+                    Integer step1 = o1.getOptimizationStep() == null ? 0 : o1.getOptimizationStep();
+                    Integer step2 = o2.getOptimizationStep() == null ? 0 : o2.getOptimizationStep();
+                    return step1.compareTo(step2);
+                }
+            });
+            return precursorChromInfoList;
+        }
+
+        @Override
+        protected void addAnnotation(PrecursorChromInfo pChromInfo, PeakInChart peakInChart, int index)
+        {
+            // Don't add any annotations here. Record the peak with the maximum height.
+            if(pChromInfo.getBestRetentionTime() != null)
+            {
+                if(_bestPeakInChart == null || _bestPrecursorChromInfo.getMaxHeight() < pChromInfo.getMaxHeight())
+                {
+                    _bestPeakInChart = peakInChart;
+                    _bestPrecursorChromInfo = pChromInfo;
+                    _bestPeakSeriesIndex = index;
+                }
+            }
+        }
+
+        @Override
+        protected String getLabel(PrecursorChromInfo pChromInfo)
+        {
+            return LabelFactory.precursorChromInfoLabel(pChromInfo);
+        }
+
+        @Override
+        public String getChartTitle()
+        {
+            return LabelFactory.precursorChromInfoChartTitle(_precursorChromInfo);
+        }
+
+        @Override
+        protected Color getSeriesColor(PrecursorChromInfo pChromInfo, int seriesIndex)
+        {
+            if(pChromInfo.isOptimizationPeak())
+            {
+                return ChartColors.getTransitionColor(seriesIndex);
+            }
+            else
+            {
+               return ChartColors.getPrecursorColor(0); // Red
             }
         }
     }
@@ -454,9 +581,10 @@ public abstract class ChromatogramDataset
 
         private void buildJFreedataset(Chromatogram chromatogram, RtRange chromatogramRtRange)
         {
-            List<TransChromInfoPlusTransition> tciList = new ArrayList<>(chromatogram.getTransitionsCount());
+            int transitionCount = chromatogram.getTransitionsCount();
+            List<TransChromInfoPlusTransition> tciList = new ArrayList<>(transitionCount);
 
-            for(int chromatogramIndex = 0; chromatogramIndex < chromatogram.getTransitionsCount(); chromatogramIndex++)
+            for(int chromatogramIndex = 0; chromatogramIndex < transitionCount; chromatogramIndex++)
             {
                 List<TransitionChromInfo> tChromInfoList = TransitionManager.getTransitionChromInfoList(_pChromInfo.getId(), chromatogramIndex);
                 if(tChromInfoList == null || tChromInfoList.size() == 0)
@@ -658,7 +786,7 @@ public abstract class ChromatogramDataset
         @Override
         public String getChartTitle()
         {
-            return LabelFactory.precursorChromInfoChartLabel(_pChromInfo);
+            return LabelFactory.precursorChromInfoChartTitle(_pChromInfo);
         }
 
         @Override
@@ -768,7 +896,8 @@ public abstract class ChromatogramDataset
 
             if (_tChromInfo.getChromatogramIndex() >= chromatogram.getTransitionsCount())
             {
-                throw new IllegalStateException("Requested index " + _tChromInfo.getChromatogramIndex() + " but there are only " + chromatogram.getTransitionsCount());
+                throw new IllegalStateException("Requested chromatogram index " + _tChromInfo.getChromatogramIndex() + " but there are only "
+                                                + chromatogram.getTransitionsCount() + " transitions.");
             }
 
             _jfreeDataset = new XYSeriesCollection();

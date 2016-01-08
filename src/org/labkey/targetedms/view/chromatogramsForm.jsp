@@ -188,6 +188,15 @@
                     hidden:<%=!bean.canBeSplitView()%>
                 },
                 {
+                    xtype: 'checkbox',
+                    name: 'showOptimizationPeaks',
+                    fieldLabel: 'Show Optimization Peaks',
+                    inputValue: true,
+                    checked: <%=bean.getForm().isShowOptimizationPeaks()%>,
+                    colspan:4,
+                    hidden:<%=!bean.isShowOptPeaksOption()%>
+                },
+                {
                     xtype: 'combobox',
                     name: 'replicatesFilter',
                     multiSelect: true,

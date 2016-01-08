@@ -43,13 +43,7 @@ public class LabelFactory
     private static final String[] CHARGE = {"",
                                            "+",
                                            "++",
-                                           "+++",
-                                           "++++",
-                                           "+++++",
-                                           "++++++",
-                                           "+++++++",
-                                           "++++++++",
-                                           "+++++++++"};
+                                           "+++"};
 
     private LabelFactory() {}
 
@@ -110,7 +104,19 @@ public class LabelFactory
         return label.toString();
     }
 
-    public static String peptideChromInfoChartLabel(PeptideChromInfo pepChromInfo)
+    public static String precursorChromInfoLabel(PrecursorChromInfo pChromInfo)
+    {
+        if(pChromInfo.isOptimizationPeak())
+        {
+            return "Step " + pChromInfo.getOptimizationStep();
+        }
+        else
+        {
+            return precursorLabel(pChromInfo.getPrecursorId());
+        }
+    }
+
+    public static String peptideChromInfoChartTitle(PeptideChromInfo pepChromInfo)
     {
         SampleFile sampleFile = ReplicateManager.getSampleFile(pepChromInfo.getSampleFileId());
         Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
@@ -127,7 +133,7 @@ public class LabelFactory
         return label.toString();
     }
 
-    public static String precursorChromInfoChartLabel(PrecursorChromInfo pChromInfo)
+    public static String precursorChromInfoChartTitle(PrecursorChromInfo pChromInfo)
     {
         SampleFile sampleFile = ReplicateManager.getSampleFile(pChromInfo.getSampleFileId());
         Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
@@ -152,16 +158,18 @@ public class LabelFactory
 
     public static String getChargeLabel(int charge)
     {
-        StringBuilder buf = new StringBuilder();
-        if(charge <= 0)
+        return getChargeLabel(charge, true);
+    }
+
+    public static String getChargeLabel(int charge, boolean addSeparator)
+    {
+        if(charge < 0)
             return "";
-        int diff = charge;
-        while(diff >= CHARGE.length)
+        if(charge > CHARGE.length - 1)
         {
-            buf.append(CHARGE[CHARGE.length - 1]);
-            diff = diff - (CHARGE.length - 1);
+            String plusStr = addSeparator ? ", +" : "+";
+            return plusStr + charge;
         }
-        buf.append(CHARGE[diff]);
-        return buf.toString();
+        return CHARGE[charge];
     }
 }

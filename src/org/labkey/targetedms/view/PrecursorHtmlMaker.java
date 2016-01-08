@@ -16,6 +16,7 @@
 package org.labkey.targetedms.view;
 
 import org.labkey.api.util.Formats;
+import org.labkey.targetedms.chart.LabelFactory;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
@@ -29,24 +30,13 @@ public class PrecursorHtmlMaker
 {
     private PrecursorHtmlMaker() {}
 
-    private static final String[] CHARGE = {"",
-                                           "+",
-                                           "++",
-                                           "+++",
-                                           "++++",
-                                           "+++++",
-                                           "++++++",
-                                           "+++++++",
-                                           "++++++++",
-                                           "+++++++++"};
-
     public static String getHtml(Peptide peptide, Precursor precursor, String isotopeLabel, int runId)
     {
         StringBuilder html = new StringBuilder();
         html.append(new ModifiedPeptideHtmlMaker().getPrecursorHtml(peptide, precursor, runId));
         html.append("<span>");
         html.append(" - ").append(Formats.f4.format(precursor.getMz()));
-        html.append(CHARGE[precursor.getCharge()]);
+        html.append(LabelFactory.getChargeLabel(precursor.getCharge()));
         if(!PeptideSettings.IsotopeLabel.LIGHT.equalsIgnoreCase(isotopeLabel))
         {
             html.append(" (").append(isotopeLabel).append(")");
@@ -61,7 +51,7 @@ public class PrecursorHtmlMaker
         StringBuilder html = new StringBuilder();
         html.append(modifiedPeptideHtmlMaker.getPrecursorHtml(precursor, runId));
         html.append("<span>");
-        html.append(CHARGE[precursor.getCharge()]);
+        html.append(LabelFactory.getChargeLabel(precursor.getCharge()));
         html.append("</span>");
 
         return html.toString();

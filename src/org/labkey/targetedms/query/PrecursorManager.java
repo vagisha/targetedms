@@ -323,6 +323,29 @@ public class PrecursorManager
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
     }
 
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptideChromInfo(int pepChromInfoId, int precursorId, int sampleFileId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT ");
+        sql.append("pci.* , pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
+        sql.append(" FROM ");
+        joinTablesForPrecursorChromInfo(sql);
+        sql.append(" WHERE ");
+        sql.append("pci.PeptideChromInfoId=? ");
+        sql.add(pepChromInfoId);
+        sql.append(" AND ");
+        sql.append("pci.PrecursorId=? ");
+        sql.add(precursorId);
+
+        if(sampleFileId != 0)
+        {
+            sql.append("AND ");
+            sql.append("pci.SampleFileId=?");
+            sql.add(sampleFileId);
+        }
+
+        return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
+    }
+
     private static void joinTablesForPrecursorChromInfo(SQLFragment sql)
     {
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
@@ -664,14 +687,14 @@ public class PrecursorManager
         }
     }
 
-    public static boolean canBeSplitView(int id)
+    public static boolean canBeSplitView(int peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT DISTINCT tra.fragmenttype FROM ");
         sql.append(TargetedMSManager.getTableInfoTransition(), "tra");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
         sql.append(" WHERE tra.precursorid = pre.Id AND  ");
-        sql.append("pre.peptideid = "+id);
+        sql.append("pre.peptideid = "+peptideId);
         String[] sqls = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(String.class);
 
         if(sqls.length > 1)
@@ -683,6 +706,26 @@ public class PrecursorManager
             }
         }
         return false;
+    }
+
+    public static boolean hasOptimizationPeaks(int peptideId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT pci.Id FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+
+        sql.append(" WHERE pep.id = pre.PeptideId ");
+        sql.append(" AND ");
+        sql.append(" pre.Id = pci.PrecursorId ");
+        sql.append(" AND ");
+        sql.append(" pci.OptimizationStep IS NOT NULL ");
+        sql.append(" AND ");
+        sql.append(" pep.Id = " + peptideId);
+        sql.append(" LIMIT 1 ");
+        return (new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Integer.class)).length > 0;
     }
 
     private static class PrecursorIdsWithSpectra extends DatabaseCache<Set<Integer>>
