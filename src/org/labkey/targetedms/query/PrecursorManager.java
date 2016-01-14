@@ -724,8 +724,7 @@ public class PrecursorManager
         sql.append(" pci.OptimizationStep IS NOT NULL ");
         sql.append(" AND ");
         sql.append(" pep.Id = " + peptideId);
-        sql.append(" LIMIT 1 ");
-        return (new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Integer.class)).length > 0;
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).exists();
     }
 
     private static class PrecursorIdsWithSpectra extends DatabaseCache<Set<Integer>>
