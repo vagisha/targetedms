@@ -23,7 +23,6 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
-import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.GuideSet;
@@ -199,6 +198,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // impersonate a different user in this container and verify that initial form fields used
         impersonate(USER);
+        qcPlotsWebPart.waitForPlots(1, false);
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, false);
         assertEquals("Chart Type not set to default value", QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
         assertEquals("Y-Axis Scale not set to default value", QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
