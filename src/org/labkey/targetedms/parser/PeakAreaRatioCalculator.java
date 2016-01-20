@@ -415,7 +415,7 @@ public class PeakAreaRatioCalculator
         String fragment;
         if(transition instanceof MoleculeTransition)
         {
-            fragment = ((MoleculeTransition) transition).getMassMonoisotopic().toString();
+            fragment = String.valueOf(((MoleculeTransition) transition).getMz());
         }
         else
         {

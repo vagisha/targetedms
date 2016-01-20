@@ -59,10 +59,23 @@ public class DataSettings
             targets.add(AnnotationTarget.valueOf(targetStr));
         }
 
+        AnnotationType annotationType;
+        if(type.equals("-1"))
+        {
+            // Current version of Skyline (Skyline-daily 3.5.1.9283) allows users to create a new annotation
+            // without selecting a valid "type". This will be fixed in a future release.
+            // We will assume "text" type for such annotations.
+            annotationType = AnnotationType.text;
+        }
+        else
+        {
+            annotationType = AnnotationType.valueOf(type);
+        }
+
         AnnotationDefinition annot = new AnnotationDefinition(
                                         name,
                                         targets,
-                                        AnnotationType.valueOf(type));
+                                        annotationType);
         _annotationDefinitions.put(name, annot);
 
         for(AnnotationTarget target: annot.getTargets())
