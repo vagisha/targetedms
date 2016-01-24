@@ -63,6 +63,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
@@ -1428,6 +1429,33 @@ public class TargetedMSController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             return null;  //TODO: link back to peptides details page
+        }
+    }
+
+    @RequiresPermission(UpdatePermission.class)
+    public class AutoQCPingAction extends ApiAction<Object>
+    {
+        @Override
+        public Object execute(Object o, BindException errors) throws Exception
+        {
+            // Get current record, if present
+            TableInfo table = TargetedMSManager.getTableInfoAutoQCPing();
+            Map<String, Object> currentRow = new TableSelector(table, TableSelector.ALL_COLUMNS, new SimpleFilter("Container", getContainer()), null).getMap();
+            if (currentRow == null)
+            {
+                // Add a new record
+                currentRow = new HashMap<>();
+                currentRow.put("Container", getContainer());
+                currentRow = Table.insert(getUser(), table, currentRow);
+            }
+            else
+            {
+                // Update the current one with the new timestamp
+                currentRow = Table.update(getUser(), table, currentRow, getContainer());
+            }
+
+            // Just return the full record back to the caller
+            return new ApiSimpleResponse(currentRow);
         }
     }
 

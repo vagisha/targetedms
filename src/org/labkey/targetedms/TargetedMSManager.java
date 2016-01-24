@@ -383,6 +383,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_IRT_SCALE);
     }
 
+    public static TableInfo getTableInfoAutoQCPing()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_AUTOQC_PING);
+    }
+
     public static TableInfo getTableInfoJournal()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_JOURNAL);

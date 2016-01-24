@@ -46,6 +46,7 @@ import org.labkey.api.query.LookupForeignKey;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
+import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
@@ -144,6 +145,8 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_RESPRESENTATIVE_DATA_STATE = "RepresentativeDataState";
     public static final String TABLE_IRT_PEPTIDE = "iRTPeptide";
     public static final String TABLE_IRT_SCALE = "iRTScale";
+
+    public static final String TABLE_AUTOQC_PING = "AutoQCPing";
 
     public static final String TABLE_EXPERIMENT_ANNOTATIONS = "ExperimentAnnotations";
 
@@ -503,6 +506,15 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_GUIDE_SET.equalsIgnoreCase(name))
         {
             return new GuideSetTable(this);
+        }
+        if (TABLE_AUTOQC_PING.equalsIgnoreCase(name))
+        {
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(TABLE_AUTOQC_PING), this);
+            result.wrapAllColumns(true);
+            result.getColumn("CreatedBy").setFk(new UserIdQueryForeignKey(getUser(), getContainer()));
+            result.getColumn("ModifiedBy").setFk(new UserIdQueryForeignKey(getUser(), getContainer()));
+            result.getColumn("Container").setFk(new ContainerForeignKey(this));
+            return result;
         }
         if(TABLE_EXPERIMENT_ANNOTATIONS.equalsIgnoreCase(name))
         {
@@ -1035,6 +1047,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_QC_ANNOTATION_TYPE);
         hs.add(TABLE_QC_ANNOTATION);
         hs.add(TABLE_GUIDE_SET);
+        hs.add(TABLE_AUTOQC_PING);
         return hs;
     }
 

@@ -1333,4 +1333,30 @@
         </ns:columns>
     </ns:table>
 
+    <ns:table tableName="AutoQCPing" tableDbType="TABLE">
+        <ns:tableTitle>AutoQC Ping</ns:tableTitle>
+        <ns:description>Captures the last time that AutoQC pinged the QC folder</ns:description>
+        <ns:columns>
+            <ns:column columnName="Container">
+                <ns:columnTitle>Folder</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="Created"/>
+            <ns:column columnName="CreatedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+            <ns:column columnName="Modified"/>
+            <ns:column columnName="ModifiedBy">
+                <ns:fk>
+                    <ns:fkColumnName>UserId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>UsersData</ns:fkTable>
+                </ns:fk>
+            </ns:column>
+        </ns:columns>
+    </ns:table>
+
 </ns:tables>
