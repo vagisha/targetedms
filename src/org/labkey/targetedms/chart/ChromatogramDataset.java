@@ -456,6 +456,7 @@ public abstract class ChromatogramDataset
 
     static class PrecursorOptimizationPeakDataset extends PeptideDataset
     {
+        private double _bestTotalHeight;
         private final PrecursorChromInfo _precursorChromInfo;
         private PeakInChart _bestPeakInChart;
         private PrecursorChromInfo _bestPrecursorChromInfo;
@@ -505,14 +506,24 @@ public abstract class ChromatogramDataset
         @Override
         protected void addAnnotation(PrecursorChromInfo pChromInfo, PeakInChart peakInChart, int index)
         {
-            // Don't add any annotations here. Record the peak with the maximum height.
             if(pChromInfo.getBestRetentionTime() != null)
             {
-                if(_bestPeakInChart == null || _bestPrecursorChromInfo.getMaxHeight() < pChromInfo.getMaxHeight())
+                // Don't add any annotations here. Record the peak with the maximum total height (sum up the height attribute
+                // of the transitionChromInfos for this precursorChromInfo).
+                List<TransitionChromInfo> tciList = TransitionManager.getTransitionChromInfoList(pChromInfo.getId());
+                double totalHeight = 0;
+                for(TransitionChromInfo tci: tciList)
+                {
+                    Double height = tci.getHeight();
+                    if(height != null) totalHeight += tci.getHeight();
+                }
+
+                if(_bestPeakInChart == null || _bestTotalHeight < totalHeight)
                 {
                     _bestPeakInChart = peakInChart;
                     _bestPrecursorChromInfo = pChromInfo;
                     _bestPeakSeriesIndex = index;
+                    _bestTotalHeight = totalHeight;
                 }
             }
         }

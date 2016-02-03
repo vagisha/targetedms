@@ -262,7 +262,6 @@ public class PeptideGroupManager
         sql.add(peptideGroup.getId());
         sql.append(" GROUP BY pepgrp.Id, sfile.ReplicateId");
         sql.append(" ORDER BY areaSUM DESC");
-        // sql.append(" LIMIT 1");
 
         Map<String, Object>[] mapArray = new SqlSelector(TargetedMSManager.getSchema(), sql).getMapArray();
         if(mapArray != null && mapArray.length > 0)

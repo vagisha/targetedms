@@ -80,6 +80,16 @@ public class TransitionManager
                                 .getArrayList(TransitionChromInfo.class);
     }
 
+    public static List<TransitionChromInfo> getTransitionChromInfoList(int precursorChromInfoId)
+    {
+        SimpleFilter filter = new SimpleFilter();
+        filter.addCondition(FieldKey.fromParts("PrecursorChromInfoId"),precursorChromInfoId);
+        return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(),
+                filter,
+                null)
+                .getArrayList(TransitionChromInfo.class);
+    }
+
     public static TransitionChromInfo getTransitionChromInfoForTransition(int transitionId, int precursorChromInfoId)
     {
         SimpleFilter filter = new SimpleFilter();

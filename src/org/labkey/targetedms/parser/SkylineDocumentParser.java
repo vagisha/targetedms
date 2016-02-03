@@ -122,6 +122,9 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String XML_NON_ID_SEPARATOR_CHARS = ";[]{}()!|\\/\"'<>";
     private static final String XML_NON_ID_PUNCTUATION_CHARS = ",?";
 
+
+    private final static double OPTIMIZE_SHIFT_SIZE = 0.01;
+
     private int _peptideGroupCount;
     private int _peptideCount;
     private int _precursorCount;
@@ -132,7 +135,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private TransitionSettings _transitionSettings;
     private PeptideSettings _peptideSettings;
     private DataSettings _dataSettings;
-    private List<Replicate> _replicateList;
+    private List<SkylineReplicate> _replicateList;
     private Map<String, String> _sampleFileIdToFilePathMap;
     // Map of replicate names and sample file Ids ('id' attribute of <sample_file> element).
     // An entry is added to this map only if a replicate contains a single sample file.
@@ -262,7 +265,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return _iRTScaleSettings;
     }
 
-    public List<Replicate> getReplicates()
+    public List<SkylineReplicate> getReplicates()
     {
         return _replicateList;
     }
@@ -365,7 +368,7 @@ public class SkylineDocumentParser implements AutoCloseable
     {
         if(_replicateList == null || _replicateList.size() == 0)
             return;
-        for(Replicate replicate: _replicateList) {
+        for(SkylineReplicate replicate: _replicateList) {
 
             List<ReplicateAnnotation> annotations = removeUnusedAnnotations(replicate);
 
@@ -399,7 +402,7 @@ public class SkylineDocumentParser implements AutoCloseable
         }
     }
 
-    private List<ReplicateAnnotation> removeUnusedAnnotations(Replicate replicate)
+    private List<ReplicateAnnotation> removeUnusedAnnotations(SkylineReplicate replicate)
     {
         // 04/30/14 Skyline writes replicate annotation values for annotations
         // that have been deleted/unchecked from annotation settings.
@@ -711,9 +714,9 @@ public class SkylineDocumentParser implements AutoCloseable
          }
     }
 
-    private Replicate readReplicate(XMLStreamReader reader) throws XMLStreamException
+    private SkylineReplicate readReplicate(XMLStreamReader reader) throws XMLStreamException
     {
-        Replicate replicate = new Replicate();
+        SkylineReplicate replicate = new SkylineReplicate();
         replicate.setName(XmlUtil.readRequiredAttribute(reader, "name", REPLICATE));
 
         List<SampleFile> sampleFileList = new ArrayList<>();
@@ -742,6 +745,16 @@ public class SkylineDocumentParser implements AutoCloseable
                 }
                 _sampleFileIdToFilePathMap.put(sampleFile.getSkylineId(), sampleFile.getFilePath());
                 sampleFileList.add(sampleFile);
+            }
+            else if(XmlUtil.isStartElement(reader, evtType, PREDICT_COLLISION_ENERGY))
+            {
+                TransitionSettings.Predictor predictor = readPredictor(reader, PREDICT_COLLISION_ENERGY);
+                replicate.setCePredictor(predictor);
+            }
+            else if(XmlUtil.isStartElement(reader, evtType, PREDICT_DECLUSTERING_POTENTIAL))
+            {
+                TransitionSettings.Predictor  predictor = readPredictor(reader, PREDICT_DECLUSTERING_POTENTIAL);
+                replicate.setDpPredictor(predictor);
             }
             else if(XmlUtil.isStartElement(reader, evtType, ANNOTATION))
             {
@@ -1440,12 +1453,12 @@ public class SkylineDocumentParser implements AutoCloseable
                     {
                         // From the CE Optimization tutorial:
                         // The product m/z value is incremented slightly for each value as first described by Sherwood et al., 2009
-                        transitionMz += 0.01 * transChromInfo.getOptimizationStep();
+                        transitionMz += OPTIMIZE_SHIFT_SIZE * transChromInfo.getOptimizationStep();
                     }
                     for (int i = 0; i < transitions.length; i++)
                     {
                         double deltaMz = Math.abs(transitionMz - transitions[i]);
-
+                                
                         if (deltaMz < _transitionSettings.getInstrumentSettings().getMzMatchTolerance() &&
                             deltaMz < deltaNearestMz)
                         {

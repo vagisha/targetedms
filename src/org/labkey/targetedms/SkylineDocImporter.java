@@ -266,9 +266,23 @@ public class SkylineDocImporter
             TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(run.getContainer());
 
 
-            for(Replicate replicate: parser.getReplicates())
+            for(SkylineReplicate skyReplicate: parser.getReplicates())
             {
+                Replicate replicate = new Replicate();
+                replicate.setName(skyReplicate.getName());
+                replicate.setSampleFileList(skyReplicate.getSampleFileList());
+                replicate.setAnnotations(skyReplicate.getAnnotations());
+
                 replicate.setRunId(_runId);
+                if(cePredictor != null && skyReplicate.getCePredictor() != null && cePredictor.equals(skyReplicate.getCePredictor()))
+                {
+                    replicate.setCePredictorId(cePredictor.getId());
+                }
+                if(dpPredictor != null && skyReplicate.getDpPredictor() != null && dpPredictor.equals(skyReplicate.getDpPredictor()))
+                {
+                    replicate.setDpPredictorId(dpPredictor.getId());
+                }
+
                 replicate = Table.insert(_user, TargetedMSManager.getTableInfoReplicate(), replicate);
 
                 for(SampleFile sampleFile: replicate.getSampleFileList())

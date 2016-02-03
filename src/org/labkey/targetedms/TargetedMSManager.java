@@ -968,9 +968,6 @@ public class TargetedMSManager
         // Delete from IsolationWindow
         deleteIsolationSchemeDependent(getTableInfoIsolationWindow());
 
-        // Delete from PredictorSettings and Predictor
-        deleteTransitionPredictionSettingsDependent();
-
         // Delete from MeasuredDriftTime
         deleteDriftTimePredictionSettingsDependent(getTableInfoMeasuredDriftTime());
 
@@ -986,8 +983,14 @@ public class TargetedMSManager
         deleteRunDependent(getTableInfoRetentionTimePredictionSettings());
         // Delete from DriftTimePredictionSettings
         deleteRunDependent(getTableInfoDriftTimePredictionSettings());
+
+        // Delete from PredictorSettings and Predictor
+        // This has to be done BEFORE deleting from TransitionPredictionSettings and
+        // AFTER deleting from Replicate (
+        deleteTransitionPredictionSettingsDependent();
         // Delete from TransitionPredictionSettings
         deleteRunDependent(getTableInfoTransitionPredictionSettings());
+
         // Delete from TransitionFullScanSettings
         deleteRunDependent(getTableInfoTransitionFullScanSettings());
         // Delete from IsotopeEnrichment (part of Full Scan settings)

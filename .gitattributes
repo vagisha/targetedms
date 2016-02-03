@@ -223,6 +223,7 @@ src/org/labkey/targetedms/parser/SampleFile.java -text
 src/org/labkey/targetedms/parser/SkylineBinaryParser.java -text
 src/org/labkey/targetedms/parser/SkylineDocumentParser.java -text
 src/org/labkey/targetedms/parser/SkylineEntity.java -text
+src/org/labkey/targetedms/parser/SkylineReplicate.java -text
 src/org/labkey/targetedms/parser/Transition.java -text
 src/org/labkey/targetedms/parser/TransitionAnnotation.java -text
 src/org/labkey/targetedms/parser/TransitionAreaRatio.java -text

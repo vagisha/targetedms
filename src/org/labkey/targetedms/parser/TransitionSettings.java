@@ -542,9 +542,42 @@ public class TransitionSettings
         {
             _settings = settings;
         }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Predictor predictor = (Predictor) o;
+
+            if (_name != null ? !_name.equals(predictor._name) : predictor._name != null) return false;
+            if (_stepCount != null ? !_stepCount.equals(predictor._stepCount) : predictor._stepCount != null)
+                return false;
+            if (_stepSize != null ? !_stepSize.equals(predictor._stepSize) : predictor._stepSize != null) return false;
+
+            if(_settings == null && predictor._settings == null) return true;
+            if(_settings != null && predictor._settings == null
+               || _settings == null && predictor._settings != null
+               || _settings.size() != predictor._settings.size())
+                return false;
+
+            return _settings.containsAll(predictor._settings);
+        }
+
+
+        @Override
+        public int hashCode()
+        {
+            int result = _name != null ? _name.hashCode() : 0;
+            result = 31 * result + (_stepSize != null ? _stepSize.hashCode() : 0);
+            result = 31 * result + (_stepCount != null ? _stepCount.hashCode() : 0);
+            result = 31 * result + (_settings != null ? _settings.hashCode() : 0);
+            return result;
+        }
     }
 
-    public static class PredictorSettings extends SkylineEntity
+    public static class PredictorSettings extends SkylineEntity implements Comparable<PredictorSettings>
     {
         private int _predictorId;
         private Integer _charge;
@@ -589,6 +622,46 @@ public class TransitionSettings
         public void setPredictorId(int predictorId)
         {
             _predictorId = predictorId;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PredictorSettings that = (PredictorSettings) o;
+
+            if (_charge != null ? !_charge.equals(that._charge) : that._charge != null) return false;
+            if (_intercept != null ? !_intercept.equals(that._intercept) : that._intercept != null) return false;
+            if (_slope != null ? !_slope.equals(that._slope) : that._slope != null) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = _charge != null ? _charge.hashCode() : 0;
+            result = 31 * result + (_slope != null ? _slope.hashCode() : 0);
+            result = 31 * result + (_intercept != null ? _intercept.hashCode() : 0);
+            return result;
+        }
+
+        @Override
+        public int compareTo(PredictorSettings o)
+        {
+            return o == null ? -1 : this.toString().compareTo(o.toString());
+        }
+
+        @Override
+        public String toString()
+        {
+            return "PredictorSettings{" +
+                    "charge=" + _charge +
+                    ", slope=" + _slope +
+                    ", intercept=" + _intercept +
+                    '}';
         }
     }
 
