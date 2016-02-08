@@ -19,6 +19,7 @@ import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
+import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import java.util.List;
@@ -33,14 +34,14 @@ public final class QCSummaryWebPart extends BodyWebPart
     private Integer _fileCount;
     private Integer _precursorCount;
 
-    public QCSummaryWebPart(BaseWebDriverTest test)
+    public QCSummaryWebPart(WebDriver driver)
     {
-        this(test, 0);
+        this(driver, 0);
     }
 
-    public QCSummaryWebPart(BaseWebDriverTest test, int index)
+    public QCSummaryWebPart(WebDriver driver, int index)
     {
-        super(test, DEFAULT_TITLE, index);
+        super(driver, DEFAULT_TITLE, index);
     }
 
     public void clearCache()
@@ -57,7 +58,7 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     public void readSummary(int index)
     {
-        String qcSummary = _test.getText(elements().qcSummary);
+        String qcSummary = elements().qcSummary.findElement(getDriver()).getText();
         if (index > 0)
             qcSummary = getQCSummaryDetails().get(index).getText();
 

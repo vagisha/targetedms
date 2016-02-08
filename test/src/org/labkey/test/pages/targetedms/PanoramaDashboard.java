@@ -27,9 +27,9 @@ public class PanoramaDashboard extends PortalBodyPanel
 
     public PanoramaDashboard(BaseWebDriverTest test)
     {
-        super(test);
+        super(test.getDriver());
         _qcPlotsWebPart = new QCPlotsWebPart(test);
-        _qcSummaryWebPart = new QCSummaryWebPart(test);
+        _qcSummaryWebPart = new QCSummaryWebPart(test.getDriver());
     }
 
     public QCPlotsWebPart getQcPlotsWebPart()

@@ -24,6 +24,7 @@ public class QCAnnotationTypeWebPart extends BodyWebPart
 {
     public static final String DEFAULT_TITLE = "QC Annotation Type";
     private DataRegionTable _dataRegionTable;
+    private BaseWebDriverTest _test;
 
     public QCAnnotationTypeWebPart(BaseWebDriverTest test)
     {
@@ -33,6 +34,7 @@ public class QCAnnotationTypeWebPart extends BodyWebPart
     public QCAnnotationTypeWebPart(BaseWebDriverTest test, int index)
     {
         super(test, DEFAULT_TITLE, index);
+        _test = test;
     }
 
     public DataRegionTable getDataRegion()

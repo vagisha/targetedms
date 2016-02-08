@@ -164,7 +164,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         waitForElement(Locator.css("svg"));
 
-        ParetoPlotPage paretoPage = new ParetoPlotPage(this);
+        ParetoPlotPage paretoPage = new ParetoPlotPage(getDriver());
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
         assertEquals("Wrong number of Pareto plots", 4, paretoPlotsWebPart.getNumOfParetoPlots());
@@ -189,7 +189,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
 
-        ParetoPlotPage paretoPage = new ParetoPlotPage(this);
+        ParetoPlotPage paretoPage = new ParetoPlotPage(getDriver());
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
         paretoPlotsWebPart.clickLeveyJenningsLink(this);

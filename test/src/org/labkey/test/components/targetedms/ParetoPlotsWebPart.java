@@ -18,6 +18,7 @@ package org.labkey.test.components.targetedms;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
+import org.openqa.selenium.WebDriver;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -26,9 +27,9 @@ public class ParetoPlotsWebPart extends BodyWebPart
 {
     public static final String DEFAULT_TITLE = "Pareto Plots";
 
-    public ParetoPlotsWebPart(BaseWebDriverTest test)
+    public ParetoPlotsWebPart(WebDriver driver)
     {
-        super(test, DEFAULT_TITLE);
+        super(driver, DEFAULT_TITLE);
     }
 
     public enum ChartTypeTicks
@@ -79,8 +80,8 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
         while(minIndex <= maxIndex)
         {
-            String tickText = _test.getElement(Locator.css("#paretoPlot-GuideSet-"+ guideSetNum +
-                    " > svg > g:nth-child(1) > g.tick-text > a:nth-child("+ minIndex+")")).getText();
+            String tickText = Locator.css("#paretoPlot-GuideSet-" + guideSetNum +
+                    " > svg > g:nth-child(1) > g.tick-text > a:nth-child(" + minIndex + ")").findElement(getDriver()).getText();
             ticks.add(tickText);
             minIndex++;
         }
@@ -89,7 +90,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public int getNumOfParetoPlots()
     {
-        return _test.getElementCount(Locator.xpath("//div[contains(@id, 'tiledPlotPanel')]/table[contains(@class, 'labkey-wp pareto-plot-wp')]"));
+        return Locator.xpath("//div[contains(@id, 'tiledPlotPanel')]/table[contains(@class, 'labkey-wp pareto-plot-wp')]").findElements(getDriver()).size();
     }
 
     public boolean isChartTypeTickValid(String chartType)
@@ -100,7 +101,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public int getPlotBarHeight(int guideSetId, int barPlotNum)
     {
-       return Integer.parseInt(_test.getText(Locator.css("#paretoPlot-GuideSet-" + guideSetId + "-0 > a:nth-child(" + (barPlotNum+1) + ")")));
+       return Integer.parseInt(Locator.css("#paretoPlot-GuideSet-" + guideSetId + "-0 > a:nth-child(" + (barPlotNum+1) + ")").findElement(getDriver()).getText());
     }
 
     public void clickLeveyJenningsLink(BaseWebDriverTest test)

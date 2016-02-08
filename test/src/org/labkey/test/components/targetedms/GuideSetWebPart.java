@@ -27,12 +27,10 @@ import org.labkey.test.util.DataRegionTable;
 
 import java.io.IOException;
 
-/**
- * Created by cnathe on 4/13/2015.
- */
 public class GuideSetWebPart extends BodyWebPart
 {
     public static final String DEFAULT_TITLE = "Guide Set";
+    private BaseWebDriverTest _test;
     private DataRegionTable _dataRegionTable;
     private String _projectName;
 
@@ -45,6 +43,7 @@ public class GuideSetWebPart extends BodyWebPart
     public GuideSetWebPart(BaseWebDriverTest test, int index)
     {
         super(test, DEFAULT_TITLE, index);
+        _test = test;
     }
 
     public DataRegionTable getDataRegion()

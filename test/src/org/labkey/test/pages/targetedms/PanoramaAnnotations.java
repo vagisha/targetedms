@@ -27,7 +27,7 @@ public class PanoramaAnnotations extends PortalBodyPanel
 
     public PanoramaAnnotations(BaseWebDriverTest test)
     {
-        super(test);
+        super(test.getDriver());
         _qcAnnotationWebPart = new QCAnnotationWebPart(test);
         _qcAnnotationTypeWebPart = new QCAnnotationTypeWebPart(test);
     }
