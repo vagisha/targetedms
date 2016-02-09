@@ -30,7 +30,7 @@ public class PrecursorChromInfoTable extends TargetedMSTable
 {
     public PrecursorChromInfoTable(TableInfo table, TargetedMSSchema schema)
     {
-        super(table, schema, TargetedMSSchema.ContainerJoinType.PrecursorFK.getSQL());
+        super(table, schema, TargetedMSSchema.ContainerJoinType.SampleFileFK.getSQL());
 
         // Add a calculated column for Full Width at Base (FWB)
         SQLFragment sql = new SQLFragment("(MaxEndTime - MinStartTime)");
@@ -63,6 +63,18 @@ public class PrecursorChromInfoTable extends TargetedMSTable
 
         // Add a link to view the chromatogram for all of the precursor's transitions
         setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.PrecursorChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
+
+        // TotalAreaNormalized  = (area of precursor in the replicate) / (total area of all precursors in the replicate / sample file)
+        SQLFragment totalAreaNormalizedSQL = new SQLFragment("(SELECT TotalArea / X.TotalPrecursorAreaInReplicate FROM ");
+        totalAreaNormalizedSQL.append(" ( ");
+        totalAreaNormalizedSQL.append(" SELECT SUM(TotalArea) AS TotalPrecursorAreaInReplicate FROM ");
+        totalAreaNormalizedSQL.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        totalAreaNormalizedSQL.append(" WHERE pci.SampleFileId = ").append(ExprColumn.STR_TABLE_ALIAS).append(".SampleFileId");
+        totalAreaNormalizedSQL.append(") X ");
+        totalAreaNormalizedSQL.append(" ) ");
+        ExprColumn totalAreaNormalizedCol = new ExprColumn(this, "TotalAreaNormalized", totalAreaNormalizedSQL, JdbcType.DOUBLE);
+        totalAreaNormalizedCol.setFormat("##0.####%");
+        addColumn(totalAreaNormalizedCol);
     }
 
     private SQLFragment getTransitionJoinSQL()

@@ -343,6 +343,18 @@ public class TargetedMSSchema extends UserSchema
                 return sql;
             }
         },
+        SampleFileFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSampleFile(), "sfile", "SampleFileId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoReplicate(), "rep", "sfile.ReplicateId"));
+                sql.append(getJoinToRunsTable("rep"));
+                return sql;
+            }
+        },
         iRTScaleFK
         {
             @Override
@@ -888,7 +900,6 @@ public class TargetedMSSchema extends UserSchema
         }
 
         if (TABLE_PRECURSOR_ANNOTATION.equalsIgnoreCase(name) ||
-            TABLE_PRECURSOR_CHROM_INFO.equalsIgnoreCase(name) ||
             TABLE_PRECURSOR_LIB_INFO.equalsIgnoreCase(name)
             )
         {
@@ -905,9 +916,22 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.transition
         if (TABLE_TRANSITION_CHROM_INFO.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionFK.getSQL());
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.SampleFileFK.getSQL());
             // Add a link to view the chromatogram an individual transition
             result.setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.TransitionChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
+
+            // AreaNormalized  = (area of transition in the replicate) / (total area of all transitions in the replicate/sample file)
+            SQLFragment areaNormalizedSQL = new SQLFragment("(SELECT Area / X.TotalTransitionAreaInReplicate FROM ");
+            areaNormalizedSQL.append(" ( ");
+            areaNormalizedSQL.append(" SELECT SUM(Area) AS TotalTransitionAreaInReplicate FROM ");
+            areaNormalizedSQL.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
+            areaNormalizedSQL.append(" WHERE tci.SampleFileId = ").append(ExprColumn.STR_TABLE_ALIAS).append(".SampleFileId");
+            areaNormalizedSQL.append(") X ");
+            areaNormalizedSQL.append(" ) ");
+            ExprColumn areaNormalizedCol = new ExprColumn(result, "AreaNormalized", areaNormalizedSQL, JdbcType.DOUBLE);
+            areaNormalizedCol.setFormat("##0.####%");
+            result.addColumn(areaNormalizedCol);
+
             return result;
         }
 
