@@ -185,6 +185,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // verify that on refresh, the selections are persisted to the inputs
         refresh();
+        qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, true);
         assertEquals("Chart Type not round tripped as expected", QCPlotsWebPart.ChartType.PEAK, qcPlotsWebPart.getCurrentChartType());
         assertEquals("Y-Axis Scale not round tripped as expected", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());
@@ -198,6 +199,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // impersonate a different user in this container and verify that initial form fields used
         impersonate(USER);
+        qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, false);
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, false);
         assertEquals("Chart Type not set to default value", QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
@@ -222,6 +224,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         // if the guide set expected range error bar goes beyond zero, show log plot message about it
         createGuideSetFromTable(new GuideSet("2013-08-09", "2013-08-28", "all initial data points"));
         clickTab("Panorama Dashboard");
+        qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, false);
         assertEquals("Y-axis Scale selection wasn't persisted", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());
         qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.PEAK);
@@ -402,15 +405,14 @@ public class TargetedMSQCTest extends TargetedMSTest
     private void createAndInsertAnnotations()
     {
         clickTab("Annotations");
-        PanoramaAnnotations qcAnnotations = new PanoramaAnnotations((TargetedMSQCTest)getCurrentTest());
 
-        QCAnnotationWebPart qcAnnotationWebPart = qcAnnotations.getQcAnnotationWebPart();
+        QCAnnotationWebPart qcAnnotationWebPart = new PanoramaAnnotations(this).getQcAnnotationWebPart();
 
         qcAnnotationWebPart.startInsert().insert(instrumentChange);
         qcAnnotationWebPart.startInsert().insert(reagentChange);
         qcAnnotationWebPart.startInsert().insert(technicianChange);
 
-        QCAnnotationTypeWebPart qcAnnotationTypeWebPart = qcAnnotations.getQcAnnotationTypeWebPart();
+        QCAnnotationTypeWebPart qcAnnotationTypeWebPart = new PanoramaAnnotations(this).getQcAnnotationTypeWebPart();
 
         qcAnnotationTypeWebPart.startInsert().insert(candyChange.getType(), "This happens anytime we get new candies", "808080");
 

@@ -49,7 +49,7 @@ public class GuideSetWebPart extends BodyWebPart
     public DataRegionTable getDataRegion()
     {
         if (_dataRegionTable == null)
-            _dataRegionTable = DataRegionTable.findDataRegionWithin(_test, elements().webPart.findElement(_test.getDriver()));
+            _dataRegionTable = DataRegionTable.findDataRegionWithin(_test, getComponentElement());
         return _dataRegionTable;
     }
 

@@ -19,6 +19,7 @@ import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
+import org.labkey.test.selenium.LazyWebElement;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -124,7 +125,7 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     private class Elements extends BodyWebPart.Elements
     {
-        public Locator.XPathLocator qcSummary = webPart.append(Locator.tagWithId("div", "qcSummary-1"));
+        public Locator.XPathLocator qcSummary = Locator.id(_componentElement.getAttribute("id")).append(Locator.tagWithId("div", "qcSummary-1"));
         public Locator.XPathLocator qcSummaryDetails = qcSummary.append(Locator.tagWithClass("div", "summary-view"));
         public Locator.XPathLocator qcSummaryFolderLink = Locator.tagWithClass("div", "folder-name").append(Locator.tag("a"));
         public Locator.XPathLocator qcSummaryEmptyText = Locator.tagWithClass("div", "item-text").withText("No Skyline documents");

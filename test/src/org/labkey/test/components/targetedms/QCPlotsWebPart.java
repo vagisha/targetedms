@@ -20,6 +20,8 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.components.BodyWebPart;
+import org.labkey.test.components.ext4.Checkbox;
+import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
 import org.openqa.selenium.WebDriver;
@@ -36,20 +38,20 @@ public final class QCPlotsWebPart extends BodyWebPart
 {
     public static final String DEFAULT_TITLE = "Levey-Jennings QC Plots";
 
-    public QCPlotsWebPart(BaseWebDriverTest test)
+    public QCPlotsWebPart(WebDriver driver)
     {
-        super(test, DEFAULT_TITLE);
+        super(driver, DEFAULT_TITLE);
     }
 
-    public QCPlotsWebPart(BaseWebDriverTest test, int index)
+    public QCPlotsWebPart(WebDriver driver, int index)
     {
-        super(test, DEFAULT_TITLE, index);
+        super(driver, DEFAULT_TITLE, index);
     }
 
     @Override
     protected void waitForReady()
     {
-        _test.waitForElement(elements().plot, WebDriverWrapper.WAIT_FOR_PAGE);
+        waitForPlots(1, false);
     }
 
     public enum Scale
@@ -80,13 +82,13 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     private void waitForNoRecords()
     {
-        _test.waitForElement(elements().noRecords);
+        _test.waitFor(() -> elements().noRecords().size() > 0, 10000);
     }
 
     @LogMethod
     public void setScale(Scale scale)
     {
-        WebElement plot = elements().plot.findElement(_test.getDriver());
+        WebElement plot = elements().findPlots().get(0);
         _test._ext4Helper.selectComboBoxItem(elements().scaleCombo, scale.toString());
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
         waitForReady();
@@ -94,7 +96,7 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public Scale getCurrentScale()
     {
-        WebElement scaleInput = elements().scaleCombo.append("//input").findElement(_test.getDriver());
+        WebElement scaleInput = elements().scaleCombo.append("//input").waitForElement(this, 1000);
         return Scale.getEnum(scaleInput.getAttribute("value"));
     }
 
@@ -172,7 +174,7 @@ public final class QCPlotsWebPart extends BodyWebPart
     {
         WebElement plot = null;
         if (hasExistingPlot)
-            plot = elements().plot.findElement(_test.getDriver());
+            plot = elements().findPlots().get(0);
 
         _test._ext4Helper.selectComboBoxItem(elements().chartTypeCombo, chartType.toString());
 
@@ -187,33 +189,27 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public ChartType getCurrentChartType()
     {
-        WebElement typeInput = elements().chartTypeCombo.append("//input").findElement(_test.getDriver());
+        WebElement typeInput = elements().chartTypeCombo.append("//input").waitForElement(this, 1000);
         return ChartType.getEnum(typeInput.getAttribute("value"));
     }
 
     public void setGroupXAxisValuesByDate(boolean check)
     {
-        WebElement plot = elements().plot.findElement(_test.getDriver());
-        if (check)
-            _test._ext4Helper.checkCheckbox(elements().groupedXCheckbox);
-        else
-            _test._ext4Helper.uncheckCheckbox(elements().groupedXCheckbox);
+        WebElement plot = elements().findPlots().get(0);
+        elements().groupedXCheckbox.set(check);
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
         waitForReady();
     }
 
     public boolean isGroupXAxisValuesByDateChecked()
     {
-        return _test._ext4Helper.isChecked(elements().groupedXCheckbox);
+        return elements().groupedXCheckbox.isChecked();
     }
 
     public void setShowAllPeptidesInSinglePlot(boolean check, @Nullable Integer expectedPlotCount)
     {
-        WebElement plot = elements().plot.findElement(_test.getDriver());
-        if (check)
-            _test._ext4Helper.checkCheckbox(elements().singlePlotCheckbox);
-        else
-            _test._ext4Helper.uncheckCheckbox(elements().singlePlotCheckbox);
+        WebElement plot = elements().findPlots().get(0);
+        elements().singlePlotCheckbox.set(check);
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
         waitForReady();
 
@@ -225,13 +221,12 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public boolean isShowAllPeptidesInSinglePlotChecked()
     {
-        return _test._ext4Helper.isChecked(elements().singlePlotCheckbox);
+        return elements().singlePlotCheckbox.isChecked();
     }
 
     public void applyRange()
     {
-        WebElement plotPanel = elements().plotPanel.findElement(_test.getDriver());
-        WebElement panelChild = Locator.css("svg").findElement(plotPanel); // The panel itself doesn't become stale, but its children do
+        WebElement panelChild = Locator.css("svg").findElement(elements().plotPanel); // The panel itself doesn't become stale, but its children do
         _test.clickButton("Apply", 0);
         _test.shortWait().until(ExpectedConditions.stalenessOf(panelChild));
         _test._ext4Helper.waitForMaskToDisappear(BaseWebDriverTest.WAIT_FOR_PAGE);
@@ -242,23 +237,21 @@ public final class QCPlotsWebPart extends BodyWebPart
         if (plotCount > 0)
         {
             if (exact)
-                _test.waitForElements(elements().plot, plotCount, WebDriverWrapper.WAIT_FOR_PAGE);
+                _test.waitFor(() -> elements().findPlots().size() == plotCount, WebDriverWrapper.WAIT_FOR_PAGE);
             else
-                waitForReady();
+                _test.waitFor(() -> elements().findPlots().size() >= plotCount, WebDriverWrapper.WAIT_FOR_PAGE);
         }
         else
         {
-            Locator loc = elements().plotPanel.withText("There were no records found. The date filter applied may be too restrictive.");
-            _test.waitForElement(loc, WebDriverWrapper.WAIT_FOR_PAGE);
+            _test.longWait().until(ExpectedConditions.textToBePresentInElement(elements().plotPanel, "There were no records found. The date filter applied may be too restrictive."));
         }
     }
 
     public List<QCPlot> getPlots()
     {
-        List<WebElement> plotEls = elements().plot.findElements(_test.getDriver());
         List<QCPlot> plots = new ArrayList<>();
 
-        for (WebElement plotEl : plotEls)
+        for (WebElement plotEl : elements().findPlots())
         {
             plots.add(new QCPlot(plotEl));
         }
@@ -333,7 +326,7 @@ public final class QCPlotsWebPart extends BodyWebPart
     {
         List<WebElement> matchingPoints = new ArrayList<>();
 
-        for (WebElement point : elements().svgPointPath.findElements(_test.getDriver()))
+        for (WebElement point : elements().svgPointPath.findElements(this))
         {
             if ((isPrefix && point.getAttribute(attr).startsWith(value))
                 || (!isPrefix && point.getAttribute(attr).equals(value)))
@@ -348,7 +341,7 @@ public final class QCPlotsWebPart extends BodyWebPart
     public WebElement getPointByAcquiredDate(String dateStr)
     {
         dateStr = dateStr.replaceAll("/", "-"); // convert 2013/08/14 -> 2013-08-14
-        List<WebElement> points = elements().svgPoint.findElements(_test.getDriver());
+        List<WebElement> points = elements().svgPoint.findElements(this);
         for (WebElement p : points)
         {
             if (p.getAttribute("title").contains("Acquired: " + dateStr))
@@ -369,13 +362,13 @@ public final class QCPlotsWebPart extends BodyWebPart
         Actions builder = new Actions(_test.getDriver());
         builder.moveToElement(startPoint, -10, 0).clickAndHold().moveToElement(endPoint, 10, 0).release().perform();
 
-        List<WebElement> gsButtons = elements().guideSetSvgButton.findElements(_test.getDriver());
+        List<WebElement> gsButtons = elements().guideSetSvgButton.findElements(this);
         _test.shortWait().until(ExpectedConditions.elementToBeClickable(gsButtons.get(0)));
 
         Integer brushPointCount = getPointElements("fill", "rgba(20, 204, 201, 1)", false).size();
         assertEquals("Unexpected number of points selected via brushing", guideSet.getBrushSelectedPoints(), brushPointCount);
 
-        WebElement plot = elements().plot.findElement(_test.getDriver());
+        WebElement plot = elements().findPlots().get(0);
         gsButtons.get(0).click(); // Create button : index 0
         if (guideSet.getBrushSelectedPoints() != null && guideSet.getBrushSelectedPoints() < 5)
             _test._ext4Helper.clickWindowButton("Create Guide Set Warning", "Yes", 0, 0);
@@ -396,12 +389,12 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public int getLogScaleInvalidCount()
     {
-        return _test.getElementCount(elements().logScaleInvalid);
+        return elements().logScaleInvalid().size();
     }
 
     public int getLogScaleWarningCount()
     {
-        return _test.getElementCount(elements().logScaleWarning);
+        return elements().logScaleWarning().size();
     }
 
     public Locator getLegendItemLocator(String text, boolean exactMatch)
@@ -420,22 +413,22 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     private class Elements extends BodyWebPart.Elements
     {
-        Locator.XPathLocator scaleCombo = webPart.append(Locator.id("scale-combo-box"));
-        Locator.XPathLocator startDate = webPart.append(Locator.id("start-date-field")).append("//input");
-        Locator.XPathLocator endDate = webPart.append(Locator.id("end-date-field")).append("//input");
-        Locator.XPathLocator chartTypeCombo = webPart.append(Locator.id("chart-type-field"));
-        Locator.XPathLocator groupedXCheckbox = webPart.append(Locator.id("grouped-x-field")).append("//input");
-        Locator.XPathLocator singlePlotCheckbox = webPart.append(Locator.id("peptides-single-plot")).append("//input");
+        WebElement startDate = new LazyWebElement(Locator.css("#start-date-field input"), this);
+        WebElement endDate = new LazyWebElement(Locator.css("#end-date-field input"), this);
+        Locator.XPathLocator scaleCombo = Locator.id("scale-combo-box");
+        Locator.XPathLocator chartTypeCombo = Locator.id("chart-type-field");
+        Checkbox groupedXCheckbox = new Checkbox(new LazyWebElement(Locator.css("#grouped-x-field input"), this));
+        Checkbox singlePlotCheckbox = new Checkbox(new LazyWebElement(Locator.css("#peptides-single-plot input"), this));
 
-        Locator.XPathLocator plotPanel = webPart.append(Locator.tagWithClass("div", "tiledPlotPanel"));
-        Locator.XPathLocator plot = plotPanel.append(Locator.tagWithClass("table", "qc-plot-wp"));
-        Locator.XPathLocator plotTitle = plot.append(Locator.tagWithClass("span", "qc-plot-wp-title"));
+        WebElement plotPanel = new LazyWebElement(Locator.css("div.tiledPlotPanel"), this);
 
-        Locator.XPathLocator noRecords = plotPanel.append(Locator.tagContainingText("span", "There were no records found."));
-        Locator.XPathLocator logScaleInvalid = plotPanel.append(Locator.tagContainingText("span", "Log scale invalid for values"));
-        Locator.XPathLocator logScaleWarning = plotPanel.append(Locator.tagContainingText("span", "For log scale, standard deviations below the mean"));
+        List<WebElement> findPlots() { return Locator.css("table.qc-plot-wp").waitForElements(plotPanel, 20000);}
 
-        Locator.XPathLocator extFormDisplay = Locator.tagWithClass("div", "x4-form-display-field");
+        List<WebElement> noRecords() { return Locator.tagContainingText("span", "There were no records found.").findElements(plotPanel);}
+        List<WebElement> logScaleInvalid() { return Locator.tagContainingText("span", "Log scale invalid for values").findElements(plotPanel);}
+        List<WebElement> logScaleWarning() { return Locator.tagContainingText("span", "For log scale, standard deviations below the mean").findElements(plotPanel);}
+
+        Locator extFormDisplay = Locator.css("div.x4-form-display-field");
 
         Locator.CssLocator guideSetTrainingRect = Locator.css("svg rect.training");
         Locator.CssLocator guideSetSvgButton = Locator.css("svg g.guideset-svg-button text");

@@ -22,23 +22,18 @@ import org.labkey.test.pages.PortalBodyPanel;
 
 public class PanoramaDashboard extends PortalBodyPanel
 {
-    private QCPlotsWebPart _qcPlotsWebPart;
-    private QCSummaryWebPart _qcSummaryWebPart;
-
     public PanoramaDashboard(BaseWebDriverTest test)
     {
         super(test.getDriver());
-        _qcPlotsWebPart = new QCPlotsWebPart(test);
-        _qcSummaryWebPart = new QCSummaryWebPart(test.getDriver());
     }
 
     public QCPlotsWebPart getQcPlotsWebPart()
     {
-        return _qcPlotsWebPart;
+        return new QCPlotsWebPart(getDriver());
     }
 
     public QCSummaryWebPart getQcSummaryWebPart()
     {
-        return _qcSummaryWebPart;
+        return new QCSummaryWebPart(getDriver());
     }
 }

@@ -15,10 +15,13 @@
  */
 package org.labkey.test.components.targetedms;
 
+import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
+import org.labkey.test.selenium.LazyWebElement;
 import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -96,7 +99,6 @@ public class ParetoPlotsWebPart extends BodyWebPart
     public boolean isChartTypeTickValid(String chartType)
     {
         return ChartTypeTicks.getChartTypeTick(chartType) != null;
-
     }
 
     public int getPlotBarHeight(int guideSetId, int barPlotNum)
@@ -106,7 +108,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public void clickLeveyJenningsLink(BaseWebDriverTest test)
     {
-        test.waitForElement(elements().notFound); //Check for no guide sets
+        Assert.assertTrue(elements().notFound.isDisplayed()); //Check for no guide sets
         test.clickAndWait(elements().leveyJenningsLink); //click on the link to take user to Levey-Jennings plot
     }
 
@@ -118,7 +120,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     private class Elements extends BodyWebPart.Elements
     {
-        Locator.XPathLocator notFound = webPart.append(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("Guide Sets not found."));
-        Locator.XPathLocator leveyJenningsLink = webPart.append(Locator.linkWithText("Levey-Jennings QC Plots"));
+        WebElement notFound = new LazyWebElement(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("Guide Sets not found."), this).withTimeout(1000);
+        WebElement leveyJenningsLink = new LazyWebElement(Locator.linkWithText("Levey-Jennings QC Plots"), this);
     }
 }
