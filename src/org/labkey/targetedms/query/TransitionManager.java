@@ -22,9 +22,7 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
-import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
@@ -42,9 +40,9 @@ public class TransitionManager
 {
     private TransitionManager() {}
 
-    public static Transition get(int transitionId, User user, Container container)
+    public static Transition get(int transitionId)
     {
-        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container))).getObject(transitionId, Transition.class);
+        return new TableSelector(TargetedMSManager.getTableInfoTransition()).getObject(transitionId, Transition.class);
     }
 
     public static TransitionChromInfo getTransitionChromInfo(Container c, int id)
@@ -52,17 +50,17 @@ public class TransitionManager
         SQLFragment sql = new SQLFragment("SELECT tci.* FROM ");
         sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoGeneralTransition(), "gt");
+        sql.append(TargetedMSManager.getTableInfoTransition(), "t");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-        sql.append(" WHERE tci.Id = gt.Id AND gt.GeneralPrecursorId = gp.Id AND gp.GeneralMoleculeId = gm.Id AND ");
-        sql.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND tci.Id = ?");
+        sql.append(" WHERE tci.TransitionId = t.Id AND t.PrecursorId = pre.Id AND pre.PeptideId = pep.Id AND ");
+        sql.append("pep.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND tci.Id = ?");
         sql.add(false);
         sql.add(c.getId());
         sql.add(id);
@@ -112,7 +110,7 @@ public class TransitionManager
     public static double getMaxTransitionIntensity(int peptideId, Transition.Type fragmentType)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(tci.Height) FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "pepci");
+        sql.append(TargetedMSManager.getTableInfoPeptideChromInfo(), "pepci");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
         sql.append(", ");
@@ -138,7 +136,7 @@ public class TransitionManager
             sql.append("tran.FragmentType " + condition +  " 'precursor' ");
         }
         sql.append(" AND ");
-        sql.append("pepci.GeneralMoleculeId=?");
+        sql.append("pepci.PeptideId=?");
         sql.add(peptideId);
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
@@ -154,9 +152,9 @@ public class TransitionManager
         return new HashSet<Integer>(tranChromIndexes);
     }
 
-    public static Collection<Transition> getTransitionsForPrecursor(int precursorId, User user, Container container)
+    public static Collection<Transition> getTransitionsForPrecursor(int precursorId)
     {
-        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container)),
+        return new TableSelector(TargetedMSManager.getTableInfoTransition(),
                                  new SimpleFilter(FieldKey.fromParts("PrecursorId"), precursorId), null).getCollection(Transition.class);
     }
 

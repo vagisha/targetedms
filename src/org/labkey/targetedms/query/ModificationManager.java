@@ -214,7 +214,7 @@ public class ModificationManager
         sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPeptideStructuralModification(), "mod");
         sql.append(" , ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         sql.append(" , ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" , ");
@@ -224,9 +224,9 @@ public class ModificationManager
         sql.append(" AND ");
         sql.append(" pg.runId = run.id ");
         sql.append(" AND ");
-        sql.append(" gm.peptideGroupId = pg.id ");
+        sql.append(" pep.peptideGroupId = pg.id ");
         sql.append(" AND ");
-        sql.append(" mod.peptideId = gm.id ");
+        sql.append(" mod.peptideId = pep.id ");
 
         final Map<Integer, Set<Integer>> peptideModIndexMap = new HashMap<>();
 
@@ -264,7 +264,7 @@ public class ModificationManager
         sql.append(" , ");
         sql.append(TargetedMSManager.getTableInfoRunIsotopeModification(), "rmod");
         sql.append(" , ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         sql.append(" , ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" WHERE rmod.runId = ? ");
@@ -272,9 +272,9 @@ public class ModificationManager
         sql.append(" AND ");
         sql.append(" pg.runId = rmod.runId ");
         sql.append(" AND ");
-        sql.append(" gm.peptideGroupId = pg.id ");
+        sql.append(" pep.peptideGroupId = pg.id ");
         sql.append(" AND ");
-        sql.append(" mod.peptideId = gm.id ");
+        sql.append(" mod.peptideId = pep.id ");
         sql.append(" AND ");
         sql.append(" mod.isotopeModId = rmod.isotopeModId ");
 

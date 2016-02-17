@@ -173,9 +173,9 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_MOLECULE);
     }
 
-    public static TableInfo getTableInfoGeneralMoleculeAnnotation()
+    public static TableInfo getTableInfoPeptideAnnotation()
     {
-        return getSchema().getTable(TargetedMSSchema.TABLE_GENERAL_MOLECULE_ANNOTATION);
+        return getSchema().getTable(TargetedMSSchema.TABLE_PEPTIDE_ANNOTATION);
     }
 
     public static TableInfo getTableInfoProtein()
@@ -213,9 +213,9 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_TRANSITION_CHROM_INFO_ANNOTATION);
     }
 
-    public static TableInfo getTableInfoGeneralMoleculeChromInfo()
+    public static TableInfo getTableInfoPeptideChromInfo()
     {
-        return getSchema().getTable(TargetedMSSchema.TABLE_GENERAL_MOLECULE_CHROM_INFO);
+        return getSchema().getTable(TargetedMSSchema.TABLE_PEPTIDE_CHROM_INFO);
     }
 
     public static TableInfo getTableInfoPeptideAreaRatio()
@@ -411,26 +411,6 @@ public class TargetedMSManager
     public static TableInfo getTableInfoGuideSet()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_GUIDE_SET);
-    }
-
-    public static TableInfo getTableInfoGeneralMolecule()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_GENERAL_MOLECULE);
-    }
-
-    public static TableInfo getTableInfoGeneralTransition()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_GENERAL_TRANSITION);
-    }
-
-    public static TableInfo getTableInfoGeneralPrecursor()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_GENERAL_PRECURSOR);
-    }
-
-    private static TableInfo getTableInfoMoleculePrecursor()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR);
     }
 
     public static Integer addRunToQueue(ViewBackgroundInfo info,
@@ -652,17 +632,17 @@ public class TargetedMSManager
     private static int getConflictedPeptideCount(int runId)
     {
         SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
         sql.append(" WHERE pepgrp.runid = ?");
         sql.add(runId);
         sql.append(" AND prec.representativedatastate = ?");
         sql.add(RepresentativeDataState.Conflicted.ordinal());
-        sql.append(" AND gp.GeneralMoleculeId = gm.Id");
-        sql.append(" AND gm.PeptideGroupId = pepgrp.Id");
+        sql.append(" AND prec.PeptideId = pep.Id");
+        sql.append(" AND pep.PeptideGroupId = pepgrp.Id");
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
         return count != null ? count : 0;
     }
@@ -759,9 +739,9 @@ public class TargetedMSManager
         // Get a list of runIds that have proteins that are either representative, deprecated or conflicted.
         SQLFragment reprRunIdSql = new SQLFragment();
         reprRunIdSql.append("SELECT DISTINCT (pepgrp.RunId) FROM ");
-        reprRunIdSql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
+        reprRunIdSql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
         reprRunIdSql.append(", ");
-        reprRunIdSql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        reprRunIdSql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         reprRunIdSql.append(", ");
         reprRunIdSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
         reprRunIdSql.append(", ");
@@ -770,8 +750,8 @@ public class TargetedMSManager
         String states = StringUtils.join(stateArray, ",");
 
         reprRunIdSql.append(" WHERE prec.RepresentativeDataState IN (" + states + ")");
-        reprRunIdSql.append(" AND gp.GeneralMoleculeId = gm.Id");
-        reprRunIdSql.append(" AND gm.PeptideGroupId = pepgrp.Id");
+        reprRunIdSql.append(" AND prec.PeptideId = pep.Id");
+        reprRunIdSql.append(" AND pep.PeptideGroupId = pepgrp.Id");
         reprRunIdSql.append(" AND Container = ?");
         reprRunIdSql.add(container);
         reprRunIdSql.append(" AND runs.Id = pepgrp.RunId");
@@ -852,12 +832,12 @@ public class TargetedMSManager
         String sql = "SELECT run.* FROM "+
                      getTableInfoRuns()+" AS run, "+
                      getTableInfoPeptideGroup()+" AS pg, "+
-                     getTableInfoGeneralMolecule()+" AS gm, "+
-                     getTableInfoGeneralPrecursor()+" AS gp "+
+                     getTableInfoPeptide()+" AS pep, "+
+                     getTableInfoPrecursor()+" AS pre "+
                      "WHERE run.Id=pg.RunId "+
-                     "AND pg.Id=gm.PeptideGroupId "+
-                     "AND gm.Id=gp.GeneralMoleculeId "+
-                     "AND gp.Id=?";
+                     "AND pg.Id=pep.PeptideGroupId "+
+                     "AND pep.Id=pre.PeptideId "+
+                     "AND pre.Id=?";
         SQLFragment sf = new SQLFragment(sql);
         sf.add(precursorId);
 
@@ -874,10 +854,10 @@ public class TargetedMSManager
         String sql = "SELECT run.* FROM "+
                      getTableInfoRuns()+" AS run, "+
                      getTableInfoPeptideGroup()+" AS pg, "+
-                     getTableInfoGeneralMolecule()+" AS gm "+
+                     getTableInfoPeptide()+" AS pep "+
                      "WHERE run.Id=pg.RunId "+
-                     "AND pg.Id=gm.PeptideGroupId "+
-                     "AND gm.Id=?";
+                     "AND pg.Id=pep.PeptideGroupId "+
+                     "AND pep.Id=?";
         SQLFragment sf = new SQLFragment(sql);
         sf.add(peptideId);
 
@@ -910,10 +890,10 @@ public class TargetedMSManager
         execute("DELETE FROM " + getTableInfoPrecursorChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
 
         // Delete from PeptideAreaRatio (dependent of PeptideChromInfo)
-        execute(getDependentSampleFileDeleteSql(getTableInfoPeptideAreaRatio(), "PeptideChromInfoId", getTableInfoGeneralMoleculeChromInfo()), sampleFileId);
+        execute(getDependentSampleFileDeleteSql(getTableInfoPeptideAreaRatio(), "PeptideChromInfoId", getTableInfoPeptideChromInfo()), sampleFileId);
 
         // Delete from PeptideChromInfo
-        execute("DELETE FROM " + getTableInfoGeneralMoleculeChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
+        execute("DELETE FROM " + getTableInfoPeptideChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
     }
 
     private static String getDependentSampleFileDeleteSql(TableInfo fromTable, String fromFk, TableInfo dependentTable)
@@ -935,56 +915,50 @@ public class TargetedMSManager
         deletePrecursorChromInfoDependent(getTableInfoPrecursorAreaRatio());
 
         // Delete from PeptideAreaRatio
-        deleteGeneralMoleculeChromInfoDependent(getTableInfoPeptideAreaRatio());
+        deletePeptideChromInfoDependent(getTableInfoPeptideAreaRatio());
 
         // Delete from TransitionChromInfo
-        deleteGeneralTransitionDependent(getTableInfoTransitionChromInfo(), "TransitionId");
+        deleteTransitionDependent(getTableInfoTransitionChromInfo());
         // Delete from TransitionAnnotation
-        deleteGeneralTransitionDependent(getTableInfoTransitionAnnotation(), "TransitionId");
+        deleteTransitionDependent(getTableInfoTransitionAnnotation());
         // Delete from TransitionLoss
-        deleteGeneralTransitionDependent(getTableInfoTransitionLoss(), "TransitionId");
+        deleteTransitionDependent(getTableInfoTransitionLoss());
         // Delete from TransitionOptimization
-        deleteGeneralTransitionDependent(getTableInfoTransitionOptimization(), "TransitionId");
+        deleteTransitionDependent(getTableInfoTransitionOptimization());
         // Delete from MoleculeTransition
-        deleteGeneralTransitionDependent(getTableInfoMoleculeTransition(), "TransitionId");
+        deleteTransitionDependent(getTableInfoMoleculeTransition());
+
         // Delete from Transition
-        deleteGeneralTransitionDependent(getTableInfoTransition(), "Id");
-
-        //Delete GeneralTransition
-        deleteGeneralPrecursorDependent(getTableInfoGeneralTransition(), "GeneralPrecursorId");
+        deletePrecursorDependent(getTableInfoTransition());
         // Delete from PrecursorChromInfo
-        deleteGeneralPrecursorDependent(getTableInfoPrecursorChromInfo(), "PrecursorId");
+        deletePrecursorDependent(getTableInfoPrecursorChromInfo());
         // Delete from PrecursorAnnotation
-        deleteGeneralPrecursorDependent(getTableInfoPrecursorAnnotation(), "PrecursorId");
+        deletePrecursorDependent(getTableInfoPrecursorAnnotation());
         // Delete from PrecursorLibInfo
-        deleteGeneralPrecursorDependent(getTableInfoPrecursorLibInfo(), "PrecursorId");
+        deletePrecursorDependent(getTableInfoPrecursorLibInfo());
+
+
+        // Delete from PeptideAnnotation
+        deletePeptideDependent(getTableInfoPeptideAnnotation());
         // Delete from Precursor
-        deleteGeneralPrecursorDependent(getTableInfoPrecursor(), "Id");
-        //Delete from MoleculePrecursor
-        deleteGeneralPrecursorDependent(getTableInfoMoleculePrecursor(), "Id");
-
-        //Delete GeneralPrecursor
-        deleteGeneralMoleculeDependent(getTableInfoGeneralPrecursor(), "GeneralMoleculeId");
-        // Delete from GeneralMoleculeAnnotation
-        deleteGeneralMoleculeDependent(getTableInfoGeneralMoleculeAnnotation(), "GeneralMoleculeId");
-        // Delete from GeneralMoleculeChromInfo
-        deleteGeneralMoleculeDependent(getTableInfoGeneralMoleculeChromInfo(), "GeneralMoleculeId");
-
+        deletePeptideDependent(getTableInfoPrecursor());
+        // Delete from PeptideChromInfo
+        deletePeptideDependent(getTableInfoPeptideChromInfo());
         // Delete from PeptideStructuralModification
-        deleteGeneralMoleculeDependent(getTableInfoPeptideStructuralModification(), "PeptideId");
+        deletePeptideDependent(getTableInfoPeptideStructuralModification());
         // Delete from PeptideIsotopeModification
-        deleteGeneralMoleculeDependent(getTableInfoPeptideIsotopeModification(), "PeptideId");
+        deletePeptideDependent(getTableInfoPeptideIsotopeModification());
         // Delete from Molecule
-        deleteGeneralMoleculeDependent(getTableInfoMolecule(), "Id");
-        // Delete from Peptide
-        deleteGeneralMoleculeDependent(getTableInfoPeptide(), "Id");
+        deletePeptideDependent(getTableInfoMolecule());
 
-        //Delete from GeneralMolecule
-        deletePeptideGroupDependent(getTableInfoGeneralMolecule());
+
+        // Delete from Peptide
+        deletePeptideGroupDependent(getTableInfoPeptide());
         // Delete from Protein
         deletePeptideGroupDependent(getTableInfoProtein());
         // Delete from PeptideGroupAnnotation
         deletePeptideGroupDependent(getTableInfoPeptideGroupAnnotation());
+
 
         // Delete from sampleFile
         deleteReplicateDependent(getTableInfoSampleFile());
@@ -1065,57 +1039,53 @@ public class TargetedMSManager
          execute("DELETE FROM " + tableInfo +
                  " WHERE TransitionChromInfoId IN (SELECT Id FROM " +
                  getTableInfoTransitionChromInfo() + " WHERE TransitionId IN (SELECT Id FROM " +
-                 getTableInfoGeneralTransition() + " WHERE GeneralPrecursorId IN (SELECT Id FROM " +
-                 getTableInfoGeneralPrecursor() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                 getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                 getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
+                 getTableInfoTransition() + " WHERE PrecursorId IN (SELECT Id FROM " +
+                 getTableInfoPrecursor() + " WHERE PeptideId IN (SELECT Id FROM " + getTableInfoPeptide() + " WHERE " +
+                 "PeptideGroupId IN (SELECT Id FROM " + getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
                  getTableInfoRuns() + " WHERE Deleted = ?))))))", true);
-
     }
 
     public static void deletePrecursorChromInfoDependent(TableInfo tableInfo)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE PrecursorChromInfoId IN (SELECT Id FROM " +
-                getTableInfoPrecursorChromInfo() + " WHERE PrecursorId IN (SELECT Id FROM " +
-                getTableInfoGeneralPrecursor() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
+        execute("DELETE FROM " + tableInfo + " WHERE PrecursorChromInfoId IN (SELECT Id FROM "
+                + getTableInfoPrecursorChromInfo() + " WHERE PrecursorId IN (SELECT Id FROM "
+                + getTableInfoPrecursor() + " WHERE PeptideId IN (SELECT Id FROM "
+                + getTableInfoPeptide() + " WHERE " +
+                "PeptideGroupId IN (SELECT Id FROM " + getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
                 getTableInfoRuns() + " WHERE Deleted = ?)))))", true);
     }
 
-    public static void deleteGeneralMoleculeChromInfoDependent(TableInfo tableInfo)
+    public static void deletePeptideChromInfoDependent(TableInfo tableInfo)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE PeptideChromInfoId IN (SELECT Id FROM " +
-                getTableInfoGeneralMoleculeChromInfo() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
+        execute("DELETE FROM " + tableInfo + " WHERE PeptideChromInfoId IN (SELECT Id FROM "
+                + getTableInfoPeptideChromInfo() + " WHERE PeptideId IN (SELECT Id FROM "
+                + getTableInfoPeptide() + " WHERE " +
+                "PeptideGroupId IN (SELECT Id FROM " + getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
                 getTableInfoRuns() + " WHERE Deleted = ?))))", true);
     }
 
-    public static void deleteGeneralTransitionDependent(TableInfo tableInfo, String colName)
+    public static void deleteTransitionDependent(TableInfo tableInfo)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE " + colName + " IN (SELECT Id FROM " +
-                getTableInfoGeneralTransition() + " WHERE GeneralPrecursorId IN (SELECT Id FROM " +
-                getTableInfoGeneralPrecursor() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
+        execute("DELETE FROM " + tableInfo + " WHERE TransitionId IN (SELECT Id FROM " +
+                getTableInfoTransition() + " WHERE PrecursorId IN (SELECT Id FROM " +
+                getTableInfoPrecursor() + " WHERE PeptideId IN (SELECT Id FROM " + getTableInfoPeptide() + " WHERE " +
+                "PeptideGroupId IN (SELECT Id FROM " + getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
                 getTableInfoRuns() + " WHERE Deleted = ?)))))", true);
     }
 
-    private static void deleteGeneralPrecursorDependent(TableInfo tableInfo, String colName)
+    private static void deletePrecursorDependent(TableInfo tableInfo)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE " + colName + " IN (SELECT Id FROM " +
-                getTableInfoGeneralPrecursor() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
+        execute("DELETE FROM " + tableInfo + " WHERE PrecursorId IN (SELECT Id FROM " +
+                getTableInfoPrecursor() + " WHERE PeptideId IN (SELECT Id FROM " + getTableInfoPeptide() + " WHERE " +
+                "PeptideGroupId IN (SELECT Id FROM " + getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
                 getTableInfoRuns() + " WHERE Deleted = ?))))", true);
     }
 
-    private static void deleteGeneralMoleculeDependent(TableInfo tableInfo, String colName)
+    private static void deletePeptideDependent(TableInfo tableInfo)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE " + colName + " IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
+        execute("DELETE FROM " + tableInfo + " WHERE PeptideId IN (SELECT Id FROM "
+                + getTableInfoPeptide() + " WHERE " +
+                "PeptideGroupId IN (SELECT Id FROM " + getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
                 getTableInfoRuns() + " WHERE Deleted = ?)))", true);
     }
 

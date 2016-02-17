@@ -23,8 +23,10 @@ import java.util.List;
  * Date: 4/2/12
  * Time: 10:28 AM
  */
-public class Peptide extends GeneralMolecule
+public class Peptide extends AnnotatedEntity<PeptideAnnotation>
 {
+    private int _peptideGroupId;
+
     private String _sequence;
     private String _peptideModifiedSequence;
     private String _previousAa;
@@ -33,8 +35,11 @@ public class Peptide extends GeneralMolecule
     private Integer _endIndex;
     private double _calcNeutralMass;
     private int _numMissedCleavages;
+    private Double _predictedRetentionTime;
+    private Double _avgMeasuredRetentionTime;  // average measured retention time over all replicates
 
-    private List<GeneralMoleculeAnnotation> annotations;
+    private Double _rtCalculatorScore;
+
 
     private Integer _rank;  // peptide rank either by spectrum count or by the total intensity
                            // of the picked transition peaks.
@@ -43,12 +48,25 @@ public class Peptide extends GeneralMolecule
     private Boolean _decoy;
 
     private List<Precursor> _precursorList;
-    private List<GeneralMoleculeChromInfo> _generalMoleculeChromInfoList;
+    private List<PeptideChromInfo> _peptideChromInfoList;
 
     private List<StructuralModification> _structuralMods;
     private List<IsotopeModification> _isotopeMods;
+    private String _note;
 
     private String _standardType;
+
+    private Double _explicitRetentionTime;
+
+    public int getPeptideGroupId()
+    {
+        return _peptideGroupId;
+    }
+
+    public void setPeptideGroupId(int peptideGroupId)
+    {
+        _peptideGroupId = peptideGroupId;
+    }
 
     public String getSequence()
     {
@@ -130,6 +148,36 @@ public class Peptide extends GeneralMolecule
         _numMissedCleavages = numMissedCleavages;
     }
 
+    public Double getPredictedRetentionTime()
+    {
+        return _predictedRetentionTime;
+    }
+
+    public void setPredictedRetentionTime(Double predictedRetentionTime)
+    {
+        _predictedRetentionTime = predictedRetentionTime;
+    }
+
+    public Double getAvgMeasuredRetentionTime()
+    {
+        return _avgMeasuredRetentionTime;
+    }
+
+    public void setAvgMeasuredRetentionTime(Double avgMeasuredRetentionTime)
+    {
+        _avgMeasuredRetentionTime = avgMeasuredRetentionTime;
+    }
+
+    public Double getRtCalculatorScore()
+    {
+        return _rtCalculatorScore;
+    }
+
+    public void setRtCalculatorScore(Double rtCalculatorScore)
+    {
+        _rtCalculatorScore = rtCalculatorScore;
+    }
+
     public Integer getRank()
     {
         return _rank;
@@ -165,14 +213,14 @@ public class Peptide extends GeneralMolecule
         _precursorList = precursorList;
     }
 
-    public List<GeneralMoleculeChromInfo> getGeneralMoleculeChromInfoList()
+    public List<PeptideChromInfo> getPeptideChromInfoList()
     {
-        return _generalMoleculeChromInfoList;
+        return _peptideChromInfoList;
     }
 
-    public void setGeneralMoleculeChromInfoList(List<GeneralMoleculeChromInfo> generalMoleculeChromInfoList)
+    public void setPeptideChromInfoList(List<PeptideChromInfo> peptideChromInfoList)
     {
-        _generalMoleculeChromInfoList = generalMoleculeChromInfoList;
+        _peptideChromInfoList = peptideChromInfoList;
     }
 
     public List<StructuralModification> getStructuralMods()
@@ -195,6 +243,16 @@ public class Peptide extends GeneralMolecule
         _isotopeMods = isotopeMods;
     }
 
+    public void setNote(String note)
+    {
+        _note = note;
+    }
+
+    public String getNote()
+    {
+        return _note;
+    }
+
     public String getStandardType()
     {
         return _standardType;
@@ -210,16 +268,14 @@ public class Peptide extends GeneralMolecule
         return _standardType != null;
     }
 
-    @Override
-    public List<GeneralMoleculeAnnotation> getAnnotations()
+    public Double getExplicitRetentionTime()
     {
-        return annotations;
+        return _explicitRetentionTime;
     }
 
-    @Override
-    public void setAnnotations(List<GeneralMoleculeAnnotation> annotations)
+    public void setExplicitRetentionTime(Double explicitRetentionTime)
     {
-        this.annotations = annotations;
+        _explicitRetentionTime = explicitRetentionTime;
     }
 
     public static class Modification extends SkylineEntity

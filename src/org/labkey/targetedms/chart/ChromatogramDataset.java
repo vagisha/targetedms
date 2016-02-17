@@ -18,15 +18,13 @@ package org.labkey.targetedms.chart;
 import org.jfree.chart.ChartColor;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.labkey.api.data.Container;
-import org.labkey.api.security.User;
 import org.labkey.api.util.Formats;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.model.PrecursorComparator;
 import org.labkey.targetedms.parser.Chromatogram;
-import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
+import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.SampleFile;
@@ -186,9 +184,7 @@ public abstract class ChromatogramDataset
 
     static class PeptideDataset extends ChromatogramDataset
     {
-        private Container _container;
-        private User _user;
-        private GeneralMoleculeChromInfo _pepChromInfo;
+        private PeptideChromInfo _pepChromInfo;
         private final int _peptideId;
         private final int _sampleFileId;
         private List<ChartAnnotation> _annotations;
@@ -198,13 +194,13 @@ public abstract class ChromatogramDataset
         private PrecursorColorIndexer _colorIndexer;
         private Map<Integer, Color> _seriesColors;
 
-        public PeptideDataset(GeneralMoleculeChromInfo pepChromInfo, boolean syncIntensity, boolean syncRt, User user, org.labkey.api.data.Container container)
+        public PeptideDataset(PeptideChromInfo pepChromInfo, boolean syncIntensity, boolean syncRt)
         {
-            this(pepChromInfo.getGeneralMoleculeId(), pepChromInfo.getSampleFileId(), syncIntensity, syncRt, user, container);
+            this(pepChromInfo.getPeptideId(), pepChromInfo.getSampleFileId(), syncIntensity, syncRt);
             _pepChromInfo = pepChromInfo;
         }
 
-        PeptideDataset(int peptideId, int sampleFileId, boolean syncIntensity, boolean syncRt, User user, org.labkey.api.data.Container container)
+        PeptideDataset(int peptideId, int sampleFileId, boolean syncIntensity, boolean syncRt)
         {
             _peptideId = peptideId;
             _sampleFileId = sampleFileId;
@@ -216,9 +212,7 @@ public abstract class ChromatogramDataset
             // Create a map of colors to be used for drawing the peaks.
             _seriesColors = new HashMap<>();
             TargetedMSRun run = TargetedMSManager.getRunForPeptide(_peptideId);
-            _colorIndexer = new PrecursorColorIndexer(run.getId(), _peptideId, user, container);
-            _user = user;
-            _container = container;
+            _colorIndexer = new PrecursorColorIndexer(run.getId(), _peptideId);
         }
 
         @Override
@@ -271,13 +265,12 @@ public abstract class ChromatogramDataset
 
         protected String getLabel(PrecursorChromInfo pChromInfo)
         {
-            return LabelFactory.precursorLabel(pChromInfo.getPrecursorId(), _user, _container);
+            return LabelFactory.precursorLabel(pChromInfo.getPrecursorId());
         }
 
         protected List<PrecursorChromInfoPlus> getPrecursorChromInfos()
         {
-            List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptide(_peptideId,
-                    _sampleFileId, _user, _container);
+            List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptide(_peptideId, _sampleFileId);
 
             List<PrecursorChromInfoPlus> nonOptimizationPeaks = new ArrayList<>();
             for(PrecursorChromInfoPlus pChromInfo: precursorChromInfoList)
@@ -397,13 +390,13 @@ public abstract class ChromatogramDataset
 
         protected Color getSeriesColor(PrecursorChromInfo pChromInfo, int seriesIndex)
         {
-            return ChartColors.getPrecursorColor(_colorIndexer.getColorIndex(pChromInfo.getPrecursorId(), _user, _container));
+            return ChartColors.getPrecursorColor(_colorIndexer.getColorIndex(pChromInfo.getPrecursorId()));
         }
 
         @Override
         public String getChartTitle()
         {
-            return LabelFactory.peptideChromInfoChartTitle(_pepChromInfo, _user, _container);
+            return LabelFactory.peptideChromInfoChartTitle(_pepChromInfo);
         }
 
         @Override
@@ -468,19 +461,13 @@ public abstract class ChromatogramDataset
         private PeakInChart _bestPeakInChart;
         private PrecursorChromInfo _bestPrecursorChromInfo;
         private int _bestPeakSeriesIndex;
-        private Container _container;
-        private User _user;
 
-        public PrecursorOptimizationPeakDataset(PrecursorChromInfo precursorChromInfo, boolean syncIntensity, boolean syncRt,
-                                                User user, org.labkey.api.data.Container container)
+        public PrecursorOptimizationPeakDataset(PrecursorChromInfo precursorChromInfo, boolean syncIntensity, boolean syncRt)
         {
-            super(PrecursorManager.get(precursorChromInfo.getPrecursorId(), user, container).getGeneralMoleculeId(),
+            super(PrecursorManager.get(precursorChromInfo.getPrecursorId()).getPeptideId(),
                     precursorChromInfo.getSampleFileId(),
                   syncIntensity,
-                  syncRt, user, container);
-
-            _user = user;
-            _container = container;
+                  syncRt);
             _precursorChromInfo = precursorChromInfo;
         }
 
@@ -499,10 +486,9 @@ public abstract class ChromatogramDataset
         protected List<PrecursorChromInfoPlus> getPrecursorChromInfos()
         {
             // We have the ID of the precursorChromInfo that is not an optimization peak.
-            List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptideChromInfo(
-                    _precursorChromInfo.getGeneralMoleculeChromInfoId(),
+            List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptideChromInfo(_precursorChromInfo.getPeptideChromInfoId(),
                     _precursorChromInfo.getPrecursorId(),
-                    _precursorChromInfo.getSampleFileId(), _user, _container);
+                    _precursorChromInfo.getSampleFileId());
 
             Collections.sort(precursorChromInfoList, new Comparator<PrecursorChromInfoPlus>()
             {
@@ -545,13 +531,13 @@ public abstract class ChromatogramDataset
         @Override
         protected String getLabel(PrecursorChromInfo pChromInfo)
         {
-            return LabelFactory.precursorChromInfoLabel(pChromInfo, _user, _container);
+            return LabelFactory.precursorChromInfoLabel(pChromInfo);
         }
 
         @Override
         public String getChartTitle()
         {
-            return LabelFactory.precursorChromInfoChartTitle(_precursorChromInfo, _user, _container);
+            return LabelFactory.precursorChromInfoChartTitle(_precursorChromInfo);
         }
 
         @Override
@@ -579,17 +565,13 @@ public abstract class ChromatogramDataset
         private double _bestTransitionRt;
         private int _bestTransitionSeriesIndex;
         private Double _bestTransitionPpm;
-        private Container _container;
-        private User _user;
 
-        public PrecursorDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
+        public PrecursorDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt)
         {
             _pChromInfo = pChromInfo;
             _syncRt = syncRt;
             _syncIntensity = syncIntensity;
-            _precursor = PrecursorManager.get(_pChromInfo.getPrecursorId(), user, container);
-            _user = user;
-            _container = container;
+            _precursor = PrecursorManager.get(_pChromInfo.getPrecursorId());
         }
 
         @Override
@@ -620,7 +602,7 @@ public abstract class ChromatogramDataset
                     continue;
                 for(TransitionChromInfo tChromInfo: tChromInfoList)
                 {
-                    Transition transition = TransitionManager.get(tChromInfo.getTransitionId(), _user, _container);
+                    Transition transition = TransitionManager.get(tChromInfo.getTransitionId());
 
                     if(include(transition))
                     {
@@ -672,7 +654,7 @@ public abstract class ChromatogramDataset
                 // If we are synchronizing the intensity axis, get the maximum intensity for a transition
                 // (of the given type - PRECURSOR, PRODUCT or ALL) over all replicates.
                 // TODO: Filter to the currently selected replicates.
-                _maxDisplayIntensity = TransitionManager.getMaxTransitionIntensity(precursor.getGeneralMoleculeId(), getTransitionType());
+                _maxDisplayIntensity = TransitionManager.getMaxTransitionIntensity(precursor.getPeptideId(), getTransitionType());
             }
         }
 
@@ -692,8 +674,8 @@ public abstract class ChromatogramDataset
             if(_syncRt)
             {
                 // Get the minimum and maximum RT for the peptide over all the replicates
-                _minDisplayRt = PeptideManager.getMinRetentionTime(precursor.getGeneralMoleculeId());
-                _maxDisplayRt = PeptideManager.getMaxRetentionTime(precursor.getGeneralMoleculeId());
+                _minDisplayRt = PeptideManager.getMinRetentionTime(precursor.getPeptideId());
+                _maxDisplayRt = PeptideManager.getMaxRetentionTime(precursor.getPeptideId());
                 if(_minDisplayRt == null) _minDisplayRt = 0.0;
                 if(_maxDisplayRt == null) _maxDisplayRt = 0.0;
                 margin = (_maxDisplayRt - _minDisplayRt) * 0.15;
@@ -706,11 +688,11 @@ public abstract class ChromatogramDataset
                 // get the minimum minStartTime and maximum maxEndTime for all precursors of this peptide in this replicate.
                 if (pciMinStartTime == null)
                 {
-                    pciMinStartTime = PeptideManager.getMinRetentionTime(precursor.getGeneralMoleculeId(), pChromInfo.getSampleFileId());
+                    pciMinStartTime = PeptideManager.getMinRetentionTime(precursor.getPeptideId(), pChromInfo.getSampleFileId());
                 }
                 if (pciMaxEndTime == null)
                 {
-                    pciMaxEndTime = PeptideManager.getMaxRetentionTime(precursor.getGeneralMoleculeId(), pChromInfo.getSampleFileId());
+                    pciMaxEndTime = PeptideManager.getMaxRetentionTime(precursor.getPeptideId(), pChromInfo.getSampleFileId());
                 }
                 if(pciMinStartTime != null && pciMaxEndTime != null)
                 {
@@ -815,7 +797,7 @@ public abstract class ChromatogramDataset
         @Override
         public String getChartTitle()
         {
-            return LabelFactory.precursorChromInfoChartTitle(_pChromInfo, _user, _container );
+            return LabelFactory.precursorChromInfoChartTitle(_pChromInfo);
         }
 
         @Override
@@ -832,9 +814,9 @@ public abstract class ChromatogramDataset
 
     static class PrecursorSplitDataset extends PrecursorDataset
     {
-        public PrecursorSplitDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
+        public PrecursorSplitDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt)
         {
-            super(pChromInfo, syncIntensity, syncRt, user, container);
+            super(pChromInfo, syncIntensity, syncRt);
         }
 
         Transition.Type getTransitionType()
@@ -850,9 +832,9 @@ public abstract class ChromatogramDataset
 
     static class ProductSplitDataset extends PrecursorDataset
     {
-        public ProductSplitDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
+        public ProductSplitDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt)
         {
-            super(pChromInfo, syncIntensity, syncRt, user, container);
+            super(pChromInfo, syncIntensity, syncRt);
         }
 
         Transition.Type getTransitionType()
@@ -910,16 +892,12 @@ public abstract class ChromatogramDataset
 
         private String _chartTitle;
         private ChartAnnotation _annotation;
-        private User _user;
-        private Container _container;
 
-        public TransitionDataset(PrecursorChromInfo pChromInfo, TransitionChromInfo tChromInfo, User user, Container container)
+        public TransitionDataset(PrecursorChromInfo pChromInfo, TransitionChromInfo tChromInfo)
         {
-            super(pChromInfo, false, false, user, container);
+            super(pChromInfo, false, false);
             _pChromInfo = pChromInfo;
             _tChromInfo = tChromInfo;
-            _user = user;
-            _container = container;
         }
 
         @Override
@@ -937,7 +915,7 @@ public abstract class ChromatogramDataset
             double[] intensities = addTransitionAsSeries(_jfreeDataset, chromatogram,
                     new RtRange(_tChromInfo.getStartTime(), _tChromInfo.getEndTime()),
                     _tChromInfo,
-                    LabelFactory.transitionLabel(_tChromInfo.getTransitionId(), _user, _container));
+                    LabelFactory.transitionLabel(_tChromInfo.getTransitionId()));
 
             SampleFile sampleFile = ReplicateManager.getSampleFile(_tChromInfo.getSampleFileId());
             _chartTitle = sampleFile.getSampleName();

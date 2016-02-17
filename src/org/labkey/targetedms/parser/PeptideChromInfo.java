@@ -20,21 +20,21 @@ package org.labkey.targetedms.parser;
  * Date: 4/16/12
  * Time: 3:42 PM
  */
-public class GeneralMoleculeChromInfo extends ChromInfo
+public class PeptideChromInfo extends ChromInfo
 {
-    private int _generalMoleculeId;
+    private int _peptideId;
 
     private double _peakCountRatio;
     private Double _retentionTime;
 
-    public int getGeneralMoleculeId()
+    public int getPeptideId()
     {
-        return _generalMoleculeId;
+        return _peptideId;
     }
 
-    public void setGeneralMoleculeId(int gMId)
+    public void setPeptideId(int peptideId)
     {
-        this._generalMoleculeId = gMId;
+        this._peptideId = peptideId;
     }
 
     public double getPeakCountRatio()

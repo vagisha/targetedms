@@ -72,7 +72,7 @@ public class ReplicateManager
     {
         String sql = "SELECT sf.* FROM "+
                      TargetedMSManager.getTableInfoSampleFile()+" AS sf, "+
-                     TargetedMSManager.getTableInfoGeneralMoleculeChromInfo()+" AS pci "+
+                     TargetedMSManager.getTableInfoPeptideChromInfo()+" AS pci "+
                      "WHERE sf.Id=pci.SampleFileId "+
                      "AND pci.Id=?";
         SQLFragment sf = new SQLFragment(sql);

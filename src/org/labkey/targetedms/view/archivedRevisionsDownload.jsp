@@ -35,7 +35,7 @@
     boolean isLibrary = ( folderType == TargetedMSModule.FolderType.Library ||
                           folderType == TargetedMSModule.FolderType.LibraryProtein );
 
-    int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c, getUser());
+    int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c);
 %>
 
 <table class="labkey-data-region labkey-show-borders">

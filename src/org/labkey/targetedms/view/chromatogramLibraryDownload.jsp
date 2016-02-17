@@ -38,7 +38,7 @@
     long peptideCount = TargetedMSController.getNumRepresentativePeptides(c);
     long transitionCount = TargetedMSController.getNumRankedTransitions(c);
     DecimalFormat format = new DecimalFormat("#,###");
-    int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c, user);
+    int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c);
     File archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, currentRevision);
 
     long conflictCount = ConflictResultsManager.getConflictCount(user, c);

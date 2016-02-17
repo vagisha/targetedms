@@ -106,7 +106,7 @@ public class ConflictResultsManager
         getConflictPrecursorsSql.append(", ");
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         getConflictPrecursorsSql.append(", ");
-        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         getConflictPrecursorsSql.append(", ");
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
         getConflictPrecursorsSql.append(" INNER JOIN ");
@@ -114,7 +114,7 @@ public class ConflictResultsManager
         getConflictPrecursorsSql.append(" ON (prec.ModifiedSequence = prec2.ModifiedSequence AND prec.charge = prec2.Charge) ");
         getConflictPrecursorsSql.append(" INNER JOIN ");
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptide(), "pep2");
-        getConflictPrecursorsSql.append(" ON (prec2.GeneralMoleculeId = pep2.Id) ");
+        getConflictPrecursorsSql.append(" ON (prec2.PeptideId = pep2.Id) ");
         getConflictPrecursorsSql.append(" INNER JOIN ");
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg2");
         getConflictPrecursorsSql.append(" ON (pg2.Id = pep2.PeptideGroupId) ");
@@ -122,8 +122,8 @@ public class ConflictResultsManager
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoRuns(), "r2");
         getConflictPrecursorsSql.append(" ON (r2.Id = pg2.RunId) ");
         getConflictPrecursorsSql.append(" WHERE r.Id = pg.RunId ");
-        getConflictPrecursorsSql.append(" AND pg.Id = gm.PeptideGroupId");
-        getConflictPrecursorsSql.append(" AND gm.Id = prec.GeneralMoleculeId");
+        getConflictPrecursorsSql.append(" AND pg.Id = pep.PeptideGroupId");
+        getConflictPrecursorsSql.append(" AND pep.Id = prec.PeptideId");
         getConflictPrecursorsSql.append(" AND r.Container=? " );
         getConflictPrecursorsSql.append(" AND r2.Container=? ");
         getConflictPrecursorsSql.append(" AND prec.RepresentativeDataState=? ");
@@ -132,17 +132,17 @@ public class ConflictResultsManager
         getConflictPrecursorsSql.add(container);
         getConflictPrecursorsSql.add(RepresentativeDataState.Conflicted.ordinal());
         getConflictPrecursorsSql.add(RepresentativeDataState.Representative.ordinal());
-        getConflictPrecursorsSql.append(" ORDER BY gm.Id");
+        getConflictPrecursorsSql.append(" ORDER BY pep.Id");
 
         ConflictPrecursor[] precursors = new SqlSelector(TargetedMSManager.getSchema(), getConflictPrecursorsSql).getArray(ConflictPrecursor.class);
         return Arrays.asList(precursors);
     }
 
 
-    public static List<ConflictPeptide> getConflictPeptidesForProteins(int newProteinId, int oldProteinId, User user, Container container)
+    public static List<ConflictPeptide> getConflictPeptidesForProteins(int newProteinId, int oldProteinId)
     {
-        List<BestPrecursorPeptide> newProteinPeptides = getBestPrecursorsForProtein(newProteinId, user, container);
-        List<BestPrecursorPeptide> oldProteinPeptides = getBestPrecursorsForProtein(oldProteinId, user, container);
+        List<BestPrecursorPeptide> newProteinPeptides = getBestPrecursorsForProtein(newProteinId);
+        List<BestPrecursorPeptide> oldProteinPeptides = getBestPrecursorsForProtein(oldProteinId);
 
         Map<String, ConflictPeptide> conflictPeptideMap = new HashMap<>();
         for(BestPrecursorPeptide peptide: newProteinPeptides)
@@ -196,9 +196,9 @@ public class ConflictResultsManager
         return modifiedSequence.toString();
     }
 
-    private static List<BestPrecursorPeptide> getBestPrecursorsForProtein(int proteinId, User user, Container container)
+    private static List<BestPrecursorPeptide> getBestPrecursorsForProtein(int proteinId)
     {
-        Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(proteinId, new TargetedMSSchema(user, container));
+        Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(proteinId);
         List<BestPrecursorPeptide> proteinPeptides = new ArrayList<>();
         for(Peptide peptide: peptides)
         {
@@ -206,7 +206,7 @@ public class ConflictResultsManager
             {
                 continue;
             }
-            BestPrecursorPeptide bestPrecursor = getBestPrecursor(peptide, user, container);
+            BestPrecursorPeptide bestPrecursor = getBestPrecursor(peptide);
             proteinPeptides.add(bestPrecursor);
         }
         Collections.sort(proteinPeptides, new Comparator<BestPrecursorPeptide>()
@@ -229,7 +229,7 @@ public class ConflictResultsManager
         return proteinPeptides;
     }
 
-    private static BestPrecursorPeptide getBestPrecursor(Peptide peptide, User user, Container container)
+    private static BestPrecursorPeptide getBestPrecursor(Peptide peptide)
     {
         PrecursorChromInfo bestPrecursorChromInfo = PrecursorManager.getBestPrecursorChromInfoForPeptide(peptide.getId());
 
@@ -245,7 +245,7 @@ public class ConflictResultsManager
 
         if(bestPrecursorChromInfo != null)
         {
-            bestPrecursorPeptide.setPrecursor(PrecursorManager.get(bestPrecursorChromInfo.getPrecursorId(), user, container));
+            bestPrecursorPeptide.setPrecursor(PrecursorManager.get(bestPrecursorChromInfo.getPrecursorId()));
             bestPrecursorPeptide.setMaxArea(bestPrecursorChromInfo.getTotalArea());
         }
         else
@@ -304,13 +304,13 @@ public class ConflictResultsManager
         }
     }
 
-    public static List<ConflictTransition> getConflictTransitionsForPrecursors(int newPrecursorId, int oldPrecursorId, User user, Container container)
+    public static List<ConflictTransition> getConflictTransitionsForPrecursors(int newPrecursorId, int oldPrecursorId)
     {
-        List<TransitionWithAreaAndRank> newPrecursorTransitions = getRankedTransitionsForPrecursor(newPrecursorId, user, container);
-        List<TransitionWithAreaAndRank> oldPrecursorTransitions = getRankedTransitionsForPrecursor(oldPrecursorId, user, container);
+        List<TransitionWithAreaAndRank> newPrecursorTransitions = getRankedTransitionsForPrecursor(newPrecursorId);
+        List<TransitionWithAreaAndRank> oldPrecursorTransitions = getRankedTransitionsForPrecursor(oldPrecursorId);
 
-        Precursor newPrecursor = PrecursorManager.get(newPrecursorId, user, container);
-        Precursor oldPrecursor = PrecursorManager.get(oldPrecursorId, user, container);
+        Precursor newPrecursor = PrecursorManager.get(newPrecursorId);
+        Precursor oldPrecursor = PrecursorManager.get(oldPrecursorId);
 
         // Key in the conflictTransitionMap is the transition label (y7, y8, etc.)
         Map<String, ConflictTransition> conflictTransitionMap = new HashMap<>();
@@ -346,9 +346,9 @@ public class ConflictResultsManager
         return new ArrayList<>(conflictTransitionMap.values());
     }
 
-    public static List<TransitionWithAreaAndRank> getRankedTransitionsForPrecursor(int precursorId, User user, Container container)
+    public static List<TransitionWithAreaAndRank> getRankedTransitionsForPrecursor(int precursorId)
     {
-        Collection<Transition> transitions = TransitionManager.getTransitionsForPrecursor(precursorId, user, container);
+        Collection<Transition> transitions = TransitionManager.getTransitionsForPrecursor(precursorId);
 
         // Each transition may have been measured in more than one replicate. We need to get the
         // the average area for each transition across all replicates
@@ -446,7 +446,7 @@ public class ConflictResultsManager
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoPrecursor(), "pc");
         sqlFragment.append(" WHERE ");
-        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.GeneralMoleculeId = p.Id  AND r.Deleted = ? AND r.Container = ? ");
+        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id  AND r.Deleted = ? AND r.Container = ? ");
         sqlFragment.append("AND pc.RepresentativeDataState = ? ");
 
         sqlFragment.add(false);

@@ -50,15 +50,15 @@ public class IsotopeLabelManager
         SQLFragment sql = new SQLFragment();
         sql.append("SELECT MIN(label.Id) ");
         sql.append("FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(", ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep").append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(", ");
         sql.append(TargetedMSManager.getTableInfoIsotopeLabel(), "label").append(" ");
         sql.append("WHERE ");
         sql.append("label.RunId=pg.RunId ");
         sql.append("AND ");
-        sql.append("pg.Id=gm.PeptideGroupId ");
+        sql.append("pg.Id=pep.PeptideGroupId ");
         sql.append("AND ");
-        sql.append("gm.Id=?");
+        sql.append("pep.Id=?");
 
         sql.add(peptideId);
 

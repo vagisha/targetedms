@@ -23,8 +23,7 @@ package org.labkey.targetedms.parser;
 public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 {
     private int _precursorId;
-    private int _generalPrecursorId;
-    private int _generalMoleculeChromInfoId;
+    private int _peptideChromInfoId;
 
     private Double _bestRetentionTime;
     private Double _minStartTime;
@@ -60,24 +59,14 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         this._precursorId = precursorId;
     }
 
-    public int getGeneralPrecursorId()
+    public int getPeptideChromInfoId()
     {
-        return _generalPrecursorId;
+        return _peptideChromInfoId;
     }
 
-    public void setGeneralPrecursorId(int generalPrecursorId)
+    public void setPeptideChromInfoId(int peptideChromInfoId)
     {
-        _generalPrecursorId = generalPrecursorId;
-    }
-
-    public int getGeneralMoleculeChromInfoId()
-    {
-        return _generalMoleculeChromInfoId;
-    }
-
-    public void setGeneralMoleculeChromInfoId(int generalmoleculechrominfoid)
-    {
-        _generalMoleculeChromInfoId = generalmoleculechrominfoid;
+        this._peptideChromInfoId = peptideChromInfoId;
     }
 
     public Double getBestRetentionTime()

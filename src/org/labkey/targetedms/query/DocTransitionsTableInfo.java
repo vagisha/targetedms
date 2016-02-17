@@ -35,18 +35,19 @@ import java.util.ArrayList;
  * User: vsharma
  * Date: Apr 13, 2012
  */
-public class DocTransitionsTableInfo extends JoinedTargetedMSTable
+public class DocTransitionsTableInfo extends AnnotatedTargetedMSTable
 {
     public DocTransitionsTableInfo(final TargetedMSSchema schema)
     {
+        super(TargetedMSManager.getTableInfoTransition(),
+              schema,
+              TargetedMSSchema.ContainerJoinType.PrecursorFK.getSQL(),
+              TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId",
+              "Annotations");
 
-        super(TargetedMSManager.getTableInfoGeneralTransition(), TargetedMSManager.getTableInfoTransition(),
-                schema, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK.getSQL(),
-                TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations");
+        setName(TargetedMSSchema.TABLE_TRANSITION);
 
-        setName(TargetedMSSchema.TABLE_GENERAL_TRANSITION);
-
-        ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
+        ColumnInfo precursorCol = getColumn("PrecursorId");
         precursorCol.setFk(new LookupForeignKey("Id")
         {
             @Override
@@ -56,18 +57,7 @@ public class DocTransitionsTableInfo extends JoinedTargetedMSTable
             }
         });
 
-        ColumnInfo precursorIdCol = wrapColumn("PrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
-        precursorIdCol.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
-            }
-        });
-        addColumn(precursorIdCol);
-
-         //Display the fragment as y9 instead of 'y' and '9' in separate columns
+        // Display the fragment as y9 instead of 'y' and '9' in separate columns
         StringBuilder sql = new StringBuilder();
         sql.append(" CASE WHEN ");
         sql.append(ExprColumn.STR_TABLE_ALIAS).append(".FragmentType != 'precursor'");
@@ -145,16 +135,16 @@ public class DocTransitionsTableInfo extends JoinedTargetedMSTable
         sql.append("Id IN ");
 
         sql.append("(SELECT trans.Id FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralTransition(), "trans");
+        sql.append(TargetedMSManager.getTableInfoTransition(), "trans");
         sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "prec");
-        sql.append(" ON (trans.GeneralPrecursorId=prec.Id) ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(" ON (trans.PrecursorId=prec.Id) ");
         sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
-        sql.append(" ON (prec.GeneralMoleculeId=gm.Id) ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(" ON (prec.PeptideId=pep.Id) ");
         sql.append("INNER JOIN ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        sql.append(" ON (gm.PeptideGroupId=pg.Id) ");
+        sql.append(" ON (pep.PeptideGroupId=pg.Id) ");
         sql.append("WHERE pg.RunId=? ");
         sql.append(")");
 

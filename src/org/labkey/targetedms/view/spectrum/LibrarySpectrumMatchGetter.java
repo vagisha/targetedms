@@ -15,11 +15,8 @@
  */
 package org.labkey.targetedms.view.spectrum;
 
-import org.labkey.api.data.Container;
-import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
-import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
@@ -44,10 +41,10 @@ import java.util.Set;
  */
 public class LibrarySpectrumMatchGetter
 {
-    public static List<LibrarySpectrumMatch> getMatches(Peptide peptide, User user, Container container)
+    public static List<LibrarySpectrumMatch> getMatches(Peptide peptide)
     {
         // Get the precursor of this peptide, sorted by label type and charge.
-        List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), new TargetedMSSchema(user, container));
+        List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId());
 
         TargetedMSRun run = TargetedMSManager.getRunForPeptide(peptide.getId());
 
@@ -110,9 +107,9 @@ public class LibrarySpectrumMatchGetter
         return matchedSpectra;
     }
 
-    public static List<LibrarySpectrumMatch> getMatches(Precursor precursor, TargetedMSSchema schema)
+    public static List<LibrarySpectrumMatch> getMatches(Precursor precursor)
     {
-        TargetedMSRun run = TargetedMSManager.getRunForPeptide(precursor.getGeneralMoleculeId());
+        TargetedMSRun run = TargetedMSManager.getRunForPeptide(precursor.getPeptideId());
 
         // Get the spectrum libraries for this run
         List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(run.getId());
@@ -123,7 +120,7 @@ public class LibrarySpectrumMatchGetter
 
         List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<>();
 
-        List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(precursor.getGeneralMoleculeId());
+        List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(precursor.getPeptideId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
         Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
         for(Peptide.StructuralModification mod: structuralModifications)
@@ -145,7 +142,7 @@ public class LibrarySpectrumMatchGetter
             {
                 LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
                 pepSpec.setCharge(precursor.getCharge());
-                pepSpec.setPeptide(PeptideManager.get(precursor.getGeneralMoleculeId(), schema).getSequence());
+                pepSpec.setPeptide(PeptideManager.get(precursor.getPeptideId()).getSequence());
                 pepSpec.setModifiedSequence(precursor.getModifiedSequence());
                 pepSpec.setLibrary(library);
                 pepSpec.setSpectrum(spectrum);
@@ -157,7 +154,7 @@ public class LibrarySpectrumMatchGetter
                 pepSpec.setPotentialLosses(potentialLossMap);
 
                 // Add any isotope modifications (can be different for each precursor)
-                List<Peptide.IsotopeModification> isotopeModifications = ModificationManager.getPeptideIsotopelModifications(precursor.getGeneralMoleculeId(), precursor.getIsotopeLabelId());
+                List<Peptide.IsotopeModification> isotopeModifications = ModificationManager.getPeptideIsotopelModifications(precursor.getPeptideId(), precursor.getIsotopeLabelId());
                 pepSpec.setIsotopeModifications(isotopeModifications);
 
                 break;  // return spectrum from the first library that has a match

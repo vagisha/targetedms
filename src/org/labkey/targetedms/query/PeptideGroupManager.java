@@ -44,6 +44,7 @@ public class PeptideGroupManager
 
     public static PeptideGroup get(int peptideGroupId)
     {
+
         return new TableSelector(TargetedMSManager.getTableInfoPeptideGroup(), new SimpleFilter(FieldKey.fromParts("Id"), peptideGroupId), null).getObject(PeptideGroup.class);
 	}
 
@@ -97,17 +98,17 @@ public class PeptideGroupManager
     private static void updatePrecursorRepresentativeState(String peptideGroupIdsString)
     {
         SQLFragment sql;
-        sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoGeneralPrecursor());
+        sql = new SQLFragment("UPDATE "+TargetedMSManager.getTableInfoPrecursor());
         sql.append(" SET RepresentativeDataState = pg.RepresentativeDataState");
         sql.append(" FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" WHERE pg.Id IN (");
         sql.append(peptideGroupIdsString);
         sql.append(")");
-        sql.append(" AND pg.Id = gm.peptideGroupId ");
-        sql.append(" AND gm.Id = "+TargetedMSManager.getTableInfoGeneralPrecursor()+".GeneralMoleculeId");
+        sql.append(" AND pg.Id = pep.peptideGroupId ");
+        sql.append(" AND pep.Id = "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId");
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
@@ -237,9 +238,9 @@ public class PeptideGroupManager
         sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "prec");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
         sql.append(", ");
@@ -249,9 +250,9 @@ public class PeptideGroupManager
         sql.append(" AND");
         sql.append(" pci.PrecursorId = prec.Id");
         sql.append(" AND");
-        sql.append(" prec.GeneralMoleculeId = gm.Id");
+        sql.append(" prec.PeptideId = pep.Id");
         sql.append(" AND");
-        sql.append(" gm.PeptideGroupId = pepgrp.Id");
+        sql.append(" pep.PeptideGroupId = pepgrp.Id");
         sql.append(" AND");
         sql.append(" pci.TotalArea IS NOT NULL");
         sql.append(" AND");

@@ -33,9 +33,9 @@ public class PeptideChromatogramsTableInfo extends FilteredTable<TargetedMSSchem
 
     public PeptideChromatogramsTableInfo(TargetedMSSchema schema)
     {
-        super(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), schema);
+        super(TargetedMSManager.getTableInfoPeptideChromInfo(), schema);
 
-        setName(TargetedMSSchema.TABLE_GENERAL_MOLECULE_CHROM_INFO);
+        setName(TargetedMSSchema.TABLE_PEPTIDE_CHROM_INFO);
 
         //wrap all the columns
         wrapAllColumns(true);
@@ -53,6 +53,6 @@ public class PeptideChromatogramsTableInfo extends FilteredTable<TargetedMSSchem
 
     public void addPeptideFilter()
     {
-        addCondition(new SimpleFilter(FieldKey.fromParts("GeneralMoleculeId"), _peptideId));
+        addCondition(new SimpleFilter(FieldKey.fromParts("PeptideId"), _peptideId));
     }
 }

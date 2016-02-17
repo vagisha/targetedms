@@ -17,7 +17,6 @@ package org.labkey.targetedms.view;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChartColors;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.Precursor;
@@ -55,9 +54,9 @@ public class ModifiedPeptideHtmlMaker
         _firstIsotopeLabelIdInDocMap = new HashMap<>();
     }
 
-    public String getPrecursorHtml(Precursor precursor, Integer runId, TargetedMSSchema schema)
+    public String getPrecursorHtml(Precursor precursor, Integer runId)
     {
-        Peptide peptide = PeptideManager.get(precursor.getGeneralMoleculeId(), schema);
+        Peptide peptide = PeptideManager.get(precursor.getPeptideId());
         return getPrecursorHtml(peptide, precursor, runId);
     }
 

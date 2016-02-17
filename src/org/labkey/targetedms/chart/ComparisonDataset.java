@@ -22,7 +22,6 @@ import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.statistics.BoxAndWhiskerItem;
 import org.jfree.data.statistics.DefaultBoxAndWhiskerCategoryDataset;
 import org.jfree.data.statistics.DefaultStatisticalCategoryDataset;
-import org.labkey.api.security.User;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 
 import java.awt.*;
@@ -174,7 +173,7 @@ public class ComparisonDataset
         return categoryMap;
     }
 
-    public Color getSeriesColor(SeriesLabel seriesLabel, User user, org.labkey.api.data.Container container)
+    public Color getSeriesColor(SeriesLabel seriesLabel)
     {
         if(getSortedSeriesLabels().size() == 1)
         {
@@ -183,7 +182,7 @@ public class ComparisonDataset
 
         if(_colorIndexer == null)
         {
-            _colorIndexer = new PrecursorColorIndexer(_runId, user, container);
+            _colorIndexer = new PrecursorColorIndexer(_runId);
             int minCharge = Integer.MAX_VALUE;
             for(ComparisonDataset.SeriesLabel sl: getSortedSeriesLabels())
             {

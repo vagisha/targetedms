@@ -46,17 +46,17 @@ public class PeakAreaRatioCalculator
 
     public void init(Map<SkylineDocImporter.SampleFileKey, SampleFile> skylineIdSampleFileMap)
     {
-        for(GeneralMoleculeChromInfo generalMoleculeChromInfo : _peptide.getGeneralMoleculeChromInfoList())
+        for(PeptideChromInfo peptideChromInfo: _peptide.getPeptideChromInfoList())
         {
-            SampleFile sampleFile = skylineIdSampleFileMap.get(SkylineDocImporter.SampleFileKey.getKey(generalMoleculeChromInfo));
+            SampleFile sampleFile = skylineIdSampleFileMap.get(SkylineDocImporter.SampleFileKey.getKey(peptideChromInfo));
             if(sampleFile.isSkip())
             {
                 // For QC folders only:  we do not need an area ratio calculator if the data from this sample file is being skipped.
                 continue;
             }
 
-            int sampleFileId = generalMoleculeChromInfo.getSampleFileId();
-            _peptideAreaRatioCalculatorMap.put(sampleFileId, new PeptideAreaRatioCalculator(generalMoleculeChromInfo));
+            int sampleFileId = peptideChromInfo.getSampleFileId();
+            _peptideAreaRatioCalculatorMap.put(sampleFileId, new PeptideAreaRatioCalculator(peptideChromInfo));
         }
 
         for(Precursor precursor: _peptide.getPrecursorList())
@@ -139,11 +139,11 @@ public class PeakAreaRatioCalculator
     private class PeptideAreaRatioCalculator
     {
         private Map<String, PrecursorAreaRatioCalculator> _calculatorMap;
-        private GeneralMoleculeChromInfo _generalMoleculeChromInfo;
+        private PeptideChromInfo _peptideChromInfo;
 
-        public PeptideAreaRatioCalculator(GeneralMoleculeChromInfo generalMoleculeChromInfo)
+        public PeptideAreaRatioCalculator(PeptideChromInfo peptideChromInfo)
         {
-            _generalMoleculeChromInfo = generalMoleculeChromInfo;
+            _peptideChromInfo = peptideChromInfo;
             _calculatorMap = new HashMap<>();
         }
 
@@ -168,8 +168,8 @@ public class PeakAreaRatioCalculator
                 PeptideAreaRatio pRatio = new PeptideAreaRatio();
                 pRatio.setIsotopeLabelId(numIsotopeLabelId);
                 pRatio.setIsotopeLabelStdId(denomIsotopeLabelId);
-                pRatio.setPeptideChromInfoId(_generalMoleculeChromInfo.getId());
-                pRatio.setPeptideChromInfoStdId(_generalMoleculeChromInfo.getId()); // TODO: drop this column from the table?
+                pRatio.setPeptideChromInfoId(_peptideChromInfo.getId());
+                pRatio.setPeptideChromInfoStdId(_peptideChromInfo.getId()); // TODO: drop this column from the table?
                 pRatio.setAreaRatio(ratio);
                 return pRatio;
             }
@@ -183,7 +183,7 @@ public class PeakAreaRatioCalculator
             PrecursorAreaRatioCalculator calculator = _calculatorMap.get(precursorKey);
             if(calculator == null)
             {
-                calculator = new PrecursorAreaRatioCalculator(precursorKey, _generalMoleculeChromInfo.getSampleFileId());
+                calculator = new PrecursorAreaRatioCalculator(precursorKey, _peptideChromInfo.getSampleFileId());
                 _calculatorMap.put(precursorKey, calculator);
             }
             return calculator;
@@ -439,16 +439,16 @@ public class PeakAreaRatioCalculator
        return key.toString();
     }
 
-    private static String getPrecursorKey(GeneralMolecule generalMolecule, Precursor precursor)
+    private static String getPrecursorKey(Peptide peptide, Precursor precursor)
     {
         StringBuilder key = new StringBuilder();
-        if(generalMolecule instanceof Molecule)
+        if(peptide instanceof Molecule)
         {
-            key.append(((Molecule) generalMolecule).getMassMonoisotopic());
+            key.append(((Molecule) peptide).getMassMonoisotopic());
         }
         else
         {
-            key.append(((Peptide)generalMolecule).getPeptideModifiedSequence());
+            key.append(peptide.getPeptideModifiedSequence());
         }
         key.append("_")
        .append(precursor.getCharge());

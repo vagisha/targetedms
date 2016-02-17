@@ -26,6 +26,7 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
+import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
@@ -42,9 +43,7 @@ import java.util.Collections;
  * Date: 8/4/13
  * Time: 9:56 PM
  */
-
-public class PrecursorTableInfo extends JoinedTargetedMSTable
-//public class PrecursorTableInfo extends AnnotatedTargetedMSTable
+public class PrecursorTableInfo extends AnnotatedTargetedMSTable
 {
     public PrecursorTableInfo(final TargetedMSSchema schema)
     {
@@ -53,28 +52,23 @@ public class PrecursorTableInfo extends JoinedTargetedMSTable
 
     public PrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema)
     {
-//        super(tableInfo,
-//                schema,
-//                TargetedMSSchema.ContainerJoinType.GeneralMoleculeFK.getSQL(),
-//                TargetedMSManager.getTableInfoPrecursorAnnotation(),
-//                "PrecursorId",
-//                "Precursor Annotations");
-
-        super(TargetedMSManager.getTableInfoGeneralPrecursor(), tableInfo, schema,
-        TargetedMSSchema.ContainerJoinType.GeneralMoleculeFK.getSQL(),
-        TargetedMSManager.getTableInfoPrecursorAnnotation(), "PrecursorId",
-        "Precursor Annotations");
+        super(tableInfo,
+                schema,
+                TargetedMSSchema.ContainerJoinType.PeptideFK.getSQL(),
+                TargetedMSManager.getTableInfoPrecursorAnnotation(),
+                "PrecursorId",
+                "Precursor Annotations");
 
         setName(tableName);
 
         final DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
                                                                     getContainer()),
                                                       Collections.singletonMap("id", "Id"));
-        detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder")));
+        detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Folder")));
         setDetailsURL(detailsURLs);
 
-        ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-        generalMoleculeId.setFk(new LookupForeignKey("Id")
+        ColumnInfo peptideCol = getColumn("PeptideId");
+        peptideCol.setFk(new LookupForeignKey("Id")
         {
             @Override
             public TableInfo getLookupTableInfo()
@@ -82,17 +76,6 @@ public class PrecursorTableInfo extends JoinedTargetedMSTable
                 return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
             }
         });
-
-        ColumnInfo peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
-        peptideId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
-            }
-        });
-        addColumn(peptideId);
 
         getColumn("RepresentativeDataState").setFk(new LookupForeignKey("RowId")
         {
@@ -103,11 +86,12 @@ public class PrecursorTableInfo extends JoinedTargetedMSTable
             }
         });
 
-//        getColumn("IsotopeLabelId").setFk(new QueryForeignKey(getUserSchema(), null, TargetedMSSchema.TABLE_ISOTOPE_LABEL, "Id", null));
+        getColumn("IsotopeLabelId").setFk(new QueryForeignKey(getUserSchema(), null, TargetedMSSchema.TABLE_ISOTOPE_LABEL, "Id", null));
 
-        SQLFragment transitionCountSQL = new SQLFragment("(SELECT COUNT(gt.Id) FROM ");
-        transitionCountSQL.append(TargetedMSManager.getTableInfoGeneralTransition(), "gt");
-        transitionCountSQL.append(" WHERE gt.GeneralPrecursorId = ");
+
+        SQLFragment transitionCountSQL = new SQLFragment("(SELECT COUNT(t.Id) FROM ");
+        transitionCountSQL.append(TargetedMSManager.getTableInfoTransition(), "t");
+        transitionCountSQL.append(" WHERE t.PrecursorId = ");
         transitionCountSQL.append(ExprColumn.STR_TABLE_ALIAS);
         transitionCountSQL.append(".Id)");
         ExprColumn transitionCountCol = new ExprColumn(this, "TransitionCount", transitionCountSQL, JdbcType.INTEGER);
@@ -125,6 +109,7 @@ public class PrecursorTableInfo extends JoinedTargetedMSTable
             }
         });
         addColumn(modSeqCol);
+
 
         //only display a subset of the columns by default
         ArrayList<FieldKey> visibleColumns = new ArrayList<>();
@@ -176,14 +161,14 @@ public class PrecursorTableInfo extends JoinedTargetedMSTable
         getFilter().deleteConditions(FieldKey.fromParts("Run"));
         SQLFragment sql = new SQLFragment();
         sql.append("Id IN ");
-        sql.append("(SELECT gp.Id FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
+        sql.append("(SELECT prec.Id FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
         sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
-        sql.append(" ON (gp.GeneralMoleculeId=gm.Id) ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(" ON (prec.PeptideId=pep.Id) ");
         sql.append("INNER JOIN ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        sql.append(" ON (gm.PeptideGroupId=pg.Id) ");
+        sql.append(" ON (pep.PeptideGroupId=pg.Id) ");
         sql.append("WHERE pg.RunId=? ");
         sql.append(")");
 
@@ -204,8 +189,6 @@ public class PrecursorTableInfo extends JoinedTargetedMSTable
         {
             return TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR;
         }
-
-
     }
 
     public static class LibraryPrecursorTableInfo extends PrecursorTableInfo

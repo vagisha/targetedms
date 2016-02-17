@@ -21,13 +21,24 @@ package org.labkey.targetedms.parser;
  * Date: 1/27/2015
  * Time: 2:58 PM
  */
-public class Molecule extends GeneralMolecule
+public class Molecule extends Peptide
 {
+    private int _peptideId;
 
     private String _ionFormula;
     private Double _massMonoisotopic; // not null
     private Double _massAverage; // not null
     private String _customIonName;
+
+    public int getPeptideId()
+    {
+        return _peptideId;
+    }
+
+    public void setPeptideId(int peptideId)
+    {
+        _peptideId = peptideId;
+    }
 
     public String getIonFormula()
     {

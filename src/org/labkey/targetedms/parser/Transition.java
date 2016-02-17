@@ -29,7 +29,7 @@ import java.util.Map;
  * Date: 4/2/12
  * Time: 10:28 AM
  */
-public class Transition extends GeneralTransition
+public class Transition extends AnnotatedEntity<TransitionAnnotation>
 {
     public enum Type
     {
@@ -38,10 +38,17 @@ public class Transition extends GeneralTransition
         ALL
     }
 
+    private int precursorId;
+
+    private String fragmentType;  // 'a', 'b', 'c', 'x', 'y', 'z' or 'precursor'
     private Integer fragmentOrdinal;  // e.g. Value is 9 for the y9 fragment
+    private Integer charge;
+
     private Double neutralMass;
     private Double neutralLossMass;
+
     private String cleavageAa;
+
     private Double decoyMassShift;
 
     // Library values
@@ -49,16 +56,20 @@ public class Transition extends GeneralTransition
     private Double _libraryIntensity;
 
     // These fields will be set if the fragmentType is 'precursor'.
+    private Integer massIndex;
+    private Integer isotopeDistRank;
+    private Double isotopeDistProportion;
+
+    private double mz;
     private double precursorMz;
+
     private Double collisionEnergy;
     private Double declusteringPotential;
+
     private List<TransitionChromInfo> _chromInfoList;
     private List<TransitionLoss> _neutralLosses;
-
     // The name of the measured ion that this transition uses (Only for reporter ions and other non proteomic transitions)
     private String measuredIonName;
-
-    private List<TransitionAnnotation> annotations;
 
     private static final String PRECURSOR = "precursor";
     private static final String Y_ION = "y";
@@ -68,6 +79,26 @@ public class Transition extends GeneralTransition
     private static final String C_ION = "c";
     private static final String A_ION = "a";
 
+    public int getPrecursorId()
+    {
+        return precursorId;
+    }
+
+    public void setPrecursorId(int precursorId)
+    {
+        this.precursorId = precursorId;
+    }
+
+    public String getFragmentType()
+    {
+        return fragmentType;
+    }
+
+    public void setFragmentType(String fragmentType)
+    {
+        this.fragmentType = fragmentType;
+    }
+
     public Integer getFragmentOrdinal()
     {
         return fragmentOrdinal;
@@ -76,6 +107,16 @@ public class Transition extends GeneralTransition
     public void setFragmentOrdinal(Integer fragmentOrdinal)
     {
         this.fragmentOrdinal = fragmentOrdinal;
+    }
+
+    public Integer getCharge()
+    {
+        return charge;
+    }
+
+    public void setCharge(Integer charge)
+    {
+        this.charge = charge;
     }
 
     public Double getNeutralMass()
@@ -136,6 +177,46 @@ public class Transition extends GeneralTransition
     public void setLibraryIntensity(Double libraryIntensity)
     {
         _libraryIntensity = libraryIntensity;
+    }
+
+    public Integer getMassIndex()
+    {
+        return massIndex;
+    }
+
+    public void setMassIndex(Integer massIndex)
+    {
+        this.massIndex = massIndex;
+    }
+
+    public Integer getIsotopeDistRank()
+    {
+        return isotopeDistRank;
+    }
+
+    public void setIsotopeDistRank(Integer isotopeDistRank)
+    {
+        this.isotopeDistRank = isotopeDistRank;
+    }
+
+    public Double getIsotopeDistProportion()
+    {
+        return isotopeDistProportion;
+    }
+
+    public void setIsotopeDistProportion(Double isotopeDistProportion)
+    {
+        this.isotopeDistProportion = isotopeDistProportion;
+    }
+
+    public double getMz()
+    {
+        return mz;
+    }
+
+    public void setMz(double productMz)
+    {
+        this.mz = productMz;
     }
 
     public double getPrecursorMz()
@@ -211,7 +292,6 @@ public class Transition extends GeneralTransition
                                        || fragmentType.equalsIgnoreCase(A_ION));
     }
 
-
     public boolean isCterm()
     {
         return fragmentType == null ? false
@@ -223,16 +303,6 @@ public class Transition extends GeneralTransition
     public String getLabel()
     {
         return LabelFactory.transitionLabel(this);
-    }
-
-    public List<TransitionAnnotation> getAnnotations()
-    {
-        return annotations;
-    }
-
-    public void setAnnotations(List<TransitionAnnotation> annotations)
-    {
-        this.annotations = annotations;
     }
 
     public static class TransitionComparator implements Comparator<Transition>
