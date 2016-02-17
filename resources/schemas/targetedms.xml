@@ -213,15 +213,38 @@
             <ns:column columnName="AltDescription"/>
         </ns:columns>
     </ns:table>
+    <ns:table tableDbType="TABLE" tableName="GeneralMolecule">
+        <ns:titleColumn>GeneralMoleculeTable</ns:titleColumn>
+        <ns:description>Parent table to Peptide, Molecule, GeneralMoleculeChromInfo, GeneralAnnotation.</ns:description>
+        <ns:columns>
+            <ns:column columnName="Id"/>
+            <ns:column columnName="PeptideGroupId">
+                <ns:columnTitle>Group</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="RtCalculatorScore">
+                <ns:columnTitle>RT Score</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="PredictedRetentionTime">
+                <ns:columnTitle>Predicted RT</ns:columnTitle>
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+            <ns:column columnName="AvgMeasuredRetentionTime">
+                <ns:columnTitle>Avg. Measured RT</ns:columnTitle>
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+            <ns:column columnName="Note"/>
+            <ns:column columnName="ExplicitRetentionTime">
+                <ns:columnTitle>Explicit RT</ns:columnTitle>
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+        </ns:columns>
+    </ns:table>
     <ns:table tableDbType="TABLE" tableName="Peptide">
         <ns:titleColumn>PeptideModifiedSequence</ns:titleColumn>
         <ns:description>Contains a row for each peptide loaded in a targeted MS run.</ns:description>
         <ns:columns>
             <ns:column columnName="Id">
                 <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="PeptideGroupId">
-                <ns:columnTitle>Group</ns:columnTitle>
             </ns:column>
             <ns:column columnName="Sequence" />
             <ns:column columnName="PreviousAa">
@@ -239,28 +262,12 @@
             <ns:column columnName="NumMissedCleavages">
                 <ns:columnTitle>Missed Cleavages</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="RtCalculatorScore">
-                <ns:columnTitle>RT Score</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="PredictedRetentionTime">
-                <ns:columnTitle>Predicted RT</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="AvgMeasuredRetentionTime">
-                <ns:columnTitle>Avg. Measured RT</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
             <ns:column columnName="Decoy"/>
-            <ns:column columnName="Note"/>
             <ns:column columnName="Rank"/>
             <ns:column columnName="PeptideModifiedSequence">
                 <ns:columnTitle>Modified Peptide</ns:columnTitle>
             </ns:column>
             <ns:column columnName="StandardType"/>
-            <ns:column columnName="ExplicitRetentionTime">
-                <ns:columnTitle>Explicit RT</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Molecule">
@@ -280,14 +287,14 @@
             </ns:column>
         </ns:columns>
     </ns:table>
-    <ns:table tableDbType="TABLE" tableName="PeptideChromInfo">
+    <ns:table tableDbType="TABLE" tableName="GeneralMoleculeChromInfo">
         <ns:titleColumn>SampleName</ns:titleColumn>
         <ns:description>Contains a row for each peptide chromatogram loaded in a targeted MS run.</ns:description>
         <ns:columns>
             <ns:column columnName="Id">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
-            <ns:column columnName="PeptideId">
+            <ns:column columnName="GeneralMoleculeId">
                 <ns:columnTitle>Peptide</ns:columnTitle>
             </ns:column>
             <ns:column columnName="SampleFileId">
@@ -303,22 +310,15 @@
             </ns:column>
         </ns:columns>
     </ns:table>
-    <ns:table tableDbType="TABLE" tableName="Precursor">
-        <ns:titleColumn>ModifiedSequence</ns:titleColumn>
-        <ns:description>Contains a row for each precursor loaded in a targeted MS run.</ns:description>
+    <ns:table tableDbType="TABLE" tableName="GeneralPrecursor">
+        <ns:titleColumn>General Precursor</ns:titleColumn>
+        <ns:description>Parent table to Precursor, MoleculePrecursor, PrecursorChromInfo, PrecursorAnnotation, PrecursorLibInfo</ns:description>
         <ns:columns>
             <ns:column columnName="Id">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
-            <ns:column columnName="PeptideId">
-                <ns:columnTitle>Peptide</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="IsotopeLabelId">
-                <ns:columnTitle>Isotope</ns:columnTitle>
-                <ns:inputType>text</ns:inputType>
-            </ns:column>
-            <ns:column columnName="ModifiedSequence">
-                <ns:columnTitle>Modified Precursor</ns:columnTitle>
+            <ns:column columnName="GeneralMoleculeId">
+                <ns:columnTitle>GeneralMolecule</ns:columnTitle>
             </ns:column>
             <ns:column columnName="Mz">
                 <ns:columnTitle>Q1 m/z</ns:columnTitle>
@@ -327,10 +327,6 @@
             <ns:column columnName="Charge">
                 <ns:columnTitle>Q1 Z</ns:columnTitle>
                 <ns:formatString>0+</ns:formatString>
-            </ns:column>
-            <ns:column columnName="NeutralMass">
-                <ns:columnTitle>Precursor Neutral Mass</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="CollisionEnergy">
                 <ns:columnTitle>CE</ns:columnTitle>
@@ -342,7 +338,6 @@
                 <ns:description>Declustring Potential</ns:description>
                 <ns:formatString>0.0000</ns:formatString>
             </ns:column>
-            <ns:column columnName="DecoyMassShift" />
             <ns:column columnName="Decoy"/>
             <ns:column columnName="Note"/>
             <ns:column columnName="Modified">
@@ -360,6 +355,32 @@
             <ns:column columnName="ExplicitDriftTimeHighEnergyOffsetMsec" />
         </ns:columns>
     </ns:table>
+    <ns:table tableDbType="TABLE" tableName="MoleculePrecursor">
+        <ns:columns>
+            <ns:column columnName="Id" />
+        </ns:columns>
+    </ns:table>
+    <ns:table tableDbType="TABLE" tableName="Precursor">
+        <ns:titleColumn>ModifiedSequence</ns:titleColumn>
+        <ns:description>Contains a row for each precursor loaded in a targeted MS run.</ns:description>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="IsotopeLabelId">
+                <ns:columnTitle>Isotope</ns:columnTitle>
+                <ns:inputType>text</ns:inputType>
+            </ns:column>
+            <ns:column columnName="NeutralMass">
+                <ns:columnTitle>Precursor Neutral Mass</ns:columnTitle>
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+            <ns:column columnName="ModifiedSequence">
+                <ns:columnTitle>Modified Precursor</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="DecoyMassShift"/>
+        </ns:columns>
+    </ns:table>
     <ns:table tableDbType="TABLE" tableName="PrecursorChromInfo">
         <ns:titleColumn>SampleName</ns:titleColumn>
         <ns:description>Contains a row for each precursor chromatogram loaded in a targeted MS run.</ns:description>
@@ -373,7 +394,7 @@
             <ns:column columnName="SampleFileId">
                 <ns:columnTitle>Sample File</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="PeptideChromInfoId"/>
+            <ns:column columnName="GeneralMoleculeChromInfoId"/>
             <ns:column columnName="BestRetentionTime">
                 <ns:columnTitle>Best RT</ns:columnTitle>
                 <ns:description>Best Retention Time</ns:description>
@@ -425,19 +446,43 @@
             </ns:column>
         </ns:columns>
     </ns:table>
+    <ns:table tableDbType="TABLE" tableName="GeneralTransition">
+        <ns:titleColumn>Mz</ns:titleColumn>
+        <ns:description>Parent table to Transition, MoleculeTransition, TransitionChromInfo, TransitionAnnotation.</ns:description>
+        <ns:columns>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
+            <ns:column columnName="GeneralPrecursorId">
+                <ns:columnTitle>Precursor</ns:columnTitle>
+            </ns:column>
+            <ns:column columnName="Mz">
+                <ns:columnTitle>Q3 m/z</ns:columnTitle>
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+            <ns:column columnName="Charge">
+                <ns:columnTitle>Q3 Z</ns:columnTitle>
+                <ns:formatString>0+</ns:formatString>
+            </ns:column>
+            <ns:column columnName="FragmentType"/>
+            <ns:column columnName="IsotopeDistIndex"/>
+            <ns:column columnName="IsotopeDistRank"/>
+            <ns:column columnName="IsotopeDistProportion"/>
+            <ns:column columnName="Decoy"/>
+            <ns:column columnName="Note"/>
+            <ns:column columnName="MassIndex"/>
+            <ns:column columnName="ExplicitCollisionEnergy"/>
+            <ns:column columnName="SLens"/>
+            <ns:column columnName="ConeVoltage"/>
+            <ns:column columnName="ExplicitCompensationVoltage"/>
+        </ns:columns>
+    </ns:table>
     <ns:table tableDbType="TABLE" tableName="Transition">
         <ns:titleColumn>Mz</ns:titleColumn>
         <ns:description>Contains a row for each transition loaded in a targeted MS run.</ns:description>
         <ns:columns>
             <ns:column columnName="Id">
                 <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="PrecursorId">
-                <ns:columnTitle>Precursor</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Mz">
-                <ns:columnTitle>Q3 m/z</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
             </ns:column>
             <ns:column columnName="NeutralMass">
                 <ns:columnTitle>Transition Neutral Mass</ns:columnTitle>
@@ -446,24 +491,13 @@
             <ns:column columnName="NeutralLossMass">
                 <ns:formatString>0.0000</ns:formatString>
             </ns:column>
-            <ns:column columnName="Charge">
-                <ns:columnTitle>Q3 Z</ns:columnTitle>
-                <ns:formatString>0+</ns:formatString>
-            </ns:column>
-            <ns:column columnName="FragmentType" />
             <ns:column columnName="FragmentOrdinal" />
             <ns:column columnName="CleavageAa">
                 <ns:columnTitle>Cleavage AA</ns:columnTitle>
             </ns:column>
             <ns:column columnName="LibraryRank"/>
             <ns:column columnName="LibraryIntensity"/>
-            <ns:column columnName="IsotopeDistIndex"/>
-            <ns:column columnName="IsotopeDistRank"/>
-            <ns:column columnName="IsotopeDistProportion"/>
-            <ns:column columnName="DecoyMassShift" />
-            <ns:column columnName="Decoy"/>
-            <ns:column columnName="Note"/>
-            <ns:column columnName="MassIndex"/>
+            <ns:column columnName="DecoyMassShift"/>
             <ns:column columnName="MeasuredIonName"/>
         </ns:columns>
     </ns:table>
@@ -617,14 +651,14 @@
             <ns:column columnName="MaxNeutralLosses"/>
         </ns:columns>
     </ns:table>
-    <ns:table tableName="PeptideAnnotation" tableDbType="TABLE">
+    <ns:table tableName="GeneralMoleculeAnnotation" tableDbType="TABLE">
         <ns:columns>
             <ns:column columnName="Id">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
             <ns:column columnName="Name"/>
             <ns:column columnName="Value"/>
-            <ns:column columnName="PeptideId"/>
+            <ns:column columnName="GeneralMoleculeId"/>
         </ns:columns>
     </ns:table>
     <ns:table tableName="PeptideAreaRatio" tableDbType="TABLE">

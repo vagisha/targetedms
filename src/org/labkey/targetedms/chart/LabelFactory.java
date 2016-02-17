@@ -15,12 +15,15 @@
 
 package org.labkey.targetedms.chart;
 
+import org.labkey.api.data.Container;
+import org.labkey.api.security.User;
 import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.Formats;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.Peptide;
-import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.Replicate;
@@ -47,9 +50,9 @@ public class LabelFactory
 
     private LabelFactory() {}
 
-    public static String transitionLabel(int transitionId)
+    public static String transitionLabel(int transitionId, User user, Container container)
     {
-        return transitionLabel(TransitionManager.get(transitionId));
+        return transitionLabel(TransitionManager.get(transitionId, user, container));
     }
 
     public static String transitionLabel(Transition transition)
@@ -86,7 +89,7 @@ public class LabelFactory
         return label.toString();
     }
 
-    public static String precursorLabel(int precursorId)
+    public static String precursorLabel(int precursorId, User user, Container container)
     {
         Map<String, Object> precursorSummary = PrecursorManager.getPrecursorSummary(precursorId);
 
@@ -104,7 +107,7 @@ public class LabelFactory
         return label.toString();
     }
 
-    public static String precursorChromInfoLabel(PrecursorChromInfo pChromInfo)
+    public static String precursorChromInfoLabel(PrecursorChromInfo pChromInfo, User user, Container container)
     {
         if(pChromInfo.isOptimizationPeak())
         {
@@ -112,15 +115,15 @@ public class LabelFactory
         }
         else
         {
-            return precursorLabel(pChromInfo.getPrecursorId());
+            return precursorLabel(pChromInfo.getPrecursorId(), user, container);
         }
     }
 
-    public static String peptideChromInfoChartTitle(PeptideChromInfo pepChromInfo)
+    public static String peptideChromInfoChartTitle(GeneralMoleculeChromInfo pepChromInfo, User user, Container container)
     {
         SampleFile sampleFile = ReplicateManager.getSampleFile(pepChromInfo.getSampleFileId());
         Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
-        Peptide peptide = PeptideManager.get(pepChromInfo.getPeptideId());
+        Peptide peptide = PeptideManager.get(pepChromInfo.getGeneralMoleculeId(), new TargetedMSSchema(user, container));
 
         StringBuilder label = new StringBuilder();
         label.append(replicate.getName());
@@ -133,12 +136,12 @@ public class LabelFactory
         return label.toString();
     }
 
-    public static String precursorChromInfoChartTitle(PrecursorChromInfo pChromInfo)
+    public static String precursorChromInfoChartTitle(PrecursorChromInfo pChromInfo, User user, Container container)
     {
         SampleFile sampleFile = ReplicateManager.getSampleFile(pChromInfo.getSampleFileId());
         Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
         TargetedMSRun run = TargetedMSManager.getRun(replicate.getRunId());
-        String precursorLabel = precursorLabel(pChromInfo.getPrecursorId());
+        String precursorLabel = precursorLabel(pChromInfo.getPrecursorId(), user, container);
 
         StringBuilder label = new StringBuilder();
         label.append(replicate.getName());

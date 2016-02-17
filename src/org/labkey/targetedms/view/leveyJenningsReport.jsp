@@ -59,7 +59,7 @@
 
             LABKEY.Query.executeSql({
                 schemaName: 'targetedms',
-                sql: 'SELECT MIN(SampleFileId.AcquiredTime) AS StartDate, MAX(SampleFileId.AcquiredTime) AS EndDate FROM peptidechrominfo',
+                sql: 'SELECT MIN(SampleFileId.AcquiredTime) AS StartDate, MAX(SampleFileId.AcquiredTime) AS EndDate FROM generalmoleculechrominfo',
                 success: function(data) {
                     if (data.rows.length == 0 || !data.rows[0].StartDate) {
                         Ext4.get(plotPanelId).update("No data found. Please upload runs using the Data Pipeline or directly from Skyline.");

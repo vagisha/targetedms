@@ -22,10 +22,12 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.Instrument;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideGroup;
@@ -89,10 +91,13 @@ public class ContainerChromatogramLibraryWriter
     private TargetedMSRun.RepresentativeDataState _libraryType = null;
     private Integer _bestReplicateIdForCurrentPeptideGroup;
 
-    public ContainerChromatogramLibraryWriter(String panoramaServer, Container container, List<Integer> representativeRunIds)
+    private User _user;
+
+    public ContainerChromatogramLibraryWriter(String panoramaServer, Container container, List<Integer> representativeRunIds, User user)
     {
         _panoramaServer = panoramaServer;
         _container = container;
+        _user = user;
         _representativeRunIds = representativeRunIds != null ? representativeRunIds : Collections.<Integer>emptyList();
 
         _proteinService = ServiceRegistry.get().getService(ProteinService.class);
@@ -330,7 +335,7 @@ public class ContainerChromatogramLibraryWriter
             @Override
             public int compare(Precursor o1, Precursor o2)
             {
-                return Integer.valueOf(o1.getPeptideId()).compareTo(o2.getPeptideId());
+                return Integer.valueOf(o1.getGeneralMoleculeId()).compareTo(o2.getGeneralMoleculeId());
             }
         });
 
@@ -338,24 +343,24 @@ public class ContainerChromatogramLibraryWriter
         List<Precursor> peptidePrecursors = new ArrayList<>();
         for(Precursor precursor: precursors)
         {
-            if(precursor.getPeptideId() != lastPeptideId)
+            if(precursor.getGeneralMoleculeId() != lastPeptideId)
             {
                 if(peptidePrecursors.size() > 0)
                 {
-                    Peptide peptide = PeptideManager.get(lastPeptideId);
+                    Peptide peptide = PeptideManager.get(lastPeptideId, new TargetedMSSchema(_user, _container));
                     LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors);
                     peptidePrecursors.clear();
 
                     _libWriter.writePeptide(libPeptide);
                 }
-                lastPeptideId = precursor.getPeptideId();
+                lastPeptideId = precursor.getGeneralMoleculeId();
                 peptidePrecursors = new ArrayList<>();
             }
             peptidePrecursors.add(precursor);
         }
         if(peptidePrecursors.size() > 0)
         {
-            Peptide peptide = PeptideManager.get(lastPeptideId);
+            Peptide peptide = PeptideManager.get(lastPeptideId, new TargetedMSSchema(_user, _container));
             LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors);
             _libWriter.writePeptide(libPeptide);
         }
@@ -390,10 +395,12 @@ public class ContainerChromatogramLibraryWriter
 
     private void addPeptides(PeptideGroup pepGroup, LibProtein protein)
     {
-        Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(pepGroup.getId());
+        TargetedMSSchema schema = new TargetedMSSchema(_user, _container);
+
+        Collection<Peptide> peptides = PeptideManager.getPeptidesForGroup(pepGroup.getId(), schema);
         for(Peptide peptide: peptides)
         {
-            List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId());
+            List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), schema);
 
             LibPeptide libPeptide = makeLibPeptide(peptide, precursors);
 
@@ -593,7 +600,7 @@ public class ContainerChromatogramLibraryWriter
 
     private void addTransitions(LibPrecursor precToSave, Precursor precursor, PrecursorChromInfo precursorChromInfo)
     {
-        List<Transition> transitions = new ArrayList<>(TransitionManager.getTransitionsForPrecursor(precursor.getId()));
+        List<Transition> transitions = new ArrayList<>(TransitionManager.getTransitionsForPrecursor(precursor.getId(), _user, _container));
         for(Transition transition: transitions)
         {
             TransitionChromInfo tci = null;

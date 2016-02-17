@@ -19,17 +19,17 @@ package org.labkey.targetedms.parser;
  * User: jeckels
  * Date: Jun 4, 2012
  */
-public class PeptideAnnotation extends AbstractAnnotation
+public class GeneralMoleculeAnnotation extends AbstractAnnotation
 {
-    private int _peptideId;
+    private int _generalMoleculeId;
 
-    public int getPeptideId()
+    public int getGeneralMoleculeId()
     {
-        return _peptideId;
+        return _generalMoleculeId;
     }
 
-    public void setPeptideId(int peptideId)
+    public void setGeneralMoleculeId(int generalMoleculeId)
     {
-        _peptideId = peptideId;
+        _generalMoleculeId = generalMoleculeId;
     }
 }

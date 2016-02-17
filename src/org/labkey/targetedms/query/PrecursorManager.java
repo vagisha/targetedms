@@ -29,8 +29,10 @@ import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableResultSet;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.Precursor;
@@ -64,24 +66,26 @@ public class PrecursorManager
 
     private PrecursorManager() {}
 
-    public static Precursor get(int precursorId)
+    public static Precursor get(int precursorId, User user, Container container)
     {
-        return new TableSelector(TargetedMSManager.getTableInfoPrecursor(),
+        return new TableSelector(new PrecursorTableInfo(new TargetedMSSchema(user, container)),
                                  new SimpleFilter(FieldKey.fromParts("Id"), precursorId),
                                  null).getObject(Precursor.class);
     }
 
-    public static Precursor getPrecursor(Container c, int id)
+    public static Precursor getPrecursor(Container c, int id, User user)
     {
+        TargetedMSSchema schema = new TargetedMSSchema(user, c);
+
         SQLFragment sql = new SQLFragment("SELECT pre.* FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+        sql.append(new PrecursorTableInfo(schema), "pre");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(new PeptideTableInfo(schema), "pep");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-        sql.append(" WHERE pre.PeptideId = pep.Id AND ");
+        sql.append(" WHERE pre.GeneralMoleculeId = pep.Id AND ");
         sql.append("pep.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND pre.Id = ?");
         sql.add(false);
         sql.add(c.getId());
@@ -90,19 +94,21 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Precursor.class);
     }
 
-    public static PrecursorChromInfo getPrecursorChromInfo(Container c, int id)
+    public static PrecursorChromInfo getPrecursorChromInfo(Container c, int id, User user, Container container)
     {
+        TargetedMSSchema schema = new TargetedMSSchema(user, container);
+
         SQLFragment sql = new SQLFragment("SELECT pci.* FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(new PrecursorChromInfoTable(schema), "pci");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+        sql.append(new PrecursorTableInfo(schema), "pre");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(new PeptideTableInfo(schema), "pep");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-        sql.append(" WHERE pci.PrecursorId = pre.Id AND pre.PeptideId = pep.Id AND ");
+        sql.append(" WHERE pci.PrecursorId = pre.Id AND pre.GeneralMoleculeId = pep.Id AND ");
         sql.append("pep.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND pci.Id = ?");
         sql.add(false);
         sql.add(c.getId());
@@ -111,14 +117,14 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(PrecursorChromInfo.class);
     }
 
-    public static List<Precursor> getPrecursorsForPeptide(int peptideId)
+    public static List<Precursor> getPrecursorsForPeptide(int peptideId, TargetedMSSchema targetedMSSchema)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("PeptideId"), peptideId);
 
         Sort sort = new Sort("Charge, IsotopeLabelId");
 
-        List<Precursor> precursors = new TableSelector(TargetedMSManager.getTableInfoPrecursor(), filter, sort).getArrayList(Precursor.class);
+        List<Precursor> precursors = new TableSelector(new PrecursorTableInfo(targetedMSSchema), Precursor.getColumns(), filter,  sort).getArrayList(Precursor.class);
 
         if (precursors.isEmpty())
         {
@@ -244,7 +250,7 @@ public class PrecursorManager
         sql.append(" ON ");
         sql.append("prec.Id = pci.PrecursorId ");
         sql.append(" WHERE ");
-        sql.append("prec.PeptideId=? ");
+        sql.append("prec.GeneralMoleculeId=? ");
         sql.add(peptideId);
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfo.class);
@@ -252,13 +258,17 @@ public class PrecursorManager
 
     public static Map<String, Object> getPrecursorSummary(int precursorId)
     {
-        SQLFragment sf = new SQLFragment("SELECT pre.Mz, pre.Charge, pep.Sequence, label.Name FROM ");
+        SQLFragment sf = new SQLFragment("SELECT gp.Mz, gp.Charge, pep.Sequence, label.Name FROM ");
         sf.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+        sf.append(", ");
+        sf.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
+        sf.append(", ");
+        sf.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
         sf.append(", ");
         sf.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         sf.append(", ");
         sf.append(TargetedMSManager.getTableInfoIsotopeLabel(), "label ");
-        sf.append(" WHERE pre.PeptideId = pep.Id AND pre.IsotopeLabelId = label.Id AND pre.Id = ? ");
+        sf.append(" WHERE gp.GeneralMoleculeId = gm.Id AND pre.IsotopeLabelId = label.Id AND pre.Id = ? ");
         sf.add(precursorId);
 
         try (TableResultSet rs = new SqlSelector(TargetedMSManager.getSchema(), sf).getResultSet())
@@ -283,32 +293,32 @@ public class PrecursorManager
         throw new IllegalStateException("Cannot get summary for precursor "+precursorId);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId, User user, Container container)
     {
-        return getChromInfosLitePlusForPeptideGroup(peptideGroupId, 0);
+        return getChromInfosLitePlusForPeptideGroup(peptideGroupId, 0, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId, int sampleFileId)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId, int sampleFileId, User user, Container container)
     {
-        return getPrecursorChromInfoLitePlusList(peptideGroupId, true, false, sampleFileId);
+        return getPrecursorChromInfoLitePlusList(peptideGroupId, true, false, sampleFileId, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptide(int peptideId)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptide(int peptideId, User user, Container container)
     {
-        return getPrecursorChromInfoLitePlusList(peptideId, false, false, 0);
+        return getPrecursorChromInfoLitePlusList(peptideId, false, false, 0, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPrecursor(int precursorId)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPrecursor(int precursorId, User user, Container container)
     {
-        return getPrecursorChromInfoLitePlusList(precursorId, false, true, 0);
+        return getPrecursorChromInfoLitePlusList(precursorId, false, true, 0, user, container);
     }
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId, int sampleFileId)
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId, int sampleFileId, User user, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
         sql.append(" FROM ");
-        joinTablesForPrecursorChromInfo(sql);
+        joinTablesForPrecursorChromInfo(sql, user, container);
         sql.append(" WHERE ");
         sql.append("pep.Id=? ");
         sql.add(peptideId);
@@ -323,12 +333,14 @@ public class PrecursorManager
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
     }
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptideChromInfo(int pepChromInfoId, int precursorId, int sampleFileId)
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptideChromInfo(int pepChromInfoId, int precursorId,
+                                                                                         int sampleFileId, User user,
+                                                                                         Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
         sql.append(" FROM ");
-        joinTablesForPrecursorChromInfo(sql);
+        joinTablesForPrecursorChromInfo(sql, user, container);
         sql.append(" WHERE ");
         sql.append("pci.PeptideChromInfoId=? ");
         sql.add(pepChromInfoId);
@@ -346,19 +358,21 @@ public class PrecursorManager
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
     }
 
-    private static void joinTablesForPrecursorChromInfo(SQLFragment sql)
+    private static void joinTablesForPrecursorChromInfo(SQLFragment sql, User user, Container container)
     {
+        TargetedMSSchema schema = new TargetedMSSchema(user, container);
+
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(new PeptideTableInfo(schema), "pep");
         sql.append(" ON ");
         sql.append("pg.Id = pep.PeptideGroupId ");
         sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(new PrecursorTableInfo(schema), "prec");
         sql.append(" ON ");
-        sql.append("pep.Id = prec.PeptideId ");
+        sql.append("pep.Id = prec.GeneralMoleculeId ");
         sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(new PrecursorChromInfoTable(schema), "pci");
         sql.append(" ON ");
         sql.append("prec.Id = pci.PrecursorId ");
         sql.append(" INNER JOIN ");
@@ -367,13 +381,15 @@ public class PrecursorManager
         sql.append("prec.IsotopeLabelId = label.Id ");
     }
 
-    private static List<PrecursorChromInfoLitePlus> getPrecursorChromInfoLitePlusList(int id, boolean forPeptideGroup, boolean forPrecursor, int sampleFileId)
+    private static List<PrecursorChromInfoLitePlus> getPrecursorChromInfoLitePlusList(int id, boolean forPeptideGroup,
+                                                                                      boolean forPrecursor, int sampleFileId,
+                                                                                      User user, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.id, pci.precursorId, pci.sampleFileId, pci.bestRetentionTime, pci.minStartTime, pci.maxEndTime, pci.TotalArea, pci.maxfwhm, pci.maxHeight");
         sql.append(", pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
         sql.append(" FROM ");
-        joinTablesForPrecursorChromInfo(sql);
+        joinTablesForPrecursorChromInfo(sql, user, container);
         sql.append(" WHERE ");
         if(forPeptideGroup)
         {
@@ -403,15 +419,15 @@ public class PrecursorManager
     {
         SQLFragment sql = new SQLFragment();
         sql.append("SELECT prec.* FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" WHERE");
-        sql.append(" prec.PeptideId = pep.Id");
+        sql.append(" gp.GeneralMoleculeId = gm.Id");
         sql.append(" AND");
-        sql.append(" pep.PeptideGroupId = pg.Id");
+        sql.append(" gm.PeptideGroupId = pg.Id");
         sql.append(" AND");
         sql.append(" pg.RunId = ?");
         sql.add(runId);
@@ -427,17 +443,17 @@ public class PrecursorManager
     {
         SQLFragment sql = new SQLFragment();
         sql.append("SELECT prec.* FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "run");
         sql.append(" WHERE");
-        sql.append(" prec.PeptideId = pep.Id");
+        sql.append(" gp.GeneralMoleculeId = gm.Id");
         sql.append(" AND");
-        sql.append(" pep.PeptideGroupId = pg.Id");
+        sql.append(" gm.PeptideGroupId = pg.Id");
         sql.append(" AND");
         sql.append(" pg.RunId = run.Id");
         sql.append(" AND");
@@ -468,9 +484,9 @@ public class PrecursorManager
         sql.append(" FROM "+TargetedMSManager.getTableInfoPeptide());
         sql.append(", "+TargetedMSManager.getTableInfoPeptideGroup());
         sql.append(" WHERE ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup()+".Id = "+TargetedMSManager.getTableInfoPeptide()+".PeptideGroupId");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup()+".Id = "+TargetedMSManager.getTableInfoGeneralMolecule()+".PeptideGroupId");
         sql.append(" AND ");
-        sql.append(TargetedMSManager.getTableInfoPeptide()+".Id = "+TargetedMSManager.getTableInfoPrecursor()+".PeptideId");
+        sql.append(TargetedMSManager.getTableInfoPeptide()+".Id = "+TargetedMSManager.getTableInfoPrecursor()+".GeneralMoleculeId");
         sql.append(" AND ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup()+".RunId = ?");
         sql.add(runId);
@@ -561,15 +577,15 @@ public class PrecursorManager
         if(precIds.length() > 0)
             precIds.deleteCharAt(0);
         SQLFragment sql = new SQLFragment("SELECT COUNT(pg.Id) FROM ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-        sql.append(" WHERE pre.PeptideId = pep.Id AND ");
-        sql.append("pep.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Container = ? AND pre.Id IN ("+precIds+")");
+        sql.append(" WHERE gp.GeneralMoleculeId = gm.Id AND ");
+        sql.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Container = ? AND pre.Id IN ("+precIds+")");
         sql.add(container.getId());
 
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
@@ -580,7 +596,7 @@ public class PrecursorManager
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(precHeight) FROM (");
         sql.append("SELECT SUM(tci.Height) AS precHeight FROM ");
-        sql.append(TargetedMSManager.getTableInfoPeptideChromInfo(), "pepci");
+        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "pepci");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
         sql.append(", ");
@@ -590,7 +606,7 @@ public class PrecursorManager
         sql.append(" AND");
         sql.append(" preci.Id = tci.PrecursorChromInfoId");
         sql.append(" AND");
-        sql.append(" pepci.PeptideId=?");
+        sql.append(" pepci.GeneralMoleculeId=?");
         sql.add(peptideId);
         sql.append(" GROUP BY tci.PrecursorChromInfoId");
         sql.append(" ) a");
@@ -620,17 +636,17 @@ public class PrecursorManager
                     SQLFragment sql = new SQLFragment("SELECT DISTINCT pci.PrecursorId FROM ");
                     sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
                     sql.append(" , ");
-                    sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+                    sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
                     sql.append(" , ");
-                    sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+                    sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
                     sql.append(" , ");
                     sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
                     sql.append(" WHERE ");
-                    sql.append(" pci.PrecursorId = prec.Id ");
+                    sql.append(" pci.PrecursorId = gp.Id ");
                     sql.append(" AND ");
-                    sql.append(" prec.PeptideId = pep.Id ");
+                    sql.append(" gp.GeneralMoleculeId = gm.Id ");
                     sql.append(" AND ");
-                    sql.append(" pep.PeptideGroupId = pg.Id ");
+                    sql.append(" gm.PeptideGroupId = pg.Id ");
                     sql.append(" AND ");
                     sql.append("pg.RunId = ?");
                     sql.add(Integer.valueOf(runId));
@@ -689,12 +705,12 @@ public class PrecursorManager
 
     public static boolean canBeSplitView(int peptideId)
     {
-        SQLFragment sql = new SQLFragment("SELECT DISTINCT tra.fragmenttype FROM ");
-        sql.append(TargetedMSManager.getTableInfoTransition(), "tra");
+        SQLFragment sql = new SQLFragment("SELECT DISTINCT gt.fragmenttype FROM ");
+        sql.append(TargetedMSManager.getTableInfoGeneralTransition(), "gt");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
-        sql.append(" WHERE tra.precursorid = pre.Id AND  ");
-        sql.append("pre.peptideid = "+peptideId);
+        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
+        sql.append(" WHERE gt.GeneralPrecursorId = gp.Id AND  ");
+        sql.append("gp.GeneralMoleculeId = "+peptideId);
         String[] sqls = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(String.class);
 
         if(sqls.length > 1)
@@ -711,19 +727,19 @@ public class PrecursorManager
     public static boolean hasOptimizationPeaks(int peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT pci.Id FROM ");
-        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
         sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
 
-        sql.append(" WHERE pep.id = pre.PeptideId ");
+        sql.append(" WHERE gm.id = gp.GeneralMoleculeId ");
         sql.append(" AND ");
-        sql.append(" pre.Id = pci.PrecursorId ");
+        sql.append(" gp.Id = pci.PrecursorId ");
         sql.append(" AND ");
         sql.append(" pci.OptimizationStep IS NOT NULL ");
         sql.append(" AND ");
-        sql.append(" pep.Id = " + peptideId);
+        sql.append(" gm.Id = " + peptideId);
         return new SqlSelector(TargetedMSManager.getSchema(), sql).exists();
     }
 

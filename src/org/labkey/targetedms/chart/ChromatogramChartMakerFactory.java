@@ -17,7 +17,9 @@ package org.labkey.targetedms.chart;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.labkey.targetedms.parser.PeptideChromInfo;
+import org.labkey.api.data.Container;
+import org.labkey.api.security.User;
+import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
@@ -53,27 +55,28 @@ public class ChromatogramChartMakerFactory
         _showOptimizationPeaks = showOptimizationPeaks;
     }
 
-    public JFreeChart createTransitionChromChart(TransitionChromInfo tChromInfo, PrecursorChromInfo pChromInfo)
+    public JFreeChart createTransitionChromChart(TransitionChromInfo tChromInfo, PrecursorChromInfo pChromInfo, User user, Container container)
     {
-        return new ChromatogramChartMaker().make(new ChromatogramDataset.TransitionDataset(pChromInfo, tChromInfo));
+        return new ChromatogramChartMaker().make(new ChromatogramDataset.TransitionDataset(pChromInfo, tChromInfo, user, container));
     }
 
-    public JFreeChart createPrecursorChromChart(PrecursorChromInfo pChromInfo)
+    public JFreeChart createPrecursorChromChart(PrecursorChromInfo pChromInfo, User user, Container container)
     {
         if(_showOptimizationPeaks)
         {
             // Split graph setting will be ignored if we are showing optimization peaks.
-            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorOptimizationPeakDataset(pChromInfo, _syncIntensity, _syncRt));
+            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorOptimizationPeakDataset(pChromInfo,
+                    _syncIntensity, _syncRt, user, container));
 
         }
         else if(!_splitGraph)
         {
-            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorDataset(pChromInfo, _syncIntensity, _syncRt));
+            return new ChromatogramChartMaker().make(new ChromatogramDataset.PrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container));
         }
         else
         {
-            ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.PrecursorSplitDataset(pChromInfo, _syncIntensity, _syncRt);
-            ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.ProductSplitDataset(pChromInfo, _syncIntensity, _syncRt) {
+            ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.PrecursorSplitDataset(pChromInfo, _syncIntensity, _syncRt, user, container);
+            ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.ProductSplitDataset(pChromInfo, _syncIntensity, _syncRt, user, container) {
                 int getSeriesOffset()
                 {
                     XYSeriesCollection jfreePrecIonDataset = precursorIonDataset.getJFreeDataset();
@@ -84,8 +87,8 @@ public class ChromatogramChartMakerFactory
         }
     }
 
-    public JFreeChart createPeptideChromChart(PeptideChromInfo pepChromInfo)
+    public JFreeChart createPeptideChromChart(GeneralMoleculeChromInfo pepChromInfo, User user, Container container)
     {
-        return new ChromatogramChartMaker().make(new ChromatogramDataset.PeptideDataset(pepChromInfo, _syncIntensity, _syncRt));
+        return new ChromatogramChartMaker().make(new ChromatogramDataset.PeptideDataset(pepChromInfo, _syncIntensity, _syncRt, user, container));
     }
 }
