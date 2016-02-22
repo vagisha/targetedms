@@ -119,7 +119,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
                 }
                 return val;
             }},
-            {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y', width: 105, menuDisabled: true, sortable: false},
+            {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y g:i A', width: 150, menuDisabled: true, sortable: false},
             {text: 'Imported By', dataIndex: 'CreatedBy/DisplayName', width: 100, menuDisabled: true, sortable: false},
             {text: 'Note', dataIndex: 'Flag/Comment', width: 185, menuDisabled: true, sortable: false, renderer: 'htmlEncode'},
             {text: 'Proteins', dataIndex: 'File/PeptideGroupCount', width: 67, menuDisabled: true, sortable: false, align: 'right'},
@@ -319,6 +319,8 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             Ext4.each(data.rows, function(row){
                 row.SortOrder = orderMap[row.RowId];
             });
+
+            Ext4.get(this.divId).setHTML('');
 
             Ext4.create('Ext.grid.Panel', {
                 renderTo: this.divId,

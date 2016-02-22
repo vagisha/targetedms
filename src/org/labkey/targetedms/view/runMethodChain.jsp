@@ -38,7 +38,7 @@
     ExpRun run = me.getModelBean();
 %>
 
-<div id="runMethodChainDetails"></div>
+<div id="runMethodChainDetails">Loading...</div>
 
 <script type="text/javascript">
     Ext4.onReady(function() {
