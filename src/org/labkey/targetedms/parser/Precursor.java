@@ -16,50 +16,26 @@
 
 package org.labkey.targetedms.parser;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: vsharma
  * Date: 4/2/12
  * Time: 10:28 AM
  */
-public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
+public class Precursor extends GeneralPrecursor
 {
-    private int _peptideId;
-
     private String _modifiedSequence;
-    private int _charge;
-    private double _mz;
     private double _neutralMass;
     private String _isotopeLabel;
     private int _isotopeLabelId;
-
-    private Double _collisionEnergy;
-    private Double _declusteringPotential;
-
     private Double _decoyMassShift;
-
-    private Double _explicitCollisionEnergy;
-    private Double _explicitDriftTimeMsec;
-    private Double _explicitDriftTimeHighEnergyOffsetMsec;
-
     private LibraryInfo _libraryInfo;
-
     private List<Transition> _transitionList;
     private List<PrecursorChromInfo> _chromInfoList;
-    private String _note;
-
-    protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
-
-    public int getPeptideId()
-    {
-        return _peptideId;
-    }
-
-    public void setPeptideId(int peptideId)
-    {
-        this._peptideId = peptideId;
-    }
+    private List<PrecursorAnnotation> annotations;
 
     public int getIsotopeLabelId()
     {
@@ -81,26 +57,6 @@ public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
         this._modifiedSequence = modifiedSequence;
     }
 
-    public int getCharge()
-    {
-        return _charge;
-    }
-
-    public void setCharge(int charge)
-    {
-        this._charge = charge;
-    }
-
-    public double getMz()
-    {
-        return _mz;
-    }
-
-    public void setMz(double mz)
-    {
-        this._mz = mz;
-    }
-
     public double getNeutralMass()
     {
         return _neutralMass;
@@ -119,26 +75,6 @@ public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
     public void setIsotopeLabel(String isotopeLabel)
     {
         this._isotopeLabel = isotopeLabel;
-    }
-
-    public Double getCollisionEnergy()
-    {
-        return _collisionEnergy;
-    }
-
-    public void setCollisionEnergy(Double collisionEnergy)
-    {
-        this._collisionEnergy = collisionEnergy;
-    }
-
-    public Double getDeclusteringPotential()
-    {
-        return _declusteringPotential;
-    }
-
-    public void setDeclusteringPotential(Double declusteringPotential)
-    {
-        this._declusteringPotential = declusteringPotential;
     }
 
     public Double getDecoyMassShift()
@@ -181,59 +117,44 @@ public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
         _libraryInfo = libraryInfo;
     }
 
-    public void setNote(String note)
+    public List<PrecursorAnnotation> getAnnotations()
     {
-        _note = note;
+        return annotations;
     }
 
-    public String getNote()
+    public void setAnnotations(List<PrecursorAnnotation> annotations)
     {
-        return _note;
+        this.annotations = annotations;
     }
 
-    public RepresentativeDataState getRepresentativeDataState()
+    public static Set<String> getColumns()
     {
-        return _representativeDataState;
-    }
-
-    public void setRepresentativeDataState(RepresentativeDataState representativeDataState)
-    {
-        _representativeDataState = representativeDataState;
-    }
-
-    public Double getExplicitCollisionEnergy()
-    {
-        return _explicitCollisionEnergy;
-    }
-
-    public void setExplicitCollisionEnergy(Double explicitCollisionEnergy)
-    {
-        _explicitCollisionEnergy = explicitCollisionEnergy;
-    }
-
-    public Double getExplicitDriftTimeMsec()
-    {
-        return _explicitDriftTimeMsec;
-    }
-
-    public void setExplicitDriftTimeMsec(Double explicitDriftTimeMsec)
-    {
-        _explicitDriftTimeMsec = explicitDriftTimeMsec;
-    }
-
-    public Double getExplicitDriftTimeHighEnergyOffsetMsec()
-    {
-        return _explicitDriftTimeHighEnergyOffsetMsec;
-    }
-
-    public void setExplicitDriftTimeHighEnergyOffsetMsec(Double explicitDriftTimeHighEnergyOffsetMsec)
-    {
-        _explicitDriftTimeHighEnergyOffsetMsec = explicitDriftTimeHighEnergyOffsetMsec;
+        Set<String> colNames = new HashSet<>();
+        colNames.add("Id");
+        colNames.add("GeneralMoleculeId");
+        colNames.add("Mz");
+        colNames.add("Charge");
+        colNames.add("CollisionEnergy");
+        colNames.add("DeclusteringPotential");
+        colNames.add("Decoy");
+        colNames.add("Note");
+        colNames.add("Modified");
+        colNames.add("RepresentativeDataState");
+        colNames.add("ExplicitCollisionEnergy");
+        colNames.add("ExplicitDriftTimeMsec");
+        colNames.add("ExplicitDriftTimeHighEnergyOffsetMsec");
+        colNames.add("GeneralMoleculeId");
+        colNames.add("IsotopeLabelId");
+        colNames.add("NeutralMass");
+        colNames.add("ModifiedSequence");
+        colNames.add("DecoyMassShift");
+        return colNames;
     }
 
     public static final class LibraryInfo extends SkylineEntity
     {
         private int _precursorId;
+        private int _generalPrecursorId;
         private int _spectrumLibraryId;
 
         private String _libraryName;
@@ -249,6 +170,16 @@ public class Precursor extends AnnotatedEntity<PrecursorAnnotation>
         public void setPrecursorId(int precursorId)
         {
             _precursorId = precursorId;
+        }
+
+        public int getGeneralPrecursorId()
+        {
+            return _generalPrecursorId;
+        }
+
+        public void setGeneralPrecursorId(int generalPrecursorId)
+        {
+            _generalPrecursorId = generalPrecursorId;
         }
 
         public int getSpectrumLibraryId()

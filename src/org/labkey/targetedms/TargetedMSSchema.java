@@ -55,9 +55,13 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.AnnotatedTargetedMSTable;
 import org.labkey.targetedms.query.DocTransitionsTableInfo;
 import org.labkey.targetedms.query.ExperimentAnnotationsTableInfo;
+import org.labkey.targetedms.query.GeneralMoleculeAnnotationTableInfo;
+import org.labkey.targetedms.query.GeneralMoleculeChromInfoTableInfo;
 import org.labkey.targetedms.query.GuideSetTable;
 import org.labkey.targetedms.query.JournalExperimentTableInfo;
-import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
+import org.labkey.targetedms.query.PeptideIsotopeModificationTableInfo;
+import org.labkey.targetedms.query.PeptideStructuralModificationTableInfo;
+import org.labkey.targetedms.query.PeptideTableInfo;
 import org.labkey.targetedms.query.PrecursorChromInfoTable;
 import org.labkey.targetedms.query.PrecursorTableInfo;
 import org.labkey.targetedms.query.QCAnnotationTable;
@@ -105,6 +109,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PROTEIN = "Protein";
     public static final String TABLE_PEPTIDE = "Peptide";
     public static final String TABLE_MOLECULE = "Molecule";
+    public static final String TABLE_GENERAL_MOLECULE_ANNOTATION = "GeneralMoleculeAnnotation";
     public static final String TABLE_PEPTIDE_ANNOTATION = "PeptideAnnotation";
     public static final String TABLE_PRECURSOR = "Precursor";
     public static final String TABLE_EXPERIMENT_PRECURSOR = "ExperimentPrecursor";
@@ -118,6 +123,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_TRANSITION_OPTIMIZATION = "TransitionOptimization";
     public static final String TABLE_TRANSITION_CHROM_INFO = "TransitionChromInfo";
     public static final String TABLE_TRANSITION_CHROM_INFO_ANNOTATION = "TransitionChromInfoAnnotation";
+    public static final String TABLE_GENERAL_MOLECULE_CHROM_INFO = "GeneralMoleculeChromInfo";
     public static final String TABLE_PEPTIDE_CHROM_INFO = "PeptideChromInfo";
     public static final String TABLE_PRECURSOR_CHROM_INFO = "PrecursorChromInfo";
     public static final String TABLE_PRECURSOR_CHROM_INFO_ANNOTATION = "PrecursorChromInfoAnnotation";
@@ -160,6 +166,11 @@ public class TargetedMSSchema extends UserSchema
 
     private static final String PROTOCOL_PATTERN_PREFIX = "urn:lsid:%:Protocol.%:";
 
+    public static final String TABLE_GENERAL_MOLECULE = "GeneralMolecule";
+    public static final String TABLE_GENERAL_PRECURSOR = "GeneralPrecursor";
+    public static final String TABLE_GENERAL_TRANSITION = "GeneralTransition";
+    public static final String TABLE_MOLECULE_PRECURSOR = "MoleculePrecursor";
+
     private ExpSchema _expSchema;
 
     static public void register(Module module)
@@ -184,6 +195,7 @@ public class TargetedMSSchema extends UserSchema
         return DbSchema.get(SCHEMA_NAME);
     }
 
+
     private static SQLFragment getJoinToRunsTable(String tableAlias)
     {
         tableAlias = tableAlias == null ? "" : tableAlias + ".";
@@ -203,43 +215,69 @@ public class TargetedMSSchema extends UserSchema
         return sql;
     }
 
+    private static SQLFragment makeLeftJoin(TableInfo table, String alias, String colRight)
+    {
+        SQLFragment sql = new SQLFragment("LEFT JOIN ");
+        sql.append(table, alias);
+        sql.append(" ON ( ");
+        sql.append(alias).append(".id");
+        sql.append(" = ");
+        sql.append(colRight);
+        sql.append(" ) ");
+        return sql;
+    }
+
     public enum ContainerJoinType
     {
-        PeptideFK
+        GeneralMoleculeFK
         {
             @Override
             public SQLFragment getSQL()
             {
                 SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "PeptideId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gm", "GeneralMoleculeId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gm.PeptideGroupId"));
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
         },
-        PeptideChromInfoFK
+        GeneralMoleculeChromInfoFK
         {
             @Override
             public SQLFragment getSQL()
             {
                 SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideChromInfo(), "pci", "PeptideChromInfoId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "pci.PeptideId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci", "GeneralMoleculeChromInfoId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gmid", "gmci.GeneralMoleculeId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gmid.PeptideGroupId"));
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
         },
-        TransitionFK
+        GeneralPrecursorFK
         {
             @Override
             public SQLFragment getSQL()
             {
                 SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoTransition(), "tr", "TransitionId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPrecursor(), "pre", "tr.PrecursorId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "pre.PeptideId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre", "GeneralPrecursorId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gm", "pre.GeneralMoleculeId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gm.PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
+                return sql;
+
+            }
+        },
+        GeneralTransitionFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralTransition(), "gtr", "GeneralTransitionId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralPrecursor(), "gpi", "gtr.GeneralPrecursorId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gmid", "gpi.GeneralMoleculeId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gmid.PeptideGroupId"));
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
@@ -254,6 +292,33 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSampleFile(), "sfile", "pci.SampleFileId"));
                 sql.append(makeInnerJoin(TargetedMSManager.getTableInfoReplicate(), "rep", "sfile.ReplicateId"));
                 sql.append(getJoinToRunsTable("rep"));
+                return sql;
+            }
+        },
+        PrecursorFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPrecursor(), "pre", "PrecursorId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp", "pre.Id"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gm", "gp.GeneralMoleculeId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gm.PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
+                return sql;
+            }
+        },
+        PrecursorTableFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp", "Id"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gm", "gp.GeneralMoleculeId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gm.PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
         },
@@ -284,8 +349,21 @@ public class TargetedMSSchema extends UserSchema
             public SQLFragment getSQL()
             {
                 SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "PeptideId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gm", "GeneralMoleculeId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gm.PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
+                return sql;
+            }
+        },
+        PeptideChromInfoFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci", "PeptideChromInfoId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gmid", "gmci.GeneralMoleculeId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gmid.PeptideGroupId"));
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
@@ -301,30 +379,17 @@ public class TargetedMSSchema extends UserSchema
                 return sql;
             }
         },
-        PrecursorFK
-        {
-            @Override
-            public SQLFragment getSQL()
-            {
-                SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPrecursor(), "pre", "PrecursorId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "pre.PeptideId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
-                sql.append(getJoinToRunsTable("pg"));
-                return sql;
 
-            }
-        },
         PrecursorForMoleculeFK
         {
             @Override
             public SQLFragment getSQL()
             {
                 SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoTransition(), "tran", "TransitionId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPrecursor(), "pre", "tran.PrecursorId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptide(), "pep", "pre.PeptideId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "pep.PeptideGroupId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralTransition(), "gt", "Id"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp", "gt.GeneralPrecursorId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gm", "gp.GeneralMoleculeId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gm.PeptideGroupId"));
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
 
@@ -403,6 +468,18 @@ public class TargetedMSSchema extends UserSchema
             {
                 return makeInnerJoin(TargetedMSManager.getTableInfoExperimentAnnotations(),
                         TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "ExperimentAnnotationsId");
+            }
+        },
+        ModPeptideFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gm", "PeptideId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gm.PeptideGroupId"));
+                sql.append(getJoinToRunsTable("pg"));
+                return sql;
             }
         };
 
@@ -519,7 +596,7 @@ public class TargetedMSSchema extends UserSchema
         {
             return new GuideSetTable(this);
         }
-        if (TABLE_AUTOQC_PING.equalsIgnoreCase(name))
+        if ( TABLE_AUTOQC_PING.equalsIgnoreCase(name))
         {
             FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(TABLE_AUTOQC_PING), this);
             result.wrapAllColumns(true);
@@ -687,80 +764,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.peptidegroup
         if (TABLE_PEPTIDE.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name),
-                                                                  this,
-                                                                  ContainerJoinType.PeptideGroupFK.getSQL(),
-                                                                  TargetedMSManager.getTableInfoPeptideAnnotation(),
-                                                                  "PeptideId",
-                                                                  "Peptide Annotations")
-            {
-                @Override
-                public FieldKey getContainerFieldKey()
-                {
-                    return FieldKey.fromParts("PeptideGroupId", "RunId", "Folder");
-                }
-            };
-            result.getColumn("PeptideGroupId").setFk(new LookupForeignKey("Id")
-            {
-                @Override
-                public TableInfo getLookupTableInfo()
-                {
-                    return getTable(TABLE_PEPTIDE_GROUP);
-                }
-            });
-            final DetailsURL detailsURL = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()),
-                                                                  Collections.singletonMap("id", "Id"));
-            result.setDetailsURL(detailsURL);
-            List<FieldKey> defaultCols = new ArrayList<>(result.getDefaultVisibleColumns());
-            defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
-            defaultCols.add(1, FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
-            defaultCols.add(2, FieldKey.fromParts("PeptideGroupId", "Label"));
-            defaultCols.remove(FieldKey.fromParts("PeptideGroupId"));
-            result.setDefaultVisibleColumns(defaultCols);
-
-            // Add a WrappedColumn for Note & Annotations
-            WrappedColumn noteAnnotation = new WrappedColumn(result.getColumn("Annotations"), "NoteAnnotations");
-            noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
-            {
-                @Override
-                public DisplayColumn createRenderer(ColumnInfo colInfo)
-                {
-                    return new AnnotationUIDisplayColumn(colInfo);
-                }
-            });
-            noteAnnotation.setLabel("Peptide Note/Annotations");
-            result.addColumn(noteAnnotation);
-
-            ColumnInfo sequenceColumn = result.getColumn("Sequence");
-            sequenceColumn.setURL(detailsURL);
-
-            WrappedColumn modSeqCol = new WrappedColumn(result.getColumn("PeptideModifiedSequence"), ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME);
-            modSeqCol.setLabel("Peptide");
-            modSeqCol.setDescription("Modified peptide sequence");
-            modSeqCol.setDisplayColumnFactory( new DisplayColumnFactory()
-            {
-                @Override
-                public DisplayColumn createRenderer(ColumnInfo colInfo)
-                {
-                    return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo, detailsURL.getActionURL());
-                }
-            });
-            result.addColumn(modSeqCol);
-            defaultCols.add(3, FieldKey.fromParts(ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
-
-            SQLFragment currentLibPrecursorCountSQL = new SQLFragment("(SELECT COUNT(p.Id) FROM ");
-            currentLibPrecursorCountSQL.append(TargetedMSManager.getTableInfoPrecursor(), "p");
-            currentLibPrecursorCountSQL.append(" WHERE p.PeptideId = ");
-            currentLibPrecursorCountSQL.append(ExprColumn.STR_TABLE_ALIAS);
-            currentLibPrecursorCountSQL.append(".Id");
-            currentLibPrecursorCountSQL.append(" AND p.RepresentativeDataState = ?");
-            currentLibPrecursorCountSQL.add(RepresentativeDataState.Representative.ordinal());
-            currentLibPrecursorCountSQL.append(")");
-            ExprColumn currentLibPrecursorCountCol = new ExprColumn(result, "RepresentivePrecursorCount", currentLibPrecursorCountSQL, JdbcType.INTEGER);
-            currentLibPrecursorCountCol.setLabel("Library Precursor Count");
-            result.addColumn(currentLibPrecursorCountCol);
-
-            return result;
+            return new PeptideTableInfo(this);
         }
 
         if (TABLE_MOLECULE.equalsIgnoreCase(name))
@@ -768,35 +772,35 @@ public class TargetedMSSchema extends UserSchema
             TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name),
                     this,
                     ContainerJoinType.PeptideGroupForMoleculeFK.getSQL(),
-                    TargetedMSManager.getTableInfoPeptideAnnotation(),
-                    "PeptideId",
-                    "Peptide Annotations",
-                    "PeptideId")
+                    TargetedMSManager.getTableInfoGeneralMoleculeAnnotation(),
+                    "GeneralMoleculeId",
+                    "General Molecule Annotations",
+                    "Id")
             {
                 @Override
                 public FieldKey getContainerFieldKey()
                 {
-                    return FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Folder");
+                    return FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder");
                 }
             };
-            result.getColumn("PeptideId").setFk(new LookupForeignKey("Id")
+            result.getColumn("Id").setFk(new LookupForeignKey("Id")
             {
                 @Override
                 public TableInfo getLookupTableInfo()
                 {
-                    return getTable(TABLE_PEPTIDE);
+                    return getTable(TABLE_GENERAL_MOLECULE);
                 }
             });
 
-            List<FieldKey> defaultCols = new ArrayList<>(result.getDefaultVisibleColumns());
-            defaultCols.add(0, FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "File"));
-            defaultCols.add(1, FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
-            defaultCols.add(FieldKey.fromParts("PeptideId", "RtCalculatorScore"));
-            defaultCols.add(FieldKey.fromParts("PeptideId", "PredictedRetentionTime"));
-            defaultCols.add(FieldKey.fromParts("PeptideId", "AvgMeasuredRetentionTime"));
-            defaultCols.add(FieldKey.fromParts("PeptideId", "ExplicitRetentionTime"));
-            defaultCols.add(FieldKey.fromParts("PeptideId", "StandardType"));
-            result.setDefaultVisibleColumns(defaultCols);
+//            List<FieldKey> defaultCols = new ArrayList<>(result.getDefaultVisibleColumns());
+//            defaultCols.add(0, FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "File"));
+//            defaultCols.add(1, FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
+//            defaultCols.add(FieldKey.fromParts("PeptideId", "RtCalculatorScore"));
+//            defaultCols.add(FieldKey.fromParts("PeptideId", "PredictedRetentionTime"));
+//            defaultCols.add(FieldKey.fromParts("PeptideId", "AvgMeasuredRetentionTime"));
+//            defaultCols.add(FieldKey.fromParts("PeptideId", "ExplicitRetentionTime"));
+//            defaultCols.add(FieldKey.fromParts("PeptideId", "StandardType"));
+//            result.setDefaultVisibleColumns(defaultCols);
             return result;
         }
 
@@ -816,11 +820,13 @@ public class TargetedMSSchema extends UserSchema
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.ReplicateFK.getSQL());
         }
 
-        if (TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name))
+        if (TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name) || TABLE_GENERAL_MOLECULE_CHROM_INFO.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideFK.getSQL());
+            TargetedMSTable result = new GeneralMoleculeChromInfoTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_CHROM_INFO), this, ContainerJoinType.GeneralMoleculeFK.getSQL(), name);
+
             // Add a link to view the chromatogram an individual transition
             result.setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.PeptideChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
+
             return result;
         }
 
@@ -845,14 +851,18 @@ public class TargetedMSSchema extends UserSchema
         {
             return new PrecursorTableInfo.LibraryPrecursorTableInfo(this);
         }
-        if (TABLE_PEPTIDE_ANNOTATION.equalsIgnoreCase(name) ||
-            TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name) ||
-            TABLE_PEPTIDE_STRUCTURAL_MODIFICATION.equalsIgnoreCase(name) ||
-            TABLE_PEPTIDE_ISOTOPE_MODIFICATION.equalsIgnoreCase(name))
+        if (TABLE_GENERAL_MOLECULE_ANNOTATION.equalsIgnoreCase(name) || TABLE_PEPTIDE_ANNOTATION.equals(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideFK.getSQL());
+            return new GeneralMoleculeAnnotationTableInfo(getSchema().getTable(name), this, ContainerJoinType.GeneralMoleculeFK.getSQL());
         }
-
+        if(TABLE_PEPTIDE_STRUCTURAL_MODIFICATION.equalsIgnoreCase(name))
+        {
+            return new TargetedMSTable(new PeptideStructuralModificationTableInfo(this), this, ContainerJoinType.ModPeptideFK.getSQL());
+        }
+        if(TABLE_PEPTIDE_ISOTOPE_MODIFICATION.equalsIgnoreCase(name))
+        {
+            return new TargetedMSTable(new PeptideIsotopeModificationTableInfo(this), this, ContainerJoinType.ModPeptideFK.getSQL());
+        }
         // Tables that have a FK to targetedms.precursor
         if (TABLE_PRECURSOR_CHROM_INFO.equalsIgnoreCase(name))
         {
@@ -875,7 +885,7 @@ public class TargetedMSSchema extends UserSchema
                 @Override
                 public FieldKey getContainerFieldKey()
                 {
-                    return FieldKey.fromParts("TransitionId", "PrecursorId", "PeptideId", "PeptideGroupId", "RunId", "Folder");
+                    return FieldKey.fromParts("TransitionId", "PrecursorId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder");
                 }
             };
             result.getColumn("TransitionId").setFk(new LookupForeignKey("Id")
@@ -883,14 +893,14 @@ public class TargetedMSSchema extends UserSchema
                 @Override
                 public TableInfo getLookupTableInfo()
                 {
-                    return getTable(TABLE_TRANSITION);
+                    return getTable(TABLE_GENERAL_TRANSITION);
                 }
             });
 
             List<FieldKey> defaultCols = new ArrayList<>(result.getDefaultVisibleColumns());
             int idx = 0;
-            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "PrecursorId", "PeptideId", "PeptideGroupId", "RunId", "File"));
-            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "PrecursorId", "PeptideId", "PeptideGroupId", "Label"));
+            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "PrecursorId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "File"));
+            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "PrecursorId", "GeneralMoleculeId", "PeptideGroupId", "Label"));
             defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "Mz"));
             defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "Charge"));
             defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "FragmentType"));
@@ -903,7 +913,7 @@ public class TargetedMSSchema extends UserSchema
             TABLE_PRECURSOR_LIB_INFO.equalsIgnoreCase(name)
             )
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.GeneralPrecursorFK.getSQL());
         }
 
         // Tables that have a FK to targetedms.precursorchrominfo
@@ -938,7 +948,7 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_TRANSITION_ANNOTATION.equalsIgnoreCase(name) ||
             TABLE_TRANSITION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.GeneralTransitionFK.getSQL());
         }
 
         // Tables that have a FK to targetedms.transitionchrominfo
@@ -1023,8 +1033,8 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_REPLICATE_ANNOTATION);
         hs.add(TABLE_INSTRUMENT);
         hs.add(TABLE_ISOTOPE_ENRICHMENT);
-        hs.add(TABLE_PEPTIDE_CHROM_INFO);
-        hs.add(TABLE_PEPTIDE_ANNOTATION);
+        hs.add(TABLE_GENERAL_MOLECULE_CHROM_INFO);
+        hs.add(TABLE_GENERAL_MOLECULE_ANNOTATION);
         hs.add(TABLE_PEPTIDE_AREA_RATIO);
         hs.add(TABLE_TRANSITION_ANNOTATION);
         hs.add(TABLE_TRANSITION_CHROM_INFO);

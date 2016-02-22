@@ -136,12 +136,12 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
         sql.append(" ( SELECT");
         sql.append(" SampleFileId.ReplicateId.Name AS replicate");
         sql.append(", SampleFileId.SampleName AS sample");
-        sql.append(", PeptideChromInfoId AS ").append(_peptideChromInfoCol);
+        sql.append(", GeneralMoleculeChromInfoId AS ").append(_peptideChromInfoCol);
         sql.append(", (PrecursorId.IsotopeLabelId.Name || CAST(PrecursorId.Charge AS VARCHAR)) AS isotopecharge");
         sql.append(", Id AS preciId");
         sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
-        sql.append(" WHERE PrecursorId.PeptideId=").append(peptide.getId());
+        sql.append(" WHERE PrecursorId.GeneralMoleculeId=").append(peptide.getId());
         sql.append(" AND OptimizationStep IS NULL "); // Ignore precursorChromInfos for optimization peaks (e.g. Collision energy optimization)
         if(replicatesFilter != null && replicatesFilter.size() != 0)
         {

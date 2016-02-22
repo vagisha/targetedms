@@ -177,8 +177,10 @@ public class SkylineDocImporter
         NetworkDrive.ensureDrive(f.getPath());
         f = extractIfZip(f);
 
-        try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction();
-             SkylineDocumentParser parser = new SkylineDocumentParser(f, _log))
+        try(
+// (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction();
+
+        SkylineDocumentParser parser = new SkylineDocumentParser(f, _log))
         {
             run.setFormatVersion(parser.getFormatVersion());
             run.setSoftwareVersion(parser.getSoftwareVersion());
@@ -525,7 +527,9 @@ public class SkylineDocImporter
             while (parser.hasNextPeptideGroup())
             {
                 PeptideGroup pepGroup = parser.nextPeptideGroup();
-                insertPeptideGroup(proteinService, insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap, libraryNameIdMap, pepGroup, parser);
+                insertPeptideGroup(proteinService, insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap,
+                        isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap,
+                        isotopeModNameIdMap, libraryNameIdMap, pepGroup, parser);
                 if (++peptideGroupCount % 100 == 0)
                 {
                     _log.info("Imported " + peptideGroupCount + " peptide groups.");
@@ -543,7 +547,7 @@ public class SkylineDocImporter
                 resolveRepresentativeData(run);
             }
 
-            transaction.commit();
+//            transaction.commit();
         }
         finally
         {
@@ -782,7 +786,12 @@ public class SkylineDocImporter
         RepresentativeStateManager.setRepresentativeState(_user, _container, run, run.getRepresentativeDataState());
     }
 
-    private void insertPeptideGroup(ProteinService proteinService, boolean insertCEOptmizations, boolean insertDPOptmizations, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser)
+    private void insertPeptideGroup(ProteinService proteinService, boolean insertCEOptmizations,
+                                    boolean insertDPOptmizations, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
+                                    Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds,
+                                    Map<String, Integer> structuralModNameIdMap, Map<Integer,
+            PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap,
+                                    Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser)
             throws XMLStreamException, IOException, DataFormatException
     {
         pepGroup.setRunId(_runId);
@@ -855,32 +864,37 @@ public class SkylineDocImporter
         SkylineDocumentParser.MoleculeType molType;
         // Issue 24571: Keep track of the peptides in this protein if this is document is being uploaded to a protein library folder.
         Set<String> libProteinPeptides = new HashSet<>();
+        int count = 1;
         while((molType = parser.hasNextPeptideOrMolecule()) != null)
         {
-            Peptide peptide = null;
+            GeneralMolecule generalMolecule = null;
             switch(molType)
             {
                 case PEPTIDE:
-                    peptide = parser.nextPeptide();
+                    generalMolecule = parser.nextPeptide();
                     if(_isProteinLibraryDoc)
                     {
+                        Peptide p = (Peptide) generalMolecule;
                         // Issue 24571: Proteins in protein library folders should not have duplicate peptides.
-                        if (libProteinPeptides.contains(peptide.getPeptideModifiedSequence()))
+                        if (libProteinPeptides.contains(p.getPeptideModifiedSequence()))
                         {
-                            throw new IllegalStateException("Duplicate peptide ("+ peptide.getPeptideModifiedSequence() + ") found for protein " + pepGroup.getLabel()
+                            throw new IllegalStateException("Duplicate peptide ("+ p.getPeptideModifiedSequence() + ") found for protein " + pepGroup.getLabel()
                                     + ". Proteins in documents uploaded to a protein library folder should contain unique peptides.");
                         }
                         else
                         {
-                            libProteinPeptides.add(peptide.getPeptideModifiedSequence());
+                            libProteinPeptides.add(p.getPeptideModifiedSequence());
                         }
                     }
                     break;
                 case MOLECULE:
-                    peptide = parser.nextMolecule();
+                    generalMolecule = parser.nextMolecule();
                     break;
             }
-            insertPeptide(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap, libraryNameIdMap, pepGroup, peptide);
+            _log.info("inserting gen mol. # " + count++);
+            insertPeptide(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap,
+                    internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap,
+                    libraryNameIdMap, pepGroup, generalMolecule);
 
         }
     }
@@ -923,138 +937,159 @@ public class SkylineDocImporter
         return identifierMap;
     }
 
-    private void insertPeptide(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, Peptide peptide)
+    private void insertPeptide(boolean insertCEOptmizations, boolean insertDPOptmizations,
+                               Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap,
+                               Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer,
+                               PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String,
+                               Integer> libraryNameIdMap, PeptideGroup pepGroup, GeneralMolecule generalMolecule)
     {
-        peptide.setPeptideGroupId(pepGroup.getId());
+        Peptide peptide = null;
+        Molecule molecule = null;
+
+        generalMolecule.setPeptideGroupId(pepGroup.getId());
+
+        Table.insert(_user, TargetedMSManager.getTableInfoGeneralMolecule(), generalMolecule);
+
         // If the peptide modified sequence has not been set, use the light precursor sequence
-        if (!(peptide instanceof Molecule) && peptide.getPeptideModifiedSequence() == null )
+        if (generalMolecule instanceof Peptide)
         {
-            for(Precursor precursor: peptide.getPrecursorList())
+            peptide = (Peptide) generalMolecule;
+
+            if(peptide.getPeptideModifiedSequence() == null)
             {
-                if ( PeptideSettings.IsotopeLabel.LIGHT.equalsIgnoreCase(precursor.getIsotopeLabel()) )
-                    peptide.setPeptideModifiedSequence(precursor.getModifiedSequence());
-            }
-        }
-
-        peptide = Table.insert(_user, TargetedMSManager.getTableInfoPeptide(), peptide);
-
-        if(peptide instanceof Molecule)
-        {
-            ((Molecule)peptide).setPeptideId(peptide.getId());
-            Table.insert(_user, TargetedMSManager.getTableInfoMolecule(), (Molecule)peptide);
-        }
-
-        for (PeptideAnnotation annotation : peptide.getAnnotations())
-        {
-            annotation.setPeptideId(peptide.getId());
-            Table.insert(_user, TargetedMSManager.getTableInfoPeptideAnnotation(), annotation);
-        }
-
-        for(Peptide.StructuralModification mod: peptide.getStructuralMods())
-        {
-            int modId = structuralModNameIdMap.get(mod.getModificationName());
-            mod.setStructuralModId(modId);
-            mod.setPeptideId(peptide.getId());
-            Table.insert(_user, TargetedMSManager.getTableInfoPeptideStructuralModification(), mod);
-        }
-
-        for(Peptide.IsotopeModification mod: peptide.getIsotopeMods())
-        {
-            int modId = isotopeModNameIdMap.get(mod.getModificationName());
-            mod.setIsotopeModId(modId);
-            mod.setPeptideId(peptide.getId());
-            mod.setIsotopeLabelId(isotopeLabelIdMap.get(mod.getIsotopeLabel()));
-            Table.insert(_user, TargetedMSManager.getTableInfoPeptideIsotopeModification(), mod);
-        }
-
-        Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap = new HashMap<>();
-
-        for(PeptideChromInfo peptideChromInfo: peptide.getPeptideChromInfoList())
-        {
-            SampleFileKey sampleFileKey = SampleFileKey.getKey(peptideChromInfo);
-            SampleFile sampleFile = skylineIdSampleFileIdMap.get(sampleFileKey);
-            if(sampleFile == null)
-            {
-                throw new IllegalStateException("Database ID not found for Skyline samplefile id "+peptideChromInfo.getSkylineSampleFileId() + " in replicate " + peptideChromInfo.getReplicateName());
-            }
-
-            if (!sampleFile.isSkip())
-            {
-                // Only for QC folders: ignore this chrom info if data from this sample file is not being imported.
-                peptideChromInfo.setPeptideId(peptide.getId());
-                peptideChromInfo.setSampleFileId(sampleFile.getId());
-                peptideChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPeptideChromInfo(), peptideChromInfo);
-
-                sampleFileIdPeptideChromInfoIdMap.put(sampleFile.getId(), peptideChromInfo.getId());
-            }
-        }
-
-        // 3. precursor
-        for(Precursor precursor: peptide.getPrecursorList())
-        {
-            insertPrecursor(insertCEOptmizations, insertDPOptmizations,
-                           skylineIdSampleFileIdMap,
-                           isotopeLabelIdMap,
-                           structuralModNameIdMap,
-                           structuralModLossesMap,
-                           libraryNameIdMap,
-                           peptide,
-                           sampleFileIdPeptideChromInfoIdMap,
-                           precursor);
-        }
-
-        // 4. Calculate and insert peak area ratios
-        PeakAreaRatioCalculator areaRatioCalculator = new PeakAreaRatioCalculator(peptide);
-        areaRatioCalculator.init(skylineIdSampleFileIdMap);
-        // Insert area ratios for each combination of 2 isotope labels
-        for(Integer numLabelId: isotopeLabelIdMap.values())
-        {
-            for(Integer denomLabelId: isotopeLabelIdMap.values())
-            {
-                if(!internalStandardLabelIds.contains(denomLabelId))
-                    continue;
-
-                if(numLabelId.equals(denomLabelId))
-                    continue;
-
-                for(SampleFile sampleFile: skylineIdSampleFileIdMap.values())
+                for (Precursor precursor : peptide.getPrecursorList())
                 {
-                    if(sampleFile.isSkip())
-                    {
-                        // Only for QC folders: do not try to calculate area ratios if data from this sample file is not being imported.
+                    if (PeptideSettings.IsotopeLabel.LIGHT.equalsIgnoreCase(precursor.getIsotopeLabel()))
+                        peptide.setPeptideModifiedSequence(precursor.getModifiedSequence());
+                }
+            }
+            Table.insert(_user, TargetedMSManager.getTableInfoPeptide(), peptide);
+        }
+        else if (generalMolecule instanceof Molecule)
+        {
+            molecule = (Molecule) generalMolecule;
+            molecule.setId(generalMolecule.getId());
+            _log.info("molecule formula " + molecule.getIonFormula() + ", id = " + molecule.getId());
+            Table.insert(_user, TargetedMSManager.getTableInfoMolecule(), molecule);
+        }
+
+        for (GeneralMoleculeAnnotation annotation : generalMolecule.getAnnotations())
+        {
+            annotation.setGeneralMoleculeId(generalMolecule.getId());
+            Table.insert(_user, TargetedMSManager.getTableInfoGeneralMoleculeAnnotation(), annotation);
+        }
+
+        if (peptide != null)
+        {
+            for (Peptide.StructuralModification mod : peptide.getStructuralMods())
+            {
+                int modId = structuralModNameIdMap.get(mod.getModificationName());
+                mod.setStructuralModId(modId);
+                mod.setPeptideId(peptide.getId());
+                Table.insert(_user, TargetedMSManager.getTableInfoPeptideStructuralModification(), mod);
+            }
+
+            for (Peptide.IsotopeModification mod : peptide.getIsotopeMods())
+            {
+                int modId = isotopeModNameIdMap.get(mod.getModificationName());
+                mod.setIsotopeModId(modId);
+                mod.setPeptideId(peptide.getId());
+                mod.setIsotopeLabelId(isotopeLabelIdMap.get(mod.getIsotopeLabel()));
+                Table.insert(_user, TargetedMSManager.getTableInfoPeptideIsotopeModification(), mod);
+            }
+
+            Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = new HashMap<>();
+
+            for (GeneralMoleculeChromInfo generalMoleculeChromInfo : peptide.getGeneralMoleculeChromInfoList())
+            {
+                SampleFileKey sampleFileKey = SampleFileKey.getKey(generalMoleculeChromInfo);
+                SampleFile sampleFile = skylineIdSampleFileIdMap.get(sampleFileKey);
+                if (sampleFile == null)
+                {
+                    throw new IllegalStateException("Database ID not found for Skyline samplefile id " +
+                            generalMoleculeChromInfo.getSkylineSampleFileId() + " in replicate " +
+                            generalMoleculeChromInfo.getReplicateName());
+                }
+
+                if (!sampleFile.isSkip())
+                {
+                    // Only for QC folders: ignore this chrom info if data from this sample file is not being imported.
+                    generalMoleculeChromInfo.setGeneralMoleculeId(generalMolecule.getId());
+                    generalMoleculeChromInfo.setSampleFileId(sampleFile.getId());
+                    generalMoleculeChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(),
+                            generalMoleculeChromInfo);
+
+                    sampleFileIdGeneralMolChromInfoIdMap.put(sampleFile.getId(), generalMoleculeChromInfo.getId());
+                }
+            }
+
+            // 3. precursor
+            for (Precursor precursor : peptide.getPrecursorList())
+            {
+                insertPrecursor(insertCEOptmizations, insertDPOptmizations,
+                        skylineIdSampleFileIdMap,
+                        isotopeLabelIdMap,
+                        structuralModNameIdMap,
+                        structuralModLossesMap,
+                        libraryNameIdMap,
+                        peptide,
+                        sampleFileIdGeneralMolChromInfoIdMap,
+                        precursor);
+            }
+
+            // 4. Calculate and insert peak area ratios
+            PeakAreaRatioCalculator areaRatioCalculator = new PeakAreaRatioCalculator(peptide);
+            areaRatioCalculator.init(skylineIdSampleFileIdMap);
+            // Insert area ratios for each combination of 2 isotope labels
+            for (Integer numLabelId : isotopeLabelIdMap.values())
+            {
+                for (Integer denomLabelId : isotopeLabelIdMap.values())
+                {
+                    if (!internalStandardLabelIds.contains(denomLabelId))
                         continue;
-                    }
 
-                    PeptideAreaRatio ratio = areaRatioCalculator.getPeptideAreaRatio(sampleFile.getId(), numLabelId, denomLabelId);
-                    if(ratio != null)
+                    if (numLabelId.equals(denomLabelId))
+                        continue;
+
+                    for (SampleFile sampleFile : skylineIdSampleFileIdMap.values())
                     {
-                         Table.insert(_user, TargetedMSManager.getTableInfoPeptideAreaRatio(), ratio);
-                    }
-
-                    for(Precursor precursor: peptide.getPrecursorList())
-                    {
-                        if(precursor.getIsotopeLabelId() != numLabelId)
-                            continue;
-
-                        PrecursorAreaRatio pRatio = areaRatioCalculator.getPrecursorAreaRatio(sampleFile.getId(),
-                                                                                              precursor,
-                                                                                              numLabelId,
-                                                                                              denomLabelId);
-                        if(pRatio != null)
+                        if (sampleFile.isSkip())
                         {
-                            Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAreaRatio(), pRatio);
+                            // Only for QC folders: do not try to calculate area ratios if data from this sample file is not being imported.
+                            continue;
                         }
 
-                        for(Transition transition: precursor.getTransitionList())
+                        PeptideAreaRatio ratio = areaRatioCalculator.getPeptideAreaRatio(sampleFile.getId(), numLabelId, denomLabelId);
+                        if (ratio != null)
                         {
-                            TransitionAreaRatio tRatio = areaRatioCalculator.getTransitionAreaRatio(sampleFile.getId(),
-                                                                                                    precursor,
-                                                                                                    transition,
-                                                                                                    numLabelId,
-                                                                                                    denomLabelId);
-                            if(tRatio != null)
+                            Table.insert(_user, TargetedMSManager.getTableInfoPeptideAreaRatio(), ratio);
+                        }
+
+                        for (Precursor precursor : peptide.getPrecursorList())
+                        {
+                            if (precursor.getIsotopeLabelId() != numLabelId)
+                                continue;
+
+                            PrecursorAreaRatio pRatio = areaRatioCalculator.getPrecursorAreaRatio(sampleFile.getId(),
+                                    precursor,
+                                    numLabelId,
+                                    denomLabelId);
+                            if (pRatio != null)
                             {
-                                Table.insert(_user, TargetedMSManager.getTableInfoTransitionAreaRatio(), tRatio);
+                                Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAreaRatio(), pRatio);
+                            }
+
+                            for (Transition transition : precursor.getTransitionList())
+                            {
+                                TransitionAreaRatio tRatio = areaRatioCalculator.getTransitionAreaRatio(sampleFile.getId(),
+                                        precursor,
+                                        transition,
+                                        numLabelId,
+                                        denomLabelId);
+                                if (tRatio != null)
+                                {
+                                    Table.insert(_user, TargetedMSManager.getTableInfoTransitionAreaRatio(), tRatio);
+                                }
                             }
                         }
                     }
@@ -1070,7 +1105,7 @@ public class SkylineDocImporter
                                  Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap,
                                  Map<String, Integer> libraryNameIdMap,
                                  Peptide peptide,
-                                 Map<Integer, Integer> sampleFileIdPeptideChromInfoIdMap,
+                                 Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap,
                                  Precursor precursor)
     {
         if(_isPeptideLibraryDoc)
@@ -1086,14 +1121,29 @@ public class SkylineDocImporter
                 _libPrecursors.add(precursorKey);
             }
         }
-        precursor.setPeptideId(peptide.getId());
-        precursor.setIsotopeLabelId(isotopeLabelIdMap.get(precursor.getIsotopeLabel()));
 
+        //setting values for GeneralPrecursor here seems odd - is there a better way?
+        GeneralPrecursor gp = new GeneralPrecursor();
+        gp.setGeneralMoleculeId(peptide.getId());
+        gp.setMz(precursor.getMz());
+        gp.setCharge(precursor.getCharge());
+        gp.setCollisionEnergy(precursor.getCollisionEnergy());
+        gp.setDeclusteringPotential(precursor.getDeclusteringPotential());
+        gp.setDecoy(precursor.isDecoy());
+        gp.setNote(precursor.getNote());
+        gp.setExplicitCollisionEnergy(precursor.getExplicitCollisionEnergy());
+        gp.setExplicitDriftTimeMsec(precursor.getExplicitDriftTimeMsec());
+        gp.setExplicitDriftTimeHighEnergyOffsetMsec(precursor.getExplicitDriftTimeHighEnergyOffsetMsec());
+        gp = Table.insert(_user, TargetedMSManager.getTableInfoGeneralPrecursor(), gp);
+
+        precursor.setId(gp.getId());
+        precursor.setIsotopeLabelId(isotopeLabelIdMap.get(precursor.getIsotopeLabel()));
         precursor = Table.insert(_user, TargetedMSManager.getTableInfoPrecursor(), precursor);
 
         for (PrecursorAnnotation annotation : precursor.getAnnotations())
         {
             annotation.setPrecursorId(precursor.getId());
+            annotation.setGeneralPrecursorId(gp.getId());
             Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
         }
 
@@ -1109,7 +1159,7 @@ public class SkylineDocImporter
                 throw new IllegalStateException("'" + libInfo.getLibraryName() + "' library not found in settings.");
             }
             libInfo.setSpectrumLibraryId(specLibId);
-
+            libInfo.setGeneralPrecursorId(gp.getId());
             Table.insert(_user, TargetedMSManager.getTableInfoPrecursorLibInfo(), libInfo);
         }
 
@@ -1132,10 +1182,12 @@ public class SkylineDocImporter
 
             if (!sampleFile.isSkip())
             {
+                precursorChromInfo.setGeneralPrecursorId(gp.getId());
+
                 // Only for QC folders: Ignore this chrom info if data from the sample file is not being imported.
                 precursorChromInfo.setPrecursorId(precursor.getId());
                 precursorChromInfo.setSampleFileId(sampleFile.getId());
-                precursorChromInfo.setPeptideChromInfoId(sampleFileIdPeptideChromInfoIdMap.get(sampleFile.getId()));
+                precursorChromInfo.setGeneralMoleculeChromInfoId(sampleFileIdGeneralMolChromInfoIdMap.get(sampleFile.getId()));
 
                 precursorChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfo(), precursorChromInfo);
                 sampleFilePrecursorChromInfoIdMap.put(sampleFileKey, precursorChromInfo.getId());
@@ -1157,7 +1209,24 @@ public class SkylineDocImporter
 
     private void insertTransition(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Precursor precursor, Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap, Transition transition)
     {
-        transition.setPrecursorId(precursor.getId());
+        GeneralTransition gt = new GeneralTransition();
+        gt.setGeneralPrecursorId(precursor.getId());
+        gt.setMz(transition.getMz());
+        gt.setCharge(transition.getCharge());
+        gt.setFragmentType(transition.getFragmentType());
+        gt.setIsotopeDistRank(transition.getIsotopeDistRank());
+        gt.setIsotopeDistProportion(transition.getIsotopeDistProportion());
+        gt.setMassIndex(transition.getMassIndex());
+        gt.setExplicitCollisionEnergy(transition.getExplicitCollisionEnergy());
+        gt.setsLens(transition.getsLens());
+        gt.setConeVoltage(transition.getConeVoltage());
+        gt.setExplicitCompensationVoltage(transition.getExplicitCompensationVoltage());
+        gt.setExplicitDeclusteringPotential(transition.getExplicitDeclusteringPotential());
+        gt.setExplicitDriftTimeMSec(transition.getExplicitDriftTimeMSec());
+        gt.setExplicitDriftTimeHighEnergyOffsetMSec(transition.getExplicitDriftTimeHighEnergyOffsetMSec());
+        gt = Table.insert(_user, TargetedMSManager.getTableInfoGeneralTransition(), gt);
+
+        transition.setId(gt.getId());
         Table.insert(_user, TargetedMSManager.getTableInfoTransition(), transition);
 
         // If this is a MoleculeTransition insert to MoleculeTransition Table

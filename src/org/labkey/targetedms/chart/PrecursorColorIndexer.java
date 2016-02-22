@@ -15,6 +15,9 @@
  */
 package org.labkey.targetedms.chart;
 
+import org.labkey.api.data.Container;
+import org.labkey.api.security.User;
+import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.query.IsotopeLabelManager;
@@ -33,12 +36,12 @@ public class PrecursorColorIndexer
     private int _minCharge = Integer.MAX_VALUE;
     private int _isotopeLabelCount;
 
-    public PrecursorColorIndexer(int runId)
+    public PrecursorColorIndexer(int runId, User user, Container container)
     {
-        this(runId, 0);
+        this(runId, 0, user, container);
     }
 
-    public PrecursorColorIndexer(int runId, int peptideId)
+    public PrecursorColorIndexer(int runId, int peptideId, User user, Container container)
     {
         List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(runId);
         for(PeptideSettings.IsotopeLabel label: labels)
@@ -49,7 +52,7 @@ public class PrecursorColorIndexer
 
         if(peptideId > 0)
         {
-            List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptideId);
+            List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptideId, new TargetedMSSchema(user, container));
             for (Precursor precursor : precursors)
             {
                 _minCharge = Math.min(_minCharge, precursor.getCharge());
@@ -62,10 +65,10 @@ public class PrecursorColorIndexer
         _minCharge = charge;
     }
 
-    public int getColorIndex(int precursorId)
+    public int getColorIndex(int precursorId, User user, Container container)
     {
         // CONSIDER caching the colors, as they will be the same for all the replicates
-        Precursor precursor = PrecursorManager.get(precursorId);
+        Precursor precursor = PrecursorManager.get(precursorId, user, container);
         return getColorIndex(precursor.getIsotopeLabelId(), precursor.getCharge());
     }
 

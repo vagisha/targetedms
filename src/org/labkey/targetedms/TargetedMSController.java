@@ -131,8 +131,8 @@ import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.model.Journal;
+import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.Peptide;
-import org.labkey.targetedms.parser.PeptideChromInfo;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
@@ -695,13 +695,14 @@ public class TargetedMSController extends SpringActionController
             {
                 throw new NotFoundException("No such TransitionChromInfo found in this folder: " + form.getId());
             }
-            PrecursorChromInfo pci = PrecursorManager.getPrecursorChromInfo(getContainer(), tci.getPrecursorChromInfoId());
+            PrecursorChromInfo pci = PrecursorManager.getPrecursorChromInfo(getContainer(), tci.getPrecursorChromInfoId(),
+                    getUser(), getContainer());
             if (pci == null)
             {
                 throw new NotFoundException("No such PrecursorChromInfo found in this folder: " + tci.getPrecursorChromInfoId());
             }
 
-            JFreeChart chart = new ChromatogramChartMakerFactory().createTransitionChromChart(tci, pci);
+            JFreeChart chart = new ChromatogramChartMakerFactory().createTransitionChromChart(tci, pci, getUser(), getContainer());
 
             writePNG(form, response, chart);
         }
@@ -713,7 +714,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void export(ChromatogramForm form, HttpServletResponse response, BindException errors) throws Exception
         {
-            PrecursorChromInfo pChromInfo = PrecursorManager.getPrecursorChromInfo(getContainer(), form.getId());
+            PrecursorChromInfo pChromInfo = PrecursorManager.getPrecursorChromInfo(getContainer(), form.getId(), getUser(), getContainer());
             if (pChromInfo == null)
             {
                 throw new NotFoundException("No PrecursorChromInfo found in this folder for precursorChromInfoId: " + form.getId());
@@ -724,7 +725,7 @@ public class TargetedMSController extends SpringActionController
             factory.setSyncRt(form.isSyncX());
             factory.setSplitGraph(form.isSplitGraph());
             factory.setShowOptimizationPeaks(form.isShowOptimizationPeaks());
-            JFreeChart chart = factory.createPrecursorChromChart(pChromInfo);
+            JFreeChart chart = factory.createPrecursorChromChart(pChromInfo, getUser(), getContainer());
 
             writePNG(form, response, chart);
         }
@@ -763,7 +764,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void export(ChromatogramForm form, HttpServletResponse response, BindException errors) throws Exception
         {
-            PeptideChromInfo pChromInfo = PeptideManager.getPeptideChromInfo(getContainer(), form.getId());
+            GeneralMoleculeChromInfo pChromInfo = PeptideManager.getPeptideChromInfo(getContainer(), form.getId());
             if (pChromInfo == null)
             {
                 throw new NotFoundException("No PeptideChromInfo found in this folder for peptideChromInfoId: " + form.getId());
@@ -772,7 +773,7 @@ public class TargetedMSController extends SpringActionController
             ChromatogramChartMakerFactory factory = new ChromatogramChartMakerFactory();
             factory.setSyncIntensity(form.isSyncY());
             factory.setSyncRt(form.isSyncX());
-            JFreeChart chart = factory.createPeptideChromChart(pChromInfo);
+            JFreeChart chart = factory.createPeptideChromChart(pChromInfo, getUser(), getContainer());
             writePNG(form, response, chart);
         }
     }
@@ -788,16 +789,16 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
         {
             int precursorId = form.getId();
-            Precursor precursor = PrecursorManager.getPrecursor(getContainer(), precursorId);
+            Precursor precursor = PrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
             if (precursor == null)
             {
                 throw new NotFoundException("No such Precursor found in this folder: " + precursorId);
             }
 
             _run = TargetedMSManager.getRunForPrecursor(precursorId);
-            _peptideId = precursor.getPeptideId();
+            _peptideId = precursor.getGeneralMoleculeId();
 
-            Peptide peptide = PeptideManager.get(precursor.getPeptideId());
+            Peptide peptide = PeptideManager.get(precursor.getGeneralMoleculeId(), new TargetedMSSchema(getUser(), getContainer()));
 
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
 
@@ -813,6 +814,7 @@ public class TargetedMSController extends SpringActionController
             bean.setPeptideGroup(pepGroup);
             bean.setIsotopeLabel(label);
             bean.setRun(_run);
+            bean.setTargetedMSSchema(new TargetedMSSchema(getUser(), getContainer()));
 
             JspView<PrecursorChromatogramsViewBean> precursorInfo = new JspView<>("/org/labkey/targetedms/view/precursorChromatogramsView.jsp", bean);
             precursorInfo.setFrame(WebPartView.FrameType.PORTAL);
@@ -832,11 +834,9 @@ public class TargetedMSController extends SpringActionController
             vbox.addView(precursorInfo);
             vbox.addView(gridView);
 
-
-
             // Summary charts for the precursor
             SummaryChartBean summaryChartBean = new SummaryChartBean();
-            summaryChartBean.setPeptideId(precursor.getPeptideId());
+            summaryChartBean.setPeptideId(precursor.getGeneralMoleculeId());
             summaryChartBean.setPrecursorId(precursor.getId());
             summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
             summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
@@ -848,9 +848,8 @@ public class TargetedMSController extends SpringActionController
 
             vbox.addView(summaryChartView);
 
-
             // library spectrum
-            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(precursor);
+            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(precursor, new TargetedMSSchema(getUser(), getContainer()));
             PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(_run.getRunId());
             int idx = 0;
             for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
@@ -896,7 +895,7 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
         {
             int peptideId = form.getId();
-            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
+            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId, getUser());
             if (peptide == null)
             {
                 throw new NotFoundException("No such Peptide found in this folder: " + peptideId);
@@ -915,7 +914,7 @@ public class TargetedMSController extends SpringActionController
             bean.setPeptideGroup(pepGroup);
             bean.setRun(_run);
             bean.setLabels(IsotopeLabelManager.getIsotopeLabels(_run.getId()));
-            bean.setPrecursorList(PrecursorManager.getPrecursorsForPeptide(peptide.getId()));
+            bean.setPrecursorList(PrecursorManager.getPrecursorsForPeptide(peptide.getId(), new TargetedMSSchema(getUser(), getContainer())));
 
             JspView<PeptideChromatogramsViewBean> peptideInfo = new JspView<>("/org/labkey/targetedms/view/peptideSummaryView.jsp", bean);
             peptideInfo.setFrame(WebPartView.FrameType.PORTAL);
@@ -954,6 +953,7 @@ public class TargetedMSController extends SpringActionController
     {
         private Precursor _precursor;
         private PeptideSettings.IsotopeLabel _isotopeLabel;
+        private TargetedMSSchema _targetedMSSchema;
 
         public PrecursorChromatogramsViewBean(String resultsUri)
         {
@@ -972,7 +972,7 @@ public class TargetedMSController extends SpringActionController
 
         public String getModifiedPeptideHtml()
         {
-           return new ModifiedPeptideHtmlMaker().getPrecursorHtml(getPrecursor(), getRun().getId());
+           return new ModifiedPeptideHtmlMaker().getPrecursorHtml(getPrecursor(), getRun().getId(), _targetedMSSchema);
         }
 
         public PeptideSettings.IsotopeLabel getIsotopeLabel()
@@ -983,6 +983,16 @@ public class TargetedMSController extends SpringActionController
         public void setIsotopeLabel(PeptideSettings.IsotopeLabel isotopeLabel)
         {
             _isotopeLabel = isotopeLabel;
+        }
+
+        public void setTargetedMSSchema(TargetedMSSchema s)
+        {
+            _targetedMSSchema = s;
+        }
+
+        public TargetedMSSchema getTargetedMSSchema()
+        {
+           return _targetedMSSchema;
         }
     }
 
@@ -1287,7 +1297,7 @@ public class TargetedMSController extends SpringActionController
         {
             int peptideId = form.getId();  // peptide Id
 
-            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
+            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId, getUser());
             if(peptide == null)
             {
                 throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", peptideId));
@@ -1300,7 +1310,7 @@ public class TargetedMSController extends SpringActionController
 
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
 
-            List<Precursor> precursorList = PrecursorManager.getPrecursorsForPeptide(peptide.getId());
+            List<Precursor> precursorList = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), new TargetedMSSchema(getUser(), getContainer()));
 
             List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(_run.getId());
 
@@ -1357,7 +1367,7 @@ public class TargetedMSController extends SpringActionController
             PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(_run.getRunId());
 
             // library spectrum
-            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(peptide);
+            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(peptide, getUser(), getContainer());
             int idx = 0;
             for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
             {
@@ -1398,7 +1408,7 @@ public class TargetedMSController extends SpringActionController
         {
             int peptideId = form.getId();  // peptide Id
 
-            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
+            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId, getUser());
             if(peptide == null)
             {
                 throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", peptideId));
@@ -1409,7 +1419,7 @@ public class TargetedMSController extends SpringActionController
             VBox vbox = new VBox();
             PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(run.getRunId());
 
-            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(peptide);
+            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(peptide, getUser(), getContainer());
             int idx = 0;
             for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
             {
@@ -1497,7 +1507,7 @@ public class TargetedMSController extends SpringActionController
             Precursor precursor = null;
             if(form.getPeptideId() != 0)
             {
-                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
+                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId(), getUser());
                 if(peptide == null)
                 {
                     throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", form.getPeptideId()));
@@ -1510,7 +1520,7 @@ public class TargetedMSController extends SpringActionController
 
                 if(form.getPrecursorId() != 0)
                 {
-                    precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId());
+                    precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId(), getUser());
                     if(precursor == null)
                     {
                         throw new NotFoundException(String.format("No precursor found in this folder for precursorId: %d", form.getPrecursorId()));
@@ -1526,7 +1536,7 @@ public class TargetedMSController extends SpringActionController
                                                                  form.getGroupByReplicateAnnotName(),
                                                                  form.getFilterByReplicateAnnotName(),
                                                                  form.isCvValues(),
-                                                                 form.isLogValues());
+                                                                 form.isLogValues(), getUser(), getContainer());
             if (null == chart)
             {
                 chart = createEmptyChart();
@@ -1568,7 +1578,7 @@ public class TargetedMSController extends SpringActionController
             Precursor precursor = null;
             if(form.getPeptideId() != 0)
             {
-                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
+                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId(), getUser());
                 if(peptide == null)
                 {
                     throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", form.getPeptideId()));
@@ -1581,7 +1591,7 @@ public class TargetedMSController extends SpringActionController
 
                 if(form.getPrecursorId() != 0)
                 {
-                    precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId());
+                    precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId(), getUser());
                     if(precursor == null)
                     {
                         throw new NotFoundException(String.format("No precursor found in this folder for precursorId: %d", form.getPrecursorId()));
@@ -1597,7 +1607,8 @@ public class TargetedMSController extends SpringActionController
                     precursor,
                     form.getGroupByReplicateAnnotName(),
                     form.getFilterByReplicateAnnotName(),
-                    form.getValue(), form.isCvValues());
+                    form.getValue(), form.isCvValues(),
+                    getUser(), getContainer());
             if (null == chart)
             {
                 chart = createEmptyChart();
@@ -2237,7 +2248,7 @@ public class TargetedMSController extends SpringActionController
             {
                 int seqId = group.getSequenceId().intValue();
                 List<String> peptideSequences = new ArrayList<>();
-                for (Peptide peptide : PeptideManager.getPeptidesForGroup(group.getId()))
+                for (Peptide peptide : PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(getUser(), getContainer())))
                 {
                     peptideSequences.add(peptide.getSequence());
                 }
@@ -2284,7 +2295,7 @@ public class TargetedMSController extends SpringActionController
             summaryChartBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
             summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
             summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
-            summaryChartBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId())));
+            summaryChartBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(getUser(), getContainer()))));
 
             JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp",
                     summaryChartBean);
@@ -2420,7 +2431,7 @@ public class TargetedMSController extends SpringActionController
             {
                 int seqId = group.getSequenceId().intValue();
                 List<String> peptideSequences = new ArrayList<>();
-                for (Peptide peptide : PeptideManager.getPeptidesForGroup(group.getId()))
+                for (Peptide peptide : PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(getUser(), getContainer())))
                 {
                     peptideSequences.add(peptide.getSequence());
                 }
@@ -2594,7 +2605,7 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("PeptideGroup with ID "+oldProteinId+" was not found in the container.");
             }
 
-            List<ConflictPeptide> conflictPeptides = ConflictResultsManager.getConflictPeptidesForProteins(newProteinId, oldProteinId);
+            List<ConflictPeptide> conflictPeptides = ConflictResultsManager.getConflictPeptidesForProteins(newProteinId, oldProteinId, getUser(), getContainer());
             // Sort them by ascending peptide ranks in the new protein
             Collections.sort(conflictPeptides, new Comparator<ConflictPeptide>()
             {
@@ -2776,17 +2787,17 @@ public class TargetedMSController extends SpringActionController
             ApiSimpleResponse response = new ApiSimpleResponse();
 
             int newPrecursorId = conflictPrecursorsForm.getNewPrecursorId();
-            if(PrecursorManager.getPrecursor(getContainer(), newPrecursorId) == null)
+            if(PrecursorManager.getPrecursor(getContainer(), newPrecursorId, getUser()) == null)
             {
                 throw new NotFoundException("Precursor with ID "+newPrecursorId+" was not found in the container.");
             }
             int oldPrecursorId = conflictPrecursorsForm.getOldPrecursorId();
-            if(PrecursorManager.getPrecursor(getContainer(), oldPrecursorId) == null)
+            if(PrecursorManager.getPrecursor(getContainer(), oldPrecursorId, getUser()) == null)
             {
                 throw new NotFoundException("Precursor with ID "+oldPrecursorId+" was not found in the container.");
             }
 
-            List<ConflictTransition> conflictTransitions = ConflictResultsManager.getConflictTransitionsForPrecursors(newPrecursorId, oldPrecursorId);
+            List<ConflictTransition> conflictTransitions = ConflictResultsManager.getConflictTransitionsForPrecursors(newPrecursorId, oldPrecursorId, getUser(), getContainer());
             // Sort them by ascending transitions ranks in the new precursor
             Collections.sort(conflictTransitions, new Comparator<ConflictTransition>()
             {
@@ -2945,7 +2956,7 @@ public class TargetedMSController extends SpringActionController
                 }
 
                 // Increment the chromatogram library revision number for this container.
-                ChromatogramLibraryUtils.incrementLibraryRevision(getContainer());
+                ChromatogramLibraryUtils.incrementLibraryRevision(getContainer(), getUser());
 
                 // Add event to audit log.
                 TargetedMsRepresentativeStateAuditProvider.addAuditEntry(getContainer(), getUser(), "Conflict resolved.");
@@ -3104,7 +3115,7 @@ public class TargetedMSController extends SpringActionController
             }
 
             // Get the latest library revision.
-            int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(getContainer());
+            int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(getContainer(), getUser());
             int libraryRevision = ( form.getRevision() != 0) ? form.getRevision() : currentRevision;
 
             Container container = getContainer();
@@ -3115,7 +3126,7 @@ public class TargetedMSController extends SpringActionController
             {
                 // create a new library file if the version numbers match
                 if (libraryRevision == currentRevision)
-                    ChromatogramLibraryUtils.writeLibrary(container, libraryRevision);
+                    ChromatogramLibraryUtils.writeLibrary(container, libraryRevision, getUser());
                 else
                     throw new NotFoundException("Unable to find archived library for revision " + libraryRevision);
             }
@@ -3179,7 +3190,7 @@ public class TargetedMSController extends SpringActionController
             }
 
             // Check the schema version and library revision.
-            if(!ChromatogramLibraryUtils.isRevisionCurrent(getContainer(), form.getSchemaVersion(), form.getLibraryRevision()))
+            if(!ChromatogramLibraryUtils.isRevisionCurrent(getContainer(), form.getSchemaVersion(), form.getLibraryRevision(), getUser()))
             {
                 response.put("isUptoDate", Boolean.FALSE);
                 return response;
@@ -3270,6 +3281,7 @@ public class TargetedMSController extends SpringActionController
 
             ViewContext viewContext = getViewContext();
             QuerySettings settings = new QuerySettings(viewContext, "TargetedMSMatches", "Precursor");
+//            QuerySettings settings = new QuerySettings(viewContext, "TargetedMSMatches");
 
             if (form.isIncludeSubfolders())
                 settings.setContainerFilterName(ContainerFilter.Type.CurrentAndSubfolders.name());
@@ -3279,7 +3291,10 @@ public class TargetedMSController extends SpringActionController
                 @Override
                 protected TableInfo createTable()
                 {
-                    TargetedMSTable result = (TargetedMSTable) super.createTable();
+                    TargetedMSTable precursorTable = (TargetedMSTable) super.createTable();
+                    TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+                    FilteredTable<TargetedMSSchema> result = new FilteredTable<>(precursorTable, schema);
+                    result.wrapAllColumns(true);
 
                     DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()), Collections.singletonMap("id", "PeptideId"));
                     detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Folder")));
@@ -3309,7 +3324,7 @@ public class TargetedMSController extends SpringActionController
                     }
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "File"));
                     result.setDefaultVisibleColumns(visibleColumns);
-
+                    result.setName("Precursor");
                     return result;
                 }
             };
@@ -3681,11 +3696,14 @@ public class TargetedMSController extends SpringActionController
             sqlFragment.append("p.Id ");
             sqlFragment.append("FROM ");
             sqlFragment.append("targetedms.peptide AS p, ");
+            sqlFragment.append("targetedms.GeneralMolecule AS gm, ");
             sqlFragment.append("targetedms.Runs AS r, ");
             sqlFragment.append("targetedms.PeptideGroup AS pg, ");
-            sqlFragment.append("targetedms.Precursor AS pc ");
-            sqlFragment.append("WHERE ");
-            sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id AND r.Deleted = ? AND r.Container = ? ");
+            sqlFragment.append("targetedms.Precursor AS pc, ");
+            sqlFragment.append("targetedms.GeneralPrecursor AS gp ");
+            sqlFragment.append("WHERE  ");
+            sqlFragment.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND gp.GeneralMoleculeId = p.Id AND ");
+            sqlFragment.append("p.Id = gm.Id AND r.Deleted = ? AND r.Container = ? ");
             // Only proteins (PeptideGroup) are marked as representative in "LibraryProtein" folder types. Get the Ids
             // of all the peptides of representative proteins.
             if(folderType == FolderType.LibraryProtein)
@@ -3693,7 +3711,7 @@ public class TargetedMSController extends SpringActionController
             // Precursors are marked a representative in "LibraryPeptide" folder type.  Get the peptide Ids
             // of all the representative precursors.
             else
-               sqlFragment.append("AND pc.RepresentativeDataState = ? ");
+               sqlFragment.append("AND gp.RepresentativeDataState = ? ");
             sqlFragment.append(") AS pepCount ");
             sqlFragment.append("GROUP BY pepCount.RunDate) AS x FULL OUTER JOIN ");
             sqlFragment.append("(SELECT protCount.RunDate, COUNT(DISTINCT protCount.Id) AS ProteinCount ");
@@ -3810,15 +3828,15 @@ public class TargetedMSController extends SpringActionController
 
         SQLFragment sqlFragment = new SQLFragment();
         sqlFragment.append("SELECT DISTINCT(p.Id) FROM ");
-        sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "p");
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r");
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sqlFragment.append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoPrecursor(), "pc");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pc");
         sqlFragment.append(" WHERE ");
-        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.PeptideId = p.Id  AND r.Deleted = ? AND r.Container = ? ");
+        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.GeneralMoleculeId = p.Id  AND r.Deleted = ? AND r.Container = ? ");
         sqlFragment.append("AND pc.RepresentativeDataState = ? ");
 
         // add variables
@@ -3837,17 +3855,17 @@ public class TargetedMSController extends SpringActionController
 
         SQLFragment sqlFragment = new SQLFragment();
         sqlFragment.append("SELECT DISTINCT(tr.Id) FROM ");
-        sqlFragment.append(TargetedMSManager.getTableInfoTransition(), "tr");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralTransition(), "tr");
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r");
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sqlFragment.append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "p");
         sqlFragment.append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoPrecursor(), "pc");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pc");
         sqlFragment.append(" WHERE ");
-        sqlFragment.append("tr.precursorId = pc.Id AND pc.PeptideId = p.Id AND p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? ");
+        sqlFragment.append("tr.generalPrecursorId = pc.Id AND pc.GeneralMoleculeId = p.Id AND p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? ");
         sqlFragment.append("AND pc.RepresentativeDataState = ? ");
 
         sqlFragment.add(false);

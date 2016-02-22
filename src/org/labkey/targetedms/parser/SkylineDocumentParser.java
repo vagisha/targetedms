@@ -1050,8 +1050,14 @@ public class SkylineDocumentParser implements AutoCloseable
     public Peptide nextPeptide() throws XMLStreamException, DataFormatException, IOException
     {
         Peptide peptide = new Peptide();
-        readPeptide(_reader, peptide, false);
+        readGeneralMolecule(_reader, peptide, false);
+//        persistGeneralPrecursor(peptide.getPrecursorList());
         return peptide;
+    }
+
+    private void persistGeneralPrecursor(List<Precursor> precursorList)
+    {
+
     }
 
     public Molecule nextMolecule() throws XMLStreamException, DataFormatException, IOException
@@ -1063,135 +1069,139 @@ public class SkylineDocumentParser implements AutoCloseable
         molecule.setCustomIonName(_reader.getAttributeValue(null, CUSTOM_ION_NAME));
         molecule.setMassMonoisotopic(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_MONOISOTOPIC, MOLECULE));
         molecule.setMassAverage(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_AVERAGE, MOLECULE));
-
-        readPeptide(_reader, molecule, true);
+        _reader.next();
+//        readGeneralMolecule(_reader, molecule, true);
 
         return molecule;
     }
 
-    private void readPeptide(XMLStreamReader reader, Peptide peptide, boolean isCustomMolecule) throws XMLStreamException, IOException
+    private void readGeneralMolecule(XMLStreamReader reader, GeneralMolecule generalMolecule, boolean isCustomMolecule) throws XMLStreamException, IOException
     {
-        List<Precursor> precursorList = new ArrayList<>();
-        peptide.setPrecursorList(precursorList);
-        List<PeptideAnnotation> annotations = new ArrayList<>();
-        peptide.setAnnotations(annotations);
-
-        List<PeptideChromInfo> peptideChromInfoList = new ArrayList<>();
-        peptide.setPeptideChromInfoList(peptideChromInfoList);
-
-        String start = reader.getAttributeValue(null, "start");
-        if(null != start)
-            peptide.setStartIndex(Integer.parseInt(start));
-
-        String end =  reader.getAttributeValue(null, "end");
-        if(null != end)
-            peptide.setEndIndex(Integer.parseInt(end));
-
-        peptide.setSequence(reader.getAttributeValue(null, "sequence"));
-
-        // Get the peptide structurally modified sequence (format v1.5)
-        String modifiedSequenceLight = reader.getAttributeValue(null, "modified_sequence");
-        peptide.setPeptideModifiedSequence(modifiedSequenceLight);
-
-        String prevAa = reader.getAttributeValue(null, "prev_aa");
-        if(null != prevAa)
-            peptide.setPreviousAa(prevAa);
-
-        String nextAa = reader.getAttributeValue(null, "next_aa");
-        if(null != nextAa)
-            peptide.setNextAa(nextAa);
-
-        String decoy =  reader.getAttributeValue(null, "decoy");
-        if(null != decoy)
-            peptide.setDecoy(Boolean.parseBoolean(decoy));
-
-        String calcNeutralPepMass = reader.getAttributeValue(null, "calc_neutral_pep_mass");
-        if(null != calcNeutralPepMass)
-            peptide.setCalcNeutralMass(Double.parseDouble(calcNeutralPepMass));
-
-        String numMissedCleavages = reader.getAttributeValue(null, "num_missed_cleavages");
-        if(null != numMissedCleavages)
-            peptide.setNumMissedCleavages(Integer.parseInt(numMissedCleavages));
-
-        String rank = reader.getAttributeValue(null, "rank");
-        if(null != rank)
-            peptide.setRank(Integer.parseInt(rank));
-
         String predictedRt = reader.getAttributeValue(null, "predicted_retention_time");
-        if(null != predictedRt)
-            peptide.setPredictedRetentionTime(Double.parseDouble(predictedRt));
+        if (null != predictedRt)
+            generalMolecule.setPredictedRetentionTime(Double.parseDouble(predictedRt));
 
         String avgMeasuredRt = reader.getAttributeValue(null, "avg_measured_retention_time");
-        if(null != avgMeasuredRt)
-            peptide.setAvgMeasuredRetentionTime(Double.parseDouble(avgMeasuredRt));
+        if (null != avgMeasuredRt)
+            generalMolecule.setAvgMeasuredRetentionTime(Double.parseDouble(avgMeasuredRt));
 
         String rtCalculatorScore = reader.getAttributeValue(null, "rt_calculator_score");
-        if(null != rtCalculatorScore)
-            peptide.setRtCalculatorScore(Double.parseDouble(rtCalculatorScore));
+        if (null != rtCalculatorScore)
+            generalMolecule.setRtCalculatorScore(Double.parseDouble(rtCalculatorScore));
 
-        peptide.setStandardType(XmlUtil.readAttribute(reader, "standard_type"));
+        generalMolecule.setExplicitRetentionTime(XmlUtil.readDoubleAttribute(reader, "explicit_retention_time"));
 
-        peptide.setExplicitRetentionTime(XmlUtil.readDoubleAttribute(reader, "explicit_retention_time"));
-
-        List<Peptide.StructuralModification> structuralMods = new ArrayList<>();
-        List<Peptide.IsotopeModification> isotopeMods = new ArrayList<>();
-        peptide.setStructuralMods(structuralMods);
-        peptide.setIsotopeMods(isotopeMods);
-        while(reader.hasNext())
+        if(generalMolecule instanceof Peptide)
         {
-           int evtType = reader.next();
-            if(XmlUtil.isEndElement(reader, evtType, PEPTIDE) || XmlUtil.isEndElement(reader, evtType, MOLECULE))
-            {
-                break;
-            }
-            else if (XmlUtil.isStartElement(reader, evtType, PRECURSOR))
-            {
-                precursorList.add(readPrecursor(reader, modifiedSequenceLight, isCustomMolecule));
-            }
-            else if (XmlUtil.isStartElement(reader, evtType, NOTE))
-            {
-                peptide.setNote(readNote(reader));
-            }
-            else if (XmlUtil.isStartElement(reader, evtType, PEPTIDE_RESULT))
-            {
-                peptideChromInfoList.add(readPeptideChromInfo(reader));
-            }
-            else if(XmlUtil.isStartElement(reader, evtType, VARIABLE_MODIFICATION))
-            {
-                structuralMods.add(readStructuralModification(reader));
-            }
-            else if(XmlUtil.isStartElement(reader, evtType, ANNOTATION))
-            {
-                annotations.add(readAnnotation(reader, new PeptideAnnotation()));
-            }
-            else if(XmlUtil.isStartElement(reader, evtType, EXPLICIT_STATIC_MODIFICATIONS))
-            {
-                structuralMods.addAll(readStructuralModifications(reader, EXPLICIT_STATIC_MODIFICATIONS, EXPLICIT_MODIFICATION));
-            }
-            else if(XmlUtil.isStartElement(reader, evtType, IMPLICIT_STATIC_MODIFICATIONS))
-            {
-                structuralMods.addAll(readStructuralModifications(reader, IMPLICIT_STATIC_MODIFICATIONS, IMPLICIT_MODIFICATION));
-            }
-            else if(XmlUtil.isStartElement(reader, evtType, EXPLICIT_HEAVY_MODIFICATIONS))
-            {
-                isotopeMods.addAll(readIsotopeModifications(reader, EXPLICIT_HEAVY_MODIFICATIONS, EXPLICIT_MODIFICATION));
-            }
-            else if(XmlUtil.isStartElement(reader, evtType, IMPLICIT_HEAVY_MODIFICATIONS))
-            {
-                isotopeMods.addAll(readIsotopeModifications(reader, IMPLICIT_HEAVY_MODIFICATIONS, IMPLICIT_MODIFICATION));
-            }
-        }
+            Peptide peptide = (Peptide) generalMolecule;
 
-        // Boolean type annotations are not listed in the .sky file if their value was false.
-        // We would still like to store them in the database.
-        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
-                                                                                            DataSettings.AnnotationTarget.peptide);
-        for(String missingAnotName: missingBooleanAnnotations)
-        {
-            addMissingBooleanAnnotation(annotations, missingAnotName, new PeptideAnnotation());
-        }
+            List<Precursor> precursorList = new ArrayList<>();
+            peptide.setPrecursorList(precursorList);
+            List<GeneralMoleculeAnnotation> annotations = new ArrayList<>();
+            generalMolecule.setAnnotations(annotations);
 
-        _peptideCount++;
+            List<GeneralMoleculeChromInfo> generalMoleculeChromInfoList = new ArrayList<>();
+            peptide.setGeneralMoleculeChromInfoList(generalMoleculeChromInfoList);
+
+            String start = reader.getAttributeValue(null, "start");
+            if (null != start)
+                peptide.setStartIndex(Integer.parseInt(start));
+
+            String end = reader.getAttributeValue(null, "end");
+            if (null != end)
+                peptide.setEndIndex(Integer.parseInt(end));
+
+            peptide.setSequence(reader.getAttributeValue(null, "sequence"));
+
+            // Get the peptide structurally modified sequence (format v1.5)
+            String modifiedSequenceLight = reader.getAttributeValue(null, "modified_sequence");
+            peptide.setPeptideModifiedSequence(modifiedSequenceLight);
+
+            String prevAa = reader.getAttributeValue(null, "prev_aa");
+            if (null != prevAa)
+                peptide.setPreviousAa(prevAa);
+
+            String nextAa = reader.getAttributeValue(null, "next_aa");
+            if (null != nextAa)
+                peptide.setNextAa(nextAa);
+
+            String decoy = reader.getAttributeValue(null, "decoy");
+            if (null != decoy)
+                peptide.setDecoy(Boolean.parseBoolean(decoy));
+
+            String calcNeutralPepMass = reader.getAttributeValue(null, "calc_neutral_pep_mass");
+            if (null != calcNeutralPepMass)
+                peptide.setCalcNeutralMass(Double.parseDouble(calcNeutralPepMass));
+
+            String numMissedCleavages = reader.getAttributeValue(null, "num_missed_cleavages");
+            if (null != numMissedCleavages)
+                peptide.setNumMissedCleavages(Integer.parseInt(numMissedCleavages));
+
+            String rank = reader.getAttributeValue(null, "rank");
+            if (null != rank)
+                peptide.setRank(Integer.parseInt(rank));
+
+            peptide.setStandardType(XmlUtil.readAttribute(reader, "standard_type"));
+
+            List<Peptide.StructuralModification> structuralMods = new ArrayList<>();
+            List<Peptide.IsotopeModification> isotopeMods = new ArrayList<>();
+            peptide.setStructuralMods(structuralMods);
+            peptide.setIsotopeMods(isotopeMods);
+
+            while (reader.hasNext())
+            {
+                int evtType = reader.next();
+                if (XmlUtil.isEndElement(reader, evtType, PEPTIDE) || XmlUtil.isEndElement(reader, evtType, MOLECULE))
+                {
+                    break;
+                }
+                else if (XmlUtil.isStartElement(reader, evtType, PRECURSOR))
+                {
+                    precursorList.add(readPrecursor(reader, modifiedSequenceLight, isCustomMolecule));
+                }
+                else if (XmlUtil.isStartElement(reader, evtType, NOTE))
+                {
+                    generalMolecule.setNote(readNote(reader));
+                }
+                else if (XmlUtil.isStartElement(reader, evtType, PEPTIDE_RESULT))
+                {
+                    generalMoleculeChromInfoList.add(readPeptideChromInfo(reader));
+                }
+                else if (XmlUtil.isStartElement(reader, evtType, VARIABLE_MODIFICATION))
+                {
+                    structuralMods.add(readStructuralModification(reader));
+                }
+                else if (XmlUtil.isStartElement(reader, evtType, ANNOTATION))
+                {
+                    annotations.add(readAnnotation(reader, new GeneralMoleculeAnnotation()));
+                }
+                else if (XmlUtil.isStartElement(reader, evtType, EXPLICIT_STATIC_MODIFICATIONS))
+                {
+                    structuralMods.addAll(readStructuralModifications(reader, EXPLICIT_STATIC_MODIFICATIONS, EXPLICIT_MODIFICATION));
+                }
+                else if (XmlUtil.isStartElement(reader, evtType, IMPLICIT_STATIC_MODIFICATIONS))
+                {
+                    structuralMods.addAll(readStructuralModifications(reader, IMPLICIT_STATIC_MODIFICATIONS, IMPLICIT_MODIFICATION));
+                }
+                else if (XmlUtil.isStartElement(reader, evtType, EXPLICIT_HEAVY_MODIFICATIONS))
+                {
+                    isotopeMods.addAll(readIsotopeModifications(reader, EXPLICIT_HEAVY_MODIFICATIONS, EXPLICIT_MODIFICATION));
+                }
+                else if (XmlUtil.isStartElement(reader, evtType, IMPLICIT_HEAVY_MODIFICATIONS))
+                {
+                    isotopeMods.addAll(readIsotopeModifications(reader, IMPLICIT_HEAVY_MODIFICATIONS, IMPLICIT_MODIFICATION));
+                }
+            }
+            // Boolean type annotations are not listed in the .sky file if their value was false.
+            // We would still like to store them in the database.
+            List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
+                    DataSettings.AnnotationTarget.peptide);
+
+            for (String missingAnotName : missingBooleanAnnotations)
+                addMissingBooleanAnnotation(annotations, missingAnotName, new GeneralMoleculeAnnotation());
+
+            _peptideCount++;
+        }
     }
 
     private String readNote(XMLStreamReader reader) throws XMLStreamException
@@ -1281,9 +1291,9 @@ public class SkylineDocumentParser implements AutoCloseable
         return modifications;
     }
 
-    private PeptideChromInfo readPeptideChromInfo(XMLStreamReader reader) throws XMLStreamException
+    private GeneralMoleculeChromInfo readPeptideChromInfo(XMLStreamReader reader) throws XMLStreamException
     {
-        PeptideChromInfo chromInfo = new PeptideChromInfo();
+        GeneralMoleculeChromInfo chromInfo = new GeneralMoleculeChromInfo();
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", PEPTIDE_RESULT));
         setSkylineSampleFileId(reader, chromInfo);
         chromInfo.setRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
@@ -1659,6 +1669,35 @@ public class SkylineDocumentParser implements AutoCloseable
             transition.setDecoyMassShift(Double.parseDouble(decoyMassShift));
 
         transition.setMeasuredIonName(reader.getAttributeValue(null, "measured_ion_name"));
+
+        //are these supposed to be set here? Are the strings correct?
+        String explicitCollisionEnergy = reader.getAttributeValue(null, "explicit_collision_energy");
+        if(explicitCollisionEnergy != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitCollisionEnergy));
+
+        String sLens = reader.getAttributeValue(null, "s_lens");
+        if(sLens != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(sLens));
+
+        String coneVoltage = reader.getAttributeValue(null, "cone_voltage");
+        if(coneVoltage != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(coneVoltage));
+
+        String explicitCompensationVoltage = reader.getAttributeValue(null, "explicit_compensation_voltage");
+        if(explicitCompensationVoltage != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitCompensationVoltage));
+
+        String explicitDeclusteringPotential = reader.getAttributeValue(null, "explicit_declustering_potential");
+        if(explicitDeclusteringPotential != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitDeclusteringPotential));
+
+        String explicitDriftTimeMsec = reader.getAttributeValue(null, "explicit_drift_time_msec");
+        if(explicitDriftTimeMsec != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitDriftTimeMsec));
+
+        String explicitDriftTimeHighEnergyOffsetMsec = reader.getAttributeValue(null, "explicit_drift_time_high_energy_offset_msec");
+        if(explicitDriftTimeHighEnergyOffsetMsec != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitDriftTimeHighEnergyOffsetMsec));
 
         if(transition.isPrecursorIon() && transition.getMassIndex() == null)
         {

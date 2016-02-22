@@ -19,6 +19,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
@@ -41,19 +42,19 @@ public class ChromatogramLibraryUtils
     private static final String propMapKey = "chromLibRevision";
     private static final int NO_LIB_REVISION = -1;
 
-    public static boolean isRevisionCurrent(Container container, String schemaVersion, int revisionNumber)
+    public static boolean isRevisionCurrent(Container container, String schemaVersion, int revisionNumber, User user)
     {
-        return Constants.SCHEMA_VERSION.equals(schemaVersion) && getCurrentRevision(container, false) == revisionNumber;
+        return Constants.SCHEMA_VERSION.equals(schemaVersion) && getCurrentRevision(container, false, user) == revisionNumber;
     }
 
-    private static int getCurrentRevision(Container container, boolean addProperty)
+    private static int getCurrentRevision(Container container, boolean addProperty, User user)
     {
         Map<String, String> propMap = PropertyManager.getProperties(container, "TargetedMS");
         if(!propMap.containsKey(propMapKey))
         {
             if(addProperty)
             {
-                return incrementLibraryRevision(container);
+                return incrementLibraryRevision(container, user);
             }
             else
             {
@@ -66,12 +67,12 @@ public class ChromatogramLibraryUtils
         }
     }
 
-    public static int getCurrentRevision(Container container)
+    public static int getCurrentRevision(Container container, User user)
     {
-       return getCurrentRevision(container, false);
+       return getCurrentRevision(container, false, user);
     }
 
-    public static int incrementLibraryRevision(Container container)
+    public static int incrementLibraryRevision(Container container, User user)
     {
         PropertyManager.PropertyMap propMap = PropertyManager.getWritableProperties(container, "TargetedMS", true);
         String revisionVal = propMap.get(propMapKey);
@@ -89,29 +90,30 @@ public class ChromatogramLibraryUtils
         propMap.save();
 
         // write the library to a file every time there is an increment
-        writeLibrary(container, newRevision);
+        writeLibrary(container, newRevision, user);
 
         return newRevision;
     }
 
-    public static boolean isChromLibFileUptoDate(Container container) throws SQLException, IOException
-    {
-        // Get the latest library revision.
-        int currentRevision = getCurrentRevision(container, true);
-
-        File chromLibFile = getChromLibFile(container, currentRevision);
-        if(!chromLibFile.exists())
-        {
-            return false;
-        }
-
-        ConnectionSource connSource = new ConnectionSource(chromLibFile.getPath());
-        ChromatogramLibraryReader reader = new ChromatogramLibraryReader(connSource);
-        LibInfo libInfoDb = reader.readLibInfo();
-        connSource.close();
-
-        return (Constants.SCHEMA_VERSION.equals(libInfoDb.getSchemaVersion()) && libInfoDb.getLibraryRevision() == currentRevision);
-    }
+    //TODO: Usages not found - okay to delete?
+//    public static boolean isChromLibFileUptoDate(Container container) throws SQLException, IOException
+//    {
+//        // Get the latest library revision.
+//        int currentRevision = getCurrentRevision(container, true);
+//
+//        File chromLibFile = getChromLibFile(container, currentRevision);
+//        if(!chromLibFile.exists())
+//        {
+//            return false;
+//        }
+//
+//        ConnectionSource connSource = new ConnectionSource(chromLibFile.getPath());
+//        ChromatogramLibraryReader reader = new ChromatogramLibraryReader(connSource);
+//        LibInfo libInfoDb = reader.readLibInfo();
+//        connSource.close();
+//
+//        return (Constants.SCHEMA_VERSION.equals(libInfoDb.getSchemaVersion()) && libInfoDb.getLibraryRevision() == currentRevision);
+//    }
 
     /** @return the name of the file that downloaders will see */
     public static String getDownloadFileName(Container container, int revision) throws IOException
@@ -150,7 +152,7 @@ public class ChromatogramLibraryUtils
         return chromLibDir;
     }
 
-    public static void writeLibrary(Container container, int targetRevision)
+    public static void writeLibrary(Container container, int targetRevision, User user)
     {
         try
         {
@@ -161,7 +163,7 @@ public class ChromatogramLibraryUtils
             List<Integer> representativeRunIds = TargetedMSManager.getCurrentRepresentativeRunIds(container);
 
             // Get the latest library revision.
-            int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(container);
+            int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(container, user);
             int libraryRevision = ( targetRevision != 0) ? targetRevision : currentRevision;
 
             File chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container, libraryRevision);
@@ -169,8 +171,8 @@ public class ChromatogramLibraryUtils
             ContainerChromatogramLibraryWriter writer = new ContainerChromatogramLibraryWriter(
                                                                          panoramaServer,
                                                                          container,
-                                                                         representativeRunIds
-                                                                         );
+                                                                         representativeRunIds,
+                                                                         user);
             writer.writeLibrary(libraryRevision);
 
             if(!chromLibFile.exists())

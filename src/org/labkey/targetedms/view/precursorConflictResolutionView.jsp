@@ -1,3 +1,4 @@
+<%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%
 /*
  * Copyright (c) 2012-2014 LabKey Corporation
@@ -24,6 +25,7 @@
 <%@ page import="org.labkey.targetedms.query.PrecursorManager" %>
 <%@ page import="org.labkey.targetedms.view.ModifiedPeptideHtmlMaker" %>
 <%@ page import="org.labkey.targetedms.view.PrecursorHtmlMaker" %>
+<%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.PrecursorConflictBean> me = (JspView<TargetedMSController.PrecursorConflictBean>) HttpView.currentView();
@@ -214,7 +216,8 @@ function toggleCheckboxSelection(element)
              <td class="representative newPrecursor label <%=precursor.getNewPrecursorId()%>">
                  <span class="label" id="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
                      <img src="<%=getWebappURL("_images/plus.gif")%>"/>
-                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getNewPrecursorId()), precursor.getNewPrecursorRunId())%>
+                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getNewPrecursorId(),
+                             getUser(), getContainer()), precursor.getNewPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
                  </span>
              </td>
              <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
@@ -230,7 +233,8 @@ function toggleCheckboxSelection(element)
              <td class="oldPrecursor label <%=precursor.getNewPrecursorId()%>">
                  <span class="label" id="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
                      <img src="<%=getWebappURL("_images/plus.gif")%>"/>
-                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getOldPrecursorId()), precursor.getOldPrecursorRunId())%>
+                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getOldPrecursorId(),
+                             getUser(), getContainer()), precursor.getOldPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
                  </span>
              </td>
              <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">

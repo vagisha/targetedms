@@ -318,7 +318,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // Filter the grid to a single peptide
         goToSchemaBrowser();
-        selectQuery("targetedms", "peptidechrominfo");
+        selectQuery("targetedms", "generalmoleculechrominfo");
         waitForText("view data");
         clickAndWait(Locator.linkWithText("view data"));
         DataRegionTable drt = new DataRegionTable("query", this);
@@ -398,7 +398,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
     private void verifyRow(DataRegionTable drt, int row, String sampleName, String skylineDocName)
     {
-        assertEquals(sampleName, drt.getDataAsText(row, 2));
+        assertEquals(sampleName, drt.getDataAsText(row, 1));
         assertEquals(skylineDocName, drt.getDataAsText(row, 5));
     }
 

@@ -167,7 +167,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText(targetProtein));
         //Verify it’s associated with the right protein and other values from details view.
         //protein name, portien, neutral mass, avg. RT , precursor
-        assertTextPresent(targetProtein, "YAL038W", "1343.7409", "27.9232", "677.8818++ (heavy)");
+        assertTextPresent(targetProtein, "YAL038W", "1343.740", "27.9232", "677.8818++ (heavy)");
 
         //Verify the spectrum shows up correctly.
 
@@ -206,7 +206,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         // nested data regions having the same id in the HTML. The checks above happen to work because
         // they correspond to columns that aren't in the parent table, so the XPath flips to the second table with
         // that id, which has enough columns to satisfy the Locator
-        assertTextPresent("1343.7409", "1226.6619", "1001.5506");
+        assertTextPresent("1343.740", "1226.661", "1001.550");
 
         //Click down arrow next to protein name. Click "Search for other references to this protein"
         Locator l = Locator.xpath("//span[a[text()='YAL038W']]/span/img");
