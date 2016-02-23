@@ -109,17 +109,20 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
     getBaseColumns : function() {
         return [
             // These 'dataIndex' look into the model
+            {text: 'ExpRunRowId', dataIndex: 'RowId', hidden: true},
             {text: 'ID', dataIndex: 'File/Id', hidden: true},
             {text: 'Document Name', dataIndex: 'File/FileName', flex: 3, menuDisabled: true, sortable: false, scope: this, renderer: function(value, metadata, record){
                 var val = Ext4.String.htmlEncode(value),
                     url = LABKEY.ActionURL.buildURL('targetedms', 'showPrecursorList', null, {id: record.get('File/Id')});
 
+                var highlight = this.highlightedRowIds && this.highlightedRowIds.indexOf(record.data['RowId']) != -1;
+
                 if (this.asView) {
-                    return '<a href="' + url + '">' + val + '</a>';
+                    return '<a href="' + url + '">' + (highlight ? '<strong>' : '') + val + (highlight ? '</strong>' : '') + '</a>';
                 }
-                return val;
+                return (highlight ? '<strong>' : '') + val + (highlight ? '</strong>' : '');
             }},
-            {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y g:i A', width: 150, menuDisabled: true, sortable: false},
+            {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y g:i A', width: 160, menuDisabled: true, sortable: false},
             {text: 'Imported By', dataIndex: 'CreatedBy/DisplayName', width: 100, menuDisabled: true, sortable: false},
             {text: 'Note', dataIndex: 'Flag/Comment', width: 185, menuDisabled: true, sortable: false, renderer: 'htmlEncode'},
             {text: 'Proteins', dataIndex: 'File/PeptideGroupCount', width: 67, menuDisabled: true, sortable: false, align: 'right'},
@@ -171,7 +174,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             id: 'LinkVersionsSaveGrid',
             cls: 'link-version-grid',
             padding: 15,
-            width: 950,
+            width: 1100,
             maxHeight: 300,
             autoScoll: true,
             store: store,
@@ -310,6 +313,8 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
     showDetailsView : function(data) {
         var orderMap = {}, columns = this.getBaseColumns();
 
+        Ext4.get(this.divId).setHTML('');
+
         if (this.selectedRowIds.length > 0) {
             // order the grid rows based on the getLinkVersion response
             columns.push({dataIndex: 'SortOrder', hidden: true});
@@ -320,12 +325,10 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
                 row.SortOrder = orderMap[row.RowId];
             });
 
-            Ext4.get(this.divId).setHTML('');
-
             Ext4.create('Ext.grid.Panel', {
                 renderTo: this.divId,
                 cls: 'link-version-grid',
-                width: 950,
+                width: 1100,
                 disableSelection: true,
                 columns: columns,
                 store: Ext4.create('Ext.data.Store', {

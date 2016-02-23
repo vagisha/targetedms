@@ -45,6 +45,7 @@
         Ext4.create('LABKEY.targetedms.LinkedVersions', {
             divId: 'runMethodChainDetails',
             selectedRowIds: [<%=run.getRowId()%>],
+            highlightedRowIds: [<%=run.getRowId()%>],
             asView: true
         });
     });

@@ -41,13 +41,24 @@
 
 <table>
     <tr>
+        <th width="20%" />
+        <th width="30%" />
+        <th width="20%" />
+        <th width="30%" />
+    </tr>
+    <tr>
         <td class="labkey-form-label">Name</td>
-        <td>
+        <td colspan="3" nowrap>
             <%= h(run.getDescription())%>
+            <% if (c.hasPermission(getUser(), UpdatePermission.class))
+               { %>
+                <%=textLink("Rename", TargetedMSController.getRenameRunURL(c, run, getActionURL()))%> <%
+               } %>
+
             <%
-                String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
+                String size = (skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "";
             %>
-            <%= textLink("Download", downloadAction)%><%=size%>
+            <%= textLink("Download", downloadAction)%><%=h(size)%>
         </td>
     </tr>
     <tr>
@@ -64,14 +75,4 @@
         <td class="labkey-form-label">Transition Count</td>
         <td><%= h(decimalFormat.format(run.getTransitionCount())) %></td>
     </tr>
-
-    <tr><td colspan="4">
-        <div>
-            <%
-             if (c.hasPermission(getUser(), UpdatePermission.class))
-             { %>
-                 <%=textLink("Rename", TargetedMSController.getRenameRunURL(c, run, getActionURL()))%> <%
-             } %>
-        </div>
-    </td></tr>
 </table>
