@@ -169,6 +169,7 @@
             </ns:column>
             <ns:column columnName="SoftwareVersion"/>
             <ns:column columnName="FormatVersion"/>
+            <ns:column columnName="DocumentGUID"/>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="PeptideGroup">

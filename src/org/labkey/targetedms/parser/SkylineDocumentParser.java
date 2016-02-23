@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.GUID;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.targetedms.IrtPeptide;
 import org.labkey.targetedms.chromlib.ConnectionSource;
@@ -154,6 +155,7 @@ public class SkylineDocumentParser implements AutoCloseable
 
     private String _formatVersion;
     private String _softwareVersion;
+    private GUID _documentGUID;
 
     public SkylineDocumentParser(File file, Logger log) throws XMLStreamException, IOException
     {
@@ -326,6 +328,11 @@ public class SkylineDocumentParser implements AutoCloseable
         return _softwareVersion;
     }
 
+    public GUID getDocumentGUID()
+    {
+        return _documentGUID;
+    }
+
     private void readDocumentSettings(XMLStreamReader reader) throws XMLStreamException
     {
         _dataSettings = new DataSettings();
@@ -422,6 +429,11 @@ public class SkylineDocumentParser implements AutoCloseable
 
     private void readDataSettings(XMLStreamReader reader) throws XMLStreamException
     {
+        String documentGUID = reader.getAttributeValue(null, "document_guid");
+        if (documentGUID != null)
+        {
+            _documentGUID = new GUID(documentGUID);
+        }
         while(reader.hasNext())
          {
              int evtType = reader.next();

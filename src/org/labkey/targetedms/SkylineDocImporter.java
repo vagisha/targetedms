@@ -540,6 +540,7 @@ public class SkylineDocImporter
             run.setPeptideCount(parser.getPeptideCount());
             run.setPrecursorCount(parser.getPrecursorCount());
             run.setTransitionCount(parser.getTransitionCount());
+            run.setDocumentGUID(parser.getDocumentGUID());
             Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
             if (run.isRepresentative())

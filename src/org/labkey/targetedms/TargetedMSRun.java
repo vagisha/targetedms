@@ -18,6 +18,7 @@ package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.targetedms.ITargetedMSRun;
+import org.labkey.api.util.GUID;
 import org.labkey.api.util.MemTracker;
 
 import java.io.Serializable;
@@ -74,6 +75,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
 
     private String _softwareVersion;
     private String _formatVersion;
+    private GUID _documentGUID;
 
     public TargetedMSRun()
     {
@@ -330,5 +332,15 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     public void setFormatVersion(String formatVersion)
     {
         _formatVersion = formatVersion;
+    }
+
+    public GUID getDocumentGUID()
+    {
+        return _documentGUID;
+    }
+
+    public void setDocumentGUID(GUID documentGUID)
+    {
+        _documentGUID = documentGUID;
     }
 }

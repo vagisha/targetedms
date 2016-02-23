@@ -2075,8 +2075,7 @@ public class TargetedMSController extends SpringActionController
         protected DocumentPrecursorsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
         {
             FolderType folderType = TargetedMSManager.getFolderType(getContainer());
-            DocumentPrecursorsView view = null;
-            String queryName = null;
+            String queryName;
             if(folderType == FolderType.LibraryProtein || folderType == FolderType.Library)
             {
                queryName = TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR;
@@ -2085,7 +2084,7 @@ public class TargetedMSController extends SpringActionController
             {
                 queryName = TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR;
             }
-            view = new DocumentPrecursorsView(getViewContext(),
+            DocumentPrecursorsView view = new DocumentPrecursorsView(getViewContext(),
                                                    new TargetedMSSchema(getUser(), getContainer()),
                                                    queryName,
                                                    form.getId(),

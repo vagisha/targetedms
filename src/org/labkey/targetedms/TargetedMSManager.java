@@ -539,6 +539,17 @@ public class TargetedMSManager
 
             outputDatas.put(expData, "sky");
 
+            ExpRun mostRecentExpRun = null;
+
+            if (run.getDocumentGUID() != null)
+            {
+                TargetedMSRun mostRecentRun = getMostRecentRunRevision(run);
+                if (mostRecentRun != null && mostRecentRun.getExperimentRunLSID() != null)
+                {
+                    mostRecentExpRun = ExperimentService.get().getExpRun(mostRecentRun.getExperimentRunLSID());
+                }
+            }
+
             expRun = ExperimentService.get().saveSimpleExperimentRun(expRun,
                                                                      Collections.<ExpMaterial, String>emptyMap(),
                                                                      inputDatas,
@@ -550,15 +561,34 @@ public class TargetedMSManager
             run.setExperimentRunLSID(expRun.getLSID());
             TargetedMSManager.updateRun(run, user);
 
+            if (mostRecentExpRun != null && mostRecentExpRun.getReplacedByRun() == null)
+            {
+                mostRecentExpRun.setReplacedByRun(expRun);
+                mostRecentExpRun.save(user);
+            }
+
             transaction.commit();
             return expRun;
         }
     }
 
+    private static TargetedMSRun getMostRecentRunRevision(TargetedMSRun run)
+    {
+        SQLFragment sql = new SQLFragment("SELECT * FROM ");
+        sql.append(getTableInfoRuns(), "r");
+        sql.append(" WHERE DocumentGUID = ? AND Container = ? AND Id != ? ORDER BY Id DESC");
+        sql.add(run.getDocumentGUID());
+        sql.add(run.getContainer());
+        sql.add(run.getId());
+        SQLFragment limitedSQL = getSchema().getSqlDialect().limitRows(sql, 1);
+        return new SqlSelector(getSchema(), limitedSQL).getObject(TargetedMSRun.class);
+
+    }
+
     public static TargetedMSRun getRunByDataId(int dataId, Container c)
     {
         TargetedMSRun[] runs = getRuns("DataId = ? AND Deleted = ? AND Container = ?", dataId, Boolean.FALSE, c.getId());
-        if(null == runs || runs.length == 0)
+        if(runs.length == 0)
         {
             return null;
         }
@@ -572,7 +602,7 @@ public class TargetedMSManager
     public static TargetedMSRun getRunByLsid(String lsid, Container c)
     {
         TargetedMSRun[] runs = getRuns("experimentrunlsid = ? AND container = ?", lsid, c.getId());
-        if(runs == null || runs.length == 0)
+        if(runs.length == 0)
         {
             return null;
         }
@@ -583,6 +613,7 @@ public class TargetedMSManager
         throw new IllegalArgumentException("More than one TargetedMS runs found for LSID "+lsid);
     }
 
+    @NotNull
     private static TargetedMSRun[] getRuns(String whereClause, Object... params)
     {
         SQLFragment sql = new SQLFragment("SELECT * FROM ");
