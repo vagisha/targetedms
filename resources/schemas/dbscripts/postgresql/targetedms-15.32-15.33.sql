@@ -94,7 +94,7 @@ ALTER TABLE targetedms.PeptideChromInfo RENAME TO GeneralMoleculeChromInfo;
 /** Modify GeneralChromInfo table to reference GeneralMolecule **/
 ALTER TABLE targetedms.GeneralMoleculeChromInfo RENAME COLUMN PeptideId TO GeneralMoleculeId;
 ALTER TABLE targetedms.GeneralMoleculeChromInfo ADD CONSTRAINT FK_ChromInfo_GMId FOREIGN KEY (GeneralMoleculeId) REFERENCES targetedms.GeneralMolecule(Id);
-ALTER TABLE targetedms.GeneralMoleculeChromInfo RENAME CONSTRAINT PK_PeptideChromInfo TO PK_GMChromInfoId;
+ALTER INDEX targetedms.PK_PeptideChromInfo RENAME TO PK_GMChromInfoId;
 CREATE INDEX IX_GeneralMoleculeChromInfo_GMId ON targetedms.GeneralMoleculeChromInfo(GeneralMoleculeId);
 
 /** Rename PeptideAnnotation table to GeneralMoleculeAnnotation **/
@@ -239,18 +239,21 @@ ALTER TABLE targetedms.TransitionChromInfo DROP CONSTRAINT FK_TransitionChromInf
 ALTER TABLE targetedms.TransitionAnnotation ADD CONSTRAINT FK_TransitionAnnotation_GTId FOREIGN KEY (TransitionId) REFERENCES targetedms.GeneralTransition(Id);
 ALTER TABLE targetedms.TransitionAnnotation DROP CONSTRAINT FK_TransitionAnnotation_Transition;
 
-ALTER TABLE targetedms.GeneralMoleculeChromInfo RENAME CONSTRAINT FK_PeptideChromInfo_SampleFile TO FK_GMChromInfo_SampleFile;
+ALTER TABLE targetedms.GeneralMoleculeChromInfo DROP CONSTRAINT FK_PeptideChromInfo_SampleFile;
+ALTER TABLE targetedms.GeneralMoleculeChromInfo ADD CONSTRAINT FK_GMChromInfo_SampleFile FOREIGN KEY (SampleFileId) REFERENCES targetedms.SampleFile(Id);
 DROP INDEX targetedms.IX_PeptideChromInfo_PeptideId;
 CREATE INDEX IX_GMChromInfo_SampleFileId ON targetedms.GeneralMoleculeChromInfo(samplefileid);
 DROP INDEX targetedms.IX_PeptideChromInfo_SampleFileId;
 
-ALTER TABLE targetedms.GeneralMoleculeAnnotation RENAME CONSTRAINT UQ_PeptideAnnotation_Name_Peptide TO UQ_GMAnnotation_Name_GMId;
+ALTER TABLE targetedms.GeneralMoleculeAnnotation DROP CONSTRAINT UQ_PeptideAnnotation_Name_Peptide;
+ALTER TABLE targetedms.GeneralMoleculeAnnotation ADD CONSTRAINT UQ_GMAnnotation_Name_GMId UNIQUE (Name, GeneralMoleculeId);
 DROP INDEX targetedms.IX_PeptideAnnotation_PeptideId;
 
-ALTER TABLE targetedms.GeneralMoleculeAnnotation RENAME CONSTRAINT PK_PeptideAnnotation TO PK_GMAnnotation;
+ALTER INDEX targetedms.PK_PeptideAnnotation RENAME TO PK_GMAnnotation;
 
 ALTER TABLE targetedms.PrecursorChromInfo RENAME COLUMN PeptideChromInfoId TO GeneralMoleculeChromInfoId;
-ALTER TABLE targetedms.PrecursorChromInfo RENAME CONSTRAINT FK_PrecursorChromInfo_PeptideChromInfo TO FK_PrecursorChromInfo_GMChromInfo;
+ALTER TABLE targetedms.PrecursorChromInfo DROP CONSTRAINT FK_PrecursorChromInfo_PeptideChromInfo;
+ALTER TABLE targetedms.PrecursorChromInfo ADD CONSTRAINT FK_PrecursorChromInfo_GMChromInfo FOREIGN KEY (GeneralMoleculeChromInfoId) REFERENCES targetedms.GeneralMoleculeChromInfo(Id);
 DROP INDEX targetedms.IX_PrecursorChromInfo_PeptideChromInfoId;
 CREATE INDEX IX_PrecursorChromInfo_GeneralMoleculeChromInfoId ON targetedms.PrecursorChromInfo (GeneralMoleculeChromInfoId);
 
