@@ -851,9 +851,11 @@ public class TargetedMSSchema extends UserSchema
         {
             return new PrecursorTableInfo.LibraryPrecursorTableInfo(this);
         }
-        if (TABLE_GENERAL_MOLECULE_ANNOTATION.equalsIgnoreCase(name) || TABLE_PEPTIDE_ANNOTATION.equals(name))
+        if (TABLE_GENERAL_MOLECULE_ANNOTATION.equalsIgnoreCase(name) || TABLE_PEPTIDE_ANNOTATION.equalsIgnoreCase(name))
         {
-            return new GeneralMoleculeAnnotationTableInfo(getSchema().getTable(name), this, ContainerJoinType.GeneralMoleculeFK.getSQL());
+            GeneralMoleculeAnnotationTableInfo result = new GeneralMoleculeAnnotationTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_ANNOTATION), this, ContainerJoinType.GeneralMoleculeFK.getSQL());
+            result.setName(name);
+            return result;
         }
         if(TABLE_PEPTIDE_STRUCTURAL_MODIFICATION.equalsIgnoreCase(name))
         {
