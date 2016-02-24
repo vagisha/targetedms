@@ -359,6 +359,14 @@
     <ns:table tableDbType="TABLE" tableName="MoleculePrecursor">
         <ns:columns>
             <ns:column columnName="Id" />
+            <ns:column columnName="IonFormula"/>
+            <ns:column columnName="CustomIonName"/>
+            <ns:column columnName="MassMonoisotopic">
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
+            <ns:column columnName="MassAverage">
+                <ns:formatString>0.0000</ns:formatString>
+            </ns:column>
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Precursor">
