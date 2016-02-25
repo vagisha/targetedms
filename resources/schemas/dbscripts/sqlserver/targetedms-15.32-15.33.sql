@@ -93,7 +93,10 @@ INSERT INTO targetedms.Peptide(
       gm.Decoy,
       gm.PeptideModifiedSequence,
       gm.StandardType
-    FROM targetedms.GeneralMolecule gm);
+      FROM targetedms.GeneralMolecule gm
+      WHERE gm.Sequence IS NOT NULL); -- Sequence will be NULL for pre-existing small molecule data in the GeneralPrecursor table;
+                                      --  Can't use PeptideModifiedSequence column here because it was added in 13.3
+
 
 GO
 
@@ -198,7 +201,9 @@ INSERT INTO targetedms.Precursor(
                      gp.IsotopeLabelId,
                      gp.NeutralMass,
                      gp.ModifiedSequence,
-                     gp.DecoyMassShift FROM targetedms.GeneralPrecursor gp);
+                     gp.DecoyMassShift FROM targetedms.GeneralPrecursor gp
+                     WHERE gp.ModifiedSequence IS NOT NULL); -- ModifiedSequence will be NULL for pre-existing small molecule data in the GeneralPrecursor table,
+
 
 GO
 
