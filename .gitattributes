@@ -216,6 +216,7 @@ src/org/labkey/targetedms/parser/GeneralPrecursor.java -text
 src/org/labkey/targetedms/parser/GeneralTransition.java -text
 src/org/labkey/targetedms/parser/Instrument.java -text
 src/org/labkey/targetedms/parser/Molecule.java -text
+src/org/labkey/targetedms/parser/MoleculePrecursor.java -text
 src/org/labkey/targetedms/parser/MoleculeTransition.java -text
 src/org/labkey/targetedms/parser/PeakAreaRatioCalculator.java -text
 src/org/labkey/targetedms/parser/Peptide.java -text
@@ -256,6 +257,8 @@ src/org/labkey/targetedms/pipeline/ExperimentExportTask.java -text
 src/org/labkey/targetedms/pipeline/ExperimentImportTask.java -text
 src/org/labkey/targetedms/pipeline/TargetedMSImportPipelineJob.java -text
 src/org/labkey/targetedms/pipeline/TargetedMSPipelineProvider.java -text
+src/org/labkey/targetedms/query/AbstractGeneralMoleculeTableInfo.java -text
+src/org/labkey/targetedms/query/AbstractGeneralPrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/AnnotatedTargetedMSTable.java -text
 src/org/labkey/targetedms/query/ChromatogramDisplayColumnFactory.java -text
 src/org/labkey/targetedms/query/ChromatogramGridQuerySettings.java -text
@@ -274,6 +277,8 @@ src/org/labkey/targetedms/query/JournalManager.java -text
 src/org/labkey/targetedms/query/LibraryManager.java -text
 src/org/labkey/targetedms/query/ModificationManager.java -text
 src/org/labkey/targetedms/query/ModifiedSequenceDisplayColumn.java -text
+src/org/labkey/targetedms/query/MoleculePrecursorTableInfo.java -text
+src/org/labkey/targetedms/query/MoleculeTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideGroupManager.java -text
 src/org/labkey/targetedms/query/PeptideIsotopeModificationTableInfo.java -text

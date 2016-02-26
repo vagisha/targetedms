@@ -428,7 +428,7 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_GENERAL_PRECURSOR);
     }
 
-    private static TableInfo getTableInfoMoleculePrecursor()
+    public static TableInfo getTableInfoMoleculePrecursor()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR);
     }

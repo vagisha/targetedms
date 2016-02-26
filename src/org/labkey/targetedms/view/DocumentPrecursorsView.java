@@ -23,6 +23,8 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryNestingOption;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.query.AbstractGeneralPrecursorTableInfo;
+import org.labkey.targetedms.query.MoleculePrecursorTableInfo;
 import org.labkey.targetedms.query.PrecursorTableInfo;
 
 import java.sql.SQLException;
@@ -59,20 +61,31 @@ public class DocumentPrecursorsView extends NestableQueryView
     public TableInfo createTable()
     {
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in DocumentPrecursorsView class!";
-        PrecursorTableInfo tinfo  = (PrecursorTableInfo) _targetedMsSchema.getTable(_tableName);
+        AbstractGeneralPrecursorTableInfo tinfo;
+        String viewName = getSettings().getViewName();
+        if(_tableName.equalsIgnoreCase(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR))
+        {
+            tinfo  = (MoleculePrecursorTableInfo) _targetedMsSchema.getTable(_tableName);
+        }
+        else
+        {
+            tinfo = (PrecursorTableInfo) _targetedMsSchema.getTable(_tableName);
+
+            if (_tableName.equalsIgnoreCase(TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR) &&
+                    (StringUtils.isBlank(viewName)))
+            {
+                // If we are looking at the default view for the precursor list of a document in a library
+                // folder, show only the current representative precursors.
+                PrecursorTableInfo.LibraryPrecursorTableInfo tableInfo = (PrecursorTableInfo.LibraryPrecursorTableInfo) tinfo;
+                tableInfo.selectRepresentative();
+            }
+        }
+
         if (tinfo != null)
         {
             tinfo.setRunId(_runId);
         }
-        String viewName = getSettings().getViewName();
-        if (_tableName.equalsIgnoreCase(TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR) &&
-            (StringUtils.isBlank(viewName)))
-        {
-            // If we are looking at the default view for the precursor list of a document in a library
-            // folder, show only the current representative precursors.
-            PrecursorTableInfo.LibraryPrecursorTableInfo tableInfo = (PrecursorTableInfo.LibraryPrecursorTableInfo) tinfo;
-            tableInfo.selectRepresentative();
-        }
+
         return tinfo;
     }
 
