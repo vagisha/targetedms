@@ -47,10 +47,13 @@ public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
     {
         super(TargetedMSManager.getTableInfoGeneralPrecursor(), tableInfo, schema,
         TargetedMSSchema.ContainerJoinType.GeneralMoleculeFK.getSQL(),
-        TargetedMSManager.getTableInfoPrecursorAnnotation(), "PrecursorId",
-        "Precursor Annotations");
+        TargetedMSManager.getTableInfoPrecursorAnnotation(),
+        "Id", "Precursor Annotations");
 
         setName(tableName);
+        // use the description and title column from the specialized TableInfo
+        setDescription(tableInfo.getDescription());
+        setTitleColumn(tableInfo.getTitleColumn());
 
         _detailsURL = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
                                                                     getContainer()),

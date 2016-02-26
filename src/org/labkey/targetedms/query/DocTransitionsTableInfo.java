@@ -42,9 +42,13 @@ public class DocTransitionsTableInfo extends JoinedTargetedMSTable
 
         super(TargetedMSManager.getTableInfoGeneralTransition(), TargetedMSManager.getTableInfoTransition(),
                 schema, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK.getSQL(),
-                TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations");
+                TargetedMSManager.getTableInfoTransitionAnnotation(),
+                "Id", "Annotations");
 
-        setName(TargetedMSSchema.TABLE_GENERAL_TRANSITION);
+        setName(TargetedMSSchema.TABLE_TRANSITION);
+
+        // set the description based on the specialized TableInfo (note the title column in this case comes from GeneralTransition)
+        setDescription(TargetedMSManager.getTableInfoTransition().getDescription());
 
         ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
         precursorCol.setFk(new LookupForeignKey("Id")
@@ -52,7 +56,7 @@ public class DocTransitionsTableInfo extends JoinedTargetedMSTable
             @Override
             public TableInfo getLookupTableInfo()
             {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
+                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR); // TODO should this be TABLE_GENERAL_PRECURSOR
             }
         });
 
@@ -102,7 +106,6 @@ public class DocTransitionsTableInfo extends JoinedTargetedMSTable
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "CalcNeutralMass"));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "Rank"));
 
-
         // Precursor level information
         visibleColumns.add(FieldKey.fromParts("PrecursorId", ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME));
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "Annotations"));
@@ -130,7 +133,6 @@ public class DocTransitionsTableInfo extends JoinedTargetedMSTable
         });
         noteAnnotation.setLabel("Transition Note/Annotations");
         addColumn(noteAnnotation);
-
     }
 
     public void setRunId(int runId)

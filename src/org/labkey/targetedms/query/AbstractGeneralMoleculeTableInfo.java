@@ -17,14 +17,18 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
 
 public class AbstractGeneralMoleculeTableInfo extends JoinedTargetedMSTable
 {
-    public AbstractGeneralMoleculeTableInfo(TargetedMSSchema schema, TableInfo tableInfo)
+    public AbstractGeneralMoleculeTableInfo(TargetedMSSchema schema, TableInfo tableInfo, String annotationColumnName)
     {
         super(TargetedMSManager.getTableInfoGeneralMolecule(),
                 tableInfo,
                 schema,
                 TargetedMSSchema.ContainerJoinType.PeptideGroupFK.getSQL(),
                 TargetedMSManager.getTableInfoGeneralMoleculeAnnotation(),
-                "Id", "GeneralMoleculeId");
+                "Id", annotationColumnName);
+
+        // use the description and title column from the specialized TableInfo
+        setDescription(tableInfo.getDescription());
+        setTitleColumn(tableInfo.getTitleColumn());
 
         ColumnInfo peptideGroupId = getColumn("PeptideGroupId");
         peptideGroupId.setFk(new LookupForeignKey("Id")

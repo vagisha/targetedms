@@ -46,16 +46,13 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
     {
         super(tableInfo, tableName, schema);
 
-        setName(TargetedMSSchema.TABLE_PRECURSOR);
-        setDescription("Contains a row for each precursor loaded in a targeted MS run.");
-
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new LookupForeignKey("Id")
         {
             @Override
             public TableInfo getLookupTableInfo()
             {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
+                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE); // TODO should this be TABLE_GENERAL_MOLECULE?
             }
         });
 
@@ -70,8 +67,8 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
         });
         addColumn(peptideId);
 
-
-//        getColumn("IsotopeLabelId").setFk(new QueryForeignKey(getUserSchema(), null, TargetedMSSchema.TABLE_ISOTOPE_LABEL, "Id", null));
+        // TODO enable or delete?
+        //getColumn("IsotopeLabelId").setFk(new QueryForeignKey(getUserSchema(), null, TargetedMSSchema.TABLE_ISOTOPE_LABEL, "Id", null));
 
         WrappedColumn modSeqCol = new WrappedColumn(getColumn("ModifiedSequence"), ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME);
         modSeqCol.setLabel("Precursor");
@@ -98,7 +95,6 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
         visibleColumns.add(FieldKey.fromParts("PeptideId", "NumMissedCleavages"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "CalcNeutralMass"));
         visibleColumns.add(FieldKey.fromParts("PeptideId", "Rank"));
-
 
         visibleColumns.add(FieldKey.fromParts(ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME));
         visibleColumns.add(FieldKey.fromParts("NoteAnnotations"));

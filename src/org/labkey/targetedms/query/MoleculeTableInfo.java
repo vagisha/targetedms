@@ -16,10 +16,7 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
 {
     public MoleculeTableInfo(TargetedMSSchema schema)
     {
-        super(schema, TargetedMSManager.getTableInfoMolecule());
-
-        setName(TargetedMSSchema.TABLE_MOLECULE);
-        setDescription("Contains a row for each non-proteomic molecule loaded in a targeted MS run.");
+        super(schema, TargetedMSManager.getTableInfoMolecule(), "Molecule Annotations");
 
 //        TODO: Create and Implement ShowMoleculeAction class in TargetedMSController
 //        final DetailsURL detailsURL = new DetailsURL(new ActionURL(TargetedMSController.ShowMoleculeAction.class, getContainer()),

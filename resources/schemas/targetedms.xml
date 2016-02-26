@@ -215,10 +215,12 @@
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="GeneralMolecule">
-        <ns:titleColumn>GeneralMoleculeTable</ns:titleColumn>
+        <ns:titleColumn>RtCalculatorScore</ns:titleColumn>
         <ns:description>Parent table to Peptide, Molecule, GeneralMoleculeChromInfo, GeneralAnnotation.</ns:description>
         <ns:columns>
-            <ns:column columnName="Id"/>
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
             <ns:column columnName="PeptideGroupId">
                 <ns:columnTitle>Group</ns:columnTitle>
             </ns:column>
@@ -295,9 +297,7 @@
             <ns:column columnName="Id">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
-            <ns:column columnName="GeneralMoleculeId">
-                <ns:columnTitle>Peptide</ns:columnTitle>
-            </ns:column>
+            <ns:column columnName="GeneralMoleculeId"/>
             <ns:column columnName="SampleFileId">
                 <ns:columnTitle>Sample File</ns:columnTitle>
             </ns:column>
@@ -312,15 +312,13 @@
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="GeneralPrecursor">
-        <ns:titleColumn>General Precursor</ns:titleColumn>
+        <ns:titleColumn>Mz</ns:titleColumn>
         <ns:description>Parent table to Precursor, MoleculePrecursor, PrecursorChromInfo, PrecursorAnnotation, PrecursorLibInfo</ns:description>
         <ns:columns>
             <ns:column columnName="Id">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
-            <ns:column columnName="GeneralMoleculeId">
-                <ns:columnTitle>GeneralMolecule</ns:columnTitle>
-            </ns:column>
+            <ns:column columnName="GeneralMoleculeId"/>
             <ns:column columnName="Mz">
                 <ns:columnTitle>Q1 m/z</ns:columnTitle>
                 <ns:formatString>0.0000</ns:formatString>
@@ -357,8 +355,12 @@
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="MoleculePrecursor">
+        <ns:titleColumn>MassMonoisotopic</ns:titleColumn>
+        <ns:description>Contains a row for each non-proteomic molecule precursor loaded in a targeted MS run.</ns:description>
         <ns:columns>
-            <ns:column columnName="Id" />
+            <ns:column columnName="Id">
+                <ns:isHidden>true</ns:isHidden>
+            </ns:column>
             <ns:column columnName="IonFormula"/>
             <ns:column columnName="CustomIonName"/>
             <ns:column columnName="MassMonoisotopic">
@@ -490,7 +492,6 @@
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Transition">
-        <ns:titleColumn>Mz</ns:titleColumn>
         <ns:description>Contains a row for each transition loaded in a targeted MS run.</ns:description>
         <ns:columns>
             <ns:column columnName="Id">

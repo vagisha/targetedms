@@ -44,8 +44,6 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
     {
         super(tableInfo, tableName, schema);
 
-        setName(tableName);
-
         final DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
                                                                     getContainer()),
                                                       Collections.singletonMap("id", "Id"));
@@ -58,7 +56,7 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
             @Override
             public TableInfo getLookupTableInfo()
             {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE);
+                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE); // TODO should this be TABLE_GENERAL_MOLECULE?
             }
         });
 
@@ -72,7 +70,6 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
             }
         });
         addColumn(moleculeIdId);
-
     }
 
 }

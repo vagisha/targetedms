@@ -20,21 +20,11 @@ public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
 {
     public PeptideTableInfo(TargetedMSSchema schema)
     {
-        super(schema, TargetedMSManager.getTableInfoPeptide());
-
-        setName(TargetedMSSchema.TABLE_PEPTIDE);
-        setDescription("Contains a row for each peptide loaded in a targeted MS run.");
+        super(schema, TargetedMSManager.getTableInfoPeptide(), "Peptide Annotations");
 
         final DetailsURL detailsURL = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()),
                 Collections.singletonMap("id", "Id"));
         setDetailsURL(detailsURL);
-
-        List<FieldKey> defaultCols = new ArrayList<>(getDefaultVisibleColumns());
-        defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
-        defaultCols.add(1, FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
-        defaultCols.add(2, FieldKey.fromParts("PeptideGroupId", "Label"));
-        defaultCols.remove(FieldKey.fromParts("PeptideGroupId"));
-        setDefaultVisibleColumns(defaultCols);
 
         // Add a WrappedColumn for Note & Annotations
         WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
@@ -65,6 +55,12 @@ public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
         });
         addColumn(modSeqCol);
 
-        setTitleColumn("Sequence");
+        List<FieldKey> defaultCols = new ArrayList<>(getDefaultVisibleColumns());
+        defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
+        defaultCols.add(1, FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
+        defaultCols.add(2, FieldKey.fromParts("PeptideGroupId", "Label"));
+        defaultCols.add(3, FieldKey.fromParts(ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
+        defaultCols.remove(FieldKey.fromParts("PeptideGroupId"));
+        setDefaultVisibleColumns(defaultCols);
     }
 }
