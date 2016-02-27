@@ -9,6 +9,8 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     protected String fragmentType;  // 'a', 'b', 'c', 'x', 'y', 'z' or 'precursor'
     protected Integer isotopeDistRank;
     protected Double isotopeDistProportion;
+    protected Boolean decoy;
+    protected String note;
     protected Integer massIndex;
     protected Double explicitCollisionEnergy;
     protected Double sLens;
@@ -76,6 +78,26 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     public void setIsotopeDistProportion(Double isotopeDistProportion)
     {
         this.isotopeDistProportion = isotopeDistProportion;
+    }
+
+    public Boolean isDecoy()
+    {
+        return decoy;
+    }
+
+    public void setDecoy(Boolean decoy)
+    {
+        this.decoy = decoy;
+    }
+
+    public String getNote()
+    {
+        return note;
+    }
+
+    public void setNote(String note)
+    {
+        this.note = note;
     }
 
     public double getMz()

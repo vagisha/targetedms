@@ -7,13 +7,12 @@ public class GeneralPrecursor extends AnnotatedEntity<PrecursorAnnotation>
     protected double _mz;
     protected Double _collisionEnergy;
     protected Double _declusteringPotential;
+    protected Boolean _decoy;
     protected String _note;
     protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
     protected Double _explicitCollisionEnergy;
     protected Double _explicitDriftTimeMsec;
     protected Double _explicitDriftTimeHighEnergyOffsetMsec;
-
-    protected boolean _decoy;
 
     public int getGeneralMoleculeId()
     {
@@ -105,12 +104,12 @@ public class GeneralPrecursor extends AnnotatedEntity<PrecursorAnnotation>
         _explicitDriftTimeHighEnergyOffsetMsec = explicitDriftTimeHighEnergyOffsetMsec;
     }
 
-    public boolean isDecoy()
+    public Boolean isDecoy()
     {
         return _decoy;
     }
 
-    public void setDecoy(boolean decoy)
+    public void setDecoy(Boolean decoy)
     {
         _decoy = decoy;
     }
