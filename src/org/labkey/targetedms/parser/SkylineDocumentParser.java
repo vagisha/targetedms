@@ -126,11 +126,6 @@ public class SkylineDocumentParser implements AutoCloseable
 
     private final static double OPTIMIZE_SHIFT_SIZE = 0.01;
 
-    private int _peptideGroupCount;
-    private int _peptideCount;
-    private int _precursorCount;
-    private int _transitionCount;
-
     private SkylineBinaryParser _binaryParser;
 
     private TransitionSettings _transitionSettings;
@@ -1025,7 +1020,6 @@ public class SkylineDocumentParser implements AutoCloseable
             addMissingBooleanAnnotation(annotations, missingAnotName, new PeptideGroupAnnotation());
         }
 
-        _peptideGroupCount++;
         return pepGroup;
     }
 
@@ -1211,8 +1205,6 @@ public class SkylineDocumentParser implements AutoCloseable
 
             for (String missingAnotName : missingBooleanAnnotations)
                 addMissingBooleanAnnotation(annotations, missingAnotName, new GeneralMoleculeAnnotation());
-
-            _peptideCount++;
         }
     }
 
@@ -1499,7 +1491,6 @@ public class SkylineDocumentParser implements AutoCloseable
             }
         }
 
-        _precursorCount++;
         return precursor;
     }
 
@@ -1781,8 +1772,6 @@ public class SkylineDocumentParser implements AutoCloseable
         {
             addMissingBooleanAnnotation(annotations, missingAnotName, new TransitionAnnotation());
         }
-
-        _transitionCount++;
     }
 
     private List<TransitionLoss> readLosses(XMLStreamReader reader) throws XMLStreamException
@@ -2025,25 +2014,5 @@ public class SkylineDocumentParser implements AutoCloseable
         }
 
         return Collections.emptyList();
-    }
-
-    public int getPeptideGroupCount()
-    {
-        return _peptideGroupCount;
-    }
-
-    public int getPeptideCount()
-    {
-        return _peptideCount;
-    }
-
-    public int getPrecursorCount()
-    {
-        return _precursorCount;
-    }
-
-    public int getTransitionCount()
-    {
-        return _transitionCount;
     }
 }

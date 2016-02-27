@@ -87,7 +87,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableName="Runs" tableDbType="TABLE">
-        <ns:description>Contains a row for each Targeted MS run.</ns:description>
+        <ns:description>Contains a row per Skyline document loaded in this folder.</ns:description>
         <ns:titleColumn>Description</ns:titleColumn>
         <ns:columns>
             <ns:column columnName="Id">

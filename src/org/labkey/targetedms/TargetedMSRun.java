@@ -238,6 +238,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _deleted = deleted;
     }
 
+    @Deprecated
     public int getPeptideGroupCount()
     {
         return _peptideGroupCount;
@@ -248,6 +249,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _peptideGroupCount = peptideGroupCount;
     }
 
+    @Deprecated
     public int getPeptideCount()
     {
         return _peptideCount;
@@ -258,6 +260,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _peptideCount = peptideCount;
     }
 
+    @Deprecated
     public int getPrecursorCount()
     {
         return _precursorCount;
@@ -268,6 +271,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _precursorCount = precursorCount;
     }
 
+    @Deprecated
     public int getTransitionCount()
     {
         return _transitionCount;

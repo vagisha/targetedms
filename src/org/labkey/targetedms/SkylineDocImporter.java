@@ -536,10 +536,6 @@ public class SkylineDocImporter
                 }
             }
 
-            run.setPeptideGroupCount(parser.getPeptideGroupCount());
-            run.setPeptideCount(parser.getPeptideCount());
-            run.setPrecursorCount(parser.getPrecursorCount());
-            run.setTransitionCount(parser.getTransitionCount());
             run.setDocumentGUID(parser.getDocumentGUID());
             Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 

@@ -131,8 +131,8 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PRECURSOR_LIB_INFO = "PrecursorLibInfo";
     public static final String TABLE_ANNOTATION_SETTINGS = "AnnotationSettings";
 
-    public static final String TABLE_RESPRESENTATIVE_DATA_STATE_RUN = "RepresentativeDataState_Run";
-    public static final String TABLE_RESPRESENTATIVE_DATA_STATE = "RepresentativeDataState";
+    public static final String TABLE_REPRESENTATIVE_DATA_STATE_RUN = "RepresentativeDataState_Run";
+    public static final String TABLE_REPRESENTATIVE_DATA_STATE = "RepresentativeDataState";
     public static final String TABLE_IRT_PEPTIDE = "iRTPeptide";
     public static final String TABLE_IRT_SCALE = "iRTScale";
 
@@ -487,7 +487,7 @@ public class TargetedMSSchema extends UserSchema
     {
         // Start with a standard experiment run table
         ExpRunTable result = _expSchema.getRunsTable();
-        result.setDescription("Contains a row per Skyline document loaded in this folder.");
+        result.setDescription(TargetedMSManager.getTableInfoRuns().getDescription());
 
         // Filter to just the runs with the Targeted MS protocol
         result.setProtocolPatterns(PROTOCOL_PATTERN_PREFIX + TargetedMSModule.IMPORT_SKYDOC_PROTOCOL_OBJECT_PREFIX + "%",
@@ -511,13 +511,9 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn(result.getRealTable().getColumn("Description"));
                 result.addWrapColumn(result.getRealTable().getColumn("Created"));
                 result.addWrapColumn(result.getRealTable().getColumn("Filename"));
-                result.addWrapColumn(result.getRealTable().getColumn("PeptideGroupCount"));
-                result.addWrapColumn(result.getRealTable().getColumn("PeptideCount"));
-                result.addWrapColumn(result.getRealTable().getColumn("PrecursorCount"));
-                result.addWrapColumn(result.getRealTable().getColumn("TransitionCount"));
                 result.addWrapColumn(result.getRealTable().getColumn("Status"));
                 ColumnInfo stateColumn = result.addWrapColumn(result.getRealTable().getColumn("RepresentativeDataState"));
-                stateColumn.setFk(new QueryForeignKey(TargetedMSSchema.this, null, TABLE_RESPRESENTATIVE_DATA_STATE_RUN, "RowId", null));
+                stateColumn.setFk(new QueryForeignKey(TargetedMSSchema.this, null, TABLE_REPRESENTATIVE_DATA_STATE_RUN, "RowId", null));
 
                 ColumnInfo downloadLinkColumn = result.addWrapColumn("Download", result.getRealTable().getColumn("Id"));
                 downloadLinkColumn.setLabel("");
@@ -543,12 +539,41 @@ public class TargetedMSSchema extends UserSchema
                     }
                 });
 
+                // add Peptide Group count column
+                SQLFragment sql = new SQLFragment("(").append(TargetedMSManager.getRunPeptideGroupCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
+                ColumnInfo countCol = new ExprColumn(result, "Proteins", sql, JdbcType.INTEGER);
+                countCol.setFormat("#,###");
+                result.addColumn(countCol);
+
+                // add Peptide count column
+                sql = new SQLFragment("(").append(TargetedMSManager.getRunPeptideCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
+                countCol = new ExprColumn(result, "Peptides", sql, JdbcType.INTEGER);
+                countCol.setFormat("#,###");
+                result.addColumn(countCol);
+
+                // add Small Molecule count column
+                sql = new SQLFragment("(").append(TargetedMSManager.getRunSmallMoleculeCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
+                countCol = new ExprColumn(result, "SmallMolecules", sql, JdbcType.INTEGER);
+                countCol.setFormat("#,###");
+                result.addColumn(countCol);
+
+                // add Precursor count column
+                sql = new SQLFragment("(").append(TargetedMSManager.getRunPrecursorCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
+                countCol = new ExprColumn(result, "Precursors", sql, JdbcType.INTEGER);
+                countCol.setFormat("#,###");
+                result.addColumn(countCol);
+
+                // add Transition count column
+                sql = new SQLFragment("(").append(TargetedMSManager.getRunTransitionCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
+                countCol = new ExprColumn(result, "Transitions", sql, JdbcType.INTEGER);
+                countCol.setFormat("#,###");
+                result.addColumn(countCol);
+
                 return result;
             }
         });
         skyDocDetailColumn.setHidden(false);
         result.addColumn(skyDocDetailColumn);
-
 
         //adjust the default visible columns
         List<FieldKey> columns = new ArrayList<>(result.getDefaultVisibleColumns());
@@ -559,10 +584,11 @@ public class TargetedMSSchema extends UserSchema
         columns.remove(FieldKey.fromParts("Name"));
 
         columns.add(2, FieldKey.fromParts("File"));
-        columns.add(FieldKey.fromParts("File", "PeptideGroupCount"));
-        columns.add(FieldKey.fromParts("File", "PeptideCount"));
-        columns.add(FieldKey.fromParts("File", "PrecursorCount"));
-        columns.add(FieldKey.fromParts("File", "TransitionCount"));
+        columns.add(FieldKey.fromParts("File", "Proteins"));
+        columns.add(FieldKey.fromParts("File", "Peptides"));
+        columns.add(FieldKey.fromParts("File", "SmallMolecules"));
+        columns.add(FieldKey.fromParts("File", "Precursors"));
+        columns.add(FieldKey.fromParts("File", "Transitions"));
         columns.add(FieldKey.fromParts("File", "Download"));
 
         result.setDefaultVisibleColumns(columns);
@@ -607,7 +633,7 @@ public class TargetedMSSchema extends UserSchema
             return new ExperimentAnnotationsTableInfo(this, getUser());
         }
 
-        if (TABLE_RESPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
+        if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
         {
             return new EnumTableInfo<>(
                     TargetedMSRun.RepresentativeDataState.class,
@@ -624,7 +650,7 @@ public class TargetedMSSchema extends UserSchema
                     "Possible states a run might be in for resolving representative data after upload"
                     );
         }
-        if (TABLE_RESPRESENTATIVE_DATA_STATE.equalsIgnoreCase(name))
+        if (TABLE_REPRESENTATIVE_DATA_STATE.equalsIgnoreCase(name))
         {
             EnumTableInfo tableInfo = new EnumTableInfo<>(
                     RepresentativeDataState.class,
@@ -715,7 +741,7 @@ public class TargetedMSSchema extends UserSchema
                 }
             });
             result.getColumn("RunId").setFk(new QueryForeignKey(this, null, TABLE_TARGETED_MS_RUNS, "File", null));
-            result.getColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, null, TargetedMSSchema.TABLE_RESPRESENTATIVE_DATA_STATE, "RowId", null));
+            result.getColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, null, TargetedMSSchema.TABLE_REPRESENTATIVE_DATA_STATE, "RowId", null));
             result.getColumn("RepresentativeDataState").setHidden(true);
 
             // Create a WrappedColumn for Note & Annotations
@@ -1037,8 +1063,8 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_LIBRARY_SOURCE);
         hs.add(TABLE_PRECURSOR_LIB_INFO);
         hs.add(TABLE_ANNOTATION_SETTINGS);
-        hs.add(TABLE_RESPRESENTATIVE_DATA_STATE_RUN);
-        hs.add(TABLE_RESPRESENTATIVE_DATA_STATE);
+        hs.add(TABLE_REPRESENTATIVE_DATA_STATE_RUN);
+        hs.add(TABLE_REPRESENTATIVE_DATA_STATE);
         hs.add(TABLE_IRT_PEPTIDE);
         hs.add(TABLE_IRT_SCALE);
         hs.add(TABLE_RETENTION_TIME_PREDICTION_SETTINGS);

@@ -26,6 +26,7 @@
 <%@ page import="java.io.File" %>
 <%@ page import="org.labkey.targetedms.SkylineFileUtils" %>
 <%@ page import="org.apache.commons.io.FileUtils" %>
+<%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
@@ -37,18 +38,26 @@
     downloadAction.addParameter("runId", run.getId());
     Container c = getContainer();
     DecimalFormat decimalFormat = new DecimalFormat("#,###");
+
+    Integer peptideGroupCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunPeptideGroupCountSQL(null));
+    Integer peptideCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunPeptideCountSQL(null));
+    Integer smallMoleculeCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
+    Integer precursorCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunPrecursorCountSQL(null));
+    Integer transitionCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunTransitionCountSQL(null));
 %>
 
-<table>
+<table style="min-width: 600px;">
     <tr>
-        <th width="20%" />
         <th width="30%" />
         <th width="20%" />
         <th width="30%" />
+        <th width="20%" />
+        <th width="30%" />
+        <th width="20%" />
     </tr>
     <tr>
         <td class="labkey-form-label">Name</td>
-        <td colspan="3" nowrap>
+        <td colspan="5" nowrap>
             <%= h(run.getDescription())%>
             <% if (c.hasPermission(getUser(), UpdatePermission.class))
                { %>
@@ -63,16 +72,30 @@
     </tr>
     <tr>
         <td class="labkey-form-label">Protein Count</td>
-        <td><%= h(decimalFormat.format(run.getPeptideGroupCount())) %></td>
-
+        <td><%= h(decimalFormat.format(peptideGroupCount)) %></td>
+<%
+    if (peptideCount != null && peptideCount > 0)
+    {
+%>
         <td class="labkey-form-label">Peptide Count</td>
-        <td><%= h(decimalFormat.format(run.getPeptideCount())) %></td>
+        <td><%= h(decimalFormat.format(peptideCount)) %></td>
+<%
+    }
+
+    if (smallMoleculeCount != null && smallMoleculeCount > 0)
+    {
+%>
+        <td class="labkey-form-label">Small Molecule Count</td>
+        <td><%= h(decimalFormat.format(smallMoleculeCount)) %></td>
+<%
+    }
+%>
     </tr>
     <tr>
         <td class="labkey-form-label">Precursor Count</td>
-        <td><%= h(decimalFormat.format(run.getPrecursorCount())) %></td>
+        <td><%= h(decimalFormat.format(precursorCount)) %></td>
 
         <td class="labkey-form-label">Transition Count</td>
-        <td><%= h(decimalFormat.format(run.getTransitionCount())) %></td>
+        <td><%= h(decimalFormat.format(transitionCount)) %></td>
     </tr>
 </table>

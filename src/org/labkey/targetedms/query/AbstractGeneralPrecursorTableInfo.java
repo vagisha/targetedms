@@ -25,6 +25,7 @@ import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.LookupForeignKey;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
@@ -60,6 +61,15 @@ public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
                                                       Collections.singletonMap("id", "Id"));
         _detailsURL.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder")));
         setDetailsURL(_detailsURL);
+
+        getColumn("RepresentativeDataState").setFk(new LookupForeignKey()
+        {
+            @Override
+            public TableInfo getLookupTableInfo()
+            {
+                return getUserSchema().getTable(TargetedMSSchema.TABLE_REPRESENTATIVE_DATA_STATE);
+            }
+        });
 
         SQLFragment transitionCountSQL = new SQLFragment("(SELECT COUNT(gt.Id) FROM ");
         transitionCountSQL.append(TargetedMSManager.getTableInfoGeneralTransition(), "gt");

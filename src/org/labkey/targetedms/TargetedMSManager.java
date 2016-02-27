@@ -920,6 +920,69 @@ public class TargetedMSManager
         return run;
     }
 
+    public static SQLFragment getRunPeptideGroupCountSQL(String runAlias)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(pg.id) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sqlFragment.append(" WHERE pg.RunId = ");
+        sqlFragment.append(runAlias != null ? runAlias : "?");
+        return sqlFragment;
+    }
+
+    public static SQLFragment getRunPeptideCountSQL(String runAlias)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(p.id) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p").append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sqlFragment.append(" WHERE p.Id = gm.Id AND gm.PeptideGroupId = pg.Id AND pg.RunId = ");
+        sqlFragment.append(runAlias != null ? runAlias : "?");
+        return sqlFragment;
+    }
+
+    public static SQLFragment getRunSmallMoleculeCountSQL(String runAlias)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(m.id) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoMolecule(), "m").append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sqlFragment.append(" WHERE m.Id = gm.Id AND gm.PeptideGroupId = pg.Id AND pg.RunId = ");
+        sqlFragment.append(runAlias != null ? runAlias : "?");
+        return sqlFragment;
+    }
+
+    public static SQLFragment getRunPrecursorCountSQL(String runAlias)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(gp.id) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp").append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sqlFragment.append(" WHERE gp.GeneralMoleculeId = gm.Id AND gm.PeptideGroupId = pg.Id AND pg.RunId = ");
+        sqlFragment.append(runAlias != null ? runAlias : "?");
+        return sqlFragment;
+    }
+
+    public static SQLFragment getRunTransitionCountSQL(String runAlias)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(gt.id) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralTransition(), "gt").append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp").append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sqlFragment.append(" WHERE gt.GeneralPrecursorId = gp.Id AND gp.GeneralMoleculeId = gm.Id AND gm.PeptideGroupId = pg.Id AND pg.RunId = ");
+        sqlFragment.append(runAlias != null ? runAlias : "?");
+        return sqlFragment;
+    }
+
+    public static Integer getRunSummaryCount(TargetedMSRun run, SQLFragment sql)
+    {
+        if (run != null)
+        {
+            return new SqlSelector(TargetedMSSchema.getSchema(), sql.add(run.getId())).getObject(Integer.class);
+        }
+        return null;
+    }
+
     public static void purgeDeletedSampleFiles(int sampleFileId)
     {
         // Delete from TransitionChromInfoAnnotation (dependent of TransitionChromInfo)

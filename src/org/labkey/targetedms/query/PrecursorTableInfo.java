@@ -23,6 +23,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
+import org.labkey.api.query.QueryForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -67,8 +68,7 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
         });
         addColumn(peptideId);
 
-        // TODO enable or delete?
-        //getColumn("IsotopeLabelId").setFk(new QueryForeignKey(getUserSchema(), null, TargetedMSSchema.TABLE_ISOTOPE_LABEL, "Id", null));
+        getColumn("IsotopeLabelId").setFk(new QueryForeignKey(getUserSchema(), null, TargetedMSSchema.TABLE_ISOTOPE_LABEL, "Id", null));
 
         WrappedColumn modSeqCol = new WrappedColumn(getColumn("ModifiedSequence"), ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME);
         modSeqCol.setLabel("Precursor");
