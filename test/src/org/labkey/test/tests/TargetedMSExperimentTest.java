@@ -17,6 +17,7 @@ package org.labkey.test.tests;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
@@ -49,6 +50,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         verifyModificationSearch();
         importData(SKY_FILE2, 2);
         verifyProteinSearch();
+        verifyQueries();
     }
 
     @LogMethod
@@ -222,5 +224,120 @@ public class TargetedMSExperimentTest extends TargetedMSTest
                 "GVNLPGTDVDLPALSEK", "TANDVLTIR", "GDLGIEIPAPEVLAVQK", "EPVSDWTDDVEAR");
         click(Locator.tag("img").withAttributeContaining("src", "plus.gif"));
         assertTextPresent("I from 71787-73289, Verified ORF, \"Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cyc...");
+    }
+
+    private void verifyQueries()
+    {
+        // As part of 16.1, the targetedms schema was updated to support both proteomics and small molecule data import
+        // into separate tables (i.e. general table plus specific tables for each of the two types).
+        // This test is to check backwards compatibility for SQL queries on the schema prior to 16.1
+        // Note: this expects two runs to be imported: SKY_FILE and SKY_FILE2.
+
+        // Test query against targetedms.peptide
+        String querySql = "SELECT \n" +
+                "Id, PeptideGroupId, Sequence, StartIndex, EndIndex, PreviousAa, NextAa, CalcNeutralMass, \n" +
+                "NumMissedCleavages, Rank, RtCalculatorScore, PredictedRetentionTime, \n" +
+                "AvgMeasuredRetentionTime, Decoy, Note, PeptideModifiedSequence, StandardType,\n" +
+                "ExplicitRetentionTime, Annotations NoteAnnotations, \n" +
+                "ModifiedPeptideDisplayColumn, RepresentivePrecursorCount,\n" +
+                "PeptideGroupId.RunId.Folder.Path,\n" +
+                "PeptideGroupId.RunId.File,\n" +
+                "PeptideGroupId.Label\n" +
+                "FROM peptide";
+        createQuery(PageFlowUtil.encode(getProjectName()), "query_peptide", "targetedms", querySql, null, false);
+        navigateToQuery("targetedms", "query_peptide");
+        waitForElement(Locator.paginationText(45));
+        DataRegionTable query = new DataRegionTable("query", this);
+        query.setFilter("Sequence", "Equals", "TNNPETLVALR");
+        assertEquals(1, query.getDataRowCount());
+        assertEquals("YAL038W", query.getDataAsText(0, "Protein / Label"));
+        assertElementPresent(Locator.linkWithText("YAL038W"));
+        assertEquals("TNNPETLVALR", query.getDataAsText(0, "Modified Peptide"));
+        assertEquals("K", query.getDataAsText(0, "Next Aa"));
+        assertEquals(SKY_FILE, query.getDataAsText(0, "File"));
+        query.clearFilter("Sequence");
+
+        // Test query against targetedms.precursor
+        querySql = "SELECT \n" +
+                "Id, PeptideId, IsotopeLabelId,\n" +
+                "Mz, Charge, NeutralMass, ModifiedSequence, CollisionEnergy, DeclusteringPotential, Decoy,\n" +
+                "DecoyMassShift, Note, Modified, RepresentativeDataState, ExplicitCollisionEnergy,\n" +
+                "ExplicitDriftTimeMsec, ExplicitDriftTimeHighEnergyOffsetMsec, Annotations, TransitionCount,\n" +
+                "ModifiedPrecursorDisplayColumn, NoteAnnotations, \n" +
+                "PeptideId.PeptideGroupId.Label, \n" +
+                "PeptideId.PeptideGroupId.Description,\n" +
+                "PeptideId.PeptideGroupId.NoteAnnotations AS PeptideGroupIdNoteAnnotations,\n" +
+                "PeptideId.ModifiedPeptideDisplayColumn, \n" +
+                "PeptideId.NoteAnnotations AS PeptideIdNoteAnnotations,\n" +
+                "PeptideId.NumMissedCleavages,\n" +
+                "PeptideId.CalcNeutralMass,\n" +
+                "PeptideId.Rank,\n" +
+                "IsotopeLabelId.Name\n" +
+                "FROM precursor";
+        createQuery(PageFlowUtil.encode(getProjectName()), "query_precursor", "targetedms", querySql, null, false);
+        navigateToQuery("targetedms", "query_precursor");
+        waitForElement(Locator.paginationText(89));
+        query = new DataRegionTable("query", this);
+        query.setFilter("ModifiedSequence", "Equals", "LTSLNVVAGSDLR[+10]");
+        assertEquals(1, query.getDataRowCount());
+        assertEquals("677.8818", query.getDataAsText(0, "Q1 m/z"));
+        assertEquals("YAL038W", query.getDataAsText(0, "Protein / Label"));
+        assertElementPresent(Locator.linkWithText("YAL038W"));
+        assertEquals("LTSLNVVAGSDLR", query.getDataAsText(0, "Peptide"));
+        assertEquals("1343.7408", query.getDataAsText(0, "Peptide Neutral Mass"));
+        query.clearFilter("ModifiedSequence");
+
+        // Test query against targetedms.transition
+        querySql = "SELECT \n" +
+                "Id, PrecursorId, Mz, Charge, NeutralMass, NeutralLossMass, FragmentType, FragmentOrdinal,\n" +
+                "CleavageAa, LibraryRank, LibraryIntensity, IsotopeDistIndex, IsotopeDistRank,\n" +
+                "IsotopeDistProportion, Decoy, DecoyMassShift, Note, MassIndex, MeasuredIonName,\n" +
+                "Annotations, Fragment, NoteAnnotations,\n" +
+                "PrecursorId.PeptideId.PeptideGroupId.Label,\n" +
+                "PrecursorId.PeptideId.PeptideGroupId.Description,\n" +
+                "PrecursorId.PeptideId.PeptideGroupId.Annotations AS PeptideGroupIdAnnotations,\n" +
+                "PrecursorId.PeptideId.ModifiedPeptideDisplayColumn,\n" +
+                "PrecursorId.PeptideId.Annotations AS PeptideIdAnnotations,\n" +
+                "PrecursorId.PeptideId.NumMissedCleavages,\n" +
+                "PrecursorId.PeptideId.CalcNeutralMass,\n" +
+                "PrecursorId.PeptideId.Rank,\n" +
+                "PrecursorId.ModifiedPrecursorDisplayColumn,\n" +
+                "PrecursorId.Annotations AS PrecursorIdAnnotations,\n" +
+                "PrecursorId.IsotopeLabelId.Name,\n" +
+                "PrecursorId.NeutralMass AS PrecursorIdNeutralMass,\n" +
+                "PrecursorId.Mz AS PrecursorIdMz,\n" +
+                "PrecursorId.Charge AS PrecursorIdCharge\n" +
+                "FROM transition";
+        createQuery(PageFlowUtil.encode(getProjectName()), "query_transition", "targetedms", querySql, null, false);
+        navigateToQuery("targetedms", "query_transition");
+        waitForElement(Locator.paginationText(1, 100, 299));
+        query = new DataRegionTable("query", this);
+        query.setFilter("PrecursorId", "Equals", "LTSLNVVAGSDLR[+10]");
+        assertEquals(3, query.getDataRowCount());
+        assertEquals("677.8818", query.getDataAsText(0, "Precursor Id Mz"));
+        assertEquals("YAL038W", query.getDataAsText(0, "Protein / Label"));
+        assertElementPresent(Locator.linkWithText("YAL038W"));
+        assertEquals("LTSLNVVAGSDLR", query.getDataAsText(0, "Peptide"));
+        assertEquals("1343.7408", query.getDataAsText(0, "Peptide Neutral Mass"));
+        query.clearFilter("PrecursorId");
+
+        // Test query against targetedms.librarydocprecursor
+        querySql = "SELECT GeneralMoleculeId.Id AS Id1, \n" +
+                "GeneralMoleculeId.Sequence AS Sequence1,\n" +
+                "GeneralMoleculeId.PeptideGroupId.Label AS Protein1,\n" +
+                "PeptideId.Id AS Id2,\n" +
+                "PeptideId.Sequence AS Sequence2,\n" +
+                "PeptideId.PeptideGroupId.Label AS Protein2\n" +
+                "FROM librarydocprecursor";
+        createQuery(PageFlowUtil.encode(getProjectName()), "query_librarydocprecursor", "targetedms", querySql, null, false);
+        navigateToQuery("targetedms", "query_librarydocprecursor");
+        waitForElement(Locator.paginationText(89));
+        query = new DataRegionTable("query", this);
+        query.setFilter("Protein1", "Equals", "YAL038W_renamed");
+        assertEquals(1, query.getDataRowCount());
+        assertEquals(query.getDataAsText(0, "Id1"), query.getDataAsText(0, "Id2"));
+        assertEquals(query.getDataAsText(0, "Sequence1"), query.getDataAsText(0, "Sequence1"));
+        assertEquals(query.getDataAsText(0, "Protein1"), query.getDataAsText(0, "Protein2"));
+        query.clearFilter("Protein1");
     }
 }

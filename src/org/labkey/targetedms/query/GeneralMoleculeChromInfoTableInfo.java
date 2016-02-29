@@ -3,8 +3,11 @@ package org.labkey.targetedms.query;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSSchema;
+
+import java.util.ArrayList;
 
 public class GeneralMoleculeChromInfoTableInfo extends TargetedMSTable
 {
@@ -33,17 +36,13 @@ public class GeneralMoleculeChromInfoTableInfo extends TargetedMSTable
             }
         });
         addColumn(peptideId);
-        removeColumn(generalMoleculeId);
 
-//        //only display a subset of the columns by default
-//        ArrayList<FieldKey> visibleColumns = new ArrayList<>();
-//
-//        visibleColumns.add(FieldKey.fromParts("PeptideId"));
-//        visibleColumns.add(FieldKey.fromParts("SampleFileId"));
-//        visibleColumns.add(FieldKey.fromParts("RetentionTime"));
-//        visibleColumns.add(FieldKey.fromParts("PeakCountRatio"));
-//        visibleColumns.add(FieldKey.fromParts("SampleFileId", "ReplicateId", "RunId"));
-//
-//        setDefaultVisibleColumns(visibleColumns);
+        //only display a subset of the columns by default
+        ArrayList<FieldKey> visibleColumns = new ArrayList<>();
+        visibleColumns.add(FieldKey.fromParts("PeptideId"));
+        visibleColumns.add(FieldKey.fromParts("SampleFileId"));
+        visibleColumns.add(FieldKey.fromParts("PeakCountRatio"));
+        visibleColumns.add(FieldKey.fromParts("RetentionTime"));
+        setDefaultVisibleColumns(visibleColumns);
     }
 }

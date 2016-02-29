@@ -53,7 +53,7 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
             @Override
             public TableInfo getLookupTableInfo()
             {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE); // TODO should this be TABLE_GENERAL_MOLECULE?
+                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
             }
         });
 

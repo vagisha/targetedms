@@ -56,7 +56,7 @@ public class DocTransitionsTableInfo extends JoinedTargetedMSTable
             @Override
             public TableInfo getLookupTableInfo()
             {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR); // TODO should this be TABLE_GENERAL_PRECURSOR
+                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
             }
         });
 

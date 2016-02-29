@@ -125,9 +125,9 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y g:i A', width: 160, menuDisabled: true, sortable: false},
             {text: 'Imported By', dataIndex: 'CreatedBy/DisplayName', width: 100, menuDisabled: true, sortable: false},
             {text: 'Note', dataIndex: 'Flag/Comment', width: 185, menuDisabled: true, sortable: false, renderer: 'htmlEncode'},
-            {text: 'Proteins', dataIndex: 'File/PeptideGroupCount', width: 67, menuDisabled: true, sortable: false, align: 'right'},
-            {text: 'Precursors', dataIndex: 'File/PrecursorCount', width: 85, menuDisabled: true, sortable: false, align: 'right'},
-            {text: 'Transitions', dataIndex: 'File/TransitionCount', width: 87, menuDisabled: true, sortable: false, align: 'right'},
+            {text: 'Proteins', dataIndex: 'File/Proteins', width: 67, menuDisabled: true, sortable: false, align: 'right'},
+            {text: 'Precursors', dataIndex: 'File/Precursors', width: 85, menuDisabled: true, sortable: false, align: 'right'},
+            {text: 'Transitions', dataIndex: 'File/Transitions', width: 87, menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Replaced By', dataIndex: 'ReplacedByRun', hidden: true},
             {text: 'Replaces', dataIndex: 'ReplacesRun', hidden: true}
         ];
