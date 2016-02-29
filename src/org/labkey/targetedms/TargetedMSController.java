@@ -57,7 +57,6 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DataRegionSelection;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
@@ -161,8 +160,13 @@ import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.view.ChromatogramsDataRegion;
 import org.labkey.targetedms.view.DocumentPrecursorsView;
 import org.labkey.targetedms.view.DocumentTransitionsView;
+import org.labkey.targetedms.view.DocumentView;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 import org.labkey.targetedms.view.PeptidePrecursorChromatogramsView;
+import org.labkey.targetedms.view.PeptidePrecursorsView;
+import org.labkey.targetedms.view.PeptideTransitionsView;
+import org.labkey.targetedms.view.SmallMoleculePrecursorsView;
+import org.labkey.targetedms.view.SmallMoleculeTransitionsView;
 import org.labkey.targetedms.view.TargetedMsRunListView;
 import org.labkey.targetedms.view.expannotations.ExperimentAnnotationsFormDataRegion;
 import org.labkey.targetedms.view.expannotations.TargetedMSExperimentWebPart;
@@ -209,9 +213,9 @@ import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
 public class TargetedMSController extends SpringActionController
 {
     private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
-    
+
     private static final DefaultActionResolver _actionResolver = new DefaultActionResolver(TargetedMSController.class,
-                                                                                           PublishTargetedMSExperimentsController.getActions());
+            PublishTargetedMSExperimentsController.getActions());
     public static final String CONFIGURE_TARGETED_MS_FOLDER = "Configure Panorama Folder";
 
     public TargetedMSController()
@@ -825,7 +829,7 @@ public class TargetedMSController extends SpringActionController
             tableInfo.addPrecursorFilter();
 
             ChromatogramsDataRegion dRegion = new ChromatogramsDataRegion(getViewContext(), tableInfo,
-                                                                   ChromatogramsDataRegion.PRECURSOR_CHROM_DATA_REGION);
+                    ChromatogramsDataRegion.PRECURSOR_CHROM_DATA_REGION);
             GridView gridView = new GridView(dRegion, errors);
             gridView.setFrame(WebPartView.FrameType.PORTAL);
             gridView.setTitle("Chromatograms");
@@ -925,7 +929,7 @@ public class TargetedMSController extends SpringActionController
             tableInfo.addPeptideFilter();
 
             ChromatogramsDataRegion dRegion = new ChromatogramsDataRegion(getViewContext(), tableInfo,
-                                                              ChromatogramsDataRegion.PEPTIDE_CHROM_DATA_REGION);
+                    ChromatogramsDataRegion.PEPTIDE_CHROM_DATA_REGION);
             GridView gridView = new GridView(dRegion, errors);
             gridView.setFrame(WebPartView.FrameType.PORTAL);
             gridView.setTitle("Chromatograms");
@@ -972,7 +976,7 @@ public class TargetedMSController extends SpringActionController
 
         public String getModifiedPeptideHtml()
         {
-           return new ModifiedPeptideHtmlMaker().getPrecursorHtml(getPrecursor(), getRun().getId(), _targetedMSSchema);
+            return new ModifiedPeptideHtmlMaker().getPrecursorHtml(getPrecursor(), getRun().getId(), _targetedMSSchema);
         }
 
         public PeptideSettings.IsotopeLabel getIsotopeLabel()
@@ -992,7 +996,7 @@ public class TargetedMSController extends SpringActionController
 
         public TargetedMSSchema getTargetedMSSchema()
         {
-           return _targetedMSSchema;
+            return _targetedMSSchema;
         }
     }
 
@@ -1046,7 +1050,7 @@ public class TargetedMSController extends SpringActionController
         }
         public void setReplicatesFilter(List<Replicate> replciates)
         {
-          _replicatesFilter = replciates;
+            _replicatesFilter = replciates;
         }
 
         public List<String> getReplicateAnnotationNameList()
@@ -1315,7 +1319,7 @@ public class TargetedMSController extends SpringActionController
             List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(_run.getId());
 
             PeptideChromatogramsViewBean bean = new PeptideChromatogramsViewBean(
-                new ActionURL(ShowPeptideAction.class, getContainer()).getLocalURIString());
+                    new ActionURL(ShowPeptideAction.class, getContainer()).getLocalURIString());
             bean.setForm(form);
             bean.setPeptide(peptide);
             bean.setPeptideGroup(pepGroup);
@@ -1351,7 +1355,7 @@ public class TargetedMSController extends SpringActionController
             chromatogramsBox.setFrame(WebPartView.FrameType.PORTAL);
             vbox.addView(chromatogramsBox);
 
-             // Summary charts for the peptide
+            // Summary charts for the peptide
             SummaryChartBean summaryChartBean = new SummaryChartBean();
             summaryChartBean.setPeptideId(peptideId);
             summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
@@ -1529,14 +1533,14 @@ public class TargetedMSController extends SpringActionController
             }
 
             JFreeChart chart = new ComparisonChartMaker().makePeakAreasChart(
-                                                                 form.getReplicateId(),
-                                                                 peptideGrp,
-                                                                 peptide,
-                                                                 precursor,
-                                                                 form.getGroupByReplicateAnnotName(),
-                                                                 form.getFilterByReplicateAnnotName(),
-                                                                 form.isCvValues(),
-                                                                 form.isLogValues(), getUser(), getContainer());
+                    form.getReplicateId(),
+                    peptideGrp,
+                    peptide,
+                    precursor,
+                    form.getGroupByReplicateAnnotName(),
+                    form.getFilterByReplicateAnnotName(),
+                    form.isCvValues(),
+                    form.isLogValues(), getUser(), getContainer());
             if (null == chart)
             {
                 chart = createEmptyChart();
@@ -1598,7 +1602,7 @@ public class TargetedMSController extends SpringActionController
                     }
                 }
             }
-             if(form.getValue() == null)
+            if(form.getValue() == null)
                 form.setValue("All");
             JFreeChart chart = new ComparisonChartMaker().makeRetentionTimesChart(
                     form.getReplicateId(),
@@ -1958,9 +1962,10 @@ public class TargetedMSController extends SpringActionController
     // Action to display a document's transition or precursor list
     // ------------------------------------------------------------------------
     @RequiresPermission(ReadPermission.class)
-    public abstract class ShowRunDetailsAction <VIEWTYPE extends NestableQueryView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
+    public abstract class ShowRunDetailsAction <VIEWTYPE extends DocumentView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
+        protected String _dataRegion;
 
         public ShowRunDetailsAction()
         {
@@ -1976,6 +1981,7 @@ public class TargetedMSController extends SpringActionController
             //ensure that the experiment run is valid and exists within the current container
             _run = validateRun(form.getId());
 
+//            getRunFileType(); //identify whether the run is associate with the proteomics document or non-proteomics document
             VBox vBox = new VBox();
 
             RunDetailsBean bean = new RunDetailsBean();
@@ -1996,11 +2002,30 @@ public class TargetedMSController extends SpringActionController
                 vBox.addView(runMethodChain);
             }
 
-            VIEWTYPE view = createInitializedQueryView(form, errors, false, getDataRegionName());
-            vBox.addView(view);
 
-            NavTree menu = getViewSwitcherMenu();
-            view.setNavMenu(menu);
+            Integer peptideCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunPeptideCountSQL(null));
+            Integer moleculeCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
+
+            if(peptideCount != null && peptideCount > 0)
+            {
+                VIEWTYPE view = createInitializedQueryView(form, errors, false, getDataRegionNamePeptide());
+                vBox.addView(view);
+
+                _dataRegion = view.getDataRegionName();
+                NavTree menu = getViewSwitcherMenu();
+                view.setNavMenu(menu);
+            }
+
+            if(moleculeCount != null &&  moleculeCount > 0)
+            {
+                VIEWTYPE view2 = createInitializedQueryView(form, errors, false, getDataRegionNameSmallMolecule());
+                vBox.addView(view2);
+
+                _dataRegion = view2.getDataRegionName();
+                NavTree menu2 = getViewSwitcherMenu();
+                view2.setNavMenu(menu2);
+            }
+
             return vBox;
         }
 
@@ -2019,7 +2044,8 @@ public class TargetedMSController extends SpringActionController
             return root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
         }
 
-        public abstract String getDataRegionName();
+        public abstract String getDataRegionNamePeptide();
+        public abstract String getDataRegionNameSmallMolecule();
 
         public abstract NavTree getViewSwitcherMenu();
 
@@ -2031,18 +2057,35 @@ public class TargetedMSController extends SpringActionController
         @Override
         protected DocumentTransitionsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
         {
-            DocumentTransitionsView view = new DocumentTransitionsView(getViewContext(),
-                                                                       new TargetedMSSchema(getUser(), getContainer()),
-                                                                       form.getId(),
-                                                                       forExport);
+            DocumentTransitionsView view;
+
+            if(dataRegion.equals(PeptideTransitionsView.DATAREGION_NAME))
+            {
+                view = new PeptideTransitionsView(getViewContext(),
+                        new TargetedMSSchema(getUser(), getContainer()), TargetedMSSchema.TABLE_TRANSITION,
+                        form.getId(), forExport);
+            }
+            else
+            {
+                view = new SmallMoleculeTransitionsView(getViewContext(),
+                        new TargetedMSSchema(getUser(), getContainer()), TargetedMSSchema.TABLE_MOLECULE_TRANSITION,
+                        form.getId(), forExport);
+            }
+
             view.setShowExportButtons(true);
             return view;
         }
 
         @Override
-        public String getDataRegionName()
+        public String getDataRegionNamePeptide()
         {
-            return DocumentTransitionsView.DATAREGION_NAME;
+            return PeptideTransitionsView.DATAREGION_NAME;
+        }
+
+        @Override
+        public String getDataRegionNameSmallMolecule()
+        {
+            return SmallMoleculeTransitionsView.DATAREGION_NAME;
         }
 
         @Override
@@ -2052,7 +2095,11 @@ public class TargetedMSController extends SpringActionController
             ActionURL url = new ActionURL(ShowPrecursorListAction.class, getContainer());
             url.addParameter("id", _run.getId());
 
-            menu.addChild(DocumentPrecursorsView.TITLE, url);
+            if(SmallMoleculeTransitionsView.DATAREGION_NAME.equals(_dataRegion))
+                menu.addChild(SmallMoleculePrecursorsView.TITLE, url);
+            else
+                menu.addChild(PeptidePrecursorsView.TITLE, url);
+
             return menu;
         }
     }
@@ -2074,33 +2121,55 @@ public class TargetedMSController extends SpringActionController
         @Override
         protected DocumentPrecursorsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
         {
-            FolderType folderType = TargetedMSManager.getFolderType(getContainer());
-            String queryName;
-            if(folderType == FolderType.LibraryProtein || folderType == FolderType.Library)
+            DocumentPrecursorsView view;
+            if(PeptidePrecursorsView.DATAREGION_NAME.equals(dataRegion))
             {
-               queryName = TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR;
+                FolderType folderType = TargetedMSManager.getFolderType(getContainer());
+                String queryName;
+                if (folderType == FolderType.LibraryProtein || folderType == FolderType.Library)
+                {
+                    queryName = TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR;
+                }
+                else
+                {
+                    queryName = TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR;
+                }
+                view = new PeptidePrecursorsView(getViewContext(),
+                        new TargetedMSSchema(getUser(), getContainer()),
+                        queryName,
+                        form.getId(),
+                        forExport)
+                {
+                };
             }
             else
             {
-                queryName = TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR;
+                view = new SmallMoleculePrecursorsView(getViewContext(),
+                        new TargetedMSSchema(getUser(), getContainer()),
+                        TargetedMSSchema.TABLE_MOLECULE_PRECURSOR,
+                        form.getId(),
+                        forExport);
             }
-            DocumentPrecursorsView view = new DocumentPrecursorsView(getViewContext(),
-                                                   new TargetedMSSchema(getUser(), getContainer()),
-                                                   queryName,
-                                                   form.getId(),
-                                                   forExport);
+
             view.setShowExportButtons(true);
             view.setShowDetailsColumn(false);
             VBox vbox = new VBox(view);
 
             view.setButtonBarPosition(DataRegion.ButtonBarPosition.BOTH);
+
             return view;
         }
 
         @Override
-        public String getDataRegionName()
+        public String getDataRegionNamePeptide()
         {
-            return DocumentPrecursorsView.DATAREGION_NAME;
+            return PeptidePrecursorsView.DATAREGION_NAME;
+        }
+
+        @Override
+        public String getDataRegionNameSmallMolecule()
+        {
+            return SmallMoleculePrecursorsView.DATAREGION_NAME;
         }
 
         @Override
@@ -2110,7 +2179,11 @@ public class TargetedMSController extends SpringActionController
             ActionURL url = new ActionURL(ShowTransitionListAction.class, getContainer());
             url.addParameter("id", _run.getId());
 
-            menu.addChild(DocumentTransitionsView.TITLE, url);
+            if(SmallMoleculePrecursorsView.DATAREGION_NAME.equals(_dataRegion))
+                menu.addChild(SmallMoleculeTransitionsView.TITLE, url);
+            else
+                menu.addChild(PeptideTransitionsView.TITLE, url);
+
             return menu;
         }
     }
@@ -2198,10 +2271,10 @@ public class TargetedMSController extends SpringActionController
         {
             if(redirect)
             {
-            ActionURL url = getViewContext().getActionURL().clone();
-            url.setContainer(run.getContainer());
-            throw new RedirectException(url);
-        }
+                ActionURL url = getViewContext().getActionURL().clone();
+                url.setContainer(run.getContainer());
+                throw new RedirectException(url);
+            }
             else
             {
                 throw new NotFoundException("Run " + runId +" does not exist in folder " + c.getPath());
@@ -2312,8 +2385,8 @@ public class TargetedMSController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             return new ShowPrecursorListAction(getViewContext()).appendNavTrail(root, _run)
-                                                .addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()))
-                                                .addChild(_proteinLabel);
+                    .addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()))
+                    .addChild(_proteinLabel);
         }
     }
 
@@ -2882,7 +2955,7 @@ public class TargetedMSController extends SpringActionController
             if(!resolveProtein && !resolvePrecursor)
             {
                 errors.reject(ERROR_MSG, resolveConflictForm.getConflictLevel() + " is an invalid value for 'conflictLevel' parameter."+
-                              " Valid values are 'peptide' or 'protein'.");
+                        " Valid values are 'peptide' or 'protein'.");
 
                 return false;
             }
@@ -3662,15 +3735,15 @@ public class TargetedMSController extends SpringActionController
             width = dataset.getColumnCount() * 50 + 50;
 
             JFreeChart chart = ChartFactory.createBarChart(
-                        null,                     // chart title
-                        null,                     // domain axis label
-                        "# added",                // range axis label
-                        dataset,                  // data
-                        PlotOrientation.VERTICAL, // orientation
-                        true,                     // include legend
-                        false,                     // tooltips?
-                        false                     // URLs?
-                    );
+                    null,                     // chart title
+                    null,                     // domain axis label
+                    "# added",                // range axis label
+                    dataset,                  // data
+                    PlotOrientation.VERTICAL, // orientation
+                    true,                     // include legend
+                    false,                     // tooltips?
+                    false                     // URLs?
+            );
             chart.setBackgroundPaint(new Color(1,1,1,1));
 
             response.setContentType("image/png");
@@ -3709,10 +3782,10 @@ public class TargetedMSController extends SpringActionController
             // of all the peptides of representative proteins.
             if(folderType == FolderType.LibraryProtein)
                 sqlFragment.append("AND pg.RepresentativeDataState = ? ");
-            // Precursors are marked a representative in "LibraryPeptide" folder type.  Get the peptide Ids
-            // of all the representative precursors.
+                // Precursors are marked a representative in "LibraryPeptide" folder type.  Get the peptide Ids
+                // of all the representative precursors.
             else
-               sqlFragment.append("AND gp.RepresentativeDataState = ? ");
+                sqlFragment.append("AND gp.RepresentativeDataState = ? ");
             sqlFragment.append(") AS pepCount ");
             sqlFragment.append("GROUP BY pepCount.RunDate) AS x FULL OUTER JOIN ");
             sqlFragment.append("(SELECT protCount.RunDate, COUNT(DISTINCT protCount.Id) AS ProteinCount ");
@@ -4528,14 +4601,6 @@ public class TargetedMSController extends SpringActionController
             {
                 errors.reject(ERROR_MSG, "You do not have permissions to delete experiments in folder " + container.getPath());
             }
-
-            // If this experiment has already been published it can only be deleted by folder admins.
-            List<Journal> journals = JournalManager.getJournalsForExperiment(experimentAnnotationId);
-            if(journals.size() > 0 && !container.hasPermission(user, AdminPermission.class))
-            {
-                errors.reject(ERROR_MSG, "The experiment \"" + exp.getTitle() + "\" has already been published.  You do not have permissions to delete it.");
-            }
-
             experimentAnnotations[i++] = exp;
         }
 

@@ -81,4 +81,13 @@ public class Molecule extends GeneralMolecule
     {
         _moleculePrecursorsList = moleculePrecursorsList;
     }
+
+    @Override
+    public String getPrecursorKey(GeneralMolecule gm, GeneralPrecursor gp)
+    {
+        StringBuilder key = new StringBuilder();
+        key.append(((Molecule) gm).getMassMonoisotopic());
+        key.append("_").append(((MoleculePrecursor)gp).getCharge());
+        return key.toString();
+    }
 }

@@ -113,6 +113,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String CUSTOM_ION_NAME = "custom_ion_name";
     private static final String MASS_MONOISOTOPIC = "mass_monoisotopic";
     private static final String MASS_AVERAGE = "mass_average";
+    private static final String CHARGE = "charge" ;
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
     public static final double MAX_SUPPORTED_VERSION = 2.62;
@@ -1063,6 +1064,7 @@ public class SkylineDocumentParser implements AutoCloseable
     public Molecule nextMolecule() throws XMLStreamException, DataFormatException, IOException
     {
         Molecule molecule = new Molecule();
+        readGeneralMolecule(_reader, molecule, true);
 
         // read molecule-specific attributes
         molecule.setIonFormula(_reader.getAttributeValue(null, ION_FORMULA));
@@ -1082,7 +1084,6 @@ public class SkylineDocumentParser implements AutoCloseable
             if (XmlUtil.isStartElement(_reader, evtType, PRECURSOR))
                 moleculePrecursorList.add(readMoleculePrecursor(_reader));
         }
-
         return molecule;
     }
 
@@ -1354,6 +1355,10 @@ public class SkylineDocumentParser implements AutoCloseable
         if(null != customIonName)
             moleculePrecursor.setCustomIonName(customIonName);
 
+        String charge = reader.getAttributeValue(null, CHARGE);
+        if(null != charge)
+            moleculePrecursor.setCharge(Integer.parseInt(charge));
+
         while(reader.hasNext()) {
 
             int evtType = reader.next();
@@ -1378,7 +1383,7 @@ public class SkylineDocumentParser implements AutoCloseable
         List<PrecursorChromInfo> chromInfoList = new ArrayList<>();
         precursor.setChromInfoList(chromInfoList);
 
-        String charge = reader.getAttributeValue(null, "charge");
+        String charge = reader.getAttributeValue(null, CHARGE);
         if(null != charge)
             precursor.setCharge(Integer.parseInt(charge));
 

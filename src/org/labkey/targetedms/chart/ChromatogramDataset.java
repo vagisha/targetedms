@@ -186,8 +186,8 @@ public abstract class ChromatogramDataset
 
     static class PeptideDataset extends ChromatogramDataset
     {
-        private Container _container;
-        private User _user;
+        protected Container _container;
+        protected User _user;
         private GeneralMoleculeChromInfo _pepChromInfo;
         private final int _peptideId;
         private final int _sampleFileId;

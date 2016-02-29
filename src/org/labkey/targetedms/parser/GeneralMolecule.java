@@ -1,6 +1,6 @@
 package org.labkey.targetedms.parser;
 
-public class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnnotation>
+public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnnotation>
 {
     protected int _peptideGroupId;
     protected Double _rtCalculatorScore;
@@ -67,4 +67,5 @@ public class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnnotation>
         _explicitRetentionTime = explicitRetentionTime;
     }
 
+    public abstract String getPrecursorKey(GeneralMolecule gm, GeneralPrecursor gp);
 }

@@ -15,6 +15,7 @@
 
 package org.labkey.targetedms.view;
 
+import org.labkey.api.data.NestableQueryView;
 import org.labkey.api.data.Sort;
 import org.labkey.api.query.QueryNestingOption;
 import org.labkey.api.view.ViewContext;
@@ -23,25 +24,17 @@ import org.labkey.targetedms.TargetedMSSchema;
 import java.sql.SQLException;
 
 /**
- * User: vsharma
- * Date: 4/17/12
- * Time: 10:52 PM
+ * User: binalpatel
+ * Date: 2/27/2016
  */
-public abstract class DocumentTransitionsView extends DocumentView
-{
-    protected TargetedMSSchema _targetedMsSchema = null;
-    protected final int _runId;
-    protected ViewContext _context;
-    public String TITLE;
 
-    public DocumentTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId,
-                                   boolean forExport, QueryNestingOption queryNestingOption, String dataRegionName, String title) throws SQLException
+public abstract class DocumentView extends NestableQueryView
+{
+
+    public DocumentView(ViewContext ctx, TargetedMSSchema schema, String queryName, boolean forExport,
+                        QueryNestingOption nestingOption, String dataRegionName) throws SQLException
     {
-        super(ctx, schema, queryName, !forExport, queryNestingOption, dataRegionName);
-        _targetedMsSchema = schema;
-        _runId = runId;
-        _context = ctx;
-        TITLE = title;
+        super(schema, schema.getSettings(ctx, dataRegionName, queryName), true, !forExport, nestingOption);
     }
 
     protected Sort getBaseSort()

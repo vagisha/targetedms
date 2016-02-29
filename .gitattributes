@@ -261,6 +261,7 @@ src/org/labkey/targetedms/pipeline/TargetedMSImportPipelineJob.java -text
 src/org/labkey/targetedms/pipeline/TargetedMSPipelineProvider.java -text
 src/org/labkey/targetedms/query/AbstractGeneralMoleculeTableInfo.java -text
 src/org/labkey/targetedms/query/AbstractGeneralPrecursorTableInfo.java -text
+src/org/labkey/targetedms/query/AbstractGeneralTransitionTableInfo.java -text
 src/org/labkey/targetedms/query/AnnotatedTargetedMSTable.java -text
 src/org/labkey/targetedms/query/ChromatogramDisplayColumnFactory.java -text
 src/org/labkey/targetedms/query/ChromatogramGridQuerySettings.java -text
@@ -281,6 +282,7 @@ src/org/labkey/targetedms/query/ModificationManager.java -text
 src/org/labkey/targetedms/query/ModifiedSequenceDisplayColumn.java -text
 src/org/labkey/targetedms/query/MoleculePrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/MoleculeTableInfo.java -text
+src/org/labkey/targetedms/query/MoleculeTransitionsTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideGroupManager.java -text
 src/org/labkey/targetedms/query/PeptideIsotopeModificationTableInfo.java -text
@@ -308,13 +310,18 @@ src/org/labkey/targetedms/view/AnnotationUIDisplayColumn.java -text
 src/org/labkey/targetedms/view/ChromatogramsDataRegion.java -text
 src/org/labkey/targetedms/view/DocumentPrecursorsView.java -text
 src/org/labkey/targetedms/view/DocumentTransitionsView.java -text
+src/org/labkey/targetedms/view/DocumentView.java -text
 src/org/labkey/targetedms/view/IconFactory.java -text
 src/org/labkey/targetedms/view/LibraryPrecursorViewWebPart.java -text
 src/org/labkey/targetedms/view/ModifiedPeptideHtmlMaker.java -text
 src/org/labkey/targetedms/view/PeptideGroupViewWebPart.java -text
 src/org/labkey/targetedms/view/PeptidePrecursorChromatogramsView.java -text
+src/org/labkey/targetedms/view/PeptidePrecursorsView.java -text
+src/org/labkey/targetedms/view/PeptideTransitionsView.java -text
 src/org/labkey/targetedms/view/PeptideViewWebPart.java -text
 src/org/labkey/targetedms/view/PrecursorHtmlMaker.java -text
+src/org/labkey/targetedms/view/SmallMoleculePrecursorsView.java -text
+src/org/labkey/targetedms/view/SmallMoleculeTransitionsView.java -text
 src/org/labkey/targetedms/view/TargetedMSRunsWebPartView.java -text
 src/org/labkey/targetedms/view/TargetedMsRunListView.java -text
 src/org/labkey/targetedms/view/TransitionPeptideSearchViewProvider.java -text

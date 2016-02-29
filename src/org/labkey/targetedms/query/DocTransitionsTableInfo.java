@@ -20,11 +20,9 @@ import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
@@ -35,49 +33,22 @@ import java.util.ArrayList;
  * User: vsharma
  * Date: Apr 13, 2012
  */
-public class DocTransitionsTableInfo extends JoinedTargetedMSTable
+public class DocTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
 {
     public DocTransitionsTableInfo(final TargetedMSSchema schema)
     {
-
-        super(TargetedMSManager.getTableInfoGeneralTransition(), TargetedMSManager.getTableInfoTransition(),
-                schema, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK.getSQL(),
-                TargetedMSManager.getTableInfoTransitionAnnotation(),
-                "Id", "Annotations");
+        super(schema, TargetedMSManager.getTableInfoTransition());
 
         setName(TargetedMSSchema.TABLE_TRANSITION);
+        setDescription("Contains a row for each transition loaded in a targeted MS run.");
 
-        // set the description based on the specialized TableInfo (note the title column in this case comes from GeneralTransition)
-        setDescription(TargetedMSManager.getTableInfoTransition().getDescription());
-
-        ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
-        precursorCol.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
-            }
-        });
-
-        ColumnInfo precursorIdCol = wrapColumn("PrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
-        precursorIdCol.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
-            }
-        });
-        addColumn(precursorIdCol);
-
-         //Display the fragment as y9 instead of 'y' and '9' in separate columns
+        //Display the fragment as y9 instead of 'y' and '9' in separate columns
         StringBuilder sql = new StringBuilder();
         sql.append(" CASE WHEN ");
         sql.append(ExprColumn.STR_TABLE_ALIAS).append(".FragmentType != 'precursor'");
         sql.append(" THEN ");
         sql.append(TargetedMSManager.getSqlDialect().concatenate(ExprColumn.STR_TABLE_ALIAS + ".FragmentType",
-                                                                 "CAST(" + ExprColumn.STR_TABLE_ALIAS+".FragmentOrdinal AS VARCHAR)"));
+                "CAST(" + ExprColumn.STR_TABLE_ALIAS+".FragmentOrdinal AS VARCHAR)"));
         sql.append(" ELSE ");
         sql.append("CASE WHEN ");
         sql.append(ExprColumn.STR_TABLE_ALIAS).append(".MassIndex != 0");
@@ -92,7 +63,6 @@ public class DocTransitionsTableInfo extends JoinedTargetedMSTable
         fragment.setTextAlign("Left");
         fragment.setJdbcType(JdbcType.VARCHAR);
         addColumn(fragment);
-
 
         ArrayList<FieldKey> visibleColumns = new ArrayList<>();
         visibleColumns.add(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Label"));
@@ -133,35 +103,6 @@ public class DocTransitionsTableInfo extends JoinedTargetedMSTable
         });
         noteAnnotation.setLabel("Transition Note/Annotations");
         addColumn(noteAnnotation);
-    }
 
-    public void setRunId(int runId)
-    {
-        addRunFilter(runId);
-    }
-
-    public void addRunFilter(int runId)
-    {
-        getFilter().deleteConditions(FieldKey.fromParts("Run"));
-        SQLFragment sql = new SQLFragment();
-        sql.append("Id IN ");
-
-        sql.append("(SELECT trans.Id FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralTransition(), "trans");
-        sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "prec");
-        sql.append(" ON (trans.GeneralPrecursorId=prec.Id) ");
-        sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
-        sql.append(" ON (prec.GeneralMoleculeId=gm.Id) ");
-        sql.append("INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        sql.append(" ON (gm.PeptideGroupId=pg.Id) ");
-        sql.append("WHERE pg.RunId=? ");
-        sql.append(")");
-
-        sql.add(runId);
-
-        addCondition(sql, FieldKey.fromParts("Run"));
     }
 }

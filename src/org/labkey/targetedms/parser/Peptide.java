@@ -222,6 +222,15 @@ public class Peptide extends GeneralMolecule
         this.annotations = annotations;
     }
 
+    @Override
+    public String getPrecursorKey(GeneralMolecule gm, GeneralPrecursor gp)
+    {
+        StringBuilder key = new StringBuilder();
+        key.append(((Peptide) gm).getPeptideModifiedSequence());
+        key.append("_").append(((Precursor) gp).getCharge());
+        return key.toString();
+    }
+
     public static class Modification extends SkylineEntity
     {
         private int _peptideId;

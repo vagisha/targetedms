@@ -872,39 +872,7 @@ public class TargetedMSSchema extends UserSchema
         }
         if(TABLE_MOLECULE_TRANSITION.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name),
-                    this,
-                    ContainerJoinType.PrecursorForMoleculeFK.getSQL(),
-                    TargetedMSManager.getTableInfoTransitionAnnotation(),
-                    "TransitionId",
-                    "Transition Annotations",
-                    "TransitionId")
-            {
-                @Override
-                public FieldKey getContainerFieldKey()
-                {
-                    return FieldKey.fromParts("TransitionId", "PrecursorId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder");
-                }
-            };
-            result.getColumn("TransitionId").setFk(new LookupForeignKey("Id")
-            {
-                @Override
-                public TableInfo getLookupTableInfo()
-                {
-                    return getTable(TABLE_GENERAL_TRANSITION);
-                }
-            });
-
-            List<FieldKey> defaultCols = new ArrayList<>(result.getDefaultVisibleColumns());
-            int idx = 0;
-            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "PrecursorId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "File"));
-            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "PrecursorId", "GeneralMoleculeId", "PeptideGroupId", "Label"));
-            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "Mz"));
-            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "Charge"));
-            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "FragmentType"));
-            defaultCols.add(idx++, FieldKey.fromParts("TransitionId", "MassIndex"));
-            result.setDefaultVisibleColumns(defaultCols);
-            return result;
+            return new MoleculeTransitionsTableInfo(this);
         }
 
         // Tables that have a FK to targetedms.precursorchrominfo

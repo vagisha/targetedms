@@ -15,17 +15,9 @@
 
 package org.labkey.targetedms.view;
 
-import org.apache.commons.lang3.StringUtils;
-import org.labkey.api.data.NestableQueryView;
-import org.labkey.api.data.Sort;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryNestingOption;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.query.AbstractGeneralPrecursorTableInfo;
-import org.labkey.targetedms.query.MoleculePrecursorTableInfo;
-import org.labkey.targetedms.query.PrecursorTableInfo;
 
 import java.sql.SQLException;
 
@@ -34,63 +26,19 @@ import java.sql.SQLException;
  * Date: 4/17/12
  * Time: 10:52 PM
  */
-public class DocumentPrecursorsView extends NestableQueryView
+public abstract class DocumentPrecursorsView extends DocumentView
 {
-    public static final String DATAREGION_NAME = "precursors_view";
-    public static final String TITLE = "Precursor List";
+    protected TargetedMSSchema _targetedMsSchema = null;
+    protected final int _runId;
+    protected final String _tableName;
 
-    private TargetedMSSchema _targetedMsSchema = null;
-    private final int _runId;
-    private final String _tableName;
-
-    public DocumentPrecursorsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport) throws SQLException
+    public DocumentPrecursorsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport,
+                                  QueryNestingOption nestingOption, String dataRegionName) throws SQLException
     {
-        super(schema, schema.getSettings(ctx, DATAREGION_NAME, queryName), true, !forExport,
-                new QueryNestingOption(FieldKey.fromParts("PeptideId", "PeptideGroupId"),
-                        FieldKey.fromParts("PeptideId", "PeptideGroupId", "Id"), null));
+        super(ctx, schema, queryName, !forExport, nestingOption, dataRegionName);
         _targetedMsSchema = schema;
         _runId = runId;
         _tableName = queryName;
-        setTitle(TITLE);
     }
 
-    /**
-     * Overridden to add the run id filter condition.
-     * @return A document transitions TableInfo filtered to the current run id
-     */
-    public TableInfo createTable()
-    {
-        assert null != _targetedMsSchema : "Targeted MS Schema was not set in DocumentPrecursorsView class!";
-        AbstractGeneralPrecursorTableInfo tinfo;
-        String viewName = getSettings().getViewName();
-        if(_tableName.equalsIgnoreCase(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR))
-        {
-            tinfo  = (MoleculePrecursorTableInfo) _targetedMsSchema.getTable(_tableName);
-        }
-        else
-        {
-            tinfo = (PrecursorTableInfo) _targetedMsSchema.getTable(_tableName);
-
-            if (_tableName.equalsIgnoreCase(TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR) &&
-                    (StringUtils.isBlank(viewName)))
-            {
-                // If we are looking at the default view for the precursor list of a document in a library
-                // folder, show only the current representative precursors.
-                PrecursorTableInfo.LibraryPrecursorTableInfo tableInfo = (PrecursorTableInfo.LibraryPrecursorTableInfo) tinfo;
-                tableInfo.selectRepresentative();
-            }
-        }
-
-        if (tinfo != null)
-        {
-            tinfo.setRunId(_runId);
-        }
-
-        return tinfo;
-    }
-
-    protected Sort getBaseSort()
-    {
-        return new Sort("Id");
-    }
 }

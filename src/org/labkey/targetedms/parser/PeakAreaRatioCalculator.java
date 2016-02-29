@@ -179,7 +179,7 @@ public class PeakAreaRatioCalculator
 
         private PrecursorAreaRatioCalculator getPrecursorAreaRatioCalculator(Peptide peptide, Precursor precursor)
         {
-            String precursorKey = getPrecursorKey(peptide, precursor);
+            String precursorKey = peptide.getPrecursorKey(peptide, precursor);
             PrecursorAreaRatioCalculator calculator = _calculatorMap.get(precursorKey);
             if(calculator == null)
             {
@@ -437,23 +437,5 @@ public class PeakAreaRatioCalculator
             }
         }
        return key.toString();
-    }
-
-    private static String getPrecursorKey(GeneralMolecule generalMolecule, Precursor precursor)
-    {
-        StringBuilder key = new StringBuilder();
-        if(generalMolecule instanceof Molecule)
-        {
-            key.append(((Molecule) generalMolecule).getMassMonoisotopic());
-        }
-        else
-        {
-            key.append(((Peptide)generalMolecule).getPeptideModifiedSequence());
-        }
-        key.append("_")
-       .append(precursor.getCharge());
-       //.append("_")
-       //.append(precursor.getIsotopeLabelId());
-        return key.toString();
     }
 }
