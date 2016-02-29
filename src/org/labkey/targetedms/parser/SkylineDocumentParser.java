@@ -1057,13 +1057,7 @@ public class SkylineDocumentParser implements AutoCloseable
     {
         Peptide peptide = new Peptide();
         readGeneralMolecule(_reader, peptide, false);
-//        persistGeneralPrecursor(peptide.getPrecursorList());
         return peptide;
-    }
-
-    private void persistGeneralPrecursor(List<Precursor> precursorList)
-    {
-
     }
 
     public Molecule nextMolecule() throws XMLStreamException, DataFormatException, IOException
@@ -1075,8 +1069,19 @@ public class SkylineDocumentParser implements AutoCloseable
         molecule.setCustomIonName(_reader.getAttributeValue(null, CUSTOM_ION_NAME));
         molecule.setMassMonoisotopic(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_MONOISOTOPIC, MOLECULE));
         molecule.setMassAverage(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_AVERAGE, MOLECULE));
-        _reader.next();
-//        readGeneralMolecule(_reader, molecule, true);
+
+        List<MoleculePrecursor> moleculePrecursorList = new ArrayList<>();
+        molecule.setMoleculePrecursorsList(moleculePrecursorList);
+        while (_reader.hasNext())
+        {
+            int evtType = _reader.next();
+
+            if (XmlUtil.isEndElement(_reader, evtType, MOLECULE))
+                break;
+
+            if (XmlUtil.isStartElement(_reader, evtType, PRECURSOR))
+                moleculePrecursorList.add(readMoleculePrecursor(_reader));
+        }
 
         return molecule;
     }
@@ -1319,6 +1324,49 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setSkylineSampleFileId(skylineSampleFileId);
     }
 
+    private MoleculePrecursor readMoleculePrecursor(XMLStreamReader reader) throws XMLStreamException, IOException
+    {
+        MoleculePrecursor moleculePrecursor = new MoleculePrecursor();
+        List<MoleculeTransition> moleculeTransitionList = new ArrayList<>();
+        moleculePrecursor.setMoleculeTransitionsList(moleculeTransitionList);
+
+        String precursorMz = reader.getAttributeValue(null, PRECURSOR_MZ);
+        if(null != precursorMz)
+            moleculePrecursor.setMz(Double.parseDouble(precursorMz));
+
+        String collisionEnergy = reader.getAttributeValue(null, COLLISION_ENERGY);
+        if(null != collisionEnergy)
+            moleculePrecursor.setCollisionEnergy(Double.parseDouble(collisionEnergy));
+
+        String ionFormula = reader.getAttributeValue(null, ION_FORMULA);
+        if(null != ionFormula)
+            moleculePrecursor.setIonFormula(ionFormula);
+
+        String massMonoIsotopic = reader.getAttributeValue(null, MASS_MONOISOTOPIC);
+        if(null != massMonoIsotopic)
+            moleculePrecursor.setMassMonoisotopic(Double.parseDouble(massMonoIsotopic));
+
+        String massAvg = reader.getAttributeValue(null, MASS_AVERAGE);
+        if(null != massAvg)
+            moleculePrecursor.setMassAverage(Double.parseDouble(massAvg));
+
+        String customIonName = reader.getAttributeValue(null, CUSTOM_ION_NAME);
+        if(null != customIonName)
+            moleculePrecursor.setCustomIonName(customIonName);
+
+        while(reader.hasNext()) {
+
+            int evtType = reader.next();
+
+            if(evtType == XMLStreamReader.END_ELEMENT && PRECURSOR.equalsIgnoreCase(reader.getLocalName()))
+                break;
+
+            if (XmlUtil.isStartElement(reader, evtType, TRANSITION))
+                moleculeTransitionList.add(readSmallMoleculeTransition(reader));
+        }
+        return moleculePrecursor;
+    }
+
     private Precursor readPrecursor(XMLStreamReader reader, String modifiedSequenceLight, boolean isCustomMolecule) throws XMLStreamException, IOException
     {
         Precursor precursor = new Precursor();
@@ -1338,7 +1386,7 @@ public class SkylineDocumentParser implements AutoCloseable
         if(null != calcNeutralMass)
             precursor.setNeutralMass(Double.parseDouble(calcNeutralMass));
 
-        String precursorMz = reader.getAttributeValue(null, "precursor_mz");
+        String precursorMz = reader.getAttributeValue(null, PRECURSOR_MZ);
         if(null != precursorMz)
             precursor.setMz(Double.parseDouble(precursorMz));
 
@@ -1602,6 +1650,11 @@ public class SkylineDocumentParser implements AutoCloseable
         {
             return readProteomicTransition(reader);
         }
+    }
+
+    private MoleculeTransition readSmallMoleculeTransition(XMLStreamReader reader) throws XMLStreamException
+    {
+        return readMoleculeTransition(reader);
     }
 
     private MoleculeTransition readMoleculeTransition(XMLStreamReader reader) throws XMLStreamException

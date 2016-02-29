@@ -16,6 +16,8 @@
 
 package org.labkey.targetedms.parser;
 
+import java.util.List;
+
 /**
  * User: vsharma
  * Date: 1/27/2015
@@ -28,6 +30,7 @@ public class Molecule extends GeneralMolecule
     private Double _massMonoisotopic; // not null
     private Double _massAverage; // not null
     private String _customIonName;
+    private List<MoleculePrecursor> _moleculePrecursorsList;
 
     public String getIonFormula()
     {
@@ -69,4 +72,13 @@ public class Molecule extends GeneralMolecule
         _customIonName = customIonName;
     }
 
+    public List<MoleculePrecursor> getMoleculePrecursorsList()
+    {
+        return _moleculePrecursorsList;
+    }
+
+    public void setMoleculePrecursorsList(List<MoleculePrecursor> moleculePrecursorsList)
+    {
+        _moleculePrecursorsList = moleculePrecursorsList;
+    }
 }

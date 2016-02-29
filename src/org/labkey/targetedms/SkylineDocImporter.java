@@ -177,374 +177,372 @@ public class SkylineDocImporter
         NetworkDrive.ensureDrive(f.getPath());
         f = extractIfZip(f);
 
-        try(
-// (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction();
-
-        SkylineDocumentParser parser = new SkylineDocumentParser(f, _log))
+        try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction();
+             SkylineDocumentParser parser = new SkylineDocumentParser(f, _log))
         {
-            run.setFormatVersion(parser.getFormatVersion());
-            run.setSoftwareVersion(parser.getSoftwareVersion());
+                run.setFormatVersion(parser.getFormatVersion());
+                run.setSoftwareVersion(parser.getSoftwareVersion());
 
-            new SqlExecutor(TargetedMSManager.getSchema()).execute("UPDATE " + TargetedMSManager.getTableInfoRuns() +
-                    " SET formatVersion = ?, softwareVersion = ? WHERE Id = ?",
-                    parser.getFormatVersion(), parser.getSoftwareVersion(), run.getId());
+                new SqlExecutor(TargetedMSManager.getSchema()).execute("UPDATE " + TargetedMSManager.getTableInfoRuns() +
+                        " SET formatVersion = ?, softwareVersion = ? WHERE Id = ?",
+                        parser.getFormatVersion(), parser.getSoftwareVersion(), run.getId());
 
-            ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
-            parser.readSettings();
+                ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
+                parser.readSettings();
 
-            // Store the document settings
-            // 0. iRT information
-            run.setiRTscaleId(insertiRTData(parser));
+                // Store the document settings
+                // 0. iRT information
+                run.setiRTscaleId(insertiRTData(parser));
 
 
-            // 1. Transition settings
-            TransitionSettings transSettings = parser.getTransitionSettings();
-            TransitionSettings.InstrumentSettings instrumentSettings = transSettings.getInstrumentSettings();
-            instrumentSettings.setRunId(_runId);
-            Table.insert(_user, TargetedMSManager.getTableInfoTransInstrumentSettings(), instrumentSettings);
+                // 1. Transition settings
+                TransitionSettings transSettings = parser.getTransitionSettings();
+                TransitionSettings.InstrumentSettings instrumentSettings = transSettings.getInstrumentSettings();
+                instrumentSettings.setRunId(_runId);
+                Table.insert(_user, TargetedMSManager.getTableInfoTransInstrumentSettings(), instrumentSettings);
 
-            boolean insertCEOptmizations = false;
-            boolean insertDPOptmizations = false;
+                boolean insertCEOptmizations = false;
+                boolean insertDPOptmizations = false;
 
-            TransitionSettings.PredictionSettings predictionSettings = transSettings.getPredictionSettings();
-            predictionSettings.setRunId(_runId);
-            TransitionSettings.Predictor cePredictor = predictionSettings.getCePredictor();
-            if (cePredictor != null)
-            {
-                insertCEOptmizations = predictionSettings.getOptimizeBy() != null && !"none".equalsIgnoreCase(predictionSettings.getOptimizeBy());
-                List<TransitionSettings.PredictorSettings> predictorSettingsList = cePredictor.getSettings();
-                cePredictor = Table.insert(_user, TargetedMSManager.getTableInfoPredictor(), cePredictor);
-                predictionSettings.setCePredictorId(cePredictor.getId());
-                for (TransitionSettings.PredictorSettings s : predictorSettingsList)
+                TransitionSettings.PredictionSettings predictionSettings = transSettings.getPredictionSettings();
+                predictionSettings.setRunId(_runId);
+                TransitionSettings.Predictor cePredictor = predictionSettings.getCePredictor();
+                if (cePredictor != null)
                 {
-                    s.setPredictorId(cePredictor.getId());
-                    Table.insert(_user, TargetedMSManager.getTableInfoPredictorSettings(), s);
-                }
-            }
-            TransitionSettings.Predictor dpPredictor = predictionSettings.getDpPredictor();
-            if (dpPredictor != null)
-            {
-                insertDPOptmizations = predictionSettings.getOptimizeBy() != null && !"none".equalsIgnoreCase(predictionSettings.getOptimizeBy());
-                List<TransitionSettings.PredictorSettings> predictorSettingsList = dpPredictor.getSettings();
-                dpPredictor = Table.insert(_user, TargetedMSManager.getTableInfoPredictor(), dpPredictor);
-                predictionSettings.setDpPredictorId(dpPredictor.getId());
-                for (TransitionSettings.PredictorSettings s : predictorSettingsList)
-                {
-                    s.setPredictorId(cePredictor.getId());
-                    Table.insert(_user, TargetedMSManager.getTableInfoPredictorSettings(), s);
-                }
-            }
-            Table.insert(_user, TargetedMSManager.getTableInfoTransitionPredictionSettings(), predictionSettings);
-
-            TransitionSettings.FullScanSettings fullScanSettings = transSettings.getFullScanSettings();
-            if (fullScanSettings != null)
-            {
-                fullScanSettings.setRunId(_runId);
-                fullScanSettings = Table.insert(_user, TargetedMSManager.getTableInfoTransitionFullScanSettings(), fullScanSettings);
-
-                for (TransitionSettings.IsotopeEnrichment isotopeEnrichment : fullScanSettings.getIsotopeEnrichmentList())
-                {
-                    isotopeEnrichment.setRunId(_runId);
-                    Table.insert(_user, TargetedMSManager.getTableInfoIsotopeEnrichment(), isotopeEnrichment);
-                }
-
-                TransitionSettings.IsolationScheme isolationScheme = fullScanSettings.getIsolationScheme();
-                if(isolationScheme != null)
-                {
-                    isolationScheme.setRunId(_runId);
-                    Table.insert(_user, TargetedMSManager.getTableInfoIsolationScheme(), isolationScheme);
-                    for(TransitionSettings.IsolationWindow iWindow: isolationScheme.getIsolationWindowList())
+                    insertCEOptmizations = predictionSettings.getOptimizeBy() != null && !"none".equalsIgnoreCase(predictionSettings.getOptimizeBy());
+                    List<TransitionSettings.PredictorSettings> predictorSettingsList = cePredictor.getSettings();
+                    cePredictor = Table.insert(_user, TargetedMSManager.getTableInfoPredictor(), cePredictor);
+                    predictionSettings.setCePredictorId(cePredictor.getId());
+                    for (TransitionSettings.PredictorSettings s : predictorSettingsList)
                     {
-                        iWindow.setIsolationSchemeId(isolationScheme.getId());
-                        Table.insert(_user, TargetedMSManager.getTableInfoIsolationWindow(), iWindow);
+                        s.setPredictorId(cePredictor.getId());
+                        Table.insert(_user, TargetedMSManager.getTableInfoPredictorSettings(), s);
                     }
                 }
-            }
-
-            // 2. Replicates and sample files
-            Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap = new HashMap<>();
-            Map<Instrument, Integer> instrumentIdMap = new HashMap<>();
-
-            TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(run.getContainer());
-
-
-            for(SkylineReplicate skyReplicate: parser.getReplicates())
-            {
-                Replicate replicate = new Replicate();
-                replicate.setName(skyReplicate.getName());
-                replicate.setSampleFileList(skyReplicate.getSampleFileList());
-                replicate.setAnnotations(skyReplicate.getAnnotations());
-
-                replicate.setRunId(_runId);
-                if(cePredictor != null && skyReplicate.getCePredictor() != null && cePredictor.equals(skyReplicate.getCePredictor()))
+                TransitionSettings.Predictor dpPredictor = predictionSettings.getDpPredictor();
+                if (dpPredictor != null)
                 {
-                    replicate.setCePredictorId(cePredictor.getId());
-                }
-                if(dpPredictor != null && skyReplicate.getDpPredictor() != null && dpPredictor.equals(skyReplicate.getDpPredictor()))
-                {
-                    replicate.setDpPredictorId(dpPredictor.getId());
-                }
-
-                replicate = Table.insert(_user, TargetedMSManager.getTableInfoReplicate(), replicate);
-
-                for(SampleFile sampleFile: replicate.getSampleFileList())
-                {
-                    SampleFileKey sampleFileKey = SampleFileKey.getKey(replicate, sampleFile);
-                    if(skylineIdSampleFileIdMap.containsKey(sampleFileKey))
+                    insertDPOptmizations = predictionSettings.getOptimizeBy() != null && !"none".equalsIgnoreCase(predictionSettings.getOptimizeBy());
+                    List<TransitionSettings.PredictorSettings> predictorSettingsList = dpPredictor.getSettings();
+                    dpPredictor = Table.insert(_user, TargetedMSManager.getTableInfoPredictor(), dpPredictor);
+                    predictionSettings.setDpPredictorId(dpPredictor.getId());
+                    for (TransitionSettings.PredictorSettings s : predictorSettingsList)
                     {
-                        throw new IllegalStateException("Sample file id '" + sampleFile.getSkylineId() + "' for replicate '" + replicate.getName() + "' has already been seen in the document.");
+                        s.setPredictorId(cePredictor.getId());
+                        Table.insert(_user, TargetedMSManager.getTableInfoPredictorSettings(), s);
+                    }
+                }
+                Table.insert(_user, TargetedMSManager.getTableInfoTransitionPredictionSettings(), predictionSettings);
+
+                TransitionSettings.FullScanSettings fullScanSettings = transSettings.getFullScanSettings();
+                if (fullScanSettings != null)
+                {
+                    fullScanSettings.setRunId(_runId);
+                    fullScanSettings = Table.insert(_user, TargetedMSManager.getTableInfoTransitionFullScanSettings(), fullScanSettings);
+
+                    for (TransitionSettings.IsotopeEnrichment isotopeEnrichment : fullScanSettings.getIsotopeEnrichmentList())
+                    {
+                        isotopeEnrichment.setRunId(_runId);
+                        Table.insert(_user, TargetedMSManager.getTableInfoIsotopeEnrichment(), isotopeEnrichment);
                     }
 
-                    sampleFile.setReplicateId(replicate.getId());
-
-                    List<Instrument> instrumentInfoList = sampleFile.getInstrumentInfoList();
-                    if(instrumentInfoList != null && instrumentInfoList.size() > 0)
+                    TransitionSettings.IsolationScheme isolationScheme = fullScanSettings.getIsolationScheme();
+                    if(isolationScheme != null)
                     {
-                        Instrument instrument = combineInstrumentInfos(instrumentInfoList);
-
-                        Integer instrumentId = instrumentIdMap.get(instrument);
-                        if(instrumentId == null)
+                        isolationScheme.setRunId(_runId);
+                        Table.insert(_user, TargetedMSManager.getTableInfoIsolationScheme(), isolationScheme);
+                        for(TransitionSettings.IsolationWindow iWindow: isolationScheme.getIsolationWindowList())
                         {
-                            instrument.setRunId(_runId);
-                            instrument = Table.insert(_user, TargetedMSManager.getTableInfoInstrument(), instrument);
-                            instrumentIdMap.put(instrument, instrument.getId());
-                            instrumentId = instrument.getId();
+                            iWindow.setIsolationSchemeId(isolationScheme.getId());
+                            Table.insert(_user, TargetedMSManager.getTableInfoIsolationWindow(), iWindow);
+                        }
+                    }
+                }
+
+                // 2. Replicates and sample files
+                Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap = new HashMap<>();
+                Map<Instrument, Integer> instrumentIdMap = new HashMap<>();
+
+                TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(run.getContainer());
+
+
+                for(SkylineReplicate skyReplicate: parser.getReplicates())
+                {
+                    Replicate replicate = new Replicate();
+                    replicate.setName(skyReplicate.getName());
+                    replicate.setSampleFileList(skyReplicate.getSampleFileList());
+                    replicate.setAnnotations(skyReplicate.getAnnotations());
+
+                    replicate.setRunId(_runId);
+                    if(cePredictor != null && skyReplicate.getCePredictor() != null && cePredictor.equals(skyReplicate.getCePredictor()))
+                    {
+                        replicate.setCePredictorId(cePredictor.getId());
+                    }
+                    if(dpPredictor != null && skyReplicate.getDpPredictor() != null && dpPredictor.equals(skyReplicate.getDpPredictor()))
+                    {
+                        replicate.setDpPredictorId(dpPredictor.getId());
+                    }
+
+                    replicate = Table.insert(_user, TargetedMSManager.getTableInfoReplicate(), replicate);
+
+                    for(SampleFile sampleFile: replicate.getSampleFileList())
+                    {
+                        SampleFileKey sampleFileKey = SampleFileKey.getKey(replicate, sampleFile);
+                        if(skylineIdSampleFileIdMap.containsKey(sampleFileKey))
+                        {
+                            throw new IllegalStateException("Sample file id '" + sampleFile.getSkylineId() + "' for replicate '" + replicate.getName() + "' has already been seen in the document.");
                         }
 
-                        sampleFile.setInstrumentId(instrumentId);
-                    }
+                        sampleFile.setReplicateId(replicate.getId());
 
-                    if (folderType == TargetedMSModule.FolderType.QC && TargetedMSManager.hasSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), run.getContainer()))
-                    {
-                        sampleFile.setSkip(true);
-                        _log.info("Skipping import of data from sample file " + sampleFile.getFilePath() + " in QC folder because it has already been imported");
-                    }
-                    else
-                    {
-                        sampleFile = Table.insert(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile);
-                    }
-
-                    // Remember the ids we inserted so we can reference them later
-                    skylineIdSampleFileIdMap.put(sampleFileKey, sampleFile);
-                }
-                for (ReplicateAnnotation annotation : replicate.getAnnotations())
-                {
-                    annotation.setReplicateId(replicate.getId());
-                    Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
-                }
-            }
-
-            // 3. Peptide settings
-            Map<String, Integer> isotopeLabelIdMap = new HashMap<>();
-            Set<Integer> internalStandardLabelIds = new HashSet<>();
-            Map<String, Integer> structuralModNameIdMap = new HashMap<>();
-            Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap = new HashMap<>();
-            Map<String, Integer> isotopeModNameIdMap = new HashMap<>();
-            PeptideSettings pepSettings = parser.getPeptideSettings();
-            PeptideSettings.PeptideModifications modifications = pepSettings.getModifications();
-            if(modifications != null)
-            {
-                // Insert isotope labels
-                List<PeptideSettings.IsotopeLabel> isotopeLabels = modifications.getIsotopeLabels();
-                for(PeptideSettings.IsotopeLabel isotopeLabel: isotopeLabels)
-                {
-                    isotopeLabel.setRunId(_runId);
-                    isotopeLabel = Table.insert(_user, TargetedMSManager.getTableInfoIsotopeLabel(), isotopeLabel);
-                    isotopeLabelIdMap.put(isotopeLabel.getName(), isotopeLabel.getId());
-
-                    if(isotopeLabel.isStandard())
-                    {
-                        internalStandardLabelIds.add(isotopeLabel.getId());
-                    }
-                }
-
-                // Insert peptide modification settings
-                PeptideSettings.ModificationSettings modSettings = modifications.getModificationSettings();
-                if(modSettings != null)
-                {
-                    modSettings.setRunId(_runId);
-                    Table.insert(_user, TargetedMSManager.getTableInfoModificationSettings(), modSettings);
-                }
-
-                // Insert structural modifications
-                List<PeptideSettings.RunStructuralModification> structuralMods = modifications.getStructuralModifications();
-                for(PeptideSettings.RunStructuralModification mod: structuralMods)
-                {
-                    PeptideSettings.StructuralModification existingMod = findExistingStructuralModification(mod);
-                    if (existingMod != null)
-                    {
-                        mod.setStructuralModId(existingMod.getId());
-                        structuralModNameIdMap.put(mod.getName(), existingMod.getId());
-                    }
-                    else
-                    {
-                        mod = Table.insert(_user, TargetedMSManager.getTableInfoStructuralModification(), mod);
-                        mod.setStructuralModId(mod.getId());
-                        structuralModNameIdMap.put(mod.getName(), mod.getId());
-
-                        for (PeptideSettings.PotentialLoss potentialLoss : mod.getPotentialLosses())
+                        List<Instrument> instrumentInfoList = sampleFile.getInstrumentInfoList();
+                        if(instrumentInfoList != null && instrumentInfoList.size() > 0)
                         {
-                            potentialLoss.setStructuralModId(mod.getId());
-                            Table.insert(_user, TargetedMSManager.getTableInfoStructuralModLoss(), potentialLoss);
+                            Instrument instrument = combineInstrumentInfos(instrumentInfoList);
+
+                            Integer instrumentId = instrumentIdMap.get(instrument);
+                            if(instrumentId == null)
+                            {
+                                instrument.setRunId(_runId);
+                                instrument = Table.insert(_user, TargetedMSManager.getTableInfoInstrument(), instrument);
+                                instrumentIdMap.put(instrument, instrument.getId());
+                                instrumentId = instrument.getId();
+                            }
+
+                            sampleFile.setInstrumentId(instrumentId);
+                        }
+
+                        if (folderType == TargetedMSModule.FolderType.QC && TargetedMSManager.hasSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), run.getContainer()))
+                        {
+                            sampleFile.setSkip(true);
+                            _log.info("Skipping import of data from sample file " + sampleFile.getFilePath() + " in QC folder because it has already been imported");
+                        }
+                        else
+                        {
+                            sampleFile = Table.insert(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile);
+                        }
+
+                        // Remember the ids we inserted so we can reference them later
+                        skylineIdSampleFileIdMap.put(sampleFileKey, sampleFile);
+                    }
+                    for (ReplicateAnnotation annotation : replicate.getAnnotations())
+                    {
+                        annotation.setReplicateId(replicate.getId());
+                        Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
+                    }
+                }
+
+                // 3. Peptide settings
+                Map<String, Integer> isotopeLabelIdMap = new HashMap<>();
+                Set<Integer> internalStandardLabelIds = new HashSet<>();
+                Map<String, Integer> structuralModNameIdMap = new HashMap<>();
+                Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap = new HashMap<>();
+                Map<String, Integer> isotopeModNameIdMap = new HashMap<>();
+                PeptideSettings pepSettings = parser.getPeptideSettings();
+                PeptideSettings.PeptideModifications modifications = pepSettings.getModifications();
+                if(modifications != null)
+                {
+                    // Insert isotope labels
+                    List<PeptideSettings.IsotopeLabel> isotopeLabels = modifications.getIsotopeLabels();
+                    for(PeptideSettings.IsotopeLabel isotopeLabel: isotopeLabels)
+                    {
+                        isotopeLabel.setRunId(_runId);
+                        isotopeLabel = Table.insert(_user, TargetedMSManager.getTableInfoIsotopeLabel(), isotopeLabel);
+                        isotopeLabelIdMap.put(isotopeLabel.getName(), isotopeLabel.getId());
+
+                        if(isotopeLabel.isStandard())
+                        {
+                            internalStandardLabelIds.add(isotopeLabel.getId());
                         }
                     }
 
-                    mod.setRunId(_runId);
-                    Table.insert(_user, TargetedMSManager.getTableInfoRunStructuralModification(), mod);
+                    // Insert peptide modification settings
+                    PeptideSettings.ModificationSettings modSettings = modifications.getModificationSettings();
+                    if(modSettings != null)
+                    {
+                        modSettings.setRunId(_runId);
+                        Table.insert(_user, TargetedMSManager.getTableInfoModificationSettings(), modSettings);
+                    }
+
+                    // Insert structural modifications
+                    List<PeptideSettings.RunStructuralModification> structuralMods = modifications.getStructuralModifications();
+                    for(PeptideSettings.RunStructuralModification mod: structuralMods)
+                    {
+                        PeptideSettings.StructuralModification existingMod = findExistingStructuralModification(mod);
+                        if (existingMod != null)
+                        {
+                            mod.setStructuralModId(existingMod.getId());
+                            structuralModNameIdMap.put(mod.getName(), existingMod.getId());
+                        }
+                        else
+                        {
+                            mod = Table.insert(_user, TargetedMSManager.getTableInfoStructuralModification(), mod);
+                            mod.setStructuralModId(mod.getId());
+                            structuralModNameIdMap.put(mod.getName(), mod.getId());
+
+                            for (PeptideSettings.PotentialLoss potentialLoss : mod.getPotentialLosses())
+                            {
+                                potentialLoss.setStructuralModId(mod.getId());
+                                Table.insert(_user, TargetedMSManager.getTableInfoStructuralModLoss(), potentialLoss);
+                            }
+                        }
+
+                        mod.setRunId(_runId);
+                        Table.insert(_user, TargetedMSManager.getTableInfoRunStructuralModification(), mod);
+                    }
+
+                    // Insert isotope modifications
+                    List<PeptideSettings.RunIsotopeModification> isotopeMods = modifications.getIsotopeModifications();
+                    for(PeptideSettings.RunIsotopeModification mod: isotopeMods)
+                    {
+                        PeptideSettings.IsotopeModification existingIsotopeMod = findExistingIsotopeModification(mod);
+                        if (existingIsotopeMod != null)
+                        {
+                            mod.setIsotopeModId(existingIsotopeMod.getId());
+                        }
+                        else
+                        {
+                            PeptideSettings.IsotopeModification newMod = Table.insert(_user, TargetedMSManager.getTableInfoIsotopeModification(), mod);
+                            mod.setIsotopeModId(newMod.getId());
+                        }
+
+                        isotopeModNameIdMap.put(mod.getName(), mod.getIsotopeModId());
+                        mod.setRunId(_runId);
+                        mod.setIsotopeLabelId(isotopeLabelIdMap.get(mod.getIsotopeLabel()));
+                        Table.insert(_user, TargetedMSManager.getTableInfoRunIsotopeModification(), mod);
+                    }
                 }
 
-                // Insert isotope modifications
-                List<PeptideSettings.RunIsotopeModification> isotopeMods = modifications.getIsotopeModifications();
-                for(PeptideSettings.RunIsotopeModification mod: isotopeMods)
+                // Spectrum library settings
+                Map<String, Integer> librarySourceTypes = LibraryManager.getLibrarySourceTypes();
+                Map<String, Integer> libraryNameIdMap = new HashMap<>();
+                PeptideSettings.SpectrumLibrarySettings librarySettings = pepSettings.getLibrarySettings();
+                if(librarySettings != null)
                 {
-                    PeptideSettings.IsotopeModification existingIsotopeMod = findExistingIsotopeModification(mod);
-                    if (existingIsotopeMod != null)
+                    librarySettings.setRunId(_runId);
+                    Table.insert(_user, TargetedMSManager.getTableInfoLibrarySettings(), librarySettings);
+
+                    for(PeptideSettings.SpectrumLibrary library: librarySettings.getLibraries())
                     {
-                        mod.setIsotopeModId(existingIsotopeMod.getId());
+                        library.setRunId(_runId);
+                        if(library.getLibraryType().equals("bibliospec_lite") ||
+                           library.getLibraryType().equals("bibliospec"))
+                        {
+                            library.setLibrarySourceId(librarySourceTypes.get("BiblioSpec"));
+                        }
+                        else if(library.getLibraryType().equals("hunter"))
+                        {
+                            library.setLibrarySourceId(librarySourceTypes.get("GPM"));
+                        }
+                        else if(library.getLibraryType().equals("nist") ||
+                                library.getLibraryType().equals("spectrast"))
+                        {
+                            library.setLibrarySourceId(librarySourceTypes.get("NIST"));
+                        }
+                        library = Table.insert(_user, TargetedMSManager.getTableInfoSpectrumLibrary(), library);
+                        libraryNameIdMap.put(library.getName(), library.getId());
+                    }
+                }
+
+                PeptideSettings.Enzyme enzyme = pepSettings.getEnzyme();
+                if (enzyme != null)
+                {
+                    SimpleFilter filter = new SimpleFilter();
+                    filter.addCondition(FieldKey.fromParts("cut"), enzyme.getCut(), (enzyme.getCut() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                    filter.addCondition(FieldKey.fromParts("nocut"), enzyme.getNoCut(), (enzyme.getNoCut() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                    filter.addCondition(FieldKey.fromParts("sense"), enzyme.getSense(), (enzyme.getSense() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                    filter.addCondition(FieldKey.fromParts("name"), enzyme.getName());
+                    filter.addCondition(FieldKey.fromParts("cutC"), enzyme.getCutC(), (enzyme.getCutC() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                    filter.addCondition(FieldKey.fromParts("noCutC"), enzyme.getNoCutC(), (enzyme.getNoCutC() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                    filter.addCondition(FieldKey.fromParts("cutN"), enzyme.getCutN(), (enzyme.getCutN() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                    filter.addCondition(FieldKey.fromParts("noCutN"), enzyme.getNoCutN(), (enzyme.getNoCutN() == null ? CompareType.ISBLANK : CompareType.EQUAL));
+                    PeptideSettings.Enzyme[] existingEnzymes = new TableSelector(TargetedMSManager.getTableInfoEnzyme(), filter, null).getArray(PeptideSettings.Enzyme.class);
+                    if (existingEnzymes == null || existingEnzymes.length == 0)
+                    {
+                        enzyme = Table.insert(_user, TargetedMSManager.getTableInfoEnzyme(), enzyme);
                     }
                     else
                     {
-                        PeptideSettings.IsotopeModification newMod = Table.insert(_user, TargetedMSManager.getTableInfoIsotopeModification(), mod);
-                        mod.setIsotopeModId(newMod.getId());
+                        enzyme = existingEnzymes[0];
                     }
 
-                    isotopeModNameIdMap.put(mod.getName(), mod.getIsotopeModId());
-                    mod.setRunId(_runId);
-                    mod.setIsotopeLabelId(isotopeLabelIdMap.get(mod.getIsotopeLabel()));
-                    Table.insert(_user, TargetedMSManager.getTableInfoRunIsotopeModification(), mod);
-                }
-            }
-
-            // Spectrum library settings
-            Map<String, Integer> librarySourceTypes = LibraryManager.getLibrarySourceTypes();
-            Map<String, Integer> libraryNameIdMap = new HashMap<>();
-            PeptideSettings.SpectrumLibrarySettings librarySettings = pepSettings.getLibrarySettings();
-            if(librarySettings != null)
-            {
-                librarySettings.setRunId(_runId);
-                Table.insert(_user, TargetedMSManager.getTableInfoLibrarySettings(), librarySettings);
-
-                for(PeptideSettings.SpectrumLibrary library: librarySettings.getLibraries())
-                {
-                    library.setRunId(_runId);
-                    if(library.getLibraryType().equals("bibliospec_lite") ||
-                       library.getLibraryType().equals("bibliospec"))
+                    PeptideSettings.EnzymeDigestionSettings digestSettings = pepSettings.getEnzymeDigestionSettings();
+                    if (digestSettings == null)
                     {
-                        library.setLibrarySourceId(librarySourceTypes.get("BiblioSpec"));
+                        digestSettings = new PeptideSettings.EnzymeDigestionSettings();
                     }
-                    else if(library.getLibraryType().equals("hunter"))
+                    digestSettings.setRunId(_runId);
+                    digestSettings.setEnzymeId(enzyme.getId());
+                    Table.insert(_user, TargetedMSManager.getTableInfoRunEnzyme(), digestSettings);
+                }
+
+                // Peptide prediction settings
+                PeptideSettings.PeptidePredictionSettings peptidePredictionSettings = pepSettings.getPeptidePredictionSettings();
+                PeptideSettings.RetentionTimePredictionSettings rtPredictionSettings = peptidePredictionSettings == null ? null : peptidePredictionSettings.getRtPredictionSettings();
+                if(rtPredictionSettings != null)
+                {
+                    rtPredictionSettings.setRunId(_runId);
+                    Table.insert(_user, TargetedMSManager.getTableInfoRetentionTimePredictionSettings(), rtPredictionSettings);
+                }
+
+                // Drift time prediction settings.
+                PeptideSettings.DriftTimePredictionSettings dtPredictionSettings = peptidePredictionSettings == null ? null : peptidePredictionSettings.getDtPredictionSettings();
+                if(dtPredictionSettings != null)
+                {
+                    dtPredictionSettings.setRunId(_runId);
+                    Table.insert(_user, TargetedMSManager.getTableInfoDriftTimePredictionSettings(), dtPredictionSettings);
+
+                    List<PeptideSettings.MeasuredDriftTime> driftTimes = dtPredictionSettings.getMeasuredDriftTimes();
+                    for(PeptideSettings.MeasuredDriftTime dt: driftTimes)
                     {
-                        library.setLibrarySourceId(librarySourceTypes.get("GPM"));
+                        dt.setDriftTimePredictionSettingsId(dtPredictionSettings.getId());
+                        Table.insert(_user, TargetedMSManager.getTableInfoMeasuredDriftTime(), dt);
                     }
-                    else if(library.getLibraryType().equals("nist") ||
-                            library.getLibraryType().equals("spectrast"))
+                }
+
+                // Data settings -- these are the annotation settings
+                DataSettings dataSettings = parser.getDataSettings();
+                for(AnnotationSetting annotSetting: dataSettings.getAnnotationSettings())
+                {
+                    annotSetting.setRunId(_runId);
+                    Table.insert(_user, TargetedMSManager.getTableInfoAnnotationSettings(), annotSetting);
+                }
+
+                // TODO: bulk insert of precursor, transition, chrom info etc.
+
+                // Store the data
+                // 1. peptide group
+                if(_isProteinLibraryDoc)
+                {
+                    _libProteinSequenceIds = new HashSet<>();
+                    _libProteinLabels = new HashSet<>();
+                }
+                if(_isPeptideLibraryDoc)
+                {
+                    _libPrecursors = new HashSet<>();
+                }
+                int peptideGroupCount = 0;
+                while (parser.hasNextPeptideGroup())
+                {
+                    PeptideGroup pepGroup = parser.nextPeptideGroup();
+                    insertPeptideGroup(proteinService, insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap,
+                            isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap,
+                            isotopeModNameIdMap, libraryNameIdMap, pepGroup, parser);
+                    if (++peptideGroupCount % 100 == 0)
                     {
-                        library.setLibrarySourceId(librarySourceTypes.get("NIST"));
+                        _log.info("Imported " + peptideGroupCount + " peptide groups.");
                     }
-                    library = Table.insert(_user, TargetedMSManager.getTableInfoSpectrumLibrary(), library);
-                    libraryNameIdMap.put(library.getName(), library.getId());
                 }
-            }
 
-            PeptideSettings.Enzyme enzyme = pepSettings.getEnzyme();
-            if (enzyme != null)
-            {
-                SimpleFilter filter = new SimpleFilter();
-                filter.addCondition(FieldKey.fromParts("cut"), enzyme.getCut(), (enzyme.getCut() == null ? CompareType.ISBLANK : CompareType.EQUAL));
-                filter.addCondition(FieldKey.fromParts("nocut"), enzyme.getNoCut(), (enzyme.getNoCut() == null ? CompareType.ISBLANK : CompareType.EQUAL));
-                filter.addCondition(FieldKey.fromParts("sense"), enzyme.getSense(), (enzyme.getSense() == null ? CompareType.ISBLANK : CompareType.EQUAL));
-                filter.addCondition(FieldKey.fromParts("name"), enzyme.getName());
-                filter.addCondition(FieldKey.fromParts("cutC"), enzyme.getCutC(), (enzyme.getCutC() == null ? CompareType.ISBLANK : CompareType.EQUAL));
-                filter.addCondition(FieldKey.fromParts("noCutC"), enzyme.getNoCutC(), (enzyme.getNoCutC() == null ? CompareType.ISBLANK : CompareType.EQUAL));
-                filter.addCondition(FieldKey.fromParts("cutN"), enzyme.getCutN(), (enzyme.getCutN() == null ? CompareType.ISBLANK : CompareType.EQUAL));
-                filter.addCondition(FieldKey.fromParts("noCutN"), enzyme.getNoCutN(), (enzyme.getNoCutN() == null ? CompareType.ISBLANK : CompareType.EQUAL));
-                PeptideSettings.Enzyme[] existingEnzymes = new TableSelector(TargetedMSManager.getTableInfoEnzyme(), filter, null).getArray(PeptideSettings.Enzyme.class);
-                if (existingEnzymes == null || existingEnzymes.length == 0)
+                run.setDocumentGUID(parser.getDocumentGUID());
+                Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
+
+                if (run.isRepresentative())
                 {
-                    enzyme = Table.insert(_user, TargetedMSManager.getTableInfoEnzyme(), enzyme);
-                }
-                else
-                {
-                    enzyme = existingEnzymes[0];
+                    resolveRepresentativeData(run);
                 }
 
-                PeptideSettings.EnzymeDigestionSettings digestSettings = pepSettings.getEnzymeDigestionSettings();
-                if (digestSettings == null)
-                {
-                    digestSettings = new PeptideSettings.EnzymeDigestionSettings();
-                }
-                digestSettings.setRunId(_runId);
-                digestSettings.setEnzymeId(enzyme.getId());
-                Table.insert(_user, TargetedMSManager.getTableInfoRunEnzyme(), digestSettings);
-            }
-
-            // Peptide prediction settings
-            PeptideSettings.PeptidePredictionSettings peptidePredictionSettings = pepSettings.getPeptidePredictionSettings();
-            PeptideSettings.RetentionTimePredictionSettings rtPredictionSettings = peptidePredictionSettings == null ? null : peptidePredictionSettings.getRtPredictionSettings();
-            if(rtPredictionSettings != null)
-            {
-                rtPredictionSettings.setRunId(_runId);
-                Table.insert(_user, TargetedMSManager.getTableInfoRetentionTimePredictionSettings(), rtPredictionSettings);
-            }
-
-            // Drift time prediction settings.
-            PeptideSettings.DriftTimePredictionSettings dtPredictionSettings = peptidePredictionSettings == null ? null : peptidePredictionSettings.getDtPredictionSettings();
-            if(dtPredictionSettings != null)
-            {
-                dtPredictionSettings.setRunId(_runId);
-                Table.insert(_user, TargetedMSManager.getTableInfoDriftTimePredictionSettings(), dtPredictionSettings);
-
-                List<PeptideSettings.MeasuredDriftTime> driftTimes = dtPredictionSettings.getMeasuredDriftTimes();
-                for(PeptideSettings.MeasuredDriftTime dt: driftTimes)
-                {
-                    dt.setDriftTimePredictionSettingsId(dtPredictionSettings.getId());
-                    Table.insert(_user, TargetedMSManager.getTableInfoMeasuredDriftTime(), dt);
-                }
-            }
-
-            // Data settings -- these are the annotation settings
-            DataSettings dataSettings = parser.getDataSettings();
-            for(AnnotationSetting annotSetting: dataSettings.getAnnotationSettings())
-            {
-                annotSetting.setRunId(_runId);
-                Table.insert(_user, TargetedMSManager.getTableInfoAnnotationSettings(), annotSetting);
-            }
-
-            // TODO: bulk insert of precursor, transition, chrom info etc.
-
-            // Store the data
-            // 1. peptide group
-            if(_isProteinLibraryDoc)
-            {
-                _libProteinSequenceIds = new HashSet<>();
-                _libProteinLabels = new HashSet<>();
-            }
-            if(_isPeptideLibraryDoc)
-            {
-                _libPrecursors = new HashSet<>();
-            }
-            int peptideGroupCount = 0;
-            while (parser.hasNextPeptideGroup())
-            {
-                PeptideGroup pepGroup = parser.nextPeptideGroup();
-                insertPeptideGroup(proteinService, insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap,
-                        isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap,
-                        isotopeModNameIdMap, libraryNameIdMap, pepGroup, parser);
-                if (++peptideGroupCount % 100 == 0)
-                {
-                    _log.info("Imported " + peptideGroupCount + " peptide groups.");
-                }
-            }
-
-            run.setDocumentGUID(parser.getDocumentGUID());
-            Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
-
-            if (run.isRepresentative())
-            {
-                resolveRepresentativeData(run);
-            }
-
-//            transaction.commit();
+            transaction.commit();
         }
         finally
         {
@@ -889,7 +887,7 @@ public class SkylineDocImporter
                     break;
             }
             _log.info("inserting gen mol. # " + count++);
-            insertPeptide(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap,
+            insertPeptideOrSmallMolecule(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap,
                     internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap,
                     libraryNameIdMap, pepGroup, generalMolecule);
 
@@ -934,7 +932,7 @@ public class SkylineDocImporter
         return identifierMap;
     }
 
-    private void insertPeptide(boolean insertCEOptmizations, boolean insertDPOptmizations,
+    private void insertPeptideOrSmallMolecule(boolean insertCEOptmizations, boolean insertDPOptmizations,
                                Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<String, Integer> isotopeLabelIdMap,
                                Set<Integer> internalStandardLabelIds, Map<String, Integer> structuralModNameIdMap, Map<Integer,
                                PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap, Map<String,
@@ -968,6 +966,11 @@ public class SkylineDocImporter
             molecule.setId(generalMolecule.getId());
             _log.info("molecule formula " + molecule.getIonFormula() + ", id = " + molecule.getId());
             Table.insert(_user, TargetedMSManager.getTableInfoMolecule(), molecule);
+
+            for (MoleculePrecursor moleculePrecursor : molecule.getMoleculePrecursorsList())
+            {
+                insertMoleculePrecursor(molecule, moleculePrecursor);
+            }
         }
 
         for (GeneralMoleculeAnnotation annotation : generalMolecule.getAnnotations())
@@ -1093,6 +1096,53 @@ public class SkylineDocImporter
                 }
             }
         }
+    }
+
+    private void insertMoleculePrecursor(Molecule molecule, MoleculePrecursor moleculePrecursor)
+    {
+        GeneralPrecursor gp = new GeneralPrecursor();
+        gp.setGeneralMoleculeId(molecule.getId());
+        gp.setMz(moleculePrecursor.getMz());
+        gp.setCharge(moleculePrecursor.getCharge());
+        gp.setCollisionEnergy(moleculePrecursor.getCollisionEnergy());
+        gp.setDeclusteringPotential(moleculePrecursor.getDeclusteringPotential());
+        gp.setDecoy(moleculePrecursor.isDecoy());
+        gp.setNote(moleculePrecursor.getNote());
+        gp.setExplicitCollisionEnergy(moleculePrecursor.getExplicitCollisionEnergy());
+        gp.setExplicitDriftTimeMsec(moleculePrecursor.getExplicitDriftTimeMsec());
+        gp.setExplicitDriftTimeHighEnergyOffsetMsec(moleculePrecursor.getExplicitDriftTimeHighEnergyOffsetMsec());
+        gp = Table.insert(_user, TargetedMSManager.getTableInfoGeneralPrecursor(), gp);
+
+        moleculePrecursor.setId(gp.getId());
+        moleculePrecursor = Table.insert(_user, TargetedMSManager.getTableInfoMoleculePrecursor(), moleculePrecursor);
+
+        for(MoleculeTransition moleculeTransition: moleculePrecursor.getMoleculeTransitionsList())
+        {
+            insertMoleculeTransition(moleculePrecursor, moleculeTransition);
+        }
+    }
+
+    private void insertMoleculeTransition(MoleculePrecursor moleculePrecursor, MoleculeTransition moleculeTransition)
+    {
+        GeneralTransition gt = new GeneralTransition();
+        gt.setGeneralPrecursorId(moleculePrecursor.getId());
+        gt.setMz(moleculeTransition.getMz());
+        gt.setCharge(moleculeTransition.getCharge());
+        gt.setFragmentType(moleculeTransition.getFragmentType());
+        gt.setIsotopeDistRank(moleculeTransition.getIsotopeDistRank());
+        gt.setIsotopeDistProportion(moleculeTransition.getIsotopeDistProportion());
+        gt.setMassIndex(moleculeTransition.getMassIndex());
+        gt.setExplicitCollisionEnergy(moleculeTransition.getExplicitCollisionEnergy());
+        gt.setsLens(moleculeTransition.getsLens());
+        gt.setConeVoltage(moleculeTransition.getConeVoltage());
+        gt.setExplicitCompensationVoltage(moleculeTransition.getExplicitCompensationVoltage());
+        gt.setExplicitDeclusteringPotential(moleculeTransition.getExplicitDeclusteringPotential());
+        gt.setExplicitDriftTimeMSec(moleculeTransition.getExplicitDriftTimeMSec());
+        gt.setExplicitDriftTimeHighEnergyOffsetMSec(moleculeTransition.getExplicitDriftTimeHighEnergyOffsetMSec());
+        gt = Table.insert(_user, TargetedMSManager.getTableInfoGeneralTransition(), gt);
+
+        moleculeTransition.setTransitionId(gt.getId());
+        Table.insert(_user, TargetedMSManager.getTableInfoMoleculeTransition(), moleculeTransition);
     }
 
     private void insertPrecursor(boolean insertCEOptmizations, boolean insertDPOptmizations,
