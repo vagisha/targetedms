@@ -4528,6 +4528,14 @@ public class TargetedMSController extends SpringActionController
             {
                 errors.reject(ERROR_MSG, "You do not have permissions to delete experiments in folder " + container.getPath());
             }
+
+            // If this experiment has already been published it can only be deleted by folder admins.
+            List<Journal> journals = JournalManager.getJournalsForExperiment(experimentAnnotationId);
+            if(journals.size() > 0 && !container.hasPermission(user, AdminPermission.class))
+            {
+                errors.reject(ERROR_MSG, "The experiment \"" + exp.getTitle() + "\" has already been published.  You do not have permissions to delete it.");
+            }
+
             experimentAnnotations[i++] = exp;
         }
 

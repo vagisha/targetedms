@@ -42,6 +42,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.Portal;
+import org.labkey.api.view.ShortURLService;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
@@ -353,6 +354,9 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         TargetedMSListener listener = new TargetedMSListener();
         ExperimentService.get().addExperimentListener(listener);
         ContainerManager.addContainerListener(listener);
+
+        ShortURLService shortUrlService = ServiceRegistry.get().getService(ShortURLService.class);
+        shortUrlService.addListener(listener);
 
         // Register the CopyExperimentRole
         RoleManager.registerRole(new CopyTargetedMSExperimentRole());
