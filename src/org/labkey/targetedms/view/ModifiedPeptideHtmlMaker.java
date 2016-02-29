@@ -57,7 +57,7 @@ public class ModifiedPeptideHtmlMaker
 
     public String getPrecursorHtml(Precursor precursor, Integer runId, TargetedMSSchema schema)
     {
-        Peptide peptide = PeptideManager.get(precursor.getGeneralMoleculeId(), schema);
+        Peptide peptide = PeptideManager.getPeptide(schema.getContainer(), precursor.getGeneralMoleculeId());
         return getPrecursorHtml(peptide, precursor, runId);
     }
 

@@ -24,7 +24,7 @@ public class AbstractGeneralMoleculeTableInfo extends JoinedTargetedMSTable
                 schema,
                 TargetedMSSchema.ContainerJoinType.PeptideGroupFK.getSQL(),
                 TargetedMSManager.getTableInfoGeneralMoleculeAnnotation(),
-                "Id", annotationColumnName);
+                "GeneralMoleculeId", annotationColumnName);
 
         // use the description and title column from the specialized TableInfo
         setDescription(tableInfo.getDescription());

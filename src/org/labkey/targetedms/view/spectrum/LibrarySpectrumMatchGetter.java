@@ -145,7 +145,7 @@ public class LibrarySpectrumMatchGetter
             {
                 LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
                 pepSpec.setCharge(precursor.getCharge());
-                pepSpec.setPeptide(PeptideManager.get(precursor.getGeneralMoleculeId(), schema).getSequence());
+                pepSpec.setPeptide(PeptideManager.getPeptide(schema.getContainer(), precursor.getGeneralMoleculeId()).getSequence());
                 pepSpec.setModifiedSequence(precursor.getModifiedSequence());
                 pepSpec.setLibrary(library);
                 pepSpec.setSpectrum(spectrum);

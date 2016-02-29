@@ -347,7 +347,7 @@ public class ContainerChromatogramLibraryWriter
             {
                 if(peptidePrecursors.size() > 0)
                 {
-                    Peptide peptide = PeptideManager.get(lastPeptideId, new TargetedMSSchema(_user, _container));
+                    Peptide peptide = PeptideManager.getPeptide(_container, lastPeptideId);
                     LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors);
                     peptidePrecursors.clear();
 
@@ -360,7 +360,7 @@ public class ContainerChromatogramLibraryWriter
         }
         if(peptidePrecursors.size() > 0)
         {
-            Peptide peptide = PeptideManager.get(lastPeptideId, new TargetedMSSchema(_user, _container));
+            Peptide peptide = PeptideManager.getPeptide(_container, lastPeptideId);
             LibPeptide libPeptide = makeLibPeptide(peptide, peptidePrecursors);
             _libWriter.writePeptide(libPeptide);
         }

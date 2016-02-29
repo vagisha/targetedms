@@ -22,8 +22,6 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.DatabaseCache;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
-import org.labkey.api.data.TableSelector;
-import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
@@ -47,20 +45,18 @@ public class PeptideManager
 
     private PeptideManager() {}
 
-    public static Peptide get(int peptideId, TargetedMSSchema schema)
+    public static Peptide getPeptide(Container c, int id)
     {
-        return new TableSelector(new PeptideTableInfo(schema)).getObject(peptideId, Peptide.class);
-    }
-    public static Peptide getPeptide(Container c, int id, User user)
-    {
-        SQLFragment sql = new SQLFragment("SELECT pep.* FROM ");
-        sql.append(new PeptideTableInfo(new TargetedMSSchema(user, c)), "pep");
+        SQLFragment sql = new SQLFragment("SELECT pep.*, gm.* FROM ");
+        sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
+        sql.append(", ");
+        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
         sql.append(" WHERE ");
-        sql.append("pep.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND pep.Id = ?");
+        sql.append("gm.PeptideGroupId = pg.Id AND pep.Id = gm.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND pep.Id = ?");
         sql.add(false);
         sql.add(c.getId());
         sql.add(id);

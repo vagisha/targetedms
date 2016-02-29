@@ -247,7 +247,7 @@ public class ConflictResultsManager
 
         if(bestPrecursorChromInfo != null)
         {
-            bestPrecursorPeptide.setPrecursor(PrecursorManager.get(bestPrecursorChromInfo.getPrecursorId(), user, container));
+            bestPrecursorPeptide.setPrecursor(PrecursorManager.getPrecursor(container, bestPrecursorChromInfo.getPrecursorId(), user));
             bestPrecursorPeptide.setMaxArea(bestPrecursorChromInfo.getTotalArea());
         }
         else
@@ -311,8 +311,8 @@ public class ConflictResultsManager
         List<TransitionWithAreaAndRank> newPrecursorTransitions = getRankedTransitionsForPrecursor(newPrecursorId, user, container);
         List<TransitionWithAreaAndRank> oldPrecursorTransitions = getRankedTransitionsForPrecursor(oldPrecursorId, user, container);
 
-        Precursor newPrecursor = PrecursorManager.get(newPrecursorId, user, container);
-        Precursor oldPrecursor = PrecursorManager.get(oldPrecursorId, user, container);
+        Precursor newPrecursor = PrecursorManager.getPrecursor(container, newPrecursorId, user);
+        Precursor oldPrecursor = PrecursorManager.getPrecursor(container, oldPrecursorId, user);
 
         // Key in the conflictTransitionMap is the transition label (y7, y8, etc.)
         Map<String, ConflictTransition> conflictTransitionMap = new HashMap<>();

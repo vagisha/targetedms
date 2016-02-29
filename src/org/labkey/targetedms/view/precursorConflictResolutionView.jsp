@@ -216,8 +216,8 @@ function toggleCheckboxSelection(element)
              <td class="representative newPrecursor label <%=precursor.getNewPrecursorId()%>">
                  <span class="label" id="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
                      <img src="<%=getWebappURL("_images/plus.gif")%>"/>
-                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getNewPrecursorId(),
-                             getUser(), getContainer()), precursor.getNewPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
+                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.getPrecursor(getContainer(), precursor.getNewPrecursorId(),
+                             getUser()), precursor.getNewPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
                  </span>
              </td>
              <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
@@ -233,8 +233,8 @@ function toggleCheckboxSelection(element)
              <td class="oldPrecursor label <%=precursor.getNewPrecursorId()%>">
                  <span class="label" id="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
                      <img src="<%=getWebappURL("_images/plus.gif")%>"/>
-                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.get(precursor.getOldPrecursorId(),
-                             getUser(), getContainer()), precursor.getOldPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
+                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.getPrecursor(getContainer(), precursor.getOldPrecursorId(),
+                             getUser()), precursor.getOldPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
                  </span>
              </td>
              <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">

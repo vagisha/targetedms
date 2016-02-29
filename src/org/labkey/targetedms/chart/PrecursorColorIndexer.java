@@ -68,7 +68,7 @@ public class PrecursorColorIndexer
     public int getColorIndex(int precursorId, User user, Container container)
     {
         // CONSIDER caching the colors, as they will be the same for all the replicates
-        Precursor precursor = PrecursorManager.get(precursorId, user, container);
+        Precursor precursor = PrecursorManager.getPrecursor(container, precursorId, user);
         return getColorIndex(precursor.getIsotopeLabelId(), precursor.getCharge());
     }
 

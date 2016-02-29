@@ -49,7 +49,7 @@ public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
         super(TargetedMSManager.getTableInfoGeneralPrecursor(), tableInfo, schema,
         TargetedMSSchema.ContainerJoinType.GeneralMoleculeFK.getSQL(),
         TargetedMSManager.getTableInfoPrecursorAnnotation(),
-        "Id", "Precursor Annotations");
+        "PrecursorId", "Precursor Annotations");
 
         setName(tableName);
         // use the description and title column from the specialized TableInfo

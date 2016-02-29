@@ -474,7 +474,7 @@ public abstract class ChromatogramDataset
         public PrecursorOptimizationPeakDataset(PrecursorChromInfo precursorChromInfo, boolean syncIntensity, boolean syncRt,
                                                 User user, org.labkey.api.data.Container container)
         {
-            super(PrecursorManager.get(precursorChromInfo.getPrecursorId(), user, container).getGeneralMoleculeId(),
+            super(PrecursorManager.getPrecursor(container, precursorChromInfo.getPrecursorId(), user).getGeneralMoleculeId(),
                     precursorChromInfo.getSampleFileId(),
                   syncIntensity,
                   syncRt, user, container);
@@ -587,7 +587,7 @@ public abstract class ChromatogramDataset
             _pChromInfo = pChromInfo;
             _syncRt = syncRt;
             _syncIntensity = syncIntensity;
-            _precursor = PrecursorManager.get(_pChromInfo.getPrecursorId(), user, container);
+            _precursor = PrecursorManager.getPrecursor(container, _pChromInfo.getPrecursorId(), user);
             _user = user;
             _container = container;
         }

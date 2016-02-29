@@ -798,7 +798,7 @@ public class TargetedMSController extends SpringActionController
             _run = TargetedMSManager.getRunForPrecursor(precursorId);
             _peptideId = precursor.getGeneralMoleculeId();
 
-            Peptide peptide = PeptideManager.get(precursor.getGeneralMoleculeId(), new TargetedMSSchema(getUser(), getContainer()));
+            Peptide peptide = PeptideManager.getPeptide(getContainer(), precursor.getGeneralMoleculeId());
 
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
 
@@ -895,7 +895,7 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
         {
             int peptideId = form.getId();
-            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId, getUser());
+            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
             if (peptide == null)
             {
                 throw new NotFoundException("No such Peptide found in this folder: " + peptideId);
@@ -1297,7 +1297,7 @@ public class TargetedMSController extends SpringActionController
         {
             int peptideId = form.getId();  // peptide Id
 
-            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId, getUser());
+            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
             if(peptide == null)
             {
                 throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", peptideId));
@@ -1408,7 +1408,7 @@ public class TargetedMSController extends SpringActionController
         {
             int peptideId = form.getId();  // peptide Id
 
-            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId, getUser());
+            Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
             if(peptide == null)
             {
                 throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", peptideId));
@@ -1507,7 +1507,7 @@ public class TargetedMSController extends SpringActionController
             Precursor precursor = null;
             if(form.getPeptideId() != 0)
             {
-                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId(), getUser());
+                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
                 if(peptide == null)
                 {
                     throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", form.getPeptideId()));
@@ -1578,7 +1578,7 @@ public class TargetedMSController extends SpringActionController
             Precursor precursor = null;
             if(form.getPeptideId() != 0)
             {
-                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId(), getUser());
+                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
                 if(peptide == null)
                 {
                     throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", form.getPeptideId()));
@@ -2091,6 +2091,8 @@ public class TargetedMSController extends SpringActionController
                                                    forExport);
             view.setShowExportButtons(true);
             view.setShowDetailsColumn(false);
+            VBox vbox = new VBox(view);
+
             view.setButtonBarPosition(DataRegion.ButtonBarPosition.BOTH);
             return view;
         }

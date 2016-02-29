@@ -123,7 +123,7 @@ public class LabelFactory
     {
         SampleFile sampleFile = ReplicateManager.getSampleFile(pepChromInfo.getSampleFileId());
         Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
-        Peptide peptide = PeptideManager.get(pepChromInfo.getGeneralMoleculeId(), new TargetedMSSchema(user, container));
+        Peptide peptide = PeptideManager.getPeptide(container, pepChromInfo.getGeneralMoleculeId());
 
         StringBuilder label = new StringBuilder();
         label.append(replicate.getName());

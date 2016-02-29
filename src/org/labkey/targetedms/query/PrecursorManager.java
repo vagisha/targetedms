@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
@@ -65,13 +66,6 @@ public class PrecursorManager
 
 
     private PrecursorManager() {}
-
-    public static Precursor get(int precursorId, User user, Container container)
-    {
-        return new TableSelector(new PrecursorTableInfo(new TargetedMSSchema(user, container)),
-                                 new SimpleFilter(FieldKey.fromParts("Id"), precursorId),
-                                 null).getObject(Precursor.class);
-    }
 
     public static Precursor getPrecursor(Container c, int id, User user)
     {
@@ -134,6 +128,7 @@ public class PrecursorManager
         return precursors;
     }
 
+    @NotNull
     public static List<PrecursorChromInfo> getSortedPrecursorChromInfosForPrecursor(int precursorId)
     {
         SimpleFilter filter = new SimpleFilter();
@@ -155,7 +150,7 @@ public class PrecursorManager
         // Get a list of chrom infos sorted by peak area (descending).
         List<PrecursorChromInfo> chromInfos = getSortedPrecursorChromInfosForPrecursor(precursorId);
 
-        if(chromInfos == null || chromInfos.size() == 0)
+        if(chromInfos.size() == 0)
         {
             return null;
         }
@@ -268,7 +263,7 @@ public class PrecursorManager
         sf.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         sf.append(", ");
         sf.append(TargetedMSManager.getTableInfoIsotopeLabel(), "label ");
-        sf.append(" WHERE gp.GeneralMoleculeId = gm.Id AND pre.IsotopeLabelId = label.Id AND pre.Id = ? ");
+        sf.append(" WHERE gp.GeneralMoleculeId = gm.Id AND pep.Id = gm.Id AND pre.Id = gp.Id AND pre.IsotopeLabelId = label.Id AND pre.Id = ? ");
         sf.add(precursorId);
 
         try (TableResultSet rs = new SqlSelector(TargetedMSManager.getSchema(), sf).getResultSet())
