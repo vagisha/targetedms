@@ -45,12 +45,6 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
     {
         super(tableInfo, tableName, schema);
 
-        final DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
-                                                                    getContainer()),
-                                                      Collections.singletonMap("id", "Id"));
-        detailsURLs.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder")));
-        setDetailsURL(detailsURLs);
-
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new LookupForeignKey("Id")
         {
@@ -60,6 +54,7 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
                 return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE);
             }
         });
+        generalMoleculeId.setHidden(true);
 
         ColumnInfo moleculeIdId = wrapColumn("MoleculeId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
         moleculeIdId.setFk(new LookupForeignKey("Id")
@@ -76,8 +71,8 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "Description"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "NoteAnnotations"));
-        visibleColumns.add(FieldKey.fromParts("CustomIonName"));
-        visibleColumns.add(FieldKey.fromParts("IonFormula"));
+        visibleColumns.add(FieldKey.fromParts("MoleculeId", "CustomIonName"));
+        visibleColumns.add(FieldKey.fromParts("MoleculeId", "IonFormula"));
         visibleColumns.add(FieldKey.fromParts("Charge"));
         visibleColumns.add(FieldKey.fromParts("Mz"));
         visibleColumns.add(FieldKey.fromParts("CollisionEnergy"));

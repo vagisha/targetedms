@@ -49,7 +49,7 @@ public class LibrarySpectrumMatchGetter
         // Get the precursor of this peptide, sorted by label type and charge.
         List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), new TargetedMSSchema(user, container));
 
-        TargetedMSRun run = TargetedMSManager.getRunForPeptide(peptide.getId());
+        TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(peptide.getId());
 
         // Get the spectrum libraries for this run
         List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(run.getId());
@@ -112,7 +112,7 @@ public class LibrarySpectrumMatchGetter
 
     public static List<LibrarySpectrumMatch> getMatches(Precursor precursor, TargetedMSSchema schema)
     {
-        TargetedMSRun run = TargetedMSManager.getRunForPeptide(precursor.getGeneralMoleculeId());
+        TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
 
         // Get the spectrum libraries for this run
         List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(run.getId());

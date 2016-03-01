@@ -15,7 +15,9 @@
  */
 package org.labkey.targetedms.parser;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: binalpatel
@@ -79,5 +81,28 @@ public class MoleculePrecursor extends GeneralPrecursor
     public void setMoleculeTransitionsList(List<MoleculeTransition> moleculeTransitionsList)
     {
         _moleculeTransitionsList = moleculeTransitionsList;
+    }
+
+    public static Set<String> getColumns()
+    {
+        Set<String> colNames = new HashSet<>();
+        colNames.add("Id");
+        colNames.add("GeneralMoleculeId");
+        colNames.add("Mz");
+        colNames.add("Charge");
+        colNames.add("CollisionEnergy");
+        colNames.add("DeclusteringPotential");
+        colNames.add("Decoy");
+        colNames.add("Note");
+        colNames.add("Modified");
+        colNames.add("RepresentativeDataState");
+        colNames.add("ExplicitCollisionEnergy");
+        colNames.add("ExplicitDriftTimeMsec");
+        colNames.add("ExplicitDriftTimeHighEnergyOffsetMsec");
+        colNames.add("IonFormula");
+        colNames.add("CustomIonName");
+        colNames.add("MassAverage");
+        colNames.add("MassMonoisotopic");
+        return colNames;
     }
 }

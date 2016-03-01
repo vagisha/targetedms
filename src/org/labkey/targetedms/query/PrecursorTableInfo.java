@@ -21,14 +21,19 @@ import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
+import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
 import org.labkey.api.query.QueryForeignKey;
+import org.labkey.api.util.ContainerContext;
+import org.labkey.api.view.ActionURL;
+import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * User: vsharma
@@ -47,6 +52,10 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
     {
         super(tableInfo, tableName, schema);
 
+        _detailsURL = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer()), Collections.singletonMap("id", "Id"));
+        _detailsURL.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder")));
+        setDetailsURL(_detailsURL);
+
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new LookupForeignKey("Id")
         {
@@ -56,6 +65,7 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
                 return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
             }
         });
+        generalMoleculeId.setHidden(true);
 
         ColumnInfo peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
         peptideId.setFk(new LookupForeignKey("Id")

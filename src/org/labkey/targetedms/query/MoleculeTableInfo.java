@@ -4,12 +4,16 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.WrappedColumn;
+import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.view.ActionURL;
+import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
@@ -18,10 +22,9 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
     {
         super(schema, TargetedMSManager.getTableInfoMolecule(), "Molecule Annotations");
 
-//        TODO: Create and Implement ShowMoleculeAction class in TargetedMSController
-//        final DetailsURL detailsURL = new DetailsURL(new ActionURL(TargetedMSController.ShowMoleculeAction.class, getContainer()),
-//                Collections.singletonMap("id", "Id"));
-//        setDetailsURL(detailsURL);
+        final DetailsURL detailsURL = new DetailsURL(new ActionURL(TargetedMSController.ShowMoleculeAction.class, getContainer()),
+                Collections.singletonMap("id", "Id"));
+        setDetailsURL(detailsURL);
 
         // Add a WrappedColumn for Note & Annotations
         WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
@@ -37,7 +40,7 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
         addColumn(noteAnnotation);
 
         ColumnInfo customIonName = getColumn("CustomIonName");
-//        customIonName.setURL(detailsURL); TODO: uncomment after ShowMoleculeAction is implemented
+        customIonName.setURL(detailsURL);
 
         List<FieldKey> defaultCols = new ArrayList<>(getDefaultVisibleColumns());
         defaultCols.add(0, FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "File"));

@@ -280,6 +280,8 @@ src/org/labkey/targetedms/query/JournalManager.java -text
 src/org/labkey/targetedms/query/LibraryManager.java -text
 src/org/labkey/targetedms/query/ModificationManager.java -text
 src/org/labkey/targetedms/query/ModifiedSequenceDisplayColumn.java -text
+src/org/labkey/targetedms/query/MoleculeManager.java -text
+src/org/labkey/targetedms/query/MoleculePrecursorManager.java -text
 src/org/labkey/targetedms/query/MoleculePrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/MoleculeTableInfo.java -text
 src/org/labkey/targetedms/query/MoleculeTransitionsTableInfo.java -text
@@ -338,6 +340,7 @@ src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -t
 src/org/labkey/targetedms/view/expannotations/experimentDetails.jsp -text
 src/org/labkey/targetedms/view/folderSetup.jsp -text
 src/org/labkey/targetedms/view/leveyJenningsReport.jsp -text
+src/org/labkey/targetedms/view/moleculeSummaryView.jsp -text
 src/org/labkey/targetedms/view/paretoPlot.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
 src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text

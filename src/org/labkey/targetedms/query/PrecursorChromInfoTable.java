@@ -58,6 +58,7 @@ public class PrecursorChromInfoTable extends TargetedMSTable
                 return _userSchema.getTable(TargetedMSSchema.TABLE_GENERAL_MOLECULE_CHROM_INFO);
             }
         });
+        generalMoleculeChromInfoIdId.setHidden(true);
 
         ColumnInfo peptideChromInfoIdId = wrapColumn("PeptideChromInfoId", getRealTable().getColumn(generalMoleculeChromInfoIdId.getFieldKey()));
         peptideChromInfoIdId.setFk(new LookupForeignKey("Id")

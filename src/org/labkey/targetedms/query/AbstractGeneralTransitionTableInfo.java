@@ -46,6 +46,7 @@ public class AbstractGeneralTransitionTableInfo extends JoinedTargetedMSTable
                 return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
             }
         });
+        precursorCol.setHidden(true);
 
         ColumnInfo precursorIdCol = wrapColumn("PrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
         precursorIdCol.setFk(new LookupForeignKey("Id")

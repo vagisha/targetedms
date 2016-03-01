@@ -25,6 +25,7 @@ public class GeneralMoleculeChromInfoTableInfo extends TargetedMSTable
                 return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
             }
         });
+        generalMoleculeId.setHidden(true);
 
         ColumnInfo peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
         peptideId.setFk(new LookupForeignKey("Id")

@@ -900,7 +900,7 @@ public class TargetedMSManager
         return run;
     }
 
-    public static TargetedMSRun getRunForPeptide(int peptideId)
+    public static TargetedMSRun getRunForGeneralMolecule(int id)
     {
         String sql = "SELECT run.* FROM "+
                      getTableInfoRuns()+" AS run, "+
@@ -910,12 +910,12 @@ public class TargetedMSManager
                      "AND pg.Id=gm.PeptideGroupId "+
                      "AND gm.Id=?";
         SQLFragment sf = new SQLFragment(sql);
-        sf.add(peptideId);
+        sf.add(id);
 
         TargetedMSRun run = new SqlSelector(getSchema(), sf).getObject(TargetedMSRun.class);
         if(run == null)
         {
-            throw new NotFoundException("No run found for peptide: "+peptideId);
+            throw new NotFoundException("No run found for general molecule: " + id);
         }
         return run;
     }

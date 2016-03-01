@@ -131,6 +131,8 @@ import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.model.Journal;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
+import org.labkey.targetedms.parser.Molecule;
+import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
@@ -148,6 +150,8 @@ import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
+import org.labkey.targetedms.query.MoleculeManager;
+import org.labkey.targetedms.query.MoleculePrecursorManager;
 import org.labkey.targetedms.query.PeptideChromatogramsTableInfo;
 import org.labkey.targetedms.query.PeptideGroupManager;
 import org.labkey.targetedms.query.PeptideManager;
@@ -905,7 +909,7 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("No such Peptide found in this folder: " + peptideId);
             }
 
-            _run = TargetedMSManager.getRunForPeptide(peptideId);
+            _run = TargetedMSManager.getRunForGeneralMolecule(peptideId);
 
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
 
@@ -1000,20 +1004,100 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    public static class PeptideChromatogramsViewBean
+    private static class GeneralMoleculeChromatogramsViewBean
     {
         private ChromatogramForm _form;
-        private Peptide _peptide;
         private PeptideGroup _peptideGroup;
-        private List<Precursor> _precursorList;
-        private List<PeptideSettings.IsotopeLabel> labels;
         private TargetedMSRun _run;
         protected String _resultsUri;
+
+        public ChromatogramForm getForm()
+        {
+            return _form;
+        }
+
+        public void setForm(ChromatogramForm form)
+        {
+            _form = form;
+        }
+
+        public TargetedMSRun getRun()
+        {
+            return _run;
+        }
+
+        public void setRun(TargetedMSRun run)
+        {
+            _run = run;
+        }
+
+        public PeptideGroup getPeptideGroup()
+        {
+            return _peptideGroup;
+        }
+
+        public void setPeptideGroup(PeptideGroup peptideGroup)
+        {
+            _peptideGroup = peptideGroup;
+        }
+
+        public String getResultsUri()
+        {
+            return _resultsUri;
+        }
+
+        public void setResultsUri(String resultsUri)
+        {
+            _resultsUri = resultsUri;
+        }
+    }
+
+    public static class MoleculeChromatogramsViewBean extends GeneralMoleculeChromatogramsViewBean
+    {
+        private Molecule _molecule;
+        private List<MoleculePrecursor> _precursorList;
+
+        public MoleculeChromatogramsViewBean(String resultsUri)
+        {
+            _resultsUri = resultsUri;
+        }
+
+        public Molecule getMolecule()
+        {
+            return _molecule;
+        }
+
+        public void setMolecule(Molecule molecule)
+        {
+            _molecule = molecule;
+        }
+
+        public List<MoleculePrecursor> getPrecursorList()
+        {
+            return _precursorList;
+        }
+
+        public void setPrecursorList(List<MoleculePrecursor> precursorList)
+        {
+            _precursorList = precursorList;
+        }
+    }
+
+    public static class PeptideChromatogramsViewBean extends GeneralMoleculeChromatogramsViewBean
+    {
+        private Peptide _peptide;
+        private List<Precursor> _precursorList;
+        private List<PeptideSettings.IsotopeLabel> labels;
         private List<String> _replicateAnnotationNameList;
         private List<ReplicateAnnotation> _replicateAnnotationValueList;
         private List<Replicate> _replicatesFilter;
         private boolean _canBeSplitView;
         private boolean _showOptPeaksOption;
+
+        public PeptideChromatogramsViewBean(String resultsUri)
+        {
+            _resultsUri = resultsUri;
+        }
 
         public boolean canBeSplitView()
         {
@@ -1033,15 +1117,6 @@ public class TargetedMSController extends SpringActionController
         public void setShowOptPeaksOption(boolean showOptPeaksOption)
         {
             _showOptPeaksOption = showOptPeaksOption;
-        }
-
-        public PeptideChromatogramsViewBean(String resultsUri)
-        {
-            _resultsUri = resultsUri;
-        }
-        public String getResultsUri()
-        {
-            return _resultsUri;
         }
 
         public List<Replicate> getReplicatesFilter()
@@ -1073,16 +1148,6 @@ public class TargetedMSController extends SpringActionController
             _replicateAnnotationValueList = replicateAnnotationValueList;
         }
 
-        public ChromatogramForm getForm()
-        {
-            return _form;
-        }
-
-        public void setForm(ChromatogramForm form)
-        {
-            _form = form;
-        }
-
         public Peptide getPeptide()
         {
             return _peptide;
@@ -1091,26 +1156,6 @@ public class TargetedMSController extends SpringActionController
         public void setPeptide(Peptide peptide)
         {
             _peptide = peptide;
-        }
-
-        public TargetedMSRun getRun()
-        {
-            return _run;
-        }
-
-        public void setRun(TargetedMSRun run)
-        {
-            _run = run;
-        }
-
-        public PeptideGroup getPeptideGroup()
-        {
-            return _peptideGroup;
-        }
-
-        public void setPeptideGroup(PeptideGroup peptideGroup)
-        {
-            _peptideGroup = peptideGroup;
         }
 
         public List<Precursor> getPrecursorList()
@@ -1310,7 +1355,7 @@ public class TargetedMSController extends SpringActionController
 
             VBox vbox = new VBox();
 
-            _run = TargetedMSManager.getRunForPeptide(peptideId);
+            _run = TargetedMSManager.getRunForGeneralMolecule(peptideId);
 
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
 
@@ -1402,6 +1447,65 @@ public class TargetedMSController extends SpringActionController
     }
 
     // ------------------------------------------------------------------------
+    // Action to display small molecule details page
+    // ------------------------------------------------------------------------
+    @RequiresPermission(ReadPermission.class)
+    public class ShowMoleculeAction extends SimpleViewAction<ChromatogramForm>
+    {
+        private TargetedMSRun _run; // save for use in appendNavTrail
+        private String _customIonName;
+
+        @Override
+        public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
+        {
+            int moleculeId = form.getId();
+
+            Molecule molecule = MoleculeManager.getMolecule(getContainer(), moleculeId);
+            if (molecule == null)
+            {
+                throw new NotFoundException(String.format("No small molecule found in this folder for moleculeId: %d", moleculeId));
+            }
+            _customIonName = molecule.getCustomIonName();
+
+            VBox vbox = new VBox();
+
+            _run = TargetedMSManager.getRunForGeneralMolecule(moleculeId);
+
+            PeptideGroup pepGroup = PeptideGroupManager.get(molecule.getPeptideGroupId());
+
+            List<MoleculePrecursor> precursorList = MoleculePrecursorManager.getPrecursorsForMolecule(molecule.getId(), new TargetedMSSchema(getUser(), getContainer()));
+
+            MoleculeChromatogramsViewBean bean = new MoleculeChromatogramsViewBean(
+                    new ActionURL(ShowMoleculeAction.class, getContainer()).getLocalURIString());
+            bean.setForm(form);
+            bean.setMolecule(molecule);
+            bean.setPeptideGroup(pepGroup);
+            bean.setPrecursorList(precursorList);
+            bean.setRun(_run);
+
+            // Summary for this molecule
+            JspView<MoleculeChromatogramsViewBean> moleculeInfo = new JspView<>("/org/labkey/targetedms/view/moleculeSummaryView.jsp", bean);
+            moleculeInfo.setFrame(WebPartView.FrameType.PORTAL);
+            moleculeInfo.setTitle("Small Molecule Summary");
+            vbox.addView(moleculeInfo);
+
+            return vbox;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            if (null != _run)
+            {
+                root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
+                root.addChild(_customIonName);
+            }
+            return root;
+        }
+    }
+
+    // ------------------------------------------------------------------------
     // Action to display a library spectrum
     // ------------------------------------------------------------------------
     @RequiresPermission(ReadPermission.class)
@@ -1418,7 +1522,7 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", peptideId));
             }
 
-            TargetedMSRun run = TargetedMSManager.getRunForPeptide(peptideId);
+            TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(peptideId);
 
             VBox vbox = new VBox();
             PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(run.getRunId());
@@ -2002,28 +2106,26 @@ public class TargetedMSController extends SpringActionController
                 vBox.addView(runMethodChain);
             }
 
+            VIEWTYPE view;
 
+            // for proteomics version of the Precursor List query view
             Integer peptideCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunPeptideCountSQL(null));
-            Integer moleculeCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
-
             if(peptideCount != null && peptideCount > 0)
             {
-                VIEWTYPE view = createInitializedQueryView(form, errors, false, getDataRegionNamePeptide());
-                vBox.addView(view);
-
+                view = createInitializedQueryView(form, errors, false, getDataRegionNamePeptide());
                 _dataRegion = view.getDataRegionName();
-                NavTree menu = getViewSwitcherMenu();
-                view.setNavMenu(menu);
+                view.setNavMenu(getViewSwitcherMenu());
+                vBox.addView(view);
             }
 
+            // for small molecule version of the Precursor List query view
+            Integer moleculeCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
             if(moleculeCount != null &&  moleculeCount > 0)
             {
-                VIEWTYPE view2 = createInitializedQueryView(form, errors, false, getDataRegionNameSmallMolecule());
-                vBox.addView(view2);
-
-                _dataRegion = view2.getDataRegionName();
-                NavTree menu2 = getViewSwitcherMenu();
-                view2.setNavMenu(menu2);
+                view = createInitializedQueryView(form, errors, false, getDataRegionNameSmallMolecule());
+                _dataRegion = view.getDataRegionName();
+                view.setNavMenu(getViewSwitcherMenu());
+                vBox.addView(view);
             }
 
             return vBox;
@@ -2153,8 +2255,6 @@ public class TargetedMSController extends SpringActionController
 
             view.setShowExportButtons(true);
             view.setShowDetailsColumn(false);
-            VBox vbox = new VBox(view);
-
             view.setButtonBarPosition(DataRegion.ButtonBarPosition.BOTH);
 
             return view;
@@ -2338,47 +2438,71 @@ public class TargetedMSController extends SpringActionController
             }
 
             // List of peptides
-            QuerySettings settings = new QuerySettings(getViewContext(), "Peptides", "Peptide");
-            QueryView peptidesView = new QueryView(schema, settings, errors)
+            Integer peptideCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunPeptideCountSQL(null));
+            if (peptideCount != null && peptideCount > 0)
+            {
+                List<FieldKey> baseVisibleColumns = new ArrayList<>();
+                baseVisibleColumns.add(FieldKey.fromParts(ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
+                baseVisibleColumns.add(FieldKey.fromParts("CalcNeutralMass"));
+                baseVisibleColumns.add(FieldKey.fromParts("NumMissedCleavages"));
+                result.addView(getGeneralMoleculeQueryView(form, schema, errors, "Peptides", "Peptide", baseVisibleColumns));
+            }
+
+            // List of small molecules
+            Integer moleculeCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
+            if (moleculeCount != null && moleculeCount > 0)
+            {
+                List<FieldKey> baseVisibleColumns = new ArrayList<>();
+                baseVisibleColumns.add(FieldKey.fromParts("CustomIonName"));
+                baseVisibleColumns.add(FieldKey.fromParts("IonFormula"));
+                baseVisibleColumns.add(FieldKey.fromParts("MassAverage"));
+                baseVisibleColumns.add(FieldKey.fromParts("MassMonoisotopic"));
+                result.addView(getGeneralMoleculeQueryView(form, schema, errors, "Small Molecules", "Molecule", baseVisibleColumns));
+            }
+
+            // Peptide summary charts
+            if (peptideCount != null && peptideCount > 0)
+            {
+                SummaryChartBean summaryChartBean = new SummaryChartBean();
+                summaryChartBean.setPeptideGroupId(form.getId());
+                summaryChartBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
+                summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
+                summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
+                summaryChartBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(getUser(), getContainer()))));
+
+                JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp",
+                        summaryChartBean);
+                summaryChartView.setTitle("Summary Charts");
+                summaryChartView.enableExpandCollapse("SummaryChartsView", false);
+                result.addView(summaryChartView);
+            }
+
+            return result;
+        }
+
+        private QueryView getGeneralMoleculeQueryView(ProteinDetailForm form, TargetedMSSchema schema, BindException errors,
+                                                      String title, String queryName, List<FieldKey> baseVisibleColumns)
+        {
+            String dataRegionName = title.replaceAll(" ", "");
+            QuerySettings settings = new QuerySettings(getViewContext(), dataRegionName, queryName);
+            QueryView view = new QueryView(schema, settings, errors)
             {
                 @Override
                 protected TableInfo createTable()
                 {
                     TargetedMSTable result = (TargetedMSTable) super.createTable();
                     result.addCondition(new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), form.getId()));
-                    List<FieldKey> visibleColumns = new ArrayList<>();
-                    visibleColumns.add(FieldKey.fromParts(ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
-                    visibleColumns.add(FieldKey.fromParts("CalcNeutralMass"));
-                    visibleColumns.add(FieldKey.fromParts("NumMissedCleavages"));
-                    visibleColumns.add(FieldKey.fromParts("AvgMeasuredRetentionTime"));
-                    visibleColumns.add(FieldKey.fromParts("PredictedRetentionTime"));
-                    visibleColumns.add(FieldKey.fromParts("RtCalculatorScore"));
-                    result.setDefaultVisibleColumns(visibleColumns);
+                    baseVisibleColumns.add(FieldKey.fromParts("AvgMeasuredRetentionTime"));
+                    baseVisibleColumns.add(FieldKey.fromParts("PredictedRetentionTime"));
+                    baseVisibleColumns.add(FieldKey.fromParts("RtCalculatorScore"));
+                    result.setDefaultVisibleColumns(baseVisibleColumns);
                     return result;
                 }
             };
-            peptidesView.setTitle("Peptides");
-            peptidesView.enableExpandCollapse("TargetedMSPeptides", false);
-            peptidesView.setUseQueryViewActionExportURLs(true);
-            result.addView(peptidesView);
-
-
-            // Peptide summary charts
-            SummaryChartBean summaryChartBean = new SummaryChartBean();
-            summaryChartBean.setPeptideGroupId(form.getId());
-            summaryChartBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
-            summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
-            summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
-            summaryChartBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(getUser(), getContainer()))));
-
-            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp",
-                    summaryChartBean);
-            summaryChartView.setTitle("Summary Charts");
-            summaryChartView.enableExpandCollapse("SummaryChartsView", false);
-
-            result.addView(summaryChartView);
-
-            return result;
+            view.setTitle(title);
+            view.enableExpandCollapse("TargetedMS" + dataRegionName, false);
+            view.setUseQueryViewActionExportURLs(true);
+            return view;
         }
 
         @Override

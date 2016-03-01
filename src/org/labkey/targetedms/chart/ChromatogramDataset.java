@@ -215,7 +215,7 @@ public abstract class ChromatogramDataset
 
             // Create a map of colors to be used for drawing the peaks.
             _seriesColors = new HashMap<>();
-            TargetedMSRun run = TargetedMSManager.getRunForPeptide(_peptideId);
+            TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(_peptideId);
             _colorIndexer = new PrecursorColorIndexer(run.getId(), _peptideId, user, container);
             _user = user;
             _container = container;

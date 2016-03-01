@@ -26,14 +26,9 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
-import org.labkey.api.util.ContainerContext;
-import org.labkey.api.view.ActionURL;
-import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
-
-import java.util.Collections;
 
 /**
  * User: binalpatel
@@ -55,12 +50,6 @@ public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
         // use the description and title column from the specialized TableInfo
         setDescription(tableInfo.getDescription());
         setTitleColumn(tableInfo.getTitleColumn());
-
-        _detailsURL = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class,
-                                                                    getContainer()),
-                                                      Collections.singletonMap("id", "Id"));
-        _detailsURL.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder")));
-        setDetailsURL(_detailsURL);
 
         getColumn("RepresentativeDataState").setFk(new LookupForeignKey()
         {

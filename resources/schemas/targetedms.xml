@@ -274,7 +274,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="Molecule">
-        <ns:titleColumn>MassMonoisotopic</ns:titleColumn>
+        <ns:titleColumn>CustomIonName</ns:titleColumn>
         <ns:description>Contains a row for each non-proteomic molecule loaded in a targeted MS run.</ns:description>
         <ns:columns>
             <ns:column columnName="Id">
@@ -355,7 +355,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="MoleculePrecursor">
-        <ns:titleColumn>MassMonoisotopic</ns:titleColumn>
+        <ns:titleColumn>CustomIonName</ns:titleColumn>
         <ns:description>Contains a row for each non-proteomic molecule precursor loaded in a targeted MS run.</ns:description>
         <ns:columns>
             <ns:column columnName="Id">
@@ -515,7 +515,7 @@
         </ns:columns>
     </ns:table>
     <ns:table tableDbType="TABLE" tableName="MoleculeTransition">
-        <ns:titleColumn>MassMonoisotopic</ns:titleColumn>
+        <ns:titleColumn>CustomIonName</ns:titleColumn>
         <ns:description>Contains a row for each non-proteomic molecule transition loaded in a targeted MS run.</ns:description>
         <ns:columns>
             <ns:column columnName="TransitionId">
