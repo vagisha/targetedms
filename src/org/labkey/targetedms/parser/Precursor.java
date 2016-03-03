@@ -16,16 +16,12 @@
 
 package org.labkey.targetedms.parser;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 /**
  * User: vsharma
  * Date: 4/2/12
  * Time: 10:28 AM
  */
-public class Precursor extends GeneralPrecursor
+public class Precursor extends GeneralPrecursor<Transition>
 {
     private String _modifiedSequence;
     private double _neutralMass;
@@ -33,9 +29,6 @@ public class Precursor extends GeneralPrecursor
     private int _isotopeLabelId;
     private Double _decoyMassShift;
     private LibraryInfo _libraryInfo;
-    private List<Transition> _transitionList;
-    private List<PrecursorChromInfo> _chromInfoList;
-    private List<PrecursorAnnotation> annotations;
 
     public int getIsotopeLabelId()
     {
@@ -87,26 +80,6 @@ public class Precursor extends GeneralPrecursor
         this._decoyMassShift = decoyMassShift;
     }
 
-    public List<Transition> getTransitionList()
-    {
-        return _transitionList;
-    }
-
-    public void setTransitionList(List<Transition> transitionList)
-    {
-        this._transitionList = transitionList;
-    }
-
-    public List<PrecursorChromInfo> getChromInfoList()
-    {
-        return _chromInfoList;
-    }
-
-    public void setChromInfoList(List<PrecursorChromInfo> chromInfoList)
-    {
-        _chromInfoList = chromInfoList;
-    }
-
     public LibraryInfo getLibraryInfo()
     {
         return _libraryInfo;
@@ -115,40 +88,6 @@ public class Precursor extends GeneralPrecursor
     public void setLibraryInfo(LibraryInfo libraryInfo)
     {
         _libraryInfo = libraryInfo;
-    }
-
-    public List<PrecursorAnnotation> getAnnotations()
-    {
-        return annotations;
-    }
-
-    public void setAnnotations(List<PrecursorAnnotation> annotations)
-    {
-        this.annotations = annotations;
-    }
-
-    public static Set<String> getColumns()
-    {
-        Set<String> colNames = new HashSet<>();
-        colNames.add("Id");
-        colNames.add("GeneralMoleculeId");
-        colNames.add("Mz");
-        colNames.add("Charge");
-        colNames.add("CollisionEnergy");
-        colNames.add("DeclusteringPotential");
-        colNames.add("Decoy");
-        colNames.add("Note");
-        colNames.add("Modified");
-        colNames.add("RepresentativeDataState");
-        colNames.add("ExplicitCollisionEnergy");
-        colNames.add("ExplicitDriftTimeMsec");
-        colNames.add("ExplicitDriftTimeHighEnergyOffsetMsec");
-        colNames.add("GeneralMoleculeId");
-        colNames.add("IsotopeLabelId");
-        colNames.add("NeutralMass");
-        colNames.add("ModifiedSequence");
-        colNames.add("DecoyMassShift");
-        return colNames;
     }
 
     public static final class LibraryInfo extends SkylineEntity

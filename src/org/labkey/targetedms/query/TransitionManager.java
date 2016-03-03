@@ -44,7 +44,7 @@ public class TransitionManager
 
     public static Transition get(int transitionId, User user, Container container)
     {
-        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container))).getObject(transitionId, Transition.class);
+        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container)), Transition.getColumns()).getObject(transitionId, Transition.class);
     }
 
     public static TransitionChromInfo getTransitionChromInfo(Container c, int id)
@@ -156,13 +156,13 @@ public class TransitionManager
 
     public static Collection<Transition> getTransitionsForPrecursor(int precursorId, User user, Container container)
     {
-        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container)),
+        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container)), Transition.getColumns(),
                                  new SimpleFilter(FieldKey.fromParts("PrecursorId"), precursorId), null).getCollection(Transition.class);
     }
 
     public static Collection<TransitionChromInfo> getTransitionChromInfoListForTransition(int transitionId)
     {
-        return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(),
+        return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(), Transition.getColumns(),
                                  new SimpleFilter(FieldKey.fromParts("TransitionId"), transitionId), null).getCollection(TransitionChromInfo.class);
     }
 }

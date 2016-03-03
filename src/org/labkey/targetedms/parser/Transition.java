@@ -17,12 +17,17 @@
 package org.labkey.targetedms.parser;
 
 
+import org.labkey.api.data.ColumnInfo;
+import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.chart.LabelFactory;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * User: vsharma
@@ -57,8 +62,6 @@ public class Transition extends GeneralTransition
 
     // The name of the measured ion that this transition uses (Only for reporter ions and other non proteomic transitions)
     private String measuredIonName;
-
-    private List<TransitionAnnotation> annotations;
 
     private static final String PRECURSOR = "precursor";
     private static final String Y_ION = "y";
@@ -225,14 +228,14 @@ public class Transition extends GeneralTransition
         return LabelFactory.transitionLabel(this);
     }
 
-    public List<TransitionAnnotation> getAnnotations()
+    public static Set<String> getColumns()
     {
-        return annotations;
-    }
-
-    public void setAnnotations(List<TransitionAnnotation> annotations)
-    {
-        this.annotations = annotations;
+        Set<String> colNames = new HashSet<>();
+        List<ColumnInfo> columnsGenTra = TargetedMSManager.getTableInfoGeneralTransition().getColumns();
+        List<ColumnInfo> columnsTra = TargetedMSManager.getTableInfoTransition().getColumns();
+        colNames.addAll(columnsGenTra.stream().map(ColumnInfo::getName).collect(Collectors.toList()));
+        colNames.addAll(columnsTra.stream().map(ColumnInfo::getName).collect(Collectors.toList()));
+        return colNames;
     }
 
     public static class TransitionComparator implements Comparator<Transition>

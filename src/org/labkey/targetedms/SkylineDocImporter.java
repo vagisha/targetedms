@@ -1079,7 +1079,7 @@ public class SkylineDocImporter
                                 Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAreaRatio(), pRatio);
                             }
 
-                            for (Transition transition : precursor.getTransitionList())
+                            for (Transition transition : precursor.getTransitionsList())
                             {
                                 TransitionAreaRatio tRatio = areaRatioCalculator.getTransitionAreaRatio(sampleFile.getId(),
                                         precursor,
@@ -1116,7 +1116,7 @@ public class SkylineDocImporter
         moleculePrecursor.setId(gp.getId());
         moleculePrecursor = Table.insert(_user, TargetedMSManager.getTableInfoMoleculePrecursor(), moleculePrecursor);
 
-        for(MoleculeTransition moleculeTransition: moleculePrecursor.getMoleculeTransitionsList())
+        for(MoleculeTransition moleculeTransition: moleculePrecursor.getTransitionsList())
         {
             insertMoleculeTransition(moleculePrecursor, moleculeTransition);
         }
@@ -1248,7 +1248,7 @@ public class SkylineDocImporter
         }
 
         // 4. transition
-        for(Transition transition: precursor.getTransitionList())
+        for(Transition transition: precursor.getTransitionsList())
         {
             insertTransition(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, structuralModNameIdMap, structuralModLossesMap, precursor, sampleFilePrecursorChromInfoIdMap, transition);
         }

@@ -77,7 +77,7 @@ public class PeakAreaRatioCalculator
                 }
             }
 
-            for(Transition transition: precursor.getTransitionList())
+            for(Transition transition: precursor.getTransitionsList())
             {
                 for(TransitionChromInfo transitionChromInfo: transition.getChromInfoList())
                 {

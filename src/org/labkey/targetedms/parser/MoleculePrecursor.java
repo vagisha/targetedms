@@ -16,14 +16,13 @@
 package org.labkey.targetedms.parser;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
  * User: binalpatel
  * Date: 2/23/2016
  */
-public class MoleculePrecursor extends GeneralPrecursor
+public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
 {
     private int _Id;
 
@@ -31,7 +30,6 @@ public class MoleculePrecursor extends GeneralPrecursor
     private String _customIonName;
     private Double _massMonoisotopic;
     private Double _massAverage;
-    private List<MoleculeTransition> _moleculeTransitionsList;
 
     public String getIonFormula()
     {
@@ -71,16 +69,6 @@ public class MoleculePrecursor extends GeneralPrecursor
     public void setMassAverage(Double massAverage)
     {
         _massAverage = massAverage;
-    }
-
-    public List<MoleculeTransition> getMoleculeTransitionsList()
-    {
-        return _moleculeTransitionsList;
-    }
-
-    public void setMoleculeTransitionsList(List<MoleculeTransition> moleculeTransitionsList)
-    {
-        _moleculeTransitionsList = moleculeTransitionsList;
     }
 
     public static Set<String> getColumns()

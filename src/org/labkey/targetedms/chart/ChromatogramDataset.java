@@ -468,8 +468,6 @@ public abstract class ChromatogramDataset
         private PeakInChart _bestPeakInChart;
         private PrecursorChromInfo _bestPrecursorChromInfo;
         private int _bestPeakSeriesIndex;
-        private Container _container;
-        private User _user;
 
         public PrecursorOptimizationPeakDataset(PrecursorChromInfo precursorChromInfo, boolean syncIntensity, boolean syncRt,
                                                 User user, org.labkey.api.data.Container container)
@@ -479,8 +477,6 @@ public abstract class ChromatogramDataset
                   syncIntensity,
                   syncRt, user, container);
 
-            _user = user;
-            _container = container;
             _precursorChromInfo = precursorChromInfo;
         }
 

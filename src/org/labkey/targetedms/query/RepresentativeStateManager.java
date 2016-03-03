@@ -316,8 +316,6 @@ public class RepresentativeStateManager
             return Collections.emptyList();
         }
         SQLFragment sql = new SQLFragment("SELECT pre2.Id FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
-        sql.append(",");
         sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre1");
         sql.append(" INNER JOIN ");
         sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre2");
@@ -325,10 +323,11 @@ public class RepresentativeStateManager
         sql.append(TargetedMSManager.getSqlDialect().concatenate("pre1.ModifiedSequence", "CAST(pre1.Charge AS varchar)"));
         sql.append(") = (");
         sql.append(TargetedMSManager.getSqlDialect().concatenate("pre2.ModifiedSequence", "CAST(pre2.Charge AS varchar)"));
-        sql.append(")");
-        sql.append(" AND gp.RepresentativeDataState=?");
+        sql.append("))");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
+        sql.append(" ON gp.Id = pre2.Id AND gp.RepresentativeDataState=?");
         sql.add(RepresentativeDataState.Representative.ordinal());
-        sql.append(")");
         sql.append(" INNER JOIN ");
         sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
         sql.append(" ON (gm.Id = gp.GeneralMoleculeId) ");

@@ -1,5 +1,7 @@
 package org.labkey.targetedms.parser;
 
+import java.util.List;
+
 public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnnotation>
 {
     protected int _peptideGroupId;
@@ -8,6 +10,7 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
     protected Double _avgMeasuredRetentionTime;  // average measured retention time over all replicates
     protected String _note;
     protected Double _explicitRetentionTime;
+    private List<GeneralMoleculeChromInfo> _generalMoleculeChromInfoList;
 
     public int getPeptideGroupId()
     {
@@ -65,6 +68,15 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
     public void setExplicitRetentionTime(Double explicitRetentionTime)
     {
         _explicitRetentionTime = explicitRetentionTime;
+    }
+    public List<GeneralMoleculeChromInfo> getGeneralMoleculeChromInfoList()
+    {
+        return _generalMoleculeChromInfoList;
+    }
+
+    public void setGeneralMoleculeChromInfoList(List<GeneralMoleculeChromInfo> generalMoleculeChromInfoList)
+    {
+        _generalMoleculeChromInfoList = generalMoleculeChromInfoList;
     }
 
     public abstract String getPrecursorKey(GeneralMolecule gm, GeneralPrecursor gp);

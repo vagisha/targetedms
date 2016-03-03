@@ -3900,8 +3900,12 @@ public class TargetedMSController extends SpringActionController
             sqlFragment.append("targetedms.Precursor AS pc, ");
             sqlFragment.append("targetedms.GeneralPrecursor AS gp ");
             sqlFragment.append("WHERE  ");
-            sqlFragment.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND gp.GeneralMoleculeId = p.Id AND ");
-            sqlFragment.append("p.Id = gm.Id AND r.Deleted = ? AND r.Container = ? ");
+            sqlFragment.append("p.Id = gm.Id AND ");
+            sqlFragment.append("gm.PeptideGroupId = pg.Id AND ");
+            sqlFragment.append("pg.RunId = r.Id AND ");
+            sqlFragment.append("pc.Id = gp.Id AND ");
+            sqlFragment.append("gp.GeneralMoleculeId = gm.Id AND ");
+            sqlFragment.append("r.Deleted = ? AND r.Container = ? ");
             // Only proteins (PeptideGroup) are marked as representative in "LibraryProtein" folder types. Get the Ids
             // of all the peptides of representative proteins.
             if(folderType == FolderType.LibraryProtein)

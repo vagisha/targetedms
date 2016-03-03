@@ -1,6 +1,8 @@
 package org.labkey.targetedms.parser;
 
-public class GeneralPrecursor extends AnnotatedEntity<PrecursorAnnotation>
+import java.util.List;
+
+public class GeneralPrecursor<TransitionType extends GeneralTransition> extends AnnotatedEntity<PrecursorAnnotation>
 {
     protected int _generalMoleculeId;
     protected int _charge;
@@ -13,6 +15,8 @@ public class GeneralPrecursor extends AnnotatedEntity<PrecursorAnnotation>
     protected Double _explicitCollisionEnergy;
     protected Double _explicitDriftTimeMsec;
     protected Double _explicitDriftTimeHighEnergyOffsetMsec;
+    private List<PrecursorChromInfo> _chromInfoList;
+    private List<TransitionType> _transitionsList;
 
     public int getGeneralMoleculeId()
     {
@@ -122,5 +126,25 @@ public class GeneralPrecursor extends AnnotatedEntity<PrecursorAnnotation>
     public void setRepresentativeDataState(RepresentativeDataState representativeDataState)
     {
         _representativeDataState = representativeDataState;
+    }
+
+    public List<PrecursorChromInfo> getChromInfoList()
+    {
+        return _chromInfoList;
+    }
+
+    public void setChromInfoList(List<PrecursorChromInfo> chromInfoList)
+    {
+        _chromInfoList = chromInfoList;
+    }
+
+    public List<TransitionType> getTransitionsList()
+    {
+        return _transitionsList;
+    }
+
+    public void setTransitionsList(List<TransitionType> transitionsList)
+    {
+        _transitionsList = transitionsList;
     }
 }

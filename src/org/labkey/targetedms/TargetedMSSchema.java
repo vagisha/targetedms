@@ -886,6 +886,16 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_TRANSITION_CHROM_INFO.equalsIgnoreCase(name))
         {
             TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.SampleFileFK.getSQL());
+            TargetedMSSchema targetedMSSchema = this;
+            result.getColumn("TransitionId").setFk(new LookupForeignKey("Id")
+            {
+                @Override
+                public TableInfo getLookupTableInfo()
+                {
+                    return new DocTransitionsTableInfo(targetedMSSchema);
+                }
+            });
+
             // Add a link to view the chromatogram an individual transition
             result.setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.TransitionChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
 

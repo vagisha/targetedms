@@ -34,8 +34,6 @@ public class Peptide extends GeneralMolecule
     private double _calcNeutralMass;
     private int _numMissedCleavages;
 
-    private List<GeneralMoleculeAnnotation> annotations;
-
     private Integer _rank;  // peptide rank either by spectrum count or by the total intensity
                            // of the picked transition peaks.
                            // If there are multiple precursorList, the rank of the best precursor is used.
@@ -43,8 +41,6 @@ public class Peptide extends GeneralMolecule
     private Boolean _decoy;
 
     private List<Precursor> _precursorList;
-    private List<GeneralMoleculeChromInfo> _generalMoleculeChromInfoList;
-
     private List<StructuralModification> _structuralMods;
     private List<IsotopeModification> _isotopeMods;
 
@@ -165,16 +161,6 @@ public class Peptide extends GeneralMolecule
         _precursorList = precursorList;
     }
 
-    public List<GeneralMoleculeChromInfo> getGeneralMoleculeChromInfoList()
-    {
-        return _generalMoleculeChromInfoList;
-    }
-
-    public void setGeneralMoleculeChromInfoList(List<GeneralMoleculeChromInfo> generalMoleculeChromInfoList)
-    {
-        _generalMoleculeChromInfoList = generalMoleculeChromInfoList;
-    }
-
     public List<StructuralModification> getStructuralMods()
     {
         return _structuralMods;
@@ -208,18 +194,6 @@ public class Peptide extends GeneralMolecule
     public boolean isStandardTypePeptide()
     {
         return _standardType != null;
-    }
-
-    @Override
-    public List<GeneralMoleculeAnnotation> getAnnotations()
-    {
-        return annotations;
-    }
-
-    @Override
-    public void setAnnotations(List<GeneralMoleculeAnnotation> annotations)
-    {
-        this.annotations = annotations;
     }
 
     @Override
