@@ -20,6 +20,7 @@ import org.apache.commons.dbcp.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp.PoolableConnectionFactory;
 import org.apache.commons.dbcp.PoolingDataSource;
 import org.apache.commons.pool.impl.GenericObjectPool;
+import org.jetbrains.annotations.NotNull;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -33,9 +34,9 @@ import java.sql.SQLException;
  */
 public class ConnectionSource implements AutoCloseable
 {
-    private String _libraryFilePath;
+    private final String _libraryFilePath;
     private final DataSource _dataSource;
-    private GenericObjectPool _connectionPool;
+    private final @NotNull GenericObjectPool _connectionPool;
 
     static
     {
@@ -52,8 +53,25 @@ public class ConnectionSource implements AutoCloseable
     public ConnectionSource(String libraryFilePath)
     {
         _libraryFilePath = libraryFilePath;
-        String connectURI = "jdbc:sqlite:/" + libraryFilePath;
-        _dataSource = setupDataSource(connectURI);
+
+        // Create an ObjectPool that serves as the pool of connections.
+        _connectionPool = new GenericObjectPool();
+        _connectionPool.setMaxActive(5);
+
+        // Create a ConnectionFactory that the pool will use to create Connections.
+        ConnectionFactory connectionFactory = new DriverManagerConnectionFactory("jdbc:sqlite:/" + libraryFilePath, null);
+
+        // Create a PoolableConnectionFactory, which wraps the "real" Connections created by the
+        // ConnectionFactory with the classes that implement the pooling functionality.
+        new PoolableConnectionFactory(connectionFactory,
+                _connectionPool,
+                null,
+                "SELECT 1",  // validationQuery
+                false, // defaultReadOnly
+                true); // defaultAutoCommit
+
+        // Create the PoolingDataSource
+        _dataSource = new PoolingDataSource(_connectionPool);
     }
 
     public String getLibraryFilePath()
@@ -68,34 +86,8 @@ public class ConnectionSource implements AutoCloseable
 
     public void close()
     {
-        if(_connectionPool != null)
-        {
-            _connectionPool.clear();
-            try {_connectionPool.close();} catch(Exception ignored) {}
-        }
-    }
-
-    private DataSource setupDataSource(String connectURI)
-    {
-        // Create a ConnectionFactory that the pool will use to create Connections.
-        ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(connectURI,null);
-
-        // Create an ObjectPool that serves as the pool of connections.
-        _connectionPool =  new GenericObjectPool();
-        _connectionPool.setMaxActive(5);
-
-
-        // Create a PoolableConnectionFactory, which wraps the "real" Connections created by the
-        // ConnectionFactory with the classes that implement the pooling functionality.
-        new PoolableConnectionFactory(connectionFactory,
-                                      _connectionPool,
-                                      null,
-                                      "SELECT 1",  // validationQuery
-                                      false, // defaultReadOnly
-                                      true); // defaultAutoCommit
-
-        // Create the PoolingDataSource
-        return new PoolingDataSource(_connectionPool);
+        _connectionPool.clear();
+        try {_connectionPool.close();} catch(Exception ignored) {}
     }
 
     /**

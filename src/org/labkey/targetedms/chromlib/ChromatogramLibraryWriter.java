@@ -233,39 +233,27 @@ public class ChromatogramLibraryWriter
 
     private <T> void saveEntry(Dao<T> dao, T object) throws SQLException
     {
-        Connection connection = null;
-        try
+        try (Connection connection = getConnection())
         {
-            connection = getConnection();
             dao.save(object, connection);
         }
         catch(SQLException e)
         {
-            _log.error("Error saving to "+dao.getTableName(), e);
+            _log.error("Error saving to " + dao.getTableName(), e);
             throw e;
-        }
-        finally
-        {
-            if(connection != null) try{connection.close();} catch(SQLException ignored){}
         }
     }
 
     private <T> void saveList(Dao<T> dao, List<T> list) throws SQLException
     {
-        Connection connection = null;
-        try
+        try (Connection connection = getConnection())
         {
-            connection = getConnection();
             dao.saveAll(list, connection);
         }
         catch(SQLException e)
         {
-            _log.error("Error saving list to "+dao.getTableName(), e);
+            _log.error("Error saving list to " + dao.getTableName(), e);
             throw e;
-        }
-        finally
-        {
-            if(connection != null) try{connection.close();} catch(SQLException ignored){}
         }
     }
 }
