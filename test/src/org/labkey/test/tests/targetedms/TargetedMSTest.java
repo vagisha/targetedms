@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.labkey.test.tests;
+package org.labkey.test.tests.targetedms;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;

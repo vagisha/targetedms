@@ -18,7 +18,7 @@ package org.labkey.test.components.targetedms;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.Component;
-import org.labkey.test.tests.TargetedMSLinkVersionsTest;
+import org.labkey.test.tests.targetedms.TargetedMSLinkVersionsTest;
 import org.labkey.test.util.Ext4Helper;
 import org.openqa.selenium.WebElement;
 

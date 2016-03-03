@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.labkey.test.tests;
+package org.labkey.test.tests.targetedms;
 
 import org.apache.commons.collections15.Bag;
 import org.apache.commons.collections15.bag.HashBag;
