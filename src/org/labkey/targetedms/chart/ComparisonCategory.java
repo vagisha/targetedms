@@ -330,6 +330,127 @@ public interface ComparisonCategory
         }
     }
 
+    public class MoleculeCategory implements ComparisonCategory
+    {
+        private String _customIonName;
+        private int _charge;
+        private String _annotationValue;
+        private boolean _useChargeInDisplayLabel = true;
+
+        public MoleculeCategory(String customIonName, int charge, String annotValue)
+        {
+            _customIonName = customIonName;
+            _charge = charge;
+            _annotationValue = annotValue;
+        }
+
+        public String getCustomIonName()
+        {
+            return _customIonName;
+        }
+
+        public int getCharge()
+        {
+            return _charge;
+        }
+
+        public String getAnnotationValue()
+        {
+            return _annotationValue;
+        }
+
+        public void setUseChargeInDisplayLabel(boolean useChargeInDisplayLabel)
+        {
+            _useChargeInDisplayLabel = useChargeInDisplayLabel;
+        }
+
+        public boolean isUseChargeInDisplayLabel()
+        {
+            return _useChargeInDisplayLabel;
+        }
+
+        public String getCategoryLabel()
+        {
+            return makeLabel(false);
+        }
+
+        private String makeLabel(boolean makeSortingLabel)
+        {
+            StringBuilder label = new StringBuilder();
+
+            if (!makeSortingLabel && hasAnnotationValue())
+            {
+                label.append(getAnnotationValue()).append(", ");
+            }
+
+            label.append(getCustomIonName());
+
+            if (getCharge() > 0)
+            {
+                label.append(LabelFactory.getChargeLabel(getCharge(), false));
+            }
+
+            if (makeSortingLabel && hasAnnotationValue())
+            {
+                label.append(", ").append(getAnnotationValue());
+            }
+            return label.toString();
+        }
+
+        public boolean hasAnnotationValue()
+        {
+            return !StringUtils.isBlank(getAnnotationValue());
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            MoleculeCategory that = (MoleculeCategory) o;
+
+            if (_charge != that._charge) return false;
+            if (_annotationValue != null ? !_annotationValue.equals(that._annotationValue) : that._annotationValue != null)
+                return false;
+            if (!_customIonName.equals(that._customIonName)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = _customIonName.hashCode();
+            result = 31 * result + _charge;
+            result = 31 * result + (_annotationValue != null ? _annotationValue.hashCode() : 0);
+            return result;
+        }
+
+        @Override
+        public String getDisplayLabel()
+        {
+            StringBuilder label = new StringBuilder();
+
+            if (hasAnnotationValue())
+            {
+                label.append(getAnnotationValue()).append(", ");
+            }
+            label.append(getCustomIonName());
+            if (isUseChargeInDisplayLabel())
+            {
+                label.append(LabelFactory.getChargeLabel(getCharge(), false));
+            }
+            return label.toString();
+        }
+
+        @Override
+        public String getSortingLabel()
+        {
+            return makeLabel(true);
+        }
+    }
+
     public static class TestCase extends Assert
     {
         @Test

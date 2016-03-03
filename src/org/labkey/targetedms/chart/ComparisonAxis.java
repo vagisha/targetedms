@@ -151,10 +151,10 @@ abstract class ComparisonAxis extends CategoryAxis
         return false;
     }
 
-    static class PeptideAxis extends ComparisonAxis
+    static class GeneralMoleculeAxis extends ComparisonAxis
     {
         private Map<String, ComparisonCategory> _categoryMap;
-        public PeptideAxis(String label, Map<String, ComparisonCategory> categoryMap)
+        public GeneralMoleculeAxis(String label, Map<String, ComparisonCategory> categoryMap)
         {
             super(label);
             _categoryMap = categoryMap;

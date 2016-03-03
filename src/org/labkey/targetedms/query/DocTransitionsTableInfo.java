@@ -20,9 +20,11 @@ import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
@@ -39,8 +41,29 @@ public class DocTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
     {
         super(schema, TargetedMSManager.getTableInfoTransition());
 
-        setName(TargetedMSSchema.TABLE_TRANSITION);
-        setDescription("Contains a row for each transition loaded in a targeted MS run.");
+        setDescription(TargetedMSManager.getTableInfoTransition().getDescription());
+
+        ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
+        precursorCol.setFk(new LookupForeignKey("Id")
+        {
+            @Override
+            public TableInfo getLookupTableInfo()
+            {
+                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
+            }
+        });
+        precursorCol.setHidden(true);
+
+        ColumnInfo precursorIdCol = wrapColumn("PrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
+        precursorIdCol.setFk(new LookupForeignKey("Id")
+        {
+            @Override
+            public TableInfo getLookupTableInfo()
+            {
+                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
+            }
+        });
+        addColumn(precursorIdCol);
 
         //Display the fragment as y9 instead of 'y' and '9' in separate columns
         StringBuilder sql = new StringBuilder();

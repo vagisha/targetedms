@@ -35,30 +35,6 @@ public class AbstractGeneralTransitionTableInfo extends JoinedTargetedMSTable
         super(TargetedMSManager.getTableInfoGeneralTransition(), tableInfo,
                 schema, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK.getSQL(),
                 TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations");
-
-
-        ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
-        precursorCol.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
-            }
-        });
-        precursorCol.setHidden(true);
-
-        ColumnInfo precursorIdCol = wrapColumn("PrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
-        precursorIdCol.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
-            }
-        });
-        addColumn(precursorIdCol);
-
     }
 
     public void setRunId(int runId)

@@ -24,8 +24,6 @@ import java.util.Set;
  */
 public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
 {
-    private int _Id;
-
     private String _ionFormula;
     private String _customIonName;
     private Double _massMonoisotopic;
@@ -69,28 +67,5 @@ public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
     public void setMassAverage(Double massAverage)
     {
         _massAverage = massAverage;
-    }
-
-    public static Set<String> getColumns()
-    {
-        Set<String> colNames = new HashSet<>();
-        colNames.add("Id");
-        colNames.add("GeneralMoleculeId");
-        colNames.add("Mz");
-        colNames.add("Charge");
-        colNames.add("CollisionEnergy");
-        colNames.add("DeclusteringPotential");
-        colNames.add("Decoy");
-        colNames.add("Note");
-        colNames.add("Modified");
-        colNames.add("RepresentativeDataState");
-        colNames.add("ExplicitCollisionEnergy");
-        colNames.add("ExplicitDriftTimeMsec");
-        colNames.add("ExplicitDriftTimeHighEnergyOffsetMsec");
-        colNames.add("IonFormula");
-        colNames.add("CustomIonName");
-        colNames.add("MassAverage");
-        colNames.add("MassMonoisotopic");
-        return colNames;
     }
 }

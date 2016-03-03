@@ -35,7 +35,6 @@ public class PeptideTransitionsView extends DocumentTransitionsView
 
     public PeptideTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport) throws SQLException
     {
-
         super(ctx, schema, queryName, runId, !forExport,
                 new QueryNestingOption(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId"),
                         FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId", "Id"), null), DATAREGION_NAME, TITLE);

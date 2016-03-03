@@ -20,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DatabaseCache;
 import org.labkey.api.data.SQLFragment;
@@ -52,7 +51,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 
 /**
@@ -121,10 +119,8 @@ public class PrecursorManager
         Sort sort = new Sort("Charge, IsotopeLabelId");
 
         Set<String> colNames = new HashSet<>();
-        List<ColumnInfo> columnsGenPre = TargetedMSManager.getTableInfoGeneralPrecursor().getColumns();
-        List<ColumnInfo> columnsPre = TargetedMSManager.getTableInfoPrecursor().getColumns();
-        colNames.addAll(columnsGenPre.stream().map(ColumnInfo::getName).collect(Collectors.toList()));
-        colNames.addAll(columnsPre.stream().map(ColumnInfo::getName).collect(Collectors.toList()));
+        colNames.addAll(TargetedMSManager.getTableInfoPrecursor().getColumnNameSet());
+        colNames.addAll(TargetedMSManager.getTableInfoGeneralPrecursor().getColumnNameSet());
 
         List<Precursor> precursors = new TableSelector(new PrecursorTableInfo(targetedMSSchema), colNames, filter,  sort).getArrayList(Precursor.class);
 

@@ -18,8 +18,10 @@ package org.labkey.targetedms.query;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
@@ -37,22 +39,51 @@ public class MoleculeTransitionsTableInfo extends AbstractGeneralTransitionTable
     {
         super(schema, TargetedMSManager.getTableInfoMoleculeTransition());
 
-        setName(TargetedMSSchema.TABLE_MOLECULE_TRANSITION);
-        setDescription("Contains a row for each non-proteomic molecule transition loaded in a targeted MS run.");
+        setDescription(TargetedMSManager.getTableInfoMoleculeTransition().getDescription());
 
-        List<FieldKey> defaultCols = new ArrayList<>();
-        int idx = 0;
+        ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
+        precursorCol.setFk(new LookupForeignKey("Id")
+        {
+            @Override
+            public TableInfo getLookupTableInfo()
+            {
+                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR);
+            }
+        });
+        precursorCol.setHidden(true);
 
-        defaultCols.add(FieldKey.fromParts("TransitionId", "GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId", "Label"));
-        defaultCols.add(FieldKey.fromParts("TransitionId", "GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId", "Description"));
-        defaultCols.add(FieldKey.fromParts("TransitionId", "GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId", "Annotations"));
-        defaultCols.add(idx++, FieldKey.fromParts("Mz"));
-        defaultCols.add(idx++, FieldKey.fromParts("Charge"));
-        defaultCols.add(idx++, FieldKey.fromParts("FragmentType"));
-        defaultCols.add(idx++, FieldKey.fromParts("IonFormula"));
-        defaultCols.add(idx++, FieldKey.fromParts("MassAverage"));
-        defaultCols.add(idx++, FieldKey.fromParts("MassMonoisotopic"));
-        setDefaultVisibleColumns(defaultCols);
+        ColumnInfo precursorIdCol = wrapColumn("MoleculePrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
+        precursorIdCol.setFk(new LookupForeignKey("Id")
+        {
+            @Override
+            public TableInfo getLookupTableInfo()
+            {
+                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR);
+            }
+        });
+        addColumn(precursorIdCol);
+
+        ArrayList<FieldKey> visibleColumns = new ArrayList<>();
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId", "Label"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId", "Description"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId", "Annotations"));
+        // Molecule level information
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "CustomIonName"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "IonFormula"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "Annotations"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "MassAverage"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "MassMonoisotopic"));
+        // Molecule Precursor level information
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "CustomIonName"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "Annotations"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MassAverage"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "Mz"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "Charge"));
+        // Molecule Transition level information
+        visibleColumns.add(FieldKey.fromParts("FragmentType"));
+        visibleColumns.add(FieldKey.fromParts("Mz"));
+        visibleColumns.add(FieldKey.fromParts("Charge"));
+        setDefaultVisibleColumns(visibleColumns);
 
         // Create a WrappedColumn for Note & Annotations
         WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");

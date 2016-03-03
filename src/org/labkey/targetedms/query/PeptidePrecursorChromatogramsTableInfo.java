@@ -30,7 +30,7 @@ import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 
@@ -48,10 +48,10 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
 {
     private static final String _peptideChromInfoCol = "pepciId";
 
-    public PeptidePrecursorChromatogramsTableInfo(TargetedMSSchema schema, Peptide peptide,
+    public PeptidePrecursorChromatogramsTableInfo(TargetedMSSchema schema, GeneralMolecule generalMolecule,
                                                   TargetedMSController.ChromatogramForm form)
     {
-        super(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), peptide, form.getAnnotationFilter(), form.getReplicatesFilterList()), schema);
+        super(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), generalMolecule, form.getAnnotationFilter(), form.getReplicatesFilterList()), schema);
         wrapAllColumns(true);
         ColumnInfo pepChromCol = getColumn(_peptideChromInfoCol);
         pepChromCol.setLabel("");
@@ -129,7 +129,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
         return colNames;
     }
 
-    private static TableInfo getPivotByPrecursorChromInfoTable(Container container, User user, Peptide peptide,@Nullable List<ReplicateAnnotation> filterAnnotations, @Nullable List<Integer> replicatesFilter)
+    private static TableInfo getPivotByPrecursorChromInfoTable(Container container, User user, GeneralMolecule generalMolecule,@Nullable List<ReplicateAnnotation> filterAnnotations, @Nullable List<Integer> replicatesFilter)
     {
         SQLFragment sql = new SQLFragment("SELECT");
         sql.append(" replicate, sample,isotopecharge, ").append(_peptideChromInfoCol).append(", MIN(preciId) AS preciId FROM");
@@ -141,7 +141,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
         sql.append(", Id AS preciId");
         sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
-        sql.append(" WHERE PrecursorId.GeneralMoleculeId=").append(peptide.getId());
+        sql.append(" WHERE PrecursorId.GeneralMoleculeId=").append(generalMolecule.getId());
         sql.append(" AND OptimizationStep IS NULL "); // Ignore precursorChromInfos for optimization peaks (e.g. Collision energy optimization)
         if(replicatesFilter != null && replicatesFilter.size() != 0)
         {

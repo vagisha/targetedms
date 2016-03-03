@@ -125,6 +125,36 @@ public class ComparisonChartInputMaker
             }
             return dataset;
         }
+        else if (_chartType == ComparisonDataset.ChartType.MOLECULE_COMPARISON)
+        {
+            Map<ComparisonCategory.MoleculeCategory, List<PrecursorChromInfoLitePlus>> datasetMap = new HashMap<>();
+
+            for (PrecursorChromInfoLitePlus pciPlus : _pciPlusList)
+            {
+                ComparisonCategory.MoleculeCategory categoryLabel = getMoleculeCategoryLabel(pciPlus, sampleFileAnnotMap);
+                if (!StringUtils.isBlank(_groupByAnnotationName) && !categoryLabel.hasAnnotationValue())
+                    continue;
+
+                List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.get(categoryLabel);
+                if (categoryPciList == null)
+                {
+                    categoryPciList = new ArrayList<>();
+                    datasetMap.put(categoryLabel, categoryPciList);
+                }
+                categoryPciList.add(pciPlus);
+            }
+
+            ComparisonDataset dataset = new ComparisonDataset(_runId, seriesItemMaker, _logValues);
+            dataset.setSetSortByValues(StringUtils.isBlank(_groupByAnnotationName));
+
+            for (ComparisonCategory.MoleculeCategory category : datasetMap.keySet())
+            {
+                ComparisonDataset.ComparisonCategoryItem categoryDataset = new ComparisonDataset.ComparisonCategoryItem(category);
+                categoryDataset.setData(seriesItemMaker, datasetMap.get(category), _cvValues, _chartType);
+                dataset.addCategory(categoryDataset);
+            }
+            return dataset;
+        }
         else
         {
             // REPLICATE COMPARISON
@@ -257,6 +287,14 @@ public class ComparisonChartInputMaker
         return new ComparisonCategory.PeptideCategory(pciPlus.getPeptideModifiedSequence(),
                                    pciPlus.getCharge(),
                                    pciPlus.getIsotopeLabel(),
+                                   sampleFileAnnotMap.get(pciPlus.getSampleFileId()));
+    }
+
+    private ComparisonCategory.MoleculeCategory getMoleculeCategoryLabel(PrecursorChromInfoLitePlus pciPlus,
+                                                    Map<Integer, String> sampleFileAnnotMap)
+    {
+        return new ComparisonCategory.MoleculeCategory(pciPlus.getCustomIonName(),
+                                   pciPlus.getCharge(),
                                    sampleFileAnnotMap.get(pciPlus.getSampleFileId()));
     }
 }

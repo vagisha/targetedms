@@ -71,14 +71,19 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "Description"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "NoteAnnotations"));
+
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "CustomIonName"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "IonFormula"));
+        visibleColumns.add(FieldKey.fromParts("MoleculeId", "NoteAnnotations"));
+        visibleColumns.add(FieldKey.fromParts("MoleculeId", "MassAverage"));
+        visibleColumns.add(FieldKey.fromParts("MoleculeId", "MassMonoisotopic"));
+
+        visibleColumns.add(FieldKey.fromParts("CustomIonName"));
+        visibleColumns.add(FieldKey.fromParts("NoteAnnotations"));
         visibleColumns.add(FieldKey.fromParts("Charge"));
         visibleColumns.add(FieldKey.fromParts("Mz"));
-        visibleColumns.add(FieldKey.fromParts("CollisionEnergy"));
-        visibleColumns.add(FieldKey.fromParts("MassMonoisotopic"));
         visibleColumns.add(FieldKey.fromParts("MassAverage"));
-        visibleColumns.add(FieldKey.fromParts("CollisionEnergy"));
+        visibleColumns.add(FieldKey.fromParts("MassMonoisotopic"));
         visibleColumns.add(FieldKey.fromParts("TransitionCount"));
 
         setDefaultVisibleColumns(visibleColumns);

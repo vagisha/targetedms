@@ -1004,12 +1004,19 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    private static class GeneralMoleculeChromatogramsViewBean
+    public static class GeneralMoleculeChromatogramsViewBean
     {
         private ChromatogramForm _form;
         private PeptideGroup _peptideGroup;
         private TargetedMSRun _run;
         protected String _resultsUri;
+
+        private List<String> _replicateAnnotationNameList;
+        private List<ReplicateAnnotation> _replicateAnnotationValueList;
+        private List<Replicate> _replicatesFilter;
+        private boolean _canBeSplitView;
+        private boolean _showOptPeaksOption;
+
 
         public ChromatogramForm getForm()
         {
@@ -1047,54 +1054,6 @@ public class TargetedMSController extends SpringActionController
         }
 
         public void setResultsUri(String resultsUri)
-        {
-            _resultsUri = resultsUri;
-        }
-    }
-
-    public static class MoleculeChromatogramsViewBean extends GeneralMoleculeChromatogramsViewBean
-    {
-        private Molecule _molecule;
-        private List<MoleculePrecursor> _precursorList;
-
-        public MoleculeChromatogramsViewBean(String resultsUri)
-        {
-            _resultsUri = resultsUri;
-        }
-
-        public Molecule getMolecule()
-        {
-            return _molecule;
-        }
-
-        public void setMolecule(Molecule molecule)
-        {
-            _molecule = molecule;
-        }
-
-        public List<MoleculePrecursor> getPrecursorList()
-        {
-            return _precursorList;
-        }
-
-        public void setPrecursorList(List<MoleculePrecursor> precursorList)
-        {
-            _precursorList = precursorList;
-        }
-    }
-
-    public static class PeptideChromatogramsViewBean extends GeneralMoleculeChromatogramsViewBean
-    {
-        private Peptide _peptide;
-        private List<Precursor> _precursorList;
-        private List<PeptideSettings.IsotopeLabel> labels;
-        private List<String> _replicateAnnotationNameList;
-        private List<ReplicateAnnotation> _replicateAnnotationValueList;
-        private List<Replicate> _replicatesFilter;
-        private boolean _canBeSplitView;
-        private boolean _showOptPeaksOption;
-
-        public PeptideChromatogramsViewBean(String resultsUri)
         {
             _resultsUri = resultsUri;
         }
@@ -1146,6 +1105,49 @@ public class TargetedMSController extends SpringActionController
         public void setReplicateAnnotationValueList(List<ReplicateAnnotation> replicateAnnotationValueList)
         {
             _replicateAnnotationValueList = replicateAnnotationValueList;
+        }
+    }
+
+    public static class MoleculeChromatogramsViewBean extends GeneralMoleculeChromatogramsViewBean
+    {
+        private Molecule _molecule;
+        private List<MoleculePrecursor> _precursorList;
+
+        public MoleculeChromatogramsViewBean(String resultsUri)
+        {
+            _resultsUri = resultsUri;
+        }
+
+        public Molecule getMolecule()
+        {
+            return _molecule;
+        }
+
+        public void setMolecule(Molecule molecule)
+        {
+            _molecule = molecule;
+        }
+
+        public List<MoleculePrecursor> getPrecursorList()
+        {
+            return _precursorList;
+        }
+
+        public void setPrecursorList(List<MoleculePrecursor> precursorList)
+        {
+            _precursorList = precursorList;
+        }
+    }
+
+    public static class PeptideChromatogramsViewBean extends GeneralMoleculeChromatogramsViewBean
+    {
+        private Peptide _peptide;
+        private List<Precursor> _precursorList;
+        private List<PeptideSettings.IsotopeLabel> labels;
+
+        public PeptideChromatogramsViewBean(String resultsUri)
+        {
+            _resultsUri = resultsUri;
         }
 
         public Peptide getPeptide()
@@ -1489,6 +1491,29 @@ public class TargetedMSController extends SpringActionController
             moleculeInfo.setTitle("Small Molecule Summary");
             vbox.addView(moleculeInfo);
 
+            // Precursor and transition chromatograms. One row per replicate
+            //VBox chromatogramsBox = new VBox();
+            //PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(molecule, new TargetedMSSchema(getUser(), getContainer()),form, errors);
+            //JspView<MoleculeChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
+            //
+            //chromatogramsBox.setTitle(PeptidePrecursorChromatogramsView.TITLE);
+            //chromatogramsBox.enableExpandCollapse(PeptidePrecursorChromatogramsView.TITLE, false);
+            //chromatogramsBox.addView(chartForm);
+            //chromatogramsBox.addView(chromView);
+            //chromatogramsBox.setShowTitle(true);
+            //chromatogramsBox.setFrame(WebPartView.FrameType.PORTAL);
+            //vbox.addView(chromatogramsBox);
+
+            // Summary charts for the molecule
+            SummaryChartBean summaryChartBean = new SummaryChartBean();
+            summaryChartBean.setMoleculeId(moleculeId);
+            summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
+            summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
+            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp", summaryChartBean);
+            summaryChartView.setTitle("Summary Charts");
+            summaryChartView.enableExpandCollapse("SummaryChartsView", false);
+            vbox.addView(summaryChartView);
+
             return vbox;
         }
 
@@ -1592,70 +1617,79 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    // ------------------------------------------------------------------------
-    // Action to display a peak areas chart
-    // ------------------------------------------------------------------------
-    @RequiresPermission(ReadPermission.class)
-    public class ShowPeptidePeakAreasAction extends ExportAction<SummaryChartForm>
+    private abstract class ShowSummaryChartAction<FORM> extends ExportAction<FORM>
     {
-        @Override
-        public void export(SummaryChartForm form, HttpServletResponse response, BindException errors) throws Exception
+        PeptideGroup _peptideGrp = null;
+        Peptide _peptide = null;
+        Precursor _precursor = null;
+        Molecule _molecule = null;
+        MoleculePrecursor _moleculePrecursor = null;
+
+        public void validatePeptideGroup(SummaryChartForm form)
         {
-            PeptideGroup peptideGrp = null;
-            if(form.getPeptideGroupId() != 0)
+            if (form.getPeptideGroupId() != 0)
             {
-                peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), form.getPeptideGroupId());
-                if(peptideGrp == null)
+                _peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), form.getPeptideGroupId());
+                if (_peptideGrp == null)
                 {
                     throw new NotFoundException(String.format("No peptide group found in this folder for peptideGroupId: %d", form.getPeptideGroupId()));
                 }
             }
+        }
 
-            Peptide peptide = null;
-            Precursor precursor = null;
-            if(form.getPeptideId() != 0)
+        public void validatePeptide(SummaryChartForm form)
+        {
+            if (form.getPeptideId() != 0)
             {
-                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
-                if(peptide == null)
+                _peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
+                if (_peptide == null)
                 {
                     throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", form.getPeptideId()));
                 }
 
-                if(peptideGrp == null)
+                if (_peptideGrp == null)
                 {
-                    peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), peptide.getPeptideGroupId());
+                    _peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), _peptide.getPeptideGroupId());
                 }
 
                 if(form.getPrecursorId() != 0)
                 {
-                    precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId(), getUser());
-                    if(precursor == null)
+                    _precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId(), getUser());
+                    if (_precursor == null)
                     {
                         throw new NotFoundException(String.format("No precursor found in this folder for precursorId: %d", form.getPrecursorId()));
                     }
                 }
             }
-
-            JFreeChart chart = new ComparisonChartMaker().makePeakAreasChart(
-                    form.getReplicateId(),
-                    peptideGrp,
-                    peptide,
-                    precursor,
-                    form.getGroupByReplicateAnnotName(),
-                    form.getFilterByReplicateAnnotName(),
-                    form.isCvValues(),
-                    form.isLogValues(), getUser(), getContainer());
-            if (null == chart)
-            {
-                chart = createEmptyChart();
-                form.setChartHeight(20);
-                form.setChartWidth(300);
-            }
-
-            writePNG(form, response, chart);
         }
 
-        private JFreeChart createEmptyChart()
+        public void validateMolecule(SummaryChartForm form)
+        {
+            if (form.getMoleculeId() != 0)
+            {
+                _molecule = MoleculeManager.getMolecule(getContainer(), form.getMoleculeId());
+                if (_molecule == null)
+                {
+                    throw new NotFoundException(String.format("No small molecule found in this folder for moleculeId: %d", form.getMoleculeId()));
+                }
+
+                if (_peptideGrp == null)
+                {
+                    _peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), _molecule.getPeptideGroupId());
+                }
+
+                if(form.getMoleculePrecursorId() != 0)
+                {
+                    _moleculePrecursor = MoleculePrecursorManager.getPrecursor(getContainer(), form.getMoleculePrecursorId(), getUser());
+                    if (_moleculePrecursor == null)
+                    {
+                        throw new NotFoundException(String.format("No molecule precursor found in this folder for precursorId: %d", form.getMoleculePrecursorId()));
+                    }
+                }
+            }
+        }
+
+        public JFreeChart createEmptyChart()
         {
             JFreeChart chart = ChartFactory.createBarChart("", "", "", null, PlotOrientation.VERTICAL, false, false, false);
             chart.setTitle(new TextTitle("No chromatogram data found.", new java.awt.Font("SansSerif", Font.PLAIN, 12)));
@@ -1664,59 +1698,50 @@ public class TargetedMSController extends SpringActionController
     }
 
     // ------------------------------------------------------------------------
-    // Action to display retention times chart.
+    // Action to display a peak areas chart
     // ------------------------------------------------------------------------
     @RequiresPermission(ReadPermission.class)
-    public class ShowRetentionTimesChartAction extends ExportAction<SummaryChartForm>
+    public class ShowPeakAreasAction extends ShowSummaryChartAction<SummaryChartForm>
     {
+        @Override
+        public void validate(SummaryChartForm form, BindException errors)
+        {
+            validatePeptideGroup(form);
+            validatePeptide(form);
+            validateMolecule(form);
+        }
+
         @Override
         public void export(SummaryChartForm form, HttpServletResponse response, BindException errors) throws Exception
         {
-            PeptideGroup peptideGrp = null;
-            if(form.getPeptideGroupId() != 0)
+            JFreeChart chart;
+            if (form.isAsProteomics())
             {
-                peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), form.getPeptideGroupId());
-                if(peptideGrp == null)
-                {
-                    throw new NotFoundException(String.format("No peptide group found in this folder for peptideGroupId: %d", form.getPeptideGroupId()));
-                }
+                chart = new ComparisonChartMaker().makePeakAreasChart(
+                        form.getReplicateId(),
+                        _peptideGrp,
+                        _peptide,
+                        _precursor,
+                        form.getGroupByReplicateAnnotName(),
+                        form.getFilterByReplicateAnnotName(),
+                        form.isCvValues(),
+                        form.isLogValues(), getUser(), getContainer()
+                );
+            }
+            else
+            {
+                chart = new ComparisonChartMaker().makePeakAreasChart(
+                        form.getReplicateId(),
+                        _peptideGrp,
+                        _molecule,
+                        _moleculePrecursor,
+                        form.getGroupByReplicateAnnotName(),
+                        form.getFilterByReplicateAnnotName(),
+                        form.isCvValues(),
+                        form.isLogValues(), getUser(), getContainer()
+                );
             }
 
-            Peptide peptide = null;
-            Precursor precursor = null;
-            if(form.getPeptideId() != 0)
-            {
-                peptide = PeptideManager.getPeptide(getContainer(), form.getPeptideId());
-                if(peptide == null)
-                {
-                    throw new NotFoundException(String.format("No peptide found in this folder for peptideId: %d", form.getPeptideId()));
-                }
-
-                if(peptideGrp == null)
-                {
-                    peptideGrp = PeptideGroupManager.getPeptideGroup(getContainer(), peptide.getPeptideGroupId());
-                }
-
-                if(form.getPrecursorId() != 0)
-                {
-                    precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId(), getUser());
-                    if(precursor == null)
-                    {
-                        throw new NotFoundException(String.format("No precursor found in this folder for precursorId: %d", form.getPrecursorId()));
-                    }
-                }
-            }
-            if(form.getValue() == null)
-                form.setValue("All");
-            JFreeChart chart = new ComparisonChartMaker().makeRetentionTimesChart(
-                    form.getReplicateId(),
-                    peptideGrp,
-                    peptide,
-                    precursor,
-                    form.getGroupByReplicateAnnotName(),
-                    form.getFilterByReplicateAnnotName(),
-                    form.getValue(), form.isCvValues(),
-                    getUser(), getContainer());
             if (null == chart)
             {
                 chart = createEmptyChart();
@@ -1726,12 +1751,64 @@ public class TargetedMSController extends SpringActionController
 
             writePNG(form, response, chart);
         }
+    }
 
-        private JFreeChart createEmptyChart()
+    // ------------------------------------------------------------------------
+    // Action to display retention times chart.
+    // ------------------------------------------------------------------------
+    @RequiresPermission(ReadPermission.class)
+    public class ShowRetentionTimesChartAction extends ShowSummaryChartAction<SummaryChartForm>
+    {
+        @Override
+        public void validate(SummaryChartForm form, BindException errors)
         {
-            JFreeChart chart = ChartFactory.createBarChart("", "", "", null, PlotOrientation.VERTICAL, false, false, false);
-            chart.setTitle(new TextTitle("No chromatogram data found.", new java.awt.Font("SansSerif", Font.PLAIN, 12)));
-            return chart;
+            validatePeptideGroup(form);
+            validatePeptide(form);
+            validateMolecule(form);
+        }
+
+        @Override
+        public void export(SummaryChartForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            if (form.getValue() == null)
+                form.setValue("All");
+
+            JFreeChart chart;
+            if (form.isAsProteomics())
+            {
+                chart = new ComparisonChartMaker().makeRetentionTimesChart(
+                        form.getReplicateId(),
+                        _peptideGrp,
+                        _peptide,
+                        _precursor,
+                        form.getGroupByReplicateAnnotName(),
+                        form.getFilterByReplicateAnnotName(),
+                        form.getValue(), form.isCvValues(),
+                        getUser(), getContainer()
+                );
+            }
+            else
+            {
+                chart = new ComparisonChartMaker().makeRetentionTimesChart(
+                        form.getReplicateId(),
+                        _peptideGrp,
+                        _molecule,
+                        _moleculePrecursor,
+                        form.getGroupByReplicateAnnotName(),
+                        form.getFilterByReplicateAnnotName(),
+                        form.getValue(), form.isCvValues(),
+                        getUser(), getContainer()
+                );
+            }
+
+            if (null == chart)
+            {
+                chart = createEmptyChart();
+                form.setChartHeight(20);
+                form.setChartWidth(300);
+            }
+
+            writePNG(form, response, chart);
         }
     }
 
@@ -1782,16 +1859,33 @@ public class TargetedMSController extends SpringActionController
 
     public static class SummaryChartForm extends AbstractChartForm
     {
+        private boolean _asProteomics;
         private int _peptideGroupId;
         private int _replicateId = 0; // A value of 0 means all replicates should be included in the plot.
-        private int _peptideId = 0;
-        private int _precursorId = 0;
         private String _groupByReplicateAnnotName;
         private ReplicateAnnotation _annotationFilter;
         private String _filterByReplicateAnnotName;
         private boolean _cvValues;
         private boolean _logValues;
         private String _value;
+
+        // fields for proteomics
+        private int _peptideId = 0;
+        private int _precursorId = 0;
+
+        // fields for small molecule
+        private int _moleculeId = 0;
+        private int _moleculePrecursorId = 0;
+
+        public boolean isAsProteomics()
+        {
+            return _asProteomics;
+        }
+
+        public void setAsProteomics(boolean asProteomics)
+        {
+            _asProteomics = asProteomics;
+        }
 
         public String getValue()
         {
@@ -1861,6 +1955,26 @@ public class TargetedMSController extends SpringActionController
         public void setPrecursorId(int precursorId)
         {
             _precursorId = precursorId;
+        }
+
+        public int getMoleculeId()
+        {
+            return _moleculeId;
+        }
+
+        public void setMoleculeId(int moleculeId)
+        {
+            _moleculeId = moleculeId;
+        }
+
+        public int getMoleculePrecursorId()
+        {
+            return _moleculePrecursorId;
+        }
+
+        public void setMoleculePrecursorId(int moleculePrecursorId)
+        {
+            _moleculePrecursorId = moleculePrecursorId;
         }
 
         public boolean isCvValues()
@@ -2405,6 +2519,9 @@ public class TargetedMSController extends SpringActionController
             _run = TargetedMSManager.getRun(group.getRunId());
             _proteinLabel = group.getLabel();
 
+            Integer peptideCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunPeptideCountSQL(null));
+            Integer moleculeCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
+
             // Peptide group details
             DataRegion groupDetails = new DataRegion();
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
@@ -2412,7 +2529,7 @@ public class TargetedMSController extends SpringActionController
             groupDetails.setColumns(tableInfo.getColumns("Label", "Description", "Decoy", "Note", "RunId"));
             groupDetails.setButtonBar(ButtonBar.BUTTON_BAR_EMPTY);
             DetailsView groupDetailsView = new DetailsView(groupDetails, form.getId());
-            groupDetailsView.setTitle("Protein");
+            groupDetailsView.setTitle(peptideCount != null && peptideCount > 0 ? "Protein" : "Molecule Group");
 
             VBox result = new VBox(groupDetailsView);
 
@@ -2438,7 +2555,6 @@ public class TargetedMSController extends SpringActionController
             }
 
             // List of peptides
-            Integer peptideCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunPeptideCountSQL(null));
             if (peptideCount != null && peptideCount > 0)
             {
                 List<FieldKey> baseVisibleColumns = new ArrayList<>();
@@ -2449,7 +2565,6 @@ public class TargetedMSController extends SpringActionController
             }
 
             // List of small molecules
-            Integer moleculeCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
             if (moleculeCount != null && moleculeCount > 0)
             {
                 List<FieldKey> baseVisibleColumns = new ArrayList<>();
@@ -2460,22 +2575,25 @@ public class TargetedMSController extends SpringActionController
                 result.addView(getGeneralMoleculeQueryView(form, schema, errors, "Small Molecules", "Molecule", baseVisibleColumns));
             }
 
+            SummaryChartBean summaryChartBean = new SummaryChartBean();
+            summaryChartBean.setPeptideGroupId(form.getId());
+            summaryChartBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
+            summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
+            summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
             // Peptide summary charts
             if (peptideCount != null && peptideCount > 0)
             {
-                SummaryChartBean summaryChartBean = new SummaryChartBean();
-                summaryChartBean.setPeptideGroupId(form.getId());
-                summaryChartBean.setReplicateList(ReplicateManager.getReplicatesForRun(group.getRunId()));
-                summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(group.getRunId()));
-                summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(group.getRunId()));
                 summaryChartBean.setPeptideList(new ArrayList<>(PeptideManager.getPeptidesForGroup(group.getId(), new TargetedMSSchema(getUser(), getContainer()))));
-
-                JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp",
-                        summaryChartBean);
-                summaryChartView.setTitle("Summary Charts");
-                summaryChartView.enableExpandCollapse("SummaryChartsView", false);
-                result.addView(summaryChartView);
             }
+            // Molecule summary charts
+            else if (moleculeCount != null && moleculeCount > 0)
+            {
+                summaryChartBean.setMoleculeList(new ArrayList<>(MoleculeManager.getMoleculesForGroup(group.getId())));
+            }
+            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp", summaryChartBean);
+            summaryChartView.setTitle("Summary Charts");
+            summaryChartView.enableExpandCollapse("SummaryChartsView", false);
+            result.addView(summaryChartView);
 
             return result;
         }
@@ -2532,12 +2650,19 @@ public class TargetedMSController extends SpringActionController
     public static class SummaryChartBean
     {
         private int _peptideGroupId;
-        private int _peptideId;
-        private int _precursorId;
         private List<Replicate> _replicateList;
         private List<String> _replicateAnnotationNameList;
         private List<ReplicateAnnotation> _replicateAnnotationValueList;
+
+        // fields for proteomics
+        private int _peptideId;
+        private int _precursorId;
         private List<Peptide> _peptideList;
+
+        // fields for small molecule
+        private int _moleculeId;
+        private int _moleculePrecursorId;
+        private List<Molecule> _moleculeList;
 
         public int getPeptideGroupId()
         {
@@ -2567,6 +2692,26 @@ public class TargetedMSController extends SpringActionController
         public void setPrecursorId(int precursorId)
         {
             _precursorId = precursorId;
+        }
+
+        public int getMoleculeId()
+        {
+            return _moleculeId;
+        }
+
+        public void setMoleculeId(int moleculeId)
+        {
+            _moleculeId = moleculeId;
+        }
+
+        public int getMoleculePrecursorId()
+        {
+            return _moleculePrecursorId;
+        }
+
+        public void setMoleculePrecursorId(int moleculePrecursorId)
+        {
+            _moleculePrecursorId = moleculePrecursorId;
         }
 
         public List<Replicate> getReplicateList()
@@ -2607,6 +2752,16 @@ public class TargetedMSController extends SpringActionController
         public void setPeptideList(List<Peptide> peptideList)
         {
             _peptideList = peptideList;
+        }
+
+        public List<Molecule> getMoleculeList()
+        {
+            return _moleculeList != null ? _moleculeList : Collections.<Molecule>emptyList();
+        }
+
+        public void setMoleculeList(List<Molecule> moleculeList)
+        {
+            _moleculeList = moleculeList;
         }
     }
 

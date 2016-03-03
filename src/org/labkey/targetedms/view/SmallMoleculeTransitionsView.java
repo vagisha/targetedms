@@ -36,12 +36,8 @@ public class SmallMoleculeTransitionsView extends DocumentTransitionsView
     public SmallMoleculeTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport) throws SQLException
     {
         super(ctx, schema, queryName, runId, !forExport,
-                new QueryNestingOption(FieldKey.fromParts("TransitionId", "GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId"),
-                        FieldKey.fromParts("TransitionId", "GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId", "Id"), null), DATAREGION_NAME, TITLE);
-
-//        super(ctx, schema, queryName, runId, !forExport,
-//                new QueryNestingOption(FieldKey.fromParts("GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId"),
-//                        FieldKey.fromParts("GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId", "Id"), null), DATAREGION_NAME, TITLE);
+                new QueryNestingOption(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId"),
+                        FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId", "Id"), null), DATAREGION_NAME, TITLE);
 
         setTitle(TITLE);
     }

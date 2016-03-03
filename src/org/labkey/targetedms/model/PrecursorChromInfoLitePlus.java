@@ -28,7 +28,6 @@ public class PrecursorChromInfoLitePlus extends SkylineEntity implements Precurs
     private int _sampleFileId;
     private int _precursorId;
     private int _peptideChromInfoId;
-
     private Double _bestRetentionTime;
     private Double _minStartTime;
     private Double _maxEndTime;
@@ -50,6 +49,9 @@ public class PrecursorChromInfoLitePlus extends SkylineEntity implements Precurs
     // Columns from the IsotopeLabel table
     private String _isotopeLabel;
     private int _isotopeLabelId;
+
+    // Columns from the Molecule table
+    private String _customIonName;
 
     public int getPrecursorId()
     {
@@ -209,5 +211,15 @@ public class PrecursorChromInfoLitePlus extends SkylineEntity implements Precurs
     public void setIsotopeLabelId(int isotopeLabelId)
     {
         _isotopeLabelId = isotopeLabelId;
+    }
+
+    public String getCustomIonName()
+    {
+        return _customIonName;
+    }
+
+    public void setCustomIonName(String customIonName)
+    {
+        _customIonName = customIonName;
     }
 }

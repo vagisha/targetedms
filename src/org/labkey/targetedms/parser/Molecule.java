@@ -25,7 +25,6 @@ import java.util.List;
  */
 public class Molecule extends GeneralMolecule
 {
-
     private String _ionFormula;
     private Double _massMonoisotopic; // not null
     private Double _massAverage; // not null

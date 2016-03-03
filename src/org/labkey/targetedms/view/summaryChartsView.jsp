@@ -23,36 +23,62 @@
 <%@ page import="org.labkey.targetedms.parser.Replicate" %>
 <%@ page import="java.util.List" %>
 <%@ page import="org.labkey.targetedms.parser.ReplicateAnnotation" %>
+<%@ page import="org.labkey.targetedms.parser.Molecule" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.SummaryChartBean> me = (JspView<TargetedMSController.SummaryChartBean>) HttpView.currentView();
     TargetedMSController.SummaryChartBean bean = me.getModelBean();
     int peptideGroupId = bean.getPeptideGroupId(); // Used when displaying peak areas for all peptides of a protein
-    int peptideId = bean.getPeptideId(); // Used when displaying peak areas for a single peptide in multiple replicates
-                                         // or grouped by replicate annotation.
-    int precursorId = bean.getPrecursorId(); // Used when displaying peak areas for a single precursor
 
     List<Replicate> replicateList = bean.getReplicateList();
     List<String> replicateAnnotationNameList = bean.getReplicateAnnotationNameList();
     List<ReplicateAnnotation> replicateAnnotationValueList = bean.getReplicateAnnotationValueList();
-    List<Peptide> peptideList = bean.getPeptideList();
 
-    ActionURL peakAreaUrl = new ActionURL(TargetedMSController.ShowPeptidePeakAreasAction.class, getContainer());
+    ActionURL peakAreaUrl = new ActionURL(TargetedMSController.ShowPeakAreasAction.class, getContainer());
     ActionURL retentionTimesUrl = new ActionURL(TargetedMSController.ShowRetentionTimesChartAction.class, getContainer());
-    if(peptideGroupId != 0)
+
+    // for proteomics summary charts
+    List<Peptide> peptideList = bean.getPeptideList();
+    int peptideId = bean.getPeptideId(); // Used when displaying peak areas for a single peptide in multiple replicates
+                                         // or grouped by replicate annotation.
+    int precursorId = bean.getPrecursorId(); // Used when displaying peak areas for a single precursor
+
+    // for small molecule summary charts
+    List<Molecule> moleculeList = bean.getMoleculeList();
+    int moleculeId = bean.getMoleculeId();
+    int moleculePrecursorId = bean.getMoleculePrecursorId();
+
+    if ((peptideList != null && !peptideList.isEmpty()) || peptideId != 0 || precursorId != 0)
+    {
+        peakAreaUrl.addParameter("asProteomics", true);
+        retentionTimesUrl.addParameter("asProteomics", true);
+    }
+
+    if (peptideGroupId != 0)
     {
         peakAreaUrl.addParameter("peptideGroupId", peptideGroupId);
         retentionTimesUrl.addParameter("peptideGroupId", peptideGroupId);
     }
-    else if(peptideId != 0)
+    else if (peptideId != 0)
     {
         peakAreaUrl.addParameter("peptideId", peptideId);
         retentionTimesUrl.addParameter("peptideId", peptideId);
     }
-    if(precursorId != 0)
+    else if (moleculeId != 0)
+    {
+        peakAreaUrl.addParameter("moleculeId", moleculeId);
+        retentionTimesUrl.addParameter("moleculeId", moleculeId);
+    }
+
+    if (precursorId != 0)
     {
         peakAreaUrl.addParameter("precursorId", precursorId);
         retentionTimesUrl.addParameter("precursorId", precursorId);
+    }
+    else if (moleculePrecursorId != 0)
+    {
+        peakAreaUrl.addParameter("moleculePrecursorId", moleculePrecursorId);
+        retentionTimesUrl.addParameter("moleculePrecursorId", moleculePrecursorId);
     }
 %>
 <style>
@@ -75,7 +101,7 @@
     }
 </style>
 <script type="text/javascript">
-    Ext.onReady(function() {
+    Ext4.onReady(function() {
 
     // data stores
     var replicateStore = Ext4.create('Ext.data.Store', {
@@ -129,6 +155,16 @@
         ]
     });
 
+    var moleculeStore = Ext4.create('Ext.data.Store', {
+        fields: ['customIonName', 'moleculeId'],
+        data: [
+            {"customIonName":"All", "moleculeId":"0"}
+            <%for(int i = 0; i < moleculeList.size(); i++) {%>
+            ,{"customIonName":<%=q(moleculeList.get(i).getCustomIonName())%>, "moleculeId": "<%=moleculeList.get(i).getId()%>"}
+            <%}%>
+        ]
+    });
+
     // combo boxes
     var replicateComboBox;
     if(replicateStore.count() > 0)
@@ -153,6 +189,8 @@
                         replicateAnnotNameComboBox.setValue(replicateAnnotNameStore.getAt(0));
                         peptideComboBox.disable();
                         peptideComboBox.setValue(peptideStore.getAt(0));
+                        moleculeComboBox.disable();
+                        moleculeComboBox.setValue(moleculeStore.getAt(0));
                         replicateAnnotNameValueComboBox.disable();
                         replicateAnnotNameValueComboBox.setValue(replicateAnnotNameValueStore.getAt(0));
                     }
@@ -160,6 +198,7 @@
                     {
                         replicateAnnotNameComboBox.enable();
                         peptideComboBox.enable();
+                        moleculeComboBox.enable();
                         replicateAnnotNameValueComboBox.enable();
                     }
                     updateCvCheckbox();
@@ -245,9 +284,6 @@
         });
     }
 
-
-
-
     var peptideComboBox;
     if(peptideStore.count() > 0)
     {
@@ -260,6 +296,37 @@
             forceSelection: 'true',
             allowBlank: 'false',
             value: peptideStore.getAt(0),
+            width: 400,
+            listeners:{
+                select: function(combo, record, index){
+                    var selected = combo.getValue();
+                    if(selected != 0)
+                    {
+                        replicateComboBox.setValue(replicateStore.getAt(0));
+                        replicateComboBox.disable();
+                    }
+                    else
+                    {
+                        replicateComboBox.enable();
+                    }
+                    updateCvCheckbox();
+                }
+            }
+        });
+    }
+
+    var moleculeComboBox;
+    if(moleculeStore.count() > 0)
+    {
+        moleculeComboBox = Ext4.create('Ext.form.ComboBox', {
+            fieldLabel: 'Small Molecule',
+            store: moleculeStore,
+            queryMods: 'local',
+            displayField: 'customIonName',
+            valueField: 'moleculeId',
+            forceSelection: 'true',
+            allowBlank: 'false',
+            value: moleculeStore.getAt(0),
             width: 400,
             listeners:{
                 select: function(combo, record, index){
@@ -293,54 +360,53 @@
     // peak areas graph
     var peakAreasImg = Ext4.create('Ext.Img', {
         src: '<%=peakAreaUrl%>',
-        renderTo: Ext.get('peakAreasGraphImg')
+        renderTo: Ext4.get('peakAreasGraphImg')
     });
 
     var retentionTimesImg = Ext4.create('Ext.Img', {
         src: '<%=retentionTimesUrl%>',
-        renderTo: Ext.get('retentionTimesGraphImg')
+        renderTo: Ext4.get('retentionTimesGraphImg')
     });
 
     // buttons
-    var updateBtn = new Ext.Button({text:'Update',
+    var updateBtn = Ext4.create('Ext.button.Button', {
+        text:'Update',
         handler: function(){
 
-            var url =  LABKEY.ActionURL.buildURL(
-                    'targetedms',  // controller
-                    'showPeptidePeakAreas', // action
-                    LABKEY.ActionURL.getContainer(),
-                    {
-                        peptideGroupId: <%=peptideGroupId%>,
-                        replicateId: replicateComboBox.getValue(),
-                        groupByReplicateAnnotName: replicateAnnotNameComboBox.getValue(),
-                        filterByReplicateAnnotName: replicateAnnotNameValueComboBox.getValue(),
-                        peptideId: peptideStore.count() > 1 ? peptideComboBox.getValue() : <%=peptideId%>,
-                        cvValues: cvValuesCheckbox.getValue(),
-                        logValues: logValuesCheckbox.getValue(),
-                        chartWidth: chartWidthTb.getValue(),
-                        chartHeight: chartHeightTb.getValue()
+            var params = {
+                asProteomics: <%=peptideList != null && !peptideList.isEmpty()%>,
+                peptideGroupId: <%=peptideGroupId%>,
+                replicateId: replicateComboBox.getValue(),
+                groupByReplicateAnnotName: replicateAnnotNameComboBox.getValue(),
+                filterByReplicateAnnotName: replicateAnnotNameValueComboBox.getValue(),
+                peptideId: peptideStore.count() > 1 ? peptideComboBox.getValue() : <%=peptideId%>,
+                moleculeId: moleculeStore.count() > 1 ? moleculeComboBox.getValue() : <%=moleculeId%>,
+                cvValues: cvValuesCheckbox.getValue(),
+                logValues: logValuesCheckbox.getValue(),
+                chartWidth: chartWidthTb.getValue(),
+                chartHeight: chartHeightTb.getValue()
+            };
 
-                    }
+            var pearAreaUrl =  LABKEY.ActionURL.buildURL(
+                    'targetedms',  // controller
+                    'showPeakAreas', // action
+                    LABKEY.ActionURL.getContainer(),
+                    params
             );
+
+            var retentionTimeParams = Ext4.apply(Ext4.clone(params), {
+                value: valueComboBox.getValue()
+            });
+
             var retentionTimesUrl =  LABKEY.ActionURL.buildURL(
                     'targetedms',  // controller
                     'showRetentionTimesChart', // action
                     LABKEY.ActionURL.getContainer(),
-                    {
-                        peptideGroupId: <%=peptideGroupId%>,
-                        replicateId: replicateComboBox.getValue(),
-                        groupByReplicateAnnotName: replicateAnnotNameComboBox.getValue(),
-                        filterByReplicateAnnotName: replicateAnnotNameValueComboBox.getValue(),
-                        peptideId: peptideStore.count() > 1 ? peptideComboBox.getValue() : <%=peptideId%>,
-                        cvValues: cvValuesCheckbox.getValue(),
-                        logValues: logValuesCheckbox.getValue(),
-                        chartWidth: chartWidthTb.getValue(),
-                        chartHeight: chartHeightTb.getValue(),
-                        value:valueComboBox.getValue()
-                    }
+                    retentionTimeParams
             );
+
             // change the src of the image
-            peakAreasImg.setSrc(url);
+            peakAreasImg.setSrc(pearAreaUrl);
             retentionTimesImg.setSrc(retentionTimesUrl);
         }
     });
@@ -368,6 +434,7 @@
     if(replicateAnnotNameStore.count() > 1) items.push(replicateAnnotNameComboBox);
     if(replicateAnnotNameValueStore.count() > 1) items.push(replicateAnnotNameValueComboBox);
     if(peptideStore.count() > 2) items.push(peptideComboBox);
+    if(moleculeStore.count() > 2) items.push(moleculeComboBox);
     if(replicateStore.count() > 2 || replicateAnnotNameStore.count() > 1)
     {
         items.push(cvValuesCheckbox);
@@ -381,8 +448,7 @@
     if(items.length > 0)
     {
         Ext4.create('Ext.form.Panel', {
-            renderTo: Ext.get('peakAreasFormDiv'),
-//                resizable: true,
+            renderTo: Ext4.get('peakAreasFormDiv'),
             border: false, frame: false,
             buttonAlign: 'left',
             items: items,

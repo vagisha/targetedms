@@ -25,8 +25,8 @@
 <%@ page import="org.labkey.targetedms.parser.Replicate" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    JspView<TargetedMSController.PeptideChromatogramsViewBean> me = (JspView<TargetedMSController.PeptideChromatogramsViewBean>) HttpView.currentView();
-    TargetedMSController.PeptideChromatogramsViewBean bean = me.getModelBean();
+    JspView<TargetedMSController.GeneralMoleculeChromatogramsViewBean> me = (JspView<TargetedMSController.GeneralMoleculeChromatogramsViewBean>) HttpView.currentView();
+    TargetedMSController.GeneralMoleculeChromatogramsViewBean bean = me.getModelBean();
     bean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(bean.getRun().getId()));
     bean.setReplicatesFilter(ReplicateManager.getReplicatesForRun(bean.getRun().getId()));
     bean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(bean.getRun().getId()));

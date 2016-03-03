@@ -42,7 +42,12 @@ import java.util.Set;
 */
 public class ComparisonDataset
 {
-    public static enum ChartType {PEPTIDE_COMPARISON, REPLICATE_COMPARISON}
+    public enum ChartType {
+        PEPTIDE_COMPARISON,
+        MOLECULE_COMPARISON,
+        REPLICATE_COMPARISON
+    }
+
     public enum ValueType
     {
         RT_ALL, RETENTIONTIME, FWHM, FWB, PEAKAREA

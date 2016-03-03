@@ -967,9 +967,12 @@ public class SkylineDocImporter
             _log.info("molecule formula " + molecule.getIonFormula() + ", id = " + molecule.getId());
             Table.insert(_user, TargetedMSManager.getTableInfoMolecule(), molecule);
 
+            Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = insertGeneralMoleculeChromInfos(generalMolecule.getId(),
+                    molecule.getGeneralMoleculeChromInfoList(), skylineIdSampleFileIdMap);
+
             for (MoleculePrecursor moleculePrecursor : molecule.getMoleculePrecursorsList())
             {
-                insertMoleculePrecursor(molecule, moleculePrecursor);
+                insertMoleculePrecursor(molecule, moleculePrecursor, skylineIdSampleFileIdMap, sampleFileIdGeneralMolChromInfoIdMap);
             }
         }
 
@@ -998,30 +1001,8 @@ public class SkylineDocImporter
                 Table.insert(_user, TargetedMSManager.getTableInfoPeptideIsotopeModification(), mod);
             }
 
-            Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = new HashMap<>();
-
-            for (GeneralMoleculeChromInfo generalMoleculeChromInfo : peptide.getGeneralMoleculeChromInfoList())
-            {
-                SampleFileKey sampleFileKey = SampleFileKey.getKey(generalMoleculeChromInfo);
-                SampleFile sampleFile = skylineIdSampleFileIdMap.get(sampleFileKey);
-                if (sampleFile == null)
-                {
-                    throw new IllegalStateException("Database ID not found for Skyline samplefile id " +
-                            generalMoleculeChromInfo.getSkylineSampleFileId() + " in replicate " +
-                            generalMoleculeChromInfo.getReplicateName());
-                }
-
-                if (!sampleFile.isSkip())
-                {
-                    // Only for QC folders: ignore this chrom info if data from this sample file is not being imported.
-                    generalMoleculeChromInfo.setGeneralMoleculeId(generalMolecule.getId());
-                    generalMoleculeChromInfo.setSampleFileId(sampleFile.getId());
-                    generalMoleculeChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(),
-                            generalMoleculeChromInfo);
-
-                    sampleFileIdGeneralMolChromInfoIdMap.put(sampleFile.getId(), generalMoleculeChromInfo.getId());
-                }
-            }
+            Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = insertGeneralMoleculeChromInfos(generalMolecule.getId(),
+                    peptide.getGeneralMoleculeChromInfoList(), skylineIdSampleFileIdMap);
 
             // 3. precursor
             for (Precursor precursor : peptide.getPrecursorList())
@@ -1098,7 +1079,9 @@ public class SkylineDocImporter
         }
     }
 
-    private void insertMoleculePrecursor(Molecule molecule, MoleculePrecursor moleculePrecursor)
+    private void insertMoleculePrecursor(Molecule molecule, MoleculePrecursor moleculePrecursor,
+                                         Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
+                                         Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap)
     {
         GeneralPrecursor gp = new GeneralPrecursor();
         gp.setGeneralMoleculeId(molecule.getId());
@@ -1116,13 +1099,18 @@ public class SkylineDocImporter
         moleculePrecursor.setId(gp.getId());
         moleculePrecursor = Table.insert(_user, TargetedMSManager.getTableInfoMoleculePrecursor(), moleculePrecursor);
 
+        Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = insertPrecursorChromInfos(gp.getId(),
+                moleculePrecursor.getCustomIonName(), moleculePrecursor.getChromInfoList(), skylineIdSampleFileIdMap, sampleFileIdGeneralMolChromInfoIdMap);
+
         for(MoleculeTransition moleculeTransition: moleculePrecursor.getTransitionsList())
         {
-            insertMoleculeTransition(moleculePrecursor, moleculeTransition);
+            insertMoleculeTransition(moleculePrecursor, moleculeTransition, skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap);
         }
     }
 
-    private void insertMoleculeTransition(MoleculePrecursor moleculePrecursor, MoleculeTransition moleculeTransition)
+    private void insertMoleculeTransition(MoleculePrecursor moleculePrecursor, MoleculeTransition moleculeTransition,
+                                          Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
+                                          Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap)
     {
         GeneralTransition gt = new GeneralTransition();
         gt.setGeneralPrecursorId(moleculePrecursor.getId());
@@ -1143,6 +1131,8 @@ public class SkylineDocImporter
 
         moleculeTransition.setTransitionId(gt.getId());
         Table.insert(_user, TargetedMSManager.getTableInfoMoleculeTransition(), moleculeTransition);
+
+        insertTransitionChromInfos(gt.getId(), moleculeTransition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap);
     }
 
     private void insertPrecursor(boolean insertCEOptmizations, boolean insertDPOptmizations,
@@ -1194,8 +1184,6 @@ public class SkylineDocImporter
             Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
         }
 
-        Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = new HashMap<>();
-
         Precursor.LibraryInfo libInfo = precursor.getLibraryInfo();
         if(libInfo != null)
         {
@@ -1210,42 +1198,8 @@ public class SkylineDocImporter
             Table.insert(_user, TargetedMSManager.getTableInfoPrecursorLibInfo(), libInfo);
         }
 
-        for (PrecursorChromInfo precursorChromInfo: precursor.getChromInfoList())
-        {
-            SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(precursorChromInfo));
-            if (sampleFile == null)
-            {
-                throw new IllegalStateException("Database ID not found for Skyline samplefile id "+precursorChromInfo.getSkylineSampleFileId() + " in replicate " + precursorChromInfo.getReplicateName());
-            }
-
-            SampleFileOptStepKey sampleFileKey = SampleFileOptStepKey.getKey(precursorChromInfo);
-
-            if (sampleFilePrecursorChromInfoIdMap.containsKey(sampleFileKey))
-            {
-                throw new IllegalStateException("Multiple precursor chrom infos found for precursor "+
-                           precursor.getModifiedSequence()+" and sample file "+precursorChromInfo.getSkylineSampleFileId()+
-                           " in replicate "+precursorChromInfo.getReplicateName());
-            }
-
-            if (!sampleFile.isSkip())
-            {
-                precursorChromInfo.setGeneralPrecursorId(gp.getId());
-
-                // Only for QC folders: Ignore this chrom info if data from the sample file is not being imported.
-                precursorChromInfo.setPrecursorId(precursor.getId());
-                precursorChromInfo.setSampleFileId(sampleFile.getId());
-                precursorChromInfo.setGeneralMoleculeChromInfoId(sampleFileIdGeneralMolChromInfoIdMap.get(sampleFile.getId()));
-
-                precursorChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfo(), precursorChromInfo);
-                sampleFilePrecursorChromInfoIdMap.put(sampleFileKey, precursorChromInfo.getId());
-
-                for (PrecursorChromInfoAnnotation annotation : precursorChromInfo.getAnnotations())
-                {
-                    annotation.setPrecursorChromInfoId(precursorChromInfo.getId());
-                    Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), annotation);
-                }
-            }
-        }
+        Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = insertPrecursorChromInfos(gp.getId(),
+                precursor.getModifiedSequence(), precursor.getChromInfoList(), skylineIdSampleFileIdMap, sampleFileIdGeneralMolChromInfoIdMap);
 
         // 4. transition
         for(Transition transition: precursor.getTransitionsList())
@@ -1309,36 +1263,7 @@ public class SkylineDocImporter
         }
 
         // transition results
-        for(TransitionChromInfo transChromInfo: transition.getChromInfoList())
-        {
-            SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(transChromInfo));
-            if(sampleFile == null)
-            {
-                throw new IllegalStateException("Database ID not found for Skyline samplefile id "+transChromInfo.getSkylineSampleFileId() + " in replicate " + transChromInfo.getReplicateName());
-            }
-            if (!sampleFile.isSkip())
-            {
-                // Only for QC folders: ignore this chrom info if data from the sample file is not being imported.
-                transChromInfo.setTransitionId(transition.getId());
-                transChromInfo.setSampleFileId(sampleFile.getId());
-                // Lookup a precursor chrom info measured in the same sample file with the same optimization step
-                SampleFileOptStepKey sampleFileKey = SampleFileOptStepKey.getKey(transChromInfo);
-                Integer precursorChromInfoId = sampleFilePrecursorChromInfoIdMap.get(sampleFileKey);
-                if(precursorChromInfoId == null)
-                {
-                    throw new IllegalStateException("Could not find precursor peak for " + sampleFileKey.toString());
-                }
-
-                transChromInfo.setPrecursorChromInfoId(precursorChromInfoId);
-                Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfo(), transChromInfo);
-
-                for (TransitionChromInfoAnnotation annotation : transChromInfo.getAnnotations())
-                {
-                    annotation.setTransitionChromInfoId(transChromInfo.getId());
-                    Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
-                }
-            }
-        }
+        insertTransitionChromInfos(gt.getId(), transition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap);
 
         // transition neutral losses
         for (TransitionLoss loss : transition.getNeutralLosses())
@@ -1388,6 +1313,118 @@ public class SkylineDocImporter
                                                 +" Loss: "+loss.toString()
                                                 +"; Transition: "+transition.getLabel()
                                                 +"; Precursor: "+precursor.getModifiedSequence());
+            }
+        }
+    }
+
+    private Map<Integer, Integer> insertGeneralMoleculeChromInfos(int gmId, List<GeneralMoleculeChromInfo> generalMoleculeChromInfos,
+                                                                  Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap)
+    {
+        Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = new HashMap<>();
+
+        for (GeneralMoleculeChromInfo generalMoleculeChromInfo : generalMoleculeChromInfos)
+        {
+            SampleFileKey sampleFileKey = SampleFileKey.getKey(generalMoleculeChromInfo);
+            SampleFile sampleFile = skylineIdSampleFileIdMap.get(sampleFileKey);
+            if (sampleFile == null)
+            {
+                throw new IllegalStateException("Database ID not found for Skyline samplefile id " +
+                        generalMoleculeChromInfo.getSkylineSampleFileId() + " in replicate " +
+                        generalMoleculeChromInfo.getReplicateName());
+            }
+
+            if (!sampleFile.isSkip())
+            {
+                // Only for QC folders: ignore this chrom info if data from this sample file is not being imported.
+                generalMoleculeChromInfo.setGeneralMoleculeId(gmId);
+                generalMoleculeChromInfo.setSampleFileId(sampleFile.getId());
+                generalMoleculeChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(),
+                        generalMoleculeChromInfo);
+
+                sampleFileIdGeneralMolChromInfoIdMap.put(sampleFile.getId(), generalMoleculeChromInfo.getId());
+            }
+        }
+
+        return sampleFileIdGeneralMolChromInfoIdMap;
+    }
+
+    private Map<SampleFileOptStepKey, Integer> insertPrecursorChromInfos(int gpId, String label,
+                                                                         List<PrecursorChromInfo> precursorChromInfos,
+                                                                         Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
+                                                                         Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap)
+    {
+        Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = new HashMap<>();
+
+        for (PrecursorChromInfo precursorChromInfo: precursorChromInfos)
+        {
+            SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(precursorChromInfo));
+            if (sampleFile == null)
+            {
+                throw new IllegalStateException("Database ID not found for Skyline samplefile id "+precursorChromInfo.getSkylineSampleFileId() + " in replicate " + precursorChromInfo.getReplicateName());
+            }
+
+            SampleFileOptStepKey sampleFileKey = SampleFileOptStepKey.getKey(precursorChromInfo);
+
+            if (sampleFilePrecursorChromInfoIdMap.containsKey(sampleFileKey))
+            {
+                throw new IllegalStateException("Multiple precursor chrom infos found for precursor " +
+                        label + " and sample file " + precursorChromInfo.getSkylineSampleFileId() +
+                        " in replicate " + precursorChromInfo.getReplicateName());
+            }
+
+            if (!sampleFile.isSkip())
+            {
+                // Only for QC folders: Ignore this chrom info if data from the sample file is not being imported.
+                precursorChromInfo.setPrecursorId(gpId);
+                precursorChromInfo.setSampleFileId(sampleFile.getId());
+                precursorChromInfo.setGeneralMoleculeChromInfoId(sampleFileIdGeneralMolChromInfoIdMap.get(sampleFile.getId()));
+
+                precursorChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfo(), precursorChromInfo);
+                sampleFilePrecursorChromInfoIdMap.put(sampleFileKey, precursorChromInfo.getId());
+
+                for (PrecursorChromInfoAnnotation annotation : precursorChromInfo.getAnnotations())
+                {
+                    annotation.setPrecursorChromInfoId(precursorChromInfo.getId());
+                    Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), annotation);
+                }
+            }
+        }
+
+        return sampleFilePrecursorChromInfoIdMap;
+    }
+
+    private void insertTransitionChromInfos(int gtId, List<TransitionChromInfo> transitionChromInfos,
+                                            Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
+                                            Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap)
+    {
+        for(TransitionChromInfo transChromInfo: transitionChromInfos)
+        {
+            SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(transChromInfo));
+            if(sampleFile == null)
+            {
+                throw new IllegalStateException("Database ID not found for Skyline samplefile id "+transChromInfo.getSkylineSampleFileId() + " in replicate " + transChromInfo.getReplicateName());
+            }
+            if (!sampleFile.isSkip())
+            {
+                // Only for QC folders: ignore this chrom info if data from the sample file is not being imported.
+                transChromInfo.setTransitionId(gtId);
+                transChromInfo.setSampleFileId(sampleFile.getId());
+                // Lookup a precursor chrom info measured in the same sample file with the same optimization step
+                SampleFileOptStepKey sampleFileKey = SampleFileOptStepKey.getKey(transChromInfo);
+                Integer precursorChromInfoId = sampleFilePrecursorChromInfoIdMap.get(sampleFileKey);
+                if(precursorChromInfoId == null)
+                {
+                    throw new IllegalStateException("Could not find precursor peak for " + sampleFileKey.toString());
+                }
+
+                transChromInfo.setPrecursorChromInfoId(precursorChromInfoId);
+                Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfo(), transChromInfo);
+
+                for (TransitionChromInfoAnnotation annotation : transChromInfo.getAnnotations())
+                {
+                    annotation.setTransitionChromInfoId(transChromInfo.getId());
+                    Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
+                }
             }
         }
     }

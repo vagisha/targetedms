@@ -43,13 +43,11 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
         customIonName.setURL(detailsURL);
 
         List<FieldKey> defaultCols = new ArrayList<>(getDefaultVisibleColumns());
-        defaultCols.add(0, FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "File"));
-        defaultCols.add(1, FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
-        defaultCols.add(FieldKey.fromParts("PeptideId", "RtCalculatorScore"));
-        defaultCols.add(FieldKey.fromParts("PeptideId", "PredictedRetentionTime"));
-        defaultCols.add(FieldKey.fromParts("PeptideId", "AvgMeasuredRetentionTime"));
-        defaultCols.add(FieldKey.fromParts("PeptideId", "ExplicitRetentionTime"));
-        defaultCols.add(FieldKey.fromParts("PeptideId", "StandardType"));
+        defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
+        defaultCols.add(1, FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
+        defaultCols.add(2, FieldKey.fromParts("PeptideGroupId", "Label"));
+        defaultCols.add(3, FieldKey.fromParts("CustomIonName"));
+        defaultCols.remove(FieldKey.fromParts("PeptideGroupId"));
         setDefaultVisibleColumns(defaultCols);
     }
 }
