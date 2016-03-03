@@ -1099,12 +1099,25 @@ public class SkylineDocImporter
         moleculePrecursor.setId(gp.getId());
         moleculePrecursor = Table.insert(_user, TargetedMSManager.getTableInfoMoleculePrecursor(), moleculePrecursor);
 
+        //small molecule precursor annotations
+        insertPrecursorAnnotation(moleculePrecursor.getAnnotations(), gp, moleculePrecursor.getId()); //adding small molecule precursor annotation in PrecursorAnnotation table. We might need to change this if we decide to have a separate MoleculePrecursorAnnotation table in the future.
+
         Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = insertPrecursorChromInfos(gp.getId(),
                 moleculePrecursor.getCustomIonName(), moleculePrecursor.getChromInfoList(), skylineIdSampleFileIdMap, sampleFileIdGeneralMolChromInfoIdMap);
 
         for(MoleculeTransition moleculeTransition: moleculePrecursor.getTransitionsList())
         {
             insertMoleculeTransition(moleculePrecursor, moleculeTransition, skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap);
+        }
+    }
+
+    private void insertPrecursorAnnotation(List<PrecursorAnnotation> precursorAnnotations, GeneralPrecursor gp, int id)
+    {
+        for (PrecursorAnnotation annotation : precursorAnnotations)
+        {
+            annotation.setPrecursorId(id);
+            annotation.setGeneralPrecursorId(gp.getId());
+            Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
         }
     }
 
@@ -1132,7 +1145,19 @@ public class SkylineDocImporter
         moleculeTransition.setTransitionId(gt.getId());
         Table.insert(_user, TargetedMSManager.getTableInfoMoleculeTransition(), moleculeTransition);
 
+        //small molecule transition annotations
+        insertTransitionAnnotation(moleculeTransition.getAnnotations(), moleculeTransition.getId()); //adding small molecule transition annotation in TransitionAnnotation table. We might need to change this if we decide to have a separate MoleculeTransitionAnnotation table in the future.
+
         insertTransitionChromInfos(gt.getId(), moleculeTransition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap);
+    }
+
+    private void insertTransitionAnnotation(List<TransitionAnnotation> annotations, int id)
+    {
+        for (TransitionAnnotation annotation : annotations)
+        {
+            annotation.setTransitionId(id);
+            Table.insert(_user, TargetedMSManager.getTableInfoTransitionAnnotation(), annotation);
+        }
     }
 
     private void insertPrecursor(boolean insertCEOptmizations, boolean insertDPOptmizations,
@@ -1177,12 +1202,7 @@ public class SkylineDocImporter
         precursor.setIsotopeLabelId(isotopeLabelIdMap.get(precursor.getIsotopeLabel()));
         precursor = Table.insert(_user, TargetedMSManager.getTableInfoPrecursor(), precursor);
 
-        for (PrecursorAnnotation annotation : precursor.getAnnotations())
-        {
-            annotation.setPrecursorId(precursor.getId());
-            annotation.setGeneralPrecursorId(gp.getId());
-            Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
-        }
+        insertPrecursorAnnotation(precursor.getAnnotations(), gp, precursor.getId());
 
         Precursor.LibraryInfo libInfo = precursor.getLibraryInfo();
         if(libInfo != null)
@@ -1238,11 +1258,7 @@ public class SkylineDocImporter
         }
 
         // transition annotations
-        for (TransitionAnnotation annotation : transition.getAnnotations())
-        {
-            annotation.setTransitionId(transition.getId());
-            Table.insert(_user, TargetedMSManager.getTableInfoTransitionAnnotation(), annotation);
-        }
+        insertTransitionAnnotation(transition.getAnnotations(), transition.getId());
 
         // Insert appropriate CE and DP transition optimizations
         if (insertCEOptmizations && transition.getCollisionEnergy() != null)
