@@ -63,7 +63,7 @@ public class LinkVersionsGrid extends Component
             // (using y location on the page, since they are in a grid and stacked vertically)
             if (prevGridRow != null)
             {
-                boolean rowIsAfterPrev = _test.getElement(prevGridRow).getLocation().getY() < _test.getElement(gridRow).getLocation().getY();
+                boolean rowIsAfterPrev = prevGridRow.findElement(_test.getDriver()).getLocation().getY() < gridRow.findElement(_test.getDriver()).getLocation().getY();
                 assertTrue("Unexpected document version order in method chain.", rowIsAfterPrev);
             }
 

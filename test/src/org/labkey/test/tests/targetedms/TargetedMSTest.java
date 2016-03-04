@@ -183,7 +183,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         {
             Locator loc = qcSummaryWebPart.getFolderNameLinkLocator(summaryIndex);
             assertElementPresent(loc);
-            assertEquals("Wrong folder name QC Summary tile title", folderName, getElement(loc).getText());
+            assertEquals("Wrong folder name QC Summary tile title", folderName, getText(loc));
         }
     }
 
