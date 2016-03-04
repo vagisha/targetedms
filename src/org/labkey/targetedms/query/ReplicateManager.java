@@ -68,15 +68,15 @@ public class ReplicateManager
         return new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(SampleFile.class);
     }
 
-    public static SampleFile getSampleFileForPeptideChromInfo(int peptideChromInfoId)
+    public static SampleFile getSampleFileForGeneralMoleculeChromInfo(int generalMoleculeChromInfoId)
     {
         String sql = "SELECT sf.* FROM "+
                      TargetedMSManager.getTableInfoSampleFile()+" AS sf, "+
-                     TargetedMSManager.getTableInfoGeneralMoleculeChromInfo()+" AS pci "+
-                     "WHERE sf.Id=pci.SampleFileId "+
-                     "AND pci.Id=?";
+                     TargetedMSManager.getTableInfoGeneralMoleculeChromInfo()+" AS gmci "+
+                     "WHERE sf.Id=gmci.SampleFileId "+
+                     "AND gmci.Id=?";
         SQLFragment sf = new SQLFragment(sql);
-        sf.add(peptideChromInfoId);
+        sf.add(generalMoleculeChromInfoId);
 
         return new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(SampleFile.class);
     }

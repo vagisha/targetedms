@@ -38,6 +38,7 @@ import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.CustomApiForm;
 import org.labkey.api.action.ExportAction;
+import org.labkey.api.action.ExportException;
 import org.labkey.api.action.FormHandlerAction;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasViewContext;
@@ -710,9 +711,19 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("No such PrecursorChromInfo found in this folder: " + tci.getPrecursorChromInfoId());
             }
 
-            JFreeChart chart = new ChromatogramChartMakerFactory().createTransitionChromChart(tci, pci, getUser(), getContainer());
-
-            writePNG(form, response, chart);
+            if (PrecursorManager.getPrecursor(getContainer(), pci.getPrecursorId(), getUser()) != null)
+            {
+                JFreeChart chart = new ChromatogramChartMakerFactory().createTransitionChromChart(tci, pci, getUser(), getContainer());
+                writePNG(form, response, chart);
+            }
+            else if (MoleculePrecursorManager.getPrecursor(getContainer(), pci.getPrecursorId(), getUser()) != null)
+            {
+                throw new ExportException(new HtmlView("TransitionChromatogramChartAction not yet supported for MoleculeTransition."));
+            }
+            else
+            {
+                throw new NotFoundException("No Precursor or MoleculePrecursor found in this folder for id: " + pci.getPrecursorId());
+            }
         }
     }
 
@@ -733,9 +744,20 @@ public class TargetedMSController extends SpringActionController
             factory.setSyncRt(form.isSyncX());
             factory.setSplitGraph(form.isSplitGraph());
             factory.setShowOptimizationPeaks(form.isShowOptimizationPeaks());
-            JFreeChart chart = factory.createPrecursorChromChart(pChromInfo, getUser(), getContainer());
 
-            writePNG(form, response, chart);
+            if (PrecursorManager.getPrecursor(getContainer(), pChromInfo.getPrecursorId(), getUser()) != null)
+            {
+                JFreeChart chart = factory.createPrecursorChromChart(pChromInfo, getUser(), getContainer());
+                writePNG(form, response, chart);
+            }
+            else if (MoleculePrecursorManager.getPrecursor(getContainer(), pChromInfo.getPrecursorId(), getUser()) != null)
+            {
+                throw new ExportException(new HtmlView("PrecursorChromatogramChartAction not yet supported for MoleculePrecursor."));
+            }
+            else
+            {
+                throw new NotFoundException("No Precursor or MoleculePrecursor found in this folder for id: " + pChromInfo.getPrecursorId());
+            }
         }
     }
 
@@ -766,23 +788,35 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermission(ReadPermission.class)
+    @RequiresPermission(ReadPermission.class)    // TODO this should be renamed to GeneralMoleculeChromatogramChartAction
     public class PeptideChromatogramChartAction extends ExportAction<ChromatogramForm>
     {
         @Override
         public void export(ChromatogramForm form, HttpServletResponse response, BindException errors) throws Exception
         {
-            GeneralMoleculeChromInfo pChromInfo = PeptideManager.getPeptideChromInfo(getContainer(), form.getId());
-            if (pChromInfo == null)
+            GeneralMoleculeChromInfo gmChromInfo = PeptideManager.getGeneralMoleculeChromInfo(getContainer(), form.getId());
+            if (gmChromInfo == null)
             {
-                throw new NotFoundException("No PeptideChromInfo found in this folder for peptideChromInfoId: " + form.getId());
+                throw new NotFoundException("No GeneralMoleculeChromInfo found in this folder for id: " + form.getId());
             }
 
             ChromatogramChartMakerFactory factory = new ChromatogramChartMakerFactory();
             factory.setSyncIntensity(form.isSyncY());
             factory.setSyncRt(form.isSyncX());
-            JFreeChart chart = factory.createPeptideChromChart(pChromInfo, getUser(), getContainer());
-            writePNG(form, response, chart);
+
+            if (PeptideManager.getPeptide(getContainer(), gmChromInfo.getGeneralMoleculeId()) != null)
+            {
+                JFreeChart chart = factory.createPeptideChromChart(gmChromInfo, getUser(), getContainer());
+                writePNG(form, response, chart);
+            }
+            else if (MoleculeManager.getMolecule(getContainer(), gmChromInfo.getGeneralMoleculeId()) != null)
+            {
+                throw new ExportException(new HtmlView("PeptideChromatogramChartAction not yet supported for Molecule."));
+            }
+            else
+            {
+                throw new NotFoundException("No Peptide or Molecule found in this folder for id: " + gmChromInfo.getGeneralMoleculeId());
+            }
         }
     }
 

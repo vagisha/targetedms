@@ -61,7 +61,7 @@ public class TransitionManager
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-        sql.append(" WHERE tci.Id = gt.Id AND gt.GeneralPrecursorId = gp.Id AND gp.GeneralMoleculeId = gm.Id AND ");
+        sql.append(" WHERE tci.TransitionId = gt.Id AND gt.GeneralPrecursorId = gp.Id AND gp.GeneralMoleculeId = gm.Id AND ");
         sql.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND tci.Id = ?");
         sql.add(false);
         sql.add(c.getId());
@@ -112,7 +112,7 @@ public class TransitionManager
     public static double getMaxTransitionIntensity(int peptideId, Transition.Type fragmentType)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(tci.Height) FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "pepci");
+        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
         sql.append(", ");
@@ -123,7 +123,7 @@ public class TransitionManager
             sql.append(TargetedMSManager.getTableInfoTransition(), "tran");
         }
         sql.append(" WHERE ");
-        sql.append("pepci.Id = preci.PeptideChromInfoId ");
+        sql.append("gmci.Id = preci.GeneralMoleculeChromInfoId ");
         sql.append("AND ");
         sql.append("preci.Id = tci.PrecursorChromInfoId ");
 
@@ -138,7 +138,7 @@ public class TransitionManager
             sql.append("tran.FragmentType " + condition +  " 'precursor' ");
         }
         sql.append(" AND ");
-        sql.append("pepci.GeneralMoleculeId=?");
+        sql.append("gmci.GeneralMoleculeId=?");
         sql.add(peptideId);
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);

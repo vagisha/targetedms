@@ -1123,7 +1123,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 molecule.setNote(readNote(_reader));
 
             else if (XmlUtil.isStartElement(_reader, evtType, PEPTIDE_RESULT))
-                generalMoleculeChromInfoList.add(readPeptideChromInfo(_reader));
+                generalMoleculeChromInfoList.add(readGeneralMoleculeChromInfo(_reader));
         }
     }
 
@@ -1199,7 +1199,7 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, PEPTIDE_RESULT))
             {
-                generalMoleculeChromInfoList.add(readPeptideChromInfo(reader));
+                generalMoleculeChromInfoList.add(readGeneralMoleculeChromInfo(reader));
             }
             else if (XmlUtil.isStartElement(reader, evtType, VARIABLE_MODIFICATION))
             {
@@ -1322,7 +1322,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return modifications;
     }
 
-    private GeneralMoleculeChromInfo readPeptideChromInfo(XMLStreamReader reader) throws XMLStreamException
+    private GeneralMoleculeChromInfo readGeneralMoleculeChromInfo(XMLStreamReader reader) throws XMLStreamException
     {
         GeneralMoleculeChromInfo chromInfo = new GeneralMoleculeChromInfo();
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", PEPTIDE_RESULT));

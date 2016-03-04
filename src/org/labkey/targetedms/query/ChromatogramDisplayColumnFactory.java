@@ -92,7 +92,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                 {
                     case PEPTIDE:
                         chromAction = new ActionURL(TargetedMSController.PeptideChromatogramChartAction.class, _container);
-                        sampleFile = ReplicateManager.getSampleFileForPeptideChromInfo((Integer) Id);
+                        sampleFile = ReplicateManager.getSampleFileForGeneralMoleculeChromInfo((Integer) Id);
                         break;
                     case PRECURSOR:
                         chromAction = new ActionURL(TargetedMSController.PrecursorChromatogramChartAction.class, _container);

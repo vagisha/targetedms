@@ -27,7 +27,7 @@ public class PrecursorChromInfoLitePlus extends SkylineEntity implements Precurs
     // Columns from the PrecursorChromInfo table
     private int _sampleFileId;
     private int _precursorId;
-    private int _peptideChromInfoId;
+    private int _generalMoleculeChromInfoId;
     private Double _bestRetentionTime;
     private Double _minStartTime;
     private Double _maxEndTime;
@@ -63,14 +63,14 @@ public class PrecursorChromInfoLitePlus extends SkylineEntity implements Precurs
         _precursorId = precursorId;
     }
 
-    public int getPeptideChromInfoId()
+    public int getGeneralMoleculeChromInfoId()
     {
-        return _peptideChromInfoId;
+        return _generalMoleculeChromInfoId;
     }
 
-    public void setPeptideChromInfoId(int peptideChromInfoId)
+    public void setGeneralMoleculeChromInfoId(int generalMoleculeChromInfoId)
     {
-        _peptideChromInfoId = peptideChromInfoId;
+        _generalMoleculeChromInfoId = generalMoleculeChromInfoId;
     }
 
     public int getSampleFileId()

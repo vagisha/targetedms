@@ -49,6 +49,17 @@ public class PrecursorChromInfoTable extends TargetedMSTable
             }
         });
 
+        ColumnInfo moleculePrecursorId = wrapColumn("MoleculePrecursorId", getRealTable().getColumn(precursorId.getFieldKey()));
+        moleculePrecursorId.setFk(new LookupForeignKey("Id")
+        {
+            @Override
+            public TableInfo getLookupTableInfo()
+            {
+                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR);
+            }
+        });
+        addColumn(moleculePrecursorId);
+
         ColumnInfo generalMoleculeChromInfoIdId = getColumn("GeneralMoleculeChromInfoId");
         generalMoleculeChromInfoIdId.setFk(new LookupForeignKey("Id")
         {

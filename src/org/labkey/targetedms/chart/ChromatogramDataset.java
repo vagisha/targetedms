@@ -495,7 +495,7 @@ public abstract class ChromatogramDataset
         protected List<PrecursorChromInfoPlus> getPrecursorChromInfos()
         {
             // We have the ID of the precursorChromInfo that is not an optimization peak.
-            List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForPeptideChromInfo(
+            List<PrecursorChromInfoPlus> precursorChromInfoList = PrecursorManager.getPrecursorChromInfosForGeneralMoleculeChromInfo(
                     _precursorChromInfo.getGeneralMoleculeChromInfoId(),
                     _precursorChromInfo.getPrecursorId(),
                     _precursorChromInfo.getSampleFileId(), _user, _container);

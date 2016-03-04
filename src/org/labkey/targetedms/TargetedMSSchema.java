@@ -813,12 +813,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name) || TABLE_GENERAL_MOLECULE_CHROM_INFO.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new GeneralMoleculeChromInfoTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_CHROM_INFO), this, ContainerJoinType.GeneralMoleculeFK.getSQL(), name);
-
-            // Add a link to view the chromatogram an individual transition
-            result.setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.PeptideChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
-
-            return result;
+            return new GeneralMoleculeChromInfoTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_CHROM_INFO), this, ContainerJoinType.GeneralMoleculeFK.getSQL(), name);
         }
 
         // Tables that have a FK to targetedms.peptidechrominfo
@@ -887,7 +882,9 @@ public class TargetedMSSchema extends UserSchema
         {
             TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.SampleFileFK.getSQL());
             TargetedMSSchema targetedMSSchema = this;
-            result.getColumn("TransitionId").setFk(new LookupForeignKey("Id")
+
+            ColumnInfo transitionId = result.getColumn("TransitionId");
+            transitionId.setFk(new LookupForeignKey("Id")
             {
                 @Override
                 public TableInfo getLookupTableInfo()
@@ -895,6 +892,17 @@ public class TargetedMSSchema extends UserSchema
                     return new DocTransitionsTableInfo(targetedMSSchema);
                 }
             });
+
+            ColumnInfo moleculeTransitionId = result.wrapColumn("MoleculeTransitionId", result.getRealTable().getColumn(transitionId.getFieldKey()));
+            moleculeTransitionId.setFk(new LookupForeignKey("Id")
+            {
+                @Override
+                public TableInfo getLookupTableInfo()
+                {
+                    return new MoleculeTransitionsTableInfo(targetedMSSchema);
+                }
+            });
+            result.addColumn(moleculeTransitionId);
 
             // Add a link to view the chromatogram an individual transition
             result.setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.TransitionChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));

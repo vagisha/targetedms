@@ -64,18 +64,18 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Peptide.class);
     }
 
-    public static GeneralMoleculeChromInfo getPeptideChromInfo(Container c, int id)
+    public static GeneralMoleculeChromInfo getGeneralMoleculeChromInfo(Container c, int id)
     {
-        SQLFragment sql = new SQLFragment("SELECT pci.* FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "pci");
+        SQLFragment sql = new SQLFragment("SELECT gmci.* FROM ");
+        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-        sql.append(" WHERE pci.GeneralMoleculeId = gm.Id AND  ");
-        sql.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND pci.Id = ?");
+        sql.append(" WHERE gmci.GeneralMoleculeId = gm.Id AND  ");
+        sql.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND gmci.Id = ?");
         sql.add(false);
         sql.add(c.getId());
         sql.add(id);
@@ -118,7 +118,7 @@ public class PeptideManager
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
         sql.append(" WHERE ");
-        sql.append("gmci.Id=preci.PeptideChromInfoId");
+        sql.append("gmci.Id=preci.GeneralMoleculeChromInfoId");
         sql.append(" AND ");
         sql.append("gmci.GeneralMoleculeId=?");
         sql.add(peptideId);
@@ -133,7 +133,7 @@ public class PeptideManager
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
         sql.append(" WHERE ");
-        sql.append("gmci.Id=preci.PeptideChromInfoId");
+        sql.append("gmci.Id=preci.GeneralMoleculeChromInfoId");
         sql.append(" AND ");
         sql.append("gmci.GeneralMoleculeId=?");
         sql.append(" AND ");
@@ -151,7 +151,7 @@ public class PeptideManager
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
         sql.append(" WHERE ");
-        sql.append("gmci.Id=preci.PeptideChromInfoId");
+        sql.append("gmci.Id=preci.GeneralMoleculeChromInfoId");
         sql.append(" AND ");
         sql.append("gmci.GeneralMoleculeId=?");
         sql.append(" AND ");

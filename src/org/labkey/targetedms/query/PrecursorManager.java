@@ -90,20 +90,18 @@ public class PrecursorManager
 
     public static PrecursorChromInfo getPrecursorChromInfo(Container c, int id, User user, Container container)
     {
-        TargetedMSSchema schema = new TargetedMSSchema(user, container);
-
         SQLFragment sql = new SQLFragment("SELECT pci.* FROM ");
-        sql.append(new PrecursorChromInfoTable(schema), "pci");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
         sql.append(", ");
-        sql.append(new PrecursorTableInfo(schema), "pre");
+        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(", ");
-        sql.append(new PeptideTableInfo(schema), "pep");
+        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "mol");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
-        sql.append(" WHERE pci.PrecursorId = pre.Id AND pre.GeneralMoleculeId = pep.Id AND ");
-        sql.append("pep.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND pci.Id = ?");
+        sql.append(" WHERE pci.PrecursorId = gp.Id AND gp.GeneralMoleculeId = mol.Id AND ");
+        sql.append("mol.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Deleted = ? AND r.Container = ? AND pci.Id = ?");
         sql.add(false);
         sql.add(c.getId());
         sql.add(id);
@@ -330,17 +328,17 @@ public class PrecursorManager
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
     }
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptideChromInfo(int pepChromInfoId, int precursorId,
-                                                                                         int sampleFileId, User user,
-                                                                                         Container container)
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForGeneralMoleculeChromInfo(int gmChromInfoId, int precursorId,
+                                                                                                 int sampleFileId, User user,
+                                                                                                 Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
         sql.append(" FROM ");
         joinTablesForPrecursorChromInfo(sql, user, container);
         sql.append(" WHERE ");
-        sql.append("pci.PeptideChromInfoId=? ");
-        sql.add(pepChromInfoId);
+        sql.append("pci.GeneralMoleculeChromInfoId=? ");
+        sql.add(gmChromInfoId);
         sql.append(" AND ");
         sql.append("pci.PrecursorId=? ");
         sql.add(precursorId);
@@ -589,22 +587,22 @@ public class PrecursorManager
         return count != null && count == precursorIdCount;
     }
 
-    public static double getMaxPrecursorIntensity(int peptideId)
+    public static double getMaxPrecursorIntensity(int generalMoleculeId)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(precHeight) FROM (");
         sql.append("SELECT SUM(tci.Height) AS precHeight FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "pepci");
+        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
         sql.append(" WHERE");
-        sql.append(" pepci.Id = preci.PeptideChromInfoId");
+        sql.append(" gmci.Id = preci.GeneralMoleculeChromInfoId");
         sql.append(" AND");
         sql.append(" preci.Id = tci.PrecursorChromInfoId");
         sql.append(" AND");
-        sql.append(" pepci.GeneralMoleculeId=?");
-        sql.add(peptideId);
+        sql.append(" gmci.GeneralMoleculeId=?");
+        sql.add(generalMoleculeId);
         sql.append(" GROUP BY tci.PrecursorChromInfoId");
         sql.append(" ) a");
 
