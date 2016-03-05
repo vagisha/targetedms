@@ -25,6 +25,9 @@ import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.UIContainerHelper;
+import org.openqa.selenium.WebElement;
+
+import java.util.List;
 
 import static org.junit.Assert.*;
 
@@ -90,15 +93,22 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         waitForText("Protein Search Results");
         //waitForText("1 - 7 of 7");
         assertTextPresentInThisOrder("Protein Search", "Matching Proteins (1)", "Targeted MS Peptides");
-        assertEquals(1, getElementCount(Locator.xpath("id('dataregion_PotentialProteins')/tbody/tr/td/a[contains(text(),'YAL038W')]")));
-        assertEquals(7, getElementCount(Locator.xpath("//td/span/a[contains(text(), 'YAL038W')]")));
-        assertEquals(1, getElementCount(Locator.xpath("//td/span/a[contains(text(), 'YAL038W_renamed')]")));
+
+        clickAndWait(Locator.id("expandCollapse-ProteinSearchProteinMatches"), 0); // Search results are hidden by default.
+        DataRegionTable potentialProteins = new DataRegionTable("PotentialProteins", this);
+        assertEquals(1, potentialProteins.getDataRowCount());
+        assertEquals("YAL038W", potentialProteins.getDataAsText(0, "BestName"));
+
+        DataRegionTable targetedMSMatches = new DataRegionTable("TargetedMSMatches", this);
+        List<String> labels = targetedMSMatches.getColumnDataAsText("Protein / Label");
+        assertEquals(5, labels.lastIndexOf("YAL038W"));
+        assertEquals(6, labels.indexOf("YAL038W_renamed"));
     }
 
     @LogMethod
     protected void verifyModificationSearch()
     {
-        // add modificaiton search webpart and do an initial search by AminoAcid and DeltaMass
+        // add modification search webpart and do an initial search by AminoAcid and DeltaMass
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
         waitForElement(Locator.id("identifierInput"));
         _ext4Helper.clickExt4Tab("Modification Search");
@@ -168,7 +178,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         String targetProtein = "LTSLNVVAGSDLR";
         clickAndWait(Locator.linkContainingText(targetProtein));
         //Verify it’s associated with the right protein and other values from details view.
-        //protein name, portien, neutral mass, avg. RT , precursor
+        //protein name, protein, neutral mass, avg. RT , precursor
         assertTextPresent(targetProtein, "YAL038W", "1343.740", "27.9232", "677.8818++ (heavy)");
 
         //Verify the spectrum shows up correctly.
@@ -197,17 +207,16 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         click(Locator.xpath("//th[span[contains(text(), 'Precursor List')]]/span/a/span[contains(@class, 'fa-caret-down')]"));
         clickAndWait(Locator.tagContainingText("span", "Transition List"));
         waitForText("Transition List");
-        DataRegionTable drt = new DataRegionTable("transitions_view", this);
-        drt.getDataAsText(5, "Label");
+
+        // There are many regions within one transitions_view region -- all with the same region name.
+        // Lookup the elements manually and point to a specific region to examine.
+        WebElement table = DataRegionTable.Locators.dataRegion().findElements(this.getDriver()).get(1);
+        DataRegionTable drt = new DataRegionTable(this, table);
         assertEquals("heavy", drt.getDataAsText(5, "Label"));
         assertEquals("1353.7491", drt.getDataAsText(5, "Precursor Neutral Mass"));
         assertEquals("677.8818", drt.getDataAsText(5, "Q1 m/z"));
         assertEquals("y7", drt.getDataAsText(5, "Fragment"));
         assertEquals("727.3972", drt.getDataAsText(5, "Q3 m/z"));
-        // We don't find these values based on their column headers because DataRegionTable gets confused with the
-        // nested data regions having the same id in the HTML. The checks above happen to work because
-        // they correspond to columns that aren't in the parent table, so the XPath flips to the second table with
-        // that id, which has enough columns to satisfy the Locator
         assertTextPresent("1343.740", "1226.661", "1001.550");
 
         //Click down arrow next to protein name. Click "Search for other references to this protein"
@@ -249,6 +258,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         waitForElement(Locator.paginationText(45));
         DataRegionTable query = new DataRegionTable("query", this);
         query.setFilter("Sequence", "Equals", "TNNPETLVALR");
+        query = new DataRegionTable("query", this);
         assertEquals(1, query.getDataRowCount());
         assertEquals("YAL038W", query.getDataAsText(0, "Protein / Label"));
         assertElementPresent(Locator.linkWithText("YAL038W"));
@@ -279,6 +289,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         waitForElement(Locator.paginationText(89));
         query = new DataRegionTable("query", this);
         query.setFilter("ModifiedSequence", "Equals", "LTSLNVVAGSDLR[+10]");
+        query = new DataRegionTable("query", this);
         assertEquals(1, query.getDataRowCount());
         assertEquals("677.8818", query.getDataAsText(0, "Q1 m/z"));
         assertEquals("YAL038W", query.getDataAsText(0, "Protein / Label"));
@@ -313,6 +324,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         waitForElement(Locator.paginationText(1, 100, 299));
         query = new DataRegionTable("query", this);
         query.setFilter("PrecursorId", "Equals", "LTSLNVVAGSDLR[+10]");
+        query = new DataRegionTable("query", this);
         assertEquals(3, query.getDataRowCount());
         assertEquals("677.8818", query.getDataAsText(0, "Precursor Id Mz"));
         assertEquals("YAL038W", query.getDataAsText(0, "Protein / Label"));
@@ -334,6 +346,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         waitForElement(Locator.paginationText(89));
         query = new DataRegionTable("query", this);
         query.setFilter("Protein1", "Equals", "YAL038W_renamed");
+        query = new DataRegionTable("query", this);
         assertEquals(1, query.getDataRowCount());
         assertEquals(query.getDataAsText(0, "Id1"), query.getDataAsText(0, "Id2"));
         assertEquals(query.getDataAsText(0, "Sequence1"), query.getDataAsText(0, "Sequence1"));
