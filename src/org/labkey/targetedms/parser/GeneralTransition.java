@@ -1,5 +1,7 @@
 package org.labkey.targetedms.parser;
 
+import java.util.List;
+
 public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
 {
 
@@ -19,6 +21,7 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     protected Double explicitDeclusteringPotential;
     protected Double explicitDriftTimeMSec;
     protected Double explicitDriftTimeHighEnergyOffsetMSec;
+    private List<TransitionChromInfo> _chromInfoList;
 
     public int getGeneralPrecursorId()
     {
@@ -180,4 +183,18 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
         this.explicitDriftTimeHighEnergyOffsetMSec = explicitDriftTimeHighEnergyOffsetMSec;
     }
 
+    public List<TransitionChromInfo> getChromInfoList()
+    {
+        return _chromInfoList;
+    }
+
+    public void setChromInfoList(List<TransitionChromInfo> chromInfoList)
+    {
+        _chromInfoList = chromInfoList;
+    }
+
+    public String getLabel()
+    {
+        return null;
+    }
 }

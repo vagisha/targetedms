@@ -269,10 +269,10 @@ public class Chromatogram extends SkylineEntity
         return _intensities.length;
     }
 
-    public int matchTransitions(List<Transition> transitions, double tolerance, boolean multiMatch)
+    public int matchTransitions(List<? extends GeneralTransition> transitions, double tolerance, boolean multiMatch)
     {
         int match = 0;
-        for (Transition transition : transitions)
+        for (GeneralTransition transition : transitions)
         {
             int start = _startTransitionIndex;
             int end = start + _numTransitions;

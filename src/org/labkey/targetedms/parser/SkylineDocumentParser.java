@@ -1058,7 +1058,7 @@ public class SkylineDocumentParser implements AutoCloseable
     {
         Peptide peptide = new Peptide();
         readGeneralMolecule(_reader, peptide);
-        readPeptide(_reader, peptide, false);
+        readPeptide(_reader, peptide);
         return peptide;
     }
 
@@ -1127,7 +1127,7 @@ public class SkylineDocumentParser implements AutoCloseable
         }
     }
 
-    private void readPeptide(XMLStreamReader reader, Peptide peptide, boolean isCustomMolecule) throws XMLStreamException, IOException
+    private void readPeptide(XMLStreamReader reader, Peptide peptide) throws XMLStreamException, IOException
     {
         List<Precursor> precursorList = new ArrayList<>();
         peptide.setPrecursorList(precursorList);
@@ -1191,7 +1191,7 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, PRECURSOR))
             {
-                precursorList.add(readPrecursor(reader, modifiedSequenceLight, isCustomMolecule));
+                precursorList.add(readPrecursor(reader, modifiedSequenceLight));
             }
             else if (XmlUtil.isStartElement(reader, evtType, NOTE))
             {
@@ -1402,10 +1402,14 @@ public class SkylineDocumentParser implements AutoCloseable
             else if (XmlUtil.isStartElement(reader, evtType, NOTE))
                 moleculePrecursor.setNote(readNote(reader));
         }
+
+        List<Chromatogram> chromatograms = tryLoadChromatogram(moleculeTransitionList, moleculePrecursor.getMz(), null, _matchTolerance);
+        populateChromInfoChromatograms(moleculePrecursor, chromatograms);
+
         return moleculePrecursor;
     }
 
-    private Precursor readPrecursor(XMLStreamReader reader, String modifiedSequenceLight, boolean isCustomMolecule) throws XMLStreamException, IOException
+    private Precursor readPrecursor(XMLStreamReader reader, String modifiedSequenceLight) throws XMLStreamException, IOException
     {
         Precursor precursor = new Precursor();
         List<Transition> transitionList = new ArrayList<>();
@@ -1470,7 +1474,7 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, TRANSITION))
             {
-                transitionList.add(readTransition(reader, isCustomMolecule));
+                transitionList.add(readTransition(reader, false));
             }
             else if(XmlUtil.isStartElement(reader, evtType, PRECURSOR_PEAK))
             {
@@ -1490,27 +1494,33 @@ public class SkylineDocumentParser implements AutoCloseable
         // We would still like to store them in the database.
         List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
                                                                                             DataSettings.AnnotationTarget.precursor);
-        for(String missingAnotName: missingBooleanAnnotations)
+        for (String missingAnotName: missingBooleanAnnotations)
         {
             addMissingBooleanAnnotation(annotations, missingAnotName, new PrecursorAnnotation());
         }
 
-        List<Chromatogram> chromatograms = tryLoadChromatogram(transitionList,
-                precursor.getMz(), modifiedSequenceLight,  _matchTolerance);
+        List<Chromatogram> chromatograms = tryLoadChromatogram(transitionList, precursor.getMz(), modifiedSequenceLight,  _matchTolerance);
+        populateChromInfoChromatograms(precursor, chromatograms);
+
+        return precursor;
+    }
+
+    private void populateChromInfoChromatograms(GeneralPrecursor precursor, List<Chromatogram> chromatograms)
+    {
         Map<String, Chromatogram> filePathChromatogramMap = new HashMap<>();
         for(Chromatogram chromatogram: chromatograms)
         {
             filePathChromatogramMap.put(chromatogram.getFilePath(), chromatogram);
         }
 
-        for(Iterator<PrecursorChromInfo> i = chromInfoList.iterator(); i.hasNext(); )
+        for(Iterator<PrecursorChromInfo> i = precursor.getChromInfoList().iterator(); i.hasNext(); )
         {
             PrecursorChromInfo chromInfo = i.next();
             String filePath = _sampleFileIdToFilePathMap.get(chromInfo.getSkylineSampleFileId());
             Chromatogram chromatogram = filePathChromatogramMap.get(filePath);
             if (chromatogram == null)
             {
-                _log.warn("Unable to find chromatograms for file path " + filePath + ". Precursor " + precursor.getModifiedSequence() + ", " +precursor.getCharge());
+                _log.warn("Unable to find chromatograms for file path " + filePath + ". Precursor " + precursor.getLabel() + ", " +precursor.getCharge());
                 i.remove();
             }
             else
@@ -1522,7 +1532,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 }
                 catch (DataFormatException ignored)
                 {
-                    _log.warn("Failed to extract chromatogram for " + precursor.getModifiedSequence() + " in replicate " + chromInfo.getReplicateName());
+                    _log.warn("Failed to extract chromatogram for " + precursor.getLabel() + " in replicate " + chromInfo.getReplicateName());
                 }
                 chromInfo.setNumPoints(chromatogram.getNumPoints());
                 chromInfo.setNumTransitions(chromatogram.getNumTransitions());
@@ -1530,16 +1540,17 @@ public class SkylineDocumentParser implements AutoCloseable
             }
         }
 
-        for(Transition transition: precursor.getTransitionsList())
+        List<? extends GeneralTransition> transitionsList = precursor.getTransitionsList();
+        for (GeneralTransition transition: transitionsList)
         {
-            for(Iterator<TransitionChromInfo> iter = transition.getChromInfoList().iterator(); iter.hasNext(); )
+            for (Iterator<TransitionChromInfo> iter = transition.getChromInfoList().iterator(); iter.hasNext(); )
             {
                 TransitionChromInfo transChromInfo = iter.next();
                 String filePath = _sampleFileIdToFilePathMap.get(transChromInfo.getSkylineSampleFileId());
                 Chromatogram c = filePathChromatogramMap.get(filePath);
                 if (c == null)
                 {
-                    _log.warn("Unable to find chromatograms for file path " + filePath + ". Transition " + transition.getLabel() + ", " + precursor.getModifiedSequence() + ", " +precursor.getCharge());
+                    _log.warn("Unable to find chromatograms for file path " + filePath + ". Transition " + transition.getLabel() + ", " + precursor.getLabel() + ", " +precursor.getCharge());
                     iter.remove();
                 }
                 else
@@ -1549,7 +1560,7 @@ public class SkylineDocumentParser implements AutoCloseable
                     double deltaNearestMz = Double.MAX_VALUE;
                     double[] transitions = c.getTransitions();
                     double transitionMz = transition.getMz();
-                    if(transChromInfo.isOptimizationPeak())
+                    if (transChromInfo.isOptimizationPeak())
                     {
                         // From the CE Optimization tutorial:
                         // The product m/z value is incremented slightly for each value as first described by Sherwood et al., 2009
@@ -1558,7 +1569,7 @@ public class SkylineDocumentParser implements AutoCloseable
                     for (int i = 0; i < transitions.length; i++)
                     {
                         double deltaMz = Math.abs(transitionMz - transitions[i]);
-                                
+
                         if (deltaMz < _transitionSettings.getInstrumentSettings().getMzMatchTolerance() &&
                             deltaMz < deltaNearestMz)
                         {
@@ -1576,8 +1587,6 @@ public class SkylineDocumentParser implements AutoCloseable
                 }
             }
         }
-
-        return precursor;
     }
 
     private Precursor.LibraryInfo readBibliospecLibraryInfo(XMLStreamReader reader) throws XMLStreamException
@@ -2012,7 +2021,7 @@ public class SkylineDocumentParser implements AutoCloseable
     }
 
 
-    public List<Chromatogram> tryLoadChromatogram(List<Transition> transitions,
+    private List<Chromatogram> tryLoadChromatogram(List<? extends GeneralTransition> transitions,
                                                   double precursorMz,
                                                   String modifiedSequenceLight,
                                                   double tolerance)

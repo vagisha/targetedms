@@ -68,4 +68,10 @@ public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
     {
         _massAverage = massAverage;
     }
+
+    @Override
+    public String getLabel()
+    {
+        return getCustomIonName();
+    }
 }

@@ -57,7 +57,7 @@ public class Transition extends GeneralTransition
     private double precursorMz;
     private Double collisionEnergy;
     private Double declusteringPotential;
-    private List<TransitionChromInfo> _chromInfoList;
+
     private List<TransitionLoss> _neutralLosses;
 
     // The name of the measured ion that this transition uses (Only for reporter ions and other non proteomic transitions)
@@ -169,16 +169,6 @@ public class Transition extends GeneralTransition
     public void setDeclusteringPotential(Double declusteringPotential)
     {
         this.declusteringPotential = declusteringPotential;
-    }
-
-    public List<TransitionChromInfo> getChromInfoList()
-    {
-        return _chromInfoList;
-    }
-
-    public void setChromInfoList(List<TransitionChromInfo> chromInfoList)
-    {
-        _chromInfoList = chromInfoList;
     }
 
     public List<TransitionLoss> getNeutralLosses()

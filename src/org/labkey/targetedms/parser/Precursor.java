@@ -90,6 +90,12 @@ public class Precursor extends GeneralPrecursor<Transition>
         _libraryInfo = libraryInfo;
     }
 
+    @Override
+    public String getLabel()
+    {
+        return getModifiedSequence();
+    }
+
     public static final class LibraryInfo extends SkylineEntity
     {
         private int _precursorId;
