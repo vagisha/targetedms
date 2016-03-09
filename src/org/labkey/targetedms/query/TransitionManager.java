@@ -109,7 +109,7 @@ public class TransitionManager
         return getMaxTransitionIntensity(peptideId, Transition.Type.ALL);
     }
 
-    public static double getMaxTransitionIntensity(int peptideId, Transition.Type fragmentType)
+    public static double getMaxTransitionIntensity(int generalMoleculeId, Transition.Type fragmentType)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(tci.Height) FROM ");
         sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
@@ -139,7 +139,7 @@ public class TransitionManager
         }
         sql.append(" AND ");
         sql.append("gmci.GeneralMoleculeId=?");
-        sql.add(peptideId);
+        sql.add(generalMoleculeId);
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }

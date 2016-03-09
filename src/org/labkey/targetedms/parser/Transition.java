@@ -17,7 +17,6 @@
 package org.labkey.targetedms.parser;
 
 
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.chart.LabelFactory;
 
@@ -27,7 +26,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * User: vsharma
@@ -221,10 +219,8 @@ public class Transition extends GeneralTransition
     public static Set<String> getColumns()
     {
         Set<String> colNames = new HashSet<>();
-        List<ColumnInfo> columnsGenTra = TargetedMSManager.getTableInfoGeneralTransition().getColumns();
-        List<ColumnInfo> columnsTra = TargetedMSManager.getTableInfoTransition().getColumns();
-        colNames.addAll(columnsGenTra.stream().map(ColumnInfo::getName).collect(Collectors.toList()));
-        colNames.addAll(columnsTra.stream().map(ColumnInfo::getName).collect(Collectors.toList()));
+        colNames.addAll(TargetedMSManager.getTableInfoTransition().getColumnNameSet());
+        colNames.addAll(TargetedMSManager.getTableInfoGeneralTransition().getColumnNameSet());
         return colNames;
     }
 

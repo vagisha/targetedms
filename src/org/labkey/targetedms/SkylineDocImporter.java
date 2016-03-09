@@ -1250,13 +1250,6 @@ public class SkylineDocImporter
         transition.setId(gt.getId());
         Table.insert(_user, TargetedMSManager.getTableInfoTransition(), transition);
 
-        // If this is a MoleculeTransition insert to MoleculeTransition Table
-        if(transition instanceof MoleculeTransition)
-        {
-            ((MoleculeTransition)transition).setTransitionId(transition.getId());
-            Table.insert(_user, TargetedMSManager.getTableInfoMoleculeTransition(), (MoleculeTransition)transition);
-        }
-
         // transition annotations
         insertTransitionAnnotation(transition.getAnnotations(), transition.getId());
 

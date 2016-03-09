@@ -20,7 +20,7 @@ public class GeneralMoleculeChromInfoTableInfo extends TargetedMSTable
         setName(name);
 
         // Add a link to view the chromatogram an individual transition
-        setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.PeptideChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
+        setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.GeneralMoleculeChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
 
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new LookupForeignKey("Id")

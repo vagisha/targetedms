@@ -49,7 +49,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 
     public static enum TYPE
     {
-        PEPTIDE,
+        GENERAL_MOLECULE,
         PRECURSOR
     }
 
@@ -90,8 +90,8 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                 SampleFile sampleFile = null;
                 switch (_type)
                 {
-                    case PEPTIDE:
-                        chromAction = new ActionURL(TargetedMSController.PeptideChromatogramChartAction.class, _container);
+                    case GENERAL_MOLECULE:
+                        chromAction = new ActionURL(TargetedMSController.GeneralMoleculeChromatogramChartAction.class, _container);
                         sampleFile = ReplicateManager.getSampleFileForGeneralMoleculeChromInfo((Integer) Id);
                         break;
                     case PRECURSOR:

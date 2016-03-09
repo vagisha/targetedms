@@ -184,7 +184,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //Verify the spectrum shows up correctly.
 
         //Verify we get the expected number of chromatogram graphs.
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'peptideChromatogramChart.view')]"), 1);
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'generalMoleculeChromatogramChart.view')]"), 1);
         assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 2);
         assertElementPresent(Locator.xpath("//img[contains(@alt, 'Chromatogram')]"), 3);
 

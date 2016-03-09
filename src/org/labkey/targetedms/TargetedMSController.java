@@ -167,6 +167,7 @@ import org.labkey.targetedms.view.DocumentPrecursorsView;
 import org.labkey.targetedms.view.DocumentTransitionsView;
 import org.labkey.targetedms.view.DocumentView;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
+import org.labkey.targetedms.view.MoleculePrecursorChromatogramsView;
 import org.labkey.targetedms.view.PeptidePrecursorChromatogramsView;
 import org.labkey.targetedms.view.PeptidePrecursorsView;
 import org.labkey.targetedms.view.PeptideTransitionsView;
@@ -711,19 +712,21 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("No such PrecursorChromInfo found in this folder: " + tci.getPrecursorChromInfoId());
             }
 
+            JFreeChart chart;
             if (PrecursorManager.getPrecursor(getContainer(), pci.getPrecursorId(), getUser()) != null)
             {
-                JFreeChart chart = new ChromatogramChartMakerFactory().createTransitionChromChart(tci, pci, getUser(), getContainer());
-                writePNG(form, response, chart);
+                chart = new ChromatogramChartMakerFactory().createTransitionChromChart(tci, pci, getUser(), getContainer());
             }
             else if (MoleculePrecursorManager.getPrecursor(getContainer(), pci.getPrecursorId(), getUser()) != null)
             {
-                throw new ExportException(new HtmlView("TransitionChromatogramChartAction not yet supported for MoleculeTransition."));
+                chart = new ChromatogramChartMakerFactory().createMoleculeTransitionChromChart(tci, pci, getUser(), getContainer());
             }
             else
             {
                 throw new NotFoundException("No Precursor or MoleculePrecursor found in this folder for id: " + pci.getPrecursorId());
             }
+
+            writePNG(form, response, chart);
         }
     }
 
@@ -745,19 +748,21 @@ public class TargetedMSController extends SpringActionController
             factory.setSplitGraph(form.isSplitGraph());
             factory.setShowOptimizationPeaks(form.isShowOptimizationPeaks());
 
+            JFreeChart chart;
             if (PrecursorManager.getPrecursor(getContainer(), pChromInfo.getPrecursorId(), getUser()) != null)
             {
-                JFreeChart chart = factory.createPrecursorChromChart(pChromInfo, getUser(), getContainer());
-                writePNG(form, response, chart);
+                chart = factory.createPrecursorChromChart(pChromInfo, getUser(), getContainer());
             }
             else if (MoleculePrecursorManager.getPrecursor(getContainer(), pChromInfo.getPrecursorId(), getUser()) != null)
             {
-                throw new ExportException(new HtmlView("PrecursorChromatogramChartAction not yet supported for MoleculePrecursor."));
+                chart = factory.createMoleculePrecursorChromChart(pChromInfo, getUser(), getContainer());
             }
             else
             {
                 throw new NotFoundException("No Precursor or MoleculePrecursor found in this folder for id: " + pChromInfo.getPrecursorId());
             }
+
+            writePNG(form, response, chart);
         }
     }
 
@@ -788,8 +793,9 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermission(ReadPermission.class)    // TODO this should be renamed to GeneralMoleculeChromatogramChartAction
-    public class PeptideChromatogramChartAction extends ExportAction<ChromatogramForm>
+    @RequiresPermission(ReadPermission.class)
+    @ActionNames("generalMoleculeChromatogramChart, peptideChromatogramChart, moleculeChromatogramChart")
+    public class GeneralMoleculeChromatogramChartAction extends ExportAction<ChromatogramForm>
     {
         @Override
         public void export(ChromatogramForm form, HttpServletResponse response, BindException errors) throws Exception
@@ -804,19 +810,21 @@ public class TargetedMSController extends SpringActionController
             factory.setSyncIntensity(form.isSyncY());
             factory.setSyncRt(form.isSyncX());
 
+            JFreeChart chart;
             if (PeptideManager.getPeptide(getContainer(), gmChromInfo.getGeneralMoleculeId()) != null)
             {
-                JFreeChart chart = factory.createPeptideChromChart(gmChromInfo, getUser(), getContainer());
-                writePNG(form, response, chart);
+                chart = factory.createPeptideChromChart(gmChromInfo, getUser(), getContainer());
             }
             else if (MoleculeManager.getMolecule(getContainer(), gmChromInfo.getGeneralMoleculeId()) != null)
             {
-                throw new ExportException(new HtmlView("PeptideChromatogramChartAction not yet supported for Molecule."));
+                chart = factory.createMoleculeChromChart(gmChromInfo, getUser(), getContainer());
             }
             else
             {
                 throw new NotFoundException("No Peptide or Molecule found in this folder for id: " + gmChromInfo.getGeneralMoleculeId());
             }
+
+            writePNG(form, response, chart);
         }
     }
 
@@ -1428,8 +1436,8 @@ public class TargetedMSController extends SpringActionController
             PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(peptide, new TargetedMSSchema(getUser(), getContainer()),form, errors);
             JspView<PeptideChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
 
-            chromatogramsBox.setTitle(PeptidePrecursorChromatogramsView.TITLE);
-            chromatogramsBox.enableExpandCollapse(PeptidePrecursorChromatogramsView.TITLE, false);
+            chromatogramsBox.setTitle("Chromatograms");
+            chromatogramsBox.enableExpandCollapse("Chromatograms", false);
             chromatogramsBox.addView(chartForm);
             chromatogramsBox.addView(chromView);
             chromatogramsBox.setShowTitle(true);
@@ -1525,18 +1533,18 @@ public class TargetedMSController extends SpringActionController
             moleculeInfo.setTitle("Small Molecule Summary");
             vbox.addView(moleculeInfo);
 
-            // Precursor and transition chromatograms. One row per replicate
-            //VBox chromatogramsBox = new VBox();
-            //PeptidePrecursorChromatogramsView chromView = new PeptidePrecursorChromatogramsView(molecule, new TargetedMSSchema(getUser(), getContainer()),form, errors);
-            //JspView<MoleculeChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
-            //
-            //chromatogramsBox.setTitle(PeptidePrecursorChromatogramsView.TITLE);
-            //chromatogramsBox.enableExpandCollapse(PeptidePrecursorChromatogramsView.TITLE, false);
-            //chromatogramsBox.addView(chartForm);
-            //chromatogramsBox.addView(chromView);
-            //chromatogramsBox.setShowTitle(true);
-            //chromatogramsBox.setFrame(WebPartView.FrameType.PORTAL);
-            //vbox.addView(chromatogramsBox);
+            // Molecule precursor and transition chromatograms. One row per replicate
+            VBox chromatogramsBox = new VBox();
+            MoleculePrecursorChromatogramsView chromView = new MoleculePrecursorChromatogramsView(molecule, new TargetedMSSchema(getUser(), getContainer()),form, errors);
+            JspView<MoleculeChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
+
+            chromatogramsBox.setTitle("Chromatograms");
+            chromatogramsBox.enableExpandCollapse("Chromatograms", false);
+            chromatogramsBox.addView(chartForm);
+            chromatogramsBox.addView(chromView);
+            chromatogramsBox.setShowTitle(true);
+            chromatogramsBox.setFrame(WebPartView.FrameType.PORTAL);
+            vbox.addView(chromatogramsBox);
 
             // Summary charts for the molecule
             SummaryChartBean summaryChartBean = new SummaryChartBean();

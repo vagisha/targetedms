@@ -22,8 +22,8 @@ import org.labkey.api.query.QuerySettings;
 import org.labkey.api.view.GridView;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.parser.GeneralMolecule;
-import org.labkey.targetedms.query.PeptidePrecursorChromatogramsTableInfo;
+import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.query.GeneralMoleculePrecursorChromatogramsTableInfo;
 import org.springframework.validation.Errors;
 
 /**
@@ -33,23 +33,21 @@ import org.springframework.validation.Errors;
  */
 public class PeptidePrecursorChromatogramsView extends GridView
 {
-    public static final String TITLE = "Chromatograms";
-
-    public PeptidePrecursorChromatogramsView(GeneralMolecule generalMolecule, TargetedMSSchema schema,
+    public PeptidePrecursorChromatogramsView(Peptide peptide, TargetedMSSchema schema,
                                              TargetedMSController.ChromatogramForm form,
                                              Errors errors)
     {
 
-        super(makeDataRegion(generalMolecule, schema, form), errors);
-        QuerySettings settings = new QuerySettings(getViewContext(), "General Molecule and Precursor chromatograms");
+        super(makeDataRegion(peptide, schema, form), errors);
+        QuerySettings settings = new QuerySettings(getViewContext(), "Peptide and Precursor chromatograms");
         settings.setMaxRows(10);
         getDataRegion().setSettings(settings);
     }
 
-    private static DataRegion makeDataRegion(GeneralMolecule generalMolecule, TargetedMSSchema schema,
+    private static DataRegion makeDataRegion(Peptide peptide, TargetedMSSchema schema,
                                              TargetedMSController.ChromatogramForm form)
     {
-        PeptidePrecursorChromatogramsTableInfo tableInfo = new PeptidePrecursorChromatogramsTableInfo(schema, generalMolecule, form);
+        GeneralMoleculePrecursorChromatogramsTableInfo tableInfo = new GeneralMoleculePrecursorChromatogramsTableInfo(peptide, schema, form);
         DataRegion dRegion = new DataRegion();
         dRegion.setTable(tableInfo);
         dRegion.addColumns(tableInfo, StringUtils.join(tableInfo.getDisplayColumnNames(), ","));

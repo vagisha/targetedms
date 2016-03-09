@@ -1474,7 +1474,7 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, TRANSITION))
             {
-                transitionList.add(readTransition(reader, false));
+                transitionList.add(readProteomicTransition(reader));
             }
             else if(XmlUtil.isStartElement(reader, evtType, PRECURSOR_PEAK))
             {
@@ -1687,61 +1687,67 @@ public class SkylineDocumentParser implements AutoCloseable
         return chromInfo;
     }
 
-    private Transition readTransition(XMLStreamReader reader, boolean isCustomMolecule) throws XMLStreamException
-    {
-        if(isCustomMolecule)
-        {
-            return readMoleculeTransition(reader);
-        }
-        else
-        {
-            return readProteomicTransition(reader);
-        }
-    }
-
     private MoleculeTransition readSmallMoleculeTransition(XMLStreamReader reader) throws XMLStreamException
     {
-        return readMoleculeTransition(reader);
-    }
-
-    private MoleculeTransition readMoleculeTransition(XMLStreamReader reader) throws XMLStreamException
-    {
         MoleculeTransition transition = new MoleculeTransition();
+        readGeneralTransition(reader, transition);
+
         // read molecule transition-specific attributes
         transition.setIonFormula(_reader.getAttributeValue(null, ION_FORMULA));
         transition.setCustomIonName(_reader.getAttributeValue(null, CUSTOM_ION_NAME));
         transition.setMassMonoisotopic(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_MONOISOTOPIC, MOLECULE));
         transition.setMassAverage(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_AVERAGE, MOLECULE));
-        readTransition(reader, transition);
+
+        List<TransitionChromInfo> chromInfoList = new ArrayList<>();
+        transition.setChromInfoList(chromInfoList);
+
+        List<TransitionAnnotation> annotations = new ArrayList<>();
+        transition.setAnnotations(annotations);
+
+        while(reader.hasNext()) {
+
+            int evtType = reader.next();
+            if(XmlUtil.isEndElement(reader, evtType, TRANSITION))
+            {
+                break;
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, ANNOTATION))
+            {
+                annotations.add(readAnnotation(reader, new TransitionAnnotation()));
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, PRODUCT_MZ))
+            {
+                Double productMz = XmlUtil.readDouble(reader, PRODUCT_MZ);
+                if (productMz != null)
+                {
+                    transition.setMz(productMz);
+                }
+                // Should we blow up if productMz was null?
+            }
+            else if(XmlUtil.isStartElement(reader, evtType, TRANSITION_PEAK))
+            {
+                TransitionChromInfo chromInfo = readTransitionChromInfo(reader);
+                chromInfoList.add(chromInfo);
+            }
+        }
+
+        // Boolean type annotations are not listed in the .sky file if their value was false.
+        // We would still like to store them in the database.
+        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations, DataSettings.AnnotationTarget.transition);
+        for(String missingAnotName: missingBooleanAnnotations)
+        {
+            addMissingBooleanAnnotation(annotations, missingAnotName, new TransitionAnnotation());
+        }
+
         return transition;
     }
 
     private Transition readProteomicTransition(XMLStreamReader reader) throws XMLStreamException
     {
         Transition transition = new Transition();
-        readTransition(reader, transition);
-        return transition;
-    }
+        readGeneralTransition(reader, transition);
 
-    private void readTransition(XMLStreamReader reader, Transition transition) throws XMLStreamException
-    {
-        List<TransitionAnnotation> annotations = new ArrayList<>();
-        transition.setAnnotations(annotations);
-
-        List<TransitionLoss> neutralLosses = new ArrayList<>();
-        transition.setNeutralLosses(neutralLosses);
-
-        String fragment = reader.getAttributeValue(null, "fragment_type");
-        transition.setFragmentType(fragment);
-
-        String fragmentOrdinal = reader.getAttributeValue(null, "fragment_ordinal");
-        if(fragmentOrdinal != null)
-           transition.setFragmentOrdinal(Integer.parseInt(fragmentOrdinal));
-
-        String charge =  reader.getAttributeValue(null, "product_charge");
-        if(charge != null)
-            transition.setCharge(Integer.parseInt(charge));
-
+        // read proteomics transition-specific attributes
         String calcNeutralMass = reader.getAttributeValue(null, "calc_neutral_mass");
         if(calcNeutralMass != null)
             transition.setNeutralMass(Double.parseDouble(calcNeutralMass));
@@ -1750,57 +1756,19 @@ public class SkylineDocumentParser implements AutoCloseable
         if(neutralMassLoss != null)
             transition.setNeutralLossMass(Double.parseDouble(neutralMassLoss));
 
+        String fragmentOrdinal = reader.getAttributeValue(null, "fragment_ordinal");
+        if(fragmentOrdinal != null)
+            transition.setFragmentOrdinal(Integer.parseInt(fragmentOrdinal));
+
         String cleavageAa = reader.getAttributeValue(null, "cleavage_aa");
         if(cleavageAa != null)
             transition.setCleavageAa(cleavageAa);
-
-        String massIndex = reader.getAttributeValue(null, "mass_index");
-        if(massIndex != null)
-            transition.setMassIndex(Integer.parseInt(massIndex));
-
-        String isotopeDistrRank = reader.getAttributeValue(null, "isotope_dist_rank");
-        if(isotopeDistrRank != null)
-            transition.setIsotopeDistRank(Integer.parseInt(isotopeDistrRank));
-
-        String isotopeDistrProportion = reader.getAttributeValue(null, "isotope_dist_proportion");
-        if(isotopeDistrProportion != null)
-            transition.setIsotopeDistProportion(Double.parseDouble(isotopeDistrProportion));
-
 
         String decoyMassShift = reader.getAttributeValue(null, "decoy_mass_shift");
         if(decoyMassShift != null)
             transition.setDecoyMassShift(Double.parseDouble(decoyMassShift));
 
         transition.setMeasuredIonName(reader.getAttributeValue(null, "measured_ion_name"));
-
-        //are these supposed to be set here? Are the strings correct?
-        String explicitCollisionEnergy = reader.getAttributeValue(null, "explicit_collision_energy");
-        if(explicitCollisionEnergy != null)
-            transition.setExplicitCollisionEnergy(Double.valueOf(explicitCollisionEnergy));
-
-        String sLens = reader.getAttributeValue(null, "s_lens");
-        if(sLens != null)
-            transition.setExplicitCollisionEnergy(Double.valueOf(sLens));
-
-        String coneVoltage = reader.getAttributeValue(null, "cone_voltage");
-        if(coneVoltage != null)
-            transition.setExplicitCollisionEnergy(Double.valueOf(coneVoltage));
-
-        String explicitCompensationVoltage = reader.getAttributeValue(null, "explicit_compensation_voltage");
-        if(explicitCompensationVoltage != null)
-            transition.setExplicitCollisionEnergy(Double.valueOf(explicitCompensationVoltage));
-
-        String explicitDeclusteringPotential = reader.getAttributeValue(null, "explicit_declustering_potential");
-        if(explicitDeclusteringPotential != null)
-            transition.setExplicitCollisionEnergy(Double.valueOf(explicitDeclusteringPotential));
-
-        String explicitDriftTimeMsec = reader.getAttributeValue(null, "explicit_drift_time_msec");
-        if(explicitDriftTimeMsec != null)
-            transition.setExplicitCollisionEnergy(Double.valueOf(explicitDriftTimeMsec));
-
-        String explicitDriftTimeHighEnergyOffsetMsec = reader.getAttributeValue(null, "explicit_drift_time_high_energy_offset_msec");
-        if(explicitDriftTimeHighEnergyOffsetMsec != null)
-            transition.setExplicitCollisionEnergy(Double.valueOf(explicitDriftTimeHighEnergyOffsetMsec));
 
         if(transition.isPrecursorIon() && transition.getMassIndex() == null)
         {
@@ -1809,6 +1777,12 @@ public class SkylineDocumentParser implements AutoCloseable
 
         List<TransitionChromInfo> chromInfoList = new ArrayList<>();
         transition.setChromInfoList(chromInfoList);
+
+        List<TransitionAnnotation> annotations = new ArrayList<>();
+        transition.setAnnotations(annotations);
+
+        List<TransitionLoss> neutralLosses = new ArrayList<>();
+        transition.setNeutralLosses(neutralLosses);
 
         while(reader.hasNext()) {
 
@@ -1866,12 +1840,64 @@ public class SkylineDocumentParser implements AutoCloseable
 
         // Boolean type annotations are not listed in the .sky file if their value was false.
         // We would still like to store them in the database.
-        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations,
-                                                                                            DataSettings.AnnotationTarget.transition);
+        List<String> missingBooleanAnnotations = _dataSettings.getMissingBooleanAnnotations(annotations, DataSettings.AnnotationTarget.transition);
         for(String missingAnotName: missingBooleanAnnotations)
         {
             addMissingBooleanAnnotation(annotations, missingAnotName, new TransitionAnnotation());
         }
+
+        return transition;
+    }
+
+    private void readGeneralTransition(XMLStreamReader reader, GeneralTransition transition) throws XMLStreamException
+    {
+        String fragment = reader.getAttributeValue(null, "fragment_type");
+        transition.setFragmentType(fragment);
+
+        String charge =  reader.getAttributeValue(null, "product_charge");
+        if(charge != null)
+            transition.setCharge(Integer.parseInt(charge));
+
+        String massIndex = reader.getAttributeValue(null, "mass_index");
+        if(massIndex != null)
+            transition.setMassIndex(Integer.parseInt(massIndex));
+
+        String isotopeDistrRank = reader.getAttributeValue(null, "isotope_dist_rank");
+        if(isotopeDistrRank != null)
+            transition.setIsotopeDistRank(Integer.parseInt(isotopeDistrRank));
+
+        String isotopeDistrProportion = reader.getAttributeValue(null, "isotope_dist_proportion");
+        if(isotopeDistrProportion != null)
+            transition.setIsotopeDistProportion(Double.parseDouble(isotopeDistrProportion));
+
+        //are these supposed to be set here? Are the strings correct?
+        String explicitCollisionEnergy = reader.getAttributeValue(null, "explicit_collision_energy");
+        if(explicitCollisionEnergy != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitCollisionEnergy));
+
+        String sLens = reader.getAttributeValue(null, "s_lens");
+        if(sLens != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(sLens));
+
+        String coneVoltage = reader.getAttributeValue(null, "cone_voltage");
+        if(coneVoltage != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(coneVoltage));
+
+        String explicitCompensationVoltage = reader.getAttributeValue(null, "explicit_compensation_voltage");
+        if(explicitCompensationVoltage != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitCompensationVoltage));
+
+        String explicitDeclusteringPotential = reader.getAttributeValue(null, "explicit_declustering_potential");
+        if(explicitDeclusteringPotential != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitDeclusteringPotential));
+
+        String explicitDriftTimeMsec = reader.getAttributeValue(null, "explicit_drift_time_msec");
+        if(explicitDriftTimeMsec != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitDriftTimeMsec));
+
+        String explicitDriftTimeHighEnergyOffsetMsec = reader.getAttributeValue(null, "explicit_drift_time_high_energy_offset_msec");
+        if(explicitDriftTimeHighEnergyOffsetMsec != null)
+            transition.setExplicitCollisionEnergy(Double.valueOf(explicitDriftTimeHighEnergyOffsetMsec));
     }
 
     private List<TransitionLoss> readLosses(XMLStreamReader reader) throws XMLStreamException

@@ -12,6 +12,7 @@ import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
+import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.MoleculePrecursor;
 
 import java.util.HashSet;
@@ -115,6 +116,26 @@ public class MoleculePrecursorManager
         }
 
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoLitePlus.class);
+    }
+
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForMolecule(int moleduleId, int sampleFileId, User user, Container container)
+    {
+        SQLFragment sql = new SQLFragment("SELECT ");
+        sql.append("pci.* , pg.Label AS groupName, mol.customIonName, prec.Charge");
+        sql.append(" FROM ");
+        joinTablesForMoleculePrecursorChromInfo(sql, user, container);
+        sql.append(" WHERE ");
+        sql.append("mol.Id=? ");
+        sql.add(moleduleId);
+
+        if(sampleFileId != 0)
+        {
+            sql.append("AND ");
+            sql.append("pci.SampleFileId=?");
+            sql.add(sampleFileId);
+        }
+
+        return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
     }
 
     private static void joinTablesForMoleculePrecursorChromInfo(SQLFragment sql, User user, Container container)

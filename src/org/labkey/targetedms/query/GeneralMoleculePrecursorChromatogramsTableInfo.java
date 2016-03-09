@@ -31,6 +31,8 @@ import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.GeneralMolecule;
+import org.labkey.targetedms.parser.Molecule;
+import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 
@@ -44,21 +46,34 @@ import java.util.List;
  * Date: 5/3/12
  * Time: 12:18 PM
  */
-public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSchema>
+public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSchema>
 {
-    private static final String _peptideChromInfoCol = "pepciId";
+    private static final String _generalMoleculeChromInfoCol = "genMolChromInfoId";
 
-    public PeptidePrecursorChromatogramsTableInfo(TargetedMSSchema schema, GeneralMolecule generalMolecule,
-                                                  TargetedMSController.ChromatogramForm form)
+    public GeneralMoleculePrecursorChromatogramsTableInfo(Molecule molecule, TargetedMSSchema schema, TargetedMSController.ChromatogramForm form)
     {
-        super(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), generalMolecule, form.getAnnotationFilter(), form.getReplicatesFilterList()), schema);
+        this(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), molecule,
+                "MoleculePrecursorId", "CAST(MoleculePrecursorId.Charge AS VARCHAR)",
+                form.getAnnotationFilter(), form.getReplicatesFilterList()), schema, form);
+    }
+
+    public GeneralMoleculePrecursorChromatogramsTableInfo(Peptide peptide, TargetedMSSchema schema, TargetedMSController.ChromatogramForm form)
+    {
+        this(getPivotByPrecursorChromInfoTable(schema.getContainer(), schema.getUser(), peptide,
+                "PrecursorId", "(PrecursorId.IsotopeLabelId.Name || CAST(PrecursorId.Charge AS VARCHAR))",
+                form.getAnnotationFilter(), form.getReplicatesFilterList()), schema, form);
+    }
+
+    private GeneralMoleculePrecursorChromatogramsTableInfo(TableInfo tableInfo, TargetedMSSchema schema, TargetedMSController.ChromatogramForm form)
+    {
+        super(tableInfo, schema);
         wrapAllColumns(true);
-        ColumnInfo pepChromCol = getColumn(_peptideChromInfoCol);
+        ColumnInfo pepChromCol = getColumn(_generalMoleculeChromInfoCol);
         pepChromCol.setLabel("");
 
         pepChromCol.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(
                                                         schema.getContainer(),
-                                                        ChromatogramDisplayColumnFactory.TYPE.PEPTIDE,
+                                                        ChromatogramDisplayColumnFactory.TYPE.GENERAL_MOLECULE,
                                                         form.getChartWidth(),
                                                         form.getChartHeight(),
                                                         form.isSyncY(),
@@ -96,7 +111,8 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
     public List<String> getDisplayColumnNames()
     {
         List<String> colNames = new ArrayList<>();
-        colNames.add(_peptideChromInfoCol);
+        colNames.add(_generalMoleculeChromInfoCol);
+
 		// Sort the precursor chrom info columns
         List<ColumnInfo> colInfoList = new ArrayList<>(getPrecursorChromInfoColumns());
         Collections.sort(colInfoList, new Comparator<ColumnInfo>()
@@ -129,19 +145,22 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
         return colNames;
     }
 
-    private static TableInfo getPivotByPrecursorChromInfoTable(Container container, User user, GeneralMolecule generalMolecule,@Nullable List<ReplicateAnnotation> filterAnnotations, @Nullable List<Integer> replicatesFilter)
+    private static TableInfo getPivotByPrecursorChromInfoTable(Container container, User user, GeneralMolecule generalMolecule,
+                                                               String precursorIdKey, String isotopeChargeSqlFrag,
+                                                               @Nullable List<ReplicateAnnotation> filterAnnotations,
+                                                               @Nullable List<Integer> replicatesFilter)
     {
         SQLFragment sql = new SQLFragment("SELECT");
-        sql.append(" replicate, sample,isotopecharge, ").append(_peptideChromInfoCol).append(", MIN(preciId) AS preciId FROM");
+        sql.append(" replicate, sample,isotopecharge, ").append(_generalMoleculeChromInfoCol).append(", MIN(preciId) AS preciId FROM");
         sql.append(" ( SELECT");
         sql.append(" SampleFileId.ReplicateId.Name AS replicate");
         sql.append(", SampleFileId.SampleName AS sample");
-        sql.append(", GeneralMoleculeChromInfoId AS ").append(_peptideChromInfoCol);
-        sql.append(", (PrecursorId.IsotopeLabelId.Name || CAST(PrecursorId.Charge AS VARCHAR)) AS isotopecharge");
+        sql.append(", GeneralMoleculeChromInfoId AS ").append(_generalMoleculeChromInfoCol);
+        sql.append(", " + isotopeChargeSqlFrag + " AS isotopecharge");
         sql.append(", Id AS preciId");
         sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
-        sql.append(" WHERE PrecursorId.GeneralMoleculeId=").append(generalMolecule.getId());
+        sql.append(" WHERE " + precursorIdKey + ".GeneralMoleculeId=").append(generalMolecule.getId());
         sql.append(" AND OptimizationStep IS NULL "); // Ignore precursorChromInfos for optimization peaks (e.g. Collision energy optimization)
         if(replicatesFilter != null && replicatesFilter.size() != 0)
         {
@@ -172,7 +191,7 @@ public class PeptidePrecursorChromatogramsTableInfo extends FilteredTable<Target
             sql.append(")");
         }
         sql.append(" ) X");
-        sql.append(" GROUP BY replicate, sample, ").append(_peptideChromInfoCol).append(", isotopecharge")
+        sql.append(" GROUP BY replicate, sample, ").append(_generalMoleculeChromInfoCol).append(", isotopecharge")
            .append(" PIVOT preciId BY isotopecharge");
 
         QueryDefinition qdef = QueryService.get().createQueryDef(user, container, SchemaKey.fromString(TargetedMSSchema.SCHEMA_NAME),

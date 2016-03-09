@@ -15,12 +15,18 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.labkey.targetedms.TargetedMSManager;
+
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * User: vsharma
  * Date: 2/18/2015
  * Time: 4:23 PM
  */
-public class MoleculeTransition extends Transition
+public class MoleculeTransition extends GeneralTransition
 {
     private int _transitionId;
 
@@ -77,5 +83,27 @@ public class MoleculeTransition extends Transition
     public void setMassAverage(Double massAverage)
     {
         _massAverage = massAverage;
+    }
+
+    public static Set<String> getColumns()
+    {
+        Set<String> colNames = new HashSet<>();
+        colNames.addAll(TargetedMSManager.getTableInfoMoleculeTransition().getColumnNameSet());
+        colNames.addAll(TargetedMSManager.getTableInfoGeneralTransition().getColumnNameSet());
+        return colNames;
+    }
+
+    public static class MoleculeTransitionComparator implements Comparator<MoleculeTransition>
+    {
+        @Override
+        public int compare(MoleculeTransition t1, MoleculeTransition t2)
+        {
+            int result = t1.getCharge().compareTo(t2.getCharge());
+            if(result == 0)
+            {
+                return Double.valueOf(t2.getMz()).compareTo(t1.getMz());
+            }
+            return result;
+        }
     }
 }

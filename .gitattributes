@@ -152,6 +152,7 @@ src/org/labkey/targetedms/chart/ComparisonChartInputMaker.java -text
 src/org/labkey/targetedms/chart/ComparisonChartMaker.java -text
 src/org/labkey/targetedms/chart/ComparisonDataset.java -text
 src/org/labkey/targetedms/chart/LabelFactory.java -text
+src/org/labkey/targetedms/chart/MoleculePrecursorColorIndexer.java -text
 src/org/labkey/targetedms/chart/MultiLineXYPointerAnnotation.java -text
 src/org/labkey/targetedms/chart/PrecursorColorIndexer.java -text
 src/org/labkey/targetedms/chart/ReplicateLabelMinimizer.java -text
@@ -271,6 +272,7 @@ src/org/labkey/targetedms/query/ExperimentAnnotationsManager.java -text
 src/org/labkey/targetedms/query/ExperimentAnnotationsTableInfo.java -text
 src/org/labkey/targetedms/query/GeneralMoleculeAnnotationTableInfo.java -text
 src/org/labkey/targetedms/query/GeneralMoleculeChromInfoTableInfo.java -text
+src/org/labkey/targetedms/query/GeneralMoleculePrecursorChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/GuideSetTable.java -text
 src/org/labkey/targetedms/query/InstrumentManager.java -text
 src/org/labkey/targetedms/query/IsotopeLabelManager.java -text
@@ -284,12 +286,12 @@ src/org/labkey/targetedms/query/MoleculeManager.java -text
 src/org/labkey/targetedms/query/MoleculePrecursorManager.java -text
 src/org/labkey/targetedms/query/MoleculePrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/MoleculeTableInfo.java -text
+src/org/labkey/targetedms/query/MoleculeTransitionManager.java -text
 src/org/labkey/targetedms/query/MoleculeTransitionsTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideGroupManager.java -text
 src/org/labkey/targetedms/query/PeptideIsotopeModificationTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideManager.java -text
-src/org/labkey/targetedms/query/PeptidePrecursorChromatogramsTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideStructuralModificationTableInfo.java -text
 src/org/labkey/targetedms/query/PeptideTableInfo.java -text
 src/org/labkey/targetedms/query/PrecursorChromInfoTable.java -text
@@ -316,6 +318,7 @@ src/org/labkey/targetedms/view/DocumentView.java -text
 src/org/labkey/targetedms/view/IconFactory.java -text
 src/org/labkey/targetedms/view/LibraryPrecursorViewWebPart.java -text
 src/org/labkey/targetedms/view/ModifiedPeptideHtmlMaker.java -text
+src/org/labkey/targetedms/view/MoleculePrecursorChromatogramsView.java -text
 src/org/labkey/targetedms/view/PeptideGroupViewWebPart.java -text
 src/org/labkey/targetedms/view/PeptidePrecursorChromatogramsView.java -text
 src/org/labkey/targetedms/view/PeptidePrecursorsView.java -text

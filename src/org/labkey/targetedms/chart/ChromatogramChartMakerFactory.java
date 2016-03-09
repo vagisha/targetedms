@@ -60,6 +60,11 @@ public class ChromatogramChartMakerFactory
         return new ChromatogramChartMaker().make(new ChromatogramDataset.TransitionDataset(pChromInfo, tChromInfo, user, container));
     }
 
+    public JFreeChart createMoleculeTransitionChromChart(TransitionChromInfo tChromInfo, PrecursorChromInfo pChromInfo, User user, Container container)
+    {
+        return new ChromatogramChartMaker().make(new ChromatogramDataset.MoleculeTransitionDataset(pChromInfo, tChromInfo, user, container));
+    }
+
     public JFreeChart createPrecursorChromChart(PrecursorChromInfo pChromInfo, User user, Container container)
     {
         if(_showOptimizationPeaks)
@@ -87,8 +92,18 @@ public class ChromatogramChartMakerFactory
         }
     }
 
+    public JFreeChart createMoleculePrecursorChromChart(PrecursorChromInfo pChromInfo, User user, Container container)
+    {
+        return new ChromatogramChartMaker().make(new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container));
+    }
+
     public JFreeChart createPeptideChromChart(GeneralMoleculeChromInfo pepChromInfo, User user, Container container)
     {
         return new ChromatogramChartMaker().make(new ChromatogramDataset.PeptideDataset(pepChromInfo, _syncIntensity, _syncRt, user, container));
+    }
+
+    public JFreeChart createMoleculeChromChart(GeneralMoleculeChromInfo molChromInfo, User user, Container container)
+    {
+        return new ChromatogramChartMaker().make(new ChromatogramDataset.MoleculeDataset(molChromInfo, _syncIntensity, _syncRt, user, container));
     }
 }

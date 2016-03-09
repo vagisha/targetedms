@@ -412,16 +412,8 @@ public class PeakAreaRatioCalculator
 
     private static String getTransitionKey(Transition transition, Precursor precursor)
     {
-        String fragment;
-        if(transition instanceof MoleculeTransition)
-        {
-            fragment = String.valueOf(((MoleculeTransition) transition).getMz());
-        }
-        else
-        {
-            fragment = transition.getFragmentType()
+        String fragment = transition.getFragmentType()
                 + (transition.isPrecursorIon() ? transition.getMassIndex() : transition.getFragmentOrdinal());
-        }
 
         int fragmentCharge = transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge();
         StringBuilder key = new StringBuilder();
