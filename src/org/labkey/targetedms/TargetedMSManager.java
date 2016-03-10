@@ -1348,4 +1348,10 @@ public class TargetedMSManager
         sql.add(acquiredTime);
         return new SqlSelector(getSchema(), sql).exists();
     }
+
+    public Map<String, Object> getAutoQCPingMap(Container container)
+    {
+        TableInfo table = TargetedMSManager.getTableInfoAutoQCPing();
+        return new TableSelector(table, SimpleFilter.createContainerFilter(container), null).getMap();
+    }
 }

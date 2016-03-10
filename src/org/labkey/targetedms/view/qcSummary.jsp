@@ -39,6 +39,7 @@
     .summary-view {
         padding: 5px;
         margin: 5px;
+        position: relative;
     }
 
     .subfolder-view {
@@ -59,6 +60,26 @@
 
     .folder-name a {
         color: #000000;
+    }
+
+    .auto-qc-ping-none, .auto-qc-ping-not-recent, .auto-qc-ping-recent {
+        width: 15px;
+        height: 15px;
+        border-radius: 3px;
+        font-size: 16px;
+        position: absolute;
+        top: 5px;
+        right: 5px;
+        cursor: pointer
+    }
+    .auto-qc-ping-none {
+        color: grey;
+    }
+    .auto-qc-ping-not-recent {
+        color: red;
+    }
+    .auto-qc-ping-recent {
+        color: green;
     }
 </style>
 
@@ -86,23 +107,26 @@
                     var containers = response['containers'],
                         container,
                         childPanelItems = [],
-                        showName = containers.length > 1;
+                        hasChildren = containers.length > 1;
 
                     var tpl = new Ext4.XTemplate(
-                        '<tpl if="showName === true">',
-                            '<div class="folder-name">',
-                                '<a href="{path:this.getContainerLink}">{name:htmlEncode}</a>',
-                            '</div>',
-                        '</tpl>',
-                        '<tpl if="docCount == 0">',
-                            '<div class="item-text">No Skyline documents</div>',
-                        '<tpl elseif="docCount &gt; 0">',
-                            '<div class="item-text">{docCount} Skyline document{docCount:this.pluralize}</div>',
-                            '<div class="item-text">',
-                                '<a href="{path:this.getSampleFileLink}">{fileCount} sample file{fileCount:this.pluralize}</a>',
-                            '</div>',
-                            '<div class="item-text">{precursorCount} precursor{precursorCount:this.pluralize}</div>',
-                            '<div class="item-text">Last update {lastImportDate:this.formatDate}</div>',
+                        '<tpl if="showName !== undefined">',
+                            '<tpl if="showName === true">',
+                                '<div class="folder-name">',
+                                    '<a href="{path:this.getContainerLink}">{name:htmlEncode}</a>',
+                                '</div>',
+                            '</tpl>',
+                            '<tpl if="docCount == 0">',
+                                '<div class="item-text">No Skyline documents</div>',
+                            '<tpl elseif="docCount &gt; 0">',
+                                '<div class="item-text">{docCount} Skyline document{docCount:this.pluralize}</div>',
+                                '<div class="item-text">',
+                                    '<a href="{path:this.getSampleFileLink}">{fileCount} sample file{fileCount:this.pluralize}</a>',
+                                '</div>',
+                                '<div class="item-text">{precursorCount} precursor{precursorCount:this.pluralize}</div>',
+                                '<div class="item-text">Last update {lastImportDate:this.formatDate}</div>',
+                            '</tpl>',
+                            '<div class="fa fa-square {autoQCPing:this.getAutoQCPingClass}" title="{autoQCPing:this.getAutoQCPingText}"></div>',
                         '</tpl>',
                         {
                             pluralize: function (val)
@@ -121,26 +145,40 @@
                             {
                                 return LABKEY.ActionURL.buildURL('query', 'executeQuery', path,
                                         {schemaName: 'targetedms', 'query.queryName': 'SampleFile'});
+                            },
+                            getAutoQCPingClass: function(val)
+                            {
+                                if (val == null)
+                                    return 'auto-qc-ping-none';
+                                return val.isRecent ? 'auto-qc-ping-recent' : 'auto-qc-ping-not-recent';
+                            },
+                            getAutoQCPingText: function(val)
+                            {
+                                if (val == null)
+                                    return 'Has never been pinged';
+                                return val.isRecent ? 'Was pinged recently on ' + val.modified : 'Was pinged on ' + val.modified
                             }
                         }
                     );
 
                     // Add the current (root) container to the QC Summary display
                     container = containers[0];
-                    container.showName = showName;
+                    container.showName = hasChildren;
                     this.add(Ext4.create('Ext.view.View', {
-                        cls: containers.length > 1 ? 'summary-view' : undefined,
+                        cls: hasChildren ? 'summary-view' : undefined,
+                        width: hasChildren ? 250 : undefined,
+                        minHeight: 21,
                         data: container,
                         tpl: tpl
                     }));
 
                     // Add the set of child containers in an hbox layout
-                    if (containers.length > 1)
+                    if (hasChildren)
                     {
                         for (var i = 1; i < containers.length; i++)
                         {
                             container = containers[i];
-                            container.showName = showName;
+                            container.showName = hasChildren;
 
                             childPanelItems.push(Ext4.create('Ext.view.View', {
                                 cls: 'summary-view subfolder-view',

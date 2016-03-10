@@ -192,6 +192,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayDeque;
@@ -622,6 +623,17 @@ public class TargetedMSController extends SpringActionController
         sql.append(" JOIN ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON i.RunId = r.Id");
         sql.append(" WHERE r.Container = ?)").add(container.getId());
         properties.put("precursorCount", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class));
+
+        // AutoQCPing information
+        Map<String, Object> autoQCPingMap = TargetedMSManager.get().getAutoQCPingMap(container);
+        if (autoQCPingMap != null)
+        {
+            // check if the last modified date is recent (i.e. within the last 15 min)
+            long fifteenMinutesAgo = System.currentTimeMillis() - (15 * 60000);
+            Timestamp lastModified = (Timestamp)autoQCPingMap.get("Modified");
+            autoQCPingMap.put("isRecent", lastModified.getTime() >= fifteenMinutesAgo);
+        }
+        properties.put("autoQCPing", autoQCPingMap);
 
         return properties;
     }
@@ -1624,19 +1636,18 @@ public class TargetedMSController extends SpringActionController
         public Object execute(Object o, BindException errors) throws Exception
         {
             // Get current record, if present
-            TableInfo table = TargetedMSManager.getTableInfoAutoQCPing();
-            Map<String, Object> currentRow = new TableSelector(table, TableSelector.ALL_COLUMNS, new SimpleFilter("Container", getContainer()), null).getMap();
+            Map<String, Object> currentRow = TargetedMSManager.get().getAutoQCPingMap(getContainer());
             if (currentRow == null)
             {
                 // Add a new record
                 currentRow = new HashMap<>();
                 currentRow.put("Container", getContainer());
-                currentRow = Table.insert(getUser(), table, currentRow);
+                currentRow = Table.insert(getUser(), TargetedMSManager.getTableInfoAutoQCPing(), currentRow);
             }
             else
             {
                 // Update the current one with the new timestamp
-                currentRow = Table.update(getUser(), table, currentRow, getContainer());
+                currentRow = Table.update(getUser(), TargetedMSManager.getTableInfoAutoQCPing(), currentRow, getContainer());
             }
 
             // Just return the full record back to the caller
