@@ -126,7 +126,7 @@
                                 '<div class="item-text">{precursorCount} precursor{precursorCount:this.pluralize}</div>',
                                 '<div class="item-text">Last update {lastImportDate:this.formatDate}</div>',
                             '</tpl>',
-                            '<div class="fa fa-square {autoQCPing:this.getAutoQCPingClass}" title="{autoQCPing:this.getAutoQCPingText}"></div>',
+                            '<div class="{autoQCPing:this.getAutoQCPingClass}" title="{autoQCPing:this.getAutoQCPingText}"></div>',
                         '</tpl>',
                         {
                             pluralize: function (val)
@@ -149,8 +149,8 @@
                             getAutoQCPingClass: function(val)
                             {
                                 if (val == null)
-                                    return 'auto-qc-ping-none';
-                                return val.isRecent ? 'auto-qc-ping-recent' : 'auto-qc-ping-not-recent';
+                                    return 'auto-qc-ping-none fa fa-circle-o';
+                                return val.isRecent ? 'auto-qc-ping-recent fa fa-check-circle' : 'auto-qc-ping-not-recent fa fa-circle';
                             },
                             getAutoQCPingText: function(val)
                             {
