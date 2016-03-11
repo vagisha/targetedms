@@ -66,4 +66,9 @@ public class IconFactory
 
         return iconPath;
     }
+
+    public static String getTransitionGroupIconPath()
+    {
+        return AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroup.gif";
+    }
 }

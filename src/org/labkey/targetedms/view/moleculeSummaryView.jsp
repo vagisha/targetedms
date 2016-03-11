@@ -4,10 +4,14 @@
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.parser.MoleculePrecursor" %>
+<%@ page import="org.labkey.targetedms.view.IconFactory" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.MoleculeChromatogramsViewBean> me = (JspView<TargetedMSController.MoleculeChromatogramsViewBean>) HttpView.currentView();
     TargetedMSController.MoleculeChromatogramsViewBean bean = me.getModelBean();
+
+    ActionURL precursorDetailsUrl = new ActionURL(TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class, getContainer());
 %>
 
 <table>
@@ -75,6 +79,26 @@
         <td><%=h(Formats.f4.format(bean.getMolecule().getRtCalculatorScore()))%></td>
     </tr>
     <%}%>
+
+    <tr>
+        <td class="labkey-form-label">Molecule Precursors</td>
+        <td>
+    <%
+            for (MoleculePrecursor precursor: bean.getPrecursorList())
+            {
+    %>
+            <div>
+                <%=text(precursor.getHtml())%>
+                <a href="<%=precursorDetailsUrl+"id="+precursor.getId()%>">
+                    <img src="<%=IconFactory.getTransitionGroupIconPath()%>" alt="Click to view details"/>
+                </a>
+            </div>
+    <%
+            }
+    %>
+        </td>
+
+    </tr>
 </table>
 
 

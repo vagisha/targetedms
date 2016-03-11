@@ -15,6 +15,9 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.labkey.api.util.Formats;
+import org.labkey.targetedms.chart.LabelFactory;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -73,5 +76,16 @@ public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
     public String getLabel()
     {
         return getCustomIonName();
+    }
+
+    public String getHtml()
+    {
+        StringBuilder html = new StringBuilder();
+        html.append(getLabel());
+        html.append("<span>");
+        html.append(" - ").append(Formats.f4.format(getMz()));
+        html.append(LabelFactory.getChargeLabel(getCharge()));
+        html.append("</span>");
+        return html.toString();
     }
 }

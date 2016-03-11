@@ -398,8 +398,8 @@ public class TargetedMSQCTest extends TargetedMSTest
 
     private void verifyRow(DataRegionTable drt, int row, String sampleName, String skylineDocName)
     {
-        assertEquals(sampleName, drt.getDataAsText(row, 1));
-        assertEquals(skylineDocName, drt.getDataAsText(row, 5));
+        assertEquals(sampleName, drt.getDataAsText(row, 3));
+        assertEquals(skylineDocName, drt.getDataAsText(row, 6));
     }
 
     private void createAndInsertAnnotations()

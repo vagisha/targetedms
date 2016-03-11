@@ -45,6 +45,10 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
     {
         super(tableInfo, tableName, schema);
 
+        _detailsURL = new DetailsURL(new ActionURL(TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class, getContainer()), Collections.singletonMap("id", "Id"));
+        _detailsURL.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder")));
+        setDetailsURL(_detailsURL);
+
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new LookupForeignKey("Id")
         {

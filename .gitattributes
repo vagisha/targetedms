@@ -343,6 +343,7 @@ src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -t
 src/org/labkey/targetedms/view/expannotations/experimentDetails.jsp -text
 src/org/labkey/targetedms/view/folderSetup.jsp -text
 src/org/labkey/targetedms/view/leveyJenningsReport.jsp -text
+src/org/labkey/targetedms/view/moleculePrecursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/moleculeSummaryView.jsp -text
 src/org/labkey/targetedms/view/paretoPlot.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text

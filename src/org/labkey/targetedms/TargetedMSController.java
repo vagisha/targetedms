@@ -949,6 +949,89 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
+    public class MoleculePrecursorAllChromatogramsChartAction extends SimpleViewAction<ChromatogramForm>
+    {
+        private TargetedMSRun _run; // save for use in appendNavTrail
+        private int _moleculeId; // save for use in appendNavTrail
+
+        @Override
+        public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
+        {
+            int precursorId = form.getId();
+            MoleculePrecursor precursor = MoleculePrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
+            if (precursor == null)
+            {
+                throw new NotFoundException("No such MoleculePrecursor found in this folder: " + precursorId);
+            }
+
+            _run = TargetedMSManager.getRunForPrecursor(precursorId);
+            _moleculeId = precursor.getGeneralMoleculeId();
+
+            Molecule molecule = MoleculeManager.getMolecule(getContainer(), precursor.getGeneralMoleculeId());
+            PeptideGroup pepGroup = PeptideGroupManager.get(molecule.getPeptideGroupId());
+
+            MoleculePrecursorChromatogramsViewBean bean = new MoleculePrecursorChromatogramsViewBean(
+                    new ActionURL(MoleculePrecursorAllChromatogramsChartAction.class, getContainer()).getLocalURIString()
+            );
+            bean.setForm(form);
+            bean.setPrecursor(precursor);
+            bean.setMolecule(molecule);
+            bean.setPeptideGroup(pepGroup);
+            bean.setRun(_run);
+            bean.setTargetedMSSchema(new TargetedMSSchema(getUser(), getContainer()));
+
+            JspView<MoleculePrecursorChromatogramsViewBean> precursorInfo = new JspView<>("/org/labkey/targetedms/view/moleculePrecursorChromatogramsView.jsp", bean);
+            precursorInfo.setFrame(WebPartView.FrameType.PORTAL);
+            precursorInfo.setTitle("Molecule Precursor Summary");
+
+            PrecursorChromatogramsTableInfo tableInfo = new PrecursorChromatogramsTableInfo(new TargetedMSSchema(getUser(), getContainer()));
+            tableInfo.setPrecursorId(precursorId);
+            tableInfo.addPrecursorFilter();
+
+            ChromatogramsDataRegion dRegion = new ChromatogramsDataRegion(getViewContext(), tableInfo,
+                    ChromatogramsDataRegion.PRECURSOR_CHROM_DATA_REGION);
+            GridView gridView = new GridView(dRegion, errors);
+            gridView.setFrame(WebPartView.FrameType.PORTAL);
+            gridView.setTitle("Chromatograms");
+
+            // Summary charts for the molecule precursor
+            SummaryChartBean summaryChartBean = new SummaryChartBean();
+            summaryChartBean.setMoleculeId(precursor.getGeneralMoleculeId());
+            summaryChartBean.setMoleculePrecursorId(precursor.getId());
+            summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
+            summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
+
+            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp", summaryChartBean);
+            summaryChartView.setTitle("Summary Charts");
+            summaryChartView.enableExpandCollapse("SummaryChartsView", false);
+
+            VBox vbox = new VBox();
+            vbox.addView(precursorInfo);
+            vbox.addView(gridView);
+            vbox.addView(summaryChartView);
+            return vbox;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            if (null != _run)
+            {
+                root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+
+                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
+
+                ActionURL molDetailsUrl = new ActionURL(ShowMoleculeAction.class, getContainer());
+                molDetailsUrl.addParameter("id", String.valueOf(_moleculeId));
+                root.addChild("Molecule Details", molDetailsUrl);
+
+                root.addChild("Molecule Precursor Chromatograms");
+            }
+            return root;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
     public class PeptideAllChromatogramsChartAction extends SimpleViewAction<ChromatogramForm>
     {
         private TargetedMSRun _run; // save for use in appendNavTrail
@@ -1008,6 +1091,42 @@ public class TargetedMSController extends SpringActionController
                 root.addChild("Peptide Chromatograms");
             }
             return root;
+        }
+    }
+
+    public static class MoleculePrecursorChromatogramsViewBean extends MoleculeChromatogramsViewBean
+    {
+        private MoleculePrecursor _precursor;
+        private TargetedMSSchema _targetedMSSchema;
+
+        public MoleculePrecursorChromatogramsViewBean(String resultsUri)
+        {
+            super(resultsUri);
+        }
+
+        public String getPrecursorLabel()
+        {
+            return _precursor.getLabel();
+        }
+
+        public MoleculePrecursor getPrecursor()
+        {
+            return _precursor;
+        }
+
+        public void setPrecursor(MoleculePrecursor precursor)
+        {
+            _precursor = precursor;
+        }
+
+        public void setTargetedMSSchema(TargetedMSSchema s)
+        {
+            _targetedMSSchema = s;
+        }
+
+        public TargetedMSSchema getTargetedMSSchema()
+        {
+            return _targetedMSSchema;
         }
     }
 
