@@ -38,10 +38,13 @@ import org.labkey.api.writer.ZipUtil;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.zip.DataFormatException;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * User: vsharma
@@ -50,6 +53,8 @@ import java.util.zip.DataFormatException;
  */
 public class TargetedMSDataHandler extends AbstractExperimentDataHandler
 {
+    private static final Logger _log = Logger.getLogger(TargetedMSDataHandler.class);
+
     @Override
     public DataType getDataType()
     {
@@ -242,6 +247,36 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             return null;
         ext = ext.toLowerCase();
         // we handle only *.sky or .zip files
-        return "sky".equals(ext) || "zip".equals(ext) ? Priority.HIGH : null;
+        return "sky".equals(ext) ||
+                ("zip".equals(ext) &&
+                        (TargetedMSManager.getRunByDataId(data.getRowId(), data.getContainer()) != null ||
+                        zipContainsSkyFile(data.getFile()))) ? Priority.HIGH : null;
+    }
+
+    private boolean zipContainsSkyFile(File f)
+    {
+        if (f == null || !f.exists())
+        {
+            return false;
+        }
+
+        try (FileInputStream fis = new FileInputStream(f);ZipInputStream is = new ZipInputStream(fis))
+        {
+            ZipEntry zEntry;
+            while ((zEntry = is.getNextEntry()) != null)
+            {
+                if ("sky".equalsIgnoreCase(FileUtil.getExtension(zEntry.getName())))
+                {
+                    return true;
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            //ignore
+            _log.error(e.getMessage(), e);
+        }
+
+        return false;
     }
 }

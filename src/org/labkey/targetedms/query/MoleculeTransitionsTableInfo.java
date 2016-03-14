@@ -27,7 +27,6 @@ import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * User: binalpatel
