@@ -1520,7 +1520,7 @@ public class SkylineDocumentParser implements AutoCloseable
             Chromatogram chromatogram = filePathChromatogramMap.get(filePath);
             if (chromatogram == null)
             {
-                _log.warn("Unable to find chromatograms for file path " + filePath + ". Precursor " + precursor.getLabel() + ", " +precursor.getCharge());
+                _log.warn("Unable to find chromatograms for file path " + filePath + ". Precursor " + precursor.toString() + ", " +precursor.getCharge());
                 i.remove();
             }
             else
@@ -1532,7 +1532,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 }
                 catch (DataFormatException ignored)
                 {
-                    _log.warn("Failed to extract chromatogram for " + precursor.getLabel() + " in replicate " + chromInfo.getReplicateName());
+                    _log.warn("Failed to extract chromatogram for " + precursor.toString() + " in replicate " + chromInfo.getReplicateName());
                 }
                 chromInfo.setNumPoints(chromatogram.getNumPoints());
                 chromInfo.setNumTransitions(chromatogram.getNumTransitions());
@@ -1550,7 +1550,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 Chromatogram c = filePathChromatogramMap.get(filePath);
                 if (c == null)
                 {
-                    _log.warn("Unable to find chromatograms for file path " + filePath + ". Transition " + transition.getLabel() + ", " + precursor.getLabel() + ", " +precursor.getCharge());
+                    _log.warn("Unable to find chromatograms for file path " + filePath + ". Transition " + transition.toString() + ", " + precursor.toString() + ", " +precursor.getCharge());
                     iter.remove();
                 }
                 else

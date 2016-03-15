@@ -147,9 +147,4 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
     {
         _transitionsList = transitionsList;
     }
-
-    public String getLabel()
-    {
-        return null;
-    }
 }

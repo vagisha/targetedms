@@ -1299,14 +1299,14 @@ public class SkylineDocImporter
                 {
                     throw new IllegalStateException("No loss index found for transition loss."
                                                     +" Loss: "+loss.toString()
-                                                    +"; Transition: "+transition.getLabel()
+                                                    +"; Transition: "+transition.toString()
                                                     +"; Precursor: "+precursor.getModifiedSequence());
                 }
                 if(loss.getLossIndex() < 0 || loss.getLossIndex() >= potentialLosses.length)
                 {
                     throw new IllegalStateException("Loss index out of bounds for transition loss."
                                                     +" Loss: "+loss.toString()
-                                                    +"; Transition: "+transition.getLabel()
+                                                    +"; Transition: "+transition.toString()
                                                     +"; Precursor: "+precursor.getModifiedSequence());
                 }
 
@@ -1320,7 +1320,7 @@ public class SkylineDocImporter
                 // Skyline does not yet support this case.
                 throw new IllegalStateException(" Unsupported custom neutral loss found."
                                                 +" Loss: "+loss.toString()
-                                                +"; Transition: "+transition.getLabel()
+                                                +"; Transition: "+transition.toString()
                                                 +"; Precursor: "+precursor.getModifiedSequence());
             }
         }

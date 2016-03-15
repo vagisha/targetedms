@@ -1106,7 +1106,7 @@ public class TargetedMSController extends SpringActionController
 
         public String getPrecursorLabel()
         {
-            return _precursor.getLabel();
+            return _precursor.toString();
         }
 
         public MoleculePrecursor getPrecursor()
@@ -2691,8 +2691,8 @@ public class TargetedMSController extends SpringActionController
             _run = TargetedMSManager.getRun(group.getRunId());
             _proteinLabel = group.getLabel();
 
-            Integer peptideCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunPeptideCountSQL(null));
-            Integer moleculeCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
+            Integer peptideCount = TargetedMSManager.getPeptideGroupPeptideCount(_run, group.getId());
+            Integer moleculeCount = TargetedMSManager.getPeptideGroupMoleculeCount(_run, group.getId());
 
             // Peptide group details
             DataRegion groupDetails = new DataRegion();
@@ -3336,11 +3336,11 @@ public class TargetedMSController extends SpringActionController
             for(ConflictTransition transition: conflictTransitions)
             {
                 Map<String, Object> map = new HashMap<>();
-                String newTransitionLabel = transition.getNewTransition() != null ? transition.getNewTransition().getLabel() : "-";
+                String newTransitionLabel = transition.getNewTransition() != null ? transition.getNewTransition().toString() : "-";
                 map.put("newTransition", newTransitionLabel);
                 String newTransRank = transition.getNewTransition() != null ? String.valueOf(transition.getNewTransitionRank()) : "-";
                 map.put("newTransitionRank", newTransRank);
-                String oldTransLabel = transition.getOldTransition() != null ? transition.getOldTransition().getLabel() : "-";
+                String oldTransLabel = transition.getOldTransition() != null ? transition.getOldTransition().toString() : "-";
                 map.put("oldTransition", oldTransLabel);
                 String oldPepRank = transition.getOldTransition() != null ? String.valueOf(transition.getOldTransitionRank()) : "-";
                 map.put("oldTransitionRank",oldPepRank);

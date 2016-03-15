@@ -66,6 +66,7 @@ resources/schemas/dbscripts/postgresql/targetedms-15.32-15.33.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-15.33-15.34.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-15.34-15.35.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-15.35-15.36.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-16.10-16.11.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-13.10.sql -text
@@ -109,6 +110,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-15.32-15.33.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-15.33-15.34.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-15.34-15.35.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-15.35-15.36.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-16.10-16.11.sql -text
 resources/schemas/targetedms.xml -text
 src/org/labkey/targetedms/IrtPeptide.java -text
 src/org/labkey/targetedms/PublishTargetedMSExperimentsController.java -text

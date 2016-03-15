@@ -91,7 +91,7 @@ public class Precursor extends GeneralPrecursor<Transition>
     }
 
     @Override
-    public String getLabel()
+    public String toString()
     {
         return getModifiedSequence();
     }

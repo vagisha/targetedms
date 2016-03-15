@@ -137,22 +137,6 @@
             <ns:column columnName="ExperimentRunLSID">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>
-            <ns:column columnName="PeptideGroupCount">
-                <ns:columnTitle>Proteins</ns:columnTitle>
-                <ns:formatString>#,###</ns:formatString>
-            </ns:column>
-            <ns:column columnName="PeptideCount">
-                <ns:columnTitle>Peptides</ns:columnTitle>
-                <ns:formatString>#,###</ns:formatString>
-            </ns:column>
-            <ns:column columnName="PrecursorCount">
-                <ns:columnTitle>Precursors</ns:columnTitle>
-                <ns:formatString>#,###</ns:formatString>
-            </ns:column>
-            <ns:column columnName="TransitionCount">
-                <ns:columnTitle>Transitions</ns:columnTitle>
-                <ns:formatString>#,###</ns:formatString>
-            </ns:column>
             <ns:column columnName="Created"/>
             <ns:column columnName="Deleted"/>
             <ns:column columnName="Description"/>

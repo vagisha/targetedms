@@ -70,7 +70,7 @@ public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
     }
 
     @Override
-    public String getLabel()
+    public String toString()
     {
         return getCustomIonName();
     }
@@ -78,7 +78,7 @@ public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
     public String getHtml()
     {
         StringBuilder html = new StringBuilder();
-        html.append(getLabel());
+        html.append(toString());
         html.append("<span>");
         html.append(" - ").append(Formats.f4.format(getMz()));
         html.append(LabelFactory.getChargeLabel(getCharge()));

@@ -983,6 +983,32 @@ public class TargetedMSManager
         return null;
     }
 
+    public static Integer getPeptideGroupPeptideCount(TargetedMSRun run, int peptideGroupId)
+    {
+        if (run != null && peptideGroupId > 0)
+        {
+            SQLFragment sql = TargetedMSManager.getRunPeptideCountSQL(null);
+            sql.add(run.getId());
+            sql.append(" AND pg.Id = ? ");
+            sql.add(peptideGroupId);
+            return new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class);
+        }
+        return null;
+    }
+
+    public static Integer getPeptideGroupMoleculeCount(TargetedMSRun run, int peptideGroupId)
+    {
+        if (run != null && peptideGroupId > 0)
+        {
+            SQLFragment sql = TargetedMSManager.getRunSmallMoleculeCountSQL(null);
+            sql.add(run.getId());
+            sql.append(" AND pg.Id = ? ");
+            sql.add(peptideGroupId);
+            return new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class);
+        }
+        return null;
+    }
+
     public static void purgeDeletedSampleFiles(int sampleFileId)
     {
         // Delete from TransitionChromInfoAnnotation (dependent of TransitionChromInfo)

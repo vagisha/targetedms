@@ -192,9 +192,4 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     {
         _chromInfoList = chromInfoList;
     }
-
-    public String getLabel()
-    {
-        return null;
-    }
 }

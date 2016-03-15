@@ -16,6 +16,7 @@
 package org.labkey.targetedms.parser;
 
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.chart.LabelFactory;
 
 import java.util.Comparator;
 import java.util.HashSet;
@@ -91,6 +92,12 @@ public class MoleculeTransition extends GeneralTransition
         colNames.addAll(TargetedMSManager.getTableInfoMoleculeTransition().getColumnNameSet());
         colNames.addAll(TargetedMSManager.getTableInfoGeneralTransition().getColumnNameSet());
         return colNames;
+    }
+
+    @Override
+    public String toString()
+    {
+        return LabelFactory.transitionLabel(this);
     }
 
     public static class MoleculeTransitionComparator implements Comparator<MoleculeTransition>

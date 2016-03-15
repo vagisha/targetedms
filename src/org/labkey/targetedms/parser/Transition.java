@@ -211,7 +211,8 @@ public class Transition extends GeneralTransition
                                        || fragmentType.equalsIgnoreCase(X_ION));
     }
 
-    public String getLabel()
+    @Override
+    public String toString()
     {
         return LabelFactory.transitionLabel(this);
     }

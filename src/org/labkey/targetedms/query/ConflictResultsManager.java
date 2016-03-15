@@ -323,7 +323,7 @@ public class ConflictResultsManager
             cTransition.setNewTransition(twr.getTransition());
             cTransition.setNewTransitionRank(twr.getRank());
 
-            String transitionLabel = twr.getTransition().getLabel();
+            String transitionLabel = twr.getTransition().toString();
             if(conflictTransitionMap.containsKey(transitionLabel))
             {
                 throw new IllegalStateException("Transition "+transitionLabel+" has been seen already for precursor "+newPrecursor.getModifiedSequence()+" with ID "+newPrecursorId);
@@ -333,7 +333,7 @@ public class ConflictResultsManager
 
         for(TransitionWithAreaAndRank twr: oldPrecursorTransitions)
         {
-            String transitionLabel = twr.getTransition().getLabel();
+            String transitionLabel = twr.getTransition().toString();
             ConflictTransition cTransition = conflictTransitionMap.get(transitionLabel);
             if(cTransition == null)
             {
