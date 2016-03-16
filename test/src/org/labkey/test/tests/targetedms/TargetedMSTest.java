@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.targetedms;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
@@ -33,8 +34,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public abstract class TargetedMSTest extends BaseWebDriverTest
 {
@@ -123,13 +122,17 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     }
 
     @LogMethod
-    protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int precursorCount, int transitionCount)
+    protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int precursorCount, int transitionCount, @Nullable Integer moleculeCount)
     {
         log("Verifying expected summary counts");
         assertElementPresent(Locator.xpath("//tr[td[text()='Protein Count']][td[text()='" + proteinCount + "']]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='Peptide Count']][td[text()='" + peptideCount + "']]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='Precursor Count']][td[text()='" + precursorCount + "']]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='Transition Count']][td[text()='" + transitionCount + "']]"));
+
+        if(moleculeCount != null)
+            assertElementPresent(Locator.xpath("//tr[td[text()='Small Molecule Count']][td[text()='" + moleculeCount + "']]"));
+
     }
 
     @LogMethod

@@ -37,6 +37,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
     private static final String SKY_FILE = "MRMer.zip";
     private static final String SKY_FILE2 = "MRMer_renamed_protein.zip";
 
+    private static final String SKY_FILE_SMALLMOL_PEP = "smallmol_plus_peptides.sky.zip";
+
     public TargetedMSExperimentTest()
     {
         // We want to use the UI when creating the project/folder so that we can verify that we get the wizard
@@ -49,30 +51,50 @@ public class TargetedMSExperimentTest extends TargetedMSTest
     {
         setupFolder(FolderType.Experiment);
         importData(SKY_FILE);
-        verifyImportedData();
+        verifyImportedPeptideData();
         verifyModificationSearch();
         importData(SKY_FILE2, 2);
         verifyProteinSearch();
         verifyQueries();
+
+        //small molecule
+        importData(SKY_FILE_SMALLMOL_PEP, 3);
+        verifyImportedSmallMoleculeData();
     }
 
     @LogMethod
-    protected void verifyImportedData()
+    protected void verifyImportedPeptideData()
     {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
         clickAndWait(Locator.linkContainingText(SKY_FILE));
-        verifyRunSummaryCounts(24,44,88,296); // Number of protein, peptides, precursors, transitions
-        verifyDocumentDetails();
+        verifyRunSummaryCounts(24,44,88,296, null); // Number of protein, peptides, precursors, transitions
+        verifyDocumentDetails(false);
         verifyPeptide();
     }
 
     @LogMethod
-    protected void verifyDocumentDetails()
+    protected void verifyImportedSmallMoleculeData()
+    {
+        clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
+        clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
+        verifyRunSummaryCounts(27, 44, 186, 394, 98); // Number of protein (groups), peptides, precursors, transitions, small molecules
+        verifyDocumentDetails(true);
+        verifyMolecule();
+    }
+
+    @LogMethod
+    protected void verifyDocumentDetails(boolean smallMolPresent)
     {
         assertTextPresent("CDC19 SGDID:S000000036, Chr I from 71787-73289, Verified ORF, \"Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cycle) or anaerobic (glucose fermentation) respiration");
         // Verify expected peptides/proteins in the nested view
         //Verify that amino acids from peptides are highlighted in blue as expected.
         assertElementPresent(Locator.xpath("//tr//td//a[span[text()='LTSLNVVAGSDL'][span[contains(@style,'font-weight:bold;color:#0000ff;') and text()='R']]]"));
+
+        if(smallMolPresent)
+        {
+           assertTextPresent("Small Molecule Precursor List");
+           assertTextPresent("Acylcarnitine");
+        }
     }
 
     @LogMethod
@@ -233,6 +255,103 @@ public class TargetedMSExperimentTest extends TargetedMSTest
                 "GVNLPGTDVDLPALSEK", "TANDVLTIR", "GDLGIEIPAPEVLAVQK", "EPVSDWTDDVEAR");
         click(Locator.tag("img").withAttributeContaining("src", "plus.gif"));
         assertTextPresent("I from 71787-73289, Verified ORF, \"Pyruvate kinase, functions as a homotetramer in glycolysis to convert phosphoenolpyruvate to pyruvate, the input for aerobic (TCA cyc...");
+    }
+
+    @LogMethod
+    protected void verifyMolecule()
+    {
+        //click on link 'PC' under Protein/Label
+        clickAndWait(Locator.linkContainingText("PC"));
+
+        //Go to SmallMolecules data region
+        WebElement table = DataRegionTable.Locators.dataRegion("SmallMolecules").findElements(this.getDriver()).get(0);
+        DataRegionTable drt = new DataRegionTable(this, table);
+        assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
+        assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
+        assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
+        assertEquals("704.5230", drt.getDataAsText(5, "Mass Monoisotopic"));
+        assertEquals(" ", drt.getDataAsText(5, "Avg. Measured RT"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+
+        //Click on a value under Custom Ion Name
+        clickAndWait(Locator.linkContainingText("PC aa C26:0").index(0)); //two links with this text, want the first one under Custom Ion Name hence index(0).
+        assertElementPresent(Locator.xpath("//tr[td[text()='Group']][td[a[text()='PC']]]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Custom Ion Name']][td[text()='PC aa C26:0']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Ion Formula']][td[text()='C34H69N1O8P1']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Average']][td[text()='650.8924']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Monoisotopic']][td[text()='650.4761']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Avg. RT']][td[text()='0.9701']]"));
+        assertTextPresent("Molecule Precursors");
+
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'generalMoleculeChromatogramChart.view')]"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+
+        //Click on Molecule Precursor Chromatogram link
+        clickAndWait(Locator.xpath("//a[contains(@href, 'moleculePrecursorAllChromatogramsChart.view')]"));
+
+        assertTextPresent("Molecule Precursor Chromatograms");
+        assertTextPresent("Molecule Precursor Summary");
+        assertElementPresent(Locator.xpath("//tr[td[text()='Molecule Group']][td[text()='PC']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Molecule Precursor']][td[text()='PC aa C26:0']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Charge']][td[text()='1']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='m/z']][td[text()='650.4755']]"));
+
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 4);
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+
+        //Go back to Document Summary page
+        clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
+
+        //Look for Small Molecule Precursor List data region
+        table = DataRegionTable.Locators.dataRegion("small_mol_precursors_view").findElements(this.getDriver()).get(1);
+        drt = new DataRegionTable(this, table);
+        assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
+        assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
+        assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
+        assertEquals("704.5230", drt.getDataAsText(5, "Mass Monoisotopic"));
+        assertEquals("PC aa C30:1", drt.getDataAsText(5, "Precursor"));
+        assertEquals("1+", drt.getDataAsText(5, "Q1 Z"));
+        assertEquals("704.5225", drt.getDataAsText(5, "Q1 m/z"));
+        assertEquals("1", drt.getDataAsText(5, "Transition Count"));
+
+        clickAndWait(Locator.linkContainingText("lysoPC a C14:0").index(0));
+        assertTextPresent("Small Molecule Summary");
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'generalMoleculeChromatogramChart.view')]"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+        assertElementPresent(Locator.xpath("//a[contains(@href, 'moleculePrecursorAllChromatogramsChart.view')]"));
+
+        clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
+
+        clickAndWait(Locator.linkContainingText("lysoPC a C14:0").index(1));
+        assertTextPresent("Molecule Precursor Chromatograms");
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 4);
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
+        assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
+
+        //Go to Small Molecule Transition List
+        clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
+        click(Locator.xpath("//th[span[contains(text(), 'Small Molecule Precursor List')]]/span/a/span[contains(@class, 'fa-caret-down')]"));
+        clickAndWait(Locator.tagContainingText("span", "Small Molecule Transition List"));
+        waitForText("Small Molecule Transition List");
+
+        table = DataRegionTable.Locators.dataRegion("small_mol_transitions_view").findElements(this.getDriver()).get(1);
+        drt = new DataRegionTable(this, table);
+        assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
+        assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
+        assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
+        assertEquals("704.5230", drt.getDataAsText(5, "Mass Monoisotopic"));
+        assertEquals("PC aa C30:1", drt.getDataAsText(5, "Precursor"));
+        assertEquals("1+", drt.getDataAsText(5, "Q1 Z"));
+        assertEquals("704.5225", drt.getDataAsText(5, "Q1 m/z"));
+        assertEquals("custom", drt.getDataAsText(5, "Fragment Type"));
+        assertEquals("184.0733", drt.getDataAsText(5, "Q3 m/z"));
+        assertEquals("1+", drt.getDataAsText(5, "Q3 Z"));
     }
 
     private void verifyQueries()
