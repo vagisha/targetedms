@@ -800,7 +800,7 @@ public class TargetedMSManager
 
         String states = StringUtils.join(stateArray, ",");
 
-        reprRunIdSql.append(" WHERE prec.RepresentativeDataState IN (" + states + ")");
+        reprRunIdSql.append(" WHERE gp.RepresentativeDataState IN (" + states + ")");
         reprRunIdSql.append(" AND gp.GeneralMoleculeId = gm.Id");
         reprRunIdSql.append(" AND gm.PeptideGroupId = pepgrp.Id");
         reprRunIdSql.append(" AND Container = ?");

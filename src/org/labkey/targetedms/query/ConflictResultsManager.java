@@ -119,7 +119,7 @@ public class ConflictResultsManager
         getConflictPrecursorsSql.append(" ON (prec2.Id = gp.GeneralMoleculeId AND gp.GeneralMoleculeId = pep2.Id) ");
         getConflictPrecursorsSql.append(" INNER JOIN ");
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg2");
-        getConflictPrecursorsSql.append(" ON (pg2.Id = pep2.PeptideGroupId) ");
+        getConflictPrecursorsSql.append(" ON (pep2.Id = gm.Id AND pg2.Id = gm.PeptideGroupId)");
         getConflictPrecursorsSql.append(" INNER JOIN ");
         getConflictPrecursorsSql.append(TargetedMSManager.getTableInfoRuns(), "r2");
         getConflictPrecursorsSql.append(" ON (r2.Id = pg2.RunId) ");
@@ -442,13 +442,19 @@ public class ConflictResultsManager
         sqlFragment.append("SELECT DISTINCT(p.Id) FROM ");
         sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p");
         sqlFragment.append(", ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r");
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pc");
         sqlFragment.append(" WHERE ");
-        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.GeneralMoleculeId = p.Id  AND r.Deleted = ? AND r.Container = ? ");
+        sqlFragment.append("p.Id = gm.Id AND ");
+        sqlFragment.append("gm.PeptideGroupId = pg.Id AND ");
+        sqlFragment.append("pg.RunId = r.Id AND ");
+        sqlFragment.append("pc.GeneralMoleculeId = p.Id  AND ");
+        sqlFragment.append("r.Deleted = ? AND r.Container = ? ");
         sqlFragment.append("AND pc.RepresentativeDataState = ? ");
 
         sqlFragment.add(false);
