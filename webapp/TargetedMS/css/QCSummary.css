@@ -1,0 +1,68 @@
+.summary-view {
+    padding: 5px;
+    margin: 5px;
+    position: relative;
+}
+
+.subfolder-view {
+    background-color: #EEEEEE;
+    border: solid #C0C0C0 1px;
+    border-radius: 5px;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.subfolder-view .item-text {
+    color: #303030;
+}
+
+.item-text ul {
+    margin: 0;
+}
+
+.folder-name {
+    font-weight: bold;
+    padding-right: 70px;
+}
+
+.folder-name a {
+    color: #000000;
+}
+
+.auto-qc-ping {
+    color: #222222;
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    cursor: pointer
+}
+.qc-none {
+    color: grey;
+    font-size: 15px;
+}
+.qc-error {
+    color: red;
+    font-size: 15px;
+}
+.qc-correct {
+    color: green;
+    font-size: 15px;
+}
+
+.sample-file-details {
+    cursor: pointer;
+}
+
+.sample-file-field-label {
+    font-weight: bold;
+}
+
+.sample-file-metric-list {
+    margin: 0;
+}
+
+div.hopscotch-bubble .hopscotch-actions,
+div.hopscotch-bubble .hopscotch-content {
+    margin: 0;
+    padding: 0;
+}

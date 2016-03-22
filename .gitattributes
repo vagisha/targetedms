@@ -402,6 +402,7 @@ test/test_targetedms.iml -text
 webapp/TargetedMS/css/LeveyJenningsReport.css -text
 webapp/TargetedMS/css/LinkVersionsDialog.css -text
 webapp/TargetedMS/css/ParetoPlot.css -text
+webapp/TargetedMS/css/QCSummary.css -text
 webapp/TargetedMS/css/dropDown.css -text
 webapp/TargetedMS/images/ChromatogramLibraryScreenshot.png -text
 webapp/TargetedMS/images/Fragment.gif -text
@@ -416,6 +417,7 @@ webapp/TargetedMS/js/BaseQCPlotPanel.js -text
 webapp/TargetedMS/js/LeveyJenningsTrendPlotPanel.js -text
 webapp/TargetedMS/js/LinkVersionsDialog.js -text
 webapp/TargetedMS/js/ParetoPlotPanel.js -text
+webapp/TargetedMS/js/QCSummaryPanel.js -text
 webapp/TargetedMS/js/dropDownUtil.js -text
 webapp/TargetedMS/lorikeet_0.3/css/lorikeet.css -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_lorikeet.png -text
