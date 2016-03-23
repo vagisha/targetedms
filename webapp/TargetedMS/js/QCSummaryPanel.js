@@ -204,6 +204,10 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 }
             });
         }
+        else if (container.docCount > 0)
+        {
+            Ext4.get('qc-summary-samplefiles-' + container.id).update('');
+        }
     },
 
     renderContainerSampleFileStats: function (container, dataRows)

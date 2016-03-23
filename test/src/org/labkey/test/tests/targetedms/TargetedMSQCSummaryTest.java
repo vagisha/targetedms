@@ -84,7 +84,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     @Test
     public void testSubfolders()
     {
-        waitForElements(Locator.tagWithClass("div", "item-text").containing("Last update"), 2);
+        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
         QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
         assertEquals("Unexpected number of QC Summary tiles", 3, qcSummaryWebPart.getQCSummaryDetails().size());
         verifyQcSummary(0, getProjectName(), 1, 47, 7);
@@ -108,7 +108,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         // impersonate user and check that the project QC Summary doesn't include the FOLDER_1 details
         goToProjectHome();
         impersonate(USER);
-        waitForElements(Locator.tagWithClass("div", "item-text").containing("Last update"), 2);
+        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
         QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
         assertEquals("Unexpected number of QC Summary tiles", 2, qcSummaryWebPart.getQCSummaryDetails().size());
         verifyQcSummary(0, getProjectName(), 1, 47, 7);
@@ -123,7 +123,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         int sampleFileCount = 3;
 
         clickFolder(FOLDER_2A);
-        waitForElements(Locator.tagWithClass("div", "item-text").containing("Last update"), 1);
+        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 3);
         verifyQcSummary(1, sampleFileCount, 2);
 
         // verify the initial set of QC plot points
@@ -140,7 +140,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         assertAlert("Are you sure you want to delete the selected row?");
         sampleFileCount--;
         clickTab("Panorama Dashboard");
-        waitForElements(Locator.tagWithClass("div", "item-text").containing("Last update"), 1);
+        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 2);
         verifyQcSummary(1, sampleFileCount, 2);
         assertEquals("Unexpected number of points", 2 * sampleFileCount, getQCPlotPointCount());
 
@@ -151,8 +151,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         assertAlert("Are you sure you want to delete the selected rows?");
         sampleFileCount = 0;
         clickTab("Panorama Dashboard");
-        waitForElements(Locator.tagWithClass("div", "item-text").containing("Last update"), 1);
-        assertElementPresent(Locator.linkWithText(sampleFileCount + " sample files"));
+        waitForElement(Locator.linkWithText(sampleFileCount + " sample files"));
+        assertElementNotPresent(Locator.tagWithClass("div", "sample-file-item"));
         assertElementPresent(Locator.tagContainingText("div", "No data found."));
     }
 
