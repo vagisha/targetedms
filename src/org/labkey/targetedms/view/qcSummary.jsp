@@ -27,6 +27,7 @@
         resources.add(ClientDependency.fromPath("Ext4"));
         resources.add(ClientDependency.fromPath("hopscotch/css/hopscotch.min.css"));
         resources.add(ClientDependency.fromPath("hopscotch/js/hopscotch.min.js"));
+        resources.add(ClientDependency.fromPath("targetedms/js/BaseQCPlotPanel.js"));
         resources.add(ClientDependency.fromPath("targetedms/css/QCSummary.css"));
         resources.add(ClientDependency.fromPath("targetedms/js/QCSummaryPanel.js"));
         return resources;
