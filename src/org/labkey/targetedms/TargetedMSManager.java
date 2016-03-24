@@ -1368,10 +1368,16 @@ public class TargetedMSManager
         sql.append(getTableInfoReplicate(), "rep");
         sql.append(", ");
         sql.append(getTableInfoRuns(), "r");
-        sql.append( " WHERE r.Id = rep.RunId AND rep.Id = sf.ReplicateId AND r.Container = ? AND sf.FilePath = ? AND sf.AcquiredTime = ?");
+        sql.append( " WHERE r.Id = rep.RunId AND rep.Id = sf.ReplicateId AND r.Container = ? AND sf.FilePath = ? ");
         sql.add(container);
         sql.add(filePath);
-        sql.add(acquiredTime);
+        if(acquiredTime == null)
+            sql.append("AND sf.AcquiredTime IS NULL");
+        else
+        {
+            sql.append("AND sf.AcquiredTime = ?");
+            sql.add(acquiredTime);
+        }
         return new SqlSelector(getSchema(), sql).exists();
     }
 
