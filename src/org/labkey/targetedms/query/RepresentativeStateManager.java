@@ -27,7 +27,6 @@ import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMsRepresentativeStateAuditProvider;
 import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
-import org.labkey.targetedms.parser.GeneralPrecursor;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -134,10 +133,7 @@ public class RepresentativeStateManager
             {
                 // Mark the last deprecated precursor as representative
                 lastDeprecatedPrec.setRepresentativeDataState(RepresentativeDataState.Representative);
-                GeneralPrecursor gp = new GeneralPrecursor();
-                gp.setId(lastDeprecatedPrec.getId());
-                gp.setRepresentativeDataState(lastDeprecatedPrec.getRepresentativeDataState());
-                Table.update(user, TargetedMSManager.getTableInfoGeneralPrecursor(), gp, lastDeprecatedPrec.getId());
+                Table.update(user, TargetedMSManager.getTableInfoGeneralPrecursor(), lastDeprecatedPrec, lastDeprecatedPrec.getId());
             }
         }
 
@@ -316,14 +312,20 @@ public class RepresentativeStateManager
         {
             return Collections.emptyList();
         }
-        SQLFragment sql = new SQLFragment("SELECT pre2.Id FROM ");
+        SQLFragment sql = new SQLFragment("SELECT pre2.Id FROM (");
         sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre1");
         sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp1");
+        sql.append(" ON pre1.Id = gp1.Id");
+        sql.append(") INNER JOIN (");
         sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre2");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp2");
+        sql.append(" ON pre2.Id = gp2.Id)");
         sql.append(" ON ((");
-        sql.append(TargetedMSManager.getSqlDialect().concatenate("pre1.ModifiedSequence", "CAST(pre1.Charge AS varchar)"));
+        sql.append(TargetedMSManager.getSqlDialect().concatenate("pre1.ModifiedSequence", "CAST(gp1.Charge AS varchar)"));
         sql.append(") = (");
-        sql.append(TargetedMSManager.getSqlDialect().concatenate("pre2.ModifiedSequence", "CAST(pre2.Charge AS varchar)"));
+        sql.append(TargetedMSManager.getSqlDialect().concatenate("pre2.ModifiedSequence", "CAST(gp2.Charge AS varchar)"));
         sql.append("))");
         sql.append(" INNER JOIN ");
         sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");

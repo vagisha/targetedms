@@ -478,8 +478,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var baseTableName = chartTypeProps.baseTableName;
         var baseLkFieldKey = chartTypeProps.baseLkFieldKey;
 
-        var sql = "SELECT DISTINCT " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence FROM " + baseTableName;
-        var separator = ' WHERE ';
+        var sql = "SELECT DISTINCT " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence FROM " + baseTableName
+            + ' WHERE PrecursorId.Id IS NOT NULL'; // issue 25930: filter out small molecule data for release16.1
+        var separator = ' AND ';
         // CAST as DATE to ignore time portion of value
         if (this.startDate)
         {

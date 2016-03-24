@@ -413,13 +413,17 @@ public class PrecursorManager
     public static List<Precursor> getRepresentativePrecursors(int runId)
     {
         SQLFragment sql = new SQLFragment();
-        sql.append("SELECT prec.* FROM ");
+        sql.append("SELECT gp.*, prec.* FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" WHERE");
+        sql.append(" prec.Id = gp.Id");
+        sql.append(" AND");
         sql.append(" gp.GeneralMoleculeId = gm.Id");
         sql.append(" AND");
         sql.append(" gm.PeptideGroupId = pg.Id");
@@ -427,7 +431,7 @@ public class PrecursorManager
         sql.append(" pg.RunId = ?");
         sql.add(runId);
         sql.append(" AND");
-        sql.append(" prec.RepresentativeDataState = ?");
+        sql.append(" gp.RepresentativeDataState = ?");
         sql.add(RepresentativeDataState.Representative.ordinal());
 
         Precursor[] reprPrecursors = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Precursor.class);
@@ -437,7 +441,9 @@ public class PrecursorManager
     public static Precursor getLastDeprecatedPrecursor(Precursor prec, Container container)
     {
         SQLFragment sql = new SQLFragment();
-        sql.append("SELECT prec.* FROM ");
+        sql.append("SELECT gp.*, prec.* FROM ");
+        sql.append(TargetedMSManager.getTableInfoPrecursor(), "prec");
+        sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
@@ -446,6 +452,8 @@ public class PrecursorManager
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "run");
         sql.append(" WHERE");
+        sql.append(" prec.Id = gp.Id");
+        sql.append(" AND");
         sql.append(" gp.GeneralMoleculeId = gm.Id");
         sql.append(" AND");
         sql.append(" gm.PeptideGroupId = pg.Id");
@@ -455,12 +463,12 @@ public class PrecursorManager
         sql.append(" run.Container = ?");
         sql.add(container);
         sql.append(" AND");
-        sql.append(" prec.RepresentativeDataState = ?");
+        sql.append(" gp.RepresentativeDataState = ?");
         sql.add(RepresentativeDataState.Deprecated.ordinal());
         sql.append(" AND");
         sql.append(" prec.ModifiedSequence = ?");
         sql.add(prec.getModifiedSequence());
-        sql.append(" ORDER BY prec.Modified DESC ");
+        sql.append(" ORDER BY gp.Modified DESC ");
 
         Precursor[] deprecatedPrecursors = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Precursor.class);
         if (deprecatedPrecursors.length == 0)
@@ -476,12 +484,12 @@ public class PrecursorManager
         sql.append("UPDATE "+TargetedMSManager.getTableInfoGeneralPrecursor());
         sql.append(" SET RepresentativeDataState = ?");
         sql.add(state.ordinal());
-        sql.append(" FROM "+TargetedMSManager.getTableInfoPeptide());
+        sql.append(" FROM "+TargetedMSManager.getTableInfoGeneralMolecule());
         sql.append(", "+TargetedMSManager.getTableInfoPeptideGroup());
         sql.append(" WHERE ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup()+".Id = "+TargetedMSManager.getTableInfoGeneralMolecule()+".PeptideGroupId");
         sql.append(" AND ");
-        sql.append(TargetedMSManager.getTableInfoPeptide()+".Id = "+TargetedMSManager.getTableInfoGeneralPrecursor()+".GeneralMoleculeId");
+        sql.append(TargetedMSManager.getTableInfoGeneralMolecule()+".Id = "+TargetedMSManager.getTableInfoGeneralPrecursor()+".GeneralMoleculeId");
         sql.append(" AND ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup()+".RunId = ?");
         sql.add(runId);
@@ -580,7 +588,7 @@ public class PrecursorManager
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
         sql.append(" WHERE gp.GeneralMoleculeId = gm.Id AND ");
-        sql.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Container = ? AND pre.Id IN ("+precIds+")");
+        sql.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Container = ? AND gp.Id IN ("+precIds+")");
         sql.add(container.getId());
 
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
