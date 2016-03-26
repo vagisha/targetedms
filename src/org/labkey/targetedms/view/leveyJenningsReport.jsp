@@ -21,21 +21,18 @@
 */
 
 %>
-<%@ page import="org.labkey.api.view.template.ClientDependency" %>
-<%@ page import="java.util.LinkedHashSet" %>
 <%@ page import="org.labkey.api.util.UniqueID" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    public void addClientDependencies(ClientDependencies dependencies)
     {
-        LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-        resources.add(ClientDependency.fromPath("Ext4"));
-        resources.add(ClientDependency.fromPath("vis/vis"));
-        resources.add(ClientDependency.fromPath("targetedms/css/LeveyJenningsReport.css"));
-        resources.add(ClientDependency.fromPath("targetedms/js/BaseQCPlotPanel.js"));
-        resources.add(ClientDependency.fromPath("targetedms/js/LeveyJenningsTrendPlotPanel.js"));
-        return resources;
+        dependencies.add("Ext4");
+        dependencies.add("vis/vis");
+        dependencies.add("targetedms/css/LeveyJenningsReport.css");
+        dependencies.add("targetedms/js/BaseQCPlotPanel.js");
+        dependencies.add("targetedms/js/LeveyJenningsTrendPlotPanel.js");
     }
 %>
 <%!

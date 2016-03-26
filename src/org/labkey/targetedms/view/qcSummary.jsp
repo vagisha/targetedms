@@ -17,20 +17,17 @@
 %>
 <%@ page import="org.labkey.api.util.UniqueID" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
-<%@ page import="org.labkey.api.view.template.ClientDependency" %>
-<%@ page import="java.util.LinkedHashSet" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
-    public LinkedHashSet<ClientDependency> getClientDependencies()
+    public void addClientDependencies(ClientDependencies dependencies)
     {
-        LinkedHashSet<ClientDependency> resources = new LinkedHashSet<>();
-        resources.add(ClientDependency.fromPath("Ext4"));
-        resources.add(ClientDependency.fromPath("hopscotch/css/hopscotch.min.css"));
-        resources.add(ClientDependency.fromPath("hopscotch/js/hopscotch.min.js"));
-        resources.add(ClientDependency.fromPath("targetedms/js/BaseQCPlotPanel.js"));
-        resources.add(ClientDependency.fromPath("targetedms/css/QCSummary.css"));
-        resources.add(ClientDependency.fromPath("targetedms/js/QCSummaryPanel.js"));
-        return resources;
+        dependencies.add("Ext4");
+        dependencies.add("hopscotch/css/hopscotch.min.css");
+        dependencies.add("hopscotch/js/hopscotch.min.js");
+        dependencies.add("targetedms/js/BaseQCPlotPanel.js");
+        dependencies.add("targetedms/css/QCSummary.css");
+        dependencies.add("targetedms/js/QCSummaryPanel.js");
     }
 %>
 <%!
