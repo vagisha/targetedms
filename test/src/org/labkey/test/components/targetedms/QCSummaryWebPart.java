@@ -15,17 +15,17 @@
  */
 package org.labkey.test.components.targetedms;
 
-import org.junit.Assert;
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
-import org.labkey.test.selenium.LazyWebElement;
+import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertTrue;
 
 public final class QCSummaryWebPart extends BodyWebPart
 {
@@ -117,6 +117,46 @@ public final class QCSummaryWebPart extends BodyWebPart
         return elements().qcSummaryDetails.findElements(_test.getDriver());
     }
 
+    public Locator.XPathLocator getAutoQCIcon()
+    {
+        return  getAutoQCIcon(0);
+    }
+
+    public Locator.XPathLocator getAutoQCIcon(int index)
+    {
+        return  elements().qcSummaryAutoQCIcon.index(index);
+    }
+
+    public Locator.XPathLocator getBubble()
+    {
+        return elements().qcSummaryHopscotchBubble;
+    }
+
+    public void closeBubble()
+    {
+        _test.click(elements().qcSummaryHopscotchBubbleClose);
+    }
+
+    public String getBubbleText()
+    {
+        return _test.getText(elements().qcSummaryHopscotchBubbleContent);
+    }
+
+    public Locator.XPathLocator getSampleFileDetails(int index)
+    {
+        return elements().qcSummarySampleFileDetails.index(index);
+    }
+
+    public Locator.XPathLocator getSampleFileItem(int detailIndex, int itemIndex)
+    {
+        return elements().qcSummarySampleFileDetails.index(detailIndex).append(elements().qcSummarySampleFileItem).index(itemIndex);
+    }
+
+    public String getSampleFileItemText(int detailIndex, int itemIndex)
+    {
+        return _test.getText(getSampleFileItem(detailIndex, itemIndex));
+    }
+
     @Override
     protected Elements elements()
     {
@@ -129,5 +169,12 @@ public final class QCSummaryWebPart extends BodyWebPart
         public Locator.XPathLocator qcSummaryDetails = qcSummary.append(Locator.tagWithClass("div", "summary-view"));
         public Locator.XPathLocator qcSummaryFolderLink = Locator.tagWithClass("div", "folder-name").append(Locator.tag("a"));
         public Locator.XPathLocator qcSummaryEmptyText = Locator.tagWithClass("div", "item-text").withText("No Skyline documents");
+        public Locator.XPathLocator qcSummaryAutoQC = Locator.tagWithClass("div", "auto-qc-ping");
+        public Locator.XPathLocator qcSummaryAutoQCIcon = qcSummaryAutoQC.append(Locator.xpath("//span"));
+        public Locator.XPathLocator qcSummaryHopscotchBubble = Locator.tagWithClass("div", "hopscotch-bubble-container");
+        public Locator.XPathLocator qcSummaryHopscotchBubbleContent = qcSummaryHopscotchBubble.append(Locator.tagWithClass("div", "hopscotch-bubble-content").append(Locator.tagWithClass("div", "hopscotch-content")));
+        public Locator.XPathLocator qcSummaryHopscotchBubbleClose = Locator.tagWithClass("a", "hopscotch-bubble-close");
+        public Locator.XPathLocator qcSummarySampleFileDetails = Locator.tagWithClass("div", "sample-file-details");
+        public Locator.XPathLocator qcSummarySampleFileItem = Locator.tagWithClass("div", "sample-file-item");
     }
 }

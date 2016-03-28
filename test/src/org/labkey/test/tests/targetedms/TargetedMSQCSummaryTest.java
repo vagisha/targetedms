@@ -15,19 +15,33 @@
  */
 package org.labkey.test.tests.targetedms;
 
+import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.remoteapi.Command;
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.CommandResponse;
+import org.labkey.remoteapi.Connection;
 import org.labkey.test.Locator;
+import org.labkey.test.ModulePropertyValue;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.Ext4Helper;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCSummaryTest extends TargetedMSTest
@@ -36,6 +50,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     private static final String FOLDER_2 = "QC Subfolder 2";
     private static final String FOLDER_2A = "QC Subfolder 2a";
     private static final String FOLDER_3 = "NonQC Subfolder 3";
+    private static final int QCPING_WAIT = 61000; // Value used for sleep, in milliseconds.
+    private static final String QCPING_TIMEOUT = "1"; // Value set in the Module Properties. This is in minutes.
 
     @Override
     protected String getProjectName()
@@ -49,6 +65,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         TargetedMSQCSummaryTest init = (TargetedMSQCSummaryTest)getCurrentTest();
         init.setupProjectWithSubfolders();
         init.importInitialData();
+        init.setAutoQCPingTimeOut();
     }
 
     private void setupProjectWithSubfolders()
@@ -73,6 +90,19 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
         clickFolder(FOLDER_2A);
         importData(QC_2_FILE);
+    }
+
+    private void setAutoQCPingTimeOut()
+    {
+        goToProjectHome();
+        goToFolderManagement();
+        clickAndWait(Locator.linkWithText("Module Properties"));
+        setFormElement(Locator.xpath("(//div[contains(@class, 'x4-panel-body')]//input[@type='text'])[4]"), QCPING_TIMEOUT);
+        clickButton("Save Changes", 0);
+        waitForElement(Ext4Helper.Locators.window("Success"));
+        clickButton("OK", 0);
+        _ext4Helper.waitForMaskToDisappear();
+        goToProjectHome();
     }
 
     @Before
@@ -144,6 +174,15 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         verifyQcSummary(1, sampleFileCount, 2);
         assertEquals("Unexpected number of points", 2 * sampleFileCount, getQCPlotPointCount());
 
+        log("Validate the recently loaded file content is correct.");
+        List<String> tempStringList01 = new ArrayList<>();
+        List<String> tempStringList02 = new ArrayList<>();
+        tempStringList01.add("2015/01/16 15:08:15 - no outliers");
+        tempStringList01.add("2015/01/16 12:47:30 - no outliers");
+        tempStringList02.add("25fmol_Pepmix_spike_SRM_1601_04\nacquired date/time: 2015/01/16 15:08:15");
+        tempStringList02.add("25fmol_Pepmix_spike_SRM_1601_03\nacquired date/time: 2015/01/16 12:47:30");
+        validateSampleFile(0, tempStringList01, tempStringList02);
+
         // remove all sample files
         clickAndWait(Locator.linkWithText(sampleFileCount + " sample files"));
         table.checkAll();
@@ -156,10 +195,208 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         assertElementPresent(Locator.tagContainingText("div", "No data found."));
     }
 
+    @Test
+    public void testShowAutoQC() throws MalformedURLException
+    {
+        String lastPingedDate;
+        List<String> tempStringList01 = new ArrayList<>();
+        List<String> tempStringList02 = new ArrayList<>();
+        final int MAIN_SUMMARY = 0;
+        final int SUB_FOLDER01 = 1;
+        final int SUB_FOLDER02 = 2;
+
+        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
+        tempStringList01.add("2013/08/27 14:45:49 - no outliers");
+        tempStringList01.add("2013/08/27 03:19:45 - no outliers");
+        tempStringList01.add("2013/08/26 04:27:53 - no outliers");
+        tempStringList02.add("Q_Exactive_08_23_2013_JGB_58\nacquired date/time: 2013/08/27 14:45:49");
+        tempStringList02.add("Q_Exactive_08_23_2013_JGB_51\nacquired date/time: 2013/08/27 03:19:45");
+        tempStringList02.add("out of guide set range: none");
+        validateSampleFile(0, tempStringList01, tempStringList02);
+
+        tempStringList01.clear();
+        tempStringList01.add("qc-none");
+        tempStringList01.add("fa-circle-o");
+        validateAutoQCStatus(MAIN_SUMMARY, tempStringList01, "Has never been pinged");
+
+        log("Ping the data.");
+        //http://localhost:8080/labkey/TargetedMSQCSummaryTest%20Project/QC%20Subfolder%202/targetedms-autoqcping.view
+        lastPingedDate = doAutoQCPing(null);
+
+        log("Need to refresh the page to see the updated status.");
+        refresh();
+        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
+
+        tempStringList01.clear();
+        tempStringList01.add("qc-correct");
+        tempStringList01.add("fa-check-circle");
+        validateAutoQCStatus(MAIN_SUMMARY, tempStringList01, "Was pinged recently on " + lastPingedDate);
+
+        log("Now wait for ping limit to occur.");
+        sleep(QCPING_WAIT);
+
+        log("Again need to refresh the page to see the updated status.");
+        refresh();
+
+        tempStringList01.clear();
+        tempStringList01.add("qc-error");
+        tempStringList01.add("fa-circle");
+        validateAutoQCStatus(MAIN_SUMMARY, tempStringList01, "Was pinged on " + lastPingedDate);
+
+        log("Now validate the icon for the sub-folder 1.");
+        tempStringList01.clear();
+        tempStringList01.add("qc-none");
+        tempStringList01.add("fa-circle-o");
+        validateAutoQCStatus(SUB_FOLDER01, tempStringList01, "Has never been pinged");
+
+        log("Now validate the icon for the sub-folder 2.");
+        tempStringList01.clear();
+        tempStringList01.add("qc-none");
+        tempStringList01.add("fa-circle-o");
+        validateAutoQCStatus(SUB_FOLDER02, tempStringList01, "Has never been pinged");
+
+        log("Ping the data in Subfolder 2.");
+        lastPingedDate = doAutoQCPing(FOLDER_2);
+
+        log("Refresh the page.");
+        refresh();
+        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
+
+        log("Validate the updated icons for the sub-folder 2.");
+        tempStringList01.clear();
+        tempStringList01.add("qc-correct");
+        tempStringList01.add("fa-check-circle");
+        validateAutoQCStatus(SUB_FOLDER02, tempStringList01, "Was pinged recently on " + lastPingedDate);
+
+        log("Now wait for ping limit to occur.");
+        sleep(QCPING_WAIT);
+
+        log("Again need to refresh the page to see the updated status.");
+        refresh();
+
+        log("Validate the ping timeout icons for the sub-folder 2.");
+        tempStringList01.clear();
+        tempStringList01.add("qc-error");
+        tempStringList01.add("fa-circle");
+        validateAutoQCStatus(SUB_FOLDER02, tempStringList01, "Was pinged on " + lastPingedDate);
+
+        log("Validate that a guide set updates the file info as expected.");
+        GuideSet gs = new GuideSet("2013/08/22 00:00:01", "2013/08/27 00:04:00", null);
+        createGuideSetFromTable(gs);
+
+        goToProjectHome();
+        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
+
+        tempStringList01.clear();
+        tempStringList01.add("2013/08/27 14:45:49 - 1/42 outliers");
+        tempStringList01.add("2013/08/27 03:19:45 - no outliers");
+
+        tempStringList02.clear();
+        tempStringList02.add("Full Width at Half Maximum (FWHM) - 1/7 outliers");
+        tempStringList02.add("Q_Exactive_08_23_2013_JGB_51\nacquired date/time: 2013/08/27 03:19:45");
+
+        validateSampleFile(0, tempStringList01, tempStringList02);
+
+        removeAllGuideSets();
+    }
+
+    private void validateAutoQCStatus(int webPartIndex, List<String> iconClassValues, String bubbleText)
+    {
+        String tmpString;
+
+        // Create a reference to the web page and it's various parts.
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
+        Locator autoQC = qcSummaryWebPart.getAutoQCIcon(webPartIndex);
+
+        tmpString = getAttribute(autoQC, "Class");
+
+        for(String classValue : iconClassValues)
+        {
+            log("Validate that the autoQC icon has a value of '" + classValue + "' in it's class property.");
+            assertTrue("AutoQC icon not as expected. Class did not contain '" + classValue + "'. Class: '" + tmpString + "'", tmpString.toLowerCase().contains(classValue));
+        }
+
+        log("Validate bubble text is '" + bubbleText + "'");
+        mouseOver(autoQC);
+        waitForElement(qcSummaryWebPart.getBubble());
+        tmpString = qcSummaryWebPart.getBubbleText();
+        assertTrue("Bubble text not as expected. Bubble text: '" + tmpString + "'", tmpString.contains(bubbleText));
+
+        // move the mouse off the element to remove the bubble.
+        mouseOver(Locator.css("a.labkey-main-title"));
+
+    }
+
+    private void validateSampleFile(int fileDetailIndex, List<String> fileDetails, List<String> bubbleTexts)
+    {
+        String tmpString;
+        int i=0;
+
+        // Create a reference to the web page and it's various parts.
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
+
+        for(String fileDetailText : fileDetails)
+        {
+            tmpString = qcSummaryWebPart.getSampleFileItemText(fileDetailIndex, i++);
+            log("Validate that the file detail text is '" + fileDetailText + "'.");
+            assertTrue("File detail text not as expected. File detail text: '" + tmpString + "'", tmpString.toLowerCase().contains(fileDetailText));
+        }
+
+        i=0;
+        for(String bubbleText : bubbleTexts)
+        {
+            mouseOver(qcSummaryWebPart.getSampleFileItem(fileDetailIndex, i++));
+            waitForElement(qcSummaryWebPart.getBubble());
+            tmpString = qcSummaryWebPart.getBubbleText();
+            log("Validate that the bubble text for the file detail contains '" + bubbleText + "'.");
+            assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + tmpString + "'", tmpString.toLowerCase().contains(bubbleText.toLowerCase()));
+            qcSummaryWebPart.closeBubble();
+            waitForElementToDisappear(qcSummaryWebPart.getBubble());
+        }
+
+    }
+
     private int getQCPlotPointCount()
     {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         return qcPlotsWebPart.getPointElements("d", SvgShapes.CIRCLE.getPathPrefix(), true).size();
     }
+
+    private String doAutoQCPing(@Nullable String subFolder)
+    {
+        Connection cn = createDefaultConnection(true);
+        AutoQCPing aqcp = new AutoQCPing();
+        CommandResponse cr;
+        String lastPingedDate, folderPath = getProjectName();
+
+        if(null != subFolder)
+        {
+            folderPath = folderPath + "/" + subFolder;
+        }
+
+        try
+        {
+            cr = aqcp.execute(cn, folderPath);
+            lastPingedDate = cr.getProperty("Modified");
+        }
+        catch (IOException | CommandException e)
+        {
+            throw new RuntimeException("Error trying to ping.", e);
+        }
+
+        return lastPingedDate;
+    }
+
+    public class AutoQCPing extends Command<CommandResponse>
+    {
+        public AutoQCPing()
+        {
+            super("targetedms", "autoqcping");
+        }
+
+    }
+
 }

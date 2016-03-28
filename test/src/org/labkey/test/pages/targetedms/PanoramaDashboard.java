@@ -36,4 +36,9 @@ public class PanoramaDashboard extends PortalBodyPanel
     {
         return new QCSummaryWebPart(getDriver());
     }
+
+    public QCSummaryWebPart getQcSummaryWebPart(int index)
+    {
+        return new QCSummaryWebPart(getDriver(), index);
+    }
 }
