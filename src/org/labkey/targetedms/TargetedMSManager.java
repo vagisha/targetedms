@@ -1386,4 +1386,35 @@ public class TargetedMSManager
         TableInfo table = TargetedMSManager.getTableInfoAutoQCPing();
         return new TableSelector(table, SimpleFilter.createContainerFilter(container), null).getMap();
     }
+
+    // return the ModuleProperty value for "AUTO_QC_PING_TIMEOUT"
+    public int getAutoQCPingTimeout(Container container)
+    {
+        TargetedMSModule targetedMSModule = null;
+        int timeoutValue = 15;
+
+        for (Module m : container.getActiveModules())
+        {
+            if (m instanceof TargetedMSModule)
+            {
+                targetedMSModule = (TargetedMSModule) m;
+                break;
+            }
+        }
+
+        if (targetedMSModule != null)
+        {
+            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TargetedMSModule.AUTO_QC_PING_TIMEOUT);
+            try
+            {
+                timeoutValue = Integer.parseInt(moduleProperty.getEffectiveValue(container));
+            }
+            catch (NumberFormatException e)
+            {
+                // noop, stick with the default value for the timeout setting
+            }
+        }
+
+        return timeoutValue;
+    }
 }

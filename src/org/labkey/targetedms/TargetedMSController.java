@@ -629,9 +629,9 @@ public class TargetedMSController extends SpringActionController
         if (autoQCPingMap != null)
         {
             // check if the last modified date is recent (i.e. within the last 15 min)
-            long fifteenMinutesAgo = System.currentTimeMillis() - (15 * 60000);
+            long timeoutMinutesAgo = System.currentTimeMillis() - (TargetedMSManager.get().getAutoQCPingTimeout(container) * 60000);
             Timestamp lastModified = (Timestamp)autoQCPingMap.get("Modified");
-            autoQCPingMap.put("isRecent", lastModified.getTime() >= fifteenMinutesAgo);
+            autoQCPingMap.put("isRecent", lastModified.getTime() >= timeoutMinutesAgo);
         }
         properties.put("autoQCPing", autoQCPingMap);
 
