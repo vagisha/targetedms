@@ -166,8 +166,10 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         clickAndWait(Locator.linkWithText(sampleFileCount + " sample files"));
         DataRegionTable table = new DataRegionTable("query", this);
         table.checkCheckbox(0);
-        table.clickHeaderButtonByText("Delete");
-        assertAlert("Are you sure you want to delete the selected row?");
+        doAndWaitForPageToLoad(() -> {
+            table.clickHeaderButtonByText("Delete");
+            assertAlert("Are you sure you want to delete the selected row?");
+        });
         sampleFileCount--;
         clickTab("Panorama Dashboard");
         waitForElements(Locator.tagWithClass("div", "sample-file-item"), 2);
@@ -186,8 +188,10 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         // remove all sample files
         clickAndWait(Locator.linkWithText(sampleFileCount + " sample files"));
         table.checkAll();
-        table.clickHeaderButtonByText("Delete");
-        assertAlert("Are you sure you want to delete the selected rows?");
+        doAndWaitForPageToLoad(() -> {
+            table.clickHeaderButtonByText("Delete");
+            assertAlert("Are you sure you want to delete the selected rows?");
+        });
         sampleFileCount = 0;
         clickTab("Panorama Dashboard");
         waitForElement(Locator.linkWithText(sampleFileCount + " sample files"));
