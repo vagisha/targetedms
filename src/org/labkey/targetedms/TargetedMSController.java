@@ -1758,10 +1758,8 @@ public class TargetedMSController extends SpringActionController
             Map<String, Object> currentRow = TargetedMSManager.get().getAutoQCPingMap(getContainer());
             if (currentRow == null)
             {
-                // Add a new record
-                currentRow = new HashMap<>();
-                currentRow.put("Container", getContainer());
-                currentRow = Table.insert(getUser(), TargetedMSManager.getTableInfoAutoQCPing(), currentRow);
+                // Add a new record for this container
+                currentRow = Table.insert(getUser(), TargetedMSManager.getTableInfoAutoQCPing(), Collections.singletonMap("Container", getContainer()));
             }
             else
             {
