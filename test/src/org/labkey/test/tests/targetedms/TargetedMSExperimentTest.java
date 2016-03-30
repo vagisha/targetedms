@@ -165,7 +165,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //waitForText("1 - 13 of 13");
         assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
         assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
-        _ext4Helper.selectComboBoxItem("Custom name:", "Label:13C(6)15N(2) (C-term K)");
+        setFormElement(Locator.name("customName"), "Label:13C(6)15N(2) (C-term K)"); // test timing fix, instead of using _ext4Helper.selectComboBoxItem again
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
         assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
