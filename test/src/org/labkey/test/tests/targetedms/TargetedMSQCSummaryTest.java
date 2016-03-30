@@ -65,7 +65,6 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         TargetedMSQCSummaryTest init = (TargetedMSQCSummaryTest)getCurrentTest();
         init.setupProjectWithSubfolders();
         init.importInitialData();
-        init.setAutoQCPingTimeOut();
     }
 
     private void setupProjectWithSubfolders()
@@ -92,12 +91,12 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         importData(QC_2_FILE);
     }
 
-    private void setAutoQCPingTimeOut()
+    private void setAutoQCPingTimeOut(String timeOutLength)
     {
         goToProjectHome();
         goToFolderManagement();
         clickAndWait(Locator.linkWithText("Module Properties"));
-        setFormElement(Locator.xpath("(//div[contains(@class, 'x4-panel-body')]//input[@type='text'])[4]"), QCPING_TIMEOUT);
+        setFormElement(Locator.xpath("(//div[contains(@class, 'x4-panel-body')]//input[@type='text'])[4]"), timeOutLength);
         clickButton("Save Changes", 0);
         waitForElement(Ext4Helper.Locators.window("Success"));
         clickButton("OK", 0);
@@ -200,7 +199,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     }
 
     @Test
-    public void testShowAutoQC() throws MalformedURLException
+    public void testShowAutoQC()
     {
         String lastPingedDate;
         List<String> tempStringList01 = new ArrayList<>();
@@ -208,6 +207,9 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         final int MAIN_SUMMARY = 0;
         final int SUB_FOLDER01 = 1;
         final int SUB_FOLDER02 = 2;
+
+        // Set the time out length.
+        setAutoQCPingTimeOut(QCPING_TIMEOUT);
 
         waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
         tempStringList01.add("2013/08/27 14:45:49 - no outliers");
@@ -302,6 +304,10 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         validateSampleFile(0, tempStringList01, tempStringList02);
 
         removeAllGuideSets();
+
+        // Reset the time out length.
+        setAutoQCPingTimeOut("");
+
     }
 
     private void validateAutoQCStatus(int webPartIndex, List<String> iconClassValues, String bubbleText)
@@ -334,23 +340,21 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
     private void validateSampleFile(int fileDetailIndex, List<String> fileDetails, List<String> bubbleTexts)
     {
-        String tmpString;
+        String tmpString, bubbleText;
         int i=0;
 
         // Create a reference to the web page and it's various parts.
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
 
+        assertEquals("The fileDetails and bubbleTexts list are not of equal length.", fileDetails.size(), bubbleTexts.size());
         for(String fileDetailText : fileDetails)
         {
-            tmpString = qcSummaryWebPart.getSampleFileItemText(fileDetailIndex, i++);
+            tmpString = qcSummaryWebPart.getSampleFileItemText(fileDetailIndex, i);
             log("Validate that the file detail text is '" + fileDetailText + "'.");
             assertTrue("File detail text not as expected. File detail text: '" + tmpString + "'", tmpString.toLowerCase().contains(fileDetailText));
-        }
 
-        i=0;
-        for(String bubbleText : bubbleTexts)
-        {
+            bubbleText = bubbleTexts.get(i);
             mouseOver(qcSummaryWebPart.getSampleFileItem(fileDetailIndex, i++));
             waitForElement(qcSummaryWebPart.getBubble());
             tmpString = qcSummaryWebPart.getBubbleText();
