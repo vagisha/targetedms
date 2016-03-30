@@ -49,7 +49,7 @@ public final class QCPlotsWebPart extends BodyWebPart
     }
 
     @Override
-    protected void waitForReady()
+    public void waitForReady()
     {
         waitForPlots(1, false);
     }
@@ -368,10 +368,21 @@ public final class QCPlotsWebPart extends BodyWebPart
         Integer brushPointCount = getPointElements("fill", "rgba(20, 204, 201, 1)", false).size();
         assertEquals("Unexpected number of points selected via brushing", guideSet.getBrushSelectedPoints(), brushPointCount);
 
-        WebElement plot = elements().findPlots().get(0);
-        gsButtons.get(0).click(); // Create button : index 0
+        boolean expectPageReload = expectErrorMsg == null;
         if (guideSet.getBrushSelectedPoints() != null && guideSet.getBrushSelectedPoints() < 5)
-            _test._ext4Helper.clickWindowButton("Create Guide Set Warning", "Yes", 0, 0);
+        {
+            gsButtons.get(0).click(); // Create button : index 0
+            int wait = !expectPageReload ? 0 : BaseWebDriverTest.WAIT_FOR_PAGE;
+            _test._ext4Helper.clickWindowButton("Create Guide Set Warning", "Yes", wait, 0);
+        }
+        else if (expectPageReload)
+        {
+            _test.clickAndWait(gsButtons.get(0)); // Create button : index 0
+        }
+        else
+        {
+            gsButtons.get(0).click(); // Create button : index 0
+        }
 
         if (expectErrorMsg != null)
         {
@@ -379,11 +390,6 @@ public final class QCPlotsWebPart extends BodyWebPart
             _test.assertElementPresent(elements().extFormDisplay.withText(expectErrorMsg));
             _test._ext4Helper.clickWindowButton("Error Creating Guide Set", "OK", 0, 0);
             gsButtons.get(1).click(); // Cancel button : index 1
-        }
-        else
-        {
-            _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
-            waitForReady();
         }
     }
 

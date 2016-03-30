@@ -328,6 +328,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             + "\n   " + chartTypeProps.baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
             + "\n   " + chartTypeProps.colName + " AS Value"
             + "\n   FROM " + chartTypeProps.baseTableName
+            + "\n   WHERE " + chartTypeProps.baseLkFieldKey + "SampleFileId.AcquiredTime IS NOT NULL"
             + "\n) X"
             + "\nLEFT JOIN GuideSetStats_" + chartTypeProps.name + " stats"
             + "\nON X.Sequence = stats.Sequence"

@@ -1640,7 +1640,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             success: function(data) {
                 this.plotBrushSelection = undefined;
                 this.setBrushingEnabled(false);
-                this.displayTrendPlot();
+
+                // issue 26019: since guide sets won't be created that often and we now remember plot option selections,
+                // force page reload for new guide set creation this allows the sample file information to be updated
+                // easily in the QC Summary webpart (which is commonly displayed on the same page as this plot).
+                window.location.reload();
             },
             failure: function(response) {
                 Ext4.Msg.show({
