@@ -179,19 +179,19 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
     queryContainerSampleFileStats: function (container)
     {
-        // generate a UNION SQL query for the relevant metrics to get the summary info for the last N sample files
-        var sql = "", sep = "";
-        Ext4.each(this.metricTypes, function (metricType)
-        {
-            if (metricType.showInChartTypeCombo && metricType.showInParetoPlot)
-            {
-                sql += sep + '(' + this.getLatestSampleFileStatsSql(metricType) + ')';
-                sep = "\nUNION\n";
-            }
-        }, this);
-
         if (container.fileCount > 0)
         {
+            // generate a UNION SQL query for the relevant metrics to get the summary info for the last N sample files
+            var sql = "", sep = "";
+            Ext4.each(this.metricTypes, function (metricType)
+            {
+                if (metricType.showInChartTypeCombo && metricType.showInParetoPlot)
+                {
+                    sql += sep + '(' + this.getLatestSampleFileStatsSql(metricType) + ')';
+                    sep = "\nUNION\n";
+                }
+            }, this);
+
             LABKEY.Query.executeSql({
                 containerPath: container.path,
                 schemaName: 'targetedms',
@@ -328,13 +328,13 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             + "\n   " + chartTypeProps.baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
             + "\n   " + chartTypeProps.colName + " AS Value"
             + "\n   FROM " + chartTypeProps.baseTableName
-            + "\n   WHERE " + chartTypeProps.baseLkFieldKey + "SampleFileId.AcquiredTime IS NOT NULL"
+            + "\n   WHERE " + chartTypeProps.baseLkFieldKey + "SampleFileId.Id IN (SELECT Id FROM SampleFile WHERE AcquiredTime IS NOT NULL ORDER BY AcquiredTime DESC LIMIT 3)"
             + "\n) X"
             + "\nLEFT JOIN GuideSetStats_" + chartTypeProps.name + " stats"
             + "\nON X.Sequence = stats.Sequence"
             + "\nAND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
             + "\n   OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
             + "\nGROUP BY stats.GuideSetId, X.SampleFile, X.AcquiredTime"
-            + "\nORDER BY X.AcquiredTime DESC LIMIT " + this.numSampleFileStats;
+            + "\nORDER BY X.AcquiredTime DESC";
     }
 });
