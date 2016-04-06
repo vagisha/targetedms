@@ -414,7 +414,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals("YAL038W", query.getDataAsText(0, "Protein / Label"));
         assertElementPresent(Locator.linkWithText("YAL038W"));
         assertEquals("LTSLNVVAGSDLR", query.getDataAsText(0, "Peptide"));
-        assertEquals("1343.7408", query.getDataAsText(0, "Peptide Neutral Mass"));
+        assertEquals("1343.7409", query.getDataAsText(0, "Peptide Neutral Mass"));
         query.clearFilter("ModifiedSequence");
 
         // Test query against targetedms.transition
@@ -449,7 +449,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals("YAL038W", query.getDataAsText(0, "Protein / Label"));
         assertElementPresent(Locator.linkWithText("YAL038W"));
         assertEquals("LTSLNVVAGSDLR", query.getDataAsText(0, "Peptide"));
-        assertEquals("1343.7408", query.getDataAsText(0, "Peptide Neutral Mass"));
+        assertEquals("1343.7409", query.getDataAsText(0, "Peptide Neutral Mass"));
         query.clearFilter("PrecursorId");
 
         // Test query against targetedms.librarydocprecursor
