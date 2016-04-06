@@ -46,7 +46,7 @@ public class QCAnnotationWebPart extends BodyWebPart
 
     public AnnotationInsertPage startInsert()
     {
-        getDataRegion().clickHeaderButtonByText("Insert New");
+        getDataRegion().clickHeaderButton("Insert", "Insert New");
         return new AnnotationInsertPage(_test);
     }
 }

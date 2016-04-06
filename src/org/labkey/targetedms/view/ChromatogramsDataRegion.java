@@ -173,7 +173,7 @@ public class ChromatogramsDataRegion extends DataRegion
     {
         final int maxRows = getMaxRows();
 
-        MenuButton pageSizeMenu = new MenuButton("Page Size", getName() + ".Menu.PageSize"){
+        MenuButton pageSizeMenu = new MenuButton("Paging", getName() + ".Menu.PageSize"){
 
             final boolean showingAll = getShowRows() == ShowRows.ALL;
 
