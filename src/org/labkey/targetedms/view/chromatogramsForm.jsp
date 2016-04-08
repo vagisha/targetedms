@@ -79,7 +79,7 @@
         font-size:10px;
     }
 </style>
-<script type="text/javascript" src="/labkey/MS2/lorikeet_0.3/js/jquery-1.4.2.min.js"></script>
+<script type="text/javascript" src="<%=getContextPath()%>/MS2/lorikeet_0.3/js/jquery-1.4.2.min.js"></script>
 <script type="text/javascript">
     var hiddenFields;
     var replicateStore;
