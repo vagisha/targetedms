@@ -28,7 +28,7 @@ CREATE TABLE targetedms.Peptide
   EndIndex INT,
   PreviousAa CHAR(1),
   NextAa CHAR(1),
-  CalcNeutralMass REAL NOT NULL,
+  CalcNeutralMass DOUBLE PRECISION NOT NULL,
   NumMissedCleavages INT NOT NULL,
   Rank INTEGER,
   Decoy BOOLEAN,
@@ -118,8 +118,8 @@ CREATE TABLE targetedms.Precursor
 (
   Id INT NOT NULL,
   IsotopeLabelId INT,
-  NeutralMass REAL NOT NULL,
-  ModifiedSequence VARCHAR(100) NOT NULL,
+  NeutralMass DOUBLE PRECISION NOT NULL,
+  ModifiedSequence VARCHAR(300) NOT NULL,
   DecoyMassShift REAL,
 
   CONSTRAINT PK_Precursor_Id PRIMARY KEY (Id),
