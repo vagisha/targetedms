@@ -3924,7 +3924,7 @@ public class TargetedMSController extends SpringActionController
         public String getDeltaMassSearchStr(Double deltaMass, boolean withEscapeChar)
         {
             // use ! as the escape character in the SQL LIKE clause with brackets (i.e. ModifiedSequence LIKE '%![+8!]' ESCAPE '!' )
-            DecimalFormat df = new DecimalFormat("0.#");
+            DecimalFormat df = new DecimalFormat("0.0");
             return (withEscapeChar ? "!" : "") + "[" + (deltaMass != null && deltaMass > 0 ? "+" : "") + (deltaMass == null ? "" : df.format(deltaMass)) + (withEscapeChar ? "!" : "") + "]";
         }
 
@@ -4098,14 +4098,14 @@ public class TargetedMSController extends SpringActionController
             form.setAminoAcids("R");
             assertEquals("Unexpected number of parsed amino acids", 1, form.getAminoAcidArr().length);
             assertTrue(form.getAminoAcidArr()[0] == 'R');
-            assertEquals("Unexpected modification search string", "R[+10]", form.getModificationSearchStr());
+            assertEquals("Unexpected modification search string", "R[+10.0]", form.getModificationSearchStr());
 
             form.setDeltaMass(8.0);
             form.setAminoAcids("RK");
             assertEquals("Unexpected number of parsed amino acids", 2, form.getAminoAcidArr().length);
             assertTrue(form.getAminoAcidArr()[0] == 'R');
             assertTrue(form.getAminoAcidArr()[1] == 'K');
-            assertEquals("Unexpected modification search string", "R[+8];K[+8]", form.getModificationSearchStr());
+            assertEquals("Unexpected modification search string", "R[+8.0];K[+8.0]", form.getModificationSearchStr());
 
             form.setDeltaMass(8.01);
             form.setAminoAcids("R K N");
@@ -4113,7 +4113,7 @@ public class TargetedMSController extends SpringActionController
             assertTrue(form.getAminoAcidArr()[0] == 'R');
             assertTrue(form.getAminoAcidArr()[1] == 'K');
             assertTrue(form.getAminoAcidArr()[2] == 'N');
-            assertEquals("Unexpected modification search string", "R[+8];K[+8];N[+8]", form.getModificationSearchStr());
+            assertEquals("Unexpected modification search string", "R[+8.0];K[+8.0];N[+8.0]", form.getModificationSearchStr());
 
             form.setDeltaMass(-144.11);
             form.setAminoAcids("R,K;N S|T");
@@ -4133,11 +4133,11 @@ public class TargetedMSController extends SpringActionController
             assertFalse(form.isNtermSearch());
 
             form.setModSearchPairsStr("GT,6;VG,5");
-            assertEquals("Unexpected modification search string", "G[+6];T[+6];V[+5];G[+5]", form.getModificationSearchStr());
+            assertEquals("Unexpected modification search string", "G[+6.0];T[+6.0];V[+5.0];G[+5.0]", form.getModificationSearchStr());
 
             form.setDeltaMass(10.0);
-            assertEquals("Unexpected delta mass search string", "[+10]", form.getDeltaMassSearchStr(false));
-            assertEquals("Unexpected delta mass search string", "![+10!]", form.getDeltaMassSearchStr(true));
+            assertEquals("Unexpected delta mass search string", "[+10.0]", form.getDeltaMassSearchStr(false));
+            assertEquals("Unexpected delta mass search string", "![+10.0!]", form.getDeltaMassSearchStr(true));
         }
     }
 

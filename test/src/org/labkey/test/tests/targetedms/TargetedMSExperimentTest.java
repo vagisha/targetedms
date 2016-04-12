@@ -142,16 +142,16 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //waitForText("1 - 13 of 13");
         assertTextPresentInThisOrder("Targeted MS Modification Search", "Targeted MS Peptides");
         assertTextPresent("Amino acids:", "Delta mass:");
-        assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
 
         // search for K[+8] modification
         setFormElement(Locator.name("aminoAcids"), "k R, N"); // should be split into just chars
         setFormElement(Locator.name("deltaMass"), "8.01"); // should be rounded to a whole number
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
-        assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
+        assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
 
         // test custom name search type
         _ext4Helper.selectRadioButton("Search by:", "Modification name");
@@ -163,13 +163,13 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         _ext4Helper.selectComboBoxItem("Custom name:", "Label:13C(6)15N(4) (C-term R)");
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 13 of 13");
-        assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
         setFormElement(Locator.name("customName"), "Label:13C(6)15N(2) (C-term K)"); // test timing fix, instead of using _ext4Helper.selectComboBoxItem again
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
-        assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
+        assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
 
         // test unimod name search type
         _ext4Helper.selectRadioButton("Type:", "All Unimod modifications");
@@ -180,8 +180,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         _ext4Helper.selectComboBoxItem(Ext4Helper.Locators.formItemWithLabelContaining("Unimod name:"), "Label:13C(6)15N(4) (C-term R)");
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 13 of 13");
-        assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
 
         // test C-term search using special character (i.e. ] )
         _ext4Helper.selectRadioButton("Search by:", "Delta mass");
@@ -189,8 +189,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         setFormElement(Locator.name("deltaMass"), "8");
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10]')]")));
-        assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8]')]")));
+        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
+        assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
     }
 
     @LogMethod
@@ -407,7 +407,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         navigateToQuery("targetedms", "query_precursor");
         waitForElement(Locator.paginationText(89));
         query = new DataRegionTable("query", this);
-        query.setFilter("ModifiedSequence", "Equals", "LTSLNVVAGSDLR[+10]");
+        query.setFilter("ModifiedSequence", "Equals", "LTSLNVVAGSDLR[+10.0]");
         query = new DataRegionTable("query", this);
         assertEquals(1, query.getDataRowCount());
         assertEquals("677.8818", query.getDataAsText(0, "Q1 m/z"));
@@ -442,7 +442,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         navigateToQuery("targetedms", "query_transition");
         waitForElement(Locator.paginationText(1, 100, 299));
         query = new DataRegionTable("query", this);
-        query.setFilter("PrecursorId", "Equals", "LTSLNVVAGSDLR[+10]");
+        query.setFilter("PrecursorId", "Equals", "LTSLNVVAGSDLR[+10.0]");
         query = new DataRegionTable("query", this);
         assertEquals(3, query.getDataRowCount());
         assertEquals("677.8818", query.getDataAsText(0, "Precursor Id Mz"));

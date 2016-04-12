@@ -125,6 +125,8 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String XML_NON_ID_PUNCTUATION_CHARS = ",?";
 
 
+    public static final Pattern oldModMassPattern = Pattern.compile("(\\[[+-]\\d+)\\]"); // e.g. KVN[-17]KTES[+80]K will match [-17] and [+80]
+
     private final static double OPTIMIZE_SHIFT_SIZE = 0.01;
 
     private SkylineBinaryParser _binaryParser;
@@ -1432,7 +1434,12 @@ public class SkylineDocumentParser implements AutoCloseable
         if(null != precursorMz)
             precursor.setMz(Double.parseDouble(precursorMz));
 
-        precursor.setModifiedSequence(reader.getAttributeValue(null, "modified_sequence"));
+        // Skyline-daily 3.5.1.9426 (and patch release of Skyline 3.5) changed the format of the modified_sequence attribute
+        // of the <precursor> element to always have a decimal place in the modification mass.
+        // Example: [+80.0] instead of [+80].
+        // If the file being uploaded is from an older version fo Skyline, replace modification mass strings like [+80] with [+80.0].
+        // e.g. K[+96.2]VN[-17]K[+34.1]TES[+80]K[+62.1] -->  K[+96.2]VN[-17.0]K[+34.1]TES[+80.0]K[+62.1]
+        precursor.setModifiedSequence(ensureDecimalInModMass(reader.getAttributeValue(null, "modified_sequence")));
 
         precursor.setIsotopeLabel(XmlUtil.readAttribute(reader, "isotope_label", PeptideSettings.IsotopeLabel.LIGHT));
 
@@ -1503,6 +1510,13 @@ public class SkylineDocumentParser implements AutoCloseable
         populateChromInfoChromatograms(precursor, chromatograms);
 
         return precursor;
+    }
+
+    // Replace strings like [+80] in the modified sequence with [+80.0]
+    // e.g. K[+96.2]VN[-17]K[+34.1]TES[+80]K[+62.1] --> K[+96.2]VN[-17.0]K[+34.1]TES[+80.0]K[+62.1]
+    public static String ensureDecimalInModMass(String modifiedSequence)
+    {
+        return oldModMassPattern.matcher(modifiedSequence).replaceAll("$1.0]");
     }
 
     private void populateChromInfoChromatograms(GeneralPrecursor precursor, List<Chromatogram> chromatograms)
