@@ -21,15 +21,18 @@ import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlException;
 import org.fhcrc.cpas.exp.xml.ExperimentArchiveDocument;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.TableResultSet;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
 import org.labkey.api.exp.AbstractFileXarSource;
@@ -49,6 +52,10 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryDefinition;
+import org.labkey.api.query.QueryException;
+import org.labkey.api.query.QueryService;
+import org.labkey.api.query.SchemaKey;
 import org.labkey.api.security.User;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -1416,5 +1423,64 @@ public class TargetedMSManager
         }
 
         return timeoutValue;
+    }
+
+    public static Map<String, Map<String, Double>> getClustergrammerQuery(User user, Container container)
+    {
+        //TODO Parameterize for selected files
+        String frag = "SELECT SUM(TotalArea) AS Area, " +
+            "    SampleFileId.SampleName AS SampleName, " +
+            "    PrecursorId.PeptideId.PeptideGroupId.Label AS ProteinName " +
+            "FROM PrecursorChromInfo " +
+            "GROUP BY SampleFileId.SampleName, " +
+            "    PrecursorId.PeptideId.PeptideGroupId.Label " +
+            "PIVOT Area By SampleName ";
+
+        QueryDefinition qdef = QueryService.get().createQueryDef(user, container, SchemaKey.fromString(getSchema().getQuerySchemaName()), "ClustergrammerHeatMap");
+        qdef.setSql(frag);
+        qdef.setIsHidden(true);
+
+        List<QueryException> errors = new ArrayList<>();
+        TableInfo table = qdef.getTable(errors, true);
+
+        //Since we are pivoting
+        String intensityColumnName = "Area";
+        String rowHeadingColumnName = "ProteinName";
+
+        Map<String, Map<String, Double>> intensities = new HashMap();
+        try (TableResultSet resultSet = new TableSelector(table).getResultSet())
+        {
+            if (resultSet.getSize() <= 0)
+                return intensities;
+
+            List <ColumnInfo> columns = table.getColumns();
+            while (resultSet.next())
+            {
+                Map<String, Object> rowMap = resultSet.getRowMap();
+
+                for(ColumnInfo column : columns)
+                {
+                    //Skip pivot columns
+                    String colName = column.getName();
+                    if(colName.compareToIgnoreCase(intensityColumnName) == 0 || colName.compareToIgnoreCase(rowHeadingColumnName) == 0)
+                        continue;
+
+                    Map<String, Double> intensityMap = intensities.get(column.getLabel());
+                    if (intensityMap == null)
+                    {
+                        intensityMap = new HashMap();
+                        intensities.put(column.getLabel(), intensityMap);
+                    }
+
+                    intensityMap.put((String) rowMap.get(rowHeadingColumnName), (Double)column.getValue(resultSet));
+                }
+            }
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+
+        return intensities;
     }
 }

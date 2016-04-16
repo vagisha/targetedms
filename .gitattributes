@@ -204,6 +204,10 @@ src/org/labkey/targetedms/chromlib/LibStructuralModificationDao.java -text
 src/org/labkey/targetedms/chromlib/LibTransition.java -text
 src/org/labkey/targetedms/chromlib/LibTransitionDao.java -text
 src/org/labkey/targetedms/chromlib/ObjectWithId.java -text
+src/org/labkey/targetedms/clustergrammer/ClustergrammerClient.java -text
+src/org/labkey/targetedms/clustergrammer/ClustergrammerHeatMap.java -text
+src/org/labkey/targetedms/clustergrammer/HeatMap.java -text
+src/org/labkey/targetedms/clustergrammer/HeatMapService.java -text
 src/org/labkey/targetedms/conflict/ConflictPeptide.java -text
 src/org/labkey/targetedms/conflict/ConflictPrecursor.java -text
 src/org/labkey/targetedms/conflict/ConflictProtein.java -text
@@ -420,6 +424,7 @@ webapp/TargetedMS/images/blank.gif -text
 webapp/TargetedMS/images/spectrum.gif -text
 webapp/TargetedMS/jquery/jquery-1.8.3.min.js -text
 webapp/TargetedMS/js/BaseQCPlotPanel.js -text
+webapp/TargetedMS/js/ClustergrammerDialog.js -text
 webapp/TargetedMS/js/LeveyJenningsTrendPlotPanel.js -text
 webapp/TargetedMS/js/LinkVersionsDialog.js -text
 webapp/TargetedMS/js/ParetoPlotPanel.js -text

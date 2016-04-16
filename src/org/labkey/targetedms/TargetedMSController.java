@@ -38,7 +38,6 @@ import org.labkey.api.action.ApiUsageException;
 import org.labkey.api.action.ConfirmAction;
 import org.labkey.api.action.CustomApiForm;
 import org.labkey.api.action.ExportAction;
-import org.labkey.api.action.ExportException;
 import org.labkey.api.action.FormHandlerAction;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasViewContext;
@@ -87,6 +86,11 @@ import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
+import org.labkey.api.reports.LinkReport;
+import org.labkey.api.reports.ReportService;
+import org.labkey.api.reports.model.ViewCategory;
+import org.labkey.api.reports.model.ViewCategoryManager;
+import org.labkey.api.reports.report.ReportDescriptor;
 import org.labkey.api.security.ActionNames;
 import org.labkey.api.security.RequiresLogin;
 import org.labkey.api.security.RequiresPermission;
@@ -125,6 +129,8 @@ import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
 import org.labkey.targetedms.chart.ComparisonChartMaker;
 import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
+import org.labkey.targetedms.clustergrammer.ClustergrammerClient;
+import org.labkey.targetedms.clustergrammer.ClustergrammerHeatMap;
 import org.labkey.targetedms.conflict.ConflictPeptide;
 import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
@@ -190,6 +196,7 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -5604,5 +5611,94 @@ public class TargetedMSController extends SpringActionController
     }
     // ------------------------------------------------------------------------
     // END Method building (link versions) actions
-    // ------------------------------------------------------------------------
+    // ------------------------------------------------------------------------ 1
+
+    @RequiresPermission(InsertPermission.class)
+    public static class ClustergrammerHeatMapAction extends ApiAction<ClustergrammerForm>
+    {
+        @Override
+        public void validateForm(ClustergrammerForm form, Errors errors)
+        {
+            //TODO: validate Title, Description, and selected files
+        }
+
+        @Override
+        public ApiResponse execute(ClustergrammerForm form, BindException errors) throws Exception
+        {
+            Map results = TargetedMSManager.getClustergrammerQuery(getUser(), getContainer());
+            ClustergrammerHeatMap hm = new ClustergrammerHeatMap(results, form.getTitle());
+            ClustergrammerClient client = new ClustergrammerClient();
+            String hmLink = client.generateHeatMap(hm, errors);
+
+            if (hmLink != null)
+            {
+                LinkReport report = (LinkReport) ReportService.get().createReportInstance(LinkReport.TYPE);
+
+                ReportDescriptor rd = report.getDescriptor();
+
+                try
+                {
+                    URLHelper url = new URLHelper(hmLink);
+                    report.setUrl(url);
+                }
+                catch (URISyntaxException e)
+                {
+                    throw new IllegalArgumentException(e.getMessage());
+                }
+
+                rd.setContainer(getContainer().getId());
+                rd.setAuthor(getUser().getUserId());
+                rd.setReportName(form.getTitle());
+                rd.setReportDescription(form.getDescription());
+
+                //TODO: Not sure this is the correct way to use this, but it works...
+                String[] categoryParts = new String[] {"Clustergrammer"};
+                ViewCategory category = ViewCategoryManager.getInstance().ensureViewCategory(getContainer(), getUser(), categoryParts);
+                rd.setCategory(category);
+
+                ReportService.get().saveReport(getViewContext(), rd.getReportName(), report);
+            }
+
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            response.put("heatMapURL", hmLink);
+            return response;
+        }
+    }
+
+    public static class ClustergrammerForm
+    {
+        private String _title;
+        private String _description;
+        private Integer[] _selectedIds;
+
+        public String getTitle()
+        {
+            return _title;
+        }
+
+        public void setTitle(String title)
+        {
+            _title = title;
+        }
+
+        public void setDescription(String description)
+        {
+            _description = description;
+        }
+
+        public String getDescription()
+        {
+            return _description;
+        }
+
+        public Integer[] getSelectedIds()
+        {
+            return _selectedIds;
+        }
+
+        public void setSelectedIds(Integer[] selectedIds)
+        {
+            _selectedIds = selectedIds;
+        }
+    }
 }

@@ -23,6 +23,7 @@ import org.labkey.api.exp.ExperimentRunListView;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.permissions.InsertPermission;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DataView;
@@ -63,6 +64,7 @@ public class TargetedMsRunListView extends ExperimentRunListView
         addClientDependency(ClientDependency.fromPath("Ext4"));
         addClientDependency(ClientDependency.fromPath("targetedms/js/LinkVersionsDialog.js"));
         addClientDependency(ClientDependency.fromPath("targetedms/css/LinkVersionsDialog.css"));
+        addClientDependency(ClientDependency.fromPath("targetedms/js/ClustergrammerDialog.js"));
     }
 
     private void setExpAnnotations(ExperimentAnnotations expAnnotations)
@@ -96,6 +98,7 @@ public class TargetedMsRunListView extends ExperimentRunListView
         super.populateButtonBar(view, bar);
 
         addLinkVersionButton(view, bar);
+        addClusterGrammerButton(view, bar);
 
         if(_viewType == ViewType.EDITABLE_EXPERIMENT_VIEW)
             addExperimentDetailsViewButtons(bar);
@@ -108,6 +111,16 @@ public class TargetedMsRunListView extends ExperimentRunListView
         versionButton.setScript("LABKEY.targetedms.LinkedVersions.showDialog()");
         versionButton.setDisplayPermission(UpdatePermission.class);
         bar.add(versionButton);
+    }
+
+    private void addClusterGrammerButton(DataView view, ButtonBar bar)
+    {
+        ActionButton cgButton = new ActionButton("clustergrammer Heatmap");
+        cgButton.setRequiresSelection(true, 1, null);
+        cgButton.setScript("LABKEY.targetedms.Clustergrammer.showDialog()");
+
+        cgButton.setDisplayPermission(ReadPermission.class);
+        bar.add(cgButton);
     }
 
     private void addExperimentDetailsViewButtons(ButtonBar bar)
