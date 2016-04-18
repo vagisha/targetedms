@@ -3,9 +3,16 @@ package org.labkey.targetedms.query;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.AliasedColumn;
+import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSSchema;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Flattens a "general" and a "specific" table into a single query. For example, can be used to present a single
@@ -43,7 +50,17 @@ public class JoinedTargetedMSTable extends AnnotatedTargetedMSTable
     @NotNull
     public SQLFragment getFromSQL(String alias)
     {
-        SQLFragment result = new SQLFragment("(SELECT ");
+        // Hack for issue 26146 - the filter may include columns that aren't on the "real" table (that is, the more
+        // generalized table), which can cause bad SQL generation by trying to use a WHERE clause on a column
+        // that doesn't exist. Thus, remove filters prior to calling super.getFromSQL() and apply them directly here.
+        SimpleFilter realFilter = getFilter();
+        List<SimpleFilter.FilterClause> clauses = new ArrayList<>(realFilter.getClauses());
+        for (FieldKey fieldKey : realFilter.getAllFieldKeys())
+        {
+            realFilter.deleteConditions(fieldKey);
+        }
+
+        SQLFragment result = new SQLFragment("(SELECT * FROM (SELECT ");
         String separator = "";
         for (ColumnInfo columnInfo : getRealTable().getColumns())
         {
@@ -73,9 +90,20 @@ public class JoinedTargetedMSTable extends AnnotatedTargetedMSTable
         result.append(getRealTable().getPkColumnNames().get(0));
         result.append(" = S.");
         result.append(_specializedTable.getPkColumnNames().get(0));
-        result.append(") ");
+        result.append(") i ");
 
-        result.append(alias);
+        // Re-add the clauses
+        for (SimpleFilter.FilterClause clause : clauses)
+        {
+            realFilter.addClause(clause);
+        }
+
+        // Append them to the generated SQL
+        Map<FieldKey, ColumnInfo> columnMap = Table.createColumnMap(getFromTable(), getFromTable().getColumns());
+        SQLFragment filterFrag = realFilter.getSQLFragment(_rootTable.getSqlDialect(), columnMap);
+        result.append("\n").append(filterFrag).append(") ").append(alias);
+
+
         return result;
     }
 
