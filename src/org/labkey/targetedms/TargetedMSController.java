@@ -5625,7 +5625,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ApiResponse execute(ClustergrammerForm form, BindException errors) throws Exception
         {
-            Map results = TargetedMSManager.getClustergrammerQuery(getUser(), getContainer());
+            Map results = TargetedMSManager.getClustergrammerQuery(getUser(), getContainer(), form.getSelectedIds());
             ClustergrammerHeatMap hm = new ClustergrammerHeatMap(results, form.getTitle());
             ClustergrammerClient client = new ClustergrammerClient();
             String hmLink = client.generateHeatMap(hm, errors);

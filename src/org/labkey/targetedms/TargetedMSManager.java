@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlException;
@@ -1425,27 +1426,33 @@ public class TargetedMSManager
         return timeoutValue;
     }
 
-    public static Map<String, Map<String, Double>> getClustergrammerQuery(User user, Container container)
+    public static Map<String, Map<String, Double>> getClustergrammerQuery(User user, Container container, Integer[] rowIds)
     {
-        //TODO Parameterize for selected files
-        String frag = "SELECT SUM(TotalArea) AS Area, " +
-            "    SampleFileId.SampleName AS SampleName, " +
-            "    PrecursorId.PeptideId.PeptideGroupId.Label AS ProteinName " +
-            "FROM PrecursorChromInfo " +
-            "GROUP BY SampleFileId.SampleName, " +
-            "    PrecursorId.PeptideId.PeptideGroupId.Label " +
-            "PIVOT Area By SampleName ";
+
+        //Set column names
+        String intensityColumnName = "Area";
+        String rowHeadingColumnName = "ProteinName";
+
+        //TODO: translate this into sqlfragmentese
+        String sql = "SELECT\n" +
+                "    SUM(TotalArea) AS " + intensityColumnName + ",\n" +
+                "    SampleFileId.SampleName AS SampleName,\n" +
+                "    PrecursorId.PeptideId.PeptideGroupId.Label AS " + rowHeadingColumnName + "\n" +
+                "FROM \n" +
+                "    PrecursorChromInfo pci, targetedms.targetedmsruns r\n" +
+                "WHERE\n" +
+                "    PrecursorId.PeptideId.PeptideGroupId.RunId = r.File.Id AND r.RowId IN (" + Joiner.on(", ").skipNulls().join(rowIds) + ")\n" +
+                "GROUP BY\n" +
+                "    SampleFileId.SampleName,\n" +
+                "    PrecursorId.PeptideId.PeptideGroupId.Label\n" +
+                "PIVOT " + intensityColumnName + " By SampleName";
 
         QueryDefinition qdef = QueryService.get().createQueryDef(user, container, SchemaKey.fromString(getSchema().getQuerySchemaName()), "ClustergrammerHeatMap");
-        qdef.setSql(frag);
+        qdef.setSql(sql);
         qdef.setIsHidden(true);
 
         List<QueryException> errors = new ArrayList<>();
         TableInfo table = qdef.getTable(errors, true);
-
-        //Since we are pivoting
-        String intensityColumnName = "Area";
-        String rowHeadingColumnName = "ProteinName";
 
         Map<String, Map<String, Double>> intensities = new HashMap();
         try (TableResultSet resultSet = new TableSelector(table).getResultSet())
@@ -1460,7 +1467,7 @@ public class TargetedMSManager
 
                 for(ColumnInfo column : columns)
                 {
-                    //Skip pivot columns
+                    //Skip pivot column and row name column
                     String colName = column.getName();
                     if(colName.compareToIgnoreCase(intensityColumnName) == 0 || colName.compareToIgnoreCase(rowHeadingColumnName) == 0)
                         continue;
