@@ -115,7 +115,7 @@ public class TargetedMsRunListView extends ExperimentRunListView
 
     private void addClusterGrammerButton(DataView view, ButtonBar bar)
     {
-        ActionButton cgButton = new ActionButton("clustergrammer Heatmap");
+        ActionButton cgButton = new ActionButton("Clustergrammer Heatmap");
         cgButton.setRequiresSelection(true, 1, null);
         cgButton.setScript("LABKEY.targetedms.Clustergrammer.showDialog()");
 

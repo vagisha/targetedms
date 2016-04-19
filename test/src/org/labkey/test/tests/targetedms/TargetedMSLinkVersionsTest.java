@@ -102,14 +102,14 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
 
         log("link two versions together");
         clickTab("Runs");
-        LinkVersionsGrid grid = table.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_2_FILE));
+        LinkVersionsGrid grid = table.openLinkVersionsDialogForDocuments(Arrays.asList(QC_1_FILE, QC_2_FILE));
         assertElementNotPresent(LinkVersionsGrid.Elements.replaceFooter);
         grid.clickSave();
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_2_FILE), 0);
 
         log("add third document to version chain");
         clickTab("Runs");
-        grid = table.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE), 3);
+        grid = table.openLinkVersionsDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE), 3);
         grid.waitForGrid(QC_DOCUMENT_NAMES, true); // verify QC_2 document is pulled in by association
         assertElementPresent(LinkVersionsGrid.Elements.replaceFooter);
         assertEquals(2, grid.findRemoveLinkIcons().size());
@@ -118,7 +118,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
 
         log("re-order documents in the existing chain");
         clickTab("Runs");
-        grid = table.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        grid = table.openLinkVersionsDialogForDocuments(QC_DOCUMENT_NAMES);
         assertEquals(3, grid.findRemoveLinkIcons().size());
         grid.reorderVersions(2, 0);
         grid.clickSave();
@@ -130,18 +130,18 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
     {
         log("setup chain for the 3 runs");
         TargetedMSRunsTable table = new TargetedMSRunsTable(this);
-        LinkVersionsGrid grid = table.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        LinkVersionsGrid grid = table.openLinkVersionsDialogForDocuments(QC_DOCUMENT_NAMES);
         grid.clickSave();
 
         log("remove link version from middle of chain");
-        grid = table.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        grid = table.openLinkVersionsDialogForDocuments(QC_DOCUMENT_NAMES);
         assertEquals(3, grid.findRemoveLinkIcons().size());
         grid.removeLinkVersion(1);
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_3_FILE), 0);
 
         log("remove link version from end of chain");
         clickTab("Runs");
-        grid = table.openDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE));
+        grid = table.openLinkVersionsDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE));
         assertEquals(2, grid.findRemoveLinkIcons().size());
         grid.removeLinkVersion(1);
         table.goToDocumentDetails(QC_1_FILE);
@@ -153,7 +153,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
     {
         log("setup chain for the 3 runs");
         TargetedMSRunsTable table = new TargetedMSRunsTable(this);
-        LinkVersionsGrid grid = table.openDialogForDocuments(QC_DOCUMENT_NAMES);
+        LinkVersionsGrid grid = table.openLinkVersionsDialogForDocuments(QC_DOCUMENT_NAMES);
         grid.clickSave();
         verifyDocumentDetailsChain(QC_DOCUMENT_NAMES, 0);
 

@@ -22,9 +22,9 @@ import org.labkey.test.tests.targetedms.TargetedMSLinkVersionsTest;
 import org.labkey.test.util.Ext4Helper;
 import org.openqa.selenium.WebElement;
 
-import static org.junit.Assert.assertTrue;
-
 import java.util.List;
+
+import static org.junit.Assert.assertTrue;
 
 public class LinkVersionsGrid extends Component
 {
@@ -91,7 +91,7 @@ public class LinkVersionsGrid extends Component
 
         // reopen the link versions dialog to verify it was removed
         TargetedMSRunsTable runsTable = new TargetedMSRunsTable(_test);
-        runsTable.openDialogForDocuments(TargetedMSLinkVersionsTest.QC_DOCUMENT_NAMES);
+        runsTable.openLinkVersionsDialogForDocuments(TargetedMSLinkVersionsTest.QC_DOCUMENT_NAMES);
         if (initialRemoveIconCount > 2)
         {
             _test.waitForElements(Elements.removeIcon, initialRemoveIconCount - 1);

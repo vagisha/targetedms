@@ -1433,7 +1433,7 @@ public class TargetedMSManager
         String intensityColumnName = "Area";
         String rowHeadingColumnName = "ProteinName";
 
-        //TODO: translate this into sqlfragmentese
+        //TODO: This query will be replaced once Skyline Updates are ready
         String sql = "SELECT\n" +
                 "    SUM(TotalArea) AS " + intensityColumnName + ",\n" +
                 "    SampleFileId.SampleName AS SampleName,\n" +

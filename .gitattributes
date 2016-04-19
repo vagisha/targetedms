@@ -380,6 +380,7 @@ src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatchGetter.java -text
 src/org/labkey/targetedms/view/spectrum/PeptideSpectrumView.java -text
 src/org/labkey/targetedms/view/spectrum/spectrumView.jsp -text
 src/org/labkey/targetedms/view/summaryChartsView.jsp -text
+test/src/org/labkey/test/components/targetedms/ClustergrammerDialog.java -text
 test/src/org/labkey/test/components/targetedms/GuideSet.java -text
 test/src/org/labkey/test/components/targetedms/GuideSetStats.java -text
 test/src/org/labkey/test/components/targetedms/GuideSetWebPart.java -text
@@ -397,6 +398,7 @@ test/src/org/labkey/test/pages/targetedms/GuideSetPage.java -text
 test/src/org/labkey/test/pages/targetedms/PanoramaAnnotations.java -text
 test/src/org/labkey/test/pages/targetedms/PanoramaDashboard.java -text
 test/src/org/labkey/test/pages/targetedms/ParetoPlotPage.java -text
+test/src/org/labkey/test/tests/targetedms/ClustergrammerTest.java -text
 test/src/org/labkey/test/tests/targetedms/GetDataAPITest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSExperimentIrtTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSExperimentTest.java -text

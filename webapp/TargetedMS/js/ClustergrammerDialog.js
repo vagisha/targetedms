@@ -4,7 +4,7 @@
 
 
 /**
- * Open a dialog to enter some basic info prior to making the request to the clustergrammer service
+ * Open a dialog to enter some basic info prior to making the request to the Clustergrammer service
  */
 Ext4.define('LABKEY.targetedms.Clustergrammer', {
 
@@ -58,7 +58,7 @@ Ext4.define('LABKEY.targetedms.Clustergrammer', {
         var panel = this;
         var win = Ext4.create('Ext.window.Window', {
             modal: true,
-            title: 'clustergrammer Heat Map',
+            title: 'Clustergrammer Heat Map',
             border: false,
             autoShow: true,
             minWidth: 400,
@@ -69,6 +69,7 @@ Ext4.define('LABKEY.targetedms.Clustergrammer', {
                 fieldLabel: 'Report Title',
                 padding: '10 10 0 10',
                 anchor: '100%',
+                id: 'reportTitleEditor',
                 listeners: {
                     render: function (editor) {
                         this.titleEditor = editor;
@@ -82,6 +83,7 @@ Ext4.define('LABKEY.targetedms.Clustergrammer', {
                 fieldLabel: 'Description',
                 padding: '0 10 0 10',
                 anchor: '100%',
+                id: 'reportDescriptionEditor',
                 listeners:{
                     render: function(editor) {
                         editor.setValue(panel.getDefaultDescription(data));
@@ -105,7 +107,7 @@ Ext4.define('LABKEY.targetedms.Clustergrammer', {
                     scope: this,
                     handler: function() {
                         Ext4.Msg.confirm(
-                            'Publish to clustergrammer',
+                            'Publish to Clustergrammer',
                             'Clustergrammer is a third party service, all data sent will be publicly accessible.\nDo you wish to continue?',
                             function(val) {
                                 if (val == 'yes') {

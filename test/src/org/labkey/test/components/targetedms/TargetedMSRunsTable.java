@@ -34,21 +34,17 @@ public class TargetedMSRunsTable extends DataRegionTable
         _test.waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Versions"));
     }
 
-    public LinkVersionsGrid openDialogForDocuments(List<String> documentNames)
+    public LinkVersionsGrid openLinkVersionsDialogForDocuments(List<String> documentNames)
     {
-        return openDialogForDocuments(documentNames, documentNames.size());
+        return openLinkVersionsDialogForDocuments(documentNames, documentNames.size());
     }
 
-    public LinkVersionsGrid openDialogForDocuments(List<String> documentNames, int expectedRunCount)
+    public LinkVersionsGrid openLinkVersionsDialogForDocuments(List<String> documentNames, int expectedCount)
     {
-        uncheckAll();
-        for (String documentName : documentNames)
-            checkCheckbox(getRow("File", documentName));
-
-        clickHeaderButtonByText("Link Versions");
+        openDialogForDocuments("Link Versions", documentNames);
 
         LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(_test);
-        linkVersionsGrid.waitForGrid(documentNames, expectedRunCount, true);
+        linkVersionsGrid.waitForGrid(documentNames, expectedCount, true);
 
         return linkVersionsGrid;
     }
@@ -59,5 +55,24 @@ public class TargetedMSRunsTable extends DataRegionTable
         checkCheckbox(getRow("File", documentName));
         clickHeaderButtonByText("Delete");
         _test.clickButton("Confirm Delete");
+    }
+
+    public ClustergrammerDialog openClustergrammerDialog(List<String> documents)
+    {
+        openDialogForDocuments("Clustergrammer Heatmap", documents);
+
+        ClustergrammerDialog dialog = new ClustergrammerDialog(_test);
+        dialog.waitForDialog();
+
+        return dialog;
+    }
+
+    public void openDialogForDocuments(String buttonText, List<String> documentNames)
+    {
+        uncheckAll();
+        for (String documentName : documentNames)
+            checkCheckbox(getRow("File", documentName));
+
+        clickHeaderButtonByText(buttonText);
     }
 }
