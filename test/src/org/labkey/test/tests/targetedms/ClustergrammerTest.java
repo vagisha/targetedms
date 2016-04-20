@@ -76,9 +76,12 @@ public class ClustergrammerTest extends TargetedMSTest
         //Verify LinkReport was created
         navigateToRunsTab();
         goToManageViews();
+        waitForElement(Locator.linkWithText(acceptConfirmation));
         this.assertElementNotPresent(Locator.linkWithText(declineConfirmation));
         this.assertElementPresent(Locator.linkWithText(acceptConfirmation));
         clickAndWait(Locator.linkWithText(acceptConfirmation), 10000);
+
+        //Verify link navigates to Clustergrammer
         Assert.assertTrue("LinkReport [" + acceptConfirmation + "] to Clustergrammer was broken",
                 getURL().toString().contains(ClustergrammerDialog.CG_REDIRECT_URL));
 

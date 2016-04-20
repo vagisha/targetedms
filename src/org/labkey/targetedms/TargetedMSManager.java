@@ -1479,7 +1479,7 @@ public class TargetedMSManager
                         intensities.put(column.getLabel(), intensityMap);
                     }
 
-                    intensityMap.put((String) rowMap.get(rowHeadingColumnName), (Double)column.getValue(resultSet));
+                    intensityMap.put((String) rowMap.get(rowHeadingColumnName), resultSet.getDouble(column.getAlias()));
                 }
             }
         }
