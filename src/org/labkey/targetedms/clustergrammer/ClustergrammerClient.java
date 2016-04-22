@@ -1,40 +1,36 @@
 package org.labkey.targetedms.clustergrammer;
 
-import com.google.common.io.Files;
-import org.apache.commons.lang3.NotImplementedException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
-import org.apache.http.client.HttpResponseException;
 import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.FileEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.BasicResponseHandler;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
-import org.labkey.api.util.FileUtil;
 import org.springframework.validation.BindException;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
+
+import static org.labkey.api.action.SpringActionController.ERROR_MSG;
 
 /**
  * Created by iansigmon on 4/7/16.
  */
 public class ClustergrammerClient implements HeatMapService
 {
-    //File based endpoint
-    private static final String CLUSTERGRAMMER_ENDPOINT = "http://amp.pharm.mssm.edu/clustergrammer/matrix_upload/";
     //JSON based endpoint
     private static final String CLUSTERGRAMMER_JSON_ENDPOINT = "http://amp.pharm.mssm.edu/clustergrammer/vector_upload/";
+
+    private static final String CG_JSON_TEMPLATE = "{\"title\":\"%s\", \"columns\":[%s]}";
+    private static final String COLUMN_TEMPLATE = "{\"col_name\":\"%s\", \"data\":[%s]}";
+    private static final String VALUE_TEMPLATE = "{\"val\":%E, \"row_name\":\"%s\" }";
+
 
     //Example response JSON
     //    {
@@ -66,7 +62,7 @@ public class ClustergrammerClient implements HeatMapService
                 else
                 {
                     EntityUtils.consume(response.getEntity());
-                    errors.addSuppressed(new HttpResponseException(status.getStatusCode(), status.getReasonPhrase()));
+                    errors.reject(ERROR_MSG, "Request to Clustergrammer failed:\n " + status.getStatusCode() +": " + status.getReasonPhrase());
                 }
             }
         }
@@ -79,57 +75,32 @@ public class ClustergrammerClient implements HeatMapService
         return new StringEntity(serializeToJSON(matrix), ContentType.APPLICATION_JSON);
     }
 
-    public HttpEntity generateHeatMapViaFile(HeatMap matrix) throws Exception
-    {
-        File file = serializeToFile(matrix);
-        return new FileEntity(file, ContentType.APPLICATION_OCTET_STREAM);
-    }
-
-    //Assumes row maps contain columns in same order
-    private File serializeToFile(HeatMap hm) throws FileNotFoundException
-    {
-        File streamFile = new File(FileUtil.getTempDirectory(), FileUtil.makeFileNameWithTimestamp("clustergrammer", "tsv"));
-
-        Map<String, Map<String, Double>> matrix = hm.getMatrix();
-
-        BufferedWriter writer = Files.newWriter(streamFile, StandardCharsets.UTF_8);
-
-        //TODO: serialize matrix to TSV
-        throw new NotImplementedException("");
-    }
-
     private String serializeToJSON(HeatMap hm)
     {
-        Map<String, Map<String, Double>> matrix = hm.getMatrix();
-        StringBuilder sb = new StringBuilder();
+        return String.format(CG_JSON_TEMPLATE, hm.getTitle(), serializeMatrix(hm.getMatrix()));
+    }
 
-        sb.append("{");
-        sb.append("\"title\": \"" + hm.getTitle() + "\",");
-        sb.append("\"columns\":[");
+    private String serializeMatrix(Map<String, Map<String, Double>> matrix)
+    {
+        StringBuilder sb = new StringBuilder();
 
         String comma = "";
         for (String rowKey : matrix.keySet())
         {
-            Map<String, Double> rowMap = matrix.get(rowKey);
+            Map columnMap = matrix.get(rowKey);
             sb.append(comma);
             comma = ",";
 
-            sb.append("{");
-            sb.append("\"col_name\": \"" + rowKey + "\"");
-            sb.append(comma);
-            sb.append("\"data\":[");
-
-            serializeRow(sb, rowMap);
-            sb.append("]}");
+            sb.append(String.format(COLUMN_TEMPLATE, rowKey, serializeColumn(columnMap)));
         }
-
-        sb.append("]}\n");
 
         return sb.toString();
     }
 
-    private void serializeRow(StringBuilder sb, Map<String, Double> rowMap)
+    private String serializeColumn(Map<String, Double> rowMap)
     {
+        StringBuilder sb = new StringBuilder();
+
         String comma = "";
         for (String rowKey : rowMap.keySet())
         {
@@ -139,13 +110,10 @@ public class ClustergrammerClient implements HeatMapService
 
             sb.append(comma);
             comma = ",";
-
-            sb.append("{ ");
-            sb.append("\"val\":" + value);
-            sb.append(comma);
-            sb.append("\"row_name\": \"" + rowKey + "\"");
-            sb.append("} ");
+            sb.append(String.format(VALUE_TEMPLATE, value, rowKey));
         }
+
+        return sb.toString();
     }
 
 }

@@ -86,10 +86,10 @@ import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
-import org.labkey.api.reports.LinkReport;
 import org.labkey.api.reports.ReportService;
 import org.labkey.api.reports.model.ViewCategory;
 import org.labkey.api.reports.model.ViewCategoryManager;
+import org.labkey.api.reports.report.RedirectReport;
 import org.labkey.api.reports.report.ReportDescriptor;
 import org.labkey.api.security.ActionNames;
 import org.labkey.api.security.RequiresLogin;
@@ -5619,7 +5619,11 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void validateForm(ClustergrammerForm form, Errors errors)
         {
-            //TODO: validate Title, Description, and selected files
+            if (form.getTitle() == null)
+                errors.reject(ERROR_MSG, "A Custergrammer report title is required.");
+
+            if (form.getSelectedIds() == null || form.getSelectedIds().length <= 0)
+                errors.reject(ERROR_MSG, "No files selected.");
         }
 
         @Override
@@ -5632,7 +5636,7 @@ public class TargetedMSController extends SpringActionController
 
             if (hmLink != null)
             {
-                LinkReport report = (LinkReport) ReportService.get().createReportInstance(LinkReport.TYPE);
+                RedirectReport report = (RedirectReport) ReportService.get().createReportInstance(ReportService.LINK_REPORT_TYPE);
 
                 ReportDescriptor rd = report.getDescriptor();
 
@@ -5647,11 +5651,10 @@ public class TargetedMSController extends SpringActionController
                 }
 
                 rd.setContainer(getContainer().getId());
-                rd.setAuthor(getUser().getUserId());
+                rd.setOwner(getUser().getUserId());
                 rd.setReportName(form.getTitle());
                 rd.setReportDescription(form.getDescription());
 
-                //TODO: Not sure this is the correct way to use this, but it works...
                 String[] categoryParts = new String[] {"Clustergrammer"};
                 ViewCategory category = ViewCategoryManager.getInstance().ensureViewCategory(getContainer(), getUser(), categoryParts);
                 rd.setCategory(category);

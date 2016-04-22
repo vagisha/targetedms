@@ -26,14 +26,13 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
-import org.labkey.api.data.RuntimeSQLException;
+import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.TableResultSet;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
 import org.labkey.api.exp.AbstractFileXarSource;
@@ -1428,7 +1427,6 @@ public class TargetedMSManager
 
     public static Map<String, Map<String, Double>> getClustergrammerQuery(User user, Container container, Integer[] rowIds)
     {
-
         //Set column names
         String intensityColumnName = "Area";
         String rowHeadingColumnName = "ProteinName";
@@ -1450,42 +1448,33 @@ public class TargetedMSManager
         QueryDefinition qdef = QueryService.get().createQueryDef(user, container, SchemaKey.fromString(getSchema().getQuerySchemaName()), "ClustergrammerHeatMap");
         qdef.setSql(sql);
         qdef.setIsHidden(true);
+        qdef.setIsTemporary(true);
 
         List<QueryException> errors = new ArrayList<>();
         TableInfo table = qdef.getTable(errors, true);
 
-        Map<String, Map<String, Double>> intensities = new HashMap();
-        try (TableResultSet resultSet = new TableSelector(table).getResultSet())
-        {
-            if (resultSet.getSize() <= 0)
-                return intensities;
+        Map<String, Map<String, Double>> intensities = new HashMap<>();
 
+        for (Map rowMap:new TableSelector(table).getMapArray())
+        {
             List <ColumnInfo> columns = table.getColumns();
-            while (resultSet.next())
+
+            for(ColumnInfo column : columns)
             {
-                Map<String, Object> rowMap = resultSet.getRowMap();
+                //Skip pivot column and row name column
+                String colName = column.getName();
+                if(colName.compareToIgnoreCase(intensityColumnName) == 0 || colName.compareToIgnoreCase(rowHeadingColumnName) == 0)
+                    continue;
 
-                for(ColumnInfo column : columns)
+                Map<String, Double> intensityMap = intensities.get(column.getLabel());
+                if (intensityMap == null)
                 {
-                    //Skip pivot column and row name column
-                    String colName = column.getName();
-                    if(colName.compareToIgnoreCase(intensityColumnName) == 0 || colName.compareToIgnoreCase(rowHeadingColumnName) == 0)
-                        continue;
-
-                    Map<String, Double> intensityMap = intensities.get(column.getLabel());
-                    if (intensityMap == null)
-                    {
-                        intensityMap = new HashMap();
-                        intensities.put(column.getLabel(), intensityMap);
-                    }
-
-                    intensityMap.put((String) rowMap.get(rowHeadingColumnName), resultSet.getDouble(column.getAlias()));
+                    intensityMap = new HashMap<>();
+                    intensities.put(column.getLabel(), intensityMap);
                 }
+
+                intensityMap.put((String)rowMap.get(rowHeadingColumnName), (Double)JdbcType.DOUBLE.convert(column.getValue(rowMap)));
             }
-        }
-        catch (SQLException e)
-        {
-            throw new RuntimeSQLException(e);
         }
 
         return intensities;

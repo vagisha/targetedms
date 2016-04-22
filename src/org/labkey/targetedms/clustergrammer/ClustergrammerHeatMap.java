@@ -1,6 +1,5 @@
 package org.labkey.targetedms.clustergrammer;
 
-import java.sql.SQLException;
 import java.util.Map;
 
 /**
@@ -8,13 +7,13 @@ import java.util.Map;
  */
 public class ClustergrammerHeatMap implements HeatMap
 {
-    Map<String, Map<String, Double>> _subjectTable;
-    String title;
+    private Map<String, Map<String, Double>> _subjectTable;
+    private String _title;
 
-    public ClustergrammerHeatMap(Map rs, String title) throws SQLException
+    public ClustergrammerHeatMap(Map rs, String title)
     {
         _subjectTable = rs;
-        this.title = title;
+        this._title = title;
     }
 
     @Override
@@ -26,6 +25,6 @@ public class ClustergrammerHeatMap implements HeatMap
     @Override
     public String getTitle()
     {
-        return this.title;
+        return this._title;
     }
 }
