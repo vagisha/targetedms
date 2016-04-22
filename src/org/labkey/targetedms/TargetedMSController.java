@@ -5630,11 +5630,17 @@ public class TargetedMSController extends SpringActionController
         public ApiResponse execute(ClustergrammerForm form, BindException errors) throws Exception
         {
             Map results = TargetedMSManager.getClustergrammerQuery(getUser(), getContainer(), form.getSelectedIds());
+            if (results.size() == 0)
+            {
+                errors.reject(ERROR_MSG, "No results for the selected file(s)");
+                return null;
+            }
+
             ClustergrammerHeatMap hm = new ClustergrammerHeatMap(results, form.getTitle());
             ClustergrammerClient client = new ClustergrammerClient();
             String hmLink = client.generateHeatMap(hm, errors);
 
-            if (hmLink != null)
+            if (hmLink != null && !errors.hasErrors())
             {
                 RedirectReport report = (RedirectReport) ReportService.get().createReportInstance(ReportService.LINK_REPORT_TYPE);
 

@@ -137,9 +137,16 @@ Ext4.define('LABKEY.targetedms.Clustergrammer', {
                                                         // window.open(response.heatMapURL); //TODO: Open in new tab, gets blocked by pop-up blockers
                                                     }, 2000);
                                                 }),
-                                                failure: function () {
+                                                failure: function (request) {
                                                     mask.hide();
-                                                    LABKEY.Utils.displayAjaxErrorResponse(arguments);
+                                                    win.close();
+                                                    var json = Ext.decode(request.responseText);
+                                                    if (json.exception) {
+                                                        Ext.Msg.alert("Error", json.exception);
+                                                    }
+                                                    else {
+                                                        Ext.Msg.alert("Error", "Heat map generation failed.");
+                                                    }
                                                 }
                                             });
                                         }
