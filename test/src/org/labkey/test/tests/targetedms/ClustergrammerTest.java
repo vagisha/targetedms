@@ -58,17 +58,17 @@ public class ClustergrammerTest extends TargetedMSTest
         ClustergrammerDialog dialog = table.openClustergrammerDialog(Arrays.asList(SProCoP_FILE));
 
         //Verify default title and description contain filename
-        Assert.assertTrue(dialog.getTitle().contains(SProCoP_FILE));
-        Assert.assertTrue(dialog.getDescription().contains(SProCoP_FILE));
+        Assert.assertTrue(dialog.getReportTitle().contains(SProCoP_FILE));
+        Assert.assertTrue(dialog.getReportDescription().contains(SProCoP_FILE));
 
         String declineConfirmation = "Test: Decline confirmation";
-        dialog.setTitle(declineConfirmation);
-        dialog.setDescription(declineConfirmation);
+        dialog.setReportTitle(declineConfirmation);
+        dialog.setReportDescription(declineConfirmation);
         dialog.clickSave(false);
 
         String acceptConfirmation = "Test: Acceptance";
-        dialog.setTitle(acceptConfirmation);
-        dialog.setDescription(acceptConfirmation);
+        dialog.setReportTitle(acceptConfirmation);
+        dialog.setReportDescription(acceptConfirmation);
         dialog.clickSave(true);
         Assert.assertTrue("Was not redirected to Clustergrammer as expected",
                 getURL().toString().contains(ClustergrammerDialog.CG_REDIRECT_URL));
@@ -77,8 +77,8 @@ public class ClustergrammerTest extends TargetedMSTest
         navigateToRunsTab();
         goToManageViews();
         waitForElement(Locator.linkWithText(acceptConfirmation));
-        this.assertElementNotPresent(Locator.linkWithText(declineConfirmation));
-        this.assertElementPresent(Locator.linkWithText(acceptConfirmation));
+        assertElementNotPresent(Locator.linkWithText(declineConfirmation));
+        assertElementPresent(Locator.linkWithText(acceptConfirmation));
         clickAndWait(Locator.linkWithText(acceptConfirmation), 10000);
 
         //Verify link navigates to Clustergrammer

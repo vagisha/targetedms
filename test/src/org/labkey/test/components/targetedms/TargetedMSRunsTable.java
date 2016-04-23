@@ -61,7 +61,7 @@ public class TargetedMSRunsTable extends DataRegionTable
     {
         openDialogForDocuments("Clustergrammer Heatmap", documents);
 
-        ClustergrammerDialog dialog = new ClustergrammerDialog(_test);
+        ClustergrammerDialog dialog = new ClustergrammerDialog(_test.getDriver());
         dialog.waitForDialog();
 
         return dialog;
