@@ -38,13 +38,13 @@ import org.labkey.api.writer.ZipUtil;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.zip.DataFormatException;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.zip.ZipFile;
 
 /**
  * User: vsharma
@@ -260,11 +260,12 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             return false;
         }
 
-        try (FileInputStream fis = new FileInputStream(f);ZipInputStream is = new ZipInputStream(fis))
+        try (ZipFile zipFile = new ZipFile(f))
         {
-            ZipEntry zEntry;
-            while ((zEntry = is.getNextEntry()) != null)
+            Enumeration<? extends ZipEntry> entries = zipFile.entries();
+            while (entries.hasMoreElements())
             {
+                ZipEntry zEntry = entries.nextElement();
                 if ("sky".equalsIgnoreCase(FileUtil.getExtension(zEntry.getName())))
                 {
                     return true;
