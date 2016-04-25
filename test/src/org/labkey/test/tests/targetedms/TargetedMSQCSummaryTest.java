@@ -361,6 +361,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
             log("Validate that the bubble text for the file detail contains '" + bubbleText + "'.");
             assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + tmpString + "'", tmpString.toLowerCase().contains(bubbleText.toLowerCase()));
             qcSummaryWebPart.closeBubble();
+            log("Move the mouse to avoid another hopscotch bubble.");
+            mouseOver(Locator.css("td.labkey-main-icon"));
             waitForElementToDisappear(qcSummaryWebPart.getBubble());
         }
 
