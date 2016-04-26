@@ -15,8 +15,8 @@
  */
 package org.labkey.test.components.targetedms;
 
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.components.Component;
 import org.labkey.test.tests.targetedms.TargetedMSLinkVersionsTest;
 import org.labkey.test.util.Ext4Helper;
@@ -28,9 +28,9 @@ import static org.junit.Assert.assertTrue;
 
 public class LinkVersionsGrid extends Component
 {
-    private BaseWebDriverTest _test;
+    private WebDriverWrapper _test;
 
-    public LinkVersionsGrid(BaseWebDriverTest test)
+    public LinkVersionsGrid(WebDriverWrapper test)
     {
         _test = test;
     }

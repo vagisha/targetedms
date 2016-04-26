@@ -15,23 +15,23 @@
  */
 package org.labkey.test.components.targetedms;
 
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.util.DataRegionTable;
 
 import java.util.List;
 
 public class TargetedMSRunsTable extends DataRegionTable
 {
-    public TargetedMSRunsTable(BaseWebDriverTest test)
+    public TargetedMSRunsTable(WebDriverWrapper test)
     {
         super("TargetedMSRuns", test);
     }
 
     public void goToDocumentDetails(String name)
     {
-        _test.clickAndWait(Locator.linkWithText(name));
-        _test.waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Versions"));
+        _driver.clickAndWait(Locator.linkWithText(name));
+        _driver.waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Versions"));
     }
 
     public LinkVersionsGrid openLinkVersionsDialogForDocuments(List<String> documentNames)
@@ -43,7 +43,7 @@ public class TargetedMSRunsTable extends DataRegionTable
     {
         openDialogForDocuments("Link Versions", documentNames);
 
-        LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(_test);
+        LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(_driver);
         linkVersionsGrid.waitForGrid(documentNames, expectedCount, true);
 
         return linkVersionsGrid;
@@ -54,14 +54,14 @@ public class TargetedMSRunsTable extends DataRegionTable
         uncheckAll();
         checkCheckbox(getRow("File", documentName));
         clickHeaderButtonByText("Delete");
-        _test.clickButton("Confirm Delete");
+        _driver.clickButton("Confirm Delete");
     }
 
     public ClustergrammerDialog openClustergrammerDialog(List<String> documents)
     {
         openDialogForDocuments("Clustergrammer Heatmap", documents);
 
-        ClustergrammerDialog dialog = new ClustergrammerDialog(_test.getDriver());
+        ClustergrammerDialog dialog = new ClustergrammerDialog(_driver.getDriver());
         dialog.waitForDialog();
 
         return dialog;
