@@ -92,10 +92,13 @@ public class JoinedTargetedMSTable extends AnnotatedTargetedMSTable
         result.append(_specializedTable.getPkColumnNames().get(0));
         result.append(") i ");
 
-        // Re-add the clauses
+        // Re-add the clauses, but only the ones associated with a FieldKey because the others wouldn't have been removed above
         for (SimpleFilter.FilterClause clause : clauses)
         {
-            realFilter.addClause(clause);
+            if (!clause.getFieldKeys().isEmpty())
+            {
+                realFilter.addClause(clause);
+            }
         }
 
         // Append them to the generated SQL
