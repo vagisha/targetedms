@@ -33,6 +33,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     enableBrushing: false,
     havePlotOptionsChanged: false,
 
+    // Max number of plots/series to show
+    maxCount: 50,
+
     initComponent : function() {
         Ext4.tip.QuickTipManager.init();
 
@@ -492,8 +495,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
         }
 
-        // Cap the peptide count at 50
-        sql += " ORDER BY Sequence LIMIT 50";
+        sql += " ORDER BY Sequence";
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
@@ -503,7 +505,15 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                 // stash the set of precursor sequences for use with the plot rendering
                 this.precursors = [];
-                for (var i = 0; i < data.rows.length; i++) {
+                if (data.rows.length > this.maxCount) {
+                    Ext4.get(this.countLimitedDivId).update("Limiting display to the first " + this.maxCount + " precursors out of " + data.rows.length + " total");
+                    Ext4.get(this.countLimitedDivId).setStyle("display", "block");
+                }
+                else {
+                    Ext4.get(this.countLimitedDivId).update("");
+                    Ext4.get(this.countLimitedDivId).setStyle("display", "none");
+                }
+                for (var i = 0; i < Math.min(data.rows.length, this.maxCount); i++) {
                     this.precursors.push(data.rows[i].Sequence);
                 }
 

@@ -39,15 +39,18 @@
     int uid = UniqueID.getRequestScopedUID(HttpView.currentRequest());
     String reportPanelId = "reportHeaderPanel-" + uid;
     String plotPanelId = "tiledPlotPanel-" + uid;
+    String countLimitedPanelId = "countLimitedPanel-" + uid;
 %>
 
-<div id=<%=q(reportPanelId)%> class="reportHeaderPanel"></div>
+<div id=<%=q(reportPanelId)%>></div>
+<div id=<%=q(countLimitedPanelId)%> class="countLimitedHeaderPanel"></div>
 <div id=<%=q(plotPanelId)%> class="tiledPlotPanel"></div>
 
 <script type="text/javascript">
         function init() {
             var reportPanelId = <%=q(reportPanelId)%>;
             var plotPanelId = <%=q(plotPanelId)%>;
+            var countLimitedPanelId = <%=q(countLimitedPanelId)%>;
 
             if (Ext4.isIE8) {
                 Ext4.get(plotPanelId).update("<span class='labkey-error'>Unable to render report in Internet Explorer < 9.</span>");
@@ -62,7 +65,7 @@
                         Ext4.get(plotPanelId).update("No data found. Please upload runs using the Data Pipeline or directly from Skyline.");
                     }
                     else {
-                        initializeReportPanels(data, reportPanelId, plotPanelId);
+                        initializeReportPanels(data, reportPanelId, plotPanelId, countLimitedPanelId);
                     }
                 },
                 failure: function(response) {
@@ -71,7 +74,7 @@
             });
         }
 
-        function initializeReportPanels(data, reportPanelId, plotPanelId) {
+        function initializeReportPanels(data, reportPanelId, plotPanelId, countLimitedPanelId) {
             var startDate = new Date(data.rows[0].StartDate);
             var endDate = new Date(data.rows[0].EndDate);
 
@@ -79,6 +82,7 @@
             Ext4.create('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 renderTo: reportPanelId,
                 plotDivId: plotPanelId,
+                countLimitedDivId: countLimitedPanelId,
                 cls: 'themed-panel2',
                 startDate: startDate,
                 endDate: endDate

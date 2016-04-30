@@ -4,6 +4,10 @@
     min-width: 900px;
 }
 
+.countLimitedHeaderPanel {
+    padding: 10px 0 0 0;
+}
+
 .annotation:hover, .guideset-svg-button:hover,
 .guideset-svg-button rect:hover,
 .guideset-svg-button text:hover
