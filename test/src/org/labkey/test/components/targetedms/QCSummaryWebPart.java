@@ -124,7 +124,13 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     public Locator.XPathLocator getAutoQCIcon(int index)
     {
-        return  elements().qcSummaryAutoQCIcon.index(index);
+        Locator.XPathLocator autoQCIcon;
+
+        _test.log("Trying to get the " + index + " autoQCIcon.");
+        autoQCIcon = elements().qcSummaryAutoQCIcon.index(index);
+        _test.assertElementVisible(autoQCIcon);
+
+        return  autoQCIcon;
     }
 
     public Locator.XPathLocator getBubble()
