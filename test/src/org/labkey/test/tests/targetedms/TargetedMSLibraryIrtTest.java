@@ -172,7 +172,7 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
 
     private void checkLogMessage(String message)
     {
-        new PipelineStatusTable(this, false).clickStatusLink(0);
+        new PipelineStatusTable(this).clickStatusLink(0);
         assertTextPresent(message);
     }
 }
