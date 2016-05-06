@@ -86,7 +86,7 @@ public class Molecule extends GeneralMolecule
     {
         StringBuilder key = new StringBuilder();
         key.append(((Molecule) gm).getMassMonoisotopic());
-        key.append("_").append(((MoleculePrecursor)gp).getCharge());
+        key.append("_").append(gp.getCharge());
         return key.toString();
     }
 }

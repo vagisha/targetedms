@@ -201,7 +201,7 @@ public class Peptide extends GeneralMolecule
     {
         StringBuilder key = new StringBuilder();
         key.append(((Peptide) gm).getPeptideModifiedSequence());
-        key.append("_").append(((Precursor) gp).getCharge());
+        key.append("_").append(gp.getCharge());
         return key.toString();
     }
 
