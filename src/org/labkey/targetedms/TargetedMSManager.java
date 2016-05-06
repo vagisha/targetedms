@@ -558,11 +558,11 @@ public class TargetedMSManager
             }
 
             expRun = ExperimentService.get().saveSimpleExperimentRun(expRun,
-                                                                     Collections.<ExpMaterial, String>emptyMap(),
+                                                                     Collections.emptyMap(),
                                                                      inputDatas,
-                                                                     Collections.<ExpMaterial, String>emptyMap(),
+                                                                     Collections.emptyMap(),
                                                                      outputDatas,
-                                                                     Collections.<ExpData, String>emptyMap(),
+                                                                     Collections.emptyMap(),
                                                                      info, _log, false);
 
             run.setExperimentRunLSID(expRun.getLSID());
@@ -748,7 +748,7 @@ public class TargetedMSManager
             representativeRunIds = getCurrentPeptideRepresentativeRunIds(container);
         }
 
-        return representativeRunIds != null ? representativeRunIds : Collections.<Integer>emptyList();
+        return representativeRunIds != null ? representativeRunIds : Collections.emptyList();
     }
 
     private static List<Integer> getCurrentProteinRepresentativeRunIds(Container container)

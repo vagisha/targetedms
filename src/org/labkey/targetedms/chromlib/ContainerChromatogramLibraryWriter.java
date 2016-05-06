@@ -98,7 +98,7 @@ public class ContainerChromatogramLibraryWriter
         _panoramaServer = panoramaServer;
         _container = container;
         _user = user;
-        _representativeRunIds = representativeRunIds != null ? representativeRunIds : Collections.<Integer>emptyList();
+        _representativeRunIds = representativeRunIds != null ? representativeRunIds : Collections.emptyList();
 
         _proteinService = ServiceRegistry.get().getService(ProteinService.class);
     }
@@ -435,7 +435,7 @@ public class ContainerChromatogramLibraryWriter
         for(Precursor precursor: precursors)
         {
             List<Peptide.IsotopeModification> precIsotopeMods = precIsotopeModMap.get(precursor.getIsotopeLabelId());
-            precIsotopeMods = (precIsotopeMods != null) ? precIsotopeMods : Collections.<Peptide.IsotopeModification>emptyList();
+            precIsotopeMods = (precIsotopeMods != null) ? precIsotopeMods : Collections.emptyList();
 
             LibPrecursor libPrecursor = makeLibPrecursor(precursor, precIsotopeMods);
             libPeptide.addPrecursor(libPrecursor);

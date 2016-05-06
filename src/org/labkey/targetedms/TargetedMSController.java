@@ -1260,7 +1260,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<Replicate> getReplicatesFilter()
         {
-            return _replicatesFilter != null ? _replicatesFilter : Collections.<Replicate>emptyList();
+            return _replicatesFilter != null ? _replicatesFilter : Collections.emptyList();
         }
         public void setReplicatesFilter(List<Replicate> replciates)
         {
@@ -1269,7 +1269,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<String> getReplicateAnnotationNameList()
         {
-            return _replicateAnnotationNameList != null ? _replicateAnnotationNameList : Collections.<String>emptyList();
+            return _replicateAnnotationNameList != null ? _replicateAnnotationNameList : Collections.emptyList();
         }
 
         public void setReplicateAnnotationNameList(List<String> replicateAnnotationNameList)
@@ -1279,7 +1279,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<ReplicateAnnotation> getReplicateAnnotationValueList()
         {
-            return _replicateAnnotationValueList != null ? _replicateAnnotationValueList : Collections.<ReplicateAnnotation>emptyList();
+            return _replicateAnnotationValueList != null ? _replicateAnnotationValueList : Collections.emptyList();
         }
 
         public void setReplicateAnnotationValueList(List<ReplicateAnnotation> replicateAnnotationValueList)
@@ -2893,7 +2893,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<Replicate> getReplicateList()
         {
-            return _replicateList != null ? _replicateList : Collections.<Replicate>emptyList();
+            return _replicateList != null ? _replicateList : Collections.emptyList();
         }
 
         public void setReplicateList(List<Replicate> replicateList)
@@ -2903,7 +2903,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<String> getReplicateAnnotationNameList()
         {
-            return _replicateAnnotationNameList != null ? _replicateAnnotationNameList : Collections.<String>emptyList();
+            return _replicateAnnotationNameList != null ? _replicateAnnotationNameList : Collections.emptyList();
         }
 
         public void setReplicateAnnotationNameList(List<String> replicateAnnotationNameList)
@@ -2913,7 +2913,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<ReplicateAnnotation> getReplicateAnnotationValueList()
         {
-            return _replicateAnnotationValueList != null ? _replicateAnnotationValueList : Collections.<ReplicateAnnotation>emptyList();
+            return _replicateAnnotationValueList != null ? _replicateAnnotationValueList : Collections.emptyList();
         }
 
         public void setReplicateAnnotationValueList(List<ReplicateAnnotation> replicateAnnotationValueList)
@@ -2923,7 +2923,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<Peptide> getPeptideList()
         {
-            return _peptideList != null ? _peptideList : Collections.<Peptide>emptyList();
+            return _peptideList != null ? _peptideList : Collections.emptyList();
         }
 
         public void setPeptideList(List<Peptide> peptideList)
@@ -2933,7 +2933,7 @@ public class TargetedMSController extends SpringActionController
 
         public List<Molecule> getMoleculeList()
         {
-            return _moleculeList != null ? _moleculeList : Collections.<Molecule>emptyList();
+            return _moleculeList != null ? _moleculeList : Collections.emptyList();
         }
 
         public void setMoleculeList(List<Molecule> moleculeList)
@@ -3664,7 +3664,7 @@ public class TargetedMSController extends SpringActionController
 
             // construct new filename
             String fileName = ChromatogramLibraryUtils.getDownloadFileName(container, libraryRevision);
-            PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.<String, String>emptyMap(), fileName, new FileInputStream(chromLibFile), true);
+            PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), fileName, new FileInputStream(chromLibFile), true);
 
             return null;
         }

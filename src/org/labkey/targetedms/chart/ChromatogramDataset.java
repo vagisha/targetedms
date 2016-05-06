@@ -1167,7 +1167,7 @@ public abstract class ChromatogramDataset
         @Override
         public List<ChartAnnotation> getChartAnnotations()
         {
-            return _annotation != null ?  Collections.singletonList(_annotation) : Collections.<ChartAnnotation>emptyList();
+            return _annotation != null ?  Collections.singletonList(_annotation) : Collections.emptyList();
         }
 
         @Override
