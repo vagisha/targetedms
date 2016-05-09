@@ -406,7 +406,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         {
             this.peptidesInSinglePlotCheckbox = Ext4.create('Ext.form.field.Checkbox', {
                 id: 'peptides-single-plot',
-                boxLabel: 'Show All Peptides in Single Plot',
+                boxLabel: 'Show All Fragments in Single Plot',
                 checked: this.singlePlot,
                 listeners: {
                     scope: this,
@@ -481,21 +481,21 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var baseTableName = chartTypeProps.baseTableName;
         var baseLkFieldKey = chartTypeProps.baseLkFieldKey;
 
-        var sql = "SELECT DISTINCT " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence FROM " + baseTableName
-            + ' WHERE ' + baseLkFieldKey + 'PrecursorId.Id IS NOT NULL'; // issue 25930: filter out small molecule data for release16.1
-        var separator = ' AND ';
+        var sql = "SELECT DISTINCT COALESCE(" + baseLkFieldKey + "PrecursorId.ModifiedSequence, " + baseLkFieldKey + "MoleculePrecursorId.CustomIonName) AS Fragment "
+                + "\n FROM " + baseTableName + "\n";
+        var separator = ' WHERE ';
+
         // CAST as DATE to ignore time portion of value
-        if (this.startDate)
-        {
+        if (this.startDate) {
             sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) >= '" + this.startDate + "'";
             separator = " AND ";
         }
-        if (this.endDate)
-        {
+
+        if (this.endDate) {
             sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
         }
 
-        sql += " ORDER BY Sequence";
+        sql += " ORDER BY Fragment";
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
@@ -513,8 +513,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     Ext4.get(this.countLimitedDivId).update("");
                     Ext4.get(this.countLimitedDivId).setStyle("display", "none");
                 }
+
                 for (var i = 0; i < Math.min(data.rows.length, this.maxCount); i++) {
-                    this.precursors.push(data.rows[i].Sequence);
+                    this.precursors.push(data.rows[i].Fragment);
                 }
 
                 this.getAnnotationData();
@@ -669,17 +670,19 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             whereClause += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
         }
 
-        var guideSetStatsJoinClause = "ON X.Sequence = stats.Sequence AND ((X.AcquiredTime >= stats.TrainingStart "
+        var guideSetStatsJoinClause = "ON X.Fragment = stats.Sequence AND ((X.AcquiredTime >= stats.TrainingStart "
                 + "AND X.AcquiredTime < stats.ReferenceEnd) OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))";
 
         // Build query to get the values and mean/stdDev ranges for each data point
-        var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Sequence,"
+        var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Fragment,"
             + "\n    X.AcquiredTime, X.FilePath," + valueSelectList
             + "\nCASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange,"
-            + "\nstats.GuideSetId, stats.Mean, stats.StandardDev, stats.TrainingStart"
-            + "\nFROM (SELECT " + baseLkFieldKey + "PrecursorId.Id AS PrecursorId,"
+            + "\nstats.GuideSetId, stats.Mean, stats.StandardDev, stats.TrainingStart,"
+            + "\nX.IsProteomics"
+            + "\nFROM (SELECT COALESCE(" + baseLkFieldKey + "PrecursorId.Id, "+ baseLkFieldKey + "MoleculePrecursorId.Id) AS PrecursorId,"
             + "\n      " + baseLkFieldKey + "Id AS PrecursorChromInfoId,"
-            + "\n      " + baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence,"
+            + "\n       COALESCE(" + baseLkFieldKey + "PrecursorId.ModifiedSequence, " + baseLkFieldKey + "MoleculePrecursorId.CustomIonName) AS Fragment,"
+            + "\n       CASE WHEN " + baseLkFieldKey + "PrecursorId.Id IS NOT NULL THEN TRUE ELSE FALSE END AS IsProteomics,"
             + "\n      " + baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
             + "\n      " + baseLkFieldKey + "SampleFileId.FilePath AS FilePath,"
             + "\n      " + valueInnerSelectList
@@ -689,7 +692,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: sql,
-            sort: 'Sequence, AcquiredTime',
+            sort: 'Fragment, AcquiredTime',
             scope: this,
             success: function(data) {
                 this.plotDataRows = data.rows;
@@ -707,10 +710,11 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         for (var i = 0; i < this.plotDataRows.length; i++)
         {
             var row = this.plotDataRows[i];
-            var sequence = row['Sequence'];
+            var sequence = row['Fragment'];
+            var isProteomics = row['IsProteomics'];
 
             if (!this.sequencePlotData[sequence]) {
-                this.sequencePlotData[sequence] = {sequence: sequence, data: [], min: null, max: null};
+                this.sequencePlotData[sequence] = {sequence: sequence, data: [], min: null, max: null, isProteomics: isProteomics};
             }
 
             var data = {
@@ -721,7 +725,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 FilePath: row['FilePath'], // keep in data for hover text display
                 fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
                 date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
-                groupedXTick: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null
+                groupedXTick: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
+                IsProteomics: isProteomics //needed for plot point click handler
             };
 
             // if a guideSetId is defined for this row, include the guide set stats values in the data object
@@ -1015,7 +1020,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                 this.addGuideSetTrainingRangeToPlot(plot, precursorInfo, this.guideSetTrainingData);
 
-                this.createExportToPDFButton(id, "QC Plot for peptide " + precursorInfo.sequence, "QC Plot-"+precursorInfo.sequence);
+                this.createExportToPDFButton(id, "QC Plot for fragment " + precursorInfo.sequence, "QC Plot-"+precursorInfo.sequence);
             }
         }
 
@@ -1062,12 +1067,34 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var chartTypeProps = this.getChartTypePropsByName(this.chartType),
             yLeftIndex = this.getYAxisIndex('yLeft'),
             yRightIndex = this.getYAxisIndex('yRight'),
+            yAxisCount = yRightIndex > -1 ? 2 : 1, //Will only have a right if there is already a left y-axis
             groupColors = this.getColorRange(),
             newLegendData = Ext4.Array.clone(this.legendData),
             combinePlotData = {min: null, max: null, data: []},
             lengthOfLongestPeptide = 1,
+            proteomicsLegend = [{ //Temp holder for proteomics legend labels
+                text: 'Peptides',
+                separator: true
+            }],
+            ionLegend = [{ //Temp holder for small molecule legend labels
+                text: 'Ions',
+                separator: true
+            }],
             showLogInvalid,
             precursorInfo;
+
+        //Add yLeftTitle separator to Legend sections
+        if (yLeftIndex > -1) {
+            proteomicsLegend.push({
+                text: chartTypeProps.colNames[yLeftIndex].title,
+                separator: true
+            });
+
+            ionLegend.push({
+                text: chartTypeProps.colNames[yLeftIndex].title,
+                separator: true
+            });
+        }
 
         // traverse the precursor list for: calculating the longest legend string and combine the plot data
         for (var i = 0; i < this.precursors.length; i++)
@@ -1088,20 +1115,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
 
             showLogInvalid = showLogInvalid || precursorInfo.showLogInvalid;
-        }
 
-        // add the sequence name for each group to the legend, including the metric title if we have multiple series
-        if (true || this.isMultiSeries())
-        {
-            newLegendData.push({
-                text: yLeftIndex > -1 ? chartTypeProps.colNames[yLeftIndex].title : 'Peptide',
-                separator: true
-            });
-        }
-        for (var i = 0; i < this.precursors.length; i++)
-        {
-            precursorInfo = this.sequencePlotData[this.precursors[i]];
-            newLegendData.push({
+            var appropriateLegend = precursorInfo.isProteomics ?  proteomicsLegend : ionLegend;
+
+            appropriateLegend.push({
                 name: precursorInfo.sequence + (yLeftIndex > -1 ? '|valueyLeft' : ''),
                 text: precursorInfo.sequence,
                 color: groupColors[i % groupColors.length]
@@ -1109,17 +1126,23 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         // add the sequence name for each group to the legend again for the yRight axis metric series
-        if (yRightIndex > -1)
-        {
-            newLegendData.push({
+        if (yRightIndex > -1) {
+            proteomicsLegend.push({
+                text: chartTypeProps.colNames[yRightIndex].title,
+                separator: true
+            });
+
+            ionLegend.push({
                 text: chartTypeProps.colNames[yRightIndex].title,
                 separator: true
             });
 
             for (var i = 0; i < this.precursors.length; i++)
             {
+                var appropriateLegend = precursorInfo.isProteomics ?  proteomicsLegend : ionLegend;
+
                 precursorInfo = this.sequencePlotData[this.precursors[i]];
-                newLegendData.push({
+                appropriateLegend.push({
                     name: precursorInfo.sequence + '|valueyRight',
                     text: precursorInfo.sequence,
                     color: groupColors[(this.precursors.length + i) % groupColors.length]
@@ -1127,8 +1150,17 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
         }
 
+        //Add legends if there is at least one non-separator label
+        if (proteomicsLegend.length > yAxisCount + 1) {
+            newLegendData = newLegendData.concat(proteomicsLegend);
+        }
+
+        if (ionLegend.length > yAxisCount + 1) {
+            newLegendData = newLegendData.concat(ionLegend);
+        }
+
         var id = 'combinedPlot';
-        this.addPlotWebPartToPlotDiv(id, 'All Peptides', this.plotDivId, 'qc-plot-wp');
+        this.addPlotWebPartToPlotDiv(id, 'All Fragments', this.plotDivId, 'qc-plot-wp');
         this.showInvalidLogMsg(id, showLogInvalid);
 
         var ljProperties = {
@@ -1172,7 +1204,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             },
             labels : {
                 main: {
-                    value: "All Peptides",
+                    value: "All Fragments",
                     visibility: 'hidden'
                 },
                 yLeft: {
@@ -1194,7 +1226,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         this.addGuideSetTrainingRangeToPlot(plot, combinePlotData, this.guideSetTrainingDataUniqueObjects);
 
-        this.createExportToPDFButton(id, "QC Combined Plot for All Peptides", "QC Combined Plot");
+        this.createExportToPDFButton(id, "QC Combined Plot for All Fragments", "QC Combined Plot");
 
         return true;
     },
@@ -1228,7 +1260,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     plotPointClick : function(event, row) {
-        var url = LABKEY.ActionURL.buildURL('targetedms', "precursorAllChromatogramsChart", LABKEY.ActionURL.getContainer(), {
+        //Chose action target based on precursor type
+        var action = row.IsProteomics ? "precursorAllChromatogramsChart" : "moleculePrecursorAllChromatogramsChart";
+
+        var url = LABKEY.ActionURL.buildURL('targetedms', action, LABKEY.ActionURL.getContainer(), {
                     id: row.PrecursorId,
                     chromInfoId: row.PrecursorChromInfoId
                 });

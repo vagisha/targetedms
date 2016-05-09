@@ -21,8 +21,8 @@ AVG(AverageMassErrorPPM) AS Mean,
 STDDEV(AverageMassErrorPPM) AS StandardDev
 FROM guideset gs
 LEFT JOIN (
-   SELECT PrecursorId.Id AS PrecursorId,
-   PrecursorId.ModifiedSequence AS Sequence,
+   SELECT COALESCE(PrecursorId.Id, MoleculePrecursorId.Id) AS PrecursorId,
+   COALESCE(PrecursorId.ModifiedSequence, MoleculePrecursorId.CustomIonName) AS Sequence,
    SampleFileId.AcquiredTime AS AcquiredTime,
    AverageMassErrorPPM
    FROM precursorchrominfo

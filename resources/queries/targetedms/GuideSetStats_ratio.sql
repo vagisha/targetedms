@@ -20,8 +20,8 @@ AVG(AreaRatio) AS Mean,
 STDDEV(AreaRatio) AS StandardDev
 FROM guideset gs
 LEFT JOIN (
-   SELECT PrecursorChromInfoId.PrecursorId.Id AS PrecursorId,
-   PrecursorChromInfoId.PrecursorId.ModifiedSequence AS Sequence,
+   SELECT COALESCE(PrecursorChromInfoId.PrecursorId.Id, PrecursorChromInfoId.MoleculePrecursorId.Id) AS PrecursorId,
+   COALESCE(PrecursorChromInfoId.PrecursorId.ModifiedSequence, PrecursorChromInfoId.MoleculePrecursorId.CustomIonName) AS Sequence,
    PrecursorChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
    AreaRatio
    FROM precursorarearatio

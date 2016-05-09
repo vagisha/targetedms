@@ -624,10 +624,11 @@ public class TargetedMSController extends SpringActionController
         sql.append(" WHERE r.Container = ?)").add(container.getId());
         properties.put("fileCount", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class));
 
-        // # precursors tracked, count of distinct ModifiedSequence values in targetedms.Precursor
-        sql = new SQLFragment("(SELECT COUNT(DISTINCT p.ModifiedSequence) FROM ").append(TargetedMSManager.getTableInfoPrecursor(), "p");
-        sql.append(" JOIN ").append(TargetedMSManager.getTableInfoIsotopeLabel(), "i").append(" ON p.IsotopeLabelId = i.Id");
-        sql.append(" JOIN ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON i.RunId = r.Id");
+        // # precursors tracked, count of distinct precursors. Include peptides and small molecules
+        sql = new SQLFragment("(SELECT COUNT(DISTINCT gp.Id) FROM ").append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
+        sql.append(" JOIN ").append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON gp.GeneralMoleculeId = gm.Id");
+        sql.append(" JOIN ").append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(" ON gm.PeptideGroupId = pg.Id");
+        sql.append(" JOIN ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON pg.RunId = r.Id");
         sql.append(" WHERE r.Container = ?)").add(container.getId());
         properties.put("precursorCount", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class));
 
