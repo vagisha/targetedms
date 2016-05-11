@@ -71,7 +71,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             + "\nSUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR"
             + "\n   X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers"
             + "\nFROM ("
-            + "\n   SELECT " + chartTypeProps.baseLkFieldKey + "PrecursorId.ModifiedSequence AS Sequence,"
+            + "\n   SELECT COALESCE(" + chartTypeProps.baseLkFieldKey + "PrecursorId.ModifiedSequence, " + chartTypeProps.baseLkFieldKey + "MoleculePrecursorId.CustomIonName) AS Sequence,"
             + "\n   " + chartTypeProps.baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
             + "\n   " + chartTypeProps.colName + " AS Value"
             + "\n   FROM " + chartTypeProps.baseTableName
