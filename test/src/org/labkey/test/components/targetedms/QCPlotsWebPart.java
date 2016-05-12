@@ -411,6 +411,11 @@ public final class QCPlotsWebPart extends BodyWebPart
             return elements().legendItem.containing(text);
     }
 
+    public String getOverflowWarningText()
+    {
+        return elements().overflowWarning.getText();
+    }
+
     @Override
     protected Elements elements()
     {
@@ -427,6 +432,7 @@ public final class QCPlotsWebPart extends BodyWebPart
         Checkbox singlePlotCheckbox = new Checkbox(new LazyWebElement(Locator.css("#peptides-single-plot input"), this));
 
         WebElement plotPanel = new LazyWebElement(Locator.css("div.tiledPlotPanel"), this);
+        WebElement overflowWarning = new LazyWebElement(Locator.css("div.countLimitedHeaderPanel"), this);
 
         List<WebElement> findPlots() { return Locator.css("table.qc-plot-wp").waitForElements(plotPanel, 20000);}
 

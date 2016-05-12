@@ -17,6 +17,7 @@ package org.labkey.test.tests.targetedms;
 
 import org.apache.commons.collections15.Bag;
 import org.apache.commons.collections15.bag.HashBag;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -245,7 +246,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
         qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.TPAREAS);
 
-        // check that there is two series per plot by doing a point count by color
+        // check that there are two series per plot by doing a point count by color
         int count = qcPlotsWebPart.getPointElements("fill", yLeftColor, false).size();
         assertEquals("Unexpected number of points for yLeft metric", pointsPerSeries * PRECURSORS.length, count);
         count = qcPlotsWebPart.getPointElements("fill", yRightColor, false).size();
@@ -394,6 +395,34 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot4-exportToPDFbutton"));
         assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot5-exportToPDFbutton"));
         assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot6-exportToPDFbutton"));
+    }
+
+    @Test
+    public void testSmallMoleculeQC()
+    {
+        String subFolderName = "Small Molecule QC Plot Test";
+        setupSubfolder(getProjectName(), subFolderName, FolderType.QC); //create a Panorama folder of type QC
+
+        importData(SMALL_MOLECULE);
+        clickFolder(subFolderName);
+        verifyQcSummary(1, 5, 186);
+
+        QCPlotsWebPart qcPlotsWebPart = new QCPlotsWebPart(this.getWrappedDriver());
+
+        Assert.assertEquals("Unexpected overflow warning text","Limiting display to the first 50 precursors out of 91 total", qcPlotsWebPart.getOverflowWarningText());
+        Assert.assertEquals("Unexpected number of plots", 50, qcPlotsWebPart.getPlots().size());
+
+        //select "Show All Peptides in Single Plot"
+        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
+
+        //Check for clickable pdf button for Combined plot
+        clickAndWaitForDownload(Locator.css("#combinedPlot-exportToPDFbutton > a"));
+
+        //deselect "Show All Peptides in Single Plot"
+        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, 50);
+
+        //Check for no. of pdf buttons for individual plots
+        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot3-exportToPDFbutton"));
     }
 
     private void verifyRow(DataRegionTable drt, int row, String sampleName, String skylineDocName)

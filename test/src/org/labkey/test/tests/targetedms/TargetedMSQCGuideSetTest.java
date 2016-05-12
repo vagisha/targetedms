@@ -62,6 +62,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     private static GuideSet gs4 = new GuideSet("2013/08/21 07:56:12", "2013/08/21 13:15:01", "fourth guide set, four data points in range", 4);
     private static GuideSet gs5 = new GuideSet("2013/08/27 03:00", "2013/08/31 00:00", "fifth guide set, extends beyond last initial data point with two data points in range");
 
+    private static GuideSet gsSmallMolecule = new GuideSet("2014/07/15 12:40", "2014/07/15 13:40", "Guide set for small molecules");
+
 
     @Override
     protected String getProjectName()
@@ -178,7 +180,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         verifyTicksOnPlots(paretoPlotsWebPart, 3);
         verifyDownloadableParetoPlotPdf();
-        verifyNavigationToPanoramaDashboard(3, 0);
+        verifyNavigationToPanoramaDashboard(3, 0, QCPlotsWebPart.ChartType.PEAK, true);
     }
 
     @Test
@@ -194,6 +196,26 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         paretoPlotsWebPart.clickLeveyJenningsLink(this);
 
         assertElementPresent(Locator.tagWithClass("span", "labkey-wp-title-text").withText(QCPlotsWebPart.DEFAULT_TITLE));
+    }
+
+    @Test
+    public void testSmallMoleculePareto()
+    {
+        String subFolderName = "Small Molecule Pareto Plot Test";
+        setupSubfolder(getProjectName(), subFolderName, FolderType.QC); //create a Panorama folder of type QC
+
+        importData(SMALL_MOLECULE);
+        createGuideSet(gsSmallMolecule, null, subFolderName);
+        verifyGuideSetSmallMoleculeStats(gsSmallMolecule);
+
+        clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
+        ParetoPlotPage paretoPage = new ParetoPlotPage(getDriver());
+        ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
+
+        verifyTicksOnPlots(paretoPlotsWebPart, 1);
+
+        clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-1-exportToPDFbutton > a"));
+        verifyNavigationToPanoramaDashboard(1, 0, QCPlotsWebPart.ChartType.FWHM, false);
     }
 
     private void verifyGuideSetRelatedElementsForPlots(QCPlotsWebPart qcPlotsWebPart, int visibleTrainingRanges, List<Pair<String, Integer>> shapeCounts, int axisTickCount)
@@ -312,12 +334,31 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         validateGuideSetStats(gs);
     }
 
+    private void verifyGuideSetSmallMoleculeStats(GuideSet gs)
+    {
+        String precursor = "C16";
+
+        gs.addStats(new GuideSetStats("retentionTime", 2, precursor, 0.7729333639144897, 9.424035327035906E-5));
+        gs.addStats(new GuideSetStats("peakArea", 2, precursor, 2.4647615E7, 5061166.2838173965));
+        gs.addStats(new GuideSetStats("fwhm", 2, precursor, 0.023859419859945774, 0.0010710133238455678));
+        gs.addStats(new GuideSetStats("fwb", 2, precursor, 0.11544176936149597, 0.012810408164340708));
+        gs.addStats(new GuideSetStats("ratio", 0));
+        gs.addStats(new GuideSetStats("transitionPrecursorRatio", 0, precursor, null, null));
+
+        validateGuideSetStats(gs);
+    }
+
     private void createGuideSet(GuideSet guideSet)
     {
         createGuideSet(guideSet, null);
     }
 
     private void createGuideSet(GuideSet guideSet, String expectErrorMsg)
+    {
+        createGuideSet(guideSet, expectErrorMsg, null);
+    }
+
+    private void createGuideSet(GuideSet guideSet, String expectErrorMsg, String subfolder)
     {
         if (guideSet.getBrushSelectedPoints() != null)
         {
@@ -335,20 +376,24 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         }
 
         if (expectErrorMsg == null)
-            addRowIdForCreatedGuideSet(guideSet);
+            addRowIdForCreatedGuideSet(guideSet, subfolder);
     }
 
-    private void addRowIdForCreatedGuideSet(GuideSet guideSet)
+    private void addRowIdForCreatedGuideSet(GuideSet guideSet, String subfolder)
     {
         if (!"Guide Sets".equals(getUrlParam("pageId", true)))
             clickTab("Guide Sets");
 
-        GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this, getProjectName());
+        String projectName = subfolder == null ? getProjectName() : getProjectName() + "/" + subfolder;
+
+        GuideSetWebPart guideSetWebPart = new GuideSetWebPart(this, projectName);
         guideSet.setRowId(guideSetWebPart.getRowId(guideSet));
     }
 
     private void verifyTicksOnPlots(ParetoPlotsWebPart paretoPlotsWebPart, int guideSetNum)
     {
+        paretoPlotsWebPart.waitForTickLoad(guideSetNum);
+
         List<String> ticks = paretoPlotsWebPart.getTicks(guideSetNum);
 
         for(String chartType : ticks)
@@ -361,9 +406,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-3-exportToPDFbutton > a"));
     }
 
-    private void verifyNavigationToPanoramaDashboard(int guideSetNum, int barPlotNum)
+    private void verifyNavigationToPanoramaDashboard(int guideSetNum, int barPlotNum, QCPlotsWebPart.ChartType chartType, Boolean checkEndDate)
     {
-        //click on "Peak Area" bar
+        //click on 1st bar
         clickAndWait(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + "-" + barPlotNum + " > a:nth-child(1) > rect"));
 
         //check navigation to 'Panorama Dashboard' tab
@@ -373,13 +418,14 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
 
         //test for correct chart type
-        assertEquals(QCPlotsWebPart.ChartType.PEAK, qcPlotsWebPart.getCurrentChartType());
+        assertEquals(chartType, qcPlotsWebPart.getCurrentChartType());
 
         //compare url Start Date with input form Start Date
         assertEquals("startDate in the URL does not equal 'Start Date' on the page", parseUrlDate(getUrlParam("startDate", true)), parseFormDate(qcPlotsWebPart.getCurrentStartDate()));
 
         //compare url End Date with input form End Date
-        assertEquals("endDate in the URL does not equal 'End Date' on the page", parseUrlDate(getUrlParam("endDate", true)), parseFormDate(qcPlotsWebPart.getCurrentEndDate()));
+        if(checkEndDate)
+            assertEquals("endDate in the URL does not equal 'End Date' on the page", parseUrlDate(getUrlParam("endDate", true)), parseFormDate(qcPlotsWebPart.getCurrentEndDate()));
     }
 
     private Date parseUrlDate(String urlDate)

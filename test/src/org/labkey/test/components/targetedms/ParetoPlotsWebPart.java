@@ -112,6 +112,12 @@ public class ParetoPlotsWebPart extends BodyWebPart
         test.clickAndWait(elements().leveyJenningsLink); //click on the link to take user to Levey-Jennings plot
     }
 
+    public void waitForTickLoad(int guideSetNum)
+    {
+        _test.waitForElement(Locator.css("#paretoPlot-GuideSet-" + guideSetNum +
+                " > svg > g:nth-child(1) > g.tick-text > a:nth-child(1)"));
+    }
+
     @Override
     protected Elements elements()
     {
