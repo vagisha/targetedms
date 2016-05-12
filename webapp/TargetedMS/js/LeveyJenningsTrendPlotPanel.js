@@ -1253,7 +1253,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     plotHoverTextDisplay : function(row, valueName){
         return (row[valueName + 'Title'] != undefined ? 'Metric: ' + row[valueName + 'Title'] + '\n' : '')
-            + 'Sequence: ' + row['sequence']
+            + (row.IsProteomics ? 'Sequence: ' : 'Fragment: ') + row['sequence']
             + '\nAcquired: ' + row['fullDate'] + ", "
             + '\nValue: ' + (valueName ? row[valueName] : row.value) + ", "
             + '\nFile Path: ' + row['FilePath'];
