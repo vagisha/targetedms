@@ -36,10 +36,25 @@ public class Chromatogram extends SkylineEntity
     public static final int SIZE4 = (Float.SIZE + 8 * Integer.SIZE + Integer.SIZE + Long.SIZE) / 8;
     // Grown slightly in format version 5
     public static final int SIZE5 = (Double.SIZE + 7 * Integer.SIZE + 5 * Short.SIZE + 2 * Byte.SIZE + Long.SIZE) / 8;
+    // SKYD 11 stores the start time, end time and uncompressed size of the peaks data.
+    public static final int SIZE11 = SIZE5
+                                     + (Integer.SIZE   // UncompressedSize
+                                     + Float.SIZE      // _startTime
+                                     + Float.SIZE      // _endTime
+                                     + Integer.SIZE    // Align2
+                                       ) / 8;
 
     public static int getSize(int formatVersion)
     {
-        return (formatVersion > SkylineBinaryParser.FORMAT_VERSION_CACHE_4 ? SIZE5 : SIZE4);
+        if(formatVersion < SkylineBinaryParser.FORMAT_VERSION_CACHE_5)
+        {
+            return SIZE4;
+        }
+        else if(formatVersion < SkylineBinaryParser.FORMAT_VERSION_CACHE_11)
+        {
+            return SIZE5;
+        }
+        return SIZE11;
     }
 
     private int _runId;
@@ -55,9 +70,11 @@ public class Chromatogram extends SkylineEntity
     private int _maxPeakIndex;
     private int _numPoints;
     private int _compressedSize;
-    private int _uncompressedSize;
     private short _flags;
     private long _locationPoints;
+
+    // Added in SKYD 11
+    private int _uncompressedSize;
 
     private float[] _times;
     private float[][] _intensities;
@@ -109,13 +126,23 @@ public class Chromatogram extends SkylineEntity
             _locationPoints = buffer.getLong();
         }
 
-        boolean hasErrors = hasMassErrors(_flags);
-        boolean hasMs1ScanIds = hasMs1ScanIds(_flags);
-        boolean hasFragmentScanIds = hasFragmentScanIds(_flags);
-        boolean hasSimScanIds = hasSimScanIds(_flags);
-
-        _uncompressedSize = getChromatogramsByteCount(_numTransitions, _numPoints, hasErrors,
-                hasMs1ScanIds, hasFragmentScanIds, hasSimScanIds);
+        if(formatVersion < SkylineBinaryParser.FORMAT_VERSION_CACHE_11)
+        {
+            // For versions < skyd 11 we calculate the uncompressedSize of the peaks data to store in the PrecursorChromInfo table.
+            boolean hasErrors = hasMassErrors(_flags);
+            boolean hasMs1ScanIds = hasMs1ScanIds(_flags);
+            boolean hasFragmentScanIds = hasFragmentScanIds(_flags);
+            boolean hasSimScanIds = hasSimScanIds(_flags);
+            _uncompressedSize = getChromatogramsByteCount(_numTransitions, _numPoints, hasErrors,
+                    hasMs1ScanIds, hasFragmentScanIds, hasSimScanIds);
+        }
+        else
+        {
+            _uncompressedSize = buffer.getInt();
+            buffer.getFloat(); // _startTime
+            buffer.getFloat(); // _endTime
+            buffer.getInt();   // Align2
+        }
 
         _cachedFiles = cachedFiles;
         _transitions = transitions;
@@ -382,6 +409,7 @@ public class Chromatogram extends SkylineEntity
     {
         _uncompressedSize = uncompressedSize;
     }
+
 
     public double[] getTransitions()
     {

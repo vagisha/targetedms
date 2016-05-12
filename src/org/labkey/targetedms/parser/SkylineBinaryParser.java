@@ -44,6 +44,7 @@ public class SkylineBinaryParser
     private Chromatogram[] _chromatograms;
     private ChromatogramTran[] _transitions;
 
+    public static final int FORMAT_VERSION_CACHE_11 = 11;
     public static final int FORMAT_VERSION_CACHE_10 = 10; // Introduces additional lock mass parameters InstrumentInfoUtil
     public static final int FORMAT_VERSION_CACHE_9 = 9; // Introduces abbreviated scan ids
     public static final int FORMAT_VERSION_CACHE_8 = 8; // Introduces ion mobility data
@@ -55,7 +56,7 @@ public class SkylineBinaryParser
     public static final int FORMAT_VERSION_CACHE_2 = 2;
 
     /** Newest supported version */
-    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_10;
+    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_11;
 
     private CachedFile[] _cacheFiles;
 
@@ -83,6 +84,7 @@ public class SkylineBinaryParser
     }
 
     /** File-level header fields */
+    // ChromatogramCache.Header in Skyline code
     private enum Header
     {
         // Version 9 header addition
