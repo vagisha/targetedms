@@ -3,9 +3,11 @@ package org.labkey.targetedms.query;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.LookupForeignKey;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
@@ -38,6 +40,16 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
         });
         noteAnnotation.setLabel("Molecule Note/Annotations");
         addColumn(noteAnnotation);
+
+        ColumnInfo peptideGroupId = getColumn("PeptideGroupId");
+        peptideGroupId.setFk(new LookupForeignKey("Id")
+        {
+            @Override
+            public TableInfo getLookupTableInfo()
+            {
+                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_GROUP);
+            }
+        });
 
         ColumnInfo customIonName = getColumn("CustomIonName");
         customIonName.setURL(detailsURL);

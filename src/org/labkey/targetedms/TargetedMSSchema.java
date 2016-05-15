@@ -85,6 +85,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_TRANSITION_PREDICITION_SETTINGS = "TransitionPredictionSettings";
     public static final String TABLE_SAMPLE_FILE = "SampleFile";
     public static final String TABLE_PEPTIDE_GROUP = "PeptideGroup";
+    public static final String TABLE_MOLECULE_GROUP = "MoleculeGroup";
     public static final String TABLE_PEPTIDE_GROUP_ANNOTATION = "PeptideGroupAnnotation";
     public static final String TABLE_INSTRUMENT = "Instrument";
     public static final String TABLE_ISOTOPE_ENRICHMENT = "IsotopeEnrichment";
@@ -681,9 +682,10 @@ public class TargetedMSSchema extends UserSchema
         }
 
         // Tables that have a FK directly to targetedms.Runs
-        if (TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name))
+        if (TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name) || TABLE_MOLECULE_GROUP.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name),
+            boolean proteomics = TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name);
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(TABLE_PEPTIDE_GROUP),
                                                                   this,
                                                                   ContainerJoinType.RunFK.getSQL(),
                                                                   TargetedMSManager.getTableInfoPeptideGroupAnnotation(),
@@ -708,38 +710,46 @@ public class TargetedMSSchema extends UserSchema
             });
             ColumnInfo labelColumn = result.getColumn("Label");
             labelColumn.setURL(detailsURLs);
-            labelColumn.setDisplayColumnFactory(new DisplayColumnFactory()
+            if (proteomics)
             {
-                @Override
-                public DisplayColumn createRenderer(ColumnInfo colInfo)
+                labelColumn.setDisplayColumnFactory(new DisplayColumnFactory()
                 {
-                    FieldKey seqIdFK = new FieldKey(colInfo.getFieldKey().getParent(), "Id");
-                    Map<String, FieldKey> params = new HashMap<>();
-                    params.put("id", seqIdFK);
-                    JSONObject props = new JSONObject();
-                    props.put("width", 450);
-                    props.put("title", "Protein Details");
-                    FieldKey containerFieldKey = new FieldKey(new FieldKey(colInfo.getFieldKey().getParent(), "RunId"), "Folder");
-                    return new AJAXDetailsDisplayColumn(colInfo, new ActionURL(TargetedMSController.ShowProteinAJAXAction.class, getContainer()), params, props, containerFieldKey)
+                    @Override
+                    public DisplayColumn createRenderer(ColumnInfo colInfo)
                     {
-                        private boolean _renderedCSS = false;
-
-                        @Override
-                        public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+                        FieldKey seqIdFK = new FieldKey(colInfo.getFieldKey().getParent(), "Id");
+                        Map<String, FieldKey> params = new HashMap<>();
+                        params.put("id", seqIdFK);
+                        JSONObject props = new JSONObject();
+                        props.put("width", 450);
+                        props.put("title", "Protein Details");
+                        FieldKey containerFieldKey = new FieldKey(new FieldKey(colInfo.getFieldKey().getParent(), "RunId"), "Folder");
+                        return new AJAXDetailsDisplayColumn(colInfo, new ActionURL(TargetedMSController.ShowProteinAJAXAction.class, getContainer()), params, props, containerFieldKey)
                         {
-                            if (!_renderedCSS)
+                            private boolean _renderedCSS = false;
+
+                            @Override
+                            public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {
-                                out.write("<script type=\"text/javascript\">\n" +
-                                "LABKEY.requiresCss(\"ProteinCoverageMap.css\");\n" +
-                                "LABKEY.requiresScript(\"util.js\");\n" +
-                                "</script>");
-                                _renderedCSS = true;
+                                if (!_renderedCSS)
+                                {
+                                    out.write("<script type=\"text/javascript\">\n" +
+                                            "LABKEY.requiresCss(\"ProteinCoverageMap.css\");\n" +
+                                            "LABKEY.requiresScript(\"util.js\");\n" +
+                                            "</script>");
+                                    _renderedCSS = true;
+                                }
+                                super.renderGridCellContents(ctx, out);
                             }
-                            super.renderGridCellContents(ctx, out);
-                        }
-                    };
-                }
-            });
+                        };
+                    }
+                });
+            }
+            else
+            {
+                labelColumn.setLabel("Molecule / Label");
+                result.getColumn("SequenceId").setHidden(true);
+            }
             result.getColumn("RunId").setFk(new QueryForeignKey(this, null, TABLE_TARGETED_MS_RUNS, "File", null));
             result.getColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, null, TargetedMSSchema.TABLE_REPRESENTATIVE_DATA_STATE, "RowId", null));
             result.getColumn("RepresentativeDataState").setHidden(true);
@@ -754,7 +764,14 @@ public class TargetedMSSchema extends UserSchema
                     return new AnnotationUIDisplayColumn(colInfo);
                 }
             });
-            noteAnnotation.setLabel("Protein Note/Annotations");
+            if (proteomics)
+            {
+                noteAnnotation.setLabel("Protein Note/Annotations");
+            }
+            else
+            {
+                noteAnnotation.setLabel("Molecule Note/Annotations");
+            }
             result.addColumn(noteAnnotation);
 
             return result;
@@ -762,11 +779,9 @@ public class TargetedMSSchema extends UserSchema
 
         // Tables that have a FK to targetedms.Runs
         if (TABLE_TRANSITION_INSTRUMENT_SETTINGS.equalsIgnoreCase(name) ||
-            TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name) ||
             TABLE_INSTRUMENT.equalsIgnoreCase(name) ||
             TABLE_ISOTOPE_ENRICHMENT.equalsIgnoreCase(name) ||
             TABLE_ISOLATION_SCHEME.equalsIgnoreCase(name) ||
-            TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name) ||
             TABLE_REPLICATE.equalsIgnoreCase(name) ||
             TABLE_TRANSITION_FULL_SCAN_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_TRANSITION_PREDICITION_SETTINGS.equalsIgnoreCase(name) ||
@@ -789,7 +804,6 @@ public class TargetedMSSchema extends UserSchema
         {
             return new PeptideTableInfo(this);
         }
-
         if (TABLE_MOLECULE.equalsIgnoreCase(name))
         {
             return new MoleculeTableInfo(this);
@@ -1010,6 +1024,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_RUNS);
         hs.add(TABLE_TRANSITION_INSTRUMENT_SETTINGS);
         hs.add(TABLE_PEPTIDE_GROUP);
+        hs.add(TABLE_MOLECULE_GROUP);
         hs.add(TABLE_PROTEIN);
         hs.add(TABLE_PEPTIDE);
         hs.add(TABLE_MOLECULE);

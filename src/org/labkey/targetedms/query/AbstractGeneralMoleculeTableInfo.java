@@ -1,11 +1,9 @@
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.ExprColumn;
-import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -15,7 +13,7 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
  * Date: 02/25/2016
  */
 
-public class AbstractGeneralMoleculeTableInfo extends JoinedTargetedMSTable
+public abstract class AbstractGeneralMoleculeTableInfo extends JoinedTargetedMSTable
 {
     public AbstractGeneralMoleculeTableInfo(TargetedMSSchema schema, TableInfo tableInfo, String annotationColumnName)
     {
@@ -29,16 +27,6 @@ public class AbstractGeneralMoleculeTableInfo extends JoinedTargetedMSTable
         // use the description and title column from the specialized TableInfo
         setDescription(tableInfo.getDescription());
         setTitleColumn(tableInfo.getTitleColumn());
-
-        ColumnInfo peptideGroupId = getColumn("PeptideGroupId");
-        peptideGroupId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
-            }
-        });
 
         SQLFragment currentLibPrecursorCountSQL = new SQLFragment("(SELECT COUNT(p.Id) FROM ");
         currentLibPrecursorCountSQL.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "p");

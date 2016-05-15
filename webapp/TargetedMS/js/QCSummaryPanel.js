@@ -27,6 +27,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 // Add the current (root) container to the QC Summary display
                 container = containers[0];
                 container.showName = hasChildren;
+                container.isParent = true;
                 this.add(this.getContainerSummaryView(container, hasChildren));
 
                 // Add the set of child containers in an hbox layout
@@ -35,7 +36,8 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     for (var i = 1; i < containers.length; i++)
                     {
                         container = containers[i];
-                        container.showName = hasChildren;
+                        container.showName = true;
+                        container.isParent = false;
                         childPanelItems.push(this.getContainerSummaryView(container));
                     }
 
@@ -98,13 +100,16 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
     {
         return new Ext4.XTemplate(
             '<tpl if="showName !== undefined">',
-                '<tpl if="showName === true">',
+                '<tpl if="showName === true &amp;&amp; isParent !== true">',
                     '<div class="folder-name">',
                         '<a href="{path:this.getContainerLink}">{name:htmlEncode}</a>',
                     '</div>',
                 '</tpl>',
-                '<tpl if="docCount == 0">',
+                '<tpl if="docCount == 0 && isParent !== true">',
                     '<div class="item-text">No Skyline documents</div>',
+                    '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
+                '<tpl elseif="docCount == 0">',
+                    '<div class="item-text">No Skyline documents in current folder</div>',
                 '<tpl elseif="docCount &gt; 0">',
                     '<div class="item-text">{docCount} Skyline document{docCount:this.pluralize}</div>',
                     '<div class="item-text">',
@@ -112,8 +117,8 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     '</div>',
                     '<div class="item-text">{precursorCount} precursor{precursorCount:this.pluralize}</div>',
                     '<div class="item-text sample-file-details" id="qc-summary-samplefiles-{id}">...</div>',
+                    '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
                 '</tpl>',
-                '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
             '</tpl>',
             {
                 pluralize: function (val)
@@ -143,6 +148,9 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
     {
         var divEl = Ext4.get(divId),
             content = '', width = undefined;
+
+        if (!divEl)
+            return;
 
         if (autoQC == null)
         {
