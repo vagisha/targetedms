@@ -100,7 +100,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
     {
         return new Ext4.XTemplate(
             '<tpl if="showName !== undefined">',
-                '<tpl if="showName === true &amp;&amp; isParent !== true">',
+                '<tpl if="showName === true &amp;&amp; (isParent !== true || docCount &gt; 0)">',
                     '<div class="folder-name">',
                         '<a href="{path:this.getContainerLink}">{name:htmlEncode}</a>',
                     '</div>',
