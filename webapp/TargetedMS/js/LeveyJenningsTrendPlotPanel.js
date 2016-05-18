@@ -1301,12 +1301,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             var me = this;
             var xMid = extent[0][0] + (extent[1][0] - extent[0][0]) / 2;
 
-            var createBtn = this.createGuideSetSvgButton(plot, 'Create', xMid - 57, 54);
+            var createBtn = this.createGuideSetSvgButton(plot, 'Create', xMid - 57, 50);
             createBtn.on('click', function() {
                 me.createGuideSetBtnClick();
             });
 
-            var cancelBtn = this.createGuideSetSvgButton(plot, 'Cancel', xMid + 3, 53);
+            var cancelBtn = this.createGuideSetSvgButton(plot, 'Cancel', xMid + 3, 49);
             cancelBtn.on('click', function () {
                 me.clearPlotBrush(plot);
                 plot.clearBrush();
