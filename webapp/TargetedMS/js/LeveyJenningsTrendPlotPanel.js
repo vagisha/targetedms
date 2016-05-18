@@ -503,7 +503,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             scope: this,
             success: function(data) {
 
-                // stash the set of precursor sequences for use with the plot rendering
+                // stash the set of precursor fragments for use with the plot rendering
                 this.precursors = [];
                 if (data.rows.length > this.maxCount) {
                     Ext4.get(this.countLimitedDivId).update("Limiting display to the first " + this.maxCount + " precursors out of " + data.rows.length + " total");
@@ -611,7 +611,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: guideSetSql,
-            sort: 'TrainingStart,Sequence',
+            sort: 'TrainingStart,Fragment',
             scope: this,
             success: this.processGuideSetData,
             failure: this.failureHandler
@@ -670,7 +670,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             whereClause += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
         }
 
-        var guideSetStatsJoinClause = "ON X.Fragment = stats.Sequence AND ((X.AcquiredTime >= stats.TrainingStart "
+        var guideSetStatsJoinClause = "ON X.Fragment = stats.Fragment AND ((X.AcquiredTime >= stats.TrainingStart "
                 + "AND X.AcquiredTime < stats.ReferenceEnd) OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))";
 
         // Build query to get the values and mean/stdDev ranges for each data point
@@ -706,20 +706,20 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var chartTypeProps = this.getChartTypePropsByName(this.chartType);
 
         // process the data to shape it for the JS LeveyJenningsPlot API call
-        this.sequencePlotData = {};
+        this.fragmentPlotData = {};
         for (var i = 0; i < this.plotDataRows.length; i++)
         {
             var row = this.plotDataRows[i];
-            var sequence = row['Fragment'];
+            var fragment = row['Fragment'];
             var isProteomics = row['IsProteomics'];
 
-            if (!this.sequencePlotData[sequence]) {
-                this.sequencePlotData[sequence] = {sequence: sequence, data: [], min: null, max: null, isProteomics: isProteomics};
+            if (!this.fragmentPlotData[fragment]) {
+                this.fragmentPlotData[fragment] = {fragment: fragment, data: [], min: null, max: null, isProteomics: isProteomics};
             }
 
             var data = {
                 type: 'data',
-                sequence: sequence,
+                fragment: fragment,
                 PrecursorId: row['PrecursorId'], // keep in data for click handler
                 PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
                 FilePath: row['FilePath'], // keep in data for hover text display
@@ -756,15 +756,15 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 data['value'] = row['Value'];
             }
 
-            this.sequencePlotData[sequence].data.push(data);
+            this.fragmentPlotData[fragment].data.push(data);
 
-            this.setSequenceMinMax(this.sequencePlotData[sequence], row);
+            this.setFragmentMinMax(this.fragmentPlotData[fragment], row);
         }
 
         // merge in the annotation data to make room on the y axis
         for (var i = 0; i < this.precursors.length; i++)
         {
-            var precursorInfo = this.sequencePlotData[this.precursors[i]];
+            var precursorInfo = this.fragmentPlotData[this.precursors[i]];
 
             // We don't necessarily have info for all possible precursors, depending on the filters and plot type
             if (precursorInfo)
@@ -917,7 +917,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         for (var i = 0; i < this.precursors.length; i++)
         {
-            var precursorInfo = this.sequencePlotData[this.precursors[i]];
+            var precursorInfo = this.fragmentPlotData[this.precursors[i]];
 
             // We don't necessarily have info for all possible precursors, depending on the filters and plot type
             if (precursorInfo)
@@ -1020,7 +1020,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                 this.addGuideSetTrainingRangeToPlot(plot, precursorInfo, this.guideSetTrainingData);
 
-                this.createExportToPDFButton(id, "QC Plot for fragment " + precursorInfo.sequence, "QC Plot-"+precursorInfo.sequence);
+                this.createExportToPDFButton(id, "QC Plot for fragment " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment);
             }
         }
 
@@ -1071,7 +1071,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             groupColors = this.getColorRange(),
             newLegendData = Ext4.Array.clone(this.legendData),
             combinePlotData = {min: null, max: null, data: []},
-            lengthOfLongestPeptide = 1,
+            lengthOfLongestLegend = 1,
             proteomicsLegend = [{ //Temp holder for proteomics legend labels
                 text: 'Peptides',
                 separator: true
@@ -1085,6 +1085,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         //Add yLeftTitle separator to Legend sections
         if (yLeftIndex > -1) {
+            if (chartTypeProps.colNames[yLeftIndex].title.length > lengthOfLongestLegend)
+                lengthOfLongestLegend = chartTypeProps.colNames[yLeftIndex].title.length;
+
             proteomicsLegend.push({
                 text: chartTypeProps.colNames[yLeftIndex].title,
                 separator: true
@@ -1099,10 +1102,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         // traverse the precursor list for: calculating the longest legend string and combine the plot data
         for (var i = 0; i < this.precursors.length; i++)
         {
-            precursorInfo = this.sequencePlotData[this.precursors[i]];
+            precursorInfo = this.fragmentPlotData[this.precursors[i]];
 
-            if (precursorInfo.sequence.length > lengthOfLongestPeptide) {
-                lengthOfLongestPeptide = precursorInfo.sequence.length;
+            if (precursorInfo.fragment.length > lengthOfLongestPeptide) {
+                lengthOfLongestLegend = precursorInfo.fragment.length;
             }
 
             // for combined plot, concat all data together into a single array and track min/max for all
@@ -1119,14 +1122,18 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             var appropriateLegend = precursorInfo.isProteomics ?  proteomicsLegend : ionLegend;
 
             appropriateLegend.push({
-                name: precursorInfo.sequence + (yLeftIndex > -1 ? '|valueyLeft' : ''),
-                text: precursorInfo.sequence,
+                name: precursorInfo.fragment + (yLeftIndex > -1 ? '|valueyLeft' : ''),
+                text: precursorInfo.fragment,
                 color: groupColors[i % groupColors.length]
             });
         }
 
-        // add the sequence name for each group to the legend again for the yRight axis metric series
+        // add the fragment name for each group to the legend again for the yRight axis metric series
         if (yRightIndex > -1) {
+            if (chartTypeProps.colNames[yRightIndex].title.length > lengthOfLongestLegend)
+                lengthOfLongestLegend = chartTypeProps.colNames[yRightIndex].title.length;
+
+
             proteomicsLegend.push({
                 text: chartTypeProps.colNames[yRightIndex].title,
                 separator: true
@@ -1141,10 +1148,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             {
                 var appropriateLegend = precursorInfo.isProteomics ?  proteomicsLegend : ionLegend;
 
-                precursorInfo = this.sequencePlotData[this.precursors[i]];
+                precursorInfo = this.fragmentPlotData[this.precursors[i]];
                 appropriateLegend.push({
-                    name: precursorInfo.sequence + '|valueyRight',
-                    text: precursorInfo.sequence,
+                    name: precursorInfo.fragment + '|valueyRight',
+                    text: precursorInfo.fragment,
                     color: groupColors[(this.precursors.length + i) % groupColors.length]
                 });
             }
@@ -1169,8 +1176,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             xTickLabel: 'date',
             yAxisScale: (showLogInvalid ? 'linear' : this.yAxisScale),
             shape: 'guideSetId',
-            groupBy: 'sequence',
-            color: 'sequence',
+            groupBy: 'fragment',
+            color: 'fragment',
             showTrendLine: true,
             hoverTextFn: this.plotHoverTextDisplay,
             pointClickFn: this.plotPointClick,
@@ -1198,7 +1205,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
                 top: 45 + this.getMaxStackedAnnotations() * 12,
-                right: 10 * lengthOfLongestPeptide + (this.isMultiSeries() ? 50 : 0),
+                right: 11 * lengthOfLongestLegend + (this.isMultiSeries() ? 50 : 0),
                 left: 75,
                 bottom: 75
             },
@@ -1253,7 +1260,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     plotHoverTextDisplay : function(row, valueName){
         return (row[valueName + 'Title'] != undefined ? 'Metric: ' + row[valueName + 'Title'] + '\n' : '')
-            + (row.IsProteomics ? 'Sequence: ' : 'Fragment: ') + row['sequence']
+            + (row.IsProteomics ? 'Sequence: ' : 'Fragment: ') + row['fragment']
             + '\nAcquired: ' + row['fullDate'] + ", "
             + '\nValue: ' + (valueName ? row[valueName] : row.value) + ", "
             + '\nFile Path: ' + row['FilePath'];
@@ -1382,8 +1389,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         // find the x-axis starting and ending index based on the guide set information attached to each data point
         for (var i = 0; i < guideSetTrainingDataOrig.length; i++)
         {
-            // only compare guide set info for matching precursor sequence
-            if (!this.singlePlot && precursorInfo.sequence != guideSetTrainingDataOrig[i].Sequence) {
+            // only compare guide set info for matching precursor fragment
+            if (!this.singlePlot && precursorInfo.fragment != guideSetTrainingDataOrig[i].Fragment) {
                 continue;
             }
 
@@ -1552,7 +1559,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return config;
     },
 
-    setSequenceMinMax: function(dataObject, row) {
+    setFragmentMinMax: function(dataObject, row) {
         // track the min and max data so we can get the range for including the QC annotations
         if (LABKEY.vis.isValid(row['Value']))
         {

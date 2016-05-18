@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd,
-Sequence,
+Fragment,
 COUNT(AreaRatio) AS NumRecords,
 AVG(AreaRatio) AS Mean,
 STDDEV(AreaRatio) AS StandardDev
 FROM guideset gs
 LEFT JOIN (
    SELECT COALESCE(PrecursorChromInfoId.PrecursorId.Id, PrecursorChromInfoId.MoleculePrecursorId.Id) AS PrecursorId,
-   COALESCE(PrecursorChromInfoId.PrecursorId.ModifiedSequence, PrecursorChromInfoId.MoleculePrecursorId.CustomIonName) AS Sequence,
+   COALESCE(PrecursorChromInfoId.PrecursorId.ModifiedSequence, PrecursorChromInfoId.MoleculePrecursorId.CustomIonName) AS Fragment,
    PrecursorChromInfoId.SampleFileId.AcquiredTime AS AcquiredTime,
    AreaRatio
    FROM precursorarearatio
 ) as p ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd
-GROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.Sequence
+GROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.Fragment

@@ -15,7 +15,7 @@
  */
 SELECT
 gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd,
-Sequence,
+Fragment,
 COUNT(PrecursorId) AS NumRecords,
 -- note: no value for this metric as it is a combination of two other metrics
 NULL AS Mean,
@@ -23,8 +23,8 @@ NULL AS StandardDev
 FROM guideset gs
 LEFT JOIN (
    SELECT COALESCE(PrecursorId.Id, MoleculePrecursorId.Id) AS PrecursorId,
-   COALESCE(PrecursorId.ModifiedSequence, MoleculePrecursorId.CustomIonName) AS Sequence,
+   COALESCE(PrecursorId.ModifiedSequence, MoleculePrecursorId.CustomIonName) AS Fragment,
    SampleFileId.AcquiredTime AS AcquiredTime
    FROM precursorchrominfo
 ) as p ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd
-GROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.Sequence
+GROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.Fragment

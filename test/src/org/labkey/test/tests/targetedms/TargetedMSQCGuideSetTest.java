@@ -240,9 +240,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
             DataRegionTable table = new DataRegionTable("query", this);
             table.setFilter("GuideSetId", "Equals", String.valueOf(gs.getRowId()));
             if (stats.getPrecursor() != null)
-                table.setFilter("Sequence", "Equals", stats.getPrecursor());
+                table.setFilter("Fragment", "Equals", stats.getPrecursor());
             else
-                table.setFilter("Sequence", "Is Blank", null);
+                table.setFilter("Fragment", "Is Blank", null);
 
             assertEquals("Unexpected number of filtered rows", 1, table.getDataRowCount());
             assertEquals("Unexpected guide set stats record count", stats.getNumRecords(), Integer.parseInt(table.getDataAsText(0, "NumRecords")));
