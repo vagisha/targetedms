@@ -1104,7 +1104,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         {
             precursorInfo = this.fragmentPlotData[this.precursors[i]];
 
-            if (precursorInfo.fragment.length > lengthOfLongestPeptide) {
+            if (precursorInfo.fragment.length > lengthOfLongestLegend) {
                 lengthOfLongestLegend = precursorInfo.fragment.length;
             }
 
