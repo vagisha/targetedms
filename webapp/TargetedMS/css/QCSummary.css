@@ -50,6 +50,7 @@
 }
 
 .sample-file-details {
+    padding-top: 5px;
     cursor: pointer;
 }
 
@@ -65,4 +66,8 @@ div.hopscotch-bubble .hopscotch-actions,
 div.hopscotch-bubble .hopscotch-content {
     margin: 0;
     padding: 0;
+}
+
+div.hopscotch-bubble .hopscotch-title {
+    padding-bottom: 5px;
 }

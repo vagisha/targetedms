@@ -155,12 +155,12 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         if (autoQC == null)
         {
             content = 'Has never been pinged';
-            width = 135;
+            width = 155;
         }
         else
         {
             content = autoQC.isRecent ? 'Was pinged recently on ' + autoQC.modified : 'Was pinged on ' + autoQC.modified;
-            width = autoQC.isRecent ? 260 : 210;
+            width = autoQC.isRecent ? 160 : 140;
         }
 
         // add mouse listeners to the div element for when to show the AutoQC message
@@ -307,7 +307,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     id: Ext4.id(),
                     target: el.dom,
                     placement: 'bottom',
-                    width: sampleFile.Items.length > 0 ? 350 : 275,
+                    width: sampleFile.Items.length > 0 ? 400 : 300,
                     title: 'Recent Sample File Details',
                     content: content
                 });
