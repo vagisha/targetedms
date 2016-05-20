@@ -35,6 +35,8 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.dialect.SqlDialect;
+import org.labkey.api.data.statistics.MathStat;
+import org.labkey.api.data.statistics.StatsService;
 import org.labkey.api.exp.AbstractFileXarSource;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.Lsid;
@@ -57,6 +59,7 @@ import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SchemaKey;
 import org.labkey.api.security.User;
+import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -1455,15 +1458,39 @@ public class TargetedMSManager
 
         Map<String, Map<String, Double>> intensities = new HashMap<>();
 
-        for (Map rowMap:new TableSelector(table).getMapArray())
+        for (Map<String, Object> rowMap:new TableSelector(table).getMapArray())
         {
             List <ColumnInfo> columns = table.getColumns();
+
+            List<Double> values = new ArrayList<>();
 
             for(ColumnInfo column : columns)
             {
                 //Skip pivot column and row name column
                 String colName = column.getName();
-                if(colName.compareToIgnoreCase(intensityColumnName) == 0 || colName.compareToIgnoreCase(rowHeadingColumnName) == 0)
+                if (colName.compareToIgnoreCase(intensityColumnName) == 0 || colName.compareToIgnoreCase(rowHeadingColumnName) == 0)
+                    continue;
+
+                Double value = getValue(column.getValue(rowMap));
+                if (value != null)
+                {
+                    values.add(value);
+                }
+            }
+
+            double[] primitiveValues = new double[values.size()];
+            int index = 0;
+            for (Double value : values)
+            {
+                primitiveValues[index++] = value.doubleValue();
+            }
+
+            MathStat stats = ServiceRegistry.get().getService(StatsService.class).getStats(primitiveValues);
+
+            for(ColumnInfo column : columns)
+            {
+                String colName = column.getName();
+                if (colName.compareToIgnoreCase(intensityColumnName) == 0 || colName.compareToIgnoreCase(rowHeadingColumnName) == 0)
                     continue;
 
                 Map<String, Double> intensityMap = intensities.get(column.getLabel());
@@ -1473,10 +1500,27 @@ public class TargetedMSManager
                     intensities.put(column.getLabel(), intensityMap);
                 }
 
-                intensityMap.put((String)rowMap.get(rowHeadingColumnName), (Double)JdbcType.DOUBLE.convert(column.getValue(rowMap)));
+                Double value = getValue(column.getValue(rowMap));
+                if (value != null)
+                {
+                    value = (value.doubleValue() - stats.getMean()) / stats.getStdDev();
+                }
+                intensityMap.put((String)rowMap.get(rowHeadingColumnName), value);
             }
         }
 
         return intensities;
     }
+
+    private static Double getValue(Object o)
+    {
+        Double value = (Double)JdbcType.DOUBLE.convert(o);
+        if (value == null || value == 0.0)
+        {
+            return null;
+        }
+
+        return Math.log(value.doubleValue()) / Math.log(2);
+    }
+
 }

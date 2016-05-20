@@ -10,7 +10,7 @@ public class ClustergrammerHeatMap implements HeatMap
     private Map<String, Map<String, Double>> _subjectTable;
     private String _title;
 
-    public ClustergrammerHeatMap(Map rs, String title)
+    public ClustergrammerHeatMap(Map<String, Map<String, Double>> rs, String title)
     {
         _subjectTable = rs;
         this._title = title;
