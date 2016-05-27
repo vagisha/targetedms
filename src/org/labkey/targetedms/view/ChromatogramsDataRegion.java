@@ -173,8 +173,8 @@ public class ChromatogramsDataRegion extends DataRegion
     {
         final int maxRows = getMaxRows();
 
-        MenuButton pageSizeMenu = new MenuButton("Paging", getName() + ".Menu.PageSize"){
-
+        MenuButton pageSizeMenu = new MenuButton("Paging", getName() + ".Menu.PageSize")
+        {
             final boolean showingAll = getShowRows() == ShowRows.ALL;
 
             @Override
@@ -182,8 +182,8 @@ public class ChromatogramsDataRegion extends DataRegion
             {
                 addSeparator();
 
-                NavTree item = addMenuItem("Show All", "#",
-                        "LABKEY.DataRegions[" + PageFlowUtil.jsString(getName()) + "].showAll()", showingAll);
+                NavTree item = addMenuItem("Show All", null,
+                        "LABKEY.DataRegions[" + PageFlowUtil.jsString(getName()) + "].showAll();", showingAll);
                 item.setId("Page Size:All");
 
                 super.render(ctx, out);
@@ -204,8 +204,8 @@ public class ChromatogramsDataRegion extends DataRegion
         for (Integer pageSize : sizes)
         {
             boolean checked = pageSize == maxRows;
-            NavTree item = pageSizeMenu.addMenuItem(String.valueOf(pageSize) + " per page", "#",
-                    "LABKEY.DataRegions[" + PageFlowUtil.jsString(getName()) + "].setMaxRows(" + String.valueOf(pageSize) + ")", checked);
+            NavTree item = pageSizeMenu.addMenuItem(String.valueOf(pageSize) + " per page", null,
+                    "LABKEY.DataRegions[" + PageFlowUtil.jsString(getName()) + "].setMaxRows(" + String.valueOf(pageSize) + ");", checked);
             item.setId("Page Size:" + pageSize);
         }
 
