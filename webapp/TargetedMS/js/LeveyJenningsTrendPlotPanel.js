@@ -92,6 +92,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         toolbar1 = Ext4.create('Ext.toolbar.Toolbar', {
             ui: 'footer',
+            cls: 'levey-jennings-toolbar',
             padding: 10,
             layout: {
                 pack: 'center'
@@ -122,6 +123,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         toolbar2 = Ext4.create('Ext.toolbar.Toolbar', {
             ui: 'footer',
+            cls: 'levey-jennings-toolbar',
             layout: { pack: 'center' },
             padding: '0 10px 10px 10px',
             items: toolbarItems
