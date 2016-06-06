@@ -20,28 +20,35 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.pages.InsertPage;
+import org.openqa.selenium.WebDriver;
 
 public class GuideSetPage extends InsertPage
 {
     private static final String DEFAULT_TITLE = "Insert GuideSet";
 
+    @Deprecated
     public GuideSetPage(BaseWebDriverTest test)
     {
-        super(test, DEFAULT_TITLE);
+        this(test.getDriver());
+    }
+
+    public GuideSetPage(WebDriver driver)
+    {
+        super(driver, DEFAULT_TITLE);
     }
 
     public void insert(GuideSet guideSet, @Nullable String expectErrorMsg)
     {
         Elements elements = elements();
-        _test.setFormElement(elements.trainingStartDate, guideSet.getStartDate());
-        _test.setFormElement(elements.trainingEndDate, guideSet.getEndDate());
-        _test.setFormElement(elements.comment, guideSet.getComment());
-        _test.clickAndWait(elements.submit);
+        setFormElement(elements.trainingStartDate, guideSet.getStartDate());
+        setFormElement(elements.trainingEndDate, guideSet.getEndDate());
+        setFormElement(elements.comment, guideSet.getComment());
+        clickAndWait(elements.submit);
 
         if (expectErrorMsg != null)
         {
-            _test.assertElementPresent(elements.error.withText(expectErrorMsg));
-            _test.clickAndWait(elements.cancel);
+            assertElementPresent(elements.error.withText(expectErrorMsg));
+            clickAndWait(elements.cancel);
         }
     }
 

@@ -19,29 +19,36 @@ import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.pages.InsertPage;
 import org.labkey.test.util.targetedms.QCHelper;
+import org.openqa.selenium.WebDriver;
 
 public class AnnotationInsertPage extends InsertPage
 {
     private static final String DEFAULT_TITLE = "Insert QCAannotation";
 
+    @Deprecated
     public AnnotationInsertPage(BaseWebDriverTest test)
     {
-        super(test, DEFAULT_TITLE);
+        this(test.getDriver());
+    }
+
+    public AnnotationInsertPage(WebDriver driver)
+    {
+        super(driver, DEFAULT_TITLE);
     }
 
     @Override
     protected void waitForReady()
     {
-        _test.waitForElement(elements().annotationType);
+        waitForElement(elements().annotationType);
     }
 
     public void insert(QCHelper.Annotation annotation)
     {
         Elements elements = elements();
-        _test.selectOptionByText(elements.annotationType, annotation.getType());
-        _test.setFormElement(elements.description, annotation.getDescription());
-        _test.setFormElement(elements.date, annotation.getDate());
-        _test.clickAndWait(elements.submit);
+        selectOptionByText(elements.annotationType, annotation.getType());
+        setFormElement(elements.description, annotation.getDescription());
+        setFormElement(elements.date, annotation.getDate());
+        clickAndWait(elements.submit);
     }
 
     @Override

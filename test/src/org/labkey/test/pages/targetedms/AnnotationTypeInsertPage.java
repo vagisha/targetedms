@@ -18,23 +18,30 @@ package org.labkey.test.pages.targetedms;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.pages.InsertPage;
+import org.openqa.selenium.WebDriver;
 
 public class AnnotationTypeInsertPage extends InsertPage
 {
     private static final String DEFAULT_TITLE = "Insert QCAnnotationType";
 
+    @Deprecated
     public AnnotationTypeInsertPage(BaseWebDriverTest test)
     {
-        super(test, DEFAULT_TITLE);
+        this(test.getDriver());
+    }
+
+    public AnnotationTypeInsertPage(WebDriver driver)
+    {
+        super(driver, DEFAULT_TITLE);
     }
 
     public void insert(String name, String description, String color)
     {
         Elements elements = elements();
-        _test.setFormElement(elements.name, name);
-        _test.setFormElement(elements.description, description);
-        _test.click(Locator.xpath("//a[contains(@class, " + Locator.xq("color-" + color) + ")]"));
-        _test.clickAndWait(elements.submit);
+        setFormElement(elements.name, name);
+        setFormElement(elements.description, description);
+        click(Locator.xpath("//a[contains(@class, " + Locator.xq("color-" + color) + ")]"));
+        clickAndWait(elements.submit);
     }
 
     @Override
