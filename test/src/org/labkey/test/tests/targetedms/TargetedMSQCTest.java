@@ -15,8 +15,8 @@
  */
 package org.labkey.test.tests.targetedms;
 
-import org.apache.commons.collections15.Bag;
-import org.apache.commons.collections15.bag.HashBag;
+import org.apache.commons.collections4.Bag;
+import org.apache.commons.collections4.bag.HashBag;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -462,5 +462,4 @@ public class TargetedMSQCTest extends TargetedMSTest
             assertEquals("Wrong annotations in " + plotType + ":" + plot.getPrecursor(), expectedAnnotations, plotAnnotations);
         }
     }
-
 }
