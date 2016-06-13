@@ -40,10 +40,9 @@ public class PeptideViewWebPart extends QueryView
         UserSchema schema = getSchema();
         QuerySettings settings = schema.getSettings(portalCtx, dataRegionName, TargetedMSSchema.TABLE_PEPTIDE);
 
-        if ( !portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
+        if (!portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
             settings.setViewName("LibraryPeptides");
 
         return settings;
     }
-
 }

@@ -39,7 +39,7 @@ public class LibraryPrecursorViewWebPart extends QueryView
     {
         UserSchema schema = getSchema();
         QuerySettings settings = schema.getSettings(portalCtx, dataRegionName, TargetedMSSchema.TABLE_LIBRARY_PRECURSOR);
-        if ( !portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
+        if (!portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
             settings.setViewName("LibraryPrecursors");
 
         return settings;

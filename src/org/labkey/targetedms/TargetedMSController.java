@@ -124,6 +124,7 @@ import org.labkey.api.view.VBox;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.ViewForm;
+import org.labkey.api.view.ViewServlet;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
@@ -4632,7 +4633,7 @@ public class TargetedMSController extends SpringActionController
             view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
             if(reshow)
             {
-                view.setInitialValues(form.getRequest().getParameterMap());
+                view.setInitialValues(ViewServlet.adjustAndValidateParameterMap(form.getRequest().getParameterMap()));
             }
             return view;
         }
