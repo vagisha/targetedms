@@ -4633,7 +4633,7 @@ public class TargetedMSController extends SpringActionController
             view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
             if(reshow)
             {
-                view.setInitialValues(ViewServlet.adjustAndValidateParameterMap(form.getRequest().getParameterMap()));
+                view.setInitialValues(ViewServlet.adaptParameterMap(form.getRequest().getParameterMap()));
             }
             return view;
         }
