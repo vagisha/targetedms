@@ -88,6 +88,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         assertEquals(QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
         assertEquals(QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
+        assertEquals(QCPlotsWebPart.DateRangeOffset.ALL, qcPlotsWebPart.getCurrentDateRangeOffset());
     }
 
     @Before
@@ -192,21 +193,21 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals("Y-Axis Scale not round tripped as expected", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());
         assertTrue("Group X-Axis not round tripped as expected", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertTrue("Show All Peptides not round tripped as expected", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
-        // date range should not persist
-        assertNotEquals("Start Date should not have been persisted", testDateStr, qcPlotsWebPart.getCurrentStartDate());
-        assertNotEquals("End Date should not have been persisted", testDateStr, qcPlotsWebPart.getCurrentEndDate());
+        assertEquals("Date Range Offset not round tripped as expected", QCPlotsWebPart.DateRangeOffset.CUSTOM, qcPlotsWebPart.getCurrentDateRangeOffset());
+        assertEquals("Start Date not round tripped as expected", testDateStr, qcPlotsWebPart.getCurrentStartDate());
+        assertEquals("End Date not round tripped as expected", testDateStr, qcPlotsWebPart.getCurrentEndDate());
         count = qcPlotsWebPart.getPointElements("d", "M", true).size();
-        assertTrue("Unexpected number of points for initial data date range", count >= 329);
+        assertEquals("Unexpected number of points for initial data date range", 21, count);
 
         // impersonate a different user in this container and verify that initial form fields used
         impersonate(USER);
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, false);
-        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, false);
         assertEquals("Chart Type not set to default value", QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
         assertEquals("Y-Axis Scale not set to default value", QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
         assertFalse("Group X-Axis not set to default value", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertFalse("Show All Peptides not set to default value", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
+        assertEquals("Date Range Offset not set to default value", QCPlotsWebPart.DateRangeOffset.ALL, qcPlotsWebPart.getCurrentDateRangeOffset());
     }
 
     @Test
@@ -276,6 +277,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
 
+        qcPlotsWebPart.setDateRangeOffset(QCPlotsWebPart.DateRangeOffset.CUSTOM);
         qcPlotsWebPart.setStartDate("2014-08-09");
         qcPlotsWebPart.setEndDate("2014-08-27");
         qcPlotsWebPart.applyRange();

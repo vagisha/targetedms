@@ -368,7 +368,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
             PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
             qcDashboard.getQcPlotsWebPart().createGuideSet(guideSet, expectErrorMsg);
-            qcDashboard.getQcPlotsWebPart().waitForReady();
+            qcDashboard.getQcPlotsWebPart().waitForPlots();
         }
         else
         {

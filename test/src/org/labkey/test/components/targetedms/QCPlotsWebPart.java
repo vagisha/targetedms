@@ -48,12 +48,6 @@ public final class QCPlotsWebPart extends BodyWebPart
         super(driver, DEFAULT_TITLE, index);
     }
 
-    @Override
-    public void waitForReady()
-    {
-        waitForPlots(1, false);
-    }
-
     public enum Scale
     {
         LINEAR("Linear"),
@@ -80,6 +74,39 @@ public final class QCPlotsWebPart extends BodyWebPart
         }
     }
 
+    public enum DateRangeOffset
+    {
+        ALL(0, "All dates"),
+        CUSTOM(-1, "Custom range");
+
+        private Integer _offset;
+        private String _label;
+
+        private DateRangeOffset(Integer offset, String label)
+        {
+            _offset = offset;
+            _label = label;
+        }
+
+        public Integer getOffset()
+        {
+            return _offset;
+        }
+
+        public String toString()
+        {
+            return _label;
+        }
+
+        public static DateRangeOffset getEnum(String value)
+        {
+            for (DateRangeOffset v : values())
+                if (v.toString().equalsIgnoreCase(value))
+                    return v;
+            throw new IllegalArgumentException();
+        }
+    }
+
     private void waitForNoRecords()
     {
         _test.waitFor(() -> elements().noRecords().size() > 0, 10000);
@@ -91,13 +118,27 @@ public final class QCPlotsWebPart extends BodyWebPart
         WebElement plot = elements().findPlots().get(0);
         _test._ext4Helper.selectComboBoxItem(elements().scaleCombo, scale.toString());
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
-        waitForReady();
+        waitForPlots();
     }
 
     public Scale getCurrentScale()
     {
         WebElement scaleInput = elements().scaleCombo.append("//input").waitForElement(this, 1000);
         return Scale.getEnum(scaleInput.getAttribute("value"));
+    }
+
+    @LogMethod
+    public void setDateRangeOffset(DateRangeOffset dateRangeOffset)
+    {
+        if (dateRangeOffset == null)
+            dateRangeOffset = DateRangeOffset.ALL;
+        _test._ext4Helper.selectComboBoxItem(elements().dateRangeCombo, dateRangeOffset.toString());
+    }
+
+    public DateRangeOffset getCurrentDateRangeOffset()
+    {
+        WebElement scaleInput = elements().dateRangeCombo.append("//input").waitForElement(this, 1000);
+        return DateRangeOffset.getEnum(scaleInput.getAttribute("value"));
     }
 
     public void setStartDate(String startDate)
@@ -182,7 +223,7 @@ public final class QCPlotsWebPart extends BodyWebPart
             _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
 
         if (hasData)
-            waitForReady();
+            waitForPlots();
         else
             waitForNoRecords();
     }
@@ -198,7 +239,7 @@ public final class QCPlotsWebPart extends BodyWebPart
         WebElement plot = elements().findPlots().get(0);
         elements().groupedXCheckbox.set(check);
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
-        waitForReady();
+        waitForPlots();
     }
 
     public boolean isGroupXAxisValuesByDateChecked()
@@ -211,7 +252,7 @@ public final class QCPlotsWebPart extends BodyWebPart
         WebElement plot = elements().findPlots().get(0);
         elements().singlePlotCheckbox.set(check);
         _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
-        waitForReady();
+        waitForPlots();
 
         if (expectedPlotCount != null)
             waitForPlots(expectedPlotCount, true);
@@ -230,6 +271,11 @@ public final class QCPlotsWebPart extends BodyWebPart
         _test.clickButton("Apply", 0);
         _test.shortWait().until(ExpectedConditions.stalenessOf(panelChild));
         _test._ext4Helper.waitForMaskToDisappear(BaseWebDriverTest.WAIT_FOR_PAGE);
+    }
+
+    public void waitForPlots()
+    {
+        waitForPlots(1, false);
     }
 
     public void waitForPlots(Integer plotCount, boolean exact)
@@ -285,10 +331,7 @@ public final class QCPlotsWebPart extends BodyWebPart
             resetInitialQCPlotFields();
         }
 
-        if (!"2013-08-09".equals(getCurrentStartDate()) || !"2013-08-27".equals(getCurrentEndDate()))
-        {
-            filterQCPlots("2013-08-09", "2013-08-27", expectedPlotCount);
-        }
+        filterQCPlots("2013-08-09", "2013-08-27", expectedPlotCount);
     }
 
     public void resetInitialQCPlotFields()
@@ -296,16 +339,20 @@ public final class QCPlotsWebPart extends BodyWebPart
         // revert to the initial form values if any of them have changed
         if (getCurrentChartType() != QCPlotsWebPart.ChartType.RETENTION)
             setChartType(QCPlotsWebPart.ChartType.RETENTION);
+        if (getCurrentDateRangeOffset() != DateRangeOffset.ALL)
+            setDateRangeOffset(DateRangeOffset.ALL);
         if (getCurrentScale() != QCPlotsWebPart.Scale.LINEAR)
             setScale(QCPlotsWebPart.Scale.LINEAR);
         if (isGroupXAxisValuesByDateChecked())
             setGroupXAxisValuesByDate(false);
         if (isShowAllPeptidesInSinglePlotChecked())
             setShowAllPeptidesInSinglePlot(false, null);
+        waitForPlots();
     }
 
     public void filterQCPlots(String startDate, String endDate, int expectedPlotCount)
     {
+        setDateRangeOffset(DateRangeOffset.CUSTOM);
         setStartDate(startDate);
         setEndDate(endDate);
         applyRange();
@@ -427,6 +474,7 @@ public final class QCPlotsWebPart extends BodyWebPart
         WebElement startDate = new LazyWebElement(Locator.css("#start-date-field input"), this);
         WebElement endDate = new LazyWebElement(Locator.css("#end-date-field input"), this);
         Locator.XPathLocator scaleCombo = Locator.id("scale-combo-box");
+        Locator.XPathLocator dateRangeCombo = Locator.id("daterange-combo-box");
         Locator.XPathLocator chartTypeCombo = Locator.id("chart-type-field");
         Checkbox groupedXCheckbox = new Checkbox(new LazyWebElement(Locator.css("#grouped-x-field input"), this));
         Checkbox singlePlotCheckbox = new Checkbox(new LazyWebElement(Locator.css("#peptides-single-plot input"), this));

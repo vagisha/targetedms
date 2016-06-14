@@ -25,6 +25,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     // properties specific to this TargetedMS Levey-Jennings plot implementation
     yAxisScale: 'linear',
     chartType: 'retentionTime',
+    dateRangeOffset: 0,
+    minAcquiredTime: null,
+    maxAcquiredTime: null,
     startDate: null,
     endDate: null,
     groupedX: false,
@@ -39,28 +42,34 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     initComponent : function() {
         Ext4.tip.QuickTipManager.init();
 
-        // format incoming start and end dates so that we are dealing with strings instead of Date objects
-        if (this.startDate)
-            this.startDate = this.formatDate(this.startDate);
-        if (this.endDate)
-            this.endDate = this.formatDate(this.endDate);
-
         this.callParent();
 
-        // Get the initial values for the plot options.
-        // If there are URL parameters (i.e. from Pareto Plot click), set those as initia values as well.
+        // min and max acquired date must be provided
+        if (this.minAcquiredTime == null || this.maxAcquiredTime == null)
+            Ext4.get(this.plotDivId).update("<span class='labkey-error'>Unable to render report. Missing min and max AcquiredTime from data query.</span>");
+        else
+            this.queryInitialPlotOptions();
+    },
+
+    queryInitialPlotOptions : function()
+    {
+        // If there are URL parameters (i.e. from Pareto Plot click), set those as initial values as well.
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'leveyJenningsPlotOptions.api'),
             scope: this,
             success: LABKEY.Utils.getCallbackWrapper(function(response)
             {
-                // convert the boolean values from strings
+                // convert the boolean and integer values from strings
                 var initValues = {};
                 Ext4.iterate(response.properties, function(key, value)
                 {
                     if (value === "true" || value === "false")
                     {
                         value = value === "true";
+                    }
+                    else if (value != undefined && value.length > 0 && !isNaN(Number(value)))
+                    {
+                        value = +value;
                     }
                     initValues[key] = value;
                 });
@@ -73,83 +82,144 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         });
     },
 
+    calculateStartDateByOffset : function()
+    {
+        if (this.dateRangeOffset > 0)
+        {
+            var todayMinusOffset = new Date();
+            todayMinusOffset.setDate(todayMinusOffset.getDate() - this.dateRangeOffset);
+            return todayMinusOffset;
+        }
+
+        return this.minAcquiredTime;
+    },
+
+    calculateEndDateByOffset : function()
+    {
+        if (this.dateRangeOffset > 0)
+            return new Date();
+
+        return this.maxAcquiredTime;
+    },
+
     initPlotForm : function(initValues)
     {
         // apply the initial values to the panel object so they are used in form field initialization
         Ext4.apply(this, initValues);
 
+        // if we have a dateRangeOffset, we need to calculate the start and end date
+        if (this.dateRangeOffset > -1)
+        {
+            this.startDate = this.formatDate(this.calculateStartDateByOffset());
+            this.endDate = this.formatDate(this.calculateEndDateByOffset());
+        }
+
         // initialize the form panel toolbars and display the plot
         this.add(this.initPlotFormToolbars());
+
         this.displayTrendPlot();
     },
 
     initPlotFormToolbars : function()
     {
-        var tbspacer = {xtype: 'tbspacer'},
-            tbseparator = {xtype: 'tbseparator'},
-            toolbar1, toolbar2, toolbar3,
-            toolbarItems;
-
-        toolbar1 = Ext4.create('Ext.toolbar.Toolbar', {
-            ui: 'footer',
-            cls: 'levey-jennings-toolbar',
-            padding: 10,
-            layout: {
-                pack: 'center'
-            },
-            items: [
-                this.getChartTypeCombo(), tbspacer,
-                tbseparator, tbspacer,
-                this.getStartDateField(), tbspacer,
-                this.getEndDateField(), tbspacer,
-                this.getApplyDateRangeButton()
-            ]
-        });
-
-        toolbarItems = [
-            this.getScaleCombo(), tbspacer,
-            tbseparator, tbspacer,
-            this.getGroupedXCheckbox(), tbspacer,
-            tbseparator, tbspacer,
-            this.getSinglePlotCheckbox(), tbspacer
+        return [
+            { tbar: this.getMainPlotOptionsToolbar() },
+            { tbar: this.getCustomDateRangeToolbar() },
+            { tbar: this.getOtherPlotOptionsToolbar() },
+            { tbar: this.getGuideSetMessageToolbar() }
         ];
+    },
 
-        // only add the create guide set button if the user has the proper permissions to insert/update guide sets
-        if (this.canUserEdit())
+    getMainPlotOptionsToolbar : function()
+    {
+        if (!this.mainPlotOptionsToolbar)
         {
-            toolbarItems.push(tbseparator, tbspacer);
-            toolbarItems.push(this.getGuideSetCreateButton());
+            this.mainPlotOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
+                ui: 'footer',
+                cls: 'levey-jennings-toolbar',
+                padding: 10,
+                layout: { pack: 'center' },
+                items: [
+                    this.getChartTypeCombo(),
+                    {xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
+                    this.getDateRangeCombo()
+                ]
+            });
         }
 
-        toolbar2 = Ext4.create('Ext.toolbar.Toolbar', {
-            ui: 'footer',
-            cls: 'levey-jennings-toolbar',
-            layout: { pack: 'center' },
-            padding: '0 10px 10px 10px',
-            items: toolbarItems
-        });
+        return this.mainPlotOptionsToolbar;
+    },
 
-        toolbar3 = Ext4.create('Ext.toolbar.Toolbar', {
-            ui: 'footer',
-            cls: 'guideset-toolbar-msg',
-            hidden: true,
-            layout: {
-                pack: 'center'
-            },
-            items: [{
-                xtype: 'box',
-                itemId: 'GuideSetMessageToolBar',
-                html: 'Please click and drag in the plot to select the guide set training date range.'
-            }]
-        });
+    getOtherPlotOptionsToolbar : function()
+    {
+        if (!this.otherPlotOptionsToolbar)
+        {
+            var  toolbarItems = [
+                this.getScaleCombo(), {xtype: 'tbspacer'},
+                {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
+                this.getGroupedXCheckbox(), {xtype: 'tbspacer'},
+                {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
+                this.getSinglePlotCheckbox(), {xtype: 'tbspacer'}
+            ];
 
-        return [{
-            tbar: toolbar1
-        },{
-            tbar: toolbar2
-        },{
-            tbar: toolbar3
-        }];
+            // only add the create guide set button if the user has the proper permissions to insert/update guide sets
+            if (this.canUserEdit())
+            {
+                toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
+                toolbarItems.push(this.getGuideSetCreateButton());
+            }
+
+            this.otherPlotOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
+                ui: 'footer',
+                cls: 'levey-jennings-toolbar',
+                layout: { pack: 'center' },
+                padding: '0 10px 10px 10px',
+                items: toolbarItems
+            });
+        }
+
+        return this.otherPlotOptionsToolbar;
+    },
+
+    getCustomDateRangeToolbar : function()
+    {
+        if (!this.customDateRangeToolbar)
+        {
+            this.customDateRangeToolbar = Ext4.create('Ext.toolbar.Toolbar', {
+                ui: 'footer',
+                cls: 'levey-jennings-toolbar',
+                padding: '0 10px 10px 10px',
+                hidden: this.dateRangeOffset > -1,
+                layout: { pack: 'center' },
+                items: [
+                    this.getStartDateField(), {xtype: 'tbspacer'},
+                    this.getEndDateField(), {xtype: 'tbspacer'},
+                    this.getApplyDateRangeButton()
+                ]
+            });
+        }
+
+        return this.customDateRangeToolbar;
+    },
+
+    getGuideSetMessageToolbar : function()
+    {
+        if (!this.guideSetMessageToolbar)
+        {
+            this.guideSetMessageToolbar = Ext4.create('Ext.toolbar.Toolbar', {
+                ui: 'footer',
+                cls: 'guideset-toolbar-msg',
+                hidden: true,
+                layout: { pack: 'center' },
+                items: [{
+                    xtype: 'box',
+                    itemId: 'GuideSetMessageToolBar',
+                    html: 'Please click and drag in the plot to select the guide set training date range.'
+                }]
+            });
+        }
+
+        return this.guideSetMessageToolbar;
     },
 
     getInitialValuesFromUrlParams : function()
@@ -185,6 +255,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
             else
             {
+                paramValues['dateRangeOffset'] = -1; // force to custom date range selection
                 paramValues['startDate'] = this.formatDate(paramValue);
             }
         }
@@ -198,6 +269,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             }
             else
             {
+                paramValues['dateRangeOffset'] = -1; // force to custom date range selection
                 paramValues['endDate'] = this.formatDate(paramValue);
             }
         }
@@ -265,6 +337,61 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return this.scaleCombo;
     },
 
+    getDateRangeCombo : function()
+    {
+        if (!this.dateRangeCombo)
+        {
+            this.dateRangeCombo = Ext4.create('Ext.form.field.ComboBox', {
+                id: 'daterange-combo-box',
+                width: 190,
+                labelWidth: 75,
+                fieldLabel: 'Date Range',
+                triggerAction: 'all',
+                mode: 'local',
+                store: Ext4.create('Ext.data.ArrayStore', {
+                    fields: ['value', 'display'],
+                    data: [
+                        [0, 'All dates'],
+                        [7, 'Last 7 days'],
+                        [30, 'Last 30 days'],
+                        [90, 'Last 90 days'],
+                        [365, 'Last 365 days'],
+                        [-1, 'Custom range']
+                    ]
+                }),
+                valueField: 'value',
+                displayField: 'display',
+                value: this.dateRangeOffset,
+                forceSelection: true,
+                editable: false,
+                listeners: {
+                    scope: this,
+                    change: function(cmp, newVal, oldVal)
+                    {
+                        this.dateRangeOffset = newVal;
+                        this.havePlotOptionsChanged = true;
+
+                        var showCustomRangeItems = this.dateRangeOffset == -1;
+                        this.getCustomDateRangeToolbar().setVisible(showCustomRangeItems);
+
+                        if (!showCustomRangeItems)
+                        {
+                            // either use the min and max values based on the data
+                            // or calculate range based on today's date and the offset
+                            this.startDate = this.formatDate(this.calculateStartDateByOffset());
+                            this.endDate = this.formatDate(this.calculateEndDateByOffset());
+
+                            this.setBrushingEnabled(false);
+                            this.displayTrendPlot();
+                        }
+                    }
+                }
+            });
+        }
+
+        return this.dateRangeCombo;
+    },
+
     getStartDateField : function()
     {
         if (!this.startDateField)
@@ -320,7 +447,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         if (!this.applyFilterButton)
         {
             this.applyFilterButton = Ext4.create('Ext.button.Button', {
-                disabled: true,
                 text: 'Apply',
                 handler: this.applyGraphFilterBtnClick,
                 scope: this
@@ -366,6 +492,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     {
                         this.chartType = newVal;
                         this.havePlotOptionsChanged = true;
+
                         this.setBrushingEnabled(false);
                         this.displayTrendPlot();
                     }
@@ -867,25 +994,24 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.havePlotOptionsChanged = false;
             LABKEY.Ajax.request({
                 url: LABKEY.ActionURL.buildURL('targetedms', 'leveyJenningsPlotOptions.api'),
-                params: this.getSelectedPlotFormOptions(false)
+                params: this.getSelectedPlotFormOptions()
             });
         }
     },
 
-    getSelectedPlotFormOptions : function(includeDates)
+    getSelectedPlotFormOptions : function()
     {
         var props = {
             chartType: this.chartType,
             yAxisScale: this.yAxisScale,
             groupedX: this.groupedX,
-            singlePlot: this.singlePlot
+            singlePlot: this.singlePlot,
+            dateRangeOffset: this.dateRangeOffset
         };
 
-        if (includeDates)
-        {
-            props.startDate = this.formatDate(this.startDate);
-            props.endDate = this.formatDate(this.endDate);
-        }
+        // set start and end date to null unless we are
+        props.startDate = this.dateRangeOffset == -1 ? this.formatDate(this.startDate) : null;
+        props.endDate = this.dateRangeOffset == -1 ? this.formatDate(this.endDate) : null;
 
         return props;
     },
@@ -1654,6 +1780,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             this.endDate = endDateRawValue;
             this.havePlotOptionsChanged = true;
 
+            this.setBrushingEnabled(false);
             this.displayTrendPlot();
         }
     },

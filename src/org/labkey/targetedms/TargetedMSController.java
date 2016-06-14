@@ -516,6 +516,10 @@ public class TargetedMSController extends SpringActionController
                 Map<String, String> valuesToPersist = form.getAsMapOfStrings();
                 if (!valuesToPersist.isEmpty())
                 {
+                    // note: start and end date handled separately since they can be null and we want to persist that
+                    valuesToPersist.put("startDate", form.getStartDate());
+                    valuesToPersist.put("endDate", form.getEndDate());
+
                     properties.putAll(valuesToPersist);
                     properties.save();
                 }
@@ -533,6 +537,9 @@ public class TargetedMSController extends SpringActionController
         private String _yAxisScale;
         private Boolean _groupedX;
         private Boolean _singlePlot;
+        private Integer _dateRangeOffset;
+        private String _startDate;
+        private String _endDate;
 
         public Map<String, String> getAsMapOfStrings()
         {
@@ -545,6 +552,9 @@ public class TargetedMSController extends SpringActionController
                 valueMap.put("groupedX", Boolean.toString(_groupedX));
             if (_singlePlot != null)
                 valueMap.put("singlePlot", Boolean.toString(_singlePlot));
+            if (_dateRangeOffset != null)
+                valueMap.put("dateRangeOffset", Integer.toString(_dateRangeOffset));
+            // note: start and end date handled separately since they can be null and we want to persist that
             return valueMap;
         }
 
@@ -566,6 +576,31 @@ public class TargetedMSController extends SpringActionController
         public void setSinglePlot(Boolean singlePlot)
         {
             _singlePlot = singlePlot;
+        }
+
+        public void setDateRangeOffset(Integer dateRangeOffset)
+        {
+            _dateRangeOffset = dateRangeOffset;
+        }
+
+        public void setStartDate(String startDate)
+        {
+            _startDate = startDate;
+        }
+
+        public String getStartDate()
+        {
+            return _startDate;
+        }
+
+        public void setEndDate(String endDate)
+        {
+            _endDate = endDate;
+        }
+
+        public String getEndDate()
+        {
+            return _endDate;
         }
     }
 

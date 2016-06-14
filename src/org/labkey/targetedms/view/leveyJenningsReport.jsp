@@ -59,9 +59,9 @@
 
             LABKEY.Query.executeSql({
                 schemaName: 'targetedms',
-                sql: 'SELECT MIN(SampleFileId.AcquiredTime) AS StartDate, MAX(SampleFileId.AcquiredTime) AS EndDate FROM generalmoleculechrominfo',
+                sql: 'SELECT MIN(SampleFileId.AcquiredTime) AS MinAcquiredTime, MAX(SampleFileId.AcquiredTime) AS MaxAcquiredTime FROM generalmoleculechrominfo',
                 success: function(data) {
-                    if (data.rows.length == 0 || !data.rows[0].StartDate) {
+                    if (data.rows.length == 0 || !data.rows[0]['MinAcquiredTime']) {
                         Ext4.get(plotPanelId).update("No data found. Please upload runs using the Data Pipeline or directly from Skyline.");
                     }
                     else {
@@ -74,18 +74,16 @@
             });
         }
 
-        function initializeReportPanels(data, reportPanelId, plotPanelId, countLimitedPanelId) {
-            var startDate = new Date(data.rows[0].StartDate);
-            var endDate = new Date(data.rows[0].EndDate);
-
+        function initializeReportPanels(data, reportPanelId, plotPanelId, countLimitedPanelId)
+        {
             // initialize the panel that displays the Levey-Jennings plot for trend plotting
             Ext4.create('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 renderTo: reportPanelId,
                 plotDivId: plotPanelId,
                 countLimitedDivId: countLimitedPanelId,
                 cls: 'themed-panel2',
-                startDate: startDate,
-                endDate: endDate
+                minAcquiredTime: new Date(data.rows[0]['MinAcquiredTime']),
+                maxAcquiredTime: new Date(data.rows[0]['MaxAcquiredTime'])
             });
         }
 
