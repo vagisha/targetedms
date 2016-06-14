@@ -133,6 +133,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.resetInitialQCPlotFields();
 
         // 4 of the 5 guide sets are visible in plot region based on the initial data
         List<Pair<String, Integer>> shapeCounts = new ArrayList<>();
