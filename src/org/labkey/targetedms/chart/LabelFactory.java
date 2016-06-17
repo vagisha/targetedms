@@ -90,7 +90,7 @@ public class LabelFactory
     public static String transitionLabel(MoleculeTransition transition)
     {
         StringBuilder label = new StringBuilder();
-        label.append(transition.getIonFormula());
+        label.append(transition.getIonFormula() == null ? "Ion" : transition.getIonFormula());
         label.append(" - ").append(Formats.f4.format(transition.getMz()));
         if(transition.getCharge() != null)
         {
@@ -99,7 +99,7 @@ public class LabelFactory
         return label.toString();
     }
 
-    public static String precursorLabel(int precursorId, User user, Container container)
+    public static String precursorLabel(int precursorId)
     {
         Map<String, Object> precursorSummary = PrecursorManager.getPrecursorSummary(precursorId);
 
@@ -121,14 +121,12 @@ public class LabelFactory
     {
         MoleculePrecursor moleculePrecursor = MoleculePrecursorManager.getPrecursor(container, moleculePrecursorId, user);
 
-        StringBuilder label = new StringBuilder();
-        label.append(moleculePrecursor.getCustomIonName());
-        label.append(" - ").append(Formats.f4.format(moleculePrecursor.getMz()));
-        label.append(getChargeLabel(moleculePrecursor.getCharge()));
-        return label.toString();
+        return moleculePrecursor.getCustomIonName() +
+                " - " + Formats.f4.format(moleculePrecursor.getMz()) +
+                getChargeLabel(moleculePrecursor.getCharge());
     }
 
-    public static String precursorChromInfoLabel(PrecursorChromInfo pChromInfo, User user, Container container)
+    public static String precursorChromInfoLabel(PrecursorChromInfo pChromInfo)
     {
         if(pChromInfo.isOptimizationPeak())
         {
@@ -136,11 +134,11 @@ public class LabelFactory
         }
         else
         {
-            return precursorLabel(pChromInfo.getPrecursorId(), user, container);
+            return precursorLabel(pChromInfo.getPrecursorId());
         }
     }
 
-    public static String generalMoleculeChromInfoChartTitle(GeneralMoleculeChromInfo pepChromInfo, User user, Container container)
+    public static String generalMoleculeChromInfoChartTitle(GeneralMoleculeChromInfo pepChromInfo)
     {
         SampleFile sampleFile = ReplicateManager.getSampleFile(pepChromInfo.getSampleFileId());
         Replicate replicate = ReplicateManager.getReplicate(sampleFile.getReplicateId());
@@ -154,31 +152,27 @@ public class LabelFactory
         return label.toString();
     }
 
-    public static String peptideChromInfoChartTitle(GeneralMoleculeChromInfo pepChromInfo, User user, Container container)
+    public static String peptideChromInfoChartTitle(GeneralMoleculeChromInfo pepChromInfo, Container container)
     {
         Peptide peptide = PeptideManager.getPeptide(container, pepChromInfo.getGeneralMoleculeId());
 
-        StringBuilder label = new StringBuilder();
-        label.append(generalMoleculeChromInfoChartTitle(pepChromInfo, user, container));
-        label.append('\n');
-        label.append(peptide.getSequence());
-        return label.toString();
+        return generalMoleculeChromInfoChartTitle(pepChromInfo) +
+                '\n' +
+                peptide.getSequence();
     }
 
-    public static String moleculeChromInfoChartTitle(GeneralMoleculeChromInfo pepChromInfo, User user, Container container)
+    public static String moleculeChromInfoChartTitle(GeneralMoleculeChromInfo pepChromInfo, Container container)
     {
         Molecule molecule = MoleculeManager.getMolecule(container, pepChromInfo.getGeneralMoleculeId());
 
-        StringBuilder label = new StringBuilder();
-        label.append(generalMoleculeChromInfoChartTitle(pepChromInfo, user, container));
-        label.append('\n');
-        label.append(molecule.getCustomIonName());
-        return label.toString();
+        return generalMoleculeChromInfoChartTitle(pepChromInfo) +
+                '\n' +
+                molecule.getCustomIonName();
     }
 
-    public static String precursorChromInfoChartTitle(PrecursorChromInfo pChromInfo, User user, Container container)
+    public static String precursorChromInfoChartTitle(PrecursorChromInfo pChromInfo)
     {
-        String label = precursorLabel(pChromInfo.getPrecursorId(), user, container);
+        String label = precursorLabel(pChromInfo.getPrecursorId());
         return generalPrecursorChromInfoChartTitle(label, pChromInfo);
     }
 

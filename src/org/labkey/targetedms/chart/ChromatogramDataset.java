@@ -214,13 +214,13 @@ public abstract class ChromatogramDataset
 
         protected String getLabel(PrecursorChromInfo pChromInfo)
         {
-            return LabelFactory.precursorLabel(pChromInfo.getPrecursorId(), _user, _container);
+            return LabelFactory.precursorLabel(pChromInfo.getPrecursorId());
         }
 
         @Override
         public String getChartTitle()
         {
-            return LabelFactory.peptideChromInfoChartTitle(_pepChromInfo, _user, _container);
+            return LabelFactory.peptideChromInfoChartTitle(_pepChromInfo, _container);
         }
     }
 
@@ -258,7 +258,7 @@ public abstract class ChromatogramDataset
         @Override
         public String getChartTitle()
         {
-            return LabelFactory.moleculeChromInfoChartTitle(_pepChromInfo, _user, _container);
+            return LabelFactory.moleculeChromInfoChartTitle(_pepChromInfo, _container);
         }
     }
 
@@ -572,15 +572,10 @@ public abstract class ChromatogramDataset
                     _precursorChromInfo.getPrecursorId(),
                     _precursorChromInfo.getSampleFileId(), _user, _container);
 
-            Collections.sort(precursorChromInfoList, new Comparator<PrecursorChromInfoPlus>()
-            {
-                @Override
-                public int compare(PrecursorChromInfoPlus o1, PrecursorChromInfoPlus o2)
-                {
-                    Integer step1 = o1.getOptimizationStep() == null ? 0 : o1.getOptimizationStep();
-                    Integer step2 = o2.getOptimizationStep() == null ? 0 : o2.getOptimizationStep();
-                    return step1.compareTo(step2);
-                }
+            Collections.sort(precursorChromInfoList, (o1, o2) -> {
+                Integer step1 = o1.getOptimizationStep() == null ? 0 : o1.getOptimizationStep();
+                Integer step2 = o2.getOptimizationStep() == null ? 0 : o2.getOptimizationStep();
+                return step1.compareTo(step2);
             });
             return precursorChromInfoList;
         }
@@ -613,13 +608,13 @@ public abstract class ChromatogramDataset
         @Override
         protected String getLabel(PrecursorChromInfo pChromInfo)
         {
-            return LabelFactory.precursorChromInfoLabel(pChromInfo, _user, _container);
+            return LabelFactory.precursorChromInfoLabel(pChromInfo);
         }
 
         @Override
         public String getChartTitle()
         {
-            return LabelFactory.precursorChromInfoChartTitle(_precursorChromInfo, _user, _container);
+            return LabelFactory.precursorChromInfoChartTitle(_precursorChromInfo);
         }
 
         @Override
@@ -697,7 +692,7 @@ public abstract class ChromatogramDataset
             for(int chromatogramIndex = 0; chromatogramIndex < transitionCount; chromatogramIndex++)
             {
                 List<TransitionChromInfo> tChromInfoList = TransitionManager.getTransitionChromInfoList(_pChromInfo.getId(), chromatogramIndex);
-                if(tChromInfoList == null || tChromInfoList.size() == 0)
+                if(tChromInfoList.isEmpty())
                     continue;
                 for(TransitionChromInfo tChromInfo: tChromInfoList)
                 {
@@ -901,7 +896,7 @@ public abstract class ChromatogramDataset
         @Override
         public String getChartTitle()
         {
-            return LabelFactory.precursorChromInfoChartTitle(_pChromInfo, _user, _container );
+            return LabelFactory.precursorChromInfoChartTitle(_pChromInfo);
         }
 
         @Override
@@ -947,7 +942,7 @@ public abstract class ChromatogramDataset
             for (int chromatogramIndex = 0; chromatogramIndex < transitionCount; chromatogramIndex++)
             {
                 List<TransitionChromInfo> tChromInfoList = TransitionManager.getTransitionChromInfoList(_pChromInfo.getId(), chromatogramIndex);
-                if (tChromInfoList == null || tChromInfoList.size() == 0)
+                if (tChromInfoList.isEmpty())
                     continue;
                 for (TransitionChromInfo tChromInfo: tChromInfoList)
                 {

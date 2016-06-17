@@ -229,7 +229,7 @@ public class Chromatogram extends SkylineEntity
     private byte[] uncompress(byte[] compressedBytes) throws DataFormatException
     {
         int uncompressedSize = _uncompressedSize;
-        if(uncompressedSize == 0)
+        if(uncompressedSize <= 0)
         {
             uncompressedSize = (Integer.SIZE / 8) * _numPoints * (_numTransitions + 1);
         }
@@ -250,6 +250,10 @@ public class Chromatogram extends SkylineEntity
 
     private float toFloat(byte[] bytes, int offset)
     {
+        if (bytes.length <= offset + 3)
+        {
+            return 10;
+        }
         int asInt = (bytes[offset] & 0xFF)
                     | ((bytes[offset + 1] & 0xFF) << 8)
                     | ((bytes[offset + 2] & 0xFF) << 16)

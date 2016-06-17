@@ -15,6 +15,8 @@
 
 package org.labkey.targetedms.query;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
@@ -42,11 +44,13 @@ public class TransitionManager
 {
     private TransitionManager() {}
 
+    @Nullable
     public static Transition get(int transitionId, User user, Container container)
     {
         return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container)), Transition.getColumns()).getObject(transitionId, Transition.class);
     }
 
+    @Nullable
     public static TransitionChromInfo getTransitionChromInfo(Container c, int id)
     {
         SQLFragment sql = new SQLFragment("SELECT tci.* FROM ");
@@ -70,7 +74,7 @@ public class TransitionManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(TransitionChromInfo.class);
     }
 
-    // Returns null if an entry for the given precursorChromInfoId and chromatogramIndex is not found.
+    @NotNull
     public static List<TransitionChromInfo> getTransitionChromInfoList(int precursorChromInfoId, int chromatogramIndex)
     {
         SimpleFilter filter = new SimpleFilter();
@@ -82,6 +86,7 @@ public class TransitionManager
                                 .getArrayList(TransitionChromInfo.class);
     }
 
+    @NotNull
     public static List<TransitionChromInfo> getTransitionChromInfoList(int precursorChromInfoId)
     {
         SimpleFilter filter = new SimpleFilter();
@@ -92,6 +97,7 @@ public class TransitionManager
                 .getArrayList(TransitionChromInfo.class);
     }
 
+    @Nullable
     public static TransitionChromInfo getTransitionChromInfoForTransition(int transitionId, int precursorChromInfoId)
     {
         SimpleFilter filter = new SimpleFilter();
@@ -135,7 +141,7 @@ public class TransitionManager
             String condition = fragmentType == Transition.Type.PRECURSOR ? "=" : "!=";
 
             sql.append(" AND ");
-            sql.append("tran.FragmentType " + condition +  " 'precursor' ");
+            sql.append("tran.FragmentType ").append(condition).append(" 'precursor' ");
         }
         sql.append(" AND ");
         sql.append("gmci.GeneralMoleculeId=?");
@@ -144,22 +150,25 @@ public class TransitionManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
+    @NotNull
     public static Set<Integer> getTransitionChromatogramIndexes(int precursorChromInfoId)
     {
         TableInfo tinfo = TargetedMSManager.getTableInfoTransitionChromInfo();
-        Collection tranChromIndexes = new TableSelector(tinfo.getColumn("ChromatogramIndex"),
+        Collection<Integer> tranChromIndexes = new TableSelector(tinfo.getColumn("ChromatogramIndex"),
                                                         new SimpleFilter(FieldKey.fromParts("PrecursorChromInfoId"), precursorChromInfoId),
                                                         null
                                                         ).getCollection(Integer.class);
-        return new HashSet<Integer>(tranChromIndexes);
+        return new HashSet<>(tranChromIndexes);
     }
 
+    @NotNull
     public static Collection<Transition> getTransitionsForPrecursor(int precursorId, User user, Container container)
     {
         return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container)), Transition.getColumns(),
                                  new SimpleFilter(FieldKey.fromParts("PrecursorId"), precursorId), null).getCollection(Transition.class);
     }
 
+    @NotNull
     public static Collection<TransitionChromInfo> getTransitionChromInfoListForTransition(int transitionId)
     {
         return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(), Transition.getColumns(),
