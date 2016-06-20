@@ -45,13 +45,11 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCTest extends TargetedMSTest
 {
-    private static final int INIT_DATA_SAMPLE_FILE_COUNT = 47;
     private static final String[] PRECURSORS = {
             "ATEEQLK",
             "FFVAPFPEVFGK",
@@ -287,16 +285,19 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testDocsWithOverlappingSampleFiles()
     {
-        List<String> precursors = new ArrayList<>(Arrays.asList(PRECURSORS));
+        List<String> precursors = new ArrayList<>();
         precursors.add("AGGSSEPVTGLADK");
         precursors.add("VEATFGVDESANK");
         Collections.sort(precursors);
 
+        String subFolderName = "OverlappingSampleFiles";
+        setupSubfolder(getProjectName(), subFolderName, FolderType.QC); //create a Panorama folder of type QC
+
         // Upload QC_1.sky.zip
         // File has results from 3 sample files.
-        importData(QC_1_FILE, 2);
-        goToProjectHome();
-        verifyQcSummary(2, INIT_DATA_SAMPLE_FILE_COUNT + 3, precursors.size());
+        importData(QC_1_FILE, 1);
+        clickFolder(subFolderName);
+        verifyQcSummary(1, 3, precursors.size());
 
         // Upload QC_2.sky.zip
         // File has results from 3 sample files but two of these are the same as the ones in QC_1.sky.zip.
@@ -305,15 +306,15 @@ public class TargetedMSQCTest extends TargetedMSTest
         // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=22455
         // Importing a file containing two or more sample files that had already been imported from an earlier document
         // in a QC folder was causing an exception in the code that calculates area ratios.
-        importData(QC_2_FILE, 3);
-        goToProjectHome();
-        verifyQcSummary(3, INIT_DATA_SAMPLE_FILE_COUNT + 4, precursors.size());
+        importData(QC_2_FILE, 2);
+        clickFolder(subFolderName);
+        verifyQcSummary(2, 4, precursors.size());
 
         // verify if the new start/stop date ranges based on the runs added in this test
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.resetInitialQCPlotFields();
-        assertEquals("2013-08-09", qcPlotsWebPart.getCurrentStartDate());
+        assertEquals("2015-01-16", qcPlotsWebPart.getCurrentStartDate());
         assertEquals("2015-01-16", qcPlotsWebPart.getCurrentEndDate());
 
         // Check for the newly added precursors.

@@ -44,7 +44,6 @@ import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.XarFormatException;
 import org.labkey.api.exp.XarSource;
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExpMaterial;
 import org.labkey.api.exp.api.ExpProtocol;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
@@ -79,6 +78,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
 
@@ -948,6 +949,30 @@ public class TargetedMSManager
         sqlFragment.append(" WHERE p.Id = gm.Id AND gm.PeptideGroupId = pg.Id AND pg.RunId = ");
         sqlFragment.append(runAlias != null ? runAlias : "?");
         return sqlFragment;
+    }
+
+    public static Set<String> getDistinctPeptides(Container c)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT DISTINCT(p.Sequence) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p").append(" INNER JOIN ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON p.Id = gm.Id INNER JOIN ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(" ON gm.PeptideGroupId = pg.Id INNER JOIN ");
+        sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON r.Id = pg.RunId AND r.Container = ?");
+        sqlFragment.add(c);
+
+        return new TreeSet<>(new SqlSelector(getSchema(), sqlFragment).getCollection(String.class));
+    }
+
+    public static Set<String> getDistinctMolecules(Container c)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT DISTINCT(m.IonFormula) FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoMolecule(), "m").append(" INNER JOIN ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON m.Id = gm.Id INNER JOIN ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(" ON gm.PeptideGroupId = pg.Id INNER JOIN ");
+        sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON r.Id = pg.RunId AND r.Container = ?");
+        sqlFragment.add(c);
+
+        return new TreeSet<>(new SqlSelector(getSchema(), sqlFragment).getCollection(String.class));
     }
 
     public static SQLFragment getRunSmallMoleculeCountSQL(String runAlias)

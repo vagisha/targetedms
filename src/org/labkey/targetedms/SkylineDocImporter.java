@@ -61,11 +61,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.DataFormatException;
 
 /**
- * Drives import of the Skyline document, and handles the high-level iteration for inserting the document's contents into the database
+ * Drives import of the Skyline document, and handles the high-level iteration for inserting
+ * the document's contents into the database
  * User: vsharma
  * Date: 4/1/12
  * Time: 10:58 AM
@@ -79,11 +81,11 @@ public class SkylineDocImporter
     private static final String IMPORT_STARTED = "Importing... (refresh to check status)";
     private static final String IMPORT_SUCCEEDED = "";
 
-    protected User _user;
-    protected Container _container;
+    private User _user;
+    private Container _container;
     private final TargetedMSRun.RepresentativeDataState _representative;
     private final ExpData _expData;
-    protected String _description;
+    private String _description;
 
     protected int _runId;
     private boolean _isProteinLibraryDoc = false;
@@ -522,19 +524,41 @@ public class SkylineDocImporter
                     _libPrecursors = new HashSet<>();
                 }
                 int peptideGroupCount = 0;
+                Set<String> peptides = new TreeSet<>();
+                Set<String> smallMolecules = new TreeSet<>();
+
                 while (parser.hasNextPeptideGroup())
                 {
                     PeptideGroup pepGroup = parser.nextPeptideGroup();
                     insertPeptideGroup(proteinService, insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap,
                             isotopeLabelIdMap, internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap,
-                            isotopeModNameIdMap, libraryNameIdMap, pepGroup, parser);
+                            isotopeModNameIdMap, libraryNameIdMap, pepGroup, parser, peptides, smallMolecules);
                     if (++peptideGroupCount % 100 == 0)
                     {
                         _log.info("Imported " + peptideGroupCount + " peptide groups.");
                     }
                 }
 
-                run.setDocumentGUID(parser.getDocumentGUID());
+                if (folderType == TargetedMSModule.FolderType.QC)
+                {
+                    Set<String> expectedPeptides = TargetedMSManager.getDistinctPeptides(_container);
+                    Set<String> expectedMolecules = TargetedMSManager.getDistinctMolecules(_container);
+
+                    if (!expectedMolecules.isEmpty() || !expectedPeptides.isEmpty())
+                    {
+                        if (!expectedPeptides.equals(peptides))
+                        {
+                            throw new PipelineJobException("QC folders require that all documents use the same peptides, but they did not match. Please create a new QC folder if you wish to work with different peptides. Attempted import: " + peptides + ". Previously imported: " + expectedPeptides + ".");
+                        }
+                        if (!expectedMolecules.equals(smallMolecules))
+                        {
+                            throw new PipelineJobException("QC folders require that all documents use the same molecule, but they did not match. Please create a new QC folder if you wish to work with different molecules. Attempted import: " + smallMolecules + ". Previously imported: " + expectedMolecules + ".");
+                        }
+                    }
+                }
+
+
+            run.setDocumentGUID(parser.getDocumentGUID());
                 Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
                 if (run.isRepresentative())
@@ -786,8 +810,8 @@ public class SkylineDocImporter
                                     Map<String, Integer> isotopeLabelIdMap, Set<Integer> internalStandardLabelIds,
                                     Map<String, Integer> structuralModNameIdMap, Map<Integer,
             PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap,
-                                    Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser)
-            throws XMLStreamException, IOException, DataFormatException
+                                    Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser, Set<String> peptides, Set<String> smallMolecules)
+            throws XMLStreamException, IOException, DataFormatException, PipelineJobException
     {
         pepGroup.setRunId(_runId);
 
@@ -860,13 +884,16 @@ public class SkylineDocImporter
         // Issue 24571: Keep track of the peptides in this protein if this is document is being uploaded to a protein library folder.
         Set<String> libProteinPeptides = new HashSet<>();
         int count = 1;
+
         while((molType = parser.hasNextPeptideOrMolecule()) != null)
         {
             GeneralMolecule generalMolecule = null;
             switch(molType)
             {
                 case PEPTIDE:
-                    generalMolecule = parser.nextPeptide();
+                    Peptide peptide = parser.nextPeptide();
+                    peptides.add(peptide.getSequence());
+                    generalMolecule = peptide;
                     if(_isProteinLibraryDoc)
                     {
                         Peptide p = (Peptide) generalMolecule;
@@ -883,14 +910,15 @@ public class SkylineDocImporter
                     }
                     break;
                 case MOLECULE:
-                    generalMolecule = parser.nextMolecule();
+                    Molecule molecule = parser.nextMolecule();
+                    smallMolecules.add(molecule.getIonFormula());
+                    generalMolecule = molecule;
                     break;
             }
-            _log.info("inserting gen mol. # " + count++);
+
             insertPeptideOrSmallMolecule(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap,
                     internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap,
                     libraryNameIdMap, pepGroup, generalMolecule);
-
         }
     }
 
@@ -939,7 +967,6 @@ public class SkylineDocImporter
                                Integer> libraryNameIdMap, PeptideGroup pepGroup, GeneralMolecule generalMolecule)
     {
         Peptide peptide = null;
-        Molecule molecule = null;
 
         generalMolecule.setPeptideGroupId(pepGroup.getId());
 
@@ -962,7 +989,7 @@ public class SkylineDocImporter
         }
         else if (generalMolecule instanceof Molecule)
         {
-            molecule = (Molecule) generalMolecule;
+            Molecule molecule = (Molecule) generalMolecule;
             molecule.setId(generalMolecule.getId());
             _log.info("molecule formula " + molecule.getIonFormula() + ", id = " + molecule.getId());
             Table.insert(_user, TargetedMSManager.getTableInfoMolecule(), molecule);
