@@ -969,7 +969,7 @@ public class TargetedMSManager
         sqlFragment.append(TargetedMSManager.getTableInfoMolecule(), "m").append(" INNER JOIN ");
         sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON m.Id = gm.Id INNER JOIN ");
         sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(" ON gm.PeptideGroupId = pg.Id INNER JOIN ");
-        sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON r.Id = pg.RunId AND r.Container = ?");
+        sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON r.Id = pg.RunId AND r.Container = ? AND m.IonFormula IS NOT NULL");
         sqlFragment.add(c);
 
         return new TreeSet<>(new SqlSelector(getSchema(), sqlFragment).getCollection(String.class));

@@ -911,7 +911,11 @@ public class SkylineDocImporter
                     break;
                 case MOLECULE:
                     Molecule molecule = parser.nextMolecule();
-                    smallMolecules.add(molecule.getIonFormula());
+                    if (molecule.getIonFormula() != null)
+                    {
+                        // Some molecules only have a mass, no formula. Just omit them from the check.
+                        smallMolecules.add(molecule.getIonFormula());
+                    }
                     generalMolecule = molecule;
                     break;
             }
@@ -991,7 +995,6 @@ public class SkylineDocImporter
         {
             Molecule molecule = (Molecule) generalMolecule;
             molecule.setId(generalMolecule.getId());
-            _log.info("molecule formula " + molecule.getIonFormula() + ", id = " + molecule.getId());
             Table.insert(_user, TargetedMSManager.getTableInfoMolecule(), molecule);
 
             Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = insertGeneralMoleculeChromInfos(generalMolecule.getId(),
