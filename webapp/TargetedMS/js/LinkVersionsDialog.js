@@ -60,7 +60,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             return;
         }
 
-        if (config.asView && !Ext.isString(config.divId)) {
+        if (config.asView && !Ext4.isString(config.divId)) {
             console.error("'divId' must be defined for asView.");
             return;
         }
