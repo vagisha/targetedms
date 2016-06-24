@@ -19,7 +19,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.LinkVersionsGrid;
@@ -52,8 +51,6 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         // pre-upload the files to the pipeline root so that all of the @Test don't have to worry about it
         init.goToModule("Pipeline");
         init.clickButton("Process and Import Data");
-        for (String file : QC_DOCUMENT_NAMES)
-            init._fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
     }
 
     @Before
@@ -65,9 +62,9 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         // since importing one of these runs is really quick, delete and re-import runs
         // for each @Test so that we can assure the Created date ordering of the runs
         deleteExistingQCRuns();
-        importData(QC_1_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3), false);
-        importData(QC_2_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3), false);
-        importData(QC_3_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3), false);
+        importData(QC_1_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3));
+        importData(QC_2_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3));
+        importData(QC_3_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3));
         clickTab("Runs");
     }
 
@@ -78,9 +75,9 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
 
         for (String documentName : QC_DOCUMENT_NAMES)
         {
-            if (table.getRow("File", documentName) > -1)
+            if (table.getRowIndex("File", documentName) > -1)
             {
-                table.checkCheckbox(table.getRow("File", documentName));
+                table.checkCheckbox(table.getRowIndex("File", documentName));
                 hasRunsToDelete = true;
             }
         }

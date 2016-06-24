@@ -28,7 +28,9 @@ import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.LoggedParam;
 import org.labkey.test.util.UIContainerHelper;
+import org.openqa.selenium.WebElement;
 
 import java.util.Arrays;
 import java.util.List;
@@ -97,29 +99,40 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         selectFolderType(folderType);
     }
 
-    @LogMethod
     protected void importData(String file)
     {
         importData(file, 1);
     }
 
-    @LogMethod
     protected void importData(String file, int jobCount)
     {
         importData(file, jobCount, true);
     }
 
-    @LogMethod
-    protected void importData(String file, int jobCount, boolean uploadIfDoesntExist)
+    protected void importData(String file, boolean failOnError)
     {
-        log("Importing file " + file);
-        goToModule("Pipeline");
-        clickButton("Process and Import Data");
-        if (uploadIfDoesntExist && !isElementPresent(FileBrowserHelper.Locators.gridRow(file)))
+        importData(file, 1, failOnError);
+    }
+
+    @LogMethod
+    protected void importData(@LoggedParam String file, int jobCount, boolean failOnError)
+    {
+        Locator.XPathLocator importButtonLoc = Locator.lkButton("Process and Import Data");
+        WebElement importButton = importButtonLoc.findElementOrNull(getDriver());
+        if (null == importButton)
+        {
+            goToModule("Pipeline");
+            importButton = importButtonLoc.findElement(getDriver());
+        }
+        clickAndWait(importButton);
+        if (!isElementPresent(FileBrowserHelper.Locators.gridRow(file)))
             _fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
         _fileBrowserHelper.importFile(file, "Import Skyline Results");
         waitForText("Skyline document import");
-        waitForPipelineJobsToFinish(jobCount);
+        if (failOnError)
+            waitForPipelineJobsToComplete(jobCount, file, false);
+        else
+            waitForPipelineJobsToFinish(jobCount);
     }
 
     @LogMethod
@@ -208,7 +221,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         if (!"Guide Sets".equals(getUrlParam("pageId", true)))
             clickTab("Guide Sets");
 
-        DataRegionTable table = new DataRegionTable("qwp1", this);
+        DataRegionTable table = new DataRegionTable("qwp1", getDriver());
         table.checkAll();
         table.clickHeaderButtonByText("Delete");
         assertAlertContains("Are you sure you want to delete the selected row");
@@ -217,7 +230,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
-        deleteProject(getProjectName(), afterTest);
+        _containerHelper.deleteProject(getProjectName(), afterTest);
         deleteUsersIfPresent(USER);
     }
 

@@ -402,6 +402,7 @@ test/src/org/labkey/test/tests/targetedms/ClustergrammerTest.java -text
 test/src/org/labkey/test/tests/targetedms/GetDataAPITest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSExperimentIrtTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSExperimentTest.java -text
+test/src/org/labkey/test/tests/targetedms/TargetedMSIrtTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSLibraryIrtTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSLibraryTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSLinkVersionsTest.java -text

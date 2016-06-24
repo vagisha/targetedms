@@ -13,10 +13,6 @@ import org.labkey.test.components.targetedms.TargetedMSRunsTable;
 
 import java.util.Arrays;
 
-
-/**
- * Created by iansigmon on 4/19/16.
- */
 @Category({DailyB.class, MS2.class})
 public class ClustergrammerTest extends TargetedMSTest
 {
@@ -33,10 +29,7 @@ public class ClustergrammerTest extends TargetedMSTest
     {
         ClustergrammerTest init = (ClustergrammerTest)getCurrentTest();
         init.setupFolder(FolderType.QC);
-        init.importData(SProCoP_FILE);
-        init.importData(QC_1_FILE,2);
-        init.importData(QC_2_FILE,3);
-        init.importData(QC_3_FILE,4);
+        init.importData(SProCoP_FILE, true);
     }
 
     @Before
@@ -53,7 +46,7 @@ public class ClustergrammerTest extends TargetedMSTest
         TargetedMSRunsTable table = new TargetedMSRunsTable(this);
 
         //check button enabled on selection
-        table.checkCheckbox(1);
+        table.checkCheckbox(0);
         assertElementPresent(Locator.lkButtonContainingText(BUTTON_TEXT));
         ClustergrammerDialog dialog = table.openClustergrammerDialog(Arrays.asList(SProCoP_FILE));
 
@@ -69,21 +62,30 @@ public class ClustergrammerTest extends TargetedMSTest
         String acceptConfirmation = "Test: Acceptance";
         dialog.setReportTitle(acceptConfirmation);
         dialog.setReportDescription(acceptConfirmation);
-        dialog.clickSave(true);
-        Assert.assertTrue("Was not redirected to Clustergrammer as expected",
-                getURL().toString().contains(ClustergrammerDialog.CG_REDIRECT_URL));
+        ClustergrammerDialog.Confirmation confirmation = dialog.clickSave();
+        pauseJsErrorChecker(); // Ignore JSErrors on external server
+        {
+            confirmation.clickYes();
+            Assert.assertTrue("Was not redirected to Clustergrammer as expected",
+                    getURL().toString().contains(ClustergrammerDialog.CG_REDIRECT_URL));
+        }
+        resumeJsErrorChecker();
 
         //Verify LinkReport was created
         navigateToRunsTab();
         goToManageViews();
         waitForElement(Locator.linkWithText(acceptConfirmation));
         assertElementNotPresent(Locator.linkWithText(declineConfirmation));
-        assertElementPresent(Locator.linkWithText(acceptConfirmation));
-        clickAndWait(Locator.linkWithText(acceptConfirmation), 10000);
 
-        //Verify link navigates to Clustergrammer
-        Assert.assertTrue("LinkReport [" + acceptConfirmation + "] to Clustergrammer was broken",
-                getURL().toString().contains(ClustergrammerDialog.CG_REDIRECT_URL));
+        pauseJsErrorChecker(); // Ignore JSErrors on external server
+        {
+            clickAndWait(Locator.linkWithText(acceptConfirmation), 10000);
+
+            //Verify link navigates to Clustergrammer
+            Assert.assertTrue("LinkReport [" + acceptConfirmation + "] to Clustergrammer was broken",
+                    getURL().toString().contains(ClustergrammerDialog.CG_REDIRECT_URL));
+        }
+        resumeJsErrorChecker();
 
         //TODO: Waiting to exercise the query more explicitly as it is likely to change in the near future.
     }

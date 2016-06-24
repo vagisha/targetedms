@@ -17,42 +17,14 @@ package org.labkey.test.tests.targetedms;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-import org.labkey.remoteapi.query.Filter;
-import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
-import org.labkey.test.util.PipelineStatusTable;
-import org.labkey.test.util.UIContainerHelper;
-
-import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 @Category({DailyB.class, MS2.class})
-public class TargetedMSLibraryIrtTest extends TargetedMSTest
+public class TargetedMSLibraryIrtTest extends TargetedMSIrtTest
 {
-    private static final String SCHEMA = "targetedms";
-    private static final String QUERY = "iRTPeptide";
-
-    // All tests use varations of this test dataset.
-    protected static final String SKY_FILE = "iRT Human+Standard Calibrate.zip";
-    protected static final int PEPTIDE_COUNT = 716;
-    private static final double DELTA = 0.00001;
-
-    // Same iRT standards, but one value has been badly skewed
-    protected static final String SKY_FILE_ONE_BAD_STANDARD = "iRT Human+Standard Calibrate_ONE_BAD_STANDARD.zip";
-
-    // No iRT standards, and all retention times multiplied by 2
-    protected static final String SKY_FILE_DOUBLE_TIMES_NO_STANDARDS = "iRT Human_ DOUBLE_TIMES_NO_STANDARDS.zip";
-
-    // One of the sequences for a standard peptide has been changed in DIEFERENT_STANDARDS
-    protected static final String SKY_FILE_BAD_STANDARDS = "iRT Human+Standard Calibrate_DIFFERENT_STANDARDS.zip";
-
     // One of the sequences has had it's value changed in FOR_UPDATE to verify the weighted average calculation.
     // Another one of the sequences has been changed altogether to verify import counts and new inserts.
     private static final String SKY_FILE_UPDATE_SCALE = "iRT Human+Standard Calibrate_FOR_UPDATE.zip";
@@ -60,14 +32,12 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
     private static final String STANDARD_PEPTIDE = "TPVITGAPYEYR";
 
     // This peptide has been hand edited in the "FOR_UPDATE" test dataset.
-    protected static final String UPDATE_PEPTIDE = "ASTEGVAIQGQQGTR";
     private static final double ORIGINAL_VALUE = -6.9907960408018255;
     private static final double REWEIGHED_VALUE = -3.49539802;
 
-//  The changed sequence in "FOR_UPDATE"
+    //  The changed sequence in "FOR_UPDATE"
     private static final String OMITTED_PEPTIDE = "AQYEDIANR";
     private static final String NEW_PEPTIDE = "ZZZZZZ";
-
 
     private static final String IGNORE_ONE_STANDARD_MSG = "Calculated iRT regression line by ignoring import value for standard: ADVTPADFSEWSK";
     private static final String CALCULATED_FROM_SHARED_MSG = "Successfully calculated iRT regression line from 705 shared peptides";
@@ -75,17 +45,6 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
     private static final String COULDNT_CALCULATE_CORRELATION_MSG = "Unable to find sufficient correlation in standard or shared library peptides";
 
     private int goodImport = 0;
-
-    public TargetedMSLibraryIrtTest()
-    {
-        setContainerHelper(new UIContainerHelper(this));
-    }
-
-    @Override
-    protected String getProjectName()
-    {
-        return "TargetedMS" + "_iRT Test";
-    }
 
     @Test
     public void testSteps()
@@ -125,54 +84,11 @@ public class TargetedMSLibraryIrtTest extends TargetedMSTest
 
         // 5. Shared peptide failed correlation test. Import another copy which doesn't match the same set of standards as the first import. Because of the update done in test 4, this will
         // attempt to calculate a correlation from shared peptides, and fail to find one.
-        importData(SKY_FILE_BAD_STANDARDS, 5);
+        importData(SKY_FILE_BAD_STANDARDS, 5, false);
         assertTextPresent("ERROR");
         checkLogMessage(COULDNT_CALCULATE_CORRELATION_MSG);
         checkExpectedErrors(1);
 
-        downloadLibraryExport();
-    }
-
-    private void downloadLibraryExport()
-    {
-        // Very basic sanity check- can we get a download file with expected name and a reasonable file length.
-        // We're not attempting to verify its contents.
-        goToProjectHome();
-        final File exportFile = clickAndWaitForDownload(Locator.linkWithText("Download"), 1)[0];
-        assertEquals(getProjectName() + "_rev" + goodImport + ".clib", exportFile.getName());
-        Supplier<Boolean> fileSize = () -> exportFile.length() > 1E+6;
-        waitFor(fileSize, WAIT_FOR_JAVASCRIPT);
-        assertTrue("Chromatogram library export file is too small: " + exportFile.length() + " bytes", fileSize.get());
-    }
-
-    protected int getRowCount()
-    {
-        return executeSelectRowCommand(SCHEMA, QUERY).getRowCount().intValue();
-    }
-
-    protected List<Map<String, Object>> getRowsForPeptide(String peptide)
-    {
-        return executeSelectRowCommand(SCHEMA, QUERY, Collections.singletonList(new Filter("ModifiedSequence", peptide))).getRows();
-    }
-
-    protected Map<String, Object> getIrtPeptide(String peptide)
-    {
-        return getRowsForPeptide(peptide).get(0);
-    }
-
-    protected double getIrtValue(String peptide)
-    {
-        return (double) getIrtPeptide(peptide).get("iRTValue");
-    }
-
-    protected int getImportCount(String peptide)
-    {
-        return (int) getIrtPeptide(peptide).get("ImportCount");
-    }
-
-    private void checkLogMessage(String message)
-    {
-        new PipelineStatusTable(this).clickStatusLink(0);
-        assertTextPresent(message);
+        downloadLibraryExport(goodImport);
     }
 }

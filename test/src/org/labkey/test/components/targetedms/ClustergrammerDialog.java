@@ -3,13 +3,9 @@ package org.labkey.test.components.targetedms;
 import org.labkey.test.Locator;
 import org.labkey.test.components.ext4.Window;
 import org.labkey.test.selenium.LazyWebElement;
-import org.labkey.test.util.Ext4Helper;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
-/**
- * Created by iansigmon on 4/19/16.
- */
 public class ClustergrammerDialog extends Window
 {
     private static final String DIALOG_TITLE = "Clustergrammer Heat Map";
@@ -23,11 +19,15 @@ public class ClustergrammerDialog extends Window
         _elements = new Elements();
     }
 
-    public void clickSave(boolean confirm)
+    public Confirmation clickSave()
     {
         clickButton("Save", 0);
-        Confirmation confirmation = new Confirmation(getWrapper().getDriver());
-        confirmation.waitForDialog();
+        return new Confirmation(getWrapper().getDriver());
+    }
+
+    public void clickSave(boolean confirm)
+    {
+        Confirmation confirmation = clickSave();
 
         if (confirm)
             confirmation.clickYes();
@@ -57,11 +57,6 @@ public class ClustergrammerDialog extends Window
         return getWrapper().getFormElement(elements().reportDescriptionEditor);
     }
 
-    public void waitForDialog()
-    {
-        getWrapper().waitForElement(Ext4Helper.Locators.window(DIALOG_TITLE));
-    }
-
     //Hides superclasses' elements()
     protected Elements elements()
     {
@@ -87,18 +82,12 @@ public class ClustergrammerDialog extends Window
         public void clickYes()
         {
             clickButton("Yes", 30000);
-            waitForClose();
         }
 
         public void clickNo()
         {
             clickButton("No", 0);
             waitForClose();
-        }
-
-        public void waitForDialog()
-        {
-            getWrapper().waitForElement(Ext4Helper.Locators.window(CONFIRMATION_TITLE));
         }
     }
 }

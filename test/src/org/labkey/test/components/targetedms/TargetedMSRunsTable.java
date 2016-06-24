@@ -25,7 +25,7 @@ public class TargetedMSRunsTable extends DataRegionTable
 {
     public TargetedMSRunsTable(WebDriverWrapper test)
     {
-        super("TargetedMSRuns", test);
+        super("TargetedMSRuns", test.getDriver());
     }
 
     public void goToDocumentDetails(String name)
@@ -52,7 +52,7 @@ public class TargetedMSRunsTable extends DataRegionTable
     public void deleteRun(String documentName)
     {
         uncheckAll();
-        checkCheckbox(getRow("File", documentName));
+        checkCheckbox(getRowIndex("File", documentName));
         clickHeaderButtonByText("Delete");
         _driver.clickButton("Confirm Delete");
     }
@@ -60,18 +60,14 @@ public class TargetedMSRunsTable extends DataRegionTable
     public ClustergrammerDialog openClustergrammerDialog(List<String> documents)
     {
         openDialogForDocuments("Clustergrammer Heatmap", documents);
-
-        ClustergrammerDialog dialog = new ClustergrammerDialog(_driver.getDriver());
-        dialog.waitForDialog();
-
-        return dialog;
+        return new ClustergrammerDialog(_driver.getDriver());
     }
 
     public void openDialogForDocuments(String buttonText, List<String> documentNames)
     {
         uncheckAll();
         for (String documentName : documentNames)
-            checkCheckbox(getRow("File", documentName));
+            checkCheckbox(getRowIndex("File", documentName));
 
         clickHeaderButtonByText(buttonText);
     }
