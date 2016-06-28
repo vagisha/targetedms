@@ -757,17 +757,17 @@ public class TargetedMSManager
 
     private static List<Integer> getCurrentProteinRepresentativeRunIds(Container container)
     {
-        return getProteinRepresentativeRunIds(container, new Integer[]{RepresentativeDataState.Representative.ordinal()});
+        return getProteinRepresentativeRunIds(container, RepresentativeDataState.Representative.ordinal());
     }
 
     private static List<Integer> getProteinRepresentativeRunIds(Container container)
     {
-        return getProteinRepresentativeRunIds(container, new Integer[]{RepresentativeDataState.Representative.ordinal(),
-                                                                       RepresentativeDataState.Deprecated.ordinal(),
-                                                                       RepresentativeDataState.Conflicted.ordinal()});
+        return getProteinRepresentativeRunIds(container, RepresentativeDataState.Representative.ordinal(),
+                                                         RepresentativeDataState.Deprecated.ordinal(),
+                                                         RepresentativeDataState.Conflicted.ordinal());
     }
 
-    private static List<Integer> getProteinRepresentativeRunIds(Container container, Integer[] stateArray)
+    private static List<Integer> getProteinRepresentativeRunIds(Container container, int... stateArray)
     {
         SQLFragment reprRunIdSql = new SQLFragment();
         reprRunIdSql.append("SELECT DISTINCT (RunId) FROM ");
@@ -786,17 +786,17 @@ public class TargetedMSManager
 
     private static List<Integer> getCurrentPeptideRepresentativeRunIds(Container container)
     {
-        return getPeptideRepresentativeRunIds(container, new Integer[]{RepresentativeDataState.Representative.ordinal()});
+        return getPeptideRepresentativeRunIds(container, RepresentativeDataState.Representative.ordinal());
     }
 
     private static List<Integer> getPeptideRepresentativeRunIds(Container container)
     {
-        return getPeptideRepresentativeRunIds(container, new Integer[]{RepresentativeDataState.Representative.ordinal(),
-                                                                       RepresentativeDataState.Deprecated.ordinal(),
-                                                                       RepresentativeDataState.Conflicted.ordinal()});
+        return getPeptideRepresentativeRunIds(container, RepresentativeDataState.Representative.ordinal(),
+                                                         RepresentativeDataState.Deprecated.ordinal(),
+                                                         RepresentativeDataState.Conflicted.ordinal());
     }
 
-    private static List<Integer> getPeptideRepresentativeRunIds(Container container, Integer[] stateArray)
+    private static List<Integer> getPeptideRepresentativeRunIds(Container container, int... stateArray)
     {
         // Get a list of runIds that have proteins that are either representative, deprecated or conflicted.
         SQLFragment reprRunIdSql = new SQLFragment();
