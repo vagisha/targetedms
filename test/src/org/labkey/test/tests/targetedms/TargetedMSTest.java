@@ -125,6 +125,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
             importButton = importButtonLoc.findElement(getDriver());
         }
         clickAndWait(importButton);
+        _fileBrowserHelper.waitForFileGridReady();
         if (!isElementPresent(FileBrowserHelper.Locators.gridRow(file)))
             _fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
         _fileBrowserHelper.importFile(file, "Import Skyline Results");
