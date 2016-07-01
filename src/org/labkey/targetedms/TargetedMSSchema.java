@@ -528,13 +528,17 @@ public class TargetedMSSchema extends UserSchema
                         {
                             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {
-                                String runId = String.valueOf(ctx.get(this.getColumnInfo().getFieldKey()));
-                                downloadUrl.replaceParameter("runId", runId);
+                                Object value = ctx.get(this.getColumnInfo().getFieldKey());
+                                if (value != null)
+                                {
+                                    String runId = String.valueOf(value);
+                                    downloadUrl.replaceParameter("runId", runId);
 
-                                File skyDocFile = SkylineFileUtils.getSkylineFile(Integer.parseInt(runId));
-                                String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
-                                out.write(PageFlowUtil.textLink("Download", downloadUrl));
-                                out.write("<span class=\"labkey-text-link\">" + size + "</span>");
+                                    File skyDocFile = SkylineFileUtils.getSkylineFile(Integer.parseInt(runId));
+                                    String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
+                                    out.write(PageFlowUtil.textLink("Download", downloadUrl));
+                                    out.write("<span class=\"labkey-text-link\">" + size + "</span>");
+                                }
                             }
                         };
                     }
