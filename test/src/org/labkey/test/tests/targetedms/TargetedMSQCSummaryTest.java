@@ -294,7 +294,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6, 5000);
 
         tempStringList01.clear();
-        tempStringList01.add("2013/08/27 14:45:49 - 1/42 outliers");
+        tempStringList01.add("2013/08/27 14:45:49 - 1/56 outliers");
         tempStringList01.add("2013/08/27 03:19:45 - no outliers");
 
         tempStringList02.clear();
