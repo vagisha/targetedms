@@ -33,9 +33,24 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         var applicableChartTypes = [];
         Ext4.each(this.chartTypePropArr, function(chartTypeProps)
         {
-            if (chartTypeProps.showInParetoPlot)
+            if (Ext4.isDefined(chartTypeProps['series1Label']))
             {
-                applicableChartTypes.push(chartTypeProps);
+                applicableChartTypes.push({
+                    name: chartTypeProps['name'],
+                    label: chartTypeProps['series1Label'],
+                    schemaName: chartTypeProps['series1SchemaName'],
+                    queryName: chartTypeProps['series1QueryName']
+                });
+            }
+
+            if (Ext4.isDefined(chartTypeProps['series2Label']))
+            {
+                applicableChartTypes.push({
+                    name: chartTypeProps['name'],
+                    label: chartTypeProps['series2Label'],
+                    schemaName: chartTypeProps['series2SchemaName'],
+                    queryName: chartTypeProps['series2QueryName']
+                });
             }
         });
 
@@ -65,19 +80,14 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
     getGuideSetNonConformersSql : function(chartTypeProps)
     {
         return "SELECT stats.GuideSetId,"
-            + "\n'" + chartTypeProps.shortName + "' AS Metric,"
-            + "\n'" + chartTypeProps.title + "' AS MetricLongLabel,"
-            + "\n'" + (chartTypeProps.altParetoPlotClickName || chartTypeProps.name) + "' AS MetricName,"
-            + "\nSUM(CASE WHEN X.Value > (stats.Mean + (3 * stats.StandardDev)) OR"
-            + "\n   X.Value < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers"
-            + "\nFROM ("
-            + "\n   SELECT COALESCE(" + chartTypeProps.baseLkFieldKey + "PrecursorId.ModifiedSequence, " + chartTypeProps.baseLkFieldKey + "MoleculePrecursorId.CustomIonName) AS Fragment,"
-            + "\n   " + chartTypeProps.baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
-            + "\n   " + chartTypeProps.colName + " AS Value"
-            + "\n   FROM " + chartTypeProps.baseTableName
-            + "\n) X"
-            + "\nLEFT JOIN GuideSetStats_" + chartTypeProps.name + " stats"
-            + "\n  ON X.Fragment = stats.Fragment"
+            + "\n'" + chartTypeProps.name + "' AS MetricName,"
+            + "\n'" + chartTypeProps.label + "' AS MetricLabel,"
+            + "\nSUM(CASE WHEN X.MetricValue > (stats.Mean + (3 * stats.StandardDev)) OR"
+            + "\n   X.MetricValue < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers"
+            + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.FilePath AS FilePath"
+            + "\n  FROM " + chartTypeProps.schemaName + "." + chartTypeProps.queryName + ") X"
+            + "\nLEFT JOIN (" + this.metricGuideSetSql(chartTypeProps.schemaName, chartTypeProps.queryName) + ") stats"
+            + "\n  ON X.SeriesLabel = stats.SeriesLabel"
             + "\n  AND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
             + "\n  OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
             + "\nWHERE stats.GuideSetId IS NOT NULL"
@@ -89,7 +99,6 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         var nonConformers = dataRows;
         var guideSetMap = {};
         var guideSetCount = 1;
-        var shortNameLongNameMap = {};
 
         for (var i = 0; i < nonConformers.length; i++)
         {
@@ -102,8 +111,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
             guideSetMap[key].data.push({
                 guidesetId: key,
-                metric : nonConformers[i]['Metric'],
-                metricLong: nonConformers[i]['MetricLongLabel'],
+                metricLabel : nonConformers[i]['MetricLabel'],
                 metricName: nonConformers[i]['MetricName'],
                 count : count,
                 percent: 0,
@@ -111,9 +119,6 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                 trainingEnd: this.guideSetIdTrainingDatesMap[key].trainingEnd,
                 referenceEnd: this.guideSetIdTrainingDatesMap[key].referenceEnd
             });
-
-            //store short name long name in a map for hover text
-            shortNameLongNameMap[nonConformers[i]['Metric']] = nonConformers[i]['MetricLongLabel'];
         }
 
         for (var key in guideSetMap)
@@ -150,12 +155,12 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             this.addPlotWebPartToPlotDiv(id, "Guide Set " + guideSetCount, this.plotPanelDiv, 'pareto-plot-wp');
             this.setPlotWidth(this.plotPanelDiv);
             this.createExportToPDFButton(id, title, "ParetoPlot-Guide Set "+guideSetCount);
-            this.plotPareto(id, sortedDataset, title, shortNameLongNameMap, maxNumNonConformers);
+            this.plotPareto(id, sortedDataset, title, maxNumNonConformers);
             guideSetCount++;
         }
     },
 
-    plotPareto: function(id, data, title, hoverTextMap, yAxisMax)
+    plotPareto: function(id, data, title, yAxisMax)
     {
         var barChart = new LABKEY.vis.Plot({
             renderTo: id,
@@ -174,19 +179,33 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                 }),
                 new LABKEY.vis.Layer({
                     geom: new LABKEY.vis.Geom.Path({color: 'steelblue'}),
-                    aes: { x: 'metric', yRight: 'percent' }
+                    aes: { x: 'metricLabel', yRight: 'percent' }
                 }),
                 new LABKEY.vis.Layer({
                     geom: new LABKEY.vis.Geom.Point({color: 'steelblue'}),
-                    aes: { x: 'metric', yRight: 'percent', hoverText: function(val){return val.percent.toPrecision(4) + "%"}}
+                    aes: { x: 'metricLabel', yRight: 'percent', hoverText: function(val){return val.percent.toPrecision(4) + "%"}}
                 })
             ],
-            aes: { x: 'metric', y: 'count' },
+            aes: {
+                x: 'metricLabel',
+                y: 'count'
+            },
             scales : {
-                x : { scaleType: 'discrete', tickHoverText: function(val) { return hoverTextMap[val]}},
-                yLeft : { domain: [0, (yAxisMax==0 ? 1 : yAxisMax)]},
-                yRight : { domain: [0, 100] },
-
+                x : {
+                    scaleType: 'discrete',
+                    tickHoverText: function(val) {
+                        return val;
+                    }
+                },
+                yLeft : {
+                    domain: [0, (yAxisMax==0 ? 1 : yAxisMax)]
+                },
+                yRight : {
+                    domain: [0, 100]
+                }
+            },
+            margins: {
+                bottom: 75
             }
         });
         barChart.render();

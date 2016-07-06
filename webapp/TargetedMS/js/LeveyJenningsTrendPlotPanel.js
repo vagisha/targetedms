@@ -460,15 +460,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     {
         if (!this.chartTypeField)
         {
-            var chartTypes = [];
-            Ext4.each(this.chartTypePropArr, function(chartType)
-            {
-                if (chartType.showInChartTypeCombo)
-                {
-                    chartTypes.push(chartType);
-                }
-            });
-
             this.chartTypeField = Ext4.create('Ext.form.field.ComboBox', {
                 id: 'chart-type-field',
                 width: 340,
@@ -479,7 +470,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 store: Ext4.create('Ext.data.Store', {
                     fields: ['name', 'title'],
                     sorters: [{property: 'title'}],
-                    data: chartTypes
+                    data: this.chartTypePropArr
                 }),
                 valueField: 'name',
                 displayField: 'title',
@@ -535,7 +526,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         {
             this.peptidesInSinglePlotCheckbox = Ext4.create('Ext.form.field.Checkbox', {
                 id: 'peptides-single-plot',
-                boxLabel: 'Show All Fragments in Single Plot',
+                boxLabel: 'Show All Series in a Single Plot',
                 checked: this.singlePlot,
                 listeners: {
                     scope: this,
@@ -607,24 +598,28 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     getDistinctPrecursors: function() {
 
         var chartTypeProps = this.getChartTypePropsByName(this.chartType);
-        var baseTableName = chartTypeProps.baseTableName;
-        var baseLkFieldKey = chartTypeProps.baseLkFieldKey;
 
-        var sql = "SELECT DISTINCT COALESCE(" + baseLkFieldKey + "PrecursorId.ModifiedSequence, " + baseLkFieldKey + "MoleculePrecursorId.CustomIonName) AS Fragment "
-                + "\n FROM " + baseTableName + "\n";
-        var separator = ' WHERE ';
+        var series1Sql = "SELECT SeriesLabel FROM " + chartTypeProps.series1SchemaName + "." + chartTypeProps.series1QueryName,
+            series2Sql = this.isMultiSeries() ? " UNION SELECT SeriesLabel FROM " + chartTypeProps.series2SchemaName + "." + chartTypeProps.series2QueryName : '',
+            separator = ' WHERE ';
 
         // CAST as DATE to ignore time portion of value
-        if (this.startDate) {
-            sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) >= '" + this.startDate + "'";
+        if (this.startDate)
+        {
+            series1Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) >= '" + this.startDate + "'";
+            if (series2Sql.length > 0)
+                series2Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) >= '" + this.startDate + "'";
+
             separator = " AND ";
         }
-
-        if (this.endDate) {
-            sql += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
+        if (this.endDate)
+        {
+            series1Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
+            if (series2Sql.length > 0)
+                series2Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
         }
 
-        sql += " ORDER BY Fragment";
+        var sql = "SELECT DISTINCT SeriesLabel FROM (\n" + series1Sql + series2Sql + "\n) X ORDER BY SeriesLabel";
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
@@ -632,7 +627,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             scope: this,
             success: function(data) {
 
-                // stash the set of precursor fragments for use with the plot rendering
+                // stash the set of precursor series labels for use with the plot rendering
                 this.precursors = [];
                 if (data.rows.length > this.maxCount) {
                     Ext4.get(this.countLimitedDivId).update("Limiting display to the first " + this.maxCount + " precursors out of " + data.rows.length + " total");
@@ -644,7 +639,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 }
 
                 for (var i = 0; i < Math.min(data.rows.length, this.maxCount); i++) {
-                    this.precursors.push(data.rows[i].Fragment);
+                    this.precursors.push(data.rows[i].SeriesLabel);
                 }
 
                 this.getAnnotationData();
@@ -725,22 +720,24 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         var config = this.getReportConfig();
         var chartTypeProps = this.getChartTypePropsByName(this.chartType);
 
-        // Filter on start/end dates from the QC plot form
-        var guideSetSql = "SELECT s.*, g.Comment FROM GuideSetStats_" + chartTypeProps.name + " s"
+        var guideSetSql = "SELECT s.*, g.Comment FROM ("
+                + this.metricGuideSetSql(chartTypeProps.series1SchemaName, chartTypeProps.series1QueryName, chartTypeProps.series2SchemaName, chartTypeProps.series2QueryName) + ") s"
                 + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
+
+        // Filter on start/end dates from the QC plot form
         var separator = " WHERE ";
         if (config.StartDate) {
-            guideSetSql += separator + "s.TrainingEnd >= '" + config.StartDate + "'";
+            guideSetSql += separator + "(s.ReferenceEnd >= '" + config.StartDate + "' OR s.ReferenceEnd IS NULL)";
             separator = " AND ";
         }
         if (config.EndDate) {
-            guideSetSql += separator + "s.TrainingStart <= TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP))";
+            guideSetSql += separator + "s.TrainingStart < TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP))";
         }
 
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: guideSetSql,
-            sort: 'TrainingStart,Fragment',
+            sort: 'TrainingStart,SeriesLabel',
             scope: this,
             success: this.processGuideSetData,
             failure: this.failureHandler
@@ -749,86 +746,85 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     processGuideSetData : function(data)
     {
-        this.guideSetTrainingData = data.rows;
-        var guideSetTrainingDataUniqueIds = Ext4.Array.toValueMap(this.guideSetTrainingData , 'GuideSetId');
-        this.guideSetTrainingDataUniqueObjects = [];
-
-        for (var i in guideSetTrainingDataUniqueIds)
-        {
-            if (guideSetTrainingDataUniqueIds.hasOwnProperty(i))
+        this.guideSetDataMap = {};
+        Ext4.each(data.rows, function(row) {
+            var guideSetId = row['GuideSetId'];
+            if (!this.guideSetDataMap[guideSetId])
             {
-                this.guideSetTrainingDataUniqueObjects.push(Ext4.clone(guideSetTrainingDataUniqueIds[i]));
+                this.guideSetDataMap[guideSetId] = {
+                    ReferenceEnd: row['ReferenceEnd'],
+                    TrainingEnd: row['TrainingEnd'],
+                    TrainingStart: row['TrainingStart'],
+                    Comment: row['Comment'],
+                    Series: {}
+                };
             }
-        }
+
+            var seriesLabel = row['SeriesLabel'];
+            if (!this.guideSetDataMap[guideSetId].Series[seriesLabel])
+            {
+                this.guideSetDataMap[guideSetId].Series[seriesLabel] = {
+                    NumRecords: row['NumRecords'],
+                    Mean: row['Mean'],
+                    StandardDev: row['StandardDev']
+                };
+            }
+        }, this);
 
         this.getPlotData();
     },
 
-    getPlotData: function() {
-        var config = this.getReportConfig();
-
-        var chartTypeProps = this.getChartTypePropsByName(this.chartType);
-        var baseTableName = chartTypeProps.baseTableName;
-        var baseLkFieldKey = chartTypeProps.baseLkFieldKey;
-
-        var valueSelectList = '', valueInnerSelectList = '', sep = '';
-        if (Ext4.isDefined(chartTypeProps.colName))
-        {
-            valueSelectList = ' X.Value,';
-            valueInnerSelectList = chartTypeProps.colName + ' AS Value';
-        }
-        else if (Ext4.isArray(chartTypeProps.colNames))
-        {
-            // if the metric is to show multiple y-axis measures, add the column names to the select list
-            for (var i = 0; i < chartTypeProps.colNames.length; i++)
-            {
-                valueSelectList += ' X.Value' + chartTypeProps.colNames[i].axis + ',';
-                valueInnerSelectList += sep + chartTypeProps.colNames[i].name + ' AS Value' + chartTypeProps.colNames[i].axis;
-                sep = ', ';
-            }
-        }
+    getPlotData: function()
+    {
+        var config = this.getReportConfig(),
+            chartTypeProps = this.getChartTypePropsByName(this.chartType);
 
         // Filter on start/end dates, casting as DATE to ignore the time part
-        var whereClause = " WHERE ";
-        var separator = "";
+        var whereClause = " WHERE ", sep = "";
         if (config.StartDate) {
-            whereClause += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
-            separator = " AND ";
+            whereClause += "CAST(SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
+            sep = " AND ";
         }
         if (config.EndDate) {
-            whereClause += separator + "CAST(" + baseLkFieldKey + "SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
+            whereClause += sep + "CAST(SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
         }
 
-        var guideSetStatsJoinClause = "ON X.Fragment = stats.Fragment AND ((X.AcquiredTime >= stats.TrainingStart "
-                + "AND X.AcquiredTime < stats.ReferenceEnd) OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))";
+        this.plotDataRows = [];
+        var seriesTypes = this.isMultiSeries() ? ['series1', 'series2'] : ['series1'],
+            seriesCount = 0;
+        Ext4.each(seriesTypes, function(type)
+        {
+            var schema = chartTypeProps[type + 'SchemaName'],
+                query = chartTypeProps[type + 'QueryName'];
 
-        // Build query to get the values and mean/stdDev ranges for each data point
-        var sql = "SELECT X.PrecursorId, X.PrecursorChromInfoId, X.Fragment,"
-            + "\n    X.AcquiredTime, X.FilePath," + valueSelectList
-            + "\nCASE WHEN (X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime <= stats.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange,"
-            + "\nstats.GuideSetId, stats.Mean, stats.StandardDev, stats.TrainingStart,"
-            + "\nX.IsProteomics"
-            + "\nFROM (SELECT COALESCE(" + baseLkFieldKey + "PrecursorId.Id, "+ baseLkFieldKey + "MoleculePrecursorId.Id) AS PrecursorId,"
-            + "\n      " + baseLkFieldKey + "Id AS PrecursorChromInfoId,"
-            + "\n       COALESCE(" + baseLkFieldKey + "PrecursorId.ModifiedSequence, " + baseLkFieldKey + "MoleculePrecursorId.CustomIonName) AS Fragment,"
-            + "\n       CASE WHEN " + baseLkFieldKey + "PrecursorId.Id IS NOT NULL THEN TRUE ELSE FALSE END AS IsProteomics,"
-            + "\n      " + baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
-            + "\n      " + baseLkFieldKey + "SampleFileId.FilePath AS FilePath,"
-            + "\n      " + valueInnerSelectList
-            + "\n      FROM " + baseTableName + whereClause + ") X "
-            + "\nLEFT JOIN GuideSetStats_" + chartTypeProps.name + " stats " + guideSetStatsJoinClause;
+            // Build query to get the metric values and related guide set info for this series
+            var sql = "SELECT '" + type + "' AS SeriesType,"
+                    + "\nX.PrecursorId, X.PrecursorChromInfoId, X.SeriesLabel, X.DataType, X.AcquiredTime,"
+                    + "\nX.FilePath, X.MetricValue, gs.RowId AS GuideSetId,"
+                    + "\nCASE WHEN (X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime <= gs.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange"
+                    + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.FilePath AS FilePath"
+                    + "\n      FROM " + schema + '.' + query + whereClause + ") X "
+                    + "\nLEFT JOIN guideset gs"
+                    + "\nON ((X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime < gs.ReferenceEnd) OR (X.AcquiredTime >= gs.TrainingStart AND gs.ReferenceEnd IS NULL))"
+                    + "\nORDER BY X.SeriesLabel, X.AcquiredTime";
 
-        LABKEY.Query.executeSql({
-            schemaName: 'targetedms',
-            sql: sql,
-            sort: 'Fragment, AcquiredTime',
-            scope: this,
-            success: function(data) {
-                this.plotDataRows = data.rows;
-                this.processPlotData();
-            },
-            failure: this.failureHandler
-        });
+            LABKEY.Query.executeSql({
+                schemaName: 'targetedms',
+                sql: sql,
+                scope: this,
+                success: function(data) {
+                    this.plotDataRows = this.plotDataRows.concat(data.rows);
+
+                    seriesCount++;
+                    if (seriesCount == seriesTypes.length)
+                    {
+                        this.processPlotData();
+                    }
+                },
+                failure: this.failureHandler
+            });
+
+        }, this);
     },
 
     processPlotData: function() {
@@ -838,12 +834,20 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.fragmentPlotData = {};
         for (var i = 0; i < this.plotDataRows.length; i++)
         {
-            var row = this.plotDataRows[i];
-            var fragment = row['Fragment'];
-            var isProteomics = row['IsProteomics'];
+            var row = this.plotDataRows[i],
+                seriesType = row['SeriesType'],
+                fragment = row['SeriesLabel'],
+                dataType = row['DataType'];
 
-            if (!this.fragmentPlotData[fragment]) {
-                this.fragmentPlotData[fragment] = {fragment: fragment, data: [], min: null, max: null, isProteomics: isProteomics};
+            if (!this.fragmentPlotData[fragment])
+            {
+                this.fragmentPlotData[fragment] = {
+                    fragment: fragment,
+                    dataType: dataType,
+                    data: [],
+                    min: null,
+                    max: null
+                };
             }
 
             var data = {
@@ -855,39 +859,38 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
                 date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
                 groupedXTick: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
-                IsProteomics: isProteomics //needed for plot point click handler
+                dataType: dataType //needed for plot point click handler
             };
 
             // if a guideSetId is defined for this row, include the guide set stats values in the data object
             if (Ext4.isDefined(row['GuideSetId']))
             {
-                data['mean'] = row['Mean'];
-                data['stdDev'] = row['StandardDev'];
-                data['guideSetId'] = row['GuideSetId'];
-                data['inGuideSetTrainingRange'] = row['InGuideSetTrainingRange'];
-                data['groupedXTick'] = data['groupedXTick'] + '|'
-                        + (row['TrainingStart'] ? row['TrainingStart'] : '0') + '|'
-                        + (row['InGuideSetTrainingRange'] ? 'include' : 'notinclude');
+                var gs = this.guideSetDataMap[row['GuideSetId']];
+                if (Ext4.isDefined(gs) && gs.Series[fragment])
+                {
+                    data['mean'] = gs.Series[fragment]['Mean'];
+                    data['stdDev'] = gs.Series[fragment]['StandardDev'];
+                    data['guideSetId'] = row['GuideSetId'];
+                    data['inGuideSetTrainingRange'] = row['InGuideSetTrainingRange'];
+                    data['groupedXTick'] = data['groupedXTick'] + '|'
+                            + (gs['TrainingStart'] ? gs['TrainingStart'] : '0') + '|'
+                            + (row['InGuideSetTrainingRange'] ? 'include' : 'notinclude');
+                }
             }
 
-            // if the metric defines multiple colNames for the plot, tack on the additional values to the data object
-            // otherwise just add the default 'value' to the data object
-            if (Ext4.isArray(chartTypeProps.colNames))
+            if (this.isMultiSeries())
             {
-                for (var j = 0; j < chartTypeProps.colNames.length; j++)
-                {
-                    data['value' + chartTypeProps.colNames[j].axis] = row['Value' + chartTypeProps.colNames[j].axis];
-                    data['value' + chartTypeProps.colNames[j].axis + 'Title'] = chartTypeProps.colNames[j].title;
-                }
+                data['value_' + seriesType] = row['MetricValue'];
+                data['value_' + seriesType + 'Title'] = chartTypeProps[seriesType + 'Label'];
             }
             else
             {
-                data['value'] = row['Value'];
+                data['value'] = row['MetricValue'];
             }
 
             this.fragmentPlotData[fragment].data.push(data);
 
-            this.setFragmentMinMax(this.fragmentPlotData[fragment], row);
+            this.setSeriesMinMax(this.fragmentPlotData[fragment], data);
         }
 
         // merge in the annotation data to make room on the y axis
@@ -1039,8 +1042,6 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     {
         var addedPlot = false,
             chartTypeProps = this.getChartTypePropsByName(this.chartType),
-            yLeftIndex = this.getYAxisIndex('yLeft'),
-            yRightIndex = this.getYAxisIndex('yRight'),
             me = this; // for plot brushing
 
         for (var i = 0; i < this.precursors.length; i++)
@@ -1080,12 +1081,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 if (this.isMultiSeries())
                 {
                     ljProperties['disableRangeDisplay'] = true;
-                    if (yLeftIndex > -1) {
-                        ljProperties['value'] = 'valueyLeft';
-                    }
-                    if (yRightIndex > -1) {
-                        ljProperties['valueRight'] = 'valueyRight';
-                    }
+                    ljProperties['value'] = 'value_series1';
+                    ljProperties['valueRight'] = 'value_series2';
                 }
                 else
                 {
@@ -1109,12 +1106,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                             visibility: 'hidden'
                         },
                         yLeft: {
-                            value: yLeftIndex > -1 ? chartTypeProps.colNames[yLeftIndex].title : chartTypeProps.title,
+                            value: chartTypeProps.series1Label,
                             visibility: this.isMultiSeries() ? undefined : 'hidden',
                             color: this.isMultiSeries() ? this.getColorRange()[0] : undefined
                         },
                         yRight: {
-                            value: yRightIndex > -1 ? chartTypeProps.colNames[yRightIndex].title : chartTypeProps.title,
+                            value: this.isMultiSeries() ? chartTypeProps.series2Label : undefined,
                             visibility: this.isMultiSeries() ? undefined : 'hidden',
                             color: this.isMultiSeries() ? this.getColorRange()[1] : undefined
                         }
@@ -1146,7 +1143,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
                 this.addAnnotationsToPlot(plot, precursorInfo);
 
-                this.addGuideSetTrainingRangeToPlot(plot, precursorInfo, this.guideSetTrainingData);
+                this.addGuideSetTrainingRangeToPlot(plot, precursorInfo);
 
                 this.createExportToPDFButton(id, "QC Plot for fragment " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment);
             }
@@ -1162,28 +1159,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         if (Ext4.isString(this.chartType))
         {
             var chartTypeProps = this.getChartTypePropsByName(this.chartType);
-            return Ext4.isArray(chartTypeProps.colNames);
+            return Ext4.isDefined(chartTypeProps.series2SchemaName) && Ext4.isDefined(chartTypeProps.series2QueryName);
         }
         return false;
-    },
-
-    getYAxisIndex : function(axis)
-    {
-        if (Ext4.isString(this.chartType))
-        {
-            var chartTypeProps = this.getChartTypePropsByName(this.chartType);
-            if (Ext4.isArray(chartTypeProps.colNames))
-            {
-                for (var i = 0; i < chartTypeProps.colNames.length; i++)
-                {
-                    if (chartTypeProps.colNames[i].axis == axis)
-                    {
-                        return i;
-                    }
-                }
-            }
-        }
-        return -1;
     },
 
     getColorRange: function()
@@ -1193,9 +1171,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     addCombinedPeptideSinglePlot : function() {
         var chartTypeProps = this.getChartTypePropsByName(this.chartType),
-            yLeftIndex = this.getYAxisIndex('yLeft'),
-            yRightIndex = this.getYAxisIndex('yRight'),
-            yAxisCount = yRightIndex > -1 ? 2 : 1, //Will only have a right if there is already a left y-axis
+            yAxisCount = this.isMultiSeries() ? 2 : 1, //Will only have a right if there is already a left y-axis
             groupColors = this.getColorRange(),
             newLegendData = Ext4.Array.clone(this.legendData),
             combinePlotData = {min: null, max: null, data: []},
@@ -1211,18 +1187,18 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             showLogInvalid,
             precursorInfo;
 
-        //Add yLeftTitle separator to Legend sections
-        if (yLeftIndex > -1) {
-            if (chartTypeProps.colNames[yLeftIndex].title.length > lengthOfLongestLegend)
-                lengthOfLongestLegend = chartTypeProps.colNames[yLeftIndex].title.length;
+        //Add series1 separator to Legend sections
+        if (this.isMultiSeries()) {
+            if (chartTypeProps.series1Label.length > lengthOfLongestLegend)
+                lengthOfLongestLegend = chartTypeProps.series1Label.length;
 
             proteomicsLegend.push({
-                text: chartTypeProps.colNames[yLeftIndex].title,
+                text: chartTypeProps.series1Label,
                 separator: true
             });
 
             ionLegend.push({
-                text: chartTypeProps.colNames[yLeftIndex].title,
+                text: chartTypeProps.series1Label,
                 separator: true
             });
         }
@@ -1247,38 +1223,38 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
             showLogInvalid = showLogInvalid || precursorInfo.showLogInvalid;
 
-            var appropriateLegend = precursorInfo.isProteomics ?  proteomicsLegend : ionLegend;
+            var appropriateLegend = precursorInfo.dataType == 'Peptide' ?  proteomicsLegend : ionLegend;
 
             appropriateLegend.push({
-                name: precursorInfo.fragment + (yLeftIndex > -1 ? '|valueyLeft' : ''),
+                name: precursorInfo.fragment + (this.isMultiSeries() ? '|value_series1' : ''),
                 text: precursorInfo.fragment,
                 color: groupColors[i % groupColors.length]
             });
         }
 
-        // add the fragment name for each group to the legend again for the yRight axis metric series
-        if (yRightIndex > -1) {
-            if (chartTypeProps.colNames[yRightIndex].title.length > lengthOfLongestLegend)
-                lengthOfLongestLegend = chartTypeProps.colNames[yRightIndex].title.length;
+        // add the fragment name for each group to the legend again for the series2 axis metric series
+        if (this.isMultiSeries()) {
+            if (chartTypeProps.series2Label.length > lengthOfLongestLegend)
+                lengthOfLongestLegend = chartTypeProps.series2Label.length;
 
 
             proteomicsLegend.push({
-                text: chartTypeProps.colNames[yRightIndex].title,
+                text: chartTypeProps.series2Label,
                 separator: true
             });
 
             ionLegend.push({
-                text: chartTypeProps.colNames[yRightIndex].title,
+                text: chartTypeProps.series2Label,
                 separator: true
             });
 
             for (var i = 0; i < this.precursors.length; i++)
             {
-                var appropriateLegend = precursorInfo.isProteomics ?  proteomicsLegend : ionLegend;
+                var appropriateLegend = precursorInfo.dataType == 'Peptide' ?  proteomicsLegend : ionLegend;
 
                 precursorInfo = this.fragmentPlotData[this.precursors[i]];
                 appropriateLegend.push({
-                    name: precursorInfo.fragment + '|valueyRight',
+                    name: precursorInfo.fragment + '|value_series2',
                     text: precursorInfo.fragment,
                     color: groupColors[(this.precursors.length + i) % groupColors.length]
                 });
@@ -1295,7 +1271,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
 
         var id = 'combinedPlot';
-        this.addPlotWebPartToPlotDiv(id, 'All Fragments', this.plotDivId, 'qc-plot-wp');
+        this.addPlotWebPartToPlotDiv(id, 'All Series', this.plotDivId, 'qc-plot-wp');
         this.showInvalidLogMsg(id, showLogInvalid);
 
         var ljProperties = {
@@ -1314,12 +1290,8 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         // some properties are specific to whether or not we are showing multiple y-axis series
         if (this.isMultiSeries())
         {
-            if (yLeftIndex > -1) {
-                ljProperties['value'] = 'valueyLeft';
-            }
-            if (yRightIndex > -1) {
-                ljProperties['valueRight'] = 'valueyRight';
-            }
+            ljProperties['value'] = 'value_series1';
+            ljProperties['valueRight'] = 'value_series2';
         }
         else
         {
@@ -1339,15 +1311,15 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
             },
             labels : {
                 main: {
-                    value: "All Fragments",
+                    value: "All Series",
                     visibility: 'hidden'
                 },
                 yLeft: {
-                    value: yLeftIndex > -1 ? chartTypeProps.colNames[yLeftIndex].title : chartTypeProps.title,
+                    value: chartTypeProps.series1Label,
                     visibility: this.isMultiSeries() ? undefined : 'hidden'
                 },
                 yRight: {
-                    value: yRightIndex > -1 ? chartTypeProps.colNames[yRightIndex].title : chartTypeProps.title,
+                    value: this.isMultiSeries() ? chartTypeProps.series2Label : undefined,
                     visibility: this.isMultiSeries() ? undefined : 'hidden'
                 }
             },
@@ -1359,9 +1331,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
         this.addAnnotationsToPlot(plot, combinePlotData);
 
-        this.addGuideSetTrainingRangeToPlot(plot, combinePlotData, this.guideSetTrainingDataUniqueObjects);
+        this.addGuideSetTrainingRangeToPlot(plot, combinePlotData);
 
-        this.createExportToPDFButton(id, "QC Combined Plot for All Fragments", "QC Combined Plot");
+        this.createExportToPDFButton(id, "QC Combined Plot for All Series", "QC Combined Plot");
 
         return true;
     },
@@ -1388,7 +1360,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     plotHoverTextDisplay : function(row, valueName){
         return (row[valueName + 'Title'] != undefined ? 'Metric: ' + row[valueName + 'Title'] + '\n' : '')
-            + (row.IsProteomics ? 'Sequence: ' : 'Fragment: ') + row['fragment']
+            + row.dataType + ': ' + row['fragment']
             + '\nAcquired: ' + row['fullDate'] + ", "
             + '\nValue: ' + (valueName ? row[valueName] : row.value) + ", "
             + '\nFile Path: ' + row['FilePath'];
@@ -1396,7 +1368,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     plotPointClick : function(event, row) {
         //Chose action target based on precursor type
-        var action = row.IsProteomics ? "precursorAllChromatogramsChart" : "moleculePrecursorAllChromatogramsChart";
+        var action = row.dataType == 'Peptide' ? "precursorAllChromatogramsChart" : "moleculePrecursorAllChromatogramsChart";
 
         var url = LABKEY.ActionURL.buildURL('targetedms', action, LABKEY.ActionURL.getContainer(), {
                     id: row.PrecursorId,
@@ -1510,35 +1482,37 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         toolbarMsg.up('toolbar').setVisible(this.enableBrushing);
     },
 
-    addGuideSetTrainingRangeToPlot : function(plot, precursorInfo, guideSetTrainingDataOrig) {
+    addGuideSetTrainingRangeToPlot : function(plot, precursorInfo) {
         var me = this;
         var guideSetTrainingData = [];
 
         // find the x-axis starting and ending index based on the guide set information attached to each data point
-        for (var i = 0; i < guideSetTrainingDataOrig.length; i++)
+        Ext4.Object.each(this.guideSetDataMap, function(guideSetId, guideSetData)
         {
             // only compare guide set info for matching precursor fragment
-            if (!this.singlePlot && precursorInfo.fragment != guideSetTrainingDataOrig[i].Fragment) {
-                continue;
+            if (!this.singlePlot && guideSetData.Series[precursorInfo.fragment] == undefined) {
+                return true; // continue
             }
 
-            var gs = Ext4.clone(guideSetTrainingDataOrig[i]);
-
+            var gs = {GuideSetId: guideSetId};
             for (var j = 0; j < precursorInfo.data.length; j++)
             {
                 // only use data points that match the GuideSet RowId and are in the training set range
-                if (precursorInfo.data[j].guideSetId == gs.GuideSetId && precursorInfo.data[j].inGuideSetTrainingRange) {
-                    if (gs.StartIndex == undefined) {
+                if (precursorInfo.data[j].guideSetId == gs.GuideSetId && precursorInfo.data[j].inGuideSetTrainingRange)
+                {
+                    if (gs.StartIndex == undefined)
+                    {
                         gs.StartIndex = precursorInfo.data[j].seqValue;
                     }
                     gs.EndIndex = precursorInfo.data[j].seqValue;
                 }
             }
 
-            if (gs.StartIndex != undefined) {
+            if (gs.StartIndex != undefined)
+            {
                 guideSetTrainingData.push(gs);
             }
-        }
+        }, this);
 
         if (guideSetTrainingData.length > 0)
         {
@@ -1562,20 +1536,27 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 .attr('fill', '#000000').attr('fill-opacity', 0.1);
 
             guideSetTrainingRange.append("title").text(function (d) {
-                var mean = me.formatNumeric(d['Mean']);
-                var stdDev = me.formatNumeric(d['StandardDev']);
-                var percentCV = me.formatNumeric((stdDev/mean) * 100);
-                var numRecs = d['NumRecords'];
-                var showGuideSetStats = !me.singlePlot && numRecs > 0;
+                var guideSetInfo = me.guideSetDataMap[d.GuideSetId],
+                    seriesGuideSetInfo = guideSetInfo.Series[precursorInfo.fragment],
+                    numRecs = seriesGuideSetInfo ? seriesGuideSetInfo.NumRecords : 0,
+                    showGuideSetStats = !me.singlePlot && numRecs > 0,
+                    mean, stdDev, percentCV;
 
-                return "Guide Set ID: " + d['GuideSetId'] + ","
-                        + "\nStart: " + me.formatDate(new Date(d['TrainingStart']), true)
-                        + ",\nEnd: " + me.formatDate(new Date(d['TrainingEnd']), true)
-                        + (showGuideSetStats ? ",\n# Runs: " + numRecs : "")
-                        + (showGuideSetStats ? ",\nMean: " + mean : "")
-                        + (showGuideSetStats ? ",\nStd Dev: " + stdDev : "")
-                        + (showGuideSetStats ? ",\n%CV: " + percentCV : "")
-                        + (d['Comment'] ? (",\nComment: " + d['Comment']) : "");
+                if (showGuideSetStats)
+                {
+                    mean = me.formatNumeric(seriesGuideSetInfo.Mean);
+                    stdDev = me.formatNumeric(seriesGuideSetInfo.StandardDev);
+                    percentCV = me.formatNumeric((stdDev / mean) * 100);
+                }
+
+                return "Guide Set ID: " + d.GuideSetId + ","
+                    + "\nStart: " + me.formatDate(new Date(guideSetInfo.TrainingStart), true)
+                    + ",\nEnd: " + me.formatDate(new Date(guideSetInfo.TrainingEnd), true)
+                    + (showGuideSetStats ? ",\n# Runs: " + numRecs : "")
+                    + (showGuideSetStats ? ",\nMean: " + mean : "")
+                    + (showGuideSetStats ? ",\nStd Dev: " + stdDev : "")
+                    + (showGuideSetStats ? ",\n%CV: " + percentCV : "")
+                    + (guideSetInfo.Comment ? (",\nComment: " + guideSetInfo.Comment) : "");
             });
         }
 
@@ -1687,24 +1668,25 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return config;
     },
 
-    setFragmentMinMax: function(dataObject, row) {
+    setSeriesMinMax: function(dataObject, row) {
         // track the min and max data so we can get the range for including the QC annotations
-        if (LABKEY.vis.isValid(row['Value']))
+        var val = row['value'];
+        if (LABKEY.vis.isValid(val))
         {
-            if (dataObject.min == null || row['Value'] < dataObject.min) {
-                dataObject.min = row['Value'];
+            if (dataObject.min == null || val < dataObject.min) {
+                dataObject.min = val;
             }
-            if (dataObject.max == null || row['Value'] > dataObject.max) {
-                dataObject.max = row['Value'];
+            if (dataObject.max == null || val > dataObject.max) {
+                dataObject.max = val;
             }
 
-            if (this.yAxisScale == 'log' && row['Value'] <= 0)
+            if (this.yAxisScale == 'log' && val <= 0)
             {
                 dataObject.showLogInvalid = true;
             }
 
-            var mean = row['Mean'];
-            var sd = LABKEY.vis.isValid(row['StandardDev']) ? row['StandardDev'] : 0;
+            var mean = row['mean'];
+            var sd = LABKEY.vis.isValid(row['stdDev']) ? row['stdDev'] : 0;
             if (LABKEY.vis.isValid(mean))
             {
                 var minSd = (mean - (3 * sd));
@@ -1731,18 +1713,15 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         }
         else if (this.isMultiSeries())
         {
-            // check if either of the y-axis metric values are invalid for a log scale,
-            // breaking from the check once we encounter an invalid log scale value on either axis
+            // check if either of the y-axis metric values are invalid for a log scale
+            var val1 = row['value_series1'],
+                val2 = row['value_series2'];
             if (dataObject.showLogInvalid == undefined && this.yAxisScale == 'log')
             {
-                Ext4.each(this.getChartTypePropsByName(this.chartType).colNames, function(col)
+                if ((LABKEY.vis.isValid(val1) && val1 <= 0) || (LABKEY.vis.isValid(val2) && val2 <= 0))
                 {
-                    if (LABKEY.vis.isValid(row['Value' + col.axis]) && row['Value' + col.axis] <= 0)
-                    {
-                        dataObject.showLogInvalid = true;
-                        return true;
-                    }
-                });
+                    dataObject.showLogInvalid = true;
+                }
             }
         }
     },

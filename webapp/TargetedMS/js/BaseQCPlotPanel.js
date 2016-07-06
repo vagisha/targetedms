@@ -10,112 +10,80 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     // properties used for the various data queries based on chart metric type
     chartTypePropArr: [{
         name: 'retentionTime',
-        shortName: 'RT',
         title: 'Retention Time',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'BestRetentionTime',
-        showInChartTypeCombo: true,
-        showInParetoPlot: true
+        series1Label: 'Retention Time',
+        series1SchemaName: 'targetedms',
+        series1QueryName: 'QCMetric_retentionTime'
     },
     {
         name: 'peakArea',
-        shortName: 'PA',
         title: 'Peak Area',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'TotalArea',
-        showInChartTypeCombo: true,
-        showInParetoPlot: true
+        series1Label: 'Peak Area',
+        series1SchemaName: 'targetedms',
+        series1QueryName: 'QCMetric_peakArea'
     },
     {
         name: 'fwhm',
-        shortName: 'FWHM',
         title: 'Full Width at Half Maximum (FWHM)',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'MaxFWHM',
-        showInChartTypeCombo: true,
-        showInParetoPlot: true
+        series1Label: 'Full Width at Half Maximum (FWHM)',
+        series1SchemaName: 'targetedms',
+        series1QueryName: 'QCMetric_fwhm'
     },
     {
         name: 'fwb',
-        shortName: 'FWB',
         title: 'Full Width at Base (FWB)',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'MaxFWB',
-        showInChartTypeCombo: true,
-        showInParetoPlot: true
+        series1Label: 'Full Width at Base (FWB)',
+        series1SchemaName: 'targetedms',
+        series1QueryName: 'QCMetric_fwb'
     },
     {
         name: 'ratio',
-        shortName: 'L/H ratio',
         title: 'Light/Heavy Ratio',
-        baseTableName: 'PrecursorAreaRatio',
-        baseLkFieldKey: 'PrecursorChromInfoId.',
-        colName: 'AreaRatio',
-        showInChartTypeCombo: true,
-        showInParetoPlot: true
+        series1Label: 'Light/Heavy Ratio',
+        series1SchemaName: 'targetedms',
+        series1QueryName: 'QCMetric_lhRatio'
     },
     {
         name: 'transitionPrecursorRatio',
-        shortName: 'T/P Ratio',
         title: 'Transition/Precursor Area Ratio',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'TransitionPrecursorRatio',
-        showInChartTypeCombo: true,
-        showInParetoPlot: true
+        series1Label: 'Transition/Precursor Area Ratio',
+        series1SchemaName: 'targetedms',
+        series1QueryName: 'QCMetric_transitionPrecursorRatio'
     },
-    // in Levey-Jennings plot, we show the 'Transition/Precursor Areas' metric, but
-    // we define it as 3 total metrics so that the individual area values can be used
-    // for guide set calculation and pareto plot display.
     {
         name: 'transitionAndPrecursorArea',
-        shortName: 'T/P Area',
         title: 'Transition/Precursor Areas',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colNames: [
-            {name: 'TotalNonPrecursorArea', title: 'Transition Area', axis: 'yLeft'},
-            {name: 'TotalPrecursorArea', title: 'Precursor Area', axis: 'yRight'}
-        ],
-        showInChartTypeCombo: true,
-        showInParetoPlot: false
-    },
-    {
-        name: 'nonPrecursorArea',
-        shortName: 'T Area',
-        title: 'Transition Area',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'TotalNonPrecursorArea',
-        showInChartTypeCombo: false,
-        showInParetoPlot: true,
-        altParetoPlotClickName: 'transitionAndPrecursorArea'
-    },
-    {
-        name: 'precursorArea',
-        shortName: 'P Area',
-        title: 'Precursor Area',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'TotalPrecursorArea',
-        showInChartTypeCombo: false,
-        showInParetoPlot: true,
-        altParetoPlotClickName: 'transitionAndPrecursorArea'
+        series1Label: 'Transition Area',
+        series1SchemaName: 'targetedms',
+        series1QueryName: 'QCMetric_transitionArea',
+        series2Label: 'Precursor Area',
+        series2SchemaName: 'targetedms',
+        series2QueryName: 'QCMetric_precursorArea'
     },
     {
         name: 'massAccuracy',
-        shortName: 'MA',
         title: 'Mass Accuracy',
-        baseTableName: 'PrecursorChromInfo',
-        baseLkFieldKey: '',
-        colName: 'AverageMassErrorPPM',
-        showInChartTypeCombo: true,
-        showInParetoPlot: true
+        series1Label: 'Mass Accuracy',
+        series1SchemaName: 'targetedms',
+        series1QueryName: 'QCMetric_massAccuracy'
     }],
+
+    metricGuideSetSql : function(schema1Name, query1Name, schema2Name, query2Name)
+    {
+        var includeCalc = !Ext4.isDefined(schema2Name) && !Ext4.isDefined(query2Name),
+            selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel' + (includeCalc ? ', MetricValue' : ''),
+            series1SQL = 'SELECT ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
+            series2SQL = includeCalc ? '' : ' UNION SELECT ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name;
+
+        return 'SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, '
+            + '\nCOUNT(p.SampleFileId) AS NumRecords, '
+            + '\n' + (includeCalc ? 'AVG(p.MetricValue)' : 'NULL') + ' AS Mean, '
+            + '\n' + (includeCalc ? 'STDDEV(p.MetricValue)' : 'NULL') + ' AS StandardDev '
+            + '\nFROM guideset gs'
+            + '\nLEFT JOIN (' + series1SQL + series2SQL + ') as p'
+            + '\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd'
+            + '\nGROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel';
+    },
 
     addPlotWebPartToPlotDiv: function (id, title, div, wp)
     {

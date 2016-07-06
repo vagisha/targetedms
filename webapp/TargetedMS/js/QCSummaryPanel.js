@@ -7,7 +7,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
     initComponent: function ()
     {
-        this.metricTypes = Ext4.create('LABKEY.targetedms.BaseQCPlotPanel').chartTypePropArr;
+        this.qcPlotPanel = Ext4.create('LABKEY.targetedms.BaseQCPlotPanel');
 
         this.callParent();
 
@@ -90,7 +90,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         {
             config.cls = 'summary-view subfolder-view';
             config.width = 375;
-            config.minHeight = 124;
+            config.minHeight = 136;
         }
 
         return Ext4.create('Ext.view.View', config);
@@ -191,11 +191,23 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         {
             // generate a UNION SQL query for the relevant metrics to get the summary info for the last N sample files
             var sql = "", sep = "";
-            Ext4.each(this.metricTypes, function (metricType)
+            Ext4.each(this.qcPlotPanel.chartTypePropArr, function (metricType)
             {
-                if (metricType.showInChartTypeCombo && metricType.showInParetoPlot)
+                var name = metricType.name,
+                    label = metricType.series1Label,
+                    schema = metricType.series1SchemaName,
+                    query = metricType.series1QueryName;
+
+                sql += sep + '(' + this.getLatestSampleFileStatsSql(name, label, schema, query) + ')';
+                sep = "\nUNION\n";
+
+                if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
                 {
-                    sql += sep + '(' + this.getLatestSampleFileStatsSql(metricType) + ')';
+                    label = metricType.series2Label;
+                    schema = metricType.series2SchemaName;
+                    query = metricType.series2QueryName;
+
+                    sql += sep + '(' + this.getLatestSampleFileStatsSql(name, label, schema, query) + ')';
                     sep = "\nUNION\n";
                 }
             }, this);
@@ -320,26 +332,22 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }, this);
     },
 
-    getLatestSampleFileStatsSql : function(chartTypeProps)
+    getLatestSampleFileStatsSql : function(name, label, schema, query)
     {
         return "SELECT stats.GuideSetId,"
-            + "\n'" + chartTypeProps.name + "' AS MetricName,"
-            + "\n'" + chartTypeProps.title + "' AS MetricLabel,"
+            + "\n'" + name + "' AS MetricName,"
+            + "\n'" + label + "' AS MetricLabel,"
             + "\nX.SampleFile,"
             + "\nX.AcquiredTime,"
-            + "\nSUM(CASE WHEN X.Value > (stats.Mean + (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END)))"
-            + "\n   OR X.Value < (stats.Mean - (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END))) THEN 1 ELSE 0 END) AS NonConformers,"
+            + "\nSUM(CASE WHEN X.MetricValue > (stats.Mean + (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END)))"
+            + "\n   OR X.MetricValue < (stats.Mean - (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END))) THEN 1 ELSE 0 END) AS NonConformers,"
             + "\nCOUNT(*) AS TotalCount"
-            + "\nFROM ("
-            + "\n   SELECT COALESCE(" + chartTypeProps.baseLkFieldKey + "PrecursorId.ModifiedSequence, " + chartTypeProps.baseLkFieldKey + "MoleculePrecursorId.CustomIonName) AS Fragment,"
-            + "\n   " + chartTypeProps.baseLkFieldKey + "SampleFileId.SampleName AS SampleFile,"
-            + "\n   " + chartTypeProps.baseLkFieldKey + "SampleFileId.AcquiredTime AS AcquiredTime,"
-            + "\n   " + chartTypeProps.colName + " AS Value"
-            + "\n   FROM " + chartTypeProps.baseTableName
-            + "\n   WHERE " + chartTypeProps.baseLkFieldKey + "SampleFileId.Id IN (SELECT Id FROM SampleFile WHERE AcquiredTime IS NOT NULL ORDER BY AcquiredTime DESC LIMIT 3)"
+            + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.SampleName AS SampleFile"
+            + "\n      FROM " + schema + "." + query
+            + "\n      WHERE SampleFileId.Id IN (SELECT Id FROM SampleFile WHERE AcquiredTime IS NOT NULL ORDER BY AcquiredTime DESC LIMIT 3)"
             + "\n) X"
-            + "\nLEFT JOIN GuideSetStats_" + chartTypeProps.name + " stats"
-            + "\nON X.Fragment = stats.Fragment"
+            + "\nLEFT JOIN (" + this.qcPlotPanel.metricGuideSetSql(schema, query) + ") stats"
+            + "\nON X.SeriesLabel = stats.SeriesLabel"
             + "\nAND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
             + "\n   OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
             + "\nGROUP BY stats.GuideSetId, X.SampleFile, X.AcquiredTime"

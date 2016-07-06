@@ -37,15 +37,15 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public enum ChartTypeTicks
     {
-        RETENTION("RT"),
-        PEAK("PA"),
-        FWHM("FWHM)"),
-        FWB("FWB"),
+        RETENTION("Retention Time"),
+        PEAK("Peak Area"),
+        FWHM("Full Width at Half Maximum (FWHM)"),
+        FWB("Full Width at Base (FWB)"),
         LHRATIO("Light/Heavy Ratio"),
-        TPAREARATIO("T/P Ratio"),
-        PAREA("P Area"),
-        TAREA("T Area"),
-        MASSACCURACY("MA");
+        TPAREARATIO("Transition/Precursor Area Ratio"),
+        PAREA("Precursor Area"),
+        TAREA("Transition Area"),
+        MASSACCURACY("Mass Accuracy");
 
         private String _text;
 
