@@ -291,7 +291,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 0));
         gs.addStats(new GuideSetStats("massAccuracy", 0));
-        // TODO add check for transitionArea and precursorArea
+        gs.addStats(new GuideSetStats("transitionArea", 0));
+        gs.addStats(new GuideSetStats("precursorArea", 0));
 
         validateGuideSetStats(gs);
     }
@@ -305,7 +306,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 1, PRECURSORS[0], 0.06410326063632965, null));
         gs.addStats(new GuideSetStats("massAccuracy", 1, PRECURSORS[0], -0.0025051420088857412, null));
-        // TODO add check for transitionArea and precursorArea
+        gs.addStats(new GuideSetStats("transitionArea", 1, PRECURSORS[0], 6.99620390375E8, null));
+        gs.addStats(new GuideSetStats("precursorArea", 1, PRECURSORS[0], 1.0913960576E10, null));
 
         validateGuideSetStats(gs);
     }
@@ -319,7 +321,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 10, PRECURSORS[1], 0.16636697351932525, 0.024998646348985));
         gs.addStats(new GuideSetStats("massAccuracy", 10, PRECURSORS[1], -0.14503030776977538, 0.5113428116648383));
-        // TODO add check for transitionArea and precursorArea
+        gs.addStats(new GuideSetStats("transitionArea", 10, PRECURSORS[1], 4.0861855873442184E10, 6.243547152656243E9));
+        gs.addStats(new GuideSetStats("precursorArea", 10, PRECURSORS[1], 2.522116655104E11, 5.881135711787484E10));
 
         validateGuideSetStats(gs);
     }
@@ -333,7 +336,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 4, PRECURSORS[2], 0.0, 0.0));
         gs.addStats(new GuideSetStats("massAccuracy", 4, PRECURSORS[2], 1.7878320217132568, 0.09473514310269647));
-        // TODO add check for transitionArea and precursorArea
+        gs.addStats(new GuideSetStats("transitionArea", 4, PRECURSORS[2], 0.0, 0.0));
+        gs.addStats(new GuideSetStats("precursorArea", 4, PRECURSORS[2], 1.15644516E10, 1.57131477994273E9));
 
         validateGuideSetStats(gs);
     }
@@ -347,7 +351,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 2, PRECURSORS[3], 0.06426714546978474, 0.02016935064728605));
         gs.addStats(new GuideSetStats("massAccuracy", 2, PRECURSORS[3], 1.6756309866905212, 0.23667992679147354));
-        // TODO add check for transitionArea and precursorArea
+        gs.addStats(new GuideSetStats("transitionArea", 2, PRECURSORS[3], 3.376995236234375E9, 9.104157411050748E8));
+        gs.addStats(new GuideSetStats("precursorArea", 2, PRECURSORS[3], 5.2929907456E10, 2.4452102765845675E9));
 
         validateGuideSetStats(gs);
     }
@@ -362,7 +367,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         gs.addStats(new GuideSetStats("fwb", 2, precursor, 0.11544176936149597, 0.012810408164340708));
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 0, precursor, null, null));
-        // TODO add check for transitionArea and precursorArea
+        gs.addStats(new GuideSetStats("transitionArea", 2, precursor, 2.4647615E7, 5061166.2838173965));
+        gs.addStats(new GuideSetStats("precursorArea", 2, precursor, 0.0, 0.0));
 
         validateGuideSetStats(gs);
     }
