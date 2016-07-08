@@ -774,7 +774,7 @@ public class TargetedMSManager
         reprRunIdSql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
         reprRunIdSql.append(", ");
         reprRunIdSql.append(TargetedMSManager.getTableInfoRuns(), "runs");
-        String states = StringUtils.join(stateArray, ",");
+        String states = StringUtils.join(stateArray, ',');
 
         reprRunIdSql.append(" WHERE pepgrp.RepresentativeDataState IN (" + states + ")");
         reprRunIdSql.append(" AND runs.Container = ?");
@@ -809,7 +809,7 @@ public class TargetedMSManager
         reprRunIdSql.append(", ");
         reprRunIdSql.append(TargetedMSManager.getTableInfoRuns(), "runs");
 
-        String states = StringUtils.join(stateArray, ",");
+        String states = StringUtils.join(stateArray, ',');
 
         reprRunIdSql.append(" WHERE gp.RepresentativeDataState IN (" + states + ")");
         reprRunIdSql.append(" AND gp.GeneralMoleculeId = gm.Id");
