@@ -353,8 +353,10 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                     data: [
                         [0, 'All dates'],
                         [7, 'Last 7 days'],
+                        [15, 'Last 15 days'],
                         [30, 'Last 30 days'],
                         [90, 'Last 90 days'],
+                        [180, 'Last 180 days'],
                         [365, 'Last 365 days'],
                         [-1, 'Custom range']
                     ]
