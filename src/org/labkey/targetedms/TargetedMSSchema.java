@@ -143,6 +143,7 @@ public class TargetedMSSchema extends UserSchema
 
     public static final String TABLE_QC_ANNOTATION_TYPE = "QCAnnotationType";
     public static final String TABLE_QC_ANNOTATION = "QCAnnotation";
+    public static final String TABLE_QC_METRIC_CONFIGURATION = "QCMetricConfiguration";
 
     public static final String TABLE_GUIDE_SET = "GuideSet";
 

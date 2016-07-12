@@ -61,6 +61,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
 import org.labkey.targetedms.query.ModificationManager;
@@ -417,6 +418,11 @@ public class TargetedMSManager
     public static TableInfo getTableInfoQCAnnotation()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_QC_ANNOTATION);
+    }
+
+    public static TableInfo getTableInfoQCMetricConfiguration()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_QC_METRIC_CONFIGURATION);
     }
 
     public static TableInfo getTableInfoGuideSet()
@@ -1548,4 +1554,9 @@ public class TargetedMSManager
         return Math.log(value.doubleValue()) / Math.log(2);
     }
 
+    public ArrayList<QCMetricConfiguration> getQCMetricConfigurations(Container container)
+    {
+        TableInfo table = TargetedMSManager.getTableInfoQCMetricConfiguration();
+        return new TableSelector(table, SimpleFilter.createContainerFilter(container), null).getArrayList(QCMetricConfiguration.class);
+    }
 }

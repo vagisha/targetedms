@@ -29,6 +29,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.json.JSONObject;
+import org.json.simple.JSONArray;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.action.ApiAction;
@@ -138,6 +139,7 @@ import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.model.Journal;
+import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.Molecule;
 import org.labkey.targetedms.parser.MoleculePrecursor;
@@ -683,6 +685,68 @@ public class TargetedMSController extends SpringActionController
         properties.put("autoQCPing", autoQCPingMap);
 
         return properties;
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class GetQCMetricConfigurationsAction extends ApiAction<Object>
+    {
+        @Override
+        public Object execute(Object form, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            Container container = getContainer();
+            ArrayList<QCMetricConfiguration> configurations = getContainerQCMetricConfigurations(container);
+
+            boolean isRoot = false;
+            while (configurations.isEmpty() && !isRoot)
+            {
+                container = getCandidateContainer(container, getUser());
+                isRoot = container.getParent() == null;
+                configurations = getContainerQCMetricConfigurations(container);
+            }
+
+            List<JSONObject> result = new JSONArray();
+            for (QCMetricConfiguration configuration : configurations)
+            {
+                   result.add(configuration.toJSON());
+            }
+            response.put("configurations", result);
+            return response;
+        }
+
+    }
+
+    public static Container getCandidateContainer(Container container, User user)
+    {
+        Container sharedContainer = ContainerManager.getSharedContainer();
+        Container rootContainer = ContainerManager.getRoot();
+
+        boolean isParentValid = false;
+        if(container==sharedContainer){
+            return rootContainer;
+        }
+
+        while (!isParentValid)
+        {
+            container = container.getParent();
+            TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
+            isParentValid = container.hasPermission(user, ReadPermission.class) && folderType == FolderType.QC;
+            if(isParentValid){
+                break;
+            }
+            if(container == rootContainer){
+                return sharedContainer;
+            }
+        }
+        return container;
+    }
+
+
+    private ArrayList<QCMetricConfiguration> getContainerQCMetricConfigurations(Container container)
+    {
+        ArrayList<QCMetricConfiguration> configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
+
+        return configurations;
     }
 
     private static class QCSummaryForm

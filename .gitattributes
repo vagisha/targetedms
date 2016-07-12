@@ -144,6 +144,7 @@ src/org/labkey/targetedms/SkylinePort/Irt/RetentionTimeRegression.java -text
 src/org/labkey/targetedms/SkylinePort/Irt/RetentionTimeScoreCache.java -text
 src/org/labkey/targetedms/SkylinePort/Irt/RetentionTimeStatistics.java -text
 src/org/labkey/targetedms/SkylinePort/Irt/Statistics.java -text
+src/org/labkey/targetedms/TargetMSControllerUnitTest.java -text
 src/org/labkey/targetedms/TargetedMSController.java -text
 src/org/labkey/targetedms/TargetedMSDataHandler.java -text
 src/org/labkey/targetedms/TargetedMSExperimentRunType.java -text
@@ -222,6 +223,7 @@ src/org/labkey/targetedms/model/JournalExperiment.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoLitePlus.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoPlus.java -text
 src/org/labkey/targetedms/model/PrecursorComparator.java -text
+src/org/labkey/targetedms/model/QCMetricConfiguration.java -text
 src/org/labkey/targetedms/parser/AbstractAnnotation.java -text
 src/org/labkey/targetedms/parser/AnnotatedEntity.java -text
 src/org/labkey/targetedms/parser/AnnotationSetting.java -text
