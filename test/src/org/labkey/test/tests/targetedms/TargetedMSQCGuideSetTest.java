@@ -249,12 +249,18 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
             assertEquals("Unexpected guide set stats record count", stats.getNumRecords(), Integer.parseInt(table.getDataAsText(0, "NumRecords")));
 
             if (stats.getMean() != null)
-                assertEquals("Unexpected guide set stats mean", stats.getMean(), Double.parseDouble(table.getDataAsText(0, "Mean")), 0.0005);
+            {
+                Double delta = stats.getMean() > 1E8 ? 5000.0 : 0.0005;
+                assertEquals("Unexpected guide set stats mean", stats.getMean(), Double.parseDouble(table.getDataAsText(0, "Mean")), delta);
+            }
             else
                 assertNull("Unexpected guide set stats mean", stats.getMean());
 
             if (stats.getStdDev() != null)
-                assertEquals("Unexpected guide set stats std dev", stats.getStdDev(), Double.parseDouble(table.getDataAsText(0, "StandardDev")), 0.0005);
+            {
+                Double delta = stats.getMean() > 1E8 ? 5000.0 : 0.0005;
+                assertEquals("Unexpected guide set stats std dev", stats.getStdDev(), Double.parseDouble(table.getDataAsText(0, "StandardDev")), delta);
+            }
             else
                 assertNull("Unexpected guide set stats std dev", stats.getStdDev());
         }
