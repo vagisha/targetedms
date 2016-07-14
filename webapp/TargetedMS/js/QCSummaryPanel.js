@@ -116,7 +116,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                         '<a href="{path:this.getSampleFileLink}">{fileCount} sample file{fileCount:this.pluralize}</a>',
                     '</div>',
                     '<div class="item-text">{precursorCount} precursor{precursorCount:this.pluralize}</div>',
-                    '<div class="item-text sample-file-details" id="qc-summary-samplefiles-{id}">...</div>',
+                    '<div class="item-text sample-file-details sample-file-details-loading" id="qc-summary-samplefiles-{id}">...</div>',
                     '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
                 '</tpl>',
             '</tpl>',
@@ -226,7 +226,9 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }
         else if (container.docCount > 0)
         {
-            Ext4.get('qc-summary-samplefiles-' + container.id).update('');
+            var sampleFilesDiv = Ext4.get('qc-summary-samplefiles-' + container.id);
+            sampleFilesDiv.update('');
+            sampleFilesDiv.removeCls('sample-file-details-loading');
         }
     },
 
@@ -272,7 +274,9 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     + (sampleFile.NonConformers > 0 ? sampleFile.NonConformers + '/' + sampleFile.TotalCount : 'no')
                     + ' outliers</div>';
         });
-        Ext4.get('qc-summary-samplefiles-' + container.id).update(html);
+        var sampleFilesDiv = Ext4.get('qc-summary-samplefiles-' + container.id);
+        sampleFilesDiv.update(html);
+        sampleFilesDiv.removeCls('sample-file-details-loading');
 
         // since the height of the panel will change from adding up to three lines of text, need to reset the size of the view
         this.doLayout();

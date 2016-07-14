@@ -186,7 +186,6 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     protected void verifyQcSummary(int summaryIndex, String folderName, int docCount, int sampleFileCount, int precursorCount)
     {
         QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
-        qcSummaryWebPart.readSummary(summaryIndex);
 
         assertEquals("Wrong number of Skyline documents uploaded for index " + summaryIndex, docCount, qcSummaryWebPart.getDocCount());
         assertEquals("Wrong number sample files for index " + summaryIndex, sampleFileCount, qcSummaryWebPart.getFileCount());

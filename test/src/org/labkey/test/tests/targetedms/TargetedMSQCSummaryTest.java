@@ -25,7 +25,6 @@ import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
 import org.labkey.test.Locator;
-import org.labkey.test.ModulePropertyValue;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.GuideSet;
@@ -36,7 +35,6 @@ import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -113,7 +111,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     @Test
     public void testSubfolders()
     {
-        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
+        waitForSampleFiles(6);
         QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
         assertEquals("Unexpected number of QC Summary tiles", 3, qcSummaryWebPart.getQCSummaryDetails().size());
         verifyQcSummary(0, getProjectName(), 1, 47, 7);
@@ -137,8 +135,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         // impersonate user and check that the project QC Summary doesn't include the FOLDER_1 details
         goToProjectHome();
         impersonate(USER);
-        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
         QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
+        qcSummaryWebPart.waitForSampleFileDetails(6);
         assertEquals("Unexpected number of QC Summary tiles", 2, qcSummaryWebPart.getQCSummaryDetails().size());
         verifyQcSummary(0, getProjectName(), 1, 47, 7);
         verifyQcSummary(1, FOLDER_2, 1, 3, 2);
@@ -152,7 +150,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         int sampleFileCount = 3;
 
         clickFolder(FOLDER_2A);
-        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 3);
+        waitForSampleFiles(3);
         verifyQcSummary(1, sampleFileCount, 2);
 
         // verify the initial set of QC plot points
@@ -171,7 +169,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         });
         sampleFileCount--;
         clickTab("Panorama Dashboard");
-        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 2);
+        waitForSampleFiles(2);
         verifyQcSummary(1, sampleFileCount, 2);
         assertEquals("Unexpected number of points", 2 * sampleFileCount, getQCPlotPointCount());
 
@@ -291,7 +289,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         createGuideSetFromTable(gs);
 
         goToProjectHome();
-        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6, 5000);
+        waitForSampleFiles(6);
 
         tempStringList01.clear();
         tempStringList01.add("2013/08/27 14:45:49 - 1/56 outliers");
@@ -366,6 +364,11 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
             waitForElementToDisappear(qcSummaryWebPart.getBubble());
         }
 
+    }
+
+    private void waitForSampleFiles(int count)
+    {
+        new QCSummaryWebPart(getDriver()).waitForSampleFileDetails(count);
     }
 
     private int getQCPlotPointCount()

@@ -17,7 +17,7 @@ package org.labkey.test.components.targetedms;
 
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
-import org.labkey.test.pages.targetedms.PanoramaDashboard;
+import org.labkey.test.util.TestLogger;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public final class QCSummaryWebPart extends BodyWebPart
@@ -114,7 +115,7 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     public List<WebElement> getQCSummaryDetails()
     {
-        return elements().qcSummaryDetails.findElements(_test.getDriver());
+        return elements().qcSummaryDetails.findElements(this);
     }
 
     public Locator.XPathLocator getAutoQCIcon()
@@ -126,9 +127,9 @@ public final class QCSummaryWebPart extends BodyWebPart
     {
         Locator.XPathLocator autoQCIcon;
 
-        _test.log("Trying to get the " + index + " autoQCIcon.");
+        TestLogger.log("Trying to get the " + index + " autoQCIcon.");
         autoQCIcon = elements().qcSummaryAutoQCIcon.index(index);
-        _test.assertElementVisible(autoQCIcon);
+        getWrapper().assertElementVisible(autoQCIcon);
 
         return  autoQCIcon;
     }
@@ -140,17 +141,12 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     public void closeBubble()
     {
-        _test.click(elements().qcSummaryHopscotchBubbleClose);
+        getWrapper().click(elements().qcSummaryHopscotchBubbleClose);
     }
 
     public String getBubbleText()
     {
-        return _test.getText(elements().qcSummaryHopscotchBubbleContent);
-    }
-
-    public Locator.XPathLocator getSampleFileDetails(int index)
-    {
-        return elements().qcSummarySampleFileDetails.index(index);
+        return getWrapper().getText(elements().qcSummaryHopscotchBubbleContent);
     }
 
     public Locator.XPathLocator getSampleFileItem(int detailIndex, int itemIndex)
@@ -160,7 +156,18 @@ public final class QCSummaryWebPart extends BodyWebPart
 
     public String getSampleFileItemText(int detailIndex, int itemIndex)
     {
-        return _test.getText(getSampleFileItem(detailIndex, itemIndex));
+        return getWrapper().getText(getSampleFileItem(detailIndex, itemIndex));
+    }
+
+    public void waitForSampleFileDetails(int count)
+    {
+        waitForSampleFileDetails();
+        assertEquals("Details for wrong number of sample files in QC Summary.", count, elements().qcSummarySampleFileItem.findElements(this).size());
+    }
+
+    public void waitForSampleFileDetails()
+    {
+        elements().qcSummarySampleFileDetailsLoading.waitForElementToDisappear(this, 10000);
     }
 
     @Override
@@ -182,5 +189,6 @@ public final class QCSummaryWebPart extends BodyWebPart
         public Locator.XPathLocator qcSummaryHopscotchBubbleClose = Locator.tagWithClass("a", "hopscotch-bubble-close");
         public Locator.XPathLocator qcSummarySampleFileDetails = Locator.tagWithClass("div", "sample-file-details");
         public Locator.XPathLocator qcSummarySampleFileItem = Locator.tagWithClass("div", "sample-file-item");
+        public Locator qcSummarySampleFileDetailsLoading = Locator.tagWithClass("div", "sample-file-details-loading");
     }
 }
