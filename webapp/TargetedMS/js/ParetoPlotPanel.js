@@ -11,9 +11,15 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
     extend: 'LABKEY.targetedms.BaseQCPlotPanel',
 
-    initComponent : function() {
+    initComponent : function()
+    {
 
         this.callParent();
+
+        this.queryInitialQcMetrics(this.initPlot, this);
+    },
+
+    initPlot : function(){
 
         var guideSetDataRows = this.guideSetData.rows;
         this.guideSetIdTrainingDatesMap = {};
@@ -36,8 +42,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             if (Ext4.isDefined(chartTypeProps['series1Label']))
             {
                 applicableChartTypes.push({
-                    name: chartTypeProps['name'],
-                    label: chartTypeProps['series1Label'],
+                    id: chartTypeProps['id'],
+                    name: chartTypeProps['series1Label'],
                     schemaName: chartTypeProps['series1SchemaName'],
                     queryName: chartTypeProps['series1QueryName']
                 });
@@ -46,8 +52,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             if (Ext4.isDefined(chartTypeProps['series2Label']))
             {
                 applicableChartTypes.push({
-                    name: chartTypeProps['name'],
-                    label: chartTypeProps['series2Label'],
+                    id: chartTypeProps['id'],
+                    name: chartTypeProps['series2Label'],
                     schemaName: chartTypeProps['series2SchemaName'],
                     queryName: chartTypeProps['series2QueryName']
                 });
@@ -80,8 +86,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
     getGuideSetNonConformersSql : function(chartTypeProps)
     {
         return "SELECT stats.GuideSetId,"
-            + "\n'" + chartTypeProps.name + "' AS MetricName,"
-            + "\n'" + chartTypeProps.label + "' AS MetricLabel,"
+            + "\n'" + chartTypeProps.id + "' AS MetricId,"
+            + "\n'" + chartTypeProps.name + "' AS MetricLabel,"
             + "\nSUM(CASE WHEN X.MetricValue > (stats.Mean + (3 * stats.StandardDev)) OR"
             + "\n   X.MetricValue < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers"
             + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.FilePath AS FilePath"
@@ -112,7 +118,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             guideSetMap[key].data.push({
                 guidesetId: key,
                 metricLabel : nonConformers[i]['MetricLabel'],
-                metricName: nonConformers[i]['MetricName'],
+                metricId: nonConformers[i]['MetricId'],
                 count : count,
                 percent: 0,
                 trainingStart: this.guideSetIdTrainingDatesMap[key].trainingStart,
@@ -213,7 +219,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
 
     plotBarClickEvent : function(event, row) {
-        var params = {startDate: row.trainingStart, metric: row.metricName};
+        var params = {startDate: row.trainingStart, metric: row.metricId};
         if (row.referenceEnd)
         {
             params.endDate = row.referenceEnd;

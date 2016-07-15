@@ -4,6 +4,7 @@ import org.json.JSONObject;
 
 public class QCMetricConfiguration
 {
+    private int _id;
     private String _name;
     private String _series1Label;
     private String _series1SchemaName;
@@ -11,6 +12,16 @@ public class QCMetricConfiguration
     private String _series2Label;
     private String _series2SchemaName;
     private String _series2QueryName;
+
+    public int getId()
+    {
+        return _id;
+    }
+
+    public void setId(int rowId)
+    {
+        _id = rowId;
+    }
 
     public String getName()
     {
@@ -83,6 +94,7 @@ public class QCMetricConfiguration
 
     public JSONObject toJSON(){
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put("id", _id);
         jsonObject.put("name", _name);
         jsonObject.put("series1Label",      _series1Label);
         jsonObject.put("series1SchemaName", _series1SchemaName);

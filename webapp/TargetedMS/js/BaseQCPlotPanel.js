@@ -8,65 +8,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     extend: 'Ext.panel.Panel',
 
     // properties used for the various data queries based on chart metric type
-    chartTypePropArr: [{
-        name: 'retentionTime',
-        title: 'Retention Time',
-        series1Label: 'Retention Time',
-        series1SchemaName: 'targetedms',
-        series1QueryName: 'QCMetric_retentionTime'
-    },
-    {
-        name: 'peakArea',
-        title: 'Peak Area',
-        series1Label: 'Peak Area',
-        series1SchemaName: 'targetedms',
-        series1QueryName: 'QCMetric_peakArea'
-    },
-    {
-        name: 'fwhm',
-        title: 'Full Width at Half Maximum (FWHM)',
-        series1Label: 'Full Width at Half Maximum (FWHM)',
-        series1SchemaName: 'targetedms',
-        series1QueryName: 'QCMetric_fwhm'
-    },
-    {
-        name: 'fwb',
-        title: 'Full Width at Base (FWB)',
-        series1Label: 'Full Width at Base (FWB)',
-        series1SchemaName: 'targetedms',
-        series1QueryName: 'QCMetric_fwb'
-    },
-    {
-        name: 'ratio',
-        title: 'Light/Heavy Ratio',
-        series1Label: 'Light/Heavy Ratio',
-        series1SchemaName: 'targetedms',
-        series1QueryName: 'QCMetric_lhRatio'
-    },
-    {
-        name: 'transitionPrecursorRatio',
-        title: 'Transition/Precursor Area Ratio',
-        series1Label: 'Transition/Precursor Area Ratio',
-        series1SchemaName: 'targetedms',
-        series1QueryName: 'QCMetric_transitionPrecursorRatio'
-    },
-    {
-        name: 'transitionAndPrecursorArea',
-        title: 'Transition/Precursor Areas',
-        series1Label: 'Transition Area',
-        series1SchemaName: 'targetedms',
-        series1QueryName: 'QCMetric_transitionArea',
-        series2Label: 'Precursor Area',
-        series2SchemaName: 'targetedms',
-        series2QueryName: 'QCMetric_precursorArea'
-    },
-    {
-        name: 'massAccuracy',
-        title: 'Mass Accuracy',
-        series1Label: 'Mass Accuracy',
-        series1SchemaName: 'targetedms',
-        series1QueryName: 'QCMetric_massAccuracy'
-    }],
+    chartTypePropArr: [],
 
     metricGuideSetSql : function(schema1Name, query1Name, schema2Name, query2Name)
     {
@@ -150,6 +92,21 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         }
 
         Ext4.get(this.plotDivId).unmask();
+    },
+
+    queryInitialQcMetrics : function(successCallback,callbackScope) {
+        LABKEY.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCMetricConfigurations.api'),
+            method: 'GET',
+            success: function(response) {
+                this.chartTypePropArr = Ext4.JSON.decode(response.responseText).configurations;
+                successCallback.call(callbackScope);
+            },
+            failure: LABKEY.Utils.getCallbackWrapper(function(response) {
+                this.failureHandler(response);
+            }, null, true),
+            scope: this
+        });
     }
 });
 

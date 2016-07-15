@@ -24,7 +24,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     // properties specific to this TargetedMS Levey-Jennings plot implementation
     yAxisScale: 'linear',
-    chartType: 'retentionTime',
+    chartType: null,
     dateRangeOffset: 0,
     minAcquiredTime: null,
     maxAcquiredTime: null,
@@ -48,7 +48,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         if (this.minAcquiredTime == null || this.maxAcquiredTime == null)
             Ext4.get(this.plotDivId).update("<span class='labkey-error'>Unable to render report. Missing min and max AcquiredTime from data query.</span>");
         else
-            this.queryInitialPlotOptions();
+            this.queryInitialQcMetrics(this.queryInitialPlotOptions, this);
     },
 
     queryInitialPlotOptions : function()
@@ -233,7 +233,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         paramValue = urlParams['metric'];
         if (paramValue != undefined)
         {
-            chartType = this.validateChartTypeName(paramValue);
+            chartType = this.validateChartTypeId(paramValue);
             if(chartType == null)
             {
                 alertMessage += "Invalid Chart Type, reverting to default chart type.";
@@ -287,13 +287,13 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return null;
     },
 
-    validateChartTypeName : function(name)
+    validateChartTypeId : function(id)
     {
         for (var i = 0; i < this.chartTypePropArr.length; i++)
         {
-            if (this.chartTypePropArr[i].name == name)
+            if (this.chartTypePropArr[i].id == id)
             {
-                return this.chartTypePropArr[i].name;
+                return this.chartTypePropArr[i].id;
             }
         }
         return null;
@@ -458,10 +458,20 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         return this.applyFilterButton;
     },
 
+    assignDefaultChartTypeIfNull: function ()
+    {
+        if (this.chartType == null || isNaN(Number(this.chartType)))
+        {
+            this.chartType = this.chartTypePropArr[0].id;
+        }
+    },
+
     getChartTypeCombo : function()
     {
         if (!this.chartTypeField)
         {
+            this.assignDefaultChartTypeIfNull();
+            
             this.chartTypeField = Ext4.create('Ext.form.field.ComboBox', {
                 id: 'chart-type-field',
                 width: 340,
@@ -470,12 +480,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 triggerAction: 'all',
                 mode: 'local',
                 store: Ext4.create('Ext.data.Store', {
-                    fields: ['name', 'title'],
-                    sorters: [{property: 'title'}],
+                    fields: ['id', 'name'],
+                    sorters: [{property: 'name'}],
                     data: this.chartTypePropArr
                 }),
-                valueField: 'name',
-                displayField: 'title',
+                valueField: 'id',
+                displayField: 'name',
                 value: this.chartType,
                 forceSelection: true,
                 editable: false,
@@ -588,9 +598,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         this.getDistinctPrecursors();
     },
 
-    getChartTypePropsByName: function(name) {
+    getChartTypePropsById: function(id) {
         for (var i = 0; i < this.chartTypePropArr.length; i++) {
-            if (this.chartTypePropArr[i].name == name) {
+            if (this.chartTypePropArr[i].id == id) {
                 return this.chartTypePropArr[i];
             }
         }
@@ -599,7 +609,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     getDistinctPrecursors: function() {
 
-        var chartTypeProps = this.getChartTypePropsByName(this.chartType);
+        this.assignDefaultChartTypeIfNull();
+
+        var chartTypeProps = this.getChartTypePropsById(this.chartType);
 
         var series1Sql = "SELECT SeriesLabel FROM " + chartTypeProps.series1SchemaName + "." + chartTypeProps.series1QueryName,
             series2Sql = this.isMultiSeries() ? " UNION SELECT SeriesLabel FROM " + chartTypeProps.series2SchemaName + "." + chartTypeProps.series2QueryName : '',
@@ -720,7 +732,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     getGuideSetData : function() {
         var config = this.getReportConfig();
-        var chartTypeProps = this.getChartTypePropsByName(this.chartType);
+        var chartTypeProps = this.getChartTypePropsById(this.chartType);
 
         var guideSetSql = "SELECT s.*, g.Comment FROM ("
                 + this.metricGuideSetSql(chartTypeProps.series1SchemaName, chartTypeProps.series1QueryName, chartTypeProps.series2SchemaName, chartTypeProps.series2QueryName) + ") s"
@@ -779,7 +791,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     getPlotData: function()
     {
         var config = this.getReportConfig(),
-            chartTypeProps = this.getChartTypePropsByName(this.chartType);
+            chartTypeProps = this.getChartTypePropsById(this.chartType);
 
         // Filter on start/end dates, casting as DATE to ignore the time part
         var whereClause = " WHERE ", sep = "";
@@ -830,7 +842,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     processPlotData: function() {
-        var chartTypeProps = this.getChartTypePropsByName(this.chartType);
+        var chartTypeProps = this.getChartTypePropsById(this.chartType);
 
         // process the data to shape it for the JS LeveyJenningsPlot API call
         this.fragmentPlotData = {};
@@ -1043,7 +1055,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     addIndividualPrecursorPlots : function()
     {
         var addedPlot = false,
-            chartTypeProps = this.getChartTypePropsByName(this.chartType),
+            chartTypeProps = this.getChartTypePropsById(this.chartType),
             me = this; // for plot brushing
 
         for (var i = 0; i < this.precursors.length; i++)
@@ -1158,9 +1170,9 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
 
     isMultiSeries : function()
     {
-        if (Ext4.isString(this.chartType))
+        if (Ext4.isNumber(this.chartType))
         {
-            var chartTypeProps = this.getChartTypePropsByName(this.chartType);
+            var chartTypeProps = this.getChartTypePropsById(this.chartType);
             return Ext4.isDefined(chartTypeProps.series2SchemaName) && Ext4.isDefined(chartTypeProps.series2QueryName);
         }
         return false;
@@ -1172,7 +1184,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
     },
 
     addCombinedPeptideSinglePlot : function() {
-        var chartTypeProps = this.getChartTypePropsByName(this.chartType),
+        var chartTypeProps = this.getChartTypePropsById(this.chartType),
             yAxisCount = this.isMultiSeries() ? 2 : 1, //Will only have a right if there is already a left y-axis
             groupColors = this.getColorRange(),
             newLegendData = Ext4.Array.clone(this.legendData),

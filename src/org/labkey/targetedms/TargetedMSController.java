@@ -688,21 +688,21 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetQCMetricConfigurationsAction extends ApiAction<Object>
+    public class GetQCMetricConfigurationsAction extends ApiAction
     {
         @Override
         public Object execute(Object form, BindException errors) throws Exception
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
             Container container = getContainer();
-            ArrayList<QCMetricConfiguration> configurations = getContainerQCMetricConfigurations(container);
+            ArrayList<QCMetricConfiguration> configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
 
             boolean isRoot = false;
             while (configurations.isEmpty() && !isRoot)
             {
                 container = getCandidateContainer(container, getUser());
                 isRoot = container.getParent() == null;
-                configurations = getContainerQCMetricConfigurations(container);
+                configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
             }
 
             List<JSONObject> result = new JSONArray();
@@ -716,27 +716,25 @@ public class TargetedMSController extends SpringActionController
 
     }
 
-    public static Container getCandidateContainer(Container container, User user)
+    private Container getCandidateContainer(Container container, User user)
     {
         Container sharedContainer = ContainerManager.getSharedContainer();
         Container rootContainer = ContainerManager.getRoot();
 
         boolean isParentValid = false;
-        if(container==sharedContainer){
+        if(container.equals(sharedContainer)){
             return rootContainer;
         }
 
         while (!isParentValid)
         {
             container = container.getParent();
-            TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
-            isParentValid = container.hasPermission(user, ReadPermission.class) && folderType == FolderType.QC;
-            if(isParentValid){
-                break;
-            }
-            if(container == rootContainer){
+            if(container.equals(rootContainer)){
                 return sharedContainer;
             }
+
+            TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
+            isParentValid = container.hasPermission(user, ReadPermission.class) && folderType == FolderType.QC;
         }
         return container;
     }

@@ -11,6 +11,12 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
         this.callParent();
 
+        this.qcPlotPanel.queryInitialQcMetrics(this.initPanel, this);
+
+    },
+
+    initPanel : function(){
+
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'getQCSummary.api'),
             params: {
