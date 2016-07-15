@@ -199,12 +199,13 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             var sql = "", sep = "";
             Ext4.each(this.qcPlotPanel.chartTypePropArr, function (metricType)
             {
-                var name = metricType.name,
+                var id = metricType.id,
+                    name = metricType.name,
                     label = metricType.series1Label,
                     schema = metricType.series1SchemaName,
                     query = metricType.series1QueryName;
 
-                sql += sep + '(' + this.getLatestSampleFileStatsSql(name, label, schema, query) + ')';
+                sql += sep + '(' + this.getLatestSampleFileStatsSql(id, name, label, schema, query) + ')';
                 sep = "\nUNION\n";
 
                 if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
@@ -213,7 +214,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     schema = metricType.series2SchemaName;
                     query = metricType.series2QueryName;
 
-                    sql += sep + '(' + this.getLatestSampleFileStatsSql(name, label, schema, query) + ')';
+                    sql += sep + '(' + this.getLatestSampleFileStatsSql(id, name, label, schema, query) + ')';
                     sep = "\nUNION\n";
                 }
             }, this);
@@ -310,7 +311,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             content += '<ul class="sample-file-metric-list">';
             Ext4.each(sampleFile.Items, function(item)
             {
-                var href = LABKEY.ActionURL.buildURL('project', 'begin', item.ContainerPath, {metric: item.MetricName});
+                var href = LABKEY.ActionURL.buildURL('project', 'begin', item.ContainerPath, {metric: item.MetricId});
                 content += '<li><a href="' + href + '">' + item.MetricLabel + ' - ' + item.NonConformers + '/' + item.TotalCount + ' outliers</a></li>'
             });
             content += '</ul>';
@@ -342,9 +343,10 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }, this);
     },
 
-    getLatestSampleFileStatsSql : function(name, label, schema, query)
+    getLatestSampleFileStatsSql : function(id, name, label, schema, query)
     {
         return "SELECT stats.GuideSetId,"
+            + "\n'" + id + "' AS MetricId,"
             + "\n'" + name + "' AS MetricName,"
             + "\n'" + label + "' AS MetricLabel,"
             + "\nX.SampleFile,"
