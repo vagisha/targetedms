@@ -21,7 +21,8 @@
 }
 
 .folder-name {
-    font-weight: bold;
+    font-weight: normal;
+    font-family: 'Roboto-Bold', 'Arial-Bold', 'Helvetica-Bold', sans-serif;
     padding-right: 70px;
 }
 

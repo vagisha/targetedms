@@ -22,7 +22,8 @@
 
 .guideset-toolbar-msg .x4-box-item {
     padding-top: 7px;
-    font-weight: bold;
+    font-weight: normal;
+    font-family: 'Roboto-Bold', 'Arial-Bold', 'Helvetica-Bold', sans-serif;
     font-size: 11px;
     text-transform: uppercase;
 }
