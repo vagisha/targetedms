@@ -17,10 +17,11 @@ package org.labkey.test.components.targetedms;
 
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
-import org.labkey.test.util.TestLogger;
+import org.labkey.test.components.Component;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,13 +29,9 @@ import java.util.regex.Pattern;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public final class QCSummaryWebPart extends BodyWebPart
+public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Elements>
 {
     public static final String DEFAULT_TITLE = "QC Summary";
-
-    private Integer _docCount;
-    private Integer _fileCount;
-    private Integer _precursorCount;
 
     public QCSummaryWebPart(WebDriver driver)
     {
@@ -44,151 +41,178 @@ public final class QCSummaryWebPart extends BodyWebPart
     public QCSummaryWebPart(WebDriver driver, int index)
     {
         super(driver, DEFAULT_TITLE, index);
+        waitForLoad();
     }
 
+    @Override
     public void clearCache()
     {
-        _docCount = null;
-        _fileCount = null;
-        _precursorCount = null;
+        super.clearCache();
     }
 
-    private void readSummary()
+    public void waitForLoad()
     {
-        readSummary(0);
-    }
-
-    public void readSummary(int index)
-    {
-        String qcSummary = elements().qcSummary.findElement(getDriver()).getText();
-        if (index > 0)
-            qcSummary = getQCSummaryDetails().get(index).getText();
-
-        Pattern docPattern = Pattern.compile("(\\d+) Skyline document");
-        Matcher docMatcher = docPattern.matcher(qcSummary);
-        _docCount = docMatcher.find() ? Integer.parseInt(docMatcher.group(1)) : 0;
-
-        Pattern filePattern = Pattern.compile("(\\d+) sample file");
-        Matcher fileMatcher = filePattern.matcher(qcSummary);
-        _fileCount = fileMatcher.find() ? Integer.parseInt(fileMatcher.group(1)) : 0;
-
-        Pattern precursorPattern = Pattern.compile("(\\d+) precursor");
-        Matcher precursorMatcher = precursorPattern.matcher(qcSummary);
-        _precursorCount = precursorMatcher.find() ? Integer.parseInt(precursorMatcher.group(1)) : 0;
-    }
-
-    public int getDocCount()
-    {
-        if (_docCount == null)
-            readSummary();
-        return _docCount;
-    }
-
-    public int getFileCount()
-    {
-        if (_fileCount == null)
-            readSummary();
-        return _fileCount;
-    }
-
-    public int getPrecursorCount()
-    {
-        if (_precursorCount == null)
-            readSummary();
-        return _precursorCount;
-    }
-
-    public Locator getFolderNameLinkLocator(int index)
-    {
-        return getQCSummaryIndexLocator(index).append(elements().qcSummaryFolderLink);
-    }
-
-    public Locator getEmptyTextLocator(int index)
-    {
-        return getQCSummaryIndexLocator(index).append(elements().qcSummaryEmptyText);
-    }
-
-    private Locator.XPathLocator getQCSummaryIndexLocator(int index)
-    {
-        return new Locator.XPathLocator("(" + elements().qcSummaryDetails.getPath() + ")[" + (index+1) + "]");
-    }
-
-    public List<WebElement> getQCSummaryDetails()
-    {
-        return elements().qcSummaryDetails.findElements(this);
-    }
-
-    public Locator.XPathLocator getAutoQCIcon()
-    {
-        return  getAutoQCIcon(0);
-    }
-
-    public Locator.XPathLocator getAutoQCIcon(int index)
-    {
-        Locator.XPathLocator autoQCIcon;
-
-        TestLogger.log("Trying to get the " + index + " autoQCIcon.");
-        autoQCIcon = elements().qcSummaryAutoQCIcon.index(index);
-        getWrapper().assertElementVisible(autoQCIcon);
-
-        return  autoQCIcon;
+        Locator.tagWithClass("div", "item-text").waitForElement(this, 10000);
+        Locators.recentSampleFilesLoading.waitForElementToDisappear(this, 10000);
     }
 
     public Locator.XPathLocator getBubble()
     {
-        return elements().qcSummaryHopscotchBubble;
+        return Locators.hopscotchBubble;
     }
 
     public void closeBubble()
     {
-        getWrapper().click(elements().qcSummaryHopscotchBubbleClose);
+        getWrapper().click(Locators.hopscotchBubbleClose);
     }
 
     public String getBubbleText()
     {
-        return getWrapper().getText(elements().qcSummaryHopscotchBubbleContent);
+        return getWrapper().getText(Locators.hopscotchBubbleContent);
     }
 
-    public Locator.XPathLocator getSampleFileItem(int detailIndex, int itemIndex)
+    public List<QcSummaryTile> getQcSummaryTiles()
     {
-        return elements().qcSummarySampleFileDetails.index(detailIndex).append(elements().qcSummarySampleFileItem).index(itemIndex);
+        return elementCache().summaryTiles();
     }
 
-    public String getSampleFileItemText(int detailIndex, int itemIndex)
+    public void waitForRecentSampleFiles(int count)
     {
-        return getWrapper().getText(getSampleFileItem(detailIndex, itemIndex));
-    }
-
-    public void waitForSampleFileDetails(int count)
-    {
-        waitForSampleFileDetails();
-        assertEquals("Details for wrong number of sample files in QC Summary.", count, elements().qcSummarySampleFileItem.findElements(this).size());
-    }
-
-    public void waitForSampleFileDetails()
-    {
-        elements().qcSummarySampleFileDetailsLoading.waitForElementToDisappear(this, 10000);
+        assertEquals("Details for wrong number of sample files in QC Summary.", count, Locators.recentSampleFile.findElements(this).size());
     }
 
     @Override
-    protected Elements elements()
+    protected Elements newElementCache()
     {
         return new Elements();
     }
 
-    private class Elements extends BodyWebPart.Elements
+    public class Elements extends BodyWebPart.Elements
     {
-        public Locator.XPathLocator qcSummary = Locator.id(_componentElement.getAttribute("id")).append(Locator.tagWithId("div", "qcSummary-1"));
-        public Locator.XPathLocator qcSummaryDetails = qcSummary.append(Locator.tagWithClass("div", "summary-view"));
-        public Locator.XPathLocator qcSummaryFolderLink = Locator.tagWithClass("div", "folder-name").append(Locator.tag("a"));
-        public Locator.XPathLocator qcSummaryEmptyText = Locator.tagWithClass("div", "item-text").withText("No Skyline documents");
-        public Locator.XPathLocator qcSummaryAutoQC = Locator.tagWithClass("div", "auto-qc-ping");
-        public Locator.XPathLocator qcSummaryAutoQCIcon = qcSummaryAutoQC.append(Locator.xpath("//span"));
-        public Locator.XPathLocator qcSummaryHopscotchBubble = Locator.tagWithClass("div", "hopscotch-bubble-container");
-        public Locator.XPathLocator qcSummaryHopscotchBubbleContent = qcSummaryHopscotchBubble.append(Locator.tagWithClass("div", "hopscotch-bubble-content").append(Locator.tagWithClass("div", "hopscotch-content")));
-        public Locator.XPathLocator qcSummaryHopscotchBubbleClose = Locator.tagWithClass("a", "hopscotch-bubble-close");
-        public Locator.XPathLocator qcSummarySampleFileDetails = Locator.tagWithClass("div", "sample-file-details");
-        public Locator.XPathLocator qcSummarySampleFileItem = Locator.tagWithClass("div", "sample-file-item");
-        public Locator qcSummarySampleFileDetailsLoading = Locator.tagWithClass("div", "sample-file-details-loading");
+        private List<QcSummaryTile> summaryTiles;
+        public List<QcSummaryTile> summaryTiles()
+        {
+            if (summaryTiles == null)
+            {
+                summaryTiles = new ArrayList<>();
+                int index = 0;
+                List<WebElement> els = Locators.summaryTile.findElements(this);
+                for (WebElement el : els)
+                {
+                    summaryTiles.add(new QcSummaryTile(el, index++));
+                }
+            }
+            return summaryTiles;
+        }
+    }
+
+    private static abstract class Locators
+    {
+        static final Locator.XPathLocator hopscotchBubble = Locator.tagWithClass("div", "hopscotch-bubble-container");
+        static final Locator.XPathLocator hopscotchBubbleContent = hopscotchBubble.append(Locator.tagWithClass("div", "hopscotch-bubble-content").append(Locator.tagWithClass("div", "hopscotch-content")));
+        static final Locator.XPathLocator hopscotchBubbleClose = Locator.tagWithClass("a", "hopscotch-bubble-close");
+        static final Locator summaryTile = Locator.tagWithClass("div", "summary-tile");
+        static final Locator recentSampleFilesLoading = Locator.tagWithClass("div", "sample-file-details-loading");
+        static final Locator recentSampleFile = Locator.css("div.sample-file-item");
+    }
+
+    public class QcSummaryTile extends Component
+    {
+        private final WebElement _el;
+
+        private final Locator emptyText = Locator.tagWithClass("div", "item-text").withText("No Skyline documents");
+        private final WebElement folderLink = Locator.css("div.folder-name a").findWhenNeeded(this);
+        private final WebElement autoQCIcon = Locator.css("div.auto-qc-ping span").findWhenNeeded(this);
+        private List<WebElement> _recentSampleFiles;
+
+        private String _folderName;
+        private Integer _docCount;
+        private Integer _fileCount;
+        private Integer _precursorCount;
+        private final int _index;
+
+        protected QcSummaryTile(WebElement el, int index)
+        {
+            _el = el;
+            _index = index;
+        }
+
+        @Override
+        public WebElement getComponentElement()
+        {
+            return _el;
+        }
+
+        public int getIndex()
+        {
+            return _index;
+        }
+
+        private void readSummary()
+        {
+            waitForLoad();
+            String qcSummary = getComponentElement().getText();
+
+            Pattern docPattern = Pattern.compile("(\\d+) Skyline document");
+            Matcher docMatcher = docPattern.matcher(qcSummary);
+            _docCount = docMatcher.find() ? Integer.parseInt(docMatcher.group(1)) : 0;
+
+            Pattern filePattern = Pattern.compile("(\\d+) sample file");
+            Matcher fileMatcher = filePattern.matcher(qcSummary);
+            _fileCount = fileMatcher.find() ? Integer.parseInt(fileMatcher.group(1)) : 0;
+
+            Pattern precursorPattern = Pattern.compile("(\\d+) precursor");
+            Matcher precursorMatcher = precursorPattern.matcher(qcSummary);
+            _precursorCount = precursorMatcher.find() ? Integer.parseInt(precursorMatcher.group(1)) : 0;
+        }
+
+        public String getFolderName()
+        {
+            if (_folderName == null)
+                _folderName = folderLink.getText();
+            return _folderName;
+        }
+
+        public int getDocCount()
+        {
+            if (_docCount == null)
+                readSummary();
+            return _docCount;
+        }
+
+        public int getFileCount()
+        {
+            if (_fileCount == null)
+                readSummary();
+            return _fileCount;
+        }
+
+        public int getPrecursorCount()
+        {
+            if (_precursorCount == null)
+                readSummary();
+            return _precursorCount;
+        }
+
+        public boolean hasNoSkylineDocuments()
+        {
+            return !emptyText.findElements(this).isEmpty();
+        }
+
+        public WebElement getAutoQCIcon()
+        {
+            assertTrue("AutoQC Icon not visible for " + getFolderName(), autoQCIcon.isDisplayed());
+            return autoQCIcon;
+        }
+
+        public List<WebElement> getRecentSampleFiles()
+        {
+            if (_recentSampleFiles == null)
+            {
+                _recentSampleFiles = new ArrayList<>();
+                _recentSampleFiles.addAll(Locators.recentSampleFile.findElements(this));
+            }
+            return _recentSampleFiles;
+        }
     }
 }

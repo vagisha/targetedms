@@ -36,6 +36,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public abstract class TargetedMSTest extends BaseWebDriverTest
 {
@@ -174,34 +176,32 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
 
     protected void verifyQcSummary(int docCount, int sampleFileCount, int precursorCount)
     {
-        verifyQcSummary(0, null, docCount, sampleFileCount, precursorCount);
-    }
-
-    protected void verifyQcSummary(int summaryIndex, String folderName)
-    {
-        verifyQcSummary(summaryIndex, folderName, 0, 0, 0);
+        QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
+        verifyQcSummary(qcSummaryWebPart.getQcSummaryTiles().get(0), null, docCount, sampleFileCount, precursorCount);
     }
 
     @LogMethod
-    protected void verifyQcSummary(int summaryIndex, String folderName, int docCount, int sampleFileCount, int precursorCount)
+    protected void verifyQcSummary(QCSummaryWebPart.QcSummaryTile tile, String folderName, int docCount, int sampleFileCount, int precursorCount)
     {
-        QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
-
-        assertEquals("Wrong number of Skyline documents uploaded for index " + summaryIndex, docCount, qcSummaryWebPart.getDocCount());
-        assertEquals("Wrong number sample files for index " + summaryIndex, sampleFileCount, qcSummaryWebPart.getFileCount());
-        assertEquals("Wrong number of precursors tracked for index " + summaryIndex, precursorCount, qcSummaryWebPart.getPrecursorCount());
-
-        if (docCount == 0 && sampleFileCount == 0 && precursorCount == 0)
-            assertElementPresent(qcSummaryWebPart.getEmptyTextLocator(summaryIndex));
-        else
-            assertElementNotPresent(qcSummaryWebPart.getEmptyTextLocator(summaryIndex));
-
+        String actualFolderName;
         if (folderName != null)
         {
-            Locator loc = qcSummaryWebPart.getFolderNameLinkLocator(summaryIndex);
-            assertElementPresent(loc);
-            assertEquals("Wrong folder name QC Summary tile title", folderName, getText(loc));
+            actualFolderName = tile.getFolderName();
+            assertEquals("Wrong folder name for QC Summary tile", folderName, actualFolderName);
         }
+        else
+        {
+            actualFolderName = "tile " + tile.getIndex();
+        }
+
+        assertEquals("Wrong number of Skyline documents uploaded for " + actualFolderName, docCount, tile.getDocCount());
+        assertEquals("Wrong number sample files for " + actualFolderName, sampleFileCount, tile.getFileCount());
+        assertEquals("Wrong number of precursors tracked for " + actualFolderName, precursorCount, tile.getPrecursorCount());
+
+        if (docCount == 0 && sampleFileCount == 0 && precursorCount == 0)
+            assertTrue("Expected no documents for " + actualFolderName, tile.hasNoSkylineDocuments());
+        else
+            assertFalse("Unexpected lack of skyline documents for " + actualFolderName, tile.hasNoSkylineDocuments());
     }
 
     @LogMethod

@@ -88,7 +88,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
         if (Ext4.isDefined(hasChildren))
         {
-            config.cls = hasChildren ? 'summary-view' : undefined;
+            config.cls = hasChildren ? 'summary-view' : '';
             config.width = hasChildren ? 375 : undefined;
             config.minHeight = 21;
         }
@@ -98,6 +98,8 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             config.width = 375;
             config.minHeight = 136;
         }
+        
+        config.cls += ' summary-tile'; // For tests
 
         return Ext4.create('Ext.view.View', config);
     },

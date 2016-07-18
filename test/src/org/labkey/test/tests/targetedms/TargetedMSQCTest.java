@@ -34,6 +34,7 @@ import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaAnnotations;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
+import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.targetedms.QCHelper;
@@ -74,25 +75,33 @@ public class TargetedMSQCTest extends TargetedMSTest
     public static void initProject()
     {
         TargetedMSQCTest init = (TargetedMSQCTest)getCurrentTest();
+        init.doInit();
+    }
 
-        init.setupFolder(FolderType.QC);
-        init.createUserWithPermissions(USER, init.getProjectName(), "Reader");
-        init.importData(SProCoP_FILE);
-        init.createAndInsertAnnotations();
-
-        // verify the initial values for the Levey-Jennings plot input form
-        init.goToProjectHome();
-        PanoramaDashboard qcDashboard = new PanoramaDashboard(init);
-        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        assertEquals(QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
-        assertEquals(QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
-        assertEquals(QCPlotsWebPart.DateRangeOffset.ALL, qcPlotsWebPart.getCurrentDateRangeOffset());
+    private void doInit()
+    {
+        setupFolder(FolderType.QC);
+        _userHelper.createUser(USER);
+        new ApiPermissionsHelper(this).setUserPermissions(USER, "Reader");
+        importData(SProCoP_FILE);
+        createAndInsertAnnotations();
     }
 
     @Before
     public void preTest()
     {
         goToProjectHome();
+    }
+
+    @Test
+    public void testInitialPlotSettings() throws Exception
+    {
+        // verify the initial values for the Levey-Jennings plot input form
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        assertEquals(QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
+        assertEquals(QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
+        assertEquals(QCPlotsWebPart.DateRangeOffset.ALL, qcPlotsWebPart.getCurrentDateRangeOffset());
     }
 
     @Test

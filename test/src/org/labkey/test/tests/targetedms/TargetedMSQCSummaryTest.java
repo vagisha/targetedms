@@ -27,12 +27,14 @@ import org.labkey.remoteapi.Connection;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.components.ext4.Window;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
+import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.Ext4Helper;
+import org.openqa.selenium.WebElement;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -40,6 +42,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.labkey.test.components.ext4.Window.Window;
 
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCSummaryTest extends TargetedMSTest
@@ -96,8 +99,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         clickAndWait(Locator.linkWithText("Module Properties"));
         setFormElement(Locator.xpath("(//div[contains(@class, 'x4-panel-body')]//input[@type='text'])[4]"), timeOutLength);
         clickButton("Save Changes", 0);
-        waitForElement(Ext4Helper.Locators.window("Success"));
-        clickButton("OK", 0);
+        Window success = Window().withTitle("Success").waitFor(getDriver());
+        success.clickButton("OK", true);
         _ext4Helper.waitForMaskToDisappear();
         goToProjectHome();
     }
@@ -111,36 +114,39 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     @Test
     public void testSubfolders()
     {
-        waitForSampleFiles(6);
         QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
-        assertEquals("Unexpected number of QC Summary tiles", 3, qcSummaryWebPart.getQCSummaryDetails().size());
-        verifyQcSummary(0, getProjectName(), 1, 47, 7);
-        verifyQcSummary(1, FOLDER_1);
-        verifyQcSummary(2, FOLDER_2, 1, 3, 2);
+        qcSummaryWebPart.waitForRecentSampleFiles(6);
+        List<QCSummaryWebPart.QcSummaryTile> summaryTiles = qcSummaryWebPart.getQcSummaryTiles();
+
+        assertEquals("Unexpected number of QC Summary tiles", 3, summaryTiles.size());
+        verifyQcSummary(summaryTiles.get(0), getProjectName(), 1, 47, 7);
+        verifyQcSummary(summaryTiles.get(1), FOLDER_1, 0, 0, 0);
+        verifyQcSummary(summaryTiles.get(2), FOLDER_2, 1, 3, 2);
     }
 
     @Test
     public void testPermissions()
     {
+        ApiPermissionsHelper permissionsHelper = new ApiPermissionsHelper(this);
+
         // give user reader permissions to all but FOLDER_1
         createUserWithPermissions(USER, getProjectName(), "Reader");
         clickButton("Save and Finish");
         for (String folder : new String[]{FOLDER_2, FOLDER_2A, FOLDER_3})
         {
             clickFolder(folder);
-            _permissionsHelper.setUserPermissions(USER, "Reader");
-            clickButton("Save and Finish");
+            permissionsHelper.setUserPermissions(USER, "Reader");
         }
 
         // impersonate user and check that the project QC Summary doesn't include the FOLDER_1 details
         goToProjectHome();
         impersonate(USER);
         QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
-        qcSummaryWebPart.waitForSampleFileDetails(6);
-        assertEquals("Unexpected number of QC Summary tiles", 2, qcSummaryWebPart.getQCSummaryDetails().size());
-        verifyQcSummary(0, getProjectName(), 1, 47, 7);
-        verifyQcSummary(1, FOLDER_2, 1, 3, 2);
-        assertElementNotPresent(qcSummaryWebPart.getEmptyTextLocator(1));
+        qcSummaryWebPart.waitForRecentSampleFiles(6);
+        List<QCSummaryWebPart.QcSummaryTile> qcSummaryTiles = qcSummaryWebPart.getQcSummaryTiles();
+        assertEquals("Unexpected number of QC Summary tiles", 2, qcSummaryTiles.size());
+        verifyQcSummary(qcSummaryTiles.get(0), getProjectName(), 1, 47, 7);
+        verifyQcSummary(qcSummaryTiles.get(1), FOLDER_2, 1, 3, 2);
         stopImpersonating();
     }
 
@@ -150,7 +156,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         int sampleFileCount = 3;
 
         clickFolder(FOLDER_2A);
-        waitForSampleFiles(3);
+        waitForRecentSampleFiles(3);
         verifyQcSummary(1, sampleFileCount, 2);
 
         // verify the initial set of QC plot points
@@ -161,7 +167,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
         // remove a sample file
         clickAndWait(Locator.linkWithText(sampleFileCount + " sample files"));
-        DataRegionTable table = new DataRegionTable("query", this);
+        DataRegionTable table = new DataRegionTable("query", getDriver());
         table.checkCheckbox(0);
         doAndWaitForPageToLoad(() -> {
             table.clickHeaderButtonByText("Delete");
@@ -169,7 +175,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         });
         sampleFileCount--;
         clickTab("Panorama Dashboard");
-        waitForSampleFiles(2);
+        waitForRecentSampleFiles(2);
         verifyQcSummary(1, sampleFileCount, 2);
         assertEquals("Unexpected number of points", 2 * sampleFileCount, getQCPlotPointCount());
 
@@ -289,7 +295,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         createGuideSetFromTable(gs);
 
         goToProjectHome();
-        waitForSampleFiles(6);
+        waitForRecentSampleFiles(6);
 
         tempStringList01.clear();
         tempStringList01.add("2013/08/27 14:45:49 - 1/56 outliers");
@@ -315,9 +321,9 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         // Create a reference to the web page and it's various parts.
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
-        Locator autoQC = qcSummaryWebPart.getAutoQCIcon(webPartIndex);
+        WebElement autoQC = qcSummaryWebPart.getQcSummaryTiles().get(webPartIndex).getAutoQCIcon();
 
-        tmpString = getAttribute(autoQC, "Class");
+        tmpString = autoQC.getAttribute("class");
 
         for(String classValue : iconClassValues)
         {
@@ -338,26 +344,27 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
     private void validateSampleFile(int fileDetailIndex, List<String> fileDetails, List<String> bubbleTexts)
     {
-        String tmpString, bubbleText;
-        int i=0;
+        if (fileDetails.size() != bubbleTexts.size())
+            throw new IllegalArgumentException("The fileDetails and bubbleTexts list are not of equal length.");
 
-        // Create a reference to the web page and it's various parts.
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
 
-        assertEquals("The fileDetails and bubbleTexts list are not of equal length.", fileDetails.size(), bubbleTexts.size());
-        for(String fileDetailText : fileDetails)
+        for(int i = 0; i< fileDetails.size(); i++)
         {
-            tmpString = qcSummaryWebPart.getSampleFileItemText(fileDetailIndex, i);
-            log("Validate that the file detail text is '" + fileDetailText + "'.");
-            assertTrue("File detail text not as expected. File detail text: '" + tmpString + "'", tmpString.toLowerCase().contains(fileDetailText));
+            String fileDetailText = fileDetails.get(i);
+            String bubbleText = bubbleTexts.get(i);
+            QCSummaryWebPart.QcSummaryTile qcSummaryTile = qcSummaryWebPart.getQcSummaryTiles().get(fileDetailIndex);
 
-            bubbleText = bubbleTexts.get(i);
-            mouseOver(qcSummaryWebPart.getSampleFileItem(fileDetailIndex, i++));
+            String actualFileDetailText = qcSummaryTile.getRecentSampleFiles().get(i).getText();
+            log("Validate that the file detail text is '" + fileDetailText + "'.");
+            assertTrue("File detail text not as expected. File detail text: '" + actualFileDetailText + "'", actualFileDetailText.toLowerCase().contains(fileDetailText));
+
+            mouseOver(qcSummaryTile.getRecentSampleFiles().get(i));
             waitForElement(qcSummaryWebPart.getBubble());
-            tmpString = qcSummaryWebPart.getBubbleText();
+            actualFileDetailText = qcSummaryWebPart.getBubbleText();
             log("Validate that the bubble text for the file detail contains '" + bubbleText + "'.");
-            assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + tmpString + "'", tmpString.toLowerCase().contains(bubbleText.toLowerCase()));
+            assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + actualFileDetailText + "'", actualFileDetailText.toLowerCase().contains(bubbleText.toLowerCase()));
             qcSummaryWebPart.closeBubble();
             log("Move the mouse to avoid another hopscotch bubble.");
             mouseOver(Locator.css("td.labkey-main-icon"));
@@ -366,9 +373,9 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
     }
 
-    private void waitForSampleFiles(int count)
+    private void waitForRecentSampleFiles(int count)
     {
-        new QCSummaryWebPart(getDriver()).waitForSampleFileDetails(count);
+        new QCSummaryWebPart(getDriver()).waitForRecentSampleFiles(count);
     }
 
     private int getQCPlotPointCount()

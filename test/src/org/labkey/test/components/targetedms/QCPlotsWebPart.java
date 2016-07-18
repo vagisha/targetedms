@@ -21,8 +21,8 @@ import org.labkey.test.Locator;
 import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.components.BodyWebPart;
 import org.labkey.test.components.ext4.Checkbox;
+import org.labkey.test.components.ext4.Window;
 import org.labkey.test.selenium.LazyWebElement;
-import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -33,8 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.labkey.test.components.ext4.Window.Window;
 
-public final class QCPlotsWebPart extends BodyWebPart
+public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 {
     public static final String DEFAULT_TITLE = "Levey-Jennings QC Plots";
 
@@ -55,7 +56,7 @@ public final class QCPlotsWebPart extends BodyWebPart
 
         private String _text;
 
-        private Scale(String text)
+        Scale(String text)
         {
             _text = text;
         }
@@ -82,7 +83,7 @@ public final class QCPlotsWebPart extends BodyWebPart
         private Integer _offset;
         private String _label;
 
-        private DateRangeOffset(Integer offset, String label)
+        DateRangeOffset(Integer offset, String label)
         {
             _offset = offset;
             _label = label;
@@ -109,21 +110,21 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     private void waitForNoRecords()
     {
-        _test.waitFor(() -> elements().noRecords().size() > 0, 10000);
+        WebDriverWrapper.waitFor(() -> elementCache().noRecords().size() > 0, 10000);
     }
 
     @LogMethod
     public void setScale(Scale scale)
     {
-        WebElement plot = elements().findPlots().get(0);
-        _test._ext4Helper.selectComboBoxItem(elements().scaleCombo, scale.toString());
-        _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
+        WebElement plot = elementCache().findPlots().get(0);
+        getWrapper()._ext4Helper.selectComboBoxItem(elementCache().scaleCombo, scale.toString());
+        getWrapper().shortWait().until(ExpectedConditions.stalenessOf(plot));
         waitForPlots();
     }
 
     public Scale getCurrentScale()
     {
-        WebElement scaleInput = elements().scaleCombo.append("//input").waitForElement(this, 1000);
+        WebElement scaleInput = elementCache().scaleCombo.append("//input").waitForElement(this, 1000);
         return Scale.getEnum(scaleInput.getAttribute("value"));
     }
 
@@ -132,33 +133,33 @@ public final class QCPlotsWebPart extends BodyWebPart
     {
         if (dateRangeOffset == null)
             dateRangeOffset = DateRangeOffset.ALL;
-        _test._ext4Helper.selectComboBoxItem(elements().dateRangeCombo, dateRangeOffset.toString());
+        getWrapper()._ext4Helper.selectComboBoxItem(elementCache().dateRangeCombo, dateRangeOffset.toString());
     }
 
     public DateRangeOffset getCurrentDateRangeOffset()
     {
-        WebElement scaleInput = elements().dateRangeCombo.append("//input").waitForElement(this, 1000);
+        WebElement scaleInput = elementCache().dateRangeCombo.append("//input").waitForElement(this, 1000);
         return DateRangeOffset.getEnum(scaleInput.getAttribute("value"));
     }
 
     public void setStartDate(String startDate)
     {
-        _test.setFormElement(elements().startDate, startDate);
+        getWrapper().setFormElement(elementCache().startDate, startDate);
     }
 
     public String getCurrentStartDate()
     {
-        return _test.getFormElement(elements().startDate);
+        return getWrapper().getFormElement(elementCache().startDate);
     }
 
     public void setEndDate(String endDate)
     {
-        _test.setFormElement(elements().endDate, endDate);
+        getWrapper().setFormElement(elementCache().endDate, endDate);
     }
 
     public String getCurrentEndDate()
     {
-        return _test.getFormElement(elements().endDate);
+        return getWrapper().getFormElement(elementCache().endDate);
     }
 
     public enum ChartType
@@ -215,12 +216,12 @@ public final class QCPlotsWebPart extends BodyWebPart
     {
         WebElement plot = null;
         if (hasExistingPlot)
-            plot = elements().findPlots().get(0);
+            plot = elementCache().findPlots().get(0);
 
-        _test._ext4Helper.selectComboBoxItem(elements().chartTypeCombo, chartType.toString());
+        getWrapper()._ext4Helper.selectComboBoxItem(elementCache().chartTypeCombo, chartType.toString());
 
         if (hasExistingPlot)
-            _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
+            getWrapper().shortWait().until(ExpectedConditions.stalenessOf(plot));
 
         if (hasData)
             waitForPlots();
@@ -230,28 +231,28 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public ChartType getCurrentChartType()
     {
-        WebElement typeInput = elements().chartTypeCombo.append("//input").waitForElement(this, 1000);
+        WebElement typeInput = elementCache().chartTypeCombo.append("//input").waitForElement(this, 1000);
         return ChartType.getEnum(typeInput.getAttribute("value"));
     }
 
     public void setGroupXAxisValuesByDate(boolean check)
     {
-        WebElement plot = elements().findPlots().get(0);
-        elements().groupedXCheckbox.set(check);
-        _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
+        WebElement plot = elementCache().findPlots().get(0);
+        elementCache().groupedXCheckbox.set(check);
+        getWrapper().shortWait().until(ExpectedConditions.stalenessOf(plot));
         waitForPlots();
     }
 
     public boolean isGroupXAxisValuesByDateChecked()
     {
-        return elements().groupedXCheckbox.isChecked();
+        return elementCache().groupedXCheckbox.isChecked();
     }
 
     public void setShowAllPeptidesInSinglePlot(boolean check, @Nullable Integer expectedPlotCount)
     {
-        WebElement plot = elements().findPlots().get(0);
-        elements().singlePlotCheckbox.set(check);
-        _test.shortWait().until(ExpectedConditions.stalenessOf(plot));
+        WebElement plot = elementCache().findPlots().get(0);
+        elementCache().singlePlotCheckbox.set(check);
+        getWrapper().shortWait().until(ExpectedConditions.stalenessOf(plot));
         waitForPlots();
 
         if (expectedPlotCount != null)
@@ -262,15 +263,15 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public boolean isShowAllPeptidesInSinglePlotChecked()
     {
-        return elements().singlePlotCheckbox.isChecked();
+        return elementCache().singlePlotCheckbox.isChecked();
     }
 
     public void applyRange()
     {
-        WebElement panelChild = Locator.css("svg").findElement(elements().plotPanel); // The panel itself doesn't become stale, but its children do
-        _test.clickButton("Apply", 0);
-        _test.shortWait().until(ExpectedConditions.stalenessOf(panelChild));
-        _test._ext4Helper.waitForMaskToDisappear(BaseWebDriverTest.WAIT_FOR_PAGE);
+        WebElement panelChild = Locator.css("svg").findElement(elementCache().plotPanel); // The panel itself doesn't become stale, but its children do
+        getWrapper().clickButton("Apply", 0);
+        getWrapper().shortWait().until(ExpectedConditions.stalenessOf(panelChild));
+        getWrapper()._ext4Helper.waitForMaskToDisappear(BaseWebDriverTest.WAIT_FOR_PAGE);
     }
 
     public void waitForPlots()
@@ -283,13 +284,13 @@ public final class QCPlotsWebPart extends BodyWebPart
         if (plotCount > 0)
         {
             if (exact)
-                _test.waitFor(() -> elements().findPlots().size() == plotCount, WebDriverWrapper.WAIT_FOR_PAGE);
+                WebDriverWrapper.waitFor(() -> elementCache().findPlots().size() == plotCount, WebDriverWrapper.WAIT_FOR_PAGE);
             else
-                _test.waitFor(() -> elements().findPlots().size() >= plotCount, WebDriverWrapper.WAIT_FOR_PAGE);
+                WebDriverWrapper.waitFor(() -> elementCache().findPlots().size() >= plotCount, WebDriverWrapper.WAIT_FOR_PAGE);
         }
         else
         {
-            _test.longWait().until(ExpectedConditions.textToBePresentInElement(elements().plotPanel, "There were no records found. The date filter applied may be too restrictive."));
+            getWrapper().longWait().until(ExpectedConditions.textToBePresentInElement(elementCache().plotPanel, "There were no records found. The date filter applied may be too restrictive."));
         }
     }
 
@@ -297,7 +298,7 @@ public final class QCPlotsWebPart extends BodyWebPart
     {
         List<QCPlot> plots = new ArrayList<>();
 
-        for (WebElement plotEl : elements().findPlots())
+        for (WebElement plotEl : elementCache().findPlots())
         {
             plots.add(new QCPlot(plotEl));
         }
@@ -308,7 +309,7 @@ public final class QCPlotsWebPart extends BodyWebPart
     public String getSVGPlotText(String id)
     {
         Locator loc = Locator.tagWithId("div", id).withDescendant(Locator.xpath("//*[local-name() = 'svg']"));
-        WebElement svg = loc.findElement(_test.getDriver());
+        WebElement svg = loc.findElement(getWrapper().getDriver());
         return svg.getText();
     }
 
@@ -361,19 +362,19 @@ public final class QCPlotsWebPart extends BodyWebPart
 
     public int getGuideSetTrainingRectCount()
     {
-        return _test.getElementCount(elements().guideSetTrainingRect);
+        return getWrapper().getElementCount(elementCache().guideSetTrainingRect);
     }
 
     public int getGuideSetErrorBarPathCount(String cls)
     {
-        return _test.getElementCount(Locator.css("svg g g.error-bar path." + cls));
+        return getWrapper().getElementCount(Locator.css("svg g g.error-bar path." + cls));
     }
 
     public List<WebElement> getPointElements(String attr, String value, boolean isPrefix)
     {
         List<WebElement> matchingPoints = new ArrayList<>();
 
-        for (WebElement point : elements().svgPointPath.findElements(this))
+        for (WebElement point : elementCache().svgPointPath.findElements(this))
         {
             if ((isPrefix && point.getAttribute(attr).startsWith(value))
                 || (!isPrefix && point.getAttribute(attr).equals(value)))
@@ -388,7 +389,7 @@ public final class QCPlotsWebPart extends BodyWebPart
     public WebElement getPointByAcquiredDate(String dateStr)
     {
         dateStr = dateStr.replaceAll("/", "-"); // convert 2013/08/14 -> 2013-08-14
-        List<WebElement> points = elements().svgPoint.findElements(this);
+        List<WebElement> points = elementCache().svgPoint.findElements(this);
         for (WebElement p : points)
         {
             if (p.getAttribute("title").contains("Acquired: " + dateStr))
@@ -401,16 +402,16 @@ public final class QCPlotsWebPart extends BodyWebPart
     public void createGuideSet(GuideSet guideSet, String expectErrorMsg)
     {
         waitForPlots(1, false);
-        _test.clickButton("Create Guide Set", 0);
+        getWrapper().clickButton("Create Guide Set", 0);
 
         WebElement startPoint = getPointByAcquiredDate(guideSet.getStartDate());
         WebElement endPoint = getPointByAcquiredDate(guideSet.getEndDate());
 
-        Actions builder = new Actions(_test.getDriver());
+        Actions builder = new Actions(getWrapper().getDriver());
         builder.moveToElement(startPoint, -10, 0).clickAndHold().moveToElement(endPoint, 10, 0).release().perform();
 
-        List<WebElement> gsButtons = elements().guideSetSvgButton.findElements(this);
-        _test.shortWait().until(ExpectedConditions.elementToBeClickable(gsButtons.get(0)));
+        List<WebElement> gsButtons = elementCache().guideSetSvgButton.findElements(this);
+        getWrapper().shortWait().until(ExpectedConditions.elementToBeClickable(gsButtons.get(0)));
 
         Integer brushPointCount = getPointElements("fill", "rgba(20, 204, 201, 1)", false).size();
         assertEquals("Unexpected number of points selected via brushing", guideSet.getBrushSelectedPoints(), brushPointCount);
@@ -419,12 +420,15 @@ public final class QCPlotsWebPart extends BodyWebPart
         if (guideSet.getBrushSelectedPoints() != null && guideSet.getBrushSelectedPoints() < 5)
         {
             gsButtons.get(0).click(); // Create button : index 0
-            int wait = !expectPageReload ? 0 : BaseWebDriverTest.WAIT_FOR_PAGE;
-            _test._ext4Helper.clickWindowButton("Create Guide Set Warning", "Yes", wait, 0);
+            Window warning = Window().withTitle("Create Guide Set Warning").waitFor(getDriver());
+            if (expectPageReload)
+                warning.clickButton("Yes");
+            else
+                warning.clickButton("Yes", true);
         }
         else if (expectPageReload)
         {
-            _test.clickAndWait(gsButtons.get(0)); // Create button : index 0
+            getWrapper().clickAndWait(gsButtons.get(0)); // Create button : index 0
         }
         else
         {
@@ -433,43 +437,43 @@ public final class QCPlotsWebPart extends BodyWebPart
 
         if (expectErrorMsg != null)
         {
-            _test.waitForElement(Ext4Helper.Locators.window("Error Creating Guide Set"));
-            _test.assertElementPresent(elements().extFormDisplay.withText(expectErrorMsg));
-            _test._ext4Helper.clickWindowButton("Error Creating Guide Set", "OK", 0, 0);
+            Window error = Window().withTitle("Error Creating Guide Set").waitFor(getDriver());
+            getWrapper().assertElementPresent(elementCache().extFormDisplay.withText(expectErrorMsg));
+            error.clickButton("OK", true);
             gsButtons.get(1).click(); // Cancel button : index 1
         }
     }
 
     public int getLogScaleInvalidCount()
     {
-        return elements().logScaleInvalid().size();
+        return elementCache().logScaleInvalid().size();
     }
 
     public int getLogScaleWarningCount()
     {
-        return elements().logScaleWarning().size();
+        return elementCache().logScaleWarning().size();
     }
 
     public Locator getLegendItemLocator(String text, boolean exactMatch)
     {
         if (exactMatch)
-            return elements().legendItem.withText(text);
+            return elementCache().legendItem.withText(text);
         else
-            return elements().legendItem.containing(text);
+            return elementCache().legendItem.containing(text);
     }
 
     public String getOverflowWarningText()
     {
-        return elements().overflowWarning.getText();
+        return elementCache().overflowWarning.getText();
     }
 
     @Override
-    protected Elements elements()
+    protected Elements newElementCache()
     {
         return new Elements();
     }
 
-    private class Elements extends BodyWebPart.Elements
+    public class Elements extends BodyWebPart.Elements
     {
         WebElement startDate = new LazyWebElement(Locator.css("#start-date-field input"), this);
         WebElement endDate = new LazyWebElement(Locator.css("#end-date-field input"), this);
