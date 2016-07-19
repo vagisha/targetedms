@@ -424,7 +424,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
             if (expectPageReload)
                 warning.clickButton("Yes");
             else
-                warning.clickButton("Yes", true);
+                warning.clickButton("Yes", false);
         }
         else if (expectPageReload)
         {
