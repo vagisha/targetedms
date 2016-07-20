@@ -94,17 +94,6 @@ public class TargetedMSQCTest extends TargetedMSTest
     }
 
     @Test
-    public void testInitialPlotSettings() throws Exception
-    {
-        // verify the initial values for the Levey-Jennings plot input form
-        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
-        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        assertEquals(QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
-        assertEquals(QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
-        assertEquals(QCPlotsWebPart.DateRangeOffset.ALL, qcPlotsWebPart.getCurrentDateRangeOffset());
-    }
-
-    @Test
     public void testQCDashboard()
     {
         List<String> expectedWebParts = Arrays.asList(QCSummaryWebPart.DEFAULT_TITLE, QCPlotsWebPart.DEFAULT_TITLE);
@@ -210,7 +199,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         impersonate(USER);
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, false);
-        assertEquals("Chart Type not set to default value", QCPlotsWebPart.ChartType.RETENTION, qcPlotsWebPart.getCurrentChartType());
+        assertEquals("Chart Type not set to default value", QCPlotsWebPart.ChartType.FWB, qcPlotsWebPart.getCurrentChartType());
         assertEquals("Y-Axis Scale not set to default value", QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
         assertFalse("Group X-Axis not set to default value", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertFalse("Show All Peptides not set to default value", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
