@@ -29,6 +29,7 @@ import org.labkey.api.data.DbScope;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
@@ -1557,6 +1558,6 @@ public class TargetedMSManager
     public ArrayList<QCMetricConfiguration> getQCMetricConfigurations(Container container)
     {
         TableInfo table = TargetedMSManager.getTableInfoQCMetricConfiguration();
-        return new TableSelector(table, SimpleFilter.createContainerFilter(container), null).getArrayList(QCMetricConfiguration.class);
+        return new TableSelector(table, SimpleFilter.createContainerFilter(container), new Sort("Name")).getArrayList(QCMetricConfiguration.class);
     }
 }

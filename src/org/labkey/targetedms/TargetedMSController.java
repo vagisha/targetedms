@@ -29,7 +29,6 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.json.JSONObject;
-import org.json.simple.JSONArray;
 import org.junit.Assert;
 import org.junit.Test;
 import org.labkey.api.action.ApiAction;
@@ -705,7 +704,7 @@ public class TargetedMSController extends SpringActionController
                 configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
             }
 
-            List<JSONObject> result = new JSONArray();
+            List<JSONObject> result = new ArrayList<>();
             for (QCMetricConfiguration configuration : configurations)
             {
                    result.add(configuration.toJSON());

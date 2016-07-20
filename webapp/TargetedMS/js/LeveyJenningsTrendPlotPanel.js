@@ -464,6 +464,12 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
         {
             this.chartType = this.chartTypePropArr[0].id;
         }
+        else if (!this.getChartTypePropsById(this.chartType))
+        {
+            console.log("The chart type with id " + this.chartType + " is no longer available.");
+            this.chartType = this.chartTypePropArr[0].id;
+            console.log("Using default chart type with id " + this.chartType + ".");
+        }
     },
 
     getChartTypeCombo : function()
