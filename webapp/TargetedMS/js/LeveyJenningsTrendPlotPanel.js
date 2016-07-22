@@ -610,7 +610,7 @@ Ext4.define('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
                 return this.chartTypePropArr[i];
             }
         }
-        return {};
+        return undefined;
     },
 
     getDistinctPrecursors: function() {
