@@ -52,8 +52,8 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
 
     public void waitForLoad()
     {
-        Locator.tagWithClass("div", "item-text").waitForElement(this, 10000);
-        Locators.recentSampleFilesLoading.waitForElementToDisappear(this, 10000);
+        Locator.tagWithClass("div", "item-text").waitForElement(this, 15000);
+        Locators.recentSampleFilesLoading.waitForElementToDisappear(this, 15000);
     }
 
     public Locator.XPathLocator getBubble()
