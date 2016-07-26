@@ -374,7 +374,7 @@
         handler: function(){
 
             var params = {
-                asProteomics: <%=peptideList != null && !peptideList.isEmpty()%>,
+                asProteomics: <%=(peptideList != null && !peptideList.isEmpty()) || peptideId != 0 || precursorId != 0%>,
                 peptideGroupId: <%=peptideGroupId%>,
                 replicateId: replicateComboBox.getValue(),
                 groupByReplicateAnnotName: replicateAnnotNameComboBox.getValue(),
