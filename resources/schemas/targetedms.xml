@@ -61,6 +61,7 @@
             </ns:column>
             <ns:column columnName="Name"/>
             <ns:column columnName="Value"/>
+            <ns:column columnName="Source"/>
             <ns:column columnName="ReplicateId"/>
         </ns:columns>
     </ns:table>
@@ -1409,7 +1410,9 @@
             <ns:column columnName="Container">
                 <ns:columnTitle>Folder</ns:columnTitle>
             </ns:column>
-            <ns:column columnName="Created"/>
+            <ns:column columnName="Created">
+                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
+            </ns:column>
             <ns:column columnName="CreatedBy">
                 <ns:fk>
                     <ns:fkColumnName>UserId</ns:fkColumnName>
@@ -1417,7 +1420,9 @@
                     <ns:fkTable>UsersData</ns:fkTable>
                 </ns:fk>
             </ns:column>
-            <ns:column columnName="Modified"/>
+            <ns:column columnName="Modified">
+                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
+            </ns:column>
             <ns:column columnName="ModifiedBy">
                 <ns:fk>
                     <ns:fkColumnName>UserId</ns:fkColumnName>

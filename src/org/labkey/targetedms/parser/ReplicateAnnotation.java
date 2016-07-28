@@ -23,6 +23,8 @@ public class ReplicateAnnotation extends AbstractAnnotation
 {
     private int _replicateId;
 
+    private String _source;
+
     public int getReplicateId()
     {
         return _replicateId;
@@ -31,5 +33,15 @@ public class ReplicateAnnotation extends AbstractAnnotation
     public void setReplicateId(int replicateId)
     {
         _replicateId = replicateId;
+    }
+
+    public String getSource()
+    {
+        return _source;
+    }
+
+    public void setSource(String source)
+    {
+        _source = source;
     }
 }

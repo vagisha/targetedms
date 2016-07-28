@@ -17,6 +17,7 @@
 package org.labkey.targetedms;
 
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AJAXDetailsDisplayColumn;
@@ -37,6 +38,7 @@ import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
 import org.labkey.api.module.Module;
 import org.labkey.api.ms2.MS2Service;
+import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
@@ -46,9 +48,13 @@ import org.labkey.api.query.LookupForeignKey;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
+import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.security.UserPrincipal;
+import org.labkey.api.security.permissions.InsertPermission;
+import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -827,7 +833,26 @@ public class TargetedMSSchema extends UserSchema
         }
         if (TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.ReplicateFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.ReplicateFK.getSQL())
+            {
+                @Override
+                public boolean hasPermission(@NotNull UserPrincipal user, @NotNull Class<? extends Permission> perm)
+                {
+                    if(InsertPermission.class.equals(perm))
+                    {
+                        // Allow inserts only in QC folder types
+                        return getContainer().hasPermission(user, perm)
+                                && (TargetedMSManager.getFolderType(getContainer()) == TargetedMSModule.FolderType.QC);
+                    }
+                    return super.hasPermission(user, perm);
+                }
+
+                @Override
+                public QueryUpdateService getUpdateService()
+                {
+                    return new DefaultQueryUpdateService(this, getRealTable());
+                }
+            };
         }
 
         if (TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name) || TABLE_GENERAL_MOLECULE_CHROM_INFO.equalsIgnoreCase(name))
