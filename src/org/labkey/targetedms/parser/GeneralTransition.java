@@ -23,6 +23,14 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     protected Double explicitDriftTimeHighEnergyOffsetMSec;
     private List<TransitionChromInfo> _chromInfoList;
 
+    protected static final String PRECURSOR = "precursor";
+    private static final String Y_ION = "y";
+    private static final String Z_ION = "z";
+    private static final String X_ION = "x";
+    private static final String B_ION = "b";
+    private static final String C_ION = "c";
+    private static final String A_ION = "a";
+
     public int getGeneralPrecursorId()
     {
         return generalPrecursorId;
@@ -191,5 +199,27 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     public void setChromInfoList(List<TransitionChromInfo> chromInfoList)
     {
         _chromInfoList = chromInfoList;
+    }
+
+    public boolean isPrecursorIon()
+    {
+        return fragmentType != null ? fragmentType.equalsIgnoreCase(PRECURSOR) : false;
+    }
+
+    public boolean isNterm()
+    {
+        return fragmentType == null ? false
+                : (fragmentType.equalsIgnoreCase(B_ION)
+                || fragmentType.equalsIgnoreCase(C_ION)
+                || fragmentType.equalsIgnoreCase(A_ION));
+    }
+
+
+    public boolean isCterm()
+    {
+        return fragmentType == null ? false
+                : (fragmentType.equalsIgnoreCase(Y_ION)
+                || fragmentType.equalsIgnoreCase(Z_ION)
+                || fragmentType.equalsIgnoreCase(X_ION));
     }
 }

@@ -310,7 +310,7 @@
             </ns:column>
             <ns:column columnName="Charge">
                 <ns:columnTitle>Q1 Z</ns:columnTitle>
-                <ns:formatString>0+</ns:formatString>
+                <ns:formatString>0+;0-</ns:formatString>
             </ns:column>
             <ns:column columnName="CollisionEnergy">
                 <ns:columnTitle>CE</ns:columnTitle>
@@ -458,7 +458,7 @@
             </ns:column>
             <ns:column columnName="Charge">
                 <ns:columnTitle>Q3 Z</ns:columnTitle>
-                <ns:formatString>0+</ns:formatString>
+                <ns:formatString>0+;0-</ns:formatString>
             </ns:column>
             <ns:column columnName="FragmentType"/>
             <ns:column columnName="IsotopeDistIndex"/>

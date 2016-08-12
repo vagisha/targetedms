@@ -1784,11 +1784,6 @@ public class SkylineDocumentParser implements AutoCloseable
 
         transition.setMeasuredIonName(reader.getAttributeValue(null, "measured_ion_name"));
 
-        if(transition.isPrecursorIon() && transition.getMassIndex() == null)
-        {
-            transition.setMassIndex(0);
-        }
-
         List<TransitionChromInfo> chromInfoList = new ArrayList<>();
         transition.setChromInfoList(chromInfoList);
 
@@ -1875,6 +1870,11 @@ public class SkylineDocumentParser implements AutoCloseable
         String massIndex = reader.getAttributeValue(null, "mass_index");
         if(massIndex != null)
             transition.setMassIndex(Integer.parseInt(massIndex));
+
+        if(transition.isPrecursorIon() && transition.getMassIndex() == null)
+        {
+            transition.setMassIndex(0);
+        }
 
         String isotopeDistrRank = reader.getAttributeValue(null, "isotope_dist_rank");
         if(isotopeDistrRank != null)

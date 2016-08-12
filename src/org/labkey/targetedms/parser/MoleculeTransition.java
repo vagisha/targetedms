@@ -105,6 +105,12 @@ public class MoleculeTransition extends GeneralTransition
         @Override
         public int compare(MoleculeTransition t1, MoleculeTransition t2)
         {
+            if(t1.isPrecursorIon() && t2.isPrecursorIon())
+            {
+                // Precursor ions are ordered M, M+1, M+2.
+                return t1.getMassIndex().compareTo(t2.getMassIndex());
+            }
+
             int result = t1.getCharge().compareTo(t2.getCharge());
             if(result == 0)
             {

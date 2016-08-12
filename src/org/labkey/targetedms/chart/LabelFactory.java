@@ -46,10 +46,15 @@ import java.util.Map;
  */
 public class LabelFactory
 {
-    private static final String[] CHARGE = {"",
-                                           "+",
-                                           "++",
-                                           "+++"};
+    private static final String[] CHARGE_POS = {"",
+                                                "+",
+                                                "++",
+                                                "+++"};
+
+    private static final String[] CHARGE_NEG = {"",
+                                                "-",
+                                                "--",
+                                                "---"};
 
     private LabelFactory() {}
 
@@ -211,13 +216,13 @@ public class LabelFactory
 
     public static String getChargeLabel(int charge, boolean addSeparator)
     {
-        if(charge < 0)
-            return "";
-        if(charge > CHARGE.length - 1)
+        int abs_charge = charge < 0 ? -charge : charge;
+
+        if(abs_charge > CHARGE_POS.length - 1)
         {
-            String plusStr = addSeparator ? ", +" : "+";
-            return plusStr + charge;
+            String chgStr = addSeparator ? ", " : "";
+            return chgStr + charge + (charge < 0 ? "-" : "+");
         }
-        return CHARGE[charge];
+        return charge >= 0 ? CHARGE_POS[abs_charge] : CHARGE_NEG[abs_charge];
     }
 }
