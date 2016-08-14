@@ -28,6 +28,8 @@ import java.util.Date;
 import java.util.zip.DataFormatException;
 
 /**
+ * Parses the .skyd binary file format, for chromatogram data.
+ *
  * Based on ChromatogramCache.cs and ChromHeaderInfo.cs from Skyline
  * 
  * User: jeckels

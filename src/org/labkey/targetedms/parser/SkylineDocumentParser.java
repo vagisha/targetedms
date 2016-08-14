@@ -46,9 +46,9 @@ import java.util.regex.Pattern;
 import java.util.zip.DataFormatException;
 
 /**
+ * Parses the .sky XML file format, building up an in-memory representation of its contents.
  * User: vsharma
  * Date: 4/2/12
- * Time: 10:58 AM
  */
 public class SkylineDocumentParser implements AutoCloseable
 {

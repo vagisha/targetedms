@@ -67,10 +67,9 @@ import java.util.zip.DataFormatException;
 
 /**
  * Drives import of the Skyline document, and handles the high-level iteration for inserting
- * the document's contents into the database
+ * the document's contents into the database but not the parsing of the XML.
  * User: vsharma
  * Date: 4/1/12
- * Time: 10:58 AM
  */
 public class SkylineDocImporter
 {
@@ -99,7 +98,7 @@ public class SkylineDocImporter
     protected Logger _log = null;
 
     // Use system logger for bugs & system problems, and in cases where we don't have a pipeline logger
-    protected static Logger _systemLog = Logger.getLogger(SkylineDocImporter.class);
+    protected static final Logger _systemLog = Logger.getLogger(SkylineDocImporter.class);
     protected final XarContext _context;
     private int blankLabelIndex;
 
