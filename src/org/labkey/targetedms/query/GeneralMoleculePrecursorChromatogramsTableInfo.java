@@ -170,7 +170,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
             sql.append("SampleFileId.ReplicateId IN ("+replicateIds+")");
             sql.append(")");
         }
-        if(filterAnnotations != null)
+        if(filterAnnotations != null && !filterAnnotations.isEmpty())
         {
             sql.append(" AND ")
                .append(" SampleFileId.ReplicateId IN (SELECT replicateId FROM ")
