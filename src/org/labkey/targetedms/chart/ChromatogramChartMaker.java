@@ -15,16 +15,20 @@
 
 package org.labkey.targetedms.chart;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jfree.chart.ChartColor;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.IntervalMarker;
+import org.jfree.chart.plot.Marker;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.ui.Layer;
+import org.jfree.ui.RectangleAnchor;
 import org.jfree.ui.TextAnchor;
 
 import java.awt.*;
@@ -45,16 +49,29 @@ class ChromatogramChartMaker
 
     private void addAnnotation(ChromatogramDataset.ChartAnnotation annotation, JFreeChart chart)
     {
-        MultiLineXYPointerAnnotation pointer = new MultiLineXYPointerAnnotation(annotation.getLabels(), annotation.getRetentionTime(), annotation.getIntensity());
-        pointer.setTipRadius(3.0);  // The radius from the (x, y) point to the tip of the arrow
-        pointer.setBaseRadius(11.0); // The radius from the (x, y) point to the start of the arrow line
-        pointer.setArrowLength(11.0);  //The length of the arrow head
-        pointer.setLabelOffset(-5.0);
-        pointer.setFont(new Font("SansSerif", Font.PLAIN, 10));
-        pointer.setPaint(annotation.getColor());
-        pointer.setTextAnchor(TextAnchor.BOTTOM_LEFT);
+        if(annotation.getIntensity() == Double.MAX_VALUE)
+        {
+            Marker marker = new ValueMarker(annotation.getRetentionTime());
+            marker.setPaint(annotation.getColor());
+            marker.setLabel(StringUtils.join(annotation.getLabels(), ","));
+            marker.setLabelAnchor(RectangleAnchor.TOP_RIGHT);
+            marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
 
-        chart.getXYPlot().addAnnotation(pointer);
+            chart.getXYPlot().addDomainMarker(marker);
+        }
+        else
+        {
+            MultiLineXYPointerAnnotation pointer = new MultiLineXYPointerAnnotation(annotation.getLabels(), annotation.getRetentionTime(), annotation.getIntensity());
+            pointer.setTipRadius(3.0);  // The radius from the (x, y) point to the tip of the arrow
+            pointer.setBaseRadius(11.0); // The radius from the (x, y) point to the start of the arrow line
+            pointer.setArrowLength(11.0);  //The length of the arrow head
+            pointer.setLabelOffset(-5.0);
+            pointer.setFont(new Font("SansSerif", Font.PLAIN, 10));
+            pointer.setPaint(annotation.getColor());
+            pointer.setTextAnchor(TextAnchor.BOTTOM_LEFT);
+
+            chart.getXYPlot().addAnnotation(pointer);
+        }
     }
 
     public JFreeChart make(final ChromatogramDataset chromatogramDataset)

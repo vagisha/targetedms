@@ -15,6 +15,11 @@
 
 package org.labkey.targetedms.parser.blib;
 
+import org.apache.log4j.Logger;
+import org.labkey.targetedms.TargetedMSController;
+import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
+import org.sqlite.SQLiteConfig;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -23,6 +28,9 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -45,6 +53,8 @@ public class BlibSpectrumReader
             throw new RuntimeException("Could not find SQLite driver", e);
         }
     }
+
+    private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
 
     public static BlibSpectrum getSpectrum(String blibFilePath, String modifiedPeptide, int charge)
     {
@@ -72,6 +82,55 @@ public class BlibSpectrumReader
         }
         finally
         {
+            if(conn != null) try {conn.close();} catch(SQLException ignored){}
+        }
+    }
+
+    public static List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getRetentionTimes(String blibFilePath, String modifiedPeptide)
+    {
+        String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
+
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rs = null;
+        SQLiteConfig config = new SQLiteConfig();
+        config.setReadOnly(true);
+
+        try {
+            conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath, config.toProperties());
+            stmt = conn.createStatement();
+            StringBuilder sql = new StringBuilder("SELECT rt.retentionTime, rs.peptideModSeq, rs.precursorCharge, ssf.fileName from RetentionTimes AS rt ");
+            sql.append(" INNER JOIN RefSpectra AS rs ON (rt.RefSpectraID = rs.id)");
+            sql.append(" INNER JOIN SpectrumSourceFiles ssf ON (rt.SpectrumSourceID = ssf.id)");
+            sql.append(" WHERE rs.peptideModSeq='"+blibPeptide+"'");
+
+            rs = stmt.executeQuery(sql.toString());
+
+            List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> retentionTimes = new ArrayList<>();
+            while(rs.next())
+            {
+                LibrarySpectrumMatchGetter.PeptideIdRtInfo rtInfo = new LibrarySpectrumMatchGetter.PeptideIdRtInfo(rs.getString("fileName"),
+                        modifiedPeptide,
+                        rs.getInt("precursorCharge"),
+                        rs.getDouble("retentionTime"));
+                retentionTimes.add(rtInfo);
+            }
+            return Collections.unmodifiableList(retentionTimes);
+        }
+        catch(SQLException e)
+        {
+            // Older versions of blib databases don't have a RetentionTimes table.
+            if(e.getMessage().contains("no such table: RetentionTimes"))
+            {
+                LOG.info("Missing RetentionTimes table in blib file " + blibFilePath);
+                return Collections.emptyList();
+            }
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+            if(rs != null) try {rs.close();} catch(SQLException ignored){}
+            if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
             if(conn != null) try {conn.close();} catch(SQLException ignored){}
         }
     }
@@ -156,19 +215,7 @@ public class BlibSpectrumReader
 
         int uncompressedLength = peakCount * sizeOfMz;
         byte[] uncompressed;
-        if(uncompressedLength == compressed.length)
-        {
-            uncompressed = compressed;
-        }
-        else
-        {
-            uncompressed = new byte[uncompressedLength];
-
-            Inflater inflater = new Inflater();
-            inflater.setInput(compressed, 0, compressed.length);
-            inflater.inflate(uncompressed);
-            inflater.end();
-        }
+        uncompressed = getBytes(compressed, uncompressedLength);
 
         ByteBuffer bbuf = ByteBuffer.wrap(uncompressed);
         bbuf = bbuf.order(ByteOrder.LITTLE_ENDIAN);
@@ -187,6 +234,21 @@ public class BlibSpectrumReader
         int uncompressedLength = peakCount * sizeOfInten;
         byte[] uncompressed;
 
+        uncompressed = getBytes(compressed, uncompressedLength);
+
+        ByteBuffer bbuf = ByteBuffer.wrap(uncompressed);
+        bbuf = bbuf.order(ByteOrder.LITTLE_ENDIAN);
+        float[] intensities = new float[peakCount];
+        for(int i = 0; i < intensities.length; i++)
+        {
+            intensities[i] = bbuf.getFloat(i * sizeOfInten);
+        }
+        return intensities;
+    }
+
+    private static byte[] getBytes(byte[] compressed, int uncompressedLength) throws DataFormatException
+    {
+        byte[] uncompressed;
         if(uncompressedLength == compressed.length)
         {
             uncompressed = compressed;
@@ -200,14 +262,6 @@ public class BlibSpectrumReader
             inflater.inflate(uncompressed);
             inflater.end();
         }
-
-        ByteBuffer bbuf = ByteBuffer.wrap(uncompressed);
-        bbuf = bbuf.order(ByteOrder.LITTLE_ENDIAN);
-        float[] intensities = new float[peakCount];
-        for(int i = 0; i < intensities.length; i++)
-        {
-            intensities[i] = bbuf.getFloat(i * sizeOfInten);
-        }
-        return intensities;
+        return uncompressed;
     }
 }

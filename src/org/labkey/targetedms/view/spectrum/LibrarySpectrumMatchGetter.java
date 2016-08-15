@@ -15,14 +15,21 @@
  */
 package org.labkey.targetedms.view.spectrum;
 
+import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.cache.BlockingCache;
+import org.labkey.api.cache.CacheLoader;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
+import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
+import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.blib.BlibSpectrum;
 import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
 import org.labkey.targetedms.query.LibraryManager;
@@ -30,7 +37,9 @@ import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -44,6 +53,37 @@ import java.util.Set;
  */
 public class LibrarySpectrumMatchGetter
 {
+    private static final int CACHE_SIZE = 10;
+
+    private static BlockingCache<PrecursorKey, List<PeptideIdRtInfo>> _peptideIdRtsCache =
+            CacheManager.getBlockingCache(CACHE_SIZE, CacheManager.DAY, "TargetedMS peptide ID retention times",
+                    new CacheLoader<PrecursorKey, List<PeptideIdRtInfo>>()
+            {
+                @Override
+                public List<PeptideIdRtInfo> load(PrecursorKey precursor, @Nullable Object argument)
+                {
+                    TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
+
+                    // Get the spectrum libraries for this run
+                    List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(run.getId());
+                    Map<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId(), libraries);
+
+                    for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
+                    {
+                        List<PeptideIdRtInfo> rtInfos = BlibSpectrumReader.getRetentionTimes(libraryFilePathsMap.get(library),
+                                precursor.getModifiedSequence());
+
+                        if(rtInfos.size() > 0)
+                        {
+                            return rtInfos;  // return matches from the first library that has a match
+                        }
+                    }
+
+                    return Collections.emptyList();
+
+                }
+            });
+
     public static List<LibrarySpectrumMatch> getMatches(Peptide peptide, User user, Container container)
     {
         // Get the precursor of this peptide, sorted by label type and charge.
@@ -165,5 +205,119 @@ public class LibrarySpectrumMatchGetter
         }
 
         return matchedSpectra;
+    }
+
+    public static List<Double> getPeptideIdRts(Precursor precursor, SampleFile sampleFile)
+    {
+        if(precursor == null || sampleFile == null)
+        {
+            return Collections.emptyList();
+        }
+
+        List<PeptideIdRtInfo> peptideIdRtInfos = _peptideIdRtsCache.get(new PrecursorKey(precursor.getModifiedSequence(), precursor.getGeneralMoleculeId()));
+
+        if(peptideIdRtInfos == null)
+        {
+            return Collections.emptyList();
+        }
+
+        List<Double> rts = new ArrayList<>();
+        // PeptideIdRtInfos cache has matches for the given precursor modified sequence in all sample files. Find the
+        // ones in this sample file.
+        for(PeptideIdRtInfo rtInfo: peptideIdRtInfos)
+        {
+            if(rtInfo.getSampleFileName() != null && sampleFile.getFilePath() != null)
+            {
+                File libSourceFile = new File(rtInfo.getSampleFileName());
+                File skySampleFile = new File(sampleFile.getFilePath());
+                if (rtInfo.getCharge() == precursor.getCharge() &&
+                        libSourceFile.getName().equals(skySampleFile.getName()))
+                {
+                    rts.add(rtInfo.getRt());
+                }
+            }
+        }
+
+        return rts;
+    }
+
+    private static class PrecursorKey
+    {
+        private final String _modifiedSequence;
+        private final int _generalMoleculeId;
+
+
+        private PrecursorKey(String modifiedSequence, int generalMoleculeId)
+        {
+            _modifiedSequence = modifiedSequence;
+            _generalMoleculeId = generalMoleculeId;
+        }
+
+        public String getModifiedSequence()
+        {
+            return _modifiedSequence;
+        }
+
+        public int getGeneralMoleculeId()
+        {
+            return _generalMoleculeId;
+        }
+
+        @Override
+        public boolean equals(Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PrecursorKey that = (PrecursorKey) o;
+
+            if (_generalMoleculeId != that._generalMoleculeId) return false;
+            return _modifiedSequence.equals(that._modifiedSequence);
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = _modifiedSequence.hashCode();
+            result = 31 * result + _generalMoleculeId;
+            return result;
+        }
+    }
+
+    public static class PeptideIdRtInfo
+    {
+        private final String _sampleFileName;
+        private final String _modifiedSequence;
+        private final int _charge;
+        private final double _rt;
+
+        public PeptideIdRtInfo(String sampleFileName, String modifiedSequence, int charge, double rt)
+        {
+            _sampleFileName = sampleFileName;
+            _modifiedSequence = modifiedSequence;
+            _charge = charge;
+            _rt = rt;
+        }
+
+        public String getSampleFileName()
+        {
+            return _sampleFileName;
+        }
+
+        public String getModifiedSequence()
+        {
+            return _modifiedSequence;
+        }
+
+        public int getCharge()
+        {
+            return _charge;
+        }
+
+        public double getRt()
+        {
+            return _rt;
+        }
     }
 }

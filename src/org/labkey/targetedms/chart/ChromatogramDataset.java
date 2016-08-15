@@ -40,6 +40,7 @@ import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.TransitionManager;
+import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 
 import java.awt.*;
 import java.util.ArrayList;
@@ -634,7 +635,8 @@ public abstract class ChromatogramDataset
     static class PrecursorDataset extends ChromatogramDataset
     {
         protected final PrecursorChromInfo _pChromInfo;
-        protected Integer _generalMoleculeId = null;
+        private Precursor _precursor;
+        private List<Double> _peptideIdRetentionTimes;
 
         // The best transition is determined as the transition with the max intensity at the
         // bestRetentionTime set on the PrecursorChromInfo (_pChromInfo)
@@ -656,16 +658,11 @@ public abstract class ChromatogramDataset
 
         protected int getGeneralMoleculeId()
         {
-            if (_generalMoleculeId == null)
+            if (_precursor == null)
             {
-                Precursor precursor = PrecursorManager.getPrecursor(_container, _pChromInfo.getPrecursorId(), _user);
-                if (precursor != null)
-                {
-                    _generalMoleculeId = precursor.getGeneralMoleculeId();
-                }
+                _precursor = PrecursorManager.getPrecursor(_container, _pChromInfo.getPrecursorId(), _user);
             }
-
-            return _generalMoleculeId == null ? 0 : _generalMoleculeId;
+            return _precursor == null ? 0 : _precursor.getGeneralMoleculeId();
         }
 
         @Override
@@ -680,8 +677,17 @@ public abstract class ChromatogramDataset
             // Get the retention time range that should be displayed for the chromatogram
             RtRange chromatogramRtRange = getChromatogramRange(getGeneralMoleculeId(), _pChromInfo);
 
-            // Build the dataset
+            // Get retention times for any peptide ID matches
+            _peptideIdRetentionTimes = getPeptideIdRetentionTimes();
+
+           // Build the dataset
             buildJFreedataset(chromatogram, chromatogramRtRange);
+        }
+
+        protected List<Double> getPeptideIdRetentionTimes()
+        {
+            SampleFile sampleFile = ReplicateManager.getSampleFile(_pChromInfo.getSampleFileId());
+            return LibrarySpectrumMatchGetter.getPeptideIdRts(_precursor, sampleFile);
         }
 
         protected void buildJFreedataset(Chromatogram chromatogram, RtRange chromatogramRtRange)
@@ -873,11 +879,20 @@ public abstract class ChromatogramDataset
                 return Collections.emptyList();
             else
             {
-                return Collections.singletonList(makePeakApexAnnotation(
+                List<ChartAnnotation> annotations = new ArrayList<>();
+                annotations.add(makePeakApexAnnotation(
                         _bestTransitionRt,
                         _bestTransitionPpm,
                         _bestTransitionPeakIntensity,
                         _bestTransitionSeriesIndex));
+
+                for(Double retentionTime: _peptideIdRetentionTimes)
+                {
+                    String label = "ID: " + Formats.f1.format(retentionTime);
+                    annotations.add(new ChromatogramDataset.ChartAnnotation(retentionTime, Double.MAX_VALUE,
+                            Collections.singletonList(label), Color.black));
+                }
+                return annotations;
             }
         }
 
@@ -913,6 +928,8 @@ public abstract class ChromatogramDataset
 
     static class MoleculePrecursorDataset extends PrecursorDataset
     {
+        private MoleculePrecursor _molPrecursor;
+
         public MoleculePrecursorDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
         {
             super(pChromInfo, syncIntensity, syncRt, user, container);
@@ -921,16 +938,18 @@ public abstract class ChromatogramDataset
         @Override
         protected int getGeneralMoleculeId()
         {
-            if (_generalMoleculeId == null)
+            if (_molPrecursor == null)
             {
-                MoleculePrecursor precursor = MoleculePrecursorManager.getPrecursor(_container, _pChromInfo.getPrecursorId(), _user);
-                if (precursor != null)
-                {
-                    _generalMoleculeId = precursor.getGeneralMoleculeId();
-                }
+                _molPrecursor = MoleculePrecursorManager.getPrecursor(_container, _pChromInfo.getPrecursorId(), _user);
             }
 
-            return _generalMoleculeId == null ? 0 : _generalMoleculeId;
+            return _molPrecursor == null ? 0 : _molPrecursor.getGeneralMoleculeId();
+        }
+
+        @Override
+        protected List<Double> getPeptideIdRetentionTimes()
+        {
+            return Collections.emptyList();
         }
 
         @Override
