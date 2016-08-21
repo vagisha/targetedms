@@ -318,7 +318,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     {
         String tmpString;
 
-        // Create a reference to the web page and it's various parts.
+        // Create a reference to the web page and its various parts.
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
         WebElement autoQC = qcSummaryWebPart.getQcSummaryTiles().get(webPartIndex).getAutoQCIcon();
@@ -327,7 +327,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
         for(String classValue : iconClassValues)
         {
-            log("Validate that the autoQC icon has a value of '" + classValue + "' in it's class property.");
+            log("Validate that the autoQC icon has a value of '" + classValue + "' in its class property.");
             assertTrue("AutoQC icon not as expected. Class did not contain '" + classValue + "'. Class: '" + tmpString + "'", tmpString.toLowerCase().contains(classValue));
         }
 
