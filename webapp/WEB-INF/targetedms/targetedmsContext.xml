@@ -9,6 +9,9 @@
                 <bean class="org.labkey.targetedms.pipeline.ExperimentExportTask$Factory"/>
                 <bean class="org.labkey.targetedms.pipeline.ExperimentImportTask$Factory"/>
                 <bean class="org.labkey.targetedms.pipeline.CopyExperimentFinalTask$Factory"/>
+                <bean class="org.labkey.targetedms.pipeline.TargetedMSImportTask$Factory">
+                    <property name="location" value="webserver-high-priority" />
+                </bean>
             </list>
         </property>
 
@@ -26,6 +29,17 @@
                             </bean>
                             <bean id="finalTask" class="org.labkey.api.pipeline.TaskId">
                                 <constructor-arg><value type="java.lang.Class">org.labkey.targetedms.pipeline.CopyExperimentFinalTask</value></constructor-arg>
+                            </bean>
+                        </list>
+                    </property>
+                </bean>
+
+                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
+                    <constructor-arg type="java.lang.Class" value="org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob"/>
+                    <property name="taskProgressionSpec">
+                        <list>
+                            <bean id="targetedMSImportTask" class="org.labkey.api.pipeline.TaskId">
+                                <constructor-arg><value type="java.lang.Class">org.labkey.targetedms.pipeline.TargetedMSImportTask</value></constructor-arg>
                             </bean>
                         </list>
                     </property>

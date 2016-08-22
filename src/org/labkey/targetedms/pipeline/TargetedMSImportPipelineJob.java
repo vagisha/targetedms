@@ -16,28 +16,25 @@
 
 package org.labkey.targetedms.pipeline;
 
-import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
-import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.TaskId;
+import org.labkey.api.pipeline.TaskPipeline;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSController;
-import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
-import org.labkey.targetedms.model.ExperimentAnnotations;
-import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 
 import java.sql.SQLException;
 
 /**
+ * Simple wrapper job around a {@link TargetedMSImportTask}.
  * User: vsharma
  * Date: 4/1/12
- * Time: 10:58 AM
  */
 public class TargetedMSImportPipelineJob extends PipelineJob
 {
@@ -56,6 +53,12 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         setLogFile(FT_LOG.newFile(_expData.getFile().getParentFile(), basename));
     }
 
+    @Override
+    public TaskPipeline getTaskPipeline()
+    {
+        return PipelineJobService.get().getTaskPipeline(new TaskId(TargetedMSImportPipelineJob.class));
+    }
+
     public ActionURL getStatusHref()
     {
         if (_runInfo.getRunId() > 0)
@@ -70,43 +73,18 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         return "Skyline document import - " + _expData.getFile().getName();
     }
 
-    public void run()
+    public SkylineDocImporter.RunInfo getRunInfo()
     {
-        if (!setStatus("LOADING"))
-        {
-            return;
-        }
+        return _runInfo;
+    }
 
-        boolean completeStatus = false;
-        try
-        {
-            XarContext context = new XarContext(getDescription(), getContainer(), getUser());
-            SkylineDocImporter importer = new SkylineDocImporter(getUser(), getContainer(), context.getJobDescription(), _expData, getLogger(), context, _representative);
-            TargetedMSRun run = importer.importRun(_runInfo);
+    public ExpData getExpData()
+    {
+        return _expData;
+    }
 
-            ExpRun expRun = TargetedMSManager.ensureWrapped(run, getUser());
-
-            // Check if an experiment is defined in the current folder, or if an experiment defined in a parent folder
-            // has been configured to include subfolders.
-            ExperimentAnnotations expAnnotations = ExperimentAnnotationsManager.getExperimentIncludesContainer(getContainer());
-            if(expAnnotations != null)
-            {
-                ExperimentAnnotationsManager.addSelectedRunsToExperiment(expAnnotations.getExperiment(), new int[]{expRun.getRowId()}, getUser());
-            }
-
-            setStatus(TaskStatus.complete);
-            completeStatus = true;
-        }
-        catch (Exception e)
-        {
-            getLogger().error("Skyline document import failed", e);
-        }
-        finally
-        {
-            if (!completeStatus)
-            {
-                setStatus(TaskStatus.error);
-            }
-        }
+    public TargetedMSRun.RepresentativeDataState getRepresentative()
+    {
+        return _representative;
     }
 }

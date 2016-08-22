@@ -283,6 +283,7 @@ src/org/labkey/targetedms/pipeline/CopyExperimentPipelineProvider.java -text
 src/org/labkey/targetedms/pipeline/ExperimentExportTask.java -text
 src/org/labkey/targetedms/pipeline/ExperimentImportTask.java -text
 src/org/labkey/targetedms/pipeline/TargetedMSImportPipelineJob.java -text
+src/org/labkey/targetedms/pipeline/TargetedMSImportTask.java -text
 src/org/labkey/targetedms/pipeline/TargetedMSPipelineProvider.java -text
 src/org/labkey/targetedms/query/AbstractGeneralMoleculeTableInfo.java -text
 src/org/labkey/targetedms/query/AbstractGeneralPrecursorTableInfo.java -text
