@@ -45,6 +45,8 @@ public class SkylineBinaryParser
 
     private Chromatogram[] _chromatograms;
     private ChromatogramTran[] _transitions;
+    private float[] _allPeaksRt;
+    private int _peakSize = (Float.SIZE * 7 + Integer.SIZE ) / 8;
 
     public static final int FORMAT_VERSION_CACHE_11 = 11;
     public static final int FORMAT_VERSION_CACHE_10 = 10; // Introduces additional lock mass parameters InstrumentInfoUtil
@@ -181,6 +183,7 @@ public class SkylineBinaryParser
             }
 
             parseFiles(version);
+            parsePeaks();
             parseTransitions(version);
             parseChromatograms(version);
         }
@@ -312,6 +315,31 @@ public class SkylineBinaryParser
         }
     }
 
+    private void parsePeaks() throws IOException
+    {
+        int numPeaks = Header.num_peaks.getHeaderValueInt(_headers);
+        long peaksStart = Header.location_peaks_lo.getHeaderValueLong(_headers);
+
+        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, peaksStart, _peakSize * numPeaks);
+        buffer.order(ByteOrder.LITTLE_ENDIAN);
+
+        _allPeaksRt = new float[numPeaks];
+        for (int i = 0; i< numPeaks; i++)
+        {
+
+            float retentionTime = buffer.getFloat();
+            buffer.getFloat(); // startTime
+            buffer.getFloat(); // endTime
+            buffer.getFloat(); // area
+            buffer.getFloat(); // backgroundArea
+            buffer.getFloat(); // height
+            buffer.getFloat(); // fwhm
+            buffer.getInt(); // flagBits
+
+            _allPeaksRt[i] = retentionTime;
+        }
+    }
+
     private void parseTransitions(int formatVersion) throws IOException
     {
         int numTransitions = Header.num_transitions.getHeaderValueInt(_headers);
@@ -370,7 +398,7 @@ public class SkylineBinaryParser
         _chromatograms = new Chromatogram[numChrom];
         for (int i = 0; i < _chromatograms.length; i++)
         {
-            _chromatograms[i] = new Chromatogram(formatVersion, buffer, seqBytes, _cacheFiles, _transitions);
+            _chromatograms[i] = new Chromatogram(formatVersion, buffer, seqBytes, _cacheFiles, _transitions, _allPeaksRt);
         }
     }
 

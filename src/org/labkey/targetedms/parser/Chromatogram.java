@@ -60,7 +60,7 @@ public class Chromatogram extends SkylineEntity
     private int _runId;
 
     private double _precursor;
-    private String _modifiedSequence;
+    private String _textId;
     private int _fileIndex;
     private int _numTransitions;
     private int _startTransitionIndex;
@@ -76,10 +76,14 @@ public class Chromatogram extends SkylineEntity
     // Added in SKYD 11
     private int _uncompressedSize;
 
+    private Float _startTime;
+    private Float _endTime;
+
     private float[] _times;
     private float[][] _intensities;
     private SkylineBinaryParser.CachedFile[] _cachedFiles;
     private ChromatogramTran[] _transitions;
+    private float[] _allPeaksRt;
     /** The compressed bytes */
     private byte[] _chromatogram;
 
@@ -89,7 +93,8 @@ public class Chromatogram extends SkylineEntity
     }
 
     /** Parses the header information from the underlying file */
-    public Chromatogram(int formatVersion, ByteBuffer buffer, byte[] seqBytes, SkylineBinaryParser.CachedFile[] cachedFiles, ChromatogramTran[] transitions)
+    public Chromatogram(int formatVersion, ByteBuffer buffer, byte[] seqBytes, SkylineBinaryParser.CachedFile[] cachedFiles, ChromatogramTran[] transitions,
+                        float[] allPeaksRt)
     {
         if (formatVersion > SkylineBinaryParser.FORMAT_VERSION_CACHE_4)
         {
@@ -109,7 +114,7 @@ public class Chromatogram extends SkylineEntity
             buffer.getInt(); // Burn 4 bytes due to compiler alignment of in-memory data structure (v5) or StatusId and StatusRank (v6)
             _precursor = buffer.getDouble();
             _locationPoints = buffer.getLong();
-            _modifiedSequence = seqIndex != -1 ? new String(seqBytes, seqIndex, seqLen) : null;
+            _textId = seqIndex != -1 ? new String(seqBytes, seqIndex, seqLen) : null;
         }
         else
         {
@@ -139,13 +144,14 @@ public class Chromatogram extends SkylineEntity
         else
         {
             _uncompressedSize = buffer.getInt();
-            buffer.getFloat(); // _startTime
-            buffer.getFloat(); // _endTime
+            _startTime = buffer.getFloat(); // _startTime
+            _endTime = buffer.getFloat(); // _endTime
             buffer.getInt();   // Align2
         }
 
         _cachedFiles = cachedFiles;
         _transitions = transitions;
+        _allPeaksRt = allPeaksRt;
     }
 
     private int getChromatogramsByteCount(int numTransitions, int numPoints, boolean hasErrors, boolean hasMs1ScanIds, boolean hasFragmentScanIds, boolean hasSimScanIds)
@@ -165,7 +171,7 @@ public class Chromatogram extends SkylineEntity
     }
 
     /*
-    From ChromGroupHeaderInfo5 in Skyline code:
+    From ChromGroupHeaderInfo.FlagValues in Skyline code:
 
     has_mass_errors = 0x01,
     has_calculated_mzs = 0x02,
@@ -173,6 +179,7 @@ public class Chromatogram extends SkylineEntity
     has_ms1_scan_ids = 0x08,
     has_sim_scan_ids = 0x10,
     has_frag_scan_ids = 0x20,
+    polarity_negative = 0x40, // When set, only use negative scans.
      */
     private boolean hasSimScanIds(short flags)
     {
@@ -194,14 +201,29 @@ public class Chromatogram extends SkylineEntity
         return (flags & 0x01) != 0;
     }
 
+    public boolean isNegative()
+    {
+        return (_flags & 0x40) != 0;
+    }
+
     public double getPrecursorMz()
     {
         return _precursor;
     }
 
-    public String getModifiedSequence()
+    public SignedMz getSignedMz()
     {
-        return _modifiedSequence;
+        return getSignedMz(_precursor);
+    }
+
+    private SignedMz getSignedMz(double mz)
+    {
+        return new SignedMz(mz, isNegative());
+    }
+
+    public String getTextId()
+    {
+        return _textId;
     }
 
     private void ensureUncompressed() throws DataFormatException
@@ -296,9 +318,19 @@ public class Chromatogram extends SkylineEntity
         return _intensities.length;
     }
 
-    public int matchTransitions(List<? extends GeneralTransition> transitions, double tolerance, boolean multiMatch)
+    // ChromatogramGroupInfo.MatchTransitions() in Skyline
+    public TranMatch matchTransitions(List<? extends GeneralTransition> transitions, Double explicitRt, double tolerance, boolean multiMatch)
     {
         int match = 0;
+        double errRt = Double.MAX_VALUE;
+
+        if (explicitRt != null)
+        {
+            // We have retention time info, use that in the match
+            if (isNotIncludedTime(explicitRt))
+                return new TranMatch(match, errRt);
+        }
+
         for (GeneralTransition transition : transitions)
         {
             int start = _startTransitionIndex;
@@ -306,22 +338,59 @@ public class Chromatogram extends SkylineEntity
             for (int i = start; i < end; i++)
             {
                 // Do we need to look through all of the transitions from the .skyd file?
-                if (compareTolerant(transition.getMz(), _transitions[i].getProduct(), tolerance) == 0)
+                if (compareTolerant(getSignedMz(transition.getMz()), getSignedMz(_transitions[i].getProduct()), tolerance) == 0)
                 {
-                    match++;
-                    if (!multiMatch)
-                        break;  // only one match per transition
+                    if (explicitRt == null)
+                    {
+                        match++;
+                        if (!multiMatch)
+                        {
+                            break;  // only one match per transition
+                        }
+                    }
+                    else
+                    {
+                        match = multiMatch ? match + 1 : 1; // Examine all RT values even if we're not multimatch
+                        int transitionNum = i - start;
+                        // How well does explicit retention time match the best peak for this transition?
+                        if (_maxPeakIndex != -1)
+                        {
+                            float peakRt = getTransitionPeakRt(transitionNum, _maxPeakIndex);
+                            errRt = Math.min(errRt, Math.abs(explicitRt - peakRt));
+                        }
+                    }
                 }
             }
         }
-        return match;
+        return new TranMatch(match, errRt);
     }
 
-    public static int compareTolerant(double f1, double f2, double tolerance)
+    public static class TranMatch
     {
-        if (Math.abs(f1 - f2) < tolerance)
-            return 0;
-        return (f1 > f2 ? 1 : -1);
+        public final int match;
+        public final double errRt;
+
+        public TranMatch(int match, double errRt)
+        {
+            this.match = match;
+            this.errRt = errRt;
+        }
+    }
+
+    public float getTransitionPeakRt(int transitionNum, int peakNum)
+    {
+        return _allPeaksRt[_startPeakIndex + transitionNum * _numPeaks + peakNum];
+    }
+
+    private boolean isNotIncludedTime(double retentionTime)
+    {
+        return _startTime != null && _endTime != null &&
+                (retentionTime < _startTime || _endTime < retentionTime);
+    }
+
+    public static int compareTolerant(SignedMz f1, SignedMz f2, double tolerance)
+    {
+        return f1.compareTolerant(f2, tolerance);
     }
 
     public String getFilePath()
@@ -417,5 +486,15 @@ public class Chromatogram extends SkylineEntity
         for (int i = 0; i < _numTransitions; i++)
             result[i] = _transitions[_startTransitionIndex + i].getProduct();
         return result;
+    }
+
+    public Float getStartTime()
+    {
+        return _startTime;
+    }
+
+    public Float getEndTime()
+    {
+        return _endTime;
     }
 }

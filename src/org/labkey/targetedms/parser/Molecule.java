@@ -31,6 +31,8 @@ public class Molecule extends GeneralMolecule
     private String _customIonName;
     private List<MoleculePrecursor> _moleculePrecursorsList;
 
+    private final static String massFormat = "{0} [{1:F06}/{2:F06}]";
+
     public String getIonFormula()
     {
         return _ionFormula;
@@ -88,5 +90,24 @@ public class Molecule extends GeneralMolecule
         key.append(((Molecule) gm).getMassMonoisotopic());
         key.append("_").append(gp.getCharge());
         return key.toString();
+    }
+
+    @Override
+    public String getTextId()
+    {
+        return getName();
+    }
+
+    public String getName()
+    {
+        if(_customIonName != null)
+        {
+            return _customIonName;
+        }
+        if(_ionFormula != null)
+        {
+            return _ionFormula;
+        }
+        return String.format(massFormat, "Ion", _massMonoisotopic, _massAverage);
     }
 }

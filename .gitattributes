@@ -261,6 +261,7 @@ src/org/labkey/targetedms/parser/Replicate.java -text
 src/org/labkey/targetedms/parser/ReplicateAnnotation.java -text
 src/org/labkey/targetedms/parser/RepresentativeDataState.java -text
 src/org/labkey/targetedms/parser/SampleFile.java -text
+src/org/labkey/targetedms/parser/SignedMz.java -text
 src/org/labkey/targetedms/parser/SkylineBinaryParser.java -text
 src/org/labkey/targetedms/parser/SkylineDocumentParser.java -text
 src/org/labkey/targetedms/parser/SkylineEntity.java -text

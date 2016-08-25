@@ -1116,7 +1116,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 break;
 
             if (XmlUtil.isStartElement(_reader, evtType, PRECURSOR))
-                moleculePrecursorList.add(readMoleculePrecursor(_reader));
+                moleculePrecursorList.add(readMoleculePrecursor(_reader, molecule));
 
             else if (XmlUtil.isStartElement(_reader, evtType, ANNOTATION))
                 annotations.add(readAnnotation(_reader, new GeneralMoleculeAnnotation()));
@@ -1150,8 +1150,7 @@ public class SkylineDocumentParser implements AutoCloseable
         peptide.setSequence(reader.getAttributeValue(null, "sequence"));
 
         // Get the peptide structurally modified sequence (format v1.5)
-        String modifiedSequenceLight = reader.getAttributeValue(null, "modified_sequence");
-        peptide.setPeptideModifiedSequence(modifiedSequenceLight);
+        peptide.setPeptideModifiedSequence(reader.getAttributeValue(null, "modified_sequence"));
 
         String prevAa = reader.getAttributeValue(null, "prev_aa");
         if (null != prevAa)
@@ -1193,7 +1192,7 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, PRECURSOR))
             {
-                precursorList.add(readPrecursor(reader, modifiedSequenceLight));
+                precursorList.add(readPrecursor(reader, peptide));
             }
             else if (XmlUtil.isStartElement(reader, evtType, NOTE))
             {
@@ -1348,7 +1347,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setSkylineSampleFileId(skylineSampleFileId);
     }
 
-    private MoleculePrecursor readMoleculePrecursor(XMLStreamReader reader) throws XMLStreamException, IOException
+    private MoleculePrecursor readMoleculePrecursor(XMLStreamReader reader, Molecule molecule) throws XMLStreamException, IOException
     {
         MoleculePrecursor moleculePrecursor = new MoleculePrecursor();
         List<MoleculeTransition> moleculeTransitionList = new ArrayList<>();
@@ -1405,13 +1404,13 @@ public class SkylineDocumentParser implements AutoCloseable
                 moleculePrecursor.setNote(readNote(reader));
         }
 
-        List<Chromatogram> chromatograms = tryLoadChromatogram(moleculeTransitionList, moleculePrecursor.getMz(), null, _matchTolerance);
+        List<Chromatogram> chromatograms = tryLoadChromatogram(moleculeTransitionList, molecule, moleculePrecursor, _matchTolerance);
         populateChromInfoChromatograms(moleculePrecursor, chromatograms);
 
         return moleculePrecursor;
     }
 
-    private Precursor readPrecursor(XMLStreamReader reader, String modifiedSequenceLight) throws XMLStreamException, IOException
+    private Precursor readPrecursor(XMLStreamReader reader, Peptide peptide) throws XMLStreamException, IOException
     {
         Precursor precursor = new Precursor();
         List<Transition> transitionList = new ArrayList<>();
@@ -1506,7 +1505,7 @@ public class SkylineDocumentParser implements AutoCloseable
             addMissingBooleanAnnotation(annotations, missingAnotName, new PrecursorAnnotation());
         }
 
-        List<Chromatogram> chromatograms = tryLoadChromatogram(transitionList, precursor.getMz(), modifiedSequenceLight,  _matchTolerance);
+        List<Chromatogram> chromatograms = tryLoadChromatogram(transitionList, peptide, precursor, _matchTolerance);
         populateChromInfoChromatograms(precursor, chromatograms);
 
         return precursor;
@@ -2031,40 +2030,40 @@ public class SkylineDocumentParser implements AutoCloseable
         return chromInfo;
     }
 
-    private int findEntry(double precursorMz, double tolerance, Chromatogram[] chromatograms, int left, int right)
+    private int findEntry(SignedMz precursorMz, double tolerance, Chromatogram[] chromatograms, int left, int right)
     {
         // Binary search for the right precursorMz
         if (left > right)
             return -1;
         int mid = (left + right) / 2;
-        int compare = compareMz(precursorMz, chromatograms[mid].getPrecursorMz(), tolerance);
+        int compare = compareMz(precursorMz, chromatograms[mid].getSignedMz(), tolerance);
         if (compare < 0)
             return findEntry(precursorMz, tolerance, chromatograms, left, mid - 1);
         if (compare > 0)
             return findEntry(precursorMz, tolerance, chromatograms, mid + 1, right);
 
         // Scan backward until the first matching element is found.
-        while (mid > 0 && matchMz(precursorMz, tolerance, chromatograms[mid - 1].getPrecursorMz()))
+        while (mid > 0 && matchMz(precursorMz, chromatograms[mid - 1].getSignedMz(), tolerance))
             mid--;
 
         return mid;
     }
 
-    private static boolean matchMz(double mz1, double mz2, double tolerance)
+    private static boolean matchMz(SignedMz mz1, SignedMz mz2, double tolerance)
     {
         return compareMz(mz1, mz2, tolerance) == 0;
     }
 
-    private static int compareMz(double precursorMz1, double precursorMz2, double tolerance)
+    private static int compareMz(SignedMz precursorMz1, SignedMz precursorMz2, double tolerance)
     {
         return Chromatogram.compareTolerant(precursorMz1, precursorMz2, tolerance);
     }
 
 
     private List<Chromatogram> tryLoadChromatogram(List<? extends GeneralTransition> transitions,
-                                                  double precursorMz,
-                                                  String modifiedSequenceLight,
-                                                  double tolerance)
+                                                   GeneralMolecule molecule,
+                                                   GeneralPrecursor precursor,
+                                                   double tolerance)
     {
         // Add precursor matches to a list, if they match at least 1 transition
         // in this group, and are potentially the maximal transition match.
@@ -2078,32 +2077,46 @@ public class SkylineDocumentParser implements AutoCloseable
 
         if (_binaryParser != null && _binaryParser.getChromatograms() != null)
         {
+            // ChromatogramCache.TryLoadChromInfo() in Skyline code:
             // Filter the list of chromatograms based on our precursor mZ
-            int i = findEntry(precursorMz, tolerance, _binaryParser.getChromatograms(), 0, _binaryParser.getChromatograms().length - 1);
+            int i = findEntry(precursor.getSignedMz(), tolerance, _binaryParser.getChromatograms(), 0, _binaryParser.getChromatograms().length - 1);
             if (i == -1)
             {
                 return Collections.emptyList();
             }
 
+            Double explicitRT = molecule.getExplicitRetentionTime();
+            String molTextId = molecule.getTextId();
+
             // Add entries to a list until they no longer match
             List<Chromatogram> listChromatograms = new ArrayList<>();
             while (i < _binaryParser.getChromatograms().length &&
-                    matchMz(precursorMz, _binaryParser.getChromatograms()[i].getPrecursorMz(), tolerance))
+                    matchMz(precursor.getSignedMz(), _binaryParser.getChromatograms()[i].getSignedMz(), tolerance))
             {
                 Chromatogram chrom = _binaryParser.getChromatograms()[i++];
                 // Sequence matching for extracted chromatogram data added in v1.5
-                String modifiedSequenceChrom = chrom.getModifiedSequence();
-                if (modifiedSequenceLight != null && modifiedSequenceChrom != null &&
-                        !modifiedSequenceLight.equals(modifiedSequenceChrom))
+                String chromTextId = chrom.getTextId();
+                if (molTextId != null && chromTextId != null && !molTextId.equals(chromTextId))
                     continue;
-                listChromatograms.add(chrom);
+
+                // If explicit retention time info is available, use that to discard obvious mismatches
+                if (explicitRT == null || // No explicit RT
+                        chrom.getStartTime() == null || // No time data loaded yet
+                        (chrom.getStartTime() <= explicitRT && explicitRT <=  chrom.getEndTime())) // No overlap
+                {
+                    listChromatograms.add(chrom);
+                }
             }
 
+            // MeasuredResults.TryLoadChromatogram in Skyline code:
             // Since we are reading and returning chromatograms for all replicates we need to maintain
             // the number of maximum transition matches for each replicate.
             // MeasuredResults.TryLoadChromatogram in Skyline reads and returns chromatograms for a single replicate.
             int[] maxTranMatches = new int[_binaryParser.getCacheFileSize()];
-            for(int m = 0; m < maxTranMatches.length; m++) maxTranMatches[m] = 1;
+            for(int m = 0; m < maxTranMatches.length; m++) maxTranMatches[m] = 0;
+
+            double[] minErrRts = new double[_binaryParser.getCacheFileSize()];
+            for(int m = 0; m < minErrRts.length; m++) minErrRts[m] = Double.MAX_VALUE;
 
             Chromatogram[] chromArray = new Chromatogram[_binaryParser.getCacheFileSize()];
 
@@ -2112,30 +2125,55 @@ public class SkylineDocumentParser implements AutoCloseable
 //                if (containsInfo(chromatogram, chromInfo))
 //                    continue;
 
-                // If the chromatogram set has an optimiztion function then the number
+                // If the chromatogram set has an optimization function then the number
                 // of matching chromatograms per transition is a reflection of better
                 // matching.  Otherwise, we only expect one match per transition.
                 // TODO - do we need this on the Java side?
                 boolean multiMatch = false;//chromatogram.OptimizationFunction != null;
 
-                int tranMatch = chromInfo.matchTransitions(transitions, tolerance, multiMatch);
+                Chromatogram.TranMatch tranMatch = chromInfo.matchTransitions(transitions, explicitRT, tolerance, multiMatch);
 
                 int fileIndex = chromInfo.getFileIndex();
-                Chromatogram currentChromForFileIndex = chromArray[fileIndex];
                 int maxTranMatch = maxTranMatches[fileIndex];
+                double minErrRt = minErrRts[fileIndex];
 
-                if (currentChromForFileIndex == null || tranMatch > maxTranMatch)
+                if (tranMatch.match >= maxTranMatch || tranMatch.errRt < minErrRt)
                 {
-                    maxTranMatches[fileIndex] = tranMatch;
-                    chromArray[fileIndex] = chromInfo;
-                }
-                else if(tranMatch == maxTranMatch)
-                {
-                    // If more than one value was found, ensure that there
-                    // is only one precursor match per file.
-                    // Use the entry with the m/z closest to the target
-                    if (Math.abs(precursorMz - chromInfo.getPrecursorMz()) <
-                                 Math.abs(precursorMz - currentChromForFileIndex.getPrecursorMz()))
+                    if(tranMatch.errRt < minErrRt)
+                    {
+                        // This is the closest peak we've found to the explicit RT
+                        minErrRts[fileIndex] = tranMatch.errRt;
+                        chromArray[fileIndex] = null;
+                    }
+
+                    else if (tranMatch.errRt > minErrRt)
+                    {
+                        // This is not the closest peak we've found to the explicit RT, skip it
+                        continue;
+                    }
+
+                    // If new maximum, clear anything collected at the previous maximum
+                    if (tranMatch.match > maxTranMatch)
+                    {
+                        chromArray[fileIndex] = null;
+                    }
+
+                    maxTranMatches[fileIndex] = tranMatch.match;
+
+                    if(chromArray[fileIndex] != null)
+                    {
+                        // If more than one value was found, ensure that there
+                        // is only one precursor match per file.
+                        // Use the entry with the m/z closest to the target
+                        Chromatogram currentChromForFileIndex = chromArray[fileIndex];
+                        // Use the entry with the m/z closest to the target
+                        if (Math.abs(precursor.getMz() - chromInfo.getPrecursorMz()) <
+                                Math.abs(precursor.getMz() - currentChromForFileIndex.getPrecursorMz()))
+                        {
+                            chromArray[fileIndex] = chromInfo;
+                        }
+                    }
+                    else
                     {
                         chromArray[fileIndex] = chromInfo;
                     }

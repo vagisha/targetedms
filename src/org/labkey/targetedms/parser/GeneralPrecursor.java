@@ -147,4 +147,9 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
     {
         _transitionsList = transitionsList;
     }
+
+    public SignedMz getSignedMz()
+    {
+        return new SignedMz(_mz, _charge < 0);
+    }
 }
