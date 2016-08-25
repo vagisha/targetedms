@@ -205,6 +205,12 @@ public class Peptide extends GeneralMolecule
         return key.toString();
     }
 
+    @Override
+    public String getTextId()
+    {
+        return getPeptideModifiedSequence();
+    }
+
     public static class Modification extends SkylineEntity
     {
         private int _peptideId;

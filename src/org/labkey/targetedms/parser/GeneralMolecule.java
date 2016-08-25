@@ -80,4 +80,6 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
     }
 
     public abstract String getPrecursorKey(GeneralMolecule gm, GeneralPrecursor gp);
+
+    public abstract String getTextId();
 }
