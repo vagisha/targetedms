@@ -230,6 +230,11 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 success: function (data)
                 {
                     this.renderContainerSampleFileStats(container, data.rows);
+                },
+                failure: function (errorInfo)
+                {
+                    alert(errorInfo.exception);
+                    console.error(errorInfo);
                 }
             });
         }
