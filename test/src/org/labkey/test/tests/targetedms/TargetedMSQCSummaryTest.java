@@ -119,9 +119,9 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         List<QCSummaryWebPart.QcSummaryTile> summaryTiles = qcSummaryWebPart.getQcSummaryTiles();
 
         assertEquals("Unexpected number of QC Summary tiles", 3, summaryTiles.size());
-        verifyQcSummary(summaryTiles.get(0), getProjectName(), 1, 47, 7);
-        verifyQcSummary(summaryTiles.get(1), FOLDER_1, 0, 0, 0);
-        verifyQcSummary(summaryTiles.get(2), FOLDER_2, 1, 3, 2);
+        verifyQcSummary(summaryTiles.get(0), getProjectName(), 47, 7);
+        verifyQcSummary(summaryTiles.get(1), FOLDER_1, 0, 0);
+        verifyQcSummary(summaryTiles.get(2), FOLDER_2, 3, 2);
     }
 
     @Test
@@ -145,8 +145,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         qcSummaryWebPart.waitForRecentSampleFiles(6);
         List<QCSummaryWebPart.QcSummaryTile> qcSummaryTiles = qcSummaryWebPart.getQcSummaryTiles();
         assertEquals("Unexpected number of QC Summary tiles", 2, qcSummaryTiles.size());
-        verifyQcSummary(qcSummaryTiles.get(0), getProjectName(), 1, 47, 7);
-        verifyQcSummary(qcSummaryTiles.get(1), FOLDER_2, 1, 3, 2);
+        verifyQcSummary(qcSummaryTiles.get(0), getProjectName(), 47, 7);
+        verifyQcSummary(qcSummaryTiles.get(1), FOLDER_2, 3, 2);
         stopImpersonating();
     }
 

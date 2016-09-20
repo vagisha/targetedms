@@ -34,6 +34,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 container = containers[0];
                 container.showName = hasChildren;
                 container.isParent = true;
+                container.parentOnly = containers.length == 1;
                 this.add(this.getContainerSummaryView(container, hasChildren));
 
                 // Add the set of child containers in an hbox layout
@@ -43,6 +44,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     {
                         container = containers[i];
                         container.showName = true;
+                        container.parentOnly = false;
                         container.isParent = false;
                         childPanelItems.push(this.getContainerSummaryView(container));
                     }
@@ -114,12 +116,11 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     '</div>',
                 '</tpl>',
                 '<tpl if="docCount == 0 && isParent !== true">',
-                    '<div class="item-text">No Skyline documents</div>',
+                    '<div class="item-text">No sample files imported</div>',
                     '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
-                '<tpl elseif="docCount == 0">',
-                    '<div class="item-text">No Skyline documents in current folder</div>',
+                '<tpl elseif="docCount == 0 && parentOnly">',
+                    '<div class="item-text">No data found.</div>',
                 '<tpl elseif="docCount &gt; 0">',
-                    '<div class="item-text">{docCount} Skyline document{docCount:this.pluralize}</div>',
                     '<div class="item-text">',
                         '<a href="{path:this.getSampleFileLink}">{fileCount} sample file{fileCount:this.pluralize}</a>',
                     '</div>',

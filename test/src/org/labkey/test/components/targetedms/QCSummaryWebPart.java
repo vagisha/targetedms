@@ -120,13 +120,12 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
     {
         private final WebElement _el;
 
-        private final Locator emptyText = Locator.tagWithClass("div", "item-text").withText("No Skyline documents");
+        private final Locator emptyText = Locator.tagWithClass("div", "item-text").withText("No sample files imported");
         private final WebElement folderLink = Locator.css("div.folder-name a").findWhenNeeded(this);
         private final WebElement autoQCIcon = Locator.css("div.auto-qc-ping span").findWhenNeeded(this);
         private List<WebElement> _recentSampleFiles;
 
         private String _folderName;
-        private Integer _docCount;
         private Integer _fileCount;
         private Integer _precursorCount;
         private final int _index;
@@ -153,10 +152,6 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
             waitForLoad();
             String qcSummary = getComponentElement().getText();
 
-            Pattern docPattern = Pattern.compile("(\\d+) Skyline document");
-            Matcher docMatcher = docPattern.matcher(qcSummary);
-            _docCount = docMatcher.find() ? Integer.parseInt(docMatcher.group(1)) : 0;
-
             Pattern filePattern = Pattern.compile("(\\d+) sample file");
             Matcher fileMatcher = filePattern.matcher(qcSummary);
             _fileCount = fileMatcher.find() ? Integer.parseInt(fileMatcher.group(1)) : 0;
@@ -171,13 +166,6 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
             if (_folderName == null)
                 _folderName = folderLink.getText();
             return _folderName;
-        }
-
-        public int getDocCount()
-        {
-            if (_docCount == null)
-                readSummary();
-            return _docCount;
         }
 
         public int getFileCount()

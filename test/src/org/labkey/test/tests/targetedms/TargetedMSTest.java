@@ -177,11 +177,11 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     protected void verifyQcSummary(int docCount, int sampleFileCount, int precursorCount)
     {
         QCSummaryWebPart qcSummaryWebPart = new PanoramaDashboard(this).getQcSummaryWebPart();
-        verifyQcSummary(qcSummaryWebPart.getQcSummaryTiles().get(0), null, docCount, sampleFileCount, precursorCount);
+        verifyQcSummary(qcSummaryWebPart.getQcSummaryTiles().get(0), null, sampleFileCount, precursorCount);
     }
 
     @LogMethod
-    protected void verifyQcSummary(QCSummaryWebPart.QcSummaryTile tile, String folderName, int docCount, int sampleFileCount, int precursorCount)
+    protected void verifyQcSummary(QCSummaryWebPart.QcSummaryTile tile, String folderName, int sampleFileCount, int precursorCount)
     {
         String actualFolderName;
         if (folderName != null)
@@ -194,11 +194,10 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
             actualFolderName = "tile " + tile.getIndex();
         }
 
-        assertEquals("Wrong number of Skyline documents uploaded for " + actualFolderName, docCount, tile.getDocCount());
         assertEquals("Wrong number sample files for " + actualFolderName, sampleFileCount, tile.getFileCount());
         assertEquals("Wrong number of precursors tracked for " + actualFolderName, precursorCount, tile.getPrecursorCount());
 
-        if (docCount == 0 && sampleFileCount == 0 && precursorCount == 0)
+        if (sampleFileCount == 0 && precursorCount == 0)
             assertTrue("Expected no documents for " + actualFolderName, tile.hasNoSkylineDocuments());
         else
             assertFalse("Unexpected lack of skyline documents for " + actualFolderName, tile.hasNoSkylineDocuments());
