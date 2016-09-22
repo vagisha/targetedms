@@ -1201,7 +1201,7 @@ public class SkylineDocImporter
     {
         if(_isPeptideLibraryDoc)
         {
-            String precursorKey = precursor.getModifiedSequence() + ", charge " + precursor.getCharge();
+            String precursorKey = precursor.getModifiedSequence() + ", charge " + precursor.getCharge() +", mz " + precursor.getMz();
             if(_libPrecursors.contains(precursorKey))
             {
                 throw new IllegalStateException("Duplicate precursor found: " + precursorKey

@@ -78,6 +78,12 @@ public class BlibSpectrumReader
         }
         catch(SQLException e)
         {
+            // Malformed blib file?
+            if(e.getMessage().contains("no such table"))
+            {
+                LOG.error("Missing table in blib file " + blibFilePath, e);
+                return null;
+            }
             throw new RuntimeException(e);
         }
         finally
@@ -88,6 +94,9 @@ public class BlibSpectrumReader
 
     public static List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getRetentionTimes(String blibFilePath, String modifiedPeptide)
     {
+        if(!(new File(blibFilePath)).exists())
+            return Collections.emptyList();
+
         String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
 
         Connection conn = null;
@@ -120,9 +129,9 @@ public class BlibSpectrumReader
         catch(SQLException e)
         {
             // Older versions of blib databases don't have a RetentionTimes table.
-            if(e.getMessage().contains("no such table: RetentionTimes"))
+            if(e.getMessage().contains("no such table"))
             {
-                LOG.info("Missing RetentionTimes table in blib file " + blibFilePath);
+                LOG.error("Missing table in blib file " + blibFilePath, e);
                 return Collections.emptyList();
             }
             throw new RuntimeException(e);
