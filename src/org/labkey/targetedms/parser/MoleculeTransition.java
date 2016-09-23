@@ -15,11 +15,13 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.chart.LabelFactory;
 
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -100,6 +102,11 @@ public class MoleculeTransition extends GeneralTransition
         return LabelFactory.transitionLabel(this);
     }
 
+    public String getName()
+    {
+        return CustomIon.getName(this);
+    }
+
     public static class MoleculeTransitionComparator implements Comparator<MoleculeTransition>
     {
         @Override
@@ -111,12 +118,24 @@ public class MoleculeTransition extends GeneralTransition
                 return t1.getMassIndex().compareTo(t2.getMassIndex());
             }
 
-            int result = t1.getCharge().compareTo(t2.getCharge());
+            int result = nullSafeCompareTo(t1.getName(), t2.getName());
+
             if(result == 0)
             {
-                return Double.valueOf(t2.getMz()).compareTo(t1.getMz());
+                result = Double.valueOf(t2.getMz()).compareTo(t1.getMz());
             }
+            if(result == 0)
+            {
+                result = nullSafeCompareTo(t1.getCharge(), t2.getCharge());
+            }
+
             return result;
+        }
+
+        private static <T extends Comparable<T>> int nullSafeCompareTo(T o1, T o2)
+        {
+            // null is greater
+           return (o1 == null && o2 == null) ? 0 : (o1 == null ? 1 : (o2 == null ? -1 : o1.compareTo(o2)));
         }
     }
 }

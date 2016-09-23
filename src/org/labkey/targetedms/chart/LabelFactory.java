@@ -15,6 +15,7 @@
 
 package org.labkey.targetedms.chart;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 import org.labkey.api.util.DateUtil;
@@ -95,8 +96,11 @@ public class LabelFactory
     public static String transitionLabel(MoleculeTransition transition)
     {
         StringBuilder label = new StringBuilder();
-        label.append(transition.getIonFormula() == null ? "Ion" : transition.getIonFormula());
-        label.append(" - ").append(Formats.f4.format(transition.getMz()));
+        if(!StringUtils.isBlank(transition.getName()))
+        {
+            label.append(transition.getName()).append(" - ");
+        }
+        label.append(Formats.f4.format(transition.getMz()));
         if(transition.getCharge() != null)
         {
             label.append(getChargeLabel(transition.getCharge()));
