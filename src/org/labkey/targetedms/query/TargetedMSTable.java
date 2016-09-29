@@ -17,6 +17,7 @@ package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ForeignKey;
 import org.labkey.api.data.SQLFragment;
@@ -28,6 +29,8 @@ import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.targetedms.TargetedMSSchema;
 
+import java.util.Collections;
+
 /**
  * User: jeckels
  * Date: Apr 19, 2012
@@ -38,6 +41,10 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
     private static final SQLFragment _containerSQL = new SQLFragment(CONTAINER_COL_TABLE_ALIAS).append(".Container");
 
     private final SQLFragment _joinSQL;
+
+    private boolean _needsContainerWhereClause = true;
+
+    private CompareType.EqualsCompareClause _containerTableFilter;
 
     public TargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL)
     {
@@ -63,15 +70,34 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
         // Don't apply the container filter normally, let us apply it in our wrapper around the normally generated SQL
     }
 
+    public void setNeedsContainerWhereClause(boolean needsContainerWhereClause)
+    {
+        _needsContainerWhereClause = needsContainerWhereClause;
+    }
+
     @NotNull
     public SQLFragment getFromSQL(String alias)
     {
         SQLFragment sql = new SQLFragment("(SELECT X.* FROM ");
         sql.append(super.getFromSQL("X"));
         sql.append(" ");
-        sql.append(_joinSQL);
-        sql.append(" WHERE ");
-        sql.append(getContainerFilter().getSQLFragment(getSchema(), _containerSQL, getContainer()));
+
+        if (_needsContainerWhereClause || _containerTableFilter != null)
+        {
+            sql.append(_joinSQL);
+
+            sql.append(" WHERE ");
+            sql.append(getContainerFilter().getSQLFragment(getSchema(), _containerSQL, getContainer()));
+
+            if(_containerTableFilter != null)
+            {
+                // Add another filter on the table that has the container column
+                sql.append(" AND ");
+                SQLFragment fragment = new SQLFragment(CONTAINER_COL_TABLE_ALIAS).append(".")
+                                      .append(_containerTableFilter.toSQLFragment(Collections.emptyMap(),getSqlDialect()));
+                sql.append(fragment);
+            }
+        }
         sql.append(") ");
         sql.append(alias);
 
@@ -82,5 +108,16 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
     public boolean hasPermission(@NotNull UserPrincipal user, @NotNull Class<? extends Permission> perm)
     {
         return ReadPermission.class.equals(perm) && getContainer().hasPermission(user, perm);
+    }
+
+    /*
+    This is an additional filter that is applied to the table that has the container column. This can be used, for example,
+    to filter the results of the Precursor table to a single run in a container (Id column in the targetedms.runs table).
+    Tables in the targetedms schema that have a container column are:
+     - runs, autoqcping, irtscale, experimentannotations, guideset, qcannotation, qcannotationtype
+     */
+    public void addContainerTableFilter(CompareType.EqualsCompareClause filterClause)
+    {
+       _containerTableFilter = filterClause;
     }
 }

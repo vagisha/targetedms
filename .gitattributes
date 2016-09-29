@@ -333,6 +333,7 @@ src/org/labkey/targetedms/query/ReplicateManager.java -text
 src/org/labkey/targetedms/query/RepresentativeStateDisplayColumn.java -text
 src/org/labkey/targetedms/query/RepresentativeStateManager.java -text
 src/org/labkey/targetedms/query/SampleFileTable.java -text
+src/org/labkey/targetedms/query/TargetedMSForeignKey.java -text
 src/org/labkey/targetedms/query/TargetedMSTable.java -text
 src/org/labkey/targetedms/query/TransitionManager.java -text
 src/org/labkey/targetedms/search/ModificationSearchBean.java -text

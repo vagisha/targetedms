@@ -22,7 +22,6 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.LookupForeignKey;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
@@ -40,47 +39,23 @@ public class PrecursorChromInfoTable extends TargetedMSTable
         super(table, schema, TargetedMSSchema.ContainerJoinType.SampleFileFK.getSQL());
 
         ColumnInfo precursorId = getColumn("PrecursorId");
-        precursorId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
-            }
-        });
+        precursorId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR));
 
         ColumnInfo moleculePrecursorId = wrapColumn("MoleculePrecursorId", getRealTable().getColumn(precursorId.getFieldKey()));
-        moleculePrecursorId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR);
-            }
-        });
+        moleculePrecursorId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR));
+
         addColumn(moleculePrecursorId);
 
         ColumnInfo generalMoleculeChromInfoIdId = getColumn("GeneralMoleculeChromInfoId");
-        generalMoleculeChromInfoIdId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_GENERAL_MOLECULE_CHROM_INFO);
-            }
-        });
+        generalMoleculeChromInfoIdId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_GENERAL_MOLECULE_CHROM_INFO));
         generalMoleculeChromInfoIdId.setHidden(true);
 
         ColumnInfo peptideChromInfoIdId = wrapColumn("PeptideChromInfoId", getRealTable().getColumn(generalMoleculeChromInfoIdId.getFieldKey()));
-        peptideChromInfoIdId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_GENERAL_MOLECULE_CHROM_INFO);
-            }
-        });
+        peptideChromInfoIdId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_GENERAL_MOLECULE_CHROM_INFO));
         addColumn(peptideChromInfoIdId);
+
+        ColumnInfo sampleFileId = getColumn("SampleFileId");
+        sampleFileId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_SAMPLE_FILE));
 
         // Add a calculated column for Full Width at Base (FWB)
         SQLFragment sql = new SQLFragment("(MaxEndTime - MinStartTime)");

@@ -44,25 +44,12 @@ public class DocTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
         setDescription(TargetedMSManager.getTableInfoTransition().getDescription());
 
         ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
-        precursorCol.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
-            }
-        });
+        precursorCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR));
         precursorCol.setHidden(true);
 
         ColumnInfo precursorIdCol = wrapColumn("PrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
-        precursorIdCol.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PRECURSOR);
-            }
-        });
+        precursorIdCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR));
+
         addColumn(precursorIdCol);
 
         //Display the fragment as y9 instead of 'y' and '9' in separate columns

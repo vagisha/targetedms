@@ -15,7 +15,7 @@
 
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSManager;
@@ -37,31 +37,6 @@ public class AbstractGeneralTransitionTableInfo extends JoinedTargetedMSTable
 
     public void setRunId(int runId)
     {
-        addRunFilter(runId);
-    }
-
-    public void addRunFilter(int runId)
-    {
-        getFilter().deleteConditions(FieldKey.fromParts("Run"));
-        SQLFragment sql = new SQLFragment();
-        sql.append("Id IN ");
-
-        sql.append("(SELECT trans.Id FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralTransition(), "trans");
-        sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "prec");
-        sql.append(" ON (trans.GeneralPrecursorId=prec.Id) ");
-        sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
-        sql.append(" ON (prec.GeneralMoleculeId=gm.Id) ");
-        sql.append("INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        sql.append(" ON (gm.PeptideGroupId=pg.Id) ");
-        sql.append("WHERE pg.RunId=? ");
-        sql.append(")");
-
-        sql.add(runId);
-
-        addCondition(sql, FieldKey.fromParts("Run"));
+        super.addContainerTableFilter(new CompareType.EqualsCompareClause(FieldKey.fromParts("Id"), CompareType.EQUAL, runId));
     }
 }

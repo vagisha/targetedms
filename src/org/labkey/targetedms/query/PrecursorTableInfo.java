@@ -23,8 +23,6 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.LookupForeignKey;
-import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
@@ -57,28 +55,14 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
         setDetailsURL(_detailsURL);
 
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-        generalMoleculeId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
-            }
-        });
+        generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE));
         generalMoleculeId.setHidden(true);
 
         ColumnInfo peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
-        peptideId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
-            }
-        });
+        peptideId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE));
         addColumn(peptideId);
 
-        getColumn("IsotopeLabelId").setFk(new QueryForeignKey(getUserSchema(), null, TargetedMSSchema.TABLE_ISOTOPE_LABEL, "Id", null));
+        getColumn("IsotopeLabelId").setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_ISOTOPE_LABEL));
 
         WrappedColumn modSeqCol = new WrappedColumn(getColumn("ModifiedSequence"), ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME);
         modSeqCol.setLabel("Precursor");

@@ -13,25 +13,11 @@ public class GeneralMoleculeAnnotationTableInfo extends TargetedMSTable
         super(table, schema, joinSQL);
 
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-        generalMoleculeId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
-            }
-        });
+        generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE));
         generalMoleculeId.setHidden(true);
 
         ColumnInfo peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
-        peptideId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
-            }
-        });
+        peptideId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE));
         addColumn(peptideId);
     }
 }

@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.JdbcType;
@@ -29,6 +30,8 @@ import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
+
+import java.util.Date;
 
 /**
  * User: binalpatel
@@ -84,28 +87,6 @@ public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
 
     public void setRunId(int runId)
     {
-        addRunFilter(runId);
+        super.addContainerTableFilter(new CompareType.EqualsCompareClause(FieldKey.fromParts("Id"), CompareType.EQUAL, runId));
     }
-
-    private void addRunFilter(int runId)
-    {
-        getFilter().deleteConditions(FieldKey.fromParts("Run"));
-        SQLFragment sql = new SQLFragment();
-        sql.append("Id IN ");
-        sql.append("(SELECT gp.Id FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
-        sql.append(" INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
-        sql.append(" ON (gp.GeneralMoleculeId=gm.Id) ");
-        sql.append("INNER JOIN ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        sql.append(" ON (gm.PeptideGroupId=pg.Id) ");
-        sql.append("WHERE pg.RunId=? ");
-        sql.append(")");
-
-        sql.add(runId);
-
-        addCondition(sql, FieldKey.fromParts("Run"));
-    }
-
 }

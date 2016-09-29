@@ -41,25 +41,11 @@ public class MoleculeTransitionsTableInfo extends AbstractGeneralTransitionTable
         setDescription(TargetedMSManager.getTableInfoMoleculeTransition().getDescription());
 
         ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
-        precursorCol.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR);
-            }
-        });
+        precursorCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR));
         precursorCol.setHidden(true);
 
         ColumnInfo precursorIdCol = wrapColumn("MoleculePrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
-        precursorIdCol.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR);
-            }
-        });
+        precursorIdCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR));
         addColumn(precursorIdCol);
 
         ArrayList<FieldKey> visibleColumns = new ArrayList<>();

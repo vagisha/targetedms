@@ -50,25 +50,12 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         setDetailsURL(_detailsURL);
 
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-        generalMoleculeId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE);
-            }
-        });
+        generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE));
         generalMoleculeId.setHidden(true);
 
         ColumnInfo moleculeIdId = wrapColumn("MoleculeId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
-        moleculeIdId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE);
-            }
-        });
+        moleculeIdId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE));
+
         addColumn(moleculeIdId);
 
         ColumnInfo customIonName = getColumn("CustomIonName");

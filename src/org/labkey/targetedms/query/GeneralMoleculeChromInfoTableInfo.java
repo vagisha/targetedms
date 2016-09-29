@@ -23,36 +23,15 @@ public class GeneralMoleculeChromInfoTableInfo extends TargetedMSTable
         setDetailsURL(new DetailsURL(new ActionURL(TargetedMSController.GeneralMoleculeChromatogramChartAction.class, getContainer()), "id", FieldKey.fromParts("Id")));
 
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-        generalMoleculeId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
-            }
-        });
+        generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE));
         generalMoleculeId.setHidden(true);
 
         ColumnInfo peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
-        peptideId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
-            }
-        });
+        peptideId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE));
         addColumn(peptideId);
 
         ColumnInfo moleculeId = wrapColumn("MoleculeId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
-        moleculeId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE);
-            }
-        });
+        moleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE));
         addColumn(moleculeId);
 
         //only display a subset of the columns by default

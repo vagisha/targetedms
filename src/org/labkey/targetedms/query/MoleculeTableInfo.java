@@ -42,14 +42,7 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
         addColumn(noteAnnotation);
 
         ColumnInfo peptideGroupId = getColumn("PeptideGroupId");
-        peptideGroupId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_GROUP);
-            }
-        });
+        peptideGroupId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_GROUP));
 
         ColumnInfo customIonName = getColumn("CustomIonName");
         customIonName.setURL(detailsURL);

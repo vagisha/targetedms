@@ -16,14 +16,6 @@ public class PeptideIsotopeModificationTableInfo extends FilteredTable<TargetedM
         wrapAllColumns(true);
 
         ColumnInfo peptideId = getColumn("PeptideId");
-        peptideId.setFk(new LookupForeignKey("Id")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                return _userSchema.getTable(TargetedMSSchema.TABLE_PEPTIDE);
-            }
-        });
-
+        peptideId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE));
     }
 }
