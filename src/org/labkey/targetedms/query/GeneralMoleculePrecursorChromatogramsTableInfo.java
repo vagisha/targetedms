@@ -151,20 +151,20 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
                                                                @Nullable List<Integer> replicatesFilter)
     {
         SQLFragment sql = new SQLFragment("SELECT");
-        sql.append(" replicate, sample,isotopecharge, ").append(_generalMoleculeChromInfoCol).append(", MIN(preciId) AS preciId FROM");
-        sql.append(" ( SELECT");
-        sql.append(" SampleFileId.ReplicateId.Name AS replicate");
-        sql.append(", SampleFileId.SampleName AS sample");
-        sql.append(", GeneralMoleculeChromInfoId AS ").append(_generalMoleculeChromInfoCol);
-        sql.append(", " + isotopeChargeSqlFrag + " AS isotopecharge");
-        sql.append(", Id AS preciId");
+        sql.append(" replicate, sample, isotopecharge, ").append(_generalMoleculeChromInfoCol).append(", MIN(preciId) AS preciId FROM");
+        sql.append("\n ( SELECT");
+        sql.append("\n SampleFileId.ReplicateId.Name AS replicate");
+        sql.append("\n, SampleFileId.SampleName AS sample");
+        sql.append("\n, GeneralMoleculeChromInfoId AS ").append(_generalMoleculeChromInfoCol);
+        sql.append("\n, " + isotopeChargeSqlFrag + " AS isotopecharge");
+        sql.append("\n, Id AS preciId");
         sql.append(" FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
         sql.append(" WHERE " + precursorIdKey + ".GeneralMoleculeId=").append(generalMolecule.getId());
         sql.append(" AND OptimizationStep IS NULL "); // Ignore precursorChromInfos for optimization peaks (e.g. Collision energy optimization)
         if(replicatesFilter != null && replicatesFilter.size() != 0)
         {
-            sql.append(" AND ");
+            sql.append("\n AND ");
             sql.append("( ");
             String replicateIds = StringUtils.join(replicatesFilter,",");
             sql.append("SampleFileId.ReplicateId IN ("+replicateIds+")");
@@ -172,10 +172,10 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
         }
         if(filterAnnotations != null && !filterAnnotations.isEmpty())
         {
-            sql.append(" AND ")
+            sql.append("\n AND ")
                .append(" SampleFileId.ReplicateId IN (SELECT replicateId FROM ")
                .append(TargetedMSManager.getTableInfoReplicateAnnotation(), "repAnnot")
-               .append(" WHERE ");
+               .append("\n WHERE ");
             boolean first = true;
             for(ReplicateAnnotation annotation: filterAnnotations)
             {
@@ -191,8 +191,8 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
             sql.append(")");
         }
         sql.append(" ) X");
-        sql.append(" GROUP BY replicate, sample, ").append(_generalMoleculeChromInfoCol).append(", isotopecharge")
-           .append(" PIVOT preciId BY isotopecharge");
+        sql.append("\n GROUP BY replicate, sample, ").append(_generalMoleculeChromInfoCol).append(", isotopecharge")
+           .append("\n PIVOT preciId BY isotopecharge");
 
         QueryDefinition qdef = QueryService.get().createQueryDef(user, container, SchemaKey.fromString(TargetedMSSchema.SCHEMA_NAME),
                                                                  "PeptideChromInfo_pivotByIsotopeLabelCharge");
@@ -210,7 +210,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
             {
                 sb.append(qe.getMessage()).append('\n');
             }
-            throw new IllegalStateException(sb.toString());
+            throw new IllegalStateException(sb.toString() + "\n.SQL: " + sql.toString());
         }
 
         return tableInfo;
