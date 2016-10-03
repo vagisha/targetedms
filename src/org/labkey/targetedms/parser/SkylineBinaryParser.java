@@ -167,7 +167,7 @@ public class SkylineBinaryParser
 
             for (int i = 0; i < _headers.length; i++)
             {
-                _headers[i] = ((long)buffer.getInt() & 0xFFFFFFFFl);
+                _headers[i] = ((long)buffer.getInt() & 0xFFFFFFFFL);
             }
             int version = Header.format_version.getHeaderValueInt(_headers);
 
