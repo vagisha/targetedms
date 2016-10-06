@@ -189,14 +189,18 @@ public class PeptideManager
                 @Override
                 public Set<Integer> load(String runId, @Nullable Object argument)
                 {
-                    SQLFragment sql = new SQLFragment("SELECT DISTINCT pre.Id FROM ");
+                    SQLFragment sql = new SQLFragment("SELECT DISTINCT pep.Id FROM ");
                     sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
                     sql.append(" , ");
                     sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
                     sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
+                    sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
+                    sql.append(", ");
+                    sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
                     sql.append(" WHERE ");
                     sql.append(" pcilib.SpectrumLibraryId = specLib.Id ");
+                    sql.append(" AND ");
+                    sql.append(" pre.GeneralMoleculeId = pep.Id ");
                     sql.append(" AND ");
                     sql.append(" pcilib.PrecursorId = pre.Id ");
                     sql.append(" AND ");

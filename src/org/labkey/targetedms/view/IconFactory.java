@@ -15,7 +15,9 @@
  */
 package org.labkey.targetedms.view;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.settings.AppProps;
+import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
 
@@ -28,47 +30,95 @@ public class IconFactory
 {
     private IconFactory(){}
 
-    public static String getPeptideIconPath(int peptideId, Integer runId)
+    public static String getPeptideIconPath(int peptideId, Integer runId, boolean isDecoy, String standardType)
     {
-        String iconPath = AppProps.getInstance().getContextPath() + "/TargetedMS/images/Peptide.gif";
+        boolean hasLibInfo = PeptideManager.hasSpectrumLibraryInformation(peptideId, runId);
 
-        if(PeptideManager.hasSpectrumLibraryInformation(peptideId, runId))
+        String iconFile = "/TargetedMS/images/Peptide.bmp";
+
+         if(hasLibInfo)
         {
-            iconPath =  AppProps.getInstance().getContextPath() + "/TargetedMS/images/PeptideLib.gif";
+            if(StringUtils.isBlank(standardType))
+            {
+                iconFile =  isDecoy ? "/TargetedMS/images/PeptideDecoyLib.bmp" : "/TargetedMS/images/PeptideLib.bmp";
+            }
+            else
+            {
+                if(standardType.equals(Peptide.StandardType.Normalization.name()))
+                {
+                    iconFile = "/TargetedMS/images/PeptideStandardLib.bmp";
+                }
+                else if(standardType.equals(Peptide.StandardType.QC.name()))
+                {
+                    iconFile = "/TargetedMS/images/PeptideQcLib.bmp";
+                }
+                else if(standardType.equals(Peptide.StandardType.iRT.name()))
+                {
+                    iconFile = "/TargetedMS/images/PeptideIrtLib.bmp";
+                }
+            }
+        }
+        else
+        {
+            if(StringUtils.isBlank(standardType))
+            {
+                iconFile =  isDecoy ? "/TargetedMS/images/PeptideDecoy.bmp" : "/TargetedMS/images/Peptide.bmp";
+            }
+            else
+            {
+                if(standardType.equals(Peptide.StandardType.Normalization.name()))
+                {
+                    iconFile = "/TargetedMS/images/PeptideStandard.bmp";
+                }
+                else if(standardType.equals(Peptide.StandardType.QC.name()))
+                {
+                    iconFile = "/TargetedMS/images/PeptideQc.bmp";
+                }
+                else if(standardType.equals(Peptide.StandardType.iRT.name()))
+                {
+                    iconFile = "/TargetedMS/images/PeptideIrt.bmp";
+                }
+            }
         }
 
-        return iconPath;
+        return AppProps.getInstance().getContextPath() + iconFile;
     }
 
-    public static String getPrecursorIconPath(int precursorId)
+    public static String getPrecursorIconPath(int precursorId, boolean isDecoy)
     {
-        return getPrecursorIconPath(precursorId, null);
+        return getPrecursorIconPath(precursorId, null, isDecoy);
     }
 
-    public static String getPrecursorIconPath(int precursorId, Integer runId)
+    public static String getPrecursorIconPath(int precursorId, Integer runId, boolean isDecoy)
     {
-        String iconPath = AppProps.getInstance().getContextPath() + "/TargetedMS/images/blank.gif";
+        String iconPath;
 
         boolean hasLibSpectrum = PrecursorManager.hasLibrarySpectra(precursorId, runId);
         boolean hasChromatograms = PrecursorManager.hasChromatograms(precursorId, runId);
-        if(hasLibSpectrum && hasChromatograms)
+
+        if(hasLibSpectrum)
         {
-            iconPath =  AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroupLib.gif";
+            iconPath = hasChromatograms ? (isDecoy ? "/TargetedMS/images/TransitionGroupLibDecoy.bmp"
+                                                   : "/TargetedMS/images/TransitionGroupLib.bmp")
+                                        : "/TargetedMS/images/spectrum.gif";
         }
-        else if(hasChromatograms)
+        else
         {
-            iconPath =  AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroup.gif";
-        }
-        else if(hasLibSpectrum)
-        {
-            iconPath =  AppProps.getInstance().getContextPath() + "/TargetedMS/images/spectrum.gif";
+            iconPath = hasChromatograms ? (isDecoy ? "/TargetedMS/images/TransitionGroupDecoy.bmp"
+                                                   : "/TargetedMS/images/TransitionGroup.bmp")
+                                        : "/TargetedMS/images/blank.gif"; // no chromatogram AND no spectrum
         }
 
-        return iconPath;
+        return AppProps.getInstance().getContextPath() + iconPath;
     }
 
     public static String getTransitionGroupIconPath()
     {
-        return AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroup.gif";
+        return AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroup.bmp";
+    }
+
+    public static String getMoleculeIconPath()
+    {
+       return AppProps.getInstance().getContextPath() + "/TargetedMS/images/Molecule.bmp";
     }
 }

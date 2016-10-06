@@ -67,7 +67,7 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "Description"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "NoteAnnotations"));
 
-        visibleColumns.add(FieldKey.fromParts("MoleculeId", "CustomIonName"));
+        visibleColumns.add(FieldKey.fromParts("MoleculeId", "Molecule"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "IonFormula"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "NoteAnnotations"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "MassAverage"));

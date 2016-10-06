@@ -44,14 +44,25 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
         ColumnInfo peptideGroupId = getColumn("PeptideGroupId");
         peptideGroupId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_GROUP));
 
-        ColumnInfo customIonName = getColumn("CustomIonName");
-        customIonName.setURL(detailsURL);
+        WrappedColumn moleculeCol = new WrappedColumn(getColumn("CustomIonName"), "Molecule");
+        moleculeCol.setLabel("Molecule");
+        moleculeCol.setDescription("Custom Ion Name");
+        moleculeCol.setDisplayColumnFactory( new DisplayColumnFactory()
+        {
+            @Override
+            public DisplayColumn createRenderer(ColumnInfo colInfo)
+            {
+                return new IconColumn.MoleculeDisplayCol(colInfo, detailsURL.getActionURL());
+            }
+        });
+        addColumn(moleculeCol);
+        moleculeCol.setURL(detailsURL);
 
         List<FieldKey> defaultCols = new ArrayList<>(getDefaultVisibleColumns());
         defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
         defaultCols.add(1, FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
         defaultCols.add(2, FieldKey.fromParts("PeptideGroupId", "Label"));
-        defaultCols.add(3, FieldKey.fromParts("CustomIonName"));
+        defaultCols.add(3, FieldKey.fromParts("Molecule"));
         defaultCols.remove(FieldKey.fromParts("PeptideGroupId"));
         setDefaultVisibleColumns(defaultCols);
     }

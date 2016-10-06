@@ -16,7 +16,6 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.view.ActionURL;
@@ -33,32 +32,20 @@ import java.util.Set;
  * Date: 4/23/12
  * Time: 2:34 PM
  */
-public abstract class ModifiedSequenceDisplayColumn extends DataColumn
+public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 {
-    private final ActionURL _linkUrl;
     private final ModifiedPeptideHtmlMaker _htmlMaker;
+    String _iconPath;
+    String _cellData;
 
     public static final String PEPTIDE_COLUMN_NAME = "ModifiedPeptideDisplayColumn";
     public static final String PRECURSOR_COLUMN_NAME = "ModifiedPrecursorDisplayColumn";
 
-    private final FieldKey _parentFieldKey;
-
     public ModifiedSequenceDisplayColumn(ColumnInfo colInfo, ActionURL url)
     {
-        super(colInfo);
-
-
-        _linkUrl = url;
+        super(colInfo, url);
 
         _htmlMaker = new ModifiedPeptideHtmlMaker();
-
-        _parentFieldKey = colInfo.getFieldKey().getParent();
-        setTextAlign("left");
-    }
-
-    ActionURL getLinkUrl()
-    {
-        return _linkUrl;
     }
 
     ModifiedPeptideHtmlMaker getHtmlMaker()
@@ -66,50 +53,38 @@ public abstract class ModifiedSequenceDisplayColumn extends DataColumn
         return _htmlMaker;
     }
 
-    FieldKey getParentFieldKey()
-    {
-        return _parentFieldKey;
-    }
-
-    public abstract String getModifiedSequenceHtml(RenderContext ctx);
+    public abstract void initialize(RenderContext ctx);
 
     @Override
     public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
     {
-
-        String sequenceHtml = getModifiedSequenceHtml(ctx);
-        if(sequenceHtml == null)
-        {
-            super.renderGridCellContents(ctx, out);
-            return;
-        }
-
-        out.write(sequenceHtml);
+        initialize(ctx);
+        super.renderGridCellContents(ctx, out);
     }
 
-    private String makeImageHtml(String iconPath, String title)
+    @Override
+    String getIconPath()
     {
-        StringBuilder imgHtml = new StringBuilder();
-        imgHtml.append("<a href=\"").append(_linkUrl.getLocalURIString()).append("\" title=\"").append(title).append("\">");
-        imgHtml.append("<img src=\"").append(iconPath).append("\"").append(" width=\"18\" height=\"16\" style=\"margin-right: 5px;\"/>");
-        imgHtml.append("</a>");
-        return imgHtml.toString();
+        return _iconPath;
     }
 
-    private String combineHtml(String sequenceHtml, String imgHtml)
+    @Override
+    String getCellDataHtml(RenderContext ctx)
     {
-        return "<nobr>"
-                + imgHtml
-                + "<a href=\""+_linkUrl.getLocalURIString()+"\" style=\"color: #000000\">" + sequenceHtml + "</a>"
-                + "</nobr>";
+        return _cellData;
     }
 
     public static class PeptideCol extends ModifiedSequenceDisplayColumn
     {
-
         public PeptideCol(ColumnInfo colInfo, ActionURL url)
         {
             super(colInfo, url);
+        }
+
+        @Override
+        String getIconTitle()
+        {
+            return "Peptide Details";
         }
 
         @Override
@@ -118,41 +93,35 @@ public abstract class ModifiedSequenceDisplayColumn extends DataColumn
             super.addQueryFieldKeys(keys);
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "Id"));
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "Sequence"));
+            keys.add(FieldKey.fromString(super.getParentFieldKey(), "Decoy"));
+            keys.add(FieldKey.fromString(super.getParentFieldKey(), "StandardType"));
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "PeptideGroupId/RunId"));
         }
 
-        public String getModifiedSequenceHtml(RenderContext ctx)
+        public void initialize(RenderContext ctx)
         {
+            Integer peptideId = (Integer)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Id"));
 
-            Object peptideId = ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Id"));
-            if(null == peptideId)
-            {
-                return null;
-            }
+            String sequence = (String)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Sequence"));
 
-            Object sequence = ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Sequence"));
-            if(sequence == null)
-            {
-               return null;
-            }
+            Integer runId = (Integer)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideGroupId/RunId"));
 
-            Object runId = ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideGroupId/RunId"));
-            if(runId == null)
-            {
-                return null;
-            }
+            Boolean decoy = (Boolean)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Decoy"));
+            if(decoy == null)  decoy = Boolean.FALSE;
+
+            String standardType = (String)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "StandardType"));
 
             String peptideModifiedSequence = (String)getValue(ctx);
 
-            String peptideHtml = getHtmlMaker().getPeptideHtml((Integer) peptideId, (String) sequence, peptideModifiedSequence, (Integer)runId);
-
-             getLinkUrl().replaceParameter("id", String.valueOf(peptideId));
-
-            String title = "Peptide Details";
-            String iconPath = IconFactory.getPeptideIconPath((Integer)peptideId, (Integer)runId);
-            String imgHtml = super.makeImageHtml(iconPath, title);
-
-            return super.combineHtml(peptideHtml, imgHtml);
+            if(peptideId == null || sequence == null || runId == null)
+            {
+                _cellData = peptideModifiedSequence;
+            }
+            else
+            {
+                _cellData = getHtmlMaker().getPeptideHtml(peptideId, sequence, peptideModifiedSequence, runId);
+                _iconPath = IconFactory.getPeptideIconPath(peptideId, runId, decoy, standardType);
+            }
         }
     }
 
@@ -164,65 +133,54 @@ public abstract class ModifiedSequenceDisplayColumn extends DataColumn
         }
 
         @Override
+        String getIconTitle()
+        {
+            return "Precursor Details";
+        }
+
+        @Override
         public void addQueryFieldKeys(Set<FieldKey> keys)
         {
             super.addQueryFieldKeys(keys);
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "Id"));
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "PeptideId"));
+            keys.add(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/Decoy"));
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/Sequence"));
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "IsotopeLabelId"));
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/PeptideGroupId/RunId"));
         }
 
         @Override
-        public String getModifiedSequenceHtml(RenderContext ctx)
+        public void initialize(RenderContext ctx)
         {
-            Object precursorId = ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Id"));
-            if(precursorId == null)
-            {
-               return null;
-            }
+            Integer precursorId = (Integer)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Id"));
 
-            Object peptideId = ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId"));
-            if(peptideId == null)
-            {
-                return null;
-            }
+            Integer peptideId = (Integer)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId"));
 
-            Object sequence = ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/Sequence"));
-            if(sequence == null)
-            {
-                return null;
-            }
+            String sequence = (String) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/Sequence"));
 
-            Object isotopeLabelId = ctx.get(FieldKey.fromString(super.getParentFieldKey(), "IsotopeLabelId"));
-            if(isotopeLabelId == null)
-            {
-                return null;
-            }
+            Integer isotopeLabelId = (Integer) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "IsotopeLabelId"));
 
-            Object runId = ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/PeptideGroupId/RunId"));
-            if(runId == null)
-            {
-                return null;
-            }
+            Integer runId = (Integer) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/PeptideGroupId/RunId"));
+
+            Boolean decoy = (Boolean) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/Decoy"));
+            if(decoy == null) decoy = Boolean.FALSE;
 
             String precursorModifiedSequence = (String)getValue(ctx);
 
-            String precursorHtml = getHtmlMaker().getPrecursorHtml((Integer)peptideId,
-                                                                  (Integer)isotopeLabelId,
-                                                                  (String)sequence,
-                                                                  precursorModifiedSequence,
-                                                                  (Integer)runId);
-
-             getLinkUrl().replaceParameter("id", String.valueOf(precursorId));
-
-            String iconPath = IconFactory.getPrecursorIconPath((Integer)precursorId, (Integer)runId);
-            String title = "Precursor Details";
-
-            String imgHtml = super.makeImageHtml(iconPath, title);
-
-            return super.combineHtml(precursorHtml, imgHtml);
+            if(precursorId == null || peptideId == null || isotopeLabelId == null || precursorModifiedSequence == null || sequence == null || runId == null)
+            {
+                _cellData = precursorModifiedSequence;
+            }
+            else
+            {
+                _cellData = getHtmlMaker().getPrecursorHtml(peptideId,
+                        isotopeLabelId,
+                        sequence,
+                        precursorModifiedSequence,
+                        runId);
+                _iconPath = IconFactory.getPrecursorIconPath(precursorId, runId, decoy);
+            }
         }
     }
 }

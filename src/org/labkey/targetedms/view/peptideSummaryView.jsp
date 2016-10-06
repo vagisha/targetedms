@@ -99,7 +99,7 @@
                                                     bean.getRun().getId())
                      )%>
 
-                     <% String imgUrl = IconFactory.getPrecursorIconPath(precursor.getId()); %>
+                     <% String imgUrl = IconFactory.getPrecursorIconPath(precursor.getId(), bean.getPeptide().isDecoyPeptide()); %>
                      <a href="<%=precursorDetailsUrl+"id="+precursor.getId()%>">
                         <img src="<%=imgUrl%>" alt="Click to view details"/>
                      </a>

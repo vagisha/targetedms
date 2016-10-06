@@ -46,6 +46,8 @@ public class Peptide extends GeneralMolecule
 
     private String _standardType;
 
+    public static enum StandardType {Normalization, QC, iRT}
+
     public String getSequence()
     {
         return _sequence;
