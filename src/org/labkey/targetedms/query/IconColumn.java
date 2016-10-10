@@ -36,7 +36,7 @@ public abstract class IconColumn extends DataColumn
 
     abstract String getIconPath();
 
-    abstract String getIconTitle();
+    abstract String getLinkTitle();
 
     abstract String getCellDataHtml(RenderContext ctx);
 
@@ -45,28 +45,25 @@ public abstract class IconColumn extends DataColumn
         return true;
     }
 
-    private String makeIconHtml(String iconPath, String title)
+    private static String getIconHtml(String iconPath)
     {
         if(StringUtils.isBlank(iconPath))
         {
             return "";
         }
 
-        if(title == null) title = "";
-        StringBuilder imgHtml = new StringBuilder();
-        imgHtml.append("<a href=\"").append(_linkUrl.getLocalURIString()).append("\" title=\"").append(PageFlowUtil.filter(title)).append("\">");
-        imgHtml.append("<img src=\"").append(PageFlowUtil.filter(iconPath)).append("\"").append(" width=\"16\" height=\"16\" style=\"margin-right: 5px;\"/>");
-        imgHtml.append("</a>");
+        StringBuilder imgHtml = new StringBuilder("<img src=\"");
+        imgHtml.append(PageFlowUtil.filter(iconPath)).append("\"").append(" width=\"16\" height=\"16\" style=\"margin-right: 5px;\"/>");
         return imgHtml.toString();
     }
 
     @Override
     public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
     {
-        String iconHtml = makeIconHtml(getIconPath(), getIconTitle());
+        String iconHtml = getIconHtml(getIconPath());
         String cellDataHtml = getCellDataHtml(ctx);
 
-        if(cellDataHtml == null && iconHtml == null)
+        if(StringUtils.isBlank(cellDataHtml) && StringUtils.isBlank(iconHtml))
         {
             super.renderGridCellContents(ctx, out);
             return;
@@ -78,17 +75,24 @@ public abstract class IconColumn extends DataColumn
             if(id != null)
             {
                 _linkUrl.replaceParameter("id", String.valueOf(id));
+                String linkStartTag = getLinkStartTag(_linkUrl.getLocalURIString(), getLinkTitle(), removeLinkDefaultColor());
+                cellDataHtml = linkStartTag + cellDataHtml + "</a>";
+                iconHtml = linkStartTag + iconHtml + "</a>";
             }
-            StringBuilder wLink = new StringBuilder("<a href=\""+_linkUrl.getLocalURIString()+ "\"");
-            if(removeLinkDefaultColor()) wLink.append(" style=\"color: #000000\"");
-            wLink.append(">" + cellDataHtml + "</a>");
-
-            cellDataHtml = wLink.toString();
         }
         out.write("<nobr>"
                 + iconHtml
                 + cellDataHtml
                 + "</nobr>");
+    }
+
+    private static String getLinkStartTag(String linkUrl, String title, boolean removeLinkDefaultColor)
+    {
+        StringBuilder aTag = new StringBuilder("<a href=\"" + linkUrl + "\" ");
+        aTag.append(" title=\"").append(PageFlowUtil.filter(title)).append("\"");
+        if (removeLinkDefaultColor) aTag.append(" style=\"color: #000000\"");
+        aTag.append(">");
+        return aTag.toString();
     }
 
     public static class MoleculeDisplayCol extends IconColumn
@@ -105,7 +109,7 @@ public abstract class IconColumn extends DataColumn
         }
 
         @Override
-        String getIconTitle()
+        String getLinkTitle()
         {
             return "Molecule Details";
         }

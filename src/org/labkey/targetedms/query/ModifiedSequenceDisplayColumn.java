@@ -82,7 +82,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
         }
 
         @Override
-        String getIconTitle()
+        String getLinkTitle()
         {
             return "Peptide Details";
         }
@@ -133,7 +133,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
         }
 
         @Override
-        String getIconTitle()
+        String getLinkTitle()
         {
             return "Precursor Details";
         }
