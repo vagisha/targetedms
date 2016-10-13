@@ -636,7 +636,7 @@ public abstract class ChromatogramDataset
     {
         protected final PrecursorChromInfo _pChromInfo;
         private Precursor _precursor;
-        private List<Double> _peptideIdRetentionTimes;
+        private List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> _peptideIdRetentionTimes;
 
         // The best transition is determined as the transition with the max intensity at the
         // bestRetentionTime set on the PrecursorChromInfo (_pChromInfo)
@@ -684,7 +684,7 @@ public abstract class ChromatogramDataset
             buildJFreedataset(chromatogram, chromatogramRtRange);
         }
 
-        protected List<Double> getPeptideIdRetentionTimes()
+        protected List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getPeptideIdRetentionTimes()
         {
             SampleFile sampleFile = ReplicateManager.getSampleFile(_pChromInfo.getSampleFileId());
             return LibrarySpectrumMatchGetter.getPeptideIdRts(_precursor, sampleFile);
@@ -886,11 +886,12 @@ public abstract class ChromatogramDataset
                         _bestTransitionPeakIntensity,
                         _bestTransitionSeriesIndex));
 
-                for(Double retentionTime: _peptideIdRetentionTimes)
+                for(LibrarySpectrumMatchGetter.PeptideIdRtInfo idRtInfo: _peptideIdRetentionTimes)
                 {
-                    String label = "ID: " + Formats.f1.format(retentionTime);
-                    annotations.add(new ChromatogramDataset.ChartAnnotation(retentionTime, Double.MAX_VALUE,
-                            Collections.singletonList(label), Color.black));
+                    String label = "ID " + Formats.f1.format(idRtInfo.getRt());
+                    Color color = idRtInfo.isBestSpectrum() ? Color.red : Color.black;
+                    annotations.add(new ChromatogramDataset.ChartAnnotation(idRtInfo.getRt(), Double.MAX_VALUE,
+                            Collections.singletonList(label), color));
                 }
                 return annotations;
             }
@@ -947,7 +948,7 @@ public abstract class ChromatogramDataset
         }
 
         @Override
-        protected List<Double> getPeptideIdRetentionTimes()
+        protected List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getPeptideIdRetentionTimes()
         {
             return Collections.emptyList();
         }

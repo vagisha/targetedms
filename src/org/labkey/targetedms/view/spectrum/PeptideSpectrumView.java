@@ -29,9 +29,8 @@ public class PeptideSpectrumView extends JspView<LibrarySpectrumMatch>
     public PeptideSpectrumView(LibrarySpectrumMatch specMatch, BindException errors)
     {
         super("/org/labkey/targetedms/view/spectrum/spectrumView.jsp", specMatch, errors);
-        setTitle(String.format("%s, Charge %d, %s",
-                                   getModelBean().getModifiedSequence(),
-                                   getModelBean().getCharge(),
-                                   getModelBean().getLibrary().getName()));
+        setTitle(String.format("%s, Charge %d",
+                getModelBean().getModifiedSequence(),
+                getModelBean().getCharge()));
     }
 }

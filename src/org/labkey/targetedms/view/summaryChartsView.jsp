@@ -179,7 +179,6 @@
             allowBlank: 'false',
             value: replicateStore.getAt(0),
             width: 400,
-            height: 23,
             listeners:{
                 select: function(combo, record, index){
                     var selected = combo.getValue();
@@ -220,7 +219,6 @@
             allowBlank: 'false',
             value: replicateAnnotNameStore.getAt(0),
             width: 400,
-            height: 23,
             listeners:{
                 select: function(combo, record, index) {
                     updateCvCheckbox();
@@ -240,7 +238,6 @@
         allowBlank: 'false',
         value: valueStore.getAt(0),
         width: 400,
-        height: 23,
         listeners:{
             select: function(combo, record, index) {
                 updateCvCheckbox();
@@ -271,7 +268,6 @@
             allowBlank: 'false',
             value: replicateAnnotNameValueStore.getAt(0),
             width: 400,
-            height: 23,
             listeners:{
                 select: function(combo, record, index){
                     var selected = combo.getValue();

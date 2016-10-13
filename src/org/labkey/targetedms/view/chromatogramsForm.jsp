@@ -208,7 +208,6 @@
                     valueField: 'replicateId',
                     editable: false,
                     width: 450,
-                    height: 23,
                     colspan:2,
                     listeners: {
                         change: function (field, newValue, oldValue) {
@@ -234,7 +233,6 @@
                     valueField: 'name-value',
                     editable: false,
                     width: 450,
-                    height: 23,
                     colspan:2,
                     listeners: {
                         change: function (field, newValue, oldValue) {

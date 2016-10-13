@@ -153,10 +153,12 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.parser.SkylineDocumentParser;
 import org.labkey.targetedms.parser.TransitionChromInfo;
+import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.JournalManager;
+import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
 import org.labkey.targetedms.query.MoleculeManager;
@@ -1853,6 +1855,117 @@ public class TargetedMSController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             return null;  //TODO: link back to peptides details page
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class LibrarySpectrumDataAction extends ApiAction<SpectrumDataForm>
+    {
+        @Override
+        public Object execute(SpectrumDataForm form, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+
+            Precursor precursor = PrecursorManager.getPrecursor(getContainer(), form.getPrecursorId(), getUser());
+            if (precursor == null)
+            {
+                return response;
+            }
+            Peptide peptide = PeptideManager.getPeptide(getContainer(), precursor.getGeneralMoleculeId());
+            if (peptide == null)
+            {
+                response.put("error", "Could not find peptide/molecule for id " + precursor.getGeneralMoleculeId());
+                return response;
+            }
+            TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(peptide.getId());
+            if (run == null)
+            {
+                response.put("error", "Could not find run for id " + precursor.getGeneralMoleculeId());
+                return response;
+            }
+
+            List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(run.getId());
+            PeptideSettings.SpectrumLibrary library = null;
+            for (PeptideSettings.SpectrumLibrary lib : libraries)
+            {
+                if (lib.getName().equals(form.getLibraryName()))
+                {
+                    library = lib;
+                    break;
+                }
+            }
+
+            if (library == null)
+            {
+                response.put("error", "Could not find the library :" + form.getLibraryName());
+                return response;
+            }
+            String blibFilePath = LibraryManager.getLibraryFilePath(run.getId(), library);
+            String redundantBlibFilePath = BlibSpectrumReader.redundantBlibPath(blibFilePath);
+            if (redundantBlibFilePath == null || !(new File(redundantBlibFilePath)).exists())
+            {
+                response.put("error", "Redundant library file " + redundantBlibFilePath + " does not exist.");
+                return response;
+            }
+
+            LibrarySpectrumMatch spectrumMatch = LibrarySpectrumMatchGetter.getSpectrumMatch(run, peptide, precursor, library,
+                    redundantBlibFilePath,
+                    form.getRedundantRefSpectrumId());
+            if (spectrumMatch == null)
+            {
+                response.put("error", "Could not find spectrum in library " + form.getLibraryName());
+                return response;
+            }
+            Map<String, Object> spectrumDetails = new HashMap<>(4);
+            spectrumDetails.put("sequence", spectrumMatch.getPeptide());
+            spectrumDetails.put("staticMods", spectrumMatch.getStructuralModifications());
+            spectrumDetails.put("variableMods", spectrumMatch.getVariableModifications());
+            spectrumDetails.put("maxNeutralLossCount", spectrumMatch.getMaxNeutralLosses());
+            spectrumDetails.put("charge", spectrumMatch.getCharge());
+            spectrumDetails.put("fileName", spectrumMatch.getSpectrum().getSourceFileName());
+            spectrumDetails.put("retentionTime", spectrumMatch.getSpectrum().getRetentionTimeF2());
+            spectrumDetails.put("peaks", spectrumMatch.getPeaks());
+
+            response.put("spectrum", spectrumDetails);
+
+            return response;
+        }
+    }
+
+    private static class SpectrumDataForm
+    {
+        private String _libraryName;
+        private int _redundantRefSpectrumId;
+        private int _precursorId;
+
+        public String getLibraryName()
+        {
+            return _libraryName;
+        }
+
+        public void setLibraryName(String libraryName)
+        {
+            _libraryName = libraryName;
+        }
+
+        public int getRedundantRefSpectrumId()
+        {
+            return _redundantRefSpectrumId;
+        }
+
+        public void setRedundantRefSpectrumId(int redundantRefSpectrumId)
+        {
+            _redundantRefSpectrumId = redundantRefSpectrumId;
+        }
+
+        public int getPrecursorId()
+        {
+            return _precursorId;
+        }
+
+        public void setPrecursorId(int precursorId)
+        {
+            _precursorId = precursorId;
         }
     }
 

@@ -15,6 +15,9 @@
 
 package org.labkey.targetedms.parser.blib;
 
+import org.apache.commons.io.FilenameUtils;
+import org.labkey.api.util.Formats;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,8 +40,13 @@ public class BlibSpectrum
     private String _nextAa;
     private int _copies;
     private int _numPeaks;
+    private Double _retentionTime;
+    private Integer _fileId;
+    private String _sourceFile;
 
     private List<Peak> _peakList;
+
+    private List<RedundantSpectrum> _redundantSpectrumList;
 
     public int getBlibId()
     {
@@ -130,6 +138,46 @@ public class BlibSpectrum
         _numPeaks = numPeaks;
     }
 
+    public Double getRetentionTime()
+    {
+        return _retentionTime;
+    }
+
+    public String getRetentionTimeF2()
+    {
+        return _retentionTime == null ? null : Formats.f2.format(_retentionTime);
+    }
+
+    public void setRetentionTime(Double retentionTime)
+    {
+        _retentionTime = retentionTime;
+    }
+
+    public Integer getFileId()
+    {
+        return _fileId;
+    }
+
+    public void setFileId(Integer fileId)
+    {
+        _fileId = fileId;
+    }
+
+    public String getSourceFile()
+    {
+        return _sourceFile;
+    }
+
+    public String getSourceFileName()
+    {
+        return (_sourceFile != null ) ? FilenameUtils.getName(_sourceFile) : "";
+    }
+
+    public void setSourceFile(String sourceFile)
+    {
+        _sourceFile = sourceFile;
+    }
+
     void setMzAndIntensity (double[] mzArr, float[] intensityArr)
     {
 
@@ -147,6 +195,16 @@ public class BlibSpectrum
     public List<Peak> getPeaks()
     {
         return Collections.unmodifiableList(_peakList);
+    }
+
+    public List<RedundantSpectrum> getRedundantSpectrumList()
+    {
+        return _redundantSpectrumList == null ? Collections.emptyList() : Collections.unmodifiableList(_redundantSpectrumList);
+    }
+
+    public void setRedundantSpectrumList(List<RedundantSpectrum> redundantSpectrumList)
+    {
+        _redundantSpectrumList = redundantSpectrumList;
     }
 
     public static class Peak implements Comparable<Peak>
@@ -174,6 +232,64 @@ public class BlibSpectrum
         public int compareTo(Peak o)
         {
             return Double.valueOf(this.getMz()).compareTo(o.getMz());
+        }
+    }
+
+    public static class RedundantSpectrum
+    {
+        private int _redundantRefSpectrumId;
+        private String _sourceFile;
+        private Double _retentionTime;
+        private boolean _bestSpectrum;
+
+        public int getRedundantRefSpectrumId()
+        {
+            return _redundantRefSpectrumId;
+        }
+
+        public void setRedundantRefSpectrumId(int redundantRefSpectrumId)
+        {
+            _redundantRefSpectrumId = redundantRefSpectrumId;
+        }
+
+        public String getSourceFile()
+        {
+            return _sourceFile;
+        }
+
+        public String getSourceFileName()
+        {
+            return (_sourceFile != null ) ? FilenameUtils.getName(_sourceFile) : "";
+        }
+
+        public void setSourceFile(String sourceFile)
+        {
+            _sourceFile = sourceFile;
+        }
+
+        public Double getRetentionTime()
+        {
+            return _retentionTime;
+        }
+
+        public String getRetentionTimeF2()
+        {
+            return _retentionTime == null ? null : Formats.f2.format(_retentionTime);
+        }
+
+        public void setRetentionTime(Double retentionTime)
+        {
+            _retentionTime = retentionTime;
+        }
+
+        public boolean isBestSpectrum()
+        {
+            return _bestSpectrum;
+        }
+
+        public void setBestSpectrum(boolean bestSpectrum)
+        {
+            _bestSpectrum = bestSpectrum;
         }
     }
 }

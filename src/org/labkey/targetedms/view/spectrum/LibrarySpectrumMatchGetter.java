@@ -15,14 +15,13 @@
  */
 package org.labkey.targetedms.view.spectrum;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cache.BlockingCache;
 import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
-import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
@@ -37,7 +36,6 @@ import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -126,6 +124,7 @@ public class LibrarySpectrumMatchGetter
                 if(spectrum != null && spectrum.getNumPeaks() > 0)
                 {
                     LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
+                    pepSpec.setPrecursorId(precursor.getId());
                     pepSpec.setCharge(precursor.getCharge());
                     pepSpec.setPeptide(peptide.getSequence());
                     pepSpec.setModifiedSequence(precursor.getModifiedSequence());
@@ -184,6 +183,7 @@ public class LibrarySpectrumMatchGetter
             if(spectrum != null && spectrum.getNumPeaks() > 0)
             {
                 LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
+                pepSpec.setPrecursorId(precursor.getId());
                 pepSpec.setCharge(precursor.getCharge());
                 pepSpec.setPeptide(PeptideManager.getPeptide(schema.getContainer(), precursor.getGeneralMoleculeId()).getSequence());
                 pepSpec.setModifiedSequence(precursor.getModifiedSequence());
@@ -207,7 +207,48 @@ public class LibrarySpectrumMatchGetter
         return matchedSpectra;
     }
 
-    public static List<Double> getPeptideIdRts(Precursor precursor, SampleFile sampleFile)
+    public static LibrarySpectrumMatch getSpectrumMatch(TargetedMSRun run, Peptide peptide, Precursor precursor,
+                                                        PeptideSettings.SpectrumLibrary library, String redundantLibPath, int redundantRefSpecId)
+    {
+        List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(precursor.getGeneralMoleculeId());
+        List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
+        Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
+        for(Peptide.StructuralModification mod: structuralModifications)
+        {
+            List<PeptideSettings.PotentialLoss> losses = ModificationManager.getPotentialLossesForStructuralMod(mod.getStructuralModId());
+            potentialLossMap.put(mod.getStructuralModId(), losses);
+        }
+
+        BlibSpectrum spectrum = BlibSpectrumReader.getRedundantSpectrum(redundantLibPath, redundantRefSpecId);
+
+        // Make sure that the Bibliospec spectrum has peaks.  Minimized libraries in Skyline can have
+        // library entries with no spectrum peaks.  This should be fixed in Skyline.
+        if(spectrum != null && spectrum.getNumPeaks() > 0)
+        {
+            LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
+            pepSpec.setPrecursorId(precursor.getId());
+            pepSpec.setCharge(precursor.getCharge());
+            pepSpec.setPeptide(peptide.getSequence());
+            pepSpec.setModifiedSequence(precursor.getModifiedSequence());
+            pepSpec.setLibrary(library);
+            pepSpec.setSpectrum(spectrum);
+
+            // Add any structural modifications
+            pepSpec.setStructuralModifications(structuralModifications, runStrMods);
+            // Add any potential losses
+            pepSpec.setPotentialLosses(potentialLossMap);
+
+            // Add any isotope modifications (can be different for each precursor)
+            List<Peptide.IsotopeModification> isotopeModifications = ModificationManager.getPeptideIsotopelModifications(peptide.getId(), precursor.getIsotopeLabelId());
+            pepSpec.setIsotopeModifications(isotopeModifications);
+
+            return pepSpec;
+        }
+
+        return null;
+    }
+
+    public static List<PeptideIdRtInfo> getPeptideIdRts(Precursor precursor, SampleFile sampleFile)
     {
         if(precursor == null || sampleFile == null)
         {
@@ -221,19 +262,22 @@ public class LibrarySpectrumMatchGetter
             return Collections.emptyList();
         }
 
-        List<Double> rts = new ArrayList<>();
+        List<PeptideIdRtInfo> rts = new ArrayList<>();
         // PeptideIdRtInfos cache has matches for the given precursor modified sequence in all sample files. Find the
         // ones in this sample file.
         for(PeptideIdRtInfo rtInfo: peptideIdRtInfos)
         {
             if(rtInfo.getSampleFileName() != null && sampleFile.getFilePath() != null)
             {
-                File libSourceFile = new File(rtInfo.getSampleFileName());
-                File skySampleFile = new File(sampleFile.getFilePath());
+                // Use FileNameUtils.getBaseName() handle a file in either Unix or Windows format
+                // Use getBaseName() to remove extension before comparing. Extension in the .blib file could be .mgf
+                // and corresponding .raw file imported into Skyline.
+                String sampleFileNameInLib = FilenameUtils.getBaseName(rtInfo.getSampleFileName());
+                String sampleFileNameInSky = FilenameUtils.getBaseName(sampleFile.getFilePath());
                 if (rtInfo.getCharge() == precursor.getCharge() &&
-                        libSourceFile.getName().equals(skySampleFile.getName()))
+                        sampleFileNameInSky.equals(sampleFileNameInLib))
                 {
-                    rts.add(rtInfo.getRt());
+                    rts.add(rtInfo);
                 }
             }
         }
@@ -291,13 +335,15 @@ public class LibrarySpectrumMatchGetter
         private final String _modifiedSequence;
         private final int _charge;
         private final double _rt;
+        private final boolean _bestSpectrum;
 
-        public PeptideIdRtInfo(String sampleFileName, String modifiedSequence, int charge, double rt)
+        public PeptideIdRtInfo(String sampleFileName, String modifiedSequence, int charge, double rt, boolean bestSpectrum)
         {
             _sampleFileName = sampleFileName;
             _modifiedSequence = modifiedSequence;
             _charge = charge;
             _rt = rt;
+            _bestSpectrum = bestSpectrum;
         }
 
         public String getSampleFileName()
@@ -318,6 +364,11 @@ public class LibrarySpectrumMatchGetter
         public double getRt()
         {
             return _rt;
+        }
+
+        public boolean isBestSpectrum()
+        {
+            return _bestSpectrum;
         }
     }
 }

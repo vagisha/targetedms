@@ -53,6 +53,7 @@ class ChromatogramChartMaker
         {
             Marker marker = new ValueMarker(annotation.getRetentionTime());
             marker.setPaint(annotation.getColor());
+            marker.setLabelPaint(annotation.getColor());
             marker.setLabel(StringUtils.join(annotation.getLabels(), ","));
             marker.setLabelAnchor(RectangleAnchor.TOP_RIGHT);
             marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);

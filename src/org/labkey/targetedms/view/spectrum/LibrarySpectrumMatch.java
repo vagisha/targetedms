@@ -34,6 +34,7 @@ import java.util.regex.Pattern;
  */
 public class LibrarySpectrumMatch
 {
+    private int _precursorId;
     private BlibSpectrum _spectrum;
     private String _peptide;
     private String _modifiedSequence;
@@ -45,6 +46,16 @@ public class LibrarySpectrumMatch
     Map<Integer, List<PeptideSettings.PotentialLoss>> _potentialLossIdMap;
     List<Peptide.IsotopeModification> _isotopeModifications;
     private int _maxNeutralLosses;
+
+    public int getPrecursorId()
+    {
+        return _precursorId;
+    }
+
+    public void setPrecursorId(int precursorId)
+    {
+        _precursorId = precursorId;
+    }
 
     public String getPeptide()
     {
@@ -116,6 +127,11 @@ public class LibrarySpectrumMatch
         _maxNeutralLosses = maxNeutralLosses;
     }
 
+    public boolean hasRedundantSpectra()
+    {
+        return _spectrum != null && _spectrum.getRedundantSpectrumList().size() > 0;
+    }
+
     public String getPeaks()
     {
         if(getSpectrum() == null)
@@ -129,11 +145,11 @@ public class LibrarySpectrumMatch
         for (BlibSpectrum.Peak peak: peakList)
         {
             if(!firstPeak)
-                peaks.append(",\n");
+                peaks.append(",");
             peaks.append("[").append(peak.getMz()).append(",").append(peak.getIntensity()).append("]");
             firstPeak = false;
         }
-        peaks.append("\n]\n");
+        peaks.append("]");
 
         return peaks.toString();
     }
@@ -176,7 +192,7 @@ public class LibrarySpectrumMatch
         // Return all static (not variable) structural modifications.
         mods.append(appendStructuralModifications(_structuralModifications, false)); // only static mods
 
-        mods.append("\n]\n");
+        mods.append("]");
         return mods.toString();
     }
 
@@ -191,10 +207,14 @@ public class LibrarySpectrumMatch
 
         // Return all isotopic and variable structural modifications.
         mods.append(appendStructuralModifications(_structuralModifications, true)); // only variable mods
-        if(mods.length() > 1) mods.append(",\n");
-        mods.append(appendIsotopeModifications(_isotopeModifications));
+        String isotopeMods = appendIsotopeModifications(_isotopeModifications);
+        if(isotopeMods.length() > 1)
+        {
+           mods.append(",");
+        }
+        mods.append(isotopeMods);
 
-        mods.append("\n]\n");
+        mods.append("]");
         return mods.toString();
     }
 
@@ -214,13 +234,12 @@ public class LibrarySpectrumMatch
         {
             mods.append(comma);
             comma = ",";
-            mods.append("\n");
-            mods.append("{index: ")
+            mods.append("{\"index\": ")
                 .append(mod.getIndexAa() + 1) // Lorikeet uses a 1-based index
-                .append(", modMass: ")
+                .append(", \"modMass\": ")
                 .append(mod.getMassDiff())
-                .append(", aminoAcid: '")
-                .append(_peptide.charAt(mod.getIndexAa())).append("'")
+                .append(", \"aminoAcid\": \"")
+                .append(_peptide.charAt(mod.getIndexAa())).append("\"")
                 .append(getNeutralLosses(mod))
                 .append("}");
         }
@@ -250,19 +269,18 @@ public class LibrarySpectrumMatch
             }
             mods.append(comma);
             comma = ",";
-            mods.append("\n");
             mods.append("{");
             if(variable)
             {
-                mods.append("index: ")
+                mods.append("\"index\": ")
                     .append(mod.getIndexAa() + 1) // Lorikeet uses a 1-based index
                     .append(", ");
             }
 
-            mods.append("modMass: ")
+            mods.append("\"modMass\": ")
                     .append(mod.getMassDiff())
-                    .append(", aminoAcid: '")
-                    .append(_peptide.charAt(mod.getIndexAa())).append("'")
+                    .append(", \"aminoAcid\": \"")
+                    .append(_peptide.charAt(mod.getIndexAa())).append("\"")
                     .append(getNeutralLosses(mod))
                     .append("}");
         }
@@ -283,7 +301,7 @@ public class LibrarySpectrumMatch
         }
 
         StringBuilder lossString = new StringBuilder();
-        lossString.append(", losses: [");
+        lossString.append(", \"losses\": [");
         int index = 0;
         for(PeptideSettings.PotentialLoss loss: losses)
         {
@@ -303,11 +321,11 @@ public class LibrarySpectrumMatch
             if(index++ > 0)
                 lossString.append(", ");
             lossString.append("{");
-            lossString.append("monoLossMass: ").append(massDiffMono)
-                      .append(", avgLossMass: ").append(massDiffAvg);
+            lossString.append("\"monoLossMass\": ").append(massDiffMono)
+                      .append(", \"avgLossMass\": ").append(massDiffAvg);
             if(loss.getFormula() != null)
             {
-                lossString.append(", formula: '").append(loss.getFormula()).append("'");
+                lossString.append(", \"formula\": \"").append(loss.getFormula()).append("\"");
             }
             lossString.append("}");
         }

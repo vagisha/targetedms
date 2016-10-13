@@ -21,7 +21,6 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.SkylineFileUtils;
 import org.labkey.targetedms.TargetedMSManager;
@@ -57,6 +56,12 @@ public class LibraryManager
         return new TableSelector(TargetedMSManager.getTableInfoSpectrumLibrary(),
                                filter,
                                null).getArrayList(PeptideSettings.SpectrumLibrary.class);
+    }
+
+    public static String getLibraryFilePath(int runId, PeptideSettings.SpectrumLibrary library)
+    {
+        Map<PeptideSettings.SpectrumLibrary, String> libraryFilePaths = getLibraryFilePaths(runId, Collections.singletonList(library));
+        return libraryFilePaths.size() > 0 ? libraryFilePaths.values().iterator().next() : null;
     }
 
     public static Map<PeptideSettings.SpectrumLibrary, String> getLibraryFilePaths(int runId, List<PeptideSettings.SpectrumLibrary> libraries)

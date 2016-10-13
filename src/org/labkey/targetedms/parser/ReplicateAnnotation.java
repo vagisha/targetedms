@@ -21,6 +21,8 @@ package org.labkey.targetedms.parser;
  */
 public class ReplicateAnnotation extends AbstractAnnotation
 {
+    private static final String SOURCE_SKYLINE = "Skyline";
+
     private int _replicateId;
 
     private String _source;
@@ -37,7 +39,7 @@ public class ReplicateAnnotation extends AbstractAnnotation
 
     public String getSource()
     {
-        return _source;
+        return _source != null ? _source : SOURCE_SKYLINE;
     }
 
     public void setSource(String source)
