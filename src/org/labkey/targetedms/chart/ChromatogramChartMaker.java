@@ -27,6 +27,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
+import org.jfree.data.RangeType;
 import org.jfree.ui.Layer;
 import org.jfree.ui.RectangleAnchor;
 import org.jfree.ui.TextAnchor;
@@ -142,6 +143,12 @@ class ChromatogramChartMaker
             }
         });
 
+        ((NumberAxis) chart.getXYPlot().getRangeAxis()).setRangeType(RangeType.POSITIVE);
+        chart.getXYPlot().getRangeAxis().setAutoRangeMinimumSize(1.0);
+        ((NumberAxis) chart.getXYPlot().getDomainAxis()).setRangeType(RangeType.POSITIVE);
+        chart.getXYPlot().getDomainAxis().setAutoRangeMinimumSize(1.0);
+
+
         double smallMargin = 0.15;
         double largeMargin = 0.32;
         chart.getXYPlot().getRangeAxis().setUpperMargin(smallMargin);
@@ -163,7 +170,7 @@ class ChromatogramChartMaker
         if(minRt != null && maxRt != null)
         {
             chart.getXYPlot().getDomainAxis().setLowerBound(minRt);
-            chart.getXYPlot().getDomainAxis().setUpperBound(maxRt);
+            chart.getXYPlot().getDomainAxis().setUpperBound(Math.max(maxRt, 1.0));
         }
 
         chart.getTitle().setFont(TITLE_FONT);
