@@ -1477,7 +1477,7 @@ public class TargetedMSController extends SpringActionController
 
         public ChromatogramForm()
         {
-            setChartWidth(400);
+            setDefaultChartWidth(400);
         }
 
         public int getId()
@@ -1644,6 +1644,12 @@ public class TargetedMSController extends SpringActionController
 
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
 
+            int maxTransitions = TargetedMSManager.getMaxTransitionCount(peptideId);
+            if (maxTransitions > 10)
+            {
+                form.setDefaultChartHeight(300 + maxTransitions * 10);
+            }
+
             List<Precursor> precursorList = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), new TargetedMSSchema(getUser(), getContainer()));
 
             List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(_run.getId());
@@ -1776,7 +1782,14 @@ public class TargetedMSController extends SpringActionController
 
             // Molecule precursor and transition chromatograms. One row per replicate
             VBox chromatogramsBox = new VBox();
-            MoleculePrecursorChromatogramsView chromView = new MoleculePrecursorChromatogramsView(molecule, new TargetedMSSchema(getUser(), getContainer()),form, errors);
+
+            int maxTransitions = TargetedMSManager.getMaxTransitionCount(moleculeId);
+            if (maxTransitions > 10)
+            {
+                form.setDefaultChartHeight(300 + maxTransitions * 10);
+            }
+
+            MoleculePrecursorChromatogramsView chromView = new MoleculePrecursorChromatogramsView(molecule, new TargetedMSSchema(getUser(), getContainer()), form, errors);
             JspView<MoleculeChromatogramsViewBean> chartForm = new JspView<>("/org/labkey/targetedms/view/chromatogramsForm.jsp", bean);
 
             chromatogramsBox.setTitle("Chromatograms");
@@ -2208,28 +2221,47 @@ public class TargetedMSController extends SpringActionController
     {
         public static final int SCREEN_RES = 72;
 
-        private int _chartWidth = 600;
-        private int _chartHeight = 400;
+        private int _defaultChartWidth = 600;
+        private int _defaultChartHeight = 400;
+
+        private Integer _chartWidth = null;
+        private Integer _chartHeight = null;
         private int _dpi = SCREEN_RES;
 
         public int getChartWidth()
         {
-            return _chartWidth;
+            return _chartWidth == null ? _defaultChartWidth : _chartWidth.intValue();
+        }
+
+        public void setDefaultChartWidth(int defaultChartWidth)
+        {
+            _defaultChartWidth = defaultChartWidth;
+        }
+
+        public void setDefaultChartHeight(int defaultChartHeight)
+        {
+            _defaultChartHeight = defaultChartHeight;
         }
 
         public void setChartWidth(int chartWidth)
         {
-            _chartWidth = chartWidth;
+            if (chartWidth > 0)
+            {
+                _chartWidth = chartWidth;
+            }
         }
 
         public int getChartHeight()
         {
-            return _chartHeight;
+            return _chartHeight == null ? _defaultChartHeight : _chartHeight.intValue();
         }
 
         public void setChartHeight(int chartHeight)
         {
-            _chartHeight = chartHeight;
+            if (chartHeight > 0)
+            {
+                _chartHeight = chartHeight;
+            }
         }
 
         public int getDpi()

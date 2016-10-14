@@ -1560,4 +1560,23 @@ public class TargetedMSManager
         TableInfo table = TargetedMSManager.getTableInfoQCMetricConfiguration();
         return new TableSelector(table, SimpleFilter.createContainerFilter(container), new Sort("Name")).getArrayList(QCMetricConfiguration.class);
     }
+
+    public static int getMaxTransitionCount(int moleculeId)
+    {
+        SQLFragment maxTransitionSQL = new SQLFragment("select MAX(c) FROM\n" +
+                "(\n" +
+                "select pci.id, COUNT(DISTINCT tci.Id) AS C FROM \n");
+        maxTransitionSQL.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
+        maxTransitionSQL.append(" INNER JOIN \n");
+        maxTransitionSQL.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        maxTransitionSQL.append(" ON tci.precursorchrominfoid = pci.id INNER JOIN \n");
+        maxTransitionSQL.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
+        maxTransitionSQL.append(" ON pci.generalmoleculechrominfoid = gmci.id \n" +
+                "WHERE\n" +
+                "gmci.generalmoleculeid = ?\n" +
+                "GROUP BY pci.id\n" +
+                ") x\n");
+        maxTransitionSQL.add(moleculeId);
+        return new SqlSelector(getSchema(), maxTransitionSQL).getObject(Integer.class).intValue();
+    }
 }
