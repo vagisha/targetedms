@@ -56,7 +56,7 @@ public class LinkVersionsGrid extends Component
         Locator prevGridRow = null;
         for (String documentName : documentNames)
         {
-            Locator gridRow = Ext4Helper.Locators.getGridRow(documentName, 0);
+            Locator gridRow = Ext4Helper.Locators.getGridRow(documentName);
             _test.assertElementPresent(gridRow);
 
             // verify that the grid rows are in the expected order
