@@ -16,6 +16,9 @@
 package org.labkey.targetedms.parser.blib;
 
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 import org.sqlite.SQLiteConfig;
@@ -56,6 +59,7 @@ public class BlibSpectrumReader
 
     private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
 
+    @Nullable
     public static BlibSpectrum getSpectrum(String blibFilePath, String modifiedPeptide, int charge)
     {
         // CONSIDER: we are reading directly from Bibliospec SQLite file. Should we store library information in the schema?
@@ -63,11 +67,8 @@ public class BlibSpectrumReader
         if(!(new File(blibFilePath)).exists())
             return null;
 
-        Connection conn = null;
-
-        try {
-            conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath);
-
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath))
+        {
             BlibSpectrum spectrum = readSpectrum(conn, modifiedPeptide, charge);
             if(spectrum == null)
                 return null;
@@ -91,11 +92,7 @@ public class BlibSpectrumReader
                 LOG.error("Missing table in blib file " + blibFilePath, e);
                 return null;
             }
-            throw new RuntimeException(e);
-        }
-        finally
-        {
-            if(conn != null) try {conn.close();} catch(SQLException ignored){}
+            throw new RuntimeSQLException(e);
         }
     }
 
@@ -115,6 +112,7 @@ public class BlibSpectrumReader
         return null;
     }
 
+    @NotNull
     public static List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getRetentionTimes(String blibFilePath, String modifiedPeptide)
     {
         if(!(new File(blibFilePath)).exists())
@@ -125,22 +123,18 @@ public class BlibSpectrumReader
 
         String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
 
-        Connection conn = null;
-        Statement stmt = null;
-        ResultSet rs = null;
         SQLiteConfig config = new SQLiteConfig();
         config.setReadOnly(true);
 
-        try {
-            conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath, config.toProperties());
-            stmt = conn.createStatement();
-            StringBuilder sql = new StringBuilder("SELECT rt.retentionTime, rt.bestSpectrum, rs.peptideModSeq, rs.precursorCharge, ssf.fileName from RetentionTimes AS rt ");
-            sql.append(" INNER JOIN RefSpectra AS rs ON (rt.RefSpectraID = rs.id)");
-            sql.append(" INNER JOIN SpectrumSourceFiles ssf ON (rt.SpectrumSourceID = ssf.id)");
-            sql.append(" WHERE rs.peptideModSeq='"+blibPeptide+"'");
+        StringBuilder sql = new StringBuilder("SELECT rt.retentionTime, rt.bestSpectrum, rs.peptideModSeq, rs.precursorCharge, ssf.fileName from RetentionTimes AS rt ");
+        sql.append(" INNER JOIN RefSpectra AS rs ON (rt.RefSpectraID = rs.id)");
+        sql.append(" INNER JOIN SpectrumSourceFiles ssf ON (rt.SpectrumSourceID = ssf.id)");
+        sql.append(" WHERE rs.peptideModSeq='"+blibPeptide+"'");
 
-            rs = stmt.executeQuery(sql.toString());
-
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath, config.toProperties());
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql.toString()))
+        {
             List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> retentionTimes = new ArrayList<>();
             while(rs.next())
             {
@@ -161,27 +155,21 @@ public class BlibSpectrumReader
                 LOG.error("Missing table in blib file " + blibFilePath, e);
                 return Collections.emptyList();
             }
-            throw new RuntimeException(e);
-        }
-        finally
-        {
-            if(rs != null) try {rs.close();} catch(SQLException ignored){}
-            if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
-            if(conn != null) try {conn.close();} catch(SQLException ignored){}
+            throw new RuntimeSQLException(e);
         }
     }
 
+    @Nullable
     private static BlibSpectrum readSpectrum(Connection conn, String modifiedPeptide, int charge) throws SQLException
     {
         String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
 
-        Statement stmt = null;
-        ResultSet rs = null;
-        try {
-            stmt = conn.createStatement();
+        // Check if the schema has a RetentionTimes table.
+        String tableCheckSql = "SELECT name FROM sqlite_master WHERE type='table' AND name='RetentionTimes'";
 
-            // Check if the schema has a RetentionTimes table.
-            String tableCheckSql = "SELECT name FROM sqlite_master WHERE type='table' AND name='RetentionTimes'";
+        ResultSet rs;
+        try (Statement stmt = conn.createStatement())
+        {
             rs = stmt.executeQuery(tableCheckSql);
             boolean hasRtTable = false;
             if(rs.next())
@@ -231,11 +219,6 @@ public class BlibSpectrumReader
             }
             return spectrum;
         }
-        finally
-        {
-            if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
-            if(rs != null) try {rs.close();} catch(SQLException ignored){}
-        }
     }
 
     private static String makePeptideBlibFormat(String modifiedPeptide)
@@ -249,12 +232,9 @@ public class BlibSpectrumReader
 
     private static void readSpectrumPeaks(Connection conn, BlibSpectrum spectrum) throws SQLException
     {
-        Statement stmt = null;
-        ResultSet rs = null;
-        try {
-            stmt = conn.createStatement();
-
-            rs = stmt.executeQuery("SELECT * FROM RefSpectraPeaks WHERE RefSpectraId="+spectrum.getBlibId());
+        try (Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery("SELECT * FROM RefSpectraPeaks WHERE RefSpectraId="+spectrum.getBlibId()))
+        {
             if(rs.next())
             {
                 byte[] mzsCompressed = rs.getBytes(2);
@@ -269,11 +249,6 @@ public class BlibSpectrumReader
         catch (DataFormatException e)
         {
             throw new IllegalStateException("Error uncompressing peaks for spectrum");
-        }
-        finally
-        {
-            if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
-            if(rs != null) try {rs.close();} catch(SQLException ignored){}
         }
     }
 
