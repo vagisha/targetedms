@@ -54,8 +54,8 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
             return null;  // only enable this view if the TargetedMSModule is active
 
         QuerySettings settings = new QuerySettings(viewContext, getDataRegionName(), "Peptide");
-        settings.addAggregates(new Aggregate(FieldKey.fromParts("PeptideGroupId", "RunId", "File"), Aggregate.Type.COUNT, null, true));
-        settings.addAggregates(new Aggregate(FieldKey.fromParts("Sequence"), Aggregate.Type.COUNT, null, true));
+        settings.addAggregates(new Aggregate(FieldKey.fromParts("PeptideGroupId", "RunId", "File"), Aggregate.BaseType.COUNT, null, true));
+        settings.addAggregates(new Aggregate(FieldKey.fromParts("Sequence"), Aggregate.BaseType.COUNT, null, true));
 
         // Issue 17576: Peptide and Protein searches do not work for searching in subfolders
         if (form.isSubfolders())
