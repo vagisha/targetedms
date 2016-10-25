@@ -1577,6 +1577,8 @@ public class TargetedMSManager
                 "GROUP BY pci.id\n" +
                 ") x\n");
         maxTransitionSQL.add(moleculeId);
-        return new SqlSelector(getSchema(), maxTransitionSQL).getObject(Integer.class).intValue();
+
+        Integer maxCount = new SqlSelector(getSchema(), maxTransitionSQL).getObject(Integer.class);
+        return maxCount != null ? maxCount.intValue() : 0;
     }
 }
