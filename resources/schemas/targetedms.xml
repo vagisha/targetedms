@@ -381,6 +381,15 @@
         <ns:titleColumn>SampleName</ns:titleColumn>
         <ns:description>Contains a row for each precursor chromatogram loaded in a targeted MS run.</ns:description>
         <ns:columns>
+            <ns:column columnName="Container">
+                <ns:isHidden>true</ns:isHidden>
+                <ns:isReadOnly>true</ns:isReadOnly>
+                <ns:fk>
+                    <ns:fkColumnName>EntityId</ns:fkColumnName>
+                    <ns:fkDbSchema>core</ns:fkDbSchema>
+                    <ns:fkTable>containers</ns:fkTable>
+                </ns:fk>
+            </ns:column>
             <ns:column columnName="Id">
                 <ns:isHidden>true</ns:isHidden>
             </ns:column>

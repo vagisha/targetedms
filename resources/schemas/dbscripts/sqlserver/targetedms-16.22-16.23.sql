@@ -15,6 +15,8 @@
  */
 
 -- ExperimentRunLSID references exp.experimentrun.lsid
+EXEC core.fn_dropifexists 'Runs','targetedms','INDEX','IX_Runs_ExperimentRunLSID';
+
 CREATE INDEX IX_Runs_ExperimentRunLSID ON targetedms.Runs(ExperimentRunLSID);
 
 ALTER TABLE targetedms.transition ALTER COLUMN MeasuredIonName NVARCHAR(255);

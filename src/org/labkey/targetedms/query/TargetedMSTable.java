@@ -38,9 +38,10 @@ import java.util.Collections;
 public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
 {
     public static final String CONTAINER_COL_TABLE_ALIAS = "r";
-    private static final SQLFragment _containerSQL = new SQLFragment(CONTAINER_COL_TABLE_ALIAS).append(".Container");
+    private static final SQLFragment _defaultContainerSQL = new SQLFragment(CONTAINER_COL_TABLE_ALIAS).append(".Container");
 
     private final SQLFragment _joinSQL;
+    private final SQLFragment _containerSQL;
 
     private boolean _needsContainerWhereClause = true;
 
@@ -48,8 +49,14 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
 
     public TargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL)
     {
+        this(table, schema, joinSQL, _defaultContainerSQL);
+    }
+
+    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL, SQLFragment containerSQL)
+    {
         super(table, schema);
         _joinSQL = joinSQL;
+        _containerSQL = containerSQL;
         wrapAllColumns(true);
 
         // Swap out DbSchema FKs with Query FKs so that we get all the extra calculated columns and such

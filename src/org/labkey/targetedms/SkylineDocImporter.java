@@ -1413,6 +1413,7 @@ public class SkylineDocImporter
             if (!sampleFile.isSkip())
             {
                 // Only for QC folders: Ignore this chrom info if data from the sample file is not being imported.
+                precursorChromInfo.setContainer(_container);
                 precursorChromInfo.setPrecursorId(gpId);
                 precursorChromInfo.setSampleFileId(sampleFile.getId());
                 precursorChromInfo.setGeneralMoleculeChromInfoId(sampleFileIdGeneralMolChromInfoIdMap.get(sampleFile.getId()));

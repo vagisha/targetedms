@@ -15,6 +15,8 @@
 
 package org.labkey.targetedms.parser;
 
+import org.labkey.api.data.Container;
+
 /**
  * User: vsharma
  * Date: 4/16/12
@@ -22,6 +24,7 @@ package org.labkey.targetedms.parser;
  */
 public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 {
+    private Container _container;
     private int _precursorId;
     private int _generalPrecursorId;
     private int _generalMoleculeChromInfoId;
@@ -49,6 +52,24 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     private int _numTransitions;
     private Integer _uncompressedSize;
 
+    public PrecursorChromInfo()
+    {
+    }
+
+    public PrecursorChromInfo(Container c)
+    {
+        _container = c;
+    }
+
+    public Container getContainer()
+    {
+        return _container;
+    }
+
+    public void setContainer(Container container)
+    {
+        _container = container;
+    }
 
     public int getPrecursorId()
     {
