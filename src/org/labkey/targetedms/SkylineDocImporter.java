@@ -164,6 +164,7 @@ public class SkylineDocImporter
         }
         finally
         {
+            TargetedMSManager.uncacheCounts();
             close();
         }
     }

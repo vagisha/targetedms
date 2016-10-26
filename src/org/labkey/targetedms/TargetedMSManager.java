@@ -22,11 +22,13 @@ import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlException;
 import org.fhcrc.cpas.exp.xml.ExperimentArchiveDocument;
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.MaterializedQueryHelper;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -947,16 +949,58 @@ public class TargetedMSManager
         return sqlFragment;
     }
 
+
+    /*
+        RunPeptideCountSQL
+    */
+
     public static SQLFragment getRunPeptideCountSQL(String runAlias)
     {
-        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(p.id) FROM ");
-        sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p").append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        sqlFragment.append(" WHERE p.Id = gm.Id AND gm.PeptideGroupId = pg.Id AND pg.RunId = ");
+        if (!useMaterializedHelpers)
+            return _getRunPeptideCountSQL(runAlias);
+
+        synchronized (initMaterializedHelperLock)
+        {
+            if (null == peptideCountMaterialized)
+            {
+                SqlDialect d = TargetedMSManager.getSqlDialect();
+                DbScope scope = TargetedMSManager.getSchema().getScope();
+                SQLFragment select =new SQLFragment("SELECT COUNT(*) AS _count, pg.RunId AS _runid FROM ")
+                    .append(_getRunPeptideCountJoinSQL())
+                    .append(" GROUP BY pg.RunId");
+                SQLFragment uptodate = new SQLFragment("SELECT ").append(d.concatenate(
+                        new SQLFragment("(SELECT COALESCE(CAST(MAX(pg.Id) AS VARCHAR(40)),'-') FROM ").append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(")"),
+                        new SQLFragment("'/'"),
+                        new SQLFragment("(SELECT COALESCE(CAST(MAX(p.Id) AS VARCHAR(40)),'-') FROM ").append(TargetedMSManager.getTableInfoPeptide(), "p").append(")"))
+                );
+                peptideCountMaterialized = MaterializedQueryHelper.create("ms_pep", scope, select, uptodate, null, maxMaterializeCacheTTL);
+            }
+            SQLFragment sqlFragment = new SQLFragment("SELECT _count FROM ")
+                    .append(peptideCountMaterialized.getFromSql("_pc_",null));
+            sqlFragment.append(" WHERE _runid=");
+            sqlFragment.append(runAlias != null ? runAlias : "?");
+            return sqlFragment;
+        }
+    }
+
+    private static SQLFragment _getRunPeptideCountJoinSQL()
+    {
+        SQLFragment sqlFragment = new SQLFragment();
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptide(), "p")
+            .append(" INNER JOIN ")
+            .append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON p.Id = gm.Id ")
+            .append(" INNER JOIN ")
+            .append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(" ON gm.PeptideGroupId = pg.Id ");
+        return sqlFragment;
+    }
+
+    private static SQLFragment _getRunPeptideCountSQL(String runAlias)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(p.id) FROM ").append(_getRunPeptideCountJoinSQL()).append(" AND pg.RunId = ");
         sqlFragment.append(runAlias != null ? runAlias : "?");
         return sqlFragment;
     }
+
 
     public static Set<String> getDistinctPeptides(Container c)
     {
@@ -993,28 +1037,152 @@ public class TargetedMSManager
         return sqlFragment;
     }
 
+
+    /*
+        RunPrecursor SQL
+    */
+
     public static SQLFragment getRunPrecursorCountSQL(String runAlias)
     {
-        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(gp.id) FROM ");
-        sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp").append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        sqlFragment.append(" WHERE gp.GeneralMoleculeId = gm.Id AND gm.PeptideGroupId = pg.Id AND pg.RunId = ");
+        if (!useMaterializedHelpers)
+            return _getRunPrecursorCountSQL(runAlias);
+
+        synchronized (initMaterializedHelperLock)
+        {
+            if (null == precursorCountMaterialized)
+            {
+                SqlDialect d = TargetedMSManager.getSqlDialect();
+                DbScope scope = TargetedMSManager.getSchema().getScope();
+
+                SQLFragment select = new SQLFragment("SELECT COUNT(*) as _count, pg.RunId as _runid FROM ")
+                    .append(_getRunPrecursorJoinSQL())
+                    .append(" GROUP BY pg.RunId");
+                SQLFragment uptodate = new SQLFragment("SELECT ").append(d.concatenate(
+                        new SQLFragment("(SELECT COALESCE(CAST(MAX(pg.Id) AS VARCHAR(40)),'-') FROM ").append(TargetedMSManager.getTableInfoPeptideGroup(),"pg").append(")"),
+                        new SQLFragment("'/'"),
+                        new SQLFragment("(SELECT COALESCE(CAST(MAX(gp.Id) AS VARCHAR(40)),'-') FROM ").append(TargetedMSManager.getTableInfoGeneralPrecursor(),"gp").append(")")                    )
+                );
+                precursorCountMaterialized = MaterializedQueryHelper.create("ms_pre", scope, select, uptodate, null, maxMaterializeCacheTTL);
+            }
+        }
+
+        SQLFragment sqlFragment = new SQLFragment("SELECT _count FROM ")
+                .append(precursorCountMaterialized.getFromSql("_pc_",null));
+        sqlFragment.append(" WHERE _runid=");
         sqlFragment.append(runAlias != null ? runAlias : "?");
         return sqlFragment;
     }
 
-    public static SQLFragment getRunTransitionCountSQL(String runAlias)
+    private static SQLFragment _getRunPrecursorJoinSQL()
     {
-        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(gt.id) FROM ");
-        sqlFragment.append(TargetedMSManager.getTableInfoGeneralTransition(), "gt").append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp").append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(", ");
-        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
-        sqlFragment.append(" WHERE gt.GeneralPrecursorId = gp.Id AND gp.GeneralMoleculeId = gm.Id AND gm.PeptideGroupId = pg.Id AND pg.RunId = ");
+        SQLFragment sqlFragment = new SQLFragment();
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp")
+            .append(" INNER JOIN ")
+            .append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON gp.GeneralMoleculeId = gm.Id ")
+            .append(" INNER JOIN ")
+            .append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(" ON gm.PeptideGroupId = pg.Id ");
+        return sqlFragment;
+    }
+
+    /* old version, if you want to revert/test */
+    private static SQLFragment _getRunPrecursorCountSQL(String runAlias)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(*) FROM ").append(_getRunPrecursorJoinSQL()).append(" WHERE pg.RunId = ");
         sqlFragment.append(runAlias != null ? runAlias : "?");
         return sqlFragment;
     }
+
+
+    /*
+        RunTransitionCountSQL
+    */
+
+    public static SQLFragment getRunTransitionCountSQL(String runAlias)
+    {
+        synchronized (initMaterializedHelperLock)
+        {
+            if (!useMaterializedHelpers)
+                return _getRunTransitionCountSQL(runAlias);
+
+            if (null == transitionCountMaterialized)
+            {
+                SqlDialect d = TargetedMSManager.getSqlDialect();
+                DbScope scope = TargetedMSManager.getSchema().getScope();
+
+                SQLFragment select = new SQLFragment("SELECT COUNT(*) AS _count, pg.RunId AS _runid FROM ")
+                        .append(_getRunTransitionCountJoinSQL())
+                        .append(" GROUP BY pg.RunId");
+                SQLFragment uptodate = new SQLFragment("SELECT ").append(d.concatenate(
+                        new SQLFragment("(SELECT COALESCE(CAST(MAX(pg.Id) AS VARCHAR(40)),'-') FROM ").append(TargetedMSManager.getTableInfoPeptideGroup(),"pg").append(")"),
+                        new SQLFragment("'/'"),
+                        new SQLFragment("(SELECT COALESCE(CAST(MAX(gt.Id) AS VARCHAR(40)),'-') FROM ").append(TargetedMSManager.getTableInfoGeneralTransition(),"gt").append(")")                    )
+                );
+                transitionCountMaterialized = MaterializedQueryHelper.create("ms_trn", scope, select, uptodate, null, maxMaterializeCacheTTL);
+            }
+        }
+
+        SQLFragment sqlFragment = new SQLFragment("SELECT _count FROM ")
+                .append(transitionCountMaterialized.getFromSql("_tc_", null));
+        sqlFragment.append(" WHERE _runid=");
+        sqlFragment.append(runAlias != null ? runAlias : "?");
+        return sqlFragment;
+    }
+
+    public static SQLFragment _getRunTransitionCountJoinSQL()
+    {
+        SQLFragment sqlFragment = new SQLFragment();
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralTransition(), "gt")
+            .append(" INNER JOIN ")
+            .append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp").append(" ON gt.GeneralPrecursorId = gp.Id ")
+            .append(" INNER JOIN ")
+            .append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON gp.GeneralMoleculeId = gm.Id ")
+            .append(" INNER JOIN ")
+            .append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(" ON gm.PeptideGroupId = pg.Id");
+        return sqlFragment;
+    }
+
+    /* old version, if you want to revert/test */
+    public static SQLFragment _getRunTransitionCountSQL(String runAlias)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT COUNT(*) FROM ")
+            .append(_getRunTransitionCountJoinSQL())
+            .append(" WHERE pg.RunId = ");
+        sqlFragment.append(runAlias != null ? runAlias : "?");
+        return sqlFragment;
+    }
+
+    final static boolean useMaterializedHelpers = true;
+    final static long maxMaterializeCacheTTL = CacheManager.HOUR;
+    final static Object initMaterializedHelperLock = new Object();
+    static MaterializedQueryHelper transitionCountMaterialized = null;
+    static MaterializedQueryHelper precursorCountMaterialized = null;
+    static MaterializedQueryHelper peptideCountMaterialized = null;
+
+    public static void uncacheCounts()
+    {
+        if (!useMaterializedHelpers)
+            return;
+
+        synchronized (initMaterializedHelperLock)
+        {
+            if (null != transitionCountMaterialized)
+            {
+                transitionCountMaterialized.uncache(null);
+                transitionCountMaterialized.cacheInBackground(null);
+            }
+            if (null != peptideCountMaterialized)
+            {
+                peptideCountMaterialized.uncache(null);
+                peptideCountMaterialized.cacheInBackground(null);
+            }
+            if (null != precursorCountMaterialized)
+            {
+                precursorCountMaterialized.uncache(null);
+                precursorCountMaterialized.cacheInBackground(null);
+            }
+        }
+    }
+
 
     public static Integer getRunSummaryCount(TargetedMSRun run, SQLFragment sql)
     {
@@ -1029,7 +1197,7 @@ public class TargetedMSManager
     {
         if (run != null && peptideGroupId > 0)
         {
-            SQLFragment sql = TargetedMSManager.getRunPeptideCountSQL(null);
+            SQLFragment sql = TargetedMSManager._getRunPeptideCountSQL(null);
             sql.add(run.getId());
             sql.append(" AND pg.Id = ? ");
             sql.add(peptideGroupId);

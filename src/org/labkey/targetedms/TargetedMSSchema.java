@@ -558,8 +558,14 @@ public class TargetedMSSchema extends UserSchema
                 result.addColumn(countCol);
 
                 // add Peptide count column
-                sql = new SQLFragment("(").append(TargetedMSManager.getRunPeptideCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
-                countCol = new ExprColumn(result, "Peptides", sql, JdbcType.INTEGER);
+                countCol = new ExprColumn(result, "Peptides", sql, JdbcType.INTEGER)
+                {
+                    @Override
+                    public SQLFragment getValueSql(String tableAlias)
+                    {
+                        return new SQLFragment("(").append(TargetedMSManager.getRunPeptideCountSQL(tableAlias + ".Id")).append(")");
+                    }
+                };
                 countCol.setFormat("#,###");
                 result.addColumn(countCol);
 
@@ -570,14 +576,27 @@ public class TargetedMSSchema extends UserSchema
                 result.addColumn(countCol);
 
                 // add Precursor count column
-                sql = new SQLFragment("(").append(TargetedMSManager.getRunPrecursorCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
-                countCol = new ExprColumn(result, "Precursors", sql, JdbcType.INTEGER);
+                countCol = new ExprColumn(result, "Precursors", null, JdbcType.INTEGER)
+                {
+                    @Override
+                    public SQLFragment getValueSql(String tableAlias)
+                    {
+                        return new SQLFragment("(").append(TargetedMSManager.getRunPrecursorCountSQL(tableAlias + ".Id")).append(")");
+                    }
+                };
                 countCol.setFormat("#,###");
                 result.addColumn(countCol);
 
                 // add Transition count column
-                sql = new SQLFragment("(").append(TargetedMSManager.getRunTransitionCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
-                countCol = new ExprColumn(result, "Transitions", sql, JdbcType.INTEGER);
+                countCol = new ExprColumn(result, "Transitions", null, JdbcType.INTEGER)
+                {
+                    @Override
+                    public SQLFragment getValueSql(String tableAlias)
+                    {
+                        return new SQLFragment("(").append(TargetedMSManager.getRunTransitionCountSQL(tableAlias + ".Id")).append(")");
+                    }
+                };
+
                 countCol.setFormat("#,###");
                 result.addColumn(countCol);
 
