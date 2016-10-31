@@ -617,17 +617,27 @@ public class TargetedMSController extends SpringActionController
             List<Map<String, Object>> containers = new ArrayList<>();
 
             // include the QC Summary properties for the current container
-            containers.add(getContainerQCSummaryProperties(getContainer(), false));
+            containers.add(getContainerQCSummaryProperties(getContainer(), getContainer(), false));
 
             // include the QC Summary properties for the direct subfolders, of type QC, that the user has read permission
             if (form.isIncludeSubfolders())
             {
                 for (Container container : getContainer().getChildren())
                 {
-                    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
-                    if (container.hasPermission(getUser(), ReadPermission.class) && folderType == TargetedMSModule.FolderType.QC)
+                    Container bestContainer = container;
+                    Container mostRecentPingContainer = TargetedMSManager.getMostRecentPingChild(getUser(), container);
+                    // Find the most recent AutoQC ping for the subfolder or its children
+                    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(mostRecentPingContainer);
+                    // Make sure it's a QC folder
+                    if (mostRecentPingContainer.hasPermission(getUser(), ReadPermission.class) && folderType == TargetedMSModule.FolderType.QC)
                     {
-                        containers.add(getContainerQCSummaryProperties(container, true));
+                         bestContainer = mostRecentPingContainer;
+                    }
+
+                    folderType = TargetedMSManager.getFolderType(bestContainer);
+                    if (bestContainer.hasPermission(getUser(), ReadPermission.class) && folderType == TargetedMSModule.FolderType.QC)
+                    {
+                        containers.add(getContainerQCSummaryProperties(bestContainer, container, true));
                     }
                 }
             }
@@ -637,13 +647,13 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    private Map<String, Object> getContainerQCSummaryProperties(Container container, boolean isSubfolder)
+    private Map<String, Object> getContainerQCSummaryProperties(Container container, Container instrumentContainer, boolean isSubfolder)
     {
         Map<String, Object> properties = new HashMap<>();
         SQLFragment sql;
 
         properties.put("id", container.getId());
-        properties.put("name", container.getName());
+        properties.put("name", instrumentContainer.equals(container) ? container.getName() : (instrumentContainer.getName() + " - " + container.getName()));
         properties.put("path", container.getPath());
         properties.put("subfolder", isSubfolder);
 

@@ -25,6 +25,8 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.JdbcType;
@@ -590,6 +592,25 @@ public class TargetedMSManager
             transaction.commit();
             return expRun;
         }
+    }
+
+    @NotNull
+    public static Container getMostRecentPingChild(@NotNull User user, @NotNull Container c)
+    {
+        SQLFragment sql = new SQLFragment("SELECT Container FROM ");
+        sql.append(getTableInfoAutoQCPing(), "p");
+        ContainerFilter f = new ContainerFilter.CurrentAndFirstChildren(user);
+        sql.append(" WHERE ");
+        sql.append(f.getSQLFragment(getSchema(), new SQLFragment("Container"), c));
+        sql.append(" ORDER BY Modified DESC");
+
+        String containerId = new SqlSelector(getSchema(), getSqlDialect().limitRows(sql, 1)).getObject(String.class);
+        Container result = null;
+        if (containerId != null)
+        {
+            result = ContainerManager.getForId(containerId);
+        }
+        return result == null ? c : result;
     }
 
     private static TargetedMSRun getMostRecentRunRevision(TargetedMSRun run)
