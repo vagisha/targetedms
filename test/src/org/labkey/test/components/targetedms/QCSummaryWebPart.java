@@ -68,7 +68,7 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
 
     public String getBubbleText()
     {
-        return getWrapper().getText(Locators.hopscotchBubbleContent);
+        return Locators.hopscotchBubbleContent.withText().waitForElement(getDriver(), 1000).getText();
     }
 
     public List<QcSummaryTile> getQcSummaryTiles()
