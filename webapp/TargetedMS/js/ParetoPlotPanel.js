@@ -37,7 +37,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         }
 
         var applicableChartTypes = [];
-        Ext4.each(this.chartTypePropArr, function(chartTypeProps)
+        Ext4.each(this.metricPropArr, function(chartTypeProps)
         {
             if (Ext4.isDefined(chartTypeProps['series1Label']))
             {

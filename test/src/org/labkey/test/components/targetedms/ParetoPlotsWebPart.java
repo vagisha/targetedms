@@ -35,7 +35,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
         super(driver, DEFAULT_TITLE);
     }
 
-    public enum ChartTypeTicks
+    public enum MetricTypeTicks
     {
         RETENTION("Retention Time"),
         PEAK("Peak Area"),
@@ -49,7 +49,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
         private String _text;
 
-        ChartTypeTicks(String text)
+        MetricTypeTicks(String text)
         {
             _text = text;
         }
@@ -59,20 +59,20 @@ public class ParetoPlotsWebPart extends BodyWebPart
             return _text;
         }
 
-        public static String getChartTypeTick(String value)
+        public static String getMetricTypeTick(String value)
         {
-            String chartTypeTick = null;
+            String metricTypeTick = null;
 
-            for(ChartTypeTicks v : values())
+            for(MetricTypeTicks v : values())
             {
                 if (value.contains(v.toString()))
                 {
-                    chartTypeTick = v.toString();
+                    metricTypeTick = v.toString();
                     break;
                 }
             }
 
-            return chartTypeTick;
+            return metricTypeTick;
         }
     }
     public List<String> getTicks(int guideSetNum)
@@ -96,9 +96,9 @@ public class ParetoPlotsWebPart extends BodyWebPart
         return Locator.xpath("//div[contains(@id, 'tiledPlotPanel')]/table[contains(@class, 'labkey-wp pareto-plot-wp')]").findElements(getDriver()).size();
     }
 
-    public boolean isChartTypeTickValid(String chartType)
+    public boolean isMetricTypeTickValid(String metricType)
     {
-        return ChartTypeTicks.getChartTypeTick(chartType) != null;
+        return MetricTypeTicks.getMetricTypeTick(metricType) != null;
     }
 
     public int getPlotBarHeight(int guideSetId, int barPlotNum)
@@ -127,6 +127,6 @@ public class ParetoPlotsWebPart extends BodyWebPart
     private class Elements extends BodyWebPart.Elements
     {
         WebElement notFound = new LazyWebElement(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("Guide Sets not found."), this).withTimeout(1000);
-        WebElement leveyJenningsLink = new LazyWebElement(Locator.linkWithText("Levey-Jennings QC Plots"), this);
+        WebElement leveyJenningsLink = new LazyWebElement(Locator.linkWithText("QC Plots"), this);
     }
 }

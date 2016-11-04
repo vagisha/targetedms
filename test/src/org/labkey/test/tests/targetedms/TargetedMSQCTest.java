@@ -148,18 +148,18 @@ public class TargetedMSQCTest extends TargetedMSTest
         }
         qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LINEAR);
 
-        // test that plot0 changes based on chart type
-        for (QCPlotsWebPart.ChartType type : QCPlotsWebPart.ChartType.values())
+        // test that plot0 changes based on metric type
+        for (QCPlotsWebPart.MetricType type : QCPlotsWebPart.MetricType.values())
         {
-            if (type != qcPlotsWebPart.getCurrentChartType())
+            if (type != qcPlotsWebPart.getCurrentMetricType())
             {
                 initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
-                qcPlotsWebPart.setChartType(type, type.hasData());
+                qcPlotsWebPart.setMetricType(type, type.hasData());
                 if (type.hasData())
                     assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
 
-                // back to default chart type for baseline comparison of svg plot change
-                qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.RETENTION, true, type.hasData());
+                // back to default metric type for baseline comparison of svg plot change
+                qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.RETENTION, true, type.hasData());
             }
         }
     }
@@ -173,7 +173,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // change all of the plot input fields and filter to a single date
         String testDateStr = "2013-08-20";
-        qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.PEAK);
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.PEAK);
         qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LOG);
         qcPlotsWebPart.setGroupXAxisValuesByDate(true);
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
@@ -185,7 +185,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         refresh();
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, true);
-        assertEquals("Chart Type not round tripped as expected", QCPlotsWebPart.ChartType.PEAK, qcPlotsWebPart.getCurrentChartType());
+        assertEquals("Metric Type not round tripped as expected", QCPlotsWebPart.MetricType.PEAK, qcPlotsWebPart.getCurrentMetricType());
         assertEquals("Y-Axis Scale not round tripped as expected", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());
         assertTrue("Group X-Axis not round tripped as expected", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertTrue("Show All Peptides not round tripped as expected", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
@@ -199,7 +199,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         impersonate(USER);
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, false);
-        assertEquals("Chart Type not set to default value", QCPlotsWebPart.ChartType.FWB, qcPlotsWebPart.getCurrentChartType());
+        assertEquals("Metric Type not set to default value", QCPlotsWebPart.MetricType.FWB, qcPlotsWebPart.getCurrentMetricType());
         assertEquals("Y-Axis Scale not set to default value", QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
         assertFalse("Group X-Axis not set to default value", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertFalse("Show All Peptides not set to default value", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
@@ -214,7 +214,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
 
         // if metric has negative values and we pick log y-axis scale, we should revert to linear scale and show message
-        qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.MASSACCURACTY);
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.MASSACCURACTY);
         qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LOG);
         assertEquals("Unexpected number of plots with invalid log scale.", 3, qcPlotsWebPart.getLogScaleInvalidCount());
         assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleWarningCount());
@@ -225,7 +225,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, false);
         assertEquals("Y-axis Scale selection wasn't persisted", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());
-        qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.PEAK);
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.PEAK);
         assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleInvalidCount());
         assertEquals("Unexpected number of plots with invalid log scale.", 1, qcPlotsWebPart.getLogScaleWarningCount());
         removeAllGuideSets();
@@ -241,7 +241,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
-        qcPlotsWebPart.setChartType(QCPlotsWebPart.ChartType.TPAREAS);
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.TPAREAS);
 
         // check that there are two series per plot by doing a point count by color
         int count = qcPlotsWebPart.getPointElements("fill", yLeftColor, false).size();

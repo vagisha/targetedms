@@ -205,7 +205,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         {
             // generate a UNION SQL query for the relevant metrics to get the summary info for the last N sample files
             var sql = "", sep = "";
-            Ext4.each(this.qcPlotPanel.chartTypePropArr, function (metricType)
+            Ext4.each(this.qcPlotPanel.metricPropArr, function (metricType)
             {
                 var id = metricType.id,
                     name = metricType.name,

@@ -181,7 +181,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         verifyTicksOnPlots(paretoPlotsWebPart, 3);
         verifyDownloadableParetoPlotPdf();
-        verifyNavigationToPanoramaDashboard(3, 0, QCPlotsWebPart.ChartType.PEAK, true);
+        verifyNavigationToPanoramaDashboard(3, 0, QCPlotsWebPart.MetricType.PEAK, true);
     }
 
     @Test
@@ -216,7 +216,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         verifyTicksOnPlots(paretoPlotsWebPart, 1);
 
         clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-1-exportToPDFbutton > a"));
-        verifyNavigationToPanoramaDashboard(1, 0, QCPlotsWebPart.ChartType.FWHM, false);
+        verifyNavigationToPanoramaDashboard(1, 0, QCPlotsWebPart.MetricType.FWHM, false);
     }
 
     private void verifyGuideSetRelatedElementsForPlots(QCPlotsWebPart qcPlotsWebPart, int visibleTrainingRanges, List<Pair<String, Integer>> shapeCounts, int axisTickCount)
@@ -427,8 +427,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         List<String> ticks = paretoPlotsWebPart.getTicks(guideSetNum);
 
-        for(String chartType : ticks)
-            assertTrue("Chart Type tick '" + chartType + "' is not valid", paretoPlotsWebPart.isChartTypeTickValid(chartType));
+        for(String metricType : ticks)
+            assertTrue("Metric Type tick '" + metricType + "' is not valid", paretoPlotsWebPart.isMetricTypeTickValid(metricType));
     }
 
     private void verifyDownloadableParetoPlotPdf()
@@ -437,7 +437,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-3-exportToPDFbutton > a"));
     }
 
-    private void verifyNavigationToPanoramaDashboard(int guideSetNum, int barPlotNum, QCPlotsWebPart.ChartType chartType, Boolean checkEndDate)
+    private void verifyNavigationToPanoramaDashboard(int guideSetNum, int barPlotNum, QCPlotsWebPart.MetricType metricType, Boolean checkEndDate)
     {
         //click on 1st bar
         clickAndWait(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + "-" + barPlotNum + " > a:nth-child(1) > rect"));
@@ -448,8 +448,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
 
-        //test for correct chart type
-        assertEquals(chartType, qcPlotsWebPart.getCurrentChartType());
+        //test for correct metric type
+        assertEquals(metricType, qcPlotsWebPart.getCurrentMetricType());
 
         //compare url Start Date with input form Start Date
         assertEquals("startDate in the URL does not equal 'Start Date' on the page", parseUrlDate(getUrlParam("startDate", true)), parseFormDate(qcPlotsWebPart.getCurrentStartDate()));

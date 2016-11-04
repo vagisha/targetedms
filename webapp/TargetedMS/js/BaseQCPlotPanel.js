@@ -8,7 +8,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     extend: 'Ext.panel.Panel',
 
     // properties used for the various data queries based on chart metric type
-    chartTypePropArr: [],
+    metricPropArr: [],
 
     metricGuideSetSql : function(schema1Name, query1Name, schema2Name, query2Name)
     {
@@ -99,7 +99,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCMetricConfigurations.api'),
             method: 'GET',
             success: function(response) {
-                this.chartTypePropArr = Ext4.JSON.decode(response.responseText).configurations;
+                this.metricPropArr = Ext4.JSON.decode(response.responseText).configurations;
                 successCallback.call(callbackScope);
             },
             failure: LABKEY.Utils.getCallbackWrapper(function(response) {

@@ -37,7 +37,7 @@ import static org.labkey.test.components.ext4.Window.Window;
 
 public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 {
-    public static final String DEFAULT_TITLE = "Levey-Jennings QC Plots";
+    public static final String DEFAULT_TITLE = "QC Plots";
 
     public QCPlotsWebPart(WebDriver driver)
     {
@@ -162,7 +162,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return getWrapper().getFormElement(elementCache().endDate);
     }
 
-    public enum ChartType
+    public enum MetricType
     {
         RETENTION("Retention Time", true),
         PEAK("Peak Area", true),
@@ -176,7 +176,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         private String _text;
         private boolean _hasData;
 
-        ChartType(String text, boolean hasData)
+        MetricType(String text, boolean hasData)
         {
             _text = text;
             _hasData = hasData;
@@ -192,33 +192,33 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
             return _hasData;
         }
 
-        public static ChartType getEnum(String value)
+        public static MetricType getEnum(String value)
         {
-            for(ChartType v : values())
+            for(MetricType v : values())
                 if(v.toString().equalsIgnoreCase(value))
                     return v;
             throw new IllegalArgumentException();
         }
     }
 
-    public void setChartType(ChartType chartType)
+    public void setMetricType(MetricType metricType)
     {
-        setChartType(chartType, true, true);
+        setMetricType(metricType, true, true);
     }
 
-    public void setChartType(ChartType chartType, boolean hasData)
+    public void setMetricType(MetricType metricType, boolean hasData)
     {
-        setChartType(chartType, hasData, true);
+        setMetricType(metricType, hasData, true);
     }
 
     @LogMethod
-    public void setChartType(ChartType chartType, boolean hasData, boolean hasExistingPlot)
+    public void setMetricType(MetricType metricType, boolean hasData, boolean hasExistingPlot)
     {
         WebElement plot = null;
         if (hasExistingPlot)
             plot = elementCache().findPlots().get(0);
 
-        getWrapper()._ext4Helper.selectComboBoxItem(elementCache().chartTypeCombo, chartType.toString());
+        getWrapper()._ext4Helper.selectComboBoxItem(elementCache().metricTypeCombo, metricType.toString());
 
         if (hasExistingPlot)
             getWrapper().shortWait().until(ExpectedConditions.stalenessOf(plot));
@@ -229,10 +229,10 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
             waitForNoRecords();
     }
 
-    public ChartType getCurrentChartType()
+    public MetricType getCurrentMetricType()
     {
-        WebElement typeInput = elementCache().chartTypeCombo.append("//input").waitForElement(this, 1000);
-        return ChartType.getEnum(typeInput.getAttribute("value"));
+        WebElement typeInput = elementCache().metricTypeCombo.append("//input").waitForElement(this, 1000);
+        return MetricType.getEnum(typeInput.getAttribute("value"));
     }
 
     public void setGroupXAxisValuesByDate(boolean check)
@@ -338,8 +338,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
     public void resetInitialQCPlotFields()
     {
         // revert to the initial form values if any of them have changed
-        if (getCurrentChartType() != QCPlotsWebPart.ChartType.RETENTION)
-            setChartType(QCPlotsWebPart.ChartType.RETENTION);
+        if (getCurrentMetricType() != MetricType.RETENTION)
+            setMetricType(MetricType.RETENTION);
         if (getCurrentDateRangeOffset() != DateRangeOffset.ALL)
             setDateRangeOffset(DateRangeOffset.ALL);
         if (getCurrentScale() != QCPlotsWebPart.Scale.LINEAR)
@@ -479,7 +479,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         WebElement endDate = new LazyWebElement(Locator.css("#end-date-field input"), this);
         Locator.XPathLocator scaleCombo = Locator.id("scale-combo-box");
         Locator.XPathLocator dateRangeCombo = Locator.id("daterange-combo-box");
-        Locator.XPathLocator chartTypeCombo = Locator.id("chart-type-field");
+        Locator.XPathLocator metricTypeCombo = Locator.id("metric-type-field");
         Checkbox groupedXCheckbox = new Checkbox(new LazyWebElement(Locator.css("#grouped-x-field input"), this));
         Checkbox singlePlotCheckbox = new Checkbox(new LazyWebElement(Locator.css("#peptides-single-plot input"), this));
 

@@ -459,10 +459,13 @@ webapp/TargetedMS/images/spectrum.gif -text
 webapp/TargetedMS/jquery/jquery-1.8.3.min.js -text
 webapp/TargetedMS/js/BaseQCPlotPanel.js -text
 webapp/TargetedMS/js/ClustergrammerDialog.js -text
-webapp/TargetedMS/js/LeveyJenningsTrendPlotPanel.js -text
+webapp/TargetedMS/js/LeveyJenningsPlotHelper.js -text
 webapp/TargetedMS/js/LinkVersionsDialog.js -text
 webapp/TargetedMS/js/ParetoPlotPanel.js -text
+webapp/TargetedMS/js/QCPlotHelperBase.js -text
+webapp/TargetedMS/js/QCPlotHelperWrapper.js -text
 webapp/TargetedMS/js/QCSummaryPanel.js -text
+webapp/TargetedMS/js/QCTrendPlotPanel.js -text
 webapp/TargetedMS/js/dropDownUtil.js -text
 webapp/TargetedMS/lorikeet_0.3/css/lorikeet.css -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_lorikeet.png -text

@@ -58,7 +58,7 @@
                 success: function(data) {
                     if (data.rows.length == 0)
                     {
-                        Ext4.get(tiledPlotPanelId).update("Guide Sets not found. Please create a Guide Set using <a href=" + LABKEY.ActionURL.buildURL('project', 'begin', null, null) + ">Levey-Jennings QC Plots</a>" + ".");
+                        Ext4.get(tiledPlotPanelId).update("Guide Sets not found. Please create a Guide Set using <a href=" + LABKEY.ActionURL.buildURL('project', 'begin', null, null) + ">QC Plots</a>" + ".");
                     }
                     else
                     {

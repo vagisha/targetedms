@@ -256,7 +256,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             {
                 JspView result = new JspView("/org/labkey/targetedms/view/leveyJenningsReport.jsp");
                 result.addClientDependency(ClientDependency.fromPath("Ext4"));
-                result.setTitle("Levey-Jennings QC Plots");
+                result.setTitle("QC Plots");
                 result.setFrame(WebPartView.FrameType.PORTAL);
                 return result;
             }

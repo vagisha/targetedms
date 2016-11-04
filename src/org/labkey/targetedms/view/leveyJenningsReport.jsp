@@ -32,8 +32,11 @@
         dependencies.add("Ext4");
         dependencies.add("vis/vis");
         dependencies.add("targetedms/css/LeveyJenningsReport.css");
+        dependencies.add("targetedms/js/QCPlotHelperBase.js");
+        dependencies.add("targetedms/js/LeveyJenningsPlotHelper.js");
+        dependencies.add("targetedms/js/QCPlotHelperWrapper.js");
         dependencies.add("targetedms/js/BaseQCPlotPanel.js");
-        dependencies.add("targetedms/js/LeveyJenningsTrendPlotPanel.js");
+        dependencies.add("targetedms/js/QCTrendPlotPanel.js");
     }
 %>
 <%!
@@ -78,7 +81,7 @@
         function initializeReportPanels(data, reportPanelId, plotPanelId, countLimitedPanelId)
         {
             // initialize the panel that displays the Levey-Jennings plot for trend plotting
-            Ext4.create('LABKEY.targetedms.LeveyJenningsTrendPlotPanel', {
+            Ext4.create('LABKEY.targetedms.QCTrendPlotPanel', {
                 renderTo: reportPanelId,
                 plotDivId: plotPanelId,
                 countLimitedDivId: countLimitedPanelId,
