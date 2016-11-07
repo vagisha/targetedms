@@ -734,7 +734,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             }
         }
 
-        this.getGuideSetData();
+        this.prepareAndRenderQCPlot();
     },
 
     getExportSVGStr: function(btn)
@@ -1067,64 +1067,6 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return config;
     },
 
-    setSeriesMinMax: function(dataObject, row) {
-        // track the min and max data so we can get the range for including the QC annotations
-        var val = row['value'];
-        if (LABKEY.vis.isValid(val))
-        {
-            if (dataObject.min == null || val < dataObject.min) {
-                dataObject.min = val;
-            }
-            if (dataObject.max == null || val > dataObject.max) {
-                dataObject.max = val;
-            }
-
-            if (this.yAxisScale == 'log' && val <= 0)
-            {
-                dataObject.showLogInvalid = true;
-            }
-
-            var mean = row['mean'];
-            var sd = LABKEY.vis.isValid(row['stdDev']) ? row['stdDev'] : 0;
-            if (LABKEY.vis.isValid(mean))
-            {
-                var minSd = (mean - (3 * sd));
-                if (dataObject.showLogInvalid == undefined && this.yAxisScale == 'log' && minSd <= 0)
-                {
-                    // Avoid setting our scale to be negative based on the three standard deviations to avoid messing up log plots
-                    dataObject.showLogWarning = true;
-                    for (var i = 2; i >= 0; i--)
-                    {
-                        minSd = (mean - (i * sd));
-                        if (minSd > 0) {
-                            break;
-                        }
-                    }
-                }
-                if (dataObject.min == null || minSd < dataObject.min) {
-                    dataObject.min = minSd;
-                }
-
-                if (dataObject.max == null || (mean + (3 * sd)) > dataObject.max) {
-                    dataObject.max = (mean + (3 * sd));
-                }
-            }
-        }
-        else if (this.isMultiSeries())
-        {
-            // check if either of the y-axis metric values are invalid for a log scale
-            var val1 = row['value_series1'],
-                val2 = row['value_series2'];
-            if (dataObject.showLogInvalid == undefined && this.yAxisScale == 'log')
-            {
-                if ((LABKEY.vis.isValid(val1) && val1 <= 0) || (LABKEY.vis.isValid(val2) && val2 <= 0))
-                {
-                    dataObject.showLogInvalid = true;
-                }
-            }
-        }
-    },
-
     applyGraphFilterBtnClick: function() {
         var startDateRawValue = this.getStartDateField().getRawValue(),
             startDateValue = this.getStartDateField().getValue(),
@@ -1215,5 +1157,57 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             },
             scope: this
         })
+    },
+
+    persistSelectedFormOptions : function()
+    {
+        if (this.havePlotOptionsChanged)
+        {
+            this.havePlotOptionsChanged = false;
+            LABKEY.Ajax.request({
+                url: LABKEY.ActionURL.buildURL('targetedms', 'leveyJenningsPlotOptions.api'),
+                params: this.getSelectedPlotFormOptions()
+            });
+        }
+    },
+
+    getSelectedPlotFormOptions : function()
+    {
+        var props = {
+            chartType: this.metric,
+            yAxisScale: this.yAxisScale,
+            groupedX: this.groupedX,
+            singlePlot: this.singlePlot,
+            dateRangeOffset: this.dateRangeOffset
+        };
+
+        // set start and end date to null unless we are
+        props.startDate = this.dateRangeOffset == -1 ? this.formatDate(this.startDate) : null;
+        props.endDate = this.dateRangeOffset == -1 ? this.formatDate(this.endDate) : null;
+
+        return props;
+    },
+
+    getMaxStackedAnnotations : function() {
+        if (this.annotationData.length > 0) {
+            return Math.max.apply(Math, (Ext4.Array.pluck(this.annotationData, "yStepIndex"))) + 1;
+        }
+        return 0;
+    },
+
+    isMultiSeries : function()
+    {
+        if (Ext4.isNumber(this.metric))
+        {
+            var metricProps = this.getMetricPropsById(this.metric);
+            return Ext4.isDefined(metricProps.series2SchemaName) && Ext4.isDefined(metricProps.series2QueryName);
+        }
+        return false;
+    },
+
+    getColorRange: function()
+    {
+        return LABKEY.vis.Scale.ColorDiscrete().concat(LABKEY.vis.Scale.DarkColorDiscrete());
     }
+
 });

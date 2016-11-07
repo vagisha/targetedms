@@ -34,6 +34,8 @@
         dependencies.add("targetedms/css/LeveyJenningsReport.css");
         dependencies.add("targetedms/js/QCPlotHelperBase.js");
         dependencies.add("targetedms/js/LeveyJenningsPlotHelper.js");
+        dependencies.add("targetedms/js/CUSUMPlotHelper.js");
+        dependencies.add("targetedms/js/MovingRangePlotHelper.js");
         dependencies.add("targetedms/js/QCPlotHelperWrapper.js");
         dependencies.add("targetedms/js/BaseQCPlotPanel.js");
         dependencies.add("targetedms/js/QCTrendPlotPanel.js");
