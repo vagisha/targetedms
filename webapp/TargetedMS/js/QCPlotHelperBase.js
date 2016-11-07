@@ -288,7 +288,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
     getSelectedPlotFormOptions : function()
     {
         var props = {
-            chartType: this.metric,
+            metric: this.metric,
             yAxisScale: this.yAxisScale,
             groupedX: this.groupedX,
             singlePlot: this.singlePlot,

@@ -242,7 +242,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             }
             else
             {
-                paramValues['chartType'] = metric;
+                paramValues['metric'] = metric;
             }
         }
 
@@ -1055,7 +1055,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     },
 
     getReportConfig: function() {
-        var config = { chartType: this.metric };
+        var config = { metric: this.metric };
 
         if (this.startDate) {
             config['StartDate'] = this.formatDate(this.startDate);
