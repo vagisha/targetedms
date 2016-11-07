@@ -16,19 +16,20 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
       return true;
     },
 
+    //TODO disable new plots for now
     showMovingRangePlot: function()
     {
-      return true;
+      return false;
     },
 
     showMeanCUSUMPlot: function()
     {
-        return true;
+        return false;
     },
 
     showVariableCUSUMPlot: function()
     {
-        return true;
+        return false;
     },
 
     addIndividualPrecursorPlots : function()
