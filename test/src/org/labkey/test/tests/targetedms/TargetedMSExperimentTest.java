@@ -142,16 +142,16 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //waitForText("1 - 13 of 13");
         assertTextPresentInThisOrder("Targeted MS Modification Search", "Targeted MS Peptides");
         assertTextPresent("Amino acids:", "Delta mass:");
-        assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
+        assertEquals(13, Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]").findElements(getDriver()).size());
+        assertEquals(0, Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]").findElements(getDriver()).size());
 
         // search for K[+8] modification
         setFormElement(Locator.name("aminoAcids"), "k R, N"); // should be split into just chars
         setFormElement(Locator.name("deltaMass"), "8.01"); // should be rounded to a whole number
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
-        assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
+        assertEquals(0, Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]").findElements(getDriver()).size());
+        assertEquals(31, Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]").findElements(getDriver()).size());
 
         // test custom name search type
         _ext4Helper.selectRadioButton("Search by:", "Modification name");
@@ -163,13 +163,13 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         _ext4Helper.selectComboBoxItem("Custom name:", "Label:13C(6)15N(4) (C-term R)");
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 13 of 13");
-        assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
+        assertEquals(13, Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]").findElements(getDriver()).size());
+        assertEquals(0, Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]").findElements(getDriver()).size());
         setFormElement(Locator.name("customName"), "Label:13C(6)15N(2) (C-term K)"); // test timing fix, instead of using _ext4Helper.selectComboBoxItem again
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
-        assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
+        assertEquals(0, Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]").findElements(getDriver()).size());
+        assertEquals(31, Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]").findElements(getDriver()).size());
 
         // test unimod name search type
         _ext4Helper.selectRadioButton("Type:", "All Unimod modifications");
@@ -180,8 +180,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         _ext4Helper.selectComboBoxItem(Ext4Helper.Locators.formItemWithLabelContaining("Unimod name:"), "Label:13C(6)15N(4) (C-term R)");
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 13 of 13");
-        assertEquals(13, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
+        assertEquals(13, Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]").findElements(getDriver()).size());
+        assertEquals(0, Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]").findElements(getDriver()).size());
 
         // test C-term search using special character (i.e. ] )
         _ext4Helper.selectRadioButton("Search by:", "Delta mass");
@@ -189,8 +189,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         setFormElement(Locator.name("deltaMass"), "8");
         waitAndClickAndWait(Ext4Helper.Locators.ext4Button("Search"));
         //waitForText("1 - 31 of 31");
-        assertEquals(0, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]")));
-        assertEquals(31, getElementCount( Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]")));
+        assertEquals(0, Locator.xpath("//td//a/span[contains(@title, 'R[+10.0]')]").findElements(getDriver()).size());
+        assertEquals(31, Locator.xpath("//td//a/span[contains(@title, 'K[+8.0]')]").findElements(getDriver()).size());
     }
 
     @LogMethod
@@ -233,7 +233,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         // There are many regions within one transitions_view region -- all with the same region name.
         // Lookup the elements manually and point to a specific region to examine.
         WebElement table = DataRegionTable.Locators.dataRegion().findElements(this.getDriver()).get(1);
-        DataRegionTable drt = new DataRegionTable(this, table);
+        DataRegionTable drt = new DataRegionTable(table, getDriver());
         assertEquals("heavy", drt.getDataAsText(5, "Label"));
         assertEquals("1353.7491", drt.getDataAsText(5, "Precursor Neutral Mass"));
         assertEquals("677.8818", drt.getDataAsText(5, "Q1 m/z"));
@@ -264,8 +264,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("PC"));
 
         //Go to SmallMolecules data region
-        WebElement table = DataRegionTable.Locators.dataRegion("SmallMolecules").findElements(this.getDriver()).get(0);
-        DataRegionTable drt = new DataRegionTable(this, table);
+        DataRegionTable drt = new DataRegionTable("SmallMolecules", getDriver());
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
         assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
         assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
@@ -307,8 +306,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
 
         //Look for Small Molecule Precursor List data region
-        table = DataRegionTable.Locators.dataRegion("small_mol_precursors_view").findElements(this.getDriver()).get(1);
-        drt = new DataRegionTable(this, table);
+        drt = DataRegionTable.DataRegion(getDriver()).withName("small_mol_precursors_view").index(1).find();
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
         assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
         assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
@@ -340,8 +338,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.tagContainingText("span", "Small Molecule Transition List"));
         waitForText("Small Molecule Transition List");
 
-        table = DataRegionTable.Locators.dataRegion("small_mol_transitions_view").findElements(this.getDriver()).get(1);
-        drt = new DataRegionTable(this, table);
+        drt = DataRegionTable.DataRegion(getDriver()).withName("small_mol_precursors_view").index(1).find();
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
         assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
         assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
