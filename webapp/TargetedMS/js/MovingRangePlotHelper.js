@@ -88,5 +88,22 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
             data['MR'] = row['MR'];
         }
         return data;
+    },
+
+    processMRCombinedMinMax: function(combinePlotData, precursorInfo)
+    {
+        if (combinePlotData.minMR == null || combinePlotData.minMR > precursorInfo.minMR)
+        {
+            combinePlotData.minMR = precursorInfo.minMR;
+        }
+        if (combinePlotData.maxMR == null || combinePlotData.maxMR < precursorInfo.maxMR)
+        {
+            combinePlotData.maxMR = precursorInfo.maxMR;
+        }
+    },
+
+    getMRCombinedPlotLegendSeries: function()
+    {
+        return ['MR_series1', 'MR_series2'];
     }
 });

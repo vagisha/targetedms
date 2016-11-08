@@ -1,7 +1,7 @@
 Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
     extend: 'LABKEY.targetedms.QCPlotHelperBase',
     setCUSUMSeriesMinMax: function(dataObject, row, isCUSUMmean) {
-        dataObject.showLogInvalid = true; //CUSUM- is always negative
+        dataObject.showLogInvalid = true; //TODO force linear for CUSUM
 
         // track the min and max data so we can get the range for including the QC annotations
         var negative = 'CUSUMmN', positive = 'CUSUMmP';
@@ -133,6 +133,46 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
             }
         }
         return data;
+    },
+
+    processCUSUMCombinedMinMax: function(combinePlotData, precursorInfo, isMeanCUSUM)
+    {
+        var negative = 'CUSUMmN', positive = 'CUSUMmP';
+        if (!isMeanCUSUM)
+        {
+            negative = 'CUSUMvN'; positive = 'CUSUMvP';
+        }
+        var maxNegative = 'max' + negative, maxPositive = 'max' + positive, minNegative = 'min' + negative, minPositive = 'min' + positive;
+        var valNegativeMin = precursorInfo[minNegative], valPositiveMin = precursorInfo[minPositive];
+        var varNegativeMax = precursorInfo[maxNegative], valPositiveMax = precursorInfo[maxPositive];
+        if (combinePlotData[minNegative] == null || valNegativeMin < combinePlotData[minNegative])
+        {
+            combinePlotData[minNegative] = valNegativeMin;
+        }
+        if (combinePlotData[maxNegative] == null || varNegativeMax > combinePlotData[maxNegative])
+        {
+            combinePlotData[maxNegative] = varNegativeMax;
+        }
+
+        if (combinePlotData[minPositive] == null || valPositiveMin < combinePlotData[minPositive])
+        {
+            combinePlotData[minPositive] = valPositiveMin;
+        }
+        if (combinePlotData[maxPositive] == null || valPositiveMax > combinePlotData[maxPositive])
+        {
+            combinePlotData[maxPositive] = valPositiveMax;
+        }
+
+    },
+
+    getCUSUMCombinedPlotLegendSeries: function(isMeanCUSUM)
+    {
+        //positive or negative will use the same color, special casing done in plot.js
+        //normalizedGroup = group.replace('CUSUMmN', 'CUSUMm').replace('CUSUMmP', 'CUSUMm');
+        //normalizedGroup = group.replace('CUSUMvN', 'CUSUMv').replace('CUSUMvP', 'CUSUMv');
+        if (isMeanCUSUM)
+            return ['CUSUMm_series1', 'CUSUMm_series2'];
+        return ['CUSUMv_series1', 'CUSUMv_series2'];
     }
 
 });

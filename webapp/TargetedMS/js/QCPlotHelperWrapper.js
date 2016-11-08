@@ -27,10 +27,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                 addedPlot = true;
 
                 // add a new panel for each plot so we can add the title to the frame
-                if (this.showLJPlot)
+                if (this.showLJPlot())
                 {
                     this.addEachIndividualPrecusorPlot(i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.LeveyJennings, undefined, me);
-
                 }
                 if (this.showMovingRangePlot())
                 {
@@ -53,6 +52,62 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         return addedPlot;
     },
 
+    addCombinedPeptideSinglePlot : function() {
+        var metricProps = this.getMetricPropsById(this.metric),
+                yAxisCount = this.isMultiSeries() ? 2 : 1, //Will only have a right if there is already a left y-axis
+                groupColors = this.getColorRange(),
+                combinePlotData = this.getCombinedPlotInitData(),
+                lengthOfLongestLegend = 1,
+                showLogInvalid,
+                precursorInfo;
+
+        //Add series1 separator to Legend sections
+        if (this.isMultiSeries()) {
+            if (metricProps.series1Label.length > lengthOfLongestLegend)
+                lengthOfLongestLegend = metricProps.series1Label.length;
+        }
+
+        // traverse the precursor list for: calculating the longest legend string and combine the plot data
+        for (var i = 0; i < this.precursors.length; i++)
+        {
+            precursorInfo = this.fragmentPlotData[this.precursors[i]];
+
+            if (precursorInfo.fragment.length > lengthOfLongestLegend) {
+                lengthOfLongestLegend = precursorInfo.fragment.length;
+            }
+
+            // for combined plot, concat all data together into a single array and track min/max for all
+            combinePlotData.data = combinePlotData.data.concat(precursorInfo.data);
+            this.processCombinedPlotMinMax(combinePlotData, precursorInfo);
+
+            showLogInvalid = showLogInvalid || precursorInfo.showLogInvalid;
+        }
+
+        if (this.isMultiSeries()) {
+            if (metricProps.series2Label.length > lengthOfLongestLegend)
+                lengthOfLongestLegend = metricProps.series2Label.length;
+        }
+
+        if (this.showLJPlot())
+        {
+            this.addEachCombinedPrecusorPlot(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
+        }
+        if (this.showMovingRangePlot())
+        {
+            this.addEachCombinedPrecusorPlot(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.MovingRange);
+        }
+        if (this.showMeanCUSUMPlot())
+        {
+            this.addEachCombinedPrecusorPlot(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.CUSUM, true);
+        }
+        if (this.showVariableCUSUMPlot())
+        {
+            this.addEachCombinedPrecusorPlot(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
+        }
+
+        return true;
+    },
+
     setSeriesMinMax: function(dataObject, row) {
         // track the min and max data so we can get the range for including the QC annotations
         if (this.showLJPlot)
@@ -67,23 +122,12 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
 
     getPlotTypeProperties: function(precursorInfo, plotType, isMean)
     {
-        var plotProperties = {};
-        // some properties are specific to whether or not we are showing multiple y-axis series
-        if (this.isMultiSeries())
-        {
-            plotProperties['disableRangeDisplay'] = true;
-        }
-        else
-        {
-            plotProperties['disableRangeDisplay'] = !this.hasGuideSetData;
-        }
-
         if (plotType == LABKEY.vis.TrendingLinePlotType.MovingRange)
-            return Ext4.apply(plotProperties, this.getMovingRangePlotTypeProperties(precursorInfo));
+            return this.getMovingRangePlotTypeProperties(precursorInfo);
         else if (plotType == LABKEY.vis.TrendingLinePlotType.CUSUM)
-            return Ext4.apply(plotProperties, this.getCUSUMPlotTypeProperties(precursorInfo, isMean));
+            return this.getCUSUMPlotTypeProperties(precursorInfo, isMean);
         else
-            return Ext4.apply(plotProperties, this.getLJPlotTypeProperties(precursorInfo));
+            return this.getLJPlotTypeProperties(precursorInfo);
     },
 
     getInitFragmentPlotData: function(fragment, dataType)
@@ -94,23 +138,31 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             data: []
         };
 
+        Ext4.apply(fragmentData, this.getInitPlotMinMaxData());
+
+        return fragmentData;
+    },
+
+    getInitPlotMinMaxData: function()
+    {
+        var plotData = {};
         if (this.showLJPlot())
         {
-            Ext4.apply(fragmentData, this.getLJInitFragmentPlotData());
+            Ext4.apply(plotData, this.getLJInitFragmentPlotData());
         }
         if (this.showMovingRangePlot())
         {
-            Ext4.apply(fragmentData, this.getMRInitFragmentPlotData());
+            Ext4.apply(plotData, this.getMRInitFragmentPlotData());
         }
         if (this.showMeanCUSUMPlot())
         {
-            Ext4.apply(fragmentData, this.getCUSUMInitFragmentPlotData(true));
+            Ext4.apply(plotData, this.getCUSUMInitFragmentPlotData(true));
         }
         if (this.showVariableCUSUMPlot())
         {
-            Ext4.apply(fragmentData, this.getCUSUMInitFragmentPlotData(false));
+            Ext4.apply(plotData, this.getCUSUMInitFragmentPlotData(false));
         }
-        return fragmentData;
+        return plotData;
     },
 
     processPlotDataRow: function(row, fragment, seriesType, metricProps)
@@ -165,5 +217,43 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         }
 
         return data;
+    },
+
+    getCombinedPlotInitData: function()
+    {
+        var combinePlotData = {data: []};
+        Ext4.apply(combinePlotData, this.getInitPlotMinMaxData());
+        return combinePlotData
+    },
+
+    processCombinedPlotMinMax: function(combinePlotData, precursorInfo)
+    {
+        if (this.showLJPlot())
+        {
+            this.processLJCombinedMinMax(combinePlotData, precursorInfo);
+        }
+        if (this.showMovingRangePlot())
+        {
+            this.processMRCombinedMinMax(combinePlotData, precursorInfo);
+        }
+        if (this.showMeanCUSUMPlot())
+        {
+            this.processCUSUMCombinedMinMax(combinePlotData, precursorInfo, true);
+        }
+        if (this.showVariableCUSUMPlot())
+        {
+            this.processCUSUMCombinedMinMax(combinePlotData, precursorInfo, false);
+        }
+    },
+
+    getCombinedPlotLegendSeries: function(plotType, isCUSUMMean)
+    {
+        if (plotType == LABKEY.vis.TrendingLinePlotType.MovingRange)
+            return this.getMRCombinedPlotLegendSeries();
+        else if (plotType == LABKEY.vis.TrendingLinePlotType.CUSUM)
+            return this.getCUSUMCombinedPlotLegendSeries(isCUSUMMean);
+        else
+            return this.getLJCombinedPlotLegendSeries();
     }
+
 });

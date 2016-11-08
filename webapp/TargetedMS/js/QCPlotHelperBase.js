@@ -354,13 +354,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         };
     },
 
-    addCombinedPeptideSinglePlot : function() {
-        var metricProps = this.getMetricPropsById(this.metric),
-                yAxisCount = this.isMultiSeries() ? 2 : 1, //Will only have a right if there is already a left y-axis
-                groupColors = this.getColorRange(),
-                newLegendData = Ext4.Array.clone(this.legendData),
-                combinePlotData = {min: null, max: null, data: []},
-                lengthOfLongestLegend = 1,
+    getCombinedPlotLegendData: function(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean)
+    {
+        var newLegendData = Ext4.Array.clone(this.legendData),
                 proteomicsLegend = [{ //Temp holder for proteomics legend labels
                     text: 'Peptides',
                     separator: true
@@ -369,14 +365,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     text: 'Ions',
                     separator: true
                 }],
-                showLogInvalid,
                 precursorInfo;
 
         //Add series1 separator to Legend sections
         if (this.isMultiSeries()) {
-            if (metricProps.series1Label.length > lengthOfLongestLegend)
-                lengthOfLongestLegend = metricProps.series1Label.length;
-
             proteomicsLegend.push({
                 text: metricProps.series1Label,
                 separator: true
@@ -388,30 +380,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             });
         }
 
+        var legendSeries = this.getCombinedPlotLegendSeries(plotType, isCUSUMMean);
         // traverse the precursor list for: calculating the longest legend string and combine the plot data
         for (var i = 0; i < this.precursors.length; i++)
         {
             precursorInfo = this.fragmentPlotData[this.precursors[i]];
 
-            if (precursorInfo.fragment.length > lengthOfLongestLegend) {
-                lengthOfLongestLegend = precursorInfo.fragment.length;
-            }
-
-            // for combined plot, concat all data together into a single array and track min/max for all
-            combinePlotData.data = combinePlotData.data.concat(precursorInfo.data);
-            if (combinePlotData.min == null || combinePlotData.min > precursorInfo.min) {
-                combinePlotData.min = precursorInfo.min;
-            }
-            if (combinePlotData.max == null || combinePlotData.max < precursorInfo.max) {
-                combinePlotData.max = precursorInfo.max;
-            }
-
-            showLogInvalid = showLogInvalid || precursorInfo.showLogInvalid;
-
             var appropriateLegend = precursorInfo.dataType == 'Peptide' ?  proteomicsLegend : ionLegend;
 
             appropriateLegend.push({
-                name: precursorInfo.fragment + (this.isMultiSeries() ? '|value_series1' : ''),
+                name: precursorInfo.fragment + (this.isMultiSeries() ? '|' + legendSeries[0] : ''),
                 text: precursorInfo.fragment,
                 color: groupColors[i % groupColors.length]
             });
@@ -419,10 +397,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         // add the fragment name for each group to the legend again for the series2 axis metric series
         if (this.isMultiSeries()) {
-            if (metricProps.series2Label.length > lengthOfLongestLegend)
-                lengthOfLongestLegend = metricProps.series2Label.length;
-
-
             proteomicsLegend.push({
                 text: metricProps.series2Label,
                 separator: true
@@ -439,7 +413,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
                 precursorInfo = this.fragmentPlotData[this.precursors[i]];
                 appropriateLegend.push({
-                    name: precursorInfo.fragment + '|value_series2',
+                    name: precursorInfo.fragment + '|' + legendSeries[1],
                     text: precursorInfo.fragment,
                     color: groupColors[(this.precursors.length + i) % groupColors.length]
                 });
@@ -454,8 +428,13 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         if (ionLegend.length > yAxisCount + 1) {
             newLegendData = newLegendData.concat(ionLegend);
         }
+        return newLegendData;
+    },
 
-        var id = 'combinedPlot';
+    addEachCombinedPrecusorPlot: function(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, plotType, isCUSUMMean)
+    {
+        var plotLegendData = this.getCombinedPlotLegendData(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean);
+        var id = 'combinedPlot' + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v');
         this.addPlotWebPartToPlotDiv(id, 'All Series', this.plotDivId, 'qc-plot-wp');
         this.showInvalidLogMsg(id, showLogInvalid);
 
@@ -472,21 +451,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             pointClickFn: this.plotPointClick,
             position: this.groupedX ? 'jitter' : undefined
         };
-        // some properties are specific to whether or not we are showing multiple y-axis series
-        if (this.isMultiSeries())
-        {
-            ljProperties['value'] = 'value_series1';
-            ljProperties['valueRight'] = 'value_series2';
-        }
-        else
-        {
-            ljProperties['value'] = 'value';
-            ljProperties['mean'] = 'mean';
-            ljProperties['stdDev'] = 'stdDev';
-            ljProperties['yAxisDomain'] = [combinePlotData.min, combinePlotData.max];
-        }
 
-        var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, newLegendData);
+        Ext4.apply(ljProperties, this.getPlotTypeProperties(combinePlotData, plotType, isCUSUMMean));
+
+        var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, plotLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
                 top: 45 + this.getMaxStackedAnnotations() * 12,
@@ -511,22 +479,22 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             properties: ljProperties
         });
 
-        var plot = LABKEY.vis.LeveyJenningsPlot(plotConfig);
+        plotConfig.qcPlotType = plotType;
+        var plot = LABKEY.vis.TrendingLinePlot(plotConfig);
         plot.render();
 
         this.addAnnotationsToPlot(plot, combinePlotData);
 
         this.addGuideSetTrainingRangeToPlot(plot, combinePlotData);
 
-        this.createExportToPDFButton(id, "QC Combined Plot for All Series", "QC Combined Plot");
+        this.createExportToPDFButton(id, "Export combined " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for  All Series", "QC Combined Plot");
 
-        return true;
     },
 
     addEachIndividualPrecusorPlot: function(i, precursorInfo, metricProps, plotType, isCUSUMMean, scope)
     {
 
-        var id = this.plotDivId + "-precursorPlot" + plotType  + (isCUSUMMean ? 'mean' : '') + i;
+        var id = this.plotDivId + "-precursorPlot" + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + i;
         this.addPlotWebPartToPlotDiv(id, this.precursors[i], this.plotDivId, 'qc-plot-wp');
 
         if (precursorInfo.showLogInvalid)
@@ -547,8 +515,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             showTrendLine: true,
             hoverTextFn: this.plotHoverTextDisplay,
             pointClickFn: this.plotPointClick,
-            position: this.groupedX ? 'jitter' : undefined
+            position: this.groupedX ? 'jitter' : undefined,
+            disableRangeDisplay: this.isMultiSeries() || !this.hasGuideSetData
         };
+
         Ext4.apply(ljProperties, this.getPlotTypeProperties(precursorInfo, plotType, isCUSUMMean));
 
         var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, this.legendData);

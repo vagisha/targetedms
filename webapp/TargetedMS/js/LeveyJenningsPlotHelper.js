@@ -73,7 +73,6 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
             plotProperties['mean'] = 'mean';
             plotProperties['stdDev'] = 'stdDev';
             plotProperties['yAxisDomain'] = [precursorInfo.min, precursorInfo.max];
-
         }
         return plotProperties;
     },
@@ -111,6 +110,23 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
         }
         return data;
 
+    },
+
+    processLJCombinedMinMax: function (combinePlotData, precursorInfo)
+    {
+        if (combinePlotData.min == null || combinePlotData.min > precursorInfo.min)
+        {
+            combinePlotData.min = precursorInfo.min;
+        }
+        if (combinePlotData.max == null || combinePlotData.max < precursorInfo.max)
+        {
+            combinePlotData.max = precursorInfo.max;
+        }
+    },
+
+    getLJCombinedPlotLegendSeries: function()
+    {
+        return ['value_series1', 'value_series2'];
     }
 
 });
