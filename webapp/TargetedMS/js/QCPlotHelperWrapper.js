@@ -27,39 +27,22 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                 addedPlot = true;
 
                 // add a new panel for each plot so we can add the title to the frame
-                var id = this.plotDivId + "-precursorPlot" + i;
-                this.addPlotWebPartToPlotDiv(id, this.precursors[i], this.plotDivId, 'qc-plot-wp');
-
-                if (precursorInfo.showLogInvalid)
-                {
-                    this.showInvalidLogMsg(id, true);
-                }
-                else if (precursorInfo.showLogWarning)
-                {
-                    Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below "
-                            + "the mean with negative values have been omitted.</span>");
-                }
-
-                var plotTypeIndex = 0;
                 if (this.showLJPlot)
                 {
-                    this.addEachIndividualPrecusorPlot(id, i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.LeveyJennings, me);
-                    this.createExportPlotToPDFButton(id, "Export Levey-Jennings plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, plotTypeIndex++);
+                    this.addEachIndividualPrecusorPlot(i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.LeveyJennings, undefined, me);
+
                 }
                 if (this.showMovingRangePlot())
                 {
-                    this.addEachIndividualPrecusorPlot(id, i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.MovingRange, me);
-                    this.createExportPlotToPDFButton(id, "Export Moving Range plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, plotTypeIndex++);
+                    this.addEachIndividualPrecusorPlot(i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.MovingRange, undefined, me);
                 }
                 if (this.showMeanCUSUMPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(id, i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, me);
-                    this.createExportPlotToPDFButton(id, "Export Mean CUSUM plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, plotTypeIndex++);
+                    this.addEachIndividualPrecusorPlot(i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, true, me);
                 }
-                if (this.showVariableCUSUMPlot()) //TODO separate out mean and variable
+                if (this.showVariableCUSUMPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(id, i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, me);
-                    this.createExportPlotToPDFButton(id, "Export Variable CUSUM plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, plotTypeIndex++);
+                    this.addEachIndividualPrecusorPlot(i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, false, me);
                 }
 
             }
@@ -80,5 +63,107 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             this.setCUSUMSeriesMinMax(dataObject, row, true);
         if (this.showVariableCUSUMPlot())
             this.setCUSUMSeriesMinMax(dataObject, row, false);
+    },
+
+    getPlotTypeProperties: function(precursorInfo, plotType, isMean)
+    {
+        var plotProperties = {};
+        // some properties are specific to whether or not we are showing multiple y-axis series
+        if (this.isMultiSeries())
+        {
+            plotProperties['disableRangeDisplay'] = true;
+        }
+        else
+        {
+            plotProperties['disableRangeDisplay'] = !this.hasGuideSetData;
+        }
+
+        if (plotType == LABKEY.vis.TrendingLinePlotType.MovingRange)
+            return Ext4.apply(plotProperties, this.getMovingRangePlotTypeProperties(precursorInfo));
+        else if (plotType == LABKEY.vis.TrendingLinePlotType.CUSUM)
+            return Ext4.apply(plotProperties, this.getCUSUMPlotTypeProperties(precursorInfo, isMean));
+        else
+            return Ext4.apply(plotProperties, this.getLJPlotTypeProperties(precursorInfo));
+    },
+
+    getInitFragmentPlotData: function(fragment, dataType)
+    {
+        var fragmentData = {
+            fragment: fragment,
+            dataType: dataType,
+            data: []
+        };
+
+        if (this.showLJPlot())
+        {
+            Ext4.apply(fragmentData, this.getLJInitFragmentPlotData());
+        }
+        if (this.showMovingRangePlot())
+        {
+            Ext4.apply(fragmentData, this.getMRInitFragmentPlotData());
+        }
+        if (this.showMeanCUSUMPlot())
+        {
+            Ext4.apply(fragmentData, this.getCUSUMInitFragmentPlotData(true));
+        }
+        if (this.showVariableCUSUMPlot())
+        {
+            Ext4.apply(fragmentData, this.getCUSUMInitFragmentPlotData(false));
+        }
+        return fragmentData;
+    },
+
+    processPlotDataRow: function(row, fragment, seriesType, metricProps)
+    {
+        var dataType = row['DataType'];
+        if (!this.fragmentPlotData[fragment])
+        {
+            this.fragmentPlotData[fragment] = this.getInitFragmentPlotData(fragment, dataType);
+        }
+
+        var data = {
+            type: 'data',
+            fragment: fragment,
+            PrecursorId: row['PrecursorId'], // keep in data for click handler
+            PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
+            FilePath: row['FilePath'], // keep in data for hover text display
+            fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
+            date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
+            groupedXTick: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
+            dataType: dataType //needed for plot point click handler
+        };
+
+        // if a guideSetId is defined for this row, include the guide set stats values in the data object
+        if (Ext4.isDefined(row['GuideSetId']))
+        {
+            var gs = this.guideSetDataMap[row['GuideSetId']];
+            if (Ext4.isDefined(gs) && gs.Series[fragment])
+            {
+                data['guideSetId'] = row['GuideSetId'];
+                data['inGuideSetTrainingRange'] = row['InGuideSetTrainingRange'];
+                data['groupedXTick'] = data['groupedXTick'] + '|'
+                        + (gs['TrainingStart'] ? gs['TrainingStart'] : '0') + '|'
+                        + (row['InGuideSetTrainingRange'] ? 'include' : 'notinclude');
+            }
+        }
+
+        if (this.showLJPlot())
+        {
+            Ext4.apply(data, this.processLJPlotDataRow(row, fragment, seriesType, metricProps));
+        }
+        if (this.showMovingRangePlot())
+        {
+            Ext4.apply(data, this.processMRPlotDataRow(row, fragment, seriesType, metricProps));
+        }
+        if (this.showMeanCUSUMPlot())
+        {
+            Ext4.apply(data, this.processCUSUMPlotDataRow(row, fragment, seriesType, metricProps, true));
+        }
+        if (this.showVariableCUSUMPlot())
+        {
+            Ext4.apply(data, this.processCUSUMPlotDataRow(row, fragment, seriesType, metricProps, false));
+        }
+
+        return data;
     }
 });

@@ -56,6 +56,61 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
                 }
             }
         }
+    },
+
+    getLJPlotTypeProperties: function(precursorInfo)
+    {
+        var plotProperties = {};
+        // some properties are specific to whether or not we are showing multiple y-axis series
+        if (this.isMultiSeries())
+        {
+            plotProperties['value'] = 'value_series1';
+            plotProperties['valueRight'] = 'value_series2';
+        }
+        else
+        {
+            plotProperties['value'] = 'value';
+            plotProperties['mean'] = 'mean';
+            plotProperties['stdDev'] = 'stdDev';
+            plotProperties['yAxisDomain'] = [precursorInfo.min, precursorInfo.max];
+
+        }
+        return plotProperties;
+    },
+
+    getLJInitFragmentPlotData: function()
+    {
+        return {
+            min: null,
+            max: null
+        }
+    },
+
+    processLJPlotDataRow: function(row, fragment, seriesType, metricProps)
+    {
+        var data = {};
+        // if a guideSetId is defined for this row, include the guide set stats values in the data object
+        if (Ext4.isDefined(row['GuideSetId']))
+        {
+            var gs = this.guideSetDataMap[row['GuideSetId']];
+            if (Ext4.isDefined(gs) && gs.Series[fragment])
+            {
+                data['mean'] = gs.Series[fragment]['Mean'];
+                data['stdDev'] = gs.Series[fragment]['StandardDev'];
+            }
+        }
+
+        if (this.isMultiSeries())
+        {
+            data['value_' + seriesType] = row['MetricValue'];
+            data['value_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
+        }
+        else
+        {
+            data['value'] = row['MetricValue'];
+        }
+        return data;
+
     }
 
 });

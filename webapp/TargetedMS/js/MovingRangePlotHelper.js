@@ -38,6 +38,55 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
                 }
             }
         }
-    }
+    },
+    getMovingRangePlotTypeProperties: function(precursorInfo)
+    {
+        var plotProperties = {};
+        // some properties are specific to whether or not we are showing multiple y-axis series
+        if (this.isMultiSeries())
+        {
+            plotProperties['valueMR'] = 'MR_series1';
+            plotProperties['valueRightMR'] = 'MR_series2';
+        }
+        else
+        {
+            plotProperties['valueMR'] = 'MR';
+            plotProperties['meanMR'] = 'meanMR';
+            var lower = Math.min(LABKEY.vis.Stat.MOVING_RANGE_LOWER_LIMIT, precursorInfo.minMR);
+            var upper = precursorInfo.maxMR;
+            plotProperties['yAxisDomain'] = [lower, upper];
+        }
+        return plotProperties;
+    },
+    getMRInitFragmentPlotData: function()
+    {
+        return {
+            minMR: null,
+            maxMR: null
+        }
+    },
+    processMRPlotDataRow: function(row, fragment, seriesType, metricProps)
+    {
+        var data = {};
+        // if a guideSetId is defined for this row, include the guide set stats values in the data object
+        if (Ext4.isDefined(row['GuideSetId']))
+        {
+            var gs = this.guideSetDataMap[row['GuideSetId']];
+            if (Ext4.isDefined(gs) && gs.Series[fragment])
+            {
+                data['meanMR'] = gs.Series[fragment]['MeanMR'];
+            }
+        }
 
+        if (this.isMultiSeries())
+        {
+            data['MR_' + seriesType] = row['MR'];
+            data['MR_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
+        }
+        else
+        {
+            data['MR'] = row['MR'];
+        }
+        return data;
+    }
 });

@@ -72,6 +72,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             if (!this.guideSetDataMap[guideSetId])
             {
                 this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
+                this.hasGuideSetData = true;
             }
 
             var seriesLabel = row['SeriesLabel'];
@@ -101,8 +102,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             Series: {}
         };
         return guideSet;
-    }
-    ,
+    },
 
     processRawGuideSetData : function(data)
     {
@@ -114,6 +114,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             if (!this.guideSetDataMap[guideSetId])
             {
                 this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
+                this.hasGuideSetData = true;
             }
 
             var seriesLabel = row['SeriesLabel'];
@@ -199,82 +200,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
                 Ext4.each(seriesTypeObj.Rows, function(row)
                 {
-                    var dataType = row['DataType'];
-                    if (!this.fragmentPlotData[fragment])
-                    {
-                        this.fragmentPlotData[fragment] = {
-                            fragment: fragment,
-                            dataType: dataType,
-                            data: [],
-                            min: null,
-                            max: null,
-                            minMR: null, //TODO
-                            maxMR: null,
-                            minCUSUMmP: null,
-                            maxCUSUMmP: null,
-                            minCUSUMmN: null,
-                            maxCUSUMmN: null,
-                            minCUSUMvP: null,
-                            maxCUSUMvP: null,
-                            minCUSUMvN: null,
-                            maxCUSUMvN: null
-                        };
-                    }
-
-                    var data = {
-                        type: 'data',
-                        fragment: fragment,
-                        PrecursorId: row['PrecursorId'], // keep in data for click handler
-                        PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
-                        FilePath: row['FilePath'], // keep in data for hover text display
-                        fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
-                        date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
-                        groupedXTick: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
-                        dataType: dataType //needed for plot point click handler
-                    };
-
-                    // if a guideSetId is defined for this row, include the guide set stats values in the data object
-                    if (Ext4.isDefined(row['GuideSetId']))
-                    {
-                        var gs = this.guideSetDataMap[row['GuideSetId']];
-                        if (Ext4.isDefined(gs) && gs.Series[fragment])
-                        {
-                            data['mean'] = gs.Series[fragment]['Mean'];
-                            data['stdDev'] = gs.Series[fragment]['StandardDev'];
-                            data['meanMR'] = gs.Series[fragment]['MeanMR']; //TODO only set for applicable plot types
-                            data['guideSetId'] = row['GuideSetId'];
-                            data['inGuideSetTrainingRange'] = row['InGuideSetTrainingRange'];
-                            data['groupedXTick'] = data['groupedXTick'] + '|'
-                                    + (gs['TrainingStart'] ? gs['TrainingStart'] : '0') + '|'
-                                    + (row['InGuideSetTrainingRange'] ? 'include' : 'notinclude');
-                        }
-                    }
-
-                    if (this.isMultiSeries()) //TODO
-                    {
-                        data['value_' + seriesType] = row['MetricValue'];
-                        data['value_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                        data['CUSUMmN_' + seriesType] = row['CUSUMmN'];
-                        data['CUSUMmN_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                        data['CUSUMmP_' + seriesType] = row['CUSUMmP'];
-                        data['CUSUMmP_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                        data['CUSUMvP_' + seriesType] = row['CUSUMvP'];
-                        data['CUSUMvP_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                        data['CUSUMvN_' + seriesType] = row['CUSUMvN'];
-                        data['CUSUMvN_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                        data['MR_' + seriesType] = row['MR'];
-                        data['MR_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                    }
-                    else
-                    {
-                        data['value'] = row['MetricValue'];
-                        data['CUSUMmN'] = row['CUSUMmN'];
-                        data['CUSUMmP'] = row['CUSUMmP'];
-                        data['CUSUMvP'] = row['CUSUMvP'];
-                        data['CUSUMvN'] = row['CUSUMvN'];
-                        data['MR'] = row['MR'];
-                    }
-
+                    var data = this.processPlotDataRow(row, fragment, seriesType, metricProps);
                     this.fragmentPlotData[fragment].data.push(data);
 
                     this.setSeriesMinMax(this.fragmentPlotData[fragment], data);
@@ -427,90 +353,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             legendData : Ext4.Array.clone(legenddata)
         };
     },
-
-    getPlotTypeProperties: function(precursorInfo, plotType, isMean)
-    {
-        var plotProperties = {};
-        // some properties are specific to whether or not we are showing multiple y-axis series
-        if (this.isMultiSeries())
-        {
-            plotProperties['disableRangeDisplay'] = true;
-            if (plotType == LABKEY.vis.TrendingLinePlotType.MovingRange)
-            {
-                plotProperties['valueMR'] = 'MR_series1';
-                plotProperties['valueRightMR'] = 'MR_series2';
-            }
-            else if (plotType == LABKEY.vis.TrendingLinePlotType.CUSUM)
-            {
-                if (isMean)
-                {
-                    plotProperties['positiveValue'] = 'CUSUMmP_series1';
-                    plotProperties['positiveValueRight'] = 'CUSUMmP_series2';
-                    plotProperties['negativeValue'] = 'CUSUMmN_series1';
-                    plotProperties['negativeValueRight'] = 'CUSUMmN_series2';
-
-                }
-                else
-                {
-                    plotProperties['positiveValue'] = 'CUSUMvP_series1';
-                    plotProperties['positiveValueRight'] = 'CUSUMvP_series2';
-                    plotProperties['negativeValue'] = 'CUSUMvN_series1';
-                    plotProperties['negativeValueRight'] = 'CUSUMvN_series2';
-
-                }
-            }
-            else  //LJ
-            {
-                plotProperties['value'] = 'value_series1';
-                plotProperties['valueRight'] = 'value_series2';
-
-            }
-        }
-        else
-        {
-            plotProperties['disableRangeDisplay'] = false;
-
-            if (plotType == LABKEY.vis.TrendingLinePlotType.MovingRange)
-            {
-                plotProperties['valueMR'] = 'MR';
-                plotProperties['meanMR'] = 'meanMR';
-                var getHeightest = 0.1; //TODO correct to heightest
-                var lower = Math.min(LABKEY.vis.Stat.MOVING_RANGE_LOWER_LIMIT , precursorInfo.minMR);
-                var upper = precursorInfo.maxMR;
-                plotProperties['yAxisDomain'] = [lower, upper]; //TODO correct to highest max*4
-            }
-            else if (plotType == LABKEY.vis.TrendingLinePlotType.CUSUM)
-            {
-                var lower, upper;
-                if (isMean)
-                {
-                    plotProperties['positiveValue'] = 'CUSUMmP';
-                    plotProperties['negativeValue'] = 'CUSUMmN';
-                    lower = Math.min(-1 * LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT - 1, precursorInfo.minCUSUMmP, precursorInfo.minCUSUMmN);
-                    upper = Math.max(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT + 1, precursorInfo.maxCUSUMmP, precursorInfo.maxCUSUMmN);
-                }
-                else
-                {
-                    plotProperties['positiveValue'] = 'CUSUMvP';
-                    plotProperties['negativeValue'] = 'CUSUMvN';
-                    lower = Math.min(-1 * LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT - 1, precursorInfo.minCUSUMvP, precursorInfo.minCUSUMvN);
-                    upper = Math.max(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT + 1, precursorInfo.maxCUSUMvP, precursorInfo.maxCUSUMvN);
-                }
-
-                plotProperties['yAxisDomain'] = [lower, upper];
-            }
-            else //LJ
-            {
-                plotProperties['value'] = 'value';
-                plotProperties['mean'] = 'mean';
-                plotProperties['stdDev'] = 'stdDev';
-                plotProperties['yAxisDomain'] = [precursorInfo.min, precursorInfo.max];
-            }
-
-        }
-        return plotProperties;
-    },
-
 
     addCombinedPeptideSinglePlot : function() {
         var metricProps = this.getMetricPropsById(this.metric),
@@ -681,8 +523,22 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return true;
     },
 
-    addEachIndividualPrecusorPlot: function(id, i, precursorInfo, metricProps, plotType, scope)
+    addEachIndividualPrecusorPlot: function(i, precursorInfo, metricProps, plotType, isCUSUMMean, scope)
     {
+
+        var id = this.plotDivId + "-precursorPlot" + plotType  + (isCUSUMMean ? 'mean' : '') + i;
+        this.addPlotWebPartToPlotDiv(id, this.precursors[i], this.plotDivId, 'qc-plot-wp');
+
+        if (precursorInfo.showLogInvalid)
+        {
+            this.showInvalidLogMsg(id, true);
+        }
+        else if (precursorInfo.showLogWarning)
+        {
+            Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below "
+                    + "the mean with negative values have been omitted.</span>");
+        }
+
         var ljProperties = {
             xTick: this.groupedX ? 'groupedXTick' : 'fullDate',
             xTickLabel: 'date',
@@ -693,7 +549,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             pointClickFn: this.plotPointClick,
             position: this.groupedX ? 'jitter' : undefined
         };
-        Ext4.apply(ljProperties, this.getPlotTypeProperties(precursorInfo, plotType));
+        Ext4.apply(ljProperties, this.getPlotTypeProperties(precursorInfo, plotType, isCUSUMMean));
 
         var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, this.legendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
@@ -747,6 +603,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         this.addAnnotationsToPlot(plot, precursorInfo);
 
         this.addGuideSetTrainingRangeToPlot(plot, precursorInfo);
+
+        this.createExportPlotToPDFButton(id, "Export " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, 0); //TODO plotTypeIndex not used yet
 
     }
 });
