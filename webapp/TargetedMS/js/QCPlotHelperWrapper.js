@@ -11,27 +11,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         return this.getRawGuideSetData();
     },
 
-    showLJPlot: function()
-    {
-      return true;
-    },
-
-    //TODO disable new plots for now
-    showMovingRangePlot: function()
-    {
-      return false;
-    },
-
-    showMeanCUSUMPlot: function()
-    {
-        return false;
-    },
-
-    showVariableCUSUMPlot: function()
-    {
-        return false;
-    },
-
     addIndividualPrecursorPlots : function()
     {
         var addedPlot = false,

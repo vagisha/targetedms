@@ -1,5 +1,25 @@
 Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
+    showLJPlot: function()
+    {
+        return true;
+    },
+
+    showMovingRangePlot: function()
+    {
+        return false;
+    },
+
+    showMeanCUSUMPlot: function()
+    {
+        return false;
+    },
+
+    showVariableCUSUMPlot: function()
+    {
+        return false;
+    },
+
     getGuideSetData : function(useRaw) {
         var config = this.getReportConfig();
         var metricProps = this.getMetricPropsById(this.metric);
@@ -65,8 +85,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             }
         }, this);
 
-        this.isRawPlotType = true; //TODO
-        if (this.isRawPlotType) //TODO
+        if (this.showMovingRangePlot())
             this.getRawGuideSetData();
         else
             this.getPlotData();
@@ -167,7 +186,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     processPlotData: function() {
         var metricProps = this.getMetricPropsById(this.metric);
-        this.processedPlotData = this.reprocessPlotData(this.plotDataRows);
+        this.processedPlotData = this.preprocessPlotData(this.showLJPlot(), this.showMovingRangePlot(), this.showMeanCUSUMPlot(), this.showVariableCUSUMPlot());
 
         // process the data to shape it for the JS LeveyJenningsPlot API call
         this.fragmentPlotData = {};
@@ -220,30 +239,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                         var gs = this.guideSetDataMap[row['GuideSetId']];
                         if (Ext4.isDefined(gs) && gs.Series[fragment])
                         {
-                            if (this.isMultiSeries()) //TODO
-                            {
-                                data['value_' + seriesType] = row['MetricValue'];
-                                data['value_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                                data['CUSUMmN_' + seriesType] = row['CUSUMmN'];
-                                data['CUSUMmN_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                                data['CUSUMmP_' + seriesType] = row['CUSUMmP'];
-                                data['CUSUMmP_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                                data['CUSUMvP_' + seriesType] = row['CUSUMvP'];
-                                data['CUSUMvP_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                                data['CUSUMvN_' + seriesType] = row['CUSUMvN'];
-                                data['CUSUMvN_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                                data['MR_' + seriesType] = row['MR'];
-                                data['MR_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                            }
-                            else
-                            {
-                                data['value'] = row['MetricValue'];
-                                data['CUSUMmN'] = row['CUSUMmN'];
-                                data['CUSUMmP'] = row['CUSUMmP'];
-                                data['CUSUMvP'] = row['CUSUMvP'];
-                                data['CUSUMvN'] = row['CUSUMvN'];
-                                data['MR'] = row['MR'];
-                            }
                             data['mean'] = gs.Series[fragment]['Mean'];
                             data['stdDev'] = gs.Series[fragment]['StandardDev'];
                             data['meanMR'] = gs.Series[fragment]['MeanMR']; //TODO only set for applicable plot types
@@ -255,7 +250,30 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                         }
                     }
 
-
+                    if (this.isMultiSeries()) //TODO
+                    {
+                        data['value_' + seriesType] = row['MetricValue'];
+                        data['value_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
+                        data['CUSUMmN_' + seriesType] = row['CUSUMmN'];
+                        data['CUSUMmN_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
+                        data['CUSUMmP_' + seriesType] = row['CUSUMmP'];
+                        data['CUSUMmP_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
+                        data['CUSUMvP_' + seriesType] = row['CUSUMvP'];
+                        data['CUSUMvP_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
+                        data['CUSUMvN_' + seriesType] = row['CUSUMvN'];
+                        data['CUSUMvN_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
+                        data['MR_' + seriesType] = row['MR'];
+                        data['MR_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
+                    }
+                    else
+                    {
+                        data['value'] = row['MetricValue'];
+                        data['CUSUMmN'] = row['CUSUMmN'];
+                        data['CUSUMmP'] = row['CUSUMmP'];
+                        data['CUSUMvP'] = row['CUSUMvP'];
+                        data['CUSUMvN'] = row['CUSUMvN'];
+                        data['MR'] = row['MR'];
+                    }
 
                     this.fragmentPlotData[fragment].data.push(data);
 
