@@ -2,22 +2,27 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     showLJPlot: function()
     {
-        return true;
+        return this.isPlotTypeSelected('Levey-Jennings');
     },
 
     showMovingRangePlot: function()
     {
-        return false;
+        return this.isPlotTypeSelected('Moving Range');
     },
 
     showMeanCUSUMPlot: function()
     {
-        return false;
+        return this.isPlotTypeSelected('CUSUMm');
     },
 
     showVariableCUSUMPlot: function()
     {
-        return false;
+        return this.isPlotTypeSelected('CUSUMv');
+    },
+
+    isPlotTypeSelected: function(plotType)
+    {
+        return this.plotTypes.indexOf(plotType) > -1;
     },
 
     getGuideSetData : function(useRaw) {
@@ -422,14 +427,18 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, plotLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
-                top: 45 + this.getMaxStackedAnnotations() * 12,
+                top: 65 + this.getMaxStackedAnnotations() * 12,
                 right: 11 * lengthOfLongestLegend + (this.isMultiSeries() ? 50 : 0),
                 left: 75,
                 bottom: 75
             },
             labels : {
                 main: {
+                    value: LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean) + ' Plot'
+                },
+                subtitle: {
                     value: "All Series",
+                    color: '#555555',
                     visibility: 'hidden'
                 },
                 yLeft: {
@@ -489,13 +498,17 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, this.legendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
-                top: 45 + this.getMaxStackedAnnotations() * 12,
+                top: 65 + this.getMaxStackedAnnotations() * 12,
                 left: 75,
                 bottom: 75
             },
             labels : {
                 main: {
+                    value: LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean) + ' Plot'
+                },
+                subtitle: {
                     value: this.precursors[i],
+                    color: '#555555',
                     visibility: 'hidden'
                 },
                 yLeft: {

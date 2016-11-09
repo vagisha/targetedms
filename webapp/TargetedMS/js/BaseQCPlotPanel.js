@@ -10,6 +10,22 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     // properties used for the various data queries based on chart metric type
     metricPropArr: [],
 
+    statics: {
+        qcPlotTypes : ['Levey-Jennings', 'Moving Range', 'CUSUMm', 'CUSUMv'],
+        isValidQCPlotType: function(plotType)
+        {
+            var valid = false;
+            Ext4.each(LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypes, function(type){
+                if (plotType == type)
+                {
+                    valid = true;
+                    return;
+                }
+            });
+            return valid;
+        }
+    },
+
     metricGuideSetSql : function(schema1Name, query1Name, schema2Name, query2Name)
     {
         var includeCalc = !Ext4.isDefined(schema2Name) && !Ext4.isDefined(query2Name),

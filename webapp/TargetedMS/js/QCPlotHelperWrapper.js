@@ -5,6 +5,23 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         movingRange: 'LABKEY.targetedms.MovingRangePlotHelper'
     },
 
+    statics: {
+        getQCPlotTypeLabel: function(visPlotType, isCUSUMMean)
+        {
+            if (visPlotType == LABKEY.vis.TrendingLinePlotType.MovingRange)
+                return 'Moving Range';
+            else if (visPlotType == LABKEY.vis.TrendingLinePlotType.CUSUM)
+            {
+                if (isCUSUMMean)
+                    return 'CUSUMm';
+                else
+                    return 'CUSUMv';
+            }
+            else
+                return 'Levey-Jennings';
+        }
+    },
+
     prepareAndRenderQCPlot : function(plotType) {
         if (this.showLJPlot())
             return this.getLJGuideSetData(plotType);

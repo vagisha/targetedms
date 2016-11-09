@@ -23,9 +23,10 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         border: false
     },
 
-    // properties specific to this TargetedMS Levey-Jennings plot implementation
+    // properties specific to this TargetedMS QC plot implementation
     yAxisScale: 'linear',
     metric: null,
+    plotTypes: ['Levey-Jennings'], //TODO select LJ only for existing tests
     dateRangeOffset: 0,
     minAcquiredTime: null,
     maxAcquiredTime: null,
@@ -71,6 +72,10 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     else if (value != undefined && value.length > 0 && !isNaN(Number(value)))
                     {
                         value = +value;
+                    }
+                    else if (key == 'plotTypes') // convert string to array
+                    {
+                        value = value.split(',');
                     }
                     initValues[key] = value;
                 });
@@ -126,9 +131,59 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return [
             { tbar: this.getMainPlotOptionsToolbar() },
             { tbar: this.getCustomDateRangeToolbar() },
+            { tbar: this.getPlotTypeOptionsToolbar() },
             { tbar: this.getOtherPlotOptionsToolbar() },
             { tbar: this.getGuideSetMessageToolbar() }
         ];
+    },
+
+    getPlotTypeOptionsToolbar: function()
+    {
+        var plotTypeCheckBoxes = [];
+        Ext4.each(LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypes, function(plotType){
+            plotTypeCheckBoxes.push({
+                boxLabel: plotType,
+                name: 'plotTypes',
+                inputValue: plotType,
+                cls: 'qc-plot-type-checkbox',
+                checked: this.isPlotTypeSelected(plotType),
+                listeners: {
+                    render: function (cmp)
+                    {
+
+                    }
+                }
+            });
+        }, this);
+        if (!this.plotTypeOptionsToolbar)
+        {
+            var me = this;
+            this.plotTypeOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
+                ui: 'footer',
+                cls: 'levey-jennings-toolbar',
+                padding: 10,
+                layout: { pack: 'center' },
+                items: [{
+                    xtype: 'checkboxgroup',
+                    fieldLabel: 'QC Plot Type',
+                    columns: 4,
+                    items: plotTypeCheckBoxes,
+                    listeners: {
+                        scope: this,
+                        change: function(cmp, newVal, oldVal)
+                        {
+                            this.plotTypes = newVal.plotTypes ? newVal.plotTypes : [];
+                            this.havePlotOptionsChanged = true;
+
+                            me.setBrushingEnabled(false);
+                            me.displayTrendPlot();
+                        }
+                    }
+                }]
+            });
+        }
+
+        return this.plotTypeOptionsToolbar;
     },
 
     getMainPlotOptionsToolbar : function()
@@ -237,7 +292,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             metric = this.validateMetricId(paramValue);
             if(metric == null)
             {
-                alertMessage += "Invalid Chart Type, reverting to default chart type.";
+                alertMessage += "Invalid Metric, reverting to default metric.";
                 sep = ' ';
             }
             else
@@ -272,6 +327,37 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             {
                 paramValues['dateRangeOffset'] = -1; // force to custom date range selection
                 paramValues['endDate'] = this.formatDate(paramValue);
+            }
+        }
+
+        paramValue = urlParams['plotTypes'];
+        if (paramValue != undefined)
+        {
+            var plotTypes = [];
+            if (Ext4.isArray(paramValue))
+            {
+                Ext4.each(paramValue, function(value){
+                    if (LABKEY.targetedms.BaseQCPlotPanel.isValidQCPlotType(value.trim()))
+                        plotTypes.push(value.trim());
+                });
+            }
+            else
+            {
+                var values = paramValue.split(',');
+                Ext4.each(values, function(value){
+                    if (LABKEY.targetedms.BaseQCPlotPanel.isValidQCPlotType(value.trim()))
+                        plotTypes.push(value.trim());
+                });
+
+            }
+
+            if(plotTypes.length == 0)
+            {
+                alertMessage += sep + "Invalid Plot Type, reverting to default plot type.";
+            }
+            else
+            {
+                paramValues['plotTypes'] = plotTypes;
             }
         }
 
@@ -1175,6 +1261,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     {
         var props = {
             metric: this.metric,
+            plotTypes: this.plotTypes,
             yAxisScale: this.yAxisScale,
             groupedX: this.groupedX,
             singlePlot: this.singlePlot,

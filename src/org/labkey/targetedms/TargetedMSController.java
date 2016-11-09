@@ -468,6 +468,7 @@ public class TargetedMSController extends SpringActionController
         private String metric;
         private String startDate;
         private String endDate;
+        private List<String> _plotTypes;
 
         public String getMetric()
         {
@@ -497,6 +498,16 @@ public class TargetedMSController extends SpringActionController
         public void setEndDate(String endDate)
         {
             this.endDate = endDate;
+        }
+
+        public void setPlotTypes(List<String> plotTypes)
+        {
+            _plotTypes = plotTypes;
+        }
+
+        public List<String> getPlotTypes()
+        {
+            return _plotTypes;
         }
 
     }
@@ -543,6 +554,7 @@ public class TargetedMSController extends SpringActionController
         private Integer _dateRangeOffset;
         private String _startDate;
         private String _endDate;
+        private List<String> _plotTypes;
 
         public Map<String, String> getAsMapOfStrings()
         {
@@ -557,6 +569,8 @@ public class TargetedMSController extends SpringActionController
                 valueMap.put("singlePlot", Boolean.toString(_singlePlot));
             if (_dateRangeOffset != null)
                 valueMap.put("dateRangeOffset", Integer.toString(_dateRangeOffset));
+            if (_plotTypes != null && !_plotTypes.isEmpty())
+                valueMap.put("plotTypes", StringUtils.join(_plotTypes, ","));
             // note: start and end date handled separately since they can be null and we want to persist that
             return valueMap;
         }
@@ -604,6 +618,16 @@ public class TargetedMSController extends SpringActionController
         public String getEndDate()
         {
             return _endDate;
+        }
+
+        public void setPlotTypes(List<String> plotTypes)
+        {
+            _plotTypes = plotTypes;
+        }
+
+        public List<String> getPlotTypes()
+        {
+            return _plotTypes;
         }
     }
 
