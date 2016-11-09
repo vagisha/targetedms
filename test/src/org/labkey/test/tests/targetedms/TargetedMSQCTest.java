@@ -278,6 +278,9 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.setEndDate("2014-08-27");
         qcPlotsWebPart.applyRange();
         qcPlotsWebPart.waitForPlots(0, true);
+
+        // reset to avoid test case dependency
+        qcPlotsWebPart.resetInitialQCPlotFields();
     }
 
     @Test
