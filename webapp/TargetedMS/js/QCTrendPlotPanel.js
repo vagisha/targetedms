@@ -1174,7 +1174,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     getSelectedPlotFormOptions : function()
     {
         var props = {
-            chartType: this.metric,
+            metric: this.metric,
             yAxisScale: this.yAxisScale,
             groupedX: this.groupedX,
             singlePlot: this.singlePlot,

@@ -306,42 +306,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         Ext4.get(this.plotDivId).unmask();
     },
 
-    persistSelectedFormOptions : function()
-    {
-        if (this.havePlotOptionsChanged)
-        {
-            this.havePlotOptionsChanged = false;
-            LABKEY.Ajax.request({
-                url: LABKEY.ActionURL.buildURL('targetedms', 'leveyJenningsPlotOptions.api'),
-                params: this.getSelectedPlotFormOptions()
-            });
-        }
-    },
-
-    getSelectedPlotFormOptions : function()
-    {
-        var props = {
-            metric: this.metric,
-            yAxisScale: this.yAxisScale,
-            groupedX: this.groupedX,
-            singlePlot: this.singlePlot,
-            dateRangeOffset: this.dateRangeOffset
-        };
-
-        // set start and end date to null unless we are
-        props.startDate = this.dateRangeOffset == -1 ? this.formatDate(this.startDate) : null;
-        props.endDate = this.dateRangeOffset == -1 ? this.formatDate(this.endDate) : null;
-
-        return props;
-    },
-
-    getMaxStackedAnnotations : function() {
-        if (this.annotationData.length > 0) {
-            return Math.max.apply(Math, (Ext4.Array.pluck(this.annotationData, "yStepIndex"))) + 1;
-        }
-        return 0;
-    },
-
     getBasePlotConfig : function(id, data, legenddata) {
         return {
             rendererType : 'd3',

@@ -465,18 +465,18 @@ public class TargetedMSController extends SpringActionController
     }
     public static class URLParameterBean
     {
-        private String chartType;
+        private String metric;
         private String startDate;
         private String endDate;
 
-        public String getChartType()
+        public String getMetric()
         {
-            return chartType;
+            return metric;
         }
 
-        public void setChartType(String chartType)
+        public void setMetric(String metric)
         {
-            this.chartType = chartType;
+            this.metric = metric;
         }
 
         public String getStartDate()
@@ -536,7 +536,7 @@ public class TargetedMSController extends SpringActionController
 
     private static class LeveyJenningsPlotOptions
     {
-        private String _chartType;
+        private String _metric;
         private String _yAxisScale;
         private Boolean _groupedX;
         private Boolean _singlePlot;
@@ -547,8 +547,8 @@ public class TargetedMSController extends SpringActionController
         public Map<String, String> getAsMapOfStrings()
         {
             Map<String, String> valueMap = new HashMap<>();
-            if (_chartType != null)
-                valueMap.put("chartType", _chartType);
+            if (_metric != null)
+                valueMap.put("metric", _metric);
             if (_yAxisScale != null)
                 valueMap.put("yAxisScale", _yAxisScale);
             if (_groupedX != null)
@@ -561,9 +561,9 @@ public class TargetedMSController extends SpringActionController
             return valueMap;
         }
 
-        public void setChartType(String chartType)
+        public void setMetric(String metric)
         {
-            _chartType = chartType;
+            _metric = metric;
         }
 
         public void setyAxisScale(String yAxisScale)
