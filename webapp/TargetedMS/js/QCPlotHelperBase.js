@@ -434,7 +434,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
     addEachCombinedPrecusorPlot: function(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, plotType, isCUSUMMean)
     {
         var plotLegendData = this.getCombinedPlotLegendData(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean);
-        var id = 'combinedPlot' + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v');
+        var plotTypeIdLabel = plotType == LABKEY.vis.TrendingLinePlotType.LeveyJennings ? '' : plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v');
+        var id = 'combinedPlot' + plotTypeIdLabel;
         this.addPlotWebPartToPlotDiv(id, 'All Series', this.plotDivId, 'qc-plot-wp');
         this.showInvalidLogMsg(id, showLogInvalid);
 
@@ -493,8 +494,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     addEachIndividualPrecusorPlot: function(i, precursorInfo, metricProps, plotType, isCUSUMMean, scope)
     {
-
-        var id = this.plotDivId + "-precursorPlot" + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + i;
+        var plotTypeIdLabel = plotType == LABKEY.vis.TrendingLinePlotType.LeveyJennings ? '' : plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v');
+        var id = this.plotDivId + "-precursorPlot" + plotTypeIdLabel + i;
         this.addPlotWebPartToPlotDiv(id, this.precursors[i], this.plotDivId, 'qc-plot-wp');
 
         if (precursorInfo.showLogInvalid)
