@@ -535,10 +535,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     scope.plotBrushEvent(extent, plot, layerSelections);
                 },
                 brushend: function(event, data, extent, plot, layerSelections) {
-                    scope.plotBrushEndEvent(data[0], extent, plot);
+                    scope.plotBrushEndEvent(data[data.length - 1], extent, plot);
                 },
                 brushclear: function(event, data, plot, layerSelections) {
-                    scope.plotBrushClearEvent(data[0], plot);
+                    scope.plotBrushClearEvent(data[data.length - 1], plot);
                 }
             }
         });
