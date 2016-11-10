@@ -469,6 +469,7 @@ public class TargetedMSController extends SpringActionController
         private String startDate;
         private String endDate;
         private List<String> _plotTypes;
+        private Boolean _largePlot;
 
         public String getMetric()
         {
@@ -510,6 +511,15 @@ public class TargetedMSController extends SpringActionController
             return _plotTypes;
         }
 
+        public Boolean getLargePlot()
+        {
+            return _largePlot;
+        }
+
+        public void setLargePlot(Boolean largePlot)
+        {
+            _largePlot = largePlot;
+        }
     }
 
     @RequiresPermission(ReadPermission.class)
@@ -555,6 +565,7 @@ public class TargetedMSController extends SpringActionController
         private String _startDate;
         private String _endDate;
         private List<String> _plotTypes;
+        private Boolean _largePlot;
 
         public Map<String, String> getAsMapOfStrings()
         {
@@ -571,6 +582,8 @@ public class TargetedMSController extends SpringActionController
                 valueMap.put("dateRangeOffset", Integer.toString(_dateRangeOffset));
             if (_plotTypes != null && !_plotTypes.isEmpty())
                 valueMap.put("plotTypes", StringUtils.join(_plotTypes, ","));
+            if (_largePlot != null)
+                valueMap.put("largePlot", Boolean.toString(_largePlot));
             // note: start and end date handled separately since they can be null and we want to persist that
             return valueMap;
         }
@@ -628,6 +641,11 @@ public class TargetedMSController extends SpringActionController
         public List<String> getPlotTypes()
         {
             return _plotTypes;
+        }
+
+        public void setLargePlot(Boolean largePlot)
+        {
+            _largePlot = largePlot;
         }
     }
 

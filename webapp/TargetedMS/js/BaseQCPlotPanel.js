@@ -171,6 +171,77 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         );
     },
 
+    addPlotsToPlotDiv: function(ids, title, div, wp)
+    {
+        if (this.largePlot)
+            this.addLargePlotsToPlotDiv(ids, title, div, wp);
+        else
+            this.addSmallPlotsToPlotDiv(ids, title, div, wp);
+    },
+
+    addLargePlotsToPlotDiv: function (ids, title, div, wp)
+    {
+        var html = '<br/>' +
+                '<table class="labkey-wp ' + wp + '">' +
+                ' <tr class="labkey-wp-header">' +
+                '     <th class="labkey-wp-title-left">' +
+                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) +
+                '           <span class="plot-export-btn-group">';
+        Ext4.each(ids, function(plotId){
+            html += '           <div class="plot-export-btn" id="' + plotId + '-exportToPDFbutton"></div>';
+        });
+
+        html += '           </span>' +
+                '        </span>' +
+                '     </th>' +
+                ' </tr>';
+
+        Ext4.each(ids, function(plotId){
+            html += '<tr>' +
+                    '     <td><div id="' + plotId + '"></div></td>' +
+                    ' </tr>';
+        });
+        html += '</table>';
+        Ext4.get(div).insertHtml('beforeEnd', html);
+    },
+
+    addSmallPlotsToPlotDiv: function (ids, title, div, wp)
+    {
+        var html = '<br/>' +
+                '<table class="labkey-wp ' + wp + '">' +
+                ' <tr class="labkey-wp-header">' +
+                '     <th class="labkey-wp-title-left">' +
+                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) +
+                '           <span class="plot-export-btn-group">';
+        Ext4.each(ids, function(plotId){
+            html += '           <div class="plot-export-btn" id="' + plotId + '-exportToPDFbutton"></div>';
+        });
+
+        html += '           </span>' +
+                '        </span>' +
+                '     </th>' +
+                ' </tr>' ;
+        if (ids.length > 0)
+        {
+            html += ' <tr>' +
+                    '     <td><div class="plot-small-layout" id="' + ids[0] + '"></div>';
+            if (ids.length > 1)
+                html += '<div class="plot-small-layout" id="' + ids[1] + '"></div>';
+            html += ' </td></tr>';
+        }
+
+        if (ids.length > 2)
+        {
+            html += ' <tr>' +
+                    '     <td><div class="plot-small-layout" id="' + ids[2] + '"></div>';
+            if (ids.length > 3)
+                html += '<div class="plot-small-layout" id="' + ids[3] + '"></div>';
+            html += ' </td></tr>';
+        }
+        html += '</table>';
+        Ext4.get(div).insertHtml('beforeEnd', html);
+    },
+
     setPlotWidth: function (div)
     {
         if (this.plotWidth == null)

@@ -312,11 +312,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
     },
 
     getBasePlotConfig : function(id, data, legenddata) {
+        var availableWidth = this.plotWidth - 30, width = availableWidth;
+        if (!this.largePlot && this.plotTypes.length > 1)
+        {
+            width = availableWidth / 2;
+        }
         return {
             rendererType : 'd3',
             renderTo : id,
             data : Ext4.Array.clone(data),
-            width : this.plotWidth - 30,
+            width : width,
             height : this.singlePlot ? 500 : 300,
             gridLineColor : 'white',
             legendData : Ext4.Array.clone(legenddata)
@@ -400,12 +405,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return newLegendData;
     },
 
-    addEachCombinedPrecusorPlot: function(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, plotType, isCUSUMMean)
+    addEachCombinedPrecusorPlot: function(id, combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, plotType, isCUSUMMean)
     {
         var plotLegendData = this.getCombinedPlotLegendData(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean);
-        var plotTypeIdLabel = plotType == LABKEY.vis.TrendingLinePlotType.LeveyJennings ? '' : plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v');
-        var id = 'combinedPlot' + plotTypeIdLabel;
-        this.addPlotWebPartToPlotDiv(id, 'All Series', this.plotDivId, 'qc-plot-wp');
         this.showInvalidLogMsg(id, showLogInvalid);
 
         var ljProperties = {
@@ -461,16 +463,12 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         this.addGuideSetTrainingRangeToPlot(plot, combinePlotData);
 
-        this.createExportToPDFButton(id, "Export combined " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for  All Series", "QC Combined Plot");
+        this.createExportPlotToPDFButton(id, "Export combined " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for  All Series", "QC Combined Plot");
 
     },
 
-    addEachIndividualPrecusorPlot: function(i, precursorInfo, metricProps, plotType, isCUSUMMean, scope)
+    addEachIndividualPrecusorPlot: function(id, i, precursorInfo, metricProps, plotType, isCUSUMMean, scope)
     {
-        var plotTypeIdLabel = plotType == LABKEY.vis.TrendingLinePlotType.LeveyJennings ? '' : plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v');
-        var id = this.plotDivId + "-precursorPlot" + plotTypeIdLabel + i;
-        this.addPlotWebPartToPlotDiv(id, this.precursors[i], this.plotDivId, 'qc-plot-wp');
-
         if (precursorInfo.showLogInvalid)
         {
             this.showInvalidLogMsg(id, true);

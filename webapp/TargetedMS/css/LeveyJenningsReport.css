@@ -30,7 +30,6 @@
 
 .plot-export-btn {
     display:inline;
-    float:right;
 }
 
 .levey-jennings-toolbar .x4-form-item-label,
@@ -43,5 +42,27 @@
 }
 
 .qc-plot-type-checkbox {
-    width: 120px;
+    width: 110px;
+}
+
+.plot-size-radio-group .x4-field-label-cell {
+    width: 60px !important;
+}
+
+.plot-type-checkbox-group .x4-field-label-cell{
+    width: 80px !important;
+}
+
+.plot-type-checkbox-group .x4-field-label-cell .x4-form-item-label-left{
+    width: 80px !important;
+}
+
+.plot-export-btn-group {
+    display: inline;
+    float: right;
+}
+
+.plot-small-layout {
+    width: 50%;
+    float: left;
 }

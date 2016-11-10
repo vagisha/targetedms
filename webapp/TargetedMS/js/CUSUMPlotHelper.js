@@ -60,14 +60,14 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
             {
                 plotProperties['positiveValue'] = 'CUSUMmP';
                 plotProperties['negativeValue'] = 'CUSUMmN';
-                lower = Math.min(-1 * LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT - 1, precursorInfo.minCUSUMmP, precursorInfo.minCUSUMmN);
+                lower = Math.min(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT_LOWER - 1, precursorInfo.minCUSUMmP, precursorInfo.minCUSUMmN);
                 upper = Math.max(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT + 1, precursorInfo.maxCUSUMmP, precursorInfo.maxCUSUMmN);
             }
             else
             {
                 plotProperties['positiveValue'] = 'CUSUMvP';
                 plotProperties['negativeValue'] = 'CUSUMvN';
-                lower = Math.min(-1 * LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT - 1, precursorInfo.minCUSUMvP, precursorInfo.minCUSUMvN);
+                lower = Math.min(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT_LOWER - 1, precursorInfo.minCUSUMvP, precursorInfo.minCUSUMvN);
                 upper = Math.max(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT + 1, precursorInfo.maxCUSUMvP, precursorInfo.maxCUSUMvN);
             }
 

@@ -2,7 +2,7 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
     extend: 'LABKEY.targetedms.QCPlotHelperBase',
     setMovingRangeSeriesMinMax: function(dataObject, row) {
         // track the min and max data so we can get the range for including the QC annotations
-        var val = row['valueMR'];
+        var val = row['MR'];
         if (LABKEY.vis.isValid(val))
         {
             if (dataObject.minMR == null || val < dataObject.minMR) {
@@ -20,8 +20,8 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
             var mean = row['meanMR'];
             if (LABKEY.vis.isValid(mean))
             {
-                if (dataObject.max == null || (mean * LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT) > dataObject.max) {
-                    dataObject.max = mean * LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT;
+                if (dataObject.maxMRMean == null || mean > dataObject.maxMRMean) {
+                    dataObject.maxMRMean = mean;
                 }
             }
         }
@@ -53,7 +53,7 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
             plotProperties['valueMR'] = 'MR';
             plotProperties['meanMR'] = 'meanMR';
             var lower = Math.min(LABKEY.vis.Stat.MOVING_RANGE_LOWER_LIMIT, precursorInfo.minMR);
-            var upper = precursorInfo.maxMR;
+            var upper = Math.max(precursorInfo.maxMRMean * LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT, precursorInfo.maxMR);
             plotProperties['yAxisDomain'] = [lower, upper];
         }
         return plotProperties;
@@ -62,7 +62,8 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
     {
         return {
             minMR: null,
-            maxMR: null
+            maxMR: null,
+            maxMRMean: null
         }
     },
     processMRPlotDataRow: function(row, fragment, seriesType, metricProps)

@@ -43,22 +43,30 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             {
                 addedPlot = true;
 
+                var id = this.plotDivId + "-precursorPlot" + i;
+                var ids = [id];
+                for (var j = 1; j < this.plotTypes.length; j++)
+                {
+                    ids.push(id + '_plotType_' + j);
+                }
+                this.addPlotsToPlotDiv(ids, this.precursors[i], this.plotDivId, 'qc-plot-wp');
+                var plotIndex = 0;
                 // add a new panel for each plot so we can add the title to the frame
                 if (this.showLJPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.LeveyJennings, undefined, me);
+                    this.addEachIndividualPrecusorPlot(ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.LeveyJennings, undefined, me);
                 }
                 if (this.showMovingRangePlot())
                 {
-                    this.addEachIndividualPrecusorPlot(i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.MovingRange, undefined, me);
+                    this.addEachIndividualPrecusorPlot(ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.MovingRange, undefined, me);
                 }
                 if (this.showMeanCUSUMPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, true, me);
+                    this.addEachIndividualPrecusorPlot(ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, true, me);
                 }
                 if (this.showVariableCUSUMPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, false, me);
+                    this.addEachIndividualPrecusorPlot(ids[plotIndex], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, false, me);
                 }
 
             }
@@ -104,22 +112,29 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             if (metricProps.series2Label.length > lengthOfLongestLegend)
                 lengthOfLongestLegend = metricProps.series2Label.length;
         }
-
+        var id = 'combinedPlot';
+        var ids = [id];
+        for (var i = 1; i < this.plotTypes.length; i++)
+        {
+            ids.push(id + 'plotType' + i.toString());
+        }
+        this.addPlotsToPlotDiv(ids, 'All Series', this.plotDivId, 'qc-plot-wp');
+        var plotIndex = 0;
         if (this.showLJPlot())
         {
-            this.addEachCombinedPrecusorPlot(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
+            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
         }
         if (this.showMovingRangePlot())
         {
-            this.addEachCombinedPrecusorPlot(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.MovingRange);
+            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.MovingRange);
         }
         if (this.showMeanCUSUMPlot())
         {
-            this.addEachCombinedPrecusorPlot(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.CUSUM, true);
+            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.CUSUM, true);
         }
         if (this.showVariableCUSUMPlot())
         {
-            this.addEachCombinedPrecusorPlot(combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
+            this.addEachCombinedPrecusorPlot(ids[plotIndex], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
         }
 
         return true;

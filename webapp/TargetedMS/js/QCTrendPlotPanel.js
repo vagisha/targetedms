@@ -27,6 +27,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     yAxisScale: 'linear',
     metric: null,
     plotTypes: ['Levey-Jennings'], //TODO select LJ only for existing tests
+    largePlot: false,
     dateRangeOffset: 0,
     minAcquiredTime: null,
     maxAcquiredTime: null,
@@ -146,15 +147,21 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 name: 'plotTypes',
                 inputValue: plotType,
                 cls: 'qc-plot-type-checkbox',
-                checked: this.isPlotTypeSelected(plotType),
-                listeners: {
-                    render: function (cmp)
-                    {
-
-                    }
-                }
+                checked: this.isPlotTypeSelected(plotType)
             });
         }, this);
+        var plotSizeRadio = [{
+            boxLabel  : 'Small',
+            name      : 'largePlot',
+            inputValue: false,
+            checked   : !this.largePlot
+        },{
+            boxLabel  : 'Large',
+            name      : 'largePlot',
+            inputValue: true,
+            checked   : this.largePlot
+        }];
+
         if (!this.plotTypeOptionsToolbar)
         {
             var me = this;
@@ -164,22 +171,48 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 padding: 10,
                 layout: { pack: 'center' },
                 items: [{
-                    xtype: 'checkboxgroup',
-                    fieldLabel: 'QC Plot Type',
-                    columns: 4,
-                    items: plotTypeCheckBoxes,
+                    xtype: 'radiogroup',
+                    fieldLabel: 'Plot Size',
+                    columns: 2,
+                    width: 180,
+                    items: plotSizeRadio,
+                    cls: 'plot-size-radio-group',
                     listeners: {
                         scope: this,
                         change: function(cmp, newVal, oldVal)
                         {
-                            this.plotTypes = newVal.plotTypes ? newVal.plotTypes : [];
+                            this.largePlot = newVal.largePlot;
                             this.havePlotOptionsChanged = true;
 
                             me.setBrushingEnabled(false);
                             me.displayTrendPlot();
                         }
                     }
-                }]
+                },{xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},{
+                    xtype: 'checkboxgroup',
+                    fieldLabel: 'QC Plot Type',
+                    columns: 4,
+                    items: plotTypeCheckBoxes,
+                    cls: 'plot-type-checkbox-group',
+                    listeners: {
+                        scope: this,
+                        change: function(cmp, newVal, oldVal)
+                        {
+                            this.plotTypes = newVal.plotTypes ? Ext4.isArray(newVal.plotTypes) ? newVal.plotTypes : [newVal.plotTypes] : [];
+                            this.havePlotOptionsChanged = true;
+
+                            me.setBrushingEnabled(false);
+                            me.displayTrendPlot();
+                        }
+                    }
+                }],
+                listeners: {
+                    scope: this,
+                    render: function(cmp)
+                    {
+                        cmp.doLayout();
+                    }
+                }
             });
         }
 
@@ -359,6 +392,12 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             {
                 paramValues['plotTypes'] = plotTypes;
             }
+        }
+
+        paramValue = urlParams['largePlot'];
+        if (paramValue !== undefined && paramValue !== null)
+        {
+            paramValues['largePlot'] = paramValue.toString().toLowerCase() === 'true';
         }
 
         if (alertMessage.length > 0)
@@ -1262,6 +1301,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         var props = {
             metric: this.metric,
             plotTypes: this.plotTypes,
+            largePlot: this.largePlot,
             yAxisScale: this.yAxisScale,
             groupedX: this.groupedX,
             singlePlot: this.singlePlot,
