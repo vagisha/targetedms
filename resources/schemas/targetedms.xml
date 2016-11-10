@@ -16,1430 +16,1430 @@
  * limitations under the License.
 
  -->
-<ns:tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd"
-           xmlns:ns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-    <ns:table tableDbType="TABLE" tableName="IsotopeLabel">
-        <ns:titleColumn>Name</ns:titleColumn>
-        <ns:description>Contains a row for each Isotope label in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Standard"/>
-            <ns:column columnName="RunId">
-                <ns:columnTitle>File</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Name">
-                <ns:columnTitle>Label</ns:columnTitle>
-                <ns:displayWidth>15</ns:displayWidth>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="Replicate">
-        <ns:titleColumn>Name</ns:titleColumn>
-        <ns:description>Contains a row for each replicate loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="RunId">
-                <ns:columnTitle>File</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="CePredictorId">
-                <ns:columnTitle>CE Predictor</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="DpPredictorId">
-                <ns:columnTitle>DP Predictor</ns:columnTitle>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="ReplicateAnnotation" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Value"/>
-            <ns:column columnName="Source"/>
-            <ns:column columnName="ReplicateId"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="SampleFile">
-        <ns:titleColumn>SampleName</ns:titleColumn>
-        <ns:description>Contains a row for each sample file loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>false</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="ReplicateId">
-                <ns:columnTitle>Replicate</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="FilePath"/>
-            <ns:column columnName="SampleName"/>
-            <ns:column columnName="AcquiredTime"/>
-            <ns:column columnName="ModifiedTime"/>
-            <ns:column columnName="SkylineId">
-                <ns:columnTitle>Skyline ID</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="InstrumentId">
-                <ns:columnTitle>Instrument</ns:columnTitle>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="Runs" tableDbType="TABLE">
-        <ns:description>Contains a row per Skyline document loaded in this folder.</ns:description>
-        <ns:titleColumn>Description</ns:titleColumn>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="_ts">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ModifiedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Owner">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Container">
-                <ns:isReadOnly>false</ns:isReadOnly>
-                <ns:fk>
-                    <ns:fkColumnName>EntityId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>containers</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="EntityId">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="FileName">
-                <ns:columnTitle>File</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="StatusId">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="ExperimentRunLSID">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Created"/>
-            <ns:column columnName="Deleted"/>
-            <ns:column columnName="Description"/>
-            <ns:column columnName="Modified">
-                <ns:formatString>DateTime</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Status"/>
-            <ns:column columnName="RepresentativeDataState">
-                <ns:columnTitle>Representative State</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="DataId"/>
-            <ns:column columnName="iRTScaleId">
-                <ns:columnTitle>iRT Scale Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="SoftwareVersion"/>
-            <ns:column columnName="FormatVersion"/>
-            <ns:column columnName="DocumentGUID"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="PeptideGroup">
-        <ns:titleColumn>Label</ns:titleColumn>
-        <ns:description>Contains a row for each peptide group loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="RunId">
-                <ns:columnTitle>File</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Label">
-                <ns:columnTitle>Protein / Label</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="SequenceId">
-                <ns:columnTitle>Sequence Id</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkDbSchema>prot</ns:fkDbSchema>
-                    <ns:fkTable>sequences</ns:fkTable>
-                    <ns:fkColumnName>seqid</ns:fkColumnName>
-                    <ns:fkDisplayColumnName>BestName</ns:fkDisplayColumnName>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Decoy"/>
-            <ns:column columnName="Note"/>
-            <ns:column columnName="Description">
-                <ns:inputType>text</ns:inputType>
-                <ns:displayWidth>800</ns:displayWidth>
-            </ns:column>
-            <ns:column columnName="Modified">
-                <ns:formatString>DateTime</ns:formatString>
-            </ns:column>
-            <ns:column columnName="RepresentativeDataState">
-                <ns:columnTitle>Library State</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Name" />
-            <ns:column columnName="Accession" />
-            <ns:column columnName="PreferredName" />
-            <ns:column columnName="Gene" />
-            <ns:column columnName="Species" />
-            <ns:column columnName="AltDescription"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="GeneralMolecule">
-        <ns:titleColumn>RtCalculatorScore</ns:titleColumn>
-        <ns:description>Parent table to Peptide, Molecule, GeneralMoleculeChromInfo, GeneralAnnotation.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="PeptideGroupId">
-                <ns:columnTitle>Group</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="RtCalculatorScore">
-                <ns:columnTitle>RT Score</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="PredictedRetentionTime">
-                <ns:columnTitle>Predicted RT</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="AvgMeasuredRetentionTime">
-                <ns:columnTitle>Avg. Measured RT</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Note"/>
-            <ns:column columnName="ExplicitRetentionTime">
-                <ns:columnTitle>Explicit RT</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="Peptide">
-        <ns:titleColumn>PeptideModifiedSequence</ns:titleColumn>
-        <ns:description>Contains a row for each peptide loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Sequence" />
-            <ns:column columnName="PreviousAa">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="NextAa">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="StartIndex" />
-            <ns:column columnName="EndIndex" />
-            <ns:column columnName="CalcNeutralMass">
-                <ns:columnTitle>Peptide Neutral Mass</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="NumMissedCleavages">
-                <ns:columnTitle>Missed Cleavages</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Decoy"/>
-            <ns:column columnName="Rank"/>
-            <ns:column columnName="PeptideModifiedSequence">
-                <ns:columnTitle>Modified Peptide</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="StandardType"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="Molecule">
-        <ns:titleColumn>CustomIonName</ns:titleColumn>
-        <ns:description>Contains a row for each non-proteomic molecule loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="IonFormula" />
-            <ns:column columnName="CustomIonName" />
-            <ns:column columnName="MassMonoisotopic">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="MassAverage">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="GeneralMoleculeChromInfo">
-        <ns:titleColumn>SampleName</ns:titleColumn>
-        <ns:description>Contains a row for each peptide chromatogram loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="GeneralMoleculeId"/>
-            <ns:column columnName="SampleFileId">
-                <ns:columnTitle>Sample File</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="PeakCountRatio">
-                <ns:formatString>0.00</ns:formatString>
-            </ns:column>
-            <ns:column columnName="RetentionTime">
-                <ns:columnTitle>RT</ns:columnTitle>
-                <ns:description>Retention Time</ns:description>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="GeneralPrecursor">
-        <ns:titleColumn>Mz</ns:titleColumn>
-        <ns:description>Parent table to Precursor, MoleculePrecursor, PrecursorChromInfo, PrecursorAnnotation, PrecursorLibInfo</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="GeneralMoleculeId"/>
-            <ns:column columnName="Mz">
-                <ns:columnTitle>Q1 m/z</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Charge">
-                <ns:columnTitle>Q1 Z</ns:columnTitle>
-                <ns:formatString>0+;0-</ns:formatString>
-            </ns:column>
-            <ns:column columnName="CollisionEnergy">
-                <ns:columnTitle>CE</ns:columnTitle>
-                <ns:description>Collision Energy</ns:description>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="DeclusteringPotential">
-                <ns:columnTitle>DP</ns:columnTitle>
-                <ns:description>Declustring Potential</ns:description>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Decoy"/>
-            <ns:column columnName="Note"/>
-            <ns:column columnName="Modified">
-                <ns:formatString>DateTime</ns:formatString>
-            </ns:column>
-            <ns:column columnName="RepresentativeDataState">
-                <ns:columnTitle>Library State</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="ExplicitCollisionEnergy">
-                <ns:columnTitle>Explicit CE</ns:columnTitle>
-                <ns:description>Explicit Collision Energy</ns:description>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="ExplicitDriftTimeMsec" />
-            <ns:column columnName="ExplicitDriftTimeHighEnergyOffsetMsec" />
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="MoleculePrecursor">
-        <ns:titleColumn>CustomIonName</ns:titleColumn>
-        <ns:description>Contains a row for each non-proteomic molecule precursor loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="IonFormula"/>
-            <ns:column columnName="CustomIonName"/>
-            <ns:column columnName="MassMonoisotopic">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="MassAverage">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="Precursor">
-        <ns:titleColumn>ModifiedSequence</ns:titleColumn>
-        <ns:description>Contains a row for each precursor loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="IsotopeLabelId">
-                <ns:columnTitle>Isotope</ns:columnTitle>
-                <ns:inputType>text</ns:inputType>
-            </ns:column>
-            <ns:column columnName="NeutralMass">
-                <ns:columnTitle>Precursor Neutral Mass</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="ModifiedSequence">
-                <ns:columnTitle>Modified Precursor</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="DecoyMassShift"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="PrecursorChromInfo">
-        <ns:titleColumn>SampleName</ns:titleColumn>
-        <ns:description>Contains a row for each precursor chromatogram loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Container">
-                <ns:isHidden>true</ns:isHidden>
-                <ns:isReadOnly>true</ns:isReadOnly>
-                <ns:fk>
-                    <ns:fkColumnName>EntityId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>containers</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="PrecursorId">
-                <ns:columnTitle>Precursor</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="SampleFileId">
-                <ns:columnTitle>Sample File</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="GeneralMoleculeChromInfoId"/>
-            <ns:column columnName="BestRetentionTime">
-                <ns:columnTitle>Best RT</ns:columnTitle>
-                <ns:description>Best Retention Time</ns:description>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="MinStartTime">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="MaxEndTime">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="TotalArea">
-                <ns:formatString>#,##0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="TotalBackground">
-                <ns:formatString>#,##0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="MaxFwhm">
-                <ns:columnTitle>Max FWHM</ns:columnTitle>
-                <ns:formatString>#,##0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="PeakCountRatio">
-                <ns:formatString>0.00</ns:formatString>
-            </ns:column>
-            <ns:column columnName="NumTruncated"/>
-            <ns:column columnName="LibraryDotP">
-                <ns:columnTitle>Library DotP</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="IsotopeDotP">
-                <ns:columnTitle>Isotope DotP</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="OptimizationStep"/>
-            <ns:column columnName="UserSet"/>
-            <ns:column columnName="Chromatogram">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="NumTransitions">
-                <ns:isHidden>false</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="NumPoints">
-                <ns:isHidden>false</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Identified"/>
-            <ns:column columnName="Note"/>
-            <ns:column columnName="MaxHeight"/>
-            <ns:column columnName="AverageMassErrorPPM"/>
-            <ns:column columnName="UncompressedSize">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="GeneralTransition">
-        <ns:titleColumn>Mz</ns:titleColumn>
-        <ns:description>Parent table to Transition, MoleculeTransition, TransitionChromInfo, TransitionAnnotation.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="GeneralPrecursorId">
-                <ns:columnTitle>Precursor</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Mz">
-                <ns:columnTitle>Q3 m/z</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Charge">
-                <ns:columnTitle>Q3 Z</ns:columnTitle>
-                <ns:formatString>0+;0-</ns:formatString>
-            </ns:column>
-            <ns:column columnName="FragmentType"/>
-            <ns:column columnName="IsotopeDistIndex"/>
-            <ns:column columnName="IsotopeDistRank"/>
-            <ns:column columnName="IsotopeDistProportion"/>
-            <ns:column columnName="Decoy"/>
-            <ns:column columnName="Note"/>
-            <ns:column columnName="MassIndex"/>
-            <ns:column columnName="ExplicitCollisionEnergy"/>
-            <ns:column columnName="SLens"/>
-            <ns:column columnName="ConeVoltage"/>
-            <ns:column columnName="ExplicitCompensationVoltage"/>
-            <ns:column columnName="ExplicitDeclusteringPotential"/>
-            <ns:column columnName="ExplicitDriftTimeMSec"/>
-            <ns:column columnName="ExplicitDriftTimeHighEnergyOffsetMSec"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="Transition">
-        <ns:description>Contains a row for each transition loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="NeutralMass">
-                <ns:columnTitle>Transition Neutral Mass</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="NeutralLossMass">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="FragmentOrdinal" />
-            <ns:column columnName="CleavageAa">
-                <ns:columnTitle>Cleavage AA</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="LibraryRank"/>
-            <ns:column columnName="LibraryIntensity"/>
-            <ns:column columnName="DecoyMassShift"/>
-            <ns:column columnName="MeasuredIonName"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="MoleculeTransition">
-        <ns:titleColumn>CustomIonName</ns:titleColumn>
-        <ns:description>Contains a row for each non-proteomic molecule transition loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="TransitionId">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="IonFormula"/>
-            <ns:column columnName="CustomIonName"/>
-            <ns:column columnName="MassMonoisotopic">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="MassAverage">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableDbType="TABLE" tableName="TransitionChromInfo">
-        <ns:titleColumn>SampleName</ns:titleColumn>
-        <ns:description>Contains a row for each transition chromatogram loaded in a targeted MS run.</ns:description>
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="TransitionId">
-                <ns:columnTitle>Product m/z</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="SampleFileId">
-                <ns:columnTitle>Sample File</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="PrecursorChromInfoId"/>
-            <ns:column columnName="RetentionTime">
-                <ns:columnTitle>RT</ns:columnTitle>
-                <ns:description>Retention Time</ns:description>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="StartTime">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="EndTime">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Height">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Area">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Background">
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Fwhm">
-                <ns:columnTitle>FWHM</ns:columnTitle>
-                <ns:formatString>0.0000</ns:formatString>
-            </ns:column>
-            <ns:column columnName="FwhmDegenerate"/>
-            <ns:column columnName="Truncated"/>
-            <ns:column columnName="PeakRank" />
-            <ns:column columnName="OptimizationStep"/>
-            <ns:column columnName="UserSet"/>
-            <ns:column columnName="ChromatogramIndex">
-                <ns:isHidden>false</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Identified"/>
-            <ns:column columnName="Note"/>
-            <ns:column columnName="MassErrorPPM"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="Enzyme" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Cut"/>
-            <ns:column columnName="NoCut"/>
-            <ns:column columnName="Sense"/>
-            <ns:column columnName="CutC"/>
-            <ns:column columnName="NoCutC"/>
-            <ns:column columnName="CutN"/>
-            <ns:column columnName="NoCutN"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="Instrument" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="RunId"/>
-            <ns:column columnName="Model"/>
-            <ns:column columnName="IonizationType"/>
-            <ns:column columnName="Analyzer"/>
-            <ns:column columnName="Detector"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="IsotopeEnrichment" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="RunId"/>
-            <ns:column columnName="Symbol"/>
-            <ns:column columnName="PercentEnrichment"/>
-            <ns:column columnName="Name"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="IsotopeModification" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="AminoAcid"/>
-            <ns:column columnName="Terminus"/>
-            <ns:column columnName="Formula"/>
-            <ns:column columnName="MassDiffMono"/>
-            <ns:column columnName="MassDiffAvg"/>
-            <ns:column columnName="Label13C"/>
-            <ns:column columnName="Label15N"/>
-            <ns:column columnName="Label18O"/>
-            <ns:column columnName="Label2H"/>
-            <ns:column columnName="UnimodId"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="LibrarySettings" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="RunId"/>
-            <ns:column columnName="Pick"/>
-            <ns:column columnName="RankType"/>
-            <ns:column columnName="PeptideCount"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="LibrarySource" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Type"/>
-            <ns:column columnName="Score1Name"/>
-            <ns:column columnName="Score2Name"/>
-            <ns:column columnName="Score3Name"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="ModificationSettings" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="RunId"/>
-            <ns:column columnName="MaxVariableMods"/>
-            <ns:column columnName="MaxNeutralLosses"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="GeneralMoleculeAnnotation" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Value"/>
-            <ns:column columnName="GeneralMoleculeId"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="PeptideAreaRatio" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="PeptideChrominfoId"/>
-            <ns:column columnName="PeptideChrominfoStdId"/>
-            <ns:column columnName="IsotopeLabelId"/>
-            <ns:column columnName="IsotopeLabelStdId"/>
-            <ns:column columnName="AreaRatio"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="PeptideGroupAnnotation" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Value"/>
-            <ns:column columnName="PeptideGroupId"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="PrecursorAnnotation" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Value"/>
-            <ns:column columnName="PrecursorId"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="PeptideIsotopeModification" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="PeptideId"/>
-            <ns:column columnName="IsotopeModId"/>
-            <ns:column columnName="IndexAA"/>
-            <ns:column columnName="MassDiff"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="PeptideStructuralModification" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="PeptideId"/>
-            <ns:column columnName="StructuralModId"/>
-            <ns:column columnName="IndexAA"/>
-            <ns:column columnName="MassDiff"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="precursorarearatio" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="precursorchrominfoid"/>
-            <ns:column columnName="precursorchrominfostdid"/>
-            <ns:column columnName="isotopelabelid"/>
-            <ns:column columnName="isotopelabelstdid"/>
-            <ns:column columnName="arearatio"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="precursorchrominfoannotation" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Value"/>
-            <ns:column columnName="precursorchrominfoid"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="predictor" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="name"/>
-            <ns:column columnName="stepsize"/>
-            <ns:column columnName="stepcount"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="predictorsettings" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="PredictorId"/>
-            <ns:column columnName="Charge"/>
-            <ns:column columnName="Slope"/>
-            <ns:column columnName="Intercept"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="protein" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="peptidegroupid"/>
-            <ns:column columnName="labkeysequenceid"/>
-            <ns:column columnName="name"/>
-            <ns:column columnName="description"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="retentiontimepredictionsettings" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="runid"/>
-            <ns:column columnName="CalculatorName"/>
-            <ns:column columnName="IsIrt"/>
-            <ns:column columnName="RegressionSlope"/>
-            <ns:column columnName="RegressionIntercept"/>
-            <ns:column columnName="PredictorName"/>
-            <ns:column columnName="TimeWindow"/>
-            <ns:column columnName="UseMeasuredRTs"/>
-            <ns:column columnName="MeasuredRTWindow"/>
-            <ns:column columnName="IrtDatabasePath"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="runenzyme" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="enzymeid"/>
-            <ns:column columnName="runid"/>
-            <ns:column columnName="maxmissedcleavages"/>
-            <ns:column columnName="excluderaggedends"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="runisotopemodification" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="isotopemodid"/>
-            <ns:column columnName="runid"/>
-            <ns:column columnName="isotopelabelid"/>
-            <ns:column columnName="explicitmod"/>
-            <ns:column columnName="relativert"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="runstructuralmodification" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="structuralmodid"/>
-            <ns:column columnName="runid"/>
-            <ns:column columnName="explicitmod"/>
-            <ns:column columnName="variable"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="spectrumlibrary" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="runid"/>
-            <ns:column columnName="librarysourceid"/>
-            <ns:column columnName="librarytype"/>
-            <ns:column columnName="name"/>
-            <ns:column columnName="filenamehint"/>
-            <ns:column columnName="SkylineLibraryId"/>
-            <ns:column columnName="revision"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="structuralmodification" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="name"/>
-            <ns:column columnName="aminoacid"/>
-            <ns:column columnName="terminus"/>
-            <ns:column columnName="formula"/>
-            <ns:column columnName="massdiffmono"/>
-            <ns:column columnName="massdiffavg"/>
-            <ns:column columnName="unimodid"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="structuralmodloss" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="structuralmodid"/>
-            <ns:column columnName="formula"/>
-            <ns:column columnName="massdiffmono"/>
-            <ns:column columnName="massdiffavg"/>
-            <ns:column columnName="Inclusion"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="transitionannotation" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Value"/>
-            <ns:column columnName="transitionid"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="transitionarearatio" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="transitionchrominfoid"/>
-            <ns:column columnName="transitionchrominfostdid"/>
-            <ns:column columnName="isotopelabelid"/>
-            <ns:column columnName="isotopelabelstdid"/>
-            <ns:column columnName="arearatio"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="transitionchrominfoannotation" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Value"/>
-            <ns:column columnName="transitionchrominfoid"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="transitionfullscansettings" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="runid"/>
-            <ns:column columnName="precursorfilter"/>
-            <ns:column columnName="precursorleftfilter"/>
-            <ns:column columnName="precursorrightfilter"/>
-            <ns:column columnName="productmassanalyzer"/>
-            <ns:column columnName="productres"/>
-            <ns:column columnName="productresmz"/>
-            <ns:column columnName="precursorisotopes"/>
-            <ns:column columnName="precursorisotopefilter"/>
-            <ns:column columnName="precursormassanalyzer"/>
-            <ns:column columnName="precursorres"/>
-            <ns:column columnName="precursorresmz"/>
-            <ns:column columnName="schedulefilter"/>
-            <ns:column columnName="AcquisitionMethod"/>
-            <ns:column columnName="RetentionTimeFilterType"/>
-            <ns:column columnName="RetentionTimeFilterLength"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="transitioninstrumentsettings" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="runid"/>
-            <ns:column columnName="dynamicmin"/>
-            <ns:column columnName="minmz"/>
-            <ns:column columnName="maxmz"/>
-            <ns:column columnName="mzmatchtolerance"/>
-            <ns:column columnName="mintime"/>
-            <ns:column columnName="maxtime"/>
-            <ns:column columnName="maxtransitions"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="transitionloss" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="transitionid"/>
-            <ns:column columnName="structuralmodlossid"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="transitionoptimization" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="transitionid"/>
-            <ns:column columnName="optimizationtype"/>
-            <ns:column columnName="optvalue"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="transitionpredictionsettings" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="runid"/>
-            <ns:column columnName="precursormasstype"/>
-            <ns:column columnName="productmasstype"/>
-            <ns:column columnName="optimizeby"/>
-            <ns:column columnName="cepredictorid"/>
-            <ns:column columnName="dppredictorid"/>
-        </ns:columns>
-    </ns:table>
+<tables xsi:schemaLocation="http://labkey.org/data/xml ..\..\..\..\schemas\tableInfo.xsd"
+           xmlns="http://labkey.org/data/xml" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <table tableDbType="TABLE" tableName="IsotopeLabel">
+        <titleColumn>Name</titleColumn>
+        <description>Contains a row for each Isotope label in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Standard"/>
+            <column columnName="RunId">
+                <columnTitle>File</columnTitle>
+            </column>
+            <column columnName="Name">
+                <columnTitle>Label</columnTitle>
+                <displayWidth>15</displayWidth>
+            </column>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="Replicate">
+        <titleColumn>Name</titleColumn>
+        <description>Contains a row for each replicate loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="RunId">
+                <columnTitle>File</columnTitle>
+            </column>
+            <column columnName="CePredictorId">
+                <columnTitle>CE Predictor</columnTitle>
+            </column>
+            <column columnName="DpPredictorId">
+                <columnTitle>DP Predictor</columnTitle>
+            </column>
+        </columns>
+    </table>
+    <table tableName="ReplicateAnnotation" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Value"/>
+            <column columnName="Source"/>
+            <column columnName="ReplicateId"/>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="SampleFile">
+        <titleColumn>SampleName</titleColumn>
+        <description>Contains a row for each sample file loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>false</isHidden>
+            </column>
+            <column columnName="ReplicateId">
+                <columnTitle>Replicate</columnTitle>
+            </column>
+            <column columnName="FilePath"/>
+            <column columnName="SampleName"/>
+            <column columnName="AcquiredTime"/>
+            <column columnName="ModifiedTime"/>
+            <column columnName="SkylineId">
+                <columnTitle>Skyline ID</columnTitle>
+            </column>
+            <column columnName="InstrumentId">
+                <columnTitle>Instrument</columnTitle>
+            </column>
+        </columns>
+    </table>
+    <table tableName="Runs" tableDbType="TABLE">
+        <description>Contains a row per Skyline document loaded in this folder.</description>
+        <titleColumn>Description</titleColumn>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="_ts">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="ModifiedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Owner">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Container">
+                <isReadOnly>false</isReadOnly>
+                <fk>
+                    <fkColumnName>EntityId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>containers</fkTable>
+                </fk>
+            </column>
+            <column columnName="EntityId">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="FileName">
+                <columnTitle>File</columnTitle>
+            </column>
+            <column columnName="StatusId">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="ExperimentRunLSID">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Created"/>
+            <column columnName="Deleted"/>
+            <column columnName="Description"/>
+            <column columnName="Modified">
+                <formatString>DateTime</formatString>
+            </column>
+            <column columnName="Status"/>
+            <column columnName="RepresentativeDataState">
+                <columnTitle>Representative State</columnTitle>
+            </column>
+            <column columnName="DataId"/>
+            <column columnName="iRTScaleId">
+                <columnTitle>iRT Scale Id</columnTitle>
+            </column>
+            <column columnName="SoftwareVersion"/>
+            <column columnName="FormatVersion"/>
+            <column columnName="DocumentGUID"/>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="PeptideGroup">
+        <titleColumn>Label</titleColumn>
+        <description>Contains a row for each peptide group loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="RunId">
+                <columnTitle>File</columnTitle>
+            </column>
+            <column columnName="Label">
+                <columnTitle>Protein / Label</columnTitle>
+            </column>
+            <column columnName="SequenceId">
+                <columnTitle>Sequence Id</columnTitle>
+                <fk>
+                    <fkDbSchema>prot</fkDbSchema>
+                    <fkTable>sequences</fkTable>
+                    <fkColumnName>seqid</fkColumnName>
+                    <fkDisplayColumnName>BestName</fkDisplayColumnName>
+                </fk>
+            </column>
+            <column columnName="Decoy"/>
+            <column columnName="Note"/>
+            <column columnName="Description">
+                <inputType>text</inputType>
+                <displayWidth>800</displayWidth>
+            </column>
+            <column columnName="Modified">
+                <formatString>DateTime</formatString>
+            </column>
+            <column columnName="RepresentativeDataState">
+                <columnTitle>Library State</columnTitle>
+            </column>
+            <column columnName="Name" />
+            <column columnName="Accession" />
+            <column columnName="PreferredName" />
+            <column columnName="Gene" />
+            <column columnName="Species" />
+            <column columnName="AltDescription"/>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="GeneralMolecule">
+        <titleColumn>RtCalculatorScore</titleColumn>
+        <description>Parent table to Peptide, Molecule, GeneralMoleculeChromInfo, GeneralAnnotation.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="PeptideGroupId">
+                <columnTitle>Group</columnTitle>
+            </column>
+            <column columnName="RtCalculatorScore">
+                <columnTitle>RT Score</columnTitle>
+            </column>
+            <column columnName="PredictedRetentionTime">
+                <columnTitle>Predicted RT</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="AvgMeasuredRetentionTime">
+                <columnTitle>Avg. Measured RT</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="Note"/>
+            <column columnName="ExplicitRetentionTime">
+                <columnTitle>Explicit RT</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="Peptide">
+        <titleColumn>PeptideModifiedSequence</titleColumn>
+        <description>Contains a row for each peptide loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Sequence" />
+            <column columnName="PreviousAa">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="NextAa">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="StartIndex" />
+            <column columnName="EndIndex" />
+            <column columnName="CalcNeutralMass">
+                <columnTitle>Peptide Neutral Mass</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="NumMissedCleavages">
+                <columnTitle>Missed Cleavages</columnTitle>
+            </column>
+            <column columnName="Decoy"/>
+            <column columnName="Rank"/>
+            <column columnName="PeptideModifiedSequence">
+                <columnTitle>Modified Peptide</columnTitle>
+            </column>
+            <column columnName="StandardType"/>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="Molecule">
+        <titleColumn>CustomIonName</titleColumn>
+        <description>Contains a row for each non-proteomic molecule loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="IonFormula" />
+            <column columnName="CustomIonName" />
+            <column columnName="MassMonoisotopic">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="MassAverage">
+                <formatString>0.0000</formatString>
+            </column>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="GeneralMoleculeChromInfo">
+        <titleColumn>SampleName</titleColumn>
+        <description>Contains a row for each peptide chromatogram loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="GeneralMoleculeId"/>
+            <column columnName="SampleFileId">
+                <columnTitle>Sample File</columnTitle>
+            </column>
+            <column columnName="PeakCountRatio">
+                <formatString>0.00</formatString>
+            </column>
+            <column columnName="RetentionTime">
+                <columnTitle>RT</columnTitle>
+                <description>Retention Time</description>
+                <formatString>0.0000</formatString>
+            </column>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="GeneralPrecursor">
+        <titleColumn>Mz</titleColumn>
+        <description>Parent table to Precursor, MoleculePrecursor, PrecursorChromInfo, PrecursorAnnotation, PrecursorLibInfo</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="GeneralMoleculeId"/>
+            <column columnName="Mz">
+                <columnTitle>Q1 m/z</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="Charge">
+                <columnTitle>Q1 Z</columnTitle>
+                <formatString>0+;0-</formatString>
+            </column>
+            <column columnName="CollisionEnergy">
+                <columnTitle>CE</columnTitle>
+                <description>Collision Energy</description>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="DeclusteringPotential">
+                <columnTitle>DP</columnTitle>
+                <description>Declustring Potential</description>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="Decoy"/>
+            <column columnName="Note"/>
+            <column columnName="Modified">
+                <formatString>DateTime</formatString>
+            </column>
+            <column columnName="RepresentativeDataState">
+                <columnTitle>Library State</columnTitle>
+            </column>
+            <column columnName="ExplicitCollisionEnergy">
+                <columnTitle>Explicit CE</columnTitle>
+                <description>Explicit Collision Energy</description>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="ExplicitDriftTimeMsec" />
+            <column columnName="ExplicitDriftTimeHighEnergyOffsetMsec" />
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="MoleculePrecursor">
+        <titleColumn>CustomIonName</titleColumn>
+        <description>Contains a row for each non-proteomic molecule precursor loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="IonFormula"/>
+            <column columnName="CustomIonName"/>
+            <column columnName="MassMonoisotopic">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="MassAverage">
+                <formatString>0.0000</formatString>
+            </column>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="Precursor">
+        <titleColumn>ModifiedSequence</titleColumn>
+        <description>Contains a row for each precursor loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="IsotopeLabelId">
+                <columnTitle>Isotope</columnTitle>
+                <inputType>text</inputType>
+            </column>
+            <column columnName="NeutralMass">
+                <columnTitle>Precursor Neutral Mass</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="ModifiedSequence">
+                <columnTitle>Modified Precursor</columnTitle>
+            </column>
+            <column columnName="DecoyMassShift"/>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="PrecursorChromInfo">
+        <titleColumn>SampleName</titleColumn>
+        <description>Contains a row for each precursor chromatogram loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Container">
+                <isHidden>true</isHidden>
+                <isReadOnly>true</isReadOnly>
+                <fk>
+                    <fkColumnName>EntityId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>containers</fkTable>
+                </fk>
+            </column>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="PrecursorId">
+                <columnTitle>Precursor</columnTitle>
+            </column>
+            <column columnName="SampleFileId">
+                <columnTitle>Sample File</columnTitle>
+            </column>
+            <column columnName="GeneralMoleculeChromInfoId"/>
+            <column columnName="BestRetentionTime">
+                <columnTitle>Best RT</columnTitle>
+                <description>Best Retention Time</description>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="MinStartTime">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="MaxEndTime">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="TotalArea">
+                <formatString>#,##0.0000</formatString>
+            </column>
+            <column columnName="TotalBackground">
+                <formatString>#,##0.0000</formatString>
+            </column>
+            <column columnName="MaxFwhm">
+                <columnTitle>Max FWHM</columnTitle>
+                <formatString>#,##0.0000</formatString>
+            </column>
+            <column columnName="PeakCountRatio">
+                <formatString>0.00</formatString>
+            </column>
+            <column columnName="NumTruncated"/>
+            <column columnName="LibraryDotP">
+                <columnTitle>Library DotP</columnTitle>
+            </column>
+            <column columnName="IsotopeDotP">
+                <columnTitle>Isotope DotP</columnTitle>
+            </column>
+            <column columnName="OptimizationStep"/>
+            <column columnName="UserSet"/>
+            <column columnName="Chromatogram">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="NumTransitions">
+                <isHidden>false</isHidden>
+            </column>
+            <column columnName="NumPoints">
+                <isHidden>false</isHidden>
+            </column>
+            <column columnName="Identified"/>
+            <column columnName="Note"/>
+            <column columnName="MaxHeight"/>
+            <column columnName="AverageMassErrorPPM"/>
+            <column columnName="UncompressedSize">
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="GeneralTransition">
+        <titleColumn>Mz</titleColumn>
+        <description>Parent table to Transition, MoleculeTransition, TransitionChromInfo, TransitionAnnotation.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="GeneralPrecursorId">
+                <columnTitle>Precursor</columnTitle>
+            </column>
+            <column columnName="Mz">
+                <columnTitle>Q3 m/z</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="Charge">
+                <columnTitle>Q3 Z</columnTitle>
+                <formatString>0+;0-</formatString>
+            </column>
+            <column columnName="FragmentType"/>
+            <column columnName="IsotopeDistIndex"/>
+            <column columnName="IsotopeDistRank"/>
+            <column columnName="IsotopeDistProportion"/>
+            <column columnName="Decoy"/>
+            <column columnName="Note"/>
+            <column columnName="MassIndex"/>
+            <column columnName="ExplicitCollisionEnergy"/>
+            <column columnName="SLens"/>
+            <column columnName="ConeVoltage"/>
+            <column columnName="ExplicitCompensationVoltage"/>
+            <column columnName="ExplicitDeclusteringPotential"/>
+            <column columnName="ExplicitDriftTimeMSec"/>
+            <column columnName="ExplicitDriftTimeHighEnergyOffsetMSec"/>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="Transition">
+        <description>Contains a row for each transition loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="NeutralMass">
+                <columnTitle>Transition Neutral Mass</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="NeutralLossMass">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="FragmentOrdinal" />
+            <column columnName="CleavageAa">
+                <columnTitle>Cleavage AA</columnTitle>
+            </column>
+            <column columnName="LibraryRank"/>
+            <column columnName="LibraryIntensity"/>
+            <column columnName="DecoyMassShift"/>
+            <column columnName="MeasuredIonName"/>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="MoleculeTransition">
+        <titleColumn>CustomIonName</titleColumn>
+        <description>Contains a row for each non-proteomic molecule transition loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="TransitionId">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="IonFormula"/>
+            <column columnName="CustomIonName"/>
+            <column columnName="MassMonoisotopic">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="MassAverage">
+                <formatString>0.0000</formatString>
+            </column>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="TransitionChromInfo">
+        <titleColumn>SampleName</titleColumn>
+        <description>Contains a row for each transition chromatogram loaded in a targeted MS run.</description>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="TransitionId">
+                <columnTitle>Product m/z</columnTitle>
+            </column>
+            <column columnName="SampleFileId">
+                <columnTitle>Sample File</columnTitle>
+            </column>
+            <column columnName="PrecursorChromInfoId"/>
+            <column columnName="RetentionTime">
+                <columnTitle>RT</columnTitle>
+                <description>Retention Time</description>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="StartTime">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="EndTime">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="Height">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="Area">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="Background">
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="Fwhm">
+                <columnTitle>FWHM</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="FwhmDegenerate"/>
+            <column columnName="Truncated"/>
+            <column columnName="PeakRank" />
+            <column columnName="OptimizationStep"/>
+            <column columnName="UserSet"/>
+            <column columnName="ChromatogramIndex">
+                <isHidden>false</isHidden>
+            </column>
+            <column columnName="Identified"/>
+            <column columnName="Note"/>
+            <column columnName="MassErrorPPM"/>
+        </columns>
+    </table>
+    <table tableName="Enzyme" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Cut"/>
+            <column columnName="NoCut"/>
+            <column columnName="Sense"/>
+            <column columnName="CutC"/>
+            <column columnName="NoCutC"/>
+            <column columnName="CutN"/>
+            <column columnName="NoCutN"/>
+        </columns>
+    </table>
+    <table tableName="Instrument" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="RunId"/>
+            <column columnName="Model"/>
+            <column columnName="IonizationType"/>
+            <column columnName="Analyzer"/>
+            <column columnName="Detector"/>
+        </columns>
+    </table>
+    <table tableName="IsotopeEnrichment" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="RunId"/>
+            <column columnName="Symbol"/>
+            <column columnName="PercentEnrichment"/>
+            <column columnName="Name"/>
+        </columns>
+    </table>
+    <table tableName="IsotopeModification" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="AminoAcid"/>
+            <column columnName="Terminus"/>
+            <column columnName="Formula"/>
+            <column columnName="MassDiffMono"/>
+            <column columnName="MassDiffAvg"/>
+            <column columnName="Label13C"/>
+            <column columnName="Label15N"/>
+            <column columnName="Label18O"/>
+            <column columnName="Label2H"/>
+            <column columnName="UnimodId"/>
+        </columns>
+    </table>
+    <table tableName="LibrarySettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="RunId"/>
+            <column columnName="Pick"/>
+            <column columnName="RankType"/>
+            <column columnName="PeptideCount"/>
+        </columns>
+    </table>
+    <table tableName="LibrarySource" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Type"/>
+            <column columnName="Score1Name"/>
+            <column columnName="Score2Name"/>
+            <column columnName="Score3Name"/>
+        </columns>
+    </table>
+    <table tableName="ModificationSettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="RunId"/>
+            <column columnName="MaxVariableMods"/>
+            <column columnName="MaxNeutralLosses"/>
+        </columns>
+    </table>
+    <table tableName="GeneralMoleculeAnnotation" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Value"/>
+            <column columnName="GeneralMoleculeId"/>
+        </columns>
+    </table>
+    <table tableName="PeptideAreaRatio" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="PeptideChrominfoId"/>
+            <column columnName="PeptideChrominfoStdId"/>
+            <column columnName="IsotopeLabelId"/>
+            <column columnName="IsotopeLabelStdId"/>
+            <column columnName="AreaRatio"/>
+        </columns>
+    </table>
+    <table tableName="PeptideGroupAnnotation" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Value"/>
+            <column columnName="PeptideGroupId"/>
+        </columns>
+    </table>
+    <table tableName="PrecursorAnnotation" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Value"/>
+            <column columnName="PrecursorId"/>
+        </columns>
+    </table>
+    <table tableName="PeptideIsotopeModification" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="PeptideId"/>
+            <column columnName="IsotopeModId"/>
+            <column columnName="IndexAA"/>
+            <column columnName="MassDiff"/>
+        </columns>
+    </table>
+    <table tableName="PeptideStructuralModification" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="PeptideId"/>
+            <column columnName="StructuralModId"/>
+            <column columnName="IndexAA"/>
+            <column columnName="MassDiff"/>
+        </columns>
+    </table>
+    <table tableName="precursorarearatio" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="precursorchrominfoid"/>
+            <column columnName="precursorchrominfostdid"/>
+            <column columnName="isotopelabelid"/>
+            <column columnName="isotopelabelstdid"/>
+            <column columnName="arearatio"/>
+        </columns>
+    </table>
+    <table tableName="precursorchrominfoannotation" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Value"/>
+            <column columnName="precursorchrominfoid"/>
+        </columns>
+    </table>
+    <table tableName="predictor" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="name"/>
+            <column columnName="stepsize"/>
+            <column columnName="stepcount"/>
+        </columns>
+    </table>
+    <table tableName="predictorsettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="PredictorId"/>
+            <column columnName="Charge"/>
+            <column columnName="Slope"/>
+            <column columnName="Intercept"/>
+        </columns>
+    </table>
+    <table tableName="protein" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="peptidegroupid"/>
+            <column columnName="labkeysequenceid"/>
+            <column columnName="name"/>
+            <column columnName="description"/>
+        </columns>
+    </table>
+    <table tableName="retentiontimepredictionsettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="runid"/>
+            <column columnName="CalculatorName"/>
+            <column columnName="IsIrt"/>
+            <column columnName="RegressionSlope"/>
+            <column columnName="RegressionIntercept"/>
+            <column columnName="PredictorName"/>
+            <column columnName="TimeWindow"/>
+            <column columnName="UseMeasuredRTs"/>
+            <column columnName="MeasuredRTWindow"/>
+            <column columnName="IrtDatabasePath"/>
+        </columns>
+    </table>
+    <table tableName="runenzyme" tableDbType="TABLE">
+        <columns>
+            <column columnName="enzymeid"/>
+            <column columnName="runid"/>
+            <column columnName="maxmissedcleavages"/>
+            <column columnName="excluderaggedends"/>
+        </columns>
+    </table>
+    <table tableName="runisotopemodification" tableDbType="TABLE">
+        <columns>
+            <column columnName="isotopemodid"/>
+            <column columnName="runid"/>
+            <column columnName="isotopelabelid"/>
+            <column columnName="explicitmod"/>
+            <column columnName="relativert"/>
+        </columns>
+    </table>
+    <table tableName="runstructuralmodification" tableDbType="TABLE">
+        <columns>
+            <column columnName="structuralmodid"/>
+            <column columnName="runid"/>
+            <column columnName="explicitmod"/>
+            <column columnName="variable"/>
+        </columns>
+    </table>
+    <table tableName="spectrumlibrary" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="runid"/>
+            <column columnName="librarysourceid"/>
+            <column columnName="librarytype"/>
+            <column columnName="name"/>
+            <column columnName="filenamehint"/>
+            <column columnName="SkylineLibraryId"/>
+            <column columnName="revision"/>
+        </columns>
+    </table>
+    <table tableName="structuralmodification" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="name"/>
+            <column columnName="aminoacid"/>
+            <column columnName="terminus"/>
+            <column columnName="formula"/>
+            <column columnName="massdiffmono"/>
+            <column columnName="massdiffavg"/>
+            <column columnName="unimodid"/>
+        </columns>
+    </table>
+    <table tableName="structuralmodloss" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="structuralmodid"/>
+            <column columnName="formula"/>
+            <column columnName="massdiffmono"/>
+            <column columnName="massdiffavg"/>
+            <column columnName="Inclusion"/>
+        </columns>
+    </table>
+    <table tableName="transitionannotation" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Value"/>
+            <column columnName="transitionid"/>
+        </columns>
+    </table>
+    <table tableName="transitionarearatio" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="transitionchrominfoid"/>
+            <column columnName="transitionchrominfostdid"/>
+            <column columnName="isotopelabelid"/>
+            <column columnName="isotopelabelstdid"/>
+            <column columnName="arearatio"/>
+        </columns>
+    </table>
+    <table tableName="transitionchrominfoannotation" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Value"/>
+            <column columnName="transitionchrominfoid"/>
+        </columns>
+    </table>
+    <table tableName="transitionfullscansettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="runid"/>
+            <column columnName="precursorfilter"/>
+            <column columnName="precursorleftfilter"/>
+            <column columnName="precursorrightfilter"/>
+            <column columnName="productmassanalyzer"/>
+            <column columnName="productres"/>
+            <column columnName="productresmz"/>
+            <column columnName="precursorisotopes"/>
+            <column columnName="precursorisotopefilter"/>
+            <column columnName="precursormassanalyzer"/>
+            <column columnName="precursorres"/>
+            <column columnName="precursorresmz"/>
+            <column columnName="schedulefilter"/>
+            <column columnName="AcquisitionMethod"/>
+            <column columnName="RetentionTimeFilterType"/>
+            <column columnName="RetentionTimeFilterLength"/>
+        </columns>
+    </table>
+    <table tableName="transitioninstrumentsettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="runid"/>
+            <column columnName="dynamicmin"/>
+            <column columnName="minmz"/>
+            <column columnName="maxmz"/>
+            <column columnName="mzmatchtolerance"/>
+            <column columnName="mintime"/>
+            <column columnName="maxtime"/>
+            <column columnName="maxtransitions"/>
+        </columns>
+    </table>
+    <table tableName="transitionloss" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="transitionid"/>
+            <column columnName="structuralmodlossid"/>
+        </columns>
+    </table>
+    <table tableName="transitionoptimization" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="transitionid"/>
+            <column columnName="optimizationtype"/>
+            <column columnName="optvalue"/>
+        </columns>
+    </table>
+    <table tableName="transitionpredictionsettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="runid"/>
+            <column columnName="precursormasstype"/>
+            <column columnName="productmasstype"/>
+            <column columnName="optimizeby"/>
+            <column columnName="cepredictorid"/>
+            <column columnName="dppredictorid"/>
+        </columns>
+    </table>
 
-    <ns:table tableName="DocumentPrecursors" tableDbType="NOT_IN_DB">
-        <ns:columns>
-            <ns:column columnName="Charge">
-                <ns:columnTitle>FWHM</ns:columnTitle>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
+    <table tableName="DocumentPrecursors" tableDbType="NOT_IN_DB">
+        <columns>
+            <column columnName="Charge">
+                <columnTitle>FWHM</columnTitle>
+            </column>
+        </columns>
+    </table>
 
-    <ns:table tableName="PrecursorLibInfo" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id"/>
-            <ns:column columnName="PrecursorId"/>
-            <ns:column columnName="SpectrumLibraryId"/>
-            <ns:column columnName="Score1"/>
-            <ns:column columnName="Score2"/>
-            <ns:column columnName="Score3"/>
-        </ns:columns>
-    </ns:table>
+    <table tableName="PrecursorLibInfo" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="PrecursorId"/>
+            <column columnName="SpectrumLibraryId"/>
+            <column columnName="Score1"/>
+            <column columnName="Score2"/>
+            <column columnName="Score3"/>
+        </columns>
+    </table>
 
-    <ns:table tableName="AnnotationSettings" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id"/>
-            <ns:column columnName="RunId"/>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Targets"/>
-            <ns:column columnName="Type"/>
-        </ns:columns>
-    </ns:table>
+    <table tableName="AnnotationSettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="RunId"/>
+            <column columnName="Name"/>
+            <column columnName="Targets"/>
+            <column columnName="Type"/>
+        </columns>
+    </table>
 
-    <ns:table tableName="iRTPeptide" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id"/>
-            <ns:column columnName="ModifiedSequence"/>
-            <ns:column columnName="iRTStandard">
-                <ns:columnTitle>iRT Standard</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="iRTValue">
-                <ns:columnTitle>iRT Value</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="iRTScaleId">
-                <ns:columnTitle>iRT Scale Id</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>Users</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ImportCount"/>
-            <ns:column columnName="TimeSource"/>
-        </ns:columns>
-    </ns:table>
+    <table tableName="iRTPeptide" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="ModifiedSequence"/>
+            <column columnName="iRTStandard">
+                <columnTitle>iRT Standard</columnTitle>
+            </column>
+            <column columnName="iRTValue">
+                <columnTitle>iRT Value</columnTitle>
+            </column>
+            <column columnName="iRTScaleId">
+                <columnTitle>iRT Scale Id</columnTitle>
+            </column>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                </fk>
+            </column>
+            <column columnName="ImportCount"/>
+            <column columnName="TimeSource"/>
+        </columns>
+    </table>
 
-    <ns:table tableName="iRTScale" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id"/>
-            <ns:column columnName="Container"/>
-            <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>Users</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
+    <table tableName="iRTScale" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="Container"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Users</fkTable>
+                </fk>
+            </column>
+        </columns>
+    </table>
 
-    <ns:table tableName="ExperimentAnnotations" tableDbType="TABLE">
-        <ns:titleColumn>Title</ns:titleColumn>
-        <ns:columns>
-            <ns:column columnName="_ts">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Id">
-                <ns:description>Contains a unique id for this targeted MS experiment</ns:description>
-            </ns:column>
-            <ns:column columnName="Container">
-                <ns:columnTitle>Folder</ns:columnTitle>
-                <ns:isReadOnly>false</ns:isReadOnly>
-                <ns:fk>
-                    <ns:fkColumnName>EntityId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>containers</ns:fkTable>
-                </ns:fk>
-                <ns:description>Folder or project in which this targeted MS experiment was created</ns:description>
-            </ns:column>
-            <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Modified"/>
-            <ns:column columnName="ModifiedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Title">
-                <ns:description>Title for this targeted MS experiment</ns:description>
-                <ns:nullable>false</ns:nullable>
-                <ns:inputRows>2</ns:inputRows>
-            </ns:column>
-            <ns:column columnName="Organism">
-                <ns:description>Name of the organism studied in the experiment</ns:description>
-            </ns:column>
-            <ns:column columnName="Instrument">
-                <ns:description>Mass Spectrometry Instrument on which the data were acquired</ns:description>
-            </ns:column>
-            <ns:column columnName="SpikeIn">
-                <ns:description>Spike-in experiment</ns:description>
-            </ns:column>
-            <ns:column columnName="ExperimentDescription">
-                <ns:description>Details about the experiment</ns:description>
-            </ns:column>
-            <ns:column columnName="SampleDescription">
-                <ns:description>Details about the biological sample used in the experiment.</ns:description>
-            </ns:column>
-            <ns:column columnName="Abstract"/>
-            <ns:column columnName="Citation">
-                <ns:inputRows>2</ns:inputRows>
-            </ns:column>
-            <ns:column columnName="PublicationLink">
-                <ns:inputRows>2</ns:inputRows>
-            </ns:column>
-            <ns:column columnName="ExperimentId">
-                <ns:fk>
-                    <ns:fkColumnName>RowId</ns:fkColumnName>
-                    <ns:fkDbSchema>exp</ns:fkDbSchema>
-                    <ns:fkTable>Experiment</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="JournalCopy">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="IncludeSubfolders">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
+    <table tableName="ExperimentAnnotations" tableDbType="TABLE">
+        <titleColumn>Title</titleColumn>
+        <columns>
+            <column columnName="_ts">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Id">
+                <description>Contains a unique id for this targeted MS experiment</description>
+            </column>
+            <column columnName="Container">
+                <columnTitle>Folder</columnTitle>
+                <isReadOnly>false</isReadOnly>
+                <fk>
+                    <fkColumnName>EntityId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>containers</fkTable>
+                </fk>
+                <description>Folder or project in which this targeted MS experiment was created</description>
+            </column>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Title">
+                <description>Title for this targeted MS experiment</description>
+                <nullable>false</nullable>
+                <inputRows>2</inputRows>
+            </column>
+            <column columnName="Organism">
+                <description>Name of the organism studied in the experiment</description>
+            </column>
+            <column columnName="Instrument">
+                <description>Mass Spectrometry Instrument on which the data were acquired</description>
+            </column>
+            <column columnName="SpikeIn">
+                <description>Spike-in experiment</description>
+            </column>
+            <column columnName="ExperimentDescription">
+                <description>Details about the experiment</description>
+            </column>
+            <column columnName="SampleDescription">
+                <description>Details about the biological sample used in the experiment.</description>
+            </column>
+            <column columnName="Abstract"/>
+            <column columnName="Citation">
+                <inputRows>2</inputRows>
+            </column>
+            <column columnName="PublicationLink">
+                <inputRows>2</inputRows>
+            </column>
+            <column columnName="ExperimentId">
+                <fk>
+                    <fkColumnName>RowId</fkColumnName>
+                    <fkDbSchema>exp</fkDbSchema>
+                    <fkTable>Experiment</fkTable>
+                </fk>
+            </column>
+            <column columnName="JournalCopy">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="IncludeSubfolders">
+                <isHidden>true</isHidden>
+            </column>
+        </columns>
+    </table>
 
-    <ns:table tableName="IsolationScheme" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id"/>
-            <ns:column columnName="RunId"/>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="PrecursorFilter"/>
-            <ns:column columnName="PrecursorLeftFilter"/>
-            <ns:column columnName="PrecursorRightFilter"/>
-            <ns:column columnName="SpecialHandling"/>
-            <ns:column columnName="WindowsPerScan"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="IsolationWindow" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id"/>
-            <ns:column columnName="IsolationSchemeId">
-                <ns:fk>
-                    <ns:fkColumnName>Id</ns:fkColumnName>
-                    <ns:fkDbSchema>targetedms</ns:fkDbSchema>
-                    <ns:fkTable>IsolationScheme</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="WindowEnd"/>
-            <ns:column columnName="WindowStart"/>
-            <ns:column columnName="Target"/>
-            <ns:column columnName="MarginLeft"/>
-            <ns:column columnName="MarginRight"/>
-            <ns:column columnName="Margin"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="DriftTimePredictionSettings" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id"/>
-            <ns:column columnName="RunId"/>
-            <ns:column columnName="UseSpectralLibraryDriftTimes"/>
-            <ns:column columnName="SpectralLibraryDriftTimesResolvingPower"/>
-            <ns:column columnName="PredictorName"/>
-            <ns:column columnName="ResolvingPower"/>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="MeasuredDriftTime" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="Id"/>
-            <ns:column columnName="DriftTimePredictionSettingsId">
-                <ns:fk>
-                    <ns:fkColumnName>Id</ns:fkColumnName>
-                    <ns:fkDbSchema>targetedms</ns:fkDbSchema>
-                    <ns:fkTable>DriftTimePredictionSettings</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ModifiedSequence"/>
-            <ns:column columnName="Charge"/>
-            <ns:column columnName="DriftTime"/>
-            <ns:column columnName="HighEnergyDriftTimeOffset" />
-        </ns:columns>
-    </ns:table>
+    <table tableName="IsolationScheme" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="RunId"/>
+            <column columnName="Name"/>
+            <column columnName="PrecursorFilter"/>
+            <column columnName="PrecursorLeftFilter"/>
+            <column columnName="PrecursorRightFilter"/>
+            <column columnName="SpecialHandling"/>
+            <column columnName="WindowsPerScan"/>
+        </columns>
+    </table>
+    <table tableName="IsolationWindow" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="IsolationSchemeId">
+                <fk>
+                    <fkColumnName>Id</fkColumnName>
+                    <fkDbSchema>targetedms</fkDbSchema>
+                    <fkTable>IsolationScheme</fkTable>
+                </fk>
+            </column>
+            <column columnName="WindowEnd"/>
+            <column columnName="WindowStart"/>
+            <column columnName="Target"/>
+            <column columnName="MarginLeft"/>
+            <column columnName="MarginRight"/>
+            <column columnName="Margin"/>
+        </columns>
+    </table>
+    <table tableName="DriftTimePredictionSettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="RunId"/>
+            <column columnName="UseSpectralLibraryDriftTimes"/>
+            <column columnName="SpectralLibraryDriftTimesResolvingPower"/>
+            <column columnName="PredictorName"/>
+            <column columnName="ResolvingPower"/>
+        </columns>
+    </table>
+    <table tableName="MeasuredDriftTime" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="DriftTimePredictionSettingsId">
+                <fk>
+                    <fkColumnName>Id</fkColumnName>
+                    <fkDbSchema>targetedms</fkDbSchema>
+                    <fkTable>DriftTimePredictionSettings</fkTable>
+                </fk>
+            </column>
+            <column columnName="ModifiedSequence"/>
+            <column columnName="Charge"/>
+            <column columnName="DriftTime"/>
+            <column columnName="HighEnergyDriftTimeOffset" />
+        </columns>
+    </table>
 
-    <ns:table tableName="Journal" tableDbType="TABLE">
-        <ns:titleColumn>Name</ns:titleColumn>
-        <ns:columns>
-            <ns:column columnName="_ts">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Created">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Modified">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="ModifiedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Id">
-                <ns:description>Contains a unique id for this Journal.</ns:description>
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Name">
-                <ns:description>Name of this journal.</ns:description>
-                <ns:nullable>false</ns:nullable>
-                <ns:url>org.labkey.targetedms.PublishTargetedMSExperimentsController$JournalGroupDetailsAction.class?id=${Id}</ns:url>
-            </ns:column>
-            <ns:column columnName="LabkeyGroupId">
-                <ns:columnTitle>Security Group</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>Principals</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Project">
-                <ns:fk>
-                    <ns:fkColumnName>EntityId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>Containers</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
+    <table tableName="Journal" tableDbType="TABLE">
+        <titleColumn>Name</titleColumn>
+        <columns>
+            <column columnName="_ts">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Created">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Modified">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="ModifiedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Id">
+                <description>Contains a unique id for this Journal.</description>
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Name">
+                <description>Name of this journal.</description>
+                <nullable>false</nullable>
+                <url>org.labkey.targetedms.PublishTargetedMSExperimentsController$JournalGroupDetailsAction.class?id=${Id}</url>
+            </column>
+            <column columnName="LabkeyGroupId">
+                <columnTitle>Security Group</columnTitle>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Principals</fkTable>
+                </fk>
+            </column>
+            <column columnName="Project">
+                <fk>
+                    <fkColumnName>EntityId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>Containers</fkTable>
+                </fk>
+            </column>
+        </columns>
+    </table>
 
-    <ns:table tableName="JournalExperiment" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="_ts">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="JournalId">
-                <ns:columnTitle>Target</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkColumnName>Id</ns:fkColumnName>
-                    <ns:fkDbSchema>targetedms</ns:fkDbSchema>
-                    <ns:fkTable>Journal</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ExperimentAnnotationsId">
-                <ns:columnTitle>Experiment</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkColumnName>Id</ns:fkColumnName>
-                    <ns:fkDbSchema>targetedms</ns:fkDbSchema>
-                    <ns:fkTable>ExperimentAnnotations</ns:fkTable>
-                </ns:fk>
-                <ns:url>/targetedms/showExperimentAnnotations.view?id=${ExperimentAnnotationsId}</ns:url>
-            </ns:column>
-            <ns:column columnName="ShortAccessURL">
-                <ns:columnTitle>Access Link</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkColumnName>EntityId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>ShortUrl</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ShortCopyURL">
-                <ns:columnTitle>Copy Link</ns:columnTitle>
-                <ns:fk>
-                    <ns:fkColumnName>EntityId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>ShortUrl</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Copied"/>
-        </ns:columns>
-    </ns:table>
+    <table tableName="JournalExperiment" tableDbType="TABLE">
+        <columns>
+            <column columnName="_ts">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="JournalId">
+                <columnTitle>Target</columnTitle>
+                <fk>
+                    <fkColumnName>Id</fkColumnName>
+                    <fkDbSchema>targetedms</fkDbSchema>
+                    <fkTable>Journal</fkTable>
+                </fk>
+            </column>
+            <column columnName="ExperimentAnnotationsId">
+                <columnTitle>Experiment</columnTitle>
+                <fk>
+                    <fkColumnName>Id</fkColumnName>
+                    <fkDbSchema>targetedms</fkDbSchema>
+                    <fkTable>ExperimentAnnotations</fkTable>
+                </fk>
+                <url>/targetedms/showExperimentAnnotations.view?id=${ExperimentAnnotationsId}</url>
+            </column>
+            <column columnName="ShortAccessURL">
+                <columnTitle>Access Link</columnTitle>
+                <fk>
+                    <fkColumnName>EntityId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>ShortUrl</fkTable>
+                </fk>
+            </column>
+            <column columnName="ShortCopyURL">
+                <columnTitle>Copy Link</columnTitle>
+                <fk>
+                    <fkColumnName>EntityId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>ShortUrl</fkTable>
+                </fk>
+            </column>
+            <column columnName="Copied"/>
+        </columns>
+    </table>
 
-    <ns:table tableName="QCAnnotationType" tableDbType="TABLE">
-        <ns:tableTitle>QC Annotation Type</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Modified"/>
-            <ns:column columnName="ModifiedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Container">
-                <ns:columnTitle>Folder</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Description"/>
-            <ns:column columnName="Color"/>
-        </ns:columns>
-    </ns:table>
+    <table tableName="QCAnnotationType" tableDbType="TABLE">
+        <tableTitle>QC Annotation Type</tableTitle>
+        <columns>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Container">
+                <columnTitle>Folder</columnTitle>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Description"/>
+            <column columnName="Color"/>
+        </columns>
+    </table>
 
-    <ns:table tableName="QCAnnotation" tableDbType="TABLE">
-        <ns:tableTitle>QC Annotation</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Modified"/>
-            <ns:column columnName="ModifiedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Container">
-                <ns:columnTitle>Folder</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Description">
-                <ns:description>A short description of what happened</ns:description>
-            </ns:column>
-            <ns:column columnName="Date">
-                <ns:columnTitle>Date and Time</ns:columnTitle>
-                <ns:description>The date and time at which the event happened</ns:description>
-                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
-            </ns:column>
-            <ns:column columnName="QCAnnotationTypeId">
-                <ns:columnTitle>Annotation Type</ns:columnTitle>
-                <ns:description>The category of the event</ns:description>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
-    <ns:table tableName="QCMetricConfiguration" tableDbType="TABLE">
-        <ns:columns>
-            <ns:column columnName="CreatedBy">
-                <ns:isHidden>true</ns:isHidden>
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="ModifiedBy">
-                <ns:isHidden>true</ns:isHidden>
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Created">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Modified">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Id">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Container">
-                <ns:columnTitle>Folder</ns:columnTitle>
-                <ns:isReadOnly>false</ns:isReadOnly>
-                <ns:fk>
-                    <ns:fkColumnName>EntityId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>containers</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Name"/>
-            <ns:column columnName="Series1Label"/>
-            <ns:column columnName="Series1SchemaName"/>
-            <ns:column columnName="Series1QueryName"/>
-            <ns:column columnName="Series2Label"/>
-            <ns:column columnName="Series2SchemaName"/>
-            <ns:column columnName="Series2QueryName"/>
-        </ns:columns>
-    </ns:table>
+    <table tableName="QCAnnotation" tableDbType="TABLE">
+        <tableTitle>QC Annotation</tableTitle>
+        <columns>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Container">
+                <columnTitle>Folder</columnTitle>
+            </column>
+            <column columnName="Description">
+                <description>A short description of what happened</description>
+            </column>
+            <column columnName="Date">
+                <columnTitle>Date and Time</columnTitle>
+                <description>The date and time at which the event happened</description>
+                <formatString>yyyy-MM-dd HH:mm</formatString>
+            </column>
+            <column columnName="QCAnnotationTypeId">
+                <columnTitle>Annotation Type</columnTitle>
+                <description>The category of the event</description>
+            </column>
+        </columns>
+    </table>
+    <table tableName="QCMetricConfiguration" tableDbType="TABLE">
+        <columns>
+            <column columnName="CreatedBy">
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="ModifiedBy">
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Created">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Modified">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Container">
+                <columnTitle>Folder</columnTitle>
+                <isReadOnly>false</isReadOnly>
+                <fk>
+                    <fkColumnName>EntityId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>containers</fkTable>
+                </fk>
+            </column>
+            <column columnName="Name"/>
+            <column columnName="Series1Label"/>
+            <column columnName="Series1SchemaName"/>
+            <column columnName="Series1QueryName"/>
+            <column columnName="Series2Label"/>
+            <column columnName="Series2SchemaName"/>
+            <column columnName="Series2QueryName"/>
+        </columns>
+    </table>
 
-    <ns:table tableName="GuideSet" tableDbType="TABLE">
-        <ns:tableTitle>Guide Set</ns:tableTitle>
-        <ns:columns>
-            <ns:column columnName="RowId">
-                <ns:isHidden>true</ns:isHidden>
-            </ns:column>
-            <ns:column columnName="Container">
-                <ns:columnTitle>Folder</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Created"/>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Modified"/>
-            <ns:column columnName="ModifiedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="TrainingStart">
-                <ns:description>The start date and time for the runs to include in the training set for this guide set.</ns:description>
-                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
-            </ns:column>
-            <ns:column columnName="TrainingEnd">
-                <ns:description>The end date and time for the runs to include in the training set for this guide set.</ns:description>
-                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
-            </ns:column>
-            <ns:column columnName="Comment"/>
-        </ns:columns>
-    </ns:table>
+    <table tableName="GuideSet" tableDbType="TABLE">
+        <tableTitle>Guide Set</tableTitle>
+        <columns>
+            <column columnName="RowId">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Container">
+                <columnTitle>Folder</columnTitle>
+            </column>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Modified"/>
+            <column columnName="ModifiedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="TrainingStart">
+                <description>The start date and time for the runs to include in the training set for this guide set.</description>
+                <formatString>yyyy-MM-dd HH:mm</formatString>
+            </column>
+            <column columnName="TrainingEnd">
+                <description>The end date and time for the runs to include in the training set for this guide set.</description>
+                <formatString>yyyy-MM-dd HH:mm</formatString>
+            </column>
+            <column columnName="Comment"/>
+        </columns>
+    </table>
 
-    <ns:table tableName="AutoQCPing" tableDbType="TABLE">
-        <ns:tableTitle>AutoQC Ping</ns:tableTitle>
-        <ns:description>Captures the last time that AutoQC pinged the QC folder</ns:description>
-        <ns:columns>
-            <ns:column columnName="Container">
-                <ns:columnTitle>Folder</ns:columnTitle>
-            </ns:column>
-            <ns:column columnName="Created">
-                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
-            </ns:column>
-            <ns:column columnName="CreatedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-            <ns:column columnName="Modified">
-                <ns:formatString>yyyy-MM-dd HH:mm</ns:formatString>
-            </ns:column>
-            <ns:column columnName="ModifiedBy">
-                <ns:fk>
-                    <ns:fkColumnName>UserId</ns:fkColumnName>
-                    <ns:fkDbSchema>core</ns:fkDbSchema>
-                    <ns:fkTable>UsersData</ns:fkTable>
-                </ns:fk>
-            </ns:column>
-        </ns:columns>
-    </ns:table>
+    <table tableName="AutoQCPing" tableDbType="TABLE">
+        <tableTitle>AutoQC Ping</tableTitle>
+        <description>Captures the last time that AutoQC pinged the QC folder</description>
+        <columns>
+            <column columnName="Container">
+                <columnTitle>Folder</columnTitle>
+            </column>
+            <column columnName="Created">
+                <formatString>yyyy-MM-dd HH:mm</formatString>
+            </column>
+            <column columnName="CreatedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Modified">
+                <formatString>yyyy-MM-dd HH:mm</formatString>
+            </column>
+            <column columnName="ModifiedBy">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+        </columns>
+    </table>
 
-</ns:tables>
+</tables>
