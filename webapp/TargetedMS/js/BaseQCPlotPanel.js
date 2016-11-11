@@ -12,6 +12,23 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     statics: {
         qcPlotTypes : ['Levey-Jennings', 'Moving Range', 'CUSUMm', 'CUSUMv'],
+        qcPlotTypesOrders : {
+            'Levey-Jennings' : 0,
+            'Moving Range' : 1,
+            'CUSUMm' : 2,
+            'CUSUMv' : 3
+        },
+        qcPlotTypesTooltips: {
+            'Levey-Jennings' : 'Levey-Jennings plot plots quality control data to give a visual indication whether a laboratory test is working well.' +
+            'The distance from the mean (expected value) is measured in standard deviations (SD).',
+            'Moving Range' : 'An MR plot plots the moving range over time to monitor process variation for individual observations ' +
+            'by using the sequential differences between two successive values as a measure of dispersion.',
+            'CUSUMm' : 'A CUSUM plot is a time-weighted control plot that displays the cumulative sums of the deviations of each sample value from the target value.' +
+            ' CUSUMm (mean CUSUM) plots two types of CUSUM statistics; one for positive mean shifts and the other for negative mean shifts.',
+            'CUSUMv' : 'A CUSUM plot is a time-weighted control plot that displays the cumulative sums of the deviations of each sample value from the target value. ' +
+            'CUSUMv (variability or scale CUSUM) plots two types of CUSUM statistics; one for positive variability shifts and the other for negative variability shifts. ' +
+            'Variability is a transformed standardized normal quantity which is sensitive to variability changes.'
+        },
         isValidQCPlotType: function(plotType)
         {
             var valid = false;
@@ -186,12 +203,9 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 ' <tr class="labkey-wp-header">' +
                 '     <th class="labkey-wp-title-left">' +
                 '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) +
-                '           <span class="plot-export-btn-group">';
-        Ext4.each(ids, function(plotId){
-            html += '           <div class="plot-export-btn" id="' + plotId + '-exportToPDFbutton"></div>';
-        });
-
-        html += '           </span>' +
+                '           <span class="plot-export-btn-group">' +
+                '           <div class="plot-export-btn" id="' + ids[0] + '-exportToPDFbutton"></div>' +
+                '           </span>' +
                 '        </span>' +
                 '     </th>' +
                 ' </tr>';
@@ -212,15 +226,13 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 ' <tr class="labkey-wp-header">' +
                 '     <th class="labkey-wp-title-left">' +
                 '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) +
-                '           <span class="plot-export-btn-group">';
-        Ext4.each(ids, function(plotId){
-            html += '           <div class="plot-export-btn" id="' + plotId + '-exportToPDFbutton"></div>';
-        });
-
-        html += '           </span>' +
+                '           <span class="plot-export-btn-group">' +
+                '           <div class="plot-export-btn" id="' + ids[0] + '-exportToPDFbutton"></div>' +
+                '           </span>' +
                 '        </span>' +
                 '     </th>' +
-                ' </tr>' ;
+                ' </tr>';
+
         if (ids.length > 0)
         {
             html += ' <tr>' +
@@ -267,39 +279,93 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             tooltip: "Export PDF of this plot",
             handler: function (btn)
             {
-                LABKEY.vis.SVGConverter.convert(this.getExportSVGStr(btn), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
+                LABKEY.vis.SVGConverter.convert(this.getExportSVGStr(btn.svgDivId), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
             },
             scope: this
         });
     },
 
-    createExportPlotToPDFButton: function (id, title, filename, index)
+    getPlotPdfMenuItem: function(divId, filename, plotType, scope)
+    {
+        return {
+            xtype: 'menuitem',
+            text: plotType,
+            listeners: {
+                click: {
+                    fn: function ()
+                    {
+                        LABKEY.vis.SVGConverter.convert(scope.getExportSVGStr(divId), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
+                    },
+                    element: 'el',
+                    scope: scope
+                }
+            }
+        }
+    },
+
+    getPlotPdfMenuItems:function(divIds, filename) {
+        this.plotTypes.sort(function(a, b){
+            return LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypesOrders[a] - LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypesOrders[b];
+        });
+        var plotIndex = 0, menuItems = [], me = this;
+        Ext4.each(this.plotTypes, function(plotType){
+            menuItems.push(me.getPlotPdfMenuItem(divIds[plotIndex], filename, plotType, me));
+            plotIndex++;
+        });
+        return menuItems;
+    },
+
+    getExportPlotToPDFMenu: function(divIds, filename)
+    {
+        return Ext4.create('Ext.menu.Menu', {
+            plain: true,
+            cls: 'toolsMenu',
+            floating: true,  // usually you want this set to True (default)
+            items: this.getPlotPdfMenuItems(divIds, filename),
+            listeners:{
+                render: function(tool) {
+                    this.showBy(tool, 'tr-br?');
+                },
+                hide: function(tool) {
+                    tool.destroy();
+                },
+                scope:this
+            }
+        });
+
+    },
+
+    createExportPlotToPDFButton: function (id, title, filename, isMenu, ids)
     {
         new Ext4.Button({
             renderTo: id + "-exportToPDFbutton",
             svgDivId: id,
+            svgDivIds: ids,
             icon: LABKEY.contextPath + "/_icons/pdf.gif",
             tooltip: {
                 text: title,
-                mouseOffset: [-250,0]
+                mouseOffset: [-150,0]
             },
             margin: '0, 10, 0 10',
-            plotIndex: index,
             handler: function (btn)
             {
-                LABKEY.vis.SVGConverter.convert(this.getExportSVGStr(btn), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
+                if (isMenu)
+                {
+                    this.getExportPlotToPDFMenu(btn.svgDivIds, filename).showBy(btn, 'tr-br?');
+                }
+                else
+                {
+                    LABKEY.vis.SVGConverter.convert(this.getExportSVGStr(btn.svgDivId), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
+                }
             },
             scope: this
         });
     },
 
-    getExportSVGStr: function(btn)
+    getExportSVGStr: function(svgDivId)
     {
-        var svgEls = Ext4.get(btn.svgDivId).select('svg');
-        var index = 0;
-        if (btn.plotIndex)
-            index = btn.plotIndex;
-        var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[index]);
+        var svgEls = Ext4.get(svgDivId).select('svg');
+        var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[0]);
         svgStr = svgStr.replace(/visibility="hidden"/g, 'visibility="visible"');
         return svgStr;
     },

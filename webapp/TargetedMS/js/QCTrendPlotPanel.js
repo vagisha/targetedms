@@ -140,16 +140,31 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
     getPlotTypeOptionsToolbar: function()
     {
-        var plotTypeCheckBoxes = [];
-        Ext4.each(LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypes, function(plotType){
-            plotTypeCheckBoxes.push({
-                boxLabel: plotType,
-                name: 'plotTypes',
-                inputValue: plotType,
-                cls: 'qc-plot-type-checkbox',
-                checked: this.isPlotTypeSelected(plotType)
+        if (!this.plotTypeOptionsToolbar)
+        {
+            var me = this;
+            this.plotTypeOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
+                ui: 'footer',
+                cls: 'levey-jennings-toolbar',
+                padding: 10,
+                layout: { pack: 'center' },
+                items: [me.getPlotSizeOptions(),
+                    {xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
+                    me.getPlotTypeOptions()],
+                listeners: {
+                    scope: this,
+                    render: function(cmp)
+                    {
+                        cmp.doLayout();
+                    }
+                }
             });
-        }, this);
+        }
+        return this.plotTypeOptionsToolbar;
+    },
+
+    getPlotSizeOptions: function()
+    {
         var plotSizeRadio = [{
             boxLabel  : 'Small',
             name      : 'largePlot',
@@ -162,61 +177,80 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             checked   : this.largePlot
         }];
 
-        if (!this.plotTypeOptionsToolbar)
-        {
-            var me = this;
-            this.plotTypeOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
-                ui: 'footer',
-                cls: 'levey-jennings-toolbar',
-                padding: 10,
-                layout: { pack: 'center' },
-                items: [{
-                    xtype: 'radiogroup',
-                    fieldLabel: 'Plot Size',
-                    columns: 2,
-                    width: 180,
-                    items: plotSizeRadio,
-                    cls: 'plot-size-radio-group',
-                    listeners: {
-                        scope: this,
-                        change: function(cmp, newVal, oldVal)
-                        {
-                            this.largePlot = newVal.largePlot;
-                            this.havePlotOptionsChanged = true;
+        return {
+            xtype: 'radiogroup',
+            fieldLabel: 'Plot Size',
+            columns: 2,
+            id: 'plot-size-radio-group',
+            width: 180,
+            items: plotSizeRadio,
+            disabled: this.plotTypes.length < 2,
+            cls: 'plot-size-radio-group',
+            listeners: {
+                scope: this,
+                change: function(cmp, newVal, oldVal)
+                {
+                    this.largePlot = newVal.largePlot;
+                    this.havePlotOptionsChanged = true;
 
-                            me.setBrushingEnabled(false);
-                            me.displayTrendPlot();
-                        }
-                    }
-                },{xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},{
-                    xtype: 'checkboxgroup',
-                    fieldLabel: 'QC Plot Type',
-                    columns: 4,
-                    items: plotTypeCheckBoxes,
-                    cls: 'plot-type-checkbox-group',
-                    listeners: {
-                        scope: this,
-                        change: function(cmp, newVal, oldVal)
-                        {
-                            this.plotTypes = newVal.plotTypes ? Ext4.isArray(newVal.plotTypes) ? newVal.plotTypes : [newVal.plotTypes] : [];
-                            this.havePlotOptionsChanged = true;
+                    this.setBrushingEnabled(false);
+                    this.displayTrendPlot();
+                }
+            }
+        }
+    },
 
-                            me.setBrushingEnabled(false);
-                            me.displayTrendPlot();
-                        }
-                    }
-                }],
+    getPlotTypeOptions: function()
+    {
+        var plotTypeCheckBoxes = [];
+        var task = new Ext4.util.DelayedTask();
+        Ext4.each(LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypes, function(plotType){
+            plotTypeCheckBoxes.push({
+                boxLabel: plotType,
+                name: 'plotTypes',
+                inputValue: plotType,
+                cls: 'qc-plot-type-checkbox',
+                checked: this.isPlotTypeSelected(plotType),
                 listeners: {
-                    scope: this,
                     render: function(cmp)
                     {
-                        cmp.doLayout();
+                        cmp.getEl().on('mouseover', function() {
+                            task.delay(1000, function(el){
+                                var calloutMgr = hopscotch.getCalloutManager();
+                                calloutMgr.removeAllCallouts();
+                                calloutMgr.createCallout({
+                                    id: Ext4.id(),
+                                    target: cmp.getEl().dom,
+                                    placement: 'bottom',
+                                    width: 300,
+                                    title: plotType + ' Plot Type',
+                                    content: LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypesTooltips[plotType]
+                                });
+                            }, this);
+                        }, this);
                     }
                 }
             });
-        }
+        }, this);
 
-        return this.plotTypeOptionsToolbar;
+        return {
+            xtype: 'checkboxgroup',
+            fieldLabel: 'QC Plot Type',
+            columns: 4,
+            items: plotTypeCheckBoxes,
+            cls: 'plot-type-checkbox-group',
+            listeners: {
+                scope: this,
+                change: function(cmp, newVal, oldVal)
+                {
+                    this.plotTypes = newVal.plotTypes ? Ext4.isArray(newVal.plotTypes) ? newVal.plotTypes : [newVal.plotTypes] : [];
+                    this.havePlotOptionsChanged = true;
+                    Ext4.getCmp('plot-size-radio-group').setDisabled(this.plotTypes.length < 2);
+                    this.setBrushingEnabled(false);
+                    this.displayTrendPlot();
+                }
+            }
+        }
     },
 
     getMainPlotOptionsToolbar : function()

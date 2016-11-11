@@ -70,6 +70,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                 }
 
             }
+
+            if (this.plotTypes.length > 1)
+                this.createExportPlotToPDFButton(id, "Export plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, true, ids);
         }
 
         this.setPlotBrushingDisplayStyle();
@@ -136,6 +139,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         {
             this.addEachCombinedPrecusorPlot(ids[plotIndex], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
         }
+
+        if (this.plotTypes.length > 1)
+            this.createExportPlotToPDFButton(id, "Export combined plot for  All Series", "QC Combined Plot", true, ids);
 
         return true;
     },

@@ -436,7 +436,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             },
             labels : {
                 main: {
-                    value: LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean) + ' Plot'
+                    value: LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean)
                 },
                 subtitle: {
                     value: "All Series",
@@ -463,7 +463,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         this.addGuideSetTrainingRangeToPlot(plot, combinePlotData);
 
-        this.createExportPlotToPDFButton(id, "Export combined " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for  All Series", "QC Combined Plot");
+        if (this.plotTypes.length == 1)
+            this.createExportPlotToPDFButton(id, "Export combined " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for  All Series", "QC Combined Plot");
 
     },
 
@@ -502,7 +503,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             },
             labels : {
                 main: {
-                    value: LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean) + ' Plot'
+                    value: LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean)
                 },
                 subtitle: {
                     value: this.precursors[i],
@@ -550,7 +551,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         this.addGuideSetTrainingRangeToPlot(plot, precursorInfo);
 
-        this.createExportPlotToPDFButton(id, "Export " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, 0); //TODO plotTypeIndex not used yet
+        if (this.plotTypes.length == 1)
+            this.createExportPlotToPDFButton(id, "Export " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, 0); //TODO plotTypeIndex not used yet
 
     }
 });
