@@ -1,8 +1,6 @@
 Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
     extend: 'LABKEY.targetedms.QCPlotHelperBase',
     setCUSUMSeriesMinMax: function(dataObject, row, isCUSUMmean) {
-        dataObject.showLogInvalid = true; //TODO force linear for CUSUM
-
         // track the min and max data so we can get the range for including the QC annotations
         var negative = 'CUSUMmN', positive = 'CUSUMmP';
         if (!isCUSUMmean)
@@ -13,6 +11,11 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
         var valNegative = row[negative], valPositive = row[positive];
         if (LABKEY.vis.isValid(valNegative) && LABKEY.vis.isValid(valPositive))
         {
+            if (this.yAxisScale == 'log' && (valNegative <= 0 || valPositive <= 0))
+            {
+                dataObject.showLogInvalid = true;
+            }
+
             if (dataObject[minNegative] == null || valNegative < dataObject[minNegative]) {
                 dataObject[minNegative] = valNegative;
             }
@@ -60,15 +63,15 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
             {
                 plotProperties['positiveValue'] = 'CUSUMmP';
                 plotProperties['negativeValue'] = 'CUSUMmN';
-                lower = Math.min(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT_LOWER - 1, precursorInfo.minCUSUMmP, precursorInfo.minCUSUMmN);
-                upper = Math.max(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT + 1, precursorInfo.maxCUSUMmP, precursorInfo.maxCUSUMmN);
+                lower = Math.min(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT_LOWER, precursorInfo.minCUSUMmP, precursorInfo.minCUSUMmN);
+                upper = Math.max(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT, precursorInfo.maxCUSUMmP, precursorInfo.maxCUSUMmN);
             }
             else
             {
                 plotProperties['positiveValue'] = 'CUSUMvP';
                 plotProperties['negativeValue'] = 'CUSUMvN';
-                lower = Math.min(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT_LOWER - 1, precursorInfo.minCUSUMvP, precursorInfo.minCUSUMvN);
-                upper = Math.max(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT + 1, precursorInfo.maxCUSUMvP, precursorInfo.maxCUSUMvN);
+                lower = Math.min(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT_LOWER, precursorInfo.minCUSUMvP, precursorInfo.minCUSUMvN);
+                upper = Math.max(LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT, precursorInfo.maxCUSUMvP, precursorInfo.maxCUSUMvN);
             }
 
             plotProperties['yAxisDomain'] = [lower, upper];

@@ -111,7 +111,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     processRawGuideSetData : function(data)
     {
-        var guideSetAvgMRs = this.getGuideSetAvgMRs(data);
+        var guideSetAvgMRs = this.getGuideSetAvgMRs(data, this.yAxisScale == 'log');
         if (!this.guideSetDataMap)
             this.guideSetDataMap = {};
         Ext4.each(data.rows, function(row) {
@@ -192,7 +192,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     processPlotData: function() {
         var metricProps = this.getMetricPropsById(this.metric);
-        this.processedPlotData = this.preprocessPlotData(this.showLJPlot(), this.showMovingRangePlot(), this.showMeanCUSUMPlot(), this.showVariableCUSUMPlot());
+        this.processedPlotData = this.preprocessPlotData(this.showLJPlot(), this.showMovingRangePlot(), this.showMeanCUSUMPlot(), this.showVariableCUSUMPlot(), this.yAxisScale == 'log');
 
         // process the data to shape it for the JS LeveyJenningsPlot API call
         this.fragmentPlotData = {};

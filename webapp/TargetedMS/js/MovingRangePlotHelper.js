@@ -1,7 +1,6 @@
 Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
     extend: 'LABKEY.targetedms.QCPlotHelperBase',
     setMovingRangeSeriesMinMax: function(dataObject, row) {
-        // track the min and max data so we can get the range for including the QC annotations
         var val = row['MR'];
         if (LABKEY.vis.isValid(val))
         {
