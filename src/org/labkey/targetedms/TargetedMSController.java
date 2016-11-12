@@ -5961,7 +5961,7 @@ public class TargetedMSController extends SpringActionController
 
                 String[] categoryParts = new String[] {"Clustergrammer"};
                 ViewCategory category = ViewCategoryManager.getInstance().ensureViewCategory(getContainer(), getUser(), categoryParts);
-                rd.setCategory(category);
+                rd.setCategoryId(category.getRowId());
 
                 ReportService.get().saveReport(getViewContext(), rd.getReportName(), report);
             }
