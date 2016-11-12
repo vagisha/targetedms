@@ -320,7 +320,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         return Ext4.create('Ext.menu.Menu', {
             plain: true,
             cls: 'toolsMenu',
-            floating: true,  // usually you want this set to True (default)
+            floating: true,
             items: this.getPlotPdfMenuItems(divIds, filename),
             listeners:{
                 render: function(tool) {
@@ -344,7 +344,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             icon: LABKEY.contextPath + "/_icons/pdf.gif",
             tooltip: {
                 text: title,
-                mouseOffset: [-150,0]
+                mouseOffset: [-150,-70]
             },
             margin: '0, 10, 0 10',
             handler: function (btn)

@@ -402,6 +402,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         if (ionLegend.length > yAxisCount + 1) {
             newLegendData = newLegendData.concat(ionLegend);
         }
+
+        var extraPlotLegendData = this.getAdditionalPlotLegend(plotType);
+        newLegendData = newLegendData.concat(extraPlotLegendData);
+
         return newLegendData;
     },
 
@@ -494,7 +498,13 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         Ext4.apply(ljProperties, this.getPlotTypeProperties(precursorInfo, plotType, isCUSUMMean));
 
-        var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, this.legendData);
+        var plotLegendData = this.getAdditionalPlotLegend(plotType);
+        if (Ext4.isArray(this.legendData))
+        {
+            plotLegendData = plotLegendData.concat(this.legendData);
+        }
+
+        var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, plotLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
                 top: 65 + this.getMaxStackedAnnotations() * 12,
@@ -554,5 +564,18 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         if (this.plotTypes.length == 1)
             this.createExportPlotToPDFButton(id, "Export " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, 0); //TODO plotTypeIndex not used yet
 
+    },
+
+    // empty legend to reserve plot space for plot alignment
+    getEmptyLegend: function()
+    {
+        var empty = [];
+        empty.push({
+            text: '',
+            shape: function(){
+                return 'M0,0L0,0Z';
+            }
+        });
+        return empty;
     }
 });

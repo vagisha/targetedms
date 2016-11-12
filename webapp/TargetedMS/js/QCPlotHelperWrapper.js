@@ -292,6 +292,15 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             return this.getCUSUMCombinedPlotLegendSeries(isCUSUMMean);
         else
             return this.getLJCombinedPlotLegendSeries();
+    },
+
+    getAdditionalPlotLegend: function(plotType)
+    {
+        if (plotType == LABKEY.vis.TrendingLinePlotType.CUSUM)
+            return this.getCUSUMGroupLegend();
+        if (this.showMeanCUSUMPlot() || this.showVariableCUSUMPlot())
+            return this.getEmptyLegend();
+        return [];
     }
 
 });

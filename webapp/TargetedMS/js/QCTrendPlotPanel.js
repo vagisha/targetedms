@@ -203,7 +203,6 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     getPlotTypeOptions: function()
     {
         var plotTypeCheckBoxes = [];
-        var task = new Ext4.util.DelayedTask();
         Ext4.each(LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypes, function(plotType){
             plotTypeCheckBoxes.push({
                 boxLabel: plotType,
@@ -214,19 +213,22 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 listeners: {
                     render: function(cmp)
                     {
-                        cmp.getEl().on('mouseover', function() {
-                            task.delay(1000, function(el){
-                                var calloutMgr = hopscotch.getCalloutManager();
-                                calloutMgr.removeAllCallouts();
-                                calloutMgr.createCallout({
-                                    id: Ext4.id(),
-                                    target: cmp.getEl().dom,
-                                    placement: 'bottom',
-                                    width: 300,
-                                    title: plotType + ' Plot Type',
-                                    content: LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypesTooltips[plotType]
-                                });
-                            }, this);
+                        cmp.getEl().on('mouseover', function () {
+                            var calloutMgr = hopscotch.getCalloutManager();
+                            calloutMgr.removeAllCallouts();
+                            calloutMgr.createCallout({
+                                id: Ext4.id(),
+                                target: cmp.getEl().dom,
+                                placement: 'top',
+                                width: 300,
+                                showCloseButton: false,
+                                title: plotType + ' Plot Type',
+                                content: LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypesTooltips[plotType]
+                            });
+                        }, this);
+
+                        cmp.getEl().on('mouseout', function() {
+                            hopscotch.getCalloutManager().removeAllCallouts();
                         }, this);
                     }
                 }
@@ -861,8 +863,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         var dateCount = {};
         this.legendData = [];
 
-        // if we are showing the All Peptides plot, add a legend header for annotations
-        if (this.annotationData.length > 0 && this.singlePlot)
+        // if more than one type of legend present, add a legend header for annotations
+        if (this.annotationData.length > 0 && (this.singlePlot || this.showMeanCUSUMPlot() || this.showVariableCUSUMPlot()))
         {
             this.legendData.push({
                 text: 'Annotations',

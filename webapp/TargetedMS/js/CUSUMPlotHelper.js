@@ -1,5 +1,13 @@
 Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
     extend: 'LABKEY.targetedms.QCPlotHelperBase',
+    statics: {
+        positiveCUSUMShape: function(){
+            return " M3,-0.5L6,-0.5 6,0.5 3,0.5Z M-3,-0.5L0,-0.5 0,0.5 -3,0.5Z M-9,-0.5L-6,-0.5 -6,0.5 -9,0.5Z ";
+        },
+        negativeCUSUMShape: function(){
+            return "M-9,-0.5L6,-0.5 6,0.5 -9,0.5Z"
+        }
+    },
     setCUSUMSeriesMinMax: function(dataObject, row, isCUSUMmean) {
         // track the min and max data so we can get the range for including the QC annotations
         var negative = 'CUSUMmN', positive = 'CUSUMmP';
@@ -176,6 +184,26 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
         if (isMeanCUSUM)
             return ['CUSUMm_series1', 'CUSUMm_series2'];
         return ['CUSUMv_series1', 'CUSUMv_series2'];
+    },
+
+    getCUSUMGroupLegend: function()
+    {
+        var cusumLegend = [];
+        cusumLegend.push({
+            text: 'CUSUM Group',
+            separator: true
+        });
+        cusumLegend.push({
+            text: 'CUSUM-',
+            color: '#000000',
+            shape: LABKEY.targetedms.CUSUMPlotHelper.negativeCUSUMShape
+        });
+        cusumLegend.push({
+            text: 'CUSUM+',
+            color: '#000000',
+            shape: LABKEY.targetedms.CUSUMPlotHelper.positiveCUSUMShape
+        });
+        return cusumLegend;
     }
 
 });
