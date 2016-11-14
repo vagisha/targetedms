@@ -338,7 +338,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.tagContainingText("span", "Small Molecule Transition List"));
         waitForText("Small Molecule Transition List");
 
-        drt = DataRegionTable.DataRegion(getDriver()).withName("small_mol_precursors_view").index(1).find();
+        drt = DataRegionTable.DataRegion(getDriver()).withName("small_mol_transitions_view").index(1).find();
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
         assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
         assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
