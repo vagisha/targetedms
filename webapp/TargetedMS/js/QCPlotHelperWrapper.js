@@ -34,6 +34,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                 metricProps = this.getMetricPropsById(this.metric),
                 me = this; // for plot brushing
 
+        this.longestLegendText = 0;
+
         for (var i = 0; i < this.precursors.length; i++)
         {
             var precursorInfo = this.fragmentPlotData[this.precursors[i]];
@@ -72,7 +74,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             }
 
             if (this.plotTypes.length > 1)
-                this.createExportPlotToPDFButton(id, "Export plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, true, ids);
+                this.createExportPlotToPDFButton(id, "Export plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, true, ids, this.showInPlotLegends() ? 0 : 10 * this.longestLegendText);
         }
 
         this.setPlotBrushingDisplayStyle();
@@ -123,25 +125,26 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         }
         this.addPlotsToPlotDiv(ids, 'All Series', this.plotDivId, 'qc-plot-wp');
         var plotIndex = 0;
+        var legendMargin = 11 * lengthOfLongestLegend + (this.isMultiSeries() ? 50 : 0);
         if (this.showLJPlot())
         {
-            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
+            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
         }
         if (this.showMovingRangePlot())
         {
-            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.MovingRange);
+            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.MovingRange);
         }
         if (this.showMeanCUSUMPlot())
         {
-            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.CUSUM, true);
+            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, true);
         }
         if (this.showVariableCUSUMPlot())
         {
-            this.addEachCombinedPrecusorPlot(ids[plotIndex], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, lengthOfLongestLegend, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
+            this.addEachCombinedPrecusorPlot(ids[plotIndex], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
         }
 
         if (this.plotTypes.length > 1)
-            this.createExportPlotToPDFButton(id, "Export combined plot for  All Series", "QC Combined Plot", true, ids);
+            this.createExportPlotToPDFButton(id, "Export combined plot for  All Series", "QC Combined Plot", true, ids, this.showInPlotLegends() ? 0 : legendMargin);
 
         return true;
     },

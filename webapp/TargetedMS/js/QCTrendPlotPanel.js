@@ -898,9 +898,9 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         this.prepareAndRenderQCPlot();
     },
 
-    getExportSVGStr: function(btn)
+    getExportSVGStr: function(btn, extraMargin)
     {
-        var svgStr = this.callParent([btn]);
+        var svgStr = this.callParent([btn, extraMargin]);
 
         // issue 25066: pdf export has artifact of the brush resize handlers
         svgStr = svgStr.replace('class="e-resize-handle-rect"', 'class="e-resize-handle-rect" visibility="hidden"');

@@ -285,7 +285,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         });
     },
 
-    getPlotPdfMenuItem: function(divId, filename, plotType, scope)
+    getPlotPdfMenuItem: function(divId, filename, plotType, extraMargin, scope)
     {
         return {
             xtype: 'menuitem',
@@ -294,7 +294,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 click: {
                     fn: function ()
                     {
-                        LABKEY.vis.SVGConverter.convert(scope.getExportSVGStr(divId), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
+                        LABKEY.vis.SVGConverter.convert(scope.getExportSVGStr(divId, extraMargin), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
                     },
                     element: 'el',
                     scope: scope
@@ -303,25 +303,25 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         }
     },
 
-    getPlotPdfMenuItems:function(divIds, filename) {
+    getPlotPdfMenuItems:function(divIds, filename, extraMargin) {
         this.plotTypes.sort(function(a, b){
             return LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypesOrders[a] - LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypesOrders[b];
         });
         var plotIndex = 0, menuItems = [], me = this;
         Ext4.each(this.plotTypes, function(plotType){
-            menuItems.push(me.getPlotPdfMenuItem(divIds[plotIndex], filename, plotType, me));
+            menuItems.push(me.getPlotPdfMenuItem(divIds[plotIndex], filename, plotType, extraMargin, me));
             plotIndex++;
         });
         return menuItems;
     },
 
-    getExportPlotToPDFMenu: function(divIds, filename)
+    getExportPlotToPDFMenu: function(divIds, filename, extraMargin)
     {
         return Ext4.create('Ext.menu.Menu', {
             plain: true,
             cls: 'toolsMenu',
             floating: true,
-            items: this.getPlotPdfMenuItems(divIds, filename),
+            items: this.getPlotPdfMenuItems(divIds, filename, extraMargin),
             listeners:{
                 render: function(tool) {
                     this.showBy(tool, 'tr-br?');
@@ -335,7 +335,8 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     },
 
-    createExportPlotToPDFButton: function (id, title, filename, isMenu, ids)
+    //extraMargin for invisible legends
+    createExportPlotToPDFButton: function (id, title, filename, isMenu, ids, extraMargin)
     {
         new Ext4.Button({
             renderTo: id + "-exportToPDFbutton",
@@ -351,21 +352,28 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             {
                 if (isMenu)
                 {
-                    this.getExportPlotToPDFMenu(btn.svgDivIds, filename).showBy(btn, 'tr-br?');
+                    this.getExportPlotToPDFMenu(btn.svgDivIds, filename, extraMargin).showBy(btn, 'tr-br?');
                 }
                 else
                 {
-                    LABKEY.vis.SVGConverter.convert(this.getExportSVGStr(btn.svgDivId), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
+                    LABKEY.vis.SVGConverter.convert(this.getExportSVGStr(btn.svgDivId, extraMargin), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
                 }
             },
             scope: this
         });
     },
 
-    getExportSVGStr: function(svgDivId)
+    getExportSVGStr: function(svgDivId, extraWidth)
     {
         var svgEls = Ext4.get(svgDivId).select('svg');
-        var svgStr = LABKEY.vis.SVGConverter.svgToStr(svgEls.elements[0]);
+        var targetSvg = svgEls.elements[0];
+        var oldWidth = targetSvg.getBoundingClientRect().width;
+        // temporarily increase svg size to allow exporting of legends that's outside svg
+        if (extraWidth)
+            targetSvg.setAttribute('width', oldWidth + extraWidth);
+        var svgStr = LABKEY.vis.SVGConverter.svgToStr(targetSvg);
+        if (extraWidth)
+            targetSvg.setAttribute('width', oldWidth);
         svgStr = svgStr.replace(/visibility="hidden"/g, 'visibility="visible"');
         return svgStr;
     },
@@ -396,8 +404,4 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         });
     }
 });
-
-
-
-
 
