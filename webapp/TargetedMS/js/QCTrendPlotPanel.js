@@ -919,11 +919,20 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     },
 
     plotHoverTextDisplay : function(row, valueName){
-        return (row[valueName + 'Title'] != undefined ? 'Metric: ' + row[valueName + 'Title'] + '\n' : '')
-            + row.dataType + ': ' + row['fragment']
-            + '\nAcquired: ' + row['fullDate'] + ", "
+        var tooltip = (row[valueName + 'Title'] != undefined ? 'Metric: ' + row[valueName + 'Title'] + '\n' : '')
+            + row.dataType + ': ' + row['fragment'];
+        if (valueName.indexOf('CUSUM') > -1)
+        {
+            tooltip += '\nGroup: ';
+            if ('CUSUMmN' == valueName || 'CUSUMvN' == valueName)
+                tooltip += 'CUSUM-';
+            else
+                tooltip += 'CUSUM+';
+        }
+        tooltip += '\nAcquired: ' + row['fullDate'] + ", "
             + '\nValue: ' + (valueName ? row[valueName] : row.value) + ", "
             + '\nFile Path: ' + row['FilePath'];
+        return tooltip;
     },
 
     plotPointClick : function(event, row) {
