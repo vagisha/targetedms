@@ -759,6 +759,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 enableToggle: true,
                 handler: function (btn)
                 {
+                    var plotHeight = this.singlePlot ? 500 : 300;
                     var me = this;
                     if (!btn.pressed)
                     {
@@ -772,7 +773,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     me.plotLegendPopup = new Ext4.Window({
                         buttonAlign: 'right',
                         width: 300,
-                        height: 450,
+                        height: plotHeight + 50,
                         border: false,
                         closable: false,
                         title: 'Legends',
@@ -780,7 +781,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                         resizable: false,
                         items: [{
                             html: {
-                                tag: 'div', id: cmpId, width: '300', height: '400'
+                                tag: 'div', id: cmpId, width: '300', height: '\'' + plotHeight + '\''
                             }
                         }],
                         buttons: [{
@@ -796,7 +797,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                                 fn: function (cmp)
                                 {
                                     this.lastPlotConfig.renderTo = cmpId;
-                                    this.lastPlotConfig.height = 380;
+                                    this.lastPlotConfig.height = plotHeight;
                                     var plot = LABKEY.vis.TrendingLinePlot(this.lastPlotConfig);
                                     plot.renderer.initCanvas();
                                     plot.grid = {topEdge: 30, rightEdge: 0};
