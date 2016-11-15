@@ -294,6 +294,9 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 toolbarItems.push(this.getGuideSetCreateButton());
             }
 
+            toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
+            toolbarItems.push(this.getShowPlotLegendButton());
+
             this.otherPlotOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
                 ui: 'footer',
                 cls: 'levey-jennings-toolbar',
@@ -745,6 +748,76 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.createGuideSetToggleButton;
     },
 
+    getShowPlotLegendButton : function()
+    {
+        if (!this.showPlotLegendButton)
+        {
+            var cmpId = Ext4.id();
+            this.showPlotLegendButton = Ext4.create('Ext.button.Button', {
+                text: 'View Legend',
+                tooltip: 'View legends used for all plots',
+                enableToggle: true,
+                handler: function (btn)
+                {
+                    var me = this;
+                    if (!btn.pressed)
+                    {
+                        if (me.plotLegendPopup)
+                        {
+                            me.plotLegendPopup.destroy();
+                        }
+                        return;
+                    }
+
+                    me.plotLegendPopup = new Ext4.Window({
+                        buttonAlign: 'right',
+                        width: 300,
+                        height: 450,
+                        border: false,
+                        closable: false,
+                        title: 'Legends',
+                        draggable: true,
+                        resizable: false,
+                        items: [{
+                            html: {
+                                tag: 'div', id: cmpId, width: '300', height: '400'
+                            }
+                        }],
+                        buttons: [{
+                            text: 'Close',
+                            onClick: function ()
+                            {
+                                me.plotLegendPopup.destroy();
+                                btn.toggle();
+                            }
+                        }],
+                        listeners: {
+                            show: {
+                                fn: function (cmp)
+                                {
+                                    this.lastPlotConfig.renderTo = cmpId;
+                                    this.lastPlotConfig.height = 380;
+                                    var plot = LABKEY.vis.TrendingLinePlot(this.lastPlotConfig);
+                                    plot.renderer.initCanvas();
+                                    plot.grid = {topEdge: 30, rightEdge: 0};
+                                    plot.renderer.renderLegend();
+                                    cmp.doLayout();
+
+                                }, scope: this
+                            }
+                        }
+
+                    });
+
+                    me.plotLegendPopup.show();
+                },
+                scope: this
+            });
+        }
+
+        return this.showPlotLegendButton;
+    },
+
     setBrushingEnabled : function(enabled) {
         // we don't currently allow creation of guide sets in single plot mode, grouped x-axis mode, or multi series mode
         this.getGuideSetCreateButton().setDisabled(this.groupedX || this.singlePlot || this.isMultiSeries());
@@ -1185,6 +1258,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         annotations.append("title")
             .text(function(d) {
                 return "Created By: " + d['DisplayName'] + ", "
+                        + "\nType: " + d['Name'] + ", "
                     + "\nDate: " + me.formatDate(new Date(d['Date']), true) + ", "
                     + "\nDescription: " + d['Description'];
             });

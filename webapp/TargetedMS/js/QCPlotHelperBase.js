@@ -462,6 +462,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         });
 
         plotConfig.qcPlotType = plotType;
+        this.lastPlotConfig = plotConfig; // remmeber the plot config for generating legend popup
         var plot = LABKEY.vis.TrendingLinePlot(plotConfig);
         plot.render();
 
@@ -568,6 +569,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         // create plot using the JS Vis API
         plotConfig.qcPlotType = plotType;
+        this.lastPlotConfig = plotConfig; // remmeber the plot config for generating legend popup
         var plot = LABKEY.vis.TrendingLinePlot(plotConfig);
         plot.render();
 
