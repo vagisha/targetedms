@@ -24,6 +24,7 @@ resources/queries/targetedms/peptidegroup/FolderProteins.qview.xml -text
 resources/queries/targetedms/peptidegroup/LibraryProteins.qview.xml -text
 resources/queries/targetedms/qcannotation/.qview.xml -text
 resources/queries/targetedms/qcannotationtype/.qview.xml -text
+resources/queries/targetedms/samplefile/.qview.xml -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-13.10.sql -text
