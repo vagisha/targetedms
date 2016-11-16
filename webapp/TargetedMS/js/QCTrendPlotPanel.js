@@ -203,7 +203,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     getPlotTypeOptions: function()
     {
         var plotTypeCheckBoxes = [];
-        Ext4.each(LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypes, function(plotType){
+        Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypes, function(plotType){
             plotTypeCheckBoxes.push({
                 boxLabel: plotType,
                 name: 'plotTypes',
@@ -223,7 +223,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                                 width: 300,
                                 showCloseButton: false,
                                 title: plotType + ' Plot Type',
-                                content: LABKEY.targetedms.BaseQCPlotPanel.qcPlotTypesTooltips[plotType]
+                                content: LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesTooltips[plotType]
                             });
                         }, this);
 
@@ -409,7 +409,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             if (Ext4.isArray(paramValue))
             {
                 Ext4.each(paramValue, function(value){
-                    if (LABKEY.targetedms.BaseQCPlotPanel.isValidQCPlotType(value.trim()))
+                    if (LABKEY.targetedms.QCPlotHelperBase.isValidQCPlotType(value.trim()))
                         plotTypes.push(value.trim());
                 });
             }
@@ -417,7 +417,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             {
                 var values = paramValue.split(',');
                 Ext4.each(values, function(value){
-                    if (LABKEY.targetedms.BaseQCPlotPanel.isValidQCPlotType(value.trim()))
+                    if (LABKEY.targetedms.QCPlotHelperBase.isValidQCPlotType(value.trim()))
                         plotTypes.push(value.trim());
                 });
 
@@ -493,7 +493,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
                         // call processPlotData instead of renderPlots so that we recalculate min y-axis scale for log
                         this.setLoadingMsg();
-                        this.processPlotData();
+                        this.processPlotData(this.plotDataRows);
                     }
                 }
             });
@@ -838,15 +838,6 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     displayTrendPlot: function() {
         this.setLoadingMsg();
         this.getDistinctPrecursors();
-    },
-
-    getMetricPropsById: function(id) {
-        for (var i = 0; i < this.metricPropArr.length; i++) {
-            if (this.metricPropArr[i].id == id) {
-                return this.metricPropArr[i];
-            }
-        }
-        return undefined;
     },
 
     getDistinctPrecursors: function() {
@@ -1440,16 +1431,6 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             return Math.max.apply(Math, (Ext4.Array.pluck(this.annotationData, "yStepIndex"))) + 1;
         }
         return 0;
-    },
-
-    isMultiSeries : function()
-    {
-        if (Ext4.isNumber(this.metric))
-        {
-            var metricProps = this.getMetricPropsById(this.metric);
-            return Ext4.isDefined(metricProps.series2SchemaName) && Ext4.isDefined(metricProps.series2QueryName);
-        }
-        return false;
     },
 
     getColorRange: function()

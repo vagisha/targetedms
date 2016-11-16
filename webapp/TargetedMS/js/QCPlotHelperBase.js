@@ -1,5 +1,38 @@
 Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
+    statics: {
+        qcPlotTypes : ['Levey-Jennings', 'Moving Range', 'CUSUMm', 'CUSUMv'],
+        qcPlotTypesOrders : {
+            'Levey-Jennings' : 0,
+            'Moving Range' : 1,
+            'CUSUMm' : 2,
+            'CUSUMv' : 3
+        },
+        qcPlotTypesTooltips: {
+            'Levey-Jennings' : 'Levey-Jennings plot plots quality control data to give a visual indication whether a laboratory test is working well.' +
+            'The distance from the mean (expected value) is measured in standard deviations (SD).',
+            'Moving Range' : 'An MR plot plots the moving range over time to monitor process variation for individual observations ' +
+            'by using the sequential differences between two successive values as a measure of dispersion.',
+            'CUSUMm' : 'A CUSUM plot is a time-weighted control plot that displays the cumulative sums of the deviations of each sample value from the target value.' +
+            ' CUSUMm (mean CUSUM) plots two types of CUSUM statistics; one for positive mean shifts and the other for negative mean shifts.',
+            'CUSUMv' : 'A CUSUM plot is a time-weighted control plot that displays the cumulative sums of the deviations of each sample value from the target value. ' +
+            'CUSUMv (variability or scale CUSUM) plots two types of CUSUM statistics; one for positive variability shifts and the other for negative variability shifts. ' +
+            'Variability is a transformed standardized normal quantity which is sensitive to variability changes.'
+        },
+        isValidQCPlotType: function(plotType)
+        {
+            var valid = false;
+            Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypes, function(type){
+                if (plotType == type)
+                {
+                    valid = true;
+                    return;
+                }
+            });
+            return valid;
+        }
+    },
+
     showLJPlot: function()
     {
         return this.isPlotTypeSelected('Levey-Jennings');
@@ -137,62 +170,45 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         this.getPlotData();
     },
 
-    getPlotData: function()
+    getPlotData: function ()
     {
         var config = this.getReportConfig(),
                 metricProps = this.getMetricPropsById(this.metric);
 
         // Filter on start/end dates, casting as DATE to ignore the time part
         var whereClause = " WHERE ", sep = "";
-        if (config.StartDate) {
+        if (config.StartDate)
+        {
             whereClause += "CAST(SampleFileId.AcquiredTime AS DATE) >= '" + config.StartDate + "'";
             sep = " AND ";
         }
-        if (config.EndDate) {
+        if (config.EndDate)
+        {
             whereClause += sep + "CAST(SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
         }
 
         this.plotDataRows = [];
-        var seriesTypes = this.isMultiSeries() ? ['series1', 'series2'] : ['series1'],
-                seriesCount = 0;
-        Ext4.each(seriesTypes, function(type)
-        {
-            var schema = metricProps[type + 'SchemaName'],
-                    query = metricProps[type + 'QueryName'];
+        var seriesTypes = this.isMultiSeries() ? ['series1', 'series2'] : ['series1'];
+        var sql = this.getSeriesTypePlotDataSql(seriesTypes, metricProps, whereClause);
 
-            // Build query to get the metric values and related guide set info for this series
-            var sql = "SELECT '" + type + "' AS SeriesType,"
-                    + "\nX.PrecursorId, X.PrecursorChromInfoId, X.SeriesLabel, X.DataType, X.AcquiredTime,"
-                    + "\nX.FilePath, X.MetricValue, gs.RowId AS GuideSetId,"
-                    + "\nCASE WHEN (X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime <= gs.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange"
-                    + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.FilePath AS FilePath"
-                    + "\n      FROM " + schema + '.' + query + whereClause + ") X "
-                    + "\nLEFT JOIN guideset gs"
-                    + "\nON ((X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime < gs.ReferenceEnd) OR (X.AcquiredTime >= gs.TrainingStart AND gs.ReferenceEnd IS NULL))"
-                    + "\nORDER BY X.SeriesLabel, SeriesType, X.AcquiredTime"; //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
+        LABKEY.Query.executeSql({
+            schemaName: 'targetedms',
+            sql: sql,
+            scope: this,
+            success: function (data)
+            {
+                this.plotDataRows = this.plotDataRows.concat(data.rows);
 
-            LABKEY.Query.executeSql({
-                schemaName: 'targetedms',
-                sql: sql,
-                scope: this,
-                success: function(data) {
-                    this.plotDataRows = this.plotDataRows.concat(data.rows);
+                this.processPlotData(this.plotDataRows);
+            },
+            failure: this.failureHandler
+        });
 
-                    seriesCount++;
-                    if (seriesCount == seriesTypes.length)
-                    {
-                        this.processPlotData();
-                    }
-                },
-                failure: this.failureHandler
-            });
-
-        }, this);
     },
 
-    processPlotData: function() {
+    processPlotData: function(plotDataRows) {
         var metricProps = this.getMetricPropsById(this.metric);
-        this.processedPlotData = this.preprocessPlotData(this.showLJPlot(), this.showMovingRangePlot(), this.showMeanCUSUMPlot(), this.showVariableCUSUMPlot(), this.yAxisScale == 'log');
+        this.processedPlotData = this.preprocessPlotData(plotDataRows, this.showMovingRangePlot(), this.showMeanCUSUMPlot(), this.showVariableCUSUMPlot(), this.yAxisScale == 'log');
 
         // process the data to shape it for the JS LeveyJenningsPlot API call
         this.fragmentPlotData = {};

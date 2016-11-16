@@ -22,9 +22,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         }
     },
 
-    prepareAndRenderQCPlot : function(plotType) {
+    prepareAndRenderQCPlot : function() {
         if (this.showLJPlot())
-            return this.getLJGuideSetData(plotType);
+            return this.getLJGuideSetData();
         return this.getRawGuideSetData();
     },
 

@@ -199,6 +199,84 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }, this);
     },
 
+    getSingleMetricGuideSetRawSql: function(metricType, schemaName, queryName)
+    {
+        var guideSetSql = "SELECT s.*, g.Comment, '" +  metricType + "' AS MetricType FROM (";
+        guideSetSql += this.qcPlotPanel.metricGuideSetRawSql(schemaName, queryName);
+        guideSetSql +=  ") s"
+                + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
+        return guideSetSql;
+    },
+
+    queryContainerSampleFileRawData: function(container)
+    {
+        // build query to query for all raw data
+        var sql = "", sep = "";
+        Ext4.each(this.qcPlotPanel.metricPropArr, function (metricType)
+        {
+            var id = metricType.id,
+                    label = metricType.series1Label,
+                    metricProps = this.qcPlotPanel.getMetricPropsById(id);
+
+            var newSql = this.qcPlotPanel.getEachSeriesTypePlotDataSql('series1', metricProps, '', label);
+
+            sql += sep + '(' + newSql + ')';
+            sep = "\nUNION\n";
+
+            if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
+            {
+                label = metricType.series2Label;
+                newSql = this.qcPlotPanel.getEachSeriesTypePlotDataSql('series2', metricProps, '', label);
+                sql += sep + '(' + newSql + ')';
+            }
+        }, this);
+
+        LABKEY.Query.executeSql({
+            containerPath: container.path,
+            schemaName: 'targetedms',
+            sql: sql,
+            scope: this,
+            success: function (data)
+            {
+                this.allRawData = data.rows;
+                // TODO process all data, calculate cusum, mr, determine outliers
+            }
+        });
+    },
+
+    queryContainerSampleFileRawGuideSetStats: function(container)
+    {
+        // build query to query for all metric guide set
+        var sql = "", sep = "";
+        Ext4.each(this.qcPlotPanel.metricPropArr, function (metricType)
+        {
+            var id = metricType.id,
+                    label = metricType.series1Label,
+                    metricProps = this.qcPlotPanel.getMetricPropsById(id);
+
+            sql += sep + '(' + this.getSingleMetricGuideSetRawSql(label, metricProps.series1SchemaName, metricProps.series1QueryName) + ')';
+            sep = "\nUNION\n";
+
+            if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
+            {
+                label = metricType.series2Label,
+                sql += sep + '(' + this.getSingleMetricGuideSetRawSql(label, metricProps.series2SchemaName, metricProps.series2QueryName) + ')';
+            }
+        }, this);
+
+        LABKEY.Query.executeSql({
+            containerPath: container.path,
+            schemaName: 'targetedms',
+            sql: sql,
+            scope: this,
+            success: function (data)
+            {
+                this.allGuideSet = data.rows; //TODO process guide set per set per peptide per metric
+                this.queryContainerSampleFileRawData(container);
+            }
+        });
+    },
+
     queryContainerSampleFileStats: function (container)
     {
         if (container.fileCount > 0)
