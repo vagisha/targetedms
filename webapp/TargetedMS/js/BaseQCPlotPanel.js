@@ -558,7 +558,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     getQCPlotMetricOutliers: function(processedMetricGuides, processedMetricDataSet, CUSUMm, CUSUMv, mR, groupByGuideSet, sampleFiles)
     {
-        if (mR && !processedMetricGuides)
+        if (!processedMetricGuides || Object.keys(processedMetricGuides).length == 0) //TODO CUSUM doesn't need guideset, should we enable outlier reporting for it without guidesets?
             return null;
         if (!groupByGuideSet && !sampleFiles)
             return null;
@@ -664,7 +664,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                     Ext4.each(dataRows, function (data)
                     {
                         var guideId = data.GuideSetId;
-                        if (!processedMetricGuides[metric][guideId] || !processedMetricGuides[metric][guideId].Series)
+                        if (!processedMetricGuides[metric] || !processedMetricGuides[metric][guideId] || !processedMetricGuides[metric][guideId].Series)
                             return;
 
                         var controlRange = processedMetricGuides[metric][guideId].Series[peptide];
