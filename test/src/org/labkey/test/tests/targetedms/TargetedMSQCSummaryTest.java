@@ -168,7 +168,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         // remove a sample file
         clickAndWait(Locator.linkWithText(sampleFileCount + " sample files"));
         DataRegionTable table = new DataRegionTable("query", getDriver());
-        table.checkCheckbox(0);
+        // Delete the oldest sample (of three), which are sorted in reverse chronological order
+        table.checkCheckbox(2);
         doAndWaitForPageToLoad(() -> {
             table.clickHeaderButtonByText("Delete");
             assertAlert("Are you sure you want to delete the selected row?");
