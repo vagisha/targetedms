@@ -17,7 +17,9 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
             }
 
             var mean = row['meanMR'];
-            if (LABKEY.vis.isValid(mean))
+
+            // Issue 28462: don't include the mean in the calculation of the max when plotting all on one plot
+            if (!this.singlePlot && LABKEY.vis.isValid(mean))
             {
                 if (dataObject.maxMRMean == null || mean > dataObject.maxMRMean) {
                     dataObject.maxMRMean = mean;

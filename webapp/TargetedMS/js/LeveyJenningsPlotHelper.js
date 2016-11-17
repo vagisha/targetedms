@@ -19,7 +19,9 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
 
             var mean = row['mean'];
             var sd = LABKEY.vis.isValid(row['stdDev']) ? row['stdDev'] : 0;
-            if (LABKEY.vis.isValid(mean))
+
+            // Issue 28462: don't include the +/-3 stddev error bars in min/max calculation when it isn't being plotted
+            if (!this.singlePlot && LABKEY.vis.isValid(mean))
             {
                 var minSd = (mean - (3 * sd));
                 if (dataObject.showLogInvalid == undefined && this.yAxisScale == 'log' && minSd <= 0)
