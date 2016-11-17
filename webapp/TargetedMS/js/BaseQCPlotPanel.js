@@ -19,9 +19,9 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         return undefined;
     },
 
-    getMetricPropsByName: function(name) {
+    getMetricPropsByLabel: function(label) {
         for (var i = 0; i < this.metricPropArr.length; i++) {
-            if (this.metricPropArr[i].name == name) {
+            if (this.metricPropArr[i].name == label || this.metricPropArr[i].series1Label == label || this.metricPropArr[i].series2Label == label) {
                 return this.metricPropArr[i];
             }
         }
@@ -563,9 +563,15 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             var countCUSUMmP = {}, countCUSUMmN = {}, countCUSUMvP = {}, countCUSUMvN = {}, countMR = {};
             plotOutliers[metric] = {TotalCount: Object.keys(metricVal).length, outliers: {}};
             Ext4.iterate(metricVal, function(peptide, peptideVal) {
-                if (!peptideVal || !peptideVal.Series || !peptideVal.Series.series1)
+                if (!peptideVal || !peptideVal.Series)
                     return;
-                var dataRows = peptideVal.Series.series1.Rows;
+                var dataRows;
+                if (peptideVal.Series.series1)
+                    dataRows = peptideVal.Series.series1.Rows;
+                else if (peptideVal.Series.series2)
+                    dataRows = peptideVal.Series.series2.Rows;
+                else
+                    return;
                 if (CUSUMm)
                 {
                     Ext4.each(dataRows, function (data)
@@ -694,6 +700,23 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         }, this);
 
         return plotOutliers;
+    },
+
+    getMetricOutliersByFileOrGuideSetGroup: function(metricOutlier) {
+        var transformedOutliers = {};
+        Ext4.iterate(metricOutlier, function(metric, vals){
+            var totalCount = vals.TotalCount;
+            Ext4.iterate(vals.outliers, function(type, groups){
+                Ext4.iterate(groups, function(group, count){
+                    if (!transformedOutliers[group])
+                        transformedOutliers[group] = {};
+                    if (!transformedOutliers[group][metric])
+                        transformedOutliers[group][metric] = {TotalCount: totalCount};
+                    transformedOutliers[group][metric][type] = count;
+                }, this);
+            }, this);
+        }, this);
+        return transformedOutliers;
     }
 
 });

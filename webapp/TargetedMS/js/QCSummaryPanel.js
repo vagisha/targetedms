@@ -258,19 +258,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             return validGuideSetIds.indexOf(row.GuideSetId) > -1;
         }));
         var metricOutlier = this.qcPlotPanel.getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, false, Object.keys(sampleFiles));
-        var transformedOutliers = {};
-        Ext4.iterate(metricOutlier, function(metric, vals){
-            var totalCount = vals.TotalCount;
-            Ext4.iterate(vals.outliers, function(type, files){
-                Ext4.iterate(files, function(name, count){
-                    if (!transformedOutliers[name])
-                        transformedOutliers[name] = {};
-                    if (!transformedOutliers[name][metric])
-                        transformedOutliers[name][metric] = {TotalCount: totalCount};
-                    transformedOutliers[name][metric][type] = count;
-                }, this);
-            }, this);
-        }, this);
+        var transformedOutliers = this.qcPlotPanel.getMetricOutliersByFileOrGuideSetGroup(metricOutlier);
 
         Ext4.iterate(transformedOutliers, function(filename, metrics){
             var info = sampleFiles[filename];
@@ -284,7 +272,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                    }
                 });
                 if (!matchedItem) {
-                    var metricId = this.qcPlotPanel.getMetricPropsByName(metric);
+                    var metricId = this.qcPlotPanel.getMetricPropsByLabel(metric);
                     if (metricId)
                         metricId = metricId.id;
                     matchedItem = {
@@ -349,6 +337,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     TotalCount: 0,
                     Items: [],
                     GuideSetId: row.GuideSetId
+
                 };
                 sampleFiles[row.SampleFile] = info;
             }
@@ -359,6 +348,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
             if (row.NonConformers > 0)
             {
+                Ext4.apply(row,{CUSUMm: 0, CUSUMv: 0, CUSUMmN: 0, CUSUMmP: 0, CUSUMvP: 0, CUSUMvN: 0, mR: 0});
                 row.ContainerPath = container.path;
                 info.Items.push(row);
             }
