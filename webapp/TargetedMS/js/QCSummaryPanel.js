@@ -249,8 +249,14 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
     getOtherQCSampleFileStats: function(params, sampleFiles)
     {
+        var validGuideSetIds = [];
+        Ext4.iterate(sampleFiles, function(key, val){
+           validGuideSetIds.push(val.GuideSetId);
+        });
         var processedMetricGuides =  this.qcPlotPanel.getAllProcessedGuideSets(params.rawGuideSet);
-        var processedMetricDataSet = this.qcPlotPanel.getAllProcessedMetricDataSets(params.rawMetricDataSet);
+        var processedMetricDataSet = this.qcPlotPanel.getAllProcessedMetricDataSets(params.rawMetricDataSet.filter(function(row){
+            return validGuideSetIds.indexOf(row.GuideSetId) > -1;
+        }));
         var metricOutlier = this.qcPlotPanel.getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, false, Object.keys(sampleFiles));
         var transformedOutliers = {};
         Ext4.iterate(metricOutlier, function(metric, vals){
@@ -341,7 +347,8 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     Metrics: 0,
                     NonConformers: 0,
                     TotalCount: 0,
-                    Items: []
+                    Items: [],
+                    GuideSetId: row.GuideSetId
                 };
                 sampleFiles[row.SampleFile] = info;
             }

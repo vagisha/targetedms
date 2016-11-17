@@ -478,11 +478,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     {
         // build query to query for all raw data
         var sql = "", sep = "", where = '';
-        //TODO confirm how many previous sample files to query to calculate CUSUM and mR
-        //if (params.limitedSampleFiles)
-        //{
-        //    where = ' WHERE SampleFileId.Id IN (SELECT Id FROM SampleFile WHERE AcquiredTime IS NOT NULL ORDER BY AcquiredTime DESC LIMIT 3)';
-        //}
         Ext4.each(this.metricPropArr, function (metricType)
         {
             var id = metricType.id,
@@ -558,7 +553,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     getQCPlotMetricOutliers: function(processedMetricGuides, processedMetricDataSet, CUSUMm, CUSUMv, mR, groupByGuideSet, sampleFiles)
     {
-        if (!processedMetricGuides || Object.keys(processedMetricGuides).length == 0) //TODO CUSUM doesn't need guideset, should we enable outlier reporting for it without guidesets?
+        if (!processedMetricGuides || Object.keys(processedMetricGuides).length == 0)
             return null;
         if (!groupByGuideSet && !sampleFiles)
             return null;
