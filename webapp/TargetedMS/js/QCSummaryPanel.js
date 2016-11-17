@@ -199,84 +199,6 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }, this);
     },
 
-    getSingleMetricGuideSetRawSql: function(metricType, schemaName, queryName)
-    {
-        var guideSetSql = "SELECT s.*, g.Comment, '" +  metricType + "' AS MetricType FROM (";
-        guideSetSql += this.qcPlotPanel.metricGuideSetRawSql(schemaName, queryName);
-        guideSetSql +=  ") s"
-                + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
-        return guideSetSql;
-    },
-
-    queryContainerSampleFileRawData: function(container)
-    {
-        // build query to query for all raw data
-        var sql = "", sep = "";
-        Ext4.each(this.qcPlotPanel.metricPropArr, function (metricType)
-        {
-            var id = metricType.id,
-                    label = metricType.series1Label,
-                    metricProps = this.qcPlotPanel.getMetricPropsById(id);
-
-            var newSql = this.qcPlotPanel.getEachSeriesTypePlotDataSql('series1', metricProps, '', label);
-
-            sql += sep + '(' + newSql + ')';
-            sep = "\nUNION\n";
-
-            if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
-            {
-                label = metricType.series2Label;
-                newSql = this.qcPlotPanel.getEachSeriesTypePlotDataSql('series2', metricProps, '', label);
-                sql += sep + '(' + newSql + ')';
-            }
-        }, this);
-
-        LABKEY.Query.executeSql({
-            containerPath: container.path,
-            schemaName: 'targetedms',
-            sql: sql,
-            scope: this,
-            success: function (data)
-            {
-                this.allRawData = data.rows;
-                // TODO process all data, calculate cusum, mr, determine outliers
-            }
-        });
-    },
-
-    queryContainerSampleFileRawGuideSetStats: function(container)
-    {
-        // build query to query for all metric guide set
-        var sql = "", sep = "";
-        Ext4.each(this.qcPlotPanel.metricPropArr, function (metricType)
-        {
-            var id = metricType.id,
-                    label = metricType.series1Label,
-                    metricProps = this.qcPlotPanel.getMetricPropsById(id);
-
-            sql += sep + '(' + this.getSingleMetricGuideSetRawSql(label, metricProps.series1SchemaName, metricProps.series1QueryName) + ')';
-            sep = "\nUNION\n";
-
-            if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
-            {
-                label = metricType.series2Label,
-                sql += sep + '(' + this.getSingleMetricGuideSetRawSql(label, metricProps.series2SchemaName, metricProps.series2QueryName) + ')';
-            }
-        }, this);
-
-        LABKEY.Query.executeSql({
-            containerPath: container.path,
-            schemaName: 'targetedms',
-            sql: sql,
-            scope: this,
-            success: function (data)
-            {
-                this.allGuideSet = data.rows; //TODO process guide set per set per peptide per metric
-                this.queryContainerSampleFileRawData(container);
-            }
-        });
-    },
-
     queryContainerSampleFileStats: function (container)
     {
         if (container.fileCount > 0)
@@ -313,7 +235,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 scope: this,
                 success: function (data)
                 {
-                    this.renderContainerSampleFileStats(container, data.rows);
+                    this.qcPlotPanel.queryContainerSampleFileRawGuideSetStats({container: container, dataRowsLJ: data.rows, limitedSampleFiles: true}, this.renderContainerSampleFileStats, this);
                 }
             });
         }
@@ -325,10 +247,90 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }
     },
 
-    renderContainerSampleFileStats: function (container, dataRows)
+    getOtherQCSampleFileStats: function(params, sampleFiles)
     {
-        var sampleFiles = [], info = null, index = 1;
-        Ext4.each(dataRows, function(row)
+        var processedMetricGuides =  this.qcPlotPanel.getAllProcessedGuideSets(params.rawGuideSet);
+        var processedMetricDataSet = this.qcPlotPanel.getAllProcessedMetricDataSets(params.rawMetricDataSet);
+        var metricOutlier = this.qcPlotPanel.getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, false, Object.keys(sampleFiles));
+        var transformedOutliers = {};
+        Ext4.iterate(metricOutlier, function(metric, vals){
+            var totalCount = vals.TotalCount;
+            Ext4.iterate(vals.outliers, function(type, files){
+                Ext4.iterate(files, function(name, count){
+                    if (!transformedOutliers[name])
+                        transformedOutliers[name] = {};
+                    if (!transformedOutliers[name][metric])
+                        transformedOutliers[name][metric] = {TotalCount: totalCount};
+                    transformedOutliers[name][metric][type] = count;
+                }, this);
+            }, this);
+        }, this);
+
+        Ext4.iterate(transformedOutliers, function(filename, metrics){
+            var info = sampleFiles[filename];
+            Ext4.iterate(metrics, function(metric, outliers){
+                var matchedItem = null;
+                Ext4.each(info.Items, function(item){
+                   if (item.MetricLabel == metric)
+                   {
+                       matchedItem = item;
+                       return false;
+                   }
+                });
+                if (!matchedItem) {
+                    var metricId = this.qcPlotPanel.getMetricPropsByName(metric);
+                    if (metricId)
+                        metricId = metricId.id;
+                    matchedItem = {
+                        MetricLabel: metric,
+                        MetricName: metric,
+                        NonConformers: 0,
+                        ContainerPath: params.container.path,
+                        MetricId: metricId
+                    };
+                    info.Items.push(matchedItem);
+                }
+                Ext4.apply(matchedItem, {CUSUMmN: 0, CUSUMmP: 0, CUSUMvP: 0, CUSUMvN: 0, mR: 0});
+                Ext4.apply(matchedItem, outliers);
+                matchedItem.CUSUMm = matchedItem.CUSUMmN + matchedItem.CUSUMmP;
+                matchedItem.CUSUMv = matchedItem.CUSUMvN + matchedItem.CUSUMvP;
+            }, this);
+
+        }, this);
+
+        Ext4.iterate(sampleFiles, function(name, sample){
+            var CUSUMmP = 0, CUSUMmN = 0, CUSUMvP = 0, CUSUMvN = 0, mR = 0;
+            Ext4.each(sample.Items, function(item){
+                if (item.CUSUMmN)
+                    CUSUMmN += item.CUSUMmN;
+                if (item.CUSUMmP)
+                    CUSUMmP += item.CUSUMmP;
+                if (item.CUSUMvP)
+                    CUSUMvP += item.CUSUMvP;
+                if (item.CUSUMvN)
+                    CUSUMvN += item.CUSUMvN;
+                if (item.mR)
+                    mR += item.mR;
+            }, this);
+            sample.CUSUMm = CUSUMmP + CUSUMmN;
+            sample.CUSUMv = CUSUMvP + CUSUMvN;
+            sample.CUSUMmP = CUSUMmP;
+            sample.CUSUMmN = CUSUMmN;
+            sample.CUSUMvN = CUSUMvN;
+            sample.CUSUMvP = CUSUMvP;
+            sample.mR = mR;
+            sample.hasOutliers = !(sample.NonConformers == 0 && sample.CUSUMm == 0 && sample.CUSUMv == 0 && sample.mR == 0);
+        }, this);
+    },
+
+    renderContainerSampleFileStats: function (params)
+    {
+        var container = params.container;
+        if (!params.rawGuideSet || !params.rawMetricDataSet)
+            return;
+
+        var sampleFiles = {}, info = null, index = 1;
+        Ext4.each(params.dataRowsLJ, function(row)
         {
             if (info == null || row.SampleFile != info.SampleFile)
             {
@@ -341,7 +343,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     TotalCount: 0,
                     Items: []
                 };
-                sampleFiles.push(info);
+                sampleFiles[row.SampleFile] = info;
             }
 
             info.Metrics++;
@@ -355,17 +357,25 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             }
         }, this);
 
+        this.getOtherQCSampleFileStats(params, sampleFiles);
         var html = '';
-        Ext4.each(sampleFiles, function(sampleFile)
+        Ext4.iterate(sampleFiles, function(name, sampleFile)
         {
             // create a new div id for each sampleFile to use for the hover details callout
             sampleFile.calloutId = Ext4.id();
 
-            var iconCls = sampleFile.NonConformers == 0 ? 'fa-file-o qc-correct' : 'fa-file qc-error';
+            var iconCls = !sampleFile.hasOutliers ? 'fa-file-o qc-correct' : 'fa-file qc-error';
             html += '<div class="sample-file-item" id="' + sampleFile.calloutId + '">'
                     + '<span class="fa ' + iconCls + '"></span> ' + sampleFile.AcquiredTime + ' - '
-                    + (sampleFile.NonConformers > 0 ? sampleFile.NonConformers + '/' + sampleFile.TotalCount : 'no')
-                    + ' outliers</div>';
+                    + (sampleFile.NonConformers > 0 ? sampleFile.NonConformers + '/' + sampleFile.TotalCount : '0')
+                    + ' (Levey-Jennings),' + ' '
+                    + (sampleFile.mR > 0 ? sampleFile.mR + '/' + sampleFile.TotalCount : '0')
+                    + ' (Moving Range),  '
+                    + (sampleFile.CUSUMm > 0 ? sampleFile.CUSUMm + '/' + sampleFile.TotalCount : '0')
+                    + ' (CUSUMm), ' + ' '
+                    + (sampleFile.CUSUMv > 0 ? sampleFile.CUSUMv + '/' + sampleFile.TotalCount : '0')
+                    + ' (CUSUMv) ' + 'outliers'
+                    +'</div>';
         });
         var sampleFilesDiv = Ext4.get('qc-summary-samplefiles-' + container.id);
         sampleFilesDiv.update(html);
@@ -375,7 +385,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         this.doLayout();
 
         // add a hover listener for each of the sample file divs
-        Ext4.each(sampleFiles, function(sampleFile)
+        Ext4.iterate(sampleFiles, function(name, sampleFile)
         {
             this.showSampleFileStatsDetails(sampleFile.calloutId, sampleFile);
         }, this);
@@ -398,7 +408,11 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             Ext4.each(sampleFile.Items, function(item)
             {
                 var href = LABKEY.ActionURL.buildURL('project', 'begin', item.ContainerPath, {metric: item.MetricId});
-                content += '<li><a href="' + href + '">' + item.MetricLabel + ' - ' + item.NonConformers + '/' + item.TotalCount + ' outliers</a></li>'
+                content += '<li><a href="' + href + '">' + item.MetricLabel + ' - ' + item.NonConformers + '/' + item.TotalCount + '(Levey-Jennings), '
+                        + item.mR + '/' + item.TotalCount + '(mR), '
+                        + item.CUSUMm + '/' + item.TotalCount + '(CUSUMm), '
+                        + item.CUSUMv + '/' + item.TotalCount + '(CUSUMv) '
+                        + ' outliers</a></li>'
             });
             content += '</ul>';
         }
@@ -416,7 +430,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     id: Ext4.id(),
                     target: el.dom,
                     placement: 'bottom',
-                    width: sampleFile.Items.length > 0 ? 400 : 300,
+                    width: sampleFile.Items.length > 0 ? 700 : 300,
                     title: 'Recent Sample File Details',
                     content: content
                 });

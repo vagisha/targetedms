@@ -144,7 +144,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     processRawGuideSetData : function(data)
     {
-        var guideSetAvgMRs = this.getGuideSetAvgMRs(data, this.yAxisScale == 'log');
+        var guideSetAvgMRs = this.getGuideSetAvgMRs(data.rows, this.yAxisScale == 'log');
         if (!this.guideSetDataMap)
             this.guideSetDataMap = {};
         Ext4.each(data.rows, function(row) {
