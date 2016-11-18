@@ -249,6 +249,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
     plotPareto: function(id, data, title, yAxisMax, plotType)
     {
+        var hoverFn = plotType.indexOf('CUSUM') > -1 ? this.plotBarHoverEvent : undefined;
         var barChart = new LABKEY.vis.Plot({
             renderTo: id,
             rendererType: 'd3',
@@ -262,7 +263,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             },
             layers : [
                 new LABKEY.vis.Layer({
-                    geom: new LABKEY.vis.Geom.BarPlot({clickFn: this.plotBarClickEvent})
+                    geom: new LABKEY.vis.Geom.BarPlot({clickFn: this.plotBarClickEvent, hoverFn: hoverFn})
                 }),
                 new LABKEY.vis.Layer({
                     geom: new LABKEY.vis.Geom.Path({color: 'steelblue'}),
@@ -310,6 +311,11 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             params.endDate = new Date();
         }
         window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, params);
-    }
+    },
 
+    plotBarHoverEvent : function(row) {
+        var CUSUMN = row.CUSUMNegative ? row.CUSUMNegative : 0, CUSUMP = row.CUSUMPositive ? row.CUSUMPositive : 0;
+        return 'CUSUM-:' + ' ' + CUSUMN + '\nCUSUM+:' + ' ' + CUSUMP + '\nTotal: ' + row.count;
+
+    }
 });
