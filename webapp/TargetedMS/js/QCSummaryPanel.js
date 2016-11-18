@@ -363,16 +363,31 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
             var iconCls = !sampleFile.hasOutliers ? 'fa-file-o qc-correct' : 'fa-file qc-error';
             html += '<div class="sample-file-item" id="' + sampleFile.calloutId + '">'
-                    + '<span class="fa ' + iconCls + '"></span> ' + sampleFile.AcquiredTime + ' - '
-                    + (sampleFile.NonConformers > 0 ? sampleFile.NonConformers + '/' + sampleFile.TotalCount : '0')
-                    + ' (Levey-Jennings),' + ' '
-                    + (sampleFile.mR > 0 ? sampleFile.mR + '/' + sampleFile.TotalCount : '0')
-                    + ' (Moving Range),  '
-                    + (sampleFile.CUSUMm > 0 ? sampleFile.CUSUMm + '/' + sampleFile.TotalCount : '0')
-                    + ' (CUSUMm), ' + ' '
-                    + (sampleFile.CUSUMv > 0 ? sampleFile.CUSUMv + '/' + sampleFile.TotalCount : '0')
-                    + ' (CUSUMv) ' + 'outliers'
-                    +'</div>';
+                    + '<span class="fa ' + iconCls + '"></span> ' + sampleFile.AcquiredTime + ' - ';
+            if (!sampleFile.NonConformers && !sampleFile.mR && !sampleFile.CUSUMm && !sampleFile.CUSUMv)
+                html += 'no outliers</div>';
+            else
+            {
+                var sep = '';
+                if (sampleFile.NonConformers > 0) {
+                    html += (sampleFile.NonConformers + '/' + sampleFile.TotalCount) + ' (Levey-Jennings)';
+                    sep = ', ';
+                }
+                if (sampleFile.mR > 0) {
+                    html += sep + (sampleFile.mR + '/' + sampleFile.TotalCount) + ' (Moving Range)';
+                    sep = ', ';
+                }
+                if (sampleFile.CUSUMm > 0) {
+                    html += sep + (sampleFile.CUSUMm + '/' + sampleFile.TotalCount) + ' (CUSUMm)';
+                    sep = ', ';
+                }
+                if (sampleFile.CUSUMv > 0) {
+                    html += sep +  (sampleFile.CUSUMv + '/' + sampleFile.TotalCount) + ' (CUSUMv)';
+                }
+
+                html += ' outliers</div>';
+            }
+
         });
         var sampleFilesDiv = Ext4.get('qc-summary-samplefiles-' + container.id);
         sampleFilesDiv.update(html);
@@ -405,11 +420,35 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             Ext4.each(sampleFile.Items, function(item)
             {
                 var href = LABKEY.ActionURL.buildURL('project', 'begin', item.ContainerPath, {metric: item.MetricId});
-                content += '<li><a href="' + href + '">' + item.MetricLabel + ' - ' + item.NonConformers + '/' + item.TotalCount + '(Levey-Jennings), '
-                        + item.mR + '/' + item.TotalCount + '(mR), '
-                        + item.CUSUMm + '/' + item.TotalCount + '(CUSUMm), '
-                        + item.CUSUMv + '/' + item.TotalCount + '(CUSUMv) '
-                        + ' outliers</a></li>'
+                content += '<li><a href="' + href + '">' + item.MetricLabel + ' - ';
+                if (!item.NonConformers && !item.mR && !item.CUSUMm && !item.CUSUMv)
+                    content += '0' + '/' + item.TotalCount + ' outliers</a></li>';
+                else{
+                    var sep = '';
+                    if (item.NonConformers) {
+                        content +=  item.NonConformers + '/' + item.TotalCount + ' (Levey-Jennings)';
+                        sep = ', ';
+                    }
+                    if (item.mR) {
+                        content +=  sep + item.mR + '/' + item.TotalCount + ' (mR)';
+                        sep = ', ';
+                    }
+                    if (item.CUSUMm) {
+                        content +=  sep +  item.CUSUMm + '/' + item.TotalCount + ' (CUSUMm: ';
+                        content += (item.CUSUMmN + '/' + item.TotalCount) + ' CUSUMm- ';
+                        content += (item.CUSUMmP + '/' + item.TotalCount) + ' CUSUMm+ ';
+                        content += ')';
+                        sep = ', ';
+                    }
+                    if (item.CUSUMv) {
+                        content +=  sep + item.CUSUMv + '/' + item.TotalCount + ' (CUSUMv: ';
+                        content += (item.CUSUMvN + '/' + item.TotalCount) + ' CUSUMv- ';
+                        content += (item.CUSUMvP + '/' + item.TotalCount) + ' CUSUMv+ ';
+                        content += ')';
+                    }
+
+                    content +=' outliers</a></li>'
+                }
             });
             content += '</ul>';
         }

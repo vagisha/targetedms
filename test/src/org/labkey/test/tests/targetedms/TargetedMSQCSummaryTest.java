@@ -299,12 +299,12 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         waitForRecentSampleFiles(6);
 
         tempStringList01.clear();
-        tempStringList01.add("2013/08/27 14:45:49 - 1/56 outliers");
-        tempStringList01.add("2013/08/27 03:19:45 - no outliers");
+        tempStringList01.add("2013/08/27 14:45:49 - 1/56 (Levey-Jennings), 1/56 (Moving Range)");
+        tempStringList01.add("2013/08/27 03:19:45 - 4/56 (Moving Range) outliers");
 
         tempStringList02.clear();
-        tempStringList02.add("Full Width at Half Maximum (FWHM) - 1/7 outliers");
-        tempStringList02.add("Q_Exactive_08_23_2013_JGB_51\nacquired date/time: 2013/08/27 03:19:45");
+        tempStringList02.add("Full Width at Half Maximum (FWHM) - 1/7 (Levey-Jennings), 1/7 (mR) outliers");
+        tempStringList02.add("Peak Area - 2/7 (mR) outliers");
 
         validateSampleFile(0, tempStringList01, tempStringList02);
 
@@ -359,13 +359,13 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
             String actualFileDetailText = qcSummaryTile.getRecentSampleFiles().get(i).getText();
             log("Validate that the file detail text is '" + fileDetailText + "'.");
-            assertTrue("File detail text not as expected. File detail text: '" + actualFileDetailText + "'", actualFileDetailText.toLowerCase().contains(fileDetailText));
+            assertTrue("File detail text not as expected. File detail text: '" + actualFileDetailText + "'" + " Expected: '" + fileDetailText + "'", actualFileDetailText.toLowerCase().contains(fileDetailText.toLowerCase()));
 
             mouseOver(qcSummaryTile.getRecentSampleFiles().get(i));
             waitForElement(qcSummaryWebPart.getBubble());
             actualFileDetailText = qcSummaryWebPart.getBubbleText();
             log("Validate that the bubble text for the file detail contains '" + bubbleText + "'.");
-            assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + actualFileDetailText + "'", actualFileDetailText.toLowerCase().contains(bubbleText.toLowerCase()));
+            assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + actualFileDetailText + "' Expected: '" + bubbleText + "'", actualFileDetailText.toLowerCase().contains(bubbleText.toLowerCase()));
             qcSummaryWebPart.closeBubble();
             log("Move the mouse to avoid another hopscotch bubble.");
             mouseOver(Locator.css("td.labkey-main-icon"));

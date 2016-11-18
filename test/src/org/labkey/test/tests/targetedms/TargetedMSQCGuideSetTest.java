@@ -169,7 +169,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         ParetoPlotPage paretoPage = new ParetoPlotPage(getDriver());
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
-        assertEquals("Wrong number of Pareto plots", 4, paretoPlotsWebPart.getNumOfParetoPlots());
+        assertEquals("Wrong number of Pareto plots", 16, paretoPlotsWebPart.getNumOfParetoPlots());
         assertEquals("Wrong number of non-conformers for PA", 69, paretoPlotsWebPart.getPlotBarHeight(3, 0));
         assertEquals("Wrong number of non-conformers for P Area", 64, paretoPlotsWebPart.getPlotBarHeight(3, 1));
         assertEquals("Wrong number of non-conformers for T Area", 60, paretoPlotsWebPart.getPlotBarHeight(3, 2));

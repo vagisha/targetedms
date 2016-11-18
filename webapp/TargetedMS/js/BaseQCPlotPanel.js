@@ -540,6 +540,8 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             }
         }, this);
 
+        sql = "SELECT * FROM (" + sql + ") a ORDER BY GuideSetId, SeriesLabel, AcquiredTime";
+
         var sqlObj = {
             schemaName: 'targetedms',
             sql: sql,
@@ -566,9 +568,11 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
         Ext4.iterate(processedMetricDataSet, function(metric, metricVal){
             var countCUSUMmP = {}, countCUSUMmN = {}, countCUSUMvP = {}, countCUSUMvN = {}, countMR = {};
-            plotOutliers[metric] = {TotalCount: Object.keys(metricVal).length, outliers: {}};
+            plotOutliers[metric] = {TotalCount: 0, outliers: {}};
             Ext4.iterate(metricVal, function(guideSetId, peptides)
             {
+                if (plotOutliers[metric].TotalCount < Object.keys(peptides).length)
+                    plotOutliers[metric].TotalCount = Object.keys(peptides).length;
                 Ext4.iterate(peptides, function (peptide, peptideVal)
                 {
                     if (!peptideVal || !peptideVal.Series)
