@@ -145,13 +145,18 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         var metricDataSet =  {};
         Ext4.each(rawData, function (row){
             if (!metricDataSet[row['MetricType']])
-                metricDataSet[row['MetricType']] = [];
-            metricDataSet[row['MetricType']].push(row);
+                metricDataSet[row['MetricType']] = {};
+            if (!metricDataSet[row['MetricType']][row.GuideSetId])
+                metricDataSet[row['MetricType']][row.GuideSetId] = [];
+            metricDataSet[row['MetricType']][row.GuideSetId].push(row);
         });
 
         var processedMetricDataSet = {};
-        Ext4.iterate(metricDataSet, function(key, val){
-            processedMetricDataSet[key] = this.preprocessPlotData(val, true, true, true);
+        Ext4.iterate(metricDataSet, function(metric, guides){
+            processedMetricDataSet[metric] = {};
+            Ext4.iterate(guides, function(guideId, guideset){
+                processedMetricDataSet[metric][guideId] = this.preprocessPlotData(guideset, true, true, true);
+            }, this);
         }, this);
         return processedMetricDataSet;
     },
@@ -562,135 +567,138 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         Ext4.iterate(processedMetricDataSet, function(metric, metricVal){
             var countCUSUMmP = {}, countCUSUMmN = {}, countCUSUMvP = {}, countCUSUMvN = {}, countMR = {};
             plotOutliers[metric] = {TotalCount: Object.keys(metricVal).length, outliers: {}};
-            Ext4.iterate(metricVal, function(peptide, peptideVal) {
-                if (!peptideVal || !peptideVal.Series)
-                    return;
-                var dataRows;
-                if (peptideVal.Series.series1)
-                    dataRows = peptideVal.Series.series1.Rows;
-                else if (peptideVal.Series.series2)
-                    dataRows = peptideVal.Series.series2.Rows;
-                else
-                    return;
-                if (CUSUMm)
+            Ext4.iterate(metricVal, function(guideSetId, peptides)
+            {
+                Ext4.iterate(peptides, function (peptide, peptideVal)
                 {
-                    Ext4.each(dataRows, function (data)
+                    if (!peptideVal || !peptideVal.Series)
+                        return;
+                    var dataRows;
+                    if (peptideVal.Series.series1)
+                        dataRows = peptideVal.Series.series1.Rows;
+                    else if (peptideVal.Series.series2)
+                        dataRows = peptideVal.Series.series2.Rows;
+                    else
+                        return;
+                    if (CUSUMm)
                     {
-                        var sampleFile = data.SampleFile;
-                        if (data.CUSUMmN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
-                        {
-                            if (groupByGuideSet)
-                            {
-                                if (!countCUSUMmN[data.GuideSetId])
-                                    countCUSUMmN[data.GuideSetId] = 0;
-                                countCUSUMmN[data.GuideSetId]++;
-                            }
-                            else
-                            {
-                                if (sampleFiles.indexOf(sampleFile) > -1)
-                                {
-                                    if (!countCUSUMmN[sampleFile])
-                                        countCUSUMmN[sampleFile] = 0;
-                                    countCUSUMmN[sampleFile]++;
-                                }
-                            }
-                        }
-                        else if (data.CUSUMmP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
-                        {
-                            if (groupByGuideSet)
-                            {
-                                if (!countCUSUMmP[data.GuideSetId])
-                                    countCUSUMmP[data.GuideSetId] = 0;
-                                countCUSUMmP[data.GuideSetId]++;
-                            }
-                            else
-                            {
-                                if (sampleFiles.indexOf(sampleFile) > -1)
-                                {
-                                    if (!countCUSUMmP[sampleFile])
-                                        countCUSUMmP[sampleFile] = 0;
-                                    countCUSUMmP[sampleFile]++;
-                                }
-                            }
-                        }
-                    }, this);
-
-                }
-                if (CUSUMv)
-                {
-                    Ext4.each(dataRows, function (data)
-                    {
-                        var sampleFile = data.SampleFile;
-                        if (data.CUSUMvN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
-                        {
-                            if (groupByGuideSet)
-                            {
-                                if (!countCUSUMvN[data.GuideSetId])
-                                    countCUSUMvN[data.GuideSetId] = 0;
-                                countCUSUMvN[data.GuideSetId]++;
-                            }
-                            else
-                            {
-                                if (sampleFiles.indexOf(sampleFile) > -1)
-                                {
-                                    if (!countCUSUMvN[sampleFile])
-                                        countCUSUMvN[sampleFile] = 0;
-                                    countCUSUMvN[sampleFile]++;
-                                }
-                            }
-                        }
-                        else if (data.CUSUMvP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
-                        {
-                            if (groupByGuideSet)
-                            {
-                                if (!countCUSUMvP[data.GuideSetId])
-                                    countCUSUMvP[data.GuideSetId] = 0;
-                                countCUSUMvP[data.GuideSetId]++;
-                            }
-                            else
-                            {
-                                if (sampleFiles.indexOf(sampleFile) > -1)
-                                {
-                                    if (!countCUSUMvP[sampleFile])
-                                        countCUSUMvP[sampleFile] = 0;
-                                    countCUSUMvP[sampleFile]++;
-                                }
-                            }
-                        }
-                    }, this);
-
-                }
-                if (mR)
-                {
-                    Ext4.each(dataRows, function (data)
-                    {
-                        var guideId = data.GuideSetId;
-                        if (!processedMetricGuides[metric] || !processedMetricGuides[metric][guideId] || !processedMetricGuides[metric][guideId].Series)
-                            return;
-
-                        var controlRange = processedMetricGuides[metric][guideId].Series[peptide];
-                        if (data.MR > LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
+                        Ext4.each(dataRows, function (data)
                         {
                             var sampleFile = data.SampleFile;
-                            if (groupByGuideSet)
+                            if (data.CUSUMmN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
                             {
-                                if (!countMR[guideId])
-                                    countMR[guideId] = 0;
-                                countMR[guideId]++;
-                            }
-                            else
-                            {
-                                if (sampleFiles.indexOf(sampleFile) > -1)
+                                if (groupByGuideSet)
                                 {
-                                    if (!countMR[sampleFile])
-                                        countMR[sampleFile] = 0;
-                                    countMR[sampleFile]++;
+                                    if (!countCUSUMmN[guideSetId])
+                                        countCUSUMmN[guideSetId] = 0;
+                                    countCUSUMmN[guideSetId]++;
+                                }
+                                else
+                                {
+                                    if (sampleFiles.indexOf(sampleFile) > -1)
+                                    {
+                                        if (!countCUSUMmN[sampleFile])
+                                            countCUSUMmN[sampleFile] = 0;
+                                        countCUSUMmN[sampleFile]++;
+                                    }
                                 }
                             }
-                        }
-                    }, this);
-                }
+                            else if (data.CUSUMmP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
+                            {
+                                if (groupByGuideSet)
+                                {
+                                    if (!countCUSUMmP[guideSetId])
+                                        countCUSUMmP[guideSetId] = 0;
+                                    countCUSUMmP[guideSetId]++;
+                                }
+                                else
+                                {
+                                    if (sampleFiles.indexOf(sampleFile) > -1)
+                                    {
+                                        if (!countCUSUMmP[sampleFile])
+                                            countCUSUMmP[sampleFile] = 0;
+                                        countCUSUMmP[sampleFile]++;
+                                    }
+                                }
+                            }
+                        }, this);
 
+                    }
+                    if (CUSUMv)
+                    {
+                        Ext4.each(dataRows, function (data)
+                        {
+                            var sampleFile = data.SampleFile;
+                            if (data.CUSUMvN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
+                            {
+                                if (groupByGuideSet)
+                                {
+                                    if (!countCUSUMvN[data.GuideSetId])
+                                        countCUSUMvN[data.GuideSetId] = 0;
+                                    countCUSUMvN[data.GuideSetId]++;
+                                }
+                                else
+                                {
+                                    if (sampleFiles.indexOf(sampleFile) > -1)
+                                    {
+                                        if (!countCUSUMvN[sampleFile])
+                                            countCUSUMvN[sampleFile] = 0;
+                                        countCUSUMvN[sampleFile]++;
+                                    }
+                                }
+                            }
+                            else if (data.CUSUMvP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
+                            {
+                                if (groupByGuideSet)
+                                {
+                                    if (!countCUSUMvP[guideSetId])
+                                        countCUSUMvP[guideSetId] = 0;
+                                    countCUSUMvP[guideSetId]++;
+                                }
+                                else
+                                {
+                                    if (sampleFiles.indexOf(sampleFile) > -1)
+                                    {
+                                        if (!countCUSUMvP[sampleFile])
+                                            countCUSUMvP[sampleFile] = 0;
+                                        countCUSUMvP[sampleFile]++;
+                                    }
+                                }
+                            }
+                        }, this);
+
+                    }
+                    if (mR)
+                    {
+                        Ext4.each(dataRows, function (data)
+                        {
+                            if (!processedMetricGuides[metric] || !processedMetricGuides[metric][guideSetId] || !processedMetricGuides[metric][guideSetId].Series)
+                                return;
+
+                            var controlRange = processedMetricGuides[metric][guideSetId].Series[peptide];
+                            if (data.MR > LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
+                            {
+                                var sampleFile = data.SampleFile;
+                                if (groupByGuideSet)
+                                {
+                                    if (!countMR[guideSetId])
+                                        countMR[guideSetId] = 0;
+                                    countMR[guideSetId]++;
+                                }
+                                else
+                                {
+                                    if (sampleFiles.indexOf(sampleFile) > -1)
+                                    {
+                                        if (!countMR[sampleFile])
+                                            countMR[sampleFile] = 0;
+                                        countMR[sampleFile]++;
+                                    }
+                                }
+                            }
+                        }, this);
+                    }
+
+                }, this);
             }, this);
             plotOutliers[metric].outliers.CUSUMmP = countCUSUMmP;
             plotOutliers[metric].outliers.CUSUMvP = countCUSUMvP;
