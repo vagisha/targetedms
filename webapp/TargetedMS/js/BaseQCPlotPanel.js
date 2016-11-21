@@ -100,6 +100,9 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             sql += this.getEachSeriesTypePlotDataSql(type, metricProps, whereClause, MetricType);
             sep = "\nUNION\n";
         }, this);
+
+        //Issue 28541
+        //TODO labkey sql server wrapper doesn't support order by subqueries with UNION, client side sort is used instead
         sql = "SELECT * FROM (" + sql + ") a ORDER BY SeriesType, SeriesLabel, AcquiredTime"; //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
         return sql;
     },
@@ -171,6 +174,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         });
         var processedMetricGuides = {};
         Ext4.iterate(metricGuideSet, function(key, val){
+            val.sort(this.metricRecordSortFn);
             processedMetricGuides[key] = this.getGuideSetAvgMRs(val);
         }, this);
         return processedMetricGuides;
@@ -202,18 +206,22 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         {
             Ext4.iterate(plotDataMap, function(seriesLabel, seriesVal){
                 Ext4.iterate(seriesVal.Series, function(seriesType, seriesTypeObj){
-                    var mRs, positiveCUSUMm, negativeCUSUMm, positiveCUSUMv, negativeCUSUMv;
+                    var mRs, positiveCUSUMm, negativeCUSUMm, positiveCUSUMv, negativeCUSUMv, metricRows = seriesTypeObj.Rows, metricVals = [];
+                    metricRows.sort(this.metricRecordSortFn);
+                    Ext4.each(metricRows, function(row){
+                        metricVals.push(row.MetricValue);
+                    });
                     if (hasMR)
-                        mRs = LABKEY.vis.Stat.getMovingRanges(seriesTypeObj.MetricValues, isLogScale);
+                        mRs = LABKEY.vis.Stat.getMovingRanges(metricVals, isLogScale);
                     if (hasCUSUMm)
                     {
-                        positiveCUSUMm = LABKEY.vis.Stat.getCUSUM(seriesTypeObj.MetricValues, false, false, isLogScale);
-                        negativeCUSUMm = LABKEY.vis.Stat.getCUSUM(seriesTypeObj.MetricValues, true, false, isLogScale);
+                        positiveCUSUMm = LABKEY.vis.Stat.getCUSUM(metricVals, false, false, isLogScale);
+                        negativeCUSUMm = LABKEY.vis.Stat.getCUSUM(metricVals, true, false, isLogScale);
                     }
                     if (hasCUSUMv)
                     {
-                        positiveCUSUMv = LABKEY.vis.Stat.getCUSUM(seriesTypeObj.MetricValues, false, true, isLogScale);
-                        negativeCUSUMv = LABKEY.vis.Stat.getCUSUM(seriesTypeObj.MetricValues, true, true, isLogScale);
+                        positiveCUSUMv = LABKEY.vis.Stat.getCUSUM(metricVals, false, true, isLogScale);
+                        negativeCUSUMv = LABKEY.vis.Stat.getCUSUM(metricVals, true, true, isLogScale);
                     }
                     for (var i = 0; i < seriesTypeObj.Rows.length; i++)
                     {
@@ -231,8 +239,8 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                             row['CUSUMvN'] = negativeCUSUMv[i];
                         }
                     }
-                })
-            });
+                }, this)
+            }, this);
         }
         return plotDataMap;
     },
@@ -438,6 +446,8 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             }
         }, this);
 
+        //Issue 28541
+        //TODO labkey sql server wrapper doesn't support order by subqueries with UNION, client side sort is used instead
         sql = "SELECT * FROM (" + sql + ") a ORDER BY SeriesType, SeriesLabel, AcquiredTime";
 
         var sqlObj = {
@@ -476,6 +486,8 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             }
         }, this);
 
+        //Issue 28541
+        //TODO labkey sql server wrapper doesn't support order by subqueries with UNION, client side sort is used instead
         sql = "SELECT * FROM (" + sql + ") a ORDER BY GuideSetId, SeriesLabel, AcquiredTime";
 
         var sqlObj = {
@@ -665,7 +677,14 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             }, this);
         }, this);
         return transformedOutliers;
-    }
+    },
 
+    metricRecordSortFn: function(a, b){
+        if (a.AcquiredTime == null && b.AcquiredTime == null)
+            return 0;
+        if (a.AcquiredTime == null) return -1;
+        if (b.AcquiredTime == null) return -1;
+        return new Date(a.AcquiredTime).getTime() - new Date(b.AcquiredTime).getTime();
+    }
 });
 
