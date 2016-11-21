@@ -351,7 +351,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     createExportIcon : function(divId, iconCls, tooltip, indexFromLeft, plotIndex, plotWidth, callbackFn)
     {
-        var leftPositionPx = (((plotIndex % 2) + 1) * plotWidth) - (indexFromLeft * 30) + 15,
+        var leftPositionPx = ((( (!this.largePlot && this.plotTypes.length > 1) ? plotIndex % 2 : 0) + 1) * plotWidth) - (indexFromLeft * 30) + 15,
             exportIconDivId = divId + iconCls,
             html = '<div id="' + exportIconDivId + '" class="export-icon" style="left: ' + leftPositionPx + 'px;">'
                     + '<i class="fa ' + iconCls + '"></i></div>';
