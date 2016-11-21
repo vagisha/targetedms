@@ -243,12 +243,12 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 '<table class="labkey-wp ' + wp + '">' +
                 ' <tr class="labkey-wp-header">' +
                 '     <th class="labkey-wp-title-left">' +
-                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) +
-                '           <div class="plot-export-btn" id="' + id + '-exportToPDFbutton"></div>' +
-                '        </span>' +
+                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) + '</span>' +
                 '     </th>' +
                 ' </tr><tr>' +
-                '     <td class="labkey-wp-body"><div id="' + id + '"></div></</td>' +
+                '     <td class="labkey-wp-body">' +
+                '        <div id="' + id + '" class="chart-render-div"></div>' +
+                '     </td>' +
                 ' </tr>' +
                 '</table>'
         );
@@ -268,17 +268,14 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 '<table class="labkey-wp ' + wp + '">' +
                 ' <tr class="labkey-wp-header">' +
                 '     <th class="labkey-wp-title-left">' +
-                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) +
-                '           <span class="plot-export-btn-group">' +
-                '           <div class="plot-export-btn" id="' + ids[0] + '-exportToPDFbutton"></div>' +
-                '           </span>' +
+                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) + '</span>' +
                 '        </span>' +
                 '     </th>' +
                 ' </tr>';
 
         Ext4.each(ids, function(plotId){
             html += '<tr>' +
-                    '     <td><div id="' + plotId + '"></div></td>' +
+                    '     <td><div id="' + plotId + '" class="chart-render-div"></div></td>' +
                     ' </tr>';
         });
         html += '</table>';
@@ -291,10 +288,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 '<table class="labkey-wp ' + wp + '">' +
                 ' <tr class="labkey-wp-header">' +
                 '     <th class="labkey-wp-title-left">' +
-                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) +
-                '           <span class="plot-export-btn-group">' +
-                '           <div class="plot-export-btn" id="' + ids[0] + '-exportToPDFbutton"></div>' +
-                '           </span>' +
+                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) + '</span>' +
                 '        </span>' +
                 '     </th>' +
                 ' </tr>';
@@ -302,18 +296,18 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         if (ids.length > 0)
         {
             html += ' <tr>' +
-                    '     <td><div class="plot-small-layout" id="' + ids[0] + '"></div>';
+                    '     <td><div class="plot-small-layout chart-render-div" id="' + ids[0] + '"></div>';
             if (ids.length > 1)
-                html += '<div class="plot-small-layout" id="' + ids[1] + '"></div>';
+                html += '<div class="plot-small-layout chart-render-div" id="' + ids[1] + '"></div>';
             html += ' </td></tr>';
         }
 
         if (ids.length > 2)
         {
             html += ' <tr>' +
-                    '     <td><div class="plot-small-layout" id="' + ids[2] + '"></div>';
+                    '     <td><div class="plot-small-layout chart-render-div" id="' + ids[2] + '"></div>';
             if (ids.length > 3)
-                html += '<div class="plot-small-layout" id="' + ids[3] + '"></div>';
+                html += '<div class="plot-small-layout chart-render-div" id="' + ids[3] + '"></div>';
             html += ' </td></tr>';
         }
         html += '</table>';
@@ -336,97 +330,39 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         }
     },
 
-    createExportToPDFButton: function (id, title, filename)
+    attachPlotExportIcons : function(id, plotTitle, plotIndex, plotWidth, extraMargin)
     {
-        new Ext4.Button({
-            renderTo: id + "-exportToPDFbutton",
-            svgDivId: id,
-            icon: LABKEY.contextPath + "/_icons/pdf.gif",
-            tooltip: "Export PDF of this plot",
-            handler: function (btn)
-            {
-                LABKEY.vis.SVGConverter.convert(this.getExportSVGStr(btn.svgDivId), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
-            },
-            scope: this
+        this.createExportIcon(id, 'fa-file-pdf-o', 'Export to PDF', 0, plotIndex, plotWidth, function(){
+            this.exportChartToImage(id, extraMargin, LABKEY.vis.SVGConverter.FORMAT_PDF, plotTitle);
+        });
+
+        this.createExportIcon(id, 'fa-file-image-o', 'Export to PNG', 1, plotIndex, plotWidth, function(){
+            this.exportChartToImage(id, extraMargin, LABKEY.vis.SVGConverter.FORMAT_PNG, plotTitle);
         });
     },
 
-    getPlotPdfMenuItem: function(divId, filename, plotType, extraMargin, scope)
+    createExportIcon : function(divId, iconCls, tooltip, indexFromLeft, plotIndex, plotWidth, callbackFn)
     {
-        return {
-            xtype: 'menuitem',
-            text: plotType,
-            listeners: {
-                click: {
-                    fn: function ()
-                    {
-                        LABKEY.vis.SVGConverter.convert(scope.getExportSVGStr(divId, extraMargin), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
-                    },
-                    element: 'el',
-                    scope: scope
-                }
-            }
-        }
+        var leftPositionPx = (((plotIndex % 2) + 1) * plotWidth) - (indexFromLeft * 30) + 15,
+            exportIconDivId = divId + iconCls,
+            html = '<div id="' + exportIconDivId + '" class="export-icon" style="left: ' + leftPositionPx + 'px;">'
+                    + '<i class="fa ' + iconCls + '"></i></div>';
+
+        Ext4.get(divId).insertHtml('afterBegin', html);
+
+        Ext4.create('Ext.tip.ToolTip', {
+            target: exportIconDivId,
+            html: tooltip
+        });
+
+        Ext4.get(exportIconDivId).on('click', callbackFn, this);
     },
 
-    getPlotPdfMenuItems:function(divIds, filename, extraMargin) {
-        this.plotTypes.sort(function(a, b){
-            return LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesOrders[a] - LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesOrders[b];
-        });
-        var plotIndex = 0, menuItems = [], me = this;
-        Ext4.each(this.plotTypes, function(plotType){
-            menuItems.push(me.getPlotPdfMenuItem(divIds[plotIndex], filename, plotType, extraMargin, me));
-            plotIndex++;
-        });
-        return menuItems;
-    },
-
-    getExportPlotToPDFMenu: function(divIds, filename, extraMargin)
+    exportChartToImage : function(svgDivId, extraMargin, type, fileName)
     {
-        return Ext4.create('Ext.menu.Menu', {
-            plain: true,
-            cls: 'toolsMenu',
-            floating: true,
-            items: this.getPlotPdfMenuItems(divIds, filename, extraMargin),
-            listeners:{
-                render: function(tool) {
-                    this.showBy(tool, 'tr-br?');
-                },
-                hide: function(tool) {
-                    tool.destroy();
-                },
-                scope:this
-            }
-        });
-
-    },
-
-    //extraMargin for invisible legends
-    createExportPlotToPDFButton: function (id, title, filename, isMenu, ids, extraMargin)
-    {
-        new Ext4.Button({
-            renderTo: id + "-exportToPDFbutton",
-            svgDivId: id,
-            svgDivIds: ids,
-            icon: LABKEY.contextPath + "/_icons/pdf.gif",
-            tooltip: {
-                text: title,
-                mouseOffset: [-150,-70]
-            },
-            margin: '0, 10, 0 10',
-            handler: function (btn)
-            {
-                if (isMenu)
-                {
-                    this.getExportPlotToPDFMenu(btn.svgDivIds, filename, extraMargin).showBy(btn, 'tr-br?');
-                }
-                else
-                {
-                    LABKEY.vis.SVGConverter.convert(this.getExportSVGStr(btn.svgDivId, extraMargin), LABKEY.vis.SVGConverter.FORMAT_PDF, filename);
-                }
-            },
-            scope: this
-        });
+        var svgStr = this.getExportSVGStr(svgDivId, extraMargin),
+            exportType = type || LABKEY.vis.SVGConverter.FORMAT_PDF;
+        LABKEY.vis.SVGConverter.convert(svgStr, exportType, fileName);
     },
 
     getExportSVGStr: function(svgDivId, extraWidth)

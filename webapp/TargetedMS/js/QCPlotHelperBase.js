@@ -328,21 +328,22 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
     },
 
     getBasePlotConfig : function(id, data, legenddata) {
-        var availableWidth = this.plotWidth - 30, width = availableWidth;
-        if (!this.largePlot && this.plotTypes.length > 1)
-        {
-            width = availableWidth / 2;
-        }
         return {
             rendererType : 'd3',
             renderTo : id,
             data : Ext4.Array.clone(data),
-            width : width,
+            width : this.getPlotWidth(),
             height : this.singlePlot ? 500 : 300,
             gridLineColor : 'white',
             legendData : Ext4.Array.clone(legenddata),
             legendNoWrap: true
         };
+    },
+
+    getPlotWidth: function()
+    {
+        var width = this.plotWidth - 30;
+        return !this.largePlot && this.plotTypes.length > 1 ? width / 2 : width;
     },
 
     getCombinedPlotLegendData: function(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean)
@@ -426,7 +427,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return newLegendData;
     },
 
-    addEachCombinedPrecusorPlot: function(id, combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, plotType, isCUSUMMean)
+    addEachCombinedPrecusorPlot: function(plotIndex, id, combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, plotType, isCUSUMMean)
     {
         var plotLegendData = this.getCombinedPlotLegendData(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean);
         this.showInvalidLogMsg(id, showLogInvalid);
@@ -447,6 +448,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         Ext4.apply(ljProperties, this.getPlotTypeProperties(combinePlotData, plotType, isCUSUMMean));
 
+        var mainTitle = LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean);
+
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, plotLegendData);
 
         var plotConfig = Ext4.apply(basePlotConfig, {
@@ -458,7 +461,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             },
             labels : {
                 main: {
-                    value: LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean)
+                    value: mainTitle
                 },
                 subtitle: {
                     value: "All Series",
@@ -486,12 +489,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         this.addGuideSetTrainingRangeToPlot(plot, combinePlotData);
 
-        if (this.plotTypes.length == 1)
-            this.createExportPlotToPDFButton(id, "Export combined " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for  All Series", "QC Combined Plot", null, null, this.showInPlotLegends() ? 0 : legendMargin);
-
+        this.attachPlotExportIcons(id, mainTitle + '- All Series', plotIndex, this.getPlotWidth(), this.showInPlotLegends() ? 0 : legendMargin);
     },
 
-    addEachIndividualPrecusorPlot: function(id, i, precursorInfo, metricProps, plotType, isCUSUMMean, scope)
+    addEachIndividualPrecusorPlot: function(plotIndex, id, precursorIndex, precursorInfo, metricProps, plotType, isCUSUMMean, scope)
     {
         if (precursorInfo.showLogInvalid)
         {
@@ -534,6 +535,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             }, this);
         }
 
+        var mainTitle = LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean);
+
         var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, plotLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
@@ -544,10 +547,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             },
             labels : {
                 main: {
-                    value: LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean)
+                    value: mainTitle
                 },
                 subtitle: {
-                    value: this.precursors[i],
+                    value: this.precursors[precursorIndex],
                     color: '#555555',
                     visibility: 'hidden'
                 },
@@ -593,9 +596,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         this.addGuideSetTrainingRangeToPlot(plot, precursorInfo);
 
-        if (this.plotTypes.length == 1)
-            this.createExportPlotToPDFButton(id, "Export " + plotType  + (isCUSUMMean === undefined ? '' : isCUSUMMean ? 'm' : 'v') + " plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, null, null, this.showInPlotLegends() ? 0 : 10 * this.longestLegendText);
-
+        var extraMargin = this.showInPlotLegends() ? 0 : 10 * this.longestLegendText;
+        this.attachPlotExportIcons(id, mainTitle + '-' + this.precursors[precursorIndex], plotIndex, this.getPlotWidth(), extraMargin);
     },
 
     // empty legend to reserve plot space for plot alignment

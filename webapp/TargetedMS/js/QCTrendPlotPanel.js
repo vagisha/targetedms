@@ -7,8 +7,6 @@
 /**
  * Class to create a panel for displaying the R plot for the trending of retention times, peak areas, and other
  * values for the selected graph parameters.
- *
- * To add PDF export support use LABKEY.vis.SVGConverter.convert.
  */
 Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 

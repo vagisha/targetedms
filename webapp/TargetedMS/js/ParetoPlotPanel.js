@@ -243,8 +243,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
     {
         this.addPlotWebPartToPlotDiv(id, wpTitle, this.plotPanelDiv, wp);
         this.setPlotWidth(this.plotPanelDiv);
-        this.createExportToPDFButton(id, plotTitle, fileName);
         this.plotPareto(id, plotData, plotTitle, yAxisMax, plotType);
+        this.attachPlotExportIcons(id, id, 0, this.plotWidth - 30, 0);
     },
 
     plotPareto: function(id, data, title, yAxisMax, plotType)
@@ -298,7 +298,6 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         });
         barChart.render();
     },
-
 
     plotBarClickEvent : function(event, row) {
         var params = {startDate: row.trainingStart, metric: row.metricId, plotTypes: row.plotType};

@@ -56,25 +56,21 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                 // add a new panel for each plot so we can add the title to the frame
                 if (this.showLJPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.LeveyJennings, undefined, me);
+                    this.addEachIndividualPrecusorPlot(plotIndex, ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.LeveyJennings, undefined, me);
                 }
                 if (this.showMovingRangePlot())
                 {
-                    this.addEachIndividualPrecusorPlot(ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.MovingRange, undefined, me);
+                    this.addEachIndividualPrecusorPlot(plotIndex, ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.MovingRange, undefined, me);
                 }
                 if (this.showMeanCUSUMPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, true, me);
+                    this.addEachIndividualPrecusorPlot(plotIndex, ids[plotIndex++], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, true, me);
                 }
                 if (this.showVariableCUSUMPlot())
                 {
-                    this.addEachIndividualPrecusorPlot(ids[plotIndex], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, false, me);
+                    this.addEachIndividualPrecusorPlot(plotIndex, ids[plotIndex], i, precursorInfo, metricProps, LABKEY.vis.TrendingLinePlotType.CUSUM, false, me);
                 }
-
             }
-
-            if (this.plotTypes.length > 1)
-                this.createExportPlotToPDFButton(id, "Export plot for " + precursorInfo.fragment, "QC Plot-"+precursorInfo.fragment, true, ids, this.showInPlotLegends() ? 0 : 10 * this.longestLegendText);
         }
 
         this.setPlotBrushingDisplayStyle();
@@ -128,23 +124,20 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         var legendMargin = 11 * lengthOfLongestLegend + (this.isMultiSeries() ? 50 : 0);
         if (this.showLJPlot())
         {
-            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
+            this.addEachCombinedPrecusorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
         }
         if (this.showMovingRangePlot())
         {
-            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.MovingRange);
+            this.addEachCombinedPrecusorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.MovingRange);
         }
         if (this.showMeanCUSUMPlot())
         {
-            this.addEachCombinedPrecusorPlot(ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, true);
+            this.addEachCombinedPrecusorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, true);
         }
         if (this.showVariableCUSUMPlot())
         {
-            this.addEachCombinedPrecusorPlot(ids[plotIndex], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
+            this.addEachCombinedPrecusorPlot(plotIndex, ids[plotIndex], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.CUSUM, false);
         }
-
-        if (this.plotTypes.length > 1)
-            this.createExportPlotToPDFButton(id, "Export combined plot for  All Series", "QC Combined Plot", true, ids, this.showInPlotLegends() ? 0 : legendMargin);
 
         return true;
     },
@@ -305,5 +298,4 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             return this.getEmptyLegend();
         return [];
     }
-
 });

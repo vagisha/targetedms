@@ -31,6 +31,7 @@
     {
         dependencies.add("Ext4");
         dependencies.add("vis/vis");
+        dependencies.add("targetedms/css/SVGExportIcon.css");
         dependencies.add("targetedms/css/ParetoPlot.css");
         dependencies.add("targetedms/js/BaseQCPlotPanel.js");
         dependencies.add("targetedms/js/ParetoPlotPanel.js");

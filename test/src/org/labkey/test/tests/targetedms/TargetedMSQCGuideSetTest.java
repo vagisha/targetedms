@@ -180,7 +180,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         assertEquals("Wrong number of non-conformers for FWB", 7, paretoPlotsWebPart.getPlotBarHeight(3, 7));
 
         verifyTicksOnPlots(paretoPlotsWebPart, 3);
-        verifyDownloadableParetoPlotPdf();
+        verifyDownloadableParetoPlots(paretoPlotsWebPart.getNumOfParetoPlots());
         verifyNavigationToPanoramaDashboard(3, 0, QCPlotsWebPart.MetricType.PEAK, true);
     }
 
@@ -215,7 +215,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         verifyTicksOnPlots(paretoPlotsWebPart, 1);
 
-        clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-1-exportToPDFbutton > a"));
+        clickExportPDFIcon("chart-render-div", 0);
+        clickExportPNGIcon("chart-render-div", 0);
         verifyNavigationToPanoramaDashboard(1, 0, QCPlotsWebPart.MetricType.FWHM, false);
     }
 
@@ -431,10 +432,13 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
             assertTrue("Metric Type tick '" + metricType + "' is not valid", paretoPlotsWebPart.isMetricTypeTickValid(metricType));
     }
 
-    private void verifyDownloadableParetoPlotPdf()
+    private void verifyDownloadableParetoPlots(int expectedPlotCount)
     {
-        //Check for clickable pdf button for Pareto Plot
-        clickAndWaitForDownload(Locator.css("#paretoPlot-GuideSet-3-exportToPDFbutton > a"));
+        //Check for clickable pdf and png for Pareto Plot
+        assertEquals("Unexpected number of plot export PDF icons", expectedPlotCount, getExportPDFIconCount("chart-render-div"));
+        clickExportPDFIcon("chart-render-div", expectedPlotCount - 1);
+        assertEquals("Unexpected number of plot export PNG icons", expectedPlotCount, getExportPNGIconCount("chart-render-div"));
+        clickExportPNGIcon("chart-render-div", expectedPlotCount - 1);
     }
 
     private void verifyNavigationToPanoramaDashboard(int guideSetNum, int barPlotNum, QCPlotsWebPart.MetricType metricType, Boolean checkEndDate)

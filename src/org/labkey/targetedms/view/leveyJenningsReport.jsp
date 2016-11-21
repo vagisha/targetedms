@@ -31,6 +31,7 @@
     {
         dependencies.add("Ext4");
         dependencies.add("vis/vis");
+        dependencies.add("targetedms/css/SVGExportIcon.css");
         dependencies.add("targetedms/css/LeveyJenningsReport.css");
         dependencies.add("targetedms/js/QCPlotHelperBase.js");
         dependencies.add("targetedms/js/LeveyJenningsPlotHelper.js");

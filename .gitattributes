@@ -437,6 +437,7 @@ webapp/TargetedMS/css/LeveyJenningsReport.css -text
 webapp/TargetedMS/css/LinkVersionsDialog.css -text
 webapp/TargetedMS/css/ParetoPlot.css -text
 webapp/TargetedMS/css/QCSummary.css -text
+webapp/TargetedMS/css/SVGExportIcon.css -text
 webapp/TargetedMS/css/dropDown.css -text
 webapp/TargetedMS/images/ChromatogramLibraryScreenshot.png -text
 webapp/TargetedMS/images/Fragment.gif -text

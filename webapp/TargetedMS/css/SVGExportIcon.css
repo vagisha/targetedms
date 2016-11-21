@@ -1,0 +1,15 @@
+.chart-render-div .export-icon {
+    display: none;
+    opacity: 0.4;
+    font-size: 24px;
+    color: #707070;
+    padding-top: 10px;
+    position: absolute;
+}
+.chart-render-div:hover .export-icon {
+    display: block;
+}
+.chart-render-div .export-icon:hover {
+    opacity: 1;
+    cursor: pointer;
+}

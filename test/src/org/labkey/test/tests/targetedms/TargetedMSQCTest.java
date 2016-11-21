@@ -385,20 +385,23 @@ public class TargetedMSQCTest extends TargetedMSTest
         }
         qcPlotsWebPart.setGroupXAxisValuesByDate(false);
 
-        //Check for clickable pdf button for Combined plot
-        clickAndWaitForDownload(Locator.css("#combinedPlot-exportToPDFbutton > a"));
+        //Check for clickable pdf and PNG button for Combined plot
+        verifyDownloadablePlotIcons(1);
 
         //deselect "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, PRECURSORS.length);
 
         //Check for no. of pdf buttons for individual plots
-        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot0-exportToPDFbutton"));
-        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot1-exportToPDFbutton"));
-        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot2-exportToPDFbutton"));
-        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot3-exportToPDFbutton"));
-        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot4-exportToPDFbutton"));
-        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot5-exportToPDFbutton"));
-        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot6-exportToPDFbutton"));
+        verifyDownloadablePlotIcons(7);
+    }
+
+    private void verifyDownloadablePlotIcons(int expectedPlotCount)
+    {
+        //Check for clickable pdf and png for Pareto Plot
+        assertEquals("Unexpected number of plot export PDF icons", expectedPlotCount, getExportPDFIconCount("chart-render-div"));
+        clickExportPDFIcon("chart-render-div", expectedPlotCount - 1);
+        assertEquals("Unexpected number of plot export PNG icons", expectedPlotCount, getExportPNGIconCount("chart-render-div"));
+        clickExportPNGIcon("chart-render-div", expectedPlotCount - 1);
     }
 
     @Test
@@ -419,14 +422,14 @@ public class TargetedMSQCTest extends TargetedMSTest
         //select "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
 
-        //Check for clickable pdf button for Combined plot
-        clickAndWaitForDownload(Locator.css("#combinedPlot-exportToPDFbutton > a"));
+        //Check for clickable PDF and PNG export icons for Combined plot
+        verifyDownloadablePlotIcons(1);
 
         //deselect "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, 50);
 
-        //Check for no. of pdf buttons for individual plots
-        assertElementPresent(Locator.id("tiledPlotPanel-2-precursorPlot3-exportToPDFbutton"));
+        //Check for no. of PDF and PNG export icons for individual plots
+        verifyDownloadablePlotIcons(50);
     }
 
     private void verifyRow(DataRegionTable drt, int row, String sampleName, String skylineDocName)
