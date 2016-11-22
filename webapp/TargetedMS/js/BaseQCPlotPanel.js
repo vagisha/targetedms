@@ -101,9 +101,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             sep = "\nUNION\n";
         }, this);
 
-        //Issue 28541
-        //TODO labkey sql server wrapper doesn't support order by subqueries with UNION, client side sort is used instead
-        sql = "SELECT * FROM (" + sql + ") a ORDER BY SeriesType, SeriesLabel, AcquiredTime"; //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
         return sql;
     },
 
@@ -174,7 +171,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         });
         var processedMetricGuides = {};
         Ext4.iterate(metricGuideSet, function(key, val){
-            val.sort(this.metricRecordSortFn);
             processedMetricGuides[key] = this.getGuideSetAvgMRs(val);
         }, this);
         return processedMetricGuides;
@@ -206,11 +202,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         {
             Ext4.iterate(plotDataMap, function(seriesLabel, seriesVal){
                 Ext4.iterate(seriesVal.Series, function(seriesType, seriesTypeObj){
-                    var mRs, positiveCUSUMm, negativeCUSUMm, positiveCUSUMv, negativeCUSUMv, metricRows = seriesTypeObj.Rows, metricVals = [];
-                    metricRows.sort(this.metricRecordSortFn);
-                    Ext4.each(metricRows, function(row){
-                        metricVals.push(row.MetricValue);
-                    });
+                    var mRs, positiveCUSUMm, negativeCUSUMm, positiveCUSUMv, negativeCUSUMv, metricVals = seriesTypeObj.MetricValues;
                     if (hasMR)
                         mRs = LABKEY.vis.Stat.getMovingRanges(metricVals, isLogScale);
                     if (hasCUSUMm)
@@ -446,14 +438,13 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             }
         }, this);
 
-        //Issue 28541
-        //TODO labkey sql server wrapper doesn't support order by subqueries with UNION, client side sort is used instead
-        sql = "SELECT * FROM (" + sql + ") a ORDER BY SeriesType, SeriesLabel, AcquiredTime";
+        sql = "SELECT * FROM (" + sql + ") a";  //wrap unioned results in sql to support sorting
 
         var sqlObj = {
             schemaName: 'targetedms',
             sql: sql,
             scope: this,
+            sort: 'SeriesType, SeriesLabel, AcquiredTime', //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
             success: function (data)
             {
                 params.rawMetricDataSet = data.rows;
@@ -486,14 +477,13 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             }
         }, this);
 
-        //Issue 28541
-        //TODO labkey sql server wrapper doesn't support order by subqueries with UNION, client side sort is used instead
-        sql = "SELECT * FROM (" + sql + ") a ORDER BY GuideSetId, SeriesLabel, AcquiredTime";
+        sql = "SELECT * FROM (" + sql + ") a"; //wrap unioned results in sql to support sorting
 
         var sqlObj = {
             schemaName: 'targetedms',
             sql: sql,
             scope: this,
+            sort: 'GuideSetId, SeriesLabel, AcquiredTime', //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
             success: function (data)
             {
                 params.rawGuideSet = data.rows;
@@ -677,14 +667,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             }, this);
         }, this);
         return transformedOutliers;
-    },
-
-    metricRecordSortFn: function(a, b){
-        if (a.AcquiredTime == null && b.AcquiredTime == null)
-            return 0;
-        if (a.AcquiredTime == null) return -1;
-        if (b.AcquiredTime == null) return -1;
-        return new Date(a.AcquiredTime).getTime() - new Date(b.AcquiredTime).getTime();
     }
 });
 

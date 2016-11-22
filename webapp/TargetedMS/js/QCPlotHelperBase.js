@@ -191,10 +191,13 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         var seriesTypes = this.isMultiSeries() ? ['series1', 'series2'] : ['series1'];
         var sql = this.getSeriesTypePlotDataSql(seriesTypes, metricProps, whereClause);
 
+        sql = "SELECT * FROM (" + sql + ") a"; //wrap unioned results in sql to support sorting
+
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: sql,
             scope: this,
+            sort: 'SeriesType, SeriesLabel, AcquiredTime', //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
             success: function (data)
             {
                 this.plotDataRows = this.plotDataRows.concat(data.rows);
