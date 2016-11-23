@@ -170,18 +170,59 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
         assertEquals("Wrong number of Pareto plots", 16, paretoPlotsWebPart.getNumOfParetoPlots());
-        assertEquals("Wrong number of non-conformers for PA", 69, paretoPlotsWebPart.getPlotBarHeight(3, 0));
-        assertEquals("Wrong number of non-conformers for P Area", 64, paretoPlotsWebPart.getPlotBarHeight(3, 1));
-        assertEquals("Wrong number of non-conformers for T Area", 60, paretoPlotsWebPart.getPlotBarHeight(3, 2));
-        assertEquals("Wrong number of non-conformers for MA", 57, paretoPlotsWebPart.getPlotBarHeight(3, 3));
-        assertEquals("Wrong number of non-conformers for T/P Ratio", 29, paretoPlotsWebPart.getPlotBarHeight(3, 4));
-        assertEquals("Wrong number of non-conformers for RT", 16, paretoPlotsWebPart.getPlotBarHeight(3, 5));
-        assertEquals("Wrong number of non-conformers for FWHM", 13, paretoPlotsWebPart.getPlotBarHeight(3, 6));
-        assertEquals("Wrong number of non-conformers for FWB", 7, paretoPlotsWebPart.getPlotBarHeight(3, 7));
-
-        verifyTicksOnPlots(paretoPlotsWebPart, 3);
         verifyDownloadableParetoPlots(paretoPlotsWebPart.getNumOfParetoPlots());
-        verifyNavigationToPanoramaDashboard(3, 0, QCPlotsWebPart.MetricType.PEAK, true);
+
+        ParetoPlotsWebPart.ParetoPlotType plotType = ParetoPlotsWebPart.ParetoPlotType.LeveyJennings;
+        int guideSetId = 3;
+        log("Verifying Pareto Plots for " + plotType.getLabel());
+        assertEquals("Wrong number of non-conformers for PA", 69, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 0));
+        assertEquals("Wrong number of non-conformers for P Area", 64, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 1));
+        assertEquals("Wrong number of non-conformers for T Area", 60, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 2));
+        assertEquals("Wrong number of non-conformers for MA", 57, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 3));
+        assertEquals("Wrong number of non-conformers for T/P Ratio", 29, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 4));
+        assertEquals("Wrong number of non-conformers for RT", 16, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 5));
+        assertEquals("Wrong number of non-conformers for FWHM", 13, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 6));
+        assertEquals("Wrong number of non-conformers for FWB", 7, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 7));
+        verifyTicksOnPlots(paretoPlotsWebPart, guideSetId, plotType);
+        verifyNavigationToPanoramaDashboard(guideSetId, 0, QCPlotsWebPart.MetricType.PEAK, true);
+
+        clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
+        waitForElement(Locator.css("svg"));
+        plotType = ParetoPlotsWebPart.ParetoPlotType.MovingRange;
+        log("Verifying non-conformers for " + plotType.getLabel());
+        assertEquals("Wrong number of non-conformers for PA", 37, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 0));
+        assertEquals("Wrong number of non-conformers for T Area", 34, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 1));
+        assertEquals("Wrong number of non-conformers for FWB", 30, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 2));
+        assertEquals("Wrong number of non-conformers for P Area", 30, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 3));
+        assertEquals("Wrong number of non-conformers for MA", 21, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 4));
+        assertEquals("Wrong number of non-conformers for RT", 17, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 5));
+        assertEquals("Wrong number of non-conformers for FWHM", 12, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 6));
+        assertEquals("Wrong number of non-conformers for T/P Ratio", 4, paretoPlotsWebPart.getPlotBarHeight(guideSetId, plotType, 7));
+        verifyTicksOnPlots(paretoPlotsWebPart, guideSetId, plotType);
+        verifyNavigationToPanoramaDashboard(guideSetId, QCPlotsWebPart.QCPlotType.MovingRange, 0, QCPlotsWebPart.MetricType.PEAK, true);
+
+        clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
+        waitForElement(Locator.css("svg"));
+        plotType = ParetoPlotsWebPart.ParetoPlotType.CUSUMv;
+        log("Verifying non-conformers for " + plotType.getLabel());
+        assertEquals("Wrong number of non-conformers for FWHM", "CUSUM-: 2 CUSUM+: 0 Total: 2", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 0));
+        assertEquals("Wrong number of non-conformers for T Area", "CUSUM-: 1 CUSUM+: 0 Total: 1", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 1));
+        verifyTicksOnPlots(paretoPlotsWebPart, guideSetId, plotType);
+        verifyNavigationToPanoramaDashboard(guideSetId, QCPlotsWebPart.QCPlotType.CUSUMv, 0, QCPlotsWebPart.MetricType.FWHM, true);
+
+        clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
+        waitForElement(Locator.css("svg"));
+        plotType = ParetoPlotsWebPart.ParetoPlotType.CUSUMm;
+        guideSetId = 2;
+        log("Verifying non-conformers for " + plotType.getLabel());
+        assertEquals("Wrong number of non-conformers for PA", "CUSUM-: 3 CUSUM+: 4 Total: 7", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 0));
+        assertEquals("Wrong number of non-conformers for P Area", "CUSUM-: 2 CUSUM+: 4 Total: 6", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 1));
+        assertEquals("Wrong number of non-conformers for MA", "CUSUM-: 0 CUSUM+: 5 Total: 5", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 2));
+        assertEquals("Wrong number of non-conformers for T/P Ratio", "CUSUM-: 3 CUSUM+: 1 Total: 4", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 3));
+        assertEquals("Wrong number of non-conformers for T Area", "CUSUM-: 4 CUSUM+: 0 Total: 4", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 4));
+        verifyTicksOnPlots(paretoPlotsWebPart, guideSetId, plotType);
+        verifyNavigationToPanoramaDashboard(guideSetId, QCPlotsWebPart.QCPlotType.CUSUMm, 0, QCPlotsWebPart.MetricType.PEAK, true);
+
     }
 
     @Test
@@ -424,9 +465,14 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
     private void verifyTicksOnPlots(ParetoPlotsWebPart paretoPlotsWebPart, int guideSetNum)
     {
-        paretoPlotsWebPart.waitForTickLoad(guideSetNum);
+        verifyTicksOnPlots(paretoPlotsWebPart, guideSetNum, ParetoPlotsWebPart.ParetoPlotType.LeveyJennings);
+    }
 
-        List<String> ticks = paretoPlotsWebPart.getTicks(guideSetNum);
+    private void verifyTicksOnPlots(ParetoPlotsWebPart paretoPlotsWebPart, int guideSetNum, ParetoPlotsWebPart.ParetoPlotType plotType)
+    {
+        paretoPlotsWebPart.waitForTickLoad(guideSetNum, plotType);
+
+        List<String> ticks = paretoPlotsWebPart.getTicks(guideSetNum, plotType);
 
         for(String metricType : ticks)
             assertTrue("Metric Type tick '" + metricType + "' is not valid", paretoPlotsWebPart.isMetricTypeTickValid(metricType));
@@ -443,8 +489,13 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
     private void verifyNavigationToPanoramaDashboard(int guideSetNum, int barPlotNum, QCPlotsWebPart.MetricType metricType, Boolean checkEndDate)
     {
+        verifyNavigationToPanoramaDashboard(guideSetNum, QCPlotsWebPart.QCPlotType.LeveyJennings, barPlotNum, metricType, checkEndDate);
+    }
+
+    private void verifyNavigationToPanoramaDashboard(int guideSetNum, QCPlotsWebPart.QCPlotType plotType, int barPlotNum, QCPlotsWebPart.MetricType metricType, Boolean checkEndDate)
+    {
         //click on 1st bar
-        clickAndWait(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + "-" + barPlotNum + " > a:nth-child(1) > rect"));
+        clickAndWait(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + plotType.getIdSuffix() + "-" + barPlotNum + " > a:nth-child(1) > rect"));
 
         //check navigation to 'Panorama Dashboard' tab
         assertEquals("Panorama Dashboard", getText(Locator.css(".tab-nav-active")));
@@ -454,6 +505,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         //test for correct metric type
         assertEquals(metricType, qcPlotsWebPart.getCurrentMetricType());
+
+        //test for correct plot type
+        qcPlotsWebPart.isPlotTypeSelected(plotType);
 
         //compare url Start Date with input form Start Date
         assertEquals("startDate in the URL does not equal 'Start Date' on the page", parseUrlDate(getUrlParam("startDate", true)), parseFormDate(qcPlotsWebPart.getCurrentStartDate()));

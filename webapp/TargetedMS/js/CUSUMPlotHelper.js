@@ -21,7 +21,7 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
         {
             if (this.yAxisScale == 'log' && (valNegative <= 0 || valPositive <= 0))
             {
-                dataObject.showLogInvalid = true;
+                dataObject.showLogEpsilonWarning = true;
             }
 
             if (dataObject[minNegative] == null || valNegative < dataObject[minNegative]) {

@@ -195,6 +195,24 @@ public class TargetedMSQCTest extends TargetedMSTest
         count = qcPlotsWebPart.getPointElements("d", "M", true).size();
         assertEquals("Unexpected number of points for initial data date range", 21, count);
 
+        // test plot type selection persistence
+        qcPlotsWebPart.checkAllPlotTypes(false);
+        List<QCPlotsWebPart.QCPlotType> selectedPlotTypes = new ArrayList<>();
+        selectedPlotTypes.add(QCPlotsWebPart.QCPlotType.MovingRange);
+        selectedPlotTypes.add(QCPlotsWebPart.QCPlotType.CUSUMm);
+        qcPlotsWebPart.checkPlotType(selectedPlotTypes.get(0), true);
+        qcPlotsWebPart.checkPlotType(selectedPlotTypes.get(1), true);
+        qcPlotsWebPart.chooseSmallPlotSize(false);
+        qcPlotsWebPart.waitForPlots(2, true);
+
+        // test plot type selection is persisted
+        refresh();
+        qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.waitForPlots(2, true);
+        assertEquals("QC Plot Type not round tripped as expected", true, qcPlotsWebPart.isPlotTypeSelected(selectedPlotTypes.get(0)));
+        assertEquals("QC Plot Type not round tripped as expected", true, qcPlotsWebPart.isPlotTypeSelected(selectedPlotTypes.get(1)));
+        assertEquals("Plot Size not round tripped as expected", false, qcPlotsWebPart.isSmallPlotSizeSelected());
+
         // impersonate a different user in this container and verify that initial form fields used
         impersonate(USER);
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
@@ -204,6 +222,14 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertFalse("Group X-Axis not set to default value", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertFalse("Show All Peptides not set to default value", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
         assertEquals("Date Range Offset not set to default value", QCPlotsWebPart.DateRangeOffset.ALL, qcPlotsWebPart.getCurrentDateRangeOffset());
+
+        stopImpersonating();
+        goToProjectHome();
+        qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.waitForPlots(1, false);
+
+        // reset plot type selection
+        qcPlotsWebPart.resetInitialQCPlotFields();
     }
 
     @Test
@@ -212,12 +238,14 @@ public class TargetedMSQCTest extends TargetedMSTest
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
+        qcPlotsWebPart.checkAllPlotTypes(true);
 
         // if metric has negative values and we pick log y-axis scale, we should revert to linear scale and show message
         qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.MASSACCURACTY);
         qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LOG);
         assertEquals("Unexpected number of plots with invalid log scale.", 3, qcPlotsWebPart.getLogScaleInvalidCount());
         assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleWarningCount());
+        assertEquals("Unexpected number of plots with log scale 0 value replacement warning.", PRECURSORS.length * 3, qcPlotsWebPart.getLogScaleEpsilonWarningCount());
 
         // if the guide set expected range error bar goes beyond zero, show log plot message about it
         createGuideSetFromTable(new GuideSet("2013-08-09", "2013-08-28", "all initial data points"));
@@ -228,21 +256,107 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.PEAK);
         assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleInvalidCount());
         assertEquals("Unexpected number of plots with invalid log scale.", 1, qcPlotsWebPart.getLogScaleWarningCount());
+        assertEquals("Unexpected number of plots with log scale 0 value replacement warning.", PRECURSORS.length * 3, qcPlotsWebPart.getLogScaleEpsilonWarningCount());
+
+        qcPlotsWebPart.resetInitialQCPlotFields();
+
         removeAllGuideSets();
+    }
+
+    @Test
+    public void testQCPlotType()
+    {
+        Locator.CssLocator legendPopup = Locator.css(".headerlegendpopup svg g.legend-item");
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+
+        log("Verify Plot Types and Legends");
+        qcPlotsWebPart.checkAllPlotTypes(false);
+        qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.LeveyJennings, true);
+        qcPlotsWebPart.waitForPlots(PRECURSORS.length, true);
+        assertFalse("Plot Size should be disabled with less than 2 plot types selected", qcPlotsWebPart.isPlotSizeRadioEnabled());
+
+        qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.MovingRange, true);
+        qcPlotsWebPart.waitForPlots(PRECURSORS.length * 2, true);
+        assertTrue("Plot Size should be enabled with at least 2 plot types selected", qcPlotsWebPart.isPlotSizeRadioEnabled());
+
+        qcPlotsWebPart.openLegendPopup();
+        waitForElement(legendPopup);
+        assertElementNotPresent(qcPlotsWebPart.getLegendPopupItemLocator("CUSUM Group", true));
+        waitAndClick(Locator.tagWithText("span", "Close"));
+
+        qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.CUSUMm, true);
+        qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.CUSUMv, true);
+        qcPlotsWebPart.waitForPlots(PRECURSORS.length * 4, true);
+
+        qcPlotsWebPart.openLegendPopup();
+        waitForElement(legendPopup);
+        assertElementPresent(qcPlotsWebPart.getLegendPopupItemLocator("CUSUM Group", true));
+        waitAndClick(Locator.tagWithText("span", "Close"));
+
+        log("Verify Small/Large Plot Size");
+        if (qcPlotsWebPart.isSmallPlotSizeSelected())
+        {
+            qcPlotsWebPart.chooseSmallPlotSize(true);
+            qcPlotsWebPart.waitForPlots();
+        }
+        assertTrue("Plot Size is set to small but plot is rendered in large size", isElementPresent(qcPlotsWebPart.getSmallPlotLoc()));
+
+        qcPlotsWebPart.chooseSmallPlotSize(false);
+        qcPlotsWebPart.waitForPlots();
+        refresh();
+        qcPlotsWebPart.waitForPlots();
+        assertFalse("Plot Size is set to large but plot is rendered in small size", isElementPresent(qcPlotsWebPart.getSmallPlotLoc()));
+
+        qcPlotsWebPart.resetInitialQCPlotFields();
     }
 
     @Test
     public void testMultiSeriesQCPlot()
     {
-        String yLeftColor = "#66C2A5";
-        String yRightColor = "#FC8D62";
-        int pointsPerSeries = 47;
-
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
         qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.TPAREAS);
+        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
 
+        for (QCPlotsWebPart.QCPlotType plotType : QCPlotsWebPart.QCPlotType.values())
+        {
+            qcPlotsWebPart.waitForPlots(1, false);
+            if (qcPlotsWebPart.isGroupXAxisValuesByDateChecked())
+            {
+                qcPlotsWebPart.setGroupXAxisValuesByDate(false);
+                qcPlotsWebPart.waitForPlots();
+            }
+            if (qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked())
+            {
+                qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, PRECURSORS.length);
+                qcPlotsWebPart.waitForPlots();
+            }
+            qcPlotsWebPart.checkAllPlotTypes(false);
+            qcPlotsWebPart.checkPlotType(plotType, true);
+            qcPlotsWebPart.waitForPlots(1, false);
+
+            testEachMultiSeriesQCPlot(plotType);
+        }
+        // reset to avoid test case dependency
+        qcPlotsWebPart.resetInitialQCPlotFields();
+    }
+
+    private void testEachMultiSeriesQCPlot(QCPlotsWebPart.QCPlotType plotType)
+    {
+        log("Test plot type " + plotType.getLongLabel());
+
+        String yLeftColor = "#66C2A5";
+        String yRightColor = "#FC8D62";
+        int pointsPerSeries = 47;
+        if (plotType == QCPlotsWebPart.QCPlotType.CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
+            pointsPerSeries *= 2;
+
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        refresh();
+        qcPlotsWebPart.waitForPlots(1, false);
         // check that there are two series per plot by doing a point count by color
         int count = qcPlotsWebPart.getPointElements("fill", yLeftColor, false).size();
         assertEquals("Unexpected number of points for yLeft metric", pointsPerSeries * PRECURSORS.length, count);
@@ -260,6 +374,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Change", false), 4);
         assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Transition Area", true));
         assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Precursor Area", true));
+        if (plotType == QCPlotsWebPart.QCPlotType.CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
+            assertElementPresent(qcPlotsWebPart.getLegendItemLocator("CUSUM Group", true));
         for (String precursor : PRECURSORS)
         {
             assertElementPresent(qcPlotsWebPart.getLegendItemLocator(precursor, true), 2);
@@ -354,13 +470,49 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testCombinedPlots()
     {
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
+        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
+
+        for (QCPlotsWebPart.QCPlotType plotType : QCPlotsWebPart.QCPlotType.values())
+        {
+            qcPlotsWebPart.waitForPlots(1, false);
+
+            if (qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked())
+            {
+                qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, PRECURSORS.length);
+                qcPlotsWebPart.waitForPlots();
+            }
+            if (qcPlotsWebPart.isGroupXAxisValuesByDateChecked())
+            {
+                qcPlotsWebPart.setGroupXAxisValuesByDate(false);
+                qcPlotsWebPart.waitForPlots();
+            }
+            qcPlotsWebPart.checkAllPlotTypes(false);
+            qcPlotsWebPart.checkPlotType(plotType, true);
+            qcPlotsWebPart.waitForPlots(1, false);
+
+            testEachCombinedPlots(plotType);
+        }
+        // reset to avoid test case dependency
+        qcPlotsWebPart.resetInitialQCPlotFields();
+    }
+
+    private void testEachCombinedPlots(QCPlotsWebPart.QCPlotType plotType)
+    {
+        log("Testing combined plot for " + plotType.getLongLabel());
         int count;
         int expectedNumPointsPerSeries = 47;
+        if (plotType == QCPlotsWebPart.QCPlotType.CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
+            expectedNumPointsPerSeries *= 2;
+
         String[] legendItemColors = new String[]{"#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494"};
 
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
+        refresh();
+        qcPlotsWebPart.waitForPlots(1, false);
 
         //select "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);

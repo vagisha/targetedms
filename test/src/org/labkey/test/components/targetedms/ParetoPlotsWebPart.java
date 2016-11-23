@@ -75,7 +75,37 @@ public class ParetoPlotsWebPart extends BodyWebPart
             return metricTypeTick;
         }
     }
+    public enum ParetoPlotType
+    {
+        LeveyJennings("Levey-Jennings", ""),
+        MovingRange("Moving Range", "_mR"),
+        CUSUMm("Mean CUSUM", "_CUSUMm"),
+        CUSUMv("Variability CUSUM", "_CUSUMv");
+
+        private String _label;
+        private String _suffix;
+
+        ParetoPlotType(String text, String idSuffix)
+        {
+            _label = text;
+            _suffix = idSuffix;
+        }
+
+        public String getLabel()
+        {
+            return _label;
+        }
+
+        public String getIdSuffix()
+        {
+            return _suffix;
+        }
+    }
     public List<String> getTicks(int guideSetNum)
+    {
+        return getTicks(guideSetNum, ParetoPlotType.LeveyJennings);
+    }
+    public List<String> getTicks(int guideSetNum, ParetoPlotType plotType)
     {
         List<String> ticks = new LinkedList<>();
         int maxIndex = 5;
@@ -83,7 +113,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
         while(minIndex <= maxIndex)
         {
-            String tickText = Locator.css("#paretoPlot-GuideSet-" + guideSetNum +
+            String tickText = Locator.css("#paretoPlot-GuideSet-" + guideSetNum  + plotType.getIdSuffix() +
                     " > svg > g:nth-child(1) > g.tick-text > a:nth-child(" + minIndex + ")").findElement(getDriver()).getText();
             ticks.add(tickText);
             minIndex++;
@@ -103,7 +133,19 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public int getPlotBarHeight(int guideSetId, int barPlotNum)
     {
-       return Integer.parseInt(Locator.css("#paretoPlot-GuideSet-" + guideSetId + "-0 > a:nth-child(" + (barPlotNum+1) + ")").findElement(getDriver()).getText());
+        return getPlotBarHeight(guideSetId, ParetoPlotType.LeveyJennings, barPlotNum);
+    }
+
+    public int getPlotBarHeight(int guideSetId, ParetoPlotType plotType, int barPlotNum)
+    {
+       return Integer.parseInt(Locator.css("#paretoPlot-GuideSet-" + guideSetId + plotType.getIdSuffix() + "-0" +
+               " > a:nth-child(" + (barPlotNum+1) + ")").findElement(getDriver()).getText());
+    }
+
+    public String getPlotBarTooltip(int guideSetId, ParetoPlotType plotType, int barPlotNum)
+    {
+        return Locator.css("#paretoPlot-GuideSet-" + guideSetId + plotType.getIdSuffix() + "-0" +
+                " > a:nth-child(" + (barPlotNum+1) + ")").findElement(getDriver()).getText();
     }
 
     public void clickLeveyJenningsLink(BaseWebDriverTest test)
@@ -114,7 +156,12 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public void waitForTickLoad(int guideSetNum)
     {
-        _test.waitForElement(Locator.css("#paretoPlot-GuideSet-" + guideSetNum +
+        waitForTickLoad(guideSetNum, ParetoPlotType.LeveyJennings);
+    }
+
+    public void waitForTickLoad(int guideSetNum, ParetoPlotType plotType)
+    {
+        _test.waitForElement(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + plotType.getIdSuffix() +
                 " > svg > g:nth-child(1) > g.tick-text > a:nth-child(1)"));
     }
 

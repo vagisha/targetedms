@@ -777,6 +777,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                         title: 'Legends',
                         draggable: true,
                         resizable: false,
+                        cls: 'headerlegendpopup',
                         items: [{
                             html: {
                                 tag: 'div', id: cmpId, width: '300', height: '\'' + plotHeight + '\''

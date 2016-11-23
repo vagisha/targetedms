@@ -13,7 +13,7 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
 
             if (this.yAxisScale == 'log' && val <= 0)
             {
-                dataObject.showLogInvalid = true;
+                dataObject.showLogEpsilonWarning = true;
             }
 
             var mean = row['meanMR'];

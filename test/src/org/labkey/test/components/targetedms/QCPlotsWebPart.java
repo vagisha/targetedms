@@ -21,6 +21,7 @@ import org.labkey.test.Locator;
 import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.components.BodyWebPart;
 import org.labkey.test.components.ext4.Checkbox;
+import org.labkey.test.components.ext4.RadioButton;
 import org.labkey.test.components.ext4.Window;
 import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.LogMethod;
@@ -107,6 +108,41 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
             throw new IllegalArgumentException();
         }
     }
+
+    public enum QCPlotType
+    {
+        LeveyJennings("Levey-Jennings", "Levey-Jennings", ""),
+        MovingRange("Moving Range", "Moving Range", "_mR"),
+        CUSUMm("CUSUMm", "Mean CUSUM", "_CUSUMm"),
+        CUSUMv("CUSUMv", "Variability CUSUM", "_CUSUMv");
+
+        private String _label;
+        private String _labellong;
+        private String _suffix;
+
+        QCPlotType(String shortlabel, String longlabel, String idSuffix)
+        {
+            _label = shortlabel;
+            _labellong = longlabel;
+            _suffix = idSuffix;
+        }
+
+        public String getLabel()
+        {
+            return _label;
+        }
+
+        public String getLongLabel()
+        {
+            return _labellong;
+        }
+
+        public String getIdSuffix()
+        {
+            return _suffix;
+        }
+    }
+
 
     private void waitForNoRecords()
     {
@@ -248,6 +284,27 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return elementCache().groupedXCheckbox.isChecked();
     }
 
+    public void chooseSmallPlotSize(boolean small)
+    {
+        String label = "Small";
+        if (!small)
+            label = "Large";
+        RadioButton plotSizeButton = RadioButton.RadioButton().withLabel(label).find(this);
+        plotSizeButton.check();
+    }
+
+    public boolean isSmallPlotSizeSelected()
+    {
+        RadioButton plotSizeButton = RadioButton.RadioButton().withLabel("Small").find(this);
+        return plotSizeButton.isChecked();
+    }
+
+    public boolean isPlotSizeRadioEnabled()
+    {
+        RadioButton plotSizeButton = RadioButton.RadioButton().withLabel("Small").find(this);
+        return plotSizeButton.isEnabled();
+    }
+
     public void setShowAllPeptidesInSinglePlot(boolean check, @Nullable Integer expectedPlotCount)
     {
         WebElement plot = elementCache().findPlots().get(0);
@@ -342,12 +399,38 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
             setMetricType(MetricType.RETENTION);
         if (getCurrentDateRangeOffset() != DateRangeOffset.ALL)
             setDateRangeOffset(DateRangeOffset.ALL);
+        if (isPlotTypeSelected(QCPlotType.MovingRange) || isPlotTypeSelected(QCPlotType.CUSUMm) || isPlotTypeSelected(QCPlotType.CUSUMv))
+        {
+            checkAllPlotTypes(false);
+            checkPlotType(QCPlotsWebPart.QCPlotType.LeveyJennings, true);
+            waitForPlots();
+        }
+        if (isPlotSizeRadioEnabled())
+        {
+            chooseSmallPlotSize(true);
+            waitForPlots();
+        }
         if (getCurrentScale() != QCPlotsWebPart.Scale.LINEAR)
+        {
             setScale(QCPlotsWebPart.Scale.LINEAR);
+            waitForPlots();
+        }
+        else
+        {
+            // work around to close Plot Type popup
+            setScale(Scale.LOG);
+            waitForPlots();
+            setScale(Scale.LINEAR);
+            waitForPlots();
+        }
         if (isGroupXAxisValuesByDateChecked())
+        {
             setGroupXAxisValuesByDate(false);
+            waitForPlots();
+        }
         if (isShowAllPeptidesInSinglePlotChecked())
             setShowAllPeptidesInSinglePlot(false, null);
+
         waitForPlots();
     }
 
@@ -454,12 +537,30 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return elementCache().logScaleWarning().size();
     }
 
+    public int getLogScaleEpsilonWarningCount()
+    {
+        return elementCache().logScaleEpsilonWarning().size();
+    }
+
     public Locator getLegendItemLocator(String text, boolean exactMatch)
     {
         if (exactMatch)
             return elementCache().legendItem.withText(text);
         else
             return elementCache().legendItem.containing(text);
+    }
+
+    public Locator getLegendPopupItemLocator(String text, boolean exactMatch)
+    {
+        if (exactMatch)
+            return elementCache().legendItemPopup.withText(text);
+        else
+            return elementCache().legendItemPopup.containing(text);
+    }
+
+    public Locator getSmallPlotLoc()
+    {
+        return elementCache().smallPlotLayoutDiv;
     }
 
     public String getOverflowWarningText()
@@ -471,6 +572,47 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
     protected Elements newElementCache()
     {
         return new Elements();
+    }
+
+    public void openLegendPopup()
+    {
+        getWrapper().waitAndClick(Locator.tagWithText("span", "View Legend"));
+        Window().withTitle("Legends").waitFor(getDriver());
+    }
+
+
+    public void checkPlotType(QCPlotType plotType, boolean checked)
+    {
+        String checkboxXPath = "//label[text()='" + plotType.getLabel() + "']/preceding-sibling::input[@type='button']";
+        if(checked)
+            _test._ext4Helper.checkCheckbox(Locator.xpath(checkboxXPath));
+        else
+            _test._ext4Helper.uncheckCheckbox(Locator.xpath(checkboxXPath));
+    }
+
+    public boolean isPlotTypeSelected(QCPlotType plotType)
+    {
+        String checkboxXPath = "//label[text()='" + plotType.getLabel() + "']/preceding-sibling::input[@type='button']";
+        return _test._ext4Helper.isChecked(Locator.xpath(checkboxXPath));
+    }
+
+    public void checkAllPlotTypes(boolean selected)
+    {
+        for (QCPlotsWebPart.QCPlotType plotType : QCPlotsWebPart.QCPlotType.values())
+        {
+            checkPlotType(plotType, selected);
+        }
+    }
+
+    public List<QCPlotType> getSelectedPlotTypes()
+    {
+        List<QCPlotType> selected = new ArrayList<>();
+        for (QCPlotsWebPart.QCPlotType plotType : QCPlotsWebPart.QCPlotType.values())
+        {
+            if (isPlotTypeSelected(plotType))
+                selected.add(plotType);
+        }
+        return selected;
     }
 
     public class Elements extends BodyWebPart.Elements
@@ -491,6 +633,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         List<WebElement> noRecords() { return Locator.tagContainingText("span", "There were no records found.").findElements(plotPanel);}
         List<WebElement> logScaleInvalid() { return Locator.tagContainingText("span", "Log scale invalid for values").findElements(plotPanel);}
         List<WebElement> logScaleWarning() { return Locator.tagContainingText("span", "For log scale, standard deviations below the mean").findElements(plotPanel);}
+        List<WebElement> logScaleEpsilonWarning() { return Locator.tagContainingText("span", "Values that are 0 have been replaced").findElements(plotPanel);}
 
         Locator extFormDisplay = Locator.css("div.x4-form-display-field");
 
@@ -499,5 +642,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.CssLocator svgPoint = Locator.css("svg g a.point");
         Locator.CssLocator svgPointPath = Locator.css("svg g a.point path");
         Locator.CssLocator legendItem = Locator.css("svg g.legend-item");
+        Locator.CssLocator legendItemPopup = Locator.css(".headerlegendpopup svg g.legend-item");
+        Locator.CssLocator smallPlotLayoutDiv = Locator.css(".plot-small-layout");
     }
 }
