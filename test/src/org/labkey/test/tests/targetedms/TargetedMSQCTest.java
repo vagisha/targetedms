@@ -295,7 +295,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         waitAndClick(Locator.tagWithText("span", "Close"));
 
         log("Verify Small/Large Plot Size");
-        if (qcPlotsWebPart.isSmallPlotSizeSelected())
+        if (!qcPlotsWebPart.isSmallPlotSizeSelected())
         {
             qcPlotsWebPart.chooseSmallPlotSize(true);
             qcPlotsWebPart.waitForPlots();
