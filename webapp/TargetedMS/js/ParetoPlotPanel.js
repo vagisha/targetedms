@@ -166,7 +166,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                     var order = parseFloat(b.count) - parseFloat(a.count);
                     if (order != 0)
                         return order;
-                    return a.metricLabel - b.metricLabel;
+                    return a.metricLabel.localeCompare(b.metricLabel);
                 });
 
                 //calculate cumulative percentage on sorted data
