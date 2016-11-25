@@ -148,10 +148,10 @@ public class ParetoPlotsWebPart extends BodyWebPart
                 " > a:nth-child(" + (barPlotNum+1) + ")").findElement(getDriver()).getText();
     }
 
-    public void clickLeveyJenningsLink(BaseWebDriverTest test)
+    public void clickQCPlotsLink(BaseWebDriverTest test)
     {
         Assert.assertTrue(elements().notFound.isDisplayed()); //Check for no guide sets
-        test.clickAndWait(elements().leveyJenningsLink); //click on the link to take user to Levey-Jennings plot
+        test.clickAndWait(elements().qcPlotsLink); //click on the link to take user to the QC Plots webpart
     }
 
     public void waitForTickLoad(int guideSetNum)
@@ -173,7 +173,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     private class Elements extends BodyWebPart.Elements
     {
-        WebElement notFound = new LazyWebElement(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("Guide Sets not found."), this).withTimeout(1000);
-        WebElement leveyJenningsLink = new LazyWebElement(Locator.linkWithText("QC Plots"), this);
+        WebElement notFound = new LazyWebElement(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("No Guide Sets found in this folder."), this).withTimeout(1000);
+        WebElement qcPlotsLink = new LazyWebElement(Locator.linkWithText("QC Plots"), this);
     }
 }

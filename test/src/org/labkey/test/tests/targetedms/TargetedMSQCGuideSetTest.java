@@ -235,7 +235,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         ParetoPlotPage paretoPage = new ParetoPlotPage(getDriver());
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
-        paretoPlotsWebPart.clickLeveyJenningsLink(this);
+        paretoPlotsWebPart.clickQCPlotsLink(this);
 
         assertElementPresent(Locator.tagWithClass("span", "labkey-wp-title-text").withText(QCPlotsWebPart.DEFAULT_TITLE));
     }

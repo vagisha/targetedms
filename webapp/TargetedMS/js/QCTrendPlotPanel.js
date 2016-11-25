@@ -624,15 +624,9 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     assignDefaultMetricIfNull: function ()
     {
         if (this.metric == null || isNaN(Number(this.metric)))
-        {
             this.metric = this.metricPropArr[0].id;
-        }
         else if (!this.getMetricPropsById(this.metric))
-        {
-            console.log("The chart type with id " + this.metric + " is no longer available.");
             this.metric = this.metricPropArr[0].id;
-            console.log("Using default chart type with id " + this.metric + ".");
-        }
     },
 
     getMetricCombo : function()

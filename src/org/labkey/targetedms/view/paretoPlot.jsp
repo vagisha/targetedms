@@ -59,7 +59,7 @@
                 success: function(data) {
                     if (data.rows.length == 0)
                     {
-                        Ext4.get(tiledPlotPanelId).update("Guide Sets not found. Please create a Guide Set using <a href=" + LABKEY.ActionURL.buildURL('project', 'begin', null, null) + ">QC Plots</a>" + ".");
+                        Ext4.get(tiledPlotPanelId).update("No Guide Sets found in this folder. Please create a Guide Set using the <a href=" + LABKEY.ActionURL.buildURL('project', 'begin', null, null) + ">QC Plots</a>" + " webpart.");
                     }
                     else
                     {
