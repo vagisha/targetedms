@@ -163,7 +163,10 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
                 //sort by count in descending order
                 var sortedDataset = dataSet.sort(function(a, b) {
-                    return parseFloat(b.count) - parseFloat(a.count);
+                    var order = parseFloat(b.count) - parseFloat(a.count);
+                    if (order != 0)
+                        return order;
+                    return a.metricLabel - b.metricLabel;
                 });
 
                 //calculate cumulative percentage on sorted data

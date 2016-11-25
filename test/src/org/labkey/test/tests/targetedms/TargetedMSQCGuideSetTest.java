@@ -218,8 +218,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         assertEquals("Wrong number of non-conformers for PA", "CUSUM-: 3 CUSUM+: 4 Total: 7", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 0));
         assertEquals("Wrong number of non-conformers for P Area", "CUSUM-: 2 CUSUM+: 4 Total: 6", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 1));
         assertEquals("Wrong number of non-conformers for MA", "CUSUM-: 0 CUSUM+: 5 Total: 5", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 2));
-        assertEquals("Wrong number of non-conformers for T/P Ratio", "CUSUM-: 3 CUSUM+: 1 Total: 4", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 3));
-        assertEquals("Wrong number of non-conformers for T Area", "CUSUM-: 4 CUSUM+: 0 Total: 4", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 4));
+        assertEquals("Wrong number of non-conformers for T Area", "CUSUM-: 4 CUSUM+: 0 Total: 4", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 3));
+        assertEquals("Wrong number of non-conformers for T/P Ratio", "CUSUM-: 3 CUSUM+: 1 Total: 4", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 4));
         verifyTicksOnPlots(paretoPlotsWebPart, guideSetId, plotType);
         verifyNavigationToPanoramaDashboard(guideSetId, QCPlotsWebPart.QCPlotType.CUSUMm, 0, QCPlotsWebPart.MetricType.PEAK, true);
 
