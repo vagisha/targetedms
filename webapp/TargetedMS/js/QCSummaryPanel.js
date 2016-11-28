@@ -413,44 +413,39 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         content += '<span class="sample-file-field-label">Name:</span> ' + sampleFile.SampleFile
                 + '<br/><span class="sample-file-field-label">Acquired Date/Time:</span> ' + sampleFile.AcquiredTime
                 + '<br/><span class="sample-file-field-label">Number of tracked metrics:</span> ' + sampleFile.Metrics
+                + '<br/><span class="sample-file-field-label">Number of data points:</span> ' + (sampleFile.TotalCount/sampleFile.Metrics)
                 + '<br/><span class="sample-file-field-label">Out of guide set range:</span> ';
         if (sampleFile.Items.length > 0)
         {
-            content += '<ul class="sample-file-metric-list">';
-            Ext4.each(sampleFile.Items, function(item)
+            content += '<table class="outlier-summary-popup">';
+            content += '<thead><tr><th class="outlier-metric-header"></th><th class="outlier-top-header" colspan="6">Outliers</th></tr>' +
+                            '<tr>' +
+                                '<th class="outlier-metric-header"></th><th class="outlier-header1"></th><th></th><th  colspan="4" class="outlier-header4">CUSUM</th>' +
+                            '</tr>' +
+                            '<tr>' +
+                                '<th class="outlier-metric-header">Metric</th>' +
+                                '<th>Levey-Jennings</th>' +
+                                '<th>Moving Range</th>' +
+                                '<th title="Mean CUSUM-">Mean-</th>' +
+                                '<th title="Mean CUSUM+">Mean+</th>' +
+                                '<th title="Variability CUSUM-">Variability-</th>' +
+                                '<th title="Variability CUSUM+">Variability+</th>' +
+                            '</tr>' +
+                        '</thead><tbody>';
+            Ext4.each(sampleFile.Items, function (item)
             {
                 var href = LABKEY.ActionURL.buildURL('project', 'begin', item.ContainerPath, {metric: item.MetricId});
-                content += '<li><a href="' + href + '">' + item.MetricLabel + ' - ';
-                if (!item.NonConformers && !item.mR && !item.CUSUMm && !item.CUSUMv)
-                    content += '0' + '/' + item.TotalCount + ' outliers</a></li>';
-                else{
-                    var sep = '';
-                    if (item.NonConformers) {
-                        content +=  item.NonConformers + '/' + item.TotalCount + ' (Levey-Jennings)';
-                        sep = ', ';
-                    }
-                    if (item.mR) {
-                        content +=  sep + item.mR + '/' + item.TotalCount + ' (mR)';
-                        sep = ', ';
-                    }
-                    if (item.CUSUMm) {
-                        content +=  sep +  item.CUSUMm + '/' + item.TotalCount + ' (CUSUMm: ';
-                        content += (item.CUSUMmN + '/' + item.TotalCount) + ' CUSUMm- ';
-                        content += (item.CUSUMmP + '/' + item.TotalCount) + ' CUSUMm+ ';
-                        content += ')';
-                        sep = ', ';
-                    }
-                    if (item.CUSUMv) {
-                        content +=  sep + item.CUSUMv + '/' + item.TotalCount + ' (CUSUMv: ';
-                        content += (item.CUSUMvN + '/' + item.TotalCount) + ' CUSUMv- ';
-                        content += (item.CUSUMvP + '/' + item.TotalCount) + ' CUSUMv+ ';
-                        content += ')';
-                    }
-
-                    content +=' outliers</a></li>'
-                }
+                content += '<tr><td class="outlier-metric-cell"><a href="' + href + '">' + item.MetricLabel + '</a></td>';
+                content += '<td class="outlier-count-cell">' + (item.NonConformers ? item.NonConformers : 0) + '</td>';
+                content += '<td class="outlier-count-cell">' + (item.mR ? item.mR : 0) + '</td>';
+                content += '<td class="outlier-count-cell">' + (item.CUSUMmN ? item.CUSUMmN : 0) + '</td>';
+                content += '<td class="outlier-count-cell">' + (item.CUSUMmP ? item.CUSUMmP : 0) + '</td>';
+                content += '<td class="outlier-count-cell">' + (item.CUSUMvN ? item.CUSUMvN : 0) + '</td>';
+                content += '<td class="outlier-count-cell">' + (item.CUSUMvP ? item.CUSUMvP : 0) + '</td>';
+                content += '</tr>';
             });
-            content += '</ul>';
+            content += '</tbody>';
+            content += '</table>';
         }
         else
         {

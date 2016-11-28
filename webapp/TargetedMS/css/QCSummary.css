@@ -72,3 +72,21 @@ div.hopscotch-bubble .hopscotch-content {
 div.hopscotch-bubble .hopscotch-title {
     padding-bottom: 5px;
 }
+
+.outlier-summary-popup {
+    border: 1px solid black;
+    border-collapse: collapse;
+}
+
+.outlier-summary-popup td{
+    border: 1px solid black;
+}
+.outlier-summary-popup th{
+    border: 1px solid black;
+    text-align: center;
+    font-weight: 500;
+}
+
+th.outlier-metric-header{
+    text-align: left;
+}
