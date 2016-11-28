@@ -24,6 +24,7 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
+        dependencies.add("vis/vis");
         dependencies.add("hopscotch/css/hopscotch.min.css");
         dependencies.add("hopscotch/js/hopscotch.min.js");
         dependencies.add("targetedms/js/BaseQCPlotPanel.js");

@@ -1,5 +1,11 @@
 Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
     extend: 'LABKEY.targetedms.QCPlotHelperBase',
+    statics: {
+        tooltips: {
+            'Moving Range' : 'An MR plot plots the moving range over time to monitor process variation for individual observations ' +
+            'by using the sequential differences between two successive values as a measure of dispersion.'
+        }
+    },
     setMovingRangeSeriesMinMax: function(dataObject, row) {
         var val = row['MR'];
         if (LABKEY.vis.isValid(val))

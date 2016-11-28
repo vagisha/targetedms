@@ -1,5 +1,44 @@
 Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
     extend: 'LABKEY.targetedms.QCPlotHelperBase',
+    statics: {
+        tooltips: {
+            'Levey-Jennings' : 'Levey-Jennings plot plots quality control data to give a visual indication whether a laboratory test is working well.' +
+            'The distance from the mean (expected value) is measured in standard deviations (SD).'
+        }
+    },
+
+    getLJGuideSetData : function() {
+        this.getGuideSetData(false);
+    },
+
+    processLJGuideSetData : function(data)
+    {
+        this.guideSetDataMap = {};
+        Ext4.each(data.rows, function(row) {
+            var guideSetId = row['GuideSetId'];
+            if (!this.guideSetDataMap[guideSetId])
+            {
+                this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
+                this.hasGuideSetData = true;
+            }
+
+            var seriesLabel = row['SeriesLabel'];
+            if (!this.guideSetDataMap[guideSetId].Series[seriesLabel])
+            {
+                this.guideSetDataMap[guideSetId].Series[seriesLabel] = {
+                    NumRecords: row['NumRecords'],
+                    Mean: row['Mean'],
+                    StandardDev: row['StandardDev']
+                };
+            }
+        }, this);
+
+        if (this.showMovingRangePlot())
+            this.getRawGuideSetData();
+        else
+            this.getPlotData();
+    },
+
     setLJSeriesMinMax: function(dataObject, row) {
         // track the min and max data so we can get the range for including the QC annotations
         var val = row['value'];

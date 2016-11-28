@@ -237,21 +237,28 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         return plotDataMap;
     },
 
-    addPlotWebPartToPlotDiv: function (id, title, div, wp)
+    getPlotWebPartHeader: function(wp, title)
     {
-        Ext4.get(div).insertHtml('beforeEnd', '<br/>' +
+        var html = '<br/>' +
                 '<table class="labkey-wp ' + wp + '">' +
                 ' <tr class="labkey-wp-header">' +
                 '     <th class="labkey-wp-title-left">' +
                 '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) + '</span>' +
                 '     </th>' +
-                ' </tr><tr>' +
-                '     <td class="labkey-wp-body">' +
-                '        <div id="' + id + '" class="chart-render-div"></div>' +
-                '     </td>' +
-                ' </tr>' +
-                '</table>'
-        );
+                ' </tr>';
+        return html;
+    },
+
+    addPlotWebPartToPlotDiv: function (id, title, div, wp)
+    {
+        var html = this.getPlotWebPartHeader(wp, title);
+            html += '<tr>' +
+                    '     <td class="labkey-wp-body">' +
+                    '        <div id="' + id + '" class="chart-render-div"></div>' +
+                    '     </td>' +
+                    ' </tr>' +
+                    '</table>';
+        Ext4.get(div).insertHtml('beforeEnd', html);
     },
 
     addPlotsToPlotDiv: function(ids, title, div, wp)
@@ -264,14 +271,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     addLargePlotsToPlotDiv: function (ids, title, div, wp)
     {
-        var html = '<br/>' +
-                '<table class="labkey-wp ' + wp + '">' +
-                ' <tr class="labkey-wp-header">' +
-                '     <th class="labkey-wp-title-left">' +
-                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) + '</span>' +
-                '        </span>' +
-                '     </th>' +
-                ' </tr>';
+        var html = this.getPlotWebPartHeader(wp, title);
 
         Ext4.each(ids, function(plotId){
             html += '<tr>' +
@@ -284,14 +284,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     addSmallPlotsToPlotDiv: function (ids, title, div, wp)
     {
-        var html = '<br/>' +
-                '<table class="labkey-wp ' + wp + '">' +
-                ' <tr class="labkey-wp-header">' +
-                '     <th class="labkey-wp-title-left">' +
-                '        <span class="labkey-wp-title-text ' +  wp + '-title">'+ Ext4.util.Format.htmlEncode(title) + '</span>' +
-                '        </span>' +
-                '     </th>' +
-                ' </tr>';
+        var html = this.getPlotWebPartHeader(wp, title);
 
         if (ids.length > 0)
         {
@@ -496,6 +489,25 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         LABKEY.Query.executeSql(sqlObj);
     },
 
+    processEachOutlier: function(groupByGuideSet, countObj, guideSetId, sampleFiles, targetSampleFile)
+    {
+        if (groupByGuideSet)
+        {
+            if (!countObj[guideSetId])
+                countObj[guideSetId] = 0;
+            countObj[guideSetId]++;
+        }
+        else
+        {
+            if (sampleFiles.indexOf(targetSampleFile) > -1)
+            {
+                if (!countObj[targetSampleFile])
+                    countObj[targetSampleFile] = 0;
+                countObj[targetSampleFile]++;
+            }
+        }
+    },
+
     getQCPlotMetricOutliers: function(processedMetricGuides, processedMetricDataSet, CUSUMm, CUSUMv, mR, groupByGuideSet, sampleFiles)
     {
         if (!processedMetricGuides || Object.keys(processedMetricGuides).length == 0)
@@ -529,39 +541,11 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                             var sampleFile = data.SampleFile;
                             if (data.CUSUMmN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
                             {
-                                if (groupByGuideSet)
-                                {
-                                    if (!countCUSUMmN[guideSetId])
-                                        countCUSUMmN[guideSetId] = 0;
-                                    countCUSUMmN[guideSetId]++;
-                                }
-                                else
-                                {
-                                    if (sampleFiles.indexOf(sampleFile) > -1)
-                                    {
-                                        if (!countCUSUMmN[sampleFile])
-                                            countCUSUMmN[sampleFile] = 0;
-                                        countCUSUMmN[sampleFile]++;
-                                    }
-                                }
+                                this.processEachOutlier(groupByGuideSet, countCUSUMmN, guideSetId, sampleFiles, sampleFile);
                             }
                             else if (data.CUSUMmP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
                             {
-                                if (groupByGuideSet)
-                                {
-                                    if (!countCUSUMmP[guideSetId])
-                                        countCUSUMmP[guideSetId] = 0;
-                                    countCUSUMmP[guideSetId]++;
-                                }
-                                else
-                                {
-                                    if (sampleFiles.indexOf(sampleFile) > -1)
-                                    {
-                                        if (!countCUSUMmP[sampleFile])
-                                            countCUSUMmP[sampleFile] = 0;
-                                        countCUSUMmP[sampleFile]++;
-                                    }
-                                }
+                                this.processEachOutlier(groupByGuideSet, countCUSUMmP, guideSetId, sampleFiles, sampleFile);
                             }
                         }, this);
 
@@ -573,39 +557,11 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                             var sampleFile = data.SampleFile;
                             if (data.CUSUMvN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
                             {
-                                if (groupByGuideSet)
-                                {
-                                    if (!countCUSUMvN[data.GuideSetId])
-                                        countCUSUMvN[data.GuideSetId] = 0;
-                                    countCUSUMvN[data.GuideSetId]++;
-                                }
-                                else
-                                {
-                                    if (sampleFiles.indexOf(sampleFile) > -1)
-                                    {
-                                        if (!countCUSUMvN[sampleFile])
-                                            countCUSUMvN[sampleFile] = 0;
-                                        countCUSUMvN[sampleFile]++;
-                                    }
-                                }
+                                this.processEachOutlier(groupByGuideSet, countCUSUMvN, guideSetId, sampleFiles, sampleFile);
                             }
                             else if (data.CUSUMvP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
                             {
-                                if (groupByGuideSet)
-                                {
-                                    if (!countCUSUMvP[guideSetId])
-                                        countCUSUMvP[guideSetId] = 0;
-                                    countCUSUMvP[guideSetId]++;
-                                }
-                                else
-                                {
-                                    if (sampleFiles.indexOf(sampleFile) > -1)
-                                    {
-                                        if (!countCUSUMvP[sampleFile])
-                                            countCUSUMvP[sampleFile] = 0;
-                                        countCUSUMvP[sampleFile]++;
-                                    }
-                                }
+                                this.processEachOutlier(groupByGuideSet, countCUSUMvP, guideSetId, sampleFiles, sampleFile);
                             }
                         }, this);
 
@@ -621,21 +577,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                             if (data.MR > LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
                             {
                                 var sampleFile = data.SampleFile;
-                                if (groupByGuideSet)
-                                {
-                                    if (!countMR[guideSetId])
-                                        countMR[guideSetId] = 0;
-                                    countMR[guideSetId]++;
-                                }
-                                else
-                                {
-                                    if (sampleFiles.indexOf(sampleFile) > -1)
-                                    {
-                                        if (!countMR[sampleFile])
-                                            countMR[sampleFile] = 0;
-                                        countMR[sampleFile]++;
-                                    }
-                                }
+                                this.processEachOutlier(groupByGuideSet, countMR, guideSetId, sampleFiles, sampleFile);
                             }
                         }, this);
                     }

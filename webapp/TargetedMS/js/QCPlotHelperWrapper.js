@@ -297,5 +297,18 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         if (this.showMeanCUSUMPlot() || this.showVariableCUSUMPlot())
             return this.getEmptyLegend();
         return [];
+    },
+
+    getPlotTypeHelpTooltip: function(plotTypeName)
+    {
+        if (plotTypeName == 'Levey-Jennings')
+            return LABKEY.targetedms.LeveyJenningsPlotHelper.tooltips['Levey-Jennings'];
+        else if (plotTypeName == 'Moving Range')
+            return LABKEY.targetedms.MovingRangePlotHelper.tooltips['Moving Range'];
+        else if (plotTypeName == 'CUSUMm')
+            return LABKEY.targetedms.CUSUMPlotHelper.tooltips['CUSUMm'];
+        else if (plotTypeName == 'CUSUMv')
+            return LABKEY.targetedms.CUSUMPlotHelper.tooltips['CUSUMv'];
+        return '';
     }
 });

@@ -454,7 +454,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(URLParameterBean urlParameterBean, BindException errors) throws Exception
         {
-            return new JspView("/org/labkey/targetedms/view/leveyJenningsReport.jsp");
+            return new JspView("/org/labkey/targetedms/view/qcTrendPlotReport.jsp");
         }
 
         public NavTree appendNavTrail(NavTree root)

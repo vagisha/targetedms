@@ -254,7 +254,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         {
             public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
-                JspView result = new JspView("/org/labkey/targetedms/view/leveyJenningsReport.jsp");
+                JspView result = new JspView("/org/labkey/targetedms/view/qcTrendPlotReport.jsp");
                 result.addClientDependency(ClientDependency.fromPath("Ext4"));
                 result.setTitle("QC Plots");
                 result.setFrame(WebPartView.FrameType.PORTAL);

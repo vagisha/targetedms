@@ -24,7 +24,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     // properties specific to this TargetedMS QC plot implementation
     yAxisScale: 'linear',
     metric: null,
-    plotTypes: ['Levey-Jennings'], //TODO select LJ only for existing tests
+    plotTypes: ['Levey-Jennings'],
     largePlot: false,
     dateRangeOffset: 0,
     minAcquiredTime: null,
@@ -140,15 +140,14 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     {
         if (!this.plotTypeOptionsToolbar)
         {
-            var me = this;
             this.plotTypeOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
                 ui: 'footer',
                 cls: 'levey-jennings-toolbar',
                 padding: 10,
                 layout: { pack: 'center' },
-                items: [me.getPlotSizeOptions(),
+                items: [this.getPlotSizeOptions(),
                     {xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
-                    me.getPlotTypeOptions()],
+                    this.getPlotTypeOptions()],
                 listeners: {
                     scope: this,
                     render: function(cmp)
@@ -201,6 +200,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     getPlotTypeOptions: function()
     {
         var plotTypeCheckBoxes = [];
+        var me = this;
         Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypes, function(plotType){
             plotTypeCheckBoxes.push({
                 boxLabel: plotType,
@@ -221,7 +221,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                                 width: 300,
                                 showCloseButton: false,
                                 title: plotType + ' Plot Type',
-                                content: LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesTooltips[plotType]
+                                content: me.getPlotTypeHelpTooltip(plotType)
                             });
                         }, this);
 
@@ -236,7 +236,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return {
             xtype: 'checkboxgroup',
             fieldLabel: 'QC Plot Type',
-            columns: 4,
+            columns: plotTypeCheckBoxes.length,
             items: plotTypeCheckBoxes,
             cls: 'plot-type-checkbox-group',
             listeners: {
@@ -348,6 +348,19 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.guideSetMessageToolbar;
     },
 
+    isValidQCPlotType: function(plotType)
+    {
+        var valid = false;
+        Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypes, function(type){
+            if (plotType == type)
+            {
+                valid = true;
+                return;
+            }
+        });
+        return valid;
+    },
+
     getInitialValuesFromUrlParams : function()
     {
         var urlParams = LABKEY.ActionURL.getParameters(),
@@ -404,24 +417,17 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         if (paramValue != undefined)
         {
             var plotTypes = [];
-            if (Ext4.isArray(paramValue))
-            {
-                Ext4.each(paramValue, function(value){
-                    if (LABKEY.targetedms.QCPlotHelperBase.isValidQCPlotType(value.trim()))
-                        plotTypes.push(value.trim());
-                });
-            }
-            else
-            {
-                var values = paramValue.split(',');
-                Ext4.each(values, function(value){
-                    if (LABKEY.targetedms.QCPlotHelperBase.isValidQCPlotType(value.trim()))
-                        plotTypes.push(value.trim());
-                });
+            if (!Ext4.isArray(paramValue))
+                paramValue = paramValue.split(',');
 
-            }
+            Ext4.each(paramValue, function (value)
+            {
+                if (this.isValidQCPlotType(value.trim()))
+                    plotTypes.push(value.trim());
+            }, this);
 
-            if(plotTypes.length == 0)
+
+            if (plotTypes.length == 0)
             {
                 alertMessage += sep + "Invalid Plot Type, reverting to default plot type.";
             }
@@ -755,14 +761,14 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     var me = this;
                     if (!btn.pressed)
                     {
-                        if (me.plotLegendPopup)
+                        if (this.plotLegendPopup)
                         {
-                            me.plotLegendPopup.destroy();
+                            this.plotLegendPopup.destroy();
                         }
                         return;
                     }
 
-                    me.plotLegendPopup = new Ext4.Window({
+                    this.plotLegendPopup = Ext4.create('Ext.window.Window', {
                         buttonAlign: 'right',
                         width: 300,
                         height: plotHeight + 50,
@@ -803,7 +809,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
                     });
 
-                    me.plotLegendPopup.show();
+                    this.plotLegendPopup.show();
                 },
                 scope: this
             });

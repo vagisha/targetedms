@@ -1,36 +1,7 @@
 Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     statics: {
-        qcPlotTypes : ['Levey-Jennings', 'Moving Range', 'CUSUMm', 'CUSUMv'],
-        qcPlotTypesOrders : {
-            'Levey-Jennings' : 0,
-            'Moving Range' : 1,
-            'CUSUMm' : 2,
-            'CUSUMv' : 3
-        },
-        qcPlotTypesTooltips: {
-            'Levey-Jennings' : 'Levey-Jennings plot plots quality control data to give a visual indication whether a laboratory test is working well.' +
-            'The distance from the mean (expected value) is measured in standard deviations (SD).',
-            'Moving Range' : 'An MR plot plots the moving range over time to monitor process variation for individual observations ' +
-            'by using the sequential differences between two successive values as a measure of dispersion.',
-            'CUSUMm' : 'A CUSUM plot is a time-weighted control plot that displays the cumulative sums of the deviations of each sample value from the target value.' +
-            ' CUSUMm (mean CUSUM) plots two types of CUSUM statistics; one for positive mean shifts and the other for negative mean shifts.',
-            'CUSUMv' : 'A CUSUM plot is a time-weighted control plot that displays the cumulative sums of the deviations of each sample value from the target value. ' +
-            'CUSUMv (variability or scale CUSUM) plots two types of CUSUM statistics; one for positive variability shifts and the other for negative variability shifts. ' +
-            'Variability is a transformed standardized normal quantity which is sensitive to variability changes.'
-        },
-        isValidQCPlotType: function(plotType)
-        {
-            var valid = false;
-            Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypes, function(type){
-                if (plotType == type)
-                {
-                    valid = true;
-                    return;
-                }
-            });
-            return valid;
-        }
+        qcPlotTypes : ['Levey-Jennings', 'Moving Range', 'CUSUMm', 'CUSUMv']
     },
 
     showLJPlot: function()
@@ -94,40 +65,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         LABKEY.Query.executeSql(sqlConfig);
     },
 
-    getLJGuideSetData : function() {
-        this.getGuideSetData(false);
-    },
-
     getRawGuideSetData : function() {
         this.getGuideSetData(true);
-    },
-
-    processLJGuideSetData : function(data)
-    {
-        this.guideSetDataMap = {};
-        Ext4.each(data.rows, function(row) {
-            var guideSetId = row['GuideSetId'];
-            if (!this.guideSetDataMap[guideSetId])
-            {
-                this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
-                this.hasGuideSetData = true;
-            }
-
-            var seriesLabel = row['SeriesLabel'];
-            if (!this.guideSetDataMap[guideSetId].Series[seriesLabel])
-            {
-                this.guideSetDataMap[guideSetId].Series[seriesLabel] = {
-                    NumRecords: row['NumRecords'],
-                    Mean: row['Mean'],
-                    StandardDev: row['StandardDev']
-                };
-            }
-        }, this);
-
-        if (this.showMovingRangePlot())
-            this.getRawGuideSetData();
-        else
-            this.getPlotData();
     },
 
     getGuideSetDataObj : function(row)

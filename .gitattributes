@@ -379,7 +379,6 @@ src/org/labkey/targetedms/view/expannotations/TargetedMSExperimentsWebPart.java 
 src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -text
 src/org/labkey/targetedms/view/expannotations/experimentDetails.jsp -text
 src/org/labkey/targetedms/view/folderSetup.jsp -text
-src/org/labkey/targetedms/view/leveyJenningsReport.jsp -text
 src/org/labkey/targetedms/view/moleculePrecursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/moleculeSummaryView.jsp -text
 src/org/labkey/targetedms/view/paretoPlot.jsp -text
@@ -394,6 +393,7 @@ src/org/labkey/targetedms/view/publish/createJournalGroup.jsp -text
 src/org/labkey/targetedms/view/publish/deleteJournal.jsp -text
 src/org/labkey/targetedms/view/publish/publishExperimentForm.jsp -text
 src/org/labkey/targetedms/view/qcSummary.jsp -text
+src/org/labkey/targetedms/view/qcTrendPlotReport.jsp -text
 src/org/labkey/targetedms/view/renameRun.jsp -text
 src/org/labkey/targetedms/view/runMethodChain.jsp -text
 src/org/labkey/targetedms/view/runSummaryView.jsp -text
@@ -434,12 +434,12 @@ test/src/org/labkey/test/tests/targetedms/TargetedMSQCTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSTest.java -text
 test/src/org/labkey/test/util/targetedms/QCHelper.java -text
 test/test_targetedms.iml -text
-webapp/TargetedMS/css/LeveyJenningsReport.css -text
 webapp/TargetedMS/css/LinkVersionsDialog.css -text
 webapp/TargetedMS/css/ParetoPlot.css -text
 webapp/TargetedMS/css/QCSummary.css -text
 webapp/TargetedMS/css/SVGExportIcon.css -text
 webapp/TargetedMS/css/dropDown.css -text
+webapp/TargetedMS/css/qcTrendPlotReport.css -text
 webapp/TargetedMS/images/ChromatogramLibraryScreenshot.png -text
 webapp/TargetedMS/images/Fragment.gif -text
 webapp/TargetedMS/images/Molecule.bmp -text

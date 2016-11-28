@@ -308,10 +308,6 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         {
             params.endDate = row.referenceEnd;
         }
-        else
-        {
-            params.endDate = new Date();
-        }
         window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, params);
     },
 
