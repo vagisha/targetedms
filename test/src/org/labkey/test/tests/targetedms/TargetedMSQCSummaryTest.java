@@ -303,8 +303,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         tempStringList01.add("2013/08/27 03:19:45 - 4/56 (Moving Range) outliers");
 
         tempStringList02.clear();
-        tempStringList02.add("Full Width at Half Maximum (FWHM) - 1/7 (Levey-Jennings), 1/7 (mR) outliers");
-        tempStringList02.add("Peak Area - 2/7 (mR) outliers");
+        tempStringList02.add("Full Width at Half Maximum (FWHM) 1 1 0 0 0 0");
+        tempStringList02.add("Peak Area 0 2 0 0 0 0");
 
         validateSampleFile(0, tempStringList01, tempStringList02);
 
