@@ -461,7 +461,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     id: Ext4.id(),
                     target: el.dom,
                     placement: 'bottom',
-                    width: sampleFile.Items.length > 0 ? 700 : 300,
+                    width: sampleFile.Items.length > 0 ? 720 : 300,
                     title: 'Recent Sample File Details',
                     content: content
                 });

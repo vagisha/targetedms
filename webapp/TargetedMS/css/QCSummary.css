@@ -80,13 +80,16 @@ div.hopscotch-bubble .hopscotch-title {
 
 .outlier-summary-popup td{
     border: 1px solid black;
+    padding: 3px;
 }
 .outlier-summary-popup th{
     border: 1px solid black;
     text-align: center;
     font-weight: 500;
+    padding: 3px;
 }
 
 th.outlier-metric-header{
     text-align: left;
+    padding: 3px;
 }
