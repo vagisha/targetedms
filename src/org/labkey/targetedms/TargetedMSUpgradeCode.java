@@ -52,7 +52,7 @@ import java.util.Set;
  */
 public class TargetedMSUpgradeCode implements UpgradeCode
 {
-    // Called at 14.23->14.24
+    // Called at 14.20-14.30
     @SuppressWarnings({"UnusedDeclaration"})
     public void updateExperimentAnnotations(final ModuleContext moduleContext)
     {
@@ -94,7 +94,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
         experiment.setLSID(lsid);
     }
 
-    // called at 14.30->14.31
+    // called at 14.30-15.10
     @SuppressWarnings({"UnusedDeclaration"})
     public void populateDefaultAnnotationTypes(final ModuleContext moduleContext)
     {
@@ -124,7 +124,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
-    // Called at 16.14->16.15 (only on SQLServer)
+    // Called at 16.10-16.20 (only on SQLServer)
     @SuppressWarnings({"UnusedDeclaration"})
     public void updatePrecursorModifiedSequence(final ModuleContext moduleContext) throws SQLException
     {
