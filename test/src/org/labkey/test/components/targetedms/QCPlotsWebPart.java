@@ -31,9 +31,12 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.labkey.test.components.ext4.Checkbox.Ext4Checkbox;
 import static org.labkey.test.components.ext4.Window.Window;
 
 public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
@@ -580,20 +583,14 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Window().withTitle("Legends").waitFor(getDriver());
     }
 
-
     public void checkPlotType(QCPlotType plotType, boolean checked)
     {
-        String checkboxXPath = "//label[text()='" + plotType.getLabel() + "']/preceding-sibling::input[@type='button']";
-        if(checked)
-            _test._ext4Helper.checkCheckbox(Locator.xpath(checkboxXPath));
-        else
-            _test._ext4Helper.uncheckCheckbox(Locator.xpath(checkboxXPath));
+        elementCache().findQCPlotTypeCheckbox(plotType).set(checked);
     }
 
     public boolean isPlotTypeSelected(QCPlotType plotType)
     {
-        String checkboxXPath = "//label[text()='" + plotType.getLabel() + "']/preceding-sibling::input[@type='button']";
-        return _test._ext4Helper.isChecked(Locator.xpath(checkboxXPath));
+        return elementCache().findQCPlotTypeCheckbox(plotType).isChecked();
     }
 
     public void checkAllPlotTypes(boolean selected)
@@ -644,5 +641,13 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.CssLocator legendItem = Locator.css("svg g.legend-item");
         Locator.CssLocator legendItemPopup = Locator.css(".headerlegendpopup svg g.legend-item");
         Locator.CssLocator smallPlotLayoutDiv = Locator.css(".plot-small-layout");
+
+        private Map<QCPlotType, Checkbox> plotTypeCheckboxes = new HashMap<>();
+        protected Checkbox findQCPlotTypeCheckbox(QCPlotType plotType)
+        {
+            if (!plotTypeCheckboxes.containsKey(plotType))
+                plotTypeCheckboxes.put(plotType, Ext4Checkbox().withLabel(plotType.getLabel()).waitFor(this));
+            return plotTypeCheckboxes.get(plotType);
+        }
     }
 }
