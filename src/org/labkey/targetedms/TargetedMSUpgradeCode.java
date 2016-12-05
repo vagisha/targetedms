@@ -52,48 +52,6 @@ import java.util.Set;
  */
 public class TargetedMSUpgradeCode implements UpgradeCode
 {
-    // Called at 14.20-14.30
-    @SuppressWarnings({"UnusedDeclaration"})
-    public void updateExperimentAnnotations(final ModuleContext moduleContext)
-    {
-        try (DbScope.Transaction transaction = CoreSchema.getInstance().getSchema().getScope().ensureTransaction())
-        {
-            // Get a list of all the entries in targetedms.ExperimentAnnotations
-            List<ExperimentAnnotations> expAnnotations = new TableSelector(TargetedMSManager.getTableInfoExperimentAnnotations()).getArrayList(ExperimentAnnotations.class);
-
-            for(ExperimentAnnotations expAnnot: expAnnotations)
-            {
-                // Create an entry in exp.experiment
-                ExpExperiment experiment = ExperimentService.get().createExpExperiment(expAnnot.getContainer(),expAnnot.getTitle());
-                ensureUniqueLSID(experiment);
-                experiment.save(UserManager.getUser(expAnnot.getCreatedBy()));
-                // Save the rowId
-                expAnnot.setExperimentId(experiment.getRowId());
-                Table.update(null, TargetedMSManager.getTableInfoExperimentAnnotations(), expAnnot, expAnnot.getId());
-            }
-
-            transaction.commit();
-        }
-    }
-
-    private void ensureUniqueLSID(ExpExperiment experiment)
-    {
-        String lsid;
-        int suffix = 1;
-        String name = experiment.getName();
-        do
-        {
-            if(suffix > 1)
-            {
-                name = experiment.getName() + "_" + suffix;
-            }
-            suffix++;
-            lsid = ExperimentService.get().generateLSID(experiment.getContainer(), ExpExperiment.class, name);
-        }
-        while (ExperimentService.get().getExpExperiment(lsid) != null);
-        experiment.setLSID(lsid);
-    }
-
     // called at 14.30-15.10
     @SuppressWarnings({"UnusedDeclaration"})
     public void populateDefaultAnnotationTypes(final ModuleContext moduleContext)
