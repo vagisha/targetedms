@@ -17,21 +17,19 @@ package org.labkey.test.components.targetedms;
 
 import org.labkey.test.Locator;
 import org.labkey.test.components.ext4.Window;
-import org.labkey.test.selenium.LazyWebElement;
+import org.labkey.test.components.html.Input;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
 
-public class ClustergrammerDialog extends Window
+import static org.labkey.test.components.html.Input.Input;
+
+public class ClustergrammerDialog extends Window<ClustergrammerDialog.ElementCache>
 {
     private static final String DIALOG_TITLE = "Clustergrammer Heat Map";
     public static final String CG_REDIRECT_URL = "amp.pharm.mssm.edu/";
 
-    private Elements _elements;
-
     public ClustergrammerDialog(WebDriver driver)
     {
         super(DIALOG_TITLE, driver);
-        _elements = new Elements();
     }
 
     public Confirmation clickSave()
@@ -50,39 +48,40 @@ public class ClustergrammerDialog extends Window
             confirmation.clickNo();
     }
 
-    public void setReportTitle(String title)
+    public ClustergrammerDialog setReportTitle(String title)
     {
-        elements().reportTitleEditor.clear();
-        elements().reportTitleEditor.sendKeys(title);
+        elementCache().reportTitleEditor.set(title);
+        elementCache().reportTitleEditor.blur();
+        return this;
     }
 
-    public void setReportDescription(String description)
+    public ClustergrammerDialog setReportDescription(String description)
     {
-        elements().reportDescriptionEditor.clear();
-        elements().reportDescriptionEditor.sendKeys(description);
+        elementCache().reportDescriptionEditor.set(description);
+        elementCache().reportDescriptionEditor.blur();
+        return this;
     }
 
     public String getReportTitle()
     {
-        return getWrapper().getFormElement(elements().reportTitleEditor);
+        return elementCache().reportTitleEditor.get();
     }
 
     public String getReportDescription()
     {
-        return getWrapper().getFormElement(elements().reportDescriptionEditor);
+        return elementCache().reportDescriptionEditor.get();
     }
 
-    //Hides superclasses' elements()
-    protected Elements elements()
+    @Override
+    protected ElementCache newElementCache()
     {
-        return _elements;
+        return new ElementCache();
     }
 
-    //Hides superclasses' Elements
-    protected class Elements extends Window.Elements
+    protected class ElementCache extends Window.ElementCache
     {
-        WebElement reportTitleEditor = new LazyWebElement(Locator.inputById("reportTitleEditor" + "-inputEl"), this);
-        WebElement reportDescriptionEditor = new LazyWebElement(Locator.textarea("reportDescriptionEditor" + "-inputEl"), this);
+        Input reportTitleEditor = Input(Locator.inputById("reportTitleEditor" + "-inputEl"), getDriver()).findWhenNeeded(this);
+        Input reportDescriptionEditor = Input(Locator.inputById("reportDescriptionEditor" + "-inputEl"), getDriver()).findWhenNeeded(this);
     }
 
     public class Confirmation extends Window
