@@ -81,7 +81,7 @@ public class ClustergrammerDialog extends Window<ClustergrammerDialog.ElementCac
     protected class ElementCache extends Window.ElementCache
     {
         Input reportTitleEditor = Input(Locator.inputById("reportTitleEditor" + "-inputEl"), getDriver()).findWhenNeeded(this);
-        Input reportDescriptionEditor = Input(Locator.inputById("reportDescriptionEditor" + "-inputEl"), getDriver()).findWhenNeeded(this);
+        Input reportDescriptionEditor = Input(Locator.textarea("reportDescriptionEditor" + "-inputEl"), getDriver()).findWhenNeeded(this);
     }
 
     public class Confirmation extends Window
