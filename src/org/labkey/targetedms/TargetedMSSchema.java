@@ -26,6 +26,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerForeignKey;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.EnumTableInfo;
@@ -33,33 +34,35 @@ import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.UpdateColumn;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
 import org.labkey.api.module.Module;
 import org.labkey.api.ms2.MS2Service;
-import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.LookupForeignKey;
+import org.labkey.api.query.QueryAction;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
-import org.labkey.api.query.QueryUpdateService;
+import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.security.UserPrincipal;
-import org.labkey.api.security.permissions.InsertPermission;
-import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.StringExpression;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.ViewContext;
+import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.*;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
+import org.springframework.validation.BindException;
 
 import java.io.File;
 import java.io.IOException;
@@ -184,7 +187,7 @@ public class TargetedMSSchema extends UserSchema
 
     public static DbSchema getSchema()
     {
-        return DbSchema.get(SCHEMA_NAME);
+        return DbSchema.get(SCHEMA_NAME, DbSchemaType.Module);
     }
 
 
@@ -852,26 +855,7 @@ public class TargetedMSSchema extends UserSchema
         }
         if (TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.ReplicateFK.getSQL())
-            {
-                @Override
-                public boolean hasPermission(@NotNull UserPrincipal user, @NotNull Class<? extends Permission> perm)
-                {
-                    if(InsertPermission.class.equals(perm))
-                    {
-                        // Allow inserts only in QC folder types
-                        return getContainer().hasPermission(user, perm)
-                                && (TargetedMSManager.getFolderType(getContainer()) == TargetedMSModule.FolderType.QC);
-                    }
-                    return super.hasPermission(user, perm);
-                }
-
-                @Override
-                public QueryUpdateService getUpdateService()
-                {
-                    return new DefaultQueryUpdateService(this, getRealTable());
-                }
-            };
+            return new ReplicateAnnotationTable(this);
         }
 
         if (TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name) || TABLE_GENERAL_MOLECULE_CHROM_INFO.equalsIgnoreCase(name))
@@ -1061,6 +1045,51 @@ public class TargetedMSSchema extends UserSchema
             };
         }
         return super.createQuerySettings(dataRegionName, queryName, viewName);
+    }
+
+    @Override
+    public QueryView createView(ViewContext context, @NotNull QuerySettings settings, BindException errors)
+    {
+        if(TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(settings.getQueryName()))
+        {
+            QueryView view = new QueryView(this, settings, errors)
+            {
+                @Override
+                protected void addDetailsAndUpdateColumns(List<DisplayColumn> ret, TableInfo table)
+                {
+                    StringExpression urlUpdate = urlExpr(QueryAction.updateQueryRow);
+                    if (urlUpdate != null)
+                    {
+                        UpdateColumn update = new UpdateColumn(urlUpdate) {
+                            @Override
+                            public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+                            {
+                                Object id = ctx.get("Id");
+                                boolean display = false;
+                                try
+                                {
+                                    int annotationId = Integer.parseInt(id.toString());
+                                    ReplicateAnnotation annotation = ReplicateManager.getReplicateAnnotation(annotationId);
+                                    if (!ReplicateAnnotation.isSourceSkyline(annotation.getSource()))
+                                    {
+                                        display = true;
+                                    }
+                                }
+                                catch (NumberFormatException ignored){}
+                                if (display)
+                                {
+                                    super.renderGridCellContents(ctx, out);
+                                }
+                            }
+                        };
+                        ret.add(0, update);
+                    }
+                }
+            };
+            return view;
+        }
+
+        return super.createView(context, settings, errors);
     }
 
     @Override

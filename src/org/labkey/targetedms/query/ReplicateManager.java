@@ -55,6 +55,26 @@ public class ReplicateManager
             .getObject(replicateId, Replicate.class);
     }
 
+    public static ReplicateAnnotation getReplicateAnnotation(int annotationId)
+    {
+        return new TableSelector(TargetedMSManager.getSchema().getTable(TargetedMSSchema.TABLE_REPLICATE_ANNOTATION))
+                .getObject(annotationId, ReplicateAnnotation.class);
+    }
+
+    public static ReplicateAnnotation getReplicateAnnotation(int annotationId, Container container)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT ra.* FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoReplicateAnnotation(), "ra");
+        sqlFragment.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoReplicate(), "rp");
+        sqlFragment.append(" ON ra.replicateId = rp.Id");
+        sqlFragment.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), "r");
+        sqlFragment.append(" ON r.Id = rp.runId");
+        sqlFragment.append(" WHERE ra.Id=?").add(annotationId);
+        sqlFragment.append(" AND r.Container=?").add(container);
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sqlFragment).getObject(ReplicateAnnotation.class);
+    }
+
     public static SampleFile getSampleFileForPrecursorChromInfo(int precursorChromInfoId)
     {
         String sql = "SELECT sf.* FROM "+

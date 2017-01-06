@@ -36,6 +36,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     plotWidth: null,
     enableBrushing: false,
     havePlotOptionsChanged: false,
+    selectedAnnotations: {},
 
     // Max number of plots/series to show
     maxCount: 50,
@@ -49,7 +50,10 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         if (this.minAcquiredTime == null || this.maxAcquiredTime == null)
             Ext4.get(this.plotDivId).update("<span class='labkey-error'>Unable to render report. Missing min and max AcquiredTime from data query.</span>");
         else
-            this.queryInitialQcMetrics(this.queryInitialPlotOptions, this);
+        {
+            // Load replicate annotations in the callback.
+            this.queryInitialQcMetrics(this.queryContainerReplicateAnnotations, this);
+        }
     },
 
     queryInitialPlotOptions : function()
@@ -82,10 +86,44 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 // apply any URL parameters to the initial values
                 Ext4.apply(initValues, this.getInitialValuesFromUrlParams());
 
+                // Initialize the form
                 this.initPlotForm(initValues);
             }, this, false)
         });
     },
+
+    queryContainerReplicateAnnotations : function()
+    {
+        LABKEY.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('targetedms', 'GetContainerReplicateAnnotations.api'),
+            method: 'GET',
+            scope: this,
+            success: LABKEY.Utils.getCallbackWrapper(function(response)
+            {
+                var annotationNodes = [];
+                Ext4.iterate(response.replicateAnnotations, function(annotation)
+                {
+                    var annotValueNodes = [];
+                    annotation.values.forEach(function(value){
+                        var valueNode = {text: value, leaf: true, iconCls: 'tree-node-noicon', checked: false};
+                        annotValueNodes.push(valueNode);
+                    });
+                    var annotNode = {text: annotation.name, expanded: true, iconCls: 'tree-node-noicon', children: annotValueNodes};
+                    annotationNodes.push(annotNode);
+                });
+                this.replicateAnnotationsNodes = annotationNodes;
+
+                // Load persisted plot options for logged in users.
+                this.queryInitialPlotOptions();
+
+            }, this, false),
+            failure: LABKEY.Utils.getCallbackWrapper(function (response)
+            {
+                this.failureHandler(response);
+            }, null, true)
+        });
+    },
+
 
     calculateStartDateByOffset : function()
     {
@@ -127,13 +165,20 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
     initPlotFormToolbars : function()
     {
-        return [
+        var toolbarArr = [
             { tbar: this.getMainPlotOptionsToolbar() },
             { tbar: this.getCustomDateRangeToolbar() },
             { tbar: this.getPlotTypeOptionsToolbar() },
             { tbar: this.getOtherPlotOptionsToolbar() },
             { tbar: this.getGuideSetMessageToolbar() }
         ];
+
+        if(this.replicateAnnotationsNodes.length > 0)
+        {
+            toolbarArr.splice(2, 0, {tbar: this.getAnnotationFiltersToolbar()});
+            toolbarArr.splice(3, 0, {tbar: this.getSelectedAnnotationsToolbar()});
+        }
+        return toolbarArr;
     },
 
     getPlotTypeOptionsToolbar: function()
@@ -305,6 +350,46 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
 
         return this.otherPlotOptionsToolbar;
+    },
+
+    getAnnotationFiltersToolbar : function()
+    {
+        if (!this.annotationFiltersToolbar)
+        {
+            this.annotationFiltersToolbar = Ext4.create('Ext.toolbar.Toolbar', {
+                ui: 'footer',
+                cls: 'levey-jennings-toolbar',
+                padding: '0 10px 10px 10px',
+                layout: { pack: 'center' },
+                items: [
+                    this.getAnnotationListTree(),
+                    {xtype: 'tbspacer'},
+                    this.getApplyAnnotationFiltersButton(),
+                    {xtype: 'tbspacer'},
+                    this.getClearAnnotationFiltersButton()
+                ]
+            });
+
+            this.annotationFiltersToolbar.setVisible(this.replicateAnnotationsNodes.length > 0);
+        }
+
+        return this.annotationFiltersToolbar;
+    },
+
+    getSelectedAnnotationsToolbar: function()
+    {
+        if (!this.selectedAnnotationsToolbar)
+        {
+            this.selectedAnnotationsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
+                ui: 'footer',
+                cls: 'levey-jennings-toolbar',
+                padding: '0 0 0 0',
+                layout: {pack: 'center'},
+                hidden: true,
+                items: []
+            });
+        }
+        return this.selectedAnnotationsToolbar;
     },
 
     getCustomDateRangeToolbar : function()
@@ -673,6 +758,61 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
 
         return this.metricField;
+    },
+
+    getAnnotationListTree : function()
+    {
+        if (!this.annotationFiltersField)
+        {
+            var store = Ext4.create('Ext.data.TreeStore', {
+                root: {expanded: false, children: this.replicateAnnotationsNodes},
+            });
+
+            this.annotationFiltersField = Ext4.create('Ext.tree.Panel', {
+                id: 'annotation-filter-field',
+                width: 440,
+                height: 150,
+                title: 'Replicate Annotations',
+                store: store,
+                rootVisible: false,
+                titleCollapse: true,
+                collapsed: true,
+                collapsible: true,
+                useArrows: true,
+                lines: false,
+            });
+        }
+
+        return this.annotationFiltersField;
+    },
+
+    getApplyAnnotationFiltersButton : function()
+    {
+        if (!this.applyAnnotationFiltersButton)
+        {
+            this.applyAnnotationFiltersButton = Ext4.create('Ext.button.Button', {
+                text: 'Apply',
+                handler: this.applyAnnotationFiltersBtnClick,
+                scope: this
+            });
+        }
+
+        return this.applyAnnotationFiltersButton;
+    },
+
+    getClearAnnotationFiltersButton : function()
+    {
+        if (!this.clearAnnotationFiltersButton)
+        {
+            this.clearAnnotationFiltersButton = Ext4.create('Ext.button.Button', {
+                text: 'Clear',
+                handler: this.clearAnnotationFiltersBtnClick,
+                scope: this,
+                hidden: true
+            });
+        }
+
+        return this.clearAnnotationFiltersButton;
     },
 
     getGroupedXCheckbox : function()
@@ -1340,6 +1480,100 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
+    applyAnnotationFiltersBtnClick: function()
+    {
+        var annotationsTree = this.getAnnotationListTree();
+        var filters = annotationsTree.getChecked();
+
+        // make sure that at least one filter is selected
+        if (filters.length == 0)
+        {
+            Ext4.Msg.show({
+                title:'ERROR',
+                msg: 'Please select a replicate annotation.',
+                buttons: Ext4.Msg.OK,
+                icon: Ext4.MessageBox.ERROR
+            });
+        }
+
+        else
+        {
+            var selectedAnnotationsTb = this.getSelectedAnnotationsToolbar();
+            selectedAnnotationsTb.removeAll();
+
+            this.selectedAnnotations = {};
+
+            for(var i = 0; i < filters.length; i++)
+            {
+                var annotation = filters[i];
+                var annotationName = annotation.parentNode.get('text');
+                var annotationValue = annotation.get('text');
+
+                var selected = this.selectedAnnotations[annotationName];
+                if(!selected)
+                {
+                    selected = [];
+                    this.selectedAnnotations[annotationName] = selected;
+                }
+
+                selected.push(annotationValue);
+            }
+
+            var selectedDisplay = '';
+            var and = '';
+            Ext4.Object.each(this.selectedAnnotations, function(name, values)
+            {
+                selectedDisplay += and;
+                and = 'AND ';
+                selectedDisplay += (name + ' (');
+                for(var i = 0; i < values.length; i++)
+                {
+                    if(i > 0) selectedDisplay += ' OR ';
+                    selectedDisplay += values[i];
+                }
+                selectedDisplay += ') ';
+            });
+            if(selectedDisplay.length > 0) {selectedDisplay = "Selected annotations: " + selectedDisplay}
+            selectedAnnotationsTb.add(selectedDisplay);
+
+            this.clearAnnotationFiltersButton.show();
+
+            this.havePlotOptionsChanged = true;
+            annotationsTree.collapse();
+            selectedAnnotationsTb.show();
+
+            this.setBrushingEnabled(false);
+            this.displayTrendPlot();
+        }
+    },
+
+    clearAnnotationFiltersBtnClick: function() {
+
+        this.selectedAnnotations = {};
+        var annotationsTree = this.getAnnotationListTree();
+        var records = annotationsTree.getChecked();
+
+        if(records.length == 0)
+        {
+            return;
+        }
+
+        for(var i = 0; i < records.length; i++)
+        {
+            records[i].set('checked', false);
+        }
+        this.havePlotOptionsChanged = true;
+
+        var selectedAnnotationsTb = this.getSelectedAnnotationsToolbar();
+        selectedAnnotationsTb.removeAll();
+        selectedAnnotationsTb.hide();
+
+        this.clearAnnotationFiltersButton.hide();
+
+        this.setBrushingEnabled(false);
+        this.displayTrendPlot();
+    },
+    
     createGuideSetBtnClick: function() {
         var minGuideSetPointCount = 5; // to warn user if less than this many points are selected for the new guide set
 

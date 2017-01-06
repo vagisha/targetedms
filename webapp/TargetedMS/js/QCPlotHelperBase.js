@@ -126,6 +126,29 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             whereClause += sep + "CAST(SampleFileId.AcquiredTime AS DATE) <= '" + config.EndDate + "'";
         }
 
+        if(Object.keys(this.selectedAnnotations).length > 0)
+        {
+            var filterClause = "SampleFileId.ReplicateId in (";
+            var intersect = "";
+            var selectSql = "(SELECT ReplicateId FROM targetedms.ReplicateAnnotation WHERE ";
+            Ext4.Object.each(this.selectedAnnotations, function(name, values)
+            {
+                filterClause += (intersect + selectSql + " Name='" + name + "' AND ( ");
+                var or = "";
+                for (var i = 0; i < values.length; i++)
+                {
+                    // Escape single quotes for SQL query
+                    var val = values[i].replace(/\'/g,"''");
+                    filterClause += (or + "Value='" + val + "'");
+                    or = " OR ";
+                }
+                filterClause += " ) ) ";
+                intersect = " INTERSECT ";
+            });
+            filterClause += ") ";
+            whereClause += sep + filterClause;
+        }
+
         this.plotDataRows = [];
         var seriesTypes = this.isMultiSeries() ? ['series1', 'series2'] : ['series1'];
         var sql = this.getSeriesTypePlotDataSql(seriesTypes, metricProps, whereClause);

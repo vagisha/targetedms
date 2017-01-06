@@ -66,3 +66,7 @@
     width: 50%;
     float: left;
 }
+
+.tree-node-noicon {
+    display: none;
+}

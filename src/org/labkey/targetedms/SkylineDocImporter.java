@@ -285,53 +285,42 @@ public class SkylineDocImporter
                         replicate.setDpPredictorId(dpPredictor.getId());
                     }
 
-                    replicate = Table.insert(_user, TargetedMSManager.getTableInfoReplicate(), replicate);
+                    boolean skipReplicate = false;
 
-                    for(SampleFile sampleFile: replicate.getSampleFileList())
+                    if(folderType == TargetedMSModule.FolderType.QC)
                     {
-                        SampleFileKey sampleFileKey = SampleFileKey.getKey(replicate, sampleFile);
-                        if(skylineIdSampleFileIdMap.containsKey(sampleFileKey))
+                        skipReplicate = true;
+                        // In QC folders insert a replicate only if at least one of the associated sample files will be inserted
+                        for(SampleFile sampleFile: replicate.getSampleFileList())
                         {
-                            throw new IllegalStateException("Sample file id '" + sampleFile.getSkylineId() + "' for replicate '" + replicate.getName() + "' has already been seen in the document.");
-                        }
-
-                        sampleFile.setReplicateId(replicate.getId());
-
-                        List<Instrument> instrumentInfoList = sampleFile.getInstrumentInfoList();
-                        if(instrumentInfoList != null && instrumentInfoList.size() > 0)
-                        {
-                            Instrument instrument = combineInstrumentInfos(instrumentInfoList);
-
-                            Integer instrumentId = instrumentIdMap.get(instrument);
-                            if(instrumentId == null)
+                            if (TargetedMSManager.hasSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), run.getContainer()))
                             {
-                                instrument.setRunId(_runId);
-                                instrument = Table.insert(_user, TargetedMSManager.getTableInfoInstrument(), instrument);
-                                instrumentIdMap.put(instrument, instrument.getId());
-                                instrumentId = instrument.getId();
+                                sampleFile.setSkip(true);
+                                _log.info("Skipping import of data from sample file " + sampleFile.getFilePath() + " in QC folder because it has already been imported.");
                             }
-
-                            sampleFile.setInstrumentId(instrumentId);
+                            else
+                            {
+                                skipReplicate = false;
+                            }
                         }
-
-                        if (folderType == TargetedMSModule.FolderType.QC && TargetedMSManager.hasSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), run.getContainer()))
-                        {
-                            sampleFile.setSkip(true);
-                            _log.info("Skipping import of data from sample file " + sampleFile.getFilePath() + " in QC folder because it has already been imported");
-                        }
-                        else
-                        {
-                            sampleFile = Table.insert(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile);
-                        }
-
-                        // Remember the ids we inserted so we can reference them later
-                        skylineIdSampleFileIdMap.put(sampleFileKey, sampleFile);
                     }
-                    for (ReplicateAnnotation annotation : replicate.getAnnotations())
+                    if(skipReplicate)
                     {
-                        annotation.setReplicateId(replicate.getId());
-                        Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
+                        _log.info("Skipping replicate " + replicate.getName() + " in QC folder because sample files for this replicate have already been imported.");
                     }
+                    else
+                    {
+                        replicate = Table.insert(_user, TargetedMSManager.getTableInfoReplicate(), replicate);
+
+                        for (ReplicateAnnotation annotation : replicate.getAnnotations())
+                        {
+                            annotation.setReplicateId(replicate.getId());
+                            annotation.setSource(ReplicateAnnotation.SOURCE_SKYLINE);
+                            Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
+                        }
+                    }
+
+                    insertSampleFiles(skylineIdSampleFileIdMap, instrumentIdMap, replicate);
                 }
 
                 // 3. Peptide settings
@@ -1466,6 +1455,47 @@ public class SkylineDocImporter
                     Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
                 }
             }
+        }
+    }
+
+    private void insertSampleFiles(Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<Instrument, Integer> instrumentIdMap, Replicate replicate)
+    {
+        for(SampleFile sampleFile: replicate.getSampleFileList())
+        {
+            SampleFileKey sampleFileKey = SampleFileKey.getKey(replicate, sampleFile);
+            if(skylineIdSampleFileIdMap.containsKey(sampleFileKey))
+            {
+                throw new IllegalStateException("Sample file id '" + sampleFile.getSkylineId() + "' for replicate '" + replicate.getName() + "' has already been seen in the document.");
+            }
+
+            if (!sampleFile.isSkip())
+            {
+                sampleFile.setReplicateId(replicate.getId());
+
+                List<Instrument> instrumentInfoList = sampleFile.getInstrumentInfoList();
+                if(instrumentInfoList != null && instrumentInfoList.size() > 0)
+                {
+                    Instrument instrument = combineInstrumentInfos(instrumentInfoList);
+
+                    Integer instrumentId = instrumentIdMap.get(instrument);
+                    if(instrumentId == null)
+                    {
+                        instrument.setRunId(_runId);
+                        instrument = Table.insert(_user, TargetedMSManager.getTableInfoInstrument(), instrument);
+                        instrumentIdMap.put(instrument, instrument.getId());
+                        instrumentId = instrument.getId();
+                    }
+
+                    sampleFile.setInstrumentId(instrumentId);
+                }
+
+                // In a QC folder data from a sample file will be imported only if the file wasn't imported in a previously uploaded
+                // Skyline document.
+                sampleFile = Table.insert(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile);
+            }
+
+            // Remember the ids we inserted so we can reference them later
+            skylineIdSampleFileIdMap.put(sampleFileKey, sampleFile);
         }
     }
 

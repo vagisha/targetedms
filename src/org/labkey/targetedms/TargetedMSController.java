@@ -28,6 +28,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
@@ -82,9 +83,13 @@ import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
+import org.labkey.api.query.QueryAction;
+import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySchema;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
+import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.reports.ReportService;
 import org.labkey.api.reports.model.ViewCategory;
@@ -363,6 +368,10 @@ public class TargetedMSController extends SpringActionController
                 annotationTypesPart.setProperty(QueryParam.schemaName.toString(), "targetedms");
                 annotationTypesPart.setProperty(QueryParam.queryName.toString(), "qcannotationtype");
                 annotationsTab.add(annotationTypesPart);
+                Portal.WebPart replicateAnnotationPart = Portal.getPortalPart("Query").createWebPart();
+                replicateAnnotationPart.setProperty(QueryParam.schemaName.toString(), "targetedms");
+                replicateAnnotationPart.setProperty(QueryParam.queryName.toString(), "replicateannotation");
+                annotationsTab.add(replicateAnnotationPart);
                 Portal.saveParts(c, ANNOTATIONS_TAB, annotationsTab);
                 Portal.addProperty(c, ANNOTATIONS_TAB, Portal.PROP_CUSTOMTAB);
 
@@ -766,7 +775,51 @@ public class TargetedMSController extends SpringActionController
             response.put("configurations", result);
             return response;
         }
+    }
 
+    @RequiresPermission(ReadPermission.class)
+    public class GetContainerReplicateAnnotationsAction extends ApiAction
+    {
+        @Override
+        public Object execute(Object form, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+
+            // Returned annotations are already sorted by name, value
+            List<ReplicateAnnotation> replicateAnnotations = ReplicateManager.getReplicateAnnotationNameValues(getContainer());
+
+            /*
+              JSON example -
+              replicateAnnotations:
+              [
+                {"name": "annotation1", "values": ["value1", "value2"]},
+                {"name": "annotation2": "values": ["val1", "val2", "val3"]},
+               ...
+              ]
+             */
+            JSONArray annotations = new JSONArray();
+
+            JSONObject annotation = null;
+            JSONArray values = null;
+
+            for(ReplicateAnnotation ra: replicateAnnotations)
+            {
+                if(annotation == null || !ra.getName().equals(annotation.get("name")))
+                {
+                    annotation = new JSONObject();
+                    annotation.put("name", ra.getName());
+                    values = new JSONArray();
+                    annotation.put("values", values);
+
+                    annotations.put(annotation);
+                }
+
+                values.put(ra.getValue());
+            }
+
+            response.put("replicateAnnotations", annotations);
+            return response;
+        }
     }
 
     private Container getCandidateContainer(Container container, User user)
@@ -790,14 +843,6 @@ public class TargetedMSController extends SpringActionController
             isParentValid = container.hasPermission(user, ReadPermission.class) && folderType == FolderType.QC;
         }
         return container;
-    }
-
-
-    private ArrayList<QCMetricConfiguration> getContainerQCMetricConfigurations(Container container)
-    {
-        ArrayList<QCMetricConfiguration> configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
-
-        return configurations;
     }
 
     private static class QCSummaryForm

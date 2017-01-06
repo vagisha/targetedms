@@ -114,7 +114,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         clickTab("Annotations");
 
         PortalHelper portalHelper = new PortalHelper(this);
-        assertEquals("Wrong WebParts", expectedWebParts, portalHelper.getWebPartTitles());
+        assertTrue("Wrong WebParts", portalHelper.getWebPartTitles().containsAll(expectedWebParts));
 
         clickTab("Panorama Dashboard");
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);

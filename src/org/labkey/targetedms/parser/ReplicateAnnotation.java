@@ -21,7 +21,9 @@ package org.labkey.targetedms.parser;
  */
 public class ReplicateAnnotation extends AbstractAnnotation
 {
-    private static final String SOURCE_SKYLINE = "Skyline";
+    public static final String SOURCE_SKYLINE = "Skyline";
+    public static final String SOURCE_USER = "User";
+    public static final String SOURCE_AUTOQC = "AutoQC";
 
     private int _replicateId;
 
@@ -45,5 +47,15 @@ public class ReplicateAnnotation extends AbstractAnnotation
     public void setSource(String source)
     {
         _source = source;
+    }
+
+    public static boolean isValidSource(String source)
+    {
+        return SOURCE_SKYLINE.equals(source) || SOURCE_AUTOQC.equals(source) || SOURCE_USER.equals(source);
+    }
+
+    public static boolean isSourceSkyline(String source)
+    {
+        return SOURCE_SKYLINE.equals(source);
     }
 }
