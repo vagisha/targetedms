@@ -479,17 +479,20 @@ public class ComparisonDataset
                         ComparisonDataset.ComparisonSeriesItem seriesDataset = categoryDataset.getSeriesDataset(seriesLabel);
                         if(seriesDataset != null)
                         {
-                            BoxAndWhisterSeriesItemData seriesItem = (BoxAndWhisterSeriesItemData) seriesDataset.getSeriesItemData();
+                            BoxAndWhiskerSeriesItemData seriesItem = (BoxAndWhiskerSeriesItemData) seriesDataset.getSeriesItemData();
                             if(seriesItem == null)
                             {
-                                continue;
+                                dataset.add(new RetentionTimeDatasetItem(null, null, null, null, null), seriesLabel.toString(), categoryLabel);
                             }
-                            RetentionTimeDatasetItem item = new RetentionTimeDatasetItem(seriesItem.getRtAtPeak(),
-                                                                                       seriesItem.getMinRt(),
-                                                                                       seriesItem.getMaxRt(),
-                                                                                       seriesItem.getFwhmStart(),
-                                                                                       seriesItem.getFwhmEnd());
-                            dataset.add(item, seriesLabel.toString(), categoryLabel);
+                            else
+                            {
+                                RetentionTimeDatasetItem item = new RetentionTimeDatasetItem(seriesItem.getRtAtPeak(),
+                                        seriesItem.getMinRt(),
+                                        seriesItem.getMaxRt(),
+                                        seriesItem.getFwhmStart(),
+                                        seriesItem.getFwhmEnd());
+                                dataset.add(item, seriesLabel.toString(), categoryLabel);
+                            }
                         }
                     }
                 }
@@ -552,7 +555,7 @@ public class ComparisonDataset
         }
     }
 
-    private static class BoxAndWhisterSeriesItemData implements SeriesItemData
+    private static class BoxAndWhiskerSeriesItemData implements SeriesItemData
     {
         private final Double _rtAtPeak;
         private final Double _minRt;
@@ -560,7 +563,7 @@ public class ComparisonDataset
         private final double _fwhmStart;
         private final double _fwhmEnd;
 
-        public BoxAndWhisterSeriesItemData(Double rtAtPeak, Double minRt, Double maxRt, Double fwhm)
+        public BoxAndWhiskerSeriesItemData(Double rtAtPeak, Double minRt, Double maxRt, Double fwhm)
         {
             _minRt = minRt;
             _maxRt = maxRt;
@@ -632,10 +635,10 @@ public class ComparisonDataset
 
             if(pciPlusList.size() == 1)
             {
-                Double peakArea = getValue(pciPlusList.get(0));
-                if(peakArea != null && !cvValues)
+                Double pciVal = getValue(pciPlusList.get(0));
+                if(pciVal != null && !cvValues)
                 {
-                    value = peakArea;
+                    value = pciVal;
                 }
             }
             else
@@ -676,7 +679,7 @@ public class ComparisonDataset
     // Makes a series item with the min, max and peak apex retention times as well as fwhm.
     public static class RetentionTimesAllValuesSeriesItemMaker implements SeriesItemMaker
     {
-        public BoxAndWhisterSeriesItemData make(List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues)
+        public BoxAndWhiskerSeriesItemData make(List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues)
         {
             if(pciPlusList.size() == 1)
             {
@@ -685,7 +688,7 @@ public class ComparisonDataset
                 {
                     return null;
                 }
-                return new BoxAndWhisterSeriesItemData(pciPlus.getBestRetentionTime(),
+                return new BoxAndWhiskerSeriesItemData(pciPlus.getBestRetentionTime(),
                         pciPlus.getMinStartTime(),
                         pciPlus.getMaxEndTime(),
                         pciPlus.getMaxFwhm());
@@ -712,7 +715,7 @@ public class ComparisonDataset
             if(count == 0)
                 return null;
 
-            return new BoxAndWhisterSeriesItemData(rtAtPeakApex / count,
+            return new BoxAndWhiskerSeriesItemData(rtAtPeakApex / count,
                     minStartTime / count,
                     maxEndTime / count,
                     fwhm / count);
@@ -742,7 +745,10 @@ public class ComparisonDataset
         @Override
         public Double getValue(PrecursorChromInfoLitePlus pciPlus)
         {
-            return pciPlus.getMaxEndTime() - pciPlus.getMinStartTime();
+            Double minStartTime = pciPlus.getMinStartTime();
+            Double maxEndTime = pciPlus.getMaxEndTime();
+
+            return (minStartTime == null || maxEndTime == null) ? null : maxEndTime - minStartTime;
         }
     }
 
