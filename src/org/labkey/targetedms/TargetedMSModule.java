@@ -143,7 +143,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public double getVersion()
     {
-        return 16.31;
+        return 16.32;
     }
 
     @Override
@@ -181,7 +181,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 return view;
             }
         };
-
         BaseWebPartFactory precursorView = new BaseWebPartFactory(TARGETED_MS_PRECURSOR_VIEW)
         {
             @Override

@@ -26,6 +26,7 @@ public class GeneralMoleculeChromInfo extends ChromInfo
 
     private double _peakCountRatio;
     private Double _retentionTime;
+    private Double _calculatedConcentration;
 
     public int getGeneralMoleculeId()
     {
@@ -55,5 +56,15 @@ public class GeneralMoleculeChromInfo extends ChromInfo
     public void setRetentionTime(Double retentionTime)
     {
         this._retentionTime = retentionTime;
+    }
+
+    public Double getCalculatedConcentration()
+    {
+        return _calculatedConcentration;
+    }
+
+    public void setCalculatedConcentration(Double calculatedConcentration)
+    {
+        _calculatedConcentration = calculatedConcentration;
     }
 }

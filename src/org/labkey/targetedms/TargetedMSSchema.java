@@ -140,6 +140,14 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_LIBRARY_SOURCE = "LibrarySource";
     public static final String TABLE_PRECURSOR_LIB_INFO = "PrecursorLibInfo";
     public static final String TABLE_ANNOTATION_SETTINGS = "AnnotationSettings";
+    public static final String TABLE_GROUP_COMPARISON_SETTINGS = "GroupComparisonSettings";
+    public static final String TABLE_FOLD_CHANGE = "FoldChange";
+    public static final String TABLE_PEPTIDE_FOLD_CHANGE = "PeptideFoldChange";
+    public static final String TABLE_MOLECULE_FOLD_CHANGE = "MoleculeFoldChange";
+    public static final String TABLE_QUANTIIFICATION_SETTINGS = "QuantificationSettings";
+    public static final String TABLE_CALIBRATION_CURVE = "CalibrationCurve";
+    public static final String TABLE_PEPTIDE_CALIBRATION_CURVE = "PeptideCalibrationCurve";
+    public static final String TABLE_MOLECULE_CALIBRATION_CURVE = "MoleculeCalibrationCurve";
 
     public static final String TABLE_REPRESENTATIVE_DATA_STATE_RUN = "RepresentativeDataState_Run";
     public static final String TABLE_REPRESENTATIVE_DATA_STATE = "RepresentativeDataState";
@@ -827,9 +835,37 @@ public class TargetedMSSchema extends UserSchema
             TABLE_RUN_ENZYME.equalsIgnoreCase(name) ||
             TABLE_SPECTRUM_LIBRARY.equalsIgnoreCase(name) ||
             TABLE_ANNOTATION_SETTINGS.equalsIgnoreCase(name) ||
-            TABLE_DRIFT_TIME_PREDICTION_SETTINGS.equalsIgnoreCase(name) )
+            TABLE_DRIFT_TIME_PREDICTION_SETTINGS.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL());
+        }
+
+        if (TABLE_CALIBRATION_CURVE.equalsIgnoreCase(name))
+        {
+            return new CalibrationCurveTable(this);
+        }
+        if (TABLE_PEPTIDE_CALIBRATION_CURVE.equalsIgnoreCase(name))
+        {
+            return new CalibrationCurveTable.PeptideCalibrationCurveTable(this);
+        }
+        if (TABLE_MOLECULE_CALIBRATION_CURVE.equalsIgnoreCase(name))
+        {
+            return new CalibrationCurveTable.MoleculeCalibrationCurveTable(this);
+        }
+
+        if (TABLE_FOLD_CHANGE.equalsIgnoreCase(name))
+        {
+            return new FoldChangeTable(this);
+        }
+
+        if (TABLE_PEPTIDE_FOLD_CHANGE.equalsIgnoreCase(name))
+        {
+            return new FoldChangeTable.PeptideFoldChangeTable(this);
+        }
+
+        if (TABLE_MOLECULE_FOLD_CHANGE.equalsIgnoreCase(name))
+        {
+            return new FoldChangeTable.MoleculeFoldChangeTable(this);
         }
 
         // Tables that have a FK to targetedms.peptidegroup
@@ -1163,6 +1199,10 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_QC_ANNOTATION);
         hs.add(TABLE_GUIDE_SET);
         hs.add(TABLE_AUTOQC_PING);
+        hs.add(TABLE_FOLD_CHANGE);
+        hs.add(TABLE_CALIBRATION_CURVE);
+        hs.add(TABLE_PEPTIDE_CALIBRATION_CURVE);
+        hs.add(TABLE_MOLECULE_CALIBRATION_CURVE);
         return hs;
     }
 

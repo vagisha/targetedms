@@ -50,6 +50,7 @@ public class MoleculeManager
     {
         SQLFragment sql = new SQLFragment("SELECT gm.id, gm.peptidegroupid, gm.rtcalculatorscore, gm.predictedretentiontime, ");
         sql.append("gm.avgmeasuredretentiontime, gm.note, gm.explicitretentiontime, ");
+        sql.append("gm.normalizationmethod, gm.standardtype, gm.concentrationmultiplier, gm.internalstandardconcentration, ");
         sql.append("m.id, m.ionformula, m.customionname, m.massaverage, m.massmonoisotopic ");
         sql.append("FROM targetedms.generalmolecule gm, targetedms.molecule m WHERE ");
         sql.append("m.id = gm.id AND gm.peptidegroupid=?");

@@ -79,6 +79,12 @@ class PeptideSettingsParser
     private static final String SPECTRAL_LIBRARY_DRIFT_TIMES_RESOLVING_POWER = "spectral_library_drift_times_resolving_power";
     private static final String RESOLVING_POWER = "resolving_power";
     private static final String MEASURED_DT = "measured_dt";
+    private static final String QUANTIFICATION = "quantification";
+    private static final String WEIGHTING = "weighting";
+    private static final String FIT = "fit";
+    private static final String NORMALIZATION = "normalization";
+    private static final String MS_LEVEL = "ms_level";
+    private static final String UNITS = "units";
 
     private String _documentName;
 
@@ -112,9 +118,12 @@ class PeptideSettingsParser
              {
                  settings.setLibrarySettings(readLibrarySettings(reader));
              }
-              else if(XmlUtil.isStartElement(reader, evtType, PEPTIDE_MODIFICATIONS))
+             else if(XmlUtil.isStartElement(reader, evtType, PEPTIDE_MODIFICATIONS))
              {
                  settings.setModifications(readModifications(reader));
+             }
+             else if (XmlUtil.isStartElement(reader, evtType, QUANTIFICATION)) {
+                 settings.setQuantificationSettings(readQuantificationSettings(reader));
              }
          }
 
@@ -520,5 +529,16 @@ class PeptideSettingsParser
                 }
             }
         }
+    }
+
+    private QuantificationSettings readQuantificationSettings(XMLStreamReader reader) throws XMLStreamException
+    {
+        QuantificationSettings quantificationSettings = new QuantificationSettings();
+        quantificationSettings.setRegressionWeighting(XmlUtil.readAttribute(reader, WEIGHTING));
+        quantificationSettings.setRegressionFit(XmlUtil.readAttribute(reader, FIT));
+        quantificationSettings.setNormalizationMethod(XmlUtil.readAttribute(reader, NORMALIZATION));
+        quantificationSettings.setMsLevel(XmlUtil.readIntegerAttribute(reader, MS_LEVEL));
+        quantificationSettings.setUnits(XmlUtil.readAttribute(reader, UNITS));
+        return quantificationSettings;
     }
 }

@@ -171,7 +171,7 @@ public class TransitionManager
     @NotNull
     public static Collection<TransitionChromInfo> getTransitionChromInfoListForTransition(int transitionId)
     {
-        return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(), Transition.getColumns(),
+        return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(),
                                  new SimpleFilter(FieldKey.fromParts("TransitionId"), transitionId), null).getCollection(TransitionChromInfo.class);
     }
 }

@@ -32,6 +32,8 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
     protected Double _explicitDriftTimeHighEnergyOffsetMsec;
     private List<PrecursorChromInfo> _chromInfoList;
     private List<TransitionType> _transitionsList;
+    private String _isotopeLabel;
+    private int _isotopeLabelId;
 
     public int getGeneralMoleculeId()
     {
@@ -166,5 +168,25 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
     public SignedMz getSignedMz()
     {
         return new SignedMz(_mz, _charge < 0);
+    }
+
+    public int getIsotopeLabelId()
+    {
+        return _isotopeLabelId;
+    }
+
+    public void setIsotopeLabelId(int isotopeLabelId)
+    {
+        this._isotopeLabelId = isotopeLabelId;
+    }
+
+    public String getIsotopeLabel()
+    {
+        return _isotopeLabel;
+    }
+
+    public void setIsotopeLabel(String isotopeLabel)
+    {
+        this._isotopeLabel = isotopeLabel;
     }
 }

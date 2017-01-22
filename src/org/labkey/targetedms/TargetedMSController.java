@@ -177,15 +177,19 @@ import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.labkey.targetedms.query.TransitionManager;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
+import org.labkey.targetedms.view.CalibrationCurveChart;
+import org.labkey.targetedms.view.CalibrationCurvesView;
 import org.labkey.targetedms.view.ChromatogramsDataRegion;
 import org.labkey.targetedms.view.DocumentPrecursorsView;
 import org.labkey.targetedms.view.DocumentTransitionsView;
 import org.labkey.targetedms.view.DocumentView;
+import org.labkey.targetedms.view.GroupComparisonView;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 import org.labkey.targetedms.view.MoleculePrecursorChromatogramsView;
 import org.labkey.targetedms.view.PeptidePrecursorChromatogramsView;
 import org.labkey.targetedms.view.PeptidePrecursorsView;
 import org.labkey.targetedms.view.PeptideTransitionsView;
+import org.labkey.targetedms.view.QuantificationView;
 import org.labkey.targetedms.view.SmallMoleculePrecursorsView;
 import org.labkey.targetedms.view.SmallMoleculeTransitionsView;
 import org.labkey.targetedms.view.TargetedMsRunListView;
@@ -2835,6 +2839,7 @@ public class TargetedMSController extends SpringActionController
                 menu.addChild(SmallMoleculePrecursorsView.TITLE, url);
             else
                 menu.addChild(PeptidePrecursorsView.TITLE, url);
+            GroupComparisonView.addQuantificationMenuItems(_form, menu);
 
             return menu;
         }
@@ -2918,7 +2923,78 @@ public class TargetedMSController extends SpringActionController
             else
                 menu.addChild(PeptideTransitionsView.TITLE, url);
 
+            QuantificationView.addQuantificationMenuItems(_form, menu);
             return menu;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowGroupComparisonAction extends ShowRunDetailsAction<GroupComparisonView>
+    {
+        public ShowGroupComparisonAction()
+        {
+            setCommandClass(GroupComparisonView.Form.class);
+        }
+
+        @Override
+        public String getDataRegionNamePeptide()
+        {
+            return GroupComparisonView.DATAREGION_NAME;
+        }
+
+        @Override
+        public String getDataRegionNameSmallMolecule()
+        {
+            return GroupComparisonView.DATAREGION_NAME_SM_MOL;
+        }
+
+        @Override
+        public NavTree getViewSwitcherMenu()
+        {
+            return QuantificationView.getViewSwitcherMenu(_form);
+        }
+
+
+        @Override
+        protected GroupComparisonView createQueryView(
+                RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+        {
+            return new GroupComparisonView(getViewContext(),
+                    new TargetedMSSchema(getUser(), getContainer()),
+                    (GroupComparisonView.Form) form,
+                    forExport, dataRegion);
+        }
+    }
+    @RequiresPermission(ReadPermission.class)
+    public class ShowCalibrationCurvesAction extends ShowRunDetailsAction<CalibrationCurvesView>
+    {
+        @Override
+        public String getDataRegionNamePeptide()
+        {
+            return CalibrationCurvesView.DATAREGION_NAME;
+        }
+
+        @Override
+        public String getDataRegionNameSmallMolecule()
+        {
+            return CalibrationCurvesView.DATAREGION_NAME_SM_MOL;
+        }
+
+        @Override
+        public NavTree getViewSwitcherMenu()
+        {
+            return QuantificationView.getViewSwitcherMenu(_form);
+        }
+
+
+        @Override
+        protected CalibrationCurvesView createQueryView(
+                RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+        {
+            return new CalibrationCurvesView(getViewContext(),
+                    new TargetedMSSchema(getUser(), getContainer()),
+                    form,
+                    forExport, dataRegion);
         }
     }
 
@@ -5847,7 +5923,7 @@ public class TargetedMSController extends SpringActionController
         public void validateForm(ChainedVersions form, Errors errors)
         {
             // verify that the run and replacedByRun rowIds are valid and match an existing run
-            for (Map.Entry<Integer,Integer> entry : form.getRuns().entrySet())
+            for (Map.Entry<Integer, Integer> entry : form.getRuns().entrySet())
             {
                 if (entry.getKey() == null || ExperimentService.get().getExpRun(entry.getKey()) == null)
                     errors.reject(ERROR_MSG, "No run found for id " + entry.getKey());
@@ -5865,11 +5941,11 @@ public class TargetedMSController extends SpringActionController
             {
                 List<Integer> chainedDocuments = getLinkedListOfChainedDocuments(form.getRuns().entrySet());
 
-                for(int i = 0; i < chainedDocuments.size(); i++)
+                for (int i = 0; i < chainedDocuments.size(); i++)
                 {
                     ExpRun run = ExperimentService.get().getExpRun(chainedDocuments.get(i));
                     ExpRun replacedRun = null;
-                    if((i+1) != chainedDocuments.size())
+                    if ((i + 1) != chainedDocuments.size())
                         replacedRun = ExperimentService.get().getExpRun(chainedDocuments.get(i + 1));
 
                     run.setReplacedByRun(replacedRun);
@@ -5893,7 +5969,7 @@ public class TargetedMSController extends SpringActionController
                 ExpRun run = ExperimentService.get().getExpRun(entry.getKey());
                 ExpRun replacedRun = entry.getValue() != null ? ExperimentService.get().getExpRun(entry.getValue()) : null;
 
-                if(chainedDocumentsList.contains(run.getRowId()) || chainedDocumentsList.contains(replacedRun.getRowId()))
+                if (chainedDocumentsList.contains(run.getRowId()) || chainedDocumentsList.contains(replacedRun.getRowId()))
                 {
                     addToDocumentChainAtCorrectIndex(run, replacedRun, chainedDocumentsList);
                 }
@@ -5908,15 +5984,15 @@ public class TargetedMSController extends SpringActionController
 
         private void addToDocumentChainAtCorrectIndex(ExpRun run, ExpRun replacedByRun, List<Integer> list)
         {
-            for(int i = 0; i < list.size(); i++)
+            for (int i = 0; i < list.size(); i++)
             {
                 final Integer rowid = list.get(i);
-                if(rowid == run.getRowId())
+                if (rowid == run.getRowId())
                 {
-                    list.add(i+1, replacedByRun.getRowId());
+                    list.add(i + 1, replacedByRun.getRowId());
                     break;
                 }
-                else if(rowid == replacedByRun.getRowId())
+                else if (rowid == replacedByRun.getRowId())
                 {
                     list.add(i, run.getRowId());
                     break;
@@ -6051,6 +6127,45 @@ public class TargetedMSController extends SpringActionController
         public void setSelectedIds(Integer[] selectedIds)
         {
             _selectedIds = selectedIds;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public static class ShowCalibrationCurveAction extends ExportAction<CalibrationCurveForm>
+    {
+        @Override
+        public void export(CalibrationCurveForm calibrationCurveForm, HttpServletResponse response, BindException errors) throws Exception
+        {
+            CalibrationCurveChart chart = new CalibrationCurveChart(getUser(), getContainer(), calibrationCurveForm);
+            JFreeChart jFreeChart = chart.getChart();
+            response.setContentType("image/png");
+            ChartUtilities.writeChartAsPNG(response.getOutputStream(), jFreeChart, 1024, 768);
+        }
+    }
+
+    public static class CalibrationCurveForm extends RunDetailsForm
+    {
+        int calibrationCurveId;
+        String[] sampleTypes;
+
+        public int getCalibrationCurveId()
+        {
+            return calibrationCurveId;
+        }
+
+        public void setCalibrationCurveId(int calibrationCurveId)
+        {
+            this.calibrationCurveId = calibrationCurveId;
+        }
+
+        public String[] getSampleTypes()
+        {
+            return sampleTypes;
+        }
+
+        public void setSampleTypes(String[] sampleTypes)
+        {
+            this.sampleTypes = sampleTypes;
         }
     }
 }

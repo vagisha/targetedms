@@ -28,6 +28,8 @@ public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
 
     private Integer _cePredictorId;
     private Integer _dpPredictorId;
+    private String _sampleType;
+    private Double _analyteConcentration;
 
     private List<SampleFile> _sampleFileList;
 
@@ -80,5 +82,25 @@ public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
     public void setSampleFileList(List<SampleFile> sampleFileList)
     {
         _sampleFileList = sampleFileList;
+    }
+
+    public String getSampleType()
+    {
+        return _sampleType;
+    }
+
+    public void setSampleType(String sampleType)
+    {
+        _sampleType = sampleType;
+    }
+
+    public Double getAnalyteConcentration()
+    {
+        return _analyteConcentration;
+    }
+
+    public void setAnalyteConcentration(Double analyteConcentration)
+    {
+        _analyteConcentration = analyteConcentration;
     }
 }

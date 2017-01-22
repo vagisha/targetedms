@@ -113,10 +113,11 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String CUSTOM_ION_NAME = "custom_ion_name";
     private static final String MASS_MONOISOTOPIC = "mass_monoisotopic";
     private static final String MASS_AVERAGE = "mass_average";
+    private static final String GROUP_COMPARISON = "group_comparison";
     private static final String CHARGE = "charge" ;
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
-    public static final double MAX_SUPPORTED_VERSION = 2.62;
+    public static final double MAX_SUPPORTED_VERSION = 3.6;
 
     private static final Pattern XML_ID_REGEX = Pattern.compile("\"/^[:_A-Za-z][-.:_A-Za-z0-9]*$/\"");
     private static final String XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -447,6 +448,23 @@ public class SkylineDocumentParser implements AutoCloseable
                  String type = XmlUtil.readRequiredAttribute(reader, "type", DATA_SETTINGS);
                  _dataSettings.addAnnotations(name, targets, type);
              }
+             else if (XmlUtil.isStartElement(reader, evtType, GROUP_COMPARISON))
+             {
+                 GroupComparisonSettings groupComparison = new GroupComparisonSettings();
+                 groupComparison.setName(XmlUtil.readAttribute(reader, "name"));
+                 groupComparison.setControlAnnotation(XmlUtil.readAttribute(reader, "control_annotation"));
+                 groupComparison.setControlValue(XmlUtil.readAttribute(reader, "control_value"));
+                 groupComparison.setCaseValue(XmlUtil.readAttribute(reader, "case_value"));
+                 groupComparison.setIdentityAnnotation(XmlUtil.readAttribute(reader, "identity_annotation"));
+                 groupComparison.setNormalizationMethod(XmlUtil.readAttribute(reader, "normalization_method"));
+                 groupComparison.setPerProtein(XmlUtil.readBooleanAttribute(reader, "per_protein", false));
+                 Double confidenceLevel = XmlUtil.readDoubleAttribute(reader, "confidence_level");
+                 if (null != confidenceLevel)
+                 {
+                     groupComparison.setConfidenceLevel(confidenceLevel / 100.0);
+                 }
+                 _dataSettings.addGroupComparison(groupComparison);
+             }
          }
     }
 
@@ -728,6 +746,8 @@ public class SkylineDocumentParser implements AutoCloseable
     {
         SkylineReplicate replicate = new SkylineReplicate();
         replicate.setName(XmlUtil.readRequiredAttribute(reader, "name", REPLICATE));
+        replicate.setSampleType(XmlUtil.readAttribute(reader, "sample_type"));
+        replicate.setAnalyteConcentration(XmlUtil.readDoubleAttribute(reader, "analyte_concentration"));
 
         List<SampleFile> sampleFileList = new ArrayList<>();
         replicate.setSampleFileList(sampleFileList);
@@ -1087,6 +1107,10 @@ public class SkylineDocumentParser implements AutoCloseable
             generalMolecule.setRtCalculatorScore(Double.parseDouble(rtCalculatorScore));
 
         generalMolecule.setExplicitRetentionTime(XmlUtil.readDoubleAttribute(reader, "explicit_retention_time"));
+        generalMolecule.setNormalizationMethod(reader.getAttributeValue(null, "normalization_method"));
+        generalMolecule.setInternalStandardConcentration(XmlUtil.readDoubleAttribute(reader, "internal_standard_concentration"));
+        generalMolecule.setConcentrationMultiplier(XmlUtil.readDoubleAttribute(reader, "concentration_multiplier"));
+        generalMolecule.setStandardType(reader.getAttributeValue(null, "standard_type"));
     }
 
     private void readSmallMolecule(XMLStreamReader reader, Molecule molecule) throws XMLStreamException, IOException
@@ -1175,8 +1199,6 @@ public class SkylineDocumentParser implements AutoCloseable
         String rank = reader.getAttributeValue(null, "rank");
         if (null != rank)
             peptide.setRank(Integer.parseInt(rank));
-
-        peptide.setStandardType(XmlUtil.readAttribute(reader, "standard_type"));
 
         List<Peptide.StructuralModification> structuralMods = new ArrayList<>();
         List<Peptide.IsotopeModification> isotopeMods = new ArrayList<>();
@@ -1362,6 +1384,7 @@ public class SkylineDocumentParser implements AutoCloseable
         String precursorMz = reader.getAttributeValue(null, PRECURSOR_MZ);
         if(null != precursorMz)
             moleculePrecursor.setMz(Double.parseDouble(precursorMz));
+        moleculePrecursor.setIsotopeLabel(XmlUtil.readAttribute(reader, "isotope_label", PeptideSettings.IsotopeLabel.LIGHT));
 
         String collisionEnergy = reader.getAttributeValue(null, COLLISION_ENERGY);
         if(null != collisionEnergy)

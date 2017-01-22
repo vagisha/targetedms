@@ -25,6 +25,10 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
     protected Double _avgMeasuredRetentionTime;  // average measured retention time over all replicates
     protected String _note;
     protected Double _explicitRetentionTime;
+    protected String _normalizationMethod;
+    protected Double _internalStandardConcentration;
+    protected Double _concentrationMultiplier;
+    protected String _standardType;
     private List<GeneralMoleculeChromInfo> _generalMoleculeChromInfoList;
 
     public int getPeptideGroupId()
@@ -94,7 +98,47 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
         _generalMoleculeChromInfoList = generalMoleculeChromInfoList;
     }
 
+    public String getStandardType()
+    {
+        return _standardType;
+    }
+
+    public void setStandardType(String standardType)
+    {
+        _standardType = standardType;
+    }
+
     public abstract String getPrecursorKey(GeneralMolecule gm, GeneralPrecursor gp);
 
     public abstract String getTextId();
+
+    public String getNormalizationMethod()
+    {
+        return _normalizationMethod;
+    }
+
+    public void setNormalizationMethod(String normalizationMethod)
+    {
+        _normalizationMethod = normalizationMethod;
+    }
+
+    public Double getInternalStandardConcentration()
+    {
+        return _internalStandardConcentration;
+    }
+
+    public void setInternalStandardConcentration(Double internalStandardConcentration)
+    {
+        _internalStandardConcentration = internalStandardConcentration;
+    }
+
+    public Double getConcentrationMultiplier()
+    {
+        return _concentrationMultiplier;
+    }
+
+    public void setConcentrationMultiplier(Double concentrationMultiplier)
+    {
+        _concentrationMultiplier = concentrationMultiplier;
+    }
 }

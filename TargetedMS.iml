@@ -12,5 +12,16 @@
     <orderEntry type="module" module-name="Internal" />
     <orderEntry type="module" module-name="MS2-API" />
     <orderEntry type="module" module-name="TargetedMS-API" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/Skyline.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/lib/Skyline.jar!/src" />
+        </SOURCES>
+      </library>
+    </orderEntry>
   </component>
 </module>

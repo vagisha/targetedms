@@ -52,6 +52,8 @@
             <column columnName="DpPredictorId">
                 <columnTitle>DP Predictor</columnTitle>
             </column>
+            <column columnName="AnalyteConcentration"/>
+            <column columnName="SampleType"/>
         </columns>
     </table>
     <table tableName="ReplicateAnnotation" tableDbType="TABLE">
@@ -225,6 +227,10 @@
                 <columnTitle>Explicit RT</columnTitle>
                 <formatString>0.0000</formatString>
             </column>
+			<column columnName="ConcentrationMultiplier"/>
+            <column columnName="InternalStandardConcentration"/>
+            <column columnName="NormalizationMethod"/>
+            <column columnName="StandardType"/>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="Peptide">
@@ -255,7 +261,6 @@
             <column columnName="PeptideModifiedSequence">
                 <columnTitle>Modified Peptide</columnTitle>
             </column>
-            <column columnName="StandardType"/>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="Molecule">
@@ -294,6 +299,7 @@
                 <description>Retention Time</description>
                 <formatString>0.0000</formatString>
             </column>
+            <column columnName="CalculatedConcentration"/>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="GeneralPrecursor">
@@ -337,6 +343,10 @@
             </column>
             <column columnName="ExplicitDriftTimeMsec" />
             <column columnName="ExplicitDriftTimeHighEnergyOffsetMsec" />
+            <column columnName="IsotopeLabelId">
+                <columnTitle>Label</columnTitle>
+                <inputType>text</inputType>
+            </column>			
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="MoleculePrecursor">
@@ -362,10 +372,6 @@
         <columns>
             <column columnName="Id">
                 <isHidden>true</isHidden>
-            </column>
-            <column columnName="IsotopeLabelId">
-                <columnTitle>Isotope</columnTitle>
-                <inputType>text</inputType>
             </column>
             <column columnName="NeutralMass">
                 <columnTitle>Precursor Neutral Mass</columnTitle>
@@ -1441,5 +1447,75 @@
             </column>
         </columns>
     </table>
-
+    <table tableName="FoldChange" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id" />
+            <column columnName="RunId" />
+            <column columnName="GroupComparisonSettingsId"/>
+            <column columnName="PeptideGroupId"/>
+            <column columnName="GeneralMoleculeId"/>
+            <column columnName="IsotopeLabelId"/>
+            <column columnName="MsLevel"/>
+            <column columnName="GroupIdentifier"/>
+            <column columnName="Log2FoldChange">
+                <columnTitle>Log 2 Fold Change</columnTitle>
+                <formatString>0.####</formatString>
+            </column>
+            <column columnName="AdjustedPValue">
+                <columnTitle>Adjusted P-Value</columnTitle>
+                <formatString>0.0000</formatString>
+            </column>
+            <column columnName="StandardError">
+                <formatString>0.####</formatString>
+            </column>
+            <column columnName="DegreesOfFreedom"/>
+        </columns>
+    </table>
+    <table tableName="CalibrationCurve" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="RunId"/>
+            <column columnName="QuantificationSettingsId"/>
+            <column columnName="GeneralMoleculeId"/>
+            <column columnName="Slope">
+                <formatString>0.0000E+0</formatString>
+            </column>
+            <column columnName="Intercept">
+                <formatString>0.0000E+0</formatString>
+            </column>
+            <column columnName="PointCount"/>
+            <column columnName="QuadraticCoefficient">
+                <formatString>0.0000E+0</formatString>
+            </column>
+            <column columnName="RSquared">
+                <formatString>0.####</formatString>
+            </column>
+            <column columnName="ErrorMessage"/>
+        </columns>
+    </table>
+    <table tableName="GroupComparisonSettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="RunId"/>
+            <column columnName="Name"/>
+            <column columnName="NormalizationMethod"/>
+            <column columnName="ConfidenceLevel"/>
+            <column columnName="ControlAnnotation"/>
+            <column columnName="ControlValue"/>
+            <column columnName="CaseValue"/>
+            <column columnName="IdentityAnnotation"/>
+            <column columnName="PerProtein"/>
+        </columns>
+    </table>
+    <table tableName="QuantificationSettings" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id"/>
+            <column columnName="RunId"/>
+            <column columnName="Regressionweighting"/>
+            <column columnName="Regressionfit"/>
+            <column columnName="Normalizationmethod"/>
+            <column columnName="MSLevel"/>
+            <column columnName="Units"/>
+        </columns>
+    </table>
 </tables>

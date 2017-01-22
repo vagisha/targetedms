@@ -66,7 +66,10 @@ import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.calculations.ReplicateDataSet;
+import org.labkey.targetedms.calculations.RunQuantifier;
 import org.labkey.targetedms.model.QCMetricConfiguration;
+import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
 import org.labkey.targetedms.query.ModificationManager;
@@ -76,6 +79,7 @@ import org.labkey.targetedms.query.RepresentativeStateManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -390,6 +394,16 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_ANNOTATION_SETTINGS);
     }
 
+    public static TableInfo getTableInfoGroupComparisonSettings()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_GROUP_COMPARISON_SETTINGS);
+    }
+
+    public static TableInfo getTableInfoFoldChange()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_FOLD_CHANGE);
+    }
+
     public static TableInfo getTableInfoiRTPeptide()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_IRT_PEPTIDE);
@@ -423,6 +437,14 @@ public class TargetedMSManager
     public static TableInfo getTableInfoQCAnnotation()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_QC_ANNOTATION);
+    }
+    public static TableInfo getTableInfoQuantificationSettings()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_QUANTIIFICATION_SETTINGS);
+    }
+
+    public static TableInfo getTableInfoCalibrationCurve() {
+        return getSchema().getTable(TargetedMSSchema.TABLE_CALIBRATION_CURVE);
     }
 
     public static TableInfo getTableInfoQCMetricConfiguration()
@@ -1275,6 +1297,11 @@ public class TargetedMSManager
     /** Actually delete runs that have been marked as deleted from the database */
     public static void purgeDeletedRuns()
     {
+        // Delete from FoldChange
+        deleteRunDependent(getTableInfoFoldChange());
+        // Delete from CalibrationCurve
+        deleteRunDependent(getTableInfoCalibrationCurve());
+
         // Delete from TransitionChromInfoAnnotation
         deleteTransitionChromInfoDependent(getTableInfoTransitionChromInfoAnnotation());
         // Delete from TransitionAreaRatio
@@ -1388,6 +1415,10 @@ public class TargetedMSManager
         deleteRunDependent(getTableInfoRunEnzyme());
         // Delete from AnnotationSettings
         deleteRunDependent(getTableInfoAnnotationSettings());
+        // Delete from GroupComparisons
+        deleteRunDependent(getTableInfoGroupComparisonSettings());
+        // Delete from CalibrationCurve
+        deleteRunDependent(getTableInfoQuantificationSettings());
         // Delete from IsolationScheme
         deleteRunDependent(getTableInfoIsolationScheme());
 

@@ -29,6 +29,8 @@ public class SkylineReplicate extends AnnotatedEntity<ReplicateAnnotation>
     private TransitionSettings.Predictor _cePredictor;
     private TransitionSettings.Predictor _dpPredictor;
     private List<SampleFile> _sampleFileList;
+    private String sampleType;
+    private Double analyteConcentration;
 
     public String getName()
     {
@@ -68,6 +70,26 @@ public class SkylineReplicate extends AnnotatedEntity<ReplicateAnnotation>
     public void setSampleFileList(List<SampleFile> sampleFileList)
     {
         _sampleFileList = sampleFileList;
+    }
+
+    public String getSampleType()
+    {
+        return sampleType;
+    }
+
+    public void setSampleType(String sampleType)
+    {
+        this.sampleType = sampleType;
+    }
+
+    public Double getAnalyteConcentration()
+    {
+        return analyteConcentration;
+    }
+
+    public void setAnalyteConcentration(Double analyteConcentration)
+    {
+        this.analyteConcentration = analyteConcentration;
     }
 }
 

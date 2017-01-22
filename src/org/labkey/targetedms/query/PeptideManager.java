@@ -87,9 +87,10 @@ public class PeptideManager
     {
         SQLFragment sql = new SQLFragment("SELECT gm.id, gm.id, gm.peptidegroupid, gm.rtcalculatorscore, gm.predictedretentiontime, ");
         sql.append("gm.avgmeasuredretentiontime, gm.note, gm.explicitretentiontime, ");
+        sql.append("gm.normalizationmethod, gm.standardtype, gm.concentrationmultiplier, gm.internalstandardconcentration, ");
         sql.append("p.id, p.sequence, p.startindex, p.endindex, p.previousaa, p.nextaa, ");
         sql.append("p.calcneutralmass, p.nummissedcleavages, p.rank, p.decoy, p.peptidemodifiedsequence, ");
-        sql.append("p.standardtype FROM targetedms.generalmolecule gm, targetedms.peptide p WHERE ");
+        sql.append("gm.standardtype FROM targetedms.generalmolecule gm, targetedms.peptide p WHERE ");
         sql.append("p.id = gm.id AND gm.peptidegroupid=?");
         sql.add(peptideGroupId);
 

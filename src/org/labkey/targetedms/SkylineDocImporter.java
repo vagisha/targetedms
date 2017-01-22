@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import edu.washington.gs.skyline.model.quantification.RegressionFit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -43,6 +44,7 @@ import org.labkey.api.writer.ZipUtil;
 import org.labkey.targetedms.SkylinePort.Irt.IRegressionFunction;
 import org.labkey.targetedms.SkylinePort.Irt.IrtRegressionCalculator;
 import org.labkey.targetedms.SkylinePort.Irt.RetentionTimeProviderImpl;
+import org.labkey.targetedms.calculations.RunQuantifier;
 import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
@@ -53,6 +55,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -274,6 +277,8 @@ public class SkylineDocImporter
                     replicate.setName(skyReplicate.getName());
                     replicate.setSampleFileList(skyReplicate.getSampleFileList());
                     replicate.setAnnotations(skyReplicate.getAnnotations());
+                    replicate.setSampleType(skyReplicate.getSampleType());
+                    replicate.setAnalyteConcentration(skyReplicate.getAnalyteConcentration());
 
                     replicate.setRunId(_runId);
                     if(cePredictor != null && skyReplicate.getCePredictor() != null && cePredictor.equals(skyReplicate.getCePredictor()))
@@ -527,6 +532,11 @@ public class SkylineDocImporter
                         _log.info("Imported " + peptideGroupCount + " peptide groups.");
                     }
                 }
+            QuantificationSettings quantificationSettings = pepSettings.getQuantificationSettings();
+            if (quantificationSettings != null) {
+                quantificationSettings.setRunId(_runId);
+                Table.insert(_user, TargetedMSManager.getTableInfoQuantificationSettings(), quantificationSettings);
+            }
 
                 if (folderType == TargetedMSModule.FolderType.QC)
                 {
@@ -550,11 +560,18 @@ public class SkylineDocImporter
             run.setDocumentGUID(parser.getDocumentGUID());
                 Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
+            List<GroupComparisonSettings> groupComparisons = new ArrayList<>(dataSettings.getGroupComparisons());
+            for (GroupComparisonSettings groupComparison : groupComparisons) {
+                groupComparison.setRunId(_runId);
+                Table.insert(_user, TargetedMSManager.getTableInfoGroupComparisonSettings(), groupComparison);
+            }
+
                 if (run.isRepresentative())
                 {
                     resolveRepresentativeData(run);
                 }
 
+            quantifyRun(run, quantificationSettings, groupComparisons);
             transaction.commit();
         }
         finally
@@ -991,7 +1008,7 @@ public class SkylineDocImporter
 
             for (MoleculePrecursor moleculePrecursor : molecule.getMoleculePrecursorsList())
             {
-                insertMoleculePrecursor(molecule, moleculePrecursor, skylineIdSampleFileIdMap, sampleFileIdGeneralMolChromInfoIdMap);
+                insertMoleculePrecursor(molecule, moleculePrecursor, skylineIdSampleFileIdMap, isotopeLabelIdMap, sampleFileIdGeneralMolChromInfoIdMap);
             }
         }
 
@@ -1100,6 +1117,7 @@ public class SkylineDocImporter
 
     private void insertMoleculePrecursor(Molecule molecule, MoleculePrecursor moleculePrecursor,
                                          Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
+                                         Map<String, Integer> isotopeLabelIdMap,
                                          Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap)
     {
         GeneralPrecursor gp = new GeneralPrecursor();
@@ -1113,9 +1131,12 @@ public class SkylineDocImporter
         gp.setExplicitCollisionEnergy(moleculePrecursor.getExplicitCollisionEnergy());
         gp.setExplicitDriftTimeMsec(moleculePrecursor.getExplicitDriftTimeMsec());
         gp.setExplicitDriftTimeHighEnergyOffsetMsec(moleculePrecursor.getExplicitDriftTimeHighEnergyOffsetMsec());
+        gp.setIsotopeLabelId(isotopeLabelIdMap.get(moleculePrecursor.getIsotopeLabel()));
         gp = Table.insert(_user, TargetedMSManager.getTableInfoGeneralPrecursor(), gp);
 
+        moleculePrecursor.setIsotopeLabelId(gp.getIsotopeLabelId());
         moleculePrecursor.setId(gp.getId());
+
         moleculePrecursor = Table.insert(_user, TargetedMSManager.getTableInfoMoleculePrecursor(), moleculePrecursor);
 
         //small molecule precursor annotations
@@ -1215,10 +1236,12 @@ public class SkylineDocImporter
         gp.setExplicitCollisionEnergy(precursor.getExplicitCollisionEnergy());
         gp.setExplicitDriftTimeMsec(precursor.getExplicitDriftTimeMsec());
         gp.setExplicitDriftTimeHighEnergyOffsetMsec(precursor.getExplicitDriftTimeHighEnergyOffsetMsec());
+        gp.setIsotopeLabel(precursor.getIsotopeLabel());
+        gp.setIsotopeLabelId(isotopeLabelIdMap.get(precursor.getIsotopeLabel()));
         gp = Table.insert(_user, TargetedMSManager.getTableInfoGeneralPrecursor(), gp);
 
+        precursor.setIsotopeLabelId(gp.getIsotopeLabelId());
         precursor.setId(gp.getId());
-        precursor.setIsotopeLabelId(isotopeLabelIdMap.get(precursor.getIsotopeLabel()));
         precursor = Table.insert(_user, TargetedMSManager.getTableInfoPrecursor(), precursor);
 
         insertPrecursorAnnotation(precursor.getAnnotations(), gp, precursor.getId());
@@ -1804,5 +1827,39 @@ public class SkylineDocImporter
     {
         _systemLog.error(message, e);
         _log.error(message, e);
+    }
+
+    void quantifyRun(TargetedMSRun run, QuantificationSettings quantificationSettings, Collection<GroupComparisonSettings> groupComparisons)
+    {
+        RegressionFit regressionFit = RegressionFit.NONE;
+        if (quantificationSettings != null)
+        {
+            regressionFit = RegressionFit.parse(quantificationSettings.getRegressionFit());
+        }
+        if (groupComparisons.isEmpty() && regressionFit == RegressionFit.NONE)
+        {
+            return;
+        }
+
+        RunQuantifier quantifier = new RunQuantifier(run, _user, _container);
+        for (GroupComparisonSettings groupComparison : groupComparisons)
+        {
+            for (FoldChange foldChange : quantifier.calculateFoldChanges(groupComparison))
+            {
+                Table.insert(_user, TargetedMSManager.getTableInfoFoldChange(), foldChange);
+            }
+        }
+        if (regressionFit != RegressionFit.NONE)
+        {
+            List<GeneralMoleculeChromInfo> moleculeChromInfos = new ArrayList<>();
+            for (CalibrationCurveEntity calibrationCurve : quantifier.calculateCalibrationCurves(quantificationSettings, moleculeChromInfos))
+            {
+                Table.insert(_user, TargetedMSManager.getTableInfoCalibrationCurve(), calibrationCurve);
+            }
+            for (GeneralMoleculeChromInfo chromInfo : moleculeChromInfos)
+            {
+                Table.update(_user, TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), chromInfo, chromInfo.getId());
+            }
+        }
     }
 }

@@ -45,6 +45,7 @@ public class DataSettings
     private Map<String, AnnotationDefinition> _annotationDefinitions = new HashMap<>();
     private Map<AnnotationTarget, List<AnnotationDefinition>> _targetAnnotationsMap =
                         new HashMap<>();
+    private List<GroupComparisonSettings> _groupComparisons = new ArrayList<>();
 
     public void addAnnotations(String name, String targetsString, String type)
     {
@@ -88,6 +89,16 @@ public class DataSettings
             }
             targetAnnotations.add(annot);
         }
+    }
+
+    public void addGroupComparison(GroupComparisonSettings groupComparison)
+    {
+        _groupComparisons.add(groupComparison);
+    }
+
+    public List<GroupComparisonSettings> getGroupComparisons()
+    {
+        return _groupComparisons;
     }
 
     public boolean isBooleanAnnotation(String name) {

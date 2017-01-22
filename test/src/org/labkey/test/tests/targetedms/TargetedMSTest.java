@@ -32,6 +32,7 @@ import org.labkey.test.util.LoggedParam;
 import org.labkey.test.util.UIContainerHelper;
 import org.openqa.selenium.WebElement;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -128,9 +129,10 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         }
         clickAndWait(importButton);
         _fileBrowserHelper.waitForFileGridReady();
-        if (!isElementPresent(FileBrowserHelper.Locators.gridRow(file)))
+        String fileName = Paths.get(file).getFileName().toString();
+        if (!isElementPresent(FileBrowserHelper.Locators.gridRow(fileName)))
             _fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
-        _fileBrowserHelper.importFile(file, "Import Skyline Results");
+        _fileBrowserHelper.importFile(fileName, "Import Skyline Results");
         waitForText("Skyline document import");
         if (failOnError)
             waitForPipelineJobsToComplete(jobCount, file, false);

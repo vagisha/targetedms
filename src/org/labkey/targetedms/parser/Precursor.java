@@ -25,20 +25,8 @@ public class Precursor extends GeneralPrecursor<Transition>
 {
     private String _modifiedSequence;
     private double _neutralMass;
-    private String _isotopeLabel;
-    private int _isotopeLabelId;
     private Double _decoyMassShift;
     private LibraryInfo _libraryInfo;
-
-    public int getIsotopeLabelId()
-    {
-        return _isotopeLabelId;
-    }
-
-    public void setIsotopeLabelId(int isotopeLabelId)
-    {
-        this._isotopeLabelId = isotopeLabelId;
-    }
 
     public String getModifiedSequence()
     {
@@ -58,16 +46,6 @@ public class Precursor extends GeneralPrecursor<Transition>
     public void setNeutralMass(double neutralMass)
     {
         this._neutralMass = neutralMass;
-    }
-
-    public String getIsotopeLabel()
-    {
-        return _isotopeLabel;
-    }
-
-    public void setIsotopeLabel(String isotopeLabel)
-    {
-        this._isotopeLabel = isotopeLabel;
     }
 
     public Double getDecoyMassShift()

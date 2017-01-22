@@ -15,9 +15,8 @@
  */
 package org.labkey.targetedms.view;
 
-import org.apache.commons.lang3.StringUtils;
 import org.labkey.api.settings.AppProps;
-import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.parser.StandardType;
 import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
 
@@ -35,48 +34,51 @@ public class IconFactory
         boolean hasLibInfo = PeptideManager.hasSpectrumLibraryInformation(peptideId, runId);
 
         String iconFile = "/TargetedMS/images/Peptide.bmp";
+        StandardType standardTypeEnum = StandardType.parse(standardType);
 
-         if(hasLibInfo)
+        if(hasLibInfo)
         {
-            if(StringUtils.isBlank(standardType))
+            if (standardTypeEnum == null)
             {
-                iconFile =  isDecoy ? "/TargetedMS/images/PeptideDecoyLib.bmp" : "/TargetedMS/images/PeptideLib.bmp";
+                iconFile = isDecoy ? "/TargetedMS/images/PeptideDecoyLib.bmp" : "/TargetedMS/images/PeptideLib.bmp";
             }
             else
             {
-                if(standardType.equals(Peptide.StandardType.Normalization.name()))
+                switch (standardTypeEnum)
                 {
-                    iconFile = "/TargetedMS/images/PeptideStandardLib.bmp";
-                }
-                else if(standardType.equals(Peptide.StandardType.QC.name()))
-                {
-                    iconFile = "/TargetedMS/images/PeptideQcLib.bmp";
-                }
-                else if(standardType.equals(Peptide.StandardType.iRT.name()))
-                {
-                    iconFile = "/TargetedMS/images/PeptideIrtLib.bmp";
+                    case Normalization:
+                    case SurrogateStandard:
+                        iconFile = "/TargetedMS/images/PeptideStandardLib.bmp";
+                        break;
+                    case QC:
+                        iconFile = "/TargetedMS/images/PeptideQcLib.bmp";
+                        break;
+                    case iRT:
+                        iconFile = "/TargetedMS/images/PeptideIrtLib.bmp";
+                        break;
                 }
             }
         }
         else
         {
-            if(StringUtils.isBlank(standardType))
+            if(standardTypeEnum == null)
             {
                 iconFile =  isDecoy ? "/TargetedMS/images/PeptideDecoy.bmp" : "/TargetedMS/images/Peptide.bmp";
             }
             else
             {
-                if(standardType.equals(Peptide.StandardType.Normalization.name()))
+                switch (standardTypeEnum)
                 {
-                    iconFile = "/TargetedMS/images/PeptideStandard.bmp";
-                }
-                else if(standardType.equals(Peptide.StandardType.QC.name()))
-                {
-                    iconFile = "/TargetedMS/images/PeptideQc.bmp";
-                }
-                else if(standardType.equals(Peptide.StandardType.iRT.name()))
-                {
-                    iconFile = "/TargetedMS/images/PeptideIrt.bmp";
+                    case Normalization:
+                    case SurrogateStandard:
+                        iconFile = "/TargetedMS/images/PeptideStandard.bmp";
+                        break;
+                    case QC:
+                        iconFile = "/TargetedMS/images/PeptideQc.bmp";
+                        break;
+                    case iRT:
+                        iconFile = "/TargetedMS/images/PeptideIrt.bmp";
+                        break;
                 }
             }
         }

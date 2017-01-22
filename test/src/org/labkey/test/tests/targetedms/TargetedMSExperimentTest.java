@@ -362,7 +362,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         String querySql = "SELECT \n" +
                 "Id, PeptideGroupId, Sequence, StartIndex, EndIndex, PreviousAa, NextAa, CalcNeutralMass, \n" +
                 "NumMissedCleavages, Rank, RtCalculatorScore, PredictedRetentionTime, \n" +
-                "AvgMeasuredRetentionTime, Decoy, Note, PeptideModifiedSequence, StandardType,\n" +
+                "AvgMeasuredRetentionTime, Decoy, Note, PeptideModifiedSequence,\n" +
                 "ExplicitRetentionTime, Annotations NoteAnnotations, \n" +
                 "ModifiedPeptideDisplayColumn, RepresentivePrecursorCount,\n" +
                 "PeptideGroupId.RunId.Folder.Path,\n" +

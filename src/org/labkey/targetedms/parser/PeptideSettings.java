@@ -29,6 +29,7 @@ public class PeptideSettings
     private SpectrumLibrarySettings _librarySettings;
     private EnzymeDigestionSettings _enzymeDigestionSettings;
     private PeptidePredictionSettings _peptidePredictionSettings;
+    private QuantificationSettings _quantificationSettings;
 
     public static final String HEAVY_LABEL = "heavy";
 
@@ -80,6 +81,16 @@ public class PeptideSettings
     public void setPeptidePredictionSettings(PeptidePredictionSettings peptidePredictionSettings)
     {
         _peptidePredictionSettings = peptidePredictionSettings;
+    }
+
+    public QuantificationSettings getQuantificationSettings()
+    {
+        return _quantificationSettings;
+    }
+
+    public void setQuantificationSettings(QuantificationSettings quantificationSettings)
+    {
+        _quantificationSettings = quantificationSettings;
     }
 
     // ------------------------------------------------------------------------

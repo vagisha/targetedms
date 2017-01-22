@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.query;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -23,6 +24,8 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.MoleculeTransition;
+
+import java.util.Collection;
 
 public class MoleculeTransitionManager
 {
@@ -34,4 +37,14 @@ public class MoleculeTransitionManager
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("TransitionId"), transitionId);
         return new TableSelector(table, MoleculeTransition.getColumns(), filter, null).getObject(MoleculeTransition.class);
     }
+
+    @NotNull
+    public static Collection<MoleculeTransition> getTransitionsForPrecursor(int precursorId, User user, Container container)
+    {
+        return new TableSelector(new MoleculeTransitionsTableInfo(new TargetedMSSchema(user, container)),
+                MoleculeTransition.getColumns(),
+                new SimpleFilter(FieldKey.fromParts("GeneralPrecursorId"), precursorId), null)
+            .getCollection(MoleculeTransition.class);
+    }
+
 }

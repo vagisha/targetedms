@@ -263,7 +263,7 @@ public class PrecursorManager
         sf.append(TargetedMSManager.getTableInfoPeptide(), "pep");
         sf.append(", ");
         sf.append(TargetedMSManager.getTableInfoIsotopeLabel(), "label ");
-        sf.append(" WHERE gp.GeneralMoleculeId = gm.Id AND pep.Id = gm.Id AND pre.Id = gp.Id AND pre.IsotopeLabelId = label.Id AND pre.Id = ? ");
+        sf.append(" WHERE gp.GeneralMoleculeId = gm.Id AND pep.Id = gm.Id AND pre.Id = gp.Id AND gp.IsotopeLabelId = label.Id AND pre.Id = ? ");
         sf.add(precursorId);
 
         try (TableResultSet rs = new SqlSelector(TargetedMSManager.getSchema(), sf).getResultSet())

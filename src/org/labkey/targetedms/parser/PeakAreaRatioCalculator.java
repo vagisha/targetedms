@@ -410,16 +410,36 @@ public class PeakAreaRatioCalculator
         return numerator / denominator;
     }
 
-    private static String getTransitionKey(Transition transition, Precursor precursor)
+    public static String getTransitionKey(GeneralTransition generalTransition, GeneralPrecursor generalPrecursor)
     {
+        if (generalTransition instanceof Transition) {
+            return getPeptideTransitionKey((Transition) generalTransition, (Precursor) generalPrecursor);
+        }
+        return getMoleculeTransitionKey((MoleculeTransition) generalTransition, (MoleculePrecursor) generalPrecursor);
+    }
+
+    private static String getMoleculeTransitionKey(MoleculeTransition transition, MoleculePrecursor precursor) {
+        // TODO(nicksh): If getCustomIonName is null, then fall back to unlabeled formula.
+        String fragment = transition.getFragmentType()
+                + (transition.isPrecursorIon() ? transition.getMassIndex() : transition.getCustomIonName());
+
+        int fragmentCharge = transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge();
+        StringBuilder key = new StringBuilder();
+        key.append(fragment)
+                .append("_")
+                .append(fragmentCharge);
+        return key.toString();
+    }
+
+    private static String getPeptideTransitionKey(Transition transition, Precursor precursor) {
         String fragment = transition.getFragmentType()
                 + (transition.isPrecursorIon() ? transition.getMassIndex() : transition.getFragmentOrdinal());
 
         int fragmentCharge = transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge();
         StringBuilder key = new StringBuilder();
         key.append(fragment)
-       .append("_")
-       .append(fragmentCharge);
+                .append("_")
+                .append(fragmentCharge);
         List<TransitionLoss> transitionLosses = transition.getNeutralLosses();
         if(transitionLosses != null && transitionLosses.size() > 0)
         {
@@ -428,6 +448,6 @@ public class PeakAreaRatioCalculator
                 key.append("_").append(loss.toString());
             }
         }
-       return key.toString();
+        return key.toString();
     }
 }

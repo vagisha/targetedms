@@ -280,7 +280,7 @@ public class RepresentativeStateManager
         }
         if(includeStandard)
         {
-            sql.append(" AND pep.StandardType IS NULL ");
+            sql.append(" AND gm.StandardType IS NULL ");
         }
         sql.append(")");
 
@@ -297,7 +297,7 @@ public class RepresentativeStateManager
         sql.append(" ON pep.Id = gp.GeneralMoleculeId");
         sql.append(" INNER JOIN ");
         sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
-        sql.append(" ON (gm.Id = gp.GeneralMoleculeId AND pep.Id = gm.Id AND pep.StandardType IS NOT NULL) ");
+        sql.append(" ON (gm.Id = gp.GeneralMoleculeId AND pep.Id = gm.Id AND gm.StandardType IS NOT NULL) ");
         sql.append(" INNER JOIN ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" ON (pg.Id = gm.PeptideGroupId AND pg.RunId = ?) ");
@@ -406,7 +406,7 @@ public class RepresentativeStateManager
         makeActiveSQL.append(TargetedMSManager.getTableInfoPeptide() + ".Decoy = " + sqlFalse);
         makeActiveSQL.append(") ");
         // Ignore standard (e.g. iRT) peptides
-        makeActiveSQL.append(" AND " + TargetedMSManager.getTableInfoPeptide() + ".StandardType IS NULL");
+        makeActiveSQL.append(" AND " + TargetedMSManager.getTableInfoGeneralMolecule() + ".StandardType IS NULL");
         makeActiveSQL.append(" AND ");
         makeActiveSQL.append(TargetedMSManager.getSqlDialect().concatenate("ModifiedSequence", "CAST(Charge AS varchar)"));
         makeActiveSQL.append(" NOT IN (SELECT ");
@@ -458,7 +458,7 @@ public class RepresentativeStateManager
         makeConflictedSQL.append(TargetedMSManager.getTableInfoPeptide() + ".Decoy = " + sqlFalse);
         makeConflictedSQL.append(") ");
         // Ignore standard (e.g. iRT) peptides
-        makeConflictedSQL.append(" AND " + TargetedMSManager.getTableInfoPeptide() + ".StandardType IS NULL");
+        makeConflictedSQL.append(" AND " + TargetedMSManager.getTableInfoGeneralMolecule() + ".StandardType IS NULL");
         makeConflictedSQL.append(" AND "+TargetedMSManager.getTableInfoGeneralPrecursor()+".GeneralMoleculeId = "+TargetedMSManager.getTableInfoPeptide()+".Id");
         makeConflictedSQL.append(" AND "+TargetedMSManager.getTableInfoPeptide()+".Id = "+TargetedMSManager.getTableInfoGeneralMolecule()+".Id");
         makeConflictedSQL.append(" AND "+TargetedMSManager.getTableInfoGeneralMolecule()+".PeptideGroupId = "+TargetedMSManager.getTableInfoPeptideGroup()+".Id");

@@ -44,10 +44,6 @@ public class Peptide extends GeneralMolecule
     private List<StructuralModification> _structuralMods;
     private List<IsotopeModification> _isotopeMods;
 
-    private String _standardType;
-
-    public static enum StandardType {Normalization, QC, iRT}
-
     public String getSequence()
     {
         return _sequence;
@@ -183,19 +179,9 @@ public class Peptide extends GeneralMolecule
         _isotopeMods = isotopeMods;
     }
 
-    public String getStandardType()
-    {
-        return _standardType;
-    }
-
-    public void setStandardType(String standardType)
-    {
-        _standardType = standardType;
-    }
-
     public boolean isStandardTypePeptide()
     {
-        return _standardType != null;
+        return getStandardType() != null;
     }
 
     @Override
