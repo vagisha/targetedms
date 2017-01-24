@@ -6,6 +6,7 @@ api-src/org/labkey/api/targetedms/SkylineAnnotation.java -text
 api-src/org/labkey/api/targetedms/TargetedMSService.java -text
 /build.gradle -text
 lib/Skyline.jar -text
+lib/commons-math3-3.6.1.jar -text
 /module.properties -text
 resources/credits/jars.txt -text
 resources/queries/targetedms/QCMetric_fwb.sql -text
