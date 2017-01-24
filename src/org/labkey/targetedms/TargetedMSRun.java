@@ -66,6 +66,11 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
 
     protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
 
+    protected int _peptideGroupCount;
+    protected int _peptideCount;
+    protected int _smallMoleculeCount;
+    protected int _precursorCount;
+    protected int _transitionCount;
     protected Integer _dataId; // FK to exp.data's RowId column
     protected Integer _iRTscaleId;
 
@@ -232,6 +237,56 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     public void setDeleted(boolean deleted)
     {
         _deleted = deleted;
+    }
+
+    public int getPeptideGroupCount()
+    {
+        return _peptideGroupCount;
+    }
+
+    public void setPeptideGroupCount(int peptideGroupCount)
+    {
+        _peptideGroupCount = peptideGroupCount;
+    }
+
+    public int getPeptideCount()
+    {
+        return _peptideCount;
+    }
+
+    public void setPeptideCount(int peptideCount)
+    {
+        _peptideCount = peptideCount;
+    }
+
+    public int getSmallMoleculeCount()
+    {
+        return _smallMoleculeCount;
+    }
+
+    public void setSmallMoleculeCount(int smallMoleculeCount)
+    {
+        _smallMoleculeCount = smallMoleculeCount;
+    }
+
+    public int getPrecursorCount()
+    {
+        return _precursorCount;
+    }
+
+    public void setPrecursorCount(int precursorCount)
+    {
+        _precursorCount = precursorCount;
+    }
+
+    public int getTransitionCount()
+    {
+        return _transitionCount;
+    }
+
+    public void setTransitionCount(int transitionCount)
+    {
+        _transitionCount = transitionCount;
     }
 
     public RepresentativeDataState getRepresentativeDataState()

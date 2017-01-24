@@ -562,54 +562,11 @@ public class TargetedMSSchema extends UserSchema
                     }
                 });
 
-                // add Peptide Group count column
-                SQLFragment sql = new SQLFragment("(").append(TargetedMSManager.getRunPeptideGroupCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
-                ColumnInfo countCol = new ExprColumn(result, "Proteins", sql, JdbcType.INTEGER);
-                countCol.setFormat("#,###");
-                result.addColumn(countCol);
-
-                // add Peptide count column
-                countCol = new ExprColumn(result, "Peptides", sql, JdbcType.INTEGER)
-                {
-                    @Override
-                    public SQLFragment getValueSql(String tableAlias)
-                    {
-                        return new SQLFragment("(").append(TargetedMSManager.getRunPeptideCountSQL(tableAlias + ".Id")).append(")");
-                    }
-                };
-                countCol.setFormat("#,###");
-                result.addColumn(countCol);
-
-                // add Small Molecule count column
-                sql = new SQLFragment("(").append(TargetedMSManager.getRunSmallMoleculeCountSQL(ExprColumn.STR_TABLE_ALIAS + ".Id")).append(")");
-                countCol = new ExprColumn(result, "SmallMolecules", sql, JdbcType.INTEGER);
-                countCol.setFormat("#,###");
-                result.addColumn(countCol);
-
-                // add Precursor count column
-                countCol = new ExprColumn(result, "Precursors", null, JdbcType.INTEGER)
-                {
-                    @Override
-                    public SQLFragment getValueSql(String tableAlias)
-                    {
-                        return new SQLFragment("(").append(TargetedMSManager.getRunPrecursorCountSQL(tableAlias + ".Id")).append(")");
-                    }
-                };
-                countCol.setFormat("#,###");
-                result.addColumn(countCol);
-
-                // add Transition count column
-                countCol = new ExprColumn(result, "Transitions", null, JdbcType.INTEGER)
-                {
-                    @Override
-                    public SQLFragment getValueSql(String tableAlias)
-                    {
-                        return new SQLFragment("(").append(TargetedMSManager.getRunTransitionCountSQL(tableAlias + ".Id")).append(")");
-                    }
-                };
-
-                countCol.setFormat("#,###");
-                result.addColumn(countCol);
+                result.addWrapColumn("Proteins", result.getRealTable().getColumn("PeptideGroupCount"));
+                result.addWrapColumn("Peptides", result.getRealTable().getColumn("PeptideCount"));
+                result.addWrapColumn("SmallMolecules", result.getRealTable().getColumn("SmallMoleculeCount"));
+                result.addWrapColumn("Precursors", result.getRealTable().getColumn("PrecursorCount"));
+                result.addWrapColumn("Transitions", result.getRealTable().getColumn("TransitionCount"));
 
                 return result;
             }

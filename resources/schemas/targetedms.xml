@@ -157,6 +157,21 @@
             <column columnName="SoftwareVersion"/>
             <column columnName="FormatVersion"/>
             <column columnName="DocumentGUID"/>
+            <column columnName="PeptideGroupCount">
+                <formatString>#,###</formatString>
+            </column>
+            <column columnName="PeptideCount">
+                <formatString>#,###</formatString>
+            </column>
+            <column columnName="SmallMoleculeCount">
+                <formatString>#,###</formatString>
+            </column>
+            <column columnName="PrecursorCount">
+                <formatString>#,###</formatString>
+            </column>
+            <column columnName="TransitionCount">
+                <formatString>#,###</formatString>
+            </column>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="PeptideGroup">

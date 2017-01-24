@@ -167,7 +167,6 @@ public class SkylineDocImporter
         }
         finally
         {
-            TargetedMSManager.uncacheCounts();
             close();
         }
     }
@@ -556,9 +555,14 @@ public class SkylineDocImporter
                     }
                 }
 
+            run.setPeptideGroupCount(parser.getPeptideGroupCount());
+            run.setPeptideCount(parser.getPeptideCount());
+            run.setSmallMoleculeCount(parser.getSmallMoleculeCount());
+            run.setPrecursorCount(parser.getPrecursorCount());
+            run.setTransitionCount(parser.getTransitionCount());
 
             run.setDocumentGUID(parser.getDocumentGUID());
-                Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
+            Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
             List<GroupComparisonSettings> groupComparisons = new ArrayList<>(dataSettings.getGroupComparisons());
             for (GroupComparisonSettings groupComparison : groupComparisons) {

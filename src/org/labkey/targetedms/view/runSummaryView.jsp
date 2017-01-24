@@ -39,11 +39,11 @@
     Container c = getContainer();
     DecimalFormat decimalFormat = new DecimalFormat("#,###");
 
-    Integer peptideGroupCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunPeptideGroupCountSQL(null));
-    Integer peptideCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunPeptideCountSQL(null));
-    Integer smallMoleculeCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
-    Integer precursorCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunPrecursorCountSQL(null));
-    Integer transitionCount = TargetedMSManager.getRunSummaryCount(run, TargetedMSManager.getRunTransitionCountSQL(null));
+    int peptideGroupCount = run.getPeptideGroupCount();
+    int peptideCount = run.getPeptideCount();
+    int smallMoleculeCount = run.getSmallMoleculeCount();
+    int precursorCount = run.getPrecursorCount();
+    int transitionCount = run.getTransitionCount();
 %>
 
 <table style="min-width: 600px;">
@@ -74,7 +74,7 @@
         <td class="labkey-form-label">Protein Count</td>
         <td><%= h(decimalFormat.format(peptideGroupCount)) %></td>
 <%
-    if (peptideCount != null && peptideCount > 0)
+    if (peptideCount > 0)
     {
 %>
         <td class="labkey-form-label">Peptide Count</td>
@@ -82,7 +82,7 @@
 <%
     }
 
-    if (smallMoleculeCount != null && smallMoleculeCount > 0)
+    if (smallMoleculeCount > 0)
     {
 %>
         <td class="labkey-form-label">Small Molecule Count</td>

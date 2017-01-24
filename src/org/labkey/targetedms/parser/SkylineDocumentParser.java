@@ -130,6 +130,12 @@ public class SkylineDocumentParser implements AutoCloseable
 
     private final static double OPTIMIZE_SHIFT_SIZE = 0.01;
 
+    private int _peptideGroupCount;
+    private int _peptideCount;
+    private int _smallMoleculeCount;
+    private int _precursorCount;
+    private int _transitionCount;
+
     private SkylineBinaryParser _binaryParser;
 
     private TransitionSettings _transitionSettings;
@@ -1043,6 +1049,7 @@ public class SkylineDocumentParser implements AutoCloseable
             addMissingBooleanAnnotation(annotations, missingAnotName, new PeptideGroupAnnotation());
         }
 
+        _peptideGroupCount++;
         return pepGroup;
     }
 
@@ -1151,6 +1158,7 @@ public class SkylineDocumentParser implements AutoCloseable
             else if (XmlUtil.isStartElement(_reader, evtType, PEPTIDE_RESULT))
                 generalMoleculeChromInfoList.add(readGeneralMoleculeChromInfo(_reader));
         }
+        _smallMoleculeCount++;
     }
 
     private void readPeptide(XMLStreamReader reader, Peptide peptide) throws XMLStreamException, IOException
@@ -1256,6 +1264,8 @@ public class SkylineDocumentParser implements AutoCloseable
 
         for (String missingAnotName : missingBooleanAnnotations)
             addMissingBooleanAnnotation(annotations, missingAnotName, new GeneralMoleculeAnnotation());
+
+        _peptideCount++;
     }
 
     private String readNote(XMLStreamReader reader) throws XMLStreamException
@@ -1531,6 +1541,7 @@ public class SkylineDocumentParser implements AutoCloseable
         List<Chromatogram> chromatograms = tryLoadChromatogram(transitionList, peptide, precursor, _matchTolerance);
         populateChromInfoChromatograms(precursor, chromatograms);
 
+        _precursorCount++;
         return precursor;
     }
 
@@ -1934,6 +1945,8 @@ public class SkylineDocumentParser implements AutoCloseable
         String explicitDriftTimeHighEnergyOffsetMsec = reader.getAttributeValue(null, "explicit_drift_time_high_energy_offset_msec");
         if(explicitDriftTimeHighEnergyOffsetMsec != null)
             transition.setExplicitCollisionEnergy(Double.valueOf(explicitDriftTimeHighEnergyOffsetMsec));
+
+        _transitionCount++;
     }
 
     private List<TransitionLoss> readLosses(XMLStreamReader reader) throws XMLStreamException
@@ -2215,5 +2228,30 @@ public class SkylineDocumentParser implements AutoCloseable
         }
 
         return Collections.emptyList();
+    }
+
+    public int getPeptideGroupCount()
+    {
+        return _peptideGroupCount;
+    }
+
+    public int getPeptideCount()
+    {
+        return _peptideCount;
+    }
+
+    public int getSmallMoleculeCount()
+    {
+        return _smallMoleculeCount;
+    }
+
+    public int getPrecursorCount()
+    {
+        return _precursorCount;
+    }
+
+    public int getTransitionCount()
+    {
+        return _transitionCount;
     }
 }

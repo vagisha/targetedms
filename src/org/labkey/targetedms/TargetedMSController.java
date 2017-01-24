@@ -2747,8 +2747,7 @@ public class TargetedMSController extends SpringActionController
             VIEWTYPE view;
 
             // for proteomics version of the Precursor List query view
-            Integer peptideCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunPeptideCountSQL(null));
-            if(peptideCount != null && peptideCount > 0)
+            if(_run.getPeptideCount() > 0)
             {
                 view = createInitializedQueryView(form, errors, false, getDataRegionNamePeptide());
                 _dataRegion = view.getDataRegionName();
@@ -2757,8 +2756,7 @@ public class TargetedMSController extends SpringActionController
             }
 
             // for small molecule version of the Precursor List query view
-            Integer moleculeCount = TargetedMSManager.getRunSummaryCount(_run, TargetedMSManager.getRunSmallMoleculeCountSQL(null));
-            if(moleculeCount != null &&  moleculeCount > 0)
+            if(_run.getSmallMoleculeCount() > 0)
             {
                 view = createInitializedQueryView(form, errors, false, getDataRegionNameSmallMolecule());
                 _dataRegion = view.getDataRegionName();
