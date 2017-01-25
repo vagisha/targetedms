@@ -16,7 +16,7 @@
 
 package org.labkey.targetedms;
 
-import edu.washington.gs.skyline.model.quantification.RegressionFit;
+import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;

@@ -14,11 +14,10 @@
  */
 package org.labkey.targetedms.view;
 
-import edu.washington.gs.skyline.model.quantification.CalibrationCurve;
-import edu.washington.gs.skyline.model.quantification.SampleType;
+import org.labkey.targetedms.calculations.quantification.CalibrationCurve;
+import org.labkey.targetedms.calculations.quantification.SampleType;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYDotRenderer;
 import org.jfree.data.xy.XYDataset;
@@ -26,7 +25,6 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.reports.chart.ChartRenderer;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
@@ -40,7 +38,6 @@ import org.labkey.targetedms.parser.QuantificationSettings;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.query.MoleculeManager;
 import org.labkey.targetedms.query.PeptideManager;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -14,16 +14,15 @@
  */
 package org.labkey.targetedms.calculations;
 
-import edu.washington.gs.skyline.model.quantification.CalibrationCurve;
-import edu.washington.gs.skyline.model.quantification.CalibrationCurveDataSet;
-import edu.washington.gs.skyline.model.quantification.GroupComparisonDataSet;
-import edu.washington.gs.skyline.model.quantification.LinearFitResult;
-import edu.washington.gs.skyline.model.quantification.NormalizationMethod;
-import edu.washington.gs.skyline.model.quantification.PValues;
-import edu.washington.gs.skyline.model.quantification.RegressionFit;
-import edu.washington.gs.skyline.model.quantification.RegressionWeighting;
-import edu.washington.gs.skyline.model.quantification.SampleType;
-import org.jetbrains.annotations.NotNull;
+import org.labkey.targetedms.calculations.quantification.CalibrationCurve;
+import org.labkey.targetedms.calculations.quantification.CalibrationCurveDataSet;
+import org.labkey.targetedms.calculations.quantification.GroupComparisonDataSet;
+import org.labkey.targetedms.calculations.quantification.LinearFitResult;
+import org.labkey.targetedms.calculations.quantification.NormalizationMethod;
+import org.labkey.targetedms.calculations.quantification.PValues;
+import org.labkey.targetedms.calculations.quantification.RegressionFit;
+import org.labkey.targetedms.calculations.quantification.RegressionWeighting;
+import org.labkey.targetedms.calculations.quantification.SampleType;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;

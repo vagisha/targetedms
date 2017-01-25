@@ -14,10 +14,8 @@
  */
 package org.labkey.targetedms.calculations;
 
-import com.sun.javaws.exceptions.InvalidArgumentException;
-import edu.washington.gs.skyline.model.quantification.NormalizationMethod;
-import edu.washington.gs.skyline.model.quantification.ReplicateData;
-import edu.washington.gs.skyline.model.quantification.TransitionAreas;
+import org.labkey.targetedms.calculations.quantification.ReplicateData;
+import org.labkey.targetedms.calculations.quantification.TransitionAreas;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
@@ -36,7 +34,6 @@ import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.Replicate;
-import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.MoleculePrecursorManager;
 import org.labkey.targetedms.query.MoleculeTransitionManager;

@@ -14,35 +14,22 @@
  */
 package org.labkey.targetedms.view;
 
-import edu.washington.gs.skyline.model.quantification.RegressionFit;
-import org.apache.xmlbeans.impl.soap.Detail;
-import org.labkey.api.data.DetailsColumn;
-import org.labkey.api.data.DisplayColumn;
+import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.FilteredTable;
-import org.labkey.api.query.QueryNestingOption;
-import org.labkey.api.util.StringExpressionFactory;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.parser.GroupComparisonSettings;
 import org.labkey.targetedms.parser.QuantificationSettings;
 import org.labkey.targetedms.query.CalibrationCurveTable;
-import org.labkey.targetedms.query.TargetedMSTable;
 
 import java.sql.SQLException;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 /**
  * Shows a list of calibration curves.  Users can click on the details to see the {@link CalibrationCurveChart}.

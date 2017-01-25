@@ -14,7 +14,7 @@
  */
 package org.labkey.targetedms.calculations;
 
-import edu.washington.gs.skyline.model.quantification.NormalizationMethod;
+import org.labkey.targetedms.calculations.quantification.NormalizationMethod;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
