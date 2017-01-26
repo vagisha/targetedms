@@ -1440,6 +1440,8 @@ public class SkylineDocumentParser implements AutoCloseable
         List<Chromatogram> chromatograms = tryLoadChromatogram(moleculeTransitionList, molecule, moleculePrecursor, _matchTolerance);
         populateChromInfoChromatograms(moleculePrecursor, chromatograms);
 
+        _precursorCount++;
+
         return moleculePrecursor;
     }
 
