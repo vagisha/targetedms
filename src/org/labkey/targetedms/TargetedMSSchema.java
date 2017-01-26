@@ -530,6 +530,7 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn(result.getRealTable().getColumn("Description"));
                 result.addWrapColumn(result.getRealTable().getColumn("Created"));
                 result.addWrapColumn(result.getRealTable().getColumn("Filename"));
+                result.addWrapColumn(result.getRealTable().getColumn("ExperimentRunLSID"));
                 result.addWrapColumn(result.getRealTable().getColumn("Status"));
                 ColumnInfo stateColumn = result.addWrapColumn(result.getRealTable().getColumn("RepresentativeDataState"));
                 stateColumn.setFk(new QueryForeignKey(TargetedMSSchema.this, null, TABLE_REPRESENTATIVE_DATA_STATE_RUN, "RowId", null));
@@ -546,17 +547,32 @@ public class TargetedMSSchema extends UserSchema
                         {
                             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {
-                                Object value = ctx.get(this.getColumnInfo().getFieldKey());
-                                if (value != null)
+                                FieldKey parentFK = this.getColumnInfo().getFieldKey().getParent();
+                                String runLSID = ctx.get(new FieldKey(parentFK, "ExperimentRunLSID"), String.class);
+                                Integer runId = ctx.get(this.getColumnInfo().getFieldKey(), Integer.class);
+                                if (runId != null && runLSID != null)
                                 {
-                                    String runId = String.valueOf(value);
-                                    downloadUrl.replaceParameter("runId", runId);
+                                    downloadUrl.replaceParameter("runId", runId.toString());
 
-                                    File skyDocFile = SkylineFileUtils.getSkylineFile(Integer.parseInt(runId));
-                                    String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
-                                    out.write(PageFlowUtil.textLink("Download", downloadUrl));
-                                    out.write("<span class=\"labkey-text-link\">" + size + "</span>");
+                                    File skyDocFile = SkylineFileUtils.getSkylineFile(runLSID);
+                                    if (skyDocFile != null && skyDocFile.isFile())
+                                    {
+                                        String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
+                                        out.write(PageFlowUtil.textLink("Download", downloadUrl));
+                                        out.write("<span class=\"labkey-text-link\">" + size + "</span>");
+                                    }
+                                    else
+                                    {
+                                        out.write("<em>Not available</em>");
+                                    }
                                 }
+                            }
+
+                            @Override
+                            public void addQueryFieldKeys(Set<FieldKey> keys)
+                            {
+                                FieldKey parentFK = this.getColumnInfo().getFieldKey().getParent();
+                                keys.add(new FieldKey(parentFK, "ExperimentRunLSID"));
                             }
                         };
                     }

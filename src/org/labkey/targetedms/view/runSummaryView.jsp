@@ -26,13 +26,12 @@
 <%@ page import="java.io.File" %>
 <%@ page import="org.labkey.targetedms.SkylineFileUtils" %>
 <%@ page import="org.apache.commons.io.FileUtils" %>
-<%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
     TargetedMSController.RunDetailsBean bean = me.getModelBean();
     TargetedMSRun run = bean.getRun();
-    File skyDocFile = SkylineFileUtils.getSkylineFile(run);
+    File skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID());
 
     ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
     downloadAction.addParameter("runId", run.getId());

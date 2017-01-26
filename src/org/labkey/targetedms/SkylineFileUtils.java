@@ -16,6 +16,7 @@
 package org.labkey.targetedms;
 
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
@@ -50,23 +51,18 @@ public class SkylineFileUtils
             return FileUtil.getBaseName(fileName, 1);
     }
 
-    public static File getSkylineFile(int runId)
+    @Nullable
+    public static File getSkylineFile(@Nullable String runLSID)
     {
-        TargetedMSRun run = TargetedMSManager.getRun(runId);
-        return getSkylineFile(run);
-    }
-
-    public static File getSkylineFile(TargetedMSRun run)
-    {
-        if (run == null)
+        if (runLSID == null)
         {
             return null;
         }
 
-        ExpRun expRun = ExperimentService.get().getExpRun(run.getExperimentRunLSID());
+        ExpRun expRun = ExperimentService.get().getExpRun(runLSID);
         if (expRun == null)
         {
-            LOG.warn("Run " + run.getExperimentRunLSID() + " does not exist.");
+            LOG.warn("Run " + runLSID + " does not exist.");
             return null;
         }
 
@@ -81,7 +77,7 @@ public class SkylineFileUtils
             }
             else
             {
-                LOG.warn("Skyline file does not exist: " + (skyDocfile != null ? skyDocfile.getPath() : null));
+                LOG.warn("Skyline file does not exist: " + (skyDocfile != null ? skyDocfile.getPath() : null) + ", referenced from " + expRun.getContainer().getPath());
                 return null;
             }
 
