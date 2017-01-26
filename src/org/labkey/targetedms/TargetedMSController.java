@@ -3916,7 +3916,7 @@ public class TargetedMSController extends SpringActionController
     public static class ResolveConflictForm
     {
         public String _conflictLevel; // Either 'peptide' or 'protein'
-        public String[] _selectedInputValues;
+        public String _selectedInputValues;
         private int[] _selectedIds;
         private int[] _deselectedIds;
 
@@ -3930,21 +3930,22 @@ public class TargetedMSController extends SpringActionController
             _conflictLevel = conflictLevel;
         }
 
-        public String[] getSelectedInputValues()
+        public String getSelectedInputValues()
         {
             return _selectedInputValues;
         }
 
-        public void setSelectedInputValues(String[] selectedInputValues)
+        public void setSelectedInputValues(String selectedInputValues)
         {
             _selectedInputValues = selectedInputValues;
-            if(selectedInputValues != null)
+            if(!StringUtils.isBlank(selectedInputValues))
             {
-                _selectedIds = new int[_selectedInputValues.length];
-                _deselectedIds = new int[_selectedInputValues.length];
+                String[] vals = selectedInputValues.split(",");
+                _selectedIds = new int[vals.length];
+                _deselectedIds = new int[vals.length];
 
                 int count = 0;
-                for(String value: _selectedInputValues)
+                for(String value: vals)
                 {
                     int idx = value.indexOf('_');
                     if(idx != -1)

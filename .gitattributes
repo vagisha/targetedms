@@ -6,6 +6,7 @@ api-src/org/labkey/api/targetedms/SkylineAnnotation.java -text
 api-src/org/labkey/api/targetedms/TargetedMSService.java -text
 /build.gradle -text
 /module.properties -text
+resources/credits/scripts.txt -text
 resources/queries/targetedms/QCMetric_fwb.sql -text
 resources/queries/targetedms/QCMetric_fwhm.sql -text
 resources/queries/targetedms/QCMetric_lhRatio.sql -text
@@ -478,6 +479,8 @@ test/src/org/labkey/test/tests/targetedms/TargetedMSQCTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSTest.java -text
 test/src/org/labkey/test/util/targetedms/QCHelper.java -text
 test/test_targetedms.iml -text
+webapp/TargetedMS/DataTables/jquery.dataTables.min.css -text
+webapp/TargetedMS/DataTables/jquery.dataTables.min.js -text
 webapp/TargetedMS/css/LinkVersionsDialog.css -text
 webapp/TargetedMS/css/ParetoPlot.css -text
 webapp/TargetedMS/css/QCSummary.css -text

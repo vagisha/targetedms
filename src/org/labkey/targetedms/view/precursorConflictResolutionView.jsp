@@ -16,7 +16,6 @@
  * limitations under the License.
  */
 %>
-<%@ page import="org.labkey.api.settings.AppProps" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
@@ -26,7 +25,18 @@
 <%@ page import="org.labkey.targetedms.view.ModifiedPeptideHtmlMaker" %>
 <%@ page import="org.labkey.targetedms.view.PrecursorHtmlMaker" %>
 <%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
+<%!
+    @Override
+    public void addClientDependencies(ClientDependencies dependencies)
+    {
+        dependencies.add("Ext4");
+        dependencies.add("TargetedMS/jquery/jquery-1.8.3.min.js");
+        dependencies.add("TargetedMS/DataTables/jquery.dataTables.min.js");
+        dependencies.add("TargetedMS/DataTables/jquery.dataTables.min.css");
+    }
+%>
 <%
     JspView<TargetedMSController.PrecursorConflictBean> me = (JspView<TargetedMSController.PrecursorConflictBean>) HttpView.currentView();
     TargetedMSController.PrecursorConflictBean bean = me.getModelBean();
@@ -41,14 +51,21 @@
 <style type="text/css">
     td.representative {background-color:#8FBC8F;}
     span.label {text-decoration: underline; cursor: pointer;}
+    table.dataTable.myTable thead th,
+    table.dataTable.myTable thead td,
+    table.dataTable.myTable tbody td,
+    table.dataTable.myTable tfoot th
+    {padding: 2px 0 2px 0}
+    table.precursor_details td {background:lightgoldenrodyellow;padding:0 0 0 0;}
+    div.protein_details {padding:3px;}
 </style>
-
-<script type="text/javascript" src="<%=getContextPath()%>/TargetedMS/jquery/jquery-1.8.3.min.js"></script>
 
 <script type="text/javascript">
 
+    var table;
+
 $(document).ready(function () {
-    $('input[name="selectedInputValues"]').click(function() {
+    $('input[name="selectedVals"]').click(function() {
          toggleCheckboxSelection($(this));
     });
 
@@ -60,28 +77,96 @@ $(document).ready(function () {
     });
 
     $("#selectAllNew").click(function(){
-        $('input.newPrecursor').attr('checked', true);
-        $('input.oldPrecursor').attr('checked', false);
-        $('td.newPrecursor').removeClass('representative').addClass('representative');
-        $('td.oldPrecursor').removeClass('representative');
+
+        var oldPrecursorCells = table.cells(".oldPrecursor").nodes();
+        var newPrecursorCells = table.cells(".newPrecursor").nodes();
+        $(newPrecursorCells).removeClass('representative').addClass('representative');
+        $(newPrecursorCells).find(':checkbox').attr('checked', 'checked');
+        $(oldPrecursorCells).removeClass('representative');
+        $(oldPrecursorCells).find(':checkbox').removeAttr('checked');
     });
     $("#selectAllOld").click(function(){
-        $('input.oldPrecursor').attr('checked', true);
-        $('input.newPrecursor').attr('checked', false);
-        $('td.oldPrecursor').removeClass('representative').addClass('representative');
-        $('td.newPrecursor').removeClass('representative');
+
+        var oldPrecursorCells = table.cells(".oldPrecursor").nodes();
+        var newPrecursorCells = table.cells(".newPrecursor").nodes();
+        $(oldPrecursorCells).removeClass('representative').addClass('representative');
+        $(oldPrecursorCells).find(':checkbox').attr('checked', 'checked');
+        $(newPrecursorCells).removeClass('representative');
+        $(newPrecursorCells).find(':checkbox').removeAttr('checked');
+    });
+
+    table = $("#dataTable").DataTable(
+            {
+                "bSort":false,
+                "searching":false,
+                "autoWidth": false,
+                "lengthMenu": [[10, 20, 50, -1], [10, 20, 50, "All"]],
+                "pageLength": 20
+            }
+    );
+
+    table.rows().every(function()
+    {
+        this.child($('<tr>'+
+                '<td colspan="4"><div class="newPrecursor precursor_details">Loading...</div></td>'+
+                '<td colspan="4"><div class="oldPrecursor precursor_details">Loading...</div></td>'+
+                '</tr>'));
+    });
+
+    table.on('click', 'td.details-control', function() {
+        var srcTd = $(this);
+        var span = $(this).children("span");
+        var cls = span.attr('class');
+        //console.log("You clicked "+cls);
+        var tokens = cls.split('_');
+        var newPrecursorId = tokens[0];
+        var oldPrecursorId = tokens[1];
+
+        var tr = $(this).closest('tr');
+        var row = table.row(tr);
+        if(row.child.isShown())
+        {
+            row.child.hide();
+            tr.removeClass('shown');
+            $("." + cls).children('img').attr('src', "<%=getWebappURL("_images/plus.gif")%>");
+        }
+        else {
+            row.child.show();
+            tr.addClass('shown');
+            $("." + cls).children('img').attr('src', "<%=getWebappURL("_images/minus.gif")%>");
+        }
+
+        if(!srcTd.hasClass('content_loaded'))
+        {
+            var url = <%=q(conflictTransitionsUrl)%>
+
+            Ext4.Ajax.request({
+                url: url,
+                params: {newPrecursorId: newPrecursorId, oldPrecursorId: oldPrecursorId},
+                method: 'GET',
+                success: function(response, request){
+                    loadPrecursorDetails(row.child(), newPrecursorId, oldPrecursorId, response, request);
+                    srcTd.addClass('content_loaded');
+                },
+                failure: function(response, request) {
+                    console.log("ERROR: " + response.responseText);
+                    row.child().find("div.newPrecursor").text("ERROR: "+response.responseText);
+                    row.child().find("div.oldPrecursor").text("ERROR");
+                }
+            });
+        }
     });
 });
 
-function loadPrecursorDetails(element, newPrecursorId, oldPrecursorId, response, request) {
+function loadPrecursorDetails(tr, newPrecursorId, oldPrecursorId, response, request) {
 
     if(response.status == 200)
     {
         // alert(response.responseText);
-        var jsonResponse = Ext.util.JSON.decode(response.responseText);
+        var jsonResponse = Ext4.JSON.decode(response.responseText);
         var result = jsonResponse.conflictTransitions;
-        var newTransitionsTable = "<table width='100%'><thead><tr><td>Transition</td><td>Rank</td></tr></thead><tbody>";
-        var oldTransitionsTable = "<table width='100%'><thead><tr><td>Transition</td><td>Rank</td></tr></thead><tbody>";
+        var newTransitionsTable = "<table width='100%' class='precursor_details'><thead><tr><td>Transition</td><td>Rank</td></tr></thead><tbody>";
+        var oldTransitionsTable = "<table width='100%' class='precursor_details'><thead><tr><td>Transition</td><td>Rank</td></tr></thead><tbody>";
         for(var i = 0; i < result.length; i++)
         {
             var conflictTransition = result[i];
@@ -94,56 +179,20 @@ function loadPrecursorDetails(element, newPrecursorId, oldPrecursorId, response,
         }
         newTransitionsTable += "</tbody></table>";
         oldTransitionsTable += "</tbody></table>";
-        $("#"+newPrecursorId+"_details").text(""); // Remove "loading..."
-        $("#"+oldPrecursorId+"_details").text(""); // Remove "loading..."
-        $("#"+newPrecursorId+"_details").append(newTransitionsTable);
-        $("#"+oldPrecursorId+"_details").append(oldTransitionsTable);
-
-        $(element).addClass('content_loaded');
-    }
-}
-
-function togglePrecursorDetails(element, newPrecursorId, oldPrecursorId)
-{
-    if(!$(element).hasClass('content_loaded'))
-    {
-        var url = <%=q(conflictTransitionsUrl)%>
-
-            Ext.Ajax.request({
-                url: url,
-                params: {newPrecursorId: newPrecursorId, oldPrecursorId: oldPrecursorId},
-                method: 'GET',
-                success: function(response, request){
-                    loadPrecursorDetails(element, newPrecursorId, oldPrecursorId, response, request);
-                },
-                failure: function(response, request) {
-                    $("#"+newPrecursorId+"_details").text("ERROR: "+response.responseText);
-                    $("#"+oldPrecursorId+"_details").text("ERROR");
-                }
-            });
-    }
-
-    if($(element).hasClass('open'))
-    {
-        $(element).removeClass('open').addClass('closed');
-        $(element).children('img').attr('src', "<%=getWebappURL("_images/plus.gif")%>");
-        $("#"+newPrecursorId+"_details").hide();
-        $("#"+oldPrecursorId+"_details").hide();
-    }
-    else
-    {
-        $(element).removeClass('closed').addClass('open');
-        $(element).children('img').attr('src', "<%=getWebappURL("_images/minus.gif")%>");
-        $("#"+newPrecursorId+"_details").show();
-        $("#"+oldPrecursorId+"_details").show();
+        tr.find("div.newPrecursor").text(""); // Remove "loading..."
+        tr.find("div.oldPrecursor").text(""); // Remove "loading..."
+        tr.find("div.newPrecursor").append(newTransitionsTable);
+        tr.find("div.oldPrecursor").append(oldTransitionsTable);
     }
 }
 
 function toggleCheckboxSelection(element)
 {
     var cls = element.attr('class').split(' ')[0]; // get the first class name
-    // alert(cls);
+    //console.log(cls);
+
     $("td."+cls).toggleClass("representative");
+
     if(element.is(":checked"))
     {
         $("."+cls).attr('checked', false); // Both old and new precursor checkboxes have the same class. First deselect all.
@@ -156,6 +205,17 @@ function toggleCheckboxSelection(element)
     }
 }
 
+    function submitMyForm()
+    {
+        var selectedIds = [];
+        table.rows().every(function(){
+            var selected = $(this.nodes()).find("input:checked").val();
+            // console.log(selected);
+            selectedIds.push(selected);
+        });
+        $("#conflictTableForm #selectedInputValues").val(selectedIds);
+        $("#conflictTableForm").submit();
+    }
 </script>
 
 <%if(bean.getAllConflictRunFiles() != null && bean.getAllConflictRunFiles().size() > 1) {%>
@@ -180,42 +240,49 @@ function toggleCheckboxSelection(element)
     </div>
 <%}%>
 
-<%int colspan=3;%>
-<form <%=formAction(TargetedMSController.ResolveConflictAction.class, Method.Post)%>><labkey:csrf/>
+<%int colspan=4;%>
+<form <%=formAction(TargetedMSController.ResolveConflictAction.class, Method.Post)%> id="conflictTableForm"><labkey:csrf/>
 <input type="hidden" name="conflictLevel" value="peptide"/>
-<table class="labkey-data-region labkey-show-borders">
+<input type="hidden" name="selectedInputValues" id="selectedInputValues"/>
+<table class="labkey-data-region labkey-show-borders myTable" id="dataTable">
     <thead>
        <tr>
             <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Peptides in Document</div></th>
             <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Current Library Peptides</div></th>
         </tr>
+       <tr>
+           <th class="labkey-column-header"></th>
+           <th class="labkey-column-header"></th>
+           <th class="labkey-column-header">Precursor</th>
+           <th class="labkey-column-header">Document</th>
+           <!--<td class="labkey-column-header">ProteinId</td>-->
+
+           <th class="labkey-column-header"></th>
+           <th class="labkey-column-header"></th>
+           <th class="labkey-column-header">Precursor</th>
+           <th class="labkey-column-header">Document</th>
+           <!--<td class="labkey-column-header">ProteinId</td>-->
+       </tr>
     </thead>
     <tbody>
-        <tr>
-            <td class="labkey-column-header"></td>
-            <td class="labkey-column-header">Precursor</td>
-            <td class="labkey-column-header">Document</td>
-            <!--<td class="labkey-column-header">PrecursorId</td>-->
 
-            <td class="labkey-column-header"></td>
-            <td class="labkey-column-header">Precursor</td>
-            <td class="labkey-column-header">Document</td>
-            <!--<td class="labkey-column-header">PrecursorId</td>-->
-        </tr>
-    <% int index = 0; %>
     <%for (ConflictPrecursor precursor: bean.getConflictPrecursorList()) {%>
          <tr class="labkey-alternate-row">
 
              <!-- New representative precursor -->
              <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
                  <input type="checkbox" class="<%=precursor.getNewPrecursorId()%> newPrecursor"
-                                        name="selectedInputValues"
+                                        name="selectedVals"
                                         value="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>"
                                         checked/></td>
              <!--<td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>"><%=precursor.getNewPrecursorId()%></td>-->
-             <td class="representative newPrecursor label <%=precursor.getNewPrecursorId()%>">
-                 <span class="label" id="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
+             <td class="representative details-control newPrecursor <%=precursor.getNewPrecursorId()%>">
+                <span class="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
                      <img src="<%=getWebappURL("_images/plus.gif")%>"/>
+                 </span>
+             </td>
+             <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
+                 <span class="label">
                      <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.getPrecursor(getContainer(), precursor.getNewPrecursorId(),
                              getUser()), precursor.getNewPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
                  </span>
@@ -227,12 +294,16 @@ function toggleCheckboxSelection(element)
              <!-- Old representative precursor -->
              <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">
                  <input type="checkbox" class="<%=precursor.getNewPrecursorId()%> oldPrecursor"
-                                        name="selectedInputValues"
+                                        name="selectedVals"
                                         value="<%=precursor.getOldPrecursorId()%>_<%=precursor.getNewPrecursorId()%>" /></td>
              <!--<td class="oldPrecursor <%=precursor.getNewPrecursorId()%>"><%=precursor.getOldPrecursorId()%></td>-->
-             <td class="oldPrecursor label <%=precursor.getNewPrecursorId()%>">
-                 <span class="label" id="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
+             <td class="details-control oldPrecursor <%=precursor.getNewPrecursorId()%>">
+                <span class="<%=precursor.getNewPrecursorId()%>_<%=precursor.getOldPrecursorId()%>">
                      <img src="<%=getWebappURL("_images/plus.gif")%>"/>
+                 </span>
+             </td>
+             <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">
+                 <span class="label">
                      <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.getPrecursor(getContainer(), precursor.getOldPrecursorId(),
                              getUser()), precursor.getOldPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
                  </span>
@@ -241,22 +312,21 @@ function toggleCheckboxSelection(element)
                 <a href="<%=runPrecursorDetailsUrl%>id=<%=precursor.getOldPrecursorId()%>"><%=precursor.getOldRunFile()%></a>
              </td>
          </tr>
-        <!-- This is a hidden table row where transition details will be displayed -->
-        <tr>
-            <td colspan="<%=colspan%>"><div id="<%=precursor.getNewPrecursorId()%>_details" style="display:none;">Loading...</div></td>
-            <td colspan="<%=colspan%>"><div id="<%=precursor.getOldPrecursorId()%>_details" style="display:none;">Loading...</div></td>
-        </tr>
     <%}%>
-        <tr>
-            <td colspan="<%=colspan%>"><span style="text-decoration:underline;cursor:pointer;" id="selectAllNew">Select All</span></td>
-            <td colspan="<%=colspan%>"><span style="text-decoration:underline;cursor:pointer;" id="selectAllOld">Select All</span></td>
-        </tr>
-        <tr>
-            <td colspan="8" style="padding:10px;" align="center">
-                <%= button("Apply Changes").submit(true) %>
-                &nbsp;
-                <%= button("Cancel").href(getContainer().getStartURL(getUser())) %>
-            </td>
-        </tr>
     </tbody>
+    <thead>
+        <tr>
+            <th colspan="<%=colspan%>"><span style="text-decoration:underline;cursor:pointer;" id="selectAllNew">Select All</span></th>
+            <th colspan="<%=colspan%>"><span style="text-decoration:underline;cursor:pointer;" id="selectAllOld">Select All</span></th>
+        </tr>
+        <tr>
+            <th colspan="8" style="padding:10px;" align="center">
+                <div class="labkey-button-bar">
+                    <%= button("Apply Changes").onClick("submitMyForm(); return false;") %>
+                    &nbsp;
+                    <%= button("Cancel").href(getContainer().getStartURL(getUser())) %>
+                </div>
+            </th>
+        </tr>
+    </thead>
 </table>
