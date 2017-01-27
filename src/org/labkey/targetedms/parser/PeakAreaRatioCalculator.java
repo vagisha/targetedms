@@ -48,13 +48,6 @@ public class PeakAreaRatioCalculator
     {
         for(GeneralMoleculeChromInfo generalMoleculeChromInfo : _peptide.getGeneralMoleculeChromInfoList())
         {
-            SampleFile sampleFile = skylineIdSampleFileMap.get(SkylineDocImporter.SampleFileKey.getKey(generalMoleculeChromInfo));
-            if(sampleFile.isSkip())
-            {
-                // For QC folders only:  we do not need an area ratio calculator if the data from this sample file is being skipped.
-                continue;
-            }
-
             int sampleFileId = generalMoleculeChromInfo.getSampleFileId();
             _peptideAreaRatioCalculatorMap.put(sampleFileId, new PeptideAreaRatioCalculator(generalMoleculeChromInfo));
         }

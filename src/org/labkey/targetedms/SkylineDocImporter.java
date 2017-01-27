@@ -289,39 +289,27 @@ public class SkylineDocImporter
                         replicate.setDpPredictorId(dpPredictor.getId());
                     }
 
-                    boolean skipReplicate = false;
-
-                    if(folderType == TargetedMSModule.FolderType.QC)
+                    if (folderType == TargetedMSModule.FolderType.QC)
                     {
-                        skipReplicate = true;
                         // In QC folders insert a replicate only if at least one of the associated sample files will be inserted
-                        for(SampleFile sampleFile: replicate.getSampleFileList())
+                        for (SampleFile sampleFile : replicate.getSampleFileList())
                         {
-                            if (TargetedMSManager.hasSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), run.getContainer()))
+                            Map<String, Object> sample = TargetedMSManager.getSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), run.getContainer());
+                            if (null != sample && sample.size() > 0)
                             {
-                                sampleFile.setSkip(true);
-                                _log.info("Skipping import of data from sample file " + sampleFile.getFilePath() + " in QC folder because it has already been imported.");
-                            }
-                            else
-                            {
-                                skipReplicate = false;
+                                TargetedMSManager.deleteSampleFileAndDependencies((Integer) sample.get("id"));
+                                _log.info("Updating data for sample file " + sampleFile.getFilePath() + " in QC folder because it has already been imported.");
                             }
                         }
                     }
-                    if(skipReplicate)
-                    {
-                        _log.info("Skipping replicate " + replicate.getName() + " in QC folder because sample files for this replicate have already been imported.");
-                    }
-                    else
-                    {
-                        replicate = Table.insert(_user, TargetedMSManager.getTableInfoReplicate(), replicate);
 
-                        for (ReplicateAnnotation annotation : replicate.getAnnotations())
-                        {
-                            annotation.setReplicateId(replicate.getId());
-                            annotation.setSource(ReplicateAnnotation.SOURCE_SKYLINE);
-                            Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
-                        }
+                    replicate = Table.insert(_user, TargetedMSManager.getTableInfoReplicate(), replicate);
+
+                    for (ReplicateAnnotation annotation : replicate.getAnnotations())
+                    {
+                        annotation.setReplicateId(replicate.getId());
+                        annotation.setSource(ReplicateAnnotation.SOURCE_SKYLINE);
+                        Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
                     }
 
                     insertSampleFiles(skylineIdSampleFileIdMap, instrumentIdMap, replicate);
@@ -576,6 +564,7 @@ public class SkylineDocImporter
                 }
 
             quantifyRun(run, quantificationSettings, groupComparisons);
+            TargetedMSManager.purgeUnreferencedReplicates();
             transaction.commit();
         }
         finally
@@ -1074,12 +1063,6 @@ public class SkylineDocImporter
 
                     for (SampleFile sampleFile : skylineIdSampleFileIdMap.values())
                     {
-                        if (sampleFile.isSkip())
-                        {
-                            // Only for QC folders: do not try to calculate area ratios if data from this sample file is not being imported.
-                            continue;
-                        }
-
                         PeptideAreaRatio ratio = areaRatioCalculator.getPeptideAreaRatio(sampleFile.getId(), numLabelId, denomLabelId);
                         if (ratio != null)
                         {
@@ -1387,17 +1370,13 @@ public class SkylineDocImporter
                         generalMoleculeChromInfo.getSkylineSampleFileId() + " in replicate " +
                         generalMoleculeChromInfo.getReplicateName());
             }
+            generalMoleculeChromInfo.setGeneralMoleculeId(gmId);
+            generalMoleculeChromInfo.setSampleFileId(sampleFile.getId());
+            generalMoleculeChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(),
+                    generalMoleculeChromInfo);
 
-            if (!sampleFile.isSkip())
-            {
-                // Only for QC folders: ignore this chrom info if data from this sample file is not being imported.
-                generalMoleculeChromInfo.setGeneralMoleculeId(gmId);
-                generalMoleculeChromInfo.setSampleFileId(sampleFile.getId());
-                generalMoleculeChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(),
-                        generalMoleculeChromInfo);
+            sampleFileIdGeneralMolChromInfoIdMap.put(sampleFile.getId(), generalMoleculeChromInfo.getId());
 
-                sampleFileIdGeneralMolChromInfoIdMap.put(sampleFile.getId(), generalMoleculeChromInfo.getId());
-            }
         }
 
         return sampleFileIdGeneralMolChromInfoIdMap;
@@ -1426,23 +1405,18 @@ public class SkylineDocImporter
                         label + " and sample file " + precursorChromInfo.getSkylineSampleFileId() +
                         " in replicate " + precursorChromInfo.getReplicateName());
             }
+            precursorChromInfo.setContainer(_container);
+            precursorChromInfo.setPrecursorId(gpId);
+            precursorChromInfo.setSampleFileId(sampleFile.getId());
+            precursorChromInfo.setGeneralMoleculeChromInfoId(sampleFileIdGeneralMolChromInfoIdMap.get(sampleFile.getId()));
 
-            if (!sampleFile.isSkip())
+            precursorChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfo(), precursorChromInfo);
+            sampleFilePrecursorChromInfoIdMap.put(sampleFileKey, precursorChromInfo.getId());
+
+            for (PrecursorChromInfoAnnotation annotation : precursorChromInfo.getAnnotations())
             {
-                // Only for QC folders: Ignore this chrom info if data from the sample file is not being imported.
-                precursorChromInfo.setContainer(_container);
-                precursorChromInfo.setPrecursorId(gpId);
-                precursorChromInfo.setSampleFileId(sampleFile.getId());
-                precursorChromInfo.setGeneralMoleculeChromInfoId(sampleFileIdGeneralMolChromInfoIdMap.get(sampleFile.getId()));
-
-                precursorChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfo(), precursorChromInfo);
-                sampleFilePrecursorChromInfoIdMap.put(sampleFileKey, precursorChromInfo.getId());
-
-                for (PrecursorChromInfoAnnotation annotation : precursorChromInfo.getAnnotations())
-                {
-                    annotation.setPrecursorChromInfoId(precursorChromInfo.getId());
-                    Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), annotation);
-                }
+                annotation.setPrecursorChromInfoId(precursorChromInfo.getId());
+                Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), annotation);
             }
         }
 
@@ -1456,31 +1430,27 @@ public class SkylineDocImporter
         for(TransitionChromInfo transChromInfo: transitionChromInfos)
         {
             SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(transChromInfo));
-            if(sampleFile == null)
+            if (sampleFile == null)
             {
-                throw new IllegalStateException("Database ID not found for Skyline samplefile id "+transChromInfo.getSkylineSampleFileId() + " in replicate " + transChromInfo.getReplicateName());
+                throw new IllegalStateException("Database ID not found for Skyline samplefile id " + transChromInfo.getSkylineSampleFileId() + " in replicate " + transChromInfo.getReplicateName());
             }
-            if (!sampleFile.isSkip())
+            transChromInfo.setTransitionId(gtId);
+            transChromInfo.setSampleFileId(sampleFile.getId());
+            // Lookup a precursor chrom info measured in the same sample file with the same optimization step
+            SampleFileOptStepKey sampleFileKey = SampleFileOptStepKey.getKey(transChromInfo);
+            Integer precursorChromInfoId = sampleFilePrecursorChromInfoIdMap.get(sampleFileKey);
+            if (precursorChromInfoId == null)
             {
-                // Only for QC folders: ignore this chrom info if data from the sample file is not being imported.
-                transChromInfo.setTransitionId(gtId);
-                transChromInfo.setSampleFileId(sampleFile.getId());
-                // Lookup a precursor chrom info measured in the same sample file with the same optimization step
-                SampleFileOptStepKey sampleFileKey = SampleFileOptStepKey.getKey(transChromInfo);
-                Integer precursorChromInfoId = sampleFilePrecursorChromInfoIdMap.get(sampleFileKey);
-                if(precursorChromInfoId == null)
-                {
-                    throw new IllegalStateException("Could not find precursor peak for " + sampleFileKey.toString());
-                }
+                throw new IllegalStateException("Could not find precursor peak for " + sampleFileKey.toString());
+            }
 
-                transChromInfo.setPrecursorChromInfoId(precursorChromInfoId);
-                Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfo(), transChromInfo);
+            transChromInfo.setPrecursorChromInfoId(precursorChromInfoId);
+            Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfo(), transChromInfo);
 
-                for (TransitionChromInfoAnnotation annotation : transChromInfo.getAnnotations())
-                {
-                    annotation.setTransitionChromInfoId(transChromInfo.getId());
-                    Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
-                }
+            for (TransitionChromInfoAnnotation annotation : transChromInfo.getAnnotations())
+            {
+                annotation.setTransitionChromInfoId(transChromInfo.getId());
+                Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
             }
         }
     }
@@ -1495,31 +1465,29 @@ public class SkylineDocImporter
                 throw new IllegalStateException("Sample file id '" + sampleFile.getSkylineId() + "' for replicate '" + replicate.getName() + "' has already been seen in the document.");
             }
 
-            if (!sampleFile.isSkip())
+            sampleFile.setReplicateId(replicate.getId());
+
+            List<Instrument> instrumentInfoList = sampleFile.getInstrumentInfoList();
+            if (instrumentInfoList != null && instrumentInfoList.size() > 0)
             {
-                sampleFile.setReplicateId(replicate.getId());
+                Instrument instrument = combineInstrumentInfos(instrumentInfoList);
 
-                List<Instrument> instrumentInfoList = sampleFile.getInstrumentInfoList();
-                if(instrumentInfoList != null && instrumentInfoList.size() > 0)
+                Integer instrumentId = instrumentIdMap.get(instrument);
+                if (instrumentId == null)
                 {
-                    Instrument instrument = combineInstrumentInfos(instrumentInfoList);
-
-                    Integer instrumentId = instrumentIdMap.get(instrument);
-                    if(instrumentId == null)
-                    {
-                        instrument.setRunId(_runId);
-                        instrument = Table.insert(_user, TargetedMSManager.getTableInfoInstrument(), instrument);
-                        instrumentIdMap.put(instrument, instrument.getId());
-                        instrumentId = instrument.getId();
-                    }
-
-                    sampleFile.setInstrumentId(instrumentId);
+                    instrument.setRunId(_runId);
+                    instrument = Table.insert(_user, TargetedMSManager.getTableInfoInstrument(), instrument);
+                    instrumentIdMap.put(instrument, instrument.getId());
+                    instrumentId = instrument.getId();
                 }
 
-                // In a QC folder data from a sample file will be imported only if the file wasn't imported in a previously uploaded
-                // Skyline document.
-                sampleFile = Table.insert(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile);
+                sampleFile.setInstrumentId(instrumentId);
             }
+
+            // In a QC folder data from a sample file will be imported only if the file wasn't imported in a previously uploaded
+            // Skyline document.
+            sampleFile = Table.insert(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile);
+
 
             // Remember the ids we inserted so we can reference them later
             skylineIdSampleFileIdMap.put(sampleFileKey, sampleFile);

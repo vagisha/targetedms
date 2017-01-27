@@ -65,10 +65,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.targetedms.calculations.ReplicateDataSet;
-import org.labkey.targetedms.calculations.RunQuantifier;
 import org.labkey.targetedms.model.QCMetricConfiguration;
-import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
 import org.labkey.targetedms.query.ModificationManager;
@@ -78,7 +75,6 @@ import org.labkey.targetedms.query.RepresentativeStateManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1042,6 +1038,33 @@ public class TargetedMSManager
         return null;
     }
 
+    private static String getDependentSampleFileReplicateDeleteSql(TableInfo fromTable, String replicateId)
+    {
+        return "DELETE FROM " + fromTable + " WHERE " + replicateId + " NOT IN (SELECT ReplicateId FROM " + getTableInfoSampleFile() + ")";
+    }
+
+    private static void deletePredictorsForUnusedReplicates()
+    {
+        execute("DELETE FROM " + getTableInfoPredictor() + " WHERE " +
+                "Id IN (SELECT CePredictorId FROM " + getTableInfoReplicate() + " WHERE Id NOT IN (SELECT ReplicateId FROM " + getTableInfoSampleFile() + ")) OR " +
+                "Id IN (SELECT DpPredictorId FROM " + getTableInfoReplicate() + " WHERE Id NOT IN (SELECT ReplicateId FROM " + getTableInfoSampleFile() + "))");
+    }
+
+    public static void purgeUnreferencedReplicates()
+    {
+        execute(getDependentSampleFileReplicateDeleteSql(getTableInfoReplicateAnnotation(), "ReplicateId"));
+
+        execute(getDependentSampleFileReplicateDeleteSql(getTableInfoReplicate(), "Id"));
+
+        deletePredictorsForUnusedReplicates();
+    }
+
+    public static void deleteSampleFileAndDependencies(int sampleFileId)
+    {
+        purgeDeletedSampleFiles(sampleFileId);
+
+        execute("DELETE FROM " + getTableInfoSampleFile() + " WHERE Id = " + sampleFileId);
+    }
 
     public static void purgeDeletedSampleFiles(int sampleFileId)
     {
@@ -1403,7 +1426,7 @@ public class TargetedMSManager
     }
 
     /** @return true if the container has already imported data for the sample file */
-    public static boolean hasSampleFile(String filePath, Date acquiredTime, Container container)
+    public static Map<String, Object> getSampleFile(String filePath, Date acquiredTime, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT sf.* FROM ");
         sql.append(getTableInfoSampleFile(), "sf");
@@ -1421,7 +1444,7 @@ public class TargetedMSManager
             sql.append("AND sf.AcquiredTime = ?");
             sql.add(acquiredTime);
         }
-        return new SqlSelector(getSchema(), sql).exists();
+        return new SqlSelector(getSchema(), sql).getMap();
     }
 
     public Map<String, Object> getAutoQCPingMap(Container container)

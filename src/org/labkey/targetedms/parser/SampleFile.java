@@ -115,15 +115,4 @@ public class SampleFile extends SkylineEntity
         _instrumentInfoList = instrumentInfoList;
     }
 
-    /** Used to track if we should skip import of this data because it's already been imported (for QC folders only) */
-    public void setSkip(boolean skip)
-    {
-        _skip = skip;
-    }
-
-    /** Used to track if we should skip import of this data because it's already been imported (for QC folders only) */
-    public boolean isSkip()
-    {
-        return _skip;
-    }
 }
