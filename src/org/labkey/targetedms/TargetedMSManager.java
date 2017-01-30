@@ -17,6 +17,8 @@
 package org.labkey.targetedms;
 
 import com.google.common.base.Joiner;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.xmlbeans.XmlException;
@@ -75,6 +77,8 @@ import org.labkey.targetedms.query.RepresentativeStateManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1050,6 +1054,53 @@ public class TargetedMSManager
                 "Id IN (SELECT DpPredictorId FROM " + getTableInfoReplicate() + " WHERE Id NOT IN (SELECT ReplicateId FROM " + getTableInfoSampleFile() + "))");
     }
 
+    private static boolean fileIsReferenced(String fileName)
+    {
+        SQLFragment sql = new SQLFragment("SELECT sf.Id FROM ");
+        sql.append(getTableInfoReplicate(), "rep");
+        sql.append(", ");
+        sql.append(getTableInfoSampleFile(), "sf");
+        sql.append(", ");
+        sql.append(getTableInfoRuns(), "r");
+        sql.append(", ");
+        sql.append(ExperimentService.get().getTinfoData(), "d");
+        sql.append( " WHERE rep.Id = sf.ReplicateId AND rep.RunId = r.Id AND d.RowId = r.DataId AND d.DataFileUrl = ?");
+        sql.add(fileName);
+
+        return new SqlSelector(getSchema(), sql).exists();
+    }
+
+    public static void purgeUnreferencedFiles(Set<String> fileNames)
+    {
+        for(String file : fileNames)
+        {
+            if(!fileIsReferenced(file))
+            {
+                try
+                {
+                    File zipFile = new File(new URI(file));
+                    String dirName = FilenameUtils.removeExtension(zipFile.getName());
+                    File dir = new File(zipFile.getParent(), dirName);
+                    if(dir.exists() && dir.isDirectory())
+                        FileUtils.deleteDirectory(dir);
+
+                    FileUtils.deleteQuietly(zipFile);
+                    _log.info("Deleting " + file + " as all the related sampleFiles has been updated with newer data.");
+                }
+                catch (URISyntaxException e)
+                {
+                    _log.error("Unable to delete file " + file + ". May be an invalid path. This file is no longer needed on the server.");
+
+                }
+                catch (IOException e)
+                {
+                    _log.error("Unable to delete unzipped directory from file " + file + ". The files in this directory are no longer needed on the server.");
+                }
+            }
+
+        }
+    }
+
     public static void purgeUnreferencedReplicates()
     {
         execute(getDependentSampleFileReplicateDeleteSql(getTableInfoReplicateAnnotation(), "ReplicateId"));
@@ -1059,11 +1110,33 @@ public class TargetedMSManager
         deletePredictorsForUnusedReplicates();
     }
 
-    public static void deleteSampleFileAndDependencies(int sampleFileId)
+    /** @return the source file path for a sampleFile */
+        public static Map<String, Object> getSampleFileUploadFile(int sampleFileId)
+        {
+            SQLFragment sql = new SQLFragment("SELECT d.DataFileUrl FROM ");
+            sql.append(getTableInfoReplicate(), "rep");
+            sql.append(", ");
+            sql.append(getTableInfoSampleFile(), "sf");
+            sql.append(", ");
+            sql.append(getTableInfoRuns(), "r");
+            sql.append(", ");
+            sql.append(ExperimentService.get().getTinfoData(), "d");
+            sql.append( " WHERE rep.Id = sf.ReplicateId AND rep.RunId = r.Id AND d.RowId = r.DataId AND sf.Id = ? ");
+            sql.add(sampleFileId);
+
+            return new SqlSelector(getSchema(), sql).getMap();
+        }
+
+    @Nullable
+    public static String deleteSampleFileAndDependencies(int sampleFileId)
     {
         purgeDeletedSampleFiles(sampleFileId);
 
+        String file = (String)getSampleFileUploadFile(sampleFileId).get("dataFileUrl");
+
         execute("DELETE FROM " + getTableInfoSampleFile() + " WHERE Id = " + sampleFileId);
+
+        return file;
     }
 
     public static void purgeDeletedSampleFiles(int sampleFileId)
@@ -1425,7 +1498,7 @@ public class TargetedMSManager
         }
     }
 
-    /** @return true if the container has already imported data for the sample file */
+    /** @return the sample file if it has already been imported in the container */
     public static Map<String, Object> getSampleFile(String filePath, Date acquiredTime, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT sf.* FROM ");

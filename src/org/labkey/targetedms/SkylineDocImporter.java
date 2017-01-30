@@ -268,7 +268,8 @@ public class SkylineDocImporter
                 Map<Instrument, Integer> instrumentIdMap = new HashMap<>();
 
                 TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(run.getContainer());
-
+                Set<String> files = new HashSet<>();
+                String fileName;
 
                 for(SkylineReplicate skyReplicate: parser.getReplicates())
                 {
@@ -297,8 +298,11 @@ public class SkylineDocImporter
                             Map<String, Object> sample = TargetedMSManager.getSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), run.getContainer());
                             if (null != sample && sample.size() > 0)
                             {
-                                TargetedMSManager.deleteSampleFileAndDependencies((Integer) sample.get("id"));
-                                _log.info("Updating data for sample file " + sampleFile.getFilePath() + " in QC folder because it has already been imported.");
+                                fileName = TargetedMSManager.deleteSampleFileAndDependencies((Integer) sample.get("id"));
+                                _log.info("Updating previously imported data for sample file " + sampleFile.getFilePath() + " in QC folder.");
+
+                                if(null != fileName)
+                                    files.add(fileName);
                             }
                         }
                     }
@@ -565,6 +569,7 @@ public class SkylineDocImporter
 
             quantifyRun(run, quantificationSettings, groupComparisons);
             TargetedMSManager.purgeUnreferencedReplicates();
+            TargetedMSManager.purgeUnreferencedFiles(files);
             transaction.commit();
         }
         finally
