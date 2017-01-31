@@ -1079,7 +1079,10 @@ public class TargetedMSManager
                 try
                 {
                     File zipFile = new File(new URI(file));
-                    String dirName = FilenameUtils.removeExtension(zipFile.getName());
+
+                    // Remove .sky.zip from file name to get directory name
+                    String dirName = FilenameUtils.removeExtension(FilenameUtils.removeExtension(zipFile.getName()));
+
                     File dir = new File(zipFile.getParent(), dirName);
                     if(dir.exists() && dir.isDirectory())
                         FileUtils.deleteDirectory(dir);
