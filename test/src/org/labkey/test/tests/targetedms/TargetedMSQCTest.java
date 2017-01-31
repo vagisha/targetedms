@@ -462,8 +462,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         // are common to the two docs. They hould have only 1 row each since they were imported
         // only from the first document (QC_1.sky.zip).
         verifyRow(drt, 0, "25fmol_Pepmix_spike_SRM_1601_01", QC_1_FILE);
-        verifyRow(drt, 1, "25fmol_Pepmix_spike_SRM_1601_02", QC_1_FILE);
-        verifyRow(drt, 2, "25fmol_Pepmix_spike_SRM_1601_03", QC_1_FILE);
+        verifyRow(drt, 1, "25fmol_Pepmix_spike_SRM_1601_02", QC_2_FILE);
+        verifyRow(drt, 2, "25fmol_Pepmix_spike_SRM_1601_03", QC_2_FILE);
         verifyRow(drt, 3, "25fmol_Pepmix_spike_SRM_1601_04", QC_2_FILE);
     }
 
