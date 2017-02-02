@@ -569,7 +569,11 @@ public class SkylineDocImporter
 
             quantifyRun(run, quantificationSettings, groupComparisons);
             TargetedMSManager.purgeUnreferencedReplicates();
-            TargetedMSManager.purgeUnreferencedFiles(files);
+            List<String> msgs = TargetedMSManager.purgeUnreferencedFiles(files);
+            for (String msg : msgs)
+            {
+                _log.info(msg);
+            }
             transaction.commit();
         }
         finally

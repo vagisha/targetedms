@@ -1070,8 +1070,10 @@ public class TargetedMSManager
         return new SqlSelector(getSchema(), sql).exists();
     }
 
-    public static void purgeUnreferencedFiles(Set<String> fileNames)
+    public static List<String> purgeUnreferencedFiles(Set<String> fileNames)
     {
+        List<String> logMsgs = new ArrayList<>();
+        String logMsg;
         for(String file : fileNames)
         {
             if(!fileIsReferenced(file))
@@ -1084,11 +1086,15 @@ public class TargetedMSManager
                     String dirName = FilenameUtils.removeExtension(FilenameUtils.removeExtension(zipFile.getName()));
 
                     File dir = new File(zipFile.getParent(), dirName);
+                    FileUtils.deleteQuietly(zipFile);
+
                     if(dir.exists() && dir.isDirectory())
                         FileUtils.deleteDirectory(dir);
 
-                    FileUtils.deleteQuietly(zipFile);
-                    _log.info("Deleting " + file + " as all the related sampleFiles has been updated with newer data.");
+                    logMsg = "Deleting " + file + ". All the related sampleFiles have been updated with newer data.";
+                    logMsgs.add(logMsg);
+
+                    _log.info(logMsg);
                 }
                 catch (URISyntaxException e)
                 {
@@ -1102,6 +1108,7 @@ public class TargetedMSManager
             }
 
         }
+        return logMsgs;
     }
 
     public static void purgeUnreferencedReplicates()

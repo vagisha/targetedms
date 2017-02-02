@@ -418,7 +418,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // Upload QC_2.sky.zip
         // File has results from 3 sample files but two of these are the same as the ones in QC_1.sky.zip.
-        // Results from these two sample files will not get imported to the QC folder.
+        // Results from these two sample files will overwrite the previously uploaded sample files.
         // This is a test for the fix implemented for issue 22455:
         // https://www.labkey.org/issues/home/Developer/issues/details.view?issueId=22455
         // Importing a file containing two or more sample files that had already been imported from an earlier document
