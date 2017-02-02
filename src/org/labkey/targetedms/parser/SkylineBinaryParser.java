@@ -85,6 +85,11 @@ public class SkylineBinaryParser
         {
             try { _randomAccessFile.close(); } catch (IOException ignored) {}
         }
+
+        // TODO: We need to call garbage collection here to free the skyd file for possible deletion. When mapping a file
+        // using a FileChannel there is a known Java issue on Windows that prevents the mapped file from being deleted,
+        // http://bugs.java.com/bugdatabase/view_bug.do?bug_id=4715154 and http://bugs.java.com/bugdatabase/view_bug.do?bug_id=4469299
+        System.gc();
     }
 
     /** File-level header fields */
