@@ -1075,11 +1075,11 @@ public class TargetedMSManager
     {
         List<String> logMsgs = new ArrayList<>();
         String logMsg;
-        for(URI uri : fileURIs)
+        for (URI uri : fileURIs)
         {
             File file = new File(uri);
 
-            if(!fileIsReferenced(uri))
+            if (!fileIsReferenced(uri))
             {
                 try
                 {
@@ -1087,10 +1087,19 @@ public class TargetedMSManager
                     String dirName = FilenameUtils.removeExtension(FilenameUtils.removeExtension(file.getName()));
 
                     File dir = new File(file.getParent(), dirName);
+                    File viewFile = new File(file.getParent(), dirName + ".sky.view");
+                    File skydFile = new File(file.getParent(), dirName + ".skyd");
+
                     FileUtils.deleteQuietly(file);
 
-                    if(dir.exists() && dir.isDirectory())
+                    if (dir.exists() && dir.isDirectory())
                         FileUtils.deleteDirectory(dir);
+
+                    if (viewFile.exists())
+                        FileUtils.deleteQuietly(viewFile);
+
+                    if (skydFile.exists())
+                        FileUtils.deleteQuietly(skydFile);
 
                     logMsg = "Deleting " + file.getPath() + ". All the related sampleFiles have been updated with newer data.";
                     logMsgs.add(logMsg);
