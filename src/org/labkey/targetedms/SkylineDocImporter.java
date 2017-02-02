@@ -54,6 +54,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.Serializable;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -268,8 +270,8 @@ public class SkylineDocImporter
                 Map<Instrument, Integer> instrumentIdMap = new HashMap<>();
 
                 TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(run.getContainer());
-                Set<String> files = new HashSet<>();
-                String fileName;
+                Set<URI> files = new HashSet<>();
+                SampleFile srcFile;
 
                 for(SkylineReplicate skyReplicate: parser.getReplicates())
                 {
@@ -295,14 +297,24 @@ public class SkylineDocImporter
                         // In QC folders insert a replicate only if at least one of the associated sample files will be inserted
                         for (SampleFile sampleFile : replicate.getSampleFileList())
                         {
-                            Map<String, Object> sample = TargetedMSManager.getSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), run.getContainer());
+                            Map<String, Object> sample = TargetedMSManager.getSampleFile(new File(sampleFile.getFilePath()), sampleFile.getAcquiredTime(), run.getContainer());
                             if (null != sample && sample.size() > 0)
                             {
-                                fileName = TargetedMSManager.deleteSampleFileAndDependencies((Integer) sample.get("id"));
+                                srcFile = TargetedMSManager.deleteSampleFileAndDependencies((Integer) sample.get("id"));
                                 _log.info("Updating previously imported data for sample file " + sampleFile.getFilePath() + " in QC folder.");
 
-                                if(null != fileName)
-                                    files.add(fileName);
+                                if(null != srcFile && !srcFile.getFilePath().isEmpty())
+                                {
+                                    try
+                                    {
+                                        files.add(new URI(srcFile.getFilePath()));
+                                    }
+                                    catch (URISyntaxException e)
+                                    {
+                                        _log.error("Unable to delete file " + srcFile.getFilePath() + ". May be an invalid path. This file is no longer needed on the server.");
+                                    }
+
+                                }
                             }
                         }
                     }

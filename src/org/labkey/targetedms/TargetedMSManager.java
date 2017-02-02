@@ -69,6 +69,7 @@ import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideManager;
@@ -78,7 +79,6 @@ import org.labkey.targetedms.query.RepresentativeStateManager;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -1054,7 +1054,7 @@ public class TargetedMSManager
                 "Id IN (SELECT DpPredictorId FROM " + getTableInfoReplicate() + " WHERE Id NOT IN (SELECT ReplicateId FROM " + getTableInfoSampleFile() + "))");
     }
 
-    private static boolean fileIsReferenced(String fileName)
+    private static boolean fileIsReferenced(@NotNull URI uri)
     {
         SQLFragment sql = new SQLFragment("SELECT sf.Id FROM ");
         sql.append(getTableInfoReplicate(), "rep");
@@ -1065,41 +1065,37 @@ public class TargetedMSManager
         sql.append(", ");
         sql.append(ExperimentService.get().getTinfoData(), "d");
         sql.append( " WHERE rep.Id = sf.ReplicateId AND rep.RunId = r.Id AND d.RowId = r.DataId AND d.DataFileUrl = ?");
-        sql.add(fileName);
+        sql.add(uri.toString());
 
         return new SqlSelector(getSchema(), sql).exists();
     }
 
-    public static List<String> purgeUnreferencedFiles(Set<String> fileNames)
+    @NotNull
+    public static List<String> purgeUnreferencedFiles(@NotNull Set<URI> fileURIs)
     {
         List<String> logMsgs = new ArrayList<>();
         String logMsg;
-        for(String file : fileNames)
+        for(URI uri : fileURIs)
         {
-            if(!fileIsReferenced(file))
+            File file = new File(uri);
+
+            if(!fileIsReferenced(uri))
             {
                 try
                 {
-                    File zipFile = new File(new URI(file));
-
                     // Remove .sky.zip from file name to get directory name
-                    String dirName = FilenameUtils.removeExtension(FilenameUtils.removeExtension(zipFile.getName()));
+                    String dirName = FilenameUtils.removeExtension(FilenameUtils.removeExtension(file.getName()));
 
-                    File dir = new File(zipFile.getParent(), dirName);
-                    FileUtils.deleteQuietly(zipFile);
+                    File dir = new File(file.getParent(), dirName);
+                    FileUtils.deleteQuietly(file);
 
                     if(dir.exists() && dir.isDirectory())
                         FileUtils.deleteDirectory(dir);
 
-                    logMsg = "Deleting " + file + ". All the related sampleFiles have been updated with newer data.";
+                    logMsg = "Deleting " + file.getPath() + ". All the related sampleFiles have been updated with newer data.";
                     logMsgs.add(logMsg);
 
                     _log.info(logMsg);
-                }
-                catch (URISyntaxException e)
-                {
-                    _log.error("Unable to delete file " + file + ". May be an invalid path. This file is no longer needed on the server.");
-
                 }
                 catch (IOException e)
                 {
@@ -1120,29 +1116,42 @@ public class TargetedMSManager
         deletePredictorsForUnusedReplicates();
     }
 
-    /** @return the source file path for a sampleFile */
-        public static Map<String, Object> getSampleFileUploadFile(int sampleFileId)
-        {
-            SQLFragment sql = new SQLFragment("SELECT d.DataFileUrl FROM ");
-            sql.append(getTableInfoReplicate(), "rep");
-            sql.append(", ");
-            sql.append(getTableInfoSampleFile(), "sf");
-            sql.append(", ");
-            sql.append(getTableInfoRuns(), "r");
-            sql.append(", ");
-            sql.append(ExperimentService.get().getTinfoData(), "d");
-            sql.append( " WHERE rep.Id = sf.ReplicateId AND rep.RunId = r.Id AND d.RowId = r.DataId AND sf.Id = ? ");
-            sql.add(sampleFileId);
-
-            return new SqlSelector(getSchema(), sql).getMap();
-        }
-
+    /**
+     * @return the source file path for a sampleFile
+     */
     @Nullable
-    public static String deleteSampleFileAndDependencies(int sampleFileId)
+    public static SampleFile getSampleFileUploadFile(int sampleFileId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT d.DataFileUrl FROM ");
+        sql.append(getTableInfoReplicate(), "rep");
+        sql.append(", ");
+        sql.append(getTableInfoSampleFile(), "sf");
+        sql.append(", ");
+        sql.append(getTableInfoRuns(), "r");
+        sql.append(", ");
+        sql.append(ExperimentService.get().getTinfoData(), "d");
+        sql.append(" WHERE rep.Id = sf.ReplicateId AND rep.RunId = r.Id AND d.RowId = r.DataId AND sf.Id = ? ");
+        sql.add(sampleFileId);
+
+        String filePath = (String) new SqlSelector(getSchema(), sql).getMap().get("dataFileUrl");
+        if(null != filePath && !filePath.isEmpty())
+        {
+            SampleFile sampleFile = new SampleFile();
+            sampleFile.setFilePath(filePath);
+            return sampleFile;
+        }
+        return null;
+    }
+
+    /**
+     * @return a SampleFile that contains the file path of the import file containing the sample
+     */
+    @Nullable
+    public static SampleFile deleteSampleFileAndDependencies(int sampleFileId)
     {
         purgeDeletedSampleFiles(sampleFileId);
 
-        String file = (String)getSampleFileUploadFile(sampleFileId).get("dataFileUrl");
+        SampleFile file = getSampleFileUploadFile(sampleFileId);
 
         execute("DELETE FROM " + getTableInfoSampleFile() + " WHERE Id = " + sampleFileId);
 
@@ -1509,7 +1518,8 @@ public class TargetedMSManager
     }
 
     /** @return the sample file if it has already been imported in the container */
-    public static Map<String, Object> getSampleFile(String filePath, Date acquiredTime, Container container)
+    @Nullable
+    public static Map<String, Object> getSampleFile(File file, Date acquiredTime, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT sf.* FROM ");
         sql.append(getTableInfoSampleFile(), "sf");
@@ -1519,7 +1529,7 @@ public class TargetedMSManager
         sql.append(getTableInfoRuns(), "r");
         sql.append( " WHERE r.Id = rep.RunId AND rep.Id = sf.ReplicateId AND r.Container = ? AND sf.FilePath = ? ");
         sql.add(container);
-        sql.add(filePath);
+        sql.add(file.getPath());
         if(acquiredTime == null)
             sql.append("AND sf.AcquiredTime IS NULL");
         else
