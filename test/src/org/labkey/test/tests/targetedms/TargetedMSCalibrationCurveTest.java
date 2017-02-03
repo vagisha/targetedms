@@ -62,7 +62,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         for (boolean smallMolecule : Arrays.asList(true, false))
         {
             clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
-            click(Locator.linkContainingText(scenario + ".sky.zip"));
+            clickAndWait(Locator.linkContainingText(scenario + ".sky.zip"));
             List<Map<String, Object>> expected;
             if (smallMolecule)
             {
@@ -73,7 +73,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 {
                     continue;
                 }
-                click(Locator.xpath("//th[span[text() = 'Small Molecule Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
+                waitAndClick(Locator.xpath("//th[span[text() = 'Small Molecule Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
             }
             else
             {
@@ -84,7 +84,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 {
                     continue;
                 }
-                click(Locator.xpath("//th[span[text() = 'Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
+                waitAndClick(Locator.xpath("//th[span[text() = 'Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
             }
             Locator calibrationCurveMenuItem = Locator.tagContainingText("span", "Calibration Curves");
             clickAndWait(calibrationCurveMenuItem);

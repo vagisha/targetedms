@@ -64,9 +64,9 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
         setupSubfolder(getProjectName(), scenario, FolderType.Experiment);
         importData(SAMPLEDATA_FOLDER + scenario + ".sky.zip");
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
-        click(Locator.linkContainingText(scenario + ".sky.zip"));
+        clickAndWait(Locator.linkContainingText(scenario + ".sky.zip"));
 
-        click(Locator.xpath("//th[span[text() = 'Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
+        waitAndClick(Locator.xpath("//th[span[text() = 'Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
 
         Locator groupComparisonLocator = Locator.xpath("//span[starts-with(text(), '" + GROUP_COMPARISON_PREFIX + "')]");
         List<WebElement> groupComparisonElements = groupComparisonLocator.findElements(getDriver());
@@ -86,10 +86,10 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
     private void verifyGroupComparison(String scenario, String groupComparisonName) throws Exception
     {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
-        click(Locator.linkContainingText(scenario + ".sky.zip"));
+        clickAndWait(Locator.linkContainingText(scenario + ".sky.zip"));
         // TODO(nicksh): this only verifies Peptide fold changes.
         // We need to add some scenarios that involve small molecules.
-        click(Locator.xpath("//th[span[text() = 'Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
+        waitAndClick(Locator.xpath("//th[span[text() = 'Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
         click(Locator.linkWithText(GROUP_COMPARISON_PREFIX + groupComparisonName));
 
         List<Map<String, Object>> expectedResultRows = readScenarioCsv(scenario, groupComparisonName + "_GroupComparisonColumns");
