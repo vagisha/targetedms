@@ -1071,10 +1071,40 @@ public class TargetedMSManager
     }
 
     @NotNull
-    public static List<String> purgeUnreferencedFiles(@NotNull Set<URI> fileURIs)
+    private static List<String> deleteFileWithLogging(@NotNull File file, @NotNull List<String> logs)
+    {
+        String logMsg = "Deleting " + file.getPath();
+        logs.add(logMsg);
+        _log.info(logMsg);
+
+        if(!FileUtils.deleteQuietly(file))
+        {
+            logMsg = "Unable to delete " + file.getPath();
+            logs.add(logMsg);
+            _log.warn(logMsg);
+        }
+
+        return logs;
+    }
+
+    private static void deleteRunForFile(URI uri, Container c, User u)
+    {
+        SQLFragment sql = new SQLFragment("SELECT d.RunId FROM ");
+        sql.append(ExperimentService.get().getTinfoData(), "d");
+        sql.append( " WHERE d.DataFileUrl = ?");
+        sql.add(uri.toString());
+
+        Integer runId = (Integer) new SqlSelector(getSchema(), sql).getMap().get("runId");
+
+        ExperimentService.get().deleteExperimentRunsByRowIds(c, u, runId);
+    }
+
+    @NotNull
+    public static List<String> purgeUnreferencedFiles(@NotNull Set<URI> fileURIs, Container c, User u)
     {
         List<String> logMsgs = new ArrayList<>();
         String logMsg;
+
         for (URI uri : fileURIs)
         {
             File file = new File(uri);
@@ -1083,6 +1113,8 @@ public class TargetedMSManager
             {
                 try
                 {
+                    deleteRunForFile(uri, c, u);
+
                     // Remove .sky.zip from file name to get directory name
                     String dirName = FilenameUtils.removeExtension(FilenameUtils.removeExtension(file.getName()));
 
@@ -1090,28 +1122,33 @@ public class TargetedMSManager
                     File viewFile = new File(file.getParent(), dirName + ".sky.view");
                     File skydFile = new File(file.getParent(), dirName + ".skyd");
 
-                    FileUtils.deleteQuietly(file);
+                    logMsg = "All the related sampleFiles for " + file.getPath() + " have been updated with newer data.";
+                    logMsgs.add(logMsg);
+                    _log.info(logMsg);
 
-                    if (dir.exists() && dir.isDirectory())
-                        FileUtils.deleteDirectory(dir);
+                    logMsgs = deleteFileWithLogging(file, logMsgs);
 
                     if (viewFile.exists())
-                        FileUtils.deleteQuietly(viewFile);
+                        logMsgs = deleteFileWithLogging(viewFile, logMsgs);
 
                     if (skydFile.exists())
-                        FileUtils.deleteQuietly(skydFile);
+                        logMsgs = deleteFileWithLogging(skydFile, logMsgs);
 
-                    logMsg = "Deleting " + file.getPath() + ". All the related sampleFiles have been updated with newer data.";
-                    logMsgs.add(logMsg);
-
-                    _log.info(logMsg);
+                    if (dir.exists() && dir.isDirectory())
+                    {
+                        logMsg = "Deleting directory " + dir.getPath();
+                        logMsgs.add(logMsg);
+                        _log.info(logMsg);
+                        FileUtils.deleteDirectory(dir);
+                    }
                 }
                 catch (IOException e)
                 {
-                    _log.error("Unable to delete unzipped directory from file " + file + ". The files in this directory are no longer needed on the server.");
+                    logMsg = "Unable to delete unzipped directory from file " + file;
+                    _log.warn(logMsg);
+                    logMsgs.add(logMsg);
                 }
             }
-
         }
         return logMsgs;
     }
