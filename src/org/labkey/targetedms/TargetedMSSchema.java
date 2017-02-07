@@ -612,7 +612,7 @@ public class TargetedMSSchema extends UserSchema
     }
 
     @Override
-    protected TableInfo createTable(String name)
+    public TableInfo createTable(String name)
     {
         if (TABLE_TARGETED_MS_RUNS.equalsIgnoreCase(name))
         {
