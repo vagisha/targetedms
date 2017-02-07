@@ -21,6 +21,8 @@ import org.labkey.test.util.DataRegionTable;
 
 import java.util.List;
 
+import static org.junit.Assert.fail;
+
 public class TargetedMSRunsTable extends DataRegionTable
 {
     public TargetedMSRunsTable(WebDriverWrapper test)
@@ -52,7 +54,10 @@ public class TargetedMSRunsTable extends DataRegionTable
     public void deleteRun(String documentName)
     {
         uncheckAll();
-        checkCheckbox(getRowIndex("File", documentName));
+        final int rowIndex = getRowIndex("File", documentName);
+        if (rowIndex < 0)
+            fail("Unable to find checkbox for non-existent file: " + documentName);
+        checkCheckbox(rowIndex);
         clickHeaderButtonByText("Delete");
         _driver.clickButton("Confirm Delete");
     }
@@ -67,7 +72,12 @@ public class TargetedMSRunsTable extends DataRegionTable
     {
         uncheckAll();
         for (String documentName : documentNames)
-            checkCheckbox(getRowIndex("File", documentName));
+        {
+            final int rowIndex = getRowIndex("File", documentName);
+            if (rowIndex < 0)
+                fail("Unable to find checkbox for non-existent file: " + documentName);
+            checkCheckbox(rowIndex);
+        }
 
         clickHeaderButtonByText(buttonText);
     }
