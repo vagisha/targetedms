@@ -60,6 +60,11 @@ public class TargetedMSQCTest extends TargetedMSTest
             "VLVLDTDYK",
             "VYVEELKPTPEGDLEILLQK"};
 
+    private static final String QCREPLICATE_1 = "25fmol_Pepmix_spike_SRM_1601_01";
+    private static final String QCREPLICATE_2 = "25fmol_Pepmix_spike_SRM_1601_02";
+    private static final String QCREPLICATE_3 = "25fmol_Pepmix_spike_SRM_1601_03";
+    private static final String QCREPLICATE_4 = "25fmol_Pepmix_spike_SRM_1601_04";
+
     private static QCHelper.Annotation instrumentChange = new QCHelper.Annotation("Instrumentation Change", "We changed it", "2013-08-22 14:43:00");
     private static QCHelper.Annotation reagentChange = new QCHelper.Annotation("Reagent Change", "New reagents", "2013-08-10 15:34:00");
     private static QCHelper.Annotation technicianChange = new QCHelper.Annotation("Technician Change", "New guy on the scene", "2013-08-10 08:43:00");
@@ -461,10 +466,45 @@ public class TargetedMSQCTest extends TargetedMSTest
         // Sample files 25fmol_Pepmix_spike_SRM_1601_02 and 25fmol_Pepmix_spike_SRM_1601_02
         // are common to the two docs. They hould have only 1 row each since they were imported
         // only from the first document (QC_1.sky.zip).
-        verifyRow(drt, 0, "25fmol_Pepmix_spike_SRM_1601_01", QC_1_FILE);
-        verifyRow(drt, 1, "25fmol_Pepmix_spike_SRM_1601_02", QC_2_FILE);
-        verifyRow(drt, 2, "25fmol_Pepmix_spike_SRM_1601_03", QC_2_FILE);
-        verifyRow(drt, 3, "25fmol_Pepmix_spike_SRM_1601_04", QC_2_FILE);
+        verifyRow(drt, 0, QCREPLICATE_1, QC_1_FILE);
+        verifyRow(drt, 1, QCREPLICATE_2, QC_2_FILE);
+        verifyRow(drt, 2, QCREPLICATE_3, QC_2_FILE);
+        verifyRow(drt, 3, QCREPLICATE_4, QC_2_FILE);
+
+        goToSchemaBrowser();
+        selectQuery("targetedms", "replicateannotation");
+        waitForText("view data");
+        clickAndWait(Locator.linkWithText("view data"));
+
+        // Ensure samples from QC-1 that exist in QC-2 have been overwritten
+        drt = new DataRegionTable("query", this);
+        assertEquals("QC1A_Annotation", drt.getDataAsText(0, 2));
+        assertEquals("QC2A_Annotation", drt.getDataAsText(1, 2));
+        assertTextNotPresent("QC1B_Annotation");
+
+        // Ensure QC_1 file not erased since one sample file in it is not overwritten
+        goToModule("FileContent");
+        waitForText("QC_1.sky.zip");
+//        assertTextPresent("QC_1.sky.zip");
+
+        clickFolder(subFolderName);
+        importData(QC_4_FILE, 3);
+        clickFolder(subFolderName);
+        verifyQcSummary(2, 4, precursors.size());
+
+        // Ensure QC-2 samples have been overwritten by QC-4
+        goToSchemaBrowser();
+        selectQuery("targetedms", "precursorchrominfo");
+        waitForText("view data");
+        clickAndWait(Locator.linkWithText("view data"));
+        assertTextPresent("42.2525");
+        assertTextNotPresent("42.4541");
+
+        // QC_2 should be deleted since all samples have been overwritten, log to remain
+        goToModule("FileContent");
+        waitForText("QC_2.sky.log");
+        assertTextNotPresent("QC_2.sky.zip");
+//        assertTextPresent("QC_2.sky.log");
     }
 
     @Test
