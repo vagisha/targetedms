@@ -46,7 +46,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
     public static void initProject()
     {
         TargetedMSLinkVersionsTest init = (TargetedMSLinkVersionsTest)getCurrentTest();
-        init.setupFolder(FolderType.QC);
+        init.setupFolder(FolderType.Experiment);
 
         // pre-upload the files to the pipeline root so that all of the @Test don't have to worry about it
         init.goToModule("Pipeline");
@@ -57,7 +57,6 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
     public void preTest()
     {
         goToProjectHome();
-        clickTab("Runs");
 
         // since importing one of these runs is really quick, delete and re-import runs
         // for each @Test so that we can assure the Created date ordering of the runs
@@ -65,7 +64,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         importData(QC_1_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3));
         importData(QC_2_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3));
         importData(QC_3_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3));
-        clickTab("Runs");
+        goToProjectHome();
     }
 
     private void deleteExistingQCRuns()
@@ -98,14 +97,14 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         waitForElement(LinkVersionsGrid.Elements.noVersions);
 
         log("link two versions together");
-        clickTab("Runs");
+        goToProjectHome();
         LinkVersionsGrid grid = table.openLinkVersionsDialogForDocuments(Arrays.asList(QC_1_FILE, QC_2_FILE));
         assertElementNotPresent(LinkVersionsGrid.Elements.replaceFooter);
         grid.clickSave();
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_2_FILE), 0);
 
         log("add third document to version chain");
-        clickTab("Runs");
+        goToProjectHome();
         grid = table.openLinkVersionsDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE), 3);
         grid.waitForGrid(QC_DOCUMENT_NAMES, true); // verify QC_2 document is pulled in by association
         assertElementPresent(LinkVersionsGrid.Elements.replaceFooter);
@@ -114,7 +113,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         verifyDocumentDetailsChain(QC_DOCUMENT_NAMES, 2);
 
         log("re-order documents in the existing chain");
-        clickTab("Runs");
+        goToProjectHome();
         grid = table.openLinkVersionsDialogForDocuments(QC_DOCUMENT_NAMES);
         assertEquals(3, grid.findRemoveLinkIcons().size());
         grid.reorderVersions(2, 0);
@@ -137,7 +136,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_3_FILE), 0);
 
         log("remove link version from end of chain");
-        clickTab("Runs");
+        goToProjectHome();
         grid = table.openLinkVersionsDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE));
         assertEquals(2, grid.findRemoveLinkIcons().size());
         grid.removeLinkVersion(1);
@@ -155,13 +154,13 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         verifyDocumentDetailsChain(QC_DOCUMENT_NAMES, 0);
 
         log("delete the run which is in a chain");
-        clickTab("Runs");
+        goToProjectHome();
         table.deleteRun(QC_2_FILE);
 
         log("verify that the chain was updated correctly for remaining runs");
         table.goToDocumentDetails(QC_1_FILE);
         waitForElement(LinkVersionsGrid.Elements.noVersions);
-        clickTab("Runs");
+        goToProjectHome();
         table.goToDocumentDetails(QC_3_FILE);
         waitForElement(LinkVersionsGrid.Elements.noVersions);
     }
