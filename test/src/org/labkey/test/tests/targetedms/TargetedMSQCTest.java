@@ -473,8 +473,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         goToSchemaBrowser();
         selectQuery("targetedms", "replicateannotation");
-        waitForText("view data");
-        clickAndWait(Locator.linkWithText("view data"));
+        waitAndClickAndWait(Locator.linkWithText("view data"));
 
         // Ensure samples from QC-1 that exist in QC-2 have been overwritten
         drt = new DataRegionTable("query", this);
@@ -485,7 +484,6 @@ public class TargetedMSQCTest extends TargetedMSTest
         // Ensure QC_1 file not erased since one sample file in it is not overwritten
         goToModule("FileContent");
         waitForText("QC_1.sky.zip");
-//        assertTextPresent("QC_1.sky.zip");
 
         clickFolder(subFolderName);
         importData(QC_4_FILE, 3);
@@ -495,8 +493,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         // Ensure QC-2 samples have been overwritten by QC-4
         goToSchemaBrowser();
         selectQuery("targetedms", "precursorchrominfo");
-        waitForText("view data");
-        clickAndWait(Locator.linkWithText("view data"));
+        waitAndClickAndWait(Locator.linkWithText("view data"));
         assertTextPresent("42.2525");
         assertTextNotPresent("42.4541");
 
@@ -504,7 +501,6 @@ public class TargetedMSQCTest extends TargetedMSTest
         goToModule("FileContent");
         waitForText("QC_2.sky.log");
         assertTextNotPresent("QC_2.sky.zip");
-//        assertTextPresent("QC_2.sky.log");
     }
 
     @Test
