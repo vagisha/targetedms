@@ -477,8 +477,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // Ensure samples from QC-1 that exist in QC-2 have been overwritten
         drt = new DataRegionTable("query", this);
-        assertEquals("QC1A_Annotation", drt.getDataAsText(0, 2));
-        assertEquals("QC2A_Annotation", drt.getDataAsText(1, 2));
+        assertEquals(Arrays.asList("QC1A_Annotation", "QC2A_Annotation"), drt.getColumnDataAsText("Name"));
         assertTextNotPresent("QC1B_Annotation");
 
         // Ensure QC_1 file not erased since one sample file in it is not overwritten
