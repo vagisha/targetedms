@@ -1744,4 +1744,24 @@ public class TargetedMSManager
         Integer maxCount = new SqlSelector(getSchema(), maxTransitionSQL).getObject(Integer.class);
         return maxCount != null ? maxCount.intValue() : 0;
     }
+
+    static void moveRun(TargetedMSRun run, Container newContainer, String newRunLSID, int newDataRowId, User user)
+    {
+        // MoveRunsTask.moveRun ensures a transaction
+        SQLFragment updatePrecChromInfoSql = new SQLFragment("UPDATE ");
+        updatePrecChromInfoSql.append(getTableInfoPrecursorChromInfo(), "");
+        updatePrecChromInfoSql.append(" SET container = ?").add(newContainer);
+        updatePrecChromInfoSql.append(" WHERE sampleFileId IN (");
+        updatePrecChromInfoSql.append(" SELECT sf.Id FROM ").append(getTableInfoSampleFile(), "sf");
+        updatePrecChromInfoSql.append(" INNER JOIN ").append(getTableInfoReplicate(), "rep").append(" ON rep.Id = sf.ReplicateId");
+        updatePrecChromInfoSql.append(" WHERE rep.runId = ?").add(run.getId());
+        updatePrecChromInfoSql.append(" )");
+
+        new SqlExecutor(getSchema()).execute(updatePrecChromInfoSql);
+
+        run.setExperimentRunLSID(newRunLSID);
+        run.setDataId(newDataRowId);
+        run.setContainer(newContainer);
+        updateRun(run, user);
+    }
 }

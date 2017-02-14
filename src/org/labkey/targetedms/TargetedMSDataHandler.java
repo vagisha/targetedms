@@ -207,10 +207,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         }
 
         // Update the run
-        run.setExperimentRunLSID(newRunLSID);
-        run.setDataId(newData.getRowId());
-        run.setContainer(targetContainer);
-        TargetedMSManager.updateRun(run, user);
+        TargetedMSManager.moveRun(run, targetContainer, newRunLSID, newData.getRowId(), user);
 
         // Delete the old entry in exp.data -- it is no longer linked to the run.
         ExpData oldData = ExperimentService.get().getExpData(oldDataRowID);
