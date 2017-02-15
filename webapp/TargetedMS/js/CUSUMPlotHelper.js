@@ -9,9 +9,9 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
         },
         tooltips: {
             'CUSUMm' : 'A CUSUM plot is a time-weighted control plot that displays the cumulative sums of the deviations of each sample value from the target value.' +
-            ' CUSUMm (mean CUSUM) plots two types of CUSUM statistics; one for positive mean shifts and the other for negative mean shifts.',
+            ' CUSUMm (mean CUSUM) plots two types of CUSUM statistics: one for positive mean shifts and the other for negative mean shifts.',
             'CUSUMv' : 'A CUSUM plot is a time-weighted control plot that displays the cumulative sums of the deviations of each sample value from the target value. ' +
-            'CUSUMv (variability or scale CUSUM) plots two types of CUSUM statistics; one for positive variability shifts and the other for negative variability shifts. ' +
+            'CUSUMv (variability or scale CUSUM) plots two types of CUSUM statistics: one for positive variability shifts and the other for negative variability shifts. ' +
             'Variability is a transformed standardized normal quantity which is sensitive to variability changes.'
         }
     },

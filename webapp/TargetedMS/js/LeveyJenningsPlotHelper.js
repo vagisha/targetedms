@@ -2,7 +2,7 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
     extend: 'LABKEY.targetedms.QCPlotHelperBase',
     statics: {
         tooltips: {
-            'Levey-Jennings' : 'Levey-Jennings plot plots quality control data to give a visual indication whether a laboratory test is working well.' +
+            'Levey-Jennings' : 'A Levey-Jennings plot plots quality control data to give a visual indication of whether a laboratory test is working well.' +
             'The distance from the mean (expected value) is measured in standard deviations (SD).'
         }
     },
