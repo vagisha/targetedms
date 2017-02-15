@@ -16,8 +16,8 @@
 
 package org.labkey.targetedms;
 
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -40,7 +40,6 @@ import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.targetedms.TargetedMSService;
-import org.labkey.api.usageMetrics.UsageMetricsProvider;
 import org.labkey.api.usageMetrics.UsageMetricsService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
@@ -332,15 +331,11 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         UsageMetricsService svc = ServiceRegistry.get().getService(UsageMetricsService.class);
         if (null != svc)
         {
-            svc.registerUsageMetrics(NAME, new UsageMetricsProvider()
+            svc.registerUsageMetrics(NAME, () ->
             {
-                @Override
-                public Map<String, Object> getUsageMetrics()
-                {
-                    Map<String, Object> metric = new HashMap<>();
-                    metric.put("runCount", new SqlSelector(DbSchema.get("TargetedMS", DbSchemaType.Module), "SELECT COUNT(*) FROM TargetedMS.Runs WHERE Deleted = ?", Boolean.FALSE).getObject(Long.class));
-                    return metric;
-                }
+                Map<String, Object> metric = new HashMap<>();
+                metric.put("runCount", new SqlSelector(DbSchema.get("TargetedMS", DbSchemaType.Module), "SELECT COUNT(*) FROM TargetedMS.Runs WHERE Deleted = ?", Boolean.FALSE).getObject(Long.class));
+                return metric;
             });
         }
     }
