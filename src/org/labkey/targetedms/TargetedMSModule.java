@@ -21,6 +21,9 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.audit.AuditLogService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
@@ -37,6 +40,8 @@ import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.api.usageMetrics.UsageMetricsProvider;
+import org.labkey.api.usageMetrics.UsageMetricsService;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.BaseWebPartFactory;
@@ -65,8 +70,10 @@ import org.labkey.targetedms.view.expannotations.TargetedMSExperimentsWebPart;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class TargetedMSModule extends SpringModule implements ProteomicsModule
@@ -321,6 +328,21 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         addController("targetedms", TargetedMSController.class);
         TargetedMSSchema.register(this);
+
+        UsageMetricsService svc = ServiceRegistry.get().getService(UsageMetricsService.class);
+        if (null != svc)
+        {
+            svc.registerUsageMetrics(NAME, new UsageMetricsProvider()
+            {
+                @Override
+                public Map<String, Object> getUsageMetrics()
+                {
+                    Map<String, Object> metric = new HashMap<>();
+                    metric.put("runCount", new SqlSelector(DbSchema.get("TargetedMS", DbSchemaType.Module), "SELECT COUNT(*) FROM TargetedMS.Runs WHERE Deleted = ?", Boolean.FALSE).getObject(Long.class));
+                    return metric;
+                }
+            });
+        }
     }
 
     @Override
