@@ -782,8 +782,12 @@
             </column>
             <column columnName="PredictorId"/>
             <column columnName="Charge"/>
-            <column columnName="Slope"/>
-            <column columnName="Intercept"/>
+            <column columnName="Slope">
+                <formatString>0.0000E0</formatString>
+            </column>
+            <column columnName="Intercept">
+                <formatString>0.0000E0</formatString>
+            </column>
         </columns>
     </table>
     <table tableName="protein" tableDbType="TABLE">
@@ -1493,14 +1497,14 @@
             <column columnName="QuantificationSettingsId"/>
             <column columnName="GeneralMoleculeId"/>
             <column columnName="Slope">
-                <formatString>0.0000E+0</formatString>
+                <formatString>0.0000E0</formatString>
             </column>
             <column columnName="Intercept">
-                <formatString>0.0000E+0</formatString>
+                <formatString>0.0000E0</formatString>
             </column>
             <column columnName="PointCount"/>
             <column columnName="QuadraticCoefficient">
-                <formatString>0.0000E+0</formatString>
+                <formatString>0.0000E0</formatString>
             </column>
             <column columnName="RSquared">
                 <formatString>0.####</formatString>
