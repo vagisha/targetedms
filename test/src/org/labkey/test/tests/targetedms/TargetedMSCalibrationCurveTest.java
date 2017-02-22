@@ -22,7 +22,6 @@ import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.DataRegionTable;
-import org.testng.Assert;
 
 import java.io.File;
 import java.util.Arrays;
@@ -30,6 +29,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 
 /**
  * Tests uploading Skyline documents that contain calibration curve settings. Makes sure that the calculated results
@@ -95,27 +97,27 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 String peptide = expectedRow.get("Peptide").toString();
                 String msg = scenario + "_" + peptide;
                 int rowIndex = calibrationCurvesTable.getRowIndex(smallMolecule ? "Molecule" : "Peptide", peptide);
-                Assert.assertNotEquals(rowIndex, -1, msg);
+                assertNotEquals(msg, -1, rowIndex);
                 String actualErrorMessage = calibrationCurvesTable.getDataAsText(rowIndex, "Error Message");
                 String expectedErrorMessage = (String) expectedRow.get("ErrorMessage");
                 if (expectedErrorMessage != null && expectedErrorMessage.length() > 0)
                 {
-                    Assert.assertNotEquals("", actualErrorMessage);
+                    assertNotEquals("", actualErrorMessage);
                 }
                 else
                 {
                     double delta = 1E-4;
                     double actualSlope = Double.parseDouble(calibrationCurvesTable.getDataAsText(rowIndex, "Slope"));
                     double expectedSlope = Double.parseDouble(expectedRow.get("Slope").toString());
-                    Assert.assertEquals(actualSlope, expectedSlope, delta);
+                    assertEquals(expectedSlope, actualSlope, delta);
                     double actualIntercept = Double.parseDouble(calibrationCurvesTable.getDataAsText(rowIndex, "Intercept"));
                     double expectedIntercept = Double.parseDouble(expectedRow.get("Intercept").toString());
-                    Assert.assertEquals(actualIntercept, expectedIntercept, delta);
+                    assertEquals(expectedIntercept, actualIntercept, delta);
                     double actualRSquared = Double.parseDouble(calibrationCurvesTable.getDataAsText(rowIndex, "RSquared"));
                     double expectedRSquared = Double.parseDouble(expectedRow.get("RSquared").toString());
                     if (Math.abs(actualRSquared - expectedRSquared) > delta)
                     {
-                        Assert.assertEquals(actualRSquared, expectedRSquared, delta);
+                        assertEquals(expectedRSquared, actualRSquared, delta);
                     }
                 }
             }

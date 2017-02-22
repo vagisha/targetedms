@@ -19,13 +19,11 @@ import org.junit.experimental.categories.Category;
 import org.labkey.api.reader.TabLoader;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
-import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.TestLogger;
 import org.openqa.selenium.WebElement;
-import org.testng.Assert;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -34,6 +32,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests for Group Comparison calculations in Panorama.  Tests uploading a Skyline document which has Group Comparisons
@@ -74,7 +76,7 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
         for (WebElement element : groupComparisonElements)
         {
             String elementText = element.getText();
-            Assert.assertTrue(elementText.startsWith(GROUP_COMPARISON_PREFIX));
+            assertTrue(elementText.startsWith(GROUP_COMPARISON_PREFIX));
             groupComparisonNames.add(elementText.substring(GROUP_COMPARISON_PREFIX.length()));
         }
         for (String groupComparisonName : groupComparisonNames)
@@ -119,11 +121,11 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
                 }
                 rowIndex = peptideColumn.indexOf(peptide.replace("[+57]", "[+57.0]"));
             }
-            Assert.assertNotEquals(rowIndex, -1);
+            assertNotEquals(-1, rowIndex);
             double delta = 1E-4;
             double actualLog2FoldChange = Double.parseDouble(groupComparisonsTable.getDataAsText(rowIndex, "Log 2 Fold Change"));
             double expectedFoldChange = Double.parseDouble(expectedRow.get("Log 2 Fold Change").toString());
-            Assert.assertEquals(actualLog2FoldChange, expectedFoldChange, delta);
+            assertEquals(expectedFoldChange, actualLog2FoldChange, delta);
         }
     }
 
