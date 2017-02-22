@@ -106,22 +106,39 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 }
                 else
                 {
-                    double delta = 1E-4;
                     double actualSlope = Double.parseDouble(calibrationCurvesTable.getDataAsText(rowIndex, "Slope"));
                     double expectedSlope = Double.parseDouble(expectedRow.get("Slope").toString());
-                    assertEquals(expectedSlope, actualSlope, delta);
+                    assertEquals(expectedSlope, actualSlope, getDelta(expectedSlope));
                     double actualIntercept = Double.parseDouble(calibrationCurvesTable.getDataAsText(rowIndex, "Intercept"));
                     double expectedIntercept = Double.parseDouble(expectedRow.get("Intercept").toString());
-                    assertEquals(expectedIntercept, actualIntercept, delta);
+                    assertEquals(expectedIntercept, actualIntercept, getDelta(expectedIntercept));
                     double actualRSquared = Double.parseDouble(calibrationCurvesTable.getDataAsText(rowIndex, "RSquared"));
                     double expectedRSquared = Double.parseDouble(expectedRow.get("RSquared").toString());
-                    if (Math.abs(actualRSquared - expectedRSquared) > delta)
-                    {
-                        assertEquals(expectedRSquared, actualRSquared, delta);
-                    }
+                    assertEquals(expectedRSquared, actualRSquared, 1E-4);
                 }
             }
         }
+    }
+
+    private double getDelta(double expectedValue)
+    {
+        double delta = 1E-3;
+        expectedValue = Math.abs(expectedValue);
+
+        if (expectedValue == 0.0)
+            return delta;
+        while (expectedValue > 10)
+        {
+            expectedValue = expectedValue / 10.0;
+            delta = delta * 10.0;
+        }
+        while (expectedValue < 1)
+        {
+            expectedValue = expectedValue * 10.0;
+            delta = delta / 10.0;
+        }
+
+        return delta;
     }
 
     private List<Map<String, Object>> readScenarioCsv(String scenarioName, String reportName) throws Exception
