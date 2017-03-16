@@ -318,11 +318,6 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public Chromatogram createChromatogram()
     {
-        Chromatogram result = new Chromatogram();
-        result.setChromatogram(_chromatogram);
-        result.setNumPoints(_numPoints);
-        result.setNumTransitions(_numTransitions);
-        result.setUncompressedSize(_uncompressedSize == null ? 0 : _uncompressedSize);
-        return result;
+        return new Chromatogram(this);
     }
 }

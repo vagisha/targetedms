@@ -714,10 +714,15 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
     assignDefaultMetricIfNull: function ()
     {
-        if (this.metric == null || isNaN(Number(this.metric)))
-            this.metric = this.metricPropArr[0].id;
-        else if (!this.getMetricPropsById(this.metric))
-            this.metric = this.metricPropArr[0].id;
+        if (this.metric == null || isNaN(Number(this.metric)) || !this.getMetricPropsById(this.metric)) {
+            var targetIndex = 0;
+            for (var i = 0; i < this.metricPropArr.length; i++) {
+                if (this.metricPropArr[i].name == 'Retention Time') {
+                    targetIndex = i;
+                }
+            }
+            this.metric = this.metricPropArr[targetIndex].id;
+        }
     },
 
     getMetricCombo : function()

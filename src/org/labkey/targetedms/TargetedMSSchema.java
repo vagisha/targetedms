@@ -17,7 +17,9 @@
 package org.labkey.targetedms;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AJAXDetailsDisplayColumn;
@@ -32,6 +34,7 @@ import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.EnumTableInfo;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.RenderContext;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.UpdateColumn;
@@ -58,6 +61,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
+import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.query.*;
@@ -67,6 +71,7 @@ import org.springframework.validation.BindException;
 import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -975,6 +980,16 @@ public class TargetedMSSchema extends UserSchema
             areaNormalizedCol.setFormat("##0.####%");
             result.addColumn(areaNormalizedCol);
 
+            // Include all but the chromatogram columns which are about to be added
+            List<FieldKey> defaultCols = new ArrayList<>(result.getDefaultVisibleColumns());
+            result.setDefaultVisibleColumns(defaultCols);
+
+            // Doesn't really matter what we wrap, so do a VARCHAR column so the type of the output matches
+            ColumnInfo timesColInfo = result.addWrapColumn("Times", result.getRealTable().getColumn("identified"));
+            timesColInfo.setDisplayColumnFactory(colInfo -> new TargetedMSSchema.ChromatogramDisplayColumn(colInfo, true));
+            ColumnInfo intensitiesColInfo = result.addWrapColumn("Intensities", result.getRealTable().getColumn("identified"));
+            intensitiesColInfo.setDisplayColumnFactory(colInfo -> new TargetedMSSchema.ChromatogramDisplayColumn(colInfo, false));
+
             return result;
         }
 
@@ -1179,4 +1194,113 @@ public class TargetedMSSchema extends UserSchema
         return hs;
     }
 
+    public static class ChromatogramDisplayColumn extends DataColumn
+    {
+        private final boolean _times;
+
+        public ChromatogramDisplayColumn(ColumnInfo col, boolean times)
+        {
+            super(col);
+            setTextAlign("left");
+            _times = times;
+        }
+
+        @Override
+        public boolean isSortable()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isFilterable()
+        {
+            return false;
+        }
+
+        @Override
+        public Object getValue(RenderContext ctx)
+        {
+            try
+            {
+                byte[] bytes = ctx.getResults().getBytes(getChromatogramFieldKey());
+                Integer numPoints = ctx.get(getNumPointsFieldKey(), Integer.class);
+                Integer numTransitions = ctx.get(getNumTransitionsFieldKey(), Integer.class);
+                Integer uncompressedSize = ctx.get(getUncompressedSizeFieldKey(), Integer.class);
+                Integer chromatogramIndex = ctx.get(getChromatogramIndexFieldKey(), Integer.class);
+
+                if (bytes != null && numPoints != null && numTransitions != null && chromatogramIndex != null)
+                {
+                    Chromatogram chromatogram = new Chromatogram(bytes, numPoints, numTransitions, uncompressedSize);
+                    return StringUtils.join(_times ? chromatogram.getTimes() : chromatogram.getIntensities(chromatogramIndex.intValue()), ',');
+                }
+            }
+            catch (SQLException e)
+            {
+                throw new RuntimeSQLException(e);
+            }
+
+            return null;
+        }
+
+        @NotNull
+        @Override
+        public String getFormattedValue(RenderContext ctx)
+        {
+            return PageFlowUtil.filter(getValue(ctx));
+        }
+
+        @Override
+        public Object getDisplayValue(RenderContext ctx)
+        {
+            return getValue(ctx);
+        }
+
+        @Nullable
+        @Override
+        public String getFormattedText(RenderContext ctx)
+        {
+            Object o = getValue(ctx);
+            return o == null ? null : o.toString();
+        }
+
+        @Override
+        public void addQueryFieldKeys(Set<FieldKey> keys)
+        {
+            keys.add(getNumPointsFieldKey());
+            keys.add(getNumTransitionsFieldKey());
+            keys.add(getUncompressedSizeFieldKey());
+            keys.add(getChromatogramIndexFieldKey());
+            keys.add(getChromatogramFieldKey());
+        }
+
+        private FieldKey getNumPointsFieldKey()
+        {
+            return new FieldKey(getPrecursorChromInfoFK(), "NumPoints");
+        }
+
+        private FieldKey getPrecursorChromInfoFK()
+        {
+            return new FieldKey(getColumnInfo().getFieldKey().getParent(), "PrecursorChromInfoId");
+        }
+
+        private FieldKey getNumTransitionsFieldKey()
+        {
+            return new FieldKey(getPrecursorChromInfoFK(), "NumTransitions");
+        }
+
+        private FieldKey getUncompressedSizeFieldKey()
+        {
+            return new FieldKey(getPrecursorChromInfoFK(), "UncompressedSize");
+        }
+
+        private FieldKey getChromatogramFieldKey()
+        {
+            return new FieldKey(getPrecursorChromInfoFK(), "Chromatogram");
+        }
+
+        private FieldKey getChromatogramIndexFieldKey()
+        {
+            return new FieldKey(getColumnInfo().getFieldKey().getParent(), "ChromatogramIndex");
+        }
+    }
 }

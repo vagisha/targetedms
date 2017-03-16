@@ -222,7 +222,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         impersonate(USER);
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, false);
-        assertEquals("Metric Type not set to default value", QCPlotsWebPart.MetricType.FWB, qcPlotsWebPart.getCurrentMetricType());
+        assertEquals("Metric Type not set to default value", QCPlotsWebPart.MetricType.RETENTION, qcPlotsWebPart.getCurrentMetricType());
         assertEquals("Y-Axis Scale not set to default value", QCPlotsWebPart.Scale.LINEAR, qcPlotsWebPart.getCurrentScale());
         assertFalse("Group X-Axis not set to default value", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertFalse("Show All Peptides not set to default value", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());

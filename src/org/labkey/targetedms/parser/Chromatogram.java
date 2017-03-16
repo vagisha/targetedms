@@ -44,6 +44,19 @@ public class Chromatogram extends SkylineEntity
                                      + Integer.SIZE    // Align2
                                        ) / 8;
 
+    public Chromatogram(PrecursorChromInfo precursorChromInfo)
+    {
+        this(precursorChromInfo.getChromatogram(), precursorChromInfo.getNumPoints(), precursorChromInfo.getNumTransitions(), precursorChromInfo.getUncompressedSize());
+    }
+
+    public Chromatogram(byte[] chromatogram, int numPoints, int numTransitions, Integer uncompressedSize)
+    {
+        setChromatogram(chromatogram);
+        setNumPoints(numPoints);
+        setNumTransitions(numTransitions);
+        setUncompressedSize(uncompressedSize == null ? 0 : uncompressedSize);
+    }
+
     public static int getSize(int formatVersion)
     {
         if(formatVersion < SkylineBinaryParser.FORMAT_VERSION_CACHE_5)
