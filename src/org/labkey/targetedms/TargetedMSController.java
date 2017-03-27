@@ -83,13 +83,9 @@ import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
-import org.labkey.api.query.QueryAction;
-import org.labkey.api.query.QueryForm;
 import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySchema;
-import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
-import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.reports.ReportService;
 import org.labkey.api.reports.model.ViewCategory;
@@ -6130,15 +6126,23 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public static class ShowCalibrationCurveAction extends ExportAction<CalibrationCurveForm>
+    public static class ShowCalibrationCurveAction extends SimpleViewAction<CalibrationCurveForm>
     {
         @Override
-        public void export(CalibrationCurveForm calibrationCurveForm, HttpServletResponse response, BindException errors) throws Exception
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return null;
+        }
+
+        @Override
+        public ModelAndView getView(CalibrationCurveForm calibrationCurveForm, BindException errors) throws Exception
         {
             CalibrationCurveChart chart = new CalibrationCurveChart(getUser(), getContainer(), calibrationCurveForm);
-            JFreeChart jFreeChart = chart.getChart();
-            response.setContentType("image/png");
-            ChartUtilities.writeChartAsPNG(response.getOutputStream(), jFreeChart, 1024, 768);
+            calibrationCurveForm.setJsonData(chart.getCalibrationCurveData());
+            JspView<CalibrationCurveForm> calibrationCurve = new JspView<>("/org/labkey/targetedms/view/calibrationCurve.jsp", calibrationCurveForm);
+            calibrationCurve.setTitle("Calibration Curve");
+
+            return calibrationCurve;
         }
     }
 
@@ -6146,6 +6150,7 @@ public class TargetedMSController extends SpringActionController
     {
         int calibrationCurveId;
         String[] sampleTypes;
+        JSONObject jsonData;
 
         public int getCalibrationCurveId()
         {
@@ -6165,6 +6170,16 @@ public class TargetedMSController extends SpringActionController
         public void setSampleTypes(String[] sampleTypes)
         {
             this.sampleTypes = sampleTypes;
+        }
+
+        public JSONObject getJsonData()
+        {
+            return jsonData;
+        }
+
+        public void setJsonData(JSONObject jsonData)
+        {
+            this.jsonData = jsonData;
         }
     }
 }

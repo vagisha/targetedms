@@ -14,6 +14,8 @@
  */
 package org.labkey.targetedms.view;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.labkey.targetedms.calculations.quantification.CalibrationCurve;
 import org.labkey.targetedms.calculations.quantification.SampleType;
 import org.jfree.chart.JFreeChart;
@@ -57,6 +59,103 @@ public class CalibrationCurveChart
         _user = user;
         _container = container;
         _form = form;
+    }
+
+    public JSONObject getCalibrationCurveData()
+    {
+        TargetedMSRun run = TargetedMSManager.getRun(_form.getId());
+        RunQuantifier runQuantifier = new RunQuantifier(run, _user, _container);
+        CalibrationCurveEntity calibrationCurve = new TableSelector(TargetedMSManager.getTableInfoCalibrationCurve())
+                .getObject(_form.getCalibrationCurveId(), CalibrationCurveEntity.class);
+        QuantificationSettings quantificationSettings = new TableSelector(TargetedMSManager.getTableInfoQuantificationSettings())
+                .getObject(_container, calibrationCurve.getQuantificationSettingsId(), QuantificationSettings.class);
+
+        GeneralMolecule generalMolecule = PeptideManager.getPeptide(_container, calibrationCurve.getGeneralMoleculeId());
+        if (generalMolecule == null) {
+            generalMolecule = MoleculeManager.getMolecule(_container, calibrationCurve.getGeneralMoleculeId());
+        }
+        List<GeneralMoleculeChromInfo> chromInfos = new ArrayList<>();
+        CalibrationCurve recalcedCalibrationCurve
+                = runQuantifier.calculateCalibrationCurve(quantificationSettings, generalMolecule, chromInfos);
+
+        return processCalibrationCurveJson(generalMolecule, runQuantifier.getReplicateDataSet(), recalcedCalibrationCurve, chromInfos);
+
+    }
+
+    private JSONObject processCalibrationCurveJson(GeneralMolecule molecule, ReplicateDataSet replicateDataSet, CalibrationCurve calibrationCurve, Iterable<GeneralMoleculeChromInfo> chromInfos)
+    {
+        JSONObject json = new JSONObject();
+        Double maxX = 0.0, maxY = 0.0, minX = 0.0, minY = 0.0;
+
+        // Molecule data
+        JSONObject jsonMolecule = new JSONObject();
+        jsonMolecule.put("name", molecule.getTextId());
+
+
+        // Get calibration curve data
+        JSONObject jsonCurve = new JSONObject();
+        jsonCurve.put("slope", calibrationCurve.getSlope());
+        jsonCurve.put("intercept", calibrationCurve.getIntercept());
+        jsonCurve.put("count", calibrationCurve.getPointCount());
+        jsonCurve.put("rSquared", calibrationCurve.getRSquared());
+        jsonCurve.put("quadraticCoefficient", calibrationCurve.getQuadraticCoefficient());
+
+
+        // Get data points
+        JSONArray jsonPoints = new JSONArray();
+        for (GeneralMoleculeChromInfo chromInfo : chromInfos)
+        {
+            Replicate replicate = replicateDataSet.getReplicateFromSampleFileId(chromInfo.getSampleFileId());
+            if (replicate == null)
+                continue;
+
+            SampleType sampleType = SampleType.fromName(replicate.getSampleType());
+            if (sampleType == SampleType.blank || sampleType == SampleType.solvent || sampleType == SampleType.double_blank)
+                continue;
+
+            JSONObject point = new JSONObject();
+            Double y = calibrationCurve.getY(chromInfo.getCalculatedConcentration());
+            Double x = replicate.getAnalyteConcentration();
+            if (x != null)
+            {
+                if (molecule.getConcentrationMultiplier() != null)
+                {
+                    x *= molecule.getConcentrationMultiplier();
+                }
+            }
+            else
+            {
+                x = chromInfo.getCalculatedConcentration();
+            }
+
+            if( y > maxY)
+                maxY = y;
+
+            if( x > maxX )
+                maxX = x;
+
+            if( x < minX )
+                minX = x;
+
+            if( y < minY )
+                minY = y;
+
+            point.put("x", x);
+            point.put("y", y);
+            point.put("type", sampleType.toString());
+            point.put("name", replicate.getName());
+
+            jsonPoints.put(point);
+        }
+
+        jsonCurve.put("maxX", maxX);
+        jsonCurve.put("maxY", maxY);
+
+        json.put("molecule", jsonMolecule);
+        json.put("calibrationCurve", jsonCurve);
+        json.put("dataPoints", jsonPoints);
+
+        return json;
     }
 
     public JFreeChart getChart() {
