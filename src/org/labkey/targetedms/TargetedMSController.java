@@ -5484,7 +5484,7 @@ public class TargetedMSController extends SpringActionController
 
         if(!errors.hasErrors())
         {
-            ExperimentService.Interface experimentService = ExperimentService.get();
+            ExperimentService experimentService = ExperimentService.get();
             for(ExperimentAnnotations experiment: experimentAnnotations)
             {
                 experimentService.deleteExpExperimentByRowId(experiment.getContainer(), user, experiment.getExperimentId());
