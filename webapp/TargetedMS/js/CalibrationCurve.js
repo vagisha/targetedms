@@ -47,7 +47,6 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
         return new LABKEY.vis.Layer({
             geom: new LABKEY.vis.Geom.Path({size: 3, opacity: 0, color: 'red'}),
-            // name: 'CD4+ (cells/mm3)',
             aes: {
                 y: function (row) {
                     return row.y
@@ -81,7 +80,6 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             renderTo: this.renderTo,
             rendererType: 'd3',
             width: this.width,
-            // width: this.plotWidth - 30,
             height: this.plotHeight,
             data: this.data.dataPoints,
             labels: {
@@ -115,12 +113,6 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                             return row.x
                         },
                         pointClickFn: function(event, data){
-                            // var legend = me.getLegendDataSlopeCalculations(me);
-                            // legend.push({text: 'Concentration: ' +
-                            //     me.formatLegendValue(me.getSlopeIntersect(me, data)),
-                            //     color: 'white', separator: true});
-                            // legend = me.getLegendDataInfo(me).concat(legend);
-
                             var legend = me.getLegendDataInfo(me)
                                     .concat(me.getLegendDataSlopeCalculations(me))
                                     .concat(me.getLegendDataPointCalculations(me, data));
