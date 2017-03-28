@@ -64,7 +64,7 @@ public abstract class RegressionFit {
                 y[i] = points.get(i).getY();
                 weights[i] = points.get(i).getWeight();
             }
-            double[] result = WeightedRegression.weighted(x, y, weights, true);
+            double[] result = WeightedRegression.weighted(x, y, weights, false);
             curve.setSlope(result[0]);
             return curve;
         }
