@@ -417,32 +417,38 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 + '<br/><span class="sample-file-field-label">Out of guide set range:</span> ';
         if (sampleFile.Items.length > 0)
         {
-            content += '<table class="outlier-summary-popup">';
-            content += '<thead><tr><th class="outlier-metric-header"></th><th class="outlier-top-header" colspan="6">Outliers</th></tr>' +
+            content += '<table class=" labkey-data-region labkey-show-borders">';
+            content += '<thead><tr><td class="labkey-column-header"></td><td class="labkey-column-header" colspan="6" align="center">Outliers</td></tr>' +
                             '<tr>' +
-                                '<th class="outlier-metric-header"></th><th class="outlier-header1"></th><th></th><th  colspan="4" class="outlier-header4">CUSUM</th>' +
+                                '<td class="labkey-column-header"></td><td class="labkey-column-header"></td>' +
+                                '<td class="labkey-column-header"></td><td class="labkey-column-header" colspan="4" align="center">CUSUM</td>' +
                             '</tr>' +
                             '<tr>' +
-                                '<th class="outlier-metric-header">Metric</th>' +
-                                '<th>Levey-Jennings</th>' +
-                                '<th>Moving Range</th>' +
-                                '<th title="Mean CUSUM-">Mean-</th>' +
-                                '<th title="Mean CUSUM+">Mean+</th>' +
-                                '<th title="Variability CUSUM-">Variability-</th>' +
-                                '<th title="Variability CUSUM+">Variability+</th>' +
+                                '<td class="labkey-column-header outlier-column-header">Metric</td>' +
+                                '<td class="labkey-column-header outlier-column-header">Levey-Jennings</td>' +
+                                '<td class="labkey-column-header outlier-column-header">Moving Range</td>' +
+                                '<td class="labkey-column-header outlier-column-header" title="Mean CUSUM-">Mean-</td>' +
+                                '<td class="labkey-column-header outlier-column-header" title="Mean CUSUM+">Mean+</td>' +
+                                '<td class="labkey-column-header outlier-column-header" title="Variability CUSUM-">Variability-</td>' +
+                                '<td class="labkey-column-header outlier-column-header" title="Variability CUSUM+">Variability+</td>' +
                             '</tr>' +
                         '</thead><tbody>';
+
+            var rowCount = 0;
             Ext4.each(sampleFile.Items, function (item)
             {
                 var href = LABKEY.ActionURL.buildURL('project', 'begin', item.ContainerPath, {metric: item.MetricId});
-                content += '<tr><td class="outlier-metric-cell"><a href="' + href + '">' + item.MetricLabel + '</a></td>';
-                content += '<td class="outlier-count-cell">' + (item.NonConformers ? item.NonConformers : 0) + '</td>';
-                content += '<td class="outlier-count-cell">' + (item.mR ? item.mR : 0) + '</td>';
-                content += '<td class="outlier-count-cell">' + (item.CUSUMmN ? item.CUSUMmN : 0) + '</td>';
-                content += '<td class="outlier-count-cell">' + (item.CUSUMmP ? item.CUSUMmP : 0) + '</td>';
-                content += '<td class="outlier-count-cell">' + (item.CUSUMvN ? item.CUSUMvN : 0) + '</td>';
-                content += '<td class="outlier-count-cell">' + (item.CUSUMvP ? item.CUSUMvP : 0) + '</td>';
+                content += '<tr class="' + (rowCount % 2 == 0 ? 'labkey-alternate-row' : 'labkey-row') + '">';
+                content += '<td class="outlier-metric-label"><a href="' + href + '">' + item.MetricLabel + '</a></td>';
+                content += '<td align="right">' + (item.NonConformers ? item.NonConformers : 0) + '</td>';
+                content += '<td align="right">' + (item.mR ? item.mR : 0) + '</td>';
+                content += '<td align="right">' + (item.CUSUMmN ? item.CUSUMmN : 0) + '</td>';
+                content += '<td align="right">' + (item.CUSUMmP ? item.CUSUMmP : 0) + '</td>';
+                content += '<td align="right">' + (item.CUSUMvN ? item.CUSUMvN : 0) + '</td>';
+                content += '<td align="right">' + (item.CUSUMvP ? item.CUSUMvP : 0) + '</td>';
                 content += '</tr>';
+
+                rowCount++;
             });
             content += '</tbody>';
             content += '</table>';
