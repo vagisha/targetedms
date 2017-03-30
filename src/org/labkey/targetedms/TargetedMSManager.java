@@ -1042,16 +1042,28 @@ public class TargetedMSManager
         return null;
     }
 
-    private static String getDependentSampleFileReplicateDeleteSql(TableInfo fromTable, String replicateId)
+    private static String getDependentSampleFileReplicateDeleteSql(TableInfo fromTable, String replicateId, Container container)
     {
-        return "DELETE FROM " + fromTable + " WHERE " + replicateId + " NOT IN (SELECT ReplicateId FROM " + getTableInfoSampleFile() + ")";
+        SQLFragment sql = new SQLFragment("DELETE FROM " + fromTable + " WHERE " + replicateId + " IN (").append(getEmptyReplicateIdsSql(container, "Id")).append(")");
+        return sql.getSQL();
     }
 
-    private static void deletePredictorsForUnusedReplicates()
+    private static void deletePredictorsForUnusedReplicates(Container container)
     {
         execute("DELETE FROM " + getTableInfoPredictor() + " WHERE " +
-                "Id IN (SELECT CePredictorId FROM " + getTableInfoReplicate() + " WHERE Id NOT IN (SELECT ReplicateId FROM " + getTableInfoSampleFile() + ")) OR " +
-                "Id IN (SELECT DpPredictorId FROM " + getTableInfoReplicate() + " WHERE Id NOT IN (SELECT ReplicateId FROM " + getTableInfoSampleFile() + "))");
+                "Id IN (" + getEmptyReplicateIdsSql(container, "CePredictorId") + ") OR " +
+                "Id IN (" + getEmptyReplicateIdsSql(container, "DpPredictorId") + ")");
+    }
+
+    private static String getEmptyReplicateIdsSql(Container container, String selectColumn)
+    {
+        // Get all the replicates in this container which no longer have any sample files. 
+        SQLFragment sql = new SQLFragment("( SELECT rep.").append(selectColumn).append(" FROM targetedms.replicate rep ");
+        sql.append(" LEFT OUTER JOIN targetedms.samplefile sf ON rep.Id = sf.ReplicateId ");
+        sql.append(" INNER JOIN targetedms.runs r on rep.runId = r.Id ");
+        sql.append(" WHERE r.container = ").append(container);
+        sql.append(" AND sf.ReplicateId IS NULL )"); // No sample files for this replicate
+        return sql.getSQL();
     }
 
     private static boolean fileIsReferenced(@NotNull URI uri)
@@ -1153,13 +1165,13 @@ public class TargetedMSManager
         return logMsgs;
     }
 
-    public static void purgeUnreferencedReplicates()
+    public static void purgeUnreferencedReplicates(Container container)
     {
-        execute(getDependentSampleFileReplicateDeleteSql(getTableInfoReplicateAnnotation(), "ReplicateId"));
+        execute(getDependentSampleFileReplicateDeleteSql(getTableInfoReplicateAnnotation(), "ReplicateId", container));
 
-        execute(getDependentSampleFileReplicateDeleteSql(getTableInfoReplicate(), "Id"));
+        execute(getDependentSampleFileReplicateDeleteSql(getTableInfoReplicate(), "Id", container));
 
-        deletePredictorsForUnusedReplicates();
+        deletePredictorsForUnusedReplicates(container);
     }
 
     /**
@@ -1386,68 +1398,73 @@ public class TargetedMSManager
 
     public static void deleteTransitionChromInfoDependent(TableInfo tableInfo)
     {
-         execute("DELETE FROM " + tableInfo +
-                 " WHERE TransitionChromInfoId IN (SELECT Id FROM " +
-                 getTableInfoTransitionChromInfo() + " WHERE TransitionId IN (SELECT Id FROM " +
-                 getTableInfoGeneralTransition() + " WHERE GeneralPrecursorId IN (SELECT Id FROM " +
-                 getTableInfoGeneralPrecursor() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                 getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                 getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
-                 getTableInfoRuns() + " WHERE Deleted = ?))))))", true);
-
+        execute(" DELETE FROM " + tableInfo +
+                " WHERE TransitionChromInfoId IN (SELECT tci.Id FROM " + getTableInfoTransitionChromInfo() + " tci "+
+                " INNER JOIN " + getTableInfoGeneralTransition() + " gt ON tci.TransitionId = gt.Id " +
+                " INNER JOIN " + getTableInfoGeneralPrecursor() + " gp ON gt.GeneralPrecursorId = gp.Id "+
+                " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON gp.GeneralMoleculeId = gm.Id " +
+                " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
+                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
+                " WHERE r.Deleted = ?)", true);
     }
 
     public static void deletePrecursorChromInfoDependent(TableInfo tableInfo)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE PrecursorChromInfoId IN (SELECT Id FROM " +
-                getTableInfoPrecursorChromInfo() + " WHERE PrecursorId IN (SELECT Id FROM " +
-                getTableInfoGeneralPrecursor() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
-                getTableInfoRuns() + " WHERE Deleted = ?)))))", true);
+        execute(" DELETE FROM " + tableInfo +
+                " WHERE PrecursorChromInfoId IN (SELECT pci.Id FROM " + getTableInfoPrecursorChromInfo() + " pci "+
+                " INNER JOIN " + getTableInfoGeneralPrecursor() + " gp ON pci.PrecursorId = gp.Id "+
+                " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON gp.GeneralMoleculeId = gm.Id " +
+                " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
+                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
+                " WHERE r.Deleted = ?)", true);
     }
 
     public static void deleteGeneralMoleculeChromInfoDependent(TableInfo tableInfo)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE PeptideChromInfoId IN (SELECT Id FROM " +
-                getTableInfoGeneralMoleculeChromInfo() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
-                getTableInfoRuns() + " WHERE Deleted = ?))))", true);
+        execute(" DELETE FROM " + tableInfo +
+                " WHERE PeptideChromInfoId IN (SELECT mci.Id FROM " + getTableInfoGeneralMoleculeChromInfo() + " mci "+
+                " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON mci.GeneralMoleculeId = gm.Id " +
+                " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
+                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
+                " WHERE r.Deleted = ?)", true);
     }
 
     public static void deleteGeneralTransitionDependent(TableInfo tableInfo, String colName)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE " + colName + " IN (SELECT Id FROM " +
-                getTableInfoGeneralTransition() + " WHERE GeneralPrecursorId IN (SELECT Id FROM " +
-                getTableInfoGeneralPrecursor() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
-                getTableInfoRuns() + " WHERE Deleted = ?)))))", true);
+        execute(" DELETE FROM " + tableInfo +
+                " WHERE " + colName + " IN (SELECT gt.Id FROM " + getTableInfoGeneralTransition() + " gt "+
+                " INNER JOIN " + getTableInfoGeneralPrecursor() + " gp ON gt.GeneralPrecursorId = gp.Id "+
+                " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON gp.GeneralMoleculeId = gm.Id " +
+                " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
+                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
+                " WHERE r.Deleted = ?)", true);
     }
 
     private static void deleteGeneralPrecursorDependent(TableInfo tableInfo, String colName)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE " + colName + " IN (SELECT Id FROM " +
-                getTableInfoGeneralPrecursor() + " WHERE GeneralMoleculeId IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
-                getTableInfoRuns() + " WHERE Deleted = ?))))", true);
+        execute(" DELETE FROM " + tableInfo +
+                " WHERE " + colName + " IN (SELECT gp.Id FROM " + getTableInfoGeneralPrecursor() + " gp "+
+                " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON gp.GeneralMoleculeId = gm.Id " +
+                " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
+                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
+                " WHERE r.Deleted = ?)", true);
     }
 
     private static void deleteGeneralMoleculeDependent(TableInfo tableInfo, String colName)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE " + colName + " IN (SELECT Id FROM " +
-                getTableInfoGeneralMolecule() + " WHERE PeptideGroupId IN (SELECT Id FROM " +
-                getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
-                getTableInfoRuns() + " WHERE Deleted = ?)))", true);
+        execute(" DELETE FROM " + tableInfo +
+                " WHERE " + colName + " IN (SELECT gm.Id FROM " + getTableInfoGeneralMolecule() + " gm "+
+                " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
+                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
+                " WHERE r.Deleted = ?)", true);
     }
 
     private static void deletePeptideGroupDependent(TableInfo tableInfo)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE " +
-                "PeptideGroupId IN (SELECT Id FROM " + getTableInfoPeptideGroup() + " WHERE RunId IN (SELECT Id FROM " +
-                getTableInfoRuns() + " WHERE Deleted = ?))", true);
+        execute(" DELETE FROM " + tableInfo +
+                " WHERE PeptideGroupId IN (SELECT pg.Id FROM " + getTableInfoPeptideGroup() + " pg "+
+                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
+                " WHERE r.Deleted = ?)", true);
     }
 
     private static void deleteRunDependent(TableInfo tableInfo)
@@ -1458,8 +1475,10 @@ public class TargetedMSManager
 
     private static void deleteReplicateDependent(TableInfo tableInfo)
     {
-        execute("DELETE FROM " + tableInfo + " WHERE ReplicateId IN (SELECT Id FROM " +
-                getTableInfoReplicate() + " WHERE RunId IN (SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted = ?))", true);
+        execute(" DELETE FROM " + tableInfo +
+                " WHERE ReplicateId IN (SELECT rep.Id FROM " + getTableInfoReplicate() + " rep "+
+                " INNER JOIN " + getTableInfoRuns() + " r ON rep.RunId = r.Id " +
+                " WHERE r.Deleted = ?)", true);
     }
 
     private static void deleteTransitionPredictionSettingsDependent()
