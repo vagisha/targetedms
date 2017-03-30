@@ -26,7 +26,7 @@ import java.util.List;
  */
 public interface TargetedMSService
 {
-    public ITargetedMSRun getRun(int runId, Container container);
-    public List<ITargetedMSRun> getRuns(Container container);
-    public List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);
+    ITargetedMSRun getRun(int runId, Container container);
+    List<ITargetedMSRun> getRuns(Container container);
+    List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);
 }
