@@ -580,11 +580,15 @@ public class SkylineDocImporter
                 }
 
             quantifyRun(run, quantificationSettings, groupComparisons);
-            TargetedMSManager.purgeUnreferencedReplicates(_container);
-            List<String> msgs = TargetedMSManager.purgeUnreferencedFiles(files, _container, _user);
-            for (String msg : msgs)
+
+            if (folderType == TargetedMSModule.FolderType.QC)
             {
-                _log.info(msg);
+                TargetedMSManager.purgeUnreferencedReplicates(_container);
+                List<String> msgs = TargetedMSManager.purgeUnreferencedFiles(files, _container, _user);
+                for (String msg : msgs)
+                {
+                    _log.info(msg);
+                }
             }
             transaction.commit();
         }
