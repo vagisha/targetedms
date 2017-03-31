@@ -75,7 +75,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 {
                     continue;
                 }
-                waitAndClick(Locator.xpath("//th[span[text() = 'Small Molecule Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
+                waitAndClick(Locator.linkContainingText("small molecule"));
             }
             else
             {
@@ -86,10 +86,9 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 {
                     continue;
                 }
-                waitAndClick(Locator.xpath("//th[span[text() = 'Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
+                waitAndClick(Locator.linkContainingText("precursor"));
             }
-            Locator calibrationCurveMenuItem = Locator.tagContainingText("span", "Calibration Curves");
-            clickAndWait(calibrationCurveMenuItem);
+            clickAndWait(Locator.linkContainingText("calibration curve"));
             waitForText("Calibration Curves");
             DataRegionTable calibrationCurvesTable = new DataRegionTable("calibration_curves" + (smallMolecule ? "_sm_mol" : ""), this);
             for (Map<String, Object> expectedRow : expected)
