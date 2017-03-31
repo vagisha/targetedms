@@ -21,6 +21,9 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
     getNameAndOptions: function () {
         var me = this;
 
+        if(this.fileName == null)
+            this.fileName = "File not found";
+
         var options = {
             xtype: 'panel',
             layout: {
@@ -29,7 +32,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             },
             border: false,
             defaults: {
-                margins: '0 3 0 0'
+                margins: '0 3 15 0'
             },
             items: [
                 {
@@ -39,7 +42,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             ]
         };
 
-        if (me.renameAction != null) {
+        if (me.renameAction != null && this.fileName != "File not found") {
             options.items.push({
                 xtype: 'label',
                 html: '<span height="16px" class="edit-views-link fa fa-pencil"></span>',
@@ -58,46 +61,42 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             });
         }
 
-        options.items = options.items.concat([
-                    {
-                        xtype: 'label',
-                        html: '<span height="16px" class="edit-views-link fa fa-download"></span>',
-                        listeners: {
-                            click: {
-                                element: 'el',
-                                fn: function () {
-                                    window.location = me.downloadAction;
-                                }
-                            }
-                        },
-                        autoEl: {
-                            tag: 'label',
-                            'data-qtip': 'Download File'
+        if (this.fileName != "File not found") {
+            options.items.push({
+                xtype: 'label',
+                html: '<span height="16px" class="edit-views-link fa fa-download"></span>',
+                listeners: {
+                    click: {
+                        element: 'el',
+                        fn: function () {
+                            window.location = me.downloadAction;
                         }
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<a>' + me.versionCount + ' version' + (me.versionCount != 1 ? 's</a>' : '</a>'),
-                        margin: '0 0 0 5',
-                        listeners: {
-                            click: {
-                                element: 'el',
-                                fn: function () {
-                                    window.location = me.versionsAction;
-                                }
-                            }
-                        },
-                        autoEl: {
-                            tag: 'label',
-                            'data-qtip': 'View Versions'
-                        }
-                    },
-                    {
-                        xtype: 'label',
-                        html: '<br><br>'
                     }
-                ]
-        );
+                },
+                autoEl: {
+                    tag: 'label',
+                    'data-qtip': 'Download File'
+                }
+            });
+
+            options.items.push({
+                xtype: 'label',
+                html: '<a>' + me.versionCount + ' version' + (me.versionCount != 1 ? 's</a>' : '</a>'),
+                margin: '0 0 0 5',
+                listeners: {
+                    click: {
+                        element: 'el',
+                        fn: function () {
+                            window.location = me.versionsAction;
+                        }
+                    }
+                },
+                autoEl: {
+                    tag: 'label',
+                    'data-qtip': 'View Versions'
+                }
+            });
+        }
 
         return options;
     },
