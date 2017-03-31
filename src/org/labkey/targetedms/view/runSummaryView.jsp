@@ -20,13 +20,23 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
+<%@ page import="org.labkey.targetedms.SkylineFileUtils" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSRun" %>
-<%@ page import="java.text.DecimalFormat" %>
 <%@ page import="java.io.File" %>
-<%@ page import="org.labkey.targetedms.SkylineFileUtils" %>
-<%@ page import="org.apache.commons.io.FileUtils" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
+
+<%!
+    @Override
+    public void addClientDependencies(ClientDependencies dependencies)
+    {
+        dependencies.add("Ext4");
+        dependencies.add("vis/vis");
+        dependencies.add("targetedms/js/DocumentSummary.js");
+    }
+%>
+
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
     TargetedMSController.RunDetailsBean bean = me.getModelBean();
@@ -36,65 +46,50 @@
     ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
     downloadAction.addParameter("runId", run.getId());
     Container c = getContainer();
-    DecimalFormat decimalFormat = new DecimalFormat("#,###");
 
-    int peptideGroupCount = run.getPeptideGroupCount();
-    int peptideCount = run.getPeptideCount();
-    int smallMoleculeCount = run.getSmallMoleculeCount();
-    int precursorCount = run.getPrecursorCount();
-    int transitionCount = run.getTransitionCount();
+    ActionURL versionsAction = new ActionURL(TargetedMSController.ShowVersionsAction.class, getContainer());
+    versionsAction.addParameter("id", run.getId());
+
+    ActionURL precursorListAction = new ActionURL(TargetedMSController.ShowPrecursorListAction.class, getContainer());
+    precursorListAction.addParameter("id", run.getId());
+
+    ActionURL transitionListAction = new ActionURL(TargetedMSController.ShowTransitionListAction.class, getContainer());
+    transitionListAction.addParameter("id", run.getId());
+
+    ActionURL calibrationCurveListAction = new ActionURL(TargetedMSController.ShowCalibrationCurvesAction.class, getContainer());
+    calibrationCurveListAction.addParameter("id", run.getId());
+
+    String renameAction = null;
+    if(c.hasPermission(getUser(), UpdatePermission.class))
+        renameAction = TargetedMSController.getRenameRunURL(c, run, getActionURL()).getLocalURIString();
 %>
 
-<table style="min-width: 600px;">
-    <tr>
-        <th width="30%" />
-        <th width="20%" />
-        <th width="30%" />
-        <th width="20%" />
-        <th width="30%" />
-        <th width="20%" />
-    </tr>
-    <tr>
-        <td class="labkey-form-label">Name</td>
-        <td colspan="5" nowrap>
-            <%= h(run.getDescription())%>
-            <% if (c.hasPermission(getUser(), UpdatePermission.class))
-               { %>
-                <%=textLink("Rename", TargetedMSController.getRenameRunURL(c, run, getActionURL()))%> <%
-               } %>
-
-            <%
-                String size = (skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "";
-            %>
-            <%= textLink("Download", downloadAction)%><%=h(size)%>
-        </td>
-    </tr>
-    <tr>
-        <td class="labkey-form-label">Protein Count</td>
-        <td><%= h(decimalFormat.format(peptideGroupCount)) %></td>
 <%
-    if (peptideCount > 0)
-    {
+    String elementId = "targetedmsDocumentSummary";
 %>
-        <td class="labkey-form-label">Peptide Count</td>
-        <td><%= h(decimalFormat.format(peptideCount)) %></td>
-<%
-    }
+<div id=<%=q(elementId)%>> </div>
 
-    if (smallMoleculeCount > 0)
-    {
-%>
-        <td class="labkey-form-label">Small Molecule Count</td>
-        <td><%= h(decimalFormat.format(smallMoleculeCount)) %></td>
-<%
-    }
-%>
-    </tr>
-    <tr>
-        <td class="labkey-form-label">Precursor Count</td>
-        <td><%= h(decimalFormat.format(precursorCount)) %></td>
+<script type="text/javascript">
 
-        <td class="labkey-form-label">Transition Count</td>
-        <td><%= h(decimalFormat.format(transitionCount)) %></td>
-    </tr>
-</table>
+    Ext4.onReady(function () {
+
+        Ext4.create('LABKEY.targetedms.DocumentSummary', {
+            renderTo: <%=q(elementId)%>,
+            peptideCount: <%=run.getPeptideCount()%>,
+            smallMoleculeCount: <%=run.getSmallMoleculeCount()%>,
+            precursorCount: <%=run.getPrecursorCount()%>,
+            transitionCount: <%=run.getTransitionCount()%>,
+            peptideGroupCount: <%=run.getPeptideGroupCount()%>,
+            calibrationCurveCount: <%=run.getCalibrationCurveCount()%>,
+            versionCount: <%=bean.getVersionCount()%>,
+            fileName: <%=q(skyDocFile != null ? skyDocFile.getName() : "File not found")%>,
+            downloadAction: <%=q(downloadAction.getLocalURIString())%>,
+            renameAction: <%=q(renameAction)%>,
+            versionsAction: <%=q(versionsAction.getLocalURIString())%>,
+            precursorListAction: <%=q(precursorListAction.getLocalURIString())%>,
+            transitionListAction: <%=q(transitionListAction.getLocalURIString())%>,
+            calibrationCurveListAction: <%=q(calibrationCurveListAction.getLocalURIString())%>
+        });
+    });
+
+</script>

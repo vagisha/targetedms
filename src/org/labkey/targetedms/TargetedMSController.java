@@ -79,12 +79,10 @@ import org.labkey.api.ms2.MS2Urls;
 import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
 import org.labkey.api.protein.ProteinService;
-import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryParam;
-import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.reports.ReportService;
@@ -211,7 +209,6 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -220,7 +217,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -2696,6 +2692,63 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    private JspView getSummaryView(RunDetailsForm form, TargetedMSRun run)
+    {
+        Integer[] ids = {Integer.valueOf(ExperimentService.get().getExpRun(run.getExperimentRunLSID()).getRowId())};
+        List<Integer> linkedRowIds = new ArrayList<>();
+        linkedRowIds.addAll(Arrays.asList(ids));
+
+        run.setCalibrationCurveCount(TargetedMSManager.getCalibrationCurveCount(run.getRunId()));
+
+        RunDetailsBean bean = new RunDetailsBean();
+        bean.setForm(form);
+        bean.setRun(run);
+        bean.setVersionCount(TargetedMSManager.getLinkedVersions(getUser(), getContainer(), ids, linkedRowIds).size());
+
+        JspView<RunDetailsBean> runSummaryView = new JspView<>("/org/labkey/targetedms/view/runSummaryView.jsp", bean);
+        runSummaryView.setFrame(WebPartView.FrameType.PORTAL);
+        runSummaryView.setTitle("Document Summary");
+
+        return runSummaryView;
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowVersionsAction extends SimpleViewAction<RunDetailsForm>
+    {
+        protected TargetedMSRun _run;  // save for use in appendNavTrail
+
+        @Override
+        public ModelAndView getView(RunDetailsForm form, BindException errors) throws Exception
+        {
+            //this action requires that a specific experiment run has been specified
+            if(!form.hasRunId())
+                throw new RedirectException(new ActionURL(ShowListAction.class, getContainer()));
+
+            //ensure that the experiment run is valid and exists within the current container
+            _run = validateRun(form.getId());
+
+//            getRunFileType(); //identify whether the run is associate with the proteomics document or non-proteomics document
+            VBox vBox = new VBox();
+            vBox.addView(getSummaryView(form, _run));
+
+            ExpRun expRun = ExperimentService.get().getExpRun(_run.getExperimentRunLSID());
+            if (expRun != null)
+            {
+                JspView<ExpRun> runMethodChain = new JspView<>("/org/labkey/targetedms/view/runMethodChain.jsp", expRun);
+                runMethodChain.setFrame(WebPartView.FrameType.PORTAL);
+                runMethodChain.setTitle("Document Versions");
+                vBox.addView(runMethodChain);
+            }
+            return vBox;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
     // ------------------------------------------------------------------------
     // Action to display a document's transition or precursor list
     // ------------------------------------------------------------------------
@@ -2719,26 +2772,8 @@ public class TargetedMSController extends SpringActionController
             //ensure that the experiment run is valid and exists within the current container
             _run = validateRun(form.getId());
 
-//            getRunFileType(); //identify whether the run is associate with the proteomics document or non-proteomics document
             VBox vBox = new VBox();
-
-            RunDetailsBean bean = new RunDetailsBean();
-            bean.setForm(form);
-            bean.setRun(_run);
-
-            JspView<RunDetailsBean> runSummaryView = new JspView<>("/org/labkey/targetedms/view/runSummaryView.jsp", bean);
-            runSummaryView.setFrame(WebPartView.FrameType.PORTAL);
-            runSummaryView.setTitle("Document Summary");
-            vBox.addView(runSummaryView);
-
-            ExpRun expRun = ExperimentService.get().getExpRun(_run.getExperimentRunLSID());
-            if (expRun != null)
-            {
-                JspView<ExpRun> runMethodChain = new JspView<>("/org/labkey/targetedms/view/runMethodChain.jsp", expRun);
-                runMethodChain.setFrame(WebPartView.FrameType.PORTAL);
-                runMethodChain.setTitle("Document Versions");
-                vBox.addView(runMethodChain);
-            }
+            vBox.addView(getSummaryView(form, _run));
 
             VIEWTYPE view;
 
@@ -2747,7 +2782,6 @@ public class TargetedMSController extends SpringActionController
             {
                 view = createInitializedQueryView(form, errors, false, getDataRegionNamePeptide());
                 _dataRegion = view.getDataRegionName();
-                view.setNavMenu(getViewSwitcherMenu());
                 vBox.addView(view);
             }
 
@@ -2756,7 +2790,6 @@ public class TargetedMSController extends SpringActionController
             {
                 view = createInitializedQueryView(form, errors, false, getDataRegionNameSmallMolecule());
                 _dataRegion = view.getDataRegionName();
-                view.setNavMenu(getViewSwitcherMenu());
                 vBox.addView(view);
             }
 
@@ -3026,6 +3059,7 @@ public class TargetedMSController extends SpringActionController
     {
         private RunDetailsForm _form;
         private TargetedMSRun _run;
+        private int _versionCount;
 
         public RunDetailsForm getForm()
         {
@@ -3045,6 +3079,16 @@ public class TargetedMSController extends SpringActionController
         public void setRun(TargetedMSRun run)
         {
             _run = run;
+        }
+
+        public int getVersionCount()
+        {
+            return _versionCount;
+        }
+
+        public void setVersionCount(int versions)
+        {
+            _versionCount = versions;
         }
     }
 
@@ -5745,77 +5789,12 @@ public class TargetedMSController extends SpringActionController
             if (form.isIncludeSelected())
                 linkedRowIds.addAll(Arrays.asList(selectedRowIds));
 
-            //get related/linked RowIds from TargetedMSRuns table
-            QuerySchema targetedMSRunsQuerySchema = DefaultSchema.get(getUser(), getContainer()).getSchema(TargetedMSSchema.getSchema().getName());
-            if (targetedMSRunsQuerySchema != null)
-            {
-                //create a filter for non-null ReplacedByRun value
-                SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ReplacedByRun"), null, CompareType.NONBLANK);
-
-                //create a set of column names with RowId and ReplacedByRun, a pair representing a parent child relationship between any two documents
-                Set<String> idColumnNames = new LinkedHashSet<>();
-                idColumnNames.add("RowId"); //RowId is parent or original document's rowid
-                idColumnNames.add("ReplacedByRun");//ReplacedByRun is child or modified document's rowid
-
-                TableInfo runsTable = targetedMSRunsQuerySchema.getTable(TargetedMSSchema.TABLE_TARGETED_MS_RUNS);
-                TableSelector selector = new TableSelector(runsTable, idColumnNames, filter, null);
-
-                //get RowId -> ReplacedByRun key value pairs and also populate the opposite direction to get ReplacedByRun -> RowId
-                Map<Integer, Integer> replacedByMap = selector.getValueMap();
-                Map<Integer, Integer> replacesMap = new HashMap<>();
-                for (Map.Entry<Integer, Integer> entry : replacedByMap.entrySet())
-                    replacesMap.put(entry.getValue(), entry.getKey());
-
-                //get full chain for the selected runs to be added to the linkedRowIds list
-                for (int i = 0; i < selectedRowIds.length; i++)
-                {
-                    Integer rowId = selectedRowIds[i];
-                    ArrayDeque<Integer> chainRowIds = new ArrayDeque<>();
-                    addParentRunsToChain(chainRowIds, replacedByMap, rowId);
-                    addChildRunsToChain(chainRowIds, replacesMap, rowId);
-
-                    for (Integer chainRowId : chainRowIds)
-                    {
-                        if (!linkedRowIds.contains(chainRowId))
-                            linkedRowIds.add(chainRowId);
-                    }
-                }
-            }
+            linkedRowIds = TargetedMSManager.getLinkedVersions(getUser(), getContainer(), selectedRowIds, linkedRowIds);
 
             //send selected rowIds and its links to the client
             ApiSimpleResponse response = new ApiSimpleResponse();
             response.put("linkedRowIds", linkedRowIds.toArray());
             return response;
-        }
-    }
-
-    private void addParentRunsToChain(ArrayDeque<Integer> chainRowIds, Map<Integer, Integer> replacedByMap, Integer rowId)
-    {
-        // add all runs rowIds up the chain to the end of the list, recursively
-        Integer replacedBy = replacedByMap.get(rowId);
-        if (replacedBy != null)
-        {
-            if (!chainRowIds.contains(rowId))
-                chainRowIds.addLast(rowId);
-            if (!chainRowIds.contains(replacedBy))
-                chainRowIds.addLast(replacedBy);
-
-            addParentRunsToChain(chainRowIds, replacedByMap, replacedBy);
-        }
-    }
-
-    private void addChildRunsToChain(ArrayDeque<Integer> chainRowIds, Map<Integer, Integer> replacesMap, Integer rowId)
-    {
-        // add all runs rowIds down the chain to the front of the list, recursively
-        Integer replaces = replacesMap.get(rowId);
-        if (replaces != null)
-        {
-            if (!chainRowIds.contains(rowId))
-                chainRowIds.addFirst(rowId);
-            if (!chainRowIds.contains(replaces))
-                chainRowIds.addFirst(replaces);
-
-            addChildRunsToChain(chainRowIds, replacesMap, replaces);
         }
     }
 

@@ -516,6 +516,7 @@ webapp/TargetedMS/js/BaseQCPlotPanel.js -text
 webapp/TargetedMS/js/CUSUMPlotHelper.js -text
 webapp/TargetedMS/js/CalibrationCurve.js -text
 webapp/TargetedMS/js/ClustergrammerDialog.js -text
+webapp/TargetedMS/js/DocumentSummary.js -text
 webapp/TargetedMS/js/LeveyJenningsPlotHelper.js -text
 webapp/TargetedMS/js/LinkVersionsDialog.js -text
 webapp/TargetedMS/js/MovingRangePlotHelper.js -text

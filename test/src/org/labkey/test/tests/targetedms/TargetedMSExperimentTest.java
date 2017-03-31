@@ -67,7 +67,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
     {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
         clickAndWait(Locator.linkContainingText(SKY_FILE));
-        verifyRunSummaryCounts(24,44,88,296, null); // Number of protein, peptides, precursors, transitions
+        verifyRunSummaryCounts(24,44,0, 88,296, 0); // Number of protein, peptides, precursors, transitions
         verifyDocumentDetails(false);
         verifyPeptide();
     }
@@ -77,7 +77,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
     {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
         clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
-        verifyRunSummaryCounts(27, 44, 186, 394, 98); // Number of protein (groups), peptides, precursors, transitions, small molecules
+        verifyRunSummaryCounts(27, 44, 98, 186, 394, 0); // Number of protein (groups), peptides, precursors, transitions, small molecules
         verifyDocumentDetails(true);
         verifyMolecule();
     }
@@ -225,9 +225,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         goBack();
         clickAndWait(Locator.linkContainingText(SKY_FILE));
-        //Toggle to Transition view (click on down arrow in Precursor List webpart header)
-        waitAndClick(Locator.xpath("//th[span[contains(text(), 'Precursor List')]]/span/a/span[contains(@class, 'fa-caret-down')]"));
-        clickAndWait(Locator.tagContainingText("span", "Transition List"));
+        waitAndClick(Locator.linkContainingText("transitions"));
         waitForText("Transition List");
 
         // There are many regions within one transitions_view region -- all with the same region name.
@@ -334,8 +332,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         //Go to Small Molecule Transition List
         clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
-        waitAndClick(Locator.xpath("//th[span[contains(text(), 'Small Molecule Precursor List')]]/span/a/span[contains(@class, 'fa-caret-down')]"));
-        clickAndWait(Locator.tagContainingText("span", "Small Molecule Transition List"));
+        waitAndClick(Locator.linkContainingText("transitions"));
         waitForText("Small Molecule Transition List");
 
         drt = DataRegionTable.DataRegion(getDriver()).withName("small_mol_transitions_view").index(1).find();
