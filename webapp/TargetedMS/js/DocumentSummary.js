@@ -77,7 +77,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                     },
                     {
                         xtype: 'label',
-                        html: '<a>' + me.versionCount + ' version' + (me.versionCount > 1 ? 's</a>' : '</a>'),
+                        html: '<a>' + me.versionCount + ' version' + (me.versionCount != 1 ? 's</a>' : '</a>'),
                         margin: '0 0 0 5',
                         listeners: {
                             click: {
@@ -116,7 +116,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             items: [
                 {
                     xtype: 'label',
-                    html: '<a>' + this.peptideGroupCount + ' proteins</a>',
+                    html: '<a>' + this.peptideGroupCount + ' protein' + (me.peptideGroupCount != 1 ? 's</a>' : '</a>'),
                     listeners: {
                         click: {
                             element: 'el',
@@ -128,7 +128,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                 },
                 {
                     xtype: 'label',
-                    html: ', <a>' + this.peptideCount + ' peptides</a>',
+                    html: ', <a>' + this.peptideCount + ' peptide' + (me.peptideCount != 1 ? 's</a>' : '</a>'),
                     listeners: {
                         click: {
                             element: 'el',
@@ -140,7 +140,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                 },
                 {
                     xtype: 'label',
-                    html: ', <a>' + this.smallMoleculeCount + ' small molecules</a>',
+                    html: ', <a>' + this.smallMoleculeCount + ' small molecule' + (me.smallMoleculeCount != 1 ? 's</a>' : '</a>'),
                     listeners: {
                         click: {
                             element: 'el',
@@ -152,7 +152,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                 },
                 {
                     xtype: 'label',
-                    html: ', <a>' + this.precursorCount + ' precursors</a>',
+                    html: ', <a>' + this.precursorCount + ' precursor' + (me.precursorCount != 1 ? 's</a>' : '</a>'),
                     listeners: {
                         click: {
                             element: 'el',
@@ -164,7 +164,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                 },
                 {
                     xtype: 'label',
-                    html: ', <a>' + this.transitionCount + ' transitions</a>',
+                    html: ', <a>' + this.transitionCount + ' transition' + (me.transitionCount != 1 ? 's</a>' : '</a>'),
                     listeners: {
                         click: {
                             element: 'el',
@@ -176,7 +176,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                 },
                 {
                     xtype: 'label',
-                    html: ', <a>' + this.calibrationCurveCount + ' calibration curves</a>',
+                    html: ', <a>' + this.calibrationCurveCount + ' calibration curve' + (me.calibrationCurveCount != 1 ? 's</a>' : '</a>'),
                     listeners: {
                         click: {
                             element: 'el',
