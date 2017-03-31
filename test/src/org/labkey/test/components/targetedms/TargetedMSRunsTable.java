@@ -33,6 +33,8 @@ public class TargetedMSRunsTable extends DataRegionTable
     public void goToDocumentDetails(String name)
     {
         _driver.clickAndWait(Locator.linkWithText(name));
+        _driver.waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Summary"));
+        _driver.clickAndWait(Locator.linkContainingText(" version"));
         _driver.waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Versions"));
     }
 
