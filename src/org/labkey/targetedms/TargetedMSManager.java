@@ -26,6 +26,7 @@ import org.fhcrc.cpas.exp.xml.ExperimentArchiveDocument;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
@@ -58,9 +59,11 @@ import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
+import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.query.QueryException;
+import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SchemaKey;
 import org.labkey.api.security.User;
@@ -80,16 +83,19 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.sql.SQLException;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import static java.lang.Math.toIntExact;
 import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
 
 public class TargetedMSManager
@@ -1783,4 +1789,85 @@ public class TargetedMSManager
         run.setContainer(newContainer);
         updateRun(run, user);
     }
+
+    private static void addParentRunsToChain(ArrayDeque<Integer> chainRowIds, Map<Integer, Integer> replacedByMap, Integer rowId)
+    {
+        // add all runs rowIds up the chain to the end of the list, recursively
+        Integer replacedBy = replacedByMap.get(rowId);
+        if (replacedBy != null)
+        {
+            if (!chainRowIds.contains(rowId))
+                chainRowIds.addLast(rowId);
+            if (!chainRowIds.contains(replacedBy))
+                chainRowIds.addLast(replacedBy);
+
+            addParentRunsToChain(chainRowIds, replacedByMap, replacedBy);
+        }
+    }
+
+    private static void addChildRunsToChain(ArrayDeque<Integer> chainRowIds, Map<Integer, Integer> replacesMap, Integer rowId)
+    {
+        // add all runs rowIds down the chain to the front of the list, recursively
+        Integer replaces = replacesMap.get(rowId);
+        if (replaces != null)
+        {
+            if (!chainRowIds.contains(rowId))
+                chainRowIds.addFirst(rowId);
+            if (!chainRowIds.contains(replaces))
+                chainRowIds.addFirst(replaces);
+
+            addChildRunsToChain(chainRowIds, replacesMap, replaces);
+        }
+    }
+
+    public static List<Integer> getLinkedVersions(User u, Container c, Integer[] selectedRowIds, List<Integer> linkedRowIds)
+    {
+        //get related/linked RowIds from TargetedMSRuns table
+        QuerySchema targetedMSRunsQuerySchema = DefaultSchema.get(u, c).getSchema(TargetedMSSchema.getSchema().getName());
+        if (targetedMSRunsQuerySchema != null)
+        {
+            //create a filter for non-null ReplacedByRun value
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("ReplacedByRun"), null, CompareType.NONBLANK);
+
+            //create a set of column names with RowId and ReplacedByRun, a pair representing a parent child relationship between any two documents
+            Set<String> idColumnNames = new LinkedHashSet<>();
+            idColumnNames.add("RowId"); //RowId is parent or original document's rowid
+            idColumnNames.add("ReplacedByRun");//ReplacedByRun is child or modified document's rowid
+
+            TableInfo runsTable = targetedMSRunsQuerySchema.getTable(TargetedMSSchema.TABLE_TARGETED_MS_RUNS);
+            TableSelector selector = new TableSelector(runsTable, idColumnNames, filter, null);
+
+            //get RowId -> ReplacedByRun key value pairs and also populate the opposite direction to get ReplacedByRun -> RowId
+            Map<Integer, Integer> replacedByMap = selector.getValueMap();
+            Map<Integer, Integer> replacesMap = new HashMap<>();
+            for (Map.Entry<Integer, Integer> entry : replacedByMap.entrySet())
+                replacesMap.put(entry.getValue(), entry.getKey());
+
+            //get full chain for the selected runs to be added to the linkedRowIds list
+            for (int i = 0; i < selectedRowIds.length; i++)
+            {
+                Integer rowId = selectedRowIds[i];
+                ArrayDeque<Integer> chainRowIds = new ArrayDeque<>();
+                addParentRunsToChain(chainRowIds, replacedByMap, rowId);
+                addChildRunsToChain(chainRowIds, replacesMap, rowId);
+
+                for (Integer chainRowId : chainRowIds)
+                {
+                    if (!linkedRowIds.contains(chainRowId))
+                        linkedRowIds.add(chainRowId);
+                }
+            }
+        }
+
+        return linkedRowIds;
+    }
+
+    public static int getCalibrationCurveCount(int runId)
+    {
+        TableInfo table = getTableInfoCalibrationCurve();
+        SimpleFilter runFilter = new SimpleFilter(FieldKey.fromParts("RunId"), runId, CompareType.EQUAL);
+        TableSelector selector = new TableSelector(table, runFilter, null);
+        return toIntExact(selector.getRowCount());
+    }
+
 }
