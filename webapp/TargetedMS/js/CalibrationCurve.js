@@ -130,7 +130,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                             d3.selectAll('svg g.layer path[stroke-opacity="0"').transition().attr('stroke-opacity', .5)
                         },
                         hoverText: function(row){
-                            return 'Name: ' + row.name + '\nNormalized Area: ' + me.formatLegendValue(row.y) + '\nCalculated Concentration: ' + me.formatLegendValue(row.x);}
+                            return 'Name: ' + row.name + '\nPeak Area Ratio: ' + me.formatLegendValue(row.y) + '\nConcentration: ' + me.formatLegendValue(row.x);}
                     }
                 })
             ],
