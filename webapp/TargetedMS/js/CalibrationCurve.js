@@ -160,6 +160,13 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         });
 
         this.plot.render();
+
+        this.createExportIcon('png', 'Export to PNG', 0, function(){
+            this.exportChartToImage(LABKEY.vis.SVGConverter.FORMAT_PNG);
+        });
+        this.createExportIcon('pdf', 'Export to PDF', 1, function(){
+            this.exportChartToImage(LABKEY.vis.SVGConverter.FORMAT_PDF);
+        });
     },
 
     getLegendDataPointCalculations: function(scope, point){
@@ -194,5 +201,23 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
     formatLegendValue: function(value) {
         return Math.round(value * 100000) / 100000;
+    },
+
+    createExportIcon: function(iconCls, tooltip, indexFromLeft, callbackFn) {
+        var iconDiv = Ext4.get(this.renderTo + '-' + iconCls);
+
+        Ext4.create('Ext.tip.ToolTip', {
+            target: iconDiv,
+            width: 110,
+            html: tooltip
+        });
+
+        iconDiv.on('click', callbackFn, this);
+    },
+
+    exportChartToImage: function(type) {
+        var fileName = 'Calibration Curve: ' + this.data.molecule.name,
+            exportType = type || LABKEY.vis.SVGConverter.FORMAT_PDF;
+        LABKEY.vis.SVGConverter.convert(Ext4.get(this.renderTo).child('svg').dom, exportType, fileName);
     }
 });

@@ -1,0 +1,15 @@
+.calibration-curve .export-icon {
+    display: none;
+    opacity: 0.4;
+    font-size: 24px;
+    color: #707070;
+    padding-top: 10px;
+    position: absolute;
+}
+.calibration-curve:hover .export-icon {
+    display: block;
+}
+.calibration-curve .export-icon:hover {
+    opacity: 1;
+    cursor: pointer;
+}

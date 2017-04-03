@@ -16,12 +16,16 @@
         dependencies.add("Ext4");
         dependencies.add("vis/vis");
         dependencies.add("targetedms/js/CalibrationCurve.js");
+        dependencies.add("targetedms/css/CalibrationCurve.css");
     }
 %>
 <%
     String elementId = "targetedmsCalibrationCurve";
 %>
-<div id=<%=q(elementId)%>> </div>
+<div id=<%=q(elementId)%> class="calibration-curve">
+    <div id=<%=q(elementId + "-png")%> class="export-icon" style="right: 125px;"><i class="fa fa-file-image-o"></i></div>
+    <div id=<%=q(elementId + "-pdf")%> class="export-icon" style="right: 155px;"><i class="fa fa-file-pdf-o"></i></div>
+</div>
 
 <script type="text/javascript">
 
