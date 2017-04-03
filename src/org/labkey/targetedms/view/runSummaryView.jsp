@@ -82,7 +82,7 @@
             peptideGroupCount: <%=run.getPeptideGroupCount()%>,
             calibrationCurveCount: <%=run.getCalibrationCurveCount()%>,
             versionCount: <%=bean.getVersionCount()%>,
-            fileName: <%=q(skyDocFile != null ? skyDocFile.getName() : "File not found")%>,
+            fileName: <%=q(skyDocFile != null ? skyDocFile.getName() : null)%>,
             downloadAction: <%=q(downloadAction.getLocalURIString())%>,
             renameAction: <%=q(renameAction)%>,
             versionsAction: <%=q(versionsAction.getLocalURIString())%>,
