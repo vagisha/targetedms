@@ -68,7 +68,7 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
         clickAndWait(Locator.linkContainingText(scenario + ".sky.zip"));
 
-        waitAndClick(Locator.xpath("//th[span[text() = 'Precursor List']]/span/a/span[contains(@class, 'fa-caret-down')]"));
+        waitAndClick(Locator.linkContainingText("precursor"));
 
         Locator groupComparisonLocator = Locator.xpath("//span[starts-with(text(), '" + GROUP_COMPARISON_PREFIX + "')]");
         List<WebElement> groupComparisonElements = groupComparisonLocator.findElements(getDriver());
