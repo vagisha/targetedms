@@ -36,6 +36,7 @@ import org.labkey.api.module.SpringModule;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.protein.ProteomicsModule;
+import org.labkey.api.security.permissions.AdminOperationsPermission;
 import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.settings.AdminConsole;
@@ -387,7 +388,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
 		// Add a link in the admin console to manage journals.
 		ActionURL url =  new ActionURL(PublishTargetedMSExperimentsController.JournalGroupsAdminViewAction.class, ContainerManager.getRoot());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "targeted ms",url);
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "targeted ms", url, AdminOperationsPermission.class);
     }
 
     @NotNull
