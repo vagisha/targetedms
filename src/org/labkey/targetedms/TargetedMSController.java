@@ -6117,7 +6117,12 @@ public class TargetedMSController extends SpringActionController
         public ModelAndView getView(CalibrationCurveForm calibrationCurveForm, BindException errors) throws Exception
         {
             CalibrationCurveChart chart = new CalibrationCurveChart(getUser(), getContainer(), calibrationCurveForm);
-            calibrationCurveForm.setJsonData(chart.getCalibrationCurveData());
+            JSONObject curveData = chart.getCalibrationCurveData();
+            if(null == curveData)
+                throw new NotFoundException("Calibration curve not found. Run ID: " + calibrationCurveForm.getId() +
+                        " Curve ID: " + calibrationCurveForm.getCalibrationCurveId());
+
+            calibrationCurveForm.setJsonData(curveData);
             JspView<CalibrationCurveForm> calibrationCurve = new JspView<>("/org/labkey/targetedms/view/calibrationCurve.jsp", calibrationCurveForm);
             calibrationCurve.setTitle("Calibration Curve");
 

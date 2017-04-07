@@ -692,6 +692,7 @@ public class TargetedMSManager
         return new SqlSelector(getSchema(), sql).getArray(TargetedMSRun.class);
     }
 
+    @Nullable
     public static TargetedMSRun getRun(int runId)
     {
         TargetedMSRun run = null;
