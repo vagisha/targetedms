@@ -2745,6 +2745,11 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
+            if (null != _run)
+            {
+                root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
+            }
             return root;
         }
     }
