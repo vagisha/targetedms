@@ -89,7 +89,7 @@ public class CalibrationCurveChart
     private JSONObject processCalibrationCurveJson(GeneralMolecule molecule, ReplicateDataSet replicateDataSet, CalibrationCurve calibrationCurve, Iterable<GeneralMoleculeChromInfo> chromInfos)
     {
         JSONObject json = new JSONObject();
-        Double maxX = 0.0, maxY = 0.0, minX = 0.0, minY = 0.0;
+        Double maxX = null, maxY = null, minY = null;
 
         // Molecule data
         JSONObject jsonMolecule = new JSONObject();
@@ -132,16 +132,13 @@ public class CalibrationCurveChart
                 x = chromInfo.getCalculatedConcentration();
             }
 
-            if( y > maxY)
+            if (maxY == null || y > maxY)
                 maxY = y;
 
-            if( x > maxX )
+            if (maxX == null || x > maxX)
                 maxX = x;
 
-            if( x < minX )
-                minX = x;
-
-            if( y < minY )
+            if (minY == null || y < minY)
                 minY = y;
 
             point.put("x", x);
@@ -154,6 +151,7 @@ public class CalibrationCurveChart
 
         jsonCurve.put("maxX", maxX);
         jsonCurve.put("maxY", maxY);
+        jsonCurve.put("minY", minY);
 
         json.put("molecule", jsonMolecule);
         json.put("calibrationCurve", jsonCurve);

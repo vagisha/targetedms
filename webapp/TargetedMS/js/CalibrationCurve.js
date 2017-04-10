@@ -15,10 +15,10 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
     colors: {
         unknown: 'black',
         standard: 'gray',
-        qc: 'green'},
+        qc: 'green'
+    },
 
-
-    initComponent : function() {
+    initComponent: function () {
         Ext4.tip.QuickTipManager.init();
         this.callParent();
 
@@ -26,11 +26,11 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         this.addPlot();
     },
 
-    getSlopeIntersect: function(scope, point) {
+    getSlopeIntersect: function (scope, point) {
         return (point.y - scope.data.calibrationCurve.intercept) / scope.data.calibrationCurve.slope;
     },
 
-    getPointToLineLayer: function(scope, point) {
+    getPointToLineLayer: function (scope, point) {
         var data = [];
         data.push(point);
         data.push({
@@ -59,7 +59,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         })
     },
 
-    addPlot : function() {
+    addPlot: function () {
         var me = this;
 
         // This is a dummy layer to be overwritten by the line layer when selecting a point
@@ -67,14 +67,22 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             geom: new LABKEY.vis.Geom.Path({size: 3, opacity: 0}),
             data: [],
             aes: {
-                y: function(row){
+                y: function (row) {
                     return row.y;
                 },
-                x: function(row) {
+                x: function (row) {
                     return row.x;
                 }
             }
         });
+
+        var minY = this.data.calibrationCurve.minY, maxY = this.data.calibrationCurve.maxY;
+
+        if (minY == null)
+            minY = 0;
+
+        if (maxY == null)
+            maxY = 0;
 
         this.plot = new LABKEY.vis.Plot({
             renderTo: this.renderTo,
@@ -92,10 +100,10 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                 new LABKEY.vis.Layer({
                     geom: new LABKEY.vis.Geom.Path({size: 3, opacity: .4}),
                     aes: {
-                        y: function(row){
+                        y: function (row) {
                             return row.y;
                         },
-                        x: function(row) {
+                        x: function (row) {
                             return (row.y - me.data.calibrationCurve.intercept) / me.data.calibrationCurve.slope;
                         }
                     }
@@ -104,7 +112,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                     geom: new LABKEY.vis.Geom.Point({size: 5}),
                     aes: {
                         y: function (row) {
-                            if(me.minY === null || me.minY > row.y)
+                            if (me.minY === null || me.minY > row.y)
                                 me.minY = row.y;
 
                             return row.y
@@ -112,7 +120,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                         x: function (row) {
                             return row.x
                         },
-                        pointClickFn: function(event, data){
+                        pointClickFn: function (event, data) {
                             var legend = me.getLegendDataInfo(me)
                                     .concat(me.getLegendDataSlopeCalculations(me))
                                     .concat(me.getLegendDataPointCalculations(me, data));
@@ -129,13 +137,14 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                             // Transition in line layer visibility
                             d3.selectAll('svg g.layer path[stroke-opacity="0"').transition().attr('stroke-opacity', .5)
                         },
-                        hoverText: function(row){
-                            return 'Name: ' + row.name + '\nPeak Area Ratio: ' + me.formatLegendValue(row.y) + '\nConcentration: ' + me.formatLegendValue(row.x);}
+                        hoverText: function (row) {
+                            return 'Name: ' + row.name + '\nPeak Area Ratio: ' + me.formatLegendValue(row.y) + '\nConcentration: ' + me.formatLegendValue(row.x);
+                        }
                     }
                 })
             ],
             aes: {
-                color: function(row){
+                color: function (row) {
                     return row.type;
                 }
             },
@@ -152,7 +161,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                 y: {
                     scaleType: 'continuous',
                     trans: 'linear',
-                    domain: [this.data.calibrationCurve.minY,this.data.calibrationCurve.maxY]
+                    domain: [minY, maxY]
                 }
             },
             legendData: this.getLegendDataInfo(me).concat(this.getLegendDataSlopeCalculations(me)),
@@ -161,26 +170,29 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
         this.plot.render();
 
-        this.createExportIcon('png', 'Export to PNG', 0, function(){
+        this.createExportIcon('png', 'Export to PNG', 0, function () {
             this.exportChartToImage(LABKEY.vis.SVGConverter.FORMAT_PNG);
         });
-        this.createExportIcon('pdf', 'Export to PDF', 1, function(){
+        this.createExportIcon('pdf', 'Export to PDF', 1, function () {
             this.exportChartToImage(LABKEY.vis.SVGConverter.FORMAT_PDF);
         });
     },
 
-    getLegendDataPointCalculations: function(scope, point){
+    getLegendDataPointCalculations: function (scope, point) {
 
         return [
             {text: 'Selected Point', separator: true},
             {text: 'Replicate: ' + point.name, color: 'white'},
             {text: 'Peak Area Ratio: ' + scope.formatLegendValue(point.y), color: 'white'},
             {text: 'Concentration: ' + scope.formatLegendValue(point.x), color: 'white'},
-            {text: 'Calc. Concentration: ' + scope.formatLegendValue(scope.getSlopeIntersect(scope, point)), color: 'white'}
+            {
+                text: 'Calc. Concentration: ' + scope.formatLegendValue(scope.getSlopeIntersect(scope, point)),
+                color: 'white'
+            }
         ]
     },
 
-    getLegendDataSlopeCalculations: function(scope){
+    getLegendDataSlopeCalculations: function (scope) {
         return [
             {text: 'Calibration Curve', separator: true},
             {text: 'Slope: ' + scope.formatLegendValue(this.data.calibrationCurve.slope), color: 'white'},
@@ -190,7 +202,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         ];
     },
 
-    getLegendDataInfo: function(scope){
+    getLegendDataInfo: function (scope) {
         return [
             {text: 'Standard', color: scope.colors['standard']},
             {text: 'QC', color: scope.colors['qc']},
@@ -199,11 +211,11 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         ];
     },
 
-    formatLegendValue: function(value) {
+    formatLegendValue: function (value) {
         return Math.round(value * 100000) / 100000;
     },
 
-    createExportIcon: function(iconCls, tooltip, indexFromLeft, callbackFn) {
+    createExportIcon: function (iconCls, tooltip, indexFromLeft, callbackFn) {
         var iconDiv = Ext4.get(this.renderTo + '-' + iconCls);
 
         Ext4.create('Ext.tip.ToolTip', {
@@ -215,9 +227,9 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         iconDiv.on('click', callbackFn, this);
     },
 
-    exportChartToImage: function(type) {
+    exportChartToImage: function (type) {
         var fileName = 'Calibration Curve: ' + this.data.molecule.name,
-            exportType = type || LABKEY.vis.SVGConverter.FORMAT_PDF;
+                exportType = type || LABKEY.vis.SVGConverter.FORMAT_PDF;
         LABKEY.vis.SVGConverter.convert(Ext4.get(this.renderTo).child('svg').dom, exportType, fileName);
     }
 });
