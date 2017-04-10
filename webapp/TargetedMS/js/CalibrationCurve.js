@@ -11,6 +11,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
     selectedPointLayer: null,
     minY: null,
     plotHeight: 500,
+    minWidth: 800,
 
     colors: {
         unknown: 'black',
@@ -22,8 +23,23 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         Ext4.tip.QuickTipManager.init();
         this.callParent();
 
-        this.width = window.innerWidth - 100;
+        this.width = this.getPanelSize();
         this.addPlot();
+
+        var me = this;
+        window.addEventListener("resize", function () {
+            console.log('resize');
+            me.setWidth(me.getPanelSize());
+            me.plot.setWidth(me.getWidth());
+            me.plot.render();
+
+            // Plot re-renders so need to shrink dots to get back to initial state
+            d3.selectAll('a.point path').transition().attr("stroke-width", 1);
+        }, false);
+    },
+
+    getPanelSize: function () {
+        return window.innerWidth - 100;
     },
 
     getSlopeIntersect: function (scope, point) {
