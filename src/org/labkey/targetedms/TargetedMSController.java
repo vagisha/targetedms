@@ -2698,12 +2698,11 @@ public class TargetedMSController extends SpringActionController
         List<Integer> linkedRowIds = new ArrayList<>();
         linkedRowIds.addAll(Arrays.asList(ids));
 
-        run.setCalibrationCurveCount(TargetedMSManager.getCalibrationCurveCount(run.getRunId()));
-
         RunDetailsBean bean = new RunDetailsBean();
         bean.setForm(form);
         bean.setRun(run);
         bean.setVersionCount(TargetedMSManager.getLinkedVersions(getUser(), getContainer(), ids, linkedRowIds).size());
+        bean.setCalibrationCurveCount(TargetedMSManager.getCalibrationCurveCount(run.getRunId()));
 
         JspView<RunDetailsBean> runSummaryView = new JspView<>("/org/labkey/targetedms/view/runSummaryView.jsp", bean);
         runSummaryView.setFrame(WebPartView.FrameType.PORTAL);
@@ -2727,7 +2726,6 @@ public class TargetedMSController extends SpringActionController
             //ensure that the experiment run is valid and exists within the current container
             _run = validateRun(form.getId());
 
-//            getRunFileType(); //identify whether the run is associate with the proteomics document or non-proteomics document
             VBox vBox = new VBox();
             vBox.addView(getSummaryView(form, _run));
 
@@ -3065,6 +3063,7 @@ public class TargetedMSController extends SpringActionController
         private RunDetailsForm _form;
         private TargetedMSRun _run;
         private int _versionCount;
+        private int _calibrationCurveCount;
 
         public RunDetailsForm getForm()
         {
@@ -3094,6 +3093,16 @@ public class TargetedMSController extends SpringActionController
         public void setVersionCount(int versions)
         {
             _versionCount = versions;
+        }
+
+        public int getCalibrationCurveCount()
+        {
+            return _calibrationCurveCount;
+        }
+
+        public void setCalibrationCurveCount(int calibrationCurveCount)
+        {
+            _calibrationCurveCount = calibrationCurveCount;
         }
     }
 
@@ -6110,12 +6119,19 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public static class ShowCalibrationCurveAction extends SimpleViewAction<CalibrationCurveForm>
+    public class ShowCalibrationCurveAction extends SimpleViewAction<CalibrationCurveForm>
     {
+        protected TargetedMSRun _run;  // save for use in appendNavTrail
+
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return null;
+            if (null != _run)
+            {
+                root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
+            }
+            return root;
         }
 
         @Override
@@ -6126,6 +6142,9 @@ public class TargetedMSController extends SpringActionController
             if(null == curveData)
                 throw new NotFoundException("Calibration curve not found. Run ID: " + calibrationCurveForm.getId() +
                         " Curve ID: " + calibrationCurveForm.getCalibrationCurveId());
+
+            //ensure that the experiment run is valid and exists within the current container
+            _run = validateRun(calibrationCurveForm.getId());
 
             calibrationCurveForm.setJsonData(curveData);
             JspView<CalibrationCurveForm> calibrationCurve = new JspView<>("/org/labkey/targetedms/view/calibrationCurve.jsp", calibrationCurveForm);
@@ -6138,7 +6157,6 @@ public class TargetedMSController extends SpringActionController
     public static class CalibrationCurveForm extends RunDetailsForm
     {
         int calibrationCurveId;
-        String[] sampleTypes;
         JSONObject jsonData;
 
         public int getCalibrationCurveId()
@@ -6149,16 +6167,6 @@ public class TargetedMSController extends SpringActionController
         public void setCalibrationCurveId(int calibrationCurveId)
         {
             this.calibrationCurveId = calibrationCurveId;
-        }
-
-        public String[] getSampleTypes()
-        {
-            return sampleTypes;
-        }
-
-        public void setSampleTypes(String[] sampleTypes)
-        {
-            this.sampleTypes = sampleTypes;
         }
 
         public JSONObject getJsonData()

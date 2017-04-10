@@ -39,8 +39,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *  Creates a calibration curve chart. In the future, the chart should be displayed alongside controls which allow
- *  users to customize which {@link SampleType}s are displayed.
+ *  Creates a calibration curve chart. The chart is rendered using the labkey D3 library.  The calibration curve is
+ *  displayed along with the applicable samples.  Calibration curve calculations along with values and calculations of
+ *  selected samples is shown in the legend.  When selected, a sample will also show a line to the point that peak area
+ *  ratio would intersect the calibration curve.  Samples are color coded by type. In the future, the chart should be
+ *  displayed alongside controls which allow users to customize which {@link SampleType}s are displayed.
  */
 public class CalibrationCurveChart
 {

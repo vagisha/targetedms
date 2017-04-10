@@ -19,7 +19,6 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
     },
 
     getNameAndOptions: function () {
-        var me = this;
 
         if(this.fileName == null)
             this.fileName = "File not found";
@@ -37,12 +36,12 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             items: [
                 {
                     xtype: 'label',
-                    html: 'Name: ' + this.fileName+ (me.fileSize == null ? '' : ' (' + me.fileSize + ')')
+                    html: 'Name: ' + this.fileName+ (this.fileSize == null ? '' : ' (' + this.fileSize + ')')
                 }
             ]
         };
 
-        if (me.renameAction != null && this.fileName != "File not found") {
+        if (this.renameAction != null && this.fileName != "File not found") {
             options.items.push({
                 xtype: 'label',
                 html: '<span height="16px" class="edit-views-link fa fa-pencil"></span>',
@@ -50,8 +49,9 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                     click: {
                         element: 'el',
                         fn: function () {
-                            window.location = me.renameAction;
-                        }
+                            window.location = this.renameAction;
+                        },
+                        scope: this
                     }
                 },
                 autoEl: {
@@ -69,8 +69,9 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                     click: {
                         element: 'el',
                         fn: function () {
-                            window.location = me.downloadAction;
-                        }
+                            window.location = this.downloadAction;
+                        },
+                        scope: this
                     }
                 },
                 autoEl: {
@@ -81,14 +82,15 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
 
             options.items.push({
                 xtype: 'label',
-                html: '<a>' + me.versionCount + ' version' + (me.versionCount != 1 ? 's</a>' : '</a>'),
+                html: '<a>' + LABKEY.Utils.pluralBasic(this.versionCount, 'version') + '</a>',
                 margin: '0 0 0 5',
                 listeners: {
                     click: {
                         element: 'el',
                         fn: function () {
-                            window.location = me.versionsAction;
-                        }
+                            window.location = this.versionsAction;
+                        },
+                        scope: this
                     }
                 }
             });
@@ -97,9 +99,23 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
         return options;
     },
 
-    getCounts: function () {
-        var me = this;
+    getClickableCount: function (count, label, action, comma) {
+        return {
+            xtype: 'label',
+            html: '<a>' + LABKEY.Utils.pluralBasic(count, label) + (comma?',':'') + '</a>&nbsp',
+            listeners: {
+                click: {
+                    element: 'el',
+                    fn: function(){
+                        window.location = action;
+                    },
+                    scope: this
+                }
+            }
+        }
+    },
 
+    getCounts: function () {
         return {
             xtype: 'panel',
             layout: {
@@ -109,78 +125,12 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             border: false,
             width: 800,
             items: [
-                {
-                    xtype: 'label',
-                    html: '<a>' + this.peptideGroupCount + ' protein' + (me.peptideGroupCount != 1 ? 's</a>' : '</a>'),
-                    listeners: {
-                        click: {
-                            element: 'el',
-                            fn: function(){
-                                window.location = me.precursorListAction
-                            }
-                        }
-                    }
-                },
-                {
-                    xtype: 'label',
-                    html: ', <a>' + this.peptideCount + ' peptide' + (me.peptideCount != 1 ? 's</a>' : '</a>'),
-                    listeners: {
-                        click: {
-                            element: 'el',
-                            fn: function(){
-                                window.location = me.precursorListAction
-                            }
-                        }
-                    }
-                },
-                {
-                    xtype: 'label',
-                    html: ', <a>' + this.smallMoleculeCount + ' small molecule' + (me.smallMoleculeCount != 1 ? 's</a>' : '</a>'),
-                    listeners: {
-                        click: {
-                            element: 'el',
-                            fn: function(){
-                                window.location = me.precursorListAction + '#Small Molecule Precursor List'
-                            }
-                        }
-                    }
-                },
-                {
-                    xtype: 'label',
-                    html: ', <a>' + this.precursorCount + ' precursor' + (me.precursorCount != 1 ? 's</a>' : '</a>'),
-                    listeners: {
-                        click: {
-                            element: 'el',
-                            fn: function(){
-                                window.location = me.precursorListAction
-                            }
-                        }
-                    }
-                },
-                {
-                    xtype: 'label',
-                    html: ', <a>' + this.transitionCount + ' transition' + (me.transitionCount != 1 ? 's</a>' : '</a>'),
-                    listeners: {
-                        click: {
-                            element: 'el',
-                            fn: function(){
-                                window.location = me.transitionListAction
-                            }
-                        }
-                    }
-                },
-                {
-                    xtype: 'label',
-                    html: ', <a>' + this.calibrationCurveCount + ' calibration curve' + (me.calibrationCurveCount != 1 ? 's</a>' : '</a>'),
-                    listeners: {
-                        click: {
-                            element: 'el',
-                            fn: function(){
-                                window.location = me.calibrationCurveListAction
-                            }
-                        }
-                    }
-                }
+                this.getClickableCount(this.peptideGroupCount, 'protein', this.precursorListAction, true),
+                this.getClickableCount(this.peptideCount, 'peptide', this.precursorListAction, true),
+                this.getClickableCount(this.smallMoleculeCount, 'small molecule', this.precursorListAction + '#Small Molecule Precursor List', true),
+                this.getClickableCount(this.precursorCount, 'precursor', this.precursorListAction, true),
+                this.getClickableCount(this.transitionCount, 'transition', this.transitionListAction, true),
+                this.getClickableCount(this.calibrationCurveCount, 'calibration curve', this.calibrationCurveListAction, false)
             ]
         };
     }

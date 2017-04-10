@@ -9,7 +9,6 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
     border: false,
 
     selectedPointLayer: null,
-    minY: null,
     plotHeight: 500,
     minWidth: 800,
 
@@ -24,6 +23,16 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         this.callParent();
 
         this.width = this.getPanelSize();
+
+        this.minY = this.data.calibrationCurve.minY;
+        this.maxY = this.data.calibrationCurve.maxY;
+
+        if (this.minY == null)
+            this.minY = 0;
+
+        if (this.maxY == null)
+            this.maxY = 0;
+
         this.addPlot();
 
         var me = this;
@@ -92,14 +101,6 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             }
         });
 
-        var minY = this.data.calibrationCurve.minY, maxY = this.data.calibrationCurve.maxY;
-
-        if (minY == null)
-            minY = 0;
-
-        if (maxY == null)
-            maxY = 0;
-
         this.plot = new LABKEY.vis.Plot({
             renderTo: this.renderTo,
             rendererType: 'd3',
@@ -128,9 +129,6 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                     geom: new LABKEY.vis.Geom.Point({size: 5}),
                     aes: {
                         y: function (row) {
-                            if (me.minY === null || me.minY > row.y)
-                                me.minY = row.y;
-
                             return row.y
                         },
                         x: function (row) {
@@ -143,7 +141,10 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
                             me.plot.setLegend(legend);
 
-                            me.selectedPointLayer = me.plot.replaceLayer(me.selectedPointLayer, me.getPointToLineLayer(me, data));
+                            var lineLayer = me.getPointToLineLayer(me, data);
+
+                            me.plot.replaceLayer(me.selectedPointLayer, lineLayer);
+                            me.selectedPointLayer = lineLayer;
                             me.plot.render();
 
                             // Shrink dots from previous clicks and grow clicked dot
@@ -177,7 +178,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                 y: {
                     scaleType: 'continuous',
                     trans: 'linear',
-                    domain: [minY, maxY]
+                    domain: [me.minY, me.maxY]
                 }
             },
             legendData: this.getLegendDataInfo(me).concat(this.getLegendDataSlopeCalculations(me)),

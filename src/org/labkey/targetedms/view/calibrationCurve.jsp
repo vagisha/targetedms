@@ -32,7 +32,6 @@
     Ext4.onReady(function () {
 
         Ext4.create('LABKEY.targetedms.CalibrationCurve', {
-            <%--curveId: <%=bean.getCalibrationCurveId()%>,--%>
             renderTo: <%=q(elementId)%>,
             data: <%=bean.getJsonData()%>
         });

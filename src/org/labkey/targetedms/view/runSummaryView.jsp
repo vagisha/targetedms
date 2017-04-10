@@ -81,7 +81,7 @@
             precursorCount: <%=run.getPrecursorCount()%>,
             transitionCount: <%=run.getTransitionCount()%>,
             peptideGroupCount: <%=run.getPeptideGroupCount()%>,
-            calibrationCurveCount: <%=run.getCalibrationCurveCount()%>,
+            calibrationCurveCount: <%=bean.getCalibrationCurveCount()%>,
             versionCount: <%=bean.getVersionCount()%>,
             fileName: <%=q(skyDocFile != null ? skyDocFile.getName() : null)%>,
             fileSize: <%=q(skyDocFile != null ? FileUtils.byteCountToDisplaySize(skyDocFile.length()) : null)%>,
