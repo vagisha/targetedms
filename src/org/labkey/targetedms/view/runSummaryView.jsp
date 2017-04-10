@@ -15,6 +15,7 @@
  * limitations under the License.
  */
 %>
+<%@ page import="org.apache.commons.io.FileUtils" %>
 <%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.security.permissions.UpdatePermission" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
@@ -83,6 +84,7 @@
             calibrationCurveCount: <%=run.getCalibrationCurveCount()%>,
             versionCount: <%=bean.getVersionCount()%>,
             fileName: <%=q(skyDocFile != null ? skyDocFile.getName() : null)%>,
+            fileSize: <%=q(skyDocFile != null ? FileUtils.byteCountToDisplaySize(skyDocFile.length()) : null)%>,
             downloadAction: <%=q(downloadAction.getLocalURIString())%>,
             renameAction: <%=q(renameAction)%>,
             versionsAction: <%=q(versionsAction.getLocalURIString())%>,

@@ -37,7 +37,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             items: [
                 {
                     xtype: 'label',
-                    html: 'Name: ' + this.fileName
+                    html: 'Name: ' + this.fileName+ (me.fileSize == null ? '' : ' (' + me.fileSize + ')')
                 }
             ]
         };
@@ -90,10 +90,6 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                             window.location = me.versionsAction;
                         }
                     }
-                },
-                autoEl: {
-                    tag: 'label',
-                    'data-qtip': 'View Versions'
                 }
             });
         }
