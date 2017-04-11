@@ -37,7 +37,6 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
         var me = this;
         window.addEventListener("resize", function () {
-            console.log('resize');
             me.setWidth(me.getPanelSize());
             me.plot.setWidth(me.getWidth());
             me.plot.render();
