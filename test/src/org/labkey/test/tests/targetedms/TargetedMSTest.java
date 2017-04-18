@@ -222,7 +222,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
 
         DataRegionTable table = new DataRegionTable("qwp1", getDriver());
         table.checkAll();
-        table.clickHeaderButtonByText("Delete");
+        table.clickHeaderButton("Delete");
         assertAlertContains("Are you sure you want to delete the selected row");
     }
 
@@ -230,7 +230,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
         _containerHelper.deleteProject(getProjectName(), afterTest);
-        deleteUsersIfPresent(USER);
+        _userHelper.deleteUsers(false, USER);
     }
 
     @Override
