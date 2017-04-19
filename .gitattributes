@@ -450,6 +450,7 @@ src/org/labkey/targetedms/view/spectrum/LibrarySpectrumMatchGetter.java -text
 src/org/labkey/targetedms/view/spectrum/PeptideSpectrumView.java -text
 src/org/labkey/targetedms/view/spectrum/spectrumView.jsp -text
 src/org/labkey/targetedms/view/summaryChartsView.jsp -text
+test/src/org/labkey/test/components/targetedms/CalibrationCurveWebpart.java -text
 test/src/org/labkey/test/components/targetedms/ClustergrammerDialog.java -text
 test/src/org/labkey/test/components/targetedms/GuideSet.java -text
 test/src/org/labkey/test/components/targetedms/GuideSetStats.java -text
