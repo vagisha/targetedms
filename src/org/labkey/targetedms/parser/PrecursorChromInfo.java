@@ -16,6 +16,9 @@
 package org.labkey.targetedms.parser;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.util.UnexpectedException;
+
+import java.io.IOException;
 
 /**
  * User: vsharma
@@ -51,6 +54,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     private int _numPoints;
     private int _numTransitions;
     private Integer _uncompressedSize;
+    private int _chromatogramFormat;
 
     public PrecursorChromInfo()
     {
@@ -316,8 +320,28 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         _uncompressedSize = uncompressedSize;
     }
 
+    public int getChromatogramFormat()
+    {
+        return _chromatogramFormat;
+    }
+
+    public void setChromatogramFormat(int chromatogramFormat)
+    {
+        _chromatogramFormat = chromatogramFormat;
+    }
+
     public Chromatogram createChromatogram()
     {
-        return new Chromatogram(this);
+        try {
+            if (_chromatogramFormat < 0 || _chromatogramFormat >= ChromatogramBinaryFormat.values().length) {
+                throw new IOException("Unknown format number " + _chromatogramFormat);
+            }
+
+            ChromatogramBinaryFormat binaryFormat = ChromatogramBinaryFormat.values()[getChromatogramFormat()];
+            byte[] uncompressedBytes = SkylineBinaryParser.uncompress(getChromatogram(), getUncompressedSize());
+            return binaryFormat.readChromatogram(uncompressedBytes, _numPoints, _numTransitions);
+        } catch (Exception exception) {
+            throw new UnexpectedException(exception);
+        }
     }
 }

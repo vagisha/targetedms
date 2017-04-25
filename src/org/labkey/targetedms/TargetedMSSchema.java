@@ -59,11 +59,14 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
+import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.parser.Chromatogram;
+import org.labkey.targetedms.parser.ChromatogramBinaryFormat;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.query.*;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 import org.springframework.validation.BindException;
@@ -78,6 +81,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.zip.DataFormatException;
 
 public class TargetedMSSchema extends UserSchema
 {
@@ -1230,7 +1234,11 @@ public class TargetedMSSchema extends UserSchema
 
                 if (bytes != null && numPoints != null && numTransitions != null && chromatogramIndex != null)
                 {
-                    Chromatogram chromatogram = new Chromatogram(bytes, numPoints, numTransitions, uncompressedSize);
+                    Integer formatOrdinal = ctx.get(getChromatogramFormatKey(), Integer.class);
+                    ChromatogramBinaryFormat format = formatOrdinal == null
+                            ? ChromatogramBinaryFormat.Arrays : ChromatogramBinaryFormat.values()[formatOrdinal];
+                    byte[] uncompressedBytes = SkylineBinaryParser.uncompress(bytes, uncompressedSize);
+                    Chromatogram chromatogram = format.readChromatogram(uncompressedBytes, numPoints, numTransitions);
                     return StringUtils.join(_times ? chromatogram.getTimes() : chromatogram.getIntensities(chromatogramIndex.intValue()), ',');
                 }
             }
@@ -1238,6 +1246,10 @@ public class TargetedMSSchema extends UserSchema
             {
                 throw new RuntimeSQLException(e);
             }
+            catch (Exception exception) {
+                throw new UnexpectedException(exception);
+            }
+
 
             return null;
         }
@@ -1271,6 +1283,7 @@ public class TargetedMSSchema extends UserSchema
             keys.add(getUncompressedSizeFieldKey());
             keys.add(getChromatogramIndexFieldKey());
             keys.add(getChromatogramFieldKey());
+            keys.add(getChromatogramFormatKey());
         }
 
         private FieldKey getNumPointsFieldKey()
@@ -1302,5 +1315,7 @@ public class TargetedMSSchema extends UserSchema
         {
             return new FieldKey(getColumnInfo().getFieldKey().getParent(), "ChromatogramIndex");
         }
+
+        private FieldKey getChromatogramFormatKey() { return new FieldKey(getPrecursorChromInfoFK(), "ChromatogramFormat");}
     }
 }

@@ -15,17 +15,29 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.labkey.targetedms.parser.skyd.CacheFormat;
+import org.labkey.targetedms.parser.skyd.CacheFormatVersion;
+import org.labkey.targetedms.parser.skyd.CacheHeaderStruct;
+import org.labkey.targetedms.parser.skyd.CachedFileHeaderStruct;
+import org.labkey.targetedms.parser.skyd.ChromGroupHeaderInfo;
+import org.labkey.targetedms.parser.skyd.ChromPeak;
+import org.labkey.targetedms.parser.skyd.ChromTransition;
+import org.labkey.targetedms.parser.skyd.StructSerializer;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
 
 /**
  * Parses the .skyd binary file format, for chromatogram data.
@@ -41,26 +53,17 @@ public class SkylineBinaryParser
     private final Logger _log;
     private FileChannel _channel;
     private RandomAccessFile _randomAccessFile;
-    private final long[] _headers = new long[Header.values().length - 1];
+    private CacheFormat _cacheFormat;
+    private CacheHeaderStruct _cacheHeaderStruct;
 
-    private Chromatogram[] _chromatograms;
-    private ChromatogramTran[] _transitions;
+    private ChromGroupHeaderInfo[] _chromatograms;
+    private ChromTransition[] _transitions;
     private float[] _allPeaksRt;
-    private int _peakSize = (Float.SIZE * 7 + Integer.SIZE ) / 8;
+    private byte[] _seqBytes;
 
-    public static final int FORMAT_VERSION_CACHE_11 = 11;
-    public static final int FORMAT_VERSION_CACHE_10 = 10; // Introduces additional lock mass parameters InstrumentInfoUtil
-    public static final int FORMAT_VERSION_CACHE_9 = 9; // Introduces abbreviated scan ids
-    public static final int FORMAT_VERSION_CACHE_8 = 8; // Introduces ion mobility data
-    public static final int FORMAT_VERSION_CACHE_7 = 7; // Introduces UTF8 character support
-    public static final int FORMAT_VERSION_CACHE_6 = 6;
-    public static final int FORMAT_VERSION_CACHE_5 = 5;
-    public static final int FORMAT_VERSION_CACHE_4 = 4;
-    public static final int FORMAT_VERSION_CACHE_3 = 3;
-    public static final int FORMAT_VERSION_CACHE_2 = 2;
 
     /** Newest supported version */
-    public static final int FORMAT_VERSION_CACHE = FORMAT_VERSION_CACHE_11;
+    public static final CacheFormatVersion FORMAT_VERSION_CACHE = CacheFormatVersion.CURRENT;
 
     private CachedFile[] _cacheFiles;
 
@@ -70,7 +73,7 @@ public class SkylineBinaryParser
         _log = log;
     }
 
-    public Chromatogram[] getChromatograms()
+    public ChromGroupHeaderInfo[] getChromatograms()
     {
         return _chromatograms;
     }
@@ -92,105 +95,28 @@ public class SkylineBinaryParser
         System.gc();
     }
 
-    /** File-level header fields */
-    // ChromatogramCache.Header in Skyline code
-    private enum Header
-    {
-        // Version 9 header addition
-        location_scan_ids_lo,
-        location_scan_ids_hi,
-
-        // Version 5 header addition
-        num_score_types,
-        num_scores,
-        location_scores_lo(true),
-        location_scores_hi,
-        num_seq_bytes,
-        location_seq_bytes_lo(true),
-        location_seq_bytes_hi,
-
-        format_version,
-        num_peaks,
-        location_peaks_lo(true),
-        location_peaks_hi,
-        num_transitions,
-        location_trans_lo(true),
-        location_trans_hi,
-        num_chromatograms,
-        location_headers_lo(true),
-        location_headers_hi,
-        num_files,
-        location_files_lo(true),
-        location_files_hi,
-
-        count;
-
-        private final boolean _longValue;
-
-        private Header()
-        {
-            this(false);
-        }
-
-        private Header(boolean longValue)
-        {
-            _longValue = longValue;
-        }
-
-        public long getHeaderValueLong(long[] headers)
-        {
-            if (!_longValue)
-            {
-                throw new IllegalStateException("Can only request long value from low bit enum values");
-            }
-            return headers[ordinal()] + (headers[ordinal() + 1] << 32);
-        }
-
-        public int getHeaderValueInt(long[] headers)
-        {
-            long value = headers[ordinal()];
-            if (value < Integer.MIN_VALUE || value > Integer.MAX_VALUE)
-            {
-                throw new IllegalStateException("Value out of range " + value + " for " + this);
-            }
-            return (int)value;
-        }
-    }
-
     public void parse() throws IOException
     {
         try
         {
             _randomAccessFile = new RandomAccessFile(_file, "r");
-            long fileSize = _file.length();
-
-            int headerLength = Header.count.ordinal();
             _channel = _randomAccessFile.getChannel();
+            _cacheHeaderStruct = CacheHeaderStruct.read(_channel);
+            _cacheFormat = new CacheFormat(_cacheHeaderStruct);
 
-            ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, fileSize - headerLength * Integer.SIZE / 8, headerLength * Integer.SIZE / 8); // 4 bytes per int
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            for (int i = 0; i < _headers.length; i++)
-            {
-                _headers[i] = ((long)buffer.getInt() & 0xFFFFFFFFL);
-            }
-            int version = Header.format_version.getHeaderValueInt(_headers);
-
-            if (version < FORMAT_VERSION_CACHE_2)
-            {
-                _log.warn("Version " + version + " is not supported for .skyd files. The earliest supported version is " + FORMAT_VERSION_CACHE_2 + ". Skipping chromatogram import.");
+            if (_cacheFormat.getFormatVersion().compareTo(CacheFormatVersion.Two) < 0) {
+                _log.warn("Version " + _cacheFormat.getFormatVersion() + " is not supported for .skyd files. The earliest supported version is " + CacheFormatVersion.Two + ". Skipping chromatogram import.");
                 return;
             }
-            if (version > FORMAT_VERSION_CACHE)
-            {
-                _log.warn("Version " + version + " is not supported for .skyd files. The newest supported version is " + FORMAT_VERSION_CACHE + ". Skipping chromatogram import.");
+            if (_cacheFormat.getVersionRequired().compareTo(FORMAT_VERSION_CACHE) > 0) {
+                _log.warn("Version " + _cacheFormat.getVersionRequired() + " is not supported for .skyd files. The newest supported version is " + FORMAT_VERSION_CACHE + ". Skipping chromatogram import.");
                 return;
             }
 
-            parseFiles(version);
+            parseFiles();
             parsePeaks();
-            parseTransitions(version);
-            parseChromatograms(version);
+            parseTransitions();
+            parseChromatograms();
         }
         catch (DataFormatException e)
         {
@@ -198,57 +124,13 @@ public class SkylineBinaryParser
         }
     }
 
-    private enum FileHeader
-    {
-        modified_lo,
-        modified_hi,
-        len_path,
-        // Version 3 file header addition
-        runstart_lo,
-        runstart_hi,
-        // Version 4 file header addition
-        len_instrument_info,
-        // Version 5 file header addition
-        flags,
-        // Version 6 file header addition
-        max_retention_time,
-        max_intensity,
-        // Version 9 file header addition
-        size_scan_ids,
-        location_scan_ids_lo,
-        location_scan_ids_hi,
-
-        count;
-
-        public static int getSize(int formatVersion)
-        {
-            switch (formatVersion)
-            {
-                case FORMAT_VERSION_CACHE_2:
-                    return FileHeader.runstart_lo.ordinal() * 4;
-                case FORMAT_VERSION_CACHE_3:
-                    return FileHeader.len_instrument_info.ordinal() * 4;
-                case FORMAT_VERSION_CACHE_4:
-                    return FileHeader.flags.ordinal() * 4;
-                case FORMAT_VERSION_CACHE_5:
-                    return FileHeader.max_retention_time.ordinal() * 4;
-                case FORMAT_VERSION_CACHE_6:
-                case FORMAT_VERSION_CACHE_7:
-                case FORMAT_VERSION_CACHE_8:
-                    return FileHeader.size_scan_ids.ordinal() * 4;
-                default:
-                    return FileHeader.count.ordinal() * 4;
-            }
-        }
-    }
-
     public static class CachedFile
     {
         private final String _filePath;
         private final String _instrumentInfo;
-        private final int _flags;
+        private final EnumSet<CachedFileHeaderStruct.Flags> _flags;
 
-        public CachedFile(String filePath, String instrumentInfo, int flags)
+        public CachedFile(String filePath, String instrumentInfo, EnumSet<CachedFileHeaderStruct.Flags> flags)
         {
             _filePath = filePath;
             _instrumentInfo = instrumentInfo;
@@ -267,144 +149,70 @@ public class SkylineBinaryParser
 
         public boolean IsSingleMatchMz()
         {
-            return (_flags & 0x02) != 0;
+            return _flags.contains(CachedFileHeaderStruct.Flags.single_match_mz);
         }
     }
 
-    private void parseFiles(int formatVersion) throws IOException
+    private void parseFiles() throws IOException
     {
-        ByteBuffer buffer;
-        int numFiles = Header.num_files.getHeaderValueInt(_headers);
-        long filesStart = Header.location_files_lo.getHeaderValueLong(_headers);
-
-        _cacheFiles = new CachedFile[numFiles];
-        int countFileHeader = FileHeader.getSize(formatVersion);
-
-        long offset = filesStart;
-
-        for (int i = 0; i < numFiles; i++)
+        CacheFormat cacheFormat = _cacheFormat;
+        CacheHeaderStruct cacheHeaderStruct = _cacheHeaderStruct;
+        StructSerializer<CachedFileHeaderStruct> cachedFileHeaderSerializer = cacheFormat.cachedFileSerializer();
+        _channel.position(cacheHeaderStruct.getLocationFiles());
+        InputStream stream = Channels.newInputStream(_channel);
+        _cacheFiles = new CachedFile[_cacheHeaderStruct.getNumFiles()];
+        for (int i = 0; i < cacheHeaderStruct.getNumFiles(); i++)
         {
-            buffer = _channel.map(FileChannel.MapMode.READ_ONLY, offset, countFileHeader);
-            offset+= countFileHeader;
-            buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-            long modifiedBinary = buffer.getLong();
-            int lenPath = buffer.getInt();
-
-            long runstartBinary = (isVersionCurrent() ? buffer.getLong() : 0);
-            int lenInstrumentInfo = formatVersion > FORMAT_VERSION_CACHE_3 ? buffer.getInt() : -1;
-            int flags = formatVersion > FORMAT_VERSION_CACHE_4 ? buffer.getInt() : 0;
-
-            byte[] filePathBuffer = new byte[lenPath];
-            buffer = _channel.map(FileChannel.MapMode.READ_ONLY, offset, lenPath);
-            offset += lenPath;
-            buffer.get(filePathBuffer);
-            String filePath = formatVersion > FORMAT_VERSION_CACHE_6 ?
-											  new String(filePathBuffer, 0, lenPath, Charset.forName("UTF8"))
-											: new String(filePathBuffer, 0, lenPath);
+            CachedFileHeaderStruct cachedFileStruct = cachedFileHeaderSerializer.readArray(stream, 1)[0];
+            byte[] filePathBuffer = new byte[cachedFileStruct.getLenPath()];
+            IOUtils.readFully(stream, filePathBuffer);
+            String filePath = new String(filePathBuffer, cacheFormat.getCharset());
 
             String instrumentInfoStr = null;
-            if (lenInstrumentInfo >= 0)
+            if (cachedFileStruct.getLenInstrumentInfo() >= 0)
             {
-                byte[] instrumentInfoBuffer = new byte[lenInstrumentInfo];
-                buffer = _channel.map(FileChannel.MapMode.READ_ONLY, offset, lenInstrumentInfo);
-                offset += lenInstrumentInfo;
-                buffer.get(instrumentInfoBuffer);
-                instrumentInfoStr = new String(instrumentInfoBuffer, 0, lenInstrumentInfo, Charset.forName("UTF8"));
+                byte[] instrumentInfoBuffer = new byte[cachedFileStruct.getLenInstrumentInfo()];
+                IOUtils.readFully(stream, instrumentInfoBuffer);
+                instrumentInfoStr = new String(instrumentInfoBuffer, cacheFormat.getCharset());
             }
 
-            Date modifiedTime = new Date(modifiedBinary);
-            Date runstartTime = (runstartBinary != 0 ? new Date(runstartBinary) : null);
-//            var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
-            _cacheFiles[i] = new CachedFile(filePath, instrumentInfoStr, flags);
+            _cacheFiles[i] = new CachedFile(filePath, instrumentInfoStr, cachedFileStruct.getFlags());
         }
     }
 
     private void parsePeaks() throws IOException
     {
-        int numPeaks = Header.num_peaks.getHeaderValueInt(_headers);
-        long peaksStart = Header.location_peaks_lo.getHeaderValueLong(_headers);
+        _channel.position(_cacheHeaderStruct.getLocationPeaks());
+        ChromPeak[] chromPeaks = _cacheFormat.chromPeakSerializer()
+                .readArray(Channels.newInputStream(_channel), _cacheHeaderStruct.getNumPeaks());
+        _allPeaksRt = new float[chromPeaks.length];
 
-        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, peaksStart, _peakSize * numPeaks);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-        _allPeaksRt = new float[numPeaks];
-        for (int i = 0; i< numPeaks; i++)
+        for (int i = 0; i < chromPeaks.length; i++)
         {
-
-            float retentionTime = buffer.getFloat();
-            buffer.getFloat(); // startTime
-            buffer.getFloat(); // endTime
-            buffer.getFloat(); // area
-            buffer.getFloat(); // backgroundArea
-            buffer.getFloat(); // height
-            buffer.getFloat(); // fwhm
-            buffer.getInt(); // flagBits
-
-            _allPeaksRt[i] = retentionTime;
+            _allPeaksRt[i] = chromPeaks[i].getRetentionTime();
         }
     }
 
-    private void parseTransitions(int formatVersion) throws IOException
+    private void parseTransitions() throws IOException
     {
-        int numTransitions = Header.num_transitions.getHeaderValueInt(_headers);
-        long transitionsStart = Header.location_trans_lo.getHeaderValueLong(_headers);
-
-        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, transitionsStart, ChromatogramTran.getSize(formatVersion) * numTransitions);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-        _transitions = new ChromatogramTran[numTransitions];
-        for (int i = 0; i< numTransitions; i++)
-        {
-
-            if (formatVersion > FORMAT_VERSION_CACHE_4)
-            {
-                double product = buffer.getDouble();
-                float extractionWidth = buffer.getFloat();
-                float ionMobilityValue = 0;
-                float ionMobilityExtractionWidth = 0;
-                if(formatVersion > FORMAT_VERSION_CACHE_7)
-                {
-                    ionMobilityValue = buffer.getFloat();
-                    ionMobilityExtractionWidth = buffer.getFloat();
-                }
-
-                _transitions[i] = new ChromatogramTran(product, extractionWidth,
-                                                       ionMobilityValue, ionMobilityExtractionWidth,
-                                                       ChromatogramTran.Source.fromBits(buffer.getShort()));
-                buffer.getShort();  // read padding
-            }
-            else
-            {
-                _transitions[i] = new ChromatogramTran(buffer.getFloat());
-            }
-        }
+        _channel.position(_cacheHeaderStruct.getLocationTransitions());
+        _transitions =_cacheFormat.chromTransitionSerializer()
+                .readArray(Channels.newInputStream(_channel), _cacheHeaderStruct.getNumTransitions());
     }
 
-    private void parseChromatograms(int formatVersion) throws IOException, DataFormatException
+    private void parseChromatograms() throws IOException, DataFormatException
     {
-        byte[] seqBytes = null;
-        if (formatVersion > FORMAT_VERSION_CACHE_4)
+        if (_cacheFormat.getFormatVersion().compareTo(CacheFormatVersion.Four)> 0)
         {
-            int numSeqBytes = Header.num_seq_bytes.getHeaderValueInt(_headers);
-            long seqBytesStart = Header.location_seq_bytes_lo.getHeaderValueLong(_headers);
-            ByteBuffer bufferSb = _channel.map(FileChannel.MapMode.READ_ONLY, seqBytesStart, numSeqBytes);
-            seqBytes = new byte[numSeqBytes];
-            bufferSb.get(seqBytes);
+            _channel.position(_cacheHeaderStruct.getLocationTextIdBytes());
+            _seqBytes = new byte[_cacheHeaderStruct.getNumTextIdBytes()];
+            IOUtils.readFully(Channels.newInputStream(_channel), _seqBytes);
         }
 
-        int numChrom = Header.num_chromatograms.getHeaderValueInt(_headers);
-        long chromatogramStart = Header.location_headers_lo.getHeaderValueLong(_headers);
+        _channel.position(_cacheHeaderStruct.getLocationHeaders());
 
-        ByteBuffer buffer = _channel.map(FileChannel.MapMode.READ_ONLY, chromatogramStart, Chromatogram.getSize(formatVersion) * numChrom);
-        buffer.order(ByteOrder.LITTLE_ENDIAN);
-
-        // Read the chromatogram headers out of the file
-        _chromatograms = new Chromatogram[numChrom];
-        for (int i = 0; i < _chromatograms.length; i++)
-        {
-            _chromatograms[i] = new Chromatogram(formatVersion, buffer, seqBytes, _cacheFiles, _transitions, _allPeaksRt);
-        }
+        _chromatograms =_cacheFormat.chromGroupHeaderInfoSerializer().readArray(
+                Channels.newInputStream(_channel), _cacheHeaderStruct.getNumChromatograms());
     }
 
     public FileChannel getChannel()
@@ -412,14 +220,104 @@ public class SkylineBinaryParser
         return _channel;
     }
 
-    public boolean isVersionCurrent()
-    {
-        long version = Header.format_version.getHeaderValueInt(_headers);
-        return (version >= FORMAT_VERSION_CACHE_3 && FORMAT_VERSION_CACHE >= version);
-    }
-
     final int getCacheFileSize()
     {
         return _cacheFiles != null ? _cacheFiles.length : 0;
+    }
+
+    public Chromatogram.TranMatch matchTransitions(ChromGroupHeaderInfo header, List<? extends GeneralTransition> transitions, Double explicitRt, double tolerance, boolean multiMatch)
+    {
+        int match = 0;
+        double errRt = Double.MAX_VALUE;
+
+        if (explicitRt != null)
+        {
+            // We have retention time info, use that in the match
+            if (header.excludesTime(explicitRt))
+                return new Chromatogram.TranMatch(match, errRt);
+        }
+
+        for (GeneralTransition transition : transitions)
+        {
+            int start = header.getStartTransitionIndex();
+            int end = start + header.getNumTransitions();
+            for (int i = start; i < end; i++)
+            {
+                // Do we need to look through all of the transitions from the .skyd file?
+                if (header.toSignedMz(transition.getMz()).compareTolerant(_transitions[i].getProduct(header), tolerance) == 0)
+                {
+                    if (explicitRt == null)
+                    {
+                        match++;
+                        if (!multiMatch)
+                        {
+                            break;  // only one match per transition
+                        }
+                    }
+                    else
+                    {
+                        match = multiMatch ? match + 1 : 1; // Examine all RT values even if we're not multimatch
+                        int transitionNum = i - start;
+                        // How well does explicit retention time match the best peak for this transition?
+                        if (header.getMaxPeakIndex() != -1)
+                        {
+                            float peakRt = _allPeaksRt[header.getStartPeakIndex() + header.getNumTransitions() * transitionNum + header.getMaxPeakIndex()];
+                            errRt = Math.min(errRt, Math.abs(explicitRt - peakRt));
+                        }
+                    }
+                }
+            }
+        }
+        return new Chromatogram.TranMatch(match, errRt);
+    }
+
+    public byte[] readChromatogramBytes(ChromGroupHeaderInfo header) throws DataFormatException, IOException
+    {
+        // Get the compressed bytes
+        MappedByteBuffer buffer = getChannel().map(FileChannel.MapMode.READ_ONLY, header.getLocationPoints(), header.getCompressedSize());
+        byte[] result = new byte[header.getCompressedSize()];
+        buffer.get(result);
+        // Make sure it uncompresses successfully so that we don't import bad content into the database
+        uncompress(result, header.getUncompressedSize());
+        return result;
+    }
+
+
+    public static byte[] uncompress(byte[] bytes, int uncompressedSize) throws DataFormatException
+    {
+        if (uncompressedSize == bytes.length) {
+            return bytes;
+        }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        Inflater inflater = new Inflater();
+        inflater.setInput(bytes);
+        byte[] buffer = new byte[65536];
+        int bytesRead;
+        while (0 != (bytesRead = inflater.inflate(buffer)))
+        {
+            byteArrayOutputStream.write(buffer, 0, bytesRead);
+        }
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    public ChromTransition[] getTransitions(ChromGroupHeaderInfo chromGroupHeaderInfo)
+    {
+        ChromTransition[] transitions = new ChromTransition[chromGroupHeaderInfo.getNumTransitions()];
+        for (int i = 0; i < transitions.length; i++)
+        {
+            transitions[i] = _transitions[i + chromGroupHeaderInfo.getStartTransitionIndex()];
+        }
+        return transitions;
+    }
+
+    public String getTextId(ChromGroupHeaderInfo chromGroupHeaderInfo) {
+        if (0 == chromGroupHeaderInfo.getTextIdLen()) {
+            return null;
+        }
+        return new String(_seqBytes, chromGroupHeaderInfo.getTextIdIndex(), chromGroupHeaderInfo.getTextIdLen(), _cacheFormat.getCharset());
+    }
+
+    public String getFilePath(ChromGroupHeaderInfo chromGroupHeaderInfo) {
+        return _cacheFiles[chromGroupHeaderInfo.getFileIndex()].getFilePath();
     }
 }

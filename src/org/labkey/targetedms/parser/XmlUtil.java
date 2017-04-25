@@ -127,7 +127,7 @@ public class XmlUtil
         if (value == null)
             return null;
         // Calendar calendar = DatatypeConverter.parseDateTime(value);
-        return (Date) ConvertUtils.convert(reader.getAttributeValue(null, "acquired_time"), Date.class);
+        return (Date) ConvertUtils.convert(value, Date.class);
     }
 
     public static String readRequiredAttribute(XMLStreamReader reader, String attributeName, String elementName) throws XMLStreamException

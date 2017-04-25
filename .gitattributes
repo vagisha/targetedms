@@ -5,7 +5,9 @@ api-src/org/labkey/api/targetedms/ITargetedMSRun.java -text
 api-src/org/labkey/api/targetedms/SkylineAnnotation.java -text
 api-src/org/labkey/api/targetedms/TargetedMSService.java -text
 /build.gradle -text
+lib/protobuf-java-3.2.0.jar -text
 /module.properties -text
+resources/credits/jars.txt -text
 resources/credits/scripts.txt -text
 resources/queries/targetedms/QCMetric_fwb.sql -text
 resources/queries/targetedms/QCMetric_fwhm.sql -text
@@ -85,6 +87,7 @@ resources/schemas/dbscripts/postgresql/targetedms-16.30-17.10.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-16.31-16.32.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-16.32-16.33.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-16.33-16.34.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-17.10-17.11.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-13.10.sql -text
@@ -146,7 +149,10 @@ resources/schemas/dbscripts/sqlserver/targetedms-16.30-17.10.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-16.31-16.32.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-16.32-16.33.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-16.33-16.34.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-17.10-17.11.sql -text
 resources/schemas/targetedms.xml -text
+src/ChromatogramGroupData.proto -text
+src/SkylineDocument.proto -text
 src/org/labkey/targetedms/IrtPeptide.java -text
 src/org/labkey/targetedms/PublishTargetedMSExperimentsController.java -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
@@ -278,7 +284,7 @@ src/org/labkey/targetedms/parser/AreaRatio.java -text
 src/org/labkey/targetedms/parser/CalibrationCurveEntity.java -text
 src/org/labkey/targetedms/parser/ChromInfo.java -text
 src/org/labkey/targetedms/parser/Chromatogram.java -text
-src/org/labkey/targetedms/parser/ChromatogramTran.java -text
+src/org/labkey/targetedms/parser/ChromatogramBinaryFormat.java -text
 src/org/labkey/targetedms/parser/CustomIon.java -text
 src/org/labkey/targetedms/parser/DataSettings.java -text
 src/org/labkey/targetedms/parser/FoldChange.java -text
@@ -315,6 +321,7 @@ src/org/labkey/targetedms/parser/SkylineDocumentParser.java -text
 src/org/labkey/targetedms/parser/SkylineEntity.java -text
 src/org/labkey/targetedms/parser/SkylineReplicate.java -text
 src/org/labkey/targetedms/parser/StandardType.java -text
+src/org/labkey/targetedms/parser/TimeIntensities.java -text
 src/org/labkey/targetedms/parser/Transition.java -text
 src/org/labkey/targetedms/parser/TransitionAnnotation.java -text
 src/org/labkey/targetedms/parser/TransitionAreaRatio.java -text
@@ -326,6 +333,18 @@ src/org/labkey/targetedms/parser/TransitionSettings.java -text
 src/org/labkey/targetedms/parser/XmlUtil.java -text
 src/org/labkey/targetedms/parser/blib/BlibSpectrum.java -text
 src/org/labkey/targetedms/parser/blib/BlibSpectrumReader.java -text
+src/org/labkey/targetedms/parser/proto/ChromatogramGroupDataOuterClass.java -text
+src/org/labkey/targetedms/parser/proto/SkylineDocument.java -text
+src/org/labkey/targetedms/parser/skyd/CacheFormat.java -text
+src/org/labkey/targetedms/parser/skyd/CacheFormatVersion.java -text
+src/org/labkey/targetedms/parser/skyd/CacheHeaderStruct.java -text
+src/org/labkey/targetedms/parser/skyd/CachedFileHeaderStruct.java -text
+src/org/labkey/targetedms/parser/skyd/ChromGroupHeaderInfo.java -text
+src/org/labkey/targetedms/parser/skyd/ChromPeak.java -text
+src/org/labkey/targetedms/parser/skyd/ChromTransition.java -text
+src/org/labkey/targetedms/parser/skyd/EnumFlagValues.java -text
+src/org/labkey/targetedms/parser/skyd/StructSerializer.java -text
+src/org/labkey/targetedms/parser/skyd/proto/ChromatogramGroupDataOuterClass.java -text
 src/org/labkey/targetedms/pipeline/CopyExperimentFinalTask.java -text
 src/org/labkey/targetedms/pipeline/CopyExperimentJobSupport.java -text
 src/org/labkey/targetedms/pipeline/CopyExperimentPipelineJob.java -text
@@ -472,6 +491,7 @@ test/src/org/labkey/test/pages/targetedms/ParetoPlotPage.java -text
 test/src/org/labkey/test/tests/targetedms/ClustergrammerTest.java -text
 test/src/org/labkey/test/tests/targetedms/GetDataAPITest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSCalibrationCurveTest.java -text
+test/src/org/labkey/test/tests/targetedms/TargetedMSDocumentFormatsTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSExperimentIrtTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSExperimentTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSGroupComparisonTest.java -text

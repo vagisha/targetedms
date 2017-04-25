@@ -84,8 +84,19 @@ public class GroupComparisonDataSet {
         List<Boolean> subjectControls = summarizedRows.stream().map(Replicate::isControl).collect(Collectors.toList());
         FoldChangeDataSet foldChangeDataSet = new FoldChangeDataSet(abundances, features, runs, subjects, subjectControls);
         DesignMatrix designMatrix = DesignMatrix.getDesignMatrix(foldChangeDataSet, false);
-        LinearFitResult linearFitResult = designMatrix.performLinearFit().get(0);
-        return linearFitResult;
+        try
+        {
+            LinearFitResult linearFitResult = designMatrix.performLinearFit().get(0);
+            return linearFitResult;
+        }
+        catch (Exception x)
+        {
+            // This usually means that the matrix could not be inverted.
+            // Skyline is always able to invert matrices because Skyline has code in the class
+            // "pwiz.Common.DataAnalysis.Matrices.QRFactorization" which is able to skip over linearly
+            // dependent columns
+            return null;
+        }
     }
 
     List<Replicate> removeIncompleteReplicates(String label, List<Replicate> replicates) {

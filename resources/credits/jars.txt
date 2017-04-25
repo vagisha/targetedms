@@ -1,0 +1,4 @@
+{table}
+Filename|Component|Version|Source|License|LabKey Dev|Purpose
+protobuf-java-3.2.0.jar|Protocol Buffers|3.2.0|{link:Github Google|https://github.com/google/protobuf/releases}|{link:Custom|https://github.com/google/protobuf/blob/master/LICENSE}|nicksh|Binary data parsing
+{table}
