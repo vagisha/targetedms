@@ -338,6 +338,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         }
 
         var legendSeries = this.getCombinedPlotLegendSeries(plotType, isCUSUMMean);
+        var legendHelper = Ext4.create("LABKEY.targetedms.QCPlotLegendHelper");
+        legendHelper.setupLegendPrefixes(this.fragmentPlotData, 3);
+
         // traverse the precursor list for: calculating the longest legend string and combine the plot data
         for (var i = 0; i < this.precursors.length; i++)
         {
@@ -347,7 +350,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
             appropriateLegend.push({
                 name: precursorInfo.fragment + (this.isMultiSeries() ? '|' + legendSeries[0] : ''),
-                text: precursorInfo.fragment,
+                text: legendHelper.getUniquePrefix(precursorInfo.fragment, (precursorInfo.dataType == 'Peptide')),
+                hoverText: precursorInfo.fragment,
                 color: groupColors[i % groupColors.length]
             });
         }
@@ -371,7 +375,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 precursorInfo = this.fragmentPlotData[this.precursors[i]];
                 appropriateLegend.push({
                     name: precursorInfo.fragment + '|' + legendSeries[1],
-                    text: precursorInfo.fragment,
+                    text: legendHelper.getUniquePrefix(precursorInfo.fragment, (precursorInfo.dataType == 'Peptide')),
+                    hoverText: precursorInfo.fragment,
                     color: groupColors[(this.precursors.length + i) % groupColors.length]
                 });
             }
