@@ -70,3 +70,13 @@
 .tree-node-noicon {
     display: none;
 }
+
+.qc-hover-field-label {
+    width: 75px;
+    font-weight: bold;
+    vertical-align: top;
+}
+
+div.hopscotch-bubble .hopscotch-content td {
+    word-break: break-all;
+}

@@ -406,7 +406,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             groupBy: 'fragment',
             color: 'fragment',
             showTrendLine: true,
-            hoverTextFn: this.plotHoverTextDisplay,
+            mouseOverFn: this.plotPointHover,
             pointClickFn: this.plotPointClick,
             position: this.groupedX ? 'jitter' : undefined
         };
@@ -479,7 +479,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             yAxisScale: (precursorInfo.showLogInvalid ? 'linear' : this.yAxisScale),
             shape: 'guideSetId',
             showTrendLine: true,
-            hoverTextFn: this.plotHoverTextDisplay,
+            mouseOverFn: this.plotPointHover,
             pointClickFn: this.plotPointClick,
             position: this.groupedX ? 'jitter' : undefined,
             disableRangeDisplay: this.isMultiSeries() || !this.hasGuideSetData

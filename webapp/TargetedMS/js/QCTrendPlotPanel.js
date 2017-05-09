@@ -980,6 +980,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     },
 
     displayTrendPlot: function() {
+        hopscotch.getCalloutManager().removeAllCallouts();
         this.setLoadingMsg();
         this.getDistinctPrecursors();
     },
@@ -1127,21 +1128,58 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    plotHoverTextDisplay : function(row, valueName){
-        var tooltip = (row[valueName + 'Title'] != undefined ? 'Metric: ' + row[valueName + 'Title'] + '\n' : '')
-            + row.dataType + ': ' + row['fragment'];
-        if (valueName.indexOf('CUSUM') > -1)
-        {
-            tooltip += '\nGroup: ';
-            if ('CUSUMmN' == valueName || 'CUSUMvN' == valueName)
-                tooltip += 'CUSUM-';
-            else
-                tooltip += 'CUSUM+';
+    plotPointHover : function(event, row, layerSel, point, valueName) {
+        var tooltip = (row[valueName + 'Title'] != undefined ? '<span class="qc-hover-field-label">Metric:</span> '
+                + row[valueName + 'Title'] + '</br>' : '');
+
+        tooltip += '<table>';
+        tooltip += '<tr><td class="qc-hover-field-label">' + row.dataType + ':</td><td>' + row['fragment'] + '</td></tr>';
+        if (valueName.indexOf('CUSUM') > -1) {
+            tooltip += '<tr><td class="qc-hover-field-label">Group:</td><td>'
+                    + ('CUSUMmN' == valueName || 'CUSUMvN' == valueName ? 'CUSUM-' : 'CUSUM+')
+                    + '</td></tr>';
         }
-        tooltip += '\nAcquired: ' + row['fullDate'] + ", "
-            + '\nValue: ' + (valueName ? row[valueName] : row.value) + ", "
-            + '\nFile Path: ' + row['FilePath'];
-        return tooltip;
+        tooltip += '<tr><td class="qc-hover-field-label">Acquired:</td><td>' + row['fullDate'] + '</td></tr>';
+        tooltip += '<tr><td class="qc-hover-field-label">Value:</td><td>' + (valueName ? row[valueName] : row.value) + '</td></tr>';
+        tooltip += '<tr><td class="qc-hover-field-label">File Path:</td><td>' + row['FilePath'] + '</td></tr>';
+        tooltip += '</table>';
+
+        //Chose action target based on precursor type
+        var action = row.dataType == 'Peptide' ? "precursorAllChromatogramsChart" : "moleculePrecursorAllChromatogramsChart",
+            url = LABKEY.ActionURL.buildURL('targetedms', action, LABKEY.ActionURL.getContainer(), {
+                id: row.PrecursorId,
+                chromInfoId: row.PrecursorChromInfoId
+            });
+        tooltip += '</br><br/>' + LABKEY.Utils.textLink({
+                text: 'Go To Chromatograms Chart',
+                href: url + '#ChromInfo' + row.PrecursorChromInfoId
+            });
+
+        var showHoverTask = new Ext4.util.DelayedTask(),
+            shiftLeft = (event.clientX || event.x) > (Ext4.getBody().getWidth() / 2);
+        showHoverTask.delay(500, function() {
+            var calloutMgr = hopscotch.getCalloutManager(),
+                hopscotchId = Ext4.id(),
+                config = {
+                    id: hopscotchId,
+                    showCloseButton: true,
+                    bubbleWidth: 450,
+                    placement: 'top',
+                    xOffset: shiftLeft ? -428 : -53,
+                    arrowOffset: shiftLeft ? 410 : 35,
+                    target: point,
+                    content: tooltip
+                };
+
+            calloutMgr.removeAllCallouts();
+            calloutMgr.createCallout(config);
+        });
+
+        // cancel the hover details show event if the user was just
+        // passing over the point without stopping for X amount of time
+        Ext4.get(point).on('mouseout', function() {
+            showHoverTask.cancel();
+        }, this);
     },
 
     plotPointClick : function(event, row) {
