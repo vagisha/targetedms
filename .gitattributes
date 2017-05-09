@@ -1,6 +1,4 @@
 * text=auto !eol
-/TargetedMS-API.iml -text
-/TargetedMS.iml -text
 api-src/org/labkey/api/targetedms/ITargetedMSRun.java -text
 api-src/org/labkey/api/targetedms/SkylineAnnotation.java -text
 api-src/org/labkey/api/targetedms/TargetedMSService.java -text
@@ -504,7 +502,6 @@ test/src/org/labkey/test/tests/targetedms/TargetedMSQCSummaryTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSQCTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSTest.java -text
 test/src/org/labkey/test/util/targetedms/QCHelper.java -text
-test/test_targetedms.iml -text
 webapp/TargetedMS/DataTables/jquery.dataTables.min.css -text
 webapp/TargetedMS/DataTables/jquery.dataTables.min.js -text
 webapp/TargetedMS/css/CalibrationCurve.css -text
