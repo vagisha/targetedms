@@ -170,6 +170,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_QC_ANNOTATION_TYPE = "QCAnnotationType";
     public static final String TABLE_QC_ANNOTATION = "QCAnnotation";
     public static final String TABLE_QC_METRIC_CONFIGURATION = "QCMetricConfiguration";
+    public static final String TABLE_QC_METRIC_EXCLUSION = "QCMetricExclusion";
 
     public static final String TABLE_GUIDE_SET = "GuideSet";
 
@@ -639,11 +640,15 @@ public class TargetedMSSchema extends UserSchema
         {
             return new QCAnnotationTable(this);
         }
+        if (TABLE_QC_METRIC_CONFIGURATION.equalsIgnoreCase(name))
+        {
+            return new QCMetricConfigurationTable(this);
+        }
         if (TABLE_GUIDE_SET.equalsIgnoreCase(name))
         {
             return new GuideSetTable(this);
         }
-        if ( TABLE_AUTOQC_PING.equalsIgnoreCase(name))
+        if (TABLE_AUTOQC_PING.equalsIgnoreCase(name))
         {
             FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(TABLE_AUTOQC_PING), this);
             result.wrapAllColumns(true);
@@ -874,6 +879,10 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(name))
         {
             return new ReplicateAnnotationTable(this);
+        }
+        if (TABLE_QC_METRIC_EXCLUSION.equalsIgnoreCase(name))
+        {
+            return new QCMetricExclusionTable(this);
         }
 
         if (TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name) || TABLE_GENERAL_MOLECULE_CHROM_INFO.equalsIgnoreCase(name))
@@ -1195,6 +1204,8 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_CALIBRATION_CURVE);
         hs.add(TABLE_PEPTIDE_CALIBRATION_CURVE);
         hs.add(TABLE_MOLECULE_CALIBRATION_CURVE);
+        hs.add(TABLE_QC_METRIC_CONFIGURATION);
+        hs.add(TABLE_QC_METRIC_EXCLUSION);
         return hs;
     }
 

@@ -96,13 +96,13 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         if (Ext4.isDefined(hasChildren))
         {
             config.cls = hasChildren ? 'summary-view' : '';
-            config.width = hasChildren ? 375 : undefined;
+            config.width = hasChildren ? 800 : undefined;
             config.minHeight = 21;
         }
         else
         {
             config.cls = 'summary-view subfolder-view';
-            config.width = 375;
+            config.width = 800;
             config.minHeight = 136;
         }
         

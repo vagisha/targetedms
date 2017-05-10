@@ -86,6 +86,7 @@ resources/schemas/dbscripts/postgresql/targetedms-16.31-16.32.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-16.32-16.33.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-16.33-16.34.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-17.10-17.11.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-17.11-17.12.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-13.10.sql -text
@@ -148,6 +149,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-16.31-16.32.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-16.32-16.33.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-16.33-16.34.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-17.10-17.11.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-17.11-17.12.sql -text
 resources/schemas/targetedms.xml -text
 src/ChromatogramGroupData.proto -text
 src/SkylineDocument.proto -text
@@ -395,6 +397,8 @@ src/org/labkey/targetedms/query/PrecursorManager.java -text
 src/org/labkey/targetedms/query/PrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/QCAnnotationTable.java -text
 src/org/labkey/targetedms/query/QCAnnotationTypeTable.java -text
+src/org/labkey/targetedms/query/QCMetricConfigurationTable.java -text
+src/org/labkey/targetedms/query/QCMetricExclusionTable.java -text
 src/org/labkey/targetedms/query/ReplicateAnnotationTable.java -text
 src/org/labkey/targetedms/query/ReplicateManager.java -text
 src/org/labkey/targetedms/query/RepresentativeStateDisplayColumn.java -text

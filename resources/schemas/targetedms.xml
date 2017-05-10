@@ -1387,6 +1387,7 @@
             <column columnName="Container">
                 <columnTitle>Folder</columnTitle>
                 <isReadOnly>false</isReadOnly>
+                <isHidden>true</isHidden>
                 <fk>
                     <fkColumnName>EntityId</fkColumnName>
                     <fkDbSchema>core</fkDbSchema>
@@ -1400,6 +1401,56 @@
             <column columnName="Series2Label"/>
             <column columnName="Series2SchemaName"/>
             <column columnName="Series2QueryName"/>
+        </columns>
+    </table>
+    <table tableName="QCMetricExclusion" tableDbType="TABLE">
+        <description>Contains a row for each replicate exclusion, for all or a specific QC metric.</description>
+        <columns>
+            <column columnName="CreatedBy">
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="ModifiedBy">
+                <isHidden>true</isHidden>
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="Created">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Modified">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="ReplicateId">
+                <columnTitle>Replicate</columnTitle>
+                <fk>
+                    <fkColumnName>Id</fkColumnName>
+                    <fkDbSchema>targetedms</fkDbSchema>
+                    <fkTable>Replicate</fkTable>
+                </fk>
+            </column>
+            <column columnName="MetricId">
+                <columnTitle>Metric</columnTitle>
+                <description>
+                    The QC metric for this replicate exclusion. Note that a NULL value in this
+                    field indicates that the replicate should be excluded for all QC metrics.
+                </description>
+                <fk>
+                    <fkColumnName>Id</fkColumnName>
+                    <fkDbSchema>targetedms</fkDbSchema>
+                    <fkTable>QCMetricConfiguration</fkTable>
+                </fk>
+            </column>
         </columns>
     </table>
 

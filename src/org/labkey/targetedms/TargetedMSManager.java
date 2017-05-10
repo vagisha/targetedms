@@ -457,6 +457,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_QC_METRIC_CONFIGURATION);
     }
 
+    public static TableInfo getTableInfoQCMetricExclusion()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_QC_METRIC_EXCLUSION);
+    }
+
     public static TableInfo getTableInfoGuideSet()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_GUIDE_SET);
@@ -1329,6 +1334,8 @@ public class TargetedMSManager
         deleteReplicateDependent(getTableInfoSampleFile());
         // Delete from ReplicateAnnotation
         deleteReplicateDependent(getTableInfoReplicateAnnotation());
+        // Delete from QCMetricExclusion
+        deleteReplicateDependent(getTableInfoQCMetricExclusion());
 
         // Delete from IsolationWindow
         deleteIsolationSchemeDependent(getTableInfoIsolationWindow());
