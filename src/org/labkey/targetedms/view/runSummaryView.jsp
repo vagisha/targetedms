@@ -60,6 +60,9 @@
     ActionURL calibrationCurveListAction = new ActionURL(TargetedMSController.ShowCalibrationCurvesAction.class, getContainer());
     calibrationCurveListAction.addParameter("id", run.getId());
 
+    ActionURL replicateListAction = new ActionURL(TargetedMSController.ShowReplicatesAction.class, getContainer());
+    replicateListAction.addParameter("id", run.getId());
+
     String renameAction = null;
     if(c.hasPermission(getUser(), UpdatePermission.class))
         renameAction = TargetedMSController.getRenameRunURL(c, run, getActionURL()).getLocalURIString();
@@ -82,6 +85,7 @@
             transitionCount: <%=run.getTransitionCount()%>,
             peptideGroupCount: <%=run.getPeptideGroupCount()%>,
             calibrationCurveCount: <%=bean.getCalibrationCurveCount()%>,
+            replicateCount: <%=bean.getReplicateCount()%>,
             versionCount: <%=bean.getVersionCount()%>,
             fileName: <%=q(skyDocFile != null ? skyDocFile.getName() : null)%>,
             fileSize: <%=q(skyDocFile != null ? FileUtils.byteCountToDisplaySize(skyDocFile.length()) : null)%>,
@@ -90,7 +94,8 @@
             versionsAction: <%=q(versionsAction.getLocalURIString())%>,
             precursorListAction: <%=q(precursorListAction.getLocalURIString())%>,
             transitionListAction: <%=q(transitionListAction.getLocalURIString())%>,
-            calibrationCurveListAction: <%=q(calibrationCurveListAction.getLocalURIString())%>
+            calibrationCurveListAction: <%=q(calibrationCurveListAction.getLocalURIString())%>,
+            replicateListAction: <%=q(replicateListAction.getLocalURIString())%>
         });
     });
 

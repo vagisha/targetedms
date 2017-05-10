@@ -99,10 +99,10 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
         return options;
     },
 
-    getClickableCount: function (count, label, action, comma) {
+    getClickableCount: function (count, label, action, first) {
         return {
             xtype: 'label',
-            html: '<a>' + LABKEY.Utils.pluralBasic(count, label) + (comma?',':'') + '</a>&nbsp',
+            html: (!first?',&nbsp':'') + '<a>' + LABKEY.Utils.pluralBasic(count, label) + '</a>',
             listeners: {
                 click: {
                     element: 'el',
@@ -116,6 +116,26 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
     },
 
     getCounts: function () {
+        var items = [];
+
+        items.push(this.getClickableCount(this.peptideGroupCount, 'protein', this.precursorListAction, true));
+        if (this.peptideCount > 0) {
+            items.push(this.getClickableCount(this.peptideCount, 'peptide', this.precursorListAction, false));
+        }
+        if (this.smallMoleculeCount > 0) {
+            items.push(this.getClickableCount(this.smallMoleculeCount, 'small molecule', this.precursorListAction + '#Small Molecule Precursor List', false));
+        }
+        items.push(this.getClickableCount(this.precursorCount, 'precursor', this.precursorListAction, false));
+        items.push(this.getClickableCount(this.transitionCount, 'transition', this.transitionListAction, false));
+
+        items.push({ xtype: 'label', html: '&nbsp;&nbsp;-&nbsp;&nbsp;'});
+
+        items.push(this.getClickableCount(this.replicateCount, 'replicate', this.replicateListAction, true));
+
+        if (this.calibrationCurveCount > 0) {
+            items.push(this.getClickableCount(this.calibrationCurveCount, 'calibration curve', this.calibrationCurveListAction, false));
+        }
+
         return {
             xtype: 'panel',
             layout: {
@@ -124,14 +144,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             },
             border: false,
             width: 800,
-            items: [
-                this.getClickableCount(this.peptideGroupCount, 'protein', this.precursorListAction, true),
-                this.getClickableCount(this.peptideCount, 'peptide', this.precursorListAction, true),
-                this.getClickableCount(this.smallMoleculeCount, 'small molecule', this.precursorListAction + '#Small Molecule Precursor List', true),
-                this.getClickableCount(this.precursorCount, 'precursor', this.precursorListAction, true),
-                this.getClickableCount(this.transitionCount, 'transition', this.transitionListAction, true),
-                this.getClickableCount(this.calibrationCurveCount, 'calibration curve', this.calibrationCurveListAction, false)
-            ]
+            items: items
         };
     }
 

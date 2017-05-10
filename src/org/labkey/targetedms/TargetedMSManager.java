@@ -1872,10 +1872,19 @@ public class TargetedMSManager
 
     public static int getCalibrationCurveCount(int runId)
     {
-        TableInfo table = getTableInfoCalibrationCurve();
+        return getCountForRunFKTable(runId, getTableInfoCalibrationCurve());
+    }
+
+    private static int getCountForRunFKTable(int runId, TableInfo table)
+    {
         SimpleFilter runFilter = new SimpleFilter(FieldKey.fromParts("RunId"), runId, CompareType.EQUAL);
         TableSelector selector = new TableSelector(table, runFilter, null);
         return toIntExact(selector.getRowCount());
+    }
+
+    public static int getReplicateCount(int runId)
+    {
+        return getCountForRunFKTable(runId, getTableInfoReplicate());
     }
 
 }

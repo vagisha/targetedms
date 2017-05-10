@@ -141,15 +141,37 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     }
 
     @LogMethod
-    protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int calibrationCount)
+    protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount)
     {
         log("Verifying expected summary counts");
         assertElementPresent(Locator.linkContainingText(proteinCount + " proteins"));
-        assertElementPresent(Locator.linkContainingText(peptideCount + " peptides"));
-        assertElementPresent(Locator.linkContainingText(moleculeCount + " small molecules"));
+        if (peptideCount > 0)
+        {
+            assertElementPresent(Locator.linkContainingText(peptideCount + " peptides"));
+        }
+        else
+        {
+            assertElementNotPresent(Locator.linkContainingText(" peptides"));
+        }
+        if (moleculeCount > 0)
+        {
+            assertElementPresent(Locator.linkContainingText(moleculeCount + " small molecules"));
+        }
+        else
+        {
+            assertElementNotPresent(Locator.linkContainingText(" small molecules"));
+        }
         assertElementPresent(Locator.linkContainingText(precursorCount + " precursors"));
         assertElementPresent(Locator.linkContainingText(transitionCount + " transitions"));
-        assertElementPresent(Locator.linkContainingText(calibrationCount + " calibration curves"));
+        assertElementPresent(Locator.linkContainingText(replicateCount + (replicateCount == 1 ? " replicate" : " replicates")));
+        if (calibrationCount > 0)
+        {
+            assertElementPresent(Locator.linkContainingText(calibrationCount + " calibration curves"));
+        }
+        else
+        {
+            assertElementNotPresent(Locator.linkContainingText(" calibration curves"));
+        }
     }
 
     @LogMethod

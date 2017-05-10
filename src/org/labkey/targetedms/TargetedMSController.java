@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -183,7 +184,6 @@ import org.labkey.targetedms.view.MoleculePrecursorChromatogramsView;
 import org.labkey.targetedms.view.PeptidePrecursorChromatogramsView;
 import org.labkey.targetedms.view.PeptidePrecursorsView;
 import org.labkey.targetedms.view.PeptideTransitionsView;
-import org.labkey.targetedms.view.QuantificationView;
 import org.labkey.targetedms.view.SmallMoleculePrecursorsView;
 import org.labkey.targetedms.view.SmallMoleculeTransitionsView;
 import org.labkey.targetedms.view.TargetedMsRunListView;
@@ -2722,6 +2722,7 @@ public class TargetedMSController extends SpringActionController
         bean.setRun(run);
         bean.setVersionCount(TargetedMSManager.getLinkedVersions(getUser(), getContainer(), ids, linkedRowIds).size());
         bean.setCalibrationCurveCount(TargetedMSManager.getCalibrationCurveCount(run.getRunId()));
+        bean.setReplicateCount(TargetedMSManager.getReplicateCount(run.getRunId()));
 
         JspView<RunDetailsBean> runSummaryView = new JspView<>("/org/labkey/targetedms/view/runSummaryView.jsp", bean);
         runSummaryView.setFrame(WebPartView.FrameType.PORTAL);
@@ -2771,16 +2772,36 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    // ------------------------------------------------------------------------
-    // Action to display a document's transition or precursor list
-    // ------------------------------------------------------------------------
-    @RequiresPermission(ReadPermission.class)
-    public abstract class ShowRunDetailsAction <VIEWTYPE extends DocumentView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
+    public abstract class AbstractShowRunDetailsAction <VIEWTYPE extends QueryView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
+
+        protected AbstractShowRunDetailsAction(Class<? extends RunDetailsForm> formClass)
+        {
+            super(formClass);
+        }
+
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return appendNavTrail(root, _run);
+        }
+
+        public NavTree appendNavTrail(NavTree root, TargetedMSRun run)
+        {
+            root = root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+            return root.addChild(run.getDescription(), getShowRunURL(getContainer(), run.getId()));
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Action to display a document's transition or precursor list, with both proteomics and small molecule views
+    // ------------------------------------------------------------------------
+    @RequiresPermission(ReadPermission.class)
+    public abstract class ShowRunSplitDetailsAction<VIEWTYPE extends DocumentView> extends AbstractShowRunDetailsAction<VIEWTYPE>
+    {
         protected String _dataRegion;
 
-        public ShowRunDetailsAction()
+        public ShowRunSplitDetailsAction()
         {
             super(RunDetailsForm.class);
         }
@@ -2818,30 +2839,12 @@ public class TargetedMSController extends SpringActionController
             return vBox;
         }
 
-        public NavTree appendNavTrail(NavTree root)
-        {
-            NavTree navTree = appendNavTrail(root, _run);
-            if (_run != null)
-            {
-                navTree = navTree.addChild(_run.getDescription());
-            }
-            return navTree;
-        }
-
-        public NavTree appendNavTrail(NavTree root, TargetedMSRun run)
-        {
-            return root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
-        }
-
         public abstract String getDataRegionNamePeptide();
         public abstract String getDataRegionNameSmallMolecule();
-
-        public abstract NavTree getViewSwitcherMenu();
-
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowTransitionListAction extends ShowRunDetailsAction<DocumentTransitionsView>
+    public class ShowTransitionListAction extends ShowRunSplitDetailsAction<DocumentTransitionsView>
     {
         @Override
         protected DocumentTransitionsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
@@ -2876,26 +2879,10 @@ public class TargetedMSController extends SpringActionController
         {
             return SmallMoleculeTransitionsView.DATAREGION_NAME;
         }
-
-        @Override
-        public NavTree getViewSwitcherMenu()
-        {
-            NavTree menu = new NavTree();
-            ActionURL url = new ActionURL(ShowPrecursorListAction.class, getContainer());
-            url.addParameter("id", _run.getId());
-
-            if(SmallMoleculeTransitionsView.DATAREGION_NAME.equals(_dataRegion))
-                menu.addChild(SmallMoleculePrecursorsView.TITLE, url);
-            else
-                menu.addChild(PeptidePrecursorsView.TITLE, url);
-            GroupComparisonView.addQuantificationMenuItems(_form, menu);
-
-            return menu;
-        }
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowPrecursorListAction extends ShowRunDetailsAction<DocumentPrecursorsView>
+    public class ShowPrecursorListAction extends ShowRunSplitDetailsAction<DocumentPrecursorsView>
     {
         // Invoked via reflection
         @SuppressWarnings("UnusedDeclaration")
@@ -2959,26 +2946,10 @@ public class TargetedMSController extends SpringActionController
         {
             return SmallMoleculePrecursorsView.DATAREGION_NAME;
         }
-
-        @Override
-        public NavTree getViewSwitcherMenu()
-        {
-            NavTree menu = new NavTree();
-            ActionURL url = new ActionURL(ShowTransitionListAction.class, getContainer());
-            url.addParameter("id", _run.getId());
-
-            if(SmallMoleculePrecursorsView.DATAREGION_NAME.equals(_dataRegion))
-                menu.addChild(SmallMoleculeTransitionsView.TITLE, url);
-            else
-                menu.addChild(PeptideTransitionsView.TITLE, url);
-
-            QuantificationView.addQuantificationMenuItems(_form, menu);
-            return menu;
-        }
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowGroupComparisonAction extends ShowRunDetailsAction<GroupComparisonView>
+    public class ShowGroupComparisonAction extends ShowRunSplitDetailsAction<GroupComparisonView>
     {
         public ShowGroupComparisonAction()
         {
@@ -2998,13 +2969,6 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree getViewSwitcherMenu()
-        {
-            return QuantificationView.getViewSwitcherMenu(_form);
-        }
-
-
-        @Override
         protected GroupComparisonView createQueryView(
                 RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
         {
@@ -3014,8 +2978,9 @@ public class TargetedMSController extends SpringActionController
                     forExport, dataRegion);
         }
     }
+
     @RequiresPermission(ReadPermission.class)
-    public class ShowCalibrationCurvesAction extends ShowRunDetailsAction<CalibrationCurvesView>
+    public class ShowCalibrationCurvesAction extends ShowRunSplitDetailsAction<CalibrationCurvesView>
     {
         @Override
         public String getDataRegionNamePeptide()
@@ -3030,13 +2995,6 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree getViewSwitcherMenu()
-        {
-            return QuantificationView.getViewSwitcherMenu(_form);
-        }
-
-
-        @Override
         protected CalibrationCurvesView createQueryView(
                 RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
         {
@@ -3044,6 +3002,48 @@ public class TargetedMSController extends SpringActionController
                     new TargetedMSSchema(getUser(), getContainer()),
                     form,
                     forExport, dataRegion);
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowReplicatesAction extends AbstractShowRunDetailsAction<QueryView>
+    {
+        private static final String DATA_REGION_NAME = "Replicate";
+
+        public ShowReplicatesAction()
+        {
+            super(RunDetailsForm.class);
+        }
+
+        @Override
+        protected ModelAndView getHtmlView(RunDetailsForm form, BindException errors) throws Exception
+        {
+            if(!form.hasRunId())
+                throw new RedirectException(new ActionURL(ShowListAction.class, getContainer()));
+
+            //ensure that the experiment run is valid and exists within the current container
+            _run = validateRun(form.getId());
+
+            VBox vBox = new VBox();
+            vBox.addView(getSummaryView(form, _run));
+            vBox.addView(createInitializedQueryView(form, errors, false, DATA_REGION_NAME));
+            return vBox;
+        }
+
+        @Override
+        protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+        {
+            if(!form.hasRunId())
+                throw new RedirectException(new ActionURL(ShowListAction.class, getContainer()));
+
+            //ensure that the experiment run is valid and exists within the current container
+            _run = validateRun(form.getId());
+
+            QuerySettings settings = new QuerySettings(getViewContext(), DATA_REGION_NAME, "Replicate");
+            settings.getBaseFilter().addCondition(FieldKey.fromParts("RunId"), _run.getRunId());
+            QueryView view = new TargetedMSSchema(getUser(), getContainer()).createView(getViewContext(), settings, errors);
+            view.setShowDetailsColumn(false);
+            return view;
         }
     }
 
@@ -3083,6 +3083,7 @@ public class TargetedMSController extends SpringActionController
         private TargetedMSRun _run;
         private int _versionCount;
         private int _calibrationCurveCount;
+        private int _replicateCount;
 
         public RunDetailsForm getForm()
         {
@@ -3122,6 +3123,16 @@ public class TargetedMSController extends SpringActionController
         public void setCalibrationCurveCount(int calibrationCurveCount)
         {
             _calibrationCurveCount = calibrationCurveCount;
+        }
+
+        public int getReplicateCount()
+        {
+            return _replicateCount;
+        }
+
+        public void setReplicateCount(int replicateCount)
+        {
+            _replicateCount = replicateCount;
         }
     }
 
