@@ -2,6 +2,7 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
 
     peptidePrefixDictionary: {},
     customIonPrefixDictionary: {},
+    ellipsis: '\u2026',
 
     moleculesStartWith(molecules, prefix) {
         return molecules.every(function (molecule) {
@@ -26,18 +27,21 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
     addString: function (name, isSequence) {
         var dict = isSequence ? this.peptidePrefixDictionary : this.customIonPrefixDictionary;
 
+        // Add to dictionary of sequences with this prefix.
         var prefix = this.getPrefix(name);
         var prefixMatches = dict[prefix];
         if (!prefixMatches) {
             dict[prefix] = prefixMatches = {};
         }
 
+        // Add to dictionary of sequences with this prefix and suffix.
         var suffix = this.getSuffix(name);
         var prefixSuffixMatches = prefixMatches[suffix];
         if (!prefixSuffixMatches) {
             prefixMatches[suffix] = prefixSuffixMatches = [];
         }
 
+        // Add to list of sequences that have the same prefix and suffix.
         if (prefixSuffixMatches.indexOf(name) === -1) {
             prefixSuffixMatches.push(name);
         }
@@ -63,6 +67,7 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
 
     },
 
+    // Create a prefix generator for the given list of sequences
     setupLegendPrefixes: function (items, minLength) {
         this.minLegendLength = minLength;
 
@@ -80,7 +85,7 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
             var commonLead = molecules.reduce(function (a, b) {
                 return a.length <= b.length ? a : b;
             });
-            while (commonLead.length > 0 && !moleculesStartWith(molecules, commonLead)) {
+            while (commonLead.length > 0 && !this.moleculesStartWith(molecules, commonLead)) {
                 commonLead = commonLead.substr(0, commonLead.length - 1);
             }
 
@@ -103,6 +108,8 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
         }
     },
 
+    // Return a unique prefix for the given identifier (which must have been included in the
+    // list of identifiers given in setupLegendPrefixes).
     getUniquePrefix: function (identifier, isPeptide) {
         if (!Ext4.isDefined(identifier))
             return '';
@@ -114,17 +121,21 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
             identifier = identifier.substr(this.commonStartLength);
         }
 
+        // Get sequences that match this prefix, and ones that match both prefix and suffix.
         var prefix = this.getPrefix(identifier);
         var matchingPrefixes = isPeptide ? this.peptidePrefixDictionary[prefix] : this.customIonPrefixDictionary[prefix];
         var suffix = this.getSuffix(identifier);
         var matchingPrefixAndSuffix = matchingPrefixes[suffix];
 
+        // If there is only one sequence with this prefix, return the prefix (unless the identifer is already short enough).
         if (Object.keys(matchingPrefixes).length === 1 && Object.keys(matchingPrefixAndSuffix).length === 1)
-            return this.shorterOf((identifier.length > (this.minLegendLength * 2) + 1) ? (prefix + "...") : identifier, identifier);
+            return this.shorterOf((identifier.length > (this.minLegendLength * 2) + 1) ? (prefix + this.ellipsis) : identifier, identifier);
 
+        // If there is only one sequence with this prefix/suffix, return the combo.
         if (matchingPrefixAndSuffix.length === 1)
-            return this.shorterOf((identifier.length > (this.minLegendLength * 2) + 1) ? (prefix + "..." + suffix) : identifier, identifier);
+            return this.shorterOf((identifier.length > (this.minLegendLength * 2) + 1) ? (prefix + this.ellipsis + suffix) : identifier, identifier);
 
+        // If the matching sequences can be differentiated by length, use length specifier.
         var matchingLengthCount = 0;
         Ext4.each(matchingPrefixAndSuffix, function (prefSuf) {
             if (prefSuf.length === identifier.length) {
@@ -133,17 +144,19 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
         }, this);
 
         if (matchingLengthCount === 1)
-            return this.shorterOf("{" + prefix + "}({" + (identifier.length - this.minLegendLength) + "})", identifier);
+            return this.shorterOf(prefix + "(" + (identifier.length - this.minLegendLength) + ")", identifier);
 
+        // Use ellipses to indicate common parts of matching sequences.
         var matches = [];
         Ext4.each(matchingPrefixAndSuffix, function (prefSuf) {
-            if (prefSuf === identifier)
+            if (prefSuf !== identifier)
                 matches.push(prefSuf);
         }, this);
 
         var lastDifference = this.minLegendLength;
         for (var i = this.minLegendLength; i < identifier.length; i++) {
 
+            // Remove any matches that don't match the current character of this sequence.
             var matchCount = matches.length;
             for (var j = matchCount - 1; j >= 0; j--) {
                 if (matches[j].length <= i || matches[j][i] != identifier[i]) {
@@ -151,18 +164,23 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
                 }
             }
 
+            // If we found any non-matching sequences, add the non-matching character to
+            // this prefix.
             if (matchCount > matches.length) {
                 if (lastDifference < i)
-                    prefix += ((i > lastDifference + 1) ? "..." : identifier[lastDifference]);
+                    prefix += ((i > lastDifference + 1) ? this.ellipsis : identifier[lastDifference]);
                 lastDifference = i + 1;
                 prefix += identifier[i];
 
+                // If there are no remaining matches, we are done.
                 if (matches.length === 0)
-                    return this.shorterOf((i < identifier.length) ? prefix + "..." : prefix, identifier);
+                    return this.shorterOf((i < identifier.length) ? prefix + this.ellipsis : prefix, identifier);
             }
         }
 
-        return this.shorterOf("{" + prefix + "}({" + identifier.length + "})", identifier);
+        // If we got here, then it means that there is something else which matches this identifier's suffix
+        // and is longer.  Return either the prefix with the length specifier, or the entire identifier.
+        return this.shorterOf(prefix + "(" + identifier.length + ")", identifier);
     }
 
 })

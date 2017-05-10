@@ -311,6 +311,64 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return !this.largePlot && this.plotTypes.length > 1 ? width / 2 : width;
     },
 
+    // TODO: Move this to tests
+    testVals: {
+        a: {fragment:'', dataType: 'Peptide', result: ''},
+        b: {fragment:'A', dataType: 'Peptide', result: 'A'},
+        c: {fragment:'A', dataType: 'Peptide', result: 'A'}, // duplicate
+        d: {fragment:'AB', dataType: 'Peptide', result: 'AB'},
+        e: {fragment:'ABC', dataType: 'Peptide', result: 'ABC'},
+        f: {fragment:'ABCD', dataType: 'Peptide', result: 'ABCD'},
+        g: {fragment:'ABCDE', dataType: 'Peptide', result: 'ABCDE'},
+        h: {fragment:'ABCDEF', dataType: 'Peptide', result: 'ABCDEF'},
+        i: {fragment:'ABCDEFG', dataType: 'Peptide', result: 'ABCDEFG'},
+        j: {fragment:'ABCDEFGH', dataType: 'Peptide', result: 'ABC…FGH'},
+        k: {fragment:'ABCDEFGHI', dataType: 'Peptide', result: 'ABC…GHI'},
+        l: {fragment:'ABCE', dataType: 'Peptide', result: 'ABCE'},
+        m: {fragment:'ABDEFGHI', dataType: 'Peptide', result: 'ABD…'},
+        n: {fragment:'ABEFGHI', dataType: 'Peptide', result: 'ABEFGHI'},
+        o: {fragment:'ABEFGHIJ', dataType: 'Peptide', result: 'ABE…HIJ'},
+        p: {fragment:'ABEFHI', dataType: 'Peptide', result: 'ABEFHI'},
+        q: {fragment:'ABFFFGHI', dataType: 'Peptide', result: 'ABF(5)'},
+        r: {fragment:'ABFFFFGHI', dataType: 'Peptide', result: 'ABF(6)'},
+        s: {fragment:'ABFFFFAFGHI', dataType: 'Peptide', result: 'ABF…FA…'},
+        t: {fragment:'ABFFFAFFGHI', dataType: 'Peptide', result: 'ABF…A…'},
+        u: {fragment:'ABGAABAABAGHI', dataType: 'Peptide', result: 'ABG…B…B…'},
+        v: {fragment:'ABGAAbAABAGHI', dataType: 'Peptide', result: 'ABG…b…B…'},
+        w: {fragment:'ABGAABAAbAGHI', dataType: 'Peptide', result: 'ABG…B…b…'},
+        x: {fragment:'ABGAAB[80]AAB[99]AGHI', dataType: 'Peptide', result: 'ABG…b…b…'},
+        y: {fragment:'C32:0', dataType: 'ion', result: 'C32:0'},
+        z: {fragment:'C32:1', dataType: 'ion', result: 'C32:1'},
+        aa: {fragment:'C32:2', dataType: 'ion', result: 'C32:2'},
+        bb: {fragment:'C32:2', dataType: 'ion', result: 'C32:2'},
+        cc: {fragment:'C30:0', dataType: 'ion', result: 'C30:0'},
+        dd: {fragment:'C[30]:0', dataType: 'ion', result: 'C[30]:0'},
+        ee: {fragment:'C[400]:0', dataType: 'ion', result: 'C[4…'},
+        ff: {fragment:'C12:0 fish breath', dataType: 'ion', result: 'C12…'},
+        gg: {fragment:'C15:0 fish breath', dataType: 'ion', result: 'C15(14)'},
+        hh: {fragment:'C15:0 doggy breath', dataType: 'ion', result: 'C15(15)'},
+        ii: {fragment:'C16:0 fishy breath', dataType: 'ion', result: 'C16…f…'},
+        jj: {fragment:'C16:0 doggy breath', dataType: 'ion', result: 'C16…d…'},
+        kk: {fragment:'C14', dataType: 'ion', result: 'C14'},
+        ll: {fragment:'C14:1', dataType: 'ion', result: 'C14:1'},
+        mm: {fragment:'C14:1-OH', dataType: 'ion', result: 'C14:1…'},
+        nn: {fragment:'C14:2', dataType: 'ion', result: 'C14:2'},
+        oo: {fragment:'C14:2-OH', dataType: 'ion', result: 'C14:2…'},
+    },
+
+    testLegends: function() {
+        var legendHelper = Ext4.create("LABKEY.targetedms.QCPlotLegendHelper");
+        legendHelper.setupLegendPrefixes(this.testVals, 3);
+
+        for (var key in this.testVals) {
+            if (this.testVals.hasOwnProperty(key)) {
+                var val = legendHelper.getUniquePrefix(this.testVals[key].fragment, (this.testVals[key].dataType == 'Peptide'));
+                if(val !== this.testVals[key].result)
+                    console.log("Incorrect result for " + this.testVals[key].fragment + ". Expected: " + this.testVals[key].result + ", Actual: " + val);
+            }
+        }
+    },
+
     getCombinedPlotLegendData: function(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean)
     {
         var newLegendData = Ext4.Array.clone(this.legendData),
