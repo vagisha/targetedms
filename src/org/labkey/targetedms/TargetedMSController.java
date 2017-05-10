@@ -545,9 +545,10 @@ public class TargetedMSController extends SpringActionController
                 Map<String, String> valuesToPersist = form.getAsMapOfStrings();
                 if (!valuesToPersist.isEmpty())
                 {
-                    // note: start and end date handled separately since they can be null and we want to persist that
+                    // note: start, end date and selectedAnnotations handled separately since they can be null and we want to persist that
                     valuesToPersist.put("startDate", form.getStartDate());
                     valuesToPersist.put("endDate", form.getEndDate());
+                    valuesToPersist.put("selectedAnnotations", form.getSelectedAnnotationsString());
 
                     properties.putAll(valuesToPersist);
                     properties.save();
@@ -571,6 +572,7 @@ public class TargetedMSController extends SpringActionController
         private String _endDate;
         private List<String> _plotTypes;
         private Boolean _largePlot;
+        public List<String> _selectedAnnotations;
 
         public Map<String, String> getAsMapOfStrings()
         {
@@ -589,6 +591,8 @@ public class TargetedMSController extends SpringActionController
                 valueMap.put("plotTypes", StringUtils.join(_plotTypes, ","));
             if (_largePlot != null)
                 valueMap.put("largePlot", Boolean.toString(_largePlot));
+            if(_selectedAnnotations != null)
+                valueMap.put("selectedAnnotations", getSelectedAnnotationsString());
             // note: start and end date handled separately since they can be null and we want to persist that
             return valueMap;
         }
@@ -651,6 +655,21 @@ public class TargetedMSController extends SpringActionController
         public void setLargePlot(Boolean largePlot)
         {
             _largePlot = largePlot;
+        }
+
+        public List<String> getSelectedAnnotations()
+        {
+            return _selectedAnnotations;
+        }
+
+        public void setSelectedAnnotations(List<String> annotations)
+        {
+            _selectedAnnotations = annotations;
+        }
+
+        public String getSelectedAnnotationsString()
+        {
+            return StringUtils.join(_selectedAnnotations, ",");
         }
     }
 
