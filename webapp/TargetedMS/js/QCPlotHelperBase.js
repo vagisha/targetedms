@@ -35,10 +35,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         var guideSetSql = "SELECT s.*, g.Comment FROM (";
         if (useRaw) {
-            guideSetSql += this.metricGuideSetRawSql(metricProps.series1SchemaName, metricProps.series1QueryName, metricProps.series2SchemaName, metricProps.series2QueryName);
+            guideSetSql += this.metricGuideSetRawSql(metricProps.id, metricProps.series1SchemaName, metricProps.series1QueryName, metricProps.series2SchemaName, metricProps.series2QueryName);
         }
         else {
-            guideSetSql += this.metricGuideSetSql(metricProps.series1SchemaName, metricProps.series1QueryName, metricProps.series2SchemaName, metricProps.series2QueryName);
+            guideSetSql += this.metricGuideSetSql(metricProps.id, metricProps.series1SchemaName, metricProps.series1QueryName, metricProps.series2SchemaName, metricProps.series2QueryName);
         }
             guideSetSql +=  ") s"
                 + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
@@ -509,7 +509,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         });
 
         plotConfig.qcPlotType = plotType;
-        this.lastPlotConfig = plotConfig; // remmeber the plot config for generating legend popup
+        this.lastPlotConfig = plotConfig; // remember the plot config for generating legend popup
         var plot = LABKEY.vis.TrendingLinePlot(plotConfig);
         plot.render();
 
@@ -620,7 +620,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         // create plot using the JS Vis API
         plotConfig.qcPlotType = plotType;
-        this.lastPlotConfig = plotConfig; // remmeber the plot config for generating legend popup
+        this.lastPlotConfig = plotConfig; // remember the plot config for generating legend popup
         var plot = LABKEY.vis.TrendingLinePlot(plotConfig);
         plot.render();
 

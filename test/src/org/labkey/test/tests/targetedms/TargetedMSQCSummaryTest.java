@@ -222,7 +222,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         tempStringList01.add("2013/08/26 04:27:53 - no outliers");
         tempStringList02.add("Q_Exactive_08_23_2013_JGB_58\nacquired date/time: 2013/08/27 14:45:49");
         tempStringList02.add("Q_Exactive_08_23_2013_JGB_51\nacquired date/time: 2013/08/27 03:19:45");
-        tempStringList02.add("out of guide set range: none");
+        tempStringList02.add("out of guide set range: no outliers");
         validateSampleFile(0, tempStringList01, tempStringList02);
 
         tempStringList01.clear();

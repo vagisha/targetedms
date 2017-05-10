@@ -73,8 +73,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                     dataRows = dataRows.concat(data.rows);
                     queryCounter--;
 
-                    if (queryCounter == 0)
-                    {
+                    if (queryCounter == 0) {
                         this.queryContainerSampleFileRawGuideSetStats({dataRowsLJ: dataRows}, this.nonConformersForParetoPlot, this);
                     }
                 },
@@ -88,11 +87,14 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         return "SELECT stats.GuideSetId,"
             + "\n'" + chartTypeProps.id + "' AS MetricId,"
             + "\n'" + chartTypeProps.name + "' AS MetricLabel,"
-            + "\nSUM(CASE WHEN X.MetricValue > (stats.Mean + (3 * stats.StandardDev)) OR"
-            + "\n   X.MetricValue < (stats.Mean - (3 * stats.StandardDev)) THEN 1 ELSE 0 END) AS NonConformers"
-            + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.FilePath AS FilePath"
+            + "\nSUM(CASE WHEN exclusion.ReplicateId IS NULL AND (X.MetricValue > (stats.Mean + (3 * stats.StandardDev)) OR"
+            + "\n   X.MetricValue < (stats.Mean - (3 * stats.StandardDev))) THEN 1 ELSE 0 END) AS NonConformers"
+            + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime,"
+            + "\n  SampleFileId.FilePath AS FilePath, SampleFileId.ReplicateId AS ReplicateId"
             + "\n  FROM " + chartTypeProps.schemaName + "." + chartTypeProps.queryName + ") X"
-            + "\nLEFT JOIN (" + this.metricGuideSetSql(chartTypeProps.schemaName, chartTypeProps.queryName) + ") stats"
+            + "\nLEFT JOIN (SELECT DISTINCT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = " + chartTypeProps.id + ") exclusion"
+            + "\nON X.ReplicateId = exclusion.ReplicateId"
+            + "\nLEFT JOIN (" + this.metricGuideSetSql(chartTypeProps.id, chartTypeProps.schemaName, chartTypeProps.queryName) + ") stats"
             + "\n  ON X.SeriesLabel = stats.SeriesLabel"
             + "\n  AND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
             + "\n  OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
@@ -183,11 +185,12 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         if (!params.rawGuideSet || !params.rawMetricDataSet)
             return;
         var processedMetricGuides =  this.getAllProcessedGuideSets(params.rawGuideSet);
-        var processedMetricDataSet = this.getAllProcessedMetricDataSets(params.rawMetricDataSet);
+        var processedMetricDataSet = this.getAllProcessedMetricDataSets(params.rawMetricDataSet.filter(function(row) {
+            return !row.IgnoreInQC;
+        }));
 
         var metricOutlier = this.getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, true);
         var transformedOutliers = this.getMetricOutliersByFileOrGuideSetGroup(metricOutlier);
-
 
         var nonConformers = params.dataRowsLJ;
 

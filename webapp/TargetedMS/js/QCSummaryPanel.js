@@ -105,7 +105,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             config.width = 800;
             config.minHeight = 136;
         }
-        
+
         config.cls += ' summary-tile'; // For tests
 
         return Ext4.create('Ext.view.View', config);
@@ -233,8 +233,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 sql: sql,
                 sort: '-AcquiredTime,MetricLabel', // remove this if the perf is bad and we can sort the data in the success callback
                 scope: this,
-                success: function (data)
-                {
+                success: function (data) {
                     this.qcPlotPanel.queryContainerSampleFileRawGuideSetStats({container: container, dataRowsLJ: data.rows, limitedSampleFiles: true}, this.renderContainerSampleFileStats, this);
                 }
             });
@@ -254,8 +253,8 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
            validGuideSetIds.push(val.GuideSetId);
         });
         var processedMetricGuides =  this.qcPlotPanel.getAllProcessedGuideSets(params.rawGuideSet);
-        var processedMetricDataSet = this.qcPlotPanel.getAllProcessedMetricDataSets(params.rawMetricDataSet.filter(function(row){
-            return validGuideSetIds.indexOf(row.GuideSetId) > -1;
+        var processedMetricDataSet = this.qcPlotPanel.getAllProcessedMetricDataSets(params.rawMetricDataSet.filter(function(row) {
+            return validGuideSetIds.indexOf(row.GuideSetId) > -1 && !row.IgnoreInQC;
         }));
         var metricOutlier = this.qcPlotPanel.getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, false, Object.keys(sampleFiles));
         var transformedOutliers = this.qcPlotPanel.getMetricOutliersByFileOrGuideSetGroup(metricOutlier);
@@ -336,38 +335,41 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     NonConformers: 0,
                     TotalCount: 0,
                     Items: [],
-                    GuideSetId: row.GuideSetId
-
+                    GuideSetId: row.GuideSetId,
+                    IgnoreForAllMetric: row.IgnoreInQC
                 };
                 sampleFiles[row.SampleFile] = info;
             }
 
             info.Metrics++;
+            info.IgnoreForAllMetric = info.IgnoreForAllMetric && row.IgnoreInQC;
             info.NonConformers += row.NonConformers;
             info.TotalCount += row.TotalCount;
 
-            if (row.NonConformers > 0)
-            {
-                Ext4.apply(row,{CUSUMm: 0, CUSUMv: 0, CUSUMmN: 0, CUSUMmP: 0, CUSUMvP: 0, CUSUMvN: 0, mR: 0});
-                row.ContainerPath = container.path;
-                info.Items.push(row);
-            }
+            Ext4.apply(row,{CUSUMm: 0, CUSUMv: 0, CUSUMmN: 0, CUSUMmP: 0, CUSUMvP: 0, CUSUMvN: 0, mR: 0});
+            row.ContainerPath = container.path;
+            info.Items.push(row);
         }, this);
 
         this.getOtherQCSampleFileStats(params, sampleFiles);
+
         var html = '';
         Ext4.iterate(sampleFiles, function(name, sampleFile)
         {
             // create a new div id for each sampleFile to use for the hover details callout
             sampleFile.calloutId = Ext4.id();
 
-            var iconCls = !sampleFile.hasOutliers ? 'fa-file-o qc-correct' : 'fa-file qc-error';
+            var iconCls = !sampleFile.IgnoreForAllMetric ? (!sampleFile.hasOutliers ? 'fa-file-o qc-correct' : 'fa-file qc-error') : 'fa-file-o qc-none';
             html += '<div class="sample-file-item" id="' + sampleFile.calloutId + '">'
                     + '<span class="fa ' + iconCls + '"></span> ' + sampleFile.AcquiredTime + ' - ';
-            if (!sampleFile.NonConformers && !sampleFile.mR && !sampleFile.CUSUMm && !sampleFile.CUSUMv)
+
+            if (sampleFile.IgnoreForAllMetric) {
+                html += 'not included in QC</div>';
+            }
+            else if (!sampleFile.NonConformers && !sampleFile.mR && !sampleFile.CUSUMm && !sampleFile.CUSUMv) {
                 html += 'no outliers</div>';
-            else
-            {
+            }
+            else {
                 var sep = '';
                 if (sampleFile.NonConformers > 0) {
                     html += (sampleFile.NonConformers + '/' + sampleFile.TotalCount) + ' (Levey-Jennings)';
@@ -415,8 +417,13 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 + '<br/><span class="sample-file-field-label">Number of tracked metrics:</span> ' + sampleFile.Metrics
                 + '<br/><span class="sample-file-field-label">Number of data points:</span> ' + (sampleFile.TotalCount/sampleFile.Metrics)
                 + '<br/><span class="sample-file-field-label">Out of guide set range:</span> ';
-        if (sampleFile.Items.length > 0)
-        {
+        if (sampleFile.IgnoreForAllMetric) {
+            content += 'not included in QC<br/>';
+        }
+        else if (!sampleFile.NonConformers && !sampleFile.mR && !sampleFile.CUSUMm && !sampleFile.CUSUMv) {
+            content += 'no outliers<br/>';
+        }
+        else {
             content += '<table class=" labkey-data-region labkey-show-borders">';
             content += '<thead><tr><td class="labkey-column-header"></td><td class="labkey-column-header" colspan="6" align="center">Outliers</td></tr>' +
                             '<tr>' +
@@ -434,28 +441,38 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                             '</tr>' +
                         '</thead><tbody>';
 
+            // sort by metric label, alphabetically
+            sampleFile.Items.sort(function(a, b) {
+                if (a.MetricLabel < b.MetricLabel)
+                    return -1;
+                if (a.MetricLabel > b.MetricLabel)
+                    return 1;
+                return 0;
+            });
+
             var rowCount = 0;
             Ext4.each(sampleFile.Items, function (item)
             {
                 var href = LABKEY.ActionURL.buildURL('project', 'begin', item.ContainerPath, {metric: item.MetricId});
                 content += '<tr class="' + (rowCount % 2 == 0 ? 'labkey-alternate-row' : 'labkey-row') + '">';
                 content += '<td class="outlier-metric-label"><a href="' + href + '">' + item.MetricLabel + '</a></td>';
-                content += '<td align="right">' + (item.NonConformers ? item.NonConformers : 0) + '</td>';
-                content += '<td align="right">' + (item.mR ? item.mR : 0) + '</td>';
-                content += '<td align="right">' + (item.CUSUMmN ? item.CUSUMmN : 0) + '</td>';
-                content += '<td align="right">' + (item.CUSUMmP ? item.CUSUMmP : 0) + '</td>';
-                content += '<td align="right">' + (item.CUSUMvN ? item.CUSUMvN : 0) + '</td>';
-                content += '<td align="right">' + (item.CUSUMvP ? item.CUSUMvP : 0) + '</td>';
+                if (item.IgnoreInQC) {
+                    content += '<td align="center" colspan="6"><em>not included in QC</em></td>';
+                }
+                else {
+                    content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'NonConformers') + '</td>';
+                    content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'mR') + '</td>';
+                    content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'CUSUMmN') + '</td>';
+                    content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'CUSUMmP') + '</td>';
+                    content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'CUSUMvN') + '</td>';
+                    content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'CUSUMvP') + '</td>';
+                }
                 content += '</tr>';
 
                 rowCount++;
-            });
+            }, this);
             content += '</tbody>';
             content += '</table>';
-        }
-        else
-        {
-            content += 'None<br/>';
         }
 
         // add mouse listeners to the div element for when to show the hover details for this sample file
@@ -480,6 +497,10 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }, this);
     },
 
+    getSampleDetailOutlierDisplayValue : function(item, variable) {
+        return item[variable] ? item[variable] : 0
+    },
+
     getLatestSampleFileStatsSql : function(id, name, label, schema, query)
     {
         return "SELECT stats.GuideSetId,"
@@ -488,18 +509,21 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             + "\n'" + label + "' AS MetricLabel,"
             + "\nX.SampleFile,"
             + "\nX.AcquiredTime,"
-            + "\nSUM(CASE WHEN X.MetricValue > (stats.Mean + (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END)))"
-            + "\n   OR X.MetricValue < (stats.Mean - (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END))) THEN 1 ELSE 0 END) AS NonConformers,"
+            + "\nCASE WHEN (exclusion.ReplicateId IS NOT NULL) THEN TRUE ELSE FALSE END AS IgnoreInQC,"
+            + "\nSUM(CASE WHEN exclusion.ReplicateId IS NULL AND (X.MetricValue > (stats.Mean + (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END)))"
+            + "\n   OR X.MetricValue < (stats.Mean - (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END)))) THEN 1 ELSE 0 END) AS NonConformers,"
             + "\nCOUNT(*) AS TotalCount"
-            + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.SampleName AS SampleFile"
+            + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.SampleName AS SampleFile, SampleFileId.ReplicateId AS ReplicateId"
             + "\n      FROM " + schema + "." + query
             + "\n      WHERE SampleFileId.Id IN (SELECT Id FROM SampleFile WHERE AcquiredTime IS NOT NULL ORDER BY AcquiredTime DESC LIMIT 3)"
             + "\n) X"
-            + "\nLEFT JOIN (" + this.qcPlotPanel.metricGuideSetSql(schema, query) + ") stats"
+            + "\nLEFT JOIN (SELECT DISTINCT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = " + id + ") exclusion"
+            + "\nON X.ReplicateId = exclusion.ReplicateId"
+            + "\nLEFT JOIN (" + this.qcPlotPanel.metricGuideSetSql(id, schema, query) + ") stats"
             + "\nON X.SeriesLabel = stats.SeriesLabel"
             + "\nAND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
             + "\n   OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
-            + "\nGROUP BY stats.GuideSetId, X.SampleFile, X.AcquiredTime"
+            + "\nGROUP BY stats.GuideSetId, X.SampleFile, X.AcquiredTime, exclusion.ReplicateId"
             + "\nORDER BY X.AcquiredTime DESC";
     }
 });

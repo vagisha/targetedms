@@ -39,33 +39,41 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         return false;
     },
 
-    metricGuideSetSql : function(schema1Name, query1Name, schema2Name, query2Name)
+    getExclusionWhereSql : function(metricId)
+    {
+        return ' WHERE SampleFileId.ReplicateId NOT IN '
+            + '(SELECT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = ' + metricId + ')';
+    },
+
+    metricGuideSetSql : function(id, schema1Name, query1Name, schema2Name, query2Name)
     {
         var includeCalc = !Ext4.isDefined(schema2Name) && !Ext4.isDefined(query2Name),
             selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel' + (includeCalc ? ', MetricValue' : ''),
             series1SQL = 'SELECT ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
-            series2SQL = includeCalc ? '' : ' UNION SELECT ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name;
+            series2SQL = includeCalc ? '' : ' UNION SELECT ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name,
+            exclusionWhereSQL = this.getExclusionWhereSql(id);
 
         return 'SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, '
             + '\nCOUNT(p.SampleFileId) AS NumRecords, '
             + '\n' + (includeCalc ? 'AVG(p.MetricValue)' : 'NULL') + ' AS Mean, '
             + '\n' + (includeCalc ? 'STDDEV(p.MetricValue)' : 'NULL') + ' AS StandardDev '
             + '\nFROM guideset gs'
-            + '\nLEFT JOIN (' + series1SQL + series2SQL + ') as p'
+            + '\nLEFT JOIN (' + series1SQL + series2SQL + exclusionWhereSQL + ') as p'
             + '\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd'
             + '\nGROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel';
     },
 
-    metricGuideSetRawSql : function(schema1Name, query1Name, schema2Name, query2Name)
+    metricGuideSetRawSql : function(id, schema1Name, query1Name, schema2Name, query2Name)
     {
         var includeCalc = !Ext4.isDefined(schema2Name) && !Ext4.isDefined(query2Name),
-                selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel' + (includeCalc ? ', MetricValue' : ''),
-                series1SQL = 'SELECT ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
-                series2SQL = includeCalc ? '' : ' UNION SELECT ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name;
+            selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel' + (includeCalc ? ', MetricValue' : ''),
+            series1SQL = 'SELECT ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
+            series2SQL = includeCalc ? '' : ' UNION SELECT ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name,
+            exclusionWhereSQL = this.getExclusionWhereSql(id);
 
         return 'SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.AcquiredTime ' + (includeCalc ? ', p.MetricValue' : '')
                 + '\nFROM guideset gs'
-                + '\nLEFT JOIN (' + series1SQL + series2SQL + ') as p'
+                + '\nLEFT JOIN (' + series1SQL + series2SQL + exclusionWhereSQL + ') as p'
                 + '\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd'
                 + '\n ORDER BY GuideSetId, p.SeriesLabel, p.AcquiredTime'; //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR
     },
@@ -73,18 +81,22 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     getEachSeriesTypePlotDataSql: function (type, metricProps, whereClause, MetricType)
     {
         var schema = metricProps[type + 'SchemaName'],
-                query = metricProps[type + 'QueryName'];
-        var sql = "SELECT '" + type + "' AS SeriesType, X.SampleFile, ";
-        if (MetricType)
-        {
+            query = metricProps[type + 'QueryName'],
+            sql = "SELECT '" + type + "' AS SeriesType, X.SampleFile, ";
+
+        if (MetricType) {
             sql +=  "'" + MetricType + "'"  + " AS MetricType, ";
         }
 
         sql += "\nX.PrecursorId, X.PrecursorChromInfoId, X.SeriesLabel, X.DataType, X.AcquiredTime,"
                 + "\nX.FilePath, X.MetricValue, gs.RowId AS GuideSetId,"
+                + "\nCASE WHEN (exclusion.ReplicateId IS NOT NULL) THEN TRUE ELSE FALSE END AS IgnoreInQC,"
                 + "\nCASE WHEN (X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime <= gs.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange"
-                + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.FilePath AS FilePath, SampleFileId.SampleName AS SampleFile"
+                + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.FilePath AS FilePath,"
+                + "\n      SampleFileId.SampleName AS SampleFile, SampleFileId.ReplicateId AS ReplicateId"
                 + "\n      FROM " + schema + '.' + query + whereClause + ") X "
+                + "\nLEFT JOIN (SELECT DISTINCT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = " + metricProps.id + ") exclusion"
+                + "\nON X.ReplicateId = exclusion.ReplicateId"
                 + "\nLEFT JOIN guideset gs"
                 + "\nON ((X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime < gs.ReferenceEnd) OR (X.AcquiredTime >= gs.TrainingStart AND gs.ReferenceEnd IS NULL))"
                 + "\nORDER BY X.SeriesLabel, SeriesType, X.AcquiredTime"; //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
@@ -399,10 +411,10 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         });
     },
 
-    getSingleMetricGuideSetRawSql: function(metricType, schemaName, queryName)
+    getSingleMetricGuideSetRawSql: function(metricId, metricType, schemaName, queryName)
     {
         var guideSetSql = "SELECT s.*, g.Comment, '" +  metricType + "' AS MetricType FROM (";
-        guideSetSql += this.metricGuideSetRawSql(schemaName, queryName);
+        guideSetSql += this.metricGuideSetRawSql(metricId, schemaName, queryName);
         guideSetSql +=  ") s"
                 + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
         return guideSetSql;
@@ -415,8 +427,8 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         Ext4.each(this.metricPropArr, function (metricType)
         {
             var id = metricType.id,
-                    label = metricType.series1Label,
-                    metricProps = this.getMetricPropsById(id);
+                label = metricType.series1Label,
+                metricProps = this.getMetricPropsById(id);
 
             var newSql = this.getEachSeriesTypePlotDataSql('series1', metricProps, where, label);
 
@@ -457,16 +469,16 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         Ext4.each(this.metricPropArr, function (metricType)
         {
             var id = metricType.id,
-                    label = metricType.series1Label,
-                    metricProps = this.getMetricPropsById(id);
+                label = metricType.series1Label,
+                metricProps = this.getMetricPropsById(id);
 
-            sql += sep + '(' + this.getSingleMetricGuideSetRawSql(label, metricProps.series1SchemaName, metricProps.series1QueryName) + ')';
+            sql += sep + '(' + this.getSingleMetricGuideSetRawSql(id, label, metricProps.series1SchemaName, metricProps.series1QueryName) + ')';
             sep = "\nUNION\n";
 
             if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
             {
                 label = metricType.series2Label;
-                sql += sep + '(' + this.getSingleMetricGuideSetRawSql(label, metricProps.series2SchemaName, metricProps.series2QueryName) + ')';
+                sql += sep + '(' + this.getSingleMetricGuideSetRawSql(id, label, metricProps.series2SchemaName, metricProps.series2QueryName) + ')';
             }
         }, this);
 
@@ -534,6 +546,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                         dataRows = peptideVal.Series.series2.Rows;
                     else
                         return;
+                    
                     if (CUSUMm)
                     {
                         Ext4.each(dataRows, function (data)
