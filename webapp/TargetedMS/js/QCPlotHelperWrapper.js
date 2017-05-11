@@ -210,6 +210,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         var data = {
             type: 'data',
             fragment: fragment,
+            ReplicateId: row['ReplicateId'], // keep in data for click handler
             PrecursorId: row['PrecursorId'], // keep in data for click handler
             PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
             FilePath: row['FilePath'], // keep in data for hover text display

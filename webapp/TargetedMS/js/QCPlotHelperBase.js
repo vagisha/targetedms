@@ -474,7 +474,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
             showTrendLine: true,
             mouseOverFn: this.plotPointHover,
-            pointClickFn: this.plotPointClick,
+            mouseOverFnScope: this,
             position: this.groupedX ? 'jitter' : undefined
         };
 
@@ -548,7 +548,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
             showTrendLine: true,
             mouseOverFn: this.plotPointHover,
-            pointClickFn: this.plotPointClick,
+            mouseOverFnScope: this,
             position: this.groupedX ? 'jitter' : undefined,
             disableRangeDisplay: this.isMultiSeries() || !this.hasGuideSetData
         };

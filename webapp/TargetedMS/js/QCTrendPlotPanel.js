@@ -1213,37 +1213,15 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     },
 
     plotPointHover : function(event, row, layerSel, point, valueName) {
-        var tooltip = (row[valueName + 'Title'] != undefined ? '<span class="qc-hover-field-label">Metric:</span> '
-                + row[valueName + 'Title'] + '</br>' : '');
-
-        tooltip += '<table>';
-        tooltip += '<tr><td class="qc-hover-field-label">' + row.dataType + ':</td><td>' + row['fragment'] + '</td></tr>';
-        if (valueName.indexOf('CUSUM') > -1) {
-            tooltip += '<tr><td class="qc-hover-field-label">Group:</td><td>'
-                    + ('CUSUMmN' == valueName || 'CUSUMvN' == valueName ? 'CUSUM-' : 'CUSUM+')
-                    + '</td></tr>';
-        }
-        tooltip += '<tr><td class="qc-hover-field-label">Acquired:</td><td>' + row['fullDate'] + '</td></tr>';
-        tooltip += '<tr><td class="qc-hover-field-label">Value:</td><td>' + (valueName ? row[valueName] : row.value) + '</td></tr>';
-        tooltip += '<tr><td class="qc-hover-field-label">File Path:</td><td>' + row['FilePath'] + '</td></tr>';
-        tooltip += '</table>';
-
-        //Chose action target based on precursor type
-        var action = row.dataType == 'Peptide' ? "precursorAllChromatogramsChart" : "moleculePrecursorAllChromatogramsChart",
-            url = LABKEY.ActionURL.buildURL('targetedms', action, LABKEY.ActionURL.getContainer(), {
-                id: row.PrecursorId,
-                chromInfoId: row.PrecursorChromInfoId
-            });
-        tooltip += '</br><br/>' + LABKEY.Utils.textLink({
-                text: 'Go To Chromatograms Chart',
-                href: url + '#ChromInfo' + row.PrecursorChromInfoId
-            });
-
         var showHoverTask = new Ext4.util.DelayedTask(),
-            shiftLeft = (event.clientX || event.x) > (Ext4.getBody().getWidth() / 2);
+            metricProps = this.getMetricPropsById(this.metric),
+            me = this;
+
         showHoverTask.delay(500, function() {
             var calloutMgr = hopscotch.getCalloutManager(),
                 hopscotchId = Ext4.id(),
+                contentDivId = Ext4.id(),
+                shiftLeft = (event.clientX || event.x) > (Ext4.getBody().getWidth() / 2),
                 config = {
                     id: hopscotchId,
                     showCloseButton: true,
@@ -1251,8 +1229,29 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     placement: 'top',
                     xOffset: shiftLeft ? -428 : -53,
                     arrowOffset: shiftLeft ? 410 : 35,
+                    yOffset: me.canUserEdit() ? -265 : -150,
                     target: point,
-                    content: tooltip
+                    content: '<div id="' + contentDivId + '"></div>',
+                    onShow: function() {
+                        Ext4.create('LABKEY.targetedms.QCPlotHoverPanel', {
+                            renderTo: contentDivId,
+                            pointData: row,
+                            valueName: valueName,
+                            metricProps: metricProps,
+                            canEdit: me.canUserEdit(),
+                            listeners: {
+                                scope: me,
+                                close: function(requiresReload) {
+                                    calloutMgr.removeAllCallouts();
+
+                                    if (requiresReload) {
+                                        this.setLoadingMsg();
+                                        this.getAnnotationData();
+                                    }
+                                }
+                            }
+                        });
+                    }
                 };
 
             calloutMgr.removeAllCallouts();
@@ -1264,18 +1263,6 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         Ext4.get(point).on('mouseout', function() {
             showHoverTask.cancel();
         }, this);
-    },
-
-    plotPointClick : function(event, row) {
-        //Chose action target based on precursor type
-        var action = row.dataType == 'Peptide' ? "precursorAllChromatogramsChart" : "moleculePrecursorAllChromatogramsChart";
-
-        var url = LABKEY.ActionURL.buildURL('targetedms', action, LABKEY.ActionURL.getContainer(), {
-                    id: row.PrecursorId,
-                    chromInfoId: row.PrecursorChromInfoId
-                });
-
-        window.location = url + '#ChromInfo' + row.PrecursorChromInfoId;
     },
 
     plotBrushStartEvent : function(plot) {

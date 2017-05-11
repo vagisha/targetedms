@@ -71,12 +71,7 @@
     display: none;
 }
 
-.qc-hover-field-label {
-    width: 75px;
+.qc-hover-field .x4-form-item-label {
+    margin-top: 2px;
     font-weight: bold;
-    vertical-align: top;
-}
-
-div.hopscotch-bubble .hopscotch-content td {
-    word-break: break-all;
 }

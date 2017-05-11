@@ -546,6 +546,7 @@ webapp/TargetedMS/js/MovingRangePlotHelper.js -text
 webapp/TargetedMS/js/ParetoPlotPanel.js -text
 webapp/TargetedMS/js/QCPlotHelperBase.js -text
 webapp/TargetedMS/js/QCPlotHelperWrapper.js -text
+webapp/TargetedMS/js/QCPlotHoverPanel.js -text
 webapp/TargetedMS/js/QCPlotLegendHelper.js -text
 webapp/TargetedMS/js/QCSummaryPanel.js -text
 webapp/TargetedMS/js/QCTrendPlotPanel.js -text
