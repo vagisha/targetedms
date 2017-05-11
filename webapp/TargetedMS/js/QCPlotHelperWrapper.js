@@ -83,9 +83,11 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                 yAxisCount = this.isMultiSeries() ? 2 : 1, //Will only have a right if there is already a left y-axis
                 groupColors = this.getColorRange(),
                 combinePlotData = this.getCombinedPlotInitData(),
-                lengthOfLongestLegend = 1,
+                lengthOfLongestLegend = 8,  // At least length of label 'Peptides'
+                lengthOfLongestAnnot = 1,
                 showLogInvalid,
-                precursorInfo;
+                precursorInfo,
+                prefix, ellipCount, prefLength, ellipMatch = new RegExp(this.legendHelper.ellipsis, 'g');
 
         //Add series1 separator to Legend sections
         if (this.isMultiSeries()) {
@@ -97,9 +99,12 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         for (var i = 0; i < this.precursors.length; i++)
         {
             precursorInfo = this.fragmentPlotData[this.precursors[i]];
+            prefix = this.legendHelper.getUniquePrefix(precursorInfo.fragment, (precursorInfo.dataType == 'Peptide'));
+            ellipCount = prefix.match(ellipMatch) ? prefix.match(ellipMatch).length : 0;
+            prefLength = prefix.length + ellipCount;  // ellipsis count for two chars
 
-            if (precursorInfo.fragment.length > lengthOfLongestLegend) {
-                lengthOfLongestLegend = precursorInfo.fragment.length;
+            if (prefLength > lengthOfLongestLegend) {
+                lengthOfLongestLegend = prefLength;
             }
 
             // for combined plot, concat all data together into a single array and track min/max for all
@@ -108,6 +113,13 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
 
             showLogInvalid = showLogInvalid || precursorInfo.showLogInvalid;
         }
+
+        // Annotations
+        Ext4.each(this.legendData, function(entry) {
+            if (entry.text.length > lengthOfLongestLegend) {
+                lengthOfLongestAnnot = entry.text.length;
+            }
+        }, this);
 
         if (this.isMultiSeries()) {
             if (metricProps.series2Label.length > lengthOfLongestLegend)
@@ -121,7 +133,17 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         }
         this.addPlotsToPlotDiv(ids, 'All Series', this.plotDivId, 'qc-plot-wp');
         var plotIndex = 0;
-        var legendMargin = 11 * lengthOfLongestLegend + (this.isMultiSeries() ? 50 : 0);
+        var legendMargin = 14 * lengthOfLongestLegend + (this.isMultiSeries() ? 50 : 0) + 20;
+        var annotMargin = 11 * lengthOfLongestAnnot;
+
+        if( annotMargin > legendMargin) {
+            legendMargin = annotMargin;  // Give some extra space if annotations defined
+        }
+
+        // Annotations can still push legend too far so cap this
+        if (legendMargin > 300)
+            legendMargin = 300;
+
         if (this.showLJPlot())
         {
             this.addEachCombinedPrecusorPlot(plotIndex, ids[plotIndex++], combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, LABKEY.vis.TrendingLinePlotType.LeveyJennings);
