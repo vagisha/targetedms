@@ -213,6 +213,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             PrecursorId: row['PrecursorId'], // keep in data for click handler
             PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
             FilePath: row['FilePath'], // keep in data for hover text display
+            IgnoreInQC: row['IgnoreInQC'], // keep in data for hover text display
             fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
             date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
             groupedXTick: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,

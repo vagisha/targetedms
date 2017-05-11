@@ -33,6 +33,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     endDate: null,
     groupedX: false,
     singlePlot: false,
+    showExcluded: false,
     plotWidth: null,
     enableBrushing: false,
     havePlotOptionsChanged: false,
@@ -193,8 +194,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         var toolbarArr = [
             { tbar: this.getMainPlotOptionsToolbar() },
             { tbar: this.getCustomDateRangeToolbar() },
-            { tbar: this.getPlotTypeOptionsToolbar() },
-            { tbar: this.getOtherPlotOptionsToolbar() },
+            { tbar: this.getFirstPlotOptionsToolbar() },
+            { tbar: this.getSecondPlotOptionsToolbar() },
             { tbar: this.getGuideSetMessageToolbar() }
         ];
 
@@ -206,7 +207,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return toolbarArr;
     },
 
-    getPlotTypeOptionsToolbar: function()
+    getFirstPlotOptionsToolbar: function()
     {
         if (!this.plotTypeOptionsToolbar)
         {
@@ -215,9 +216,13 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 cls: 'levey-jennings-toolbar',
                 padding: 10,
                 layout: { pack: 'center' },
-                items: [this.getPlotSizeOptions(),
+                items: [
+                    this.getPlotSizeOptions(),
                     {xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
-                    this.getPlotTypeOptions()],
+                    this.getScaleCombo(),
+                    {xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
+                    this.getPlotTypeOptions()
+                ],
                 listeners: {
                     scope: this,
                     render: function(cmp)
@@ -343,25 +348,24 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.mainPlotOptionsToolbar;
     },
 
-    getOtherPlotOptionsToolbar : function()
+    getSecondPlotOptionsToolbar : function()
     {
         if (!this.otherPlotOptionsToolbar)
         {
-            var  toolbarItems = [
-                this.getScaleCombo(), {xtype: 'tbspacer'},
-                {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
-                this.getGroupedXCheckbox(), {xtype: 'tbspacer'},
-                {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
-                this.getSinglePlotCheckbox(), {xtype: 'tbspacer'}
-            ];
+            var  toolbarItems = [];
 
             // only add the create guide set button if the user has the proper permissions to insert/update guide sets
             if (this.canUserEdit())
             {
-                toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
                 toolbarItems.push(this.getGuideSetCreateButton());
+                toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
             }
 
+            toolbarItems.push(this.getGroupedXCheckbox());
+            toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
+            toolbarItems.push(this.getSinglePlotCheckbox());
+            toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
+            toolbarItems.push(this.getShowExcludedCheckbox());
             toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
             toolbarItems.push(this.getShowPlotLegendButton());
 
@@ -923,6 +927,31 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
 
         return this.peptidesInSinglePlotCheckbox;
+    },
+
+    getShowExcludedCheckbox : function()
+    {
+        if (!this.showExcludedPointsCheckbox)
+        {
+            this.showExcludedPointsCheckbox = Ext4.create('Ext.form.field.Checkbox', {
+                id: 'show-excluded-points',
+                boxLabel: 'Show Excluded Points',
+                checked: this.showExcluded,
+                listeners: {
+                    scope: this,
+                    change: function(cb, newValue, oldValue)
+                    {
+                        this.showExcluded = newValue;
+                        this.havePlotOptionsChanged = true;
+
+                        this.setLoadingMsg();
+                        this.getAnnotationData();
+                    }
+                }
+            });
+        }
+
+        return this.showExcludedPointsCheckbox;
     },
 
     getGuideSetCreateButton : function()
@@ -1778,6 +1807,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             yAxisScale: this.yAxisScale,
             groupedX: this.groupedX,
             singlePlot: this.singlePlot,
+            showExcluded: this.showExcluded,
             dateRangeOffset: this.dateRangeOffset,
             selectedAnnotations: annotationsProp
         };

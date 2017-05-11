@@ -567,6 +567,7 @@ public class TargetedMSController extends SpringActionController
         private String _yAxisScale;
         private Boolean _groupedX;
         private Boolean _singlePlot;
+        private Boolean _showExcluded;
         private Integer _dateRangeOffset;
         private String _startDate;
         private String _endDate;
@@ -585,6 +586,8 @@ public class TargetedMSController extends SpringActionController
                 valueMap.put("groupedX", Boolean.toString(_groupedX));
             if (_singlePlot != null)
                 valueMap.put("singlePlot", Boolean.toString(_singlePlot));
+            if (_showExcluded != null)
+                valueMap.put("showExcluded", Boolean.toString(_showExcluded));
             if (_dateRangeOffset != null)
                 valueMap.put("dateRangeOffset", Integer.toString(_dateRangeOffset));
             if (_plotTypes != null && !_plotTypes.isEmpty())
@@ -615,6 +618,11 @@ public class TargetedMSController extends SpringActionController
         public void setSinglePlot(Boolean singlePlot)
         {
             _singlePlot = singlePlot;
+        }
+
+        public void setShowExcluded(Boolean showExcluded)
+        {
+            _showExcluded = showExcluded;
         }
 
         public void setDateRangeOffset(Integer dateRangeOffset)

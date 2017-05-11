@@ -155,13 +155,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         sql = "SELECT * FROM (" + sql + ") a"; //wrap unioned results in sql to support sorting
 
+        if (!this.showExcluded) {
+            sql += ' WHERE IgnoreInQC = false';
+        }
+
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: sql,
             scope: this,
             sort: 'SeriesType, SeriesLabel, AcquiredTime', //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
-            success: function (data)
-            {
+            success: function (data) {
                 this.plotDataRows = this.plotDataRows.concat(data.rows);
 
                 this.processPlotData(this.plotDataRows);
@@ -460,7 +463,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         var plotLegendData = this.getCombinedPlotLegendData(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean);
         this.showInvalidLogMsg(id, showLogInvalid);
 
-        var ljProperties = {
+        var trendLineProps = {
             disableRangeDisplay: true,
             xTick: this.groupedX ? 'groupedXTick' : 'fullDate',
             xTickLabel: 'date',
@@ -468,13 +471,14 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             shape: 'guideSetId',
             groupBy: 'fragment',
             color: 'fragment',
+            pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
             showTrendLine: true,
             mouseOverFn: this.plotPointHover,
             pointClickFn: this.plotPointClick,
             position: this.groupedX ? 'jitter' : undefined
         };
 
-        Ext4.apply(ljProperties, this.getPlotTypeProperties(combinePlotData, plotType, isCUSUMMean));
+        Ext4.apply(trendLineProps, this.getPlotTypeProperties(combinePlotData, plotType, isCUSUMMean));
 
         var mainTitle = LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean);
 
@@ -505,7 +509,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     visibility: this.isMultiSeries() ? undefined : 'hidden'
                 }
             },
-            properties: ljProperties
+            properties: trendLineProps
         });
 
         plotConfig.qcPlotType = plotType;
@@ -536,11 +540,12 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     + "the mean with negative values have been omitted.</span>");
         }
 
-        var ljProperties = {
+        var trendLineProps = {
             xTick: this.groupedX ? 'groupedXTick' : 'fullDate',
             xTickLabel: 'date',
             yAxisScale: (precursorInfo.showLogInvalid ? 'linear' : this.yAxisScale),
             shape: 'guideSetId',
+            pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
             showTrendLine: true,
             mouseOverFn: this.plotPointHover,
             pointClickFn: this.plotPointClick,
@@ -548,7 +553,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             disableRangeDisplay: this.isMultiSeries() || !this.hasGuideSetData
         };
 
-        Ext4.apply(ljProperties, this.getPlotTypeProperties(precursorInfo, plotType, isCUSUMMean));
+        Ext4.apply(trendLineProps, this.getPlotTypeProperties(precursorInfo, plotType, isCUSUMMean));
 
         var plotLegendData = this.getAdditionalPlotLegend(plotType);
         if (Ext4.isArray(this.legendData))
@@ -597,7 +602,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     color: this.isMultiSeries() ? this.getColorRange()[1] : undefined
                 }
             },
-            properties: ljProperties,
+            properties: trendLineProps,
             brushing: !this.allowGuideSetBrushing() ? undefined : {
                 dimension: 'x',
                 fillOpacity: 0.4,
