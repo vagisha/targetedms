@@ -29,6 +29,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.ExperimentAnnotations;
@@ -89,7 +90,11 @@ public class TargetedMsRunListView extends ExperimentRunListView
         }
         else
         {
-            setShowMoveRunsButton(true);
+            if(TargetedMSManager.getFolderType(getContainer()) == TargetedMSModule.FolderType.Experiment)
+            {
+                // We are only allowing runs to be moved between experimental data folders.
+                setShowMoveRunsButton(true);
+            }
         }
     }
 

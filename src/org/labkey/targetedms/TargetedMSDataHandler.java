@@ -142,6 +142,24 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     @Override
     public void runMoved(ExpData newData, Container container, Container targetContainer, String oldRunLSID, String newRunLSID, User user, int oldDataRowID) throws ExperimentException
     {
+        TargetedMSModule.FolderType sourceFolderType = TargetedMSManager.getFolderType(container);
+        TargetedMSModule.FolderType targetFolderType = TargetedMSManager.getFolderType(targetContainer);
+
+        if(sourceFolderType != TargetedMSModule.FolderType.Experiment || targetFolderType != TargetedMSModule.FolderType.Experiment)
+        {
+            StringBuilder error = new StringBuilder();
+            if(sourceFolderType != TargetedMSModule.FolderType.Experiment)
+            {
+                error.append("Source folder \"").append(container.getPath()).append("\" is a \"").append(sourceFolderType.name()).append("\" folder. ");
+            }
+            if(targetFolderType != TargetedMSModule.FolderType.Experiment)
+            {
+                error.append("Target folder \"").append(targetContainer.getPath()).append("\" is a \"").append(targetFolderType.name()).append("\" folder. ");
+            }
+            error.append("Runs can only be moved between \"Experimental Data\" folders. For other folder types please delete the run in the source folder and import it in the target folder.");
+            throw new ExperimentException(error.toString());
+        }
+
         File sourceFile = newData.getFile();
 
         // Fail if a Skyline document with the same source file name exists in the new location.
