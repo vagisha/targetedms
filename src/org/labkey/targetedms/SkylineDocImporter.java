@@ -45,8 +45,10 @@ import org.labkey.targetedms.SkylinePort.Irt.IRegressionFunction;
 import org.labkey.targetedms.SkylinePort.Irt.IrtRegressionCalculator;
 import org.labkey.targetedms.SkylinePort.Irt.RetentionTimeProviderImpl;
 import org.labkey.targetedms.calculations.RunQuantifier;
+import org.labkey.targetedms.model.QCMetricExclusion;
 import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.query.LibraryManager;
+import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
 
 import javax.xml.stream.XMLStreamException;
@@ -321,12 +323,20 @@ public class SkylineDocImporter
 
                     replicate = Table.insert(_user, TargetedMSManager.getTableInfoReplicate(), replicate);
 
+                    // special case for the ignore_in_QC annotation in QC folders
+                    ReplicateAnnotation ignoreInQcAnnot = null;
+
                     for (ReplicateAnnotation annotation : replicate.getAnnotations())
                     {
                         annotation.setReplicateId(replicate.getId());
                         annotation.setSource(ReplicateAnnotation.SOURCE_SKYLINE);
                         Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
+
+                        if (annotation.isIgnoreInQC() && folderType == TargetedMSModule.FolderType.QC)
+                            ignoreInQcAnnot = annotation;
                     }
+
+                    handleReplicateExclusions(replicate, ignoreInQcAnnot);
 
                     insertSampleFiles(skylineIdSampleFileIdMap, instrumentIdMap, replicate);
                 }
@@ -603,6 +613,42 @@ public class SkylineDocImporter
 //            {
 //                FileUtil.deleteDir(zipDir);
 //            }
+        }
+    }
+
+    private void handleReplicateExclusions(Replicate replicate, ReplicateAnnotation ignoreInQcAnnot)
+    {
+        // keep any existing exclusions for this replicate by name
+        List<QCMetricExclusion> existingExclusions = ReplicateManager.getReplicateExclusions(replicate.getName(), _container);
+        boolean hasExistingExcludeAllMetrics = false;
+        for (QCMetricExclusion existingExclusion : existingExclusions)
+        {
+            ReplicateManager.insertReplicateExclusion(_user, replicate.getId(), existingExclusion.getMetricId());
+            if (existingExclusion.getMetricId() == null)
+                hasExistingExcludeAllMetrics = true;
+        }
+
+        // handle insert or check based on an ignore_in_QC annotation for this replicate
+        if (ignoreInQcAnnot != null)
+        {
+            boolean shouldExcludeFromAnnot = "true".equalsIgnoreCase(ignoreInQcAnnot.getValue());
+
+            if (existingExclusions.isEmpty())
+            {
+                // If there is an ignore_in_QC annotation for this replicate and we don't currently have any
+                // existing exclusions, insert it into the targetedms.QCMetricExclusion table.
+                if (shouldExcludeFromAnnot)
+                    ReplicateManager.insertReplicateExclusion(_user, replicate.getId(), null);
+            }
+            else
+            {
+                // If there is an ignore_in_QC annotation and we already have existing exclusions, don't insert but compare and
+                // give a warning if there is a mismatch.
+                if (!shouldExcludeFromAnnot)
+                    _log.warn("Replicate " + replicate.getName() + " has an ignore_in_QC=false annotation but there are existing exclusions in the QCMetricExclusion table.");
+                else if (!hasExistingExcludeAllMetrics)
+                    _log.warn("Replicate " + replicate.getName() + " has an ignore_in_QC=true annotation but there are existing exclusions for specific metrics only in the QCMetricExclusion table.");
+            }
         }
     }
 

@@ -15,14 +15,18 @@
 
 package org.labkey.targetedms.query;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.model.QCMetricExclusion;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.SampleFile;
@@ -53,6 +57,27 @@ public class ReplicateManager
     {
         return new TableSelector(TargetedMSManager.getSchema().getTable(TargetedMSSchema.TABLE_REPLICATE))
             .getObject(replicateId, Replicate.class);
+    }
+
+    public static List<QCMetricExclusion> getReplicateExclusions(String name, Container container)
+    {
+        SQLFragment sqlFragment = new SQLFragment("SELECT qme.* FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoQCMetricExclusion(), "qme");
+        sqlFragment.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoReplicate(), "rp");
+        sqlFragment.append(" ON qme.ReplicateId = rp.Id");
+        sqlFragment.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), "r");
+        sqlFragment.append(" ON r.Id = rp.runId");
+        sqlFragment.append(" WHERE rp.Name=?").add(name);
+        sqlFragment.append(" AND r.Container=?").add(container);
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sqlFragment).getArrayList(QCMetricExclusion.class);
+    }
+
+    public static QCMetricExclusion insertReplicateExclusion(User user, Integer replicateId, @Nullable Integer metricId)
+    {
+        // Note: null metricId indicates an exclusion for all metrics for the given replicate
+        QCMetricExclusion exclusion = new QCMetricExclusion(replicateId, metricId);
+        return Table.insert(user, TargetedMSManager.getTableInfoQCMetricExclusion(), exclusion);
     }
 
     public static ReplicateAnnotation getReplicateAnnotation(int annotationId)

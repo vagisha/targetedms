@@ -1180,7 +1180,7 @@ public class TargetedMSManager
     public static void purgeUnreferencedReplicates(Container container)
     {
         execute(getDependentSampleFileReplicateDeleteSql(getTableInfoReplicateAnnotation(), "ReplicateId", container));
-
+        execute(getDependentSampleFileReplicateDeleteSql(getTableInfoQCMetricExclusion(), "ReplicateId", container));
         execute(getDependentSampleFileReplicateDeleteSql(getTableInfoReplicate(), "Id", container));
 
         deletePredictorsForUnusedReplicates(container);
