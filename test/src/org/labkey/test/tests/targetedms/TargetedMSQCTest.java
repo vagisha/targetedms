@@ -566,6 +566,16 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertTextNotPresent("QC_2.sky.zip");
     }
 
+    private void verifyCombinedLegend()
+    {
+        assertTextPresent("ATEEQLK");  // 7 is max length without abbreviation
+        assertTextPresent("FFV\u2026");
+        assertTextPresent("VLV\u2026");
+
+        String result = (String)executeScript(longPeptideJSTest);
+        assertEquals("", result);
+    }
+
     @Test
     public void testCombinedPlots()
     {
@@ -574,8 +584,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
 
-        String result = (String)executeScript(longPeptideJSTest);
-        assertEquals("", result);
+        verifyCombinedLegend();
 
         for (QCPlotsWebPart.QCPlotType plotType : QCPlotsWebPart.QCPlotType.values())
         {
