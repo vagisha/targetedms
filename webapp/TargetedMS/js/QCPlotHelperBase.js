@@ -547,6 +547,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             yAxisScale: (precursorInfo.showLogInvalid ? 'linear' : this.yAxisScale),
             shape: 'guideSetId',
             pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
+            pointIdAttr: function(row) { return row['fullDate']; },
             showTrendLine: true,
             mouseOverFn: this.plotPointHover,
             mouseOverFnScope: this,

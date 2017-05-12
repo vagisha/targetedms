@@ -42,7 +42,9 @@ import org.labkey.test.util.targetedms.QCHelper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -383,7 +385,8 @@ public class TargetedMSQCTest extends TargetedMSTest
             assertElementPresent(qcPlotsWebPart.getLegendItemLocator("CUSUM Group", true));
         for (String precursor : PRECURSORS)
         {
-            assertElementPresent(qcPlotsWebPart.getLegendItemLocator(precursor, true), 2);
+            Locator legendItemLoc = qcPlotsWebPart.getLegendItemLocatorByTitle(precursor);
+            assertElementPresent("Unexpected number of QC plot legend items found for " + precursor, legendItemLoc, 2);
         }
     }
 
@@ -464,7 +467,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // Verify values in the rows.
         // Sample files 25fmol_Pepmix_spike_SRM_1601_02 and 25fmol_Pepmix_spike_SRM_1601_02
-        // are common to the two docs. They hould have only 1 row each since they were imported
+        // are common to the two docs. They should have only 1 row each since they were imported
         // only from the first document (QC_1.sky.zip).
         verifyRow(drt, 0, QCREPLICATE_1, QC_1_FILE);
         verifyRow(drt, 1, QCREPLICATE_2, QC_2_FILE);

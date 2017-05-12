@@ -478,7 +478,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         List<WebElement> points = elementCache().svgPoint.findElements(this);
         for (WebElement p : points)
         {
-            if (p.getAttribute("title").contains("Acquired: " + dateStr))
+            if (dateStr.equals(p.getAttribute("id")))
                 return p;
         }
 
@@ -551,6 +551,11 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
             return elementCache().legendItem.withText(text);
         else
             return elementCache().legendItem.containing(text);
+    }
+
+    public Locator getLegendItemLocatorByTitle(String text)
+    {
+        return elementCache().legendItemTitle.withText(text);
     }
 
     public Locator getLegendPopupItemLocator(String text, boolean exactMatch)
@@ -639,6 +644,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.CssLocator svgPoint = Locator.css("svg g a.point");
         Locator.CssLocator svgPointPath = Locator.css("svg g a.point path");
         Locator.CssLocator legendItem = Locator.css("svg g.legend-item");
+        Locator.CssLocator legendItemTitle = Locator.css("svg g.legend-item title");
         Locator.CssLocator legendItemPopup = Locator.css(".headerlegendpopup svg g.legend-item");
         Locator.CssLocator smallPlotLayoutDiv = Locator.css(".plot-small-layout");
 
