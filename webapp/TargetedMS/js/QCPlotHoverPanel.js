@@ -183,12 +183,14 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
                             commands: commands,
                             scope: this,
                             success: function(data) {
-                                this.fireEvent('close', true);
+                                // Issue 30343: need to reload the full page because the QC Summary webpart might be
+                                // present and need to be updated according to the updated exclusion state.
+                                window.location.reload();
                             }
                         });
                     }
                     else {
-                        this.fireEvent('close', false);
+                        this.fireEvent('close');
                     }
                 }
             });

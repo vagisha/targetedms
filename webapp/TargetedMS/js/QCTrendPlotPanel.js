@@ -1241,13 +1241,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                             canEdit: me.canUserEdit(),
                             listeners: {
                                 scope: me,
-                                close: function(requiresReload) {
+                                close: function() {
                                     calloutMgr.removeAllCallouts();
-
-                                    if (requiresReload) {
-                                        this.setLoadingMsg();
-                                        this.getAnnotationData();
-                                    }
                                 }
                             }
                         });

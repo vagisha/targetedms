@@ -645,9 +645,9 @@ public class SkylineDocImporter
                 // If there is an ignore_in_QC annotation and we already have existing exclusions, don't insert but compare and
                 // give a warning if there is a mismatch.
                 if (!shouldExcludeFromAnnot)
-                    _log.warn("Replicate " + replicate.getName() + " has an ignore_in_QC=false annotation but there are existing exclusions in the QCMetricExclusion table.");
+                    _log.warn("Replicate " + replicate.getName() + " has an ignore_in_QC=false annotation but there are existing exclusions that were added within Panorama or from a previous import.");
                 else if (!hasExistingExcludeAllMetrics)
-                    _log.warn("Replicate " + replicate.getName() + " has an ignore_in_QC=true annotation but there are existing exclusions for specific metrics only in the QCMetricExclusion table.");
+                    _log.warn("Replicate " + replicate.getName() + " has an ignore_in_QC=true annotation but there are existing metric specific exclusions that were added within Panorama.");
             }
         }
     }
