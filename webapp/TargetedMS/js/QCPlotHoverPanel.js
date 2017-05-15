@@ -59,7 +59,7 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
             this.add(this.getPlotPointDetailField('Metric', this.pointData[this.valueName + 'Title']));
         }
 
-        this.add(this.getPlotPointDetailField(this.pointData['dataType'], this.pointData['fragment']));
+        this.add(this.getPlotPointDetailField(this.pointData['dataType'], this.pointData['fragment'], 'qc-hover-value-break'));
 
         if (this.valueName.indexOf('CUSUM') > -1) {
             this.add(this.getPlotPointDetailField('Group', 'CUSUMmN' == this.valueName || 'CUSUMvN' == this.valueName ? 'CUSUM-' : 'CUSUM+'));
@@ -79,9 +79,9 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
         this.add(Ext4.create('Ext.Component', { html: this.getPlotPointClickLink() }));
     },
 
-    getPlotPointDetailField : function(label, value) {
+    getPlotPointDetailField : function(label, value, includeCls) {
         return Ext4.create('Ext.form.field.Display', {
-            cls: 'qc-hover-field',
+            cls: 'qc-hover-field' + (Ext4.isString(includeCls) ? ' ' + includeCls : ''),
             fieldLabel: label,
             labelWidth: 75,
             width: 450,

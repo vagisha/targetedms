@@ -75,3 +75,7 @@
     margin-top: 2px;
     font-weight: bold;
 }
+
+.hopscotch-bubble-container .qc-hover-value-break {
+    word-break: break-all;
+}
