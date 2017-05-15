@@ -341,10 +341,12 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 sampleFiles[row.SampleFile] = info;
             }
 
-            info.Metrics++;
             info.IgnoreForAllMetric = info.IgnoreForAllMetric && row.IgnoreInQC;
-            info.NonConformers += row.NonConformers;
-            info.TotalCount += row.TotalCount;
+            if (!row.IgnoreInQC) {
+                info.Metrics++;
+                info.NonConformers += row.NonConformers;
+                info.TotalCount += row.TotalCount;
+            }
 
             Ext4.apply(row,{CUSUMm: 0, CUSUMv: 0, CUSUMmN: 0, CUSUMmP: 0, CUSUMvP: 0, CUSUMvN: 0, mR: 0});
             row.ContainerPath = container.path;
@@ -415,7 +417,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         content += '<span class="sample-file-field-label">Name:</span> ' + sampleFile.SampleFile
                 + '<br/><span class="sample-file-field-label">Acquired Date/Time:</span> ' + sampleFile.AcquiredTime
                 + '<br/><span class="sample-file-field-label">Number of tracked metrics:</span> ' + sampleFile.Metrics
-                + '<br/><span class="sample-file-field-label">Number of data points:</span> ' + (sampleFile.TotalCount/sampleFile.Metrics)
+                + '<br/><span class="sample-file-field-label">Number of data points:</span> ' + (sampleFile.Metrics > 0 ? sampleFile.TotalCount/sampleFile.Metrics : 'n/a')
                 + '<br/><span class="sample-file-field-label">Out of guide set range:</span> ';
         if (sampleFile.IgnoreForAllMetric) {
             content += 'not included in QC<br/>';
