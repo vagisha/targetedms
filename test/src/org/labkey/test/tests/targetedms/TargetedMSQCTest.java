@@ -26,6 +26,7 @@ import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.components.ext4.RadioButton;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
 import org.labkey.test.components.targetedms.QCAnnotationWebPart;
@@ -36,8 +37,11 @@ import org.labkey.test.pages.targetedms.PanoramaAnnotations;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.PipelineStatusTable;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.targetedms.QCHelper;
+import org.openqa.selenium.WebElement;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -507,11 +511,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals("Wrong precursors", precursors, qcPlotsWebPart.getPlotTitles());
 
         // Filter the grid to a single peptide
-        goToSchemaBrowser();
-        selectQuery("targetedms", "generalmoleculechrominfo");
-        waitForText("view data");
-        clickAndWait(Locator.linkWithText("view data"));
-        DataRegionTable drt = new DataRegionTable("query", this);
+        DataRegionTable drt =  getSchemaBrowserDataView("targetedms", "generalmoleculechrominfo");
+
         drt.setFilter("PeptideId", "Equals", "AGGSSEPVTGLADK");
 
         // Verify number of expected rows in the filtered grid
@@ -564,6 +565,15 @@ public class TargetedMSQCTest extends TargetedMSTest
         goToModule("FileContent");
         waitForText("QC_2.sky.log");
         assertTextNotPresent("QC_2.sky.zip");
+    }
+
+    private DataRegionTable getSchemaBrowserDataView(String schemaName, String queryName)
+    {
+        goToSchemaBrowser();
+        selectQuery(schemaName, queryName);
+        waitForText("view data");
+        clickAndWait(Locator.linkWithText("view data"));
+        return new DataRegionTable("query", this);
     }
 
     private void verifyCombinedLegend()
@@ -693,6 +703,77 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         //Check for no. of PDF and PNG export icons for individual plots
         verifyDownloadablePlotIcons(50);
+    }
+
+     @Test
+    public void testExclusionQCExistsWarning()
+    {
+        String subFolderName = "QC Plot Exclusions Test";
+        setupSubfolder(getProjectName(), subFolderName, FolderType.QC); //create a Panorama folder of type QC
+
+        importData(QC_1a_FILE);
+        clickFolder(subFolderName);
+        verifyQcSummary(1, 3, 2);
+
+        //confirm 3 exclusions
+        DataRegionTable drt = getSchemaBrowserDataView("targetedms", "qcmetricexclusion");
+        assertEquals("Wrong count", 3,drt.getDataRowCount());
+        assertEquals("Wrong metric", " ", drt.getRowDataAsText(0,"MetricId").get(0));
+        assertEquals("Wrong metric", " ", drt.getRowDataAsText(1,"MetricId").get(0));
+        assertEquals("Wrong metric", " ", drt.getRowDataAsText(2,"MetricId").get(0));
+
+        importData(QC_1b_FILE,2);
+        clickFolder(subFolderName);
+        verifyQcSummary(1, 3, 2);
+
+        drt = getSchemaBrowserDataView("targetedms", "qcmetricexclusion");
+        assertEquals("Wrong count", 3,drt.getDataRowCount());
+        assertEquals("Wrong metric", " ", drt.getRowDataAsText(0,"MetricId").get(0));
+        assertEquals("Wrong metric", " ", drt.getRowDataAsText(1,"MetricId").get(0));
+        assertEquals("Wrong metric", " ", drt.getRowDataAsText(2,"MetricId").get(0));
+
+        verifyUploadReport("Replicate 25fmol_Pepmix_spike_SRM_1601_03 has an ignore_in_QC=false annotation " +
+                "but there are existing exclusions that were added within Panorama or from a previous import.");
+
+        clickFolder(subFolderName);
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+        qcPlotsWebPart.setShowExcludedPoints(true);
+//        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false,null);
+        waitForText("AGGSSEPVTGLADK");
+        String acquiredDate = "2015-01-16 14:47:30";
+        String buttonLabel = "Exclude sample from QC for all metrics";
+        boolean expected = true;
+        verifyExclusionButtonSelection(qcDashboard, qcPlotsWebPart, acquiredDate, buttonLabel, expected);
+        acquiredDate = "2015-01-16 12:26:46";
+        buttonLabel = "Exclude sample from QC for all metrics";
+        expected = true;
+        verifyExclusionButtonSelection(qcDashboard, qcPlotsWebPart, acquiredDate, buttonLabel, expected);
+
+
+    }
+
+    private void verifyExclusionButtonSelection(PanoramaDashboard qcDashboard, QCPlotsWebPart qcPlotsWebPart, String acquiredDate, String buttonLabel, boolean expected)
+    {
+        WebElement point = qcPlotsWebPart.getPointByAcquiredDate(acquiredDate);
+        mouseOver(point);
+        QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
+        WebElement bubble = waitForElement(qcSummaryWebPart.getBubble());
+        RadioButton include = RadioButton.RadioButton().withLabel(buttonLabel).find(bubble);
+        assertEquals(buttonLabel + " selection not as expected:" + expected, expected,include.isChecked());
+        qcSummaryWebPart.closeBubble();
+    }
+
+    @LogMethod
+    private void verifyUploadReport(String... reportText)
+    {
+        beginAt( getCurrentContainerPath()  + "/pipeline-status-showList.view?");
+        waitForRunningPipelineJobs(MAX_WAIT_SECONDS * 1000);
+
+        PipelineStatusTable statusTable = new PipelineStatusTable(this);
+        statusTable.clickStatusLink(0);
+        assertTextPresent(reportText);
     }
 
     private void verifyRow(DataRegionTable drt, int row, String sampleName, String skylineDocName)

@@ -308,6 +308,11 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return plotSizeButton.isEnabled();
     }
 
+    /**
+     * This should be called only when a plot is visible.
+     * @param check
+     * @param expectedPlotCount
+     */
     public void setShowAllPeptidesInSinglePlot(boolean check, @Nullable Integer expectedPlotCount)
     {
         WebElement plot = elementCache().findPlots().get(0);
@@ -319,6 +324,11 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
             waitForPlots(expectedPlotCount, true);
         else
             waitForPlots(1, false);
+    }
+
+    public void setShowExcludedPoints(boolean check)
+    {
+        elementCache().showExcludedCheckbox.set(check);
     }
 
     public boolean isShowAllPeptidesInSinglePlotChecked()
@@ -626,6 +636,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.XPathLocator metricTypeCombo = Locator.id("metric-type-field");
         Checkbox groupedXCheckbox = new Checkbox(new LazyWebElement(Locator.css("#grouped-x-field input"), this));
         Checkbox singlePlotCheckbox = new Checkbox(new LazyWebElement(Locator.css("#peptides-single-plot input"), this));
+        Checkbox showExcludedCheckbox = new Checkbox(new LazyWebElement(Locator.css("#show-excluded-points input"), this));
 
         WebElement plotPanel = new LazyWebElement(Locator.css("div.tiledPlotPanel"), this);
         WebElement overflowWarning = new LazyWebElement(Locator.css("div.countLimitedHeaderPanel"), this);

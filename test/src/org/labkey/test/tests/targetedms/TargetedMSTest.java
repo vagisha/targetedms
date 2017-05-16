@@ -43,6 +43,8 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
 {
     protected static final String SProCoP_FILE = "SProCoPTutorial.zip";
     protected static final String QC_1_FILE = "QC_1.sky.zip";
+    protected static final String QC_1a_FILE = "QC_1a.sky.zip";
+    protected static final String QC_1b_FILE = "QC_1b.sky.zip";
     protected static final String QC_2_FILE = "QC_2.sky.zip";
     protected static final String QC_3_FILE = "QC_3.sky.zip";
     protected static final String QC_4_FILE = "QC_4.sky.zip";
