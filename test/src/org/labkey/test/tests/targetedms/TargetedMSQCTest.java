@@ -578,9 +578,9 @@ public class TargetedMSQCTest extends TargetedMSTest
 
     private void verifyCombinedLegend()
     {
-        assertTextPresent("ATEEQLK");  // 7 is max length without abbreviation
-        assertTextPresent("FFV\u2026");
-        assertTextPresent("VLV\u2026");
+        assertTextPresent("ATEEQLK",  // 7 is max length without abbreviation
+            "FFV\u2026",
+            "VLV\u2026");
 
         String result = (String)executeScript(longPeptideJSTest);
         assertEquals("", result);
