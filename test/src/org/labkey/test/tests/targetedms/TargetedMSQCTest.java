@@ -769,7 +769,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         qcDashboard.getQcSummaryWebPart().waitForRecentSampleFiles(3);
         QCSummaryWebPart.QcSummaryTile qcSummaryTile = qcDashboard.getQcSummaryWebPart().getQcSummaryTiles().get(0);
-        qcSummaryTile.hasRecentSampleFileWithOulierTxt(acquiredDate, outlierInfo);
+        assertTrue("Unexpected outlier information for QC summary sample file, expected: "
+                + acquiredDate + " - " + outlierInfo, qcSummaryTile.hasRecentSampleFileWithOulierTxt(acquiredDate, outlierInfo));
     }
 
     private String getAcquiredDateDisplayStr(String acquiredDate)
