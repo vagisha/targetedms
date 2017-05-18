@@ -87,8 +87,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         return "SELECT stats.GuideSetId,"
             + "\n'" + chartTypeProps.id + "' AS MetricId,"
             + "\n'" + chartTypeProps.name + "' AS MetricLabel,"
-            + "\nSUM(CASE WHEN exclusion.ReplicateId IS NULL AND (X.MetricValue > (stats.Mean + (3 * stats.StandardDev)) OR"
-            + "\n   X.MetricValue < (stats.Mean - (3 * stats.StandardDev))) THEN 1 ELSE 0 END) AS NonConformers"
+            + "\nSUM(CASE WHEN exclusion.ReplicateId IS NULL AND (X.MetricValue > (stats.Mean + (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END))) OR"
+            + "\n   X.MetricValue < (stats.Mean - (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END)))) THEN 1 ELSE 0 END) AS NonConformers"
             + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime,"
             + "\n  SampleFileId.FilePath AS FilePath, SampleFileId.ReplicateId AS ReplicateId"
             + "\n  FROM " + chartTypeProps.schemaName + "." + chartTypeProps.queryName + ") X"
@@ -125,26 +125,34 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             guideSet.stats.CUSUMm = {data : []};
             guideSet.stats.CUSUMv = {data : []};
             guideSet.stats.rM = {data : []};
-            var metricOutliers = transformedOutliers[key];
-            Ext4.iterate(metricOutliers, function(metric, outliers){
-                var metricProps = this.getMetricPropsByLabel(metric), metricId = metricProps['id'];
-                if (CUSUMm)
-                {
+
+            var metricOutliers = transformedOutliers[key] || {},
+                metricNames = Ext4.Array.clean(Ext4.Array.pluck(this.metricPropArr, 'series1Label').concat(Ext4.Array.pluck(this.metricPropArr, 'series2Label'))),
+                ljMetricNames = Ext4.Array.pluck(guideSet.stats.LJ.data, 'metricLabel');
+
+            Ext4.each(metricNames, function(metric) {
+                var metricProps = this.getMetricPropsByLabel(metric),
+                    metricId = metricProps['id'],
+                    outliers = metricOutliers[metric] || {};
+
+                if (CUSUMm) {
                     var positive = outliers.CUSUMmP ? outliers.CUSUMmP : 0, negative = outliers.CUSUMmN ? outliers.CUSUMmN : 0;
                     guideSet.stats.CUSUMm.data.push(this.getGuideSetDataObj(key, metric, metricId, positive + negative, positive, negative, 'CUSUMm'));
                 }
-                if (CUSUMv)
-                {
+                if (CUSUMv) {
                     var positive = outliers.CUSUMvP ? outliers.CUSUMvP : 0, negative = outliers.CUSUMvN ? outliers.CUSUMvN : 0;
                     guideSet.stats.CUSUMv.data.push(this.getGuideSetDataObj(key, metric, metricId, positive + negative, positive, negative, 'CUSUMv'));
                 }
-                if (mR)
-                {
+                if (mR) {
                     var count = outliers.mR ? outliers.mR : 0;
                     guideSet.stats.rM.data.push(this.getGuideSetDataObj(key, metric, metricId, count, null, null, 'Moving Range'));
                 }
-            }, this);
 
+                // also add any missing metrics to the LJ data array so we have a full metric set for each plot type
+                if (ljMetricNames.indexOf(metric) == -1) {
+                    guideSet.stats.LJ.data.push(this.getGuideSetDataObj(key, metric, metricId, 0, null, null, 'Levey-Jennings'));
+                }
+            }, this);
         }, this);
 
         Ext4.iterate(guideSetMap, function(key, guideSet){
@@ -222,11 +230,10 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
         for (var key in guideSetMap)
         {
             var guideSetData = guideSetMap[key];
-
-            var title = "'Training Start: " + guideSetData.trainingStart;
-            title += (guideSetData.referenceEnd) ? (" - Reference End: " + guideSetData.referenceEnd) : (" - Training End: " + guideSetData.trainingEnd);
-            title += "'";
             var id = "paretoPlot-GuideSet-"+guideSetCount;
+
+            var title = "Training Start: " + guideSetData.trainingStart
+                + (guideSetData.referenceEnd ? " - Reference End: " + guideSetData.referenceEnd : " - Training End: " + guideSetData.trainingEnd);
 
             var plotIdSuffix = '', plotType = "Levey-Jennings", plotWp = 'pareto-plot-wp', plotData = guideSetData.stats.LJ.data, plotMaxY = guideSetData.stats.LJ.maxNumNonConformers;
             var webpartTitleBase = "Guide Set " + guideSetCount + ' ';
@@ -263,7 +270,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             height: 500,
             data: Ext4.Array.clone(data),
             labels: {
-                main: {value: "Pareto Plot (" + plotType + ") for " + title},
+                main: {value: "Pareto Plot - " + plotType},
+                subtitle: {value: title, color: '#555555'},
                 yLeft: {value: '# Nonconformers'},
                 yRight: {value: 'Cumulative Percentage'}
             },
