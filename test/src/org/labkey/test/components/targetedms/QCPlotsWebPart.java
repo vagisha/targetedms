@@ -310,8 +310,6 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     /**
      * This should be called only when a plot is visible.
-     * @param check
-     * @param expectedPlotCount
      */
     public void setShowAllPeptidesInSinglePlot(boolean check, @Nullable Integer expectedPlotCount)
     {
@@ -458,12 +456,12 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public int getGuideSetTrainingRectCount()
     {
-        return getWrapper().getElementCount(elementCache().guideSetTrainingRect);
+        return elementCache().guideSetTrainingRect.findElements(getDriver()).size();
     }
 
     public int getGuideSetErrorBarPathCount(String cls)
     {
-        return getWrapper().getElementCount(Locator.css("svg g g.error-bar path." + cls));
+        return Locator.css("svg g g.error-bar path." + cls).findElements(getDriver()).size();
     }
 
     public List<WebElement> getPointElements(String attr, String value, boolean isPrefix)
@@ -516,7 +514,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         if (guideSet.getBrushSelectedPoints() != null && guideSet.getBrushSelectedPoints() < 5)
         {
             gsButtons.get(0).click(); // Create button : index 0
-            Window warning = Window().withTitle("Create Guide Set Warning").waitFor(getDriver());
+            Window warning = Window(getDriver()).withTitle("Create Guide Set Warning").waitFor();
             if (expectPageReload)
                 warning.clickButton("Yes");
             else
@@ -533,7 +531,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
         if (expectErrorMsg != null)
         {
-            Window error = Window().withTitle("Error Creating Guide Set").waitFor(getDriver());
+            Window error = Window(getDriver()).withTitle("Error Creating Guide Set").waitFor();
             getWrapper().assertElementPresent(elementCache().extFormDisplay.withText(expectErrorMsg));
             error.clickButton("OK", true);
             gsButtons.get(1).click(); // Cancel button : index 1
@@ -595,7 +593,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
     public void openLegendPopup()
     {
         getWrapper().waitAndClick(Locator.tagWithText("span", "View Legend"));
-        Window().withTitle("Legends").waitFor(getDriver());
+        Window(getDriver()).withTitle("Legends").waitFor();
     }
 
     public void checkPlotType(QCPlotType plotType, boolean checked)
@@ -627,7 +625,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return selected;
     }
 
-    public class Elements extends BodyWebPart.Elements
+    public class Elements extends BodyWebPart.ElementCache
     {
         WebElement startDate = new LazyWebElement(Locator.css("#start-date-field input"), this);
         WebElement endDate = new LazyWebElement(Locator.css("#end-date-field input"), this);
