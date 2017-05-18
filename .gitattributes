@@ -3,7 +3,6 @@ api-src/org/labkey/api/targetedms/ITargetedMSRun.java -text
 api-src/org/labkey/api/targetedms/SkylineAnnotation.java -text
 api-src/org/labkey/api/targetedms/TargetedMSService.java -text
 /build.gradle -text
-lib/protobuf-java-3.2.0.jar -text
 /module.properties -text
 resources/credits/jars.txt -text
 resources/credits/scripts.txt -text
