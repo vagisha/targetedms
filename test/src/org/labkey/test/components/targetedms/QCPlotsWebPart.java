@@ -146,6 +146,25 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         }
     }
 
+    public enum QCPlotExclusionState
+    {
+        Include("Include in QC"),
+        ExcludeMetric("Exclude sample from QC for this metric"),
+        ExcludeAll("Exclude sample from QC for all metrics");
+
+        private String _label;
+
+        QCPlotExclusionState(String label)
+        {
+            _label = label;
+        }
+
+        public String getLabel()
+        {
+            return _label;
+        }
+    }
+
 
     private void waitForNoRecords()
     {
@@ -625,6 +644,16 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return selected;
     }
 
+    public Locator.XPathLocator getBubble()
+    {
+        return elementCache().hopscotchBubble;
+    }
+
+    public void closeBubble()
+    {
+        getWrapper().click(elementCache().hopscotchBubbleClose);
+    }
+
     public class Elements extends BodyWebPart.ElementCache
     {
         WebElement startDate = new LazyWebElement(Locator.css("#start-date-field input"), this);
@@ -656,6 +685,9 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.CssLocator legendItemTitle = Locator.css("svg g.legend-item title");
         Locator.CssLocator legendItemPopup = Locator.css(".headerlegendpopup svg g.legend-item");
         Locator.CssLocator smallPlotLayoutDiv = Locator.css(".plot-small-layout");
+
+        Locator.XPathLocator hopscotchBubble = Locator.tagWithClass("div", "hopscotch-bubble-container");
+        Locator.XPathLocator hopscotchBubbleClose = Locator.tagWithClass("a", "hopscotch-bubble-close");
 
         private Map<QCPlotType, Checkbox> plotTypeCheckboxes = new HashMap<>();
         protected Checkbox findQCPlotTypeCheckbox(QCPlotType plotType)

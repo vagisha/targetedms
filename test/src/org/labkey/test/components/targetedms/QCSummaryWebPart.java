@@ -202,5 +202,10 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
             }
             return _recentSampleFiles;
         }
+
+        public boolean hasRecentSampleFileWithOulierTxt(String acquiredDate, String outlierStr)
+        {
+            return Locators.recentSampleFile.withText(" " + acquiredDate + " - " + outlierStr).findElements(this).size() == 1;
+        }
     }
 }

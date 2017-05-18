@@ -37,6 +37,7 @@ import org.labkey.test.pages.targetedms.PanoramaAnnotations;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.PipelineStatusTable;
 import org.labkey.test.util.PortalHelper;
@@ -702,9 +703,10 @@ public class TargetedMSQCTest extends TargetedMSTest
         verifyDownloadablePlotIcons(50);
     }
 
-     @Test
-    public void testExclusionQCExistsWarning()
+    @Test
+    public void testQCPlotExclusions()
     {
+        String[] sampleFileAcquiredDates = new String[]{"2015/01/16 09:12:39", "2015/01/16 12:26:46", "2015/01/16 14:47:30"};
         String subFolderName = "QC Plot Exclusions Test";
         setupSubfolder(getProjectName(), subFolderName, FolderType.QC); //create a Panorama folder of type QC
 
@@ -734,30 +736,71 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         clickFolder(subFolderName);
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
-
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.setShowExcludedPoints(true);
-        waitForText("AGGSSEPVTGLADK");
-        String acquiredDate = "2015-01-16 14:47:30";
-        String buttonLabel = "Exclude sample from QC for all metrics";
-        boolean expected = true;
-        verifyExclusionButtonSelection(qcDashboard, qcPlotsWebPart, acquiredDate, buttonLabel, expected);
-        acquiredDate = "2015-01-16 12:26:46";
-        buttonLabel = "Exclude sample from QC for all metrics";
-        expected = true;
-        verifyExclusionButtonSelection(qcDashboard, qcPlotsWebPart, acquiredDate, buttonLabel, expected);
+        qcPlotsWebPart.waitForPlots(2, true);
 
+        // verify that the plot data points are excluded and then change the state to re-include it
+        String acquiredDateStr = getAcquiredDateDisplayStr(sampleFileAcquiredDates[0]);
+        verifyExclusionButtonSelection(acquiredDateStr, QCPlotsWebPart.QCPlotExclusionState.ExcludeAll);
+        changePointExclusionState(acquiredDateStr, QCPlotsWebPart.QCPlotExclusionState.Include, 2);
+        acquiredDateStr = getAcquiredDateDisplayStr(sampleFileAcquiredDates[2]);
+        verifyExclusionButtonSelection(acquiredDateStr, QCPlotsWebPart.QCPlotExclusionState.ExcludeAll);
+        changePointExclusionState(acquiredDateStr, QCPlotsWebPart.QCPlotExclusionState.Include, 2);
 
+        // verify initial QC summary outlier info
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[0], "no outliers");
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[1], "not included in QC");
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "no outliers");
+
+        // create a guide set and verify updated QC Summary outliers info
+        qcPlotsWebPart.createGuideSet(new GuideSet(sampleFileAcquiredDates[0], sampleFileAcquiredDates[1], null, 2), null);
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "10/16 (Levey-Jennings), 10/16 (Moving Range) outliers");
+
+        // change data point to only be excluded for a single metric and verify outliers changed
+        changePointExclusionState(getAcquiredDateDisplayStr(sampleFileAcquiredDates[1]), QCPlotsWebPart.QCPlotExclusionState.ExcludeMetric, 2);
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "2/16 (Levey-Jennings), 3/16 (Moving Range) outliers");
+        changePointExclusionState(getAcquiredDateDisplayStr(sampleFileAcquiredDates[2]), QCPlotsWebPart.QCPlotExclusionState.ExcludeMetric, 2);
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "1/14 (Moving Range) outliers");
     }
 
-    private void verifyExclusionButtonSelection(PanoramaDashboard qcDashboard, QCPlotsWebPart qcPlotsWebPart, String acquiredDate, String buttonLabel, boolean expected)
+    private void verifyQCSummarySampleFileOutliers(String acquiredDate, String outlierInfo)
     {
-        WebElement point = qcPlotsWebPart.getPointByAcquiredDate(acquiredDate);
-        mouseOver(point);
-        WebElement bubble = waitForElement(qcDashboard.getQcSummaryWebPart().getBubble());
-        RadioButton include = RadioButton.RadioButton().withLabel(buttonLabel).find(bubble);
-        assertEquals(buttonLabel + " selection not as expected:" + expected, expected,include.isChecked());
-        qcDashboard.getQcSummaryWebPart().closeBubble();
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        qcDashboard.getQcSummaryWebPart().waitForRecentSampleFiles(3);
+        QCSummaryWebPart.QcSummaryTile qcSummaryTile = qcDashboard.getQcSummaryWebPart().getQcSummaryTiles().get(0);
+        qcSummaryTile.hasRecentSampleFileWithOulierTxt(acquiredDate, outlierInfo);
+    }
+
+    private String getAcquiredDateDisplayStr(String acquiredDate)
+    {
+        return acquiredDate.replaceAll("/","-");
+    }
+
+    private void verifyExclusionButtonSelection(String acquiredDate, QCPlotsWebPart.QCPlotExclusionState state)
+    {
+        QCPlotsWebPart qcPlotsWebPart = new PanoramaDashboard(this).getQcPlotsWebPart();
+        mouseOver(qcPlotsWebPart.getPointByAcquiredDate(acquiredDate));
+        waitForElement(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
+        WebElement bubble = qcPlotsWebPart.getBubble().findElement(getDriver());
+        RadioButton radioButton = RadioButton.RadioButton().withLabel(state.getLabel()).find(bubble);
+        assertTrue("QC data point exclusion selection not as expected:" + state.getLabel(), radioButton.isChecked());
+        qcPlotsWebPart.closeBubble();
+    }
+
+    private void changePointExclusionState(String acquiredDate, QCPlotsWebPart.QCPlotExclusionState state, int waitForPlotCount)
+    {
+        QCPlotsWebPart qcPlotsWebPart = new PanoramaDashboard(this).getQcPlotsWebPart();
+        mouseOver(qcPlotsWebPart.getPointByAcquiredDate(acquiredDate));
+        waitForElement(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
+        WebElement bubble = qcPlotsWebPart.getBubble().findElement(getDriver());
+        RadioButton radioButton = RadioButton.RadioButton().withLabel(state.getLabel()).find(bubble);
+        if (!radioButton.isChecked())
+        {
+            radioButton.check();
+            doAndWaitForPageToLoad(() -> Ext4Helper.Locators.ext4Button("Save").findElement(bubble).click());
+            qcPlotsWebPart.waitForPlots(waitForPlotCount, true);
+        }
     }
 
     @LogMethod
