@@ -570,10 +570,7 @@ public class TargetedMSQCTest extends TargetedMSTest
     private DataRegionTable getSchemaBrowserDataView(String schemaName, String queryName)
     {
         goToSchemaBrowser();
-        selectQuery(schemaName, queryName);
-        waitForText("view data");
-        clickAndWait(Locator.linkWithText("view data"));
-        return new DataRegionTable("query", this);
+        return viewQueryData("targetedms", "qcmetricexclusion");
     }
 
     private void verifyCombinedLegend()
@@ -740,7 +737,6 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.setShowExcludedPoints(true);
-//        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false,null);
         waitForText("AGGSSEPVTGLADK");
         String acquiredDate = "2015-01-16 14:47:30";
         String buttonLabel = "Exclude sample from QC for all metrics";
@@ -758,11 +754,10 @@ public class TargetedMSQCTest extends TargetedMSTest
     {
         WebElement point = qcPlotsWebPart.getPointByAcquiredDate(acquiredDate);
         mouseOver(point);
-        QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
-        WebElement bubble = waitForElement(qcSummaryWebPart.getBubble());
+        WebElement bubble = waitForElement(qcDashboard.getQcSummaryWebPart().getBubble());
         RadioButton include = RadioButton.RadioButton().withLabel(buttonLabel).find(bubble);
         assertEquals(buttonLabel + " selection not as expected:" + expected, expected,include.isChecked());
-        qcSummaryWebPart.closeBubble();
+        qcDashboard.getQcSummaryWebPart().closeBubble();
     }
 
     @LogMethod
