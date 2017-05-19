@@ -571,7 +571,7 @@ public class TargetedMSQCTest extends TargetedMSTest
     private DataRegionTable getSchemaBrowserDataView(String schemaName, String queryName)
     {
         goToSchemaBrowser();
-        return viewQueryData("targetedms", "qcmetricexclusion");
+        return viewQueryData(schemaName, queryName);
     }
 
     private void verifyCombinedLegend()
