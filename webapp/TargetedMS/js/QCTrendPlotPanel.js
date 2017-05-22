@@ -1137,7 +1137,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         if (exceedsPageLimit) {
             displayHtml += this.getPaginationTxt();
             sep = "&nbsp;&nbsp;&nbsp;";
-            //TODO displayHtml += sep + this.getPaginationBtns();
+            displayHtml += sep + this.getPaginationBtns();
         }
         Ext4.get(this.plotPaginationDivId).update(displayHtml);
         Ext4.get(this.plotPaginationDivId).setStyle("display", exceedsPageLimit ? "block" : "none");

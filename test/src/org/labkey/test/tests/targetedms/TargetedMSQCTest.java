@@ -690,11 +690,11 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.waitForPlots(currentPagePlotCount, true);
         assertTrue("Unexpected overflow warning text", qcPlotsWebPart.getPaginationText().startsWith("Showing 1 - 50 of 91 precursors"));
 
-        // TODO go to the second page of plots
-        //qcPlotsWebPart.goToNextPage();
-        //currentPagePlotCount = 41;
-        //qcPlotsWebPart.waitForPlots(currentPagePlotCount, true);
-        //assertTrue("Unexpected overflow warning text", qcPlotsWebPart.getPaginationText().startsWith("Showing 51 - 91 of 91 precursors"));
+        // go to the second page of plots
+        qcPlotsWebPart.goToNextPage();
+        currentPagePlotCount = 41;
+        qcPlotsWebPart.waitForPlots(currentPagePlotCount, true);
+        assertTrue("Unexpected overflow warning text", qcPlotsWebPart.getPaginationText().startsWith("Showing 51 - 91 of 91 precursors"));
 
         //select "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
