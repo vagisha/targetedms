@@ -686,9 +686,15 @@ public class TargetedMSQCTest extends TargetedMSTest
         verifyQcSummary(1, 5, 186);
 
         QCPlotsWebPart qcPlotsWebPart = new QCPlotsWebPart(this.getWrappedDriver());
+        int currentPagePlotCount = 50;
+        qcPlotsWebPart.waitForPlots(currentPagePlotCount, true);
+        assertTrue("Unexpected overflow warning text", qcPlotsWebPart.getPaginationText().startsWith("Showing 1 - 50 of 91 precursors"));
 
-        Assert.assertEquals("Unexpected overflow warning text","Showing 1 - 50 of 91 precursors", qcPlotsWebPart.getPaginationText());
-        Assert.assertEquals("Unexpected number of plots", 50, qcPlotsWebPart.getPlots().size());
+        // TODO go to the second page of plots
+        //qcPlotsWebPart.goToNextPage();
+        //currentPagePlotCount = 41;
+        //qcPlotsWebPart.waitForPlots(currentPagePlotCount, true);
+        //assertTrue("Unexpected overflow warning text", qcPlotsWebPart.getPaginationText().startsWith("Showing 51 - 91 of 91 precursors"));
 
         //select "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
@@ -697,10 +703,10 @@ public class TargetedMSQCTest extends TargetedMSTest
         verifyDownloadablePlotIcons(1);
 
         //deselect "Show All Peptides in Single Plot"
-        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, 50);
+        qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, currentPagePlotCount);
 
         //Check for no. of PDF and PNG export icons for individual plots
-        verifyDownloadablePlotIcons(50);
+        verifyDownloadablePlotIcons(currentPagePlotCount);
     }
 
     @Test

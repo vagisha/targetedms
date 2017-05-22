@@ -1102,6 +1102,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             sql: sql,
             scope: this,
             success: function(data) {
+                this.pagingStartIndex = 0;
+                this.pagingEndIndex = this.maxCount;
 
                 // stash the set of precursor series labels for use with the plot rendering
                 this.allPrecursors = Ext4.Array.pluck(data.rows, 'SeriesLabel');
@@ -1113,27 +1115,69 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     },
 
     setPrecursorsForPage: function() {
-        var startIndex = 0;
         if (Ext4.isNumeric(LABKEY.ActionURL.getParameter('qcPlots.offset')))
-            startIndex = parseInt(LABKEY.ActionURL.getParameter('qcPlots.offset'));
+            this.pagingStartIndex = parseInt(LABKEY.ActionURL.getParameter('qcPlots.offset'));
 
-        if (startIndex < 0)
-            startIndex = 0;
-        else if (startIndex > this.allPrecursors.length)
-            startIndex = this.allPrecursors.length - this.maxCount;
-        
-        var endIndex = Math.min(startIndex + this.maxCount, this.allPrecursors.length);
+        if (this.pagingStartIndex < 0)
+            this.pagingStartIndex = 0;
+        else if (this.pagingStartIndex > this.allPrecursors.length)
+            this.pagingStartIndex = this.allPrecursors.length - this.maxCount;
 
-        this.precursors = Ext4.Array.slice(this.allPrecursors, startIndex, endIndex);
+        this.pagingEndIndex = Math.min(this.pagingStartIndex + this.maxCount, this.allPrecursors.length);
 
-        var exceedsPageLimit = this.allPrecursors.length > this.maxCount;
-        Ext4.get(this.plotPaginationDivId).update(exceedsPageLimit ? this.getPaginationTxt(startIndex, endIndex) : "");
-        Ext4.get(this.plotPaginationDivId).setStyle("display", exceedsPageLimit ? "block" : "none");
+        this.precursors = Ext4.Array.slice(this.allPrecursors, this.pagingStartIndex, this.pagingEndIndex);
+
+        this.updatePaginationDiv();
     },
 
-    getPaginationTxt: function(startIndex, endIndex) {
-        return "Showing <b>" + (startIndex+1) + " - " + endIndex + "</b> of <b>"
+    updatePaginationDiv: function() {
+        var exceedsPageLimit = this.allPrecursors.length > this.maxCount;
+
+        var displayHtml = "", sep = "";
+        if (exceedsPageLimit) {
+            displayHtml += this.getPaginationTxt();
+            sep = "&nbsp;&nbsp;&nbsp;";
+            //TODO displayHtml += sep + this.getPaginationBtns();
+        }
+        Ext4.get(this.plotPaginationDivId).update(displayHtml);
+        Ext4.get(this.plotPaginationDivId).setStyle("display", exceedsPageLimit ? "block" : "none");
+
+        this.attachPagingListeners();
+    },
+
+    getPaginationTxt: function() {
+        return "Showing <b>" + (this.pagingStartIndex+1) + " - " + this.pagingEndIndex + "</b> of <b>"
                 + this.allPrecursors.length + "</b> precursors";
+    },
+
+    getPaginationBtns: function() {
+        var btnHtml = '';
+
+        btnHtml += '<span class="qc-paging-prev ' + (this.pagingStartIndex > 0 ? 'qc-paging-icon-enabled' : 'qc-paging-icon-disabled')
+                + '"><i class="fa fa-angle-left"></i></span>';
+
+        btnHtml += '<span class="qc-paging-next ' + (this.pagingEndIndex < this.allPrecursors.length ? 'qc-paging-icon-enabled' : 'qc-paging-icon-disabled')
+                + '"><i class="fa fa-angle-right"></i></span>';
+
+        return btnHtml;
+    },
+
+    attachPagingListeners: function() {
+        var prevBtn = Ext4.DomQuery.selectNode('.qc-paging-prev');
+        if (prevBtn && this.pagingStartIndex > 0) {
+            Ext4.get(prevBtn).on('click', function() {
+                window.location = LABKEY.ActionURL.buildURL(LABKEY.ActionURL.getController(), LABKEY.ActionURL.getAction(), null,
+                    Ext4.apply(LABKEY.ActionURL.getParameters(), {'qcPlots.offset': Math.max(0, this.pagingStartIndex - this.maxCount)}));
+            }, this);
+        }
+
+        var nextBtn = Ext4.DomQuery.selectNode('.qc-paging-next');
+        if (nextBtn && this.pagingEndIndex < this.allPrecursors.length) {
+            Ext4.get(nextBtn).on('click', function() {
+                window.location = LABKEY.ActionURL.buildURL(LABKEY.ActionURL.getController(), LABKEY.ActionURL.getAction(), null,
+                    Ext4.apply(LABKEY.ActionURL.getParameters(), {'qcPlots.offset': this.pagingEndIndex}));
+            }, this);
+        }
     },
 
     getAnnotationData: function() {

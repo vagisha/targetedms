@@ -76,6 +76,23 @@
     font-weight: bold;
 }
 
+.qc-paging-prev, .qc-paging-next {
+    font-weight: bold;
+    font-size: 18px;
+    padding: 0 8px;
+    border: solid #c0c0c0 1px;
+}
+.qc-paging-prev {
+    border-right-width: 0;
+}
+.qc-paging-icon-disabled {
+    color: #c0c0c0;
+}
+.qc-paging-icon-enabled:hover {
+    background-color: rgba(20, 204, 201, 0.4);
+    cursor: pointer;
+}
+
 .hopscotch-bubble-container .qc-hover-value-break {
     word-break: break-all;
 }

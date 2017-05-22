@@ -654,6 +654,16 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         getWrapper().click(elementCache().hopscotchBubbleClose);
     }
 
+    public void goToPreviousPage()
+    {
+        getWrapper().doAndWaitForPageToLoad(() -> elementCache().paginationPrevBtn.findElement(this).click());
+    }
+
+    public void goToNextPage()
+    {
+        getWrapper().doAndWaitForPageToLoad(() -> elementCache().paginationNextBtn.findElement(this).click());
+    }
+
     public class Elements extends BodyWebPart.ElementCache
     {
         WebElement startDate = new LazyWebElement(Locator.css("#start-date-field input"), this);
@@ -685,6 +695,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.CssLocator legendItemTitle = Locator.css("svg g.legend-item title");
         Locator.CssLocator legendItemPopup = Locator.css(".headerlegendpopup svg g.legend-item");
         Locator.CssLocator smallPlotLayoutDiv = Locator.css(".plot-small-layout");
+        Locator.CssLocator paginationPrevBtn = Locator.css(".qc-paging-prev");
+        Locator.CssLocator paginationNextBtn = Locator.css(".qc-paging-next");
 
         Locator.XPathLocator hopscotchBubble = Locator.tagWithClass("div", "hopscotch-bubble-container");
         Locator.XPathLocator hopscotchBubbleClose = Locator.tagWithClass("a", "hopscotch-bubble-close");
