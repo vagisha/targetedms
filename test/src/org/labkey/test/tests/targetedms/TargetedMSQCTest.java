@@ -687,7 +687,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         QCPlotsWebPart qcPlotsWebPart = new QCPlotsWebPart(this.getWrappedDriver());
 
-        Assert.assertEquals("Unexpected overflow warning text","Limiting display to the first 50 precursors out of 91 total", qcPlotsWebPart.getOverflowWarningText());
+        Assert.assertEquals("Unexpected overflow warning text","Showing 1 - 50 of 91 precursors", qcPlotsWebPart.getPaginationText());
         Assert.assertEquals("Unexpected number of plots", 50, qcPlotsWebPart.getPlots().size());
 
         //select "Show All Peptides in Single Plot"

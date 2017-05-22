@@ -39,7 +39,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     havePlotOptionsChanged: false,
     selectedAnnotations: {},
 
-    // Max number of plots/series to show
+    // Max number of plots/series to show per page
     maxCount: 50,
 
     initComponent : function() {
@@ -1104,24 +1104,36 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             success: function(data) {
 
                 // stash the set of precursor series labels for use with the plot rendering
-                this.precursors = [];
-                if (data.rows.length > this.maxCount) {
-                    Ext4.get(this.countLimitedDivId).update("Limiting display to the first " + this.maxCount + " precursors out of " + data.rows.length + " total");
-                    Ext4.get(this.countLimitedDivId).setStyle("display", "block");
-                }
-                else {
-                    Ext4.get(this.countLimitedDivId).update("");
-                    Ext4.get(this.countLimitedDivId).setStyle("display", "none");
-                }
-
-                for (var i = 0; i < Math.min(data.rows.length, this.maxCount); i++) {
-                    this.precursors.push(data.rows[i].SeriesLabel);
-                }
-
+                this.allPrecursors = Ext4.Array.pluck(data.rows, 'SeriesLabel');
+                this.setPrecursorsForPage();
                 this.getAnnotationData();
             },
             failure: this.failureHandler
         });
+    },
+
+    setPrecursorsForPage: function() {
+        var startIndex = 0;
+        if (Ext4.isNumeric(LABKEY.ActionURL.getParameter('qcPlots.offset')))
+            startIndex = parseInt(LABKEY.ActionURL.getParameter('qcPlots.offset'));
+
+        if (startIndex < 0)
+            startIndex = 0;
+        else if (startIndex > this.allPrecursors.length)
+            startIndex = this.allPrecursors.length - this.maxCount;
+        
+        var endIndex = Math.min(startIndex + this.maxCount, this.allPrecursors.length);
+
+        this.precursors = Ext4.Array.slice(this.allPrecursors, startIndex, endIndex);
+
+        var exceedsPageLimit = this.allPrecursors.length > this.maxCount;
+        Ext4.get(this.plotPaginationDivId).update(exceedsPageLimit ? this.getPaginationTxt(startIndex, endIndex) : "");
+        Ext4.get(this.plotPaginationDivId).setStyle("display", exceedsPageLimit ? "block" : "none");
+    },
+
+    getPaginationTxt: function(startIndex, endIndex) {
+        return "Showing <b>" + (startIndex+1) + " - " + endIndex + "</b> of <b>"
+                + this.allPrecursors.length + "</b> precursors";
     },
 
     getAnnotationData: function() {

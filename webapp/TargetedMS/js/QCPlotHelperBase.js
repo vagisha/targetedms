@@ -474,6 +474,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             color: 'fragment',
             pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
             showTrendLine: true,
+            showDataPoints: true,
             mouseOverFn: this.plotPointHover,
             mouseOverFnScope: this,
             position: this.groupedX ? 'jitter' : undefined
@@ -549,6 +550,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
             pointIdAttr: function(row) { return row['fullDate']; },
             showTrendLine: true,
+            showDataPoints: true,
             mouseOverFn: this.plotPointHover,
             mouseOverFnScope: this,
             position: this.groupedX ? 'jitter' : undefined,

@@ -48,18 +48,18 @@
     int uid = UniqueID.getRequestScopedUID(HttpView.currentRequest());
     String reportPanelId = "reportHeaderPanel-" + uid;
     String plotPanelId = "tiledPlotPanel-" + uid;
-    String countLimitedPanelId = "countLimitedPanel-" + uid;
+    String plotPaginationPanelId = "plotPaginationPanel-" + uid;
 %>
 
 <div id=<%=q(reportPanelId)%>></div>
-<div id=<%=q(countLimitedPanelId)%> class="countLimitedHeaderPanel"></div>
+<div id=<%=q(plotPaginationPanelId)%> class="plotPaginationHeaderPanel"></div>
 <div id=<%=q(plotPanelId)%> class="tiledPlotPanel"></div>
 
 <script type="text/javascript">
         function init() {
             var reportPanelId = <%=q(reportPanelId)%>;
             var plotPanelId = <%=q(plotPanelId)%>;
-            var countLimitedPanelId = <%=q(countLimitedPanelId)%>;
+            var plotPaginationPanelId = <%=q(plotPaginationPanelId)%>;
 
             if (Ext4.isIE8) {
                 Ext4.get(plotPanelId).update("<span class='labkey-error'>Unable to render report in Internet Explorer < 9.</span>");
@@ -74,7 +74,7 @@
                         Ext4.get(plotPanelId).update("No data found. Please upload runs using the Data Pipeline or directly from Skyline.");
                     }
                     else {
-                        initializeReportPanels(data, reportPanelId, plotPanelId, countLimitedPanelId);
+                        initializeReportPanels(data, reportPanelId, plotPanelId, plotPaginationPanelId);
                     }
                 },
                 failure: function(response) {
@@ -83,13 +83,13 @@
             });
         }
 
-        function initializeReportPanels(data, reportPanelId, plotPanelId, countLimitedPanelId)
+        function initializeReportPanels(data, reportPanelId, plotPanelId, plotPaginationPanelId)
         {
             // initialize the panel that displays the Levey-Jennings plot for trend plotting
             Ext4.create('LABKEY.targetedms.QCTrendPlotPanel', {
                 renderTo: reportPanelId,
                 plotDivId: plotPanelId,
-                countLimitedDivId: countLimitedPanelId,
+                plotPaginationDivId: plotPaginationPanelId,
                 cls: 'themed-panel2',
                 minAcquiredTime: new Date(data.rows[0]['MinAcquiredTime']),
                 maxAcquiredTime: new Date(data.rows[0]['MaxAcquiredTime'])

@@ -598,9 +598,9 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return elementCache().smallPlotLayoutDiv;
     }
 
-    public String getOverflowWarningText()
+    public String getPaginationText()
     {
-        return elementCache().overflowWarning.getText();
+        return elementCache().paginationPanel.getText();
     }
 
     @Override
@@ -666,7 +666,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Checkbox showExcludedCheckbox = new Checkbox(new LazyWebElement(Locator.css("#show-excluded-points input"), this));
 
         WebElement plotPanel = new LazyWebElement(Locator.css("div.tiledPlotPanel"), this);
-        WebElement overflowWarning = new LazyWebElement(Locator.css("div.countLimitedHeaderPanel"), this);
+        WebElement paginationPanel = new LazyWebElement(Locator.css("div.plotPaginationHeaderPanel"), this);
 
         List<WebElement> findPlots() { return Locator.css("table.qc-plot-wp").waitForElements(plotPanel, 20000);}
 
