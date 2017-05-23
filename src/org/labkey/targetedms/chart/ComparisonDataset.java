@@ -28,7 +28,6 @@ import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -108,20 +107,16 @@ public class ComparisonDataset
             }
         }
         List<ComparisonCategoryItem> categoryDatasets = new ArrayList<>(_categoryItemMap.values());
-        Collections.sort(categoryDatasets, new Comparator<ComparisonCategoryItem>()
+        categoryDatasets.sort((o1, o2) ->
         {
-            @Override
-            public int compare(ComparisonCategoryItem o1, ComparisonCategoryItem o2)
+            if (_setSortByValues)
+                return Double.valueOf(o2.getSeriesMaxValue()).compareTo(o1.getSeriesMaxValue());
+            else
             {
-                if (_setSortByValues)
-                    return Double.valueOf(o2.getSeriesMaxValue()).compareTo(o1.getSeriesMaxValue());
+                if (_numericSort)
+                    return Float.valueOf(o1.getSortingLabel()).compareTo(Float.valueOf(o2.getSortingLabel()));
                 else
-                {
-                    if (_numericSort)
-                        return Float.valueOf(o1.getSortingLabel()).compareTo(Float.valueOf(o2.getSortingLabel()));
-                    else
-                        return o1.getSortingLabel().compareTo(o2.getSortingLabel());
-                }
+                    return o1.getSortingLabel().compareTo(o2.getSortingLabel());
             }
         });
 

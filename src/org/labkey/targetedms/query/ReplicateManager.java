@@ -191,26 +191,23 @@ public class ReplicateManager
         List<ReplicateAnnotation> uniqueAnnotationsList = new ArrayList<>(uniqueAnnotationsMap.values());
 
         //Sorts alphabetically by Name then value if names are same
-        Collections.sort(uniqueAnnotationsList, new Comparator<ReplicateAnnotation>()
+        uniqueAnnotationsList.sort((o1, o2) ->
         {
-            public int compare(ReplicateAnnotation o1, ReplicateAnnotation o2)
+            //If ReplicateAnnotation.getName() for o1 and o2 are the same sorts by .getValue()
+            if (o1.getName().equals(o2.getName()))
             {
-                //If ReplicateAnnotation.getName() for o1 and o2 are the same sorts by .getValue()
-                if (o1.getName().equals(o2.getName()))
+                if (o1.getValue().matches("[-+]?\\d*\\.?\\d+") && o2.getValue().matches("[-+]?\\d*\\.?\\d+"))
                 {
-                    if (o1.getValue().matches("[-+]?\\d*\\.?\\d+") && o2.getValue().matches("[-+]?\\d*\\.?\\d+"))
-                    {
-                        return Double.valueOf(o1.getValue()).compareTo(Double.valueOf(o2.getValue()));
-                    }
-                    else
-                    {
-                        return o1.getValue().compareTo(o2.getValue());
-                    }
+                    return Double.valueOf(o1.getValue()).compareTo(Double.valueOf(o2.getValue()));
                 }
                 else
                 {
-                    return o1.getName().compareTo(o2.getName());
+                    return o1.getValue().compareTo(o2.getValue());
                 }
+            }
+            else
+            {
+                return o1.getName().compareTo(o2.getName());
             }
         });
         return uniqueAnnotationsList;

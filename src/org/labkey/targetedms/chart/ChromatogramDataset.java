@@ -371,7 +371,7 @@ public abstract class ChromatogramDataset
                     nonOptimizationPeaks.add(pChromInfo);
                 }
             }
-            Collections.sort(nonOptimizationPeaks, new PrecursorComparator());
+            nonOptimizationPeaks.sort(new PrecursorComparator());
             return nonOptimizationPeaks;
         }
 
@@ -573,7 +573,8 @@ public abstract class ChromatogramDataset
                     _precursorChromInfo.getPrecursorId(),
                     _precursorChromInfo.getSampleFileId(), _user, _container);
 
-            Collections.sort(precursorChromInfoList, (o1, o2) -> {
+            precursorChromInfoList.sort((o1, o2) ->
+            {
                 Integer step1 = o1.getOptimizationStep() == null ? 0 : o1.getOptimizationStep();
                 Integer step2 = o2.getOptimizationStep() == null ? 0 : o2.getOptimizationStep();
                 return step1.compareTo(step2);
@@ -711,7 +712,7 @@ public abstract class ChromatogramDataset
                 }
             }
             // Sort according to the ion order used in Skyline
-            Collections.sort(tciList, new TransChromInfoPlusTransitionComparator());
+            tciList.sort(new TransChromInfoPlusTransitionComparator());
 
             _jfreeDataset = new XYSeriesCollection();
             _maxDatasetIntensity = 0.0;
@@ -970,7 +971,7 @@ public abstract class ChromatogramDataset
                     tciList.add(new MoleculeTransChromInfoPlusTransition(tChromInfo, transition));
                 }
             }
-            Collections.sort(tciList, new MoleculeTransChromInfoPlusTransitionComparator());
+            tciList.sort(new MoleculeTransChromInfoPlusTransitionComparator());
 
             _jfreeDataset = new XYSeriesCollection();
             _maxDatasetIntensity = 0.0;

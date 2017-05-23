@@ -115,14 +115,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
 
 		// Sort the precursor chrom info columns
         List<ColumnInfo> colInfoList = new ArrayList<>(getPrecursorChromInfoColumns());
-        Collections.sort(colInfoList, new Comparator<ColumnInfo>()
-        {
-            @Override
-            public int compare(ColumnInfo o1, ColumnInfo o2)
-            {
-                return o1.getName().compareTo(o2.getName());
-            }
-        });
+        colInfoList.sort(Comparator.comparing(ColumnInfo::getName));
 
 		// Add the light labeled precursor chrom info first.
         int lightColIndex = 1;

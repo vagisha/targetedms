@@ -330,14 +330,7 @@ public class ContainerChromatogramLibraryWriter
     {
         List<Precursor> precursors = PrecursorManager.getRepresentativePrecursors(runId);
         // Sort by peptideId.
-        Collections.sort(precursors, new Comparator<Precursor>()
-        {
-            @Override
-            public int compare(Precursor o1, Precursor o2)
-            {
-                return Integer.valueOf(o1.getGeneralMoleculeId()).compareTo(o2.getGeneralMoleculeId());
-            }
-        });
+        precursors.sort(Comparator.comparingInt(Precursor::getGeneralMoleculeId));
 
         int lastPeptideId = 0;
         List<Precursor> peptidePrecursors = new ArrayList<>();

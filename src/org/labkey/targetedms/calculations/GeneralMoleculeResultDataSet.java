@@ -14,6 +14,7 @@
  */
 package org.labkey.targetedms.calculations;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.targetedms.calculations.quantification.ReplicateData;
 import org.labkey.targetedms.calculations.quantification.TransitionAreas;
 import org.labkey.api.data.Container;
@@ -142,7 +143,7 @@ public class GeneralMoleculeResultDataSet
         throw new IllegalArgumentException();
     }
 
-    private Collection<? extends GeneralTransition> getTransitions(GeneralPrecursor generalPrecursor, TargetedMSSchema schema)
+    private @NotNull Collection<? extends GeneralTransition> getTransitions(GeneralPrecursor generalPrecursor, TargetedMSSchema schema)
     {
         if (generalPrecursor instanceof Precursor)
         {

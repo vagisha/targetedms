@@ -53,7 +53,7 @@ public class ComparisonChartInputMaker
         if(pciPlusList != null)
         {
             _pciPlusList = pciPlusList;
-            Collections.sort(_pciPlusList, new PrecursorComparator());
+            _pciPlusList.sort(new PrecursorComparator());
         }
         else
         {

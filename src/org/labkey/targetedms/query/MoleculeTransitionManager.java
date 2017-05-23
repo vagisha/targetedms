@@ -46,5 +46,4 @@ public class MoleculeTransitionManager
                 new SimpleFilter(FieldKey.fromParts("GeneralPrecursorId"), precursorId), null)
             .getCollection(MoleculeTransition.class);
     }
-
 }

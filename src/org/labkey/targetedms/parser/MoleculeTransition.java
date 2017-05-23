@@ -15,13 +15,11 @@
  */
 package org.labkey.targetedms.parser;
 
-import org.apache.commons.lang3.StringUtils;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.chart.LabelFactory;
 
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
 
 /**

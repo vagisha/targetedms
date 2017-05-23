@@ -221,14 +221,7 @@ public class ConflictResultsManager
             BestPrecursorPeptide bestPrecursor = getBestPrecursor(peptide, user, container);
             proteinPeptides.add(bestPrecursor);
         }
-        Collections.sort(proteinPeptides, new Comparator<BestPrecursorPeptide>()
-        {
-            @Override
-            public int compare(BestPrecursorPeptide o1, BestPrecursorPeptide o2)
-            {
-                return Double.valueOf(o2.getMaxArea()).compareTo(o1.getMaxArea());
-            }
-        });
+        proteinPeptides.sort(Comparator.comparingDouble(BestPrecursorPeptide::getMaxArea).reversed());
         int rank = 0;
         double lastMaxArea = Double.MAX_VALUE;
         for(BestPrecursorPeptide bestPrecursor: proteinPeptides)
@@ -378,19 +371,12 @@ public class ConflictResultsManager
             }
             TransitionWithAreaAndRank twr = new TransitionWithAreaAndRank();
             twr.setTransition(transition);
-            twr.setAvgArea((transChromInfoList == null || transChromInfoList.size() == 0) ? 0 : totalArea / transChromInfoList.size());
+            twr.setAvgArea(transChromInfoList.size() == 0 ? 0 : totalArea / transChromInfoList.size());
             transWithRankList.add(twr);
         }
 
         // Sort by average area.
-        Collections.sort(transWithRankList, new Comparator<TransitionWithAreaAndRank>()
-        {
-            @Override
-            public int compare(TransitionWithAreaAndRank o1, TransitionWithAreaAndRank o2)
-            {
-                return Double.valueOf(o2.getAvgArea()).compareTo(o1.getAvgArea());
-            }
-        });
+        transWithRankList.sort(Comparator.comparingDouble(TransitionWithAreaAndRank::getAvgArea).reversed());
 
         int rank = 1;
         for(TransitionWithAreaAndRank twr: transWithRankList)

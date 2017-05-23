@@ -36,9 +36,9 @@ public class PrecursorComparator implements Comparator<PrecursorComparator.Compa
         return Integer.valueOf(o1.getIsotopeLabelId()).compareTo(o2.getIsotopeLabelId());
     }
 
-    public static interface Comparable
+    public interface Comparable
     {
-        public int getCharge();
-        public int getIsotopeLabelId();
+        int getCharge();
+        int getIsotopeLabelId();
     }
 }

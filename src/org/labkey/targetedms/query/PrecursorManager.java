@@ -45,7 +45,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -210,17 +209,22 @@ public class PrecursorManager
         }
         else
         {
-            Collections.sort(chromInfos, new Comparator<PrecursorChromInfo>()
+            chromInfos.sort((o1, o2) ->
             {
-                @Override
-                public int compare(PrecursorChromInfo o1, PrecursorChromInfo o2)
+                if ((o1 == o2) || (o1.getTotalArea() == o2.getTotalArea()))
                 {
-                    if( (o1 == o2 ) || (o1.getTotalArea() == o2.getTotalArea()) ) { return 0; }
-                    else if(o1.getTotalArea() == null) {return 1;}
-                    else if(o2.getTotalArea() == null) {return -1;}
-
-                    return o2.getTotalArea().compareTo(o1.getTotalArea());
+                    return 0;
                 }
+                else if (o1.getTotalArea() == null)
+                {
+                    return 1;
+                }
+                else if (o2.getTotalArea() == null)
+                {
+                    return -1;
+                }
+
+                return o2.getTotalArea().compareTo(o1.getTotalArea());
             });
 
             for (PrecursorChromInfo chromInfo : chromInfos)

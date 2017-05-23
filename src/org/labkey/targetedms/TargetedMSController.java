@@ -22,7 +22,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -3646,14 +3645,7 @@ public class TargetedMSController extends SpringActionController
 
             List<ConflictPeptide> conflictPeptides = ConflictResultsManager.getConflictPeptidesForProteins(newProteinId, oldProteinId, getUser(), getContainer());
             // Sort them by ascending peptide ranks in the new protein
-            Collections.sort(conflictPeptides, new Comparator<ConflictPeptide>()
-            {
-                @Override
-                public int compare(ConflictPeptide o1, ConflictPeptide o2)
-                {
-                    return Integer.valueOf(o1.getNewPeptideRank()).compareTo(o2.getNewPeptideRank());
-                }
-            });
+            conflictPeptides.sort(Comparator.comparingInt(ConflictPeptide::getNewPeptideRank));
             List<Map<String, Object>> conflictPeptidesMap = new ArrayList<>();
             for(ConflictPeptide peptide: conflictPeptides)
             {
@@ -3838,14 +3830,7 @@ public class TargetedMSController extends SpringActionController
 
             List<ConflictTransition> conflictTransitions = ConflictResultsManager.getConflictTransitionsForPrecursors(newPrecursorId, oldPrecursorId, getUser(), getContainer());
             // Sort them by ascending transitions ranks in the new precursor
-            Collections.sort(conflictTransitions, new Comparator<ConflictTransition>()
-            {
-                @Override
-                public int compare(ConflictTransition o1, ConflictTransition o2)
-                {
-                    return Integer.valueOf(o1.getNewTransitionRank()).compareTo(o2.getNewTransitionRank());
-                }
-            });
+            conflictTransitions.sort(Comparator.comparingInt(ConflictTransition::getNewTransitionRank));
             List<Map<String, Object>> conflictTransitionsMap = new ArrayList<>();
             for(ConflictTransition transition: conflictTransitions)
             {
