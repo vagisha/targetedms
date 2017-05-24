@@ -268,6 +268,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
                         zipContainsSkyFile(data.getFile()))) ? Priority.HIGH : null;
     }
 
+    /** @return true if the zip file contains a .sky file, which means that we can import it (after extracting) */
     private boolean zipContainsSkyFile(File f)
     {
         if (f == null || !f.exists())
@@ -287,10 +288,10 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
                 }
             }
         }
-        catch (IOException e)
+        catch (IOException | IllegalArgumentException e)
         {
-            //ignore
-            _log.error(e.getMessage(), e);
+            //ignore - see issue 29485 for IllegalArgumentException case
+            _log.warn("Failed to open .zip file to check if it contains .sky files" + e.getMessage());
         }
 
         return false;
