@@ -18,11 +18,13 @@ package org.labkey.targetedms.view;
 import org.labkey.api.collections.ResultSetRowMapFactory;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.DataRegion;
+import org.labkey.api.data.DetailsColumn;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.MenuButton;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.Results;
 import org.labkey.api.data.ShowRows;
+import org.labkey.api.data.UpdateColumn;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
@@ -121,12 +123,21 @@ public class ChromatogramsDataRegion extends DataRegion
 
     protected void renderTableRow(RenderContext ctx, Writer out, boolean showRecordSelectors, List<DisplayColumn> renderers, int rowIndex) throws SQLException, IOException
     {
-        if (showRecordSelectors)
-            renderRecordSelector(ctx, out, rowIndex);
+        boolean newUI = PageFlowUtil.useExperimentalCoreUI();
+        DisplayColumn detailsColumn = newUI ? getDetailsUpdateColumn(ctx, renderers, true) : null;
+        DisplayColumn updateColumn = newUI ? getDetailsUpdateColumn(ctx, renderers, false) : null;;
+
+        if (showRecordSelectors || (newUI && (detailsColumn != null || updateColumn != null)))
+            renderActionColumn(ctx, out, rowIndex, showRecordSelectors, detailsColumn, updateColumn);
 
         for (DisplayColumn renderer : renderers)
             if (renderer.isVisible(ctx))
+            {
+                if (newUI && (renderer instanceof DetailsColumn || renderer instanceof UpdateColumn))
+                    continue;
+
                 renderer.renderGridDataCell(ctx, out);
+            }
 
     }
 
