@@ -80,10 +80,17 @@
         peakAreaUrl.addParameter("moleculePrecursorId", moleculePrecursorId);
         retentionTimesUrl.addParameter("moleculePrecursorId", moleculePrecursorId);
     }
+    peakAreaUrl.addParameter("chartWidth", bean.getInitialWidth());
+    peakAreaUrl.addParameter("chartHeight", bean.getInitialHeight());
+    retentionTimesUrl.addParameter("chartWidth", bean.getInitialWidth());
+    retentionTimesUrl.addParameter("chartHeight", bean.getInitialHeight());
 %>
 <style>
     .title_box {
         border: #ccc 1px solid;
+        float: left;
+        margin-right: 1em;
+        margin-bottom: 1em;
     }
 
     .title_box .title {
@@ -414,7 +421,7 @@
                 id: "chartWidth",
                 allowBlank: false,
                 maskRe: /[0-9]/,
-                value: "600"}
+                value: "<%= bean.getInitialWidth() %>"}
     );
     var chartHeightTb = Ext4.create('Ext.form.TextField',{
                 fieldLabel: "Height",
@@ -422,7 +429,7 @@
                 id: "chartHeight",
                 allowBlank: false,
                 maskRe: /[0-9]/,
-                value: "400"}
+                value: "<%= bean.getInitialHeight() %>"}
     );
 
     var items = [];
@@ -489,25 +496,15 @@
 });
 
 </script>
-<table style="margin-top:10px;">
-    <tbody>
-    <tr>
-        <div id="peakAreasFormDiv"></div>
-    </tr>
-    <tr>
-        <td>
-            <div class="title_box">
-                <h3 class="title">Peak Areas</h3>
-                <div id="peakAreasGraphImg"></div>
-            </div>
-        </td>
-        <td>
-            <div class="title_box">
-                <h3 class="title">Retention Times</h3>
-                <div id="retentionTimesGraphImg"></div>
-            </div>
-        </td>
-    </tr>
-    </tbody>
-</table>
+<div style="margin-top:10px;">
+    <div style="display: <%= bean.isShowControls() ? "block" : "none"%>;" id="peakAreasFormDiv"></div>
+    <div class="title_box">
+        <h3 class="title">Peak Areas</h3>
+        <div id="peakAreasGraphImg"></div>
+    </div>
+    <div class="title_box">
+        <h3 class="title">Retention Times</h3>
+        <div id="retentionTimesGraphImg"></div>
+    </div>
+</div>
 

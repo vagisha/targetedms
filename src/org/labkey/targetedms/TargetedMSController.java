@@ -22,6 +22,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
@@ -62,6 +63,7 @@ import org.labkey.api.data.PropertyManager;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
@@ -85,6 +87,7 @@ import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryParam;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.reports.ReportService;
 import org.labkey.api.reports.model.ViewCategory;
 import org.labkey.api.reports.model.ViewCategoryManager;
@@ -254,7 +257,14 @@ public class TargetedMSController extends SpringActionController
     public static ActionURL getShowRunURL(Container c, int runId)
     {
         ActionURL url = getShowRunURL(c);
-        url.addParameter("id", String.valueOf(runId));
+        url.addParameter("id", runId);
+        return url;
+    }
+
+    public static ActionURL getShowCalibrationCurvesURL(Container c, int runId)
+    {
+        ActionURL url = new ActionURL(ShowCalibrationCurvesAction.class, c);
+        url.addParameter("id", runId);
         return url;
     }
 
@@ -3334,6 +3344,10 @@ public class TargetedMSController extends SpringActionController
 
     public static class SummaryChartBean
     {
+        private boolean _showControls = true;
+        private int _initialWidth = 600;
+        private int _initialHeight = 400;
+
         private int _peptideGroupId;
         private List<Replicate> _replicateList;
         private List<String> _replicateAnnotationNameList;
@@ -3348,6 +3362,36 @@ public class TargetedMSController extends SpringActionController
         private int _moleculeId;
         private int _moleculePrecursorId;
         private List<Molecule> _moleculeList;
+
+        public boolean isShowControls()
+        {
+            return _showControls;
+        }
+
+        public void setShowControls(boolean showControls)
+        {
+            _showControls = showControls;
+        }
+
+        public int getInitialWidth()
+        {
+            return _initialWidth;
+        }
+
+        public void setInitialWidth(int initialWidth)
+        {
+            _initialWidth = initialWidth;
+        }
+
+        public int getInitialHeight()
+        {
+            return _initialHeight;
+        }
+
+        public void setInitialHeight(int initialHeight)
+        {
+            _initialHeight = initialHeight;
+        }
 
         public int getPeptideGroupId()
         {
@@ -6142,9 +6186,15 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowCalibrationCurveAction extends SimpleViewAction<CalibrationCurveForm>
+    public class ShowCalibrationCurveAction extends QueryViewAction<CalibrationCurveForm, QueryView>
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
+        private CalibrationCurveChart _chart;
+
+        public ShowCalibrationCurveAction()
+        {
+            super(CalibrationCurveForm.class);
+        }
 
         @Override
         public NavTree appendNavTrail(NavTree root)
@@ -6152,16 +6202,32 @@ public class TargetedMSController extends SpringActionController
             if (null != _run)
             {
                 root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
-                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
+                root.addChild(_run.getDescription(), getShowCalibrationCurvesURL(getContainer(), _run.getId()));
+                if (_chart.getMolecule() != null)
+                {
+                    root.addChild(_chart.getMolecule().getTextId());
+                }
             }
             return root;
         }
 
         @Override
+        protected QueryView createQueryView(CalibrationCurveForm form, BindException errors, boolean forExport, @Nullable String dataRegion) throws Exception
+        {
+            UserSchema schema = new TargetedMSSchema(getUser(), getContainer());
+            QuerySettings settings = new QuerySettings(getViewContext(), "curveDetail", "CalibrationCurvePrecursors");
+            settings.getBaseFilter().addCondition(FieldKey.fromParts("CalibrationCurve"), form.getCalibrationCurveId());
+            settings.setBaseSort(new Sort("SampleFileId/SampleName"));
+            QueryView result = QueryView.create(getViewContext(), schema, settings, errors);
+            result.setTitle("Quantitation Ratios");
+            return result;
+        }
+
+        @Override
         public ModelAndView getView(CalibrationCurveForm calibrationCurveForm, BindException errors) throws Exception
         {
-            CalibrationCurveChart chart = new CalibrationCurveChart(getUser(), getContainer(), calibrationCurveForm);
-            JSONObject curveData = chart.getCalibrationCurveData();
+            _chart = new CalibrationCurveChart(getUser(), getContainer(), calibrationCurveForm);
+            JSONObject curveData = _chart.getCalibrationCurveData();
             if(null == curveData)
                 throw new NotFoundException("Calibration curve not found. Run ID: " + calibrationCurveForm.getId() +
                         " Curve ID: " + calibrationCurveForm.getCalibrationCurveId());
@@ -6170,10 +6236,24 @@ public class TargetedMSController extends SpringActionController
             _run = validateRun(calibrationCurveForm.getId());
 
             calibrationCurveForm.setJsonData(curveData);
-            JspView<CalibrationCurveForm> calibrationCurve = new JspView<>("/org/labkey/targetedms/view/calibrationCurve.jsp", calibrationCurveForm);
-            calibrationCurve.setTitle("Calibration Curve");
+            JspView<CalibrationCurveForm> curvePlotView = new JspView<>("/org/labkey/targetedms/view/calibrationCurve.jsp", calibrationCurveForm);
+            curvePlotView.setTitle("Calibration Curve");
 
-            return calibrationCurve;
+            // Summary charts for the precursor
+            SummaryChartBean summaryChartBean = new SummaryChartBean();
+            summaryChartBean.setPeptideId(_chart.getMolecule().getId());
+            summaryChartBean.setShowControls(false);
+            summaryChartBean.setInitialHeight(300);
+            summaryChartBean.setInitialWidth(1200);
+
+            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp",
+                    summaryChartBean);
+            summaryChartView.setTitle("Summary Charts");
+            ActionURL pepDetailsUrl = new ActionURL(ShowPeptideAction.class, getContainer());
+            pepDetailsUrl.addParameter("id", _chart.getMolecule().getId());
+            summaryChartView.setTitleHref(pepDetailsUrl);
+
+            return new VBox(curvePlotView, summaryChartView, createQueryView(calibrationCurveForm, errors, false, null));
         }
     }
 

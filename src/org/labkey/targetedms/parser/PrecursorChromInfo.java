@@ -325,9 +325,9 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         return _chromatogramFormat;
     }
 
-    public void setChromatogramFormat(int chromatogramFormat)
+    public void setChromatogramFormat(Integer chromatogramFormat)
     {
-        _chromatogramFormat = chromatogramFormat;
+        _chromatogramFormat = chromatogramFormat == null ? ChromatogramBinaryFormat.Arrays.ordinal() : chromatogramFormat.intValue();
     }
 
     public Chromatogram createChromatogram()

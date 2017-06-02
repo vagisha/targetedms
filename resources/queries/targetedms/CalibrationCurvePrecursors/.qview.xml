@@ -1,0 +1,37 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <columns>
+        <column name="SampleFileId" />
+        <column name="Charge" />
+        <column name="HeavyPrecursorChromInfo/PrecursorId/GeneralMoleculeId/Sequence" />
+        <column name="HeavyPrecursorChromInfo/BestRetentionTime">
+            <properties>
+                <property name="columnTitle" value="RT" />
+            </properties>
+        </column>
+        <column name="HeavyPrecursorChromInfo/TotalArea">
+            <properties>
+                <property name="columnTitle" value="Intensity H" />
+            </properties>
+        </column>
+        <column name="LightPrecursorChromInfo/TotalArea">
+            <properties>
+                <property name="columnTitle" value="Intensity L" />
+            </properties>
+        </column>
+        <column name="Ratio">
+            <properties>
+                <property name="columnTitle" value="H/L Ratio" />
+            </properties>
+        </column>
+        <column name="SampleFileId/ReplicateId/AnalyteConcentration">
+            <properties>
+                <property name="columnTitle" value="Exp Conc" />
+            </properties>
+        </column>
+        <column name="HeavyPrecursorChromInfo/PeptideChromInfoId/CalculatedConcentration">
+            <properties>
+                <property name="columnTitle" value="Measured Conc" />
+            </properties>
+        </column>
+    </columns>
+</customView>

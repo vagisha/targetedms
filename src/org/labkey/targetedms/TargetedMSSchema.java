@@ -805,12 +805,16 @@ public class TargetedMSSchema extends UserSchema
             return result;
         }
 
+        if (TABLE_REPLICATE.equalsIgnoreCase(name))
+        {
+            return new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL(), TargetedMSManager.getTableInfoReplicateAnnotation(), "ReplicateId", "Replicate Annotations");
+        }
+
         // Tables that have a FK to targetedms.Runs
         if (TABLE_TRANSITION_INSTRUMENT_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_INSTRUMENT.equalsIgnoreCase(name) ||
             TABLE_ISOTOPE_ENRICHMENT.equalsIgnoreCase(name) ||
             TABLE_ISOLATION_SCHEME.equalsIgnoreCase(name) ||
-            TABLE_REPLICATE.equalsIgnoreCase(name) ||
             TABLE_TRANSITION_FULL_SCAN_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_TRANSITION_PREDICITION_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_RETENTION_TIME_PREDICTION_SETTINGS.equalsIgnoreCase(name) ||

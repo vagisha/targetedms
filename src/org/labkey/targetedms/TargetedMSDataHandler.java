@@ -291,7 +291,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         catch (IOException | IllegalArgumentException e)
         {
             //ignore - see issue 29485 for IllegalArgumentException case
-            _log.warn("Failed to open .zip file to check if it contains .sky files" + e.getMessage());
+            _log.warn("Failed to open zip file " + f + " to check if it contains .sky files" + e.getMessage());
         }
 
         return false;

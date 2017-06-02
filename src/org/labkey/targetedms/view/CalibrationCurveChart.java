@@ -47,9 +47,13 @@ import java.util.List;
  */
 public class CalibrationCurveChart
 {
-    User _user;
-    Container _container;
-    TargetedMSController.CalibrationCurveForm _form;
+    final User _user;
+    final Container _container;
+    final TargetedMSController.CalibrationCurveForm _form;
+    private CalibrationCurveEntity _curveEntity;
+    @Nullable
+    private GeneralMolecule _molecule;
+
     public CalibrationCurveChart(User user, Container container, TargetedMSController.CalibrationCurveForm form) {
         _user = user;
         _container = container;
@@ -65,28 +69,44 @@ public class CalibrationCurveChart
         if(null != run)
         {
             RunQuantifier runQuantifier = new RunQuantifier(run, _user, _container);
-            CalibrationCurveEntity calibrationCurve = new TableSelector(TargetedMSManager.getTableInfoCalibrationCurve())
-                    .getObject(_form.getCalibrationCurveId(), CalibrationCurveEntity.class);
+            CalibrationCurveEntity calibrationCurve = getCalibrationCurveEntity();
 
             if (null != calibrationCurve)
             {
                 QuantificationSettings quantificationSettings = new TableSelector(TargetedMSManager.getTableInfoQuantificationSettings())
                         .getObject(_container, calibrationCurve.getQuantificationSettingsId(), QuantificationSettings.class);
 
-                GeneralMolecule generalMolecule = PeptideManager.getPeptide(_container, calibrationCurve.getGeneralMoleculeId());
-                if (generalMolecule == null)
+                _molecule = PeptideManager.getPeptide(_container, calibrationCurve.getGeneralMoleculeId());
+                if (_molecule == null)
                 {
-                    generalMolecule = MoleculeManager.getMolecule(_container, calibrationCurve.getGeneralMoleculeId());
+                    _molecule = MoleculeManager.getMolecule(_container, calibrationCurve.getGeneralMoleculeId());
                 }
+
                 List<GeneralMoleculeChromInfo> chromInfos = new ArrayList<>();
                 CalibrationCurve recalcedCalibrationCurve
-                        = runQuantifier.calculateCalibrationCurve(quantificationSettings, generalMolecule, chromInfos);
+                        = runQuantifier.calculateCalibrationCurve(quantificationSettings, _molecule, chromInfos);
 
-                json = processCalibrationCurveJson(generalMolecule, runQuantifier.getReplicateDataSet(), recalcedCalibrationCurve, chromInfos);
+                json = processCalibrationCurveJson(_molecule, runQuantifier.getReplicateDataSet(), recalcedCalibrationCurve, chromInfos);
             }
         }
 
         return json;
+    }
+
+    public CalibrationCurveEntity getCalibrationCurveEntity()
+    {
+        if (_curveEntity == null)
+        {
+            _curveEntity = new TableSelector(TargetedMSManager.getTableInfoCalibrationCurve())
+                    .getObject(_form.getCalibrationCurveId(), CalibrationCurveEntity.class);
+        }
+        return _curveEntity;
+    }
+
+    @Nullable
+    public GeneralMolecule getMolecule()
+    {
+        return _molecule;
     }
 
     private JSONObject processCalibrationCurveJson(GeneralMolecule molecule, ReplicateDataSet replicateDataSet, CalibrationCurve calibrationCurve, Iterable<GeneralMoleculeChromInfo> chromInfos)
@@ -97,7 +117,6 @@ public class CalibrationCurveChart
         // Molecule data
         JSONObject jsonMolecule = new JSONObject();
         jsonMolecule.put("name", molecule.getTextId());
-
 
         // Get calibration curve data
         JSONObject jsonCurve = new JSONObject();

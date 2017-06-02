@@ -314,7 +314,9 @@
                 <description>Retention Time</description>
                 <formatString>0.0000</formatString>
             </column>
-            <column columnName="CalculatedConcentration"/>
+            <column columnName="CalculatedConcentration">
+                <formatString>0.000</formatString>
+            </column>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="GeneralPrecursor">

@@ -93,6 +93,8 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                 return new AnnotationsDisplayColumn(colInfo);
             }
         });
+
+
     }
 
     /**
