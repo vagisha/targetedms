@@ -25,11 +25,11 @@ import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.UIContainerHelper;
-import org.openqa.selenium.WebElement;
 
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.labkey.test.util.DataRegionTable.DataRegion;
 
 @Category({DailyB.class, MS2.class})
 public class TargetedMSExperimentTest extends TargetedMSTest
@@ -230,8 +230,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         // There are many regions within one transitions_view region -- all with the same region name.
         // Lookup the elements manually and point to a specific region to examine.
-        WebElement table = DataRegionTable.Locators.dataRegion().findElements(this.getDriver()).get(1);
-        DataRegionTable drt = new DataRegionTable(table, getDriver());
+        DataRegionTable drt = DataRegion(getDriver()).index(1).find();
         assertEquals("heavy", drt.getDataAsText(5, "Label"));
         assertEquals("1353.7491", drt.getDataAsText(5, "Precursor Neutral Mass"));
         assertEquals("677.8818", drt.getDataAsText(5, "Q1 m/z"));
@@ -304,7 +303,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText(SKY_FILE_SMALLMOL_PEP));
 
         //Look for Small Molecule Precursor List data region
-        drt = DataRegionTable.DataRegion(getDriver()).withName("small_mol_precursors_view").index(1).find();
+        drt = DataRegion(getDriver()).withName("small_mol_precursors_view").index(1).find();
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
         assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
         assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
@@ -335,7 +334,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         waitAndClick(Locator.linkContainingText("transitions"));
         waitForText("Small Molecule Transition List");
 
-        drt = DataRegionTable.DataRegion(getDriver()).withName("small_mol_transitions_view").index(1).find();
+        drt = DataRegion(getDriver()).withName("small_mol_transitions_view").index(1).find();
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
         assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
         assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
