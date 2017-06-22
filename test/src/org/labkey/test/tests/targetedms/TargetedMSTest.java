@@ -17,6 +17,7 @@ package org.labkey.test.tests.targetedms;
 
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.Locators;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.components.targetedms.GuideSet;
@@ -126,6 +127,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         WebElement importButton = importButtonLoc.findElementOrNull(getDriver());
         if (null == importButton)
         {
+            scrollIntoView(Locators.ADMIN_MENU);
             goToModule("Pipeline");
             importButton = importButtonLoc.findElement(getDriver());
         }
