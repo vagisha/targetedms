@@ -90,6 +90,7 @@ resources/schemas/dbscripts/postgresql/targetedms-16.32-16.33.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-16.33-16.34.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-17.10-17.11.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-17.11-17.12.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-17.12-17.13.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-13.10.sql -text
@@ -154,6 +155,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-16.32-16.33.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-16.33-16.34.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-17.10-17.11.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-17.11-17.12.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-17.12-17.13.sql -text
 resources/schemas/targetedms.xml -text
 src/ChromatogramGroupData.proto -text
 src/SkylineDocument.proto -text
@@ -514,6 +516,7 @@ test/src/org/labkey/test/util/targetedms/QCHelper.java -text
 webapp/TargetedMS/DataTables/jquery.dataTables.min.css -text
 webapp/TargetedMS/DataTables/jquery.dataTables.min.js -text
 webapp/TargetedMS/css/CalibrationCurve.css -text
+webapp/TargetedMS/css/ExperimentAnnotations.css -text
 webapp/TargetedMS/css/LinkVersionsDialog.css -text
 webapp/TargetedMS/css/ParetoPlot.css -text
 webapp/TargetedMS/css/QCSummary.css -text
@@ -538,6 +541,7 @@ webapp/TargetedMS/images/TransitionGroupDecoy.bmp -text
 webapp/TargetedMS/images/TransitionGroupLib.bmp -text
 webapp/TargetedMS/images/TransitionGroupLibDecoy.bmp -text
 webapp/TargetedMS/images/blank.gif -text
+webapp/TargetedMS/images/clippy.png -text
 webapp/TargetedMS/images/spectrum.gif -text
 webapp/TargetedMS/jquery/jquery-1.8.3.min.js -text
 webapp/TargetedMS/js/BaseQCPlotPanel.js -text
@@ -545,6 +549,7 @@ webapp/TargetedMS/js/CUSUMPlotHelper.js -text
 webapp/TargetedMS/js/CalibrationCurve.js -text
 webapp/TargetedMS/js/ClustergrammerDialog.js -text
 webapp/TargetedMS/js/DocumentSummary.js -text
+webapp/TargetedMS/js/ExperimentAnnotations.js -text
 webapp/TargetedMS/js/LeveyJenningsPlotHelper.js -text
 webapp/TargetedMS/js/LinkVersionsDialog.js -text
 webapp/TargetedMS/js/MovingRangePlotHelper.js -text
@@ -555,6 +560,7 @@ webapp/TargetedMS/js/QCPlotHoverPanel.js -text
 webapp/TargetedMS/js/QCPlotLegendHelper.js -text
 webapp/TargetedMS/js/QCSummaryPanel.js -text
 webapp/TargetedMS/js/QCTrendPlotPanel.js -text
+webapp/TargetedMS/js/clipboard.min.js -text
 webapp/TargetedMS/js/dropDownUtil.js -text
 webapp/TargetedMS/lorikeet_0.3/css/lorikeet.css -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_lorikeet.png -text
