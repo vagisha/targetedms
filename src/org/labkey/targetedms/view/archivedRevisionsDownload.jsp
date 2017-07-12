@@ -38,7 +38,7 @@
     int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c, getUser());
 %>
 
-<table class="labkey-data-region labkey-show-borders">
+<table class="labkey-data-region-legacy labkey-show-borders">
 <tr>
     <th>Revision #</th>
     <th>File name</th>

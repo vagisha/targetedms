@@ -18,6 +18,7 @@
 <%@ page import="org.labkey.api.view.ActionURL"%>
 <%@ page import="org.labkey.api.view.HttpView"%>
 <%@ page import="org.labkey.api.view.JspView" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.parser.Peptide" %>
 <%@ page import="org.labkey.targetedms.parser.Replicate" %>
@@ -25,6 +26,13 @@
 <%@ page import="org.labkey.targetedms.parser.ReplicateAnnotation" %>
 <%@ page import="org.labkey.targetedms.parser.Molecule" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
+<%!
+    @Override
+    public void addClientDependencies(ClientDependencies dependencies)
+    {
+        dependencies.add("Ext4");
+    }
+%>
 <%
     JspView<TargetedMSController.SummaryChartBean> me = (JspView<TargetedMSController.SummaryChartBean>) HttpView.currentView();
     TargetedMSController.SummaryChartBean bean = me.getModelBean();

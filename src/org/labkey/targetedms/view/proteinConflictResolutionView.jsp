@@ -238,7 +238,7 @@ function toggleCheckboxSelection(element)
 <form <%=formAction(TargetedMSController.ResolveConflictAction.class, Method.Post)%> id="conflictTableForm"><labkey:csrf/>
 <input type="hidden" name="conflictLevel" value="protein"/>
 <input type="hidden" name="selectedInputValues" id="selectedInputValues"/>
-<table class="labkey-data-region labkey-show-borders myTable" id="dataTable">
+<table class="labkey-data-region-legacy labkey-show-borders myTable" id="dataTable">
     <thead>
        <tr>
             <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Proteins in Document</div></th>
