@@ -55,7 +55,7 @@ public class GuideSetWebPart extends BodyWebPart
 
     public GuideSetPage startInsert()
     {
-        getDataRegion().clickHeaderButtonByText("Insert New Row");
+        getDataRegion().clickInsertNewRow();
         return new GuideSetPage(_test);
     }
 
