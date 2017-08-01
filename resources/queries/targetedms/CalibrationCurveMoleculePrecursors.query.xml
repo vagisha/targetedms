@@ -1,0 +1,31 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="CalibrationCurveMoleculePrecursors" tableDbType="TABLE">
+                <columns>
+                    <column columnName="CalibrationCurve">
+                        <fk>
+                            <fkDbSchema>targetedms</fkDbSchema>
+                            <fkTable>CalibrationCurve</fkTable>
+                        </fk>
+                    </column>
+                    <column columnName="HeavyPrecursorChromInfo">
+                        <fk>
+                            <fkDbSchema>targetedms</fkDbSchema>
+                            <fkTable>PrecursorChromInfo</fkTable>
+                        </fk>
+                    </column>
+                    <column columnName="LightPrecursorChromInfo">
+                        <fk>
+                            <fkDbSchema>targetedms</fkDbSchema>
+                            <fkTable>PrecursorChromInfo</fkTable>
+                        </fk>
+                    </column>
+                    <column columnName="Ratio">
+                        <formatString>0.00</formatString>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

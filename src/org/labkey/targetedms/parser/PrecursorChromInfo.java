@@ -320,7 +320,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         _uncompressedSize = uncompressedSize;
     }
 
-    public int getChromatogramFormat()
+    public Integer getChromatogramFormat()
     {
         return _chromatogramFormat;
     }

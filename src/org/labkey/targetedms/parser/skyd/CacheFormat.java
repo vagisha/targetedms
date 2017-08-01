@@ -56,7 +56,7 @@ public class CacheFormat {
             _chromTransitionSize = cacheHeaderStruct.chromTransitionSize;
             _chromPeakSize = cacheHeaderStruct.chromPeakSize;
         } else {
-            _cachedFileSize = cacheHeaderStruct.cachedFileSize;
+            _cachedFileSize = CachedFileHeaderStruct.getStructSize(_formatVersion);
             _chromGroupHeaderSize = ChromGroupHeaderInfo.getStructSize(_formatVersion);
             _chromTransitionSize = ChromTransition.getStructSize(_formatVersion);
             _chromPeakSize = ChromPeak.getStructSize(_formatVersion);
@@ -85,7 +85,7 @@ public class CacheFormat {
     {
         return new StructSerializer<CachedFileHeaderStruct>(CachedFileHeaderStruct.class,
                 CachedFileHeaderStruct.getStructSize(CacheFormatVersion.CURRENT),
-                CachedFileHeaderStruct.getStructSize(_formatVersion))
+                _cachedFileSize)
         {
             @Override
             public CachedFileHeaderStruct fromByteArray(byte[] bytes) throws IOException

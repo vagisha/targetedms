@@ -6190,6 +6190,7 @@ public class TargetedMSController extends SpringActionController
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
         private CalibrationCurveChart _chart;
+        private boolean _asProteomics;
 
         public ShowCalibrationCurveAction()
         {
@@ -6215,7 +6216,8 @@ public class TargetedMSController extends SpringActionController
         protected QueryView createQueryView(CalibrationCurveForm form, BindException errors, boolean forExport, @Nullable String dataRegion) throws Exception
         {
             UserSchema schema = new TargetedMSSchema(getUser(), getContainer());
-            QuerySettings settings = new QuerySettings(getViewContext(), "curveDetail", "CalibrationCurvePrecursors");
+            String queryName = _asProteomics ? "CalibrationCurvePrecursors" : "CalibrationCurveMoleculePrecursors";
+            QuerySettings settings = new QuerySettings(getViewContext(), "curveDetail", queryName);
             settings.getBaseFilter().addCondition(FieldKey.fromParts("CalibrationCurve"), form.getCalibrationCurveId());
             settings.setBaseSort(new Sort("SampleFileId/SampleName"));
             QueryView result = QueryView.create(getViewContext(), schema, settings, errors);
@@ -6232,6 +6234,8 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("Calibration curve not found. Run ID: " + calibrationCurveForm.getId() +
                         " Curve ID: " + calibrationCurveForm.getCalibrationCurveId());
 
+            _asProteomics = _chart.getMolecule() != null && _chart.getMolecule() instanceof Peptide;
+
             //ensure that the experiment run is valid and exists within the current container
             _run = validateRun(calibrationCurveForm.getId());
 
@@ -6241,17 +6245,33 @@ public class TargetedMSController extends SpringActionController
 
             // Summary charts for the precursor
             SummaryChartBean summaryChartBean = new SummaryChartBean();
-            summaryChartBean.setPeptideId(_chart.getMolecule().getId());
             summaryChartBean.setShowControls(false);
             summaryChartBean.setInitialHeight(300);
             summaryChartBean.setInitialWidth(1200);
 
-            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp",
-                    summaryChartBean);
+            // Use different setter and details URL for Peptide vs Small Molecule
+            ActionURL detailsUrl = null;
+            if (_chart.getMolecule() != null)
+            {
+                if (_asProteomics)
+                {
+                    summaryChartBean.setPeptideId(_chart.getMolecule().getId());
+                    detailsUrl = new ActionURL(ShowPeptideAction.class, getContainer());
+                }
+                else
+                {
+                    summaryChartBean.setMoleculeId(_chart.getMolecule().getId());
+                    detailsUrl = new ActionURL(ShowMoleculeAction.class, getContainer());
+                }
+            }
+
+            JspView<SummaryChartBean> summaryChartView = new JspView<>("/org/labkey/targetedms/view/summaryChartsView.jsp", summaryChartBean);
             summaryChartView.setTitle("Summary Charts");
-            ActionURL pepDetailsUrl = new ActionURL(ShowPeptideAction.class, getContainer());
-            pepDetailsUrl.addParameter("id", _chart.getMolecule().getId());
-            summaryChartView.setTitleHref(pepDetailsUrl);
+            if (detailsUrl != null)
+            {
+                detailsUrl.addParameter("id", _chart.getMolecule().getId());
+                summaryChartView.setTitleHref(detailsUrl);
+            }
 
             return new VBox(curvePlotView, summaryChartView, createQueryView(calibrationCurveForm, errors, false, null));
         }

@@ -19,8 +19,7 @@ SELECT
   hpci.SampleFileId,
   hpre.Charge,
   lpci.Id AS LightPrecursorChromInfo,
-  hpci.TotalArea / lpci.TotalArea AS Ratio
-
+  lpci.TotalArea / hpci.TotalArea AS Ratio
 FROM
   targetedms.Peptide hpep
 INNER JOIN
@@ -31,7 +30,6 @@ INNER JOIN
 ON hpci.PrecursorId = hpre.Id
 INNER JOIN
   targetedms.CalibrationCurve cc
-
 ON cc.GeneralMoleculeId = hpep.Id
 
 INNER JOIN

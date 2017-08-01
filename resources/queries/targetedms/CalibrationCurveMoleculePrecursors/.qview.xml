@@ -2,7 +2,6 @@
     <columns>
         <column name="SampleFileId" />
         <column name="Charge" />
-        <column name="HeavyPrecursorChromInfo/PrecursorId/GeneralMoleculeId/Sequence" />
         <column name="HeavyPrecursorChromInfo/BestRetentionTime">
             <properties>
                 <property name="columnTitle" value="RT" />

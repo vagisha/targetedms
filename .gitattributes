@@ -6,6 +6,9 @@ api-src/org/labkey/api/targetedms/TargetedMSService.java -text
 /module.properties -text
 resources/credits/jars.txt -text
 resources/credits/scripts.txt -text
+resources/queries/targetedms/CalibrationCurveMoleculePrecursors.query.xml -text
+resources/queries/targetedms/CalibrationCurveMoleculePrecursors.sql -text
+resources/queries/targetedms/CalibrationCurveMoleculePrecursors/.qview.xml -text
 resources/queries/targetedms/CalibrationCurvePrecursors.query.xml -text
 resources/queries/targetedms/CalibrationCurvePrecursors.sql -text
 resources/queries/targetedms/CalibrationCurvePrecursors/.qview.xml -text
