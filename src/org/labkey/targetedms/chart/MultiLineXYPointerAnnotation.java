@@ -98,7 +98,7 @@ public class MultiLineXYPointerAnnotation extends XYPointerAnnotation
 
         g2.setFont(getFont());
 
-        // Draw the multı lıne label.
+        // Draw the multi line label.
         for (int i = _labels.size() -1; i >=0; i--) {
             String l = _labels.get(i);
             g2.drawString(l,(float) labelX,(float) labelY);
