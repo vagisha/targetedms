@@ -148,7 +148,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount)
     {
         log("Verifying expected summary counts");
-        assertElementPresent(Locator.linkContainingText(proteinCount + " proteins"));
+        waitForElement(Locator.linkContainingText(proteinCount + " proteins"));
         if (peptideCount > 0)
         {
             assertElementPresent(Locator.linkContainingText(peptideCount + " peptides"));
