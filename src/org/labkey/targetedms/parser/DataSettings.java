@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import com.beust.jcommander.internal.Nullable;
+import org.labkey.api.data.JdbcType;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,7 +32,48 @@ import java.util.Set;
  */
 public class DataSettings
 {
-    public enum AnnotationType { text, number, true_false, value_list }
+    public enum AnnotationType {
+        text(JdbcType.VARCHAR,false, true),
+        number(JdbcType.DOUBLE, true, false),
+        true_false(JdbcType.BOOLEAN, false, true),
+        value_list(JdbcType.VARCHAR, false, true);
+
+        private JdbcType _dataType;
+        private boolean _isMeasure;
+        private boolean _isDimension;
+
+        AnnotationType(JdbcType dataType, boolean isMeasure, boolean isDimension)
+        {
+
+            _dataType = dataType;
+            _isMeasure = isMeasure;
+            _isDimension = isDimension;
+        }
+
+        public JdbcType getDataType()
+        {
+            return _dataType;
+        }
+
+        public static AnnotationType fromString(@Nullable String value)
+        {
+            for (AnnotationType annotationType : values())
+                if (annotationType.name().equals(value))
+                    return annotationType;
+
+            return null;
+        }
+
+        public boolean isMeasure()
+        {
+            return _isMeasure;
+        }
+
+        public boolean isDimension()
+        {
+            return _isDimension;
+        }
+    }
 
     public enum AnnotationTarget {
         protein,
