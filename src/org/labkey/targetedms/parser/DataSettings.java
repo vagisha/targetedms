@@ -33,7 +33,7 @@ import java.util.Set;
 public class DataSettings
 {
     public enum AnnotationType {
-        text(JdbcType.VARCHAR,false, true),
+        text(JdbcType.VARCHAR,false, false),
         number(JdbcType.DOUBLE, true, false),
         true_false(JdbcType.BOOLEAN, false, true),
         value_list(JdbcType.VARCHAR, false, true);
