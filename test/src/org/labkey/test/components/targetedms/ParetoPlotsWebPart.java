@@ -161,7 +161,7 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public void waitForTickLoad(int guideSetNum, ParetoPlotType plotType)
     {
-        _test.waitForElement(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + plotType.getIdSuffix() +
+        getWrapper().waitForElement(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + plotType.getIdSuffix() +
                 " > svg > g:nth-child(1) > g.tick-text > a:nth-child(1)"));
     }
 
