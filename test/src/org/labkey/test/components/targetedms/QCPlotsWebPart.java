@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.junit.Assert.assertEquals;
 import static org.labkey.test.components.ext4.Checkbox.Ext4Checkbox;
@@ -509,7 +510,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
                 return p;
         }
 
-        return null;
+        throw new NoSuchElementException("Unable to find svg point with with acquired date: " + dateStr);
     }
 
     public void createGuideSet(GuideSet guideSet, String expectErrorMsg)
