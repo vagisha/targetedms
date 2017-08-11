@@ -1,0 +1,37 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <columns>
+        <column name="Sequence" />
+        <column name="Charge" />
+        <column name="bestRtMean">
+            <properties>
+                <property name="columnTitle" value="RT Mean" />
+            </properties>
+        </column>
+        <column name="lightTotalAreaMean">
+            <properties>
+                <property name="columnTitle" value="Intensity L Mean" />
+            </properties>
+        </column>
+        <column name="heavyTotalAreaMean">
+            <properties>
+                <property name="columnTitle" value="Intensity H Mean" />
+            </properties>
+        </column>
+        <column name="ratioMean">
+            <properties>
+                <property name="columnTitle" value="L/H Ratio Mean" />
+            </properties>
+        </column>
+        <column name="analyteConcentrationMean">
+            <properties>
+                <property name="columnTitle" value="Exp Conc Mean" />
+            </properties>
+        </column>
+        <column name="calculatedConcentrationMean">
+            <properties>
+                <property name="columnTitle" value="Measured Conc Mean" />
+            </properties>
+        </column>
+        <column name="replicateId"></column>
+    </columns>
+</customView>

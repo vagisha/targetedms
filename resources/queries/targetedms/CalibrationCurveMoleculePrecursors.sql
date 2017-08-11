@@ -4,7 +4,8 @@ SELECT
   hpci.SampleFileId,
   hpre.Charge,
   lpci.Id AS LightPrecursorChromInfo,
-  lpci.TotalArea / hpci.TotalArea AS Ratio
+  CASE WHEN hpci.TotalArea <> 0 THEN
+    (lpci.TotalArea / hpci.TotalArea) ELSE NULL END AS Ratio
 FROM
   targetedms.Molecule hmol
 INNER JOIN

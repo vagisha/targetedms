@@ -9,9 +9,15 @@ resources/credits/scripts.txt -text
 resources/queries/targetedms/CalibrationCurveMoleculePrecursors.query.xml -text
 resources/queries/targetedms/CalibrationCurveMoleculePrecursors.sql -text
 resources/queries/targetedms/CalibrationCurveMoleculePrecursors/.qview.xml -text
+resources/queries/targetedms/CalibrationCurveMoleculePrecursorsByReplicate.query.xml -text
+resources/queries/targetedms/CalibrationCurveMoleculePrecursorsByReplicate.sql -text
+resources/queries/targetedms/CalibrationCurveMoleculePrecursorsByReplicate/.qview.xml -text
 resources/queries/targetedms/CalibrationCurvePrecursors.query.xml -text
 resources/queries/targetedms/CalibrationCurvePrecursors.sql -text
 resources/queries/targetedms/CalibrationCurvePrecursors/.qview.xml -text
+resources/queries/targetedms/CalibrationCurvePrecursorsByReplicate.query.xml -text
+resources/queries/targetedms/CalibrationCurvePrecursorsByReplicate.sql -text
+resources/queries/targetedms/CalibrationCurvePrecursorsByReplicate/.qview.xml -text
 resources/queries/targetedms/QCMetric_fwb.sql -text
 resources/queries/targetedms/QCMetric_fwhm.sql -text
 resources/queries/targetedms/QCMetric_lhRatio.sql -text
