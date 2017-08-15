@@ -2,36 +2,12 @@
     <columns>
         <column name="Sequence" />
         <column name="Charge" />
-        <column name="bestRtMean">
-            <properties>
-                <property name="columnTitle" value="RT Mean" />
-            </properties>
-        </column>
-        <column name="lightTotalAreaMean">
-            <properties>
-                <property name="columnTitle" value="Intensity L Mean" />
-            </properties>
-        </column>
-        <column name="heavyTotalAreaMean">
-            <properties>
-                <property name="columnTitle" value="Intensity H Mean" />
-            </properties>
-        </column>
-        <column name="ratioMean">
-            <properties>
-                <property name="columnTitle" value="L/H Ratio Mean" />
-            </properties>
-        </column>
-        <column name="analyteConcentrationMean">
-            <properties>
-                <property name="columnTitle" value="Exp Conc Mean" />
-            </properties>
-        </column>
-        <column name="calculatedConcentrationMean">
-            <properties>
-                <property name="columnTitle" value="Measured Conc Mean" />
-            </properties>
-        </column>
+        <column name="bestRtMean"/>
+        <column name="lightTotalAreaMean"/>
+        <column name="heavyTotalAreaMean"/>
+        <column name="ratioMean"/>
+        <column name="analyteConcentrationMean"/>
+        <column name="calculatedConcentrationMean"/>
         <column name="replicateId"></column>
     </columns>
 </customView>

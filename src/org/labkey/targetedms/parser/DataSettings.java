@@ -15,7 +15,7 @@
  */
 package org.labkey.targetedms.parser;
 
-import com.beust.jcommander.internal.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.JdbcType;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,7 +54,8 @@ public class DataSettings
         {
             return _dataType;
         }
-
+        
+        @Nullable
         public static AnnotationType fromString(@Nullable String value)
         {
             for (AnnotationType annotationType : values())

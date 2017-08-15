@@ -33,9 +33,9 @@ import org.labkey.api.gwt.client.FacetingBehaviorType;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.util.ResultSetUtil;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.parser.DataSettings;
 
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -43,8 +43,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-
-import org.labkey.targetedms.parser.DataSettings;
 
 /**
  * User: jeckels
@@ -95,7 +93,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         addColumn(annotationsColumn);
 
         //get list of replicate annotations for container
-        List<AnnotationSettingForTyping> annotationSettingForTypings = getAnnotationSettings(table);
+        List<AnnotationSettingForTyping> annotationSettingForTypings = getAnnotationSettings();
         //iterate over list of annotations settings
         for (AnnotationSettingForTyping annotationSettingForTyping : annotationSettingForTypings)
         {
@@ -104,7 +102,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                 continue;
             }
             //build expr col sql to select value field from annotation table
-            SQLFragment annotationSQL = new SQLFragment("(SELECT ");
+            SQLFragment annotationSQL = new SQLFragment("(SELECT ",annotationSettingForTyping.getName());
             DataSettings.AnnotationType annotationType = appendValueWithCast(annotationSettingForTyping, annotationSQL);
             annotationSQL.append(" FROM ");
             annotationSQL.append(annotationTableInfo, "a");
@@ -112,8 +110,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
             annotationSQL.append(annotationFKName);
             annotationSQL.append(" = ");
             annotationSQL.append(ExprColumn.STR_TABLE_ALIAS);
-            annotationSQL.append(".").append(pkColumnName).append(" AND a.name = '");
-            annotationSQL.append(annotationSettingForTyping.getName()).append("')");
+            annotationSQL.append(".").append(pkColumnName).append(" AND a.name = ?)");
 
             //Create new Expression column representing annotation
             ExprColumn annotationColumn = new ExprColumn(this, annotationSettingForTyping.getName(), annotationSQL, annotationType.getDataType());
@@ -142,9 +139,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
      * Adds the Value field to the passed in SQLFragment.  If the AnnotationSettingForTyping two type properties are
      * of the same type it indicates all annotation settings having this name are of the same type so can be cast.
      *
-     * @param annotationSettingForTyping
-     * @param annotationSQL
-     * @return The resulting JdbcType of the Annotation setting.
+     * @return The derived Annotation type.
      */
     protected DataSettings.AnnotationType appendValueWithCast(AnnotationSettingForTyping annotationSettingForTyping, SQLFragment annotationSQL)
     {
@@ -165,7 +160,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         return DataSettings.AnnotationType.text;
     }
 
-    private List<AnnotationSettingForTyping> getAnnotationSettings(TableInfo table)
+    private List<AnnotationSettingForTyping> getAnnotationSettings()
     {
         SQLFragment annoSettingsSql = new SQLFragment();
         TableInfo annotationSettingsTI = TargetedMSManager.getTableInfoAnnotationSettings();
@@ -175,19 +170,14 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                 "  FROM ");
         annoSettingsSql.append(annotationSettingsTI, " annoSettings ");
         ContainerFilter containerFilter = this.getContainerFilter();
-        if (containerFilter != null)
-        {
-            annoSettingsSql.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), " runs ON runs.Id = annoSettings.RunId");
-            annoSettingsSql.append(" WHERE ");
-            annoSettingsSql.append(containerFilter.getSQLFragment(getSchema(), new SQLFragment("runs.Container"), getContainer()));
-        }
+        annoSettingsSql.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), " runs ON runs.Id = annoSettings.RunId");
+        annoSettingsSql.append(" WHERE ");
+        annoSettingsSql.append(containerFilter.getSQLFragment(getSchema(), new SQLFragment("runs.Container"), getContainer()));
         annoSettingsSql.append(" GROUP BY name");
         SqlSelector annotationSettingsSelector = new SqlSelector(_schema, annoSettingsSql);
         List<AnnotationSettingForTyping> annotationSettingForTypings = new ArrayList<>();
-        TableResultSet rs = null;
-        try
+        try(TableResultSet rs = annotationSettingsSelector.getResultSet())
         {
-            rs = annotationSettingsSelector.getResultSet();
             while (rs.next())
             {
                 annotationSettingForTypings.add(new AnnotationSettingForTyping(
@@ -200,10 +190,6 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         catch (SQLException e)
         {
             throw new RuntimeSQLException(e);
-        }
-        finally
-        {
-            ResultSetUtil.close(rs);
         }
         return annotationSettingForTypings;
     }

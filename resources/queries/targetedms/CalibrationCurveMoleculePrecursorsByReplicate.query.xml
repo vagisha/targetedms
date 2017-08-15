@@ -3,6 +3,24 @@
         <tables xmlns="http://labkey.org/data/xml">
             <table tableName="CalibrationCurveMoleculePrecursorsByReplicate" tableDbType="NOT_IN_DB">
                 <columns>
+                    <column columnName="bestRtMean">
+                        <columnTitle>RT Mean</columnTitle>
+                    </column>
+                    <column columnName="lightTotalAreaMean">
+                        <columnTitle>Intensity L Mean</columnTitle>
+                    </column>
+                    <column columnName="heavyTotalAreaMean">
+                        <columnTitle>Intensity H Mean</columnTitle>
+                    </column>
+                    <column columnName="ratioMean">
+                        <columnTitle>L/H Ratio Mean</columnTitle>
+                    </column>
+                    <column columnName="analyteConcentrationMean">
+                        <columnTitle>Exp Conc Mean</columnTitle>
+                    </column>
+                    <column columnName="calculatedConcentrationMean">
+                        <columnTitle>Measured Conc Mean</columnTitle>
+                    </column>
                     <column columnName="replicateId">
                         <fk>
                             <fkDbSchema>targetedms</fkDbSchema>
