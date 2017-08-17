@@ -32,10 +32,10 @@ public class TargetedMSRunsTable extends DataRegionTable
 
     public void goToDocumentDetails(String name)
     {
-        _driver.clickAndWait(Locator.linkWithText(name));
-        _driver.waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Summary"));
-        _driver.clickAndWait(Locator.linkContainingText(" version"));
-        _driver.waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Versions"));
+        getWrapper().clickAndWait(Locator.linkWithText(name));
+        getWrapper().waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Summary"));
+        getWrapper().clickAndWait(Locator.linkContainingText(" version"));
+        getWrapper().waitForElement(Locator.tagWithClass("span", "labkey-wp-title-text").withText("Document Versions"));
     }
 
     public LinkVersionsGrid openLinkVersionsDialogForDocuments(List<String> documentNames)
@@ -61,13 +61,13 @@ public class TargetedMSRunsTable extends DataRegionTable
             fail("Unable to find checkbox for non-existent file: " + documentName);
         checkCheckbox(rowIndex);
         clickHeaderButtonByText("Delete");
-        _driver.clickButton("Confirm Delete");
+        getWrapper().clickButton("Confirm Delete");
     }
 
     public ClustergrammerDialog openClustergrammerDialog(List<String> documents)
     {
         openDialogForDocuments("Clustergrammer Heatmap", documents);
-        return new ClustergrammerDialog(_driver.getDriver());
+        return new ClustergrammerDialog(getWrapper().getDriver());
     }
 
     public void openDialogForDocuments(String buttonText, List<String> documentNames)
