@@ -47,7 +47,7 @@ public class TargetedMSRunsTable extends DataRegionTable
     {
         openDialogForDocuments("Link Versions", documentNames);
 
-        LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(_driver);
+        LinkVersionsGrid linkVersionsGrid = new LinkVersionsGrid(getWrapper());
         linkVersionsGrid.waitForGrid(documentNames, expectedCount, true);
 
         return linkVersionsGrid;
