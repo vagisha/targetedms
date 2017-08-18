@@ -46,6 +46,7 @@ resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-13.30.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-14.10.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-14.20.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-14.30.sql -text
+resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-15.10.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-12.30-13.10.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-13.10-13.20.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-13.20-13.30.sql -text
@@ -71,6 +72,7 @@ resources/schemas/dbscripts/postgresql/obsolete/targetedms-14.34-14.35.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-14.35-14.36.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-14.36-14.37.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-15.10-15.11.sql -text
+resources/schemas/dbscripts/postgresql/obsolete/targetedms-15.10-15.20.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-15.20-15.21.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-15.30-15.31.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-15.31-15.32.sql -text
@@ -90,8 +92,7 @@ resources/schemas/dbscripts/postgresql/obsolete/targetedms-16.30-16.31.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-16.31-16.32.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-16.32-16.33.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-16.33-16.34.sql -text
-resources/schemas/dbscripts/postgresql/targetedms-0.00-15.10.sql -text
-resources/schemas/dbscripts/postgresql/targetedms-15.10-15.20.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-0.00-15.20.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-15.20-15.30.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-15.30-16.10.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-16.10-16.20.sql -text
@@ -109,6 +110,7 @@ resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-13.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-14.10.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-14.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-14.30.sql -text
+resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-15.10.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-12.30-13.10.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-13.10-13.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-13.20-13.30.sql -text
@@ -135,6 +137,7 @@ resources/schemas/dbscripts/sqlserver/obsolete/targetedms-14.34-14.35.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-14.35-14.36.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-14.36-14.37.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-15.10-15.11.sql -text
+resources/schemas/dbscripts/sqlserver/obsolete/targetedms-15.10-15.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-15.11-15.12.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-15.20-15.21.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-15.30-15.31.sql -text
@@ -156,8 +159,7 @@ resources/schemas/dbscripts/sqlserver/obsolete/targetedms-16.30-16.31.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-16.31-16.32.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-16.32-16.33.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-16.33-16.34.sql -text
-resources/schemas/dbscripts/sqlserver/targetedms-0.00-15.10.sql -text
-resources/schemas/dbscripts/sqlserver/targetedms-15.10-15.20.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-0.00-15.20.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-15.20-15.30.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-15.30-16.10.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-16.10-16.20.sql -text
