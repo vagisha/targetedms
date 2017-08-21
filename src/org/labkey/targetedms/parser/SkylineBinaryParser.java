@@ -283,9 +283,9 @@ public class SkylineBinaryParser
     }
 
 
-    public static byte[] uncompress(byte[] bytes, int uncompressedSize) throws DataFormatException
+    public static byte[] uncompress(byte[] bytes, Integer uncompressedSize) throws DataFormatException
     {
-        if (uncompressedSize == bytes.length) {
+        if (uncompressedSize != null && uncompressedSize == bytes.length) {
             return bytes;
         }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();

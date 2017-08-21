@@ -514,6 +514,8 @@ public class ContainerChromatogramLibraryWriter
         {
             libPrecursor.setTotalArea(bestChromInfo.getTotalArea() == null ? 0.0 : bestChromInfo.getTotalArea());
             libPrecursor.setChromatogram(bestChromInfo.getChromatogram());
+            libPrecursor.setUncompressedSize(bestChromInfo.getUncompressedSize());
+            libPrecursor.setChromatogramFormat(bestChromInfo.getChromatogramFormat());
             libPrecursor.setNumTransitions(bestChromInfo.getNumTransitions());
             libPrecursor.setNumPoints(bestChromInfo.getNumPoints());
             libPrecursor.setAverageMassErrorPPM(bestChromInfo.getAverageMassErrorPPM());

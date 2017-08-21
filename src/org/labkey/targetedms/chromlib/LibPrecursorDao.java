@@ -97,7 +97,9 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         stmt.setObject(colIndex++, precursor.getNumPoints(), Types.INTEGER);
         stmt.setObject(colIndex++, precursor.getAverageMassErrorPPM(), Types.DOUBLE);
         stmt.setInt(colIndex++, precursor.getSampleFileId());
-        stmt.setObject(colIndex, precursor.getChromatogram(), Types.BLOB);
+        stmt.setObject(colIndex++, precursor.getChromatogram(), Types.BLOB);
+        stmt.setInt(colIndex++, precursor.getUncompressedSize());
+        stmt.setInt(colIndex, precursor.getChromatogramFormat());
     }
 
     @Override

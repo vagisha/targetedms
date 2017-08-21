@@ -33,7 +33,7 @@ class Constants
     public static final String CHROM_LIB_FILE_NAME = "chromlib";
     public static final String CHROM_LIB_FILE_EXT = "clib";
 
-    public static final String SCHEMA_VERSION = "1.1";
+    public static final String SCHEMA_VERSION = "1.2";
 
     public static enum Table
     {
@@ -118,6 +118,8 @@ class Constants
         NumTransitions("INTEGER"),
         AverageMassErrorPPM("DOUBLE"),
         Chromatogram("BLOB"),
+        UncompressedSize("INTEGER"),
+        ChromatogramFormat("INTEGER"),
 
         PrecursorId("INTEGER NOT NULL", Table.Precursor, Id),
         IsotopeModId("INTEGER NOT NULL", Table.IsotopeModification, Id),
@@ -480,7 +482,9 @@ class Constants
         NumPoints(Column.NumPoints),
         AverageMassErrorPPM(Column.AverageMassErrorPPM),
         SampleFileId(Column.SampleFileId),
-        Chromatogram(Column.Chromatogram);
+        Chromatogram(Column.Chromatogram),
+        UncompressedSize(Column.UncompressedSize),
+        ChromatogramFormat(Column.ChromatogramFormat);
 
         private final Column _column;
         private final String _definition;

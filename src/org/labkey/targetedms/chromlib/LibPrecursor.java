@@ -38,6 +38,8 @@ public class LibPrecursor implements ObjectWithId
     private Double _declusteringPotential;
     private Double _totalArea;
     private byte[] _chromatogram;
+    private int _uncompressedSize;
+    private int _chromatogramFormat;
     private int _sampleFileId;
 
     private List<LibTransition> _transitions;
@@ -157,6 +159,26 @@ public class LibPrecursor implements ObjectWithId
     public void setChromatogram(byte[] chromatogram)
     {
         this._chromatogram = chromatogram;
+    }
+
+    public int getUncompressedSize()
+    {
+        return _uncompressedSize;
+    }
+
+    public void setUncompressedSize(int uncompressedSize)
+    {
+        _uncompressedSize = uncompressedSize;
+    }
+
+    public int getChromatogramFormat()
+    {
+        return _chromatogramFormat;
+    }
+
+    public void setChromatogramFormat(int chromatogramFormat)
+    {
+        _chromatogramFormat = chromatogramFormat;
     }
 
     public void addTransition(LibTransition transition)

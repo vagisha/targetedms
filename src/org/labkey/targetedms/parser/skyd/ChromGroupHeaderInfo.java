@@ -85,6 +85,8 @@ public class ChromGroupHeaderInfo
         }
         if (cacheFormatVersion.compareTo(CacheFormatVersion.Eleven) < 0) {
             uncompressedSize = -1;
+        } else {
+            uncompressedSize = dataInputStream.readInt();
             startTime = Float.intBitsToFloat(dataInputStream.readInt());
             endTime = Float.intBitsToFloat(dataInputStream.readInt());
             collisionalCrossSection = Float.intBitsToFloat(dataInputStream.readInt());
