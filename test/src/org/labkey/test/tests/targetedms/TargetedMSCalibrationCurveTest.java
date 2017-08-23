@@ -24,7 +24,6 @@ import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.CalibrationCurveWebpart;
 import org.labkey.test.util.DataRegionTable;
-import org.openqa.selenium.WebElement;
 
 import java.io.File;
 import java.text.DecimalFormat;
@@ -72,6 +71,76 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     public void testP180Scenario() throws Exception
     {
         runScenario("p180test_calibration_DukeApril2016");
+    }
+
+    @Test
+    public void testCalibrationCurvePrecursorsByReplicate()
+    {
+        goToProjectHome(getProjectName() + "/CalibrationTest" );
+        goToSchemaBrowser();
+        selectQuery("targetedms", "CalibrationCurvePrecursorsByReplicate");
+        waitAndClickAndWait(Locator.linkWithText("view data"));
+        DataRegionTable dataRegionTable = new DataRegionTable("query",this);
+
+        List<String> expectedColumnNames = new ArrayList<>();
+        expectedColumnNames.add("Sequence");
+        expectedColumnNames.add("charge");
+        expectedColumnNames.add("bestRtMean");
+        expectedColumnNames.add("lightTotalAreaMean");
+        expectedColumnNames.add("heavyTotalAreaMean");
+        expectedColumnNames.add("ratioMean");
+        expectedColumnNames.add("analyteConcentrationMean");
+        expectedColumnNames.add("calculatedConcentrationMean");
+        expectedColumnNames.add("replicateId");
+
+        assertEquals("Wrong column names ",expectedColumnNames, dataRegionTable.getColumnNames());
+
+        List<String> expectedValues = new ArrayList<>();
+        expectedValues.add("VIFDANAPVAVR");
+        expectedValues.add("2+");
+        expectedValues.add("0.21276666224002838");
+        expectedValues.add("2288.001708984375");
+        expectedValues.add("102404.5703125");
+        expectedValues.add("0.02234276942908764");
+        expectedValues.add("0.05");
+        expectedValues.add("0.08697485875399004");
+        expectedValues.add("Cal 2_0_5 ng_mL_VIFonly");
+
+        assertEquals("Wrong column values ",expectedValues, dataRegionTable.getRowDataAsText(4));
+
+
+        //check that values have changed to mean of two replicates
+        expectedValues = new ArrayList<>();
+        expectedValues.add("VIFDANAPVAVR");
+        expectedValues.add("2+");
+        expectedValues.add("0.21276666224002838");
+        expectedValues.add("2288.001708984375");
+        expectedValues.add("102404.5703125");
+        expectedValues.add("0.02234276942908764");
+        expectedValues.add("0.05");
+        expectedValues.add("0.08697485875399004");
+        expectedValues.add("Cal 2_0_5 ng_mL_VIFonly");
+
+        assertEquals("Wrong column values ",expectedValues, dataRegionTable.getRowDataAsText(4));
+
+        goToSchemaBrowser();
+        selectQuery("targetedms", "CalibrationCurveMoleculePrecursorsByReplicate");
+        waitAndClickAndWait(Locator.linkWithText("view data"));
+        dataRegionTable = new DataRegionTable("query",this);
+
+        expectedColumnNames = new ArrayList<>();
+        expectedColumnNames.add("Sequence");
+        expectedColumnNames.add("charge");
+        expectedColumnNames.add("bestRtMean");
+        expectedColumnNames.add("lightTotalAreaMean");
+        expectedColumnNames.add("heavyTotalAreaMean");
+        expectedColumnNames.add("ratioMean");
+        expectedColumnNames.add("analyteConcentrationMean");
+        expectedColumnNames.add("calculatedConcentrationMean");
+        expectedColumnNames.add("replicateId");
+
+        assertEquals("Wrong column names ",expectedColumnNames, dataRegionTable.getColumnNames());
+
     }
 
     private void runScenario(String scenario) throws Exception

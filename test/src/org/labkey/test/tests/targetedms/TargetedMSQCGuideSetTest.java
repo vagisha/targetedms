@@ -20,6 +20,9 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.query.GetQueryDetailsCommand;
+import org.labkey.remoteapi.query.GetQueryDetailsResponse;
 import org.labkey.test.Locator;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.categories.DailyB;
@@ -34,6 +37,7 @@ import org.labkey.test.pages.targetedms.ParetoPlotPage;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.RelativeUrl;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -424,6 +428,52 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     private void createGuideSet(GuideSet guideSet)
     {
         createGuideSet(guideSet, null);
+    }
+
+    @Test
+    public void testReplicateAnnotations() throws IOException, CommandException
+    {
+        String folderName = "Annotations";
+        setupSubfolder(getProjectName(), folderName, FolderType.QC);
+        importData(SProCoP_FILE_ANNOTATED);
+        goToSchemaBrowser();
+        selectQuery("targetedms", "replicate");
+        //confirm table columns are present and of correct type representing replicate annotations:
+        GetQueryDetailsCommand queryDetailsCommand = new GetQueryDetailsCommand("targetedms", "replicate");
+        GetQueryDetailsResponse queryDetailsResponse = queryDetailsCommand.execute(createDefaultConnection(true),getProjectName() + "/" + folderName);
+        List<GetQueryDetailsResponse.Column> columns = queryDetailsResponse.getColumns();
+
+        int groupingIndex = 8;
+        assertEquals("",columns.get(groupingIndex).getName(),"Grouping");
+        assertEquals("",columns.get(groupingIndex).getCaption(),"Grouping");
+        assertEquals("",columns.get(groupingIndex).getType(), "Text (String)");
+
+        int ignoreIndex = 9;
+        assertEquals("",columns.get(ignoreIndex).getName(),"ignore_in_QC");
+        assertEquals("",columns.get(ignoreIndex).getCaption(),"ignore_in_QC");
+        assertEquals("",columns.get(ignoreIndex).getType(), "True/False (Boolean)");
+
+        int timeIndex = 10;
+        assertEquals("",columns.get(timeIndex).getName(),"Time");
+        assertEquals("",columns.get(timeIndex).getCaption(),"Time");
+        assertEquals("",columns.get(timeIndex).getType(), "Number (Double)");
+
+        //confirm data in grid view
+        waitAndClickAndWait(Locator.linkWithText("view data"));
+        DataRegionTable table = new DataRegionTable("query", this);
+        List<String> strings = table.getRowDataAsText(0);
+        List<String> expected = new ArrayList<String>();
+        expected.add("SProCoPTutorial_withAnnotations.zip");
+        expected.add("Q_Exactive_08_09_2013_JGB_02");
+        expected.add(" ");
+        expected.add(" ");
+        expected.add(" ");
+        expected.add(" ");
+        expected.add("Grouping: Group A\nignore_in_QC: true\nTime: 5");
+        expected.add("Group A");
+        expected.add("true");
+        expected.add("5.0");
+        assertEquals("Wrong data in first row",expected,strings);
     }
 
     private void createGuideSet(GuideSet guideSet, String expectErrorMsg)

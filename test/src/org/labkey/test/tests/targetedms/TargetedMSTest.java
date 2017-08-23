@@ -43,6 +43,7 @@ import static org.junit.Assert.assertTrue;
 public abstract class TargetedMSTest extends BaseWebDriverTest
 {
     protected static final String SProCoP_FILE = "SProCoPTutorial.zip";
+    protected static final String SProCoP_FILE_ANNOTATED = "SProCoPTutorial_withAnnotations.zip";
     protected static final String QC_1_FILE = "QC_1.sky.zip";
     protected static final String QC_1a_FILE = "QC_1a.sky.zip";
     protected static final String QC_1b_FILE = "QC_1b.sky.zip";
