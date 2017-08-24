@@ -118,7 +118,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         expectedValues.add("102404.5703125");
         expectedValues.add("0.02234276942908764");
         expectedValues.add("0.05");
-        expectedValues.add("0.08697485875399004");
+        expectedValues.add("0.08697485875399036");
         expectedValues.add("Cal 2_0_5 ng_mL_VIFonly");
 
         assertEquals("Wrong column values ",expectedValues, dataRegionTable.getRowDataAsText(4));
