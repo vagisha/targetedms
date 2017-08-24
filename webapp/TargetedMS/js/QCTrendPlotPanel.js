@@ -294,6 +294,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                                 target: cmp.getEl().dom,
                                 placement: 'top',
                                 width: 300,
+                                xOffset: -250,
+                                arrowOffset: 270,
                                 showCloseButton: false,
                                 title: plotType + ' Plot Type',
                                 content: me.getPlotTypeHelpTooltip(plotType)
@@ -654,7 +656,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         {
             this.dateRangeCombo = Ext4.create('Ext.form.field.ComboBox', {
                 id: 'daterange-combo-box',
-                width: 190,
+                width: 225,
                 labelWidth: 75,
                 fieldLabel: 'Date Range',
                 triggerAction: 'all',
@@ -790,8 +792,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             
             this.metricField = Ext4.create('Ext.form.field.ComboBox', {
                 id: 'metric-type-field',
-                width: 340,
-                labelWidth: 70,
+                width: 350,
+                labelWidth: 50,
                 fieldLabel: 'Metric',
                 triggerAction: 'all',
                 mode: 'local',
@@ -1285,7 +1287,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     placement: 'top',
                     xOffset: shiftLeft ? -428 : -53,
                     arrowOffset: shiftLeft ? 410 : 35,
-                    yOffset: me.canUserEdit() ? -265 : -150,
+                    yOffset: me.canUserEdit() ? -275 : -170,
                     target: point,
                     content: '<div id="' + contentDivId + '"></div>',
                     onShow: function() {

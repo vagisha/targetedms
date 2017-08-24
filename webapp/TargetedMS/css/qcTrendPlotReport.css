@@ -96,3 +96,13 @@
 .hopscotch-bubble-container .qc-hover-value-break {
     word-break: break-all;
 }
+
+.qc-trend-plot-panel .x4-panel-header,
+.qc-trend-plot-panel .x4-toolbar-footer {
+    background: #EEEEEE;
+}
+
+.qc-trend-plot-panel .x4-panel-header-text-container-default {
+    font-size: 12px;
+    color: #000000;
+}

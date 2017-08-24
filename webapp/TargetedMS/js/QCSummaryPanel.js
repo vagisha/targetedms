@@ -31,16 +31,24 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             success: LABKEY.Utils.getCallbackWrapper(function (response)
             {
                 var containers = response['containers'],
-                        container,
-                        childPanelItems = [],
-                        hasChildren = containers.length > 1;
+                    container,
+                    childPanelItems = [],
+                    hasChildren = containers.length > 1;
+
+                // determine the summaryView width
+                var portalWebpart = document.querySelector('.labkey-portal-container'),
+                    minWidth = 750,
+                    width = portalWebpart ? Math.max(portalWebpart.clientWidth - 50, minWidth) : minWidth;
+                if (hasChildren && containers.length > 1 && (width/2) > minWidth) {
+                    width = (width / 2) - 5;
+                }
 
                 // Add the current (root) container to the QC Summary display
                 container = containers[0];
                 container.showName = hasChildren;
                 container.isParent = true;
                 container.parentOnly = containers.length == 1;
-                this.add(this.getContainerSummaryView(container, hasChildren));
+                this.add(this.getContainerSummaryView(container, hasChildren, width));
 
                 // Add the set of child containers in an hbox layout
                 if (hasChildren)
@@ -51,7 +59,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                         container.showName = true;
                         container.parentOnly = false;
                         container.isParent = false;
-                        childPanelItems.push(this.getContainerSummaryView(container));
+                        childPanelItems.push(this.getContainerSummaryView(container, undefined, width));
                     }
 
                     this.add(Ext4.create('Ext.panel.Panel', {
@@ -72,7 +80,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         });
     },
 
-    getContainerSummaryView: function (container, hasChildren)
+    getContainerSummaryView: function (container, hasChildren, width)
     {
         container.viewCmpId = Ext4.id();
         container.autoQcCalloutId = Ext4.id();
@@ -96,13 +104,13 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         if (Ext4.isDefined(hasChildren))
         {
             config.cls = hasChildren ? 'summary-view' : '';
-            config.width = hasChildren ? 800 : undefined;
+            config.width = hasChildren ? width : undefined;
             config.minHeight = 21;
         }
         else
         {
             config.cls = 'summary-view subfolder-view';
-            config.width = 800;
+            config.width = width;
             config.minHeight = 136;
         }
 
@@ -426,7 +434,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             content += 'no outliers<br/>';
         }
         else {
-            content += '<table class=" labkey-data-region labkey-show-borders">';
+            content += '<table class=" labkey-data-region-legacy labkey-show-borders">';
             content += '<thead><tr><td class="labkey-column-header"></td><td class="labkey-column-header" colspan="6" align="center">Outliers</td></tr>' +
                             '<tr>' +
                                 '<td class="labkey-column-header"></td><td class="labkey-column-header"></td>' +
@@ -486,7 +494,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     id: Ext4.id(),
                     target: el.dom,
                     placement: 'bottom',
-                    width: sampleFile.Items.length > 0 ? 720 : 300,
+                    width: sampleFile.Items.length > 0 ? 655 : 300,
                     title: 'Recent Sample File Details',
                     content: content
                 });

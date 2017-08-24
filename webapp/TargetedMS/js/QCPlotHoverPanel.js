@@ -118,7 +118,6 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
         if (!this.exclusionsSaveBtn) {
             this.exclusionsSaveBtn = Ext4.create('Ext.button.Button', {
                 text: 'Save',
-                width: 75,
                 disabled: true,
                 scope: this,
                 handler: function() {

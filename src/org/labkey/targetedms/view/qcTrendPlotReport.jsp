@@ -88,9 +88,9 @@
             // initialize the panel that displays the Levey-Jennings plot for trend plotting
             Ext4.create('LABKEY.targetedms.QCTrendPlotPanel', {
                 renderTo: reportPanelId,
+                cls: 'qc-trend-plot-panel',
                 plotDivId: plotPanelId,
                 plotPaginationDivId: plotPaginationPanelId,
-                cls: 'themed-panel2',
                 minAcquiredTime: new Date(data.rows[0]['MinAcquiredTime']),
                 maxAcquiredTime: new Date(data.rows[0]['MaxAcquiredTime'])
             });
