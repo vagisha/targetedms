@@ -18,14 +18,19 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.api.reader.TabLoader;
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.query.UpdateRowsCommand;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.CalibrationCurveWebpart;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.Maps;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,6 +70,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     public void testCalibrationScenario() throws Exception
     {
         runScenario("CalibrationTest");
+        testCalibrationCurvePrecursorsByReplicate();
     }
 
     @Test
@@ -73,14 +79,13 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         runScenario("p180test_calibration_DukeApril2016");
     }
 
-    @Test
-    public void testCalibrationCurvePrecursorsByReplicate()
+    private void testCalibrationCurvePrecursorsByReplicate() throws IOException, CommandException
     {
-        goToProjectHome(getProjectName() + "/CalibrationTest" );
+
+        String folderHome = getProjectName() + "/CalibrationTest";
+        goToProjectHome(folderHome);
         goToSchemaBrowser();
-        selectQuery("targetedms", "CalibrationCurvePrecursorsByReplicate");
-        waitAndClickAndWait(Locator.linkWithText("view data"));
-        DataRegionTable dataRegionTable = new DataRegionTable("query",this);
+        DataRegionTable dataRegionTable = viewQueryData("targetedms", "CalibrationCurvePrecursorsByReplicate");
 
         List<String> expectedColumnNames = new ArrayList<>();
         expectedColumnNames.add("Sequence");
@@ -103,25 +108,19 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         expectedValues.add("102404.5703125");
         expectedValues.add("0.02234276942908764");
         expectedValues.add("0.05");
-        expectedValues.add("0.08697485875399004");
+        expectedValues.add("0.0869748587539913");
         expectedValues.add("Cal 2_0_5 ng_mL_VIFonly");
 
         assertEquals("Wrong column values ",expectedValues, dataRegionTable.getRowDataAsText(4));
 
-
-        //check that values have changed to mean of two replicates
-        expectedValues = new ArrayList<>();
-        expectedValues.add("VIFDANAPVAVR");
-        expectedValues.add("2+");
-        expectedValues.add("0.21276666224002838");
-        expectedValues.add("2288.001708984375");
-        expectedValues.add("102404.5703125");
-        expectedValues.add("0.02234276942908764");
-        expectedValues.add("0.05");
-        expectedValues.add("0.08697485875399036");
-        expectedValues.add("Cal 2_0_5 ng_mL_VIFonly");
-
-        assertEquals("Wrong column values ",expectedValues, dataRegionTable.getRowDataAsText(4));
+        //TODO check that values have changed to mean of two replicates
+        //Will require getting replicate id for the sample file represented by the row being validated.
+        //This sample data has a one to one sample file to replicate relationship.
+        //To test the actual mean values another sample file will need to have the same replicate id
+        //Once this portion of the test is complete it would be best to set the sample file's replicate id back to
+        //its original value.
+        //This will also require addressing the user permission issue in setSampleFileReplicate()
+//        setSampleFileReplicate(targetSampleFileId,replicateIdFromBaseSampleFile);
 
         goToSchemaBrowser();
         selectQuery("targetedms", "CalibrationCurveMoleculePrecursorsByReplicate");
@@ -141,6 +140,20 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
         assertEquals("Wrong column names ",expectedColumnNames, dataRegionTable.getColumnNames());
 
+    }
+
+    private void setSampleFileReplicate(int sampleFileId, int replicateId) throws IOException, CommandException
+    {
+        Connection connection = createDefaultConnection(true);
+        List<Map<String, Object>> sampleFileRows = Arrays.asList(
+                Maps.of("id", sampleFileId,
+                        "replicateId", replicateId
+                )
+        );
+
+        UpdateRowsCommand command = new UpdateRowsCommand("targetedms", "samplefile");
+        command.setRows(sampleFileRows);
+        command.execute(connection, getProjectName() + "/CalibrationTest");
     }
 
     private void runScenario(String scenario) throws Exception
