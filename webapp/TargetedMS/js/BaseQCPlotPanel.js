@@ -326,7 +326,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             // set the width of the plot webparts based on the first labkey-wp-body element
             this.plotWidth = 900;
             var spacer = 33;
-            var wp = document.querySelector('.labkey-portal-container');
+            var wp = document.querySelector('.panel.panel-portal');
             if (wp && (wp.clientWidth - spacer) > this.plotWidth) {
                 this.plotWidth = wp.clientWidth - spacer;
             }

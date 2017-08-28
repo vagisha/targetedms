@@ -36,7 +36,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     hasChildren = containers.length > 1;
 
                 // determine the summaryView width
-                var portalWebpart = document.querySelector('.labkey-portal-container'),
+                var portalWebpart = document.querySelector('.panel.panel-portal'),
                     minWidth = 750,
                     width = portalWebpart ? Math.max(portalWebpart.clientWidth - 50, minWidth) : minWidth;
                 if (hasChildren && containers.length > 1 && (width/2) > minWidth) {
