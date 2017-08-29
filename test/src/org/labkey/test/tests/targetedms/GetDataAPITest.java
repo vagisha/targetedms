@@ -31,6 +31,8 @@ import static org.junit.Assert.assertTrue;
 @Category({DailyB.class, MS2.class})
 public class GetDataAPITest extends TargetedMSTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     String CLIENT_API_CORE1 = "{"+
 "   source: {"+
 "		type: 'query',"+
@@ -54,13 +56,6 @@ public class GetDataAPITest extends TargetedMSTest
 "        console.log(responseData);"+
 "    }"+
 "}";
-
-    public GetDataAPITest()
-    {
-        // We want to use the UI when creating the project/folder so that we can verify that we get the wizard
-        // that has the extra steps
-        setContainerHelper(new UIContainerHelper(this));
-    }
 
     @Test
     public void testSteps()

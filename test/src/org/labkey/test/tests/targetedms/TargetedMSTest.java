@@ -16,6 +16,7 @@
 package org.labkey.test.tests.targetedms;
 
 import org.labkey.test.BaseWebDriverTest;
+import org.labkey.test.LabKeySiteWrapper;
 import org.labkey.test.Locator;
 import org.labkey.test.Locators;
 import org.labkey.test.TestFileUtils;
@@ -25,6 +26,7 @@ import org.labkey.test.components.targetedms.GuideSetWebPart;
 import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.GuideSetPage;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
+import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
@@ -78,6 +80,8 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
 
     public TargetedMSTest()
     {
+        // We want to use the UI when creating the project/folder so that we can verify that we get the wizard
+        // that has the extra steps
         setContainerHelper(new UIContainerHelper(this));
     }
 
@@ -128,7 +132,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         WebElement importButton = importButtonLoc.findElementOrNull(getDriver());
         if (null == importButton)
         {
-            scrollIntoView(Locators.ADMIN_MENU);
+            scrollIntoView(LabKeySiteWrapper.IS_BOOTSTRAP_LAYOUT ? Locators.UX_ADMIN_MENU_TOGGLE : Locators.ADMIN_MENU);
             goToModule("Pipeline");
             importButton = importButtonLoc.findElement(getDriver());
         }
@@ -256,7 +260,10 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
-        _containerHelper.deleteProject(getProjectName(), afterTest);
+        // these tests use the UIContainerHelper for project creation, but we can use the APIContainerHelper for deletion
+        APIContainerHelper apiContainerHelper = new APIContainerHelper(this);
+        apiContainerHelper.deleteProject(getProjectName(), afterTest);
+        
         _userHelper.deleteUsers(false, USER);
     }
 

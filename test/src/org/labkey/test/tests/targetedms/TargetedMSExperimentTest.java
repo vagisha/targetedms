@@ -39,13 +39,6 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
     private static final String SKY_FILE_SMALLMOL_PEP = "smallmol_plus_peptides.sky.zip";
 
-    public TargetedMSExperimentTest()
-    {
-        // We want to use the UI when creating the project/folder so that we can verify that we get the wizard
-        // that has the extra steps
-        setContainerHelper(new UIContainerHelper(this));
-    }
-
     @Test
     public void testSteps()
     {

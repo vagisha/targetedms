@@ -57,12 +57,12 @@ tr.spaceUnder > td
             </tr>
             <tr>
                 <td>
-                <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSModule.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - Curated precursor and product ion expression data for use in designing and validating future experiments
+                    <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSModule.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - Curated precursor and product ion expression data for use in designing and validating future experiments
                 </td>
             </tr>
             <tr>
-                <td>
-                <blockquote><input type="checkbox" name="precursorNormalized" value="true">Rank peptides within proteins by peak area</blockquote>
+                <td style="padding: 14px 0 14px 25px;">
+                    <input type="checkbox" name="precursorNormalized" value="true">Rank peptides within proteins by peak area
                 </td>
             </tr>
             <tr>

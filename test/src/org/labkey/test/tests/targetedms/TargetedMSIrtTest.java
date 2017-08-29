@@ -51,11 +51,6 @@ public abstract class TargetedMSIrtTest extends TargetedMSTest
     // This peptide has been hand edited in the "FOR_UPDATE" test dataset.
     protected static final String UPDATE_PEPTIDE = "ASTEGVAIQGQQGTR";
 
-    public TargetedMSIrtTest()
-    {
-        setContainerHelper(new UIContainerHelper(this));
-    }
-
     @Override
     protected String getProjectName()
     {

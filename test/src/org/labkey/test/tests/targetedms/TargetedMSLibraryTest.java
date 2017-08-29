@@ -31,13 +31,6 @@ public class TargetedMSLibraryTest extends TargetedMSTest
     private static final String SKY_FILE1 = "Stergachis-SupplementaryData_2_a.sky.zip";
     private static final String SKY_FILE2 = "Stergachis-SupplementaryData_2_b.sky.zip";
 
-    public TargetedMSLibraryTest()
-    {
-        // We want to use the UI when creating the project/folder so that we can verify that we get the wizard
-        // that has the extra steps
-        setContainerHelper(new UIContainerHelper(this));
-    }
-
     @Test
     public void testSteps()
     {
