@@ -19,9 +19,8 @@
 <%@ page import="org.labkey.api.ms2.MS2Urls" %>
 <%@ page import="org.labkey.api.util.PageFlowUtil" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
-<labkey:form action="<%= h(PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())) %>" method="get">
-
-    <table>
+<labkey:form action="<%= h(PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())) %>">
+    <table class="lk-fields-table">
         <tr>
             <td class="labkey-form-label"><label for="identifierInput">Protein name</label> *<%= helpPopup("Protein name", "Required to search for proteins. You may use the name as specified by the FASTA file, or an annotation, such as a gene name, that has been loaded from an annotations file. You may comma separate multiple names.") %></td>
             <td nowrap><input size="20" type="text" id="identifierInput" name="identifier" value=""/></td>
@@ -37,10 +36,6 @@
             <td nowrap><input type="checkbox" name="exactMatch" checked/></td>
             <td>&nbsp;</td>
         </tr>
-        <tr>
-
-        </tr>
     </table>
-
 </labkey:form>
 
