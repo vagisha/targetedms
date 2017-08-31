@@ -28,6 +28,8 @@ import org.openqa.selenium.WebElement;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSLibraryTest extends TargetedMSTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String SKY_FILE1 = "Stergachis-SupplementaryData_2_a.sky.zip";
     private static final String SKY_FILE2 = "Stergachis-SupplementaryData_2_b.sky.zip";
 
@@ -106,10 +108,10 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         //Tests graph attributes, changes width and height, checks if graph is still present.
         log("Verifying that expected elements exist on the protein details page");
         clickAndWait(Locator.linkContainingText("CTCF"));
-        assertElementPresent(Locator.xpath("//tr[td[span[a[text()='CTCF']]]]"));
+        assertElementPresent(Locator.pageHeader("CTCF"));
         assertTextPresent("HsCD00078657 (2-D02)");
-        assertElementPresent(Locator.xpath("//tr[(td[1] ='Decoy') and (td[2]='false')]"));
-        assertElementPresent(Locator.xpath("//tr[(td[1] ='File') and (td[2] = '" + SKY_FILE1 + "')]"));
+        assertElementPresent(Locator.xpath("//div[contains(@class, 'form-group') and (label='Decoy') and (div/p='false')]"));
+        assertElementPresent(Locator.xpath("//div[contains(@class, 'form-group') and (label='File') and (div/p='" + SKY_FILE1 + "')]"));
         assertElementPresent(Locator.xpath("//table[contains(@id, 'peptideMap')]"));
         assertElementPresent(Locator.xpath("//div[@id = 'peakAreasGraphImg']/img"));
 

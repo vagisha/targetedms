@@ -26,6 +26,8 @@ import java.util.List;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSDocumentFormatsTest extends TargetedMSTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String SAMPLEDATA_FOLDER = "DocumentFormats/";
 
     public static final List<String> skyZipFileNames = Collections.unmodifiableList(Arrays.asList(
