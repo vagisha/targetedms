@@ -25,6 +25,8 @@ import static org.junit.Assert.assertEquals;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSExperimentIrtTest extends TargetedMSIrtTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     public TargetedMSExperimentIrtTest()
     {
         super();

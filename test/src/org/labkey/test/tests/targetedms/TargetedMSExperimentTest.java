@@ -34,6 +34,8 @@ import static org.labkey.test.util.DataRegionTable.DataRegion;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSExperimentTest extends TargetedMSTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String SKY_FILE = "MRMer.zip";
     private static final String SKY_FILE2 = "MRMer_renamed_protein.zip";
 

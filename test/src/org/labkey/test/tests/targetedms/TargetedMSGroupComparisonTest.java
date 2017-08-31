@@ -46,6 +46,8 @@ import static org.junit.Assert.assertTrue;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSGroupComparisonTest extends TargetedMSTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String SAMPLEDATA_FOLDER = "Quantification/GroupComparisonScenariosTest/";
     private static final String GROUP_COMPARISON_PREFIX = "Group Comparison: ";
     public static final List<String> scenarioNames = Collections.unmodifiableList(Arrays.asList(
