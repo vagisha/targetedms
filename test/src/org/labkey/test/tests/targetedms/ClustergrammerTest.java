@@ -31,6 +31,8 @@ import java.util.Arrays;
 @Category({DailyB.class, MS2.class})
 public class ClustergrammerTest extends TargetedMSTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String BUTTON_TEXT = "Clustergrammer Heatmap";
 
     @Override
@@ -57,12 +59,12 @@ public class ClustergrammerTest extends TargetedMSTest
     public void testClustergrammerIntegration()
     {
         //Check button present but disabled (since no files selected)
-        assertElementPresent(Locator.lkButtonDisabled(BUTTON_TEXT));
-        TargetedMSRunsTable table = new TargetedMSRunsTable(this);
+        assertElementPresent(Locator.tagWithClass("a", "labkey-disabled-button").withText(BUTTON_TEXT));
 
         //check button enabled on selection
+        TargetedMSRunsTable table = new TargetedMSRunsTable(this);
         table.checkCheckbox(0);
-        assertElementPresent(Locator.lkButtonContainingText(BUTTON_TEXT));
+        assertElementPresent(Locator.lkButton(BUTTON_TEXT));
         ClustergrammerDialog dialog = table.openClustergrammerDialog(Arrays.asList(SProCoP_FILE));
 
         //Verify default title and description contain filename
