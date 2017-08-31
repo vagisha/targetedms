@@ -94,19 +94,25 @@
     retentionTimesUrl.addParameter("chartHeight", bean.getInitialHeight());
 %>
 <style>
-    .title_box {
+    .summary_form_box {
+        padding-bottom: 25px;
+    }
+
+    .summary_title_box {
         border: #ccc 1px solid;
         float: left;
         margin-right: 1em;
         margin-bottom: 1em;
     }
 
-    .title_box .title {
+    .summary_title_box .title {
         position: relative;
-        top : -0.7em;
-        margin-left: 1em;
+        top : -0.6em;
+        margin-left: 20px;
         display: inline;
         background-color: white;
+        font-size: 18px;
+        padding: 0 5px;
     }
     .valuelabel
     {
@@ -466,7 +472,7 @@
             buttons: [updateBtn],
             defaults: {
                 labelWidth: 150,
-                labelStyle: 'background-color: #E0E6EA; padding: 6px; margin-top:0px;'
+                labelStyle: 'background-color: #E0E6EA; padding: 2px 4px; margin: 0px;'
             }
         });
     }
@@ -504,13 +510,13 @@
 });
 
 </script>
-<div style="margin-top:10px;">
-    <div style="display: <%= bean.isShowControls() ? "block" : "none"%>;" id="peakAreasFormDiv"></div>
-    <div class="title_box">
+<div>
+    <div id="peakAreasFormDiv" class="summary_form_box" style="display: <%= bean.isShowControls() ? "block" : "none"%>;"></div>
+    <div class="summary_title_box">
         <h3 class="title">Peak Areas</h3>
         <div id="peakAreasGraphImg"></div>
     </div>
-    <div class="title_box">
+    <div class="summary_title_box">
         <h3 class="title">Retention Times</h3>
         <div id="retentionTimesGraphImg"></div>
     </div>

@@ -3041,9 +3041,13 @@ public class TargetedMSController extends SpringActionController
             //ensure that the experiment run is valid and exists within the current container
             _run = validateRun(form.getId());
 
+            WebPartView replicatesView = createInitializedQueryView(form, errors, false, DATA_REGION_NAME);
+            replicatesView.setFrame(WebPartView.FrameType.PORTAL);
+            replicatesView.setTitle("Replicate List");
+
             VBox vBox = new VBox();
             vBox.addView(getSummaryView(form, _run));
-            vBox.addView(createInitializedQueryView(form, errors, false, DATA_REGION_NAME));
+            vBox.addView(replicatesView);
             return vBox;
         }
 
@@ -5058,8 +5062,7 @@ public class TargetedMSController extends SpringActionController
             getPageConfig().setFocusId("description");
 
             JspView<RenameBean> jview = new JspView<>("/org/labkey/targetedms/view/renameRun.jsp", bean);
-            jview.setFrame(WebPartView.FrameType.PORTAL);
-            jview.setTitle("Rename TargetedMS Run");
+            jview.setFrame(WebPartView.FrameType.NONE);
             return jview;
         }
 

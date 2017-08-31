@@ -38,6 +38,7 @@ import org.openqa.selenium.WebElement;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -47,6 +48,8 @@ import static org.labkey.test.components.ext4.Window.Window;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCSummaryTest extends TargetedMSTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String FOLDER_1 = "QC Subfolder 1";
     private static final String FOLDER_2 = "QC Subfolder 2";
     private static final String FOLDER_2A = "QC Subfolder 2a";
@@ -182,11 +185,11 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
         log("Validate the recently loaded file content is correct.");
         List<String> tempStringList01 = new ArrayList<>();
-        List<String> tempStringList02 = new ArrayList<>();
+        List<List<String>> tempStringList02 = new ArrayList<>();
         tempStringList01.add("2015/01/16 15:08:15 - no outliers");
         tempStringList01.add("2015/01/16 12:47:30 - no outliers");
-        tempStringList02.add("25fmol_Pepmix_spike_SRM_1601_04\nacquired date/time: 2015/01/16 15:08:15");
-        tempStringList02.add("25fmol_Pepmix_spike_SRM_1601_03\nacquired date/time: 2015/01/16 12:47:30");
+        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_04", "acquired date/time: 2015/01/16 15:08:15"));
+        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_03", "acquired date/time: 2015/01/16 12:47:30"));
         validateSampleFile(0, tempStringList01, tempStringList02);
 
         // remove all sample files
@@ -208,7 +211,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     {
         String lastPingedDate;
         List<String> tempStringList01 = new ArrayList<>();
-        List<String> tempStringList02 = new ArrayList<>();
+        List<List<String>> tempStringList02 = new ArrayList<>();
         final int MAIN_SUMMARY = 0;
         final int SUB_FOLDER01 = 1;
         final int SUB_FOLDER02 = 2;
@@ -220,9 +223,9 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         tempStringList01.add("2013/08/27 14:45:49 - no outliers");
         tempStringList01.add("2013/08/27 03:19:45 - no outliers");
         tempStringList01.add("2013/08/26 04:27:53 - no outliers");
-        tempStringList02.add("Q_Exactive_08_23_2013_JGB_58\nacquired date/time: 2013/08/27 14:45:49");
-        tempStringList02.add("Q_Exactive_08_23_2013_JGB_51\nacquired date/time: 2013/08/27 03:19:45");
-        tempStringList02.add("out of guide set range: no outliers");
+        tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_58", "Acquired Date/Time: 2013/08/27 14:45:49"));
+        tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_51", "Acquired Date/Time: 2013/08/27 03:19:45"));
+        tempStringList02.add(Arrays.asList("Out of guide set range: no outliers"));
         validateSampleFile(0, tempStringList01, tempStringList02);
 
         tempStringList01.clear();
@@ -303,9 +306,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         tempStringList01.add("2013/08/27 03:19:45 - 4/56 (Moving Range) outliers");
 
         tempStringList02.clear();
-        tempStringList02.add("Full Width at Half Maximum (FWHM) 1 1 0 0 0 0");
-        tempStringList02.add("Peak Area 0 2 0 0 0 0");
-
+        tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_58", "Full Width at Half Maximum (FWHM) 1 1 0 0 0 0"));
+        tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_51", "Peak Area 0 2 0 0 0 0"));
         validateSampleFile(0, tempStringList01, tempStringList02);
 
         removeAllGuideSets();
@@ -335,15 +337,14 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         log("Validate bubble text is '" + bubbleText + "'");
         mouseOver(autoQC);
         waitForElement(qcSummaryWebPart.getBubble());
-        tmpString = qcSummaryWebPart.getBubbleText();
-        assertTrue("Bubble text not as expected. Bubble text: '" + tmpString + "'", tmpString.contains(bubbleText));
+        waitForElement(qcSummaryWebPart.getBubbleContent().containing(bubbleText));
 
         // move the mouse off the element to remove the bubble.
-        mouseOver(Locator.css("a.labkey-main-title"));
+        mouseOver(Locator.css(".labkey-page-nav"));
 
     }
 
-    private void validateSampleFile(int fileDetailIndex, List<String> fileDetails, List<String> bubbleTexts)
+    private void validateSampleFile(int fileDetailIndex, List<String> fileDetails, List<List<String>> bubbleTexts)
     {
         if (fileDetails.size() != bubbleTexts.size())
             throw new IllegalArgumentException("The fileDetails and bubbleTexts list are not of equal length.");
@@ -354,7 +355,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         for(int i = 0; i< fileDetails.size(); i++)
         {
             String fileDetailText = fileDetails.get(i);
-            String bubbleText = bubbleTexts.get(i);
+            List<String> perBubbleTexts = bubbleTexts.get(i);
             QCSummaryWebPart.QcSummaryTile qcSummaryTile = qcSummaryWebPart.getQcSummaryTiles().get(fileDetailIndex);
 
             String actualFileDetailText = qcSummaryTile.getRecentSampleFiles().get(i).getText();
@@ -363,12 +364,20 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
             mouseOver(qcSummaryTile.getRecentSampleFiles().get(i));
             waitForElement(qcSummaryWebPart.getBubble());
-            actualFileDetailText = qcSummaryWebPart.getBubbleText();
-            log("Validate that the bubble text for the file detail contains '" + bubbleText + "'.");
-            assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + actualFileDetailText + "' Expected: '" + bubbleText + "'", actualFileDetailText.toLowerCase().contains(bubbleText.toLowerCase()));
+            if (perBubbleTexts != null && !perBubbleTexts.isEmpty())
+            {
+                waitForElement(qcSummaryWebPart.getBubbleContent().containing(perBubbleTexts.get(0)));
+                for (String bubbleText : perBubbleTexts)
+                {
+                    log("Validate that the bubble text for the file detail contains '" + bubbleText + "'.");
+                    actualFileDetailText = qcSummaryWebPart.getBubbleText();
+                    assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + actualFileDetailText + "' Expected: '" + bubbleText + "'", actualFileDetailText.toLowerCase().contains(bubbleText.toLowerCase()));
+                }
+            }
             qcSummaryWebPart.closeBubble();
+            
             log("Move the mouse to avoid another hopscotch bubble.");
-            mouseOver(Locator.css("td.labkey-main-icon"));
+            mouseOver(Locator.css(".labkey-page-nav"));
             waitForElementToDisappear(qcSummaryWebPart.getBubble());
         }
 

@@ -83,7 +83,7 @@
             border: false, frame: false,
             defaults: {
                 labelWidth: 150,
-                labelStyle: 'background-color: #E0E6EA; padding: 5px;'
+                labelStyle: 'background-color: #E0E6EA; padding: 2px 4px; margin: 0;'
             },
             items: [
                 { xtype: 'hidden', name: 'X-LABKEY-CSRF', value: LABKEY.CSRF },

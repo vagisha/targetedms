@@ -55,6 +55,8 @@ import static org.junit.Assert.assertTrue;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCTest extends TargetedMSTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String[] PRECURSORS = {
             "ATEEQLK",
             "FFVAPFPEVFGK",
@@ -822,8 +824,8 @@ public class TargetedMSQCTest extends TargetedMSTest
 
     private void verifyRow(DataRegionTable drt, int row, String sampleName, String skylineDocName)
     {
-        assertEquals(sampleName, drt.getDataAsText(row, 3));
-        assertEquals(skylineDocName, drt.getDataAsText(row, 6));
+        assertEquals(sampleName, drt.getDataAsText(row, "Sample File"));
+        assertEquals(skylineDocName, drt.getDataAsText(row, "File"));
     }
 
     private void createAndInsertAnnotations()

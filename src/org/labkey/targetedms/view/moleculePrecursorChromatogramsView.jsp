@@ -26,7 +26,7 @@
     DecimalFormat ROUND_4 = new DecimalFormat("0.0000");
 %>
 
-<table>
+<table class="lk-fields-table">
     <tr>
         <td class="labkey-form-label">File</td>
         <td><%= h(bean.getRun().getFileName())%></td>

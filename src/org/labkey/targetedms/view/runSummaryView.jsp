@@ -33,7 +33,6 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
-        dependencies.add("vis/vis");
         dependencies.add("targetedms/js/DocumentSummary.js");
     }
 %>

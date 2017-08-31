@@ -66,6 +66,11 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
         getWrapper().click(Locators.hopscotchBubbleClose);
     }
 
+    public Locator.XPathLocator getBubbleContent()
+    {
+        return Locators.hopscotchBubbleContent;
+    }
+
     public String getBubbleText()
     {
         return Locators.hopscotchBubbleContent.withText().waitForElement(getDriver(), 1000).getText();

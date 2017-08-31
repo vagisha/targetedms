@@ -31,7 +31,7 @@
     ActionURL precursorDetailsUrl = new ActionURL(TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class, getContainer());
 %>
 
-<table>
+<table class="lk-fields-table">
     <tr>
         <td class="labkey-form-label">Name</td>
         <td><%= h(bean.getRun().getDescription())%></td>

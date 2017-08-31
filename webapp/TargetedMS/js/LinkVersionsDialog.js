@@ -256,18 +256,18 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
                     cls: 'link-version-footer',
                     width: 750,
                     html: footerText
-                },'->',{
+                }, '->', {
+                    text: 'Cancel',
+                    width: 75,
+                    handler: function() {
+                        win.close();
+                    }
+                },{
                     text: 'Save',
                     width: 75,
                     scope: this,
                     handler: function() {
                         this.saveLinkedVersions(win);
-                    }
-                },{
-                    text: 'Cancel',
-                    width: 75,
-                    handler: function() {
-                        win.close();
                     }
                 }]
             }]

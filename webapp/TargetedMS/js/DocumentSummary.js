@@ -40,8 +40,8 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             },
             items: [
                 {
-                    xtype: 'label',
-                    html: 'Name: ' + this.fileName+ (this.fileSize == null ? '' : ' (' + this.fileSize + ')')
+                    xtype: 'box',
+                    html: '<b>Name:</b> ' + Ext4.String.htmlEncode(this.fileName) + (this.fileSize == null ? '' : ' (' + this.fileSize + ')')
                 }
             ]
         };
@@ -68,7 +68,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
 
         if (this.fileName != "File not found") {
             options.items.push({
-                xtype: 'label',
+                xtype: 'box',
                 html: '<span height="16px" class="edit-views-link fa fa-download"></span>',
                 listeners: {
                     click: {
@@ -80,14 +80,14 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                     }
                 },
                 autoEl: {
-                    tag: 'label',
+                    tag: 'span',
                     'data-qtip': 'Download File'
                 }
             });
 
             options.items.push({
-                xtype: 'label',
-                html: '<a>' + LABKEY.Utils.pluralBasic(this.versionCount, 'version') + '</a>',
+                xtype: 'box',
+                html: '<a href="#">' + LABKEY.Utils.pluralBasic(this.versionCount, 'version') + '</a>',
                 margin: '0 0 0 5',
                 listeners: {
                     click: {
@@ -106,8 +106,8 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
 
     getClickableCount: function (count, label, action, first) {
         return {
-            xtype: 'label',
-            html: (!first?',&nbsp':'') + '<a>' + LABKEY.Utils.pluralBasic(count, label) + '</a>',
+            xtype: 'box',
+            html: (!first?',&nbsp':'') + '<a href="#">' + LABKEY.Utils.pluralBasic(count, label) + '</a>',
             listeners: {
                 click: {
                     element: 'el',

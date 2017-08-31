@@ -618,7 +618,9 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public void checkPlotType(QCPlotType plotType, boolean checked)
     {
-        elementCache().findQCPlotTypeCheckbox(plotType).set(checked);
+        Checkbox checkbox = elementCache().findQCPlotTypeCheckbox(plotType);
+        getWrapper().scrollIntoView(checkbox.getComponentElement());
+        checkbox.set(checked);
     }
 
     public boolean isPlotTypeSelected(QCPlotType plotType)

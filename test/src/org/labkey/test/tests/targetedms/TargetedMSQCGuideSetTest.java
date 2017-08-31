@@ -51,6 +51,8 @@ import static org.junit.Assert.assertTrue;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCGuideSetTest extends TargetedMSTest
 {
+    {setIsBootstrapWhitelisted(true);}
+
     private static final String[] PRECURSORS = {
             "ATEEQLK",
             "FFVAPFPEVFGK",
@@ -548,7 +550,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         clickAndWait(Locator.css("#paretoPlot-GuideSet-" + guideSetNum + plotType.getIdSuffix() + "-" + barPlotNum + " > a:nth-child(1) > rect"));
 
         //check navigation to 'Panorama Dashboard' tab
-        assertEquals("Panorama Dashboard", getText(Locator.css(".tab-nav-active")));
+        assertEquals("Panorama Dashboard", getText(Locator.tagWithClass("ul", "lk-nav-tabs").append(Locator.tagWithClass("li", "active"))));
 
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();

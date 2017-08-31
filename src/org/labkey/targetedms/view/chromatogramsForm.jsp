@@ -62,17 +62,20 @@
         width:100%;
         overflow:hidden;
     }
-    .title_box {
+    .chrom_title_box {
         border: #ccc 1px solid;
         margin-top:20px;
+        padding: 5px;
     }
 
-    .title_box .title {
+    .chrom_title_box .title {
         position: relative;
-        top : -0.7em;
-        margin-left: 1em;
+        top : -0.9em;
+        margin-left: 20px;
         display: inline;
         background-color: white;
+        font-size: 16px;
+        padding: 0 5px;
     }
     .item
     {
@@ -126,10 +129,11 @@
             name: 'chromForm',
             border: false, frame: false,
             width:550,
+            autoResize: false,
             defaults: {
                 labelWidth: 150,
                 labelHeight: 23,
-                labelStyle: 'background-color: #E0E6EA; padding: 6px; margin-top:0px;'
+                labelStyle: 'background-color: #E0E6EA; padding: 2px 4px; margin:0px;'
             }, layout: {
                 type: 'table',
                 columns: 3
@@ -481,15 +485,15 @@
 
 <div id="headContainer">
     <div  onclick="showChart()" style="margin-bottom: 10px;"><img id="showGraphImg" src="/labkey/_images/minus.gif"> <strong>Display Chart Settings</strong></div>
-    <div id="formContainer" style="float:left; width:550px;"></div>
+    <div id="formContainer" style="float:left; width:550px; padding-bottom: 25px;"></div>
     <div id="allFilters" style="float:left;">
 
-        <div style="float:left;" class="title_box" id="reptitle" >
-            <h4 class="title">Replicate Filters</h4>
+        <div style="float:left;" class="chrom_title_box" id="reptitle" >
+            <h3 class="title">Replicate Filters</h3>
         <table id="replicateFilters"></table>
         </div>
 
-        <div style="float:left; margin-left:20px;" class="title_box" id="annottitle">
+        <div style="float:left; margin-left:20px;" class="chrom_title_box" id="annottitle">
             <h4 class="title">Annotation Filters</h4>
         <table id="annotationFilters"></table>
         </div>
