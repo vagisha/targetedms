@@ -2,12 +2,12 @@
     <columns>
         <column name="Sequence" />
         <column name="Charge" />
+        <column name="replicateId"/>
         <column name="bestRtMean"/>
         <column name="lightTotalAreaMean"/>
         <column name="heavyTotalAreaMean"/>
         <column name="ratioMean"/>
         <column name="analyteConcentrationMean"/>
         <column name="calculatedConcentrationMean"/>
-        <column name="replicateId"></column>
     </columns>
 </customView>

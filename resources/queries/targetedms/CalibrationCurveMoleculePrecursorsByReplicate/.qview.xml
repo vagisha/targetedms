@@ -1,13 +1,13 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <columns>
-        <column name="Sequence" />
+        <column name="CustomIonName" />
         <column name="Charge" />
+        <column name="replicateId"/>
         <column name="bestRtMean"/>
         <column name="lightTotalAreaMean"/>
         <column name="heavyTotalAreaMean"/>
         <column name="ratioMean"/>
         <column name="analyteConcentrationMean"/>
         <column name="calculatedConcentrationMean"/>
-        <column name="replicateId"></column>
     </columns>
 </customView>

@@ -5,21 +5,26 @@
                 <columns>
                     <column columnName="bestRtMean">
                         <columnTitle>RT Mean</columnTitle>
+                        <formatString>#,##0.0000</formatString>
                     </column>
                     <column columnName="lightTotalAreaMean">
                         <columnTitle>Intensity L Mean</columnTitle>
+                        <formatString>#,##0.0000</formatString>
                     </column>
                     <column columnName="heavyTotalAreaMean">
                         <columnTitle>Intensity H Mean</columnTitle>
+                        <formatString>#,##0.0000</formatString>
                     </column>
                     <column columnName="ratioMean">
                         <columnTitle>L/H Ratio Mean</columnTitle>
+                        <formatString>0.00</formatString>
                     </column>
                     <column columnName="analyteConcentrationMean">
                         <columnTitle>Exp Conc Mean</columnTitle>
                     </column>
                     <column columnName="calculatedConcentrationMean">
                         <columnTitle>Measured Conc Mean</columnTitle>
+                        <formatString>0.00</formatString>
                     </column>
                     <column columnName="replicateId">
                         <fk>

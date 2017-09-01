@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 SELECT
-ccp.HeavyPrecursorChromInfo.PrecursorId.GeneralMoleculeId.Sequence,
+ccp.HeavyPrecursorChromInfo.MoleculePrecursorId.GeneralMoleculeId.CustomIonName,
 ccp.charge,
 avg(ccp.ratio) as ratioMean,
 avg(ccp.HeavyPrecursorChromInfo.BestRetentionTime) bestRtMean,
@@ -25,4 +25,4 @@ avg(ccp.HeavyPrecursorChromInfo.PeptideChromInfoId.CalculatedConcentration) calc
 rep.id replicateId
 FROM CalibrationCurveMoleculePrecursors ccp
 JOIN replicate rep ON rep.id = ccp.SampleFileId.ReplicateId
-GROUP BY rep.id,ccp.charge, ccp.HeavyPrecursorChromInfo.PrecursorId.GeneralMoleculeId.Sequence
+GROUP BY rep.id, ccp.charge, ccp.HeavyPrecursorChromInfo.MoleculePrecursorId.GeneralMoleculeId.CustomIonName

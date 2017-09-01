@@ -66,6 +66,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     public void testMergeDocumentsScenario() throws Exception
     {
         runScenario("MergedDocuments");
+        testCalibrationCurveMoleculePrecursorsByReplicate();
     }
 
     @Test
@@ -81,9 +82,8 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         runScenario("p180test_calibration_DukeApril2016");
     }
 
-    private void testCalibrationCurvePrecursorsByReplicate() throws IOException, CommandException
+    private void testCalibrationCurvePrecursorsByReplicate()
     {
-
         String folderHome = getProjectName() + "/CalibrationTest";
         goToProjectHome(folderHome);
         goToSchemaBrowser();
@@ -92,28 +92,26 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         List<String> expectedColumnNames = new ArrayList<>();
         expectedColumnNames.add("Sequence");
         expectedColumnNames.add("charge");
+        expectedColumnNames.add("replicateId");
         expectedColumnNames.add("bestRtMean");
         expectedColumnNames.add("lightTotalAreaMean");
         expectedColumnNames.add("heavyTotalAreaMean");
         expectedColumnNames.add("ratioMean");
         expectedColumnNames.add("analyteConcentrationMean");
         expectedColumnNames.add("calculatedConcentrationMean");
-        expectedColumnNames.add("replicateId");
-
         assertEquals("Wrong column names ",expectedColumnNames, dataRegionTable.getColumnNames());
 
-        List<String> expectedValues = new ArrayList<>();
-        expectedValues.add("VIFDANAPVAVR");
-        expectedValues.add("2+");
-        expectedValues.add("0.21276666224002838");
-        expectedValues.add("2288.001708984375");
-        expectedValues.add("102404.5703125");
-        expectedValues.add("0.02234276942908764");
-        expectedValues.add("0.05");
-        expectedValues.add("0.0869748587539913");
-        expectedValues.add("Cal 2_0_5 ng_mL_VIFonly");
-
-        assertEquals("Wrong column values ",expectedValues, dataRegionTable.getRowDataAsText(4));
+        String replicate = "Cal 2_0_5 ng_mL_VIFonly";
+        dataRegionTable.setFilter("replicateId", "Equals", replicate);
+        assertEquals("Unexpected number of filtered rows", 1, dataRegionTable.getDataRowCount());
+        assertEquals("Unexpected value for " + replicate, "VIFDANAPVAVR", dataRegionTable.getDataAsText(0, "Sequence"));
+        assertEquals("Unexpected value for " + replicate, "2+", dataRegionTable.getDataAsText(0, "charge"));
+        assertEquals("Unexpected value for " + replicate, "0.2128", dataRegionTable.getDataAsText(0, "bestRtMean"));
+        assertEquals("Unexpected value for " + replicate, "2,288.0017", dataRegionTable.getDataAsText(0, "lightTotalAreaMean"));
+        assertEquals("Unexpected value for " + replicate, "102,404.5703", dataRegionTable.getDataAsText(0, "heavyTotalAreaMean"));
+        assertEquals("Unexpected value for " + replicate, "0.02", dataRegionTable.getDataAsText(0, "ratioMean"));
+        assertEquals("Unexpected value for " + replicate, "0.05", dataRegionTable.getDataAsText(0, "analyteConcentrationMean"));
+        assertEquals("Unexpected value for " + replicate, "0.087", dataRegionTable.getDataAsText(0, "calculatedConcentrationMean"));
 
         //TODO check that values have changed to mean of two replicates
         //Will require getting replicate id for the sample file represented by the row being validated.
@@ -122,26 +120,49 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         //Once this portion of the test is complete it would be best to set the sample file's replicate id back to
         //its original value.
         //This will also require addressing the user permission issue in setSampleFileReplicate()
-//        setSampleFileReplicate(targetSampleFileId,replicateIdFromBaseSampleFile);
+        //setSampleFileReplicate(targetSampleFileId,replicateIdFromBaseSampleFile);
+    }
 
+    private void testCalibrationCurveMoleculePrecursorsByReplicate()
+    {
+        String folderHome = getProjectName() + "/MergedDocuments";
+        goToProjectHome(folderHome);
         goToSchemaBrowser();
-        selectQuery("targetedms", "CalibrationCurveMoleculePrecursorsByReplicate");
-        waitAndClickAndWait(Locator.linkWithText("view data"));
-        dataRegionTable = new DataRegionTable("query",this);
+        DataRegionTable dataRegionTable = viewQueryData("targetedms", "CalibrationCurveMoleculePrecursorsByReplicate");
 
-        expectedColumnNames = new ArrayList<>();
-        expectedColumnNames.add("Sequence");
+        List<String> expectedColumnNames = new ArrayList<>();
+        expectedColumnNames.add("CustomIonName");
         expectedColumnNames.add("charge");
+        expectedColumnNames.add("replicateId");
         expectedColumnNames.add("bestRtMean");
         expectedColumnNames.add("lightTotalAreaMean");
         expectedColumnNames.add("heavyTotalAreaMean");
         expectedColumnNames.add("ratioMean");
         expectedColumnNames.add("analyteConcentrationMean");
         expectedColumnNames.add("calculatedConcentrationMean");
-        expectedColumnNames.add("replicateId");
-
         assertEquals("Wrong column names ",expectedColumnNames, dataRegionTable.getColumnNames());
 
+        String replicate = "49_0_1_1_02_437301";
+        String customIonName = "Gly";
+        dataRegionTable.setFilter("replicateId", "Equals", replicate);
+        dataRegionTable.setFilter("CustomIonName", "Equals", customIonName);
+        assertEquals("Unexpected number of filtered rows", 1, dataRegionTable.getDataRowCount());
+        assertEquals("Unexpected value for " + replicate + " - " + customIonName, "1+", dataRegionTable.getDataAsText(0, "charge"));
+        assertEquals("Unexpected value for " + replicate + " - " + customIonName, "2.2351", dataRegionTable.getDataAsText(0, "bestRtMean"));
+        assertEquals("Unexpected value for " + replicate + " - " + customIonName, "653,201.5625", dataRegionTable.getDataAsText(0, "lightTotalAreaMean"));
+        assertEquals("Unexpected value for " + replicate + " - " + customIonName, "8,643,496.0000", dataRegionTable.getDataAsText(0, "heavyTotalAreaMean"));
+        assertEquals("Unexpected value for " + replicate + " - " + customIonName, "0.08", dataRegionTable.getDataAsText(0, "ratioMean"));
+        assertEquals("Unexpected value for " + replicate + " - " + customIonName, "25.0", dataRegionTable.getDataAsText(0, "analyteConcentrationMean"));
+        assertEquals("Unexpected value for " + replicate + " - " + customIonName, "-13.90", dataRegionTable.getDataAsText(0, "calculatedConcentrationMean"));
+
+        //TODO check that values have changed to mean of two replicates
+        //Will require getting replicate id for the sample file represented by the row being validated.
+        //This sample data has a one to one sample file to replicate relationship.
+        //To test the actual mean values another sample file will need to have the same replicate id
+        //Once this portion of the test is complete it would be best to set the sample file's replicate id back to
+        //its original value.
+        //This will also require addressing the user permission issue in setSampleFileReplicate()
+        //setSampleFileReplicate(targetSampleFileId,replicateIdFromBaseSampleFile);
     }
 
     private void setSampleFileReplicate(int sampleFileId, int replicateId) throws IOException, CommandException
