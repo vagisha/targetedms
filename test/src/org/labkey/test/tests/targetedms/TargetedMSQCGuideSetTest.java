@@ -446,19 +446,19 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         List<GetQueryDetailsResponse.Column> columns = queryDetailsResponse.getColumns();
 
         int groupingIndex = 8;
-        assertEquals("",columns.get(groupingIndex).getName(),"Grouping");
-        assertEquals("",columns.get(groupingIndex).getCaption(),"Grouping");
-        assertEquals("",columns.get(groupingIndex).getType(), "Text (String)");
+        assertEquals("","Grouping", columns.get(groupingIndex).getName());
+        assertEquals("","Grouping", columns.get(groupingIndex).getCaption());
+        assertEquals("", "Text (String)", columns.get(groupingIndex).getType());
 
         int ignoreIndex = 9;
-        assertEquals("",columns.get(ignoreIndex).getName(),"ignore_in_QC");
-        assertEquals("",columns.get(ignoreIndex).getCaption(),"ignore_in_QC");
-        assertEquals("",columns.get(ignoreIndex).getType(), "True/False (Boolean)");
+        assertEquals("","ignore_in_QC", columns.get(ignoreIndex).getName());
+        assertEquals("","ignore_in_QC", columns.get(ignoreIndex).getCaption());
+        assertEquals("", "True/False (Boolean)", columns.get(ignoreIndex).getType());
 
         int timeIndex = 10;
-        assertEquals("",columns.get(timeIndex).getName(),"Time");
-        assertEquals("",columns.get(timeIndex).getCaption(),"Time");
-        assertEquals("",columns.get(timeIndex).getType(), "Number (Double)");
+        assertEquals("","Time", columns.get(timeIndex).getName());
+        assertEquals("","Time", columns.get(timeIndex).getCaption());
+        assertEquals("", "Number (Double)", columns.get(timeIndex).getType());
 
         //confirm data in grid view
         waitAndClickAndWait(Locator.linkWithText("view data"));
@@ -475,7 +475,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         expected.add("Group A");
         expected.add("true");
         expected.add("5.0");
-        assertEquals("Wrong data in first row",expected,strings);
+        assertEquals("Wrong data in first row", expected, strings);
     }
 
     private void createGuideSet(GuideSet guideSet, String expectErrorMsg)
