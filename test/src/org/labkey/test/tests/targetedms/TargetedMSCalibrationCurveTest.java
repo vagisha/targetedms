@@ -286,7 +286,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             if (rowWithoutData >= 0)
             {
                 goBack();
-                clickAndWait(calibrationCurvesTable.detailsLink(rowWithoutData));
+                calibrationCurvesTable.clickRowDetails(rowWithoutData);
 
                 calibrationCurveWebpart = new CalibrationCurveWebpart(getDriver());
                 assertEquals("Calibration curve with no data shouldn't have any points", 0, calibrationCurveWebpart.getSvgPoints().size());
