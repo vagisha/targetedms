@@ -575,6 +575,7 @@ webapp/TargetedMS/js/QCSummaryPanel.js -text
 webapp/TargetedMS/js/QCTrendPlotPanel.js -text
 webapp/TargetedMS/js/clipboard.min.js -text
 webapp/TargetedMS/js/dropDownUtil.js -text
+webapp/TargetedMS/lorikeet.lib.xml -text
 webapp/TargetedMS/lorikeet_0.3/css/lorikeet.css -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_lorikeet.png -text
 webapp/TargetedMS/lorikeet_0.3/images/lorikeet/header_scan.png -text

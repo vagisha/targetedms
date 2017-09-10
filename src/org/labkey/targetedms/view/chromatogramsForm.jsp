@@ -23,7 +23,16 @@
 <%@ page import="org.labkey.targetedms.query.ReplicateManager" %>
 <%@ page import="java.util.List" %>
 <%@ page import="org.labkey.targetedms.parser.Replicate" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
+<%!
+    @Override
+    public void addClientDependencies(ClientDependencies dependencies)
+    {
+        dependencies.add("Ext4");
+        dependencies.add("MS2/lorikeet_0.3/js/jquery-1.4.2.min.js");
+    }
+%>
 <%
     JspView<TargetedMSController.GeneralMoleculeChromatogramsViewBean> me = (JspView<TargetedMSController.GeneralMoleculeChromatogramsViewBean>) HttpView.currentView();
     TargetedMSController.GeneralMoleculeChromatogramsViewBean bean = me.getModelBean();
@@ -36,7 +45,7 @@
     String selectedAnnotations = getViewContext().getRequest().getParameter("annotationsFilter");
     String selectedReplicates = getViewContext().getRequest().getParameter("replicatesFilter");
 %>
-<style>
+<style type="text/css">
     #allFilters
     {
         overflow:hidden;
@@ -82,7 +91,6 @@
         font-size:10px;
     }
 </style>
-<script type="text/javascript" src="<%=getContextPath()%>/MS2/lorikeet_0.3/js/jquery-1.4.2.min.js"></script>
 <script type="text/javascript">
     var hiddenFields;
     var replicateStore;
@@ -122,7 +130,7 @@
         var annotationsFilter = "<%=h(selectedAnnotations)%>";
         selectedAnnotationsFilterList = annotationsFilter.split(',');
         var replicateFilter = "<%=h(selectedReplicates)%>";
-        selectedReplicatesFilterList = replicateFilter.split(',')
+        selectedReplicatesFilterList = replicateFilter.split(',');
         form = Ext4.create('Ext.form.Panel', {
             renderTo: 'formContainer',
             standardSubmit: true,
@@ -264,7 +272,7 @@
                     });
                 }
             }]
-        })
+        });
 
         // This has to happen after form is rendered.
         form.getForm().findField("annotationsFilter").setValue(selectedAnnotationsFilterList);
@@ -408,7 +416,7 @@
         form.getForm().findField('replicatesFilter').clearValue();
         $('#replicateFilters').empty();
         manageFilterListVisibility();
-    };
+    }
 
     // Manages the visibility of the filter lists in the UI.
     function manageFilterListVisibility()
@@ -482,7 +490,6 @@
         }
     }
 </script>
-
 <div id="headContainer">
     <div  onclick="showChart()" style="margin-bottom: 10px;"><img id="showGraphImg" src="/labkey/_images/minus.gif"> <strong>Display Chart Settings</strong></div>
     <div id="formContainer" style="float:left; width:550px; padding-bottom: 25px;"></div>
