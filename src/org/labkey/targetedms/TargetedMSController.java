@@ -49,6 +49,7 @@ import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.cloud.CloudStoreService;
 import org.labkey.api.data.BeanViewForm;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.ColumnInfo;
@@ -315,6 +316,7 @@ public class TargetedMSController extends SpringActionController
                     // continue with the remainder of the function
                     break;
             }
+
             if (FolderType.Experiment.toString().equals(folderSetupForm.getFolderType()))
             {
                 moduleProperty.saveValue(getUser(), c, FolderType.Experiment.toString());
@@ -323,8 +325,6 @@ public class TargetedMSController extends SpringActionController
                 addDashboardTab(c, EXPERIMENT_FOLDER_WEB_PARTS);
                 // Add a second portal page (tab) and webparts
                 addDataPipelineTab(c);
-
-                return true;
             }
             else if (FolderType.Library.toString().equals(folderSetupForm.getFolderType()))
             {
@@ -351,8 +351,6 @@ public class TargetedMSController extends SpringActionController
 
                 // Add a second portal page (tab) and webparts
                 addDataPipelineTab(c);
-
-                return true;
             }
             else if (FolderType.QC.toString().equals(folderSetupForm.getFolderType()))
             {
@@ -395,10 +393,12 @@ public class TargetedMSController extends SpringActionController
                 Portal.addProperty(c, PARETO_PLOT_TAB, Portal.PROP_CUSTOMTAB);
 
                 addDataPipelineTab(c);
-                return true;
             }
-            else
-                return true;  // no option selected - do nothing
+
+            if (CloudFileStorageFolderType.NAME.equals(c.getFolderType().getName()))
+                CloudStoreService.get().addCloudStorageTab(c);
+
+            return true;  // no option selected - do nothing
 
         }
 

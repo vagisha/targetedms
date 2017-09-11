@@ -29,6 +29,7 @@ import org.labkey.api.view.ViewContext;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 /**
  * User: vsharma
@@ -41,13 +42,20 @@ public class TargetedMSFolderType extends MultiPortalFolderType
 
     public TargetedMSFolderType(TargetedMSModule module)
     {
-        super(NAME,
-                "Manage targeted MS assays generated in Skyline.",
-            Collections.emptyList(),
-            // Issue 17966: Add the setup webpart by default. It will be removed once the user selects a folder type.
-            Collections.singletonList(Portal.getPortalPart(TargetedMSModule.TARGETED_MS_SETUP).createWebPart()),
-            getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment")),
-            module);
+        this(module,
+             NAME,
+             "Manage targeted MS assays generated in Skyline.",
+             getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment")));
+    }
+    public TargetedMSFolderType(TargetedMSModule module, String name, String description, Set<Module> actieModules)
+    {
+        super(name,
+              description,
+              Collections.emptyList(),
+              // Issue 17966: Add the setup webpart by default. It will be removed once the user selects a folder type.
+              Collections.singletonList(Portal.getPortalPart(TargetedMSModule.TARGETED_MS_SETUP).createWebPart()),
+              actieModules,
+              module);
     }
 
     @Override

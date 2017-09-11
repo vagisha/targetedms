@@ -19,6 +19,7 @@ package org.labkey.targetedms;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.audit.AuditLogService;
+import org.labkey.api.cloud.CloudStoreService;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
@@ -366,6 +367,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         //register the Targeted MS folder type
         FolderTypeManager.get().registerFolderType(this, new TargetedMSFolderType(this));
+        if (null != CloudStoreService.get())
+            FolderTypeManager.get().registerFolderType(this, new CloudFileStorageFolderType(this));
 
         ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
         proteinService.registerProteinSearchView(new TransitionProteinSearchViewProvider());
