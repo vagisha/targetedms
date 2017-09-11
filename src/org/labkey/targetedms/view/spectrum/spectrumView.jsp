@@ -27,7 +27,7 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
-        dependencies.add("TargetedMS/lorikeet");
+        dependencies.add("MS2/lorikeet");
     }
 %>
 

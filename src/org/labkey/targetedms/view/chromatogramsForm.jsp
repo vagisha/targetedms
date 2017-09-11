@@ -321,7 +321,7 @@
         {
             if(displayValue != null)
             {
-                element.append("<tr id=\'"+id+"\'><td class="+"item"+"><img src='/labkey/_images/delete.png' style='width:10px; height:10px; margin-right:3px;' onclick=\"deleteFilter(this, \'"+parentTable+"\')\">"+displayValue+"</td></tr>");
+                element.append("<tr id=\'"+id+"\'><td class="+"item"+"><img src='<%=getViewContext().getContextPath()%>/_images/delete.png' style='width:10px; height:10px; margin-right:3px;' onclick=\"deleteFilter(this, \'"+parentTable+"\')\">"+displayValue+"</td></tr>");
             }
         }
 
@@ -476,22 +476,22 @@
     // Handels showing and hiding the form.
     function showChart()
     {
-        if($('#showGraphImg').attr('src') == "/labkey/_images/plus.gif")
+        if($('#showGraphImg').attr('src') === LABKEY.contextPath + "/_images/plus.gif")
         {
-            $('#showGraphImg').attr('src',"/labkey/_images/minus.gif");
+            $('#showGraphImg').attr('src', LABKEY.contextPath + "/_images/minus.gif");
             $('#formContainer').show("slow");
             $('#allFilters').show("slow");
         }
         else
         {
-            $('#showGraphImg').attr('src',"/labkey/_images/plus.gif");
+            $('#showGraphImg').attr('src', LABKEY.contextPath + "/_images/plus.gif");
             $('#formContainer').hide("slow");
             $('#allFilters').hide("slow");
         }
     }
 </script>
 <div id="headContainer">
-    <div  onclick="showChart()" style="margin-bottom: 10px;"><img id="showGraphImg" src="/labkey/_images/minus.gif"> <strong>Display Chart Settings</strong></div>
+    <div  onclick="showChart()" style="margin-bottom: 10px;"><img id="showGraphImg" src="<%=getViewContext().getContextPath()%>/_images/minus.gif"> <strong>Display Chart Settings</strong></div>
     <div id="formContainer" style="float:left; width:550px; padding-bottom: 25px;"></div>
     <div id="allFilters" style="float:left;">
 
