@@ -2798,6 +2798,17 @@ public class TargetedMSController extends SpringActionController
             super(formClass);
         }
 
+        @Override
+        public void validate(RunDetailsForm form, BindException errors)
+        {
+            //this action requires that a specific experiment run has been specified
+            if(!form.hasRunId())
+                throw new RedirectException(new ActionURL(ShowListAction.class, getContainer()));
+
+            //ensure that the experiment run is valid and exists within the current container
+            _run = validateRun(form.getId());
+        }
+
         public NavTree appendNavTrail(NavTree root)
         {
             return appendNavTrail(root, _run);
@@ -2825,13 +2836,6 @@ public class TargetedMSController extends SpringActionController
 
         public ModelAndView getHtmlView(final RunDetailsForm form, BindException errors) throws Exception
         {
-            //this action requires that a specific experiment run has been specified
-            if(!form.hasRunId())
-                throw new RedirectException(new ActionURL(ShowListAction.class, getContainer()));
-
-            //ensure that the experiment run is valid and exists within the current container
-            _run = validateRun(form.getId());
-
             VBox vBox = new VBox();
             vBox.addView(getSummaryView(form, _run));
 
@@ -3035,12 +3039,6 @@ public class TargetedMSController extends SpringActionController
         @Override
         protected ModelAndView getHtmlView(RunDetailsForm form, BindException errors) throws Exception
         {
-            if(!form.hasRunId())
-                throw new RedirectException(new ActionURL(ShowListAction.class, getContainer()));
-
-            //ensure that the experiment run is valid and exists within the current container
-            _run = validateRun(form.getId());
-
             WebPartView replicatesView = createInitializedQueryView(form, errors, false, DATA_REGION_NAME);
             replicatesView.setFrame(WebPartView.FrameType.PORTAL);
             replicatesView.setTitle("Replicate List");
@@ -3054,12 +3052,6 @@ public class TargetedMSController extends SpringActionController
         @Override
         protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
         {
-            if(!form.hasRunId())
-                throw new RedirectException(new ActionURL(ShowListAction.class, getContainer()));
-
-            //ensure that the experiment run is valid and exists within the current container
-            _run = validateRun(form.getId());
-
             QuerySettings settings = new QuerySettings(getViewContext(), DATA_REGION_NAME, "Replicate");
             settings.getBaseFilter().addCondition(FieldKey.fromParts("RunId"), _run.getRunId());
             QueryView view = new TargetedMSSchema(getUser(), getContainer()).createView(getViewContext(), settings, errors);
@@ -6216,6 +6208,13 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
+        public void validate(CalibrationCurveForm form, BindException errors)
+        {
+            //ensure that the experiment run is valid and exists within the current container
+            _run = validateRun(form.getId());
+        }
+
+        @Override
         protected QueryView createQueryView(CalibrationCurveForm form, BindException errors, boolean forExport, @Nullable String dataRegion) throws Exception
         {
             UserSchema schema = new TargetedMSSchema(getUser(), getContainer());
@@ -6238,9 +6237,6 @@ public class TargetedMSController extends SpringActionController
                         " Curve ID: " + calibrationCurveForm.getCalibrationCurveId());
 
             _asProteomics = _chart.getMolecule() != null && _chart.getMolecule() instanceof Peptide;
-
-            //ensure that the experiment run is valid and exists within the current container
-            _run = validateRun(calibrationCurveForm.getId());
 
             calibrationCurveForm.setJsonData(curveData);
             JspView<CalibrationCurveForm> curvePlotView = new JspView<>("/org/labkey/targetedms/view/calibrationCurve.jsp", calibrationCurveForm);
