@@ -132,7 +132,6 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         WebElement importButton = importButtonLoc.findElementOrNull(getDriver());
         if (null == importButton)
         {
-            scrollIntoView(LabKeySiteWrapper.IS_BOOTSTRAP_LAYOUT ? Locators.UX_ADMIN_MENU_TOGGLE : Locators.ADMIN_MENU);
             goToModule("Pipeline");
             importButton = importButtonLoc.findElement(getDriver());
         }
