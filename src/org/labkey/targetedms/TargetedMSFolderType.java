@@ -47,14 +47,14 @@ public class TargetedMSFolderType extends MultiPortalFolderType
              "Manage targeted MS assays generated in Skyline.",
              getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment")));
     }
-    public TargetedMSFolderType(TargetedMSModule module, String name, String description, Set<Module> actieModules)
+    public TargetedMSFolderType(TargetedMSModule module, String name, String description, Set<Module> activeModules)
     {
         super(name,
               description,
               Collections.emptyList(),
               // Issue 17966: Add the setup webpart by default. It will be removed once the user selects a folder type.
               Collections.singletonList(Portal.getPortalPart(TargetedMSModule.TARGETED_MS_SETUP).createWebPart()),
-              actieModules,
+              activeModules,
               module);
     }
 

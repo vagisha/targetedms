@@ -10,11 +10,11 @@ import java.util.Set;
 /**
  * Created by davebradlee on 9/8/17.
  */
-public class CloudFileStorageFolderType extends TargetedMSFolderType
+public class TargetedMSCloudFileStorageFolderType extends TargetedMSFolderType
 {
     public static final String NAME = "Cloud File Storage";
 
-    public CloudFileStorageFolderType(TargetedMSModule module)
+    public TargetedMSCloudFileStorageFolderType(TargetedMSModule module)
     {
         super(module, NAME, "Manage targeted MS assays and raw MS files.",
               getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment"), getModule("Cloud")));

@@ -172,7 +172,6 @@ resources/schemas/dbscripts/sqlserver/targetedms-17.12-17.13.sql -text
 resources/schemas/targetedms.xml -text
 src/ChromatogramGroupData.proto -text
 src/SkylineDocument.proto -text
-src/org/labkey/targetedms/CloudFileStorageFolderType.java -text
 src/org/labkey/targetedms/IrtPeptide.java -text
 src/org/labkey/targetedms/PublishTargetedMSExperimentsController.java -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
@@ -196,6 +195,7 @@ src/org/labkey/targetedms/SkylinePort/Irt/RetentionTimeScoreCache.java -text
 src/org/labkey/targetedms/SkylinePort/Irt/RetentionTimeStatistics.java -text
 src/org/labkey/targetedms/SkylinePort/Irt/Statistics.java -text
 src/org/labkey/targetedms/TargetMSControllerUnitTest.java -text
+src/org/labkey/targetedms/TargetedMSCloudFileStorageFolderType.java -text
 src/org/labkey/targetedms/TargetedMSController.java -text
 src/org/labkey/targetedms/TargetedMSDataHandler.java -text
 src/org/labkey/targetedms/TargetedMSExperimentRunType.java -text
