@@ -193,8 +193,7 @@ public class ChromatogramsDataRegion extends DataRegion
             {
                 addSeparator();
 
-                NavTree item = addMenuItem("Show All", null,
-                        "LABKEY.DataRegions[" + PageFlowUtil.jsString(getName()) + "].showAll();", showingAll);
+                NavTree item = addMenuItem("Show All", null, getJavaScriptObjectReference() + ".showAll();", showingAll);
                 item.setId("Page Size:All");
 
                 super.render(ctx, out);
@@ -216,7 +215,7 @@ public class ChromatogramsDataRegion extends DataRegion
         {
             boolean checked = pageSize == maxRows;
             NavTree item = pageSizeMenu.addMenuItem(String.valueOf(pageSize) + " per page", null,
-                    "LABKEY.DataRegions[" + PageFlowUtil.jsString(getName()) + "].setMaxRows(" + String.valueOf(pageSize) + ");", checked);
+                    getJavaScriptObjectReference() + ".setMaxRows(" + String.valueOf(pageSize) + ");", checked);
             item.setId("Page Size:" + pageSize);
         }
 
