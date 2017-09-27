@@ -574,6 +574,7 @@ public class SkylineDocImporter
             run.setSmallMoleculeCount(parser.getSmallMoleculeCount());
             run.setPrecursorCount(parser.getPrecursorCount());
             run.setTransitionCount(parser.getTransitionCount());
+            run.setReplicateCount(parser.getReplicateCount());
 
             run.setDocumentGUID(parser.getDocumentGUID());
             Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());

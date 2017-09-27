@@ -172,6 +172,9 @@
             <column columnName="TransitionCount">
                 <formatString>#,###</formatString>
             </column>
+            <column columnName="ReplicateCount">
+                <formatString>#,###</formatString>
+            </column>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="PeptideGroup">

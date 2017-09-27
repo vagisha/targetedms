@@ -111,7 +111,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             // These 'dataIndex' look into the model
             {text: 'ExpRunRowId', dataIndex: 'RowId', hidden: true},
             {text: 'ID', dataIndex: 'File/Id', hidden: true},
-            {text: 'Document Name', dataIndex: 'File/FileName', flex: 3, menuDisabled: true, sortable: false, scope: this, renderer: function(value, metadata, record){
+            {text: 'Document Name', dataIndex: 'File/FileName', flex: 2, menuDisabled: true, sortable: false, scope: this, renderer: function(value, metadata, record){
                 var val = Ext4.String.htmlEncode(value),
                     url = LABKEY.ActionURL.buildURL('targetedms', 'showPrecursorList', null, {id: record.get('File/Id')});
 
@@ -124,10 +124,11 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             }},
             {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y g:i A', width: 160, menuDisabled: true, sortable: false},
             {text: 'Imported By', dataIndex: 'CreatedBy/DisplayName', width: 100, menuDisabled: true, sortable: false},
-            {text: 'Note', dataIndex: 'Flag/Comment', width: 185, menuDisabled: true, sortable: false, renderer: 'htmlEncode'},
-            {text: 'Proteins', dataIndex: 'File/Proteins', width: 67, menuDisabled: true, sortable: false, align: 'right'},
-            {text: 'Precursors', dataIndex: 'File/Precursors', width: 85, menuDisabled: true, sortable: false, align: 'right'},
-            {text: 'Transitions', dataIndex: 'File/Transitions', width: 87, menuDisabled: true, sortable: false, align: 'right'},
+            {text: 'Note', dataIndex: 'Flag/Comment', menuDisabled: true, sortable: false, renderer: 'htmlEncode'},
+            {text: 'Proteins', dataIndex: 'File/Proteins', menuDisabled: true, sortable: false, align: 'right'},
+            {text: 'Precursors', dataIndex: 'File/Precursors', menuDisabled: true, sortable: false, align: 'right'},
+            {text: 'Transitions', dataIndex: 'File/Transitions', menuDisabled: true, sortable: false, align: 'right'},
+            {text: 'Replicates', dataIndex: 'File/Replicates', menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Replaced By', dataIndex: 'ReplacedByRun', hidden: true},
             {text: 'Replaces', dataIndex: 'ReplacesRun', hidden: true}
         ];

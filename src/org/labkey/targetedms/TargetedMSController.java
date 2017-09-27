@@ -2739,7 +2739,6 @@ public class TargetedMSController extends SpringActionController
         bean.setRun(run);
         bean.setVersionCount(TargetedMSManager.getLinkedVersions(getUser(), getContainer(), ids, linkedRowIds).size());
         bean.setCalibrationCurveCount(TargetedMSManager.getCalibrationCurveCount(run.getRunId()));
-        bean.setReplicateCount(TargetedMSManager.getReplicateCount(run.getRunId()));
 
         JspView<RunDetailsBean> runSummaryView = new JspView<>("/org/labkey/targetedms/view/runSummaryView.jsp", bean);
         runSummaryView.setFrame(WebPartView.FrameType.PORTAL);
@@ -3096,7 +3095,6 @@ public class TargetedMSController extends SpringActionController
         private TargetedMSRun _run;
         private int _versionCount;
         private int _calibrationCurveCount;
-        private int _replicateCount;
 
         public RunDetailsForm getForm()
         {
@@ -3136,16 +3134,6 @@ public class TargetedMSController extends SpringActionController
         public void setCalibrationCurveCount(int calibrationCurveCount)
         {
             _calibrationCurveCount = calibrationCurveCount;
-        }
-
-        public int getReplicateCount()
-        {
-            return _replicateCount;
-        }
-
-        public void setReplicateCount(int replicateCount)
-        {
-            _replicateCount = replicateCount;
         }
     }
 

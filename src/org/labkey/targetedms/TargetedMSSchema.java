@@ -546,7 +546,7 @@ public class TargetedMSSchema extends UserSchema
                 stateColumn.setFk(new QueryForeignKey(TargetedMSSchema.this, null, TABLE_REPRESENTATIVE_DATA_STATE_RUN, "RowId", null));
 
                 ColumnInfo downloadLinkColumn = result.addWrapColumn("Download", result.getRealTable().getColumn("Id"));
-                downloadLinkColumn.setLabel("");
+                downloadLinkColumn.setKeyField(false);
                 downloadLinkColumn.setTextAlign("left");
                 downloadLinkColumn.setDisplayColumnFactory(new DisplayColumnFactory()
                 {
@@ -567,9 +567,11 @@ public class TargetedMSSchema extends UserSchema
                                     File skyDocFile = SkylineFileUtils.getSkylineFile(runLSID);
                                     if (skyDocFile != null && skyDocFile.isFile())
                                     {
-                                        String size = h((skyDocFile != null && skyDocFile.isFile()) ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
-                                        out.write(PageFlowUtil.textLink("Download", downloadUrl));
-                                        out.write("<span class=\"labkey-text-link\">" + size + "</span>");
+                                        String size = h(skyDocFile.isFile() ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
+                                        out.write("<a href=\"");
+                                        out.write(PageFlowUtil.filter(downloadUrl));
+                                        out.write("\"><span class=\"fa fa-download\" data-qtip=\"Download File\" /></a>");
+                                        out.write(size);
                                     }
                                     else
                                     {
@@ -593,6 +595,7 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn("SmallMolecules", result.getRealTable().getColumn("SmallMoleculeCount"));
                 result.addWrapColumn("Precursors", result.getRealTable().getColumn("PrecursorCount"));
                 result.addWrapColumn("Transitions", result.getRealTable().getColumn("TransitionCount"));
+                result.addWrapColumn("Replicates", result.getRealTable().getColumn("ReplicateCount"));
 
                 return result;
             }
@@ -614,6 +617,7 @@ public class TargetedMSSchema extends UserSchema
         columns.add(FieldKey.fromParts("File", "SmallMolecules"));
         columns.add(FieldKey.fromParts("File", "Precursors"));
         columns.add(FieldKey.fromParts("File", "Transitions"));
+        columns.add(FieldKey.fromParts("File", "Replicates"));
         columns.add(FieldKey.fromParts("File", "Download"));
 
         result.setDefaultVisibleColumns(columns);

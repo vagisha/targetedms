@@ -25,8 +25,11 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
 
     getNameAndOptions: function () {
 
-        if(this.fileName == null)
-            this.fileName = "File not found";
+        var items = [];
+        items.push({
+            xtype: 'box',
+            html: '<b>Name:</b> ' + Ext4.String.htmlEncode(this.runName) + (this.fileName == null || this.fileName == this.runName ? '' : (', from file ' + Ext4.String.htmlEncode(this.fileName))) + (this.fileSize == null ? '' : ' (' + this.fileSize + ')')
+        });
 
         var options = {
             xtype: 'panel',
@@ -38,15 +41,10 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             defaults: {
                 margins: '0 3 15 0'
             },
-            items: [
-                {
-                    xtype: 'box',
-                    html: '<b>Name:</b> ' + Ext4.String.htmlEncode(this.fileName) + (this.fileSize == null ? '' : ' (' + this.fileSize + ')')
-                }
-            ]
+            items: items
         };
 
-        if (this.renameAction != null && this.fileName != "File not found") {
+        if (this.renameAction != null) {
             options.items.push({
                 xtype: 'label',
                 html: '<span height="16px" class="edit-views-link fa fa-pencil"></span>',
@@ -66,7 +64,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             });
         }
 
-        if (this.fileName != "File not found") {
+        if (this.fileName != null) {
             options.items.push({
                 xtype: 'box',
                 html: '<span height="16px" class="edit-views-link fa fa-download"></span>',
@@ -85,21 +83,21 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                 }
             });
 
-            options.items.push({
-                xtype: 'box',
-                html: '<a href="#">' + LABKEY.Utils.pluralBasic(this.versionCount, 'version') + '</a>',
-                margin: '0 0 0 5',
-                listeners: {
-                    click: {
-                        element: 'el',
-                        fn: function () {
-                            window.location = this.versionsAction;
-                        },
-                        scope: this
-                    }
-                }
-            });
         }
+
+        options.items.push({
+            xtype: 'box',
+            html: '<a href="#">' + LABKEY.Utils.pluralBasic(this.versionCount, 'version') + '</a>',
+            listeners: {
+                click: {
+                    element: 'el',
+                    fn: function () {
+                        window.location = this.versionsAction;
+                    },
+                    scope: this
+                }
+            }
+        });
 
         return options;
     },
@@ -141,6 +139,15 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             items.push(this.getClickableCount(this.calibrationCurveCount, 'calibration curve', this.calibrationCurveListAction, false));
         }
 
+        if (this.softwareVersion) {
+            items.push({ xtype: 'label', html: '&nbsp;&nbsp;-&nbsp;&nbsp;'});
+            items.push({
+                xtype: 'box',
+                html: Ext4.String.htmlEncode(this.softwareVersion)
+            });
+        }
+
+
         return {
             xtype: 'panel',
             layout: {
@@ -152,5 +159,4 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
             items: items
         };
     }
-
 });

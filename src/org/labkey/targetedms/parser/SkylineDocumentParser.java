@@ -143,6 +143,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private int _smallMoleculeCount;
     private int _precursorCount;
     private int _transitionCount;
+    private int _replicateCount;
 
     private SkylineBinaryParser _binaryParser;
 
@@ -812,6 +813,7 @@ public class SkylineDocumentParser implements AutoCloseable
             }
         }
 
+        _replicateCount++;
         return replicate;
     }
 
@@ -2518,6 +2520,11 @@ public class SkylineDocumentParser implements AutoCloseable
     public int getTransitionCount()
     {
         return _transitionCount;
+    }
+
+    public int getReplicateCount()
+    {
+        return _replicateCount;
     }
 
 

@@ -71,6 +71,8 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     protected int _smallMoleculeCount;
     protected int _precursorCount;
     protected int _transitionCount;
+    protected int _replicateCount;
+
     protected Integer _dataId; // FK to exp.data's RowId column
     protected Integer _iRTscaleId;
 
@@ -288,6 +290,18 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     {
         _transitionCount = transitionCount;
     }
+
+    public void setReplicateCount(int replicateCount)
+    {
+        _replicateCount = replicateCount;
+    }
+
+    public int getReplicateCount()
+    {
+        return _replicateCount;
+    }
+
+
 
     public RepresentativeDataState getRepresentativeDataState()
     {
