@@ -15,4 +15,7 @@
  */
 
 ALTER TABLE targetedms.Runs ADD ReplicateCount INT;
+
+GO
+
 UPDATE targetedms.Runs SET ReplicateCount = (SELECT COUNT(r.id) FROM targetedms.Replicate r WHERE r.RunId = targetedms.Runs.Id);
