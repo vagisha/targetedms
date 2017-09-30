@@ -32,6 +32,7 @@ public enum CacheFormatVersion
     Ten,// Introduces waters lockmass correction in MSDataFileUri syntax
     Eleven,// Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
     Twelve,// Adds structure sizes to CacheHeaderStruct
+    Thirteen, // Adds total ion current to CachedFileHeaderStruct
     UnknownFutureVersion;
     public static CacheFormatVersion fromInteger(int i) {
         if (i <= Zero.ordinal()) {
@@ -42,5 +43,5 @@ public enum CacheFormatVersion
         }
         return values()[i];
     }
-    public static final CacheFormatVersion CURRENT = Twelve;
+    public static final CacheFormatVersion CURRENT = Thirteen;
 }

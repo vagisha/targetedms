@@ -40,6 +40,7 @@ public class CachedFileHeaderStruct
     // Version 9 file header addition
     int sizeScanIds;
     long locationScanIds;
+    float ticArea;
 
     public CachedFileHeaderStruct(LittleEndianInput dataInputStream) throws IOException {
         modified = dataInputStream.readLong();
@@ -51,9 +52,13 @@ public class CachedFileHeaderStruct
         maxIntensity = Float.intBitsToFloat(dataInputStream.readInt());
         sizeScanIds = dataInputStream.readInt();
         locationScanIds = dataInputStream.readLong();
+        ticArea = Float.intBitsToFloat(dataInputStream.readInt());
     }
 
     public static int getStructSize(CacheFormatVersion formatVersion) {
+        if (formatVersion.compareTo(CacheFormatVersion.Thirteen) >= 0) {
+            return 52;
+        }
         if (formatVersion.compareTo(CacheFormatVersion.Eight) > 0) {
             return 48;
         }
