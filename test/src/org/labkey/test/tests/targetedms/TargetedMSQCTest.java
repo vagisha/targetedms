@@ -788,8 +788,10 @@ public class TargetedMSQCTest extends TargetedMSTest
     private void verifyExclusionButtonSelection(String acquiredDate, QCPlotsWebPart.QCPlotExclusionState state)
     {
         QCPlotsWebPart qcPlotsWebPart = new PanoramaDashboard(this).getQcPlotsWebPart();
+        waitForElementToDisappear(Locator.tagWithClass("div", "x4-form-display-field"));
         mouseOver(qcPlotsWebPart.getPointByAcquiredDate(acquiredDate));
-        waitForElement(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
+        waitForElement(Locator.tagWithClass("div", "x4-form-display-field"));
+        assertElementPresent(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
         WebElement bubble = qcPlotsWebPart.getBubble().findElement(getDriver());
         RadioButton radioButton = RadioButton.RadioButton().withLabel(state.getLabel()).find(bubble);
         assertTrue("QC data point exclusion selection not as expected:" + state.getLabel(), radioButton.isChecked());
@@ -799,8 +801,10 @@ public class TargetedMSQCTest extends TargetedMSTest
     private void changePointExclusionState(String acquiredDate, QCPlotsWebPart.QCPlotExclusionState state, int waitForPlotCount)
     {
         QCPlotsWebPart qcPlotsWebPart = new PanoramaDashboard(this).getQcPlotsWebPart();
+        waitForElementToDisappear(Locator.tagWithClass("div", "x4-form-display-field"));
         mouseOver(qcPlotsWebPart.getPointByAcquiredDate(acquiredDate));
-        waitForElement(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
+        waitForElement(Locator.tagWithClass("div", "x4-form-display-field"));
+        assertElementPresent(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
         WebElement bubble = qcPlotsWebPart.getBubble().findElement(getDriver());
         RadioButton radioButton = RadioButton.RadioButton().withLabel(state.getLabel()).find(bubble);
         if (!radioButton.isChecked())
