@@ -174,6 +174,8 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         annoSettingsSql.append(" WHERE ");
         annoSettingsSql.append(containerFilter.getSQLFragment(getSchema(), new SQLFragment("runs.Container"), getContainer()));
         annoSettingsSql.append(" GROUP BY name");
+        annoSettingsSql.append(" ORDER BY name");
+
         SqlSelector annotationSettingsSelector = new SqlSelector(_schema, annoSettingsSql);
         List<AnnotationSettingForTyping> annotationSettingForTypings = new ArrayList<>();
         try(TableResultSet rs = annotationSettingsSelector.getResultSet())
