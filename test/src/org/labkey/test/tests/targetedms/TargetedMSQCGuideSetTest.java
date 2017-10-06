@@ -105,9 +105,21 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     }
 
     @Test
+    public void runTestsInOrder() throws IOException, CommandException
+    {
+        testGuideSetStats();
+        testGuideSetCreateValidation();
+        testGuideSetPlotDisplay();
+        testParetoPlot();
+        testEmptyParetoPlot();
+        testSmallMoleculePareto();
+        testReplicateAnnotations();
+    }
+
     public void testGuideSetStats()
     {
         // verify guide set mean/std dev/num records from SQL queries
+        preTest();
         verifyGuideSet1Stats(gs1);
         verifyGuideSet2Stats(gs2);
         verifyGuideSet3Stats(gs3);
@@ -115,9 +127,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         verifyGuideSet5Stats(gs5);
     }
 
-    @Test
     public void testGuideSetCreateValidation()
     {
+        preTest();
         String overlapErrorMsg = "The training date range overlaps with an existing guide set's training date range.";
 
         // test validation error message from Guide Set Insert New page
@@ -134,9 +146,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         createGuideSet(new GuideSet("2013/08/09 11:39:00", "2013/08/27 14:45:49", null, 47), overlapErrorMsg);
     }
 
-    @Test
     public void testGuideSetPlotDisplay()
     {
+        preTest();
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.resetInitialQCPlotFields();
@@ -165,9 +177,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         verifyGuideSetRelatedElementsForPlots(qcPlotsWebPart, 0, shapeCounts, 2);
     }
 
-    @Test
     public void testParetoPlot()
     {
+        preTest();
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
 
         waitForElement(Locator.css("svg"));
@@ -231,9 +243,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
     }
 
-    @Test
     public void testEmptyParetoPlot()
     {
+        preTest();
         setupSubfolder(getProjectName(), "Empty Pareto Plot Test", FolderType.QC); //create a Panorama folder of type QC
 
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
@@ -246,9 +258,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         assertElementPresent(Locator.tagWithClass("span", "labkey-wp-title-text").withText(QCPlotsWebPart.DEFAULT_TITLE));
     }
 
-    @Test
     public void testSmallMoleculePareto()
     {
+        preTest();
         String subFolderName = "Small Molecule Pareto Plot Test";
         setupSubfolder(getProjectName(), subFolderName, FolderType.QC); //create a Panorama folder of type QC
 
@@ -265,6 +277,52 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         clickExportPDFIcon("chart-render-div", 0);
         clickExportPNGIcon("chart-render-div", 0);
         verifyNavigationToPanoramaDashboard(1, 0, QCPlotsWebPart.MetricType.FWHM, false);
+    }
+
+    public void testReplicateAnnotations() throws IOException, CommandException
+    {
+        preTest();
+        String folderName = "Annotations";
+        setupSubfolder(getProjectName(), folderName, FolderType.QC);
+        importData(SProCoP_FILE_ANNOTATED);
+        goToSchemaBrowser();
+        selectQuery("targetedms", "replicate");
+        //confirm table columns are present and of correct type representing replicate annotations:
+        GetQueryDetailsCommand queryDetailsCommand = new GetQueryDetailsCommand("targetedms", "replicate");
+        GetQueryDetailsResponse queryDetailsResponse = queryDetailsCommand.execute(createDefaultConnection(true),getProjectName() + "/" + folderName);
+        List<GetQueryDetailsResponse.Column> columns = queryDetailsResponse.getColumns();
+
+        int groupingIndex = 8;
+        assertEquals("","Grouping", columns.get(groupingIndex).getName());
+        assertEquals("","Grouping", columns.get(groupingIndex).getCaption());
+        assertEquals("", "Text (String)", columns.get(groupingIndex).getType());
+
+        int ignoreIndex = 9;
+        assertEquals("","ignore_in_QC", columns.get(ignoreIndex).getName());
+        assertEquals("","ignore_in_QC", columns.get(ignoreIndex).getCaption());
+        assertEquals("", "True/False (Boolean)", columns.get(ignoreIndex).getType());
+
+        int timeIndex = 10;
+        assertEquals("","Time", columns.get(timeIndex).getName());
+        assertEquals("","Time", columns.get(timeIndex).getCaption());
+        assertEquals("", "Number (Double)", columns.get(timeIndex).getType());
+
+        //confirm data in grid view
+        waitAndClickAndWait(Locator.linkWithText("view data"));
+        DataRegionTable table = new DataRegionTable("query", this);
+        List<String> strings = table.getRowDataAsText(0);
+        List<String> expected = new ArrayList<>();
+        expected.add("SProCoPTutorial_withAnnotations.zip");
+        expected.add("Q_Exactive_08_09_2013_JGB_02");
+        expected.add(" ");
+        expected.add(" ");
+        expected.add(" ");
+        expected.add(" ");
+        expected.add("Grouping: Group A\nignore_in_QC: true\nTime: 5");
+        expected.add("Group A");
+        expected.add("true");
+        expected.add("5.0");
+        assertEquals("Wrong data in first row", expected, strings);
     }
 
     private void verifyGuideSetRelatedElementsForPlots(QCPlotsWebPart qcPlotsWebPart, int visibleTrainingRanges, List<Pair<String, Integer>> shapeCounts, int axisTickCount)
@@ -430,52 +488,6 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     private void createGuideSet(GuideSet guideSet)
     {
         createGuideSet(guideSet, null);
-    }
-
-    @Test
-    public void testReplicateAnnotations() throws IOException, CommandException
-    {
-        String folderName = "Annotations";
-        setupSubfolder(getProjectName(), folderName, FolderType.QC);
-        importData(SProCoP_FILE_ANNOTATED);
-        goToSchemaBrowser();
-        selectQuery("targetedms", "replicate");
-        //confirm table columns are present and of correct type representing replicate annotations:
-        GetQueryDetailsCommand queryDetailsCommand = new GetQueryDetailsCommand("targetedms", "replicate");
-        GetQueryDetailsResponse queryDetailsResponse = queryDetailsCommand.execute(createDefaultConnection(true),getProjectName() + "/" + folderName);
-        List<GetQueryDetailsResponse.Column> columns = queryDetailsResponse.getColumns();
-
-        int groupingIndex = 8;
-        assertEquals("","Grouping", columns.get(groupingIndex).getName());
-        assertEquals("","Grouping", columns.get(groupingIndex).getCaption());
-        assertEquals("", "Text (String)", columns.get(groupingIndex).getType());
-
-        int ignoreIndex = 9;
-        assertEquals("","ignore_in_QC", columns.get(ignoreIndex).getName());
-        assertEquals("","ignore_in_QC", columns.get(ignoreIndex).getCaption());
-        assertEquals("", "True/False (Boolean)", columns.get(ignoreIndex).getType());
-
-        int timeIndex = 10;
-        assertEquals("","Time", columns.get(timeIndex).getName());
-        assertEquals("","Time", columns.get(timeIndex).getCaption());
-        assertEquals("", "Number (Double)", columns.get(timeIndex).getType());
-
-        //confirm data in grid view
-        waitAndClickAndWait(Locator.linkWithText("view data"));
-        DataRegionTable table = new DataRegionTable("query", this);
-        List<String> strings = table.getRowDataAsText(0);
-        List<String> expected = new ArrayList<String>();
-        expected.add("SProCoPTutorial_withAnnotations.zip");
-        expected.add("Q_Exactive_08_09_2013_JGB_02");
-        expected.add(" ");
-        expected.add(" ");
-        expected.add(" ");
-        expected.add(" ");
-        expected.add("Grouping: Group A\nignore_in_QC: true\nTime: 5");
-        expected.add("Group A");
-        expected.add("true");
-        expected.add("5.0");
-        assertEquals("Wrong data in first row", expected, strings);
     }
 
     private void createGuideSet(GuideSet guideSet, String expectErrorMsg)
