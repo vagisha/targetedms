@@ -53,6 +53,7 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
+import org.labkey.api.webdav.WebdavService;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
@@ -67,6 +68,7 @@ import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
 import org.labkey.targetedms.view.expannotations.TargetedMSExperimentWebPart;
 import org.labkey.targetedms.view.expannotations.TargetedMSExperimentsWebPart;
+import org.labkey.targetedms.webdav.WebFilesResolverImpl;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -340,6 +342,9 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 return metric;
             });
         }
+
+        // need to register webdav resolvers in init() instead of since static module files are loaded during module startup
+        WebdavService.get().registerRootResolver(WebFilesResolverImpl.get());
     }
 
     @Override
