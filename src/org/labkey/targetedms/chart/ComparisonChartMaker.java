@@ -32,6 +32,7 @@ import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.chart.renderer.category.CategoryItemRenderer;
 import org.jfree.chart.renderer.category.StandardBarPainter;
 import org.jfree.chart.renderer.category.StatisticalBarRenderer;
+import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.statistics.BoxAndWhiskerCategoryDataset;
 import org.labkey.api.data.Container;
@@ -344,7 +345,11 @@ public class ComparisonChartMaker
                 yAxis.setLowerBound(0.0);
             }
         }
-        chart.getTitle().setFont(new Font("SansSerif", Font.BOLD, 14));
+        TextTitle chartTitle = chart.getTitle();
+        if (chartTitle != null)
+        {
+            chartTitle.setFont(new Font("SansSerif", Font.BOLD, 14));
+        }
         return chart;
 
     }
