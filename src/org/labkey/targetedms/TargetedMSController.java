@@ -395,8 +395,9 @@ public class TargetedMSController extends SpringActionController
                 addDataPipelineTab(c);
             }
 
-            if (TargetedMSCloudFileStorageFolderType.NAME.equals(c.getFolderType().getName()))
-                CloudStoreService.get().addCloudStorageTab(c);
+            //TODO hide cloud file web part for now
+//            if (TargetedMSCloudFileStorageFolderType.NAME.equals(c.getFolderType().getName()))
+//                CloudStoreService.get().addCloudStorageTab(c);
 
             return true;
 
