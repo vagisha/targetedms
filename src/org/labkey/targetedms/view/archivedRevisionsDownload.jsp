@@ -64,7 +64,7 @@
         else
         {
 %><tr>
-    <td><%= i %></td>
+    <td align="right"><%= i %></td>
     <td><%= h(ChromatogramLibraryUtils.getDownloadFileName(c, i)) %></td>
     <td>unavailable</td>
     <td></td>
@@ -72,3 +72,4 @@
         }
     }
 %>
+</table>
