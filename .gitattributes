@@ -177,6 +177,7 @@ resources/schemas/targetedms.xml -text
 src/ChromatogramGroupData.proto -text
 src/SkylineDocument.proto -text
 src/org/labkey/targetedms/IrtPeptide.java -text
+src/org/labkey/targetedms/PanoramaBadDataException.java -text
 src/org/labkey/targetedms/PublishTargetedMSExperimentsController.java -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text
