@@ -42,6 +42,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     private String _userSet;
     private String _note;
     private int _chromatogramIndex;
+    private Integer _pointsAcrossPeak;
 
 
     public int getTransitionId()
@@ -237,5 +238,15 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     public int getChromatogramIndex()
     {
         return _chromatogramIndex;
+    }
+
+    public Integer getPointsAcrossPeak()
+    {
+        return _pointsAcrossPeak;
+    }
+
+    public void setPointsAcrossPeak(Integer pointsAcrossPeak)
+    {
+        _pointsAcrossPeak = pointsAcrossPeak;
     }
 }

@@ -603,6 +603,7 @@
             <column columnName="Identified"/>
             <column columnName="Note"/>
             <column columnName="MassErrorPPM"/>
+            <column columnName="PointsAcrossPeak"/>
         </columns>
     </table>
     <table tableName="Enzyme" tableDbType="TABLE">

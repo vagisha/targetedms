@@ -125,7 +125,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String RESULTS_DATA = "results_data";
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
-    public static final double MAX_SUPPORTED_VERSION = 3.62;
+    public static final double MAX_SUPPORTED_VERSION = 3.7;
 
     private static final Pattern XML_ID_REGEX = Pattern.compile("\"/^[:_A-Za-z][-.:_A-Za-z0-9]*$/\"");
     private static final String XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -2140,6 +2140,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setIdentified(XmlUtil.readAttribute(reader, "identified"));
         chromInfo.setPeakRank(XmlUtil.readIntegerAttribute(reader, "rank"));
         chromInfo.setUserSet(XmlUtil.readAttribute(reader, "user_set"));
+        chromInfo.setPointsAcrossPeak(XmlUtil.readIntegerAttribute(reader, "points_across", null));
 
         while(reader.hasNext())
         {
@@ -2213,6 +2214,7 @@ public class SkylineDocumentParser implements AutoCloseable
             chromInfo.setIdentified(peakIdentificationToString(transitionPeak.getIdentified()));
             chromInfo.setPeakRank(transitionPeak.getRank());
             chromInfo.setUserSet(userSetToString(transitionPeak.getUserSet()));
+            chromInfo.setPointsAcrossPeak(fromOptional(transitionPeak.getPointsAcrossPeak()));
             if (null != transitionPeak.getAnnotations()) {
                 if (!StringUtils.isEmpty(transitionPeak.getAnnotations().getNote())) {
                     chromInfo.setNote(transitionPeak.getAnnotations().getNote());
