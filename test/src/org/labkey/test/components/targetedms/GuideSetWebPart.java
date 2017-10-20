@@ -42,21 +42,21 @@ public class GuideSetWebPart extends BodyWebPart
 
     public GuideSetWebPart(BaseWebDriverTest test, int index)
     {
-        super(test, DEFAULT_TITLE, index);
+        super(test.getDriver(), DEFAULT_TITLE, index);
         _test = test;
     }
 
     public DataRegionTable getDataRegion()
     {
         if (_dataRegionTable == null)
-            _dataRegionTable = DataRegionTable.findDataRegionWithin(_test, getComponentElement());
+            _dataRegionTable = DataRegionTable.DataRegion(_test.getDriver()).find(getComponentElement());
         return _dataRegionTable;
     }
 
     public GuideSetPage startInsert()
     {
         getDataRegion().clickInsertNewRow();
-        return new GuideSetPage(_test);
+        return new GuideSetPage(_test.getDriver());
     }
 
     public Integer getRowId(GuideSet guideSet)

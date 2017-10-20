@@ -522,7 +522,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // Add the RunId (Skyline document name) column
         _customizeViewsHelper.openCustomizeViewPanel();
-        _customizeViewsHelper.addCustomizeViewColumn("SampleFileId/ReplicateId/RunId");
+        _customizeViewsHelper.addColumn("SampleFileId/ReplicateId/RunId");
         _customizeViewsHelper.saveCustomView();
 
         // Sort the grid by the sample file name

@@ -26,12 +26,6 @@ public class GuideSetPage extends InsertPage
 {
     private static final String DEFAULT_TITLE = "Insert GuideSet";
 
-    @Deprecated
-    public GuideSetPage(BaseWebDriverTest test)
-    {
-        this(test.getDriver());
-    }
-
     public GuideSetPage(WebDriver driver)
     {
         super(driver, DEFAULT_TITLE);

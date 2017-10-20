@@ -33,20 +33,20 @@ public class QCAnnotationTypeWebPart extends BodyWebPart
 
     public QCAnnotationTypeWebPart(BaseWebDriverTest test, int index)
     {
-        super(test, DEFAULT_TITLE, index);
+        super(test.getDriver(), DEFAULT_TITLE, index);
         _test = test;
     }
 
     public DataRegionTable getDataRegion()
     {
         if (_dataRegionTable == null)
-            _dataRegionTable = DataRegionTable.findDataRegionWithin(_test, getComponentElement());
+            _dataRegionTable = DataRegionTable.DataRegion(_test.getDriver()).find(getComponentElement());
         return _dataRegionTable;
     }
 
     public AnnotationTypeInsertPage startInsert()
     {
         getDataRegion().clickInsertNewRow();
-        return new AnnotationTypeInsertPage(_test);
+        return new AnnotationTypeInsertPage(_test.getDriver());
     }
 }

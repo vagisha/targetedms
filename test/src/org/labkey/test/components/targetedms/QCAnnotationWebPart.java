@@ -33,14 +33,14 @@ public class QCAnnotationWebPart extends BodyWebPart
 
     public QCAnnotationWebPart(BaseWebDriverTest test, int index)
     {
-        super(test, DEFAULT_TITLE, 0);
+        super(test.getDriver(), DEFAULT_TITLE, 0);
         _test = test;
     }
 
     public DataRegionTable getDataRegion()
     {
         if (_dataRegionTable == null)
-            _dataRegionTable = DataRegionTable.findDataRegionWithin(_test, getComponentElement());
+            _dataRegionTable = DataRegionTable.DataRegion(_test.getDriver()).find(getComponentElement());
         return _dataRegionTable;
     }
 

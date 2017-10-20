@@ -25,12 +25,6 @@ public class AnnotationInsertPage extends InsertPage
 {
     private static final String DEFAULT_TITLE = "Insert QCAannotation";
 
-    @Deprecated
-    public AnnotationInsertPage(BaseWebDriverTest test)
-    {
-        this(test.getDriver());
-    }
-
     public AnnotationInsertPage(WebDriver driver)
     {
         super(driver, DEFAULT_TITLE);
