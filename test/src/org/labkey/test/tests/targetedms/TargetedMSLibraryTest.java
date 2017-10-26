@@ -110,8 +110,8 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("CTCF"));
         assertElementPresent(Locator.pageHeader("CTCF"));
         assertTextPresent("HsCD00078657 (2-D02)");
-        assertElementPresent(Locator.xpath("//div[contains(@class, 'form-group') and (label='Decoy') and (div/p='false')]"));
-        assertElementPresent(Locator.xpath("//div[contains(@class, 'form-group') and (label='File') and (div/p='" + SKY_FILE1 + "')]"));
+        assertElementPresent(Locator.xpath("//tr/td[@class=' lk-form-label'][contains(text(), 'Decoy')]/../td[2][contains(text(), 'false')]"));
+        assertElementPresent(Locator.xpath("//tr/td[@class=' lk-form-label'][contains(text(), 'File')]/../td[2][contains(text(), '" + SKY_FILE1 + "')]"));
         assertElementPresent(Locator.xpath("//table[contains(@id, 'peptideMap')]"));
         assertElementPresent(Locator.xpath("//div[@id = 'peakAreasGraphImg']/img"));
 
