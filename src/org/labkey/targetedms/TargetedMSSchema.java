@@ -612,13 +612,13 @@ public class TargetedMSSchema extends UserSchema
         columns.remove(FieldKey.fromParts("Name"));
 
         columns.add(2, FieldKey.fromParts("File"));
+        columns.add(3, FieldKey.fromParts("File", "Download"));
         columns.add(FieldKey.fromParts("File", "Proteins"));
         columns.add(FieldKey.fromParts("File", "Peptides"));
         columns.add(FieldKey.fromParts("File", "SmallMolecules"));
         columns.add(FieldKey.fromParts("File", "Precursors"));
         columns.add(FieldKey.fromParts("File", "Transitions"));
         columns.add(FieldKey.fromParts("File", "Replicates"));
-        columns.add(FieldKey.fromParts("File", "Download"));
 
         result.setDefaultVisibleColumns(columns);
 
