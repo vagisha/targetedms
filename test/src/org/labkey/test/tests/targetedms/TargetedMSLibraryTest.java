@@ -24,6 +24,8 @@ import org.labkey.test.util.LogMethod;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
+import static org.junit.Assert.assertEquals;
+
 @Category({DailyB.class, MS2.class})
 public class TargetedMSLibraryTest extends TargetedMSTest
 {
@@ -107,8 +109,8 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("CTCF"));
         assertElementPresent(Locator.pageHeader("CTCF"));
         assertTextPresent("HsCD00078657 (2-D02)");
-        assertElementPresent(Locator.xpath("//tr/td[@class=' lk-form-label'][contains(text(), 'Decoy')]/../td[2][contains(text(), 'false')]"));
-        assertElementPresent(Locator.xpath("//tr/td[@class=' lk-form-label'][contains(text(), 'File')]/../td[2][contains(text(), '" + SKY_FILE1 + "')]"));
+        assertEquals("Wrong decoy value", "false", getText(Locator.tagWithClass("td", "lk-form-label").withText("Decoy:").followingSibling("td")));
+        assertEquals("Wrong File", SKY_FILE1, getText(Locator.tagWithClass("td", "lk-form-label").withText("File:").followingSibling("td")));
         assertElementPresent(Locator.xpath("//table[contains(@id, 'peptideMap')]"));
         assertElementPresent(Locator.xpath("//div[@id = 'peakAreasGraphImg']/img"));
 
