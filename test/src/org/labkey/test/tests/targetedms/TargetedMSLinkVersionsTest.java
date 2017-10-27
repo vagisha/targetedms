@@ -32,8 +32,6 @@ import static org.junit.Assert.assertEquals;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSLinkVersionsTest extends TargetedMSTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     public static List<String> QC_DOCUMENT_NAMES = Arrays.asList(QC_1_FILE, QC_2_FILE, QC_3_FILE);
 
     private static int PIPELINE_JOB_COUNTER = 0;

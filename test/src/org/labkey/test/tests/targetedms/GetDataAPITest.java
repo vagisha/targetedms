@@ -23,7 +23,6 @@ import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.PortalHelper;
-import org.labkey.test.util.UIContainerHelper;
 import org.labkey.test.util.WikiHelper;
 
 import static org.junit.Assert.assertTrue;
@@ -31,8 +30,6 @@ import static org.junit.Assert.assertTrue;
 @Category({DailyB.class, MS2.class})
 public class GetDataAPITest extends TargetedMSTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     String CLIENT_API_CORE1 = "{"+
 "   source: {"+
 "		type: 'query',"+

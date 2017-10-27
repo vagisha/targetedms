@@ -25,8 +25,6 @@ import static org.junit.Assert.assertEquals;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSLibraryIrtTest extends TargetedMSIrtTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     // One of the sequences has had its value changed in FOR_UPDATE to verify the weighted average calculation.
     // Another one of the sequences has been changed altogether to verify import counts and new inserts.
     private static final String SKY_FILE_UPDATE_SCALE = "iRT Human+Standard Calibrate_FOR_UPDATE.zip";

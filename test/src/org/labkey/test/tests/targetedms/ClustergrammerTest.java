@@ -31,8 +31,6 @@ import java.util.Arrays;
 @Category({DailyB.class, MS2.class})
 public class ClustergrammerTest extends TargetedMSTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     private static final String BUTTON_TEXT = "Clustergrammer Heatmap";
 
     @Override

@@ -24,7 +24,6 @@ import org.labkey.test.categories.MS2;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
-import org.labkey.test.util.UIContainerHelper;
 
 import java.util.List;
 
@@ -34,8 +33,6 @@ import static org.labkey.test.util.DataRegionTable.DataRegion;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSExperimentTest extends TargetedMSTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     private static final String SKY_FILE = "MRMer.zip";
     private static final String SKY_FILE2 = "MRMer_renamed_protein.zip";
 

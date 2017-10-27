@@ -21,15 +21,12 @@ import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.LogMethod;
-import org.labkey.test.util.UIContainerHelper;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
 @Category({DailyB.class, MS2.class})
 public class TargetedMSLibraryTest extends TargetedMSTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     private static final String SKY_FILE1 = "Stergachis-SupplementaryData_2_a.sky.zip";
     private static final String SKY_FILE2 = "Stergachis-SupplementaryData_2_b.sky.zip";
 

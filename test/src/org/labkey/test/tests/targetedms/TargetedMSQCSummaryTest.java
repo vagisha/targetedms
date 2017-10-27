@@ -48,8 +48,6 @@ import static org.labkey.test.components.ext4.Window.Window;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCSummaryTest extends TargetedMSTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     private static final String FOLDER_1 = "QC Subfolder 1";
     private static final String FOLDER_2 = "QC Subfolder 2";
     private static final String FOLDER_2A = "QC Subfolder 2a";

@@ -50,8 +50,6 @@ import static org.junit.Assert.assertTrue;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     private static final String SAMPLEDATA_FOLDER = "Quantification/CalibrationScenariosTest/";
 
     @BeforeClass

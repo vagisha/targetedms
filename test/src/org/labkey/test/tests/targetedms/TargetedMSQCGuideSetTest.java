@@ -51,8 +51,6 @@ import static org.junit.Assert.assertTrue;
 @Category({DailyB.class, MS2.class})
 public class TargetedMSQCGuideSetTest extends TargetedMSTest
 {
-    {setIsBootstrapWhitelisted(true);}
-
     private static final String[] PRECURSORS = {
             "ATEEQLK",
             "FFVAPFPEVFGK",
