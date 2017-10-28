@@ -22,23 +22,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
-import org.labkey.api.data.AJAXDetailsDisplayColumn;
-import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerForeignKey;
-import org.labkey.api.data.DataColumn;
-import org.labkey.api.data.DbSchema;
-import org.labkey.api.data.DbSchemaType;
-import org.labkey.api.data.DisplayColumn;
-import org.labkey.api.data.DisplayColumnFactory;
-import org.labkey.api.data.EnumTableInfo;
-import org.labkey.api.data.JdbcType;
-import org.labkey.api.data.RenderContext;
-import org.labkey.api.data.RuntimeSQLException;
-import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.data.UpdateColumn;
-import org.labkey.api.data.WrappedColumn;
+import org.labkey.api.data.*;
 import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
 import org.labkey.api.module.Module;
@@ -78,9 +62,12 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 import java.util.zip.DataFormatException;
 
 public class TargetedMSSchema extends UserSchema
@@ -603,24 +590,67 @@ public class TargetedMSSchema extends UserSchema
         skyDocDetailColumn.setHidden(false);
         result.addColumn(skyDocDetailColumn);
 
-        //adjust the default visible columns
-        List<FieldKey> columns = new ArrayList<>(result.getDefaultVisibleColumns());
-        columns.remove(FieldKey.fromParts("File"));
-        columns.remove(FieldKey.fromParts("Protocol"));
-        columns.remove(FieldKey.fromParts("CreatedBy"));
-        columns.remove(FieldKey.fromParts("RunGroups"));
-        columns.remove(FieldKey.fromParts("Name"));
+        List<FieldKey> defaultVisibleColumns = result.getDefaultVisibleColumns();
 
-        columns.add(2, FieldKey.fromParts("File"));
-        columns.add(3, FieldKey.fromParts("File", "Download"));
-        columns.add(FieldKey.fromParts("File", "Proteins"));
-        columns.add(FieldKey.fromParts("File", "Peptides"));
-        columns.add(FieldKey.fromParts("File", "SmallMolecules"));
-        columns.add(FieldKey.fromParts("File", "Precursors"));
-        columns.add(FieldKey.fromParts("File", "Transitions"));
-        columns.add(FieldKey.fromParts("File", "Replicates"));
+        // Create the list lazily to avoid extra DB queries when we don't need any
+        result.setDefaultVisibleColumns(new Iterable<FieldKey>()
+        {
+            private List<FieldKey> _fieldKeys;
 
-        result.setDefaultVisibleColumns(columns);
+            private List<FieldKey> init()
+            {
+                // Cache so we don't have to requery for a single request
+                if (_fieldKeys == null)
+                {
+                    //adjust the default visible columns
+                    _fieldKeys = new ArrayList<>(defaultVisibleColumns);
+                    _fieldKeys.remove(FieldKey.fromParts("File"));
+                    _fieldKeys.remove(FieldKey.fromParts("Protocol"));
+                    _fieldKeys.remove(FieldKey.fromParts("CreatedBy"));
+                    _fieldKeys.remove(FieldKey.fromParts("RunGroups"));
+                    _fieldKeys.remove(FieldKey.fromParts("Name"));
+
+                    _fieldKeys.add(2, FieldKey.fromParts("File"));
+                    _fieldKeys.add(3, FieldKey.fromParts("File", "Download"));
+                    _fieldKeys.add(FieldKey.fromParts("File", "Proteins"));
+
+                    // Omit peptides or small molecules if we don't have any in this container
+                    boolean hasSmallMolecules = new SqlSelector(TargetedMSManager.getSchema(), new SQLFragment("SELECT Id FROM ", getContainer(), false).append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE SmallMoleculeCount > 0 AND Container = ? AND Deleted = ?")).exists();
+                    boolean hasPeptides = new SqlSelector(TargetedMSManager.getSchema(), new SQLFragment("SELECT Id FROM ", getContainer(), false).append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE PeptideCount > 0 AND Container = ? AND Deleted = ?")).exists();
+
+                    if (hasPeptides || !hasSmallMolecules)
+                    {
+                        _fieldKeys.add(FieldKey.fromParts("File", "Peptides"));
+                    }
+                    if (hasSmallMolecules)
+                    {
+                        _fieldKeys.add(FieldKey.fromParts("File", "SmallMolecules"));
+                    }
+                    _fieldKeys.add(FieldKey.fromParts("File", "Precursors"));
+                    _fieldKeys.add(FieldKey.fromParts("File", "Transitions"));
+                    _fieldKeys.add(FieldKey.fromParts("File", "Replicates"));
+                }
+                return _fieldKeys;
+            }
+
+            @Override
+            public Iterator<FieldKey> iterator()
+            {
+                return init().iterator();
+            }
+
+            @Override
+            public void forEach(Consumer<? super FieldKey> action)
+            {
+                init().forEach(action);
+            }
+
+            @Override
+            public Spliterator<FieldKey> spliterator()
+            {
+                return init().spliterator();
+            }
+        });
 
         return result;
     }
