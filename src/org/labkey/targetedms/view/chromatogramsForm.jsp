@@ -137,7 +137,6 @@
             name: 'chromForm',
             border: false, frame: false,
             width:550,
-            autoResize: false,
             defaults: {
                 labelWidth: 150,
                 labelHeight: 23,
