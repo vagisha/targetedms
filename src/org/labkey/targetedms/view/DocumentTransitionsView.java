@@ -30,16 +30,14 @@ import java.sql.SQLException;
 public abstract class DocumentTransitionsView extends DocumentView
 {
     protected TargetedMSSchema _targetedMsSchema = null;
-    protected final int _runId;
     protected ViewContext _context;
     public String TITLE;
 
     public DocumentTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId,
                                    boolean forExport, QueryNestingOption queryNestingOption, String dataRegionName, String title) throws SQLException
     {
-        super(ctx, schema, queryName, !forExport, queryNestingOption, dataRegionName);
+        super(ctx, schema, queryName, runId, !forExport, queryNestingOption, dataRegionName);
         _targetedMsSchema = schema;
-        _runId = runId;
         _context = ctx;
         TITLE = title;
     }

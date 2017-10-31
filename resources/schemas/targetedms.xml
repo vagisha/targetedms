@@ -366,7 +366,7 @@
             <column columnName="IsotopeLabelId">
                 <columnTitle>Label</columnTitle>
                 <inputType>text</inputType>
-            </column>			
+            </column>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="MoleculePrecursor">
@@ -482,7 +482,7 @@
     </table>
     <table tableDbType="TABLE" tableName="GeneralTransition">
         <titleColumn>Mz</titleColumn>
-        <description>Parent table to Transition, MoleculeTransition, TransitionChromInfo, TransitionAnnotation.</description>
+        <description>Parent table to Transition, MoleculeTransition, TransitionChromInfo, TransitionAnnotation. Base table for both proteomic and small molecule transitions.</description>
         <columns>
             <column columnName="Id">
                 <isHidden>true</isHidden>

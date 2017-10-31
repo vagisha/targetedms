@@ -30,11 +30,13 @@ import java.sql.SQLException;
 
 public abstract class DocumentView extends NestableQueryView
 {
+    protected final int _runId;
 
-    public DocumentView(ViewContext ctx, TargetedMSSchema schema, String queryName, boolean forExport,
+    public DocumentView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport,
                         QueryNestingOption nestingOption, String dataRegionName) throws SQLException
     {
         super(schema, schema.getSettings(ctx, dataRegionName, queryName), true, !forExport, nestingOption);
+        _runId = runId;
     }
 
     protected Sort getBaseSort()

@@ -47,6 +47,7 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
 
     private CompareType.EqualsCompareClause _containerTableFilter;
 
+    /** Assumes that the table has its own container column, instead of needing to join to another table for container info */
     public TargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL)
     {
         this(table, schema, joinSQL, _defaultContainerSQL);

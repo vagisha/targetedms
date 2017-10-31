@@ -29,15 +29,13 @@ import java.sql.SQLException;
 public abstract class DocumentPrecursorsView extends DocumentView
 {
     protected TargetedMSSchema _targetedMsSchema = null;
-    protected final int _runId;
     protected final String _tableName;
 
     public DocumentPrecursorsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport,
                                   QueryNestingOption nestingOption, String dataRegionName) throws SQLException
     {
-        super(ctx, schema, queryName, !forExport, nestingOption, dataRegionName);
+        super(ctx, schema, queryName, runId, !forExport, nestingOption, dataRegionName);
         _targetedMsSchema = schema;
-        _runId = runId;
         _tableName = queryName;
     }
 
