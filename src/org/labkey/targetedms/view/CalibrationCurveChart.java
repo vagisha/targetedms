@@ -86,7 +86,7 @@ public class CalibrationCurveChart
                 CalibrationCurve recalcedCalibrationCurve
                         = runQuantifier.calculateCalibrationCurve(quantificationSettings, _molecule, chromInfos);
 
-                json = processCalibrationCurveJson(_molecule, runQuantifier.getReplicateDataSet(), recalcedCalibrationCurve, chromInfos);
+                json = processCalibrationCurveJson(_molecule, runQuantifier.getReplicateDataSet(), recalcedCalibrationCurve, chromInfos, quantificationSettings);
             }
         }
 
@@ -109,7 +109,7 @@ public class CalibrationCurveChart
         return _molecule;
     }
 
-    private JSONObject processCalibrationCurveJson(GeneralMolecule molecule, ReplicateDataSet replicateDataSet, CalibrationCurve calibrationCurve, Iterable<GeneralMoleculeChromInfo> chromInfos)
+    private JSONObject processCalibrationCurveJson(GeneralMolecule molecule, ReplicateDataSet replicateDataSet, CalibrationCurve calibrationCurve, Iterable<GeneralMoleculeChromInfo> chromInfos, QuantificationSettings quantificationSettings)
     {
         JSONObject json = new JSONObject();
         Double maxX = null, maxY = null, minY = null;
@@ -125,6 +125,10 @@ public class CalibrationCurveChart
         jsonCurve.put("count", calibrationCurve.getPointCount());
         jsonCurve.put("rSquared", calibrationCurve.getRSquared());
         jsonCurve.put("quadraticCoefficient", calibrationCurve.getQuadraticCoefficient());
+        jsonCurve.put("msLevel", quantificationSettings.getMsLevel());
+        jsonCurve.put("normalizationMethod", quantificationSettings.getNormalizationMethod());
+        jsonCurve.put("regressionFit", quantificationSettings.getRegressionFit());
+        jsonCurve.put("regressionWeighting", quantificationSettings.getRegressionWeighting());
 
 
         // Get data points

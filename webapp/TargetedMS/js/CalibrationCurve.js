@@ -214,13 +214,22 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
     },
 
     getLegendDataSlopeCalculations: function (scope) {
-        return [
+        var result = [
             {text: 'Calibration Curve', separator: true},
+            {text: 'Regression Fit: ' + Ext4.util.Format.htmlEncode(this.data.calibrationCurve.regressionFit), color: 'white'},
+            {text: 'Norm. Method: ' + Ext4.util.Format.htmlEncode(this.data.calibrationCurve.normalizationMethod), color: 'white'},
+            {text: 'Regression Weighting: ' + Ext4.util.Format.htmlEncode(this.data.calibrationCurve.regressionWeighting), color: 'white'},
+            {text: 'MS Level: ' + (this.data.msLevel > 0 ? this.data.msLevel : 'All'), color: 'white'},
+            {text: '', separator: true},
             {text: 'Slope: ' + scope.formatLegendValue(this.data.calibrationCurve.slope), color: 'white'},
             {text: 'Intercept: ' + scope.formatLegendValue(this.data.calibrationCurve.intercept), color: 'white'},
-            {text: 'rSquared: ' + scope.formatLegendValue(this.data.calibrationCurve.rSquared), color: 'white'},
-            {text: '', separator: true}
+            {text: 'rSquared: ' + scope.formatLegendValue(this.data.calibrationCurve.rSquared), color: 'white'}
         ];
+        if (this.data.calibrationCurve.quadraticCoefficient && this.data.calibrationCurve.quadraticCoefficient != 0.0) {
+            result.push({text: 'Quadratic Coefficient: ' + scope.formatLegendValue(this.data.calibrationCurve.quadraticCoefficient), color: 'white'});
+        }
+        result.push({text: '', separator: true});
+        return result;
     },
 
     getLegendDataInfo: function (scope) {
