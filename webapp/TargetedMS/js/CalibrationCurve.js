@@ -222,12 +222,12 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             {text: 'MS Level: ' + (this.data.msLevel > 0 ? this.data.msLevel : 'All'), color: 'white'},
             {text: '', separator: true},
             {text: 'Slope: ' + scope.formatLegendValue(this.data.calibrationCurve.slope), color: 'white'},
-            {text: 'Intercept: ' + scope.formatLegendValue(this.data.calibrationCurve.intercept), color: 'white'},
-            {text: 'rSquared: ' + scope.formatLegendValue(this.data.calibrationCurve.rSquared), color: 'white'}
+            {text: 'Intercept: ' + scope.formatLegendValue(this.data.calibrationCurve.intercept), color: 'white'}
         ];
         if (this.data.calibrationCurve.quadraticCoefficient && this.data.calibrationCurve.quadraticCoefficient != 0.0) {
             result.push({text: 'Quadratic Coefficient: ' + scope.formatLegendValue(this.data.calibrationCurve.quadraticCoefficient), color: 'white'});
         }
+        result.push({text: 'rSquared: ' + scope.formatLegendValue(this.data.calibrationCurve.rSquared), color: 'white'});
         result.push({text: '', separator: true});
         return result;
     },
