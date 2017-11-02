@@ -63,21 +63,21 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     @Test
     public void testMergeDocumentsScenario() throws Exception
     {
-        runScenario("MergedDocuments");
+        runScenario("MergedDocuments", "none");
         testCalibrationCurveMoleculePrecursorsByReplicate();
     }
 
     @Test
     public void testCalibrationScenario() throws Exception
     {
-        runScenario("CalibrationTest");
+        runScenario("CalibrationTest", "none");
         testCalibrationCurvePrecursorsByReplicate();
     }
 
     @Test
     public void testP180Scenario() throws Exception
     {
-        runScenario("p180test_calibration_DukeApril2016");
+        runScenario("p180test_calibration_DukeApril2016", "1/x");
     }
 
     private void testCalibrationCurvePrecursorsByReplicate()
@@ -177,7 +177,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         command.execute(connection, getProjectName() + "/CalibrationTest");
     }
 
-    private void runScenario(String scenario) throws Exception
+    private void runScenario(String scenario, String expectedWeighting) throws Exception
     {
         setupSubfolder(getProjectName(), scenario, FolderType.Experiment);
         importData(SAMPLEDATA_FOLDER + scenario + ".sky.zip");
@@ -246,20 +246,29 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 }
             }
 
+            List<String> baseLegendText = Arrays.asList(
+                "Standard",
+                "QC",
+                "Unknown",
+                "Calibration Curve",
+                "Regression Fit: linear",
+                "Norm. Method: ratio_to_heavy",
+                "Regression Weighting: " + expectedWeighting,
+                "MS Level: All"
+            );
+
             log("Verify calibration curve");
             assertTrue("No data found for calibration curves", rowWithData >= 0);
             clickAndWait(calibrationCurvesTable.detailsLink(rowWithData));
             CalibrationCurveWebpart calibrationCurveWebpart = new CalibrationCurveWebpart(getDriver());
             List<String> actualLegendText = calibrationCurveWebpart.getSvgLegendItems();
             DecimalFormat df = new DecimalFormat("#.#####");
-            List<String> expectedLegendText = new ArrayList<>(Arrays.asList(
-                    "Standard",
-                    "QC",
-                    "Unknown",
-                    "Calibration Curve",
-                    "Slope: " + df.format(expectedSlope),
-                    "Intercept: " + df.format(expectedIntercept),
-                    "rSquared: " + df.format(expectedRSquared)));
+            List<String> expectedLegendText = new ArrayList<>(baseLegendText);
+            expectedLegendText.addAll(Arrays.asList(
+                "Slope: " + df.format(expectedSlope),
+                "Intercept: " + df.format(expectedIntercept),
+                "rSquared: " + df.format(expectedRSquared)
+            ));
             assertEquals("Wrong legend text", expectedLegendText, actualLegendText);
 
             log("Verify calibration curve export");
@@ -289,14 +298,12 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 calibrationCurveWebpart = new CalibrationCurveWebpart(getDriver());
                 assertEquals("Calibration curve with no data shouldn't have any points", 0, calibrationCurveWebpart.getSvgPoints().size());
                 actualLegendText = calibrationCurveWebpart.getSvgLegendItems();
-                expectedLegendText = Arrays.asList(
-                        "Standard",
-                        "QC",
-                        "Unknown",
-                        "Calibration Curve",
-                        "Slope: 0",
-                        "Intercept: 0",
-                        "rSquared: 0");
+                expectedLegendText = new ArrayList<>(baseLegendText);
+                expectedLegendText.addAll(Arrays.asList(
+                    "Slope: 0",
+                    "Intercept: 0",
+                    "rSquared: 0"
+                ));
                 assertEquals("Wrong legend text", expectedLegendText, actualLegendText);
             }
         }
