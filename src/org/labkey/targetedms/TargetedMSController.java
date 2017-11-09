@@ -141,6 +141,7 @@ import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.model.Journal;
+import org.labkey.targetedms.model.JournalExperiment;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.Molecule;
@@ -5394,6 +5395,7 @@ public class TargetedMSController extends SpringActionController
     public static class ExperimentAnnotationsDetails
     {
         private ExperimentAnnotations _experimentAnnotations;
+        JournalExperiment _lastPublishedRecord;
         private boolean _fullDetails = false;
         private boolean _canPublish = false;
 
@@ -5407,6 +5409,8 @@ public class TargetedMSController extends SpringActionController
             FolderType folderType = TargetedMSModule.getFolderType(c);
             if(folderType == FolderType.Experiment)
             {
+                _lastPublishedRecord = JournalManager.getLastPublishedRecord(_experimentAnnotations.getId());
+
                 // User needs to be the folder admin to publish an experiment.
                 _canPublish = !_experimentAnnotations.isJournalCopy() && c.hasPermission(user, AdminPermission.class);
             }
@@ -5439,6 +5443,16 @@ public class TargetedMSController extends SpringActionController
         public void setCanPublish(boolean canPublish)
         {
             _canPublish = canPublish;
+        }
+
+        public JournalExperiment getLastPublishedRecord()
+        {
+            return _lastPublishedRecord;
+        }
+
+        public void setLastPublishedRecord(JournalExperiment lastPublishedRecord)
+        {
+            _lastPublishedRecord = lastPublishedRecord;
         }
     }
 
