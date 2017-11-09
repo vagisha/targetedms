@@ -32,7 +32,7 @@ public class AbstractGeneralTransitionTableInfo extends JoinedTargetedMSTable
     {
         super(TargetedMSManager.getTableInfoGeneralTransition(), tableInfo,
                 schema, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK.getSQL(),
-                TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations");
+                TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations", "transition");
     }
 
     public void setRunId(int runId)

@@ -752,7 +752,8 @@ public class TargetedMSSchema extends UserSchema
                                                                   ContainerJoinType.RunFK.getSQL(),
                                                                   TargetedMSManager.getTableInfoPeptideGroupAnnotation(),
                                                                   "PeptideGroupId",
-                                                                  "Protein Annotations")
+                                                                  "Protein Annotations",
+                                                                  "protein") // This may change as more small molecule work is done in Skyline.
             {
                 @Override
                 public FieldKey getContainerFieldKey()
@@ -841,7 +842,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_REPLICATE.equalsIgnoreCase(name))
         {
-            return new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL(), TargetedMSManager.getTableInfoReplicateAnnotation(), "ReplicateId", "Replicate Annotations");
+            return new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL(), TargetedMSManager.getTableInfoReplicateAnnotation(), "ReplicateId", "Replicate Annotations", "replicate");
         }
 
         // Tables that have a FK to targetedms.Runs
@@ -992,7 +993,8 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.transition
         if (TABLE_TRANSITION_CHROM_INFO.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.SampleFileFK.getSQL());
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.SampleFileFK.getSQL(),
+                    TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), "TransitionChromInfoId", "Transition Result Annotations", "transition_result");
             TargetedMSSchema targetedMSSchema = this;
 
             ColumnInfo transitionId = result.getColumn("TransitionId");

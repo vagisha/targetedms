@@ -39,9 +39,9 @@ public class JoinedTargetedMSTable extends AnnotatedTargetedMSTable
 {
     private final TableInfo _specializedTable;
 
-    public JoinedTargetedMSTable(TableInfo generalTable, TableInfo specializedTable, TargetedMSSchema schema, SQLFragment containerSQL, TableInfo annotationTableInfo, String annotationFKName, String columnName)
+    public JoinedTargetedMSTable(TableInfo generalTable, TableInfo specializedTable, TargetedMSSchema schema, SQLFragment containerSQL, TableInfo annotationTableInfo, String annotationFKName, String columnName, String annotationTarget)
     {
-        super(generalTable, schema, containerSQL, annotationTableInfo, annotationFKName, columnName);
+        super(generalTable, schema, containerSQL, annotationTableInfo, annotationFKName, columnName, annotationTarget);
 
         _specializedTable = specializedTable;
         setName(_specializedTable.getName());

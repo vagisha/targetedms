@@ -27,7 +27,7 @@ import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 
-public class PrecursorChromInfoTable extends TargetedMSTable
+public class PrecursorChromInfoTable extends AnnotatedTargetedMSTable
 {
     public PrecursorChromInfoTable(final TargetedMSSchema schema)
     {
@@ -36,7 +36,8 @@ public class PrecursorChromInfoTable extends TargetedMSTable
 
     public PrecursorChromInfoTable(TableInfo table, TargetedMSSchema schema)
     {
-        super(table, schema, new SQLFragment(""), new SQLFragment("Container"));
+        super(table, schema, new SQLFragment(""), new SQLFragment("Container"),
+                TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), "PrecursorChromInfoId", "Precursor Result Annotations", "precursor_result");
         ColumnInfo precursorId = getColumn("PrecursorId");
         precursorId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR));
 

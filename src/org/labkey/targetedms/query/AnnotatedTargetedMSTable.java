@@ -55,24 +55,45 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
 
     public AnnotatedTargetedMSTable(TableInfo table,
                                     TargetedMSSchema schema,
-                                    SQLFragment containerSQL,
+                                    SQLFragment joinSQL,
                                     TableInfo annotationTableInfo,
                                     String annotationFKName,
-                                    String columnName)
+                                    String columnName,
+                                    String annotationTarget) // The target of an annotation that applies to this table.
     {
-        this(table, schema, containerSQL, annotationTableInfo, annotationFKName, columnName, "Id");
+        this(table, schema, joinSQL, annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget);
     }
 
     public AnnotatedTargetedMSTable(TableInfo table,
                                     TargetedMSSchema schema,
+                                    SQLFragment joinSQL,
                                     SQLFragment containerSQL,
                                     TableInfo annotationTableInfo,
                                     String annotationFKName,
                                     String columnName,
-                                    String pkColumnName)
+                                    String annotationTarget) // The target of an annotation that applies to this table.
     {
-        super(table, schema, containerSQL);
+        super(table, schema, joinSQL, containerSQL);
 
+        addAnnotationsColumns(annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget);
+    }
+
+    public AnnotatedTargetedMSTable(TableInfo table,
+                                    TargetedMSSchema schema,
+                                    SQLFragment joinSQL,
+                                    TableInfo annotationTableInfo,
+                                    String annotationFKName,
+                                    String columnName,
+                                    String pkColumnName,
+                                    String annotationTarget) // The target of an annotation that applies to this table.
+    {
+        super(table, schema, joinSQL);
+
+        addAnnotationsColumns(annotationTableInfo, annotationFKName, columnName, pkColumnName, annotationTarget);
+    }
+
+    private void addAnnotationsColumns(TableInfo annotationTableInfo, String annotationFKName, String columnName, String pkColumnName, String annotationTarget)
+    {
         SQLFragment annotationsSQL = new SQLFragment("(SELECT ");
         annotationsSQL.append(TargetedMSManager.getSqlDialect().getGroupConcat(
                 new SQLFragment(TargetedMSManager.getSqlDialect().concatenate("a.Name", "\'"+ ANNOT_NAME_VALUE_SEPARATOR +"\' ", "a.Value")),
@@ -93,7 +114,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         addColumn(annotationsColumn);
 
         //get list of replicate annotations for container
-        List<AnnotationSettingForTyping> annotationSettingForTypings = getAnnotationSettings();
+        List<AnnotationSettingForTyping> annotationSettingForTypings = getAnnotationSettings(annotationTarget);
         //iterate over list of annotations settings
         for (AnnotationSettingForTyping annotationSettingForTyping : annotationSettingForTypings)
         {
@@ -131,8 +152,6 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                 return new AnnotationsDisplayColumn(colInfo);
             }
         });
-
-
     }
 
     /**
@@ -160,7 +179,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         return DataSettings.AnnotationType.text;
     }
 
-    private List<AnnotationSettingForTyping> getAnnotationSettings()
+    private List<AnnotationSettingForTyping> getAnnotationSettings(String annotationTarget)
     {
         SQLFragment annoSettingsSql = new SQLFragment();
         TableInfo annotationSettingsTI = TargetedMSManager.getTableInfoAnnotationSettings();
@@ -173,6 +192,11 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         annoSettingsSql.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), " runs ON runs.Id = annoSettings.RunId");
         annoSettingsSql.append(" WHERE ");
         annoSettingsSql.append(containerFilter.getSQLFragment(getSchema(), new SQLFragment("runs.Container"), getContainer()));
+        // AnnotationSettings table has a "Targets" column that determines which targets
+        // (protein, peptide, precursor, transition, precursor/transition results) an annotation applies to.
+        // Filter annotations to the target that is relevant to this table.
+        annoSettingsSql.append(" AND ");
+        annoSettingsSql.append(" annoSettings.Targets=?").add(annotationTarget);
         annoSettingsSql.append(" GROUP BY name");
         annoSettingsSql.append(" ORDER BY name");
 

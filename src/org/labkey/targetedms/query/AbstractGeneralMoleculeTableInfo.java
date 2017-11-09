@@ -37,7 +37,8 @@ public abstract class AbstractGeneralMoleculeTableInfo extends JoinedTargetedMST
                 schema,
                 TargetedMSSchema.ContainerJoinType.PeptideGroupFK.getSQL(),
                 TargetedMSManager.getTableInfoGeneralMoleculeAnnotation(),
-                "GeneralMoleculeId", annotationColumnName);
+                "GeneralMoleculeId", annotationColumnName,
+                "peptide"); // This may change as more small molecule work is done in Skyline.
 
         // use the description and title column from the specialized TableInfo
         setDescription(tableInfo.getDescription());
