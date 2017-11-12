@@ -19,6 +19,7 @@ import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
+import org.labkey.test.components.WebPart;
 import org.labkey.test.selenium.LazyWebElement;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -26,7 +27,7 @@ import org.openqa.selenium.WebElement;
 import java.util.LinkedList;
 import java.util.List;
 
-public class ParetoPlotsWebPart extends BodyWebPart
+public class ParetoPlotsWebPart extends BodyWebPart<ParetoPlotsWebPart.ElementCache>
 {
     public static final String DEFAULT_TITLE = "Pareto Plots";
 
@@ -150,8 +151,8 @@ public class ParetoPlotsWebPart extends BodyWebPart
 
     public void clickQCPlotsLink(BaseWebDriverTest test)
     {
-        Assert.assertTrue(elements().notFound.isDisplayed()); //Check for no guide sets
-        test.clickAndWait(elements().qcPlotsLink); //click on the link to take user to the QC Plots webpart
+        Assert.assertTrue(elementCache().notFound.isDisplayed()); //Check for no guide sets
+        test.clickAndWait(elementCache().qcPlotsLink); //click on the link to take user to the QC Plots webpart
     }
 
     public void waitForTickLoad(int guideSetNum)
@@ -166,12 +167,12 @@ public class ParetoPlotsWebPart extends BodyWebPart
     }
 
     @Override
-    protected Elements elements()
+    protected ElementCache newElementCache()
     {
-        return new Elements();
+        return new ElementCache();
     }
 
-    private class Elements extends BodyWebPart.Elements
+    protected class ElementCache extends WebPart.ElementCache
     {
         WebElement notFound = new LazyWebElement(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("No Guide Sets found in this folder."), this).withTimeout(1000);
         WebElement qcPlotsLink = new LazyWebElement(Locator.linkWithText("QC Plots"), this);
