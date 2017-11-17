@@ -113,8 +113,14 @@ public class LibrarySpectrumMatchGetter
             if(precursorCharges.contains(precursor.getCharge()))
                 continue;  // We already have a match for this charge state
 
-            for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
+            for(PeptideSettings.SpectrumLibrary library: libraries) // Use the "libraries" list instead of keySet on the
+                                                                    // libraryFilePathsMap so that we get a predictable order
             {
+                if(libraryFilePathsMap.get(library) == null)
+                {
+                    continue;
+                }
+
                 BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(libraryFilePathsMap.get(library),
                         precursor.getModifiedSequence(),
                         precursor.getCharge());

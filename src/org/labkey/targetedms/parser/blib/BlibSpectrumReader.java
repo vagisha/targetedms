@@ -87,13 +87,22 @@ public class BlibSpectrumReader
         catch(SQLException e)
         {
             // Malformed blib file?
-            if(e.getMessage().contains("no such table"))
+            if (malformedBlibFileError(blibFilePath, e))
             {
-                LOG.error("Missing table in blib file " + blibFilePath, e);
                 return null;
             }
             throw new RuntimeSQLException(e);
         }
+    }
+
+    private static boolean malformedBlibFileError(String blibFilePath, SQLException e)
+    {
+        if(e.getMessage().contains("no such table") || e.getMessage().contains("no such column"))
+        {
+            LOG.error("Malformed .blib file " + blibFilePath + ". Error was: " + e.getMessage());
+            return true;
+        }
+        return false;
     }
 
     private static boolean redundantBlibExists(String blibPath)
@@ -131,28 +140,33 @@ public class BlibSpectrumReader
         sql.append(" INNER JOIN SpectrumSourceFiles ssf ON (rt.SpectrumSourceID = ssf.id)");
         sql.append(" WHERE rs.peptideModSeq='"+blibPeptide+"'");
 
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath, config.toProperties());
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql.toString()))
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath, config.toProperties()))
         {
-            List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> retentionTimes = new ArrayList<>();
-            while(rs.next())
+            if(!hasValidRtTable(conn))
             {
-                LibrarySpectrumMatchGetter.PeptideIdRtInfo rtInfo = new LibrarySpectrumMatchGetter.PeptideIdRtInfo(rs.getString("fileName"),
-                        modifiedPeptide,
-                        rs.getInt("precursorCharge"),
-                        rs.getDouble("retentionTime"),
-                        rs.getBoolean("bestSpectrum"));
-                retentionTimes.add(rtInfo);
+                return Collections.emptyList();
             }
-            return Collections.unmodifiableList(retentionTimes);
+
+            try(Statement stmt = conn.createStatement();
+                ResultSet rs = stmt.executeQuery(sql.toString()))
+            {
+                List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> retentionTimes = new ArrayList<>();
+                while (rs.next())
+                {
+                    LibrarySpectrumMatchGetter.PeptideIdRtInfo rtInfo = new LibrarySpectrumMatchGetter.PeptideIdRtInfo(rs.getString("fileName"),
+                            modifiedPeptide,
+                            rs.getInt("precursorCharge"),
+                            rs.getDouble("retentionTime"),
+                            rs.getBoolean("bestSpectrum"));
+                    retentionTimes.add(rtInfo);
+                }
+                return Collections.unmodifiableList(retentionTimes);
+            }
         }
         catch(SQLException e)
         {
-            // Older versions of blib databases don't have a RetentionTimes table.
-            if(e.getMessage().contains("no such table"))
+            if (malformedBlibFileError(blibFilePath, e))
             {
-                LOG.error("Missing table in blib file " + blibFilePath, e);
                 return Collections.emptyList();
             }
             throw new RuntimeSQLException(e);
@@ -164,36 +178,26 @@ public class BlibSpectrumReader
     {
         String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
 
-        // Check if the schema has a RetentionTimes table.
-        String tableCheckSql = "SELECT name FROM sqlite_master WHERE type='table' AND name='RetentionTimes'";
-
-        ResultSet rs;
-        try (Statement stmt = conn.createStatement())
+        boolean validRtTable = hasValidRtTable(conn);
+        StringBuilder sql;
+        if(validRtTable)
         {
-            rs = stmt.executeQuery(tableCheckSql);
-            boolean hasRtTable = false;
-            if(rs.next())
-            {
-                hasRtTable = true;
-            }
+            sql = new StringBuilder("SELECT rf.*, ssf.fileName");
+            sql.append(", rt.retentionTime AS RT"); // Need an alias since RefSpectra table in non-minimized .blib files have a retentionTime column too.
+            sql.append(", rt.SpectrumSourceId FROM RefSpectra AS rf ");
+            sql.append("LEFT JOIN RetentionTimes AS rt ON (rt.RefSpectraId = rf.id AND rt.bestSpectrum = 1) ");
+            sql.append("LEFT JOIN SpectrumSourceFiles AS ssf ON rt.SpectrumSourceId = ssf.id ");
+            sql.append(" WHERE rf.peptideModSeq='").append(blibPeptide).append("'");
+            sql.append(" AND rf.precursorCharge=").append(charge);
+        }
+        else
+        {
+            sql = new StringBuilder("SELECT * from RefSpectra WHERE peptideModSeq='").append(blibPeptide).append("' AND precursorCharge=").append(charge);
+        }
 
-            if(hasRtTable)
-            {
-
-                StringBuilder sql = new StringBuilder("SELECT rf.*, ssf.fileName");
-                sql.append(", rt.retentionTime AS RT"); // Need an alias since RefSpectra table in non-minimized .blib files have a retentionTime column too.
-                sql.append(", rt.SpectrumSourceId FROM RefSpectra AS rf ");
-                sql.append("LEFT JOIN RetentionTimes AS rt ON (rt.RefSpectraId = rf.id AND rt.bestSpectrum = 1) ");
-                sql.append("LEFT JOIN SpectrumSourceFiles AS ssf ON rt.SpectrumSourceId = ssf.id ");
-                sql.append(" WHERE rf.peptideModSeq='").append(blibPeptide).append("'");
-                sql.append(" AND rf.precursorCharge=").append(charge);
-                rs = stmt.executeQuery(sql.toString());
-            }
-            else
-            {
-                rs = stmt.executeQuery("SELECT * from RefSpectra WHERE peptideModSeq='"+blibPeptide+"' AND precursorCharge="+charge);
-            }
-
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql.toString()))
+        {
             // Columns in RefSpectra table: id|peptideSeq|peptideModSeq|precursorCharge|precursorMZ|prevAA|nextAA|copies|numPeaks
             // Columns queried from RetentionTimes table (when present): retentionTime, SpectrumSourceId
             // Columns queried from SpectrumSourceFiles table (when present): fileName
@@ -210,7 +214,7 @@ public class BlibSpectrumReader
                 spectrum.setNextAa(rs.getString("nextAA"));
                 spectrum.setCopies(rs.getInt("copies"));
                 spectrum.setNumPeaks(rs.getInt("numPeaks"));
-                if(hasRtTable)
+                if (validRtTable)
                 {
                     spectrum.setRetentionTime(rs.getDouble("RT"));
                     spectrum.setFileId(rs.getInt("SpectrumSourceId"));
@@ -218,6 +222,60 @@ public class BlibSpectrumReader
                 }
             }
             return spectrum;
+        }
+    }
+
+    private static boolean hasRetentionTimesTable(Connection conn) throws SQLException
+    {
+        String tableCheckStmt = "SELECT name FROM sqlite_master WHERE type='table' AND name='RetentionTimes'";
+
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(tableCheckStmt))
+        {
+            if (rs.next())
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasValidRtTable(Connection conn) throws SQLException
+    {
+        if(!hasRetentionTimesTable(conn))
+        {
+            return false;
+        }
+
+        // Check if the RetentionTimes table has all the required columns. Some older versions of .blib
+        // files have a RetentionTimes table but not the other columns needed to join with the SpectrumSourceFiles table.
+        String tableCheckStmt = "PRAGMA table_info('RetentionTimes')"; // returns one row per column in the table, if it exists
+
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(tableCheckStmt))
+        {
+            int foundColumns = 0;
+            while (rs.next())
+            {
+                String name = rs.getString("name");
+                if (name.toLowerCase().equals("retentiontime"))
+                {
+                    foundColumns++;
+                }
+                else if (name.toLowerCase().equals("spectrumsourceid"))
+                {
+                    foundColumns++;
+                }
+                else if (name.toLowerCase().equals("refspectraid"))
+                {
+                    foundColumns++;
+                }
+                else if (name.toLowerCase().equals("bestspectrum"))
+                {
+                    foundColumns++;
+                }
+            }
+
+            return foundColumns == 4;
         }
     }
 
