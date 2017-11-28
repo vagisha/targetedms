@@ -368,8 +368,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
         //register the Targeted MS folder type
         FolderTypeManager.get().registerFolderType(this, new TargetedMSFolderType(this));
-        if (null != CloudStoreService.get())
-            FolderTypeManager.get().registerFolderType(this, new TargetedMSCloudFileStorageFolderType(this));
 
         ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
         proteinService.registerProteinSearchView(new TransitionProteinSearchViewProvider());

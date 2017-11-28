@@ -23,6 +23,7 @@ import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.module.MultiPortalFolderType;
 import org.labkey.api.util.HelpTopic;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.FolderTab;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.Portal;
 import org.labkey.api.view.ViewContext;
@@ -47,6 +48,7 @@ public class TargetedMSFolderType extends MultiPortalFolderType
              "Manage targeted MS assays generated in Skyline.",
              getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment")));
     }
+
     public TargetedMSFolderType(TargetedMSModule module, String name, String description, Set<Module> activeModules)
     {
         super(name,
