@@ -14,6 +14,9 @@
  */
 package org.labkey.targetedms.view;
 
+import org.labkey.api.data.SimpleDisplayColumn;
+import org.labkey.api.data.UrlColumn;
+import org.labkey.api.view.DataView;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
@@ -48,6 +51,19 @@ public class CalibrationCurvesView extends QuantificationView
                         : TargetedMSSchema.TABLE_PEPTIDE_CALIBRATION_CURVE,
                 form, forExport, dataRegionName);
         setTitle(isSmallMolecule() ? "Molecule Calibration Curves" : "Peptide Calibration Curves");
+    }
+
+    @Override
+    protected void setupDataView(DataView ret)
+    {
+        super.setupDataView(ret);
+
+        ActionURL url = new ActionURL(TargetedMSController.ShowFiguresOfMeritAction.class, getContainer());
+        url.addParameter("RunId", "${RunId}");
+        url.addParameter("GeneralMoleculeId", "${GeneralMoleculeId}");
+        SimpleDisplayColumn fomColumn = new UrlColumn(url.toString(), "Fom");
+        ret.getDataRegion().addDisplayColumn(1, fomColumn);
+
     }
 
     @Override

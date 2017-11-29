@@ -861,6 +861,7 @@ public class TargetedMSSchema extends UserSchema
             TABLE_RUN_ENZYME.equalsIgnoreCase(name) ||
             TABLE_SPECTRUM_LIBRARY.equalsIgnoreCase(name) ||
             TABLE_ANNOTATION_SETTINGS.equalsIgnoreCase(name) ||
+            TABLE_QUANTIIFICATION_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_DRIFT_TIME_PREDICTION_SETTINGS.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL());
@@ -1219,6 +1220,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_LIBRARY_SOURCE);
         hs.add(TABLE_PRECURSOR_LIB_INFO);
         hs.add(TABLE_ANNOTATION_SETTINGS);
+        hs.add(TABLE_QUANTIIFICATION_SETTINGS);
         hs.add(TABLE_REPRESENTATIVE_DATA_STATE_RUN);
         hs.add(TABLE_REPRESENTATIVE_DATA_STATE);
         hs.add(TABLE_IRT_PEPTIDE);

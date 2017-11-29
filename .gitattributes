@@ -18,6 +18,10 @@ resources/queries/targetedms/CalibrationCurvePrecursors/.qview.xml -text
 resources/queries/targetedms/CalibrationCurvePrecursorsByReplicate.query.xml -text
 resources/queries/targetedms/CalibrationCurvePrecursorsByReplicate.sql -text
 resources/queries/targetedms/CalibrationCurvePrecursorsByReplicate/.qview.xml -text
+resources/queries/targetedms/FiguresOfMerit.query.xml -text
+resources/queries/targetedms/FiguresOfMerit.sql -text
+resources/queries/targetedms/FiguresOfMeritPivot.sql -text
+resources/queries/targetedms/FiguresOfMeritSummary.sql -text
 resources/queries/targetedms/QCMetric_fwb.sql -text
 resources/queries/targetedms/QCMetric_fwhm.sql -text
 resources/queries/targetedms/QCMetric_lhRatio.sql -text
@@ -474,6 +478,7 @@ src/org/labkey/targetedms/view/expannotations/TargetedMSExperimentWebPart.java -
 src/org/labkey/targetedms/view/expannotations/TargetedMSExperimentsWebPart.java -text
 src/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp -text
 src/org/labkey/targetedms/view/expannotations/experimentDetails.jsp -text
+src/org/labkey/targetedms/view/figuresOfMerit.jsp -text
 src/org/labkey/targetedms/view/folderSetup.jsp -text
 src/org/labkey/targetedms/view/moleculePrecursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/moleculeSummaryView.jsp -text
@@ -537,6 +542,7 @@ webapp/TargetedMS/DataTables/jquery.dataTables.min.css -text
 webapp/TargetedMS/DataTables/jquery.dataTables.min.js -text
 webapp/TargetedMS/css/CalibrationCurve.css -text
 webapp/TargetedMS/css/ExperimentAnnotations.css -text
+webapp/TargetedMS/css/FiguresOfMerit.css -text
 webapp/TargetedMS/css/LinkVersionsDialog.css -text
 webapp/TargetedMS/css/ParetoPlot.css -text
 webapp/TargetedMS/css/QCSummary.css -text

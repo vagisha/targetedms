@@ -6203,6 +6203,27 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
+    public class ShowFiguresOfMeritAction extends SimpleViewAction<CalibrationCurveForm>
+    {
+
+        @Override
+        public ModelAndView getView(CalibrationCurveForm form, BindException errors) throws Exception
+        {
+            JspView<CalibrationCurveForm> figuresOfMeritView = new JspView<>("/org/labkey/targetedms/view/figuresOfMerit.jsp", form);
+            figuresOfMeritView.setTitle("Figures of Merit");
+
+
+            return figuresOfMeritView;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return null;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
     public class ShowCalibrationCurveAction extends QueryViewAction<CalibrationCurveForm, QueryView>
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
