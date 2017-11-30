@@ -31,6 +31,8 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
         this.minY = this.data.calibrationCurve.minY;
         this.maxY = this.data.calibrationCurve.maxY;
+        this.minX = this.data.calibrationCurve.minX;
+        this.maxX = this.data.calibrationCurve.maxX;
 
         if (this.minY == null)
             this.minY = 0;
@@ -38,6 +40,18 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         if (this.maxY == null)
             this.maxY = 0;
 
+        if (this.minX == null)
+            this.minX = 0;
+
+        if (this.maxX == null)
+            this.maxX = 0;
+
+        // Ensure plot goes to max x axis for selected point calculations
+        var calcMaxX = this.getQuadraticIntersect(this, this.maxY);
+        if (calcMaxX > this.maxX)
+            this.maxX = calcMaxX;
+
+        this.addCurvePoints();
         this.addPlot();
 
         var me = this;
@@ -51,25 +65,45 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         }, false);
     },
 
+    // Add points for quadratic calculated concentration curve
+    addCurvePoints: function () {
+        var curvePts = 50;
+        var x, y;
+        var increment = (this.maxX - this.minX) / curvePts;
+
+        for (var pt = 0; pt <= curvePts; pt++) {
+            x = this.minX + (pt * increment);
+            y = this.data.calibrationCurve.quadraticCoefficient * (x * x) + this.data.calibrationCurve.slope * x
+                    + this.data.calibrationCurve.intercept;
+
+            this.data.dataPoints.push({x:x, y:y, type: "curvePoint", name:""});
+        }
+    },
+
     getPanelSize: function () {
         return window.innerWidth - 100;
     },
 
-    getSlopeIntersect: function (scope, point) {
-        return (point.y - scope.data.calibrationCurve.intercept) / scope.data.calibrationCurve.slope;
+    // Given y, solve for x
+    getQuadraticIntersect: function (scope, y) {
+        var a = scope.data.calibrationCurve.quadraticCoefficient;
+        var b = scope.data.calibrationCurve.slope;
+        var c = scope.data.calibrationCurve.intercept;
+
+        return ((-1 * b) + Math.sqrt((b * b) - (4 * a * (c - y)))) / (2 * a);
     },
 
     getPointToLineLayer: function (scope, point) {
         var data = [];
         data.push(point);
         data.push({
-            x: scope.getSlopeIntersect(scope, point),
+            x: scope.getQuadraticIntersect(scope, point.y),
             y: point.y,
             type: point.type
         });
 
         data.push({
-            x: scope.getSlopeIntersect(scope, point),
+            x: scope.getQuadraticIntersect(scope, point.y),
             y: scope.minY,
             type: point.type
         });
@@ -122,10 +156,10 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                     geom: new LABKEY.vis.Geom.Path({size: 3, opacity: .4}),
                     aes: {
                         y: function (row) {
-                            return row.y;
+                            return (row.type === "curvePoint" ? row.y : null);
                         },
                         x: function (row) {
-                            return (row.y - me.data.calibrationCurve.intercept) / me.data.calibrationCurve.slope;
+                            return (row.type === "curvePoint" ? row.x : null);
                         }
                     }
                 }),
@@ -133,10 +167,10 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                     geom: new LABKEY.vis.Geom.Point({size: 5}),
                     aes: {
                         y: function (row) {
-                            return row.y
+                            return (row.type === "curvePoint" ? null : row.y);
                         },
                         x: function (row) {
-                            return row.x
+                            return (row.type === "curvePoint" ? null : row.x);
                         },
                         pointClickFn: function (event, data) {
                             var legend = me.getLegendDataInfo(me)
@@ -207,7 +241,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             {text: 'Peak Area Ratio: ' + scope.formatLegendValue(point.y), color: 'white'},
             {text: 'Concentration: ' + scope.formatLegendValue(point.x), color: 'white'},
             {
-                text: 'Calc. Concentration: ' + scope.formatLegendValue(scope.getSlopeIntersect(scope, point)),
+                text: 'Calc. Concentration: ' + scope.formatLegendValue(scope.getQuadraticIntersect(scope, point.y)),
                 color: 'white'
             }
         ]

@@ -112,7 +112,7 @@ public class CalibrationCurveChart
     private JSONObject processCalibrationCurveJson(GeneralMolecule molecule, ReplicateDataSet replicateDataSet, CalibrationCurve calibrationCurve, Iterable<GeneralMoleculeChromInfo> chromInfos, QuantificationSettings quantificationSettings)
     {
         JSONObject json = new JSONObject();
-        Double maxX = null, maxY = null, minY = null;
+        Double maxX = null, maxY = null, minX = null, minY = null;
 
         // Molecule data
         JSONObject jsonMolecule = new JSONObject();
@@ -129,7 +129,6 @@ public class CalibrationCurveChart
         jsonCurve.put("normalizationMethod", quantificationSettings.getNormalizationMethod());
         jsonCurve.put("regressionFit", quantificationSettings.getRegressionFit());
         jsonCurve.put("regressionWeighting", quantificationSettings.getRegressionWeighting());
-
 
         // Get data points
         JSONArray jsonPoints = new JSONArray();
@@ -167,6 +166,9 @@ public class CalibrationCurveChart
             if (minY == null || y < minY)
                 minY = y;
 
+            if (minX == null || x < minX)
+                minX = x;
+
             point.put("x", x);
             point.put("y", y);
             point.put("type", sampleType.toString());
@@ -177,6 +179,7 @@ public class CalibrationCurveChart
 
         jsonCurve.put("maxX", maxX);
         jsonCurve.put("maxY", maxY);
+        jsonCurve.put("minX", minX);
         jsonCurve.put("minY", minY);
 
         json.put("molecule", jsonMolecule);
