@@ -22,21 +22,21 @@
         <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
     </div>
     <h2 id="fom-title1"></h2>
-    <h4 id="qc-title2"></h4>
-    <hr>
-    <table class="table table-striped table-responsive fom-table">
-        <thead id="qc-header" />
-        <tbody id="qc-body" />
-    </table>
-    <div id="bias-limit"></div>
-    <div id="loq-stat"></div>
-    <div id="uloq-stat"></div>
-    <br>
     <h4 id="standard-title2"></h4>
     <hr>
     <table class="table table-striped table-responsive fom-table">
         <thead id="standard-header" />
         <tbody id="standard-body" />
+    </table>
+    <div id="bias-limit"></div>
+    <div id="loq-stat"></div>
+    <div id="uloq-stat"></div>
+    <br>
+    <h4 id="qc-title2"></h4>
+    <hr>
+    <table class="table table-striped table-responsive fom-table">
+        <thead id="qc-header" />
+        <tbody id="qc-body" />
     </table>
 
 </div>
@@ -343,7 +343,7 @@
             createFomTable('standard', callback);
         };
 
-        createQcFomTable(createStandardFomTable);
+        createStandardFomTable(createQcFomTable);
 
     }(jQuery);
 
