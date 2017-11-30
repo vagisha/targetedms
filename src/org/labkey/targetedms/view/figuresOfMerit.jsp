@@ -13,9 +13,6 @@
         dependencies.add("internal/jQuery");
     }
 %>
-<%
-    JspView<TargetedMSController.CalibrationCurveForm> me = (JspView<TargetedMSController.CalibrationCurveForm>) HttpView.currentView();
-%>
 
 <div class="container-fluid targetedms-fom">
     <div id="targetedms-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
