@@ -129,6 +129,7 @@ public class CalibrationCurveChart
         jsonCurve.put("normalizationMethod", quantificationSettings.getNormalizationMethod());
         jsonCurve.put("regressionFit", quantificationSettings.getRegressionFit());
         jsonCurve.put("regressionWeighting", quantificationSettings.getRegressionWeighting());
+        jsonCurve.put("units", quantificationSettings.getUnits());
 
         // Get data points
         JSONArray jsonPoints = new JSONArray();

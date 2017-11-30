@@ -139,6 +139,10 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             }
         });
 
+        var units = "";
+        if (this.data.calibrationCurve.units != null)
+            units = "(" + this.data.calibrationCurve.units + ")";
+
         this.plot = new LABKEY.vis.Plot({
             renderTo: this.renderTo,
             rendererType: 'd3',
@@ -148,7 +152,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             labels: {
                 main: {value: this.data.molecule.name},
                 y: {value: 'Light:Heavy Peak Area Ratio'},
-                x: {value: 'Analyte Concentration (fmol/ml)'}
+                x: {value: 'Analyte Concentration ' + units}
             },
             layers: [
                 this.selectedPointLayer,
