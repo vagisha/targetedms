@@ -18,7 +18,9 @@
     <div id="targetedms-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
         <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
     </div>
-    <h2 id="fom-title1"></h2>
+    <h4 id="fom-title1"></h4>
+    <h4 id="fom-title2"></h4>
+    <br>
     <h4 id="standard-title2"></h4>
     <hr>
     <table class="table table-striped table-responsive fom-table">
@@ -51,7 +53,7 @@
 
         this.exportExcel = function() {
             LABKEY.Utils.convertToExcel({
-                fileName : this.title + '.xlsx',
+                fileName : this.sample + '_' + this.title + '.xlsx',
                 sheets:
                         [
                             {
@@ -64,6 +66,7 @@
 
         var displayHeader = function() {
             $('#fom-title1').html(this.title);
+            $('#fom-title2').html("Sample: " + this.sample);
 
             var title2 = "Concentrations";
             if(this.sampleType === 'qc') {
@@ -162,12 +165,17 @@
         };
 
         var parseMetadata = function(data) {
-            var title;
+            var title = "";
+            var sample = "";
 
             if(data.rowCount === 0) {
                 title = "Molecule"
             }
             else {
+                if (data.rows[0].SampleName != null) {
+                    sample = data.rows[0].SampleName;
+                }
+
                 if (data.rows[0].PeptideName != null) {
                     title = "Peptide: " + data.rows[0].PeptideName;
                 }
@@ -187,9 +195,14 @@
                 this.title = title;
             }
 
+            if( this.sample == null )
+                this.sample = sample;
+
             // Add title to export
-            if (this.xlsExport.length < 1)
+            if (this.xlsExport.length < 1) {
                 this.xlsExport.push([this.title]);
+                this.xlsExport.push(["Sample: " + this.sample]);
+            }
         };
 
         var parseRawData = function(data) {
