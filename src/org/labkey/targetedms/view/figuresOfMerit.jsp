@@ -9,33 +9,25 @@
     @Override
     public void addClientDependencies(ClientDependencies dependencies)
     {
-//        dependencies.add("targetedms/js/FiguresOfMerit.js");
         dependencies.add("targetedms/css/FiguresOfMerit.css");
         dependencies.add("internal/jQuery");
     }
 %>
 <%
     JspView<TargetedMSController.CalibrationCurveForm> me = (JspView<TargetedMSController.CalibrationCurveForm>) HttpView.currentView();
-    TargetedMSController.CalibrationCurveForm bean = me.getModelBean();
-%>
-<%
-    String elementId = "targetedmsFiguresOfMerit";
 %>
 
 <div class="container-fluid targetedms-fom">
     <div id="targetedms-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
         <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
     </div>
-    <h2 id="qc-title1"></h2>
+    <h2 id="fom-title1"></h2>
     <h4 id="qc-title2"></h4>
     <hr>
     <table class="table table-striped table-responsive fom-table">
         <thead id="qc-header" />
         <tbody id="qc-body" />
     </table>
-    <%--<h5 id="bias-limit"></h5>--%>
-    <%--<h5 id="loq-stat"></h5>--%>
-    <%--<h5 id="uloq-stat"></h5>--%>
     <div id="bias-limit"></div>
     <div id="loq-stat"></div>
     <div id="uloq-stat"></div>
@@ -58,23 +50,23 @@
 
         this.moleculeId = params['GeneralMoleculeId'];
         this.biasLimit = 25;  // percent
-        this.export = [];
+        this.xlsExport = [];
 
         this.exportExcel = function() {
             LABKEY.Utils.convertToExcel({
-                fileName : "marty_test.xlsx",
+                fileName : this.title + '.xlsx',
                 sheets:
                         [
                             {
                                 name: 'Sheet1',
-                                data: this.export
+                                data: this.xlsExport
                             }
                         ]
             });
         };
 
         var displayHeader = function() {
-            $('#' + this.sampleType + '-title1').html(this.title);
+            $('#fom-title1').html(this.title);
 
             var title2 = "Concentrations";
             if(this.sampleType === 'qc') {
@@ -85,8 +77,8 @@
             }
 
             $('#' + this.sampleType + '-title2').html(title2);
-            this.export.push([]);
-            this.export.push([title2]);
+            this.xlsExport.push([]);
+            this.xlsExport.push([title2]);
 
             var hdr = '<tr><td>Concentration</td>';
             var units = '';
@@ -103,7 +95,7 @@
             hdr += '</tr>';
 
             $('#' + this.sampleType + '-header').html(hdr);
-            this.export.push(colHdrs);
+            this.xlsExport.push(colHdrs);
         };
 
         var displayBody = function() {
@@ -133,7 +125,7 @@
                     }
                 }, this);
                 html += '</tr>';
-                this.export.push(exportRow);
+                this.xlsExport.push(exportRow);
             }, this);
 
             return html;
@@ -165,7 +157,7 @@
 
                 html += "</tr>";
                 index++;
-                this.export.push(exportRow);
+                this.xlsExport.push(exportRow);
 
             } while (found);
 
@@ -173,23 +165,34 @@
         };
 
         var parseMetadata = function(data) {
-            if (data.rows[0].PeptideName != null) {
-                this.title = "Peptide: " + data.rows[0].PeptideName;
-            }
-            else if (data.rows[0].MoleculeName != null) {
-                this.title = "Molecule: " + data.rows[0].MoleculeName;
+            var title;
+
+            if(data.rowCount === 0) {
+                title = "Molecule"
             }
             else {
-                this.title = "Molecule ID: " + this.moleculeId;
+                if (data.rows[0].PeptideName != null) {
+                    title = "Peptide: " + data.rows[0].PeptideName;
+                }
+                else if (data.rows[0].MoleculeName != null) {
+                    title = "Molecule: " + data.rows[0].MoleculeName;
+                }
+                else {
+                    title = "Molecule ID: " + this.moleculeId;
+                }
+
+                // Get units
+                if (data.rows[0].Units != null)
+                    this.Units = data.rows[0].Units;
+            }
+
+            if( this.title == null || this.title === "Molecule") {
+                this.title = title;
             }
 
             // Add title to export
-            if (this.export.length < 1)
-                this.export.push([this.title]);
-
-            // Get units
-            if (data.rows[0].Units != null)
-                this.Units = data.rows[0].Units;
+            if (this.xlsExport.length < 1)
+                this.xlsExport.push([this.title]);
         };
 
         var parseRawData = function(data) {
@@ -326,10 +329,10 @@
             $('#loq-stat').html('LOQ: ' + loq + ' ' + (this.Units?this.Units:''));
             $('#uloq-stat').html('ULOQ: ' + uloq + ' ' + (this.Units?this.Units:''));
 
-            this.export.push([]);
-            this.export.push(['Bias Limit: ' + this.biasLimit + '%']);
-            this.export.push(['LOQ: ' + loq + ' ' + (this.Units?this.Units:'')]);
-            this.export.push(['ULOQ: ' + uloq + ' ' + (this.Units?this.Units:'')]);
+            this.xlsExport.push([]);
+            this.xlsExport.push(['Bias Limit: ' + this.biasLimit + '%']);
+            this.xlsExport.push(['LOQ: ' + loq + ' ' + (this.Units?this.Units:'')]);
+            this.xlsExport.push(['ULOQ: ' + uloq + ' ' + (this.Units?this.Units:'')]);
         };
 
         var createQcFomTable = function(callback) {
