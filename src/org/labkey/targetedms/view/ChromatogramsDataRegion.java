@@ -26,7 +26,6 @@ import org.labkey.api.data.Results;
 import org.labkey.api.data.ShowRows;
 import org.labkey.api.data.UpdateColumn;
 import org.labkey.api.query.FilteredTable;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.ViewContext;
