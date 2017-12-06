@@ -1,9 +1,6 @@
 
 
-<%@ page import="org.labkey.api.view.HttpView" %>
-<%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
-<%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
     @Override
@@ -18,12 +15,13 @@
     <div id="targetedms-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
         <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
     </div>
-    <h4 id="fom-title1"></h4>
+    <h3 id="fom-title1"></h3>
     <h4 id="fom-title2"></h4>
+    <h4 id="fom-title3"></h4>
     <br>
     <h4 id="standard-title2"></h4>
     <hr>
-    <table class="table table-striped table-responsive fom-table">
+    <table id="fom-table-standard" class="table table-striped table-responsive fom-table">
         <thead id="standard-header" />
         <tbody id="standard-body" />
     </table>
@@ -33,7 +31,7 @@
     <br>
     <h4 id="qc-title2"></h4>
     <hr>
-    <table class="table table-striped table-responsive fom-table">
+    <table id="fom-table-qc" class="table table-striped table-responsive fom-table">
         <thead id="qc-header" />
         <tbody id="qc-body" />
     </table>
@@ -53,7 +51,7 @@
 
         this.exportExcel = function() {
             LABKEY.Utils.convertToExcel({
-                fileName : this.sample + '_' + this.title + '.xlsx',
+                fileName : this.file.split(".")[0] + '_' + this.title + '.xlsx',
                 sheets:
                         [
                             {
@@ -66,7 +64,8 @@
 
         var displayHeader = function() {
             $('#fom-title1').html(this.title);
-            $('#fom-title2').html("Sample: " + this.sample);
+            $('#fom-title2').html("Skyline File: " + this.file);
+            $('#fom-title3').html("Sample(s): " + this.sample);
 
             var title2 = "Concentrations";
             if(this.sampleType === 'qc') {
@@ -167,13 +166,25 @@
         var parseMetadata = function(data) {
             var title = "";
             var sample = "";
+            var file = "";
 
             if(data.rowCount === 0) {
                 title = "Molecule"
             }
             else {
-                if (data.rows[0].SampleName != null) {
-                    sample = data.rows[0].SampleName;
+                var sampleNames = [];
+                sample = data.rows.reduce(function(accum, row) {
+                    if (row.SampleName != null && sampleNames.indexOf(row.SampleName) === -1) {
+                        if (accum.length !== 0)
+                            accum += ", ";
+
+                        accum += row.SampleName;
+                    }
+                    return accum;
+                }, "");
+
+                if (data.rows[0].FileName != null) {
+                    file = data.rows[0].FileName;
                 }
 
                 if (data.rows[0].PeptideName != null) {
@@ -198,10 +209,13 @@
             if( this.sample == null )
                 this.sample = sample;
 
+            if( this.file == null )
+                this.file = file;
+
             // Add title to export
             if (this.xlsExport.length < 1) {
                 this.xlsExport.push([this.title]);
-                this.xlsExport.push(["Sample: " + this.sample]);
+                this.xlsExport.push(["Sample(s): " + this.sample]);
             }
         };
 
@@ -234,8 +248,7 @@
             }, this);
 
             // Sort columns
-            var collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'});
-            this.hdrLabels.sort(collator.compare);
+            this.hdrLabels.sort(function(a, b){return a-b;});
         };
 
         var parseSummaryData = function (data) {

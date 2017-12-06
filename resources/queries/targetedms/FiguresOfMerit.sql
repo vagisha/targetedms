@@ -15,6 +15,7 @@ SELECT
   ELSE NULL END as Bias,
   gm.SampleFileId.ReplicateId.SampleType,
   gm.SampleFileId.ReplicateId.RunId.Id as RunId,
+  gm.SampleFileId.ReplicateId.RunId.FileName as FileName,
   gm.SampleFileId.SampleName,
   CAST(qs.Units AS VARCHAR) as Units
 FROM (SELECT * FROM generalmoleculechrominfo WHERE abs(CalculatedConcentration) < 1E20) as gm
@@ -32,6 +33,7 @@ GROUP BY
   gm.SampleFileId.ReplicateId.AnalyteConcentration,
   gm.SampleFileId.ReplicateId.SampleType,
   gm.SampleFileId.ReplicateId.RunId.Id,
+  gm.SampleFileId.ReplicateId.RunId.FileName,
   gm.SampleFileId.SampleName,
   CAST(qs.Units AS VARCHAR)
 
