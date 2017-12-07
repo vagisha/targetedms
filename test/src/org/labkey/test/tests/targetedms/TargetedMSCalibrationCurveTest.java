@@ -14,6 +14,7 @@
  */
 package org.labkey.test.tests.targetedms;
 
+import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -22,6 +23,7 @@ import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
 import org.labkey.remoteapi.query.UpdateRowsCommand;
 import org.labkey.test.Locator;
+import org.labkey.test.SortDirection;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
@@ -34,6 +36,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -177,6 +180,140 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         command.execute(connection, getProjectName() + "/CalibrationTest");
     }
 
+    private File getFomExport()
+    {
+        mouseOver(Locator.id("fom-table-standard"));
+        return doAndWaitForDownload(() -> click(Locator.id("targetedms-fom-export")));
+    }
+
+    private String getFomTableHeaderValue(String tableId, int col)
+    {
+        return Locator.xpath("//table[@id=" + Locator.xq(tableId) + "]/thead/tr/td").findElements(getDriver()).get(col).getText();
+    }
+
+    private String getFomTableBodyValue(String tableId, int row, int col)
+    {
+        return getTableCellText(Locator.id(tableId), row, col);
+    }
+
+    private void verifyFomTable(String tableId, List<String> groups, List<String> concentrations, List<String> biases)
+    {
+        List<String> distinctGroups = new ArrayList<>();
+        for (String group : groups)
+        {
+            if (!group.equals(" ") && !distinctGroups.contains(group))
+                distinctGroups.add(group);
+        }
+
+        // No data
+        if (distinctGroups.size() < 1)
+        {
+            assertTextPresent("No data of this type");
+            return;
+        }
+
+        for (int grpIndex = 0; grpIndex < distinctGroups.size(); grpIndex++)
+        {
+            assertTrue(getFomTableHeaderValue(tableId, (grpIndex * 2) + 1)
+                    .startsWith(distinctGroups.get(grpIndex)));
+        }
+
+        int row = 0, grpIndex, maxRow = 0;
+        String grp = "";
+        SummaryStatistics stats = new SummaryStatistics();
+        List<Double> means = new ArrayList<>(Collections.nCopies(distinctGroups.size(), 0.0));
+        List<Double> stddevs = new ArrayList<>(Collections.nCopies(distinctGroups.size(), 0.0));
+        List<Double> cvs = new ArrayList<>(Collections.nCopies(distinctGroups.size(), 0.0));
+        for (int rawIndex = 0; rawIndex < concentrations.size(); rawIndex++)
+        {
+            if ( grp.equals(groups.get(rawIndex)) )
+            {
+                row++;
+            }
+            else {
+                stats = new SummaryStatistics();
+                row = 0;
+            }
+
+            if (maxRow < row)
+                maxRow = row;
+
+            grp = groups.get(rawIndex);
+            grpIndex = distinctGroups.indexOf(grp);
+
+            stats.addValue(Double.parseDouble(concentrations.get(rawIndex)));
+
+            means.set(grpIndex, Math.round(stats.getMean() * 100)/100.00);
+            stddevs.set(grpIndex, Math.round(stats.getStandardDeviation() * 100)/100.00);
+            cvs.set(grpIndex, Math.round(((100 * stats.getStandardDeviation())/stats.getMean()) * 100)/100.00);
+
+
+            assertEquals(concentrations.get(rawIndex), getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 1));
+            assertEquals(biases.get(rawIndex), getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 2));
+        }
+
+        for (int index = 0; index < means.size(); index++)
+        {
+            assertTrue(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 3, index * 2 + 1)) == means.get(index));
+            assertTrue(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1)) == stddevs.get(index));
+            assertTrue(Math.abs(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1)) - cvs.get(index)) < .02);
+        }
+    }
+
+    private void testFiguresOfMerit(String scenario) throws Exception
+    {
+        goToProjectHome();
+        clickFolder(scenario);
+        clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
+        clickAndWait(Locator.linkContainingText(scenario + ".sky.zip"));
+        clickAndWait(Locator.linkContainingText("calibration curve"));
+        boolean peptide = countText("Peptide Calibration Curves") > 0;
+
+        DataRegionTable calibrationCurvesTable = new DataRegionTable((peptide?"calibration_curves":"calibration_curves_sm_mol"), this);
+        String molName = calibrationCurvesTable.getDataAsText(0, "GeneralMoleculeId");
+
+
+        goToSchemaBrowser();
+        DataRegionTable dataRegionTable = viewQueryData("targetedms", "FiguresOfMerit");
+        if (peptide)
+        {
+            dataRegionTable.setFilter("PeptideName", "Equals", molName);
+        }
+        else
+        {
+            dataRegionTable.setFilter("MoleculeName", "Equals", molName);
+        }
+        dataRegionTable.setFilter("SampleType", "Equals", "standard");
+        dataRegionTable.setSort("AnalyteConcentration", SortDirection.ASC);
+
+        List<String> stdGroups = dataRegionTable.getColumnDataAsText("AnalyteConcentration");
+        List<String> stdConcentrations = dataRegionTable.getColumnDataAsText("ReplicateConcentration");
+        List<String> stdBiases = dataRegionTable.getColumnDataAsText("Bias");
+
+        dataRegionTable.setFilter("SampleType", "Equals", "qc");
+
+        List<String> qcGroups = dataRegionTable.getColumnDataAsText("AnalyteConcentration");
+        List<String> qcConcentrations = dataRegionTable.getColumnDataAsText("ReplicateConcentration");
+        List<String> qcBiases = dataRegionTable.getColumnDataAsText("Bias");
+
+        goToProjectHome();
+        clickFolder(scenario);
+        clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
+        clickAndWait(Locator.linkContainingText(scenario + ".sky.zip"));
+        clickAndWait(Locator.linkContainingText("calibration curve"));
+
+        clickAndWait(Locator.linkContainingText("Fom"));
+
+        waitForText(molName);
+
+        verifyFomTable("fom-table-standard", stdGroups, stdConcentrations, stdBiases);
+        verifyFomTable("fom-table-qc", qcGroups, qcConcentrations, qcBiases);
+
+        File file = getFomExport();
+        assertTrue("Wrong file type for export pdf [" + file.getName() + "]", file.getName().endsWith(".xlsx"));
+        assertTrue("Empty pdf downloaded [" + file.getName() + "]", file.length() > 0);
+    }
+
     private void runScenario(String scenario, String expectedWeighting) throws Exception
     {
         setupSubfolder(getProjectName(), scenario, FolderType.Experiment);
@@ -307,6 +444,8 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 assertEquals("Wrong legend text", expectedLegendText, actualLegendText);
             }
         }
+
+        testFiguresOfMerit(scenario);
     }
 
     private double getDelta(double expectedValue)
