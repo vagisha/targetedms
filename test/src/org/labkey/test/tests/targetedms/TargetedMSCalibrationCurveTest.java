@@ -112,7 +112,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         assertEquals("Unexpected value for " + replicate, "102,404.5703", dataRegionTable.getDataAsText(0, "heavyTotalAreaMean"));
         assertEquals("Unexpected value for " + replicate, "0.02", dataRegionTable.getDataAsText(0, "ratioMean"));
         assertEquals("Unexpected value for " + replicate, "0.05", dataRegionTable.getDataAsText(0, "analyteConcentrationMean"));
-        assertEquals("Unexpected value for " + replicate, "0.087", dataRegionTable.getDataAsText(0, "calculatedConcentrationMean"));
+        assertEquals("Unexpected value for " + replicate, "0.064", dataRegionTable.getDataAsText(0, "calculatedConcentrationMean"));
 
         //TODO check that values have changed to mean of two replicates
         //Will require getting replicate id for the sample file represented by the row being validated.
@@ -354,9 +354,14 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             int rowWithoutData = -1;
             double expectedSlope = -1;
             double expectedIntercept = -1;
+            double expectedQuadratic = -1;
             double expectedRSquared = -1;
+            boolean quadratic = false;
             for (Map<String, Object> expectedRow : expected)
             {
+                if (!expectedRow.get("QuadraticCoefficient").toString().equals("#N/A"))
+                    quadratic = true;
+
                 String peptide = expectedRow.get("Peptide").toString();
                 String msg = scenario + "_" + peptide;
                 int rowIndex = calibrationCurvesTable.getRowIndex(smallMolecule ? "Molecule" : "Peptide", peptide);
@@ -376,6 +381,12 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                     double actualIntercept = Double.parseDouble(calibrationCurvesTable.getDataAsText(rowIndex, "Intercept"));
                     expectedIntercept = Double.parseDouble(expectedRow.get("Intercept").toString());
                     assertEquals(expectedIntercept, actualIntercept, getDelta(expectedIntercept));
+                    if (quadratic)
+                    {
+                        double actualQuadratic = Double.parseDouble(calibrationCurvesTable.getDataAsText(rowIndex, "QuadraticCoefficient"));
+                        expectedQuadratic = Double.parseDouble(expectedRow.get("QuadraticCoefficient").toString());
+                        assertEquals(expectedQuadratic, actualQuadratic, getDelta(expectedQuadratic));
+                    }
                     double actualRSquared = Double.parseDouble(calibrationCurvesTable.getDataAsText(rowIndex, "RSquared"));
                     expectedRSquared = Double.parseDouble(expectedRow.get("RSquared").toString());
                     assertEquals(expectedRSquared, actualRSquared, 1E-4);
@@ -388,7 +399,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 "QC",
                 "Unknown",
                 "Calibration Curve",
-                "Regression Fit: linear",
+                "Regression Fit: " + (quadratic?"quadratic":"linear"),
                 "Norm. Method: ratio_to_heavy",
                 "Regression Weighting: " + expectedWeighting,
                 "MS Level: All"
@@ -403,9 +414,14 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             List<String> expectedLegendText = new ArrayList<>(baseLegendText);
             expectedLegendText.addAll(Arrays.asList(
                 "Slope: " + df.format(expectedSlope),
-                "Intercept: " + df.format(expectedIntercept),
-                "rSquared: " + df.format(expectedRSquared)
+                "Intercept: " + df.format(expectedIntercept)
             ));
+            if (quadratic)
+            {
+                expectedLegendText.add("Quadratic Coefficient: " + df.format(expectedQuadratic));
+            }
+            expectedLegendText.add("rSquared: " + df.format(expectedRSquared));
+
             assertEquals("Wrong legend text", expectedLegendText, actualLegendText);
 
             log("Verify calibration curve export");

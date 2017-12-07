@@ -1,0 +1,13 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="MoleculeCalibrationCurve" tableDbType="TABLE">
+                <columns>
+                    <column columnName="RSquared">
+                        <formatString>0.00000</formatString>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>
