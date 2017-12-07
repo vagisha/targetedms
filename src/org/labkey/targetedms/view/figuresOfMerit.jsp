@@ -12,7 +12,7 @@
 %>
 
 <div class="container-fluid targetedms-fom">
-    <div id="targetedms-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
+    <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
         <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
     </div>
     <h3 id="fom-title1"></h3>
@@ -79,28 +79,39 @@
             this.xlsExport.push([]);
             this.xlsExport.push([title2]);
 
-            var hdr = '<tr><td>Concentration</td>';
-            var units = '';
-            var colHdrs = [""];
+            var colHdrs = [];
+            var hdr = "";
+            if (this.hdrLabels == null || this.hdrLabels.length < 1) {
+                $('#' + this.sampleType + '-header').html("No data of this type");
+                colHdrs.push("No data of this type");
+                hdr += "No data of this type";
+            }
+            else {
+                colHdrs.push("");
+                hdr += '<tr><td>Concentration</td>';
+                var units = '';
 
-            if (this.Units)
-                units = ' (' + this.Units + ')';
+                if (this.Units)
+                    units = ' (' + this.Units + ')';
 
-            this.hdrLabels.forEach(function (label) {
-                hdr += '<td>' + label + units + '</td>' + '<td>Bias (%)</td>';
-                colHdrs.push(label + units);
-                colHdrs.push("Bias (%)");
-            }, this);
-            hdr += '</tr>';
+                this.hdrLabels.forEach(function (label) {
+                    hdr += '<td>' + label + units + '</td>' + '<td>Bias (%)</td>';
+                    colHdrs.push(label + units);
+                    colHdrs.push("Bias (%)");
+                }, this);
+                hdr += '</tr>';
+            }
 
             $('#' + this.sampleType + '-header').html(hdr);
             this.xlsExport.push(colHdrs);
         };
 
         var displayBody = function() {
-            var html = getRawDataHtml();
-            html += getSummaryHtml();
-            $('#' + this.sampleType + '-body').html(html);
+            if (this.hdrLabels != null && this.hdrLabels.length > 0) {
+                var html = getRawDataHtml();
+                html += getSummaryHtml();
+                $('#' + this.sampleType + '-body').html(html);
+            }
         };
 
         var getSummaryHtml = function() {
@@ -221,6 +232,10 @@
 
         var parseRawData = function(data) {
 
+            // No data
+            if (data.rows.length < 1)
+                return;
+
             parseMetadata(data);
 
             // Process data to collapse rows
@@ -277,16 +292,16 @@
             }, this);
         };
 
-        this.handleData = function() {
+        this.handleData = function () {
 
-                displayHeader();
-                displayBody();
+            displayHeader();
+            displayBody();
 
-                if (this.sampleType === 'standard')
-                    createLoqStats();
+            if (this.sampleType === 'standard')
+                createLoqStats();
 
-                if (this.callback != null)
-                    this.callback();
+            if (this.callback != null)
+                this.callback();
         };
 
         var createFomTable = function(sampleType, callback)
