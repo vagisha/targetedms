@@ -66,7 +66,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     {
         String description = data.getFile().getName();
         SkylineDocImporter importer = new SkylineDocImporter(info.getUser(), context.getContainer(), description,
-                                                             data, log, context, TargetedMSRun.RepresentativeDataState.NotRepresentative);
+                                                             data, log, context, TargetedMSRun.RepresentativeDataState.NotRepresentative, null, null);
         try
         {
             SkylineDocImporter.RunInfo runInfo = importer.prepareRun();

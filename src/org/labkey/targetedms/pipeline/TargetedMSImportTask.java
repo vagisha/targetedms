@@ -57,10 +57,12 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
         try
         {
             XarContext context = new XarContext(job.getDescription(), job.getContainer(), job.getUser());
-            SkylineDocImporter importer = new SkylineDocImporter(job.getUser(), job.getContainer(), context.getJobDescription(), job.getExpData(), job.getLogger(), context, job.getRepresentative());
+            SkylineDocImporter importer = new SkylineDocImporter(job.getUser(), job.getContainer(), context.getJobDescription(),
+                                                                 job.getExpData(), job.getLogger(), context, job.getRepresentative(),
+                                                                 job.getWorkingDirectory(), job.getPipeRoot());
             TargetedMSRun run = importer.importRun(job.getRunInfo());
 
-            ExpRun expRun = TargetedMSManager.ensureWrapped(run, job.getUser());
+            ExpRun expRun = TargetedMSManager.ensureWrapped(run, job.getUser(), job.getPipeRoot());
 
             // Check if an experiment is defined in the current folder, or if an experiment defined in a parent folder
             // has been configured to include subfolders.

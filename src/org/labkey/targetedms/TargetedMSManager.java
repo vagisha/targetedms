@@ -68,6 +68,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SchemaKey;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.model.QCMetricConfiguration;
@@ -83,6 +84,7 @@ import org.labkey.targetedms.query.RepresentativeStateManager;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -489,10 +491,10 @@ public class TargetedMSManager
     }
 
     public static Integer addRunToQueue(ViewBackgroundInfo info,
-                                     final File file,
+                                     final Path path,
                                      PipeRoot root) throws SQLException, IOException, XarFormatException
     {
-        String description = "Skyline document import - " + file.getName();
+        String description = "Skyline document import - " + path.getFileName().toString();
         XarContext xarContext = new XarContext(description, info.getContainer(), info.getUser());
         User user =  info.getUser();
         Container container = info.getContainer();
@@ -500,7 +502,7 @@ public class TargetedMSManager
         // If an entry does not already exist for this data file in exp.data create it now.
 		// This should happen only if a file was copied to the pipeline directory instead
 		// of being uploaded via the files browser.
-        ExpData expData = ExperimentService.get().getExpDataByURL(file, container);
+        ExpData expData = ExperimentService.get().getExpDataByURL(path, container);
         if(expData == null)
         {
             XarSource source = new AbstractFileXarSource("Wrap Targeted MS Run", container, user)
@@ -513,7 +515,10 @@ public class TargetedMSManager
                 @Override
                 public File getRoot()
                 {
-                    return file.getParentFile();
+                    if (!FileUtil.hasCloudScheme(path.toUri()))
+                        return path.toFile().getParentFile();
+
+                    throw new UnsupportedOperationException();
                 }
 
                 @Override
@@ -523,7 +528,7 @@ public class TargetedMSManager
                 }
             };
 
-            expData = ExperimentService.get().createData(file.toURI(), source);
+            expData = ExperimentService.get().createData(path.toUri(), source);
         }
 
         TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
@@ -534,7 +539,7 @@ public class TargetedMSManager
         else if (folderType == TargetedMSModule.FolderType.LibraryProtein)
             representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
 
-        SkylineDocImporter importer = new SkylineDocImporter(user, container, file.getName(), expData, null, xarContext, representative);
+        SkylineDocImporter importer = new SkylineDocImporter(user, container, path.getFileName().toString(), expData, null, xarContext, representative, null, null);
         SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
         TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, expData, runInfo, root, representative);
         try
@@ -548,7 +553,7 @@ public class TargetedMSManager
         }
     }
 
-    public static ExpRun ensureWrapped(TargetedMSRun run, User user) throws ExperimentException
+    public static ExpRun ensureWrapped(TargetedMSRun run, User user, PipeRoot pipeRoot) throws ExperimentException
     {
         ExpRun expRun;
         if (run.getExperimentRunLSID() != null)
@@ -559,10 +564,10 @@ public class TargetedMSManager
                 return expRun;
             }
         }
-        return wrapRun(run, user);
+        return wrapRun(run, user, pipeRoot);
     }
 
-    private static ExpRun wrapRun(TargetedMSRun run, User user) throws ExperimentException
+    private static ExpRun wrapRun(TargetedMSRun run, User user, PipeRoot pipeRoot) throws ExperimentException
     {
         try (DbScope.Transaction transaction = ExperimentService.get().getSchema().getScope().ensureTransaction())
         {
@@ -582,11 +587,11 @@ public class TargetedMSManager
             }
 
             ExpData expData = ExperimentService.get().getExpData(run.getDataId());
-            File skylineFile = expData.getFile();
+            Path skylineFile = pipeRoot.resolveToNioPathFromUrl(expData.getDataFileUrl());
 
             ExpRun expRun = ExperimentService.get().createExperimentRun(container, run.getDescription());
             expRun.setProtocol(protocol);
-            expRun.setFilePathRoot(skylineFile.getParentFile());
+            expRun.setFilePathRootPath(null != skylineFile ? skylineFile.getParent() : null);
             ViewBackgroundInfo info = new ViewBackgroundInfo(container, user, null);
 
             Map<ExpData, String> inputDatas = new HashMap<>();

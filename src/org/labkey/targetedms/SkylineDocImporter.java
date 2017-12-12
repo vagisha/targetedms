@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -58,6 +59,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -109,10 +113,15 @@ public class SkylineDocImporter
     protected final XarContext _context;
     private int blankLabelIndex;
 
+    private final File _workingDirectory;
+    private final PipeRoot _pipeRoot;
+    private File _tempFile = null;
+
     // protected Connection _conn;
     // private static final int BATCH_SIZE = 100;
 
-    public SkylineDocImporter(User user, Container c, String description, ExpData expData, Logger log, XarContext context, TargetedMSRun.RepresentativeDataState representative)
+    public SkylineDocImporter(User user, Container c, String description, ExpData expData, Logger log, XarContext context,
+                              TargetedMSRun.RepresentativeDataState representative, @Nullable File workingDirectory, @Nullable PipeRoot pipeRoot)
     {
         _context = context;
         _user = user;
@@ -120,12 +129,14 @@ public class SkylineDocImporter
         _representative = representative;
 
         _expData = expData;
+        _workingDirectory = workingDirectory;
+        _pipeRoot = pipeRoot;
 
         if (null != description)
             _description = description;
         else
         {
-            _description = FileUtil.getBaseName(_expData.getFile().getName());
+            _description = FileUtil.getBaseName(_expData.getName());
         }
 
         _log = (null == log ? _systemLog : log);
@@ -140,7 +151,7 @@ public class SkylineDocImporter
         // Skip if run was already fully imported
         if (runInfo.isAlreadyImported() && run != null && run.getStatusId() == SkylineDocImporter.STATUS_SUCCESS)
         {
-            _log.info(_expData.getFile().getName() + " has already been imported so it does not need to be imported again");
+            _log.info(_expData.getName() + " has already been imported so it does not need to be imported again");
             return run;
         }
 
@@ -150,9 +161,13 @@ public class SkylineDocImporter
 
         try
         {
+            File inputFile = getInputFile();
+            if (null == inputFile)
+                throw new FileNotFoundException();
+
             updateRunStatus(IMPORT_STARTED);
             _log.info("Starting to import Skyline document from " + run.getFileName());
-            importSkylineDoc(run);
+            importSkylineDoc(run, inputFile);
             _log.info("Completed import of Skyline document from " + run.getFileName());
 
             updateRunStatus(IMPORT_SUCCEEDED, STATUS_SUCCESS);
@@ -176,12 +191,11 @@ public class SkylineDocImporter
     }
 
 
-    private void importSkylineDoc(TargetedMSRun run) throws XMLStreamException, IOException, DataFormatException, PipelineJobException
+    private void importSkylineDoc(TargetedMSRun run, File f) throws XMLStreamException, IOException, DataFormatException, PipelineJobException
     {
         // TODO - Consider if this is too big to fit in a single transaction. If so, need to blow away all existing
         // data for this run before restarting the import in the case of a retry
 
-        File f = _expData.getFile();
         NetworkDrive.ensureDrive(f.getPath());
         f = extractIfZip(f);
 
@@ -1825,7 +1839,7 @@ public class SkylineDocImporter
             }
             else
             {
-                _log.info("Starting import from " + _expData.getFile().getName());
+                _log.info("Starting import from " + _expData.getName());
                 _runId = createRun();
             }
 
@@ -1848,13 +1862,13 @@ public class SkylineDocImporter
         TargetedMSRun run = TargetedMSManager.getRunByDataId(_expData.getRowId(), _container);
         if (run != null)
         {
-            throw new IllegalStateException("There is already a run for " + _expData.getFile() + " in " + _container.getPath());
+            throw new IllegalStateException("There is already a run for " + _expData.getName() + " in " + _container.getPath());
         }
 
         run = new TargetedMSRun();
         run.setDescription(_description);
         run.setContainer(_container);
-        run.setFileName(_expData.getFile().getName());
+        run.setFileName(_expData.getName());
         run.setDataId(_expData.getRowId());
         run.setStatus(IMPORT_STARTED);
         run.setRepresentativeDataState(_representative == null ? TargetedMSRun.RepresentativeDataState.NotRepresentative : _representative);
@@ -1865,6 +1879,12 @@ public class SkylineDocImporter
 
     private void close()
     {
+        if (null != _tempFile)
+        {   // TODO still need to delete unzipped archive files
+            if (!_tempFile.delete())
+                _log.warn("Failed to delete temp file: " + _tempFile.toString());
+        }
+
         // TODO: close connection and prepared statements used for bulk inserts
 //        if (null != _conn)
 //            TargetedMSManager.getSchema().getScope().releaseConnection(_conn);
@@ -1908,5 +1928,35 @@ public class SkylineDocImporter
                 Table.update(_user, TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), chromInfo, chromInfo.getId());
             }
         }
+    }
+
+    @Nullable
+    private File getInputFile()
+    {
+        if (_expData.hasFileScheme())
+            return _expData.getFile();
+
+        if (null == _pipeRoot || null == _workingDirectory)
+            return null;
+
+        // File elsewhere (on S3); make a copy a return File object for copy
+        Path path = _pipeRoot.resolveToNioPathFromUrl(_expData.getDataFileUrl());
+        if (null != path)
+        {
+            String filename = path.getFileName().toString();
+            String tempName = FileUtil.makeFileNameWithTimestamp("temp_") + "_" + filename;
+            try
+            {
+                _tempFile = new File(_workingDirectory, tempName);
+                Files.copy(path, _tempFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
+                _log.info("Created temp file because input is from cloud: " + path.toUri().toString());
+                return _tempFile;
+            }
+            catch (IOException e)
+            {
+                _log.error("IO Error: " + e.getMessage());
+            }
+        }
+        return null;
     }
 }

@@ -17,6 +17,7 @@
 package org.labkey.targetedms.pipeline;
 
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -29,6 +30,7 @@ import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSRun;
 
+import java.io.File;
 import java.sql.SQLException;
 
 /**
@@ -41,6 +43,7 @@ public class TargetedMSImportPipelineJob extends PipelineJob
     private final ExpData _expData;
     private SkylineDocImporter.RunInfo _runInfo;
     private final TargetedMSRun.RepresentativeDataState _representative;
+    private final File _workingDirectory;
 
     public TargetedMSImportPipelineJob(ViewBackgroundInfo info, ExpData expData, SkylineDocImporter.RunInfo runInfo, PipeRoot root, TargetedMSRun.RepresentativeDataState representative) throws SQLException
     {
@@ -49,8 +52,12 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         _runInfo = runInfo;
         _representative = representative;
 
-        String basename = FileUtil.getBaseName(_expData.getFile(), 1);
-        setLogFile(FT_LOG.newFile(_expData.getFile().getParentFile(), basename));
+        // TODO: logfile will be in local temp directory
+        String basename = FileUtil.getBaseName(_expData.getName(), 1);
+        _workingDirectory = _expData.hasFileScheme() ?
+                _expData.getFile().getParentFile() :
+                FileContentService.get().getFileRoot(getContainer(), FileContentService.ContentType.files);
+        setLogFile(FT_LOG.newFile(_workingDirectory, basename));
     }
 
     @Override
@@ -70,7 +77,7 @@ public class TargetedMSImportPipelineJob extends PipelineJob
 
     public String getDescription()
     {
-        return "Skyline document import - " + _expData.getFile().getName();
+        return "Skyline document import - " + _expData.getName();
     }
 
     public SkylineDocImporter.RunInfo getRunInfo()
@@ -86,5 +93,10 @@ public class TargetedMSImportPipelineJob extends PipelineJob
     public TargetedMSRun.RepresentativeDataState getRepresentative()
     {
         return _representative;
+    }
+
+    public File getWorkingDirectory()
+    {
+        return _workingDirectory;
     }
 }

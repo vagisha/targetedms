@@ -112,7 +112,6 @@ import org.labkey.api.util.HelpTopic;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
-import org.labkey.api.util.Path;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DetailsView;
@@ -211,6 +210,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
@@ -2670,24 +2671,19 @@ public class TargetedMSController extends SpringActionController
 
         public boolean doAction(SkylinePipelinePathForm form, BindException errors) throws Exception
         {
-            for (File file : form.getValidatedFiles(getContainer()))
+            for (Path path : form.getValidatedPaths(getContainer(), false))
             {
-                if (!file.isFile())
+                if (Files.isDirectory(path))
                 {
-                    throw new NotFoundException("Expected a file but found a directory: " + file.getName());
+                    throw new NotFoundException("Expected a file but found a directory: " + path.getFileName().toString());
                 }
 
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
+                    TargetedMSManager.addRunToQueue(info, path, form.getPipeRoot(getContainer()));
                 }
-                catch (IOException e)
-                {
-                    errors.reject(ERROR_MSG, e.getMessage());
-                    return false;
-                }
-                catch (SQLException e)
+                catch (IOException | SQLException e)
                 {
                     errors.reject(ERROR_MSG, e.getMessage());
                     return false;
@@ -2706,28 +2702,24 @@ public class TargetedMSController extends SpringActionController
             ApiSimpleResponse response = new ApiSimpleResponse();
             List<Map<String, Object>> jobDetailsList = new ArrayList<>();
 
-            for (File file : form.getValidatedFiles(getContainer()))
+            for (Path path : form.getValidatedPaths(getContainer(), false))
             {
-                if (!file.isFile())
+                if (Files.isDirectory(path))
                 {
-                    throw new NotFoundException("Expected a file but found a directory: " + file.getName());
+                    throw new NotFoundException("Expected a file but found a directory: " + path.getFileName().toString());
                 }
 
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    Integer jobId = TargetedMSManager.addRunToQueue(info, file, form.getPipeRoot(getContainer()));
+                    Integer jobId = TargetedMSManager.addRunToQueue(info, path, form.getPipeRoot(getContainer()));
                     Map<String, Object> detailsMap = new HashMap<>(4);
                     detailsMap.put("Path", form.getPath());
-                    detailsMap.put("File",file.getName());
+                    detailsMap.put("File",path.getFileName().toString());
                     detailsMap.put("RowId", jobId);
                     jobDetailsList.add(detailsMap);
                 }
-                catch (IOException e)
-                {
-                    throw new ApiUsageException(e);
-                }
-                catch (SQLException e)
+                catch (IOException | SQLException e)
                 {
                     throw new ApiUsageException(e);
                 }

@@ -25,7 +25,8 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSController;
 
-import java.io.File;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Path;
 
 /**
  * User: vsharma
@@ -53,11 +54,12 @@ public class TargetedMSPipelineProvider extends PipelineProvider
                 directory, directory.listFiles(new UploadFileFilter()), true, false, includeAll);
     }
 
-    public static class UploadFileFilter extends PipelineProvider.FileEntryFilter
+    public static class UploadFileFilter implements DirectoryStream.Filter<Path>
     {
-        public boolean accept(File file)
+        @Override
+        public boolean accept(Path file)
         {
-            String ext = FileUtil.getExtension(file.getName());
+            String ext =  FileUtil.getExtension(file.getFileName().toString());
             if (ext == null)
             {
                 return false;
@@ -66,5 +68,11 @@ public class TargetedMSPipelineProvider extends PipelineProvider
             return ext.equals("sky") ||
                    ext.equals("zip");
         }
+    }
+
+    @Override
+    public boolean supportsCloud()
+    {
+        return true;
     }
 }
