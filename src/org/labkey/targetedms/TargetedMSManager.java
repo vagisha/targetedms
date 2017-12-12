@@ -71,6 +71,7 @@ import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.model.QCMetricConfiguration;
+import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
@@ -1598,7 +1599,21 @@ public class TargetedMSManager
 
     /** @return the sample file if it has already been imported in the container */
     @Nullable
-    public static Map<String, Object> getSampleFile(File file, Date acquiredTime, Container container)
+    public static Replicate getReplicate(int replicateId, Container container)
+    {
+        SQLFragment sql = new SQLFragment("SELECT rep.* FROM ");
+        sql.append(getTableInfoReplicate(), "rep");
+        sql.append(", ");
+        sql.append(getTableInfoRuns(), "r");
+        sql.append( " WHERE r.Id = rep.RunId AND rep.Id = ? AND r.Container = ? ");
+        sql.add(replicateId);
+        sql.add(container);
+        return new SqlSelector(getSchema(), sql).getObject(Replicate.class);
+    }
+
+    /** @return the sample file if it has already been imported in the container */
+    @Nullable
+    public static List<SampleFile> getSampleFile(File file, Date acquiredTime, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT sf.* FROM ");
         sql.append(getTableInfoSampleFile(), "sf");
@@ -1616,7 +1631,7 @@ public class TargetedMSManager
             sql.append("AND sf.AcquiredTime = ?");
             sql.add(acquiredTime);
         }
-        return new SqlSelector(getSchema(), sql).getMap();
+        return new SqlSelector(getSchema(), sql).getArrayList(SampleFile.class);
     }
 
     public Map<String, Object> getAutoQCPingMap(Container container)

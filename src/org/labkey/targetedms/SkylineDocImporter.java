@@ -16,7 +16,6 @@
 
 package org.labkey.targetedms;
 
-import org.labkey.api.util.ExceptionUtil;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -300,23 +299,26 @@ public class SkylineDocImporter
                         // In QC folders insert a replicate only if at least one of the associated sample files will be inserted
                         for (SampleFile sampleFile : replicate.getSampleFileList())
                         {
-                            Map<String, Object> sample = TargetedMSManager.getSampleFile(new File(sampleFile.getFilePath()), sampleFile.getAcquiredTime(), run.getContainer());
-                            if (null != sample && sample.size() > 0)
+                            // It's possible that a data file is referenced in multiple replicates, so handle that case
+                            for (SampleFile existingSample : TargetedMSManager.getSampleFile(new File(sampleFile.getFilePath()), sampleFile.getAcquiredTime(), run.getContainer()))
                             {
-                                srcFile = TargetedMSManager.deleteSampleFileAndDependencies((Integer) sample.get("id"));
-                                _log.info("Updating previously imported data for sample file " + sampleFile.getFilePath() + " in QC folder.");
-
-                                if(null != srcFile && !srcFile.getFilePath().isEmpty())
+                                Replicate existingReplicate = TargetedMSManager.getReplicate(existingSample.getReplicateId(), run.getContainer());
+                                if (existingReplicate.getRunId() != run.getId())
                                 {
-                                    try
-                                    {
-                                        files.add(new URI(srcFile.getFilePath()));
-                                    }
-                                    catch (URISyntaxException e)
-                                    {
-                                        _log.error("Unable to delete file " + srcFile.getFilePath() + ". May be an invalid path. This file is no longer needed on the server.");
-                                    }
+                                    srcFile = TargetedMSManager.deleteSampleFileAndDependencies(existingSample.getId());
+                                    _log.info("Updating previously imported data for sample file " + sampleFile.getFilePath() + " in QC folder.");
 
+                                    if (null != srcFile && !srcFile.getFilePath().isEmpty())
+                                    {
+                                        try
+                                        {
+                                            files.add(new URI(srcFile.getFilePath()));
+                                        }
+                                        catch (URISyntaxException e)
+                                        {
+                                            _log.error("Unable to delete file " + srcFile.getFilePath() + ". May be an invalid path. This file is no longer needed on the server.");
+                                        }
+                                    }
                                 }
                             }
                         }
