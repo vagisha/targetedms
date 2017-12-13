@@ -16,6 +16,8 @@
 
 package org.labkey.targetedms.parser;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 
 /**
@@ -94,6 +96,65 @@ public class Molecule extends GeneralMolecule
     public String getTextId()
     {
         return getName();
+    }
+
+    /**
+     * Determines whether the specified textId matches this molecule.
+     * The textId is stored in the .skyd file. For small molecules, the textId is formatted as a set
+     * of components separated by "$". We only compare the first two components (name and formula),
+     * and ignore later components (which is currently just accession numbers).
+     */
+    @Override
+    public boolean textIdMatches(String textId)
+    {
+        if (!textId.startsWith("#"))
+        {
+            return false;
+        }
+        // The separator is whatever appears between the first two "#". Usually it's "$", but could be
+        // followed by any number of underscores.
+        int ichSeparatorEnd = textId.indexOf('#', 1);
+        if (ichSeparatorEnd < 0)
+        {
+            return false;
+        }
+        String separator = textId.substring(1, ichSeparatorEnd);
+
+        String[] parts = StringUtils.splitByWholeSeparatorPreserveAllTokens(
+                textId.substring(ichSeparatorEnd + 1), separator);
+        if (parts.length > 0)
+        {
+            String name = getCustomIonName();
+            if (name == null)
+            {
+                name = "";
+            }
+            if (!name.equals(parts[0]))
+            {
+                return false;
+            }
+        }
+        if (parts.length > 1)
+        {
+            String formula = getIonFormula();
+            if (!StringUtils.isEmpty(formula))
+            {
+                if (!formula.equals(parts[1]))
+                {
+                    return false;
+                }
+            }
+            else
+            {
+                String expectedText = String.format("%.9f/%.9f", getMassMonoisotopic(), getMassAverage());
+                if (!expectedText.equals(parts[1]))
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+
     }
 
     public String getName()

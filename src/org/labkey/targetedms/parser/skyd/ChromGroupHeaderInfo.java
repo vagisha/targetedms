@@ -58,7 +58,8 @@ public class ChromGroupHeaderInfo
             startTransitionIndex = dataInputStream.readInt();
             numPeaks = checkByte(dataInputStream.readInt());
             startPeakIndex = dataInputStream.readInt();
-            maxPeakIndex = checkByte(dataInputStream.readInt());
+            int maxPeakIndexInt = dataInputStream.readInt();
+            maxPeakIndex = maxPeakIndexInt == -1 ? (byte) 0xff : checkByte(maxPeakIndexInt);
             numPoints = dataInputStream.readInt();
             compressedSize = dataInputStream.readInt();
             dataInputStream.readInt(); // ignore these four bytes

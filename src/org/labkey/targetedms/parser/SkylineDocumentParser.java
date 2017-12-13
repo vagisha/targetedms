@@ -116,16 +116,19 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String ISOLATION_SCHEME = "isolation_scheme";
     private static final String ISOLATION_WINDOW = "isolation_window";
     private static final String ION_FORMULA = "ion_formula";
+    private static final String NEUTRAL_FORMULA = "neutral_formula";
     private static final String CUSTOM_ION_NAME = "custom_ion_name";
-    private static final String MASS_MONOISOTOPIC = "mass_monoisotopic";
-    private static final String MASS_AVERAGE = "mass_average";
+    private static final String MASS_MONOISOTOPIC = "mass_monoisotopic"; //  Obsolete - would be most properly called mass_h_monoisotopic
+    private static final String MASS_AVERAGE = "mass_average"; // Obsolete - would be most properly called mass_h_average
+    private static final String NEUTRAL_MASS_MONOISOTOPIC = "neutral_mass_monoisotopic";
+    private static final String NEUTRAL_MASS_AVERAGE = "neutral_mass_average";
     private static final String GROUP_COMPARISON = "group_comparison";
     private static final String CHARGE = "charge" ;
     private static final String TRANSITION_DATA = "transition_data";
     private static final String RESULTS_DATA = "results_data";
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
-    public static final double MAX_SUPPORTED_VERSION = 3.7;
+    public static final double MAX_SUPPORTED_VERSION = 3.73;
 
     private static final Pattern XML_ID_REGEX = Pattern.compile("\"/^[:_A-Za-z][-.:_A-Za-z0-9]*$/\"");
     private static final String XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -1133,10 +1136,15 @@ public class SkylineDocumentParser implements AutoCloseable
     private void readSmallMolecule(XMLStreamReader reader, Molecule molecule) throws XMLStreamException, IOException
     {
         // read molecule-specific attributes
-        molecule.setIonFormula(reader.getAttributeValue(null, ION_FORMULA));
+        String formula = reader.getAttributeValue(null, ION_FORMULA);
+        if (formula == null)
+        {
+            formula = reader.getAttributeValue(null, NEUTRAL_FORMULA);
+        }
+        molecule.setIonFormula(formula);
         molecule.setCustomIonName(reader.getAttributeValue(null, CUSTOM_ION_NAME));
-        molecule.setMassMonoisotopic(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_MONOISOTOPIC, MOLECULE));
-        molecule.setMassAverage(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_AVERAGE, MOLECULE));
+        molecule.setMassMonoisotopic(readRequiredMass(reader, true, MOLECULE));
+        molecule.setMassAverage(readRequiredMass(reader, false, MOLECULE));
 
         List<MoleculePrecursor> moleculePrecursorList = new ArrayList<>();
         molecule.setMoleculePrecursorsList(moleculePrecursorList);
@@ -1414,13 +1422,8 @@ public class SkylineDocumentParser implements AutoCloseable
         if(null != ionFormula)
             moleculePrecursor.setIonFormula(ionFormula);
 
-        String massMonoIsotopic = reader.getAttributeValue(null, MASS_MONOISOTOPIC);
-        if(null != massMonoIsotopic)
-            moleculePrecursor.setMassMonoisotopic(Double.parseDouble(massMonoIsotopic));
-
-        String massAvg = reader.getAttributeValue(null, MASS_AVERAGE);
-        if(null != massAvg)
-            moleculePrecursor.setMassAverage(Double.parseDouble(massAvg));
+        moleculePrecursor.setMassMonoisotopic(readMass(reader, true));
+        moleculePrecursor.setMassAverage(readMass(reader, false));
 
         String customIonName = reader.getAttributeValue(null, CUSTOM_ION_NAME);
         if(null != customIonName)
@@ -1831,6 +1834,27 @@ public class SkylineDocumentParser implements AutoCloseable
 
         return chromInfo;
     }
+    private Double readMass(XMLStreamReader reader, boolean monoisotopic) throws XMLStreamException
+    {
+        Double massH = XmlUtil.readDoubleAttribute(reader, monoisotopic ? MASS_MONOISOTOPIC : MASS_AVERAGE);
+        if (massH != null)
+        {
+            // Consider: should we subtract a proton from massH so we are always returning neutral mass?
+            return massH;
+        }
+        return XmlUtil.readDoubleAttribute(reader,
+                monoisotopic ? NEUTRAL_MASS_MONOISOTOPIC : NEUTRAL_MASS_AVERAGE);
+    }
+
+    private double readRequiredMass(XMLStreamReader reader, boolean monoisotopic, String elementName) throws XMLStreamException
+    {
+        Double mass = readMass(reader, monoisotopic);
+        if (mass == null)
+        {
+            throw new IllegalStateException("Missing mass attribute for element " + elementName);
+        }
+        return mass;
+    }
 
     private MoleculeTransition readSmallMoleculeTransition(XMLStreamReader reader) throws XMLStreamException
     {
@@ -1840,8 +1864,8 @@ public class SkylineDocumentParser implements AutoCloseable
         // read molecule transition-specific attributes
         transition.setIonFormula(_reader.getAttributeValue(null, ION_FORMULA));
         transition.setCustomIonName(_reader.getAttributeValue(null, CUSTOM_ION_NAME));
-        transition.setMassMonoisotopic(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_MONOISOTOPIC, MOLECULE));
-        transition.setMassAverage(XmlUtil.readRequiredDoubleAttribute(_reader, MASS_AVERAGE, MOLECULE));
+        transition.setMassMonoisotopic(readRequiredMass(reader, true, TRANSITION));
+        transition.setMassAverage(readRequiredMass(reader, false, TRANSITION));
 
         List<TransitionChromInfo> chromInfoList = new ArrayList<>();
         transition.setChromInfoList(chromInfoList);
@@ -2393,7 +2417,6 @@ public class SkylineDocumentParser implements AutoCloseable
             }
 
             Double explicitRT = molecule.getExplicitRetentionTime();
-            String molTextId = molecule.getTextId();
 
             // Add entries to a list until they no longer match
             List<ChromGroupHeaderInfo> listChromatograms = new ArrayList<>();
@@ -2403,7 +2426,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 ChromGroupHeaderInfo chrom = _binaryParser.getChromatograms()[i++];
                 // Sequence matching for extracted chromatogram data added in v1.5
                 String chromTextId = _binaryParser.getTextId(chrom);
-                if (molTextId != null && chromTextId != null && !molTextId.equals(chromTextId))
+                if (chromTextId != null && !molecule.textIdMatches(chromTextId))
                     continue;
 
                 // If explicit retention time info is available, use that to discard obvious mismatches

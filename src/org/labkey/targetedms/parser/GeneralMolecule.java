@@ -112,6 +112,8 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
 
     public abstract String getTextId();
 
+    public abstract boolean textIdMatches(String textId);
+
     public String getNormalizationMethod()
     {
         return _normalizationMethod;

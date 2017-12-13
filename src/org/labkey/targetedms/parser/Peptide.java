@@ -16,6 +16,9 @@
 
 package org.labkey.targetedms.parser;
 
+import org.labkey.api.util.Pair;
+
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -199,6 +202,17 @@ public class Peptide extends GeneralMolecule
         return getPeptideModifiedSequence();
     }
 
+    @Override
+    public boolean textIdMatches(String textId)
+    {
+        if (textId.startsWith("#"))
+        {
+            // Small molecule textId.
+            return false;
+        }
+        return modifiedSequencesMatch(getPeptideModifiedSequence(), textId);
+    }
+
     public static class Modification extends SkylineEntity
     {
         private int _peptideId;
@@ -299,5 +313,100 @@ public class Peptide extends GeneralMolecule
         {
             _isotopeLabel = isotopeLabel;
         }
+    }
+
+    private static boolean modifiedSequencesMatch(String modSeq1, String modSeq2)
+    {
+        if (modSeq1.equals(modSeq2))
+        {
+            return true;
+        }
+        if (modSeq1.startsWith("#") || modSeq2.startsWith("#"))
+        {
+            return false;
+        }
+        List<Pair<Integer, String>> mods1 = new ArrayList<>();
+        String unmodSeq1 = stripModifications(modSeq1, mods1);
+        List<Pair<Integer, String>> mods2 = new ArrayList<>();
+        String unmodSeq2 = stripModifications(modSeq2, mods2);
+        if (!unmodSeq1.equals(unmodSeq2))
+        {
+            return false;
+        }
+        if (mods1.size() != mods2.size())
+        {
+            return false;
+        }
+        for (int i = 0; i < mods1.size(); i++)
+        {
+            Pair<Integer, String> mod1 = mods1.get(i);
+            Pair<Integer, String> mod2 = mods2.get(i);
+            if (!mod1.first.equals(mod1.first))
+            {
+                return false;
+            }
+            if (mod1.second.equals(mod2.second))
+            {
+                continue;
+            }
+            MassModification massMod1 = MassModification.parse(mod1.second);
+            MassModification massMod2 = MassModification.parse(mod2.second);
+            if (massMod1 == null || massMod2 == null)
+            {
+                return false;
+            }
+            if (!massMod1.matches(massMod2))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Adds to a list all of the modifications in a modifiedSequence, and returns the unmodified sequence.
+     */
+    private static String stripModifications(String modifiedSequence, List<Pair<Integer, String>> modifications)
+    {
+        StringBuilder unmodifiedSequence = null;
+        Integer modificationStart = null;
+        for (int i = 0; i < modifiedSequence.length(); i++)
+        {
+            char ch = modifiedSequence.charAt(i);
+            if (modificationStart != null) {
+                if (ch == ']')
+                {
+                    if (modifications != null)
+                    {
+                        String strModification = modifiedSequence.substring(modificationStart, i);
+                        modifications.add(new Pair<Integer, String>(unmodifiedSequence.length() - 1, strModification));
+                    }
+                    modificationStart = null;
+                }
+            }
+            else
+            {
+                if (ch == '[')
+                {
+                    if (unmodifiedSequence == null)
+                    {
+                        unmodifiedSequence = new StringBuilder(modifiedSequence.substring(0, i));
+                    }
+                    modificationStart = i + 1;
+                }
+                else
+                {
+                    if (unmodifiedSequence != null)
+                    {
+                        unmodifiedSequence.append(ch);
+                    }
+                }
+            }
+        }
+        if (unmodifiedSequence != null)
+        {
+            return unmodifiedSequence.toString();
+        }
+        return modifiedSequence;
     }
 }

@@ -328,6 +328,7 @@ src/org/labkey/targetedms/parser/GeneralPrecursor.java -text
 src/org/labkey/targetedms/parser/GeneralTransition.java -text
 src/org/labkey/targetedms/parser/GroupComparisonSettings.java -text
 src/org/labkey/targetedms/parser/Instrument.java -text
+src/org/labkey/targetedms/parser/MassModification.java -text
 src/org/labkey/targetedms/parser/Molecule.java -text
 src/org/labkey/targetedms/parser/MoleculePrecursor.java -text
 src/org/labkey/targetedms/parser/MoleculeTransition.java -text
@@ -538,6 +539,7 @@ test/src/org/labkey/test/tests/targetedms/TargetedMSLinkVersionsTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSQCGuideSetTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSQCSummaryTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSQCTest.java -text
+test/src/org/labkey/test/tests/targetedms/TargetedMSSkydTextIdTest.java -text
 test/src/org/labkey/test/tests/targetedms/TargetedMSTest.java -text
 test/src/org/labkey/test/util/targetedms/QCHelper.java -text
 webapp/TargetedMS/DataTables/jquery.dataTables.min.css -text
