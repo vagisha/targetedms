@@ -513,6 +513,16 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         throw new NoSuchElementException("Unable to find svg point with with acquired date: " + dateStr);
     }
 
+    public WebElement openExclusionBubble(String acquiredDate)
+    {
+        getWrapper().waitForElementToDisappear(Locator.tagWithClass("div", "x4-form-display-field"));
+        WebDriverWrapper.waitFor(() -> {
+            getWrapper().mouseOver(getPointByAcquiredDate(acquiredDate));
+            return getWrapper().isElementPresent(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
+        }, "Exclusion pop-up didn't appear", WebDriverWrapper.WAIT_FOR_JAVASCRIPT);
+        return elementCache().hopscotchBubble.findElement(getDriver());
+    }
+
     public void createGuideSet(GuideSet guideSet, String expectErrorMsg)
     {
         waitForPlots(1, false);
@@ -645,11 +655,6 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
                 selected.add(plotType);
         }
         return selected;
-    }
-
-    public Locator.XPathLocator getBubble()
-    {
-        return elementCache().hopscotchBubble;
     }
 
     public void closeBubble()
