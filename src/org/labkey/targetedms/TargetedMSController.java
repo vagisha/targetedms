@@ -285,7 +285,7 @@ public class TargetedMSController extends SpringActionController
         public static final String ANNOTATIONS_TAB = "Annotations";
         public static final String GUIDE_SETS_TAB = "Guide Sets";
         public static final String PARETO_PLOT_TAB = "Pareto Plot";
-        public static final String RAW_FILES_TAB = "Raw Data Files";
+        public static final String RAW_FILES_TAB = "Raw Data";
 
         public static final String DATA_PIPELINE_WEBPART = "Data Pipeline";
 
@@ -429,31 +429,31 @@ public class TargetedMSController extends SpringActionController
             Portal.addProperty(c, DATA_PIPELINE_TAB, Portal.PROP_CUSTOMTAB);
         }
 
-        private void addRawFilesPipelineTab(Container c)
-        {
-            File fileRoot = FileContentService.get().getFileRoot(c);
-            if (fileRoot != null)
-            {
-                File rawFileDir = new File(new File(fileRoot, FileContentService.FILES_LINK), RAW_FILE_DIR);
-                if (!rawFileDir.exists())
-                {
-                    rawFileDir.mkdirs();
-                }
-            }
-
-            List<Portal.WebPart> tab = new ArrayList<>();
-            Portal.WebPart webPart = Portal.getPortalPart(FilesWebPart.PART_NAME).createWebPart();
-            webPart.setProperty(FilesWebPart.FILE_ROOT_PROPERTY_NAME, "@files/" + RAW_FILE_DIR + "/");
-            tab.add(webPart);
-            Portal.saveParts(c, RAW_FILES_TAB, tab);
-            Portal.addProperty(c, RAW_FILES_TAB, Portal.PROP_CUSTOMTAB);
-        }
-
         @Override
         public URLHelper getSuccessURL(FolderSetupForm folderSetupForm)
         {
             return getContainer().getStartURL(getUser());
         }
+    }
+
+    public static void addRawFilesPipelineTab(Container c)
+    {
+        File fileRoot = FileContentService.get().getFileRoot(c);
+        if (fileRoot != null)
+        {
+            File rawFileDir = new File(new File(fileRoot, FileContentService.FILES_LINK), FolderSetupAction.RAW_FILE_DIR);
+            if (!rawFileDir.exists())
+            {
+                rawFileDir.mkdirs();
+            }
+        }
+
+        List<Portal.WebPart> tab = new ArrayList<>();
+        Portal.WebPart webPart = Portal.getPortalPart(FilesWebPart.PART_NAME).createWebPart();
+        webPart.setProperty(FilesWebPart.FILE_ROOT_PROPERTY_NAME, "@files/" + FolderSetupAction.RAW_FILE_DIR + "/");
+        tab.add(webPart);
+        Portal.saveParts(c, FolderSetupAction.RAW_FILES_TAB, tab);
+        Portal.addProperty(c, FolderSetupAction.RAW_FILES_TAB, Portal.PROP_CUSTOMTAB);
     }
 
     // ------------------------------------------------------------------------

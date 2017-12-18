@@ -21,6 +21,7 @@ import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.CoreSchema;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.DeferredUpgrade;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
@@ -35,6 +36,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.Portal;
 import org.labkey.api.view.ShortURLRecord;
 import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.model.JournalExperiment;
@@ -49,6 +51,9 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static org.labkey.targetedms.TargetedMSController.FolderSetupAction.RAW_FILES_TAB;
+
 
 /**
  * User: jeckels
@@ -191,5 +196,29 @@ public class TargetedMSUpgradeCode implements UpgradeCode
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("shortAccessUrl"), shortUrl);
         return new TableSelector(TargetedMSManager.getTableInfoJournalExperiment(), filter, null).getObject(JournalExperiment.class);
+    }
+
+    // Called at 17.30-17.31
+    @SuppressWarnings({"UnusedDeclaration"})
+    @DeferredUpgrade
+    public void addRawDataTab(final ModuleContext moduleContext) throws SQLException
+    {
+        if(moduleContext.isNewInstall())
+        {
+            // This is a new install.  There are no "targetedms" folders.
+            return;
+        }
+
+        Set<Container> containers = ContainerManager.getAllChildrenWithModule(ContainerManager.getRoot(), ModuleLoader.getInstance().getModule(TargetedMSModule.class));
+
+        for(Container container: containers)
+        {
+            if(Portal.getParts(container, RAW_FILES_TAB).size() != 0)
+            {
+                continue;
+            }
+
+            TargetedMSController.addRawFilesPipelineTab(container);
+        }
     }
 }
