@@ -90,7 +90,14 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         var b = scope.data.calibrationCurve.slope;
         var c = scope.data.calibrationCurve.intercept;
 
-        return ((-1 * b) + Math.sqrt((b * b) - (4 * a * (c - y)))) / (2 * a);
+        var intersect;
+        if (a !== 0) { //Quadratic
+            intersect = ((-1 * b) + Math.sqrt((b * b) - (4 * a * (c - y)))) / (2 * a);
+        }
+        else { //Linear
+            intersect = (y - c) / b;
+        }
+        return intersect;
     },
 
     getPointToLineLayer: function (scope, point) {
