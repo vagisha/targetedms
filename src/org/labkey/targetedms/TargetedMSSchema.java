@@ -1290,7 +1290,7 @@ public class TargetedMSSchema extends UserSchema
                     Integer formatOrdinal = ctx.get(getChromatogramFormatKey(), Integer.class);
                     ChromatogramBinaryFormat format = formatOrdinal == null
                             ? ChromatogramBinaryFormat.Arrays : ChromatogramBinaryFormat.values()[formatOrdinal];
-                    byte[] uncompressedBytes = SkylineBinaryParser.uncompress(bytes, uncompressedSize);
+                    byte[] uncompressedBytes = SkylineBinaryParser.uncompressStoredBytes(bytes, uncompressedSize, numPoints, numTransitions);
                     Chromatogram chromatogram = format.readChromatogram(uncompressedBytes, numPoints, numTransitions);
                     return StringUtils.join(_times ? chromatogram.getTimes() : chromatogram.getIntensities(chromatogramIndex.intValue()), ',');
                 }

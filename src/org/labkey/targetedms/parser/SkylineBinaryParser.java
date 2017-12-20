@@ -282,6 +282,15 @@ public class SkylineBinaryParser
         return result;
     }
 
+    public static byte[] uncompressStoredBytes(byte[] bytes, Integer uncompressedSize, int numPoints, int numTransitions) throws DataFormatException
+    {
+        if(uncompressedSize == null)
+        {
+            // For older data that got saved in the database without a value for uncompressedSize
+            uncompressedSize = (Integer.SIZE / 8) * numPoints * (numTransitions + 1);
+        }
+        return uncompress(bytes, uncompressedSize);
+    }
 
     public static byte[] uncompress(byte[] bytes, Integer uncompressedSize) throws DataFormatException
     {

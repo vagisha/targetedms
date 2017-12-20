@@ -338,7 +338,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
             }
 
             ChromatogramBinaryFormat binaryFormat = ChromatogramBinaryFormat.values()[getChromatogramFormat()];
-            byte[] uncompressedBytes = SkylineBinaryParser.uncompress(getChromatogram(), getUncompressedSize());
+            byte[] uncompressedBytes = SkylineBinaryParser.uncompressStoredBytes(getChromatogram(), getUncompressedSize(), _numPoints, _numTransitions);
             return binaryFormat.readChromatogram(uncompressedBytes, _numPoints, _numTransitions);
         } catch (Exception exception) {
             throw new UnexpectedException(exception);
