@@ -88,6 +88,7 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryParam;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserSchema;
@@ -6195,13 +6196,13 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowFiguresOfMeritAction extends SimpleViewAction<CalibrationCurveForm>
+    public class ShowFiguresOfMeritAction extends SimpleViewAction<FomForm>
     {
         @Override
-        public void validate(CalibrationCurveForm form, BindException errors)
+        public void validate(FomForm form, BindException errors)
         {
-            String runId = form.getViewContext().getActionURL().getParameter("RunId");
-            String genMoleculeId = form.getViewContext().getActionURL().getParameter("GeneralMoleculeId");
+            String runId = getViewContext().getActionURL().getParameter("RunId");
+            String genMoleculeId = getViewContext().getActionURL().getParameter("GeneralMoleculeId");
 
             if (runId == null && genMoleculeId == null)
                 throw new NotFoundException("Missing RunId and GeneralMoleculeId.");
@@ -6237,22 +6238,33 @@ public class TargetedMSController extends SpringActionController
                     throw new NotFoundException("Invalid GeneralMoleculeId. Must be integer.");
                 }
             }
+        }
 
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("GeneralMoleculeId"), genMoleculeId, CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("SampleFileId/ReplicateId/RunId/Id"), runId, CompareType.EQUAL);
-            TableSelector ts = new TableSelector(TargetedMSManager.getTableInfoGeneralMoleculeChomInfo(), filter, null);
+        @Override
+        public ModelAndView getView(FomForm form, BindException errors) throws Exception
+        {
+            String runId = getViewContext().getActionURL().getParameter("RunId");
+            String genMoleculeId = getViewContext().getActionURL().getParameter("GeneralMoleculeId");
+
+            UserSchema schema = QueryService.get().getUserSchema(getUser(), getViewContext().getContainer(), TargetedMSSchema.SCHEMA_NAME);
+            TableInfo tableInfo = schema.getTable(TargetedMSSchema.TABLE_MOLECULE_INFO);
+            if (tableInfo == null)
+            {
+                throw new NotFoundException("Query " + TargetedMSSchema.SCHEMA_NAME + "." + TargetedMSSchema.TABLE_MOLECULE_INFO + " not found.");
+            }
+
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("MoleculeId"), genMoleculeId, CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("RunId"), runId, CompareType.EQUAL);
+            TableSelector ts = new TableSelector(tableInfo, filter, null);
 
             if (ts.getRowCount() < 1)
             {
                 throw new NotFoundException("GeneralMoleculeId " + genMoleculeId + " not found for RunId " + runId);
             }
 
-        }
+            form = ts.getObject(FomForm.class);
 
-        @Override
-        public ModelAndView getView(CalibrationCurveForm form, BindException errors) throws Exception
-        {
-            JspView<CalibrationCurveForm> figuresOfMeritView = new JspView<>("/org/labkey/targetedms/view/figuresOfMerit.jsp", form);
+            JspView<FomForm> figuresOfMeritView = new JspView<>("/org/labkey/targetedms/view/figuresOfMerit.jsp", form);
             figuresOfMeritView.setTitle("Figures of Merit");
 
 
@@ -6263,6 +6275,76 @@ public class TargetedMSController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             return null;
+        }
+    }
+
+    public static class FomForm
+    {
+        int _runId;
+        int _moleculeId;
+        String _peptideName;
+        String _moleculeName;
+        String _fileName;
+        String _sampleFiles;
+
+        public int getRunId()
+        {
+            return _runId;
+        }
+
+        public void setRunId(int runId)
+        {
+            _runId = runId;
+        }
+
+        public int getMoleculeId()
+        {
+            return _moleculeId;
+        }
+
+        public void setMoleculeId(int moleculeId)
+        {
+            _moleculeId = moleculeId;
+        }
+
+        public String getPeptideName()
+        {
+            return _peptideName;
+        }
+
+        public void setPeptideName(String peptideName)
+        {
+            _peptideName = peptideName;
+        }
+
+        public String getMoleculeName()
+        {
+            return _moleculeName;
+        }
+
+        public void setMoleculeName(String moleculeName)
+        {
+            _moleculeName = moleculeName;
+        }
+
+        public String getFileName()
+        {
+            return _fileName;
+        }
+
+        public void setFileName(String fileName)
+        {
+            _fileName = fileName;
+        }
+
+        public String getSampleFiles()
+        {
+            return _sampleFiles;
+        }
+
+        public void setSampleFiles(String sampleFiles)
+        {
+            _sampleFiles = sampleFiles;
         }
     }
 

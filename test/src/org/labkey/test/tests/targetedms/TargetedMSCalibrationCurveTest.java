@@ -314,7 +314,8 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
         clickAndWait(Locator.linkContainingText("Fom"));
 
-        waitForText(molName);
+        waitForText("LoadingDone");
+        sleep(3000);
 
         verifyFomTable("fom-table-standard", stdGroups, stdConcentrations, stdBiases);
         verifyFomTable("fom-table-qc", qcGroups, qcConcentrations, qcBiases);
