@@ -252,11 +252,21 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             assertEquals(biases.get(rawIndex), getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 2));
         }
 
+        boolean singleValue;
         for (int index = 0; index < means.size(); index++)
         {
+            singleValue = Integer.parseInt(getFomTableBodyValue(tableId, maxRow + 2, index * 2 + 1)) == 1;
             assertTrue(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 3, index * 2 + 1)) == means.get(index));
-            assertTrue(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1)) == stddevs.get(index));
-            assertTrue(Math.abs(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1)) - cvs.get(index)) < .02);
+            if (singleValue)
+            {
+                assertTrue(getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1).equals("NA"));
+                assertTrue(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1).equals("NA"));
+            }
+            else
+            {
+                assertTrue(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1)) == stddevs.get(index));
+                assertTrue(Math.abs(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1)) - cvs.get(index)) < .02);
+            }
         }
     }
 

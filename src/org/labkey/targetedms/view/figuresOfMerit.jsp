@@ -117,7 +117,7 @@
         var getSummaryHtml = function() {
 
             var stats = ["n", "Mean", "StdDev", "CV", "Bias"]
-            var html = "", exportRow;
+            var html = "", exportRow, summaryValue;
 
             stats.forEach(function(stat) {
                 html += '<tr><td>' + stat + '</td>';
@@ -129,8 +129,18 @@
                         exportRow.push("");
                     }
                     else {
-                        html += '<td>' + this.summaryData[col][stat] + '</td><td></td>';
-                        exportRow.push(Number(this.summaryData[col][stat]));
+                        summaryValue = this.summaryData[col][stat];
+                        if (summaryValue === "") {
+                            summaryValue = "NA";
+                        }
+                        html += '<td>' + summaryValue + '</td><td></td>';
+
+                        if (summaryValue === "NA") {
+                            exportRow.push(summaryValue);
+                        }
+                        else {
+                            exportRow.push(Number(summaryValue));
+                        }
                         exportRow.push("");
                     }
                 }, this);
