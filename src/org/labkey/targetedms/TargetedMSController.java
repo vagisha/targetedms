@@ -6197,6 +6197,57 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class ShowFiguresOfMeritAction extends SimpleViewAction<CalibrationCurveForm>
     {
+        @Override
+        public void validate(CalibrationCurveForm form, BindException errors)
+        {
+            String runId = form.getViewContext().getActionURL().getParameter("RunId");
+            String genMoleculeId = form.getViewContext().getActionURL().getParameter("GeneralMoleculeId");
+
+            if (runId == null && genMoleculeId == null)
+                throw new NotFoundException("Missing RunId and GeneralMoleculeId.");
+
+            if (runId == null)
+            {
+                throw new NotFoundException("Missing RunId.");
+            }
+            else
+            {
+                try
+                {
+                    Integer.parseInt(runId);
+                }
+                catch (NumberFormatException e)
+                {
+                    throw new NotFoundException("Invalid RunId. Must be integer.");
+                }
+            }
+
+            if (genMoleculeId == null)
+            {
+                throw new NotFoundException("Missing GeneralMoleculeId.");
+            }
+            else
+            {
+                try
+                {
+                    Integer.parseInt(genMoleculeId);
+                }
+                catch(NumberFormatException e)
+                {
+                    throw new NotFoundException("Invalid GeneralMoleculeId. Must be integer.");
+                }
+            }
+
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("GeneralMoleculeId"), genMoleculeId, CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("SampleFileId/ReplicateId/RunId/Id"), runId, CompareType.EQUAL);
+            TableSelector ts = new TableSelector(TargetedMSManager.getTableInfoGeneralMoleculeChomInfo(), filter, null);
+
+            if (ts.getRowCount() < 1)
+            {
+                throw new NotFoundException("GeneralMoleculeId " + genMoleculeId + " not found for RunId " + runId);
+            }
+
+        }
 
         @Override
         public ModelAndView getView(CalibrationCurveForm form, BindException errors) throws Exception
