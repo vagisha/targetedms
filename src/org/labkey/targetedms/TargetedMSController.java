@@ -6201,51 +6201,13 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void validate(FomForm form, BindException errors)
         {
-            String runId = getViewContext().getActionURL().getParameter("RunId");
-            String genMoleculeId = getViewContext().getActionURL().getParameter("GeneralMoleculeId");
-
-            if (runId == null && genMoleculeId == null)
-                throw new NotFoundException("Missing RunId and GeneralMoleculeId.");
-
-            if (runId == null)
-            {
-                throw new NotFoundException("Missing RunId.");
-            }
-            else
-            {
-                try
-                {
-                    Integer.parseInt(runId);
-                }
-                catch (NumberFormatException e)
-                {
-                    throw new NotFoundException("Invalid RunId. Must be integer.");
-                }
-            }
-
-            if (genMoleculeId == null)
-            {
-                throw new NotFoundException("Missing GeneralMoleculeId.");
-            }
-            else
-            {
-                try
-                {
-                    Integer.parseInt(genMoleculeId);
-                }
-                catch(NumberFormatException e)
-                {
-                    throw new NotFoundException("Invalid GeneralMoleculeId. Must be integer.");
-                }
-            }
+            if (form.getRunId() == null || form.getGeneralMoleculeId() == null)
+                throw new NotFoundException("Missing one of the required parameters, RunId or GeneralMoleculeId.");
         }
 
         @Override
         public ModelAndView getView(FomForm form, BindException errors) throws Exception
         {
-            String runId = getViewContext().getActionURL().getParameter("RunId");
-            String genMoleculeId = getViewContext().getActionURL().getParameter("GeneralMoleculeId");
-
             UserSchema schema = QueryService.get().getUserSchema(getUser(), getViewContext().getContainer(), TargetedMSSchema.SCHEMA_NAME);
             TableInfo tableInfo = schema.getTable(TargetedMSSchema.TABLE_MOLECULE_INFO);
             if (tableInfo == null)
@@ -6253,13 +6215,13 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("Query " + TargetedMSSchema.SCHEMA_NAME + "." + TargetedMSSchema.TABLE_MOLECULE_INFO + " not found.");
             }
 
-            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("MoleculeId"), genMoleculeId, CompareType.EQUAL);
-            filter.addCondition(FieldKey.fromString("RunId"), runId, CompareType.EQUAL);
+            SimpleFilter filter = new SimpleFilter(FieldKey.fromString("GeneralMoleculeId"), form.getGeneralMoleculeId(), CompareType.EQUAL);
+            filter.addCondition(FieldKey.fromString("RunId"), form.getRunId(), CompareType.EQUAL);
             TableSelector ts = new TableSelector(tableInfo, filter, null);
 
             if (ts.getRowCount() < 1)
             {
-                throw new NotFoundException("GeneralMoleculeId " + genMoleculeId + " not found for RunId " + runId);
+                throw new NotFoundException("GeneralMoleculeId " + form.getGeneralMoleculeId() + " not found for RunId " + form.getRunId());
             }
 
             form = ts.getObject(FomForm.class);
@@ -6280,31 +6242,31 @@ public class TargetedMSController extends SpringActionController
 
     public static class FomForm
     {
-        int _runId;
-        int _moleculeId;
+        Integer _runId;
+        Integer _generalMoleculeId;
         String _peptideName;
         String _moleculeName;
         String _fileName;
         String _sampleFiles;
 
-        public int getRunId()
+        public Integer getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(Integer runId)
         {
             _runId = runId;
         }
 
-        public int getMoleculeId()
+        public Integer getGeneralMoleculeId()
         {
-            return _moleculeId;
+            return _generalMoleculeId;
         }
 
-        public void setMoleculeId(int moleculeId)
+        public void setGeneralMoleculeId(Integer moleculeId)
         {
-            _moleculeId = moleculeId;
+            _generalMoleculeId = moleculeId;
         }
 
         public String getPeptideName()

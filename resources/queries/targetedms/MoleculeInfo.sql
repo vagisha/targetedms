@@ -1,7 +1,7 @@
 SELECT
   PeptideId,
   PeptideId.PeptideModifiedSequence as PeptideName,
-  MoleculeId,
+  MoleculeId AS GeneralMoleculeId,
   MoleculeId.CustomIonName as MoleculeName,
   GROUP_CONCAT(DISTINCT SampleFileId.SampleName, ', ') as SampleFiles,
 	SampleFileId.ReplicateId.RunId.Id as RunId,

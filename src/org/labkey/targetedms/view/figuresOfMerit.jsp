@@ -51,7 +51,7 @@
 
         var params = LABKEY.ActionURL.getParameters();
 
-        this.moleculeId = <%=bean.getMoleculeId()%>;
+        this.moleculeId = <%=bean.getGeneralMoleculeId()%>;
         this.moleculeName = "<%=bean.getMoleculeName()%>";
         this.peptideName = "<%=bean.getPeptideName()%>";
         this.fileName = "<%=bean.getFileName()%>";
