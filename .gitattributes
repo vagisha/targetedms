@@ -23,6 +23,7 @@ resources/queries/targetedms/FiguresOfMerit.sql -text
 resources/queries/targetedms/FiguresOfMeritPivot.sql -text
 resources/queries/targetedms/FiguresOfMeritSummary.sql -text
 resources/queries/targetedms/MoleculeCalibrationCurve.query.xml -text
+resources/queries/targetedms/MoleculeInfo.sql -text
 resources/queries/targetedms/PeptideCalibrationCurve.query.xml -text
 resources/queries/targetedms/QCMetric_fwb.sql -text
 resources/queries/targetedms/QCMetric_fwhm.sql -text
