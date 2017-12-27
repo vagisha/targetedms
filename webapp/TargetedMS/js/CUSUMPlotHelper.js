@@ -6,12 +6,6 @@
 Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
     extend: 'LABKEY.targetedms.QCPlotHelperBase',
     statics: {
-        positiveCUSUMShape: function(){
-            return " M3,-0.5L6,-0.5 6,0.5 3,0.5Z M-3,-0.5L0,-0.5 0,0.5 -3,0.5Z M-9,-0.5L-6,-0.5 -6,0.5 -9,0.5Z ";
-        },
-        negativeCUSUMShape: function(){
-            return "M-9,-0.5L6,-0.5 6,0.5 -9,0.5Z"
-        },
         tooltips: {
             'CUSUMm' : 'A CUSUM plot is a time-weighted control plot that displays the cumulative sums of the deviations of each sample value from the target value.' +
             ' CUSUMm (mean CUSUM) plots two types of CUSUM statistics: one for positive mean shifts and the other for negative mean shifts.',
@@ -208,12 +202,12 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
         cusumLegend.push({
             text: 'CUSUM-',
             color: '#000000',
-            shape: LABKEY.targetedms.CUSUMPlotHelper.negativeCUSUMShape
+            shape: LABKEY.vis.TrendingLineShape.negativeCUSUM
         });
         cusumLegend.push({
             text: 'CUSUM+',
             color: '#000000',
-            shape: LABKEY.targetedms.CUSUMPlotHelper.positiveCUSUMShape
+            shape: LABKEY.vis.TrendingLineShape.positiveCUSUM
         });
         return cusumLegend;
     }
