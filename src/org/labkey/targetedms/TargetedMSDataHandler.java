@@ -187,7 +187,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(srcFileExt))
         {
             // Copy the source Skyline zip file to the new location.
-            File destFile = new File(targetRoot.getRootPath(), sourceFile.getName());
+            File destFile = new File(targetRoot.getRootPath(), sourceFile.getName());   // TODO: S3 work
             // It is only meaningful to copy the file it is a shared zip file that may contain spectrum and/or irt libraries.
             // When rendering the MS/MS spectrum we read scan peaks directly from the .blib (spectrum library) files.
             // The contents of these files are not stored in the database.
