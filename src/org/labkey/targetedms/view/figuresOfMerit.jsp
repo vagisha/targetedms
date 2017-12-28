@@ -25,22 +25,26 @@
     <h4 id="fom-title2"></h4>
     <h4 id="fom-title3"></h4>
     <br>
-    <h4 id="standard-title2"></h4>
-    <hr>
-    <table id="fom-table-standard" class="table table-striped table-responsive fom-table">
-        <thead id="standard-header" />
-        <tbody id="standard-body" />
-    </table>
-    <div id="bias-limit"></div>
-    <div id="loq-stat"></div>
-    <div id="uloq-stat"></div>
-    <br>
-    <h4 id="qc-title2"></h4>
-    <hr>
-    <table id="fom-table-qc" class="table table-striped table-responsive fom-table">
-        <thead id="qc-header" />
-        <tbody id="qc-body" />
-    </table>
+    <div class="container-fluid targetedms-fom">
+        <div class="row">
+            <h4 id="standard-title2"></h4>
+            <hr>
+            <table id="fom-table-standard" class="table table-striped table-responsive fom-table">
+                <thead id="standard-header"/>
+                <tbody id="standard-body"/>
+            </table>
+            <div id="bias-limit"></div>
+            <div id="loq-stat"></div>
+            <div id="uloq-stat"></div>
+            <br>
+            <h4 id="qc-title2"></h4>
+            <hr>
+            <table id="fom-table-qc" class="table table-striped table-responsive fom-table">
+                <thead id="qc-header"/>
+                <tbody id="qc-body"/>
+            </table>
+        </div>
+    </div>
     <div id="targetedms-afterload" hidden></div>
 </div>
 
@@ -120,7 +124,7 @@
                     units = ' (' + this.Units + ')';
 
                 this.hdrLabels.forEach(function (label) {
-                    hdr += '<td>' + label + units + '</td>' + '<td>Bias (%)</td>';
+                    hdr += '<td class=\'fom-number\'>' + label + units + '</td>' + '<td class=\'fom-number\'>Bias (%)</td>';
                     colHdrs.push(label + units);
                     colHdrs.push("Bias (%)");
                 }, this);
@@ -141,15 +145,22 @@
 
         var getSummaryHtml = function() {
 
-            var stats = ["n", "Mean", "StdDev", "CV", "Bias"]
+            var stats = ["n", "Mean", "StdDev", "CV", "Bias"];
+            var units = "";
             var html = "", exportRow, summaryValue;
 
             stats.forEach(function(stat) {
-                html += '<tr><td>' + stat + '</td>';
+                if (stat === "CV" || stat === "Bias") {
+                    units = "(%)";
+                }
+                else {
+                    units = "";
+                }
+                html += '<tr><td class="fom-label">' + stat + units + '</td>';
                 exportRow = [stat];
                 this.hdrLabels.forEach(function(col) {
                     if (stat === "n") {
-                        html += '<td>' + (this.rawData[col].length?this.rawData[col].length:"") + '</td><td></td>';
+                        html += '<td class=\'fom-number\'>' + (this.rawData[col].length?this.rawData[col].length:"") + '</td><td></td>';
                         exportRow.push(this.rawData[col].length?this.rawData[col].length:"");
                         exportRow.push("");
                     }
@@ -158,7 +169,7 @@
                         if (summaryValue === "") {
                             summaryValue = "NA";
                         }
-                        html += '<td>' + summaryValue + '</td><td></td>';
+                        html += '<td class=\'fom-number\'>' + summaryValue + '</td><td></td>';
 
                         if (summaryValue === "NA") {
                             exportRow.push(summaryValue);
@@ -189,7 +200,7 @@
                 this.hdrLabels.forEach(function (label) {
                     if (this.rawData[label][index]) {
                         found = true;
-                        html += "<td>" + this.rawData[label][index].value + "</td><td>" + this.rawData[label][index].bias + "</td>";
+                        html += "<td class='fom-number'>" + this.rawData[label][index].value + "</td><td class='fom-number'>" + this.rawData[label][index].bias + "</td>";
                         exportRow.push(Number(this.rawData[label][index].value));
                         exportRow.push(Number(this.rawData[label][index].bias));
                     }

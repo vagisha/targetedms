@@ -29,3 +29,12 @@
     opacity: 1;
     cursor: pointer;
 }
+
+.fom-table td.fom-number{
+    text-align: right;
+    white-space:nowrap;
+}
+
+.fom-table td.fom-label{
+    white-space:nowrap;
+}
