@@ -18,7 +18,7 @@ SELECT
   gm.SampleFileId.ReplicateId.RunId.FileName as FileName,
   gm.SampleFileId.SampleName,
   CAST(qs.Units AS VARCHAR) as Units
-FROM (SELECT * FROM generalmoleculechrominfo WHERE abs(CalculatedConcentration) < 1E20) as gm
+FROM (SELECT * FROM generalmoleculechrominfo WHERE CalculatedConcentration IS NOT NULL AND abs(CalculatedConcentration) < 1E20) as gm
 JOIN QuantificationSettings qs ON gm.SampleFileId.ReplicateId.RunId.Id = qs.RunId.Id
 
 GROUP BY

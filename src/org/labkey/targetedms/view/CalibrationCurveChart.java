@@ -158,16 +158,16 @@ public class CalibrationCurveChart
                 x = chromInfo.getCalculatedConcentration();
             }
 
-            if ((maxY == null || y > maxY) && !y.isNaN())
+            if (!y.isNaN() && (maxY == null || y > maxY) )
                 maxY = y;
 
-            if ((maxX == null || x > maxX) && !x.isNaN())
+            if (!x.isNaN() && (maxX == null || x > maxX))
                 maxX = x;
 
-            if ((minY == null || y < minY) && !y.isNaN())
+            if (!y.isNaN() && (minY == null || y < minY))
                 minY = y;
 
-            if ((minX == null || x < minX) && !x.isNaN())
+            if (!x.isNaN() && (minX == null || x < minX))
                 minX = x;
 
             point.put("x", x);

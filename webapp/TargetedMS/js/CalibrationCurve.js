@@ -29,22 +29,10 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
         this.width = this.getPanelSize();
 
-        this.minY = this.data.calibrationCurve.minY;
-        this.maxY = this.data.calibrationCurve.maxY;
-        this.minX = this.data.calibrationCurve.minX;
-        this.maxX = this.data.calibrationCurve.maxX;
-
-        if (this.minY == null)
-            this.minY = 0;
-
-        if (this.maxY == null)
-            this.maxY = 0;
-
-        if (this.minX == null)
-            this.minX = 0;
-
-        if (this.maxX == null)
-            this.maxX = 0;
+        this.minY = this.data.calibrationCurve.minY || 0;
+        this.maxY = this.data.calibrationCurve.maxY || 0;
+        this.minX = this.data.calibrationCurve.minX || 0;
+        this.maxX = this.data.calibrationCurve.maxX || 0;
 
         // Ensure plot goes to max x axis for selected point calculations
         var calcMaxX = this.getQuadraticIntersect(this, this.maxY);
@@ -71,12 +59,13 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
         var x, y;
         var increment = (this.maxX - this.minX) / curvePts;
 
+        this.data.curvePoints = [];
         for (var pt = 0; pt <= curvePts; pt++) {
             x = this.minX + (pt * increment);
             y = this.data.calibrationCurve.quadraticCoefficient * (x * x) + this.data.calibrationCurve.slope * x
                     + this.data.calibrationCurve.intercept;
 
-            this.data.dataPoints.push({x:x, y:y, type: "curvePoint", name:""});
+            this.data.curvePoints.push({x:x, y:y});
         }
     },
 
@@ -155,7 +144,6 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             rendererType: 'd3',
             width: this.width,
             height: this.plotHeight,
-            data: this.data.dataPoints,
             labels: {
                 main: {value: this.data.molecule.name},
                 y: {value: 'Light:Heavy Peak Area Ratio'},
@@ -164,25 +152,19 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             layers: [
                 this.selectedPointLayer,
                 new LABKEY.vis.Layer({
+                    data: this.data.curvePoints,
                     geom: new LABKEY.vis.Geom.Path({size: 3, opacity: .4}),
                     aes: {
-                        y: function (row) {
-                            return (row.type === "curvePoint" ? row.y : null);
-                        },
-                        x: function (row) {
-                            return (row.type === "curvePoint" ? row.x : null);
-                        }
+                        y: 'y',
+                        x: 'x'
                     }
                 }),
                 new LABKEY.vis.Layer({
+                    data: this.data.dataPoints,
                     geom: new LABKEY.vis.Geom.Point({size: 5}),
                     aes: {
-                        y: function (row) {
-                            return (row.type === "curvePoint" ? null : row.y);
-                        },
-                        x: function (row) {
-                            return (row.type === "curvePoint" ? null : row.x);
-                        },
+                        y: 'y',
+                        x: 'x',
                         pointClickFn: function (event, data) {
                             var legend = me.getLegendDataInfo(me)
                                     .concat(me.getLegendDataSlopeCalculations(me))
