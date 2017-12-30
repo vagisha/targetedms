@@ -76,11 +76,8 @@ CREATE TABLE targetedms.Predictor
 (
     Id SERIAL NOT NULL,
     Name VARCHAR(100),
-    StepSize INT,
+    StepSize REAL,
     StepCount INT,
-    Charge INT,
-    Slope REAL,
-    Intercept REAL,
 
     CONSTRAINT PK_Predictor PRIMARY KEY (Id)
 );
@@ -88,8 +85,8 @@ CREATE TABLE targetedms.Predictor
 CREATE TABLE targetedms.TransitionPredictionSettings
 (
     RunId INT NOT NULL,
-    PrecursorMassType VARCHAR(5),
-    ProductMassType VARCHAR(5),
+    PrecursorMassType VARCHAR(20),
+    ProductMassType VARCHAR(20),
     OptimizeBy VARCHAR(10) NOT NULL,
     CePredictorId INT,
     DpPredictorId INT,
@@ -128,6 +125,11 @@ CREATE TABLE targetedms.TransitionFullScanSettings
     PrecursorRes REAL,
     PrecursorResMz REAL,
     ScheduleFilter BOOLEAN,
+    -- AcquisitionMethod can be one of 'none', 'Targeted', 'DIA
+    AcquisitionMethod VARCHAR(10),
+    -- RetentionTimeFilterType can be one of 'none', 'scheduling_windows', 'ms2_ids'
+    RetentionTimeFilterType VARCHAR(20),
+    RetentionTimeFilterLength REAL,
 
     CONSTRAINT PK_TransitionFullScanSettings PRIMARY KEY (RunId),
     CONSTRAINT FK_TransitionFullScanSettings_Runs FOREIGN KEY (RunId) REFERENCES targetedms.Runs(Id)
@@ -139,6 +141,7 @@ CREATE TABLE targetedms.IsotopeEnrichment
     RunId INT NOT NULL,
     Symbol VARCHAR(10),
     PercentEnrichment REAL,
+    Name VARCHAR(100),
 
     CONSTRAINT PK_IsotopeEnrichment PRIMARY KEY (Id),
     CONSTRAINT FK_IsotopeEnrichment_Runs FOREIGN KEY (RunId) REFERENCES targetedms.Runs(Id)
@@ -153,10 +156,15 @@ CREATE INDEX IX_IsotopeEnrichment_RunId ON targetedms.IsotopeEnrichment (RunId);
 CREATE TABLE targetedms.RetentionTimePredictionSettings
 (
     RunId INT NOT NULL,
-    CalculatorName VARCHAR(100),
+    CalculatorName VARCHAR(200),
     IsIrt BOOLEAN,
     RegressionSlope REAL,
     RegressionIntercept REAL,
+    PredictorName VARCHAR(200),
+    TimeWindow REAL,
+    UseMeasuredRts BOOLEAN,
+    MeasuredRtWindow REAL,
+    IrtDatabasePath VARCHAR(500),
 
     CONSTRAINT PK_RetentionTimePredictionSettings PRIMARY KEY (RunId),
     CONSTRAINT FK_RetentionTimePredictionSettings_Runs FOREIGN KEY (RunId) REFERENCES targetedms.Runs(Id)
@@ -206,7 +214,7 @@ CREATE TABLE targetedms.SampleFile
     ReplicateId INT NOT NULL,
     FilePath VARCHAR(500) NOT NULL,
     SampleName VARCHAR(300) NOT NULL,
-    SkylineId VARCHAR(300) NOT NULL,
+    SkylineId VARCHAR(300),
     AcquiredTime TIMESTAMP,
     ModifiedTime TIMESTAMP,
     InstrumentId INT,
@@ -218,22 +226,6 @@ CREATE TABLE targetedms.SampleFile
 
 CREATE INDEX IX_SampleFile_ReplicateId ON targetedms.SampleFile(ReplicateId);
 
-
-
--- ----------------------------------------------------------------------------
--- Annotations
--- ----------------------------------------------------------------------------
-CREATE TABLE targetedms.Annotation
-(
-    Id SERIAL NOT NULL,
-    Name VARCHAR(255) NOT NULL,
-    Value VARCHAR(255) NOT NULL,
-
-    CONSTRAINT PK_Annotation PRIMARY KEY (Id)
-);
-
-
-
 -- ----------------------------------------------------------------------------
 -- Peptide Group
 -- ----------------------------------------------------------------------------
@@ -241,11 +233,21 @@ CREATE TABLE targetedms.PeptideGroup
 (
     Id SERIAL NOT NULL,
     RunId INT NOT NULL,
-    Label CHAR(10) NOT NULL,
+    Label CHAR(255) NOT NULL,
     Description TEXT,
     SequenceId INTEGER,
     Decoy BOOLEAN,
-    Note VARCHAR(255),
+    Note TEXT,
+    Modified TIMESTAMP,
+
+    -- 0 = NotRepresentative, 1 = Representative_Protein, 2 = Representative_Peptide
+    RepresentativeDataState INT NOT NULL DEFAULT 0,
+    Name VARCHAR(255),
+    Accession VARCHAR(50),
+    PreferredName VARCHAR(50),
+    Gene VARCHAR(500),
+    Species VARCHAR(255),
+    AltDescription TEXT,
 
     CONSTRAINT PK_PeptideGroup PRIMARY KEY (Id),
     CONSTRAINT FK_PeptideGroup_Runs FOREIGN KEY (RunId) REFERENCES targetedms.Runs(Id)
@@ -266,18 +268,6 @@ CREATE TABLE targetedms.Protein
 );
 CREATE INDEX IX_Protein_PeptideGroupId ON targetedms.Protein(PeptideGroupId);
 
-CREATE TABLE targetedms.PeptideGroupAnnotation
-(
-    AnnotationId INT NOT NULL,
-    PeptideGroupId INT NOT NULL,
-
-    CONSTRAINT PK_PeptideGroupAnnotation PRIMARY KEY (AnnotationId,PeptideGroupId),
-    CONSTRAINT FK_PeptideGroupAnnotation_Annotation FOREIGN KEY (AnnotationId) REFERENCES targetedms.Annotation(Id),
-    CONSTRAINT FK_PeptideGroupAnnotation_PeptideGroup FOREIGN KEY (PeptideGroupId) REFERENCES targetedms.PeptideGroup(Id)
-);
-
-
-
 -- ----------------------------------------------------------------------------
 -- Peptide
 -- ----------------------------------------------------------------------------
@@ -285,19 +275,22 @@ CREATE TABLE targetedms.Peptide
 (
     Id SERIAL NOT NULL,
     PeptideGroupId INT NOT NULL,
-    Sequence VARCHAR(100) NOT NULL,
+    Sequence VARCHAR(100),
     StartIndex INT,
     EndIndex INT,
     PreviousAa CHAR(1),
     NextAa CHAR(1),
-    CalcNeutralMass REAL NOT NULL,
-    NumMissedCleavages INT NOT NULL,
+    CalcNeutralMass DOUBLE PRECISION,
+    NumMissedCleavages INT,
     Rank INTEGER,
     RtCalculatorScore REAL,
     PredictedRetentionTime REAL,
     AvgMeasuredRetentionTime REAL,
     Decoy BOOLEAN,
-    Note VARCHAR(255),
+    Note TEXT,
+    PeptideModifiedSequence VARCHAR(255),
+    StandardType VARCHAR(20),
+    ExplicitRetentionTime REAL,
 
     CONSTRAINT PK_Peptide PRIMARY KEY (Id),
     CONSTRAINT FK_Peptide_PeptideGroup FOREIGN KEY (PeptideGroupId) REFERENCES targetedms.PeptideGroup(Id)
@@ -305,25 +298,13 @@ CREATE TABLE targetedms.Peptide
 CREATE INDEX IX_Peptide_Sequence ON targetedms.Peptide (Sequence);
 CREATE INDEX IX_Peptide_PeptideGroupId ON targetedms.Peptide(PeptideGroupId);
 
-CREATE TABLE targetedms.PeptideAnnotation
-(
-    AnnotationId INT NOT NULL,
-    PeptideId INT NOT NULL,
-
-    CONSTRAINT PK_PeptideAnnotation PRIMARY KEY (AnnotationId,PeptideId),
-    CONSTRAINT FK_PeptideAnnotation_Annotation FOREIGN KEY (AnnotationId) REFERENCES targetedms.Annotation(Id),
-    CONSTRAINT FK_PeptideAnnotation_Peptide FOREIGN KEY (PeptideId) REFERENCES targetedms.Peptide(Id)
-);
-
 CREATE TABLE targetedms.PeptideChromInfo
 (
     Id SERIAL NOT NULL,
-    PeptideId INT  NOT NULL,
+    PeptideId INT NOT NULL,
     SampleFileId INT NOT NULL,
     PeakCountRatio REAL NOT NULL,
     RetentionTime REAL,
-    PredictedRetentionTime REAL,
-    RatioToStandard REAL,
 
     CONSTRAINT PK_PeptideChromInfo PRIMARY KEY (Id),
     CONSTRAINT FK_PeptideChromInfo_Peptide FOREIGN KEY (PeptideId) REFERENCES targetedms.Peptide(Id),
@@ -333,7 +314,6 @@ CREATE INDEX IX_PeptideChromInfo_PeptideId ON targetedms.PeptideChromInfo(Peptid
 CREATE INDEX IX_PeptideChromInfo_SampleFileId ON targetedms.PeptideChromInfo(SampleFileId);
 
 
-
 -- ----------------------------------------------------------------------------
 -- Precursor
 -- ----------------------------------------------------------------------------
@@ -341,30 +321,28 @@ CREATE TABLE targetedms.Precursor (
     Id SERIAL NOT NULL,
     PeptideId INT  NOT NULL,
     IsotopeLabelId INT,
-    Mz REAL NOT NULL,
+    Mz DOUBLE PRECISION NOT NULL,
     Charge INT NOT NULL,
-    NeutralMass REAL NOT NULL,
-    ModifiedSequence VARCHAR(100) NOT NULL,
+    NeutralMass DOUBLE PRECISION,
+    ModifiedSequence VARCHAR(300),
     CollisionEnergy REAL,
     DeclusteringPotential REAL,
     Decoy BOOLEAN,
     DecoyMassShift REAL,
-    Note VARCHAR(255),
+    Note TEXT,
+    Modified TIMESTAMP,
+    -- 0 = NotRepresentative; 1 = Representative; 2 = Representative_Deprecated; 3 = Conflicted
+    RepresentativeDataState INT NOT NULL DEFAULT 0,
+    ExplicitCollisionEnergy REAL,
+    ExplicitDriftTimeMsec REAL,
+    ExplicitDriftTimeHighEnergyOffsetMsec REAL,
 
     CONSTRAINT PK_Precursor PRIMARY KEY (Id),
 	CONSTRAINT FK_Precursor_Peptide FOREIGN KEY (PeptideId) REFERENCES targetedms.Peptide(Id)
 );
 CREATE INDEX IX_Precursor_PeptideId ON targetedms.Precursor(PeptideId);
+CREATE INDEX IX_Precursor_IsotopeLabelId ON targetedms.Precursor(IsotopeLabelId);
 
-CREATE TABLE targetedms.PrecursorAnnotation
-(
-    AnnotationId INT NOT NULL,
-    PrecursorId INT NOT NULL,
-
-    CONSTRAINT PK_PrecursorAnnotation PRIMARY KEY (AnnotationId,PrecursorId),
-    CONSTRAINT FK_PrecursorAnnotation_Annotation FOREIGN KEY (AnnotationId) REFERENCES targetedms.Annotation(Id),
-    CONSTRAINT FK_PrecursorAnnotation_Precursor FOREIGN KEY (PrecursorId) REFERENCES targetedms.Precursor(Id)
-);
 
 CREATE TABLE targetedms.PrecursorChromInfo
 (
@@ -381,11 +359,19 @@ CREATE TABLE targetedms.PrecursorChromInfo
     MaxFwhm REAL,
     PeakCountRatio REAL,
     NumTruncated INT,
-    Identified BOOLEAN,
-    LibraryDtop REAL,
+    Identified VARCHAR(10),
+    LibraryDotp REAL,
     OptimizationStep INT,
-    UserSet BOOLEAN,
-    NOTE VARCHAR(500),
+    UserSet VARCHAR(20),
+    NOTE TEXT,
+    Chromatogram BYTEA,
+    NumTransitions INT,
+    NumPoints INT,
+
+    UncompressedSize INT,
+    MaxHeight REAL,
+    IsotopeDotp REAL,
+    AverageMassErrorPPM REAL,
 
     CONSTRAINT PK_PrecursorChromInfo PRIMARY KEY (Id),
     CONSTRAINT FK_PrecursorChromInfo_Precursor FOREIGN KEY (PrecursorId) REFERENCES targetedms.Precursor(Id),
@@ -396,29 +382,17 @@ CREATE INDEX IX_PrecursorChromInfo_PrecursorId ON targetedms.PrecursorChromInfo(
 CREATE INDEX IX_PrecursorChromInfo_SampleFileId ON targetedms.PrecursorChromInfo(SampleFileId);
 CREATE INDEX IX_PrecursorChromInfo_PeptideChromInfoId ON targetedms.PrecursorChromInfo(PeptideChromInfoId);
 
-CREATE TABLE targetedms.PrecursorChromInfoAnnotation
-(
-    AnnotationId INT NOT NULL,
-    PrecursorChromInfoId INT NOT NULL,
-
-    CONSTRAINT PK_PrecursorChromInfoAnnotation PRIMARY KEY (AnnotationId,PrecursorChromInfoId),
-    CONSTRAINT FK_PrecursorChromInfoAnnotation_Annotation FOREIGN KEY (AnnotationId) REFERENCES targetedms.Annotation(Id),
-    CONSTRAINT FK_PrecursorChromInfoAnnotation_Precursor FOREIGN KEY (PrecursorChromInfoId) REFERENCES targetedms.PrecursorChromInfo(Id)
-);
-
-
-
 -- ----------------------------------------------------------------------------
 -- Transition
 -- ----------------------------------------------------------------------------
 CREATE TABLE targetedms.Transition (
     Id SERIAL NOT NULL,
     PrecursorId INT NOT NULL,
-    Mz REAL,
+    Mz DOUBLE PRECISION,
     Charge INT,
-    NeutralMass REAL,
-    NeutralLossMass REAL,
-    FragmentType VARCHAR(10) NOT NULL,
+    NeutralMass DOUBLE PRECISION,
+    NeutralLossMass DOUBLE PRECISION,
+    FragmentType VARCHAR(20),
     FragmentOrdinal INT,
     CleavageAa CHAR(1),
     LibraryRank INT,
@@ -428,22 +402,14 @@ CREATE TABLE targetedms.Transition (
     IsotopeDistProportion REAL,
     Decoy BOOLEAN,
     DecoyMassShift REAL,
-    Note VARCHAR(255),
+    Note TEXT,
+    massindex INT,
+    MeasuredIonName VARCHAR(20),
 
     CONSTRAINT PK_Transition PRIMARY KEY (Id),
 	CONSTRAINT FK_Transition_Precursor FOREIGN KEY (PrecursorId) REFERENCES targetedms.Precursor(Id)
 );
 CREATE INDEX IX_Transition_PrecursorId ON targetedms.Transition(PrecursorId);
-
-CREATE TABLE targetedms.TransitionAnnotation
-(
-    AnnotationId INT NOT NULL,
-    PrecursorId INT NOT NULL,
-
-    CONSTRAINT PK_TransitionAnnotation PRIMARY KEY (AnnotationId,PrecursorId),
-    CONSTRAINT FK_TransitionAnnotation_Annotation FOREIGN KEY (AnnotationId) REFERENCES targetedms.Annotation(Id),
-    CONSTRAINT FK_TransitionAnnotation_Precursor FOREIGN KEY (PrecursorId) REFERENCES targetedms.Precursor(Id)
-);
 
 CREATE TABLE targetedms.TransitionChromInfo
 (
@@ -462,10 +428,13 @@ CREATE TABLE targetedms.TransitionChromInfo
     FwhmDegenerate BOOLEAN,
     Truncated BOOLEAN,
     PeakRank INT,
-    Identified BOOLEAN,
+    Identified VARCHAR(10),
     OptimizationStep INT,
-    UserSet BOOLEAN,
-    NOTE VARCHAR(500),
+    UserSet VARCHAR(20),
+    NOTE TEXT,
+    MassErrorPPM REAL,
+    -- Remember which index within the chromatogram data we used for each TransitionChromInfo
+    chromatogramindex INT,
 
     CONSTRAINT PK_TransitionChromInfo PRIMARY KEY (Id),
     CONSTRAINT FK_TransitionChromInfo_Transition FOREIGN KEY (TransitionId) REFERENCES targetedms.Transition(Id),
@@ -474,34 +443,7 @@ CREATE TABLE targetedms.TransitionChromInfo
 );
 CREATE INDEX IX_TransitionChromInfo_TransitionId ON targetedms.TransitionChromInfo(TransitionId);
 CREATE INDEX IX_TransitionChromInfo_SampleFileId ON targetedms.TransitionChromInfo(SampleFileId);
--- CREATE INDEX IX_TransitionChromInfo_PrecursorChromInfoId ON targetedms.TransitionChromInfo(PrecursorChromInfoId);
-
-CREATE TABLE targetedms.TransitionChromInfoAnnotation
-(
-    AnnotationId INT NOT NULL,
-    TransitionChromInfoId INT NOT NULL,
-
-    CONSTRAINT PK_TransitionChromInfoAnnotation PRIMARY KEY (AnnotationId,TransitionChromInfoId),
-    CONSTRAINT FK_TransitionChromInfoAnnotation_Annotation FOREIGN KEY (AnnotationId) REFERENCES targetedms.Annotation(Id),
-    CONSTRAINT FK_TransitionChromInfoAnnotation_Transition FOREIGN KEY (TransitionChromInfoId) REFERENCES targetedms.TransitionChromInfo(Id)
-);
-
-
-
-ALTER TABLE targetedms.TransitionAnnotation DROP COLUMN PrecursorId;
-
-ALTER TABLE targetedms.TransitionAnnotation ADD COLUMN TransitionId INT NOT NULL;
-ALTER TABLE targetedms.TransitionAnnotation ADD CONSTRAINT FK_TransitionAnnotation_Transition FOREIGN KEY (TransitionId) REFERENCES targetedms.Transition(Id);
-
-CREATE INDEX IDX_transitionannotation_transitionid ON targetedms.TransitionAnnotation(TransitionId);
-
--- Store the bytes of the chromatograms on PrecursorChromInfo
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN Chromatogram BYTEA;
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN NumTransitions INT;
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN NumPoints INT;
-
--- Remember which index within the chromatogram data we used for each TransitionChromInfo
-ALTER TABLE targetedms.TransitionChromInfo ADD COLUMN chromatogramindex INT;
+CREATE INDEX IX_TransitionChromInfo_PrecursorChromInfoId ON targetedms.TransitionChromInfo(PrecursorChromInfoId);
 
 -- ----------------------------------------------------------------------------
 -- Enzyme
@@ -509,10 +451,15 @@ ALTER TABLE targetedms.TransitionChromInfo ADD COLUMN chromatogramindex INT;
 CREATE TABLE targetedms.Enzyme
 (
     Id SERIAL NOT NULL,
-    Name VARCHAR(10) NOT NULL,
-    Cut VARCHAR(10) NOT NULL,
-    NoCut VARCHAR(10),
-    Sense CHAR(1) NOT NULL,
+    Name VARCHAR(30) NOT NULL,
+    Cut VARCHAR(20),
+    NoCut VARCHAR(20),
+    Sense CHAR(1),
+
+    CutC VARCHAR(20),
+    NoCutC VARCHAR(20),
+    CutN VARCHAR(20),
+    NoCutN VARCHAR(20),
 
     CONSTRAINT PK_Enzyme PRIMARY KEY (Id)
 );
@@ -557,17 +504,15 @@ CREATE INDEX IX_IsotopeLabel_RunId ON targetedms.IsotopeLabel (RunId);
 CREATE TABLE targetedms.StructuralModification
 (
     Id SERIAL NOT NULL,
-    RunId INT NOT NULL,
     Name VARCHAR(100) NOT NULL,
-    AminoAcid CHAR(1),
+    AminoAcid CHAR(30),
     Terminus CHAR(1),
-    Formula VARCHAR(50) NOT NULL,
-    MassDiffMono REAL,
-    MassDiffAvg REAL,
+    Formula VARCHAR(50),
+    MassDiffMono DOUBLE PRECISION,
+    MassDiffAvg DOUBLE PRECISION,
     UnimodId INTEGER,
 
-    CONSTRAINT PK_StructuralModification PRIMARY KEY (Id),
-    CONSTRAINT FK_StructuralModification_Runs FOREIGN KEY (RunId) REFERENCES targetedms.Runs(Id)
+    CONSTRAINT PK_StructuralModification PRIMARY KEY (Id)
 );
 
 CREATE TABLE targetedms.StructuralModLoss
@@ -575,8 +520,9 @@ CREATE TABLE targetedms.StructuralModLoss
     Id SERIAL NOT NULL,
     StructuralModId INT NOT NULL,
     Formula VARCHAR(50),
-    MassDiffMono REAL,
-    MassDiffAvg REAL,
+    MassDiffMono DOUBLE PRECISION,
+    MassDiffAvg DOUBLE PRECISION,
+    Inclusion VARCHAR(10),
 
     CONSTRAINT PK_StructuralModLoss PRIMARY KEY (Id),
     CONSTRAINT FK_StructuralModLoss_StructuralModification FOREIGN KEY (StructuralModId) REFERENCES targetedms.StructuralModification(Id)
@@ -588,8 +534,9 @@ CREATE TABLE targetedms.RunStructuralModification
     StructuralModId INT NOT NULL,
     RunId INT NOT NULL,
     ExplicitMod BOOLEAN,
+    variable BOOLEAN NOT NULL DEFAULT false,
 
-    CONSTRAINT PK_RunStructuralModification PRIMARY KEY (StructuralModId),
+    CONSTRAINT PK_RunStructuralModification PRIMARY KEY (StructuralModId, RunId),
     CONSTRAINT FK_RunStructuralModification_StructuralModification FOREIGN KEY (StructuralModId) REFERENCES targetedms.StructuralModification(Id),
     CONSTRAINT FK_RunStructuralModification_Runs FOREIGN KEY (RunId) REFERENCES targetedms.Runs(Id)
 );
@@ -598,25 +545,20 @@ CREATE INDEX IX_RunStructuralModification_RunId ON targetedms.RunStructuralModif
 CREATE TABLE targetedms.IsotopeModification
 (
     Id SERIAL NOT NULL,
-    RunId INT NOT NULL,
     Name VARCHAR(100) NOT NULL,
     AminoAcid CHAR(1),
     Terminus CHAR(1),
-    Formula VARCHAR(50) NOT NULL,
-    MassDiffMono REAL,
-    MassDiffAvg REAL,
+    Formula VARCHAR(50),
+    MassDiffMono DOUBLE PRECISION,
+    MassDiffAvg DOUBLE PRECISION,
     Label13C BOOLEAN,
     Label15N BOOLEAN,
     Label18O BOOLEAN,
     Label2H BOOLEAN,
-    RelativeRt REAL,
-    ExplicitMod BOOLEAN,
     UnimodId INTEGER,
 
-    CONSTRAINT PK_IsotopeModification PRIMARY KEY (Id),
-    CONSTRAINT FK_IsotopeModification_Runs FOREIGN KEY (RunId) REFERENCES targetedms.Runs(Id)
+    CONSTRAINT PK_IsotopeModification PRIMARY KEY (Id)
 );
-CREATE INDEX IX_IsotopeModification_RunId ON targetedms.IsotopeModification (RunId);
 
 CREATE TABLE targetedms.RunIsotopeModification
 (
@@ -644,7 +586,7 @@ CREATE TABLE targetedms.PeptideStructuralModification
     PeptideId INT NOT NULL,
     StructuralModId INT NOT NULL,
     IndexAa INT NOT NULL,
-    MassDiff REAL,
+    MassDiff DOUBLE PRECISION,
 
     CONSTRAINT PK_PeptideStructuralModification PRIMARY KEY (Id),
     CONSTRAINT FK_PeptideStructuralModification_Peptide FOREIGN KEY (PeptideId) REFERENCES targetedms.Peptide(Id),
@@ -659,7 +601,7 @@ CREATE TABLE targetedms.PeptideIsotopeModification
     PeptideId INT NOT NULL,
     IsotopeModId INT NOT NULL,
     IndexAa INT NOT NULL,
-    MassDiff REAL,
+    MassDiff DOUBLE PRECISION,
 
     CONSTRAINT PK_PeptideIsotopeModification PRIMARY KEY (Id),
     CONSTRAINT FK_PeptideIsotopeModification_Peptide FOREIGN KEY (PeptideId) REFERENCES targetedms.Peptide(Id),
@@ -766,9 +708,9 @@ CREATE TABLE targetedms.SpectrumLibrary
     RunId INT NOT NULL,
     LibrarySourceId INT NOT NULL,
     LibraryType VARCHAR(20) NOT NULL, -- One of 'bibliospec', 'bibliospec_lite', 'xhunter', 'nist', 'spectrast'.
-    Name VARCHAR(10) NOT NULL,
+    Name VARCHAR(200) NOT NULL,
     FileNameHint VARCHAR(100),
-    LibraryId VARCHAR(50) NOT NULL,
+    SkylineLibraryId VARCHAR(200),
     Revision VARCHAR(10),
 
     CONSTRAINT PK_SpectrumLibrary PRIMARY KEY (Id),
@@ -808,26 +750,8 @@ CREATE TABLE targetedms.TransitionLoss
 CREATE INDEX IX_TransitionLoss_TransitionId ON targetedms.TransitionLoss (TransitionId);
 CREATE INDEX IX_TransitionLoss_StructuralModLossId ON targetedms.TransitionLoss (StructuralModLossId);
 
--- Move the RelativeRt column from IsotopeModification to RunIsotopeModification
-ALTER TABLE targetedms.IsotopeModification DROP COLUMN RelativeRt;
-
--- Remove RunId columns from StructuralModification and IsotopeModification tables.
--- Modifications are not specific to a single Skyline document, they may be used
--- by multiple documents.
-ALTER TABLE targetedms.IsotopeModification DROP COLUMN RunId;
-ALTER TABLE targetedms.StructuralModification DROP COLUMN RunId;
-
--- 'Formula' can be NULL
-ALTER TABLE targetedms.IsotopeModification ALTER COLUMN Formula DROP NOT NULL;
-ALTER TABLE targetedms.StructuralModification ALTER COLUMN Formula DROP NOT NULL;
-
 -- Add IsotopeLabelId FK
 ALTER TABLE targetedms.Precursor ADD CONSTRAINT FK_Precursor_IsotopeLabel FOREIGN KEY (IsotopeLabelId) REFERENCES targetedms.IsotopeLabel(Id);
-
-ALTER TABLE targetedms.PeptideGroup ALTER COLUMN Label TYPE VARCHAR(50);
-
-ALTER TABLE targetedms.SpectrumLibrary ALTER COLUMN LibraryId TYPE VARCHAR(200);
-ALTER TABLE targetedms.SpectrumLibrary RENAME COLUMN LibraryId TO SkylineLibraryId;
 
 INSERT INTO targetedms.LibrarySource (type, score1name) VALUES ('BiblioSpec', 'count_measured');
 INSERT INTO targetedms.LibrarySource (type, score1name, score2name) VALUES ('GPM', 'expect', 'processed_intensity');
@@ -848,17 +772,6 @@ CREATE TABLE targetedms.PrecursorLibInfo
 );
 CREATE INDEX IX_PrecursorLibInfo_PrecursorId ON targetedms.PrecursorLibInfo(PrecursorId);
 CREATE INDEX IX_PrecursorLibInfo_SpectrumLibraryId ON targetedms.PrecursorLibInfo(SpectrumLibraryId);
-
-ALTER TABLE targetedms.SpectrumLibrary ALTER COLUMN Name TYPE VARCHAR(200);
-
--- Don't use a central annotation table - just add the names/values directly on the specific types of annotations
-DROP TABLE targetedms.PeptideGroupAnnotation;
-DROP TABLE targetedms.PrecursorAnnotation;
-DROP TABLE targetedms.PrecursorChromInfoAnnotation;
-DROP TABLE targetedms.TransitionAnnotation;
-DROP TABLE targetedms.TransitionChromInfoAnnotation;
-DROP TABLE targetedms.PeptideAnnotation;
-DROP TABLE targetedms.Annotation;
 
 CREATE TABLE targetedms.PeptideGroupAnnotation
 (
@@ -932,15 +845,6 @@ CREATE TABLE targetedms.PeptideAnnotation
     CONSTRAINT UQ_PeptideAnnotation_Name_Peptide UNIQUE (Name, PeptideId)
 );
 
-
-ALTER TABLE targetedms.SampleFile ALTER COLUMN SkylineId DROP NOT NULL;
-
-ALTER TABLE targetedms.Precursor ALTER COLUMN ModifiedSequence DROP NOT NULL;
-
-ALTER TABLE targetedms.Predictor DROP COLUMN Charge;
-ALTER TABLE targetedms.Predictor DROP COLUMN Slope;
-ALTER TABLE targetedms.Predictor DROP COLUMN Intercept;
-
 CREATE TABLE targetedms.PredictorSettings
 (
     Id SERIAL NOT NULL,
@@ -954,28 +858,7 @@ CREATE TABLE targetedms.PredictorSettings
     CONSTRAINT FK_PredictorSettings_PredictorId FOREIGN KEY (PredictorId) REFERENCES targetedms.Predictor(Id)
 );
 
-ALTER TABLE targetedms.transitionpredictionsettings ALTER COLUMN precursormasstype TYPE VARCHAR(20);
-ALTER TABLE targetedms.transitionpredictionsettings ALTER COLUMN productmasstype TYPE VARCHAR(20);
-
--- A structural modification can be attached to multiple amino acids, which are stored comma-separated
-ALTER TABLE targetedms.structuralmodification ALTER COLUMN aminoacid TYPE VARCHAR(30);
-
-ALTER TABLE targetedms.runstructuralmodification DROP CONSTRAINT pk_runstructuralmodification;
-
-ALTER TABLE targetedms.runstructuralmodification ADD CONSTRAINT pk_runstructuralmodification PRIMARY KEY (structuralmodid, runid);
-
 /* targetedms-12.20-12.30.sql */
-
-
-ALTER TABLE targetedms.peptidegroup ADD COLUMN ActiveRepresentativeData BOOLEAN NOT NULL DEFAULT false;
-
-ALTER TABLE targetedms.spectrumlibrary ALTER COLUMN skylinelibraryid DROP NOT NULL;
-
-ALTER TABLE targetedms.enzyme ALTER COLUMN name TYPE VARCHAR(30);
-
-ALTER TABLE targetedms.transition ADD COLUMN massindex INT;
-
-ALTER TABLE targetedms.runstructuralmodification ADD COLUMN variable BOOLEAN NOT NULL DEFAULT false;
 
 CREATE TABLE targetedms.ReplicateAnnotation
 (
@@ -989,34 +872,6 @@ CREATE TABLE targetedms.ReplicateAnnotation
     CONSTRAINT UQ_ReplicateAnnotation_Name_Repicate UNIQUE (Name, ReplicateId)
 );
 
-ALTER TABLE targetedms.PeptideGroup ALTER COLUMN label TYPE VARCHAR(255);
-
-
--- Add a "Modified" column to PeptideGroup
-ALTER TABLE targetedms.PeptideGroup ADD COLUMN Modified TIMESTAMP;
-
-
--- Add a "RepresentativeDataState" column to PeptideGroup.  This can take 4 values:
--- 0 = NotRepresentative; 1 = Representative; 2 = Representative_Deprecated; 3 = Conflicted
-ALTER TABLE targetedms.PeptideGroup ADD COLUMN RepresentativeDataState INT NOT NULL DEFAULT 0;
-
--- Change the order of values in RepresentativeDataState column of Runs, and add new values
--- RepresentativeProtein and RepresentativePeptide. The new state order is
--- 0 = NotRepresentative, 1 = Representative_Protein, 2 = Representative_Peptide
--- Old order was:
--- 0 = NotRepresentative, 1 = Conflicted, 2 = Representative
--- Remove the old "Conflicted" state since we will get that from the PeptideGroup or Precursor tables.
--- Mark any existing "Conflicted" runs as Representative_Protein.
-
--- Remove the "ActiveRepresentativeData" column from PeptideGroup since we don't need it anymore.
-ALTER TABLE targetedms.PeptideGroup DROP COLUMN ActiveRepresentativeData;
-
--- Add a "Modified" column to Precursor
-ALTER TABLE targetedms.Precursor ADD COLUMN Modified TIMESTAMP;
-
--- Add a "RepresentativeDataState" column to Precursor.  This can take 4 values:
--- 0 = NotRepresentative; 1 = Representative; 2 = Representative_Deprecated; 3 = Conflicted
-ALTER TABLE targetedms.Precursor ADD COLUMN RepresentativeDataState INT NOT NULL DEFAULT 0;
 
 -- AnnotationSettings table to store annotation settings.
 -- Name: Name of the annotation
@@ -1052,22 +907,6 @@ CREATE INDEX IX_TransitionAnnotation_TransitionId ON targetedms.TransitionAnnota
 
 /* targetedms-13.10-13.20.sql */
 
-ALTER TABLE targetedms.Peptide ADD COLUMN PeptideModifiedSequence VARCHAR(255);
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN MaxHeight REAL;
-ALTER TABLE targetedms.PrecursorChromInfo RENAME COLUMN LibraryDtop TO LibraryDotp;
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN IsotopeDotp REAL;
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN AverageMassErrorPPM REAL;
-ALTER TABLE targetedms.TransitionChromInfo ADD COLUMN MassErrorPPM REAL;
-
-UPDATE core.PortalWebParts
-SET Permanent = false
-WHERE Name = 'Protein Search' AND Container IN
-(SELECT ObjectId FROM prop.PropertySets ps JOIN prop.Properties p ON ps.Set = p.Set
-WHERE ps.Category = 'folderType' AND p.Value = 'Targeted MS');
-
--- Clear the representative data state for all existing containers
-UPDATE targetedms.precursor set representativedatastate = 0;
-UPDATE targetedms.peptidegroup set representativedatastate = 0;
 
 -- iRTPeptide table to store iRT peptide information.
 -- ModifiedSequence: the optionally chemically modified peptide sequence
@@ -1080,40 +919,14 @@ CREATE TABLE targetedms.iRTPeptide
     iRTScaleId INT NOT NULL,
     Created TIMESTAMP,
     CreatedBy INT,
+    ImportCount INT NOT NULL,
+    TimeSource INT,
 
     CONSTRAINT PK_iRTPeptide PRIMARY KEY (Id),
     CONSTRAINT FK_iRTPeptide_iRTScaleId FOREIGN KEY (iRTScaleId) REFERENCES targetedms.iRTScale(Id)
 );
 CREATE INDEX IX_iRTPeptide_iRTScaleId ON targetedms.iRTPeptide (iRTScaleId);
-
--- Add missing index to speed up deletes
-CREATE INDEX IX_TransitionChromInfo_PrecursorChromInfoId
-  ON targetedms.TransitionChromInfo(PrecursorChromInfoId);
-
-/* targetedms-13.20-13.30.sql */
-
-INSERT INTO prot.identTypes (name, entryDate) SELECT 'Skyline', current_timestamp
-WHERE NOT EXISTS (SELECT 1 from prot.identTypes where name='Skyline');
-
-ALTER TABLE targetedms.PeptideGroup ADD COLUMN Name VARCHAR(255);
-
-ALTER TABLE targetedms.PeptideGroup ALTER COLUMN Note TYPE TEXT;
-ALTER TABLE targetedms.Peptide ALTER COLUMN Note TYPE TEXT;
-ALTER TABLE targetedms.Precursor ALTER COLUMN Note TYPE TEXT;
-ALTER TABLE targetedms.PrecursorChromInfo ALTER COLUMN Note TYPE TEXT;
-ALTER TABLE targetedms.Transition ALTER COLUMN Note TYPE TEXT;
-ALTER TABLE targetedms.TransitionChromInfo ALTER COLUMN Note TYPE TEXT;
-
-ALTER TABLE targetedms.Precursor ALTER COLUMN ModifiedSequence TYPE VARCHAR(300);
-
-ALTER TABLE targetedms.isotopemodification DROP COLUMN ExplicitMod;
-
-
-ALTER TABLE targetedms.RetentionTimePredictionSettings ADD COLUMN PredictorName VARCHAR(200);
-ALTER TABLE targetedms.RetentionTimePredictionSettings ADD COLUMN TimeWindow REAL;
-ALTER TABLE targetedms.RetentionTimePredictionSettings ADD COLUMN UseMeasuredRts BOOLEAN;
-ALTER TABLE targetedms.RetentionTimePredictionSettings ADD COLUMN MeasuredRtWindow REAL;
-ALTER TABLE targetedms.RetentionTimePredictionSettings ALTER COLUMN CalculatorName TYPE VARCHAR(200);
+ALTER TABLE targetedms.iRTPeptide ADD CONSTRAINT UQ_iRTPeptide_SequenceAndScale UNIQUE (irtScaleId, ModifiedSequence);
 
 CREATE TABLE targetedms.ExperimentAnnotations
 (
@@ -1126,7 +939,7 @@ CREATE TABLE targetedms.ExperimentAnnotations
     ModifiedBy USERID,
     Modified TIMESTAMP,
 
-    Title VARCHAR(250),
+    Title VARCHAR,
     Organism VARCHAR(100),
     ExperimentDescription TEXT,
     SampleDescription TEXT,
@@ -1135,51 +948,19 @@ CREATE TABLE targetedms.ExperimentAnnotations
     Citation TEXT,
     Abstract TEXT,
     PublicationLink TEXT,
+    ExperimentId INT NOT NULL DEFAULT 0,
+    JournalCopy BOOLEAN NOT NULL DEFAULT FALSE,
+    IncludeSubfolders BOOLEAN NOT NULL DEFAULT FALSE,
 
     CONSTRAINT PK_ExperimentAnnotations PRIMARY KEY (Id)
 );
 CREATE INDEX IX_ExperimentAnnotations_Container ON targetedms.ExperimentAnnotations (Container);
+CREATE INDEX IX_ExperimentAnnotations_ExperimentId ON targetedms.ExperimentAnnotations(ExperimentId);
 
-CREATE TABLE targetedms.ExperimentAnnotationsRun
-(
-  Id SERIAL NOT NULL,
-  RunId INT NOT NULL,
-  ExperimentAnnotationsId INT NOT NULL,
-  CreatedBy USERID,
-  Created TIMESTAMP,
-
-  CONSTRAINT PK_ExperimentAnnotationsRun PRIMARY KEY (Id),
-  CONSTRAINT FK_ExperimentAnnotationsRun_ExperimentAnnotationsId FOREIGN KEY (ExperimentAnnotationsId) REFERENCES targetedms.ExperimentAnnotations(Id),
-  CONSTRAINT FK_ExperimentAnnotationsRun_RunId FOREIGN KEY (RunId) REFERENCES targetedms.Runs(Id)
-);
-CREATE INDEX IX_ExperimentAnnotationsRun_RunId ON targetedms.ExperimentAnnotationsRun (RunId);
-CREATE INDEX IX_ExperimentAnnotationsRun_ExperimentAnnotationsId ON targetedms.ExperimentAnnotationsRun (ExperimentAnnotationsId);
+ALTER TABLE targetedms.ExperimentAnnotations ADD CONSTRAINT FK_ExperimentAnnotations_Experiment FOREIGN KEY (ExperimentId) REFERENCES exp.Experiment(RowId);
+ALTER TABLE targetedms.ExperimentAnnotations ADD CONSTRAINT FK_ExperimentAnnotations_Container FOREIGN KEY (Container) REFERENCES core.Containers(EntityId);
 
 /* targetedms-14.10-14.20.sql */
-
-ALTER TABLE targetedms.iRTPeptide ADD COLUMN ImportCount INT;
-
-UPDATE targetedms.iRTPeptide SET ImportCount = 1;
-
-ALTER TABLE targetedms.iRTPeptide ALTER COLUMN ImportCount SET NOT NULL;
-
-ALTER TABLE targetedms.iRTPeptide ADD COLUMN TimeSource INT;
-
--- StandardType can be one of 'Normalization', 'QC'
-ALTER TABLE targetedms.Peptide ADD COLUMN StandardType VARCHAR(20);
-
-ALTER TABLE targetedms.IsotopeEnrichment ADD COLUMN Name VARCHAR(100);
-
-ALTER TABLE targetedms.PeptideGroup ADD COLUMN Accession VARCHAR(50);
-ALTER TABLE targetedms.PeptideGroup ADD COLUMN PreferredName VARCHAR(50);
-ALTER TABLE targetedms.PeptideGroup ADD COLUMN Gene VARCHAR(50);
-ALTER TABLE targetedms.PeptideGroup ADD COLUMN Species VARCHAR(100);
-
--- AcquisitionMethod can be one of 'none', 'Targeted', 'DIA
-ALTER TABLE targetedms.TransitionFullScanSettings ADD COLUMN AcquisitionMethod VARCHAR(10);
--- RetentionTimeFilterType can be one of 'none', 'scheduling_windows', 'ms2_ids'
-ALTER TABLE targetedms.TransitionFullScanSettings ADD COLUMN RetentionTimeFilterType VARCHAR(20);
-ALTER TABLE targetedms.TransitionFullScanSettings ADD COLUMN RetentionTimeFilterLength REAL;
 
 CREATE TABLE targetedms.IsolationScheme
 (
@@ -1217,37 +998,11 @@ ALTER TABLE targetedms.PeptideGroup ADD CONSTRAINT FK_PeptideGroup_Sequences FOR
 CREATE INDEX IX_PeptideGroup_SequenceId ON targetedms.PeptideGroup(SequenceId);
 CREATE INDEX IX_PeptideGroup_Label ON targetedms.PeptideGroup(Label);
 
-SELECT core.fn_dropifexists('Precursor', 'targetedms', 'INDEX', 'IX_Precursor_IsotopeLabelId');
-CREATE INDEX IX_Precursor_IsotopeLabelId ON targetedms.Precursor(IsotopeLabelId);
-
-SELECT core.fn_dropifexists('ReplicateAnnotation', 'targetedms', 'INDEX', 'IX_ReplicateAnnotation_ReplicateId');
 CREATE INDEX IX_ReplicateAnnotation_ReplicateId ON targetedms.ReplicateAnnotation (ReplicateId);
 
 CREATE INDEX IX_RunEnzyme_RunId ON targetedms.RunEnzyme(RunId);
 
-
 CREATE INDEX IX_SampleFile_InstrumentId ON targetedms.SampleFile(InstrumentId);
-
-ALTER TABLE targetedms.iRTPeptide ADD CONSTRAINT UQ_iRTPeptide_SequenceAndScale UNIQUE (irtScaleId, ModifiedSequence);
-
---TransitionChromInfo UserSet can now be one of 'TRUE', 'FALSE', 'IMPORTED', 'REINTEGRATE'
-ALTER TABLE targetedms.TransitionChromInfo ADD UserSet_temp VARCHAR(20);
-UPDATE targetedms.TransitionChromInfo SET UserSet_temp =(CASE WHEN UserSet THEN 'TRUE'
-                                                              WHEN UserSet IS FALSE THEN 'FALSE'
-                                                              ELSE NULL END);
-ALTER TABLE targetedms.TransitionChromInfo DROP COLUMN UserSet;
-ALTER TABLE targetedms.TransitionChromInfo RENAME UserSet_temp TO UserSet;
-
-
-
---PrecursorChromInfo UserSet can now be one of 'TRUE', 'FALSE', 'IMPORTED', 'REINTEGRATE'
-ALTER TABLE targetedms.PrecursorChromInfo ADD UserSet_temp VARCHAR(20);
-UPDATE targetedms.PrecursorChromInfo SET UserSet_temp =(CASE WHEN UserSet THEN 'TRUE'
-                                                         WHEN UserSet IS FALSE THEN 'FALSE'
-                                                         ELSE NULL END);
-ALTER TABLE targetedms.PrecursorChromInfo DROP COLUMN UserSet;
-ALTER TABLE targetedms.PrecursorChromInfo RENAME UserSet_temp TO UserSet;
-
 
 
 -- Add ion mobility settings tables
@@ -1272,6 +1027,7 @@ CREATE TABLE targetedms.MeasuredDriftTime
     ModifiedSequence VARCHAR(255) NOT NULL,
     Charge INT NOT NULL,
     DriftTime REAL NOT NULL,
+    HighEnergyDriftTimeOffset REAL,
 
     CONSTRAINT PK_MeasuredDriftTime PRIMARY KEY (Id),
     CONSTRAINT FK_MeasuredDriftTime_DriftTimePredictionSettings FOREIGN KEY (DriftTimePredictionSettingsId) REFERENCES targetedms.DriftTimePredictionSettings(Id)
@@ -1279,38 +1035,6 @@ CREATE TABLE targetedms.MeasuredDriftTime
 CREATE INDEX IX_MeasuredDriftTime_DriftTimePredictionSettingsId ON targetedms.MeasuredDriftTime(DriftTimePredictionSettingsId);
 
 /* targetedms-14.20-14.30.sql */
-
-ALTER TABLE targetedms.Enzyme ALTER COLUMN Cut DROP NOT NULL;
-ALTER TABLE targetedms.Enzyme ALTER COLUMN Sense DROP NOT NULL;
-ALTER TABLE targetedms.Enzyme ADD COLUMN CutC VARCHAR(10);
-ALTER TABLE targetedms.Enzyme ADD COLUMN NoCutC VARCHAR(10);
-ALTER TABLE targetedms.Enzyme ADD COLUMN CutN VARCHAR(10);
-ALTER TABLE targetedms.Enzyme ADD COLUMN NoCutN VARCHAR(10);
-
-ALTER TABLE targetedms.PeptideGroup ADD COLUMN AltDescription TEXT;
-
-ALTER TABLE targetedms.Transition ADD COLUMN MeasuredIonName VARCHAR(20);
-
-ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN UncompressedSize INT;
-
-ALTER TABLE targetedms.ExperimentAnnotations ADD ExperimentId INT NOT NULL DEFAULT 0;
-ALTER TABLE targetedms.ExperimentAnnotations ADD JournalCopy BOOLEAN NOT NULL DEFAULT FALSE;
-ALTER TABLE targetedms.ExperimentAnnotations ADD IncludeSubfolders BOOLEAN NOT NULL DEFAULT FALSE;
-CREATE INDEX IX_ExperimentAnnotations_ExperimentId ON targetedms.ExperimentAnnotations(ExperimentId);
-
-DROP TABLE targetedms.ExperimentAnnotationsRun;
-DELETE FROM targetedms.ExperimentAnnotations WHERE Id NOT IN
-(SELECT ea.Id from targetedms.ExperimentAnnotations AS ea INNER JOIN core.Containers AS c ON ea.Container = c.entityId);
-
-ALTER TABLE targetedms.ExperimentAnnotations ADD CONSTRAINT FK_ExperimentAnnotations_Experiment FOREIGN KEY (ExperimentId) REFERENCES exp.Experiment(RowId);
-ALTER TABLE targetedms.ExperimentAnnotations ADD CONSTRAINT FK_ExperimentAnnotations_Container FOREIGN KEY (Container) REFERENCES core.Containers(EntityId);
-
-/* Add all runs in an experiment's container to exp.runlist */
-INSERT INTO exp.runlist
-(SELECT e.rowid, er.rowId, e.Created, e.CreatedBy
-FROM targetedms.ExperimentAnnotations ea
-INNER JOIN exp.experiment e ON (e.rowid = ea.ExperimentId)
-INNER JOIN exp.experimentrun er ON (er.container = ea.Container));
 
 CREATE TABLE targetedms.Journal
 (
@@ -1355,21 +1079,6 @@ CREATE TABLE targetedms.JournalExperiment
 CREATE INDEX IX_JournalExperiment_ShortAccessURL ON targetedms.JournalExperiment(ShortAccessURL);
 CREATE INDEX IX_JournalExperiment_ShortCopyURL ON targetedms.JournalExperiment(ShortCopyURL);
 
---TransitionChromInfo's Identified column can now be one of 'true', 'false' or 'aligned'
-ALTER TABLE targetedms.TransitionChromInfo ADD Identified_temp VARCHAR(10);
-UPDATE targetedms.TransitionChromInfo SET Identified_temp =(CASE WHEN Identified THEN 'true'
-                                                              WHEN Identified IS FALSE THEN 'false'
-                                                              ELSE NULL END);
-ALTER TABLE targetedms.TransitionChromInfo DROP COLUMN Identified;
-ALTER TABLE targetedms.TransitionChromInfo RENAME Identified_temp TO Identified;
-
---PrecursorChromInfo's Identified column can now be one of 'true', 'false' or 'aligned'
-ALTER TABLE targetedms.PrecursorChromInfo ADD Identified_temp VARCHAR(10);
-UPDATE targetedms.PrecursorChromInfo SET Identified_temp =(CASE WHEN Identified THEN 'true'
-                                                         WHEN Identified IS FALSE THEN 'false'
-                                                         ELSE NULL END);
-ALTER TABLE targetedms.PrecursorChromInfo DROP COLUMN Identified;
-ALTER TABLE targetedms.PrecursorChromInfo RENAME Identified_temp TO Identified;
 
 /* targetedms-14.30-14.31.sql */
 
@@ -1409,125 +1118,7 @@ CREATE TABLE targetedms.QCAnnotation
 -- Poke a few rows into the /Shared project
 SELECT core.executeJavaUpgradeCode('populateDefaultAnnotationTypes');
 
-/* targetedms-14.32-14.33.sql */
-
-UPDATE targetedms.QCAnnotationType SET Color = '990000' WHERE Color = 'FF0000';
-UPDATE targetedms.QCAnnotationType SET Color = '009900' WHERE Color = '00FF00';
-UPDATE targetedms.QCAnnotationType SET Color = '000099' WHERE Color = '0000FF';
-
-/* targetedms-14.33-14.34.sql */
-
-ALTER TABLE targetedms.ExperimentAnnotations ALTER COLUMN Title TYPE VARCHAR;
-
-/* targetedms-14.34-14.35.sql */
-
--- ----------------------------------------------------------------------------
--- Peptide
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.Peptide ALTER COLUMN calcNeutralMass TYPE DOUBLE PRECISION;
-
--- ----------------------------------------------------------------------------
--- Precursor
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.Precursor ALTER COLUMN Mz TYPE DOUBLE PRECISION;
-ALTER TABLE targetedms.Precursor ALTER COLUMN NeutralMass TYPE DOUBLE PRECISION;
-
--- ----------------------------------------------------------------------------
--- Transition
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.Transition ALTER COLUMN Mz TYPE DOUBLE PRECISION;
-ALTER TABLE targetedms.Transition ALTER COLUMN NeutralMass TYPE DOUBLE PRECISION;
-ALTER TABLE targetedms.Transition ALTER COLUMN NeutralLossMass TYPE DOUBLE PRECISION;
-
-
--- ----------------------------------------------------------------------------
--- StructuralModification
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.StructuralModification ALTER COLUMN massDiffMono TYPE DOUBLE PRECISION;
-ALTER TABLE targetedms.StructuralModification ALTER COLUMN massDiffAvg TYPE DOUBLE PRECISION;
-
--- ----------------------------------------------------------------------------
--- StructuralModLoss
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.StructuralModLoss ALTER COLUMN massDiffMono TYPE DOUBLE PRECISION;
-ALTER TABLE targetedms.StructuralModLoss ALTER COLUMN massDiffAvg TYPE DOUBLE PRECISION;
-
--- ----------------------------------------------------------------------------
--- IsotopeModification
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.IsotopeModification ALTER COLUMN MassDiffMono TYPE DOUBLE PRECISION;
-ALTER TABLE targetedms.IsotopeModification ALTER COLUMN MassDiffAvg TYPE DOUBLE PRECISION;
-
--- ----------------------------------------------------------------------------
--- PeptideStructuralModification
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.PeptideStructuralModification ALTER COLUMN massDiff TYPE DOUBLE PRECISION;
-
--- ----------------------------------------------------------------------------
--- IsotopeStructuralModification
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.PeptideIsotopeModification ALTER COLUMN massDiff TYPE DOUBLE PRECISION;
-
-/* targetedms-14.35-14.36.sql */
-
--- ----------------------------------------------------------------------------
--- Peptide
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.Peptide ADD ExplicitRetentionTime REAL;
-
--- ----------------------------------------------------------------------------
--- Precursor
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.Precursor ADD ExplicitCollisionEnergy REAL;
-ALTER TABLE targetedms.Precursor ADD ExplicitDriftTimeMsec REAL;
-ALTER TABLE targetedms.Precursor ADD ExplicitDriftTimeHighEnergyOffsetMsec REAL;
-
--- ----------------------------------------------------------------------------
--- Transition -- fragment_type can be one of "custom_precursor", "custom", "a", "b", "c", "x", "y", "z"
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.Transition ALTER COLUMN FragmentType TYPE VARCHAR(20);
-
--- ----------------------------------------------------------------------------
--- MeasuredDriftTime
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.MeasuredDriftTime ADD HighEnergyDriftTimeOffset REAL;
-
--- ----------------------------------------------------------------------------
--- StructuralModLoss -- inlcusion can be one of "Library", "Never", "Always"
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.StructuralModLoss ADD Inclusion VARCHAR(10);
-
-
--- ----------------------------------------------------------------------------
--- PeptideChromInfo -- the following two columns are not part of the
---                     <peptide_result> element in the Skyline XML schema.
--- ----------------------------------------------------------------------------
-ALTER TABLE targetedms.PeptideChromInfo DROP COLUMN PredictedRetentionTime;
-ALTER TABLE targetedms.PeptideChromInfo DROP COLUMN RatioToStandard;
-
-
--- PeptideGroup.gene -- this column (source: Uniprot) can contain several gene names.
-ALTER TABLE targetedms.PeptideGroup ALTER COLUMN gene TYPE VARCHAR(255);
-
--- Enzyme
-ALTER TABLE targetedms.Enzyme ALTER COLUMN Cut TYPE VARCHAR(20);
-ALTER TABLE targetedms.Enzyme ALTER COLUMN NoCut TYPE VARCHAR(20);
-ALTER TABLE targetedms.Enzyme ALTER COLUMN CutC TYPE VARCHAR(20);
-ALTER TABLE targetedms.Enzyme ALTER COLUMN NoCutC TYPE VARCHAR(20);
-ALTER TABLE targetedms.Enzyme ALTER COLUMN CutN TYPE VARCHAR(20);
-ALTER TABLE targetedms.Enzyme ALTER COLUMN NoCutN TYPE VARCHAR(20);
-
 /* targetedms-14.36-14.37.sql */
-
--- ----------------------------------------------------------------------------
--- Peptide
--- ----------------------------------------------------------------------------
--- Drop the following NOT NULL constraints till we migrate to a normalized schema.
-ALTER TABLE targetedms.Peptide ALTER COLUMN Sequence DROP NOT NULL;
-ALTER TABLE targetedms.Peptide ALTER COLUMN CalcNeutralMass DROP NOT NULL;
-ALTER TABLE targetedms.Peptide ALTER COLUMN NumMissedCleavages DROP NOT NULL;
-
-
 
 -- ----------------------------------------------------------------------------
 -- Molecule
@@ -1543,23 +1134,6 @@ CREATE TABLE targetedms.Molecule
   CONSTRAINT PK_Molecule PRIMARY KEY (PeptideId),
   CONSTRAINT FK_Molecule_Peptide FOREIGN KEY (PeptideId) REFERENCES targetedms.Peptide(Id)
 );
-
-
-
--- ----------------------------------------------------------------------------
--- Precursor
--- ----------------------------------------------------------------------------
--- Drop the following NOT NULL constraints till we migrate to a normalized schema.
-ALTER TABLE targetedms.Precursor ALTER COLUMN NeutralMass DROP NOT NULL;
-
-
-
--- ----------------------------------------------------------------------------
--- Transition
--- ----------------------------------------------------------------------------
--- Drop the following NOT NULL constraints till we migrate to a normalized schema.
-ALTER TABLE targetedms.Transition ALTER COLUMN FragmentType DROP NOT NULL;
-
 
 -- ----------------------------------------------------------------------------
 -- MoleculeTransition
@@ -1591,12 +1165,3 @@ CREATE TABLE targetedms.GuideSet
 
   CONSTRAINT PK_GuideSet PRIMARY KEY (RowId)
 );
-
-/* targetedms-15.20-15.21.sql */
-
-/* Store the iRT database file path */
-ALTER TABLE targetedms.RetentionTimePredictionSettings ADD COLUMN IrtDatabasePath VARCHAR(500);
-
-ALTER TABLE targetedms.PeptideGroup ALTER COLUMN gene TYPE VARCHAR(500);
-ALTER TABLE targetedms.PeptideGroup ALTER COLUMN species TYPE VARCHAR(255);
-ALTER TABLE targetedms.predictor ALTER COLUMN stepSize TYPE REAL;
