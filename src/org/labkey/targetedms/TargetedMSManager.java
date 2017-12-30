@@ -1142,8 +1142,6 @@ public class TargetedMSManager
 
         for (URI uri : fileURIs)
         {
-            File file = new File(uri);
-
             if (!fileIsReferenced(uri))
             {
                 try
@@ -1151,6 +1149,7 @@ public class TargetedMSManager
                     deleteRunForFile(uri, c, u);
 
                     // Remove .sky.zip from file name to get directory name
+                    File file = new File(uri);
                     String dirName = FilenameUtils.removeExtension(FilenameUtils.removeExtension(file.getName()));
 
                     File dir = new File(file.getParent(), dirName);
@@ -1179,7 +1178,7 @@ public class TargetedMSManager
                 }
                 catch (IOException e)
                 {
-                    logMsg = "Unable to delete unzipped directory from file " + file;
+                    logMsg = "Unable to delete unzipped directory from file "; // + file;        TODO
                     _log.warn(logMsg);
                     logMsgs.add(logMsg);
                 }
