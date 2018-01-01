@@ -330,7 +330,7 @@ CREATE TABLE targetedms.Precursor (
     Decoy BIT,
     DecoyMassShift REAL,
     Note TEXT,
-    Modified TIMESTAMP,
+    Modified DATETIME,
     -- 0 = NotRepresentative; 1 = Representative; 2 = Representative_Deprecated; 3 = Conflicted
     RepresentativeDataState INT NOT NULL DEFAULT 0,
     ExplicitCollisionEnergy REAL,
