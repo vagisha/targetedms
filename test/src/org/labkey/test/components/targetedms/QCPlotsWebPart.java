@@ -706,8 +706,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.CssLocator paginationPrevBtn = Locator.css(".qc-paging-prev");
         Locator.CssLocator paginationNextBtn = Locator.css(".qc-paging-next");
 
-        Locator.XPathLocator hopscotchBubble = Locator.tagWithClass("div", "hopscotch-bubble-container");
-        Locator.XPathLocator hopscotchBubbleClose = Locator.tagWithClass("a", "hopscotch-bubble-close");
+        Locator.XPathLocator hopscotchBubble = Locator.byClass("hopscotch-bubble-container");
+        Locator.XPathLocator hopscotchBubbleClose = Locator.byClass("hopscotch-bubble-close");
 
         private Map<QCPlotType, Checkbox> plotTypeCheckboxes = new HashMap<>();
         protected Checkbox findQCPlotTypeCheckbox(QCPlotType plotType)

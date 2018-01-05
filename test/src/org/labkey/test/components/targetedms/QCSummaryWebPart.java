@@ -113,9 +113,9 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
 
     private static abstract class Locators
     {
-        static final Locator.XPathLocator hopscotchBubble = Locator.tagWithClass("div", "hopscotch-bubble-container");
-        static final Locator.XPathLocator hopscotchBubbleContent = hopscotchBubble.append(Locator.tagWithClass("div", "hopscotch-bubble-content").append(Locator.tagWithClass("div", "hopscotch-content")));
-        static final Locator.XPathLocator hopscotchBubbleClose = Locator.tagWithClass("a", "hopscotch-bubble-close");
+        static final Locator.XPathLocator hopscotchBubble = Locator.byClass("hopscotch-bubble-container");
+        static final Locator.XPathLocator hopscotchBubbleContent = hopscotchBubble.append(Locator.byClass("hopscotch-bubble-content").append(Locator.byClass("hopscotch-content")));
+        static final Locator.XPathLocator hopscotchBubbleClose = Locator.byClass("hopscotch-bubble-close");
         static final Locator summaryTile = Locator.tagWithClass("div", "summary-tile");
         static final Locator recentSampleFilesLoading = Locator.tagWithClass("div", "sample-file-details-loading");
         static final Locator recentSampleFile = Locator.css("div.sample-file-item");
