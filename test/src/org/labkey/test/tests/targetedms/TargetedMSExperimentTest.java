@@ -24,6 +24,7 @@ import org.labkey.test.categories.MS2;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
+import org.openqa.selenium.WebElement;
 
 import java.util.List;
 
@@ -231,9 +232,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertTextPresent("1343.740", "1226.661", "1001.550");
 
         //Click down arrow next to protein name. Click "Search for other references to this protein"
-        Locator l = Locator.xpath("//span[a[text()='YAL038W']]/span/img");
-        waitForElement(l);
-        mouseOver(l);
+        WebElement popupArrow = waitForElement(Locator.linkWithText("YAL038W").followingSibling("span").childTag("img"));
+        mouseOver(popupArrow);
         waitForText("Search for other references to this protein");
         clickAndWait(Locator.linkContainingText("Search for other references to this protein"));
 
