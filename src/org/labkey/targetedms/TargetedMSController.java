@@ -2802,6 +2802,30 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class ShowPKAction extends SimpleViewAction<PKForm>
+    {
+
+        @Override
+        public ModelAndView getView(PKForm form, BindException errors) throws Exception
+        {
+            JspView<PKForm> pharmacokineticsView = new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp", form);
+            pharmacokineticsView.setTitle("Pharmacokinetics");
+
+            return pharmacokineticsView;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return null;
+        }
+    }
+
+    public static class PKForm extends ViewForm{
+
+    }
+
     public abstract class AbstractShowRunDetailsAction <VIEWTYPE extends QueryView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail

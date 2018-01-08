@@ -61,8 +61,14 @@ public class CalibrationCurvesView extends QuantificationView
         ActionURL url = new ActionURL(TargetedMSController.ShowFiguresOfMeritAction.class, getContainer());
         url.addParameter("RunId", "${RunId}");
         url.addParameter("GeneralMoleculeId", "${GeneralMoleculeId}");
-        SimpleDisplayColumn fomColumn = new UrlColumn(url.toString(), "Fom");
-        ret.getDataRegion().addDisplayColumn(1, fomColumn);
+        SimpleDisplayColumn urlColumn = new UrlColumn(url.toString(), "Fom");
+        ret.getDataRegion().addDisplayColumn(1, urlColumn);
+
+        url = new ActionURL(TargetedMSController.ShowPKAction.class, getContainer());
+        url.addParameter("RunId", "${RunId}");
+        url.addParameter("GeneralMoleculeId", "${GeneralMoleculeId}");
+        urlColumn = new UrlColumn(url.toString(), "PK");
+        ret.getDataRegion().addDisplayColumn(2, urlColumn);
 
     }
 

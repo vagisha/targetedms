@@ -25,6 +25,8 @@ resources/queries/targetedms/FiguresOfMeritSummary.sql -text
 resources/queries/targetedms/MoleculeCalibrationCurve.query.xml -text
 resources/queries/targetedms/MoleculeInfo.sql -text
 resources/queries/targetedms/PeptideCalibrationCurve.query.xml -text
+resources/queries/targetedms/Pharmacokinetics.sql -text
+resources/queries/targetedms/Pharmacokinetics/.qview.xml -text
 resources/queries/targetedms/QCMetric_fwb.sql -text
 resources/queries/targetedms/QCMetric_fwhm.sql -text
 resources/queries/targetedms/QCMetric_lhRatio.sql -text
@@ -492,6 +494,7 @@ src/org/labkey/targetedms/view/moleculePrecursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/moleculeSummaryView.jsp -text
 src/org/labkey/targetedms/view/paretoPlot.jsp -text
 src/org/labkey/targetedms/view/peptideSummaryView.jsp -text
+src/org/labkey/targetedms/view/pharmacokinetics.jsp -text
 src/org/labkey/targetedms/view/precursorChromatogramsView.jsp -text
 src/org/labkey/targetedms/view/precursorConflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/proteinConflictResolutionView.jsp -text
