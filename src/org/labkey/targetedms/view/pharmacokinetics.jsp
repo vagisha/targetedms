@@ -287,6 +287,7 @@
                 schemaName: 'targetedms',
                 queryName: 'Pharmacokinetics',
                 filterArray: [LABKEY.Filter.create('MoleculeId', params['GeneralMoleculeId'])],
+                sort : 'Time',
                 scope: this,
                 success: function (data) {
                     parseRawData(data);
