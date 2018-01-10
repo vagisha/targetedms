@@ -10,7 +10,7 @@ SELECT
   gm.SampleFileId.ReplicateId,
   AVG(gm.CalculatedConcentration) as ReplicateConcentration,
   gm.SampleFileId.ReplicateId.AnalyteConcentration,
-  CASE WHEN gm.SampleFileId.ReplicateId.AnalyteConcentration IS NOT NULL THEN
+  CASE WHEN (gm.SampleFileId.ReplicateId.AnalyteConcentration IS NOT NULL AND gm.SampleFileId.ReplicateId.AnalyteConcentration != 0) THEN
       (100 * (AVG(gm.CalculatedConcentration) - gm.SampleFileId.ReplicateId.AnalyteConcentration) / gm.SampleFileId.ReplicateId.AnalyteConcentration)
   ELSE NULL END as Bias,
   gm.SampleFileId.ReplicateId.SampleType,
