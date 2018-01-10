@@ -128,7 +128,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String RESULTS_DATA = "results_data";
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
-    public static final double MAX_SUPPORTED_VERSION = 3.73;
+    public static final double MAX_SUPPORTED_VERSION = 4.1;
 
     private static final Pattern XML_ID_REGEX = Pattern.compile("\"/^[:_A-Za-z][-.:_A-Za-z0-9]*$/\"");
     private static final String XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
