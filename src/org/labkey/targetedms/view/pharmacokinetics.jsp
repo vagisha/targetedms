@@ -147,9 +147,9 @@
             $.each(timeRows,function (index, row) {
                 console.log(row);
                 var checkedC0;
-                if(index ===0 ) {checkedC0='checked';}
+                if(index < 2 ) {checkedC0='checked';}
                 var checkedT;
-                if(index === timeRows.length - 1) {checkedT='checked';}
+                if(index > timeRows.length - 3) {checkedT='checked';}
 
                 $("<tr>" +
                         "<td class='pk-table-stat'>" + row.time + "</td>" +
@@ -159,32 +159,36 @@
                         "</tr>")
                         .appendTo("#pk-table-input");
                 $("<tr>" +
-                        "<td>" + row.time + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(row.conc,6) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(row.pkConc,6) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(row.inCp,4) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getLinDeltaAUC(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getAUCuMhrL(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getLogLinDeltaAUC(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getLogLinAUCuMhrL(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getCorrectPartAUC(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getCumulativeCorrectPartAUC(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(row.concxt,8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getLinDeltaAUMC(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getCumulativeLinAUMC(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getLogLinDeltaAUMC(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getCumulativeLogLinAUMC(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getCorrectDeltaAUMC(index),8) + "</td>" +
-                        "<td>" + LABKEY.Utils.roundNumber(getCorrectAUMC(index),8) + "</td>" +
+                        "<td class='pk-table-stat'>" + row.time + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(row.conc) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(row.pkConc) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(row.inCp) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLinDeltaAUC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getAUCuMhrL(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLogLinDeltaAUC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLogLinAUCuMhrL(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCorrectPartAUC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCumulativeCorrectPartAUC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(row.concxt) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLinDeltaAUMC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCumulativeLinAUMC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLogLinDeltaAUMC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCumulativeLogLinAUMC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCorrectDeltaAUMC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCorrectAUMC(index)) + "</td>" +
                         "</tr>")
                         .appendTo("#standard-body");
 
             })
-            $("<tr>" +"<td>inf</td><td ></td><td  id='infLinDeltaAUC'>" +
-                    "</td><td  id='infAUCuMhrL'></td><td ></td><td id='infLogLinAUCuMhrL'></td><td></td>" +
-                    "<td id='infCumulativeCorrectPartAUC'></td><td></td><td id='infLinDeltaAUMC'></td>" +
-                    "<td id='infCumulativeLinAUMC'></td><td></td><td id='infCumulativeLogLinAUMC'></td><td></td>" +
-                    "<td id='infCorrectAUMC'></td>" +
+            $("<tr>" +"<td>inf</td><td ></td>" +
+                    "<td class='pk-table-stat' id='infLinDeltaAUC'></td>" +
+                    "<td class='pk-table-stat' id='infAUCuMhrL'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infLogLinAUCuMhrL'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infCumulativeCorrectPartAUC'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infLinDeltaAUMC'></td>" +
+                    "<td class='pk-table-stat' id='infCumulativeLinAUMC'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infCumulativeLogLinAUMC'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infCorrectAUMC'></td>" +
                     "</tr>").appendTo("#standard-body");
             updateStats(checkBoxC0);
             updateStats(checkBoxTerminal);
@@ -194,7 +198,7 @@
             if(!value){
                 return '';
             }
-            return LABKEY.Utils.roundNumber(value,3).toFixed(3);
+            return LABKEY.Utils.roundNumber(value,3).toLocaleString(undefined, {minimumFractionDigits: 3,maximumFractionDigits: 3});
         }
 
         function getLinearRegression (y,x){
@@ -237,7 +241,7 @@
             lr = getLinearRegression(y, x);
             if(timeFrame === checkBoxC0)
             {
-                $('#IVCO').html(LABKEY.Utils.roundNumber(lr.intercept,3)); $('#IVCOEXP').html(LABKEY.Utils.roundNumber((Math.exp(lr.intercept)),4));
+                $('#IVCO').html(statRound(lr.intercept)); $('#IVCOEXP').html(statRound((Math.exp(lr.intercept))));
             }else{
                 $('#k').html(statRound(lr.slope));
                 $('#AUCExtrap     ').html(statRound(getAUCExtrap(lr)));
@@ -314,11 +318,19 @@
             $(tableId + " tr").each(function(index) {
                 $cells = $(this).find("td");
                 var row = [];
-                $cells.each(function() {
+                $cells.each(function(index) {
                     if(this.hasChildNodes() && this.firstChild.hasAttribute && this.firstChild.checked){
                         row.push('x')
                     }else {
-                        row.push(this.innerText);
+                        if(isNaN(this.innerText.replace(/,/g,''))) {
+                            row.push(this.innerText);
+                        }
+                        else {
+                            if(index===0)
+                                row.push(parseFloat(this.innerText));//Time has a different format
+                            else
+                                row.push({ value: parseFloat(this.innerText.replace(/,/g,'')), formatString: '#,##0.000'});
+                        }
                     }
                 });
                 myRows.push(row);
@@ -329,12 +341,12 @@
         this.exportExcel = function() {
 
             var sheet1Data = [
-                    ['Peptide: ', peptide],
-                    ['Skyline File: ', fileName],
+                    ['Peptide: ' + peptide],
+                    ['Skyline File: ' + fileName],
             ];
-            sheet1Data.push(['','']);
-            sheet1Data.push(['AUC Calculation','']);
-            sheet1Data.push(['','']);
+            sheet1Data.push(['']);
+            sheet1Data.push(['AUC Calculation']);
+            sheet1Data.push(['']);
 
             getTableRows("#pk-table-stats").forEach(function(row){
                 sheet1Data.push(row);

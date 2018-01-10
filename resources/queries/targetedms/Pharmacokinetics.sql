@@ -24,12 +24,12 @@ SELECT
 FROM
   (
     SELECT
-      ci.PeptideId,
-      ci.MoleculeId,
-      ifdefined(rep.Time) AS Time,
-      ci.calculatedConcentration,
-      pep.sequence,
-      rep.runid.filename
+      CAST(ci.PeptideId AS VARCHAR(250))        AS PeptideId,
+      CAST(ci.MoleculeId AS VARCHAR(250))       AS MoleculeId,
+      CAST(ifdefined(rep.Time) AS FLOAT)        AS Time,
+      CAST(ci.calculatedConcentration AS FLOAT) AS calculatedConcentration,
+      CAST(pep.sequence AS VARCHAR(250))        AS sequence,
+      CAST(rep.runid.filename AS VARCHAR(250))  AS FileName
     FROM
 
       generalmoleculechrominfo ci
