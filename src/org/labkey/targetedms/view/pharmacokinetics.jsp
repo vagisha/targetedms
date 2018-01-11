@@ -8,7 +8,7 @@
     @Override
     public void addClientDependencies(ClientDependencies dependencies)
     {
-        dependencies.add("targetedms/css/Pharmacokinetics.css");
+        dependencies.add("targetedms/css/FiguresOfMerit.css");
         dependencies.add("internal/jQuery");
         dependencies.add("vis/vis");
     }
@@ -33,8 +33,8 @@
         text-align: right;
     }
 </style>
-<div class="container-fluid targetedms-pk">
-    <div id="targetedms-pk-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
+<div class="container-fluid targetedms-fom">
+    <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
         <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
     </div>
     <h3 id="pk-title1"></h3>
@@ -127,7 +127,6 @@
             // })
             //
             $.each(data.rows, function(index, timeRow){
-                console.log(timeRow);
                 peptide = timeRow.Peptide;
                 fileName = timeRow.FileName;
                 const item = {
@@ -145,7 +144,6 @@
             $('#pk-title2').html("Skyline File: " + fileName);
             //todo set default C0 and Terminal value(s)
             $.each(timeRows,function (index, row) {
-                console.log(row);
                 var checkedC0;
                 if(index < 2 ) {checkedC0='checked';}
                 var checkedT;

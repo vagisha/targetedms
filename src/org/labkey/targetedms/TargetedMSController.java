@@ -2804,27 +2804,37 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowPKAction extends SimpleViewAction<PKForm>
+    public class ShowPKAction extends SimpleViewAction
     {
+        protected TargetedMSRun _run;  // save for use in appendNavTrail
+        protected Peptide _molecule;
+
 
         @Override
-        public ModelAndView getView(PKForm form, BindException errors) throws Exception
+        public ModelAndView getView(Object o,BindException errors) throws Exception
         {
-            JspView<PKForm> pharmacokineticsView = new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp", form);
+            _run = validateRun(Integer.parseInt(getViewContext().getRequest().getParameter("RunId")));
+            _molecule = PeptideManager.getPeptide(getContainer(), Integer.parseInt(getViewContext().getRequest().getParameter("GeneralMoleculeId")));
+
+            JspView pharmacokineticsView = new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp");
             pharmacokineticsView.setTitle("Pharmacokinetics");
 
             return pharmacokineticsView;
         }
 
+
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return null;
+            if (null != _run)
+            {
+                root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+                ActionURL showCalibrationCurvesURL = getShowCalibrationCurvesURL(getContainer(), _run.getId());
+                root.addChild(_run.getDescription(), showCalibrationCurvesURL);
+                root.addChild(_molecule.getTextId());
+            }
+            return root;
         }
-    }
-
-    public static class PKForm extends ViewForm{
-
     }
 
     public abstract class AbstractShowRunDetailsAction <VIEWTYPE extends QueryView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
