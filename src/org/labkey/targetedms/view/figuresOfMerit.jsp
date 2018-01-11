@@ -24,12 +24,12 @@
     </div>
     <h3 id="fom-title1"></h3>
     <h4 id="fom-title2"></h4>
-    <h4 id="fom-title3"></h4>
+    <h4 id="fom-title3"></h4><div id="fom-title3-value" class="collapse"></div>
     <br>
     <div class="container-fluid targetedms-fom">
         <div class="row">
             <labkey:panel title="Concentrations in Standards">
-                <table id="fom-table-standard" class="table table-striped table-responsive fom-table">
+                <table id="fom-table-standard" class="table table-responsive fom-table">
                     <thead id="standard-header"/>
                     <tbody id="standard-body"/>
                 </table>
@@ -38,7 +38,7 @@
                 <div id="uloq-stat"></div>
             </labkey:panel>
             <labkey:panel title="Concentrations in Quality Control">
-                <table id="fom-table-qc" class="table table-striped table-responsive fom-table">
+                <table id="fom-table-qc" class="table table-responsive fom-table">
                     <thead id="qc-header"/>
                     <tbody id="qc-body"/>
                 </table>
@@ -63,6 +63,7 @@
         this.biasLimit = 25;  // percent
         this.xlsExport = [];
         this.title = "Molecule ID: " + this.moleculeId;
+        this.sampleListCollapsed = true;
 
         if (this.peptideName !== "null") {
             this.title = "Peptide: " + this.peptideName;
@@ -84,10 +85,48 @@
             });
         };
 
+        this.toggleSampleList = function () {
+            if (this.sampleListCollapsed) {
+                expandSampleList();
+                this.sampleListCollapsed = false;
+            }
+            else {
+                collapseSampleList();
+                this.sampleListCollapsed = true;
+
+            }
+        };
+
+        var collapseSampleList = function () {
+            $('#fom-title3-icon').attr("class", "fa fa-caret-down");
+            $('#fom-title3-value').collapse("hide");
+        };
+
+        var expandSampleList = function () {
+            $('#fom-title3-icon').attr("class", "fa fa-caret-up");
+            $('#fom-title3-value').collapse("show");
+        };
+
+        var getSampleFilesHtml = function (samples) {
+            var html = "<ul>";
+            html += samples.reduce(function(list, file) { return list + "<li>" + file + "</li>"; }, "");
+            html += "</ul>";
+
+            return html;
+        };
+
+        var getSampleListIcon = function () {
+            return '<i id="fom-title3-icon" onClick="toggleSampleList();" class="fa fa-caret-down" ></i>';
+        }
+
         var displayHeader = function() {
             $('#fom-title1').html(this.title);
             $('#fom-title2').html("Skyline File: " + this.fileName);
-            $('#fom-title3').html("Sample(s): " + this.sampleFiles);
+
+            var samples = this.sampleFiles.split(", ");
+            $('#fom-title3').html(samples.length + " Sample" + (samples.length!=1 ? "s " : " ") + getSampleListIcon());
+            $('#fom-title3-value').html(getSampleFilesHtml(samples));
+            collapseSampleList();
 
             // Add title to export
             if (this.xlsExport.length < 1) {
@@ -116,14 +155,24 @@
             }
             else {
                 colHdrs.push("");
-                hdr += '<tr><td>Concentration</td>';
+                hdr += '<tr><td>Expected Concentration</td>';
                 var units = '';
 
                 if (this.Units)
                     units = ' (' + this.Units + ')';
 
+                var css, shade = true;
                 this.hdrLabels.forEach(function (label) {
-                    hdr += '<td class=\'fom-number\'>' + label + units + '</td>' + '<td class=\'fom-number\'>Bias (%)</td>';
+                    if (shade) {
+                        css = 'fom-number shaded';
+                        shade = false;
+                    }
+                    else {
+                        css = 'fom-number';
+                        shade = true;
+                    }
+
+                    hdr += '<td class=\'' + css + ' left\'>' + label + units + '</td>' + '<td class=\'' + css + ' right\'>Bias (%)</td>';
                     colHdrs.push(label + units);
                     colHdrs.push("Bias (%)");
                 }, this);
@@ -146,7 +195,7 @@
 
             var stats = ["n", "Mean", "StdDev", "CV", "Bias"];
             var units = "";
-            var html = "", exportRow, summaryValue;
+            var exportRow, summaryValue, html = "";
 
             stats.forEach(function(stat) {
                 if (stat === "CV" || stat === "Bias") {
@@ -157,12 +206,20 @@
                 }
                 html += '<tr><td class="fom-label">' + stat + units + '</td>';
                 exportRow = [stat];
-                var data;
+                var data, css, shade = true;
                 this.hdrLabels.forEach(function(col) {
+                    if (shade) {
+                        css = 'fom-number shaded';
+                        shade = false;
+                    }
+                    else {
+                        css = 'fom-number';
+                        shade = true;
+                    }
 
                     if (stat === "n") {
                         data = this.rawData[col];
-                        html += '<td class=\'fom-number\'>' + (data.length ? data.length : "") + '</td><td></td>';
+                        html += '<td class=\'' + css + ' left\'>' + (data.length ? data.length : "") + '</td><td class=\'' + css + ' right\'></td>';
                         exportRow.push(data.length ? data.length : "");
                         exportRow.push("");
                     }
@@ -171,7 +228,7 @@
                         if (summaryValue === "") {
                             summaryValue = "NA";
                         }
-                        html += '<td class=\'fom-number\'>' + summaryValue + '</td><td></td>';
+                        html += '<td class=\'' + css + ' left\'>' + summaryValue + '</td><td class=\''+ css + ' right\'> </td>';
 
                         if (summaryValue === "NA") {
                             exportRow.push(summaryValue);
@@ -193,23 +250,39 @@
             var index = 0;
             var found;
             var html = "", exportRow;
+            var first = true;
             do {
                 found = false;
-                html += "<tr><td></td>";
+
+                if (first) {
+                    html += "<tr><td class='fom-label'>Calculated Concentrations</td>";
+                    first = false;
+                }
+                else {
+                    html += "<tr><td></td>";
+                }
 
                 exportRow = [""];
 
-                var data;
+                var data, css, shade = true;
                 this.hdrLabels.forEach(function (label) {
+                    if (shade) {
+                        css = 'fom-number shaded';
+                        shade = false;
+                    }
+                    else {
+                        css = 'fom-number';
+                        shade = true;
+                    }
                     data = this.rawData[label][index];
                     if (data) {
                         found = true;
-                        html += "<td class='fom-number'>" + data.value + "</td><td class='fom-number'>" + data.bias + "</td>";
+                        html += '<td class=\'' + css + ' left\'>' + data.value + '</td><td class=\'' + css + ' right\'>' + data.bias + '</td>';
                         exportRow.push(Number(data.value));
                         exportRow.push(Number(data.bias));
                     }
                     else {
-                        html += "<td></td><td></td>";
+                        html += '<td class=\'' + css + ' left\'></td><td class=\'' + css + ' right\'></td>';
                         exportRow.push("");
                         exportRow.push("");
                     }

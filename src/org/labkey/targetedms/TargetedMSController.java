@@ -146,6 +146,7 @@ import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.model.Journal;
 import org.labkey.targetedms.model.JournalExperiment;
 import org.labkey.targetedms.model.QCMetricConfiguration;
+import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.Molecule;
 import org.labkey.targetedms.parser.MoleculePrecursor;
@@ -6222,11 +6223,18 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class ShowFiguresOfMeritAction extends SimpleViewAction<FomForm>
     {
+        private TargetedMSRun _run;
+        private GeneralMolecule _generalMolecule;
+
         @Override
         public void validate(FomForm form, BindException errors)
         {
             if (form.getRunId() == null || form.getGeneralMoleculeId() == null)
                 throw new NotFoundException("Missing one of the required parameters, RunId or GeneralMoleculeId.");
+
+            _run = TargetedMSManager.getRun(form.getRunId());
+            if (_run == null || !_run.getContainer().equals(getContainer()))
+                throw new NotFoundException("Could not find RunId " + form.getRunId());
         }
 
         @Override
@@ -6253,6 +6261,14 @@ public class TargetedMSController extends SpringActionController
             JspView<FomForm> figuresOfMeritView = new JspView<>("/org/labkey/targetedms/view/figuresOfMerit.jsp", form);
             figuresOfMeritView.setTitle("Figures of Merit");
 
+            if (form.getPeptideName() != null)
+            {
+                _generalMolecule = PeptideManager.getPeptide(getContainer(), form.getGeneralMoleculeId());
+            }
+            else
+            {
+                _generalMolecule = MoleculeManager.getMolecule(getContainer(), form.getGeneralMoleculeId());
+            }
 
             return figuresOfMeritView;
         }
@@ -6260,7 +6276,19 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return null;
+            if (null != _run)
+            {
+                root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+                root.addChild(_run.getDescription(), getShowCalibrationCurvesURL(getContainer(), _run.getId()));
+
+                if (_generalMolecule != null)
+                {
+                    root.addChild(_generalMolecule.getTextId());
+                }
+
+            }
+            return root;
+
         }
     }
 
