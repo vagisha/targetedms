@@ -145,9 +145,9 @@
             //todo set default C0 and Terminal value(s)
             $.each(timeRows,function (index, row) {
                 var checkedC0;
-                if(index < 2 ) {checkedC0='checked';}
+                if(index < 3 ) {checkedC0='checked';}
                 var checkedT;
-                if(index > timeRows.length - 3) {checkedT='checked';}
+                if(index > timeRows.length - 4) {checkedT='checked';}
 
                 $("<tr>" +
                         "<td class='pk-table-stat'>" + row.time + "</td>" +
