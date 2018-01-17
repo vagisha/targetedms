@@ -2807,15 +2807,18 @@ public class TargetedMSController extends SpringActionController
     public class ShowPKAction extends SimpleViewAction
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
-        protected Peptide _molecule;
+        protected GeneralMolecule _molecule;
 
 
         @Override
         public ModelAndView getView(Object o,BindException errors) throws Exception
         {
             _run = validateRun(Integer.parseInt(getViewContext().getRequest().getParameter("RunId")));
-            _molecule = PeptideManager.getPeptide(getContainer(), Integer.parseInt(getViewContext().getRequest().getParameter("GeneralMoleculeId")));
-
+            int generalMoleculeId = Integer.parseInt(getViewContext().getRequest().getParameter("GeneralMoleculeId"));
+            _molecule = PeptideManager.getPeptide(getContainer(), generalMoleculeId);
+            if (_molecule == null){
+                _molecule = MoleculeManager.getMolecule(getContainer(), generalMoleculeId);
+            }
             JspView pharmacokineticsView = new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp");
             pharmacokineticsView.setTitle("Pharmacokinetics");
 

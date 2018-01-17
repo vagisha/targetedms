@@ -2,6 +2,7 @@
     <columns>
         <column name="MoleculeId" />
         <column name="Peptide" />
+        <column name="IonName" />
         <column name="Time" />
         <column name="Concentration" />
         <column name="FileName" />

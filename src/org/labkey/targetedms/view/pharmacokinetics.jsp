@@ -82,10 +82,11 @@
 
         this.moleculeId = params['GeneralMoleculeId'];
         var peptide='';
+        var ion='';
         var fileName='';
         var timeRows=[];
 
-        //These are the values from the sample spreadsheet, sheet IVPO, refenced in
+        //These are the values from the sample spreadsheet, sheet IVPO, referenced in
         //Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
         var timeRowsMock=[
             {time: 0 , conc :  0.006689              }
@@ -126,24 +127,41 @@
             //     )
             // })
             //
-            $.each(data.rows, function(index, timeRow){
+            if(!data.rows || data.rows.length === 0){
+                $('#pk-title1').html("No data to show");
+                return;
+            }
+
+            data.rows.forEach(function(timeRow) {
+                if (timeRow.Time === undefined || timeRow.Time == null) {
+                    $('#pk-title1').html("The replicate annotation named Time is missing or has no value.");
+                    return false;
+                }
+            });
+
+            data.rows.forEach(function(timeRow){
                 peptide = timeRow.Peptide;
+                ion = timeRow.ionName;
                 fileName = timeRow.FileName;
                 const item = {
                             time: timeRow.Time,
                             conc: timeRow.Concentration
-                        }
+                        };
                     item.pkConc = item.conc;//todo add logic base on "IV" for first conc?
                     item.inCp = Math.log(item.pkConc);
                     item.concxt = item.time * item.pkConc;
                 timeRows.push(
                         item
                 )
-            })
-            $('#pk-title1').html("Peptide: " + peptide);
+            });
+            if(peptide !== '' && peptide != null) {
+                $('#pk-title1').html("Peptide: " + peptide);
+            }else{
+                $('#pk-title1').html("Molecule: " + ion);
+            }
             $('#pk-title2').html("Skyline File: " + fileName);
             //todo set default C0 and Terminal value(s)
-            $.each(timeRows,function (index, row) {
+            timeRows.forEach(function (row, index) {
                 var checkedC0;
                 if(index < 3 ) {checkedC0='checked';}
                 var checkedT;
@@ -177,7 +195,7 @@
                         "</tr>")
                         .appendTo("#standard-body");
 
-            })
+            });
             $("<tr>" +"<td>inf</td><td ></td>" +
                     "<td class='pk-table-stat' id='infLinDeltaAUC'></td>" +
                     "<td class='pk-table-stat' id='infAUCuMhrL'></td><td></td>" +
@@ -190,6 +208,7 @@
                     "</tr>").appendTo("#standard-body");
             updateStats(checkBoxC0);
             updateStats(checkBoxTerminal);
+            return true;
         }
 
         function statRound(value){
@@ -229,13 +248,13 @@
         const checkBoxTerminal = ".terminal";
         var lr;
         function updateStats(timeFrame) {
-            x = [];
-            y = [];
+            var x = [];
+            var y = [];
             $(timeFrame + ":checked").each(function (index, box) {
                 var row = timeRows[box.getAttribute('rowIndex')];
                 x.push(row.time);
                 y.push(row.inCp);
-            })
+            });
             lr = getLinearRegression(y, x);
             if(timeFrame === checkBoxC0)
             {
@@ -283,7 +302,7 @@
 
                 this.hdrLabels.forEach(function (label) {
                     $("<td>" + label + "</td>").appendTo("#standard-header");
-                })
+                });
 
             LABKEY.Query.selectRows( {
                 schemaName: 'targetedms',
@@ -292,8 +311,9 @@
                 sort : 'Time',
                 scope: this,
                 success: function (data) {
-                    parseRawData(data);
-                    showCharts();
+                    if(parseRawData(data)){
+                        showCharts();
+                    };
                 },
                 failure: function (response) {
                     LABKEY.Utils.alert(response);
@@ -307,16 +327,16 @@
             var headers = [];
             this.hdrLabels.forEach(function (label) {
                 headers.push(label);
-            })
+            });
             return headers;
         }
 
         function getTableRows(tableId){
             var myRows = [];
-            $(tableId + " tr").each(function(index) {
-                $cells = $(this).find("td");
+            $(tableId + " tr").each(function() {
+                var cells = $(this).find("td");
                 var row = [];
-                $cells.each(function(index) {
+                cells.each(function(index) {
                     if(this.hasChildNodes() && this.firstChild.hasAttribute && this.firstChild.checked){
                         row.push('x')
                     }else {
@@ -340,7 +360,7 @@
 
             var sheet1Data = [
                     ['Peptide: ' + peptide],
-                    ['Skyline File: ' + fileName],
+                    ['Skyline File: ' + fileName]
             ];
             sheet1Data.push(['']);
             sheet1Data.push(['AUC Calculation']);
@@ -348,17 +368,17 @@
 
             getTableRows("#pk-table-stats").forEach(function(row){
                 sheet1Data.push(row);
-            })
+            });
             sheet1Data.push(['','']);
             getTableRows("#pk-table-input").forEach(function(row){
                 sheet1Data.push(row);
-            })
+            });
 
             var sheet2Data = [getTableHeaders()];
 
              getTableRows("#standard-body").forEach(function(row){
                  sheet2Data.push(row);
-             })
+             });
 
             LABKEY.Utils.convertToExcel({
                 fileName : fileName.split(".")[0] + '_' + peptide + '.xlsx',
@@ -404,7 +424,7 @@
                     scaleType: 'continuous'
                 },
                 y: {
-                    scaleType: 'continuous',
+                    scaleType: 'continuous'
                 }
             }
         };
@@ -423,7 +443,7 @@
         }
 
         //The comment at the top of each function refers to the related Excel formula from the sample spreadsheet
-        //refenced in Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
+        //referenced in Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
         function getLinDeltaAUC(index){
             //    (C4+C5)*(A5-A4)/2
             if(index===0){
@@ -594,7 +614,7 @@
             return getInfCorrectAUMC(lr)/getInfCumulativeCorrectPartAUC(lr);
         }
 
-        function getMrt_Zero_T(lr){
+        function getMrt_Zero_T(){
             // =U21/N21
             return getCorrectAUMC(timeRows.length -1)/getCumulativeCorrectPartAUC(timeRows.length -1);
         }
@@ -605,7 +625,7 @@
             return (dose/getInfCumulativeCorrectPartAUC(lr))/60;
         }
 
-        function getCL_Zero_T(lr){
+        function getCL_Zero_T(){
             // =B26/N21*1/60
             //todo need Dose (B26). User entered? In Skyline file?
             return (dose/getCumulativeCorrectPartAUC(timeRows.length -1))/60;

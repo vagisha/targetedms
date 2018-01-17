@@ -20,22 +20,24 @@ SELECT
   AVG(sub.calculatedConcentration)          AS Concentration,
   group_concat(sub.calculatedConcentration) AS Concentrations,
   MAX(sub.Sequence)                         AS Peptide,
-  MAX(sub.Filename)                         AS FileName
+  MAX(sub.Filename)                         AS FileName,
+  MAX(sub.ionName)                          AS ionName
 FROM
   (
     SELECT
-      CAST(ci.PeptideId AS VARCHAR(250))        AS PeptideId,
-      CAST(ci.MoleculeId AS VARCHAR(250))       AS MoleculeId,
-      CAST(ifdefined(rep.Time) AS FLOAT)        AS Time,
-      CAST(ci.calculatedConcentration AS FLOAT) AS calculatedConcentration,
-      CAST(pep.sequence AS VARCHAR(250))        AS sequence,
-      CAST(rep.runid.filename AS VARCHAR(250))  AS FileName
+      CAST(ci.PeptideId AS VARCHAR(250))            AS PeptideId,
+      CAST(ci.MoleculeId AS VARCHAR(250))           AS MoleculeId,
+      CAST(ifdefined(rep.Time) AS FLOAT)            AS Time,
+      CAST(ci.calculatedConcentration AS FLOAT)     AS calculatedConcentration,
+      CAST(pep.sequence AS VARCHAR(250))            AS sequence,
+      CAST(rep.runid.filename AS VARCHAR(250))      AS FileName,
+      CAST(ci.MoleculeId.Molecule AS VARCHAR(250))  AS IonName
     FROM
 
       generalmoleculechrominfo ci
       JOIN samplefile sf ON sf.id = ci.samplefileid
       JOIN replicate rep ON rep.id = sf.replicateid
-      JOIN peptide pep ON pep.id = ci.peptideid
+      LEFT JOIN peptide pep ON pep.id = ci.peptideid
     WHERE (ci.SampleFileId.ReplicateId.SampleType IS NULL OR lower(ci.SampleFileId.ReplicateId.SampleType) = 'unknown')
-          AND ifdefined(rep.Time) IS NOT NULL) sub
+  ) sub
 GROUP BY sub.PeptideId, sub.MoleculeId, sub.Time
