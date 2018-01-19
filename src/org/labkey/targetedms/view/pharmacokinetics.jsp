@@ -49,6 +49,7 @@
     </table>
     <table id="pk-table-stats" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
         <thead><tr><td colspan="3">Statistic</td></tr></thead>
+        <tr><td class="pk-table-label">Dose            </td><td id='Dose'              class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">IV CO           </td><td id='IVCO'              class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">k':             </td><td id="k"                 class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">%AUC Extrap:    </td><td id="AUCExtrap"         class="pk-table-stat"></td><td></td></tr>
@@ -66,6 +67,7 @@
     <table id="pk-table-standard" class="table table-striped table-responsive pk-table">
         <thead id="standard-header" />
         <tbody id="standard-body" />
+        <tfoot id="standard-footer"/>
     </table>
     <hr>
     <table id="pk-table-qc" class="table table-striped table-responsive pk-table">
@@ -89,7 +91,7 @@
         //These are the values from the sample spreadsheet, sheet IVPO, referenced in
         //Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
         var timeRowsMock=[
-            {time: 0 , conc :  0.006689              }
+            {time: 0 , conc :  null              }
             ,{time: .133333333 , conc :  0.006184700 }
             ,{time: 0.25       , conc :  0.006025200 }
             ,{time: 0.5        , conc :  0.004984600 }
@@ -108,8 +110,7 @@
             ,{time: 7          , conc :  0.000124520 }
             ,{time: 8          , conc :  0.000082918 }];
 
-        var dose = .53;
-
+        var dose = null;
 
 
         function parseRawData(data) {
@@ -126,18 +127,37 @@
             //             item
             //     )
             // })
-            //
+            // dose = .53;
+
             if(!data.rows || data.rows.length === 0){
                 $('#pk-title1').html("No data to show");
                 return;
             }
 
+            dose = null;
+            var message;
             data.rows.forEach(function(timeRow) {
                 if (timeRow.Time === undefined || timeRow.Time == null) {
-                    $('#pk-title1').html("The replicate annotation named Time is missing or has no value.");
-                    return false;
+                    message = "The replicate annotation named Time is missing or has no value.";
+                }
+                if(dose == null){
+                    dose = timeRow.Dose;
                 }
             });
+            if(dose == null){
+                var doseMessage = "The replicate annotation named Dose is missing, has no value, or has different values within a subgroup.";
+                if(!message){
+                    message = doseMessage;
+                }
+                else{
+                    message += doseMessage;
+                }
+            }
+
+            if(message){
+                $('#pk-title1').html(message);
+                return false;
+            }
 
             data.rows.forEach(function(timeRow){
                 peptide = timeRow.Peptide;
@@ -154,13 +174,17 @@
                         item
                 )
             });
+
             if(peptide !== '' && peptide != null) {
                 $('#pk-title1').html("Peptide: " + peptide);
             }else{
                 $('#pk-title1').html("Molecule: " + ion);
             }
+
             $('#pk-title2').html("Skyline File: " + fileName);
-            //todo set default C0 and Terminal value(s)
+
+            $('#Dose').html(dose);
+
             timeRows.forEach(function (row, index) {
                 var checkedC0;
                 if(index < 3 ) {checkedC0='checked';}
@@ -174,6 +198,29 @@
                         "<td class='pk-table-stat'>" + statRound(row.conc) + "</td>" +
                         "</tr>")
                         .appendTo("#pk-table-input");
+            });
+
+            populateDerivedDataTable();
+
+            $("<tr>" +"<td>inf</td><td ></td><td ></td><td ></td>" +
+                    "<td class='pk-table-stat' id='infLinDeltaAUC'></td>" +
+                    "<td class='pk-table-stat' id='infAUCuMhrL'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infLogLinAUCuMhrL'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infCumulativeCorrectPartAUC'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infLinDeltaAUMC'></td>" +
+                    "<td class='pk-table-stat' id='infCumulativeLinAUMC'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infCumulativeLogLinAUMC'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infCorrectAUMC'></td>" +
+                    "</tr>").appendTo("#standard-footer");
+
+            updateStats(checkBoxC0);
+            updateStats(checkBoxTerminal);
+            return true;
+        }
+
+        function populateDerivedDataTable() {
+            $("#standard-body").empty();
+            timeRows.forEach(function (row, index) {
                 $("<tr>" +
                         "<td class='pk-table-stat'>" + row.time + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(row.conc) + "</td>" +
@@ -194,21 +241,7 @@
                         "<td class='pk-table-stat'>" + statRound(getCorrectAUMC(index)) + "</td>" +
                         "</tr>")
                         .appendTo("#standard-body");
-
             });
-            $("<tr>" +"<td>inf</td><td ></td>" +
-                    "<td class='pk-table-stat' id='infLinDeltaAUC'></td>" +
-                    "<td class='pk-table-stat' id='infAUCuMhrL'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infLogLinAUCuMhrL'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infCumulativeCorrectPartAUC'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infLinDeltaAUMC'></td>" +
-                    "<td class='pk-table-stat' id='infCumulativeLinAUMC'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infCumulativeLogLinAUMC'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infCorrectAUMC'></td>" +
-                    "</tr>").appendTo("#standard-body");
-            updateStats(checkBoxC0);
-            updateStats(checkBoxTerminal);
-            return true;
         }
 
         function statRound(value){
@@ -258,7 +291,15 @@
             lr = getLinearRegression(y, x);
             if(timeFrame === checkBoxC0)
             {
-                $('#IVCO').html(statRound(lr.intercept)); $('#IVCOEXP').html(statRound((Math.exp(lr.intercept))));
+                var recalc = timeRows[0].pkConc == null;
+                $('#IVCO').html(statRound(lr.intercept));
+                var ivcoExp = statRound((Math.exp(lr.intercept)));
+                $('#IVCOEXP').html(ivcoExp);
+                timeRows[0].pkConc = Math.exp(lr.intercept);
+                timeRows[0].inCp =  Math.log(Math.exp(lr.intercept));
+                populateDerivedDataTable();
+                if(recalc)
+                    updateStats(checkBoxC0);
             }else{
                 $('#k').html(statRound(lr.slope));
                 $('#AUCExtrap     ').html(statRound(getAUCExtrap(lr)));
