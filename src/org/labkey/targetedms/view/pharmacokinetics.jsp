@@ -1,5 +1,3 @@
-
-
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
@@ -49,8 +47,8 @@
     </table>
     <table id="pk-table-stats" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
         <thead><tr><td colspan="3">Statistic</td></tr></thead>
-        <tr><td class="pk-table-label">Dose            </td><td id='Dose'              class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">IV CO           </td><td id='IVCO'              class="pk-table-stat"></td><td></td></tr>
+        <tr><td class="pk-table-label">Dose            </td><td id="Dose"              class="pk-table-stat"></td><td id="DoseUnits"></td></tr>
+        <tr><td class="pk-table-label">IV CO           </td><td id="IVCO"              class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">k':             </td><td id="k"                 class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">%AUC Extrap:    </td><td id="AUCExtrap"         class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">MRT (0-inf):    </td><td id="Mrt_Zero_Inf"      class="pk-table-stat"></td><td>hr</td></tr>
@@ -63,7 +61,8 @@
         <tr><td class="pk-table-label">Effective T1/2: </td><td id="Effective_T1_2"    class="pk-table-stat"></td><td>hr</td></tr>
     </table>
 </labkey:panel>
-    <div id="chart"></div><div id="chartLog"></div>
+<labkey:panel >    <div id="chart"></div></labkey:panel>
+    <labkey:panel >    <div id="chartLog"></div></labkey:panel>
     <table id="pk-table-standard" class="table table-striped table-responsive pk-table">
         <thead id="standard-header" />
         <tbody id="standard-body" />
@@ -87,54 +86,41 @@
         var ion='';
         var fileName='';
         var timeRows=[];
+        var dose = null;
+        var doseUnits = null;
+
 
         //These are the values from the sample spreadsheet, sheet IVPO, referenced in
         //Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
+        var timeRowZero = {Time: 0 ,          Concentration :  null        };
         var timeRowsMock=[
-            {time: 0 , conc :  null              }
-            ,{time: .133333333 , conc :  0.006184700 }
-            ,{time: 0.25       , conc :  0.006025200 }
-            ,{time: 0.5        , conc :  0.004984600 }
-            ,{time: 0.75       , conc :  0.003525100 }
-            ,{time: 1          , conc :  0.004663500 }
-            ,{time: 1.5        , conc :  0.002800500 }
-            ,{time: 2          , conc :  0.001523200 }
-            ,{time: 2.5        , conc :  0.000978510 }
-            ,{time: 3          , conc :  0.000924980 }
-            ,{time: 3.5        , conc :  0.000632570 }
-            ,{time: 4          , conc :  0.000447090 }
-            ,{time: 4.5        , conc :  0.000438690 }
-            ,{time: 5          , conc :  0.000209690 }
-            ,{time: 5.5        , conc :  0.000260050 }
-            ,{time: 6          , conc :  0.000158830 }
-            ,{time: 7          , conc :  0.000124520 }
-            ,{time: 8          , conc :  0.000082918 }];
-
-        var dose = null;
-
+             {Time: .133333333 , Concentration :  0.006184700 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 0.25       , Concentration :  0.006025200 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 0.5        , Concentration :  0.004984600 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 0.75       , Concentration :  0.003525100 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 1          , Concentration :  0.004663500 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 1.5        , Concentration :  0.002800500 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 2          , Concentration :  0.001523200 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 2.5        , Concentration :  0.000978510 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 3          , Concentration :  0.000924980 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 3.5        , Concentration :  0.000632570 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 4          , Concentration :  0.000447090 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 4.5        , Concentration :  0.000438690 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 5          , Concentration :  0.000209690 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 5.5        , Concentration :  0.000260050 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 6          , Concentration :  0.000158830 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 7          , Concentration :  0.000124520 , Dose: 0.53, DoseUnits: 'mg/ml'}
+            ,{Time: 8          , Concentration :  0.000082918 , Dose: 0.53, DoseUnits: 'mg/ml'}];
 
         function parseRawData(data) {
-            // Used for development to load values from sample spreadsheet
-            // $.each(timeRowsMock, function(index, timeRow){
-            //     const item = {
-            //                 time: timeRow.time,
-            //                 conc: timeRow.conc
-            //             }
-            //         item.pkConc = item.conc;//todo add logic base on "IV" for first conc?
-            //         item.inCp = Math.log(item.pkConc);
-            //         item.concxt = item.time * item.pkConc;
-            //     timeRows.push(
-            //             item
-            //     )
-            // })
-            // dose = .53;
+            // data.rows = timeRowsMock;
+
 
             if(!data.rows || data.rows.length === 0){
                 $('#pk-title1').html("No data to show");
                 return;
             }
 
-            dose = null;
             var message;
             data.rows.forEach(function(timeRow) {
                 if (timeRow.Time === undefined || timeRow.Time == null) {
@@ -143,9 +129,23 @@
                 if(dose == null){
                     dose = timeRow.Dose;
                 }
+                if(doseUnits == null){
+                    doseUnits = timeRow.DoseUnits;
+                }
             });
+
             if(dose == null){
                 var doseMessage = "The replicate annotation named Dose is missing, has no value, or has different values within a subgroup.";
+                if(!message){
+                    message = doseMessage;
+                }
+                else{
+                    message += doseMessage;
+                }
+            }
+
+            if(doseUnits == null){
+                var doseMessage = "The replicate annotation named DoseUnits is missing, has no value, or has different values within a subgroup.";
                 if(!message){
                     message = doseMessage;
                 }
@@ -159,6 +159,9 @@
                 return false;
             }
 
+            if(data.rows[0].Time !== 0){
+                data.rows.unshift(timeRowZero);
+            }
             data.rows.forEach(function(timeRow){
                 peptide = timeRow.Peptide;
                 ion = timeRow.ionName;
@@ -167,8 +170,10 @@
                             time: timeRow.Time,
                             conc: timeRow.Concentration
                         };
-                    item.pkConc = item.conc;//todo add logic base on "IV" for first conc?
-                    item.inCp = Math.log(item.pkConc);
+                    item.pkConc = item.conc;
+                    if(item.pkConc != null) {
+                        item.lnCp = Math.log(item.pkConc);
+                    }
                     item.concxt = item.time * item.pkConc;
                 timeRows.push(
                         item
@@ -184,6 +189,7 @@
             $('#pk-title2').html("Skyline File: " + fileName);
 
             $('#Dose').html(dose);
+            $('#DoseUnits').html(doseUnits);
 
             timeRows.forEach(function (row, index) {
                 var checkedC0;
@@ -200,7 +206,7 @@
                         .appendTo("#pk-table-input");
             });
 
-            populateDerivedDataTable();
+
 
             $("<tr>" +"<td>inf</td><td ></td><td ></td><td ></td>" +
                     "<td class='pk-table-stat' id='infLinDeltaAUC'></td>" +
@@ -214,6 +220,7 @@
                     "</tr>").appendTo("#standard-footer");
 
             updateStats(checkBoxC0);
+            populateDerivedDataTable();
             updateStats(checkBoxTerminal);
             return true;
         }
@@ -225,7 +232,7 @@
                         "<td class='pk-table-stat'>" + row.time + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(row.conc) + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(row.pkConc) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(row.inCp) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(row.lnCp) + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(getLinDeltaAUC(index)) + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(getAUCuMhrL(index)) + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(getLogLinDeltaAUC(index)) + "</td>" +
@@ -285,21 +292,21 @@
             var y = [];
             $(timeFrame + ":checked").each(function (index, box) {
                 var row = timeRows[box.getAttribute('rowIndex')];
-                x.push(row.time);
-                y.push(row.inCp);
+                if(row.time != 0) {
+                    x.push(row.time);
+                    y.push(row.lnCp);
+                }
             });
             lr = getLinearRegression(y, x);
+
+            timeRows[0].pkConc = Math.exp(lr.intercept);
+            timeRows[0].lnCp =  Math.log(Math.exp(lr.intercept));
+
             if(timeFrame === checkBoxC0)
             {
-                var recalc = timeRows[0].pkConc == null;
                 $('#IVCO').html(statRound(lr.intercept));
                 var ivcoExp = statRound((Math.exp(lr.intercept)));
                 $('#IVCOEXP').html(ivcoExp);
-                timeRows[0].pkConc = Math.exp(lr.intercept);
-                timeRows[0].inCp =  Math.log(Math.exp(lr.intercept));
-                populateDerivedDataTable();
-                if(recalc)
-                    updateStats(checkBoxC0);
             }else{
                 $('#k').html(statRound(lr.slope));
                 $('#AUCExtrap     ').html(statRound(getAUCExtrap(lr)));
@@ -322,6 +329,7 @@
                 $('#infCumulativeLogLinAUMC').html(statRound(getInfCumulativeLogLinAUMC(lr)));
                 $('#infCorrectAUMC').html(statRound(getInfCorrectAUMC(lr)));
             }
+            populateDerivedDataTable();
         }
 
         $(document).on("click",checkBoxC0,function () {
@@ -500,7 +508,7 @@
             }
             const timeRow = timeRows[index];
             const timeRowPrevious = timeRows[index-1];
-            return ((timeRow.time-timeRowPrevious.time)*(timeRowPrevious.pkConc - timeRow.pkConc))/(timeRowPrevious.inCp-timeRow.inCp)
+            return ((timeRow.time-timeRowPrevious.time)*(timeRowPrevious.pkConc - timeRow.pkConc))/(timeRowPrevious.lnCp-timeRow.lnCp)
         }
 
         function getAUCuMhrL(index){
