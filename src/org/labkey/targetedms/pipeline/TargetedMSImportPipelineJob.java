@@ -17,7 +17,7 @@
 package org.labkey.targetedms.pipeline;
 
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.files.FileContentService;
+import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
@@ -30,7 +30,6 @@ import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSRun;
 
-import java.io.File;
 import java.sql.SQLException;
 
 /**
@@ -43,7 +42,6 @@ public class TargetedMSImportPipelineJob extends PipelineJob
     private final ExpData _expData;
     private SkylineDocImporter.RunInfo _runInfo;
     private final TargetedMSRun.RepresentativeDataState _representative;
-    private final File _workingDirectory;
 
     public TargetedMSImportPipelineJob(ViewBackgroundInfo info, ExpData expData, SkylineDocImporter.RunInfo runInfo, PipeRoot root, TargetedMSRun.RepresentativeDataState representative) throws SQLException
     {
@@ -52,12 +50,12 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         _runInfo = runInfo;
         _representative = representative;
 
-        // TODO: logfile will be in local temp directory
-        String basename = FileUtil.getBaseName(_expData.getName(), 1);
-        _workingDirectory = _expData.hasFileScheme() ?
-                _expData.getFile().getParentFile() :
-                FileContentService.get().getFileRoot(getContainer(), FileContentService.ContentType.files);
-        setLogFile(FT_LOG.newFile(_workingDirectory, basename));
+        String basename = FileUtil.makeFileNameWithTimestamp(FileUtil.getBaseName(_expData.getName(), 1));
+        LocalDirectory localDirectory = _expData.hasFileScheme() ?
+            new LocalDirectory(_expData.getFile().getParentFile(), basename) :
+            new LocalDirectory(getContainer(), root, _expData.getDataFileUrl(), basename);
+        setLocalDirectory(localDirectory);
+        setLogFile(localDirectory.determineLogFile());
     }
 
     @Override
@@ -93,10 +91,5 @@ public class TargetedMSImportPipelineJob extends PipelineJob
     public TargetedMSRun.RepresentativeDataState getRepresentative()
     {
         return _representative;
-    }
-
-    public File getWorkingDirectory()
-    {
-        return _workingDirectory;
     }
 }

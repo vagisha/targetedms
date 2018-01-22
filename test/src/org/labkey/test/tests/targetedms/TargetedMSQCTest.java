@@ -563,7 +563,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // QC_2 should be deleted since all samples have been overwritten, log to remain
         goToModule("FileContent");
-        waitForText("QC_2.sky.log");
+        waitForElement(Locator.xpath("//div[contains(@id,'fileContent')]"));
         assertTextNotPresent("QC_2.sky.zip");
     }
 

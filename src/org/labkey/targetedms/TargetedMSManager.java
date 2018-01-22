@@ -520,7 +520,7 @@ public class TargetedMSManager
                 @Override
                 public File getRoot()
                 {
-                    if (!FileUtil.hasCloudScheme(path.toUri()))
+                    if (!FileUtil.hasCloudScheme(path))
                         return path.toFile().getParentFile();
 
                     throw new UnsupportedOperationException();

@@ -61,9 +61,9 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         // since importing one of these runs is really quick, delete and re-import runs
         // for each @Test so that we can assure the Created date ordering of the runs
         deleteExistingQCRuns();
-        importData(QC_1_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3));
-        importData(QC_2_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3));
-        importData(QC_3_FILE, (PIPELINE_JOB_COUNTER < 3 ? ++PIPELINE_JOB_COUNTER : 3));
+        importData(QC_1_FILE, ++PIPELINE_JOB_COUNTER);
+        importData(QC_2_FILE, ++PIPELINE_JOB_COUNTER);
+        importData(QC_3_FILE, ++PIPELINE_JOB_COUNTER);
         goToProjectHome();
     }
 

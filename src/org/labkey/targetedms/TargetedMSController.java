@@ -440,22 +440,37 @@ public class TargetedMSController extends SpringActionController
 
     public static void addRawFilesPipelineTab(Container c)
     {
-        File fileRoot = FileContentService.get().getFileRoot(c);
-        if (fileRoot != null)
+        FileContentService service = FileContentService.get();
+        if (null != service)
         {
-            File rawFileDir = new File(new File(fileRoot, FileContentService.FILES_LINK), FolderSetupAction.RAW_FILE_DIR);
-            if (!rawFileDir.exists())
+            Path fileRoot = service.getFileRootPath(c, FileContentService.ContentType.files);
+            if (fileRoot != null)
             {
-                rawFileDir.mkdirs();
+                Path rawFileDir = fileRoot.resolve(FolderSetupAction.RAW_FILE_DIR);
+                if (!Files.exists(rawFileDir))
+                {
+                    try
+                    {
+                        Files.createDirectories(rawFileDir);
+                    }
+                    catch (IOException e)
+                    {
+                        throw new RuntimeException(e);
+                    }
+                }
             }
-        }
 
-        List<Portal.WebPart> tab = new ArrayList<>();
-        Portal.WebPart webPart = Portal.getPortalPart(FilesWebPart.PART_NAME).createWebPart();
-        webPart.setProperty(FilesWebPart.FILE_ROOT_PROPERTY_NAME, "@files/" + FolderSetupAction.RAW_FILE_DIR + "/");
-        tab.add(webPart);
-        Portal.saveParts(c, FolderSetupAction.RAW_FILES_TAB, tab);
-        Portal.addProperty(c, FolderSetupAction.RAW_FILES_TAB, Portal.PROP_CUSTOMTAB);
+            List<Portal.WebPart> tab = new ArrayList<>();
+            Portal.WebPart webPart = Portal.getPortalPart(FilesWebPart.PART_NAME).createWebPart();
+
+            String fileRootString = (null == fileRoot || !FileUtil.hasCloudScheme(fileRoot)) ?
+                    FileContentService.FILES_LINK + "/" + FolderSetupAction.RAW_FILE_DIR + "/" :
+                    FileContentService.CLOUD_LINK + "/" + service.getCloudRootName(c) + "/" + FolderSetupAction.RAW_FILE_DIR + "/";
+            webPart.setProperty(FilesWebPart.FILE_ROOT_PROPERTY_NAME, fileRootString);
+            tab.add(webPart);
+            Portal.saveParts(c, FolderSetupAction.RAW_FILES_TAB, tab);
+            Portal.addProperty(c, FolderSetupAction.RAW_FILES_TAB, Portal.PROP_CUSTOMTAB);
+        }
     }
 
     // ------------------------------------------------------------------------

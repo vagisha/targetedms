@@ -59,7 +59,7 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
             XarContext context = new XarContext(job.getDescription(), job.getContainer(), job.getUser());
             SkylineDocImporter importer = new SkylineDocImporter(job.getUser(), job.getContainer(), context.getJobDescription(),
                                                                  job.getExpData(), job.getLogger(), context, job.getRepresentative(),
-                                                                 job.getWorkingDirectory(), job.getPipeRoot());
+                                                                 job.getLocalDirectory(), job.getPipeRoot());
             TargetedMSRun run = importer.importRun(job.getRunInfo());
 
             ExpRun expRun = TargetedMSManager.ensureWrapped(run, job.getUser(), job.getPipeRoot());

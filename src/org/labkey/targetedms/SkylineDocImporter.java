@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.apache.commons.lang3.StringUtils;
@@ -113,15 +114,14 @@ public class SkylineDocImporter
     protected final XarContext _context;
     private int blankLabelIndex;
 
-    private final File _workingDirectory;
+    private final LocalDirectory _localDirectory;
     private final PipeRoot _pipeRoot;
-    private File _tempFile = null;
 
     // protected Connection _conn;
     // private static final int BATCH_SIZE = 100;
 
     public SkylineDocImporter(User user, Container c, String description, ExpData expData, Logger log, XarContext context,
-                              TargetedMSRun.RepresentativeDataState representative, @Nullable File workingDirectory, @Nullable PipeRoot pipeRoot)
+                              TargetedMSRun.RepresentativeDataState representative, @Nullable LocalDirectory localDirectory, @Nullable PipeRoot pipeRoot)
     {
         _context = context;
         _user = user;
@@ -129,7 +129,7 @@ public class SkylineDocImporter
         _representative = representative;
 
         _expData = expData;
-        _workingDirectory = workingDirectory;
+        _localDirectory = localDirectory;
         _pipeRoot = pipeRoot;
 
         if (null != description)
@@ -1879,12 +1879,6 @@ public class SkylineDocImporter
 
     private void close()
     {
-        if (null != _tempFile)
-        {   // TODO still need to delete unzipped archive files
-            if (!_tempFile.delete())
-                _log.warn("Failed to delete temp file: " + _tempFile.toString());
-        }
-
         // TODO: close connection and prepared statements used for bulk inserts
 //        if (null != _conn)
 //            TargetedMSManager.getSchema().getScope().releaseConnection(_conn);
@@ -1936,27 +1930,9 @@ public class SkylineDocImporter
         if (_expData.hasFileScheme())
             return _expData.getFile();
 
-        if (null == _pipeRoot || null == _workingDirectory)
+        if (null == _pipeRoot || null == _localDirectory)
             return null;
 
-        // File elsewhere (on S3); make a copy a return File object for copy
-        Path path = _pipeRoot.resolveToNioPathFromUrl(_expData.getDataFileUrl());
-        if (null != path)
-        {
-            String filename = path.getFileName().toString();
-            String tempName = FileUtil.makeFileNameWithTimestamp("temp_") + "_" + filename;
-            try
-            {
-                _tempFile = new File(_workingDirectory, tempName);
-                Files.copy(path, _tempFile.toPath(), StandardCopyOption.COPY_ATTRIBUTES);
-                _log.info("Created temp file because input is from cloud: " + path.toUri().toString());
-                return _tempFile;
-            }
-            catch (IOException e)
-            {
-                _log.error("IO Error: " + e.getMessage());
-            }
-        }
-        return null;
+        return _localDirectory.copyToLocalDirectory(_expData.getDataFileUrl(), _log);
     }
 }
