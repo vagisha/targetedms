@@ -5440,9 +5440,8 @@ public class TargetedMSController extends SpringActionController
                 journalListView.setShowPagination(false);
                 journalListView.setPrintView(false);
                 VBox journalsBox = new VBox();
-                journalsBox.setTitle("Publication Activity");
+                journalsBox.setTitle("Submission");
                 journalsBox.setFrame(WebPartView.FrameType.PORTAL);
-                journalsBox.addView(new HtmlView("<div>This experiment has been published to the following targets</div>"));
                 journalsBox.addView(journalListView);
                 result.addView(journalsBox);
             }
@@ -5536,7 +5535,7 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    public static void ensureCorrectContainer(Container requestContainer, Container expAnnotContainer, ViewContext viewContext) throws ServletException
+    public static void ensureCorrectContainer(Container requestContainer, Container expAnnotContainer, ViewContext viewContext)
     {
         if (!requestContainer.equals(expAnnotContainer))
         {
