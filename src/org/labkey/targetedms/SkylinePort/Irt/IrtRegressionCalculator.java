@@ -6,6 +6,7 @@ import org.labkey.targetedms.IrtPeptide;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 /**
  * User: tgaluhn
@@ -187,6 +188,22 @@ public class IrtRegressionCalculator
             return irt;
         }
 
+        // Merge in changes from https://svn.code.sf.net/p/proteowizard/code/trunk/pwiz/pwiz_tools/Skyline revision 9282
+        public static final double MIN_PEPTIDES_PERCENT = 0.80;
+        public static final int MIN_PEPTIDES_COUNT = 8;
+
+        public static int MinStandardCount(int expectedCount)
+        {
+            return expectedCount <= MIN_PEPTIDES_COUNT
+                    ? expectedCount
+                    : Math.max(MIN_PEPTIDES_COUNT, (int) (expectedCount * MIN_PEPTIDES_PERCENT));
+        }
+
+        public static boolean IsAcceptableStandardCount(int expectedCount, int actualCount)
+        {
+            return actualCount >= MinStandardCount(expectedCount);
+        }
+
         @Override
         public ArrayList<String> ChooseRegressionPeptides(Iterable<String> peptides)
         {
@@ -198,10 +215,11 @@ public class IrtRegressionCalculator
                     returnStandard.add(sequence);
             }
 
-            if (returnStandard.size() != _dictStandards.size())
-            {
+            int returnCount = returnStandard.size();
+            int databaseCount = _dictLibrary.size();
+
+            if (!IsAcceptableStandardCount(databaseCount, returnCount))
                 throw new IncompleteStandardException(this);
-            }
 
             return returnStandard;
         }
