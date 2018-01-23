@@ -60,7 +60,7 @@
         this.fileName = "<%=bean.getFileName()%>";
         this.sampleFiles = "<%=bean.getSampleFiles()%>";
         this.runId = <%=bean.getRunId()%>;
-        this.biasLimit = 25;  // percent
+        this.biasLimit = 30;  // percent
         this.xlsExport = [];
         this.title = "Molecule ID: " + this.moleculeId;
         this.sampleListCollapsed = true;
