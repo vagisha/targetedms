@@ -26,10 +26,13 @@ import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
+import org.labkey.test.categories.Data;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.CalibrationCurveWebpart;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Maps;
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebElement;
 
 import java.io.File;
 import java.io.IOException;
@@ -82,6 +85,60 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     {
         runScenario("p180test_calibration_DukeApril2016", "1/x");
     }
+
+    @Test
+    public void  testCalibrationPK() throws Exception
+    {
+        String subFolderName = "PKWithAnnotation";
+        goToProjectHome();
+        setupSubfolder(getProjectName(), subFolderName, FolderType.Experiment);
+        importData(SAMPLEDATA_FOLDER + subFolderName + ".zip");
+        clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
+        clickAndWait(Locator.linkContainingText(subFolderName + ".zip"));
+        clickAndWait(Locator.linkContainingText("calibration curve"));
+        clickAndWait(Locator.linkWithText("PK"));
+        Locator.tagContainingText("td","7").waitForElement(getDriver(),1000);
+
+        log("Verifying the Time content");
+        String expectedValueForTime = "0 0.3 1 1.2 1.5 3 4 5 7";
+        String dataOfTimeCol = columnDataAsString(Locator.tagWithId("table","pk-table-input").findElement(getDriver()),1);
+        assertEquals("Missing value in the Time column",expectedValueForTime,dataOfTimeCol);
+
+        log("Verifying the Concentration content");
+        String expectedValueForConc ="2.169 2.715 3.266 0.801 0.380 19.225 46.520 0.575";
+        String dataOfConcentration = columnDataAsString(Locator.tagWithId("table","pk-table-input").findElement(getDriver()),4);
+        assertEquals("Missing value in the Conc column",expectedValueForConc,dataOfConcentration);
+
+        log("Verifying the Statistic - Name content");
+        String expectedValueForStatsName ="Dose IV CO k': %AUC Extrap: MRT (0-inf): MRT (0-t): CL (0-inf): CL (0-t): Vdss (0-inf): Vdss (0-t): T1/2: Effective T1/2:";
+        String dataOfStatsName = columnDataAsString(Locator.tagWithId("table","pk-table-stats").findElement(getDriver()),1);
+        assertEquals("Missing value in the Statistic - name column",expectedValueForStatsName,dataOfStatsName);
+
+        log("Verifying the Statistic - Value content");
+        String expectedValueForStatsValue ="1 0.678 1.317 0.112 0.835 0.828 0.000 0.000 0.000 0.000 0.526 0.579";
+        String dataOfStatsValue = columnDataAsString(Locator.tagWithId("table","pk-table-stats").findElement(getDriver()),2);
+        assertEquals("Missing value in the Statistic - value column",expectedValueForStatsValue,dataOfStatsValue);
+
+        log("Checking the check box for Terminal and CO");
+        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input\"]/tbody/tr[4]/td[2]/input"));
+        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input\"]/tbody/tr[6]/td[3]/input"));
+        String expectedValuesAfterAddTerminal = "1 0.635 0.093 8.312 5.660 4.560 0.000 0.000 0.000 0.000 7.474 3.923";
+        String dataofStatsValue2 = columnDataAsString(Locator.tagWithId("table","pk-table-stats").findElement(getDriver()),2);
+        assertEquals("Missing value in the Statistic - value column after adding additional Terminal",expectedValuesAfterAddTerminal,dataofStatsValue2);
+
+    }
+
+    private String columnDataAsString (WebElement table,int col)
+    {
+        String retVal="";
+
+        int size = table.findElements(By.tagName("tr")).size();
+        for (int i=1;i < size ; i++)
+            retVal += Locator.xpath("//tbody/tr[" + i + "]/td[" + col + "]").findElement(table).getText() + " ";
+
+        return retVal.trim();
+    }
+
 
     private void testCalibrationCurvePrecursorsByReplicate()
     {
@@ -269,6 +326,8 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             }
         }
     }
+
+
 
     private void testFiguresOfMerit(String scenario) throws Exception
     {
