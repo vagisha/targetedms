@@ -89,7 +89,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     @Test
     public void  testCalibrationPK() throws Exception
     {
-        String subFolderName = "PKWithAnnotation";
+        String subFolderName = "MergedDocuments.sky";
         goToProjectHome();
         setupSubfolder(getProjectName(), subFolderName, FolderType.Experiment);
         importData(SAMPLEDATA_FOLDER + subFolderName + ".zip");
