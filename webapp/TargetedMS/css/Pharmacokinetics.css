@@ -1,0 +1,26 @@
+
+.pk-table thead, .pk-table-stats thead {
+    border-bottom: 3px solid lightgray;
+}
+
+.pk-table thead td,
+.pk-table-stats thead td {
+    padding: 0 2px;
+    border : solid 1px lightgray !important;
+}
+
+.pk-table tr td,
+.pk-table-stats tr td {
+    border : solid 1px lightgray !important;;
+}
+
+.pk-table-stats {
+    display: inline;
+    vertical-align: top;
+    padding-right: 25px;
+    width: 500px;
+}
+.pk-table-stat{
+    width: 100px;
+    text-align: right;
+}

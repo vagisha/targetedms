@@ -557,6 +557,7 @@ webapp/TargetedMS/css/ExperimentAnnotations.css -text
 webapp/TargetedMS/css/FiguresOfMerit.css -text
 webapp/TargetedMS/css/LinkVersionsDialog.css -text
 webapp/TargetedMS/css/ParetoPlot.css -text
+webapp/TargetedMS/css/Pharmacokinetics.css -text
 webapp/TargetedMS/css/QCSummary.css -text
 webapp/TargetedMS/css/SVGExportIcon.css -text
 webapp/TargetedMS/css/dropDown.css -text

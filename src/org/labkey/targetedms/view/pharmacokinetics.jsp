@@ -7,30 +7,12 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("targetedms/css/FiguresOfMerit.css");
+        dependencies.add("targetedms/css/Pharmacokinetics.css");
         dependencies.add("internal/jQuery");
         dependencies.add("vis/vis");
     }
 %>
-<style type="text/css">
-    .pk-table-stats tbody tr td {
-        border : solid 1px lightgrey;
-    }
-    .pk-table-stats {
-        display: inline;
-        vertical-align: top;
-        padding-right: 25px;
-        width: 500px;
-    }
-    .pk-table-stat{
-        width: 100px;
-        text-align: right;
-    }
 
-    .pk-table-stat{
-        width: 100px;
-        text-align: right;
-    }
-</style>
 <div class="container-fluid targetedms-fom">
     <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
         <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
@@ -38,10 +20,8 @@
     <h3 id="pk-title1"></h3>
     <h4 id="pk-title2"></h4>
     <br>
-    <hr>
 
-<labkey:panel >
-
+<labkey:panel title="Statistics">
     <table id="pk-table-input" class="table table-striped table-responsive pk-table-stats"  >
         <thead><tr><td>Time</td><td>C0</td><td>Terminal</td><td>Concentration</td></tr></thead>
     </table>
@@ -61,20 +41,21 @@
         <tr><td class="pk-table-label">Effective T1/2: </td><td id="Effective_T1_2"    class="pk-table-stat"></td><td>hr</td></tr>
     </table>
 </labkey:panel>
-<labkey:panel >    <div id="chart"></div></labkey:panel>
-    <labkey:panel >    <div id="chartLog"></div></labkey:panel>
+<labkey:panel title="Charts">
+    <div id="chart"></div>
+    <div id="chartLog"></div>
+</labkey:panel>
+<labkey:panel title="Data">
     <table id="pk-table-standard" class="table table-striped table-responsive pk-table">
         <thead id="standard-header" />
         <tbody id="standard-body" />
         <tfoot id="standard-footer"/>
     </table>
-    <hr>
     <table id="pk-table-qc" class="table table-striped table-responsive pk-table">
         <thead id="qc-header" />
         <tbody id="qc-body" />
     </table>
-    <div id="chart"></div><div id="chartLog"></div>
-
+</labkey:panel>
 </div>
 <script type="application/javascript">
     +function ($) {
