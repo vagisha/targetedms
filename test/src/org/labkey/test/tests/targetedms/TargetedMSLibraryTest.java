@@ -20,9 +20,13 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.LogMethod;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
+
+import java.util.Arrays;
+import java.util.HashSet;
 
 import static org.junit.Assert.assertEquals;
 
@@ -77,8 +81,11 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         // Download link, library statistics and revision in the ChromatogramLibraryDownloadWebpart
         verifyChromatogramLibraryDownloadWebPart(6, 79, 528, 2);
 
-        // Verify proteins in the library
-        assertTextPresent("CTCF", "GATA3", "MAX", "TAF11", "TP53", "iRT-C18 Standard Peptides");
+        log("Verify proteins in the library");
+        DataRegionTable table = new DataRegionTable("Peptide",getDriver());
+        HashSet<String> actualProteinList= new HashSet<>(table.getColumnDataAsText("PeptideGroupId/Label"));
+        HashSet<String> expectedProteinValue = new HashSet<>(Arrays.asList("CTCF", "GATA3", "MAX", "TAF11", "TP53", "iRT-C18 Standard Peptides"));
+        assertEquals("Missing proteins in the library",expectedProteinValue,actualProteinList);
 
         //check MAX is from Stergachis-SupplementaryData_2_a.zip
         assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
