@@ -26,7 +26,6 @@ import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
-import org.labkey.test.categories.Data;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.CalibrationCurveWebpart;
 import org.labkey.test.util.DataRegionTable;
