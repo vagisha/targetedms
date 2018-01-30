@@ -133,12 +133,14 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         // Set up the TargetedMS Folder Type property
         FOLDER_TYPE_PROPERTY.setDefaultValue(FolderType.Undefined.toString());
         FOLDER_TYPE_PROPERTY.setCanSetPerContainer(true);
+        FOLDER_TYPE_PROPERTY.setShowDescriptionInline(true);
         addModuleProperty(FOLDER_TYPE_PROPERTY);
 
         // setup the QC Summary webpart AutoQCPing timeout
         ModuleProperty autoQCPingProp = new ModuleProperty(this, AUTO_QC_PING_TIMEOUT);
-        autoQCPingProp.setDescription("The number of minutes before the most recent AutoQCPing indicator is considered stale. Default is 15 minutes if value is not set.");
+        autoQCPingProp.setDescription("The number of minutes before the most recent AutoQCPing indicator is considered stale.");
         autoQCPingProp.setDefaultValue("15");
+        autoQCPingProp.setShowDescriptionInline(true);
         autoQCPingProp.setCanSetPerContainer(true);
         addModuleProperty(autoQCPingProp);
     }

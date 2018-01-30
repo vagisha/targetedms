@@ -31,6 +31,8 @@
     {
         dependencies.add("Ext4");
         dependencies.add("vis/vis");
+        dependencies.add("hopscotch/css/hopscotch.min.css");
+        dependencies.add("hopscotch/js/hopscotch.min.js");
         dependencies.add("targetedms/css/SVGExportIcon.css");
         dependencies.add("targetedms/css/qcTrendPlotReport.css");
         dependencies.add("targetedms/js/QCPlotHelperBase.js");

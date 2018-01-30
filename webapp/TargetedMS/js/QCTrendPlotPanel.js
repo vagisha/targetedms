@@ -1500,10 +1500,9 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             });
         }
 
-        this.bringSvgElementToFront(plot, "g.error-bar");
-        this.bringSvgElementToFront(plot, "path");
+        // Issue 32277: need to move the data points in front of the guide set range display
+        // so that points can be interacted with (i.e. hover to exclude, see details, etc.)
         this.bringSvgElementToFront(plot, "a.point");
-        this.bringSvgElementToFront(plot, "rect.extent");
     },
 
     bringSvgElementToFront: function(plot, selector) {
