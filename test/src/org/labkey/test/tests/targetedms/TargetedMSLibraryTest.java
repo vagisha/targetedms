@@ -82,16 +82,19 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         verifyChromatogramLibraryDownloadWebPart(6, 79, 528, 2);
 
         log("Verify proteins in the library");
-        DataRegionTable table = new DataRegionTable("Peptide",getDriver());
-        HashSet<String> actualProteinList= new HashSet<>(table.getColumnDataAsText("PeptideGroupId/Label"));
+        DataRegionTable table = new DataRegionTable("PeptideGroup",getDriver());
+        HashSet<String> actualProteinList= new HashSet<>(table.getColumnDataAsText("Label"));
         HashSet<String> expectedProteinValue = new HashSet<>(Arrays.asList("CTCF", "GATA3", "MAX", "TAF11", "TP53", "iRT-C18 Standard Peptides"));
         assertEquals("Missing proteins in the library",expectedProteinValue,actualProteinList);
 
-        //check MAX is from Stergachis-SupplementaryData_2_a.zip
-        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE1 + "') and (td[span[a[text()='MAX']]])]"));
 
-        // "iRT-C18 Standard Peptides" should now be from Stergachis-SupplementaryData_2_b.sky.zip
-        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE2 + "') and (td[span[a[text()='iRT-C18 Standard Peptides']]])]"));
+        log("Check MAX is from Stergachis-SupplementaryData_2_a.zip");
+        int indexForProtein = table.getRowIndex("Label","MAX");
+        assertEquals("MAX is not from Stergachis-SupplementaryData_2_a.zip",SKY_FILE1,table.getDataAsText(indexForProtein,"RunId/File"));
+
+        log("iRT-C18 Standard Peptides should now be from Stergachis-SupplementaryData_2_b.sky.zip");
+        indexForProtein = table.getRowIndex("Label","iRT-C18 Standard Peptides");
+        assertEquals("iRT-C18 Standard Peptides is not from Stergachis-SupplementaryData_2_b.sky.zip",SKY_FILE2,table.getDataAsText(indexForProtein,"RunId/File"));
 
         verifyAndResolveConflicts();
     }
