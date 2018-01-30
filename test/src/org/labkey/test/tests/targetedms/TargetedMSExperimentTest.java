@@ -265,7 +265,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //Click on a value under Custom Ion Name
         clickAndWait(Locator.linkContainingText("PC aa C26:0").index(0)); //two links with this text, want the first one under Custom Ion Name hence index(0).
         waitForElement(Locator.linkContainingText("PC"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Group']][td[a[text()='PC']]]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Group']][td[contains(a,'PC')]]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='Custom Ion Name']][td[text()='PC aa C26:0']]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='Ion Formula']][td[text()='C34H69N1O8P1']]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='Mass Average']][td[text()='650.8924']]"));
