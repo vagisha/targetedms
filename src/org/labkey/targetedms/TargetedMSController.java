@@ -2824,10 +2824,25 @@ public class TargetedMSController extends SpringActionController
         protected TargetedMSRun _run;  // save for use in appendNavTrail
         protected GeneralMolecule _molecule;
 
+        public void validateInputParams()
+        {
+            String runId = getViewContext().getRequest().getParameter("RunId");
+            String generalMoleculeId = getViewContext().getRequest().getParameter("GeneralMoleculeId");
+            if (runId == null || generalMoleculeId == null || !isValidInt(runId) || !isValidInt(generalMoleculeId))
+            {
+                throw new NotFoundException("Missing one of the required parameters, RunId or GeneralMoleculeId.");
+            }
+
+            _run = TargetedMSManager.getRun(Integer.parseInt(runId));
+            if (_run == null || !_run.getContainer().equals(getContainer()))
+                throw new NotFoundException("Could not find RunId " + runId);
+
+        }
 
         @Override
         public ModelAndView getView(Object o,BindException errors) throws Exception
         {
+            validateInputParams();
             _run = validateRun(Integer.parseInt(getViewContext().getRequest().getParameter("RunId")));
             int generalMoleculeId = Integer.parseInt(getViewContext().getRequest().getParameter("GeneralMoleculeId"));
             _molecule = PeptideManager.getPeptide(getContainer(), generalMoleculeId);
@@ -2853,6 +2868,17 @@ public class TargetedMSController extends SpringActionController
             }
             return root;
         }
+    }
+
+    private boolean isValidInt(String intAsString)
+    {
+        try
+        {
+            Integer.parseInt(intAsString);
+        }catch (NumberFormatException e){
+            return false;
+        }
+        return true;
     }
 
     public abstract class AbstractShowRunDetailsAction <VIEWTYPE extends QueryView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
