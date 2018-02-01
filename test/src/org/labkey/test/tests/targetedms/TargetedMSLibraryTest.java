@@ -67,7 +67,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertTextPresent("CTCF", "MAX", "TAF11", "iRT-C18 Standard Peptides");
 
         // Verify the the protein MAX is present in this revision of the library
-        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE1 + "') and (td[span[a[contains(text(),'MAX')]]])]"));
+        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE1 + "') and (td[span[a[contains(normalize-space(),'MAX')]]])]"));
 
         // Verify protein details page
         verifyProteinDetailsPage();
@@ -161,7 +161,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertTextPresent("Archived Revisions");
 
         //check MAX is fromStergachis-SupplementaryData_2_b.zip
-        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE2 + "') and (td[span[a[text()='MAX']]])]"));
+        assertElementPresent(Locator.xpath("//tr[(td[2]='" + SKY_FILE2 + "') and (td[span[a[normalize-space()='MAX']]])]"));
     }
 
 }

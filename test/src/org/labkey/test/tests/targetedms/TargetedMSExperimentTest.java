@@ -264,12 +264,12 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         //Click on a value under Custom Ion Name
         clickAndWait(Locator.linkContainingText("PC aa C26:0").index(0)); //two links with this text, want the first one under Custom Ion Name hence index(0).
-        waitForElement(Locator.xpath("//tr[td[text()='Group']][td[a[text()='PC']]]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Custom Ion Name']][td[text()='PC aa C26:0']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Ion Formula']][td[text()='C34H69N1O8P1']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Average']][td[text()='650.8924']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Monoisotopic']][td[text()='650.4761']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Avg. RT']][td[text()='0.9701']]"));
+        waitForElement(Locator.xpath("//tr[td[text()='Group']][td[a[normalize-space()='PC']]]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Custom Ion Name']][td[normalize-space()='PC aa C26:0']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Ion Formula']][td[normalize-space()='C34H69N1O8P1']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Average']][td[normalize-space()='650.8924']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Monoisotopic']][td[normalize-space()='650.4761']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Avg. RT']][td[normalize-space()='0.9701']]"));
         assertTextPresent("Molecule Precursors");
 
         assertElementPresent(Locator.xpath("//img[contains(@src, 'generalMoleculeChromatogramChart.view')]"));
@@ -282,10 +282,10 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         assertTextPresent("Molecule Precursor Chromatograms");
         assertTextPresent("Molecule Precursor Summary");
-        waitForElement(Locator.xpath("//tr[td[text()='Molecule Group']][td[text()='PC']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Molecule Precursor']][td[text()='PC aa C26:0']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Charge']][td[text()='1']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='m/z']][td[text()='650.4755']]"));
+        waitForElement(Locator.xpath("//tr[td[text()='Molecule Group']][td[normalize-space()='PC']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Molecule Precursor']][td[normalize-space()='PC aa C26:0']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Charge']][td[normalize-space()='1']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='m/z']][td[normalize-space()='650.4755']]"));
 
         assertElementPresent(Locator.xpath("//img[contains(@src, 'precursorChromatogramChart.view')]"), 4);
         assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
