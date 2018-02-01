@@ -341,7 +341,7 @@ public class Peptide extends GeneralMolecule
         {
             Pair<Integer, String> mod1 = mods1.get(i);
             Pair<Integer, String> mod2 = mods2.get(i);
-            if (!mod1.first.equals(mod1.first))
+            if (!mod1.first.equals(mod2.first))
             {
                 return false;
             }
