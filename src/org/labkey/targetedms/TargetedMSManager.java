@@ -84,6 +84,7 @@ import org.labkey.targetedms.query.RepresentativeStateManager;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayDeque;
@@ -499,7 +500,7 @@ public class TargetedMSManager
                                      final Path path,
                                      PipeRoot root) throws SQLException, IOException, XarFormatException
     {
-        String description = "Skyline document import - " + path.getFileName().toString();
+        String description = "Skyline document import - " + FileUtil.getFileName(path);
         XarContext xarContext = new XarContext(description, info.getContainer(), info.getUser());
         User user =  info.getUser();
         Container container = info.getContainer();
@@ -544,7 +545,7 @@ public class TargetedMSManager
         else if (folderType == TargetedMSModule.FolderType.LibraryProtein)
             representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
 
-        SkylineDocImporter importer = new SkylineDocImporter(user, container, path.getFileName().toString(), expData, null, xarContext, representative, null, null);
+        SkylineDocImporter importer = new SkylineDocImporter(user, container, FileUtil.getFileName(path), expData, null, xarContext, representative, null, null);
         SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
         TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, expData, runInfo, root, representative);
         try
@@ -1100,21 +1101,31 @@ public class TargetedMSManager
         sql.append(", ");
         sql.append(ExperimentService.get().getTinfoData(), "d");
         sql.append( " WHERE rep.Id = sf.ReplicateId AND rep.RunId = r.Id AND d.RowId = r.DataId AND d.DataFileUrl = ?");
-        sql.add(uri.toString());
+        sql.add(FileUtil.uriToString(uri));
 
         return new SqlSelector(getSchema(), sql).exists();
     }
 
     @NotNull
-    private static List<String> deleteFileWithLogging(@NotNull File file, @NotNull List<String> logs)
+    private static List<String> deleteFileWithLogging(@NotNull Path file, @NotNull List<String> logs)
     {
-        String logMsg = "Deleting " + file.getPath();
+        String logMsg = "Deleting " + file.toString();
         logs.add(logMsg);
         _log.info(logMsg);
 
-        if(!FileUtils.deleteQuietly(file))
+        boolean success = true;
+        try
         {
-            logMsg = "Unable to delete " + file.getPath();
+            success = Files.deleteIfExists(file);
+        }
+        catch (IOException e)
+        {
+            success = false;
+        }
+
+        if (!success)
+        {
+            logMsg = "Unable to delete " + file.toString();
             logs.add(logMsg);
             _log.warn(logMsg);
         }
@@ -1127,7 +1138,7 @@ public class TargetedMSManager
         SQLFragment sql = new SQLFragment("SELECT d.RunId FROM ");
         sql.append(ExperimentService.get().getTinfoData(), "d");
         sql.append( " WHERE d.DataFileUrl = ?");
-        sql.add(uri.toString());
+        sql.add(FileUtil.uriToString(uri));
 
         Integer runId = (Integer) new SqlSelector(getSchema(), sql).getMap().get("runId");
 
@@ -1149,31 +1160,31 @@ public class TargetedMSManager
                     deleteRunForFile(uri, c, u);
 
                     // Remove .sky.zip from file name to get directory name
-                    File file = new File(uri);
-                    String dirName = FilenameUtils.removeExtension(FilenameUtils.removeExtension(file.getName()));
+                    Path file = FileUtil.getPath(c, uri);
+                    String dirName = FilenameUtils.removeExtension(FilenameUtils.removeExtension(FileUtil.getFileName(file)));
 
-                    File dir = new File(file.getParent(), dirName);
-                    File viewFile = new File(file.getParent(), dirName + ".sky.view");
-                    File skydFile = new File(file.getParent(), dirName + ".skyd");
+                    Path dir = file.getParent().resolve(dirName);
+                    Path viewFile = file.getParent().resolve(dirName + ".sky.view");
+                    Path skydFile = file.getParent().resolve(dirName + ".skyd");
 
-                    logMsg = "All the related sampleFiles for " + file.getPath() + " have been updated with newer data.";
+                    logMsg = "All the related sampleFiles for " + file.toString() + " have been updated with newer data.";
                     logMsgs.add(logMsg);
                     _log.info(logMsg);
 
                     logMsgs = deleteFileWithLogging(file, logMsgs);
 
-                    if (viewFile.exists())
+                    if (Files.exists(viewFile))
                         logMsgs = deleteFileWithLogging(viewFile, logMsgs);
 
-                    if (skydFile.exists())
+                    if (Files.exists(skydFile))
                         logMsgs = deleteFileWithLogging(skydFile, logMsgs);
 
-                    if (dir.exists() && dir.isDirectory())
+                    if (Files.exists(dir) && Files.isDirectory(dir))
                     {
-                        logMsg = "Deleting directory " + dir.getPath();
+                        logMsg = "Deleting directory " + dir.toString();
                         logMsgs.add(logMsg);
                         _log.info(logMsg);
-                        FileUtils.deleteDirectory(dir);
+                        FileUtil.deleteDir(dir);
                     }
                 }
                 catch (IOException e)
@@ -1622,7 +1633,7 @@ public class TargetedMSManager
 
     /** @return the sample file if it has already been imported in the container */
     @Nullable
-    public static List<SampleFile> getSampleFile(File file, Date acquiredTime, Container container)
+    public static List<SampleFile> getSampleFile(String filePath, Date acquiredTime, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT sf.* FROM ");
         sql.append(getTableInfoSampleFile(), "sf");
@@ -1632,7 +1643,7 @@ public class TargetedMSManager
         sql.append(getTableInfoRuns(), "r");
         sql.append( " WHERE r.Id = rep.RunId AND rep.Id = sf.ReplicateId AND r.Container = ? AND sf.FilePath = ? ");
         sql.add(container);
-        sql.add(file.getPath());
+        sql.add(filePath);
         if(acquiredTime == null)
             sql.append("AND sf.AcquiredTime IS NULL");
         else

@@ -2692,7 +2692,7 @@ public class TargetedMSController extends SpringActionController
             {
                 if (Files.isDirectory(path))
                 {
-                    throw new NotFoundException("Expected a file but found a directory: " + path.getFileName().toString());
+                    throw new NotFoundException("Expected a file but found a directory: " + FileUtil.getFileName(path));
                 }
 
                 ViewBackgroundInfo info = getViewBackgroundInfo();
@@ -2723,7 +2723,7 @@ public class TargetedMSController extends SpringActionController
             {
                 if (Files.isDirectory(path))
                 {
-                    throw new NotFoundException("Expected a file but found a directory: " + path.getFileName().toString());
+                    throw new NotFoundException("Expected a file but found a directory: " + FileUtil.getFileName(path));
                 }
 
                 ViewBackgroundInfo info = getViewBackgroundInfo();
@@ -2732,7 +2732,7 @@ public class TargetedMSController extends SpringActionController
                     Integer jobId = TargetedMSManager.addRunToQueue(info, path, form.getPipeRoot(getContainer()));
                     Map<String, Object> detailsMap = new HashMap<>(4);
                     detailsMap.put("Path", form.getPath());
-                    detailsMap.put("File",path.getFileName().toString());
+                    detailsMap.put("File", FileUtil.getFileName(path));
                     detailsMap.put("RowId", jobId);
                     jobDetailsList.add(detailsMap);
                 }

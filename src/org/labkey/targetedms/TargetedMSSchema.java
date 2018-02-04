@@ -55,9 +55,10 @@ import org.labkey.targetedms.query.*;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 import org.springframework.validation.BindException;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Writer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,7 +69,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.Consumer;
-import java.util.zip.DataFormatException;
 
 public class TargetedMSSchema extends UserSchema
 {
@@ -552,10 +552,10 @@ public class TargetedMSSchema extends UserSchema
                                 {
                                     downloadUrl.replaceParameter("runId", runId.toString());
 
-                                    File skyDocFile = SkylineFileUtils.getSkylineFile(runLSID);
-                                    if (skyDocFile != null && skyDocFile.isFile())
+                                    Path skyDocFile = SkylineFileUtils.getSkylineFile(runLSID);
+                                    if (skyDocFile != null && !Files.isDirectory(skyDocFile))
                                     {
-                                        String size = h(skyDocFile.isFile() ? " (" + FileUtils.byteCountToDisplaySize(skyDocFile.length()) + ")" : "");
+                                        String size = h(" (" + FileUtils.byteCountToDisplaySize(Files.size(skyDocFile)) + ")");
                                         out.write("<a href=\"");
                                         out.write(PageFlowUtil.filter(downloadUrl));
                                         out.write("\"><span class=\"fa fa-download\" data-qtip=\"Download File\" /></a>");

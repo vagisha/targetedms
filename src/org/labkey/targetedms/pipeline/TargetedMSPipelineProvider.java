@@ -59,7 +59,7 @@ public class TargetedMSPipelineProvider extends PipelineProvider
         @Override
         public boolean accept(Path file)
         {
-            String ext =  FileUtil.getExtension(file.getFileName().toString());
+            String ext =  FileUtil.getExtension(FileUtil.getFileName(file));
             if (ext == null)
             {
                 return false;

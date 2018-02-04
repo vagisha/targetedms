@@ -25,7 +25,8 @@
 <%@ page import="org.labkey.targetedms.SkylineFileUtils" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSRun" %>
-<%@ page import="java.io.File" %>
+<%@ page import="java.nio.file.Path" %>
+<%@ page import="java.nio.file.Files" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
 <%!
@@ -41,7 +42,7 @@
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
     TargetedMSController.RunDetailsBean bean = me.getModelBean();
     TargetedMSRun run = bean.getRun();
-    File skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID());
+    Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID());
 
     ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
     downloadAction.addParameter("runId", run.getId());
@@ -88,7 +89,7 @@
             versionCount: <%=bean.getVersionCount()%>,
             runName: <%=q(run.getDescription())%>,
             fileName: <%=q(run.getFileName())%>,
-            fileSize: <%=q(skyDocFile != null ? FileUtils.byteCountToDisplaySize(skyDocFile.length()) : null)%>,
+            fileSize: <%=q(skyDocFile != null ? FileUtils.byteCountToDisplaySize(Files.size(skyDocFile)) : null)%>,
             downloadAction: <%=q(downloadAction.getLocalURIString())%>,
             renameAction: <%=q(renameAction)%>,
             softwareVersion: <%=q(run.getSoftwareVersion())%>,

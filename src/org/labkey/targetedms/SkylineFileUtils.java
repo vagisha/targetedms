@@ -21,9 +21,9 @@ import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.NetworkDrive;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -52,7 +52,7 @@ public class SkylineFileUtils
     }
 
     @Nullable
-    public static File getSkylineFile(@Nullable String runLSID)
+    public static Path getSkylineFile(@Nullable String runLSID)
     {
         if (runLSID == null)
         {
@@ -70,18 +70,16 @@ public class SkylineFileUtils
         if (inputDatas != null && !inputDatas.isEmpty())
         {
             // The first file will be the .zip file since we only use one file as input data.
-            File skyDocfile = expRun.getAllDataUsedByRun().get(0).getFile();
-            if (NetworkDrive.exists(skyDocfile))
+            Path skyDocfile = inputDatas.get(0).getFilePath();
+            if (Files.exists(skyDocfile))
             {
                 return skyDocfile;
             }
             else
             {
-                LOG.warn("Skyline file does not exist: " + (skyDocfile != null ? skyDocfile.getPath() : null) + ", referenced from " + expRun.getContainer().getPath());
+                LOG.warn("Skyline file does not exist: " + (skyDocfile != null ? FileUtil.getFileName(skyDocfile) : null) + ", referenced from " + expRun.getContainer().getPath());
                 return null;
             }
-
-
         }
         LOG.warn("No input data found for run " + expRun.getRowId());
         return null;

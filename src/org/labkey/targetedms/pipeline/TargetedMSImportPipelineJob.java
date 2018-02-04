@@ -50,7 +50,9 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         _runInfo = runInfo;
         _representative = representative;
 
-        String basename = FileUtil.makeFileNameWithTimestamp(FileUtil.getBaseName(_expData.getName(), 1));
+        String basename = FileUtil.makeFileNameWithTimestamp(
+                FileUtil.getBaseName(_expData.getName(), 1).replace(" ", "_"));     // No space in temp name because Files.copy(from, toS3) throws exception; issue in S3Path.toUri()
+
         LocalDirectory localDirectory = _expData.hasFileScheme() ?
             new LocalDirectory(_expData.getFile().getParentFile(), basename) :
             new LocalDirectory(getContainer(), root, _expData.getDataFileUrl(), basename);
