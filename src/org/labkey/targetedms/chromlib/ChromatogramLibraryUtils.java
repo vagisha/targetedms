@@ -95,26 +95,6 @@ public class ChromatogramLibraryUtils
         return newRevision;
     }
 
-    //TODO: Usages not found - okay to delete?
-//    public static boolean isChromLibFileUptoDate(Container container) throws SQLException, IOException
-//    {
-//        // Get the latest library revision.
-//        int currentRevision = getCurrentRevision(container, true);
-//
-//        File chromLibFile = getChromLibFile(container, currentRevision);
-//        if(!chromLibFile.exists())
-//        {
-//            return false;
-//        }
-//
-//        ConnectionSource connSource = new ConnectionSource(chromLibFile.getPath());
-//        ChromatogramLibraryReader reader = new ChromatogramLibraryReader(connSource);
-//        LibInfo libInfoDb = reader.readLibInfo();
-//        connSource.close();
-//
-//        return (Constants.SCHEMA_VERSION.equals(libInfoDb.getSchemaVersion()) && libInfoDb.getLibraryRevision() == currentRevision);
-//    }
-
     /** @return the name of the file that downloaders will see */
     public static String getDownloadFileName(Container container, int revision) throws IOException
     {
