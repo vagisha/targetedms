@@ -266,7 +266,6 @@ src/org/labkey/targetedms/chart/ReplicateLabelMinimizer.java -text
 src/org/labkey/targetedms/chart/RetentionTimeBoxAndWhiskerRenderer.java -text
 src/org/labkey/targetedms/chromlib/BaseDaoImpl.java -text
 src/org/labkey/targetedms/chromlib/ChromLibSqliteSchemaCreator.java -text
-src/org/labkey/targetedms/chromlib/ChromatogramLibraryReader.java -text
 src/org/labkey/targetedms/chromlib/ChromatogramLibraryUtils.java -text
 src/org/labkey/targetedms/chromlib/ChromatogramLibraryWriter.java -text
 src/org/labkey/targetedms/chromlib/ConnectionSource.java -text
