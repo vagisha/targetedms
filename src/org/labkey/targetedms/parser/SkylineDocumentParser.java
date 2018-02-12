@@ -240,7 +240,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 try
                 {
                     String sql = "SELECT * FROM IrtLibrary";
-                    try (ConnectionSource cs = new ConnectionSource(iRTFile.getPath());
+                    try (ConnectionSource cs = new ConnectionSource(iRTFile.getAbsolutePath());
                          Connection conn = cs.getConnection();
                          ResultSet rs = conn.createStatement().executeQuery(sql))
                     {
