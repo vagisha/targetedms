@@ -28,6 +28,7 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSController;
+import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSRun;
 
 import java.sql.SQLException;
@@ -50,12 +51,14 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         _runInfo = runInfo;
         _representative = representative;
 
-        String basename = FileUtil.makeFileNameWithTimestamp(
+        String baseLogFileName = FileUtil.makeFileNameWithTimestamp(
                 FileUtil.getBaseName(_expData.getName(), 1).replace(" ", "_"));     // No space in temp name because Files.copy(from, toS3) throws exception; issue in S3Path.toUri()
 
-        LocalDirectory localDirectory = _expData.hasFileScheme() ?
-            new LocalDirectory(_expData.getFile().getParentFile(), basename) :
-            new LocalDirectory(getContainer(), root, _expData.getDataFileUrl(), basename);
+        if ((_expData.hasFileScheme() && root.isCloudRoot()) || (!_expData.hasFileScheme() && !root.isCloudRoot()))
+            throw new RuntimeException("Cannot process ExpData when its schema does not match root schema.");
+
+        LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME, baseLogFileName,
+                null != _expData.getFile() ? _expData.getFile().getParentFile().getPath() : FileUtil.getTempDirectory().getPath());
         setLocalDirectory(localDirectory);
         setLogFile(localDirectory.determineLogFile());
     }

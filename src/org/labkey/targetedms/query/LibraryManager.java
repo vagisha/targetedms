@@ -21,14 +21,17 @@ import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.SkylineFileUtils;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.parser.PeptideSettings;
 
-import java.io.File;
-import java.io.FilenameFilter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -85,8 +88,11 @@ public class LibraryManager
             throw new IllegalStateException("Experiment data not found for runId "+runId+" and dataId "+run.getDataId());
         }
 
-        File file = expData.getFile();
-        File skyFilesDir = new File(file.getParent(), SkylineFileUtils.getBaseName(file.getName()));
+        Path file = expData.getFilePath();
+        if(null == file)
+            throw new IllegalStateException("ExpData file not found.");
+
+        Path skyFilesDir = file.getParent().resolve(SkylineFileUtils.getBaseName(FileUtil.getFileName(file)));
 
         Map<PeptideSettings.SpectrumLibrary, String> libraryPathsMap = new HashMap<>();
         for(PeptideSettings.SpectrumLibrary library: libraries)
@@ -104,28 +110,33 @@ public class LibraryManager
             }
             if(libFileName != null)
             {
-                libraryPathsMap.put(library, skyFilesDir.getAbsolutePath() + File.separator + libFileName);
+                libraryPathsMap.put(library, FileUtil.getAbsolutePath(expData.getContainer(), skyFilesDir.toUri()) + "/" + libFileName);
             }
         }
         return libraryPathsMap;
     }
 
-    private static String getDocumentLibFileName(File skyFilesDir)
+    private static String getDocumentLibFileName(Path skyFilesDir)
     {
         // Get the name of the .sky file in the directory
-        String[] skyFile = skyFilesDir.list(new FilenameFilter()
+        List<String> skyFiles = new ArrayList<>();
+        try
         {
-            @Override
-            public boolean accept(File dir, String name)
-            {
-                return name.toLowerCase().endsWith(SkylineFileUtils.EXT_SKY_W_DOT);
-            }
-        });
+            Files.list(skyFilesDir).forEach(path -> {
+                String filename = FileUtil.getFileName(path).toLowerCase();
+                if (filename.endsWith(SkylineFileUtils.EXT_SKY_W_DOT))
+                    skyFiles.add(filename);
+            });
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException(e);
+        }
 
-        if(skyFile != null && skyFile.length > 0)
+        if(!skyFiles.isEmpty())
         {
             // Documents libraries have the same name as the .sky file, with a .blib extension.
-            return skyFile[0].substring(0, skyFile[0].lastIndexOf('.')) + SkylineFileUtils.EXT_BLIB_W_DOT;
+            return skyFiles.get(0).substring(0, skyFiles.get(0).lastIndexOf('.')) + SkylineFileUtils.EXT_BLIB_W_DOT;
         }
 
         return null;

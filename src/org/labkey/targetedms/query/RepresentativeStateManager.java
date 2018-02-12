@@ -22,6 +22,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
+import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
@@ -43,8 +44,8 @@ public class RepresentativeStateManager
 {
     private RepresentativeStateManager() {}
 
-    public static void setRepresentativeState(User user, Container container,
-                                             TargetedMSRun run, TargetedMSRun.RepresentativeDataState state)
+    public static void setRepresentativeState(User user, Container container, LocalDirectory localDirectory,
+                                              TargetedMSRun run, TargetedMSRun.RepresentativeDataState state)
     {
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
         {
@@ -79,7 +80,7 @@ public class RepresentativeStateManager
             TargetedMSManager.markRunsNotRepresentative(container, TargetedMSRun.RepresentativeDataState.Representative_Protein);
 
             // Increment the chromatogram library revision number for this container.
-            ChromatogramLibraryUtils.incrementLibraryRevision(container, user);
+            ChromatogramLibraryUtils.incrementLibraryRevision(container, user, localDirectory);
 
             // Add event to audit log.
             TargetedMsRepresentativeStateAuditProvider.addAuditEntry(container, user,

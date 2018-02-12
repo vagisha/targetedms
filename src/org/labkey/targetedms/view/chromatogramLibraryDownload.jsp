@@ -24,10 +24,11 @@
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
 <%@ page import="org.labkey.targetedms.query.ConflictResultsManager" %>
-<%@ page import="java.io.File" %>
 <%@ page import="java.text.DecimalFormat" %>
 <%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.security.User" %>
+<%@ page import="java.nio.file.Path" %>
+<%@ page import="java.nio.file.Files" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     Container c = getContainer();
@@ -39,7 +40,7 @@
     long transitionCount = TargetedMSController.getNumRankedTransitions(c);
     DecimalFormat format = new DecimalFormat("#,###");
     int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c, user);
-    File archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, currentRevision);
+    Path archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, currentRevision);
 
     long conflictCount = ConflictResultsManager.getConflictCount(user, c);
     String conflictViewUrl = (folderType == TargetedMSModule.FolderType.LibraryProtein) ?
@@ -117,7 +118,7 @@ div.labkey-download h3 {
 <h3><%= h(c.getName())%> Library</h3>
 <a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, c)) %>" class="banner-button">Download</a> <br/>
         <%= h(ChromatogramLibraryUtils.getDownloadFileName(c, currentRevision)) %>
-    <%= h(archiveFile.isFile() ? "(" + FileUtils.byteCountToDisplaySize(archiveFile.length()) + ")" : "") %>
+    <%= h(!Files.isDirectory(archiveFile) ? "(" + FileUtils.byteCountToDisplaySize(Files.size(archiveFile)) + ")" : "") %>
     <br/>
     Revision <%= h(currentRevision)%><br/>
     <br/>

@@ -38,6 +38,7 @@ public class SkylineFileUtils
     public static final String EXT_SKY = "sky";
     public static final String EXT_SKY_W_DOT = ".sky";
     public static final String EXT_BLIB_W_DOT = ".blib";
+    public static final String EXT_BLIB = "blib";
 
     private static final Logger LOG = Logger.getLogger(SkylineFileUtils.class);
 

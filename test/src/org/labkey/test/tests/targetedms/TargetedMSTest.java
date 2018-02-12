@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.targetedms;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.LabKeySiteWrapper;
 import org.labkey.test.Locator;
@@ -88,13 +89,27 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     @Override
     protected String getProjectName()
     {
-        return "TargetedMS" + TRICKY_CHARACTERS_FOR_PROJECT_NAMES;
+        return "TargetedMSProject";    // + TRICKY_CHARACTERS_FOR_PROJECT_NAMES;
     }
 
-    @LogMethod
     protected void setupFolder(FolderType folderType)
     {
+        setupFolder(folderType, null);
+    }
+    @LogMethod
+    protected void setupFolder(FolderType folderType, @Nullable String cloudConfigName)
+    {
         _containerHelper.createProject(getProjectName(), "Panorama");
+        waitForElement(Locator.linkContainingText("Save"));
+        if (null != cloudConfigName)
+        {
+            click(Locator.checkboxByLabel(cloudConfigName, false));
+            clickAndWait(Locator.linkContainingText("Save"));
+            click(Locator.radioButtonById("optionCloudRoot"));
+            selectOptionByText(Locator.tagWithId("select", "cloudRootName"), cloudConfigName);
+            clickAndWait(Locator.linkContainingText("Save"));
+        }
+        clickAndWait(Locator.linkContainingText("Next"));
         selectFolderType(folderType);
     }
 

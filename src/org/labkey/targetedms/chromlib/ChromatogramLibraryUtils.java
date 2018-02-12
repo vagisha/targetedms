@@ -17,17 +17,19 @@ package org.labkey.targetedms.chromlib;
 
 import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
+import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
@@ -42,24 +44,17 @@ public class ChromatogramLibraryUtils
     private static final String propMapKey = "chromLibRevision";
     private static final int NO_LIB_REVISION = -1;
 
-    public static boolean isRevisionCurrent(Container container, String schemaVersion, int revisionNumber, User user)
+    public static boolean isRevisionCurrent(Container container, User user, String schemaVersion, int revisionNumber)
     {
-        return Constants.SCHEMA_VERSION.equals(schemaVersion) && getCurrentRevision(container, false, user) == revisionNumber;
+        return Constants.SCHEMA_VERSION.equals(schemaVersion) && getCurrentRevision(container, user) == revisionNumber;
     }
 
-    private static int getCurrentRevision(Container container, boolean addProperty, User user)
+    public static int getCurrentRevision(Container container, User user)
     {
         Map<String, String> propMap = PropertyManager.getProperties(container, "TargetedMS");
         if(!propMap.containsKey(propMapKey))
         {
-            if(addProperty)
-            {
-                return incrementLibraryRevision(container, user);
-            }
-            else
-            {
-                return NO_LIB_REVISION;
-            }
+            return NO_LIB_REVISION;
         }
         else
         {
@@ -67,12 +62,7 @@ public class ChromatogramLibraryUtils
         }
     }
 
-    public static int getCurrentRevision(Container container, User user)
-    {
-       return getCurrentRevision(container, false, user);
-    }
-
-    public static int incrementLibraryRevision(Container container, User user)
+    public static int incrementLibraryRevision(Container container, User user, LocalDirectory localDirectory)
     {
         PropertyManager.PropertyMap propMap = PropertyManager.getWritableProperties(container, "TargetedMS", true);
         String revisionVal = propMap.get(propMapKey);
@@ -90,7 +80,7 @@ public class ChromatogramLibraryUtils
         propMap.save();
 
         // write the library to a file every time there is an increment
-        writeLibrary(container, newRevision, user);
+        writeLibrary(container, user, localDirectory, newRevision);
 
         return newRevision;
     }
@@ -103,36 +93,37 @@ public class ChromatogramLibraryUtils
 
     /** @return the name of the file that will be stored on disk.
      * Uses the container's RowId instead of name to handle renames gracefully */
-    public static File getChromLibFile(Container container, int revision) throws IOException
+    public static Path getChromLibFile(Container container, int revision) throws IOException
     {
-        File chromLibDir = getChromLibDir(container, false);
-        return new File(chromLibDir, Constants.CHROM_LIB_FILE_NAME+"_"+container.getRowId()+"_rev"+revision+"."+Constants.CHROM_LIB_FILE_EXT);
+        Path chromLibDir = getChromLibDir(container, false);
+        return chromLibDir.resolve(Constants.CHROM_LIB_FILE_NAME+"_"+container.getRowId()+"_rev"+revision+"."+Constants.CHROM_LIB_FILE_EXT);
     }
 
-    public static File getChromLibTempFile(Container container, int revision) throws IOException
+    public static Path getChromLibTempFile(Container container, LocalDirectory localDirectory, int revision) throws IOException
     {
-        File chromLibDir = getChromLibDir(container, true);
-        return new File(chromLibDir,
+        // Temp file in LocalDirectory (guaranteed to be local File dir)
+        File localDir = localDirectory.getLocalDirectoryFile();
+        Path chromLibDir = localDir.toPath().resolve(Constants.LIB_FILE_DIR);
+        if(!Files.exists(chromLibDir))
+            Files.createDirectory(chromLibDir);
+        return chromLibDir.resolve(
                         FileUtil.makeFileNameWithTimestamp(Constants.CHROM_LIB_FILE_NAME+"_"+container.getRowId()+"_rev"+revision,
                                                            Constants.CHROM_LIB_FILE_EXT));
     }
 
-    private static File getChromLibDir(Container container, boolean createLibDir) throws IOException
+    private static Path getChromLibDir(Container container, boolean createLibDir) throws IOException
     {
         PipeRoot root = PipelineService.get().getPipelineRootSetting(container);
         assert root != null;
-        File chromLibDir = new File(root.getRootPath(), Constants.LIB_FILE_DIR);
-        if(!NetworkDrive.exists(chromLibDir) && createLibDir)
+        Path chromLibDir = root.getRootNioPath().resolve(Constants.LIB_FILE_DIR);
+        if(!Files.exists(chromLibDir) && createLibDir)
         {
-            if(!chromLibDir.mkdir())
-            {
-                throw new IOException("Failed to create targetedMS chromatogram library directory '" + chromLibDir + "'.");
-            }
+            Files.createDirectory(chromLibDir);
         }
         return chromLibDir;
     }
 
-    public static void writeLibrary(Container container, int targetRevision, User user)
+    public static void writeLibrary(Container container, User user, LocalDirectory localDirectory, int targetRevision)
     {
         try
         {
@@ -146,18 +137,18 @@ public class ChromatogramLibraryUtils
             int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(container, user);
             int libraryRevision = ( targetRevision != 0) ? targetRevision : currentRevision;
 
-            File chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container, libraryRevision);
+            Path chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container, libraryRevision);
 
             ContainerChromatogramLibraryWriter writer = new ContainerChromatogramLibraryWriter(
                                                                          panoramaServer,
                                                                          container,
                                                                          representativeRunIds,
                                                                          user);
-            writer.writeLibrary(libraryRevision);
+            writer.writeLibrary(localDirectory, libraryRevision);
 
-            if(!chromLibFile.exists())
+            if(!Files.exists(chromLibFile))
             {
-                throw new NotFoundException("Chromatogram library file " + chromLibFile.getPath() + " was not found.");
+                throw new NotFoundException("Chromatogram library file " + chromLibFile + " was not found.");
             }
         }
         catch (java.io.IOException|SQLException exception)

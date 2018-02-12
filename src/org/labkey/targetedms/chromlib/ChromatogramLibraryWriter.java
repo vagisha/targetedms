@@ -16,8 +16,10 @@
 package org.labkey.targetedms.chromlib;
 
 import org.apache.log4j.Logger;
+import org.labkey.api.util.FileUtil;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -46,7 +48,7 @@ public class ChromatogramLibraryWriter
 
     private int _maxCacheSize = 1000;
 
-    private File _libFile;
+    private Path _libFile;
 
     private static final Logger _log = Logger.getLogger(ChromatogramLibraryWriter.class);
 
@@ -55,18 +57,18 @@ public class ChromatogramLibraryWriter
         _maxCacheSize = maxCacheSize;
     }
 
-    public void openLibrary(File libFile) throws SQLException
+    public void openLibrary(Path libFile) throws SQLException
     {
-        _log.info("Writing chromatogram library "+libFile.getPath());
-        if(libFile.exists())
+        _log.info("Writing chromatogram library " + FileUtil.getFileName(libFile));
+        if(Files.exists(libFile))
         {
-            throw new IllegalStateException("Chromatogram library file "+libFile.getPath()+" already exists.");
+            throw new IllegalStateException("Chromatogram library file "+ FileUtil.pathToString(libFile) +" already exists.");
         }
 
         _libFile = libFile;
 
         // Setup a connection source
-       _connectionSource = new ConnectionSource(_libFile.getPath());
+       _connectionSource = new ConnectionSource(_libFile.toAbsolutePath().toString());
 
         // Create an empty schema
         ChromLibSqliteSchemaCreator schemaCreator = new ChromLibSqliteSchemaCreator();
@@ -108,7 +110,7 @@ public class ChromatogramLibraryWriter
         {
             _connectionSource.close();
         }
-        _log.info("Done writing chromatogram library "+_libFile.getPath());
+        _log.info("Done writing chromatogram library "+FileUtil.pathToString(_libFile));
     }
 
     private void flushCache() throws SQLException

@@ -21,6 +21,7 @@ import org.labkey.api.cache.BlockingCache;
 import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
+import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
@@ -60,6 +61,10 @@ public class LibrarySpectrumMatchGetter
                 @Override
                 public List<PeptideIdRtInfo> load(PrecursorKey precursor, @Nullable Object argument)
                 {
+                    if (null == argument || !(argument instanceof LocalDirectory))
+                    {
+                        throw new IllegalStateException("Expected LocalDirectory argument in PeptideIdRts cache.");
+                    }
                     TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
 
                     // Get the spectrum libraries for this run
@@ -68,8 +73,8 @@ public class LibrarySpectrumMatchGetter
 
                     for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
                     {
-                        List<PeptideIdRtInfo> rtInfos = BlibSpectrumReader.getRetentionTimes(libraryFilePathsMap.get(library),
-                                precursor.getModifiedSequence());
+                        List<PeptideIdRtInfo> rtInfos = BlibSpectrumReader.getRetentionTimes(run.getContainer(), (LocalDirectory)argument,
+                                libraryFilePathsMap.get(library), precursor.getModifiedSequence());
 
                         if(rtInfos.size() > 0)
                         {
@@ -82,7 +87,7 @@ public class LibrarySpectrumMatchGetter
                 }
             });
 
-    public static List<LibrarySpectrumMatch> getMatches(Peptide peptide, User user, Container container)
+    public static List<LibrarySpectrumMatch> getMatches(Peptide peptide, User user, Container container, LocalDirectory localDirectory)
     {
         // Get the precursor of this peptide, sorted by label type and charge.
         List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), new TargetedMSSchema(user, container));
@@ -121,7 +126,7 @@ public class LibrarySpectrumMatchGetter
                     continue;
                 }
 
-                BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(libraryFilePathsMap.get(library),
+                BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(container, localDirectory, libraryFilePathsMap.get(library),
                         precursor.getModifiedSequence(),
                         precursor.getCharge());
 
@@ -155,7 +160,7 @@ public class LibrarySpectrumMatchGetter
         return matchedSpectra;
     }
 
-    public static List<LibrarySpectrumMatch> getMatches(Precursor precursor, TargetedMSSchema schema)
+    public static List<LibrarySpectrumMatch> getMatches(Precursor precursor, TargetedMSSchema schema, LocalDirectory localDirectory)
     {
         TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
 
@@ -180,7 +185,7 @@ public class LibrarySpectrumMatchGetter
 
         for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
         {
-            BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(libraryFilePathsMap.get(library),
+            BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(schema.getContainer(), localDirectory, libraryFilePathsMap.get(library),
                     precursor.getModifiedSequence(),
                     precursor.getCharge());
 
@@ -214,7 +219,8 @@ public class LibrarySpectrumMatchGetter
     }
 
     public static LibrarySpectrumMatch getSpectrumMatch(TargetedMSRun run, Peptide peptide, Precursor precursor,
-                                                        PeptideSettings.SpectrumLibrary library, String redundantLibPath, int redundantRefSpecId)
+                                                        PeptideSettings.SpectrumLibrary library, LocalDirectory localDirectory,
+                                                        String redundantLibPath, int redundantRefSpecId)
     {
         List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(precursor.getGeneralMoleculeId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
@@ -225,7 +231,7 @@ public class LibrarySpectrumMatchGetter
             potentialLossMap.put(mod.getStructuralModId(), losses);
         }
 
-        BlibSpectrum spectrum = BlibSpectrumReader.getRedundantSpectrum(redundantLibPath, redundantRefSpecId);
+        BlibSpectrum spectrum = BlibSpectrumReader.getRedundantSpectrum(localDirectory, redundantLibPath, redundantRefSpecId);
 
         // Make sure that the Bibliospec spectrum has peaks.  Minimized libraries in Skyline can have
         // library entries with no spectrum peaks.  This should be fixed in Skyline.
@@ -254,14 +260,14 @@ public class LibrarySpectrumMatchGetter
         return null;
     }
 
-    public static List<PeptideIdRtInfo> getPeptideIdRts(Precursor precursor, SampleFile sampleFile)
+    public static List<PeptideIdRtInfo> getPeptideIdRts(Precursor precursor, SampleFile sampleFile, LocalDirectory localDirectory)
     {
         if(precursor == null || sampleFile == null)
         {
             return Collections.emptyList();
         }
 
-        List<PeptideIdRtInfo> peptideIdRtInfos = _peptideIdRtsCache.get(new PrecursorKey(precursor.getModifiedSequence(), precursor.getGeneralMoleculeId()));
+        List<PeptideIdRtInfo> peptideIdRtInfos = _peptideIdRtsCache.get(new PrecursorKey(precursor.getModifiedSequence(), precursor.getGeneralMoleculeId()), localDirectory);
 
         if(peptideIdRtInfos == null)
         {

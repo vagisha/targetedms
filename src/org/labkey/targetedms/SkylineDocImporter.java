@@ -117,6 +117,9 @@ public class SkylineDocImporter
     private final LocalDirectory _localDirectory;
     private final PipeRoot _pipeRoot;
 
+    private File _blibSourceDir;
+    private final List<Path> _blibSourcePaths = new ArrayList<>();
+
     // protected Connection _conn;
     // private static final int BATCH_SIZE = 100;
 
@@ -618,6 +621,9 @@ public class SkylineDocImporter
                     _log.info(msg);
                 }
             }
+
+            if (_pipeRoot.isCloudRoot())
+                copyBlibsToCloud();
             transaction.commit();
         }
         finally
@@ -676,15 +682,19 @@ public class SkylineDocImporter
         if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(ext))
         {
             File zipDir = new File(f.getParent(), SkylineFileUtils.getBaseName(f.getName()));
+            _blibSourceDir = zipDir;
             List<File> files = ZipUtil.unzipToDirectory(f, zipDir, _log);
             File skyFile = null;
             for(File file: files)
             {
                 ext = FileUtil.getExtension(file.getName());
-                if("sky".equalsIgnoreCase(ext))
+                if(SkylineFileUtils.EXT_SKY.equalsIgnoreCase(ext) && null == skyFile)
                 {
                     skyFile = file;
-                    break;
+                }
+                else if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(ext))
+                {
+                    _blibSourcePaths.add(file.toPath());
                 }
             }
 
@@ -890,7 +900,7 @@ public class SkylineDocImporter
 
     private void resolveRepresentativeData(TargetedMSRun run)
     {
-        RepresentativeStateManager.setRepresentativeState(_user, _container, run, run.getRepresentativeDataState());
+        RepresentativeStateManager.setRepresentativeState(_user, _container, _localDirectory, run, run.getRepresentativeDataState());
     }
 
     private void insertPeptideGroup(ProteinService proteinService, boolean insertCEOptmizations,
@@ -1580,6 +1590,30 @@ public class SkylineDocImporter
 
             // Remember the ids we inserted so we can reference them later
             skylineIdSampleFileIdMap.put(sampleFileKey, sampleFile);
+        }
+    }
+
+    private void copyBlibsToCloud()
+    {
+        if (!_blibSourcePaths.isEmpty())
+        {
+            try
+            {
+                Path blibDir = _pipeRoot.getRootNioPath().resolve(_blibSourceDir.getName());
+                if (!Files.exists(blibDir))
+                    Files.createDirectory(blibDir);
+
+                for (Path path : _blibSourcePaths)
+                {
+                    Path dest = blibDir.resolve(FileUtil.getFileName(path));
+                    Files.copy(path, dest, StandardCopyOption.REPLACE_EXISTING);
+                    _log.info("Copied " + FileUtil.getFileName(path) + " to cloud storage.");
+                }
+            }
+            catch (IOException e)
+            {
+                logError("Copy Blibs to cloud failed.", e);
+            }
         }
     }
 

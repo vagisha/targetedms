@@ -23,10 +23,10 @@
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
-<%@ page import="java.io.File" %>
 <%@ page import="java.util.Date" %>
 <%@ page import="org.labkey.api.data.Container" %>
-<%@ page import="org.labkey.api.util.DateUtil" %>
+<%@ page import="java.nio.file.Files" %>
+<%@ page import="java.nio.file.Path" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     Container c = getContainer();
@@ -50,14 +50,14 @@
     {
         ActionURL u = new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, c);
         u.addParameter("revision", i);
-        File archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, i);
-        if (archiveFile.isFile()) {
+        Path archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, i);
+        if (!Files.isDirectory(archiveFile)) {
 %>
     <tr>
         <td><%= i %></td>
         <td><%= PageFlowUtil.textLink(ChromatogramLibraryUtils.getDownloadFileName(c, i), u) %></td>
-        <td><%= h(FileUtils.byteCountToDisplaySize(archiveFile.length())) %></td>
-        <td><%= formatDateTime(new Date(archiveFile.lastModified()))%></td>
+        <td><%= h(FileUtils.byteCountToDisplaySize(Files.size(archiveFile))) %></td>
+        <td><%= formatDateTime(new Date(Files.getLastModifiedTime(archiveFile).toMillis()))%></td>
     </tr>
 <%
         }

@@ -18,7 +18,10 @@ package org.labkey.targetedms.parser.blib;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
+import org.labkey.api.pipeline.LocalDirectory;
+import org.labkey.api.util.FileUtil;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 import org.sqlite.SQLiteConfig;
@@ -26,6 +29,8 @@ import org.sqlite.SQLiteConfig;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -60,11 +65,15 @@ public class BlibSpectrumReader
     private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
 
     @Nullable
-    public static BlibSpectrum getSpectrum(String blibFilePath, String modifiedPeptide, int charge)
+    public static BlibSpectrum getSpectrum(Container container, LocalDirectory localDirectory, String blibFilePath,
+                                           String modifiedPeptide, int charge)
     {
-        // CONSIDER: we are reading directly from Bibliospec SQLite file. Should we store library information in the schema?
+        blibFilePath = getLocalBlibPath(localDirectory, blibFilePath);
+        if (null == blibFilePath)
+            return null;
 
-        if(!(new File(blibFilePath)).exists())
+        // CONSIDER: we are reading directly from Bibliospec SQLite file. Should we store library information in the schema?
+        if(!(Files.exists(FileUtil.stringToPath(container, blibFilePath))))
             return null;
 
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath))
@@ -75,7 +84,7 @@ public class BlibSpectrumReader
             readSpectrumPeaks(conn, spectrum);
 
             if(spectrum.getRetentionTime() != null // retentionTime will be null if RetentionTimes table does not exist.
-                    && redundantBlibExists(blibFilePath))
+                    && redundantBlibExists(container, blibFilePath))
             {
                 // Get the redundant spectra IDs
                 addRedundantSpectrumInfo(conn, spectrum);
@@ -105,26 +114,34 @@ public class BlibSpectrumReader
         return false;
     }
 
-    private static boolean redundantBlibExists(String blibPath)
+    public static boolean redundantBlibExists(Container container, String blibPath)
     {
         String redundantBlibFilePath = redundantBlibPath(blibPath);
-        return redundantBlibFilePath == null ? false : new File(redundantBlibFilePath).exists();
+        return redundantBlibFilePath != null && Files.exists(FileUtil.stringToPath(container, redundantBlibFilePath));
     }
 
-    public static String redundantBlibPath(String blibPath)
+    public static String redundantBlibPath(@Nullable String blibPath)
     {
-        int idx = blibPath.indexOf(".blib");
-        if(idx != -1)
+        if (null != blibPath)
         {
-            return blibPath.substring(0, idx) + ".redundant.blib";
+            int idx = blibPath.indexOf(".blib");
+            if (idx != -1)
+            {
+                return blibPath.substring(0, idx) + ".redundant.blib";
+            }
         }
         return null;
     }
 
     @NotNull
-    public static List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getRetentionTimes(String blibFilePath, String modifiedPeptide)
+    public static List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getRetentionTimes(Container container, LocalDirectory localDirectory, String blibFilePath, String modifiedPeptide)
     {
-        if(!(new File(blibFilePath)).exists())
+        blibFilePath = getLocalBlibPath(localDirectory, blibFilePath);
+        if (null == blibFilePath)
+            return Collections.emptyList();
+
+        Path path = FileUtil.stringToPath(container, blibFilePath);
+        if(null == path || !Files.exists(path))
         {
             LOG.error("File not found: " + blibFilePath);
             return Collections.emptyList();
@@ -414,11 +431,16 @@ public class BlibSpectrumReader
         }
     }
 
-    public static BlibSpectrum getRedundantSpectrum(String redundantBlibFilePath, int redundantRefSpectrumId)
+    public static BlibSpectrum getRedundantSpectrum(LocalDirectory localDirectory, String redundantBlibFilePath, int redundantRefSpectrumId)
     {
+        redundantBlibFilePath = getLocalBlibPath(localDirectory, redundantBlibFilePath);
+        if (null == redundantBlibFilePath)
+            return null;
+
         Connection conn = null;
 
-        try {
+        try
+        {
             conn = DriverManager.getConnection("jdbc:sqlite:/" + redundantBlibFilePath);
 
             BlibSpectrum spectrum = readRedundantSpectrum(conn, redundantRefSpectrumId);
@@ -475,5 +497,23 @@ public class BlibSpectrumReader
             if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
             if(rs != null) try {rs.close();} catch(SQLException ignored){}
         }
+    }
+
+    @Nullable
+    private static String getLocalBlibPath(LocalDirectory localDirectory, String blibPath)
+    {
+        // If blib is in cloud, copy it locally to read (TODO: cache)
+        if (FileUtil.hasCloudScheme(blibPath))
+        {
+            File localBlibFile = localDirectory.copyToLocalDirectory(blibPath, LOG);
+            if (null != localBlibFile)
+                blibPath = localBlibFile.getAbsolutePath();
+            else
+            {
+                LOG.error("Unable to copy " + blibPath + " to local file.");
+                return null;
+            }
+        }
+        return blibPath;
     }
 }

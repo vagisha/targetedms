@@ -19,9 +19,13 @@ import org.jfree.chart.ChartColor;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.labkey.api.data.Container;
+import org.labkey.api.pipeline.LocalDirectory;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
 import org.labkey.api.util.Formats;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.model.PrecursorComparator;
@@ -688,7 +692,27 @@ public abstract class ChromatogramDataset
         protected List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getPeptideIdRetentionTimes()
         {
             SampleFile sampleFile = ReplicateManager.getSampleFile(_pChromInfo.getSampleFileId());
-            return LibrarySpectrumMatchGetter.getPeptideIdRts(_precursor, sampleFile);
+
+            // TODO: May want to move LocalDirectory up to controller, where others are created. Sharing probably desired.
+            // But a bunch of actions filter down to this single chokepoint, so I'm putting it here for now (dave 2/10/18)
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(_container);
+            if (null != root)
+            {
+                LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+                try
+                {
+                    return LibrarySpectrumMatchGetter.getPeptideIdRts(_precursor, sampleFile, localDirectory);
+                }
+                finally
+                {
+                    localDirectory.cleanUpLocalDirectory();
+                }
+            }
+            else
+            {
+                throw new IllegalStateException("Pipeline root not found.");
+            }
+
         }
 
         protected void buildJFreedataset(Chromatogram chromatogram, RtRange chromatogramRtRange)

@@ -23,11 +23,11 @@ import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.module.MultiPortalFolderType;
 import org.labkey.api.util.HelpTopic;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.FolderTab;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.Portal;
 import org.labkey.api.view.ViewContext;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -79,7 +79,18 @@ public class TargetedMSFolderType extends MultiPortalFolderType
                 ModuleProperty moduleProperty = module.getModuleProperties().get(TargetedMSModule.TARGETED_MS_FOLDER_TYPE);
                 if(TargetedMSModule.FolderType.valueOf(moduleProperty.getValueContainerSpecific(c)) == TargetedMSModule.FolderType.Undefined)
                 {
-                    return Collections.singletonList(new NavTree(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER, new ActionURL(TargetedMSController.SetupAction.class, c)));
+                    List<NavTree> extraSteps = new ArrayList<>();
+                    ActionURL setupUrl = new ActionURL(TargetedMSController.SetupAction.class, c);
+
+                    if (c.isProject())
+                    {
+                        ActionURL fileRootsUrl = new ActionURL("admin", "fileRootsStandAlone", c)
+                                .addParameter("folderSetup", true)
+                                .addReturnURL(setupUrl);
+                        extraSteps.add(new NavTree("Change File Root", fileRootsUrl));
+                    }
+                    extraSteps.add(new NavTree(TargetedMSController.CONFIGURE_TARGETED_MS_FOLDER, setupUrl));
+                    return extraSteps;
                 }
                 break;
             }

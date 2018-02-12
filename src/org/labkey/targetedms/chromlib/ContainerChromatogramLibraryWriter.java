@@ -15,16 +15,16 @@
  */
 package org.labkey.targetedms.chromlib;
 
-import org.apache.commons.io.FileUtils;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
-import org.labkey.api.util.NetworkDrive;
+import org.labkey.api.util.FileUtil;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
@@ -46,8 +46,9 @@ import org.labkey.targetedms.query.PrecursorManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.TransitionManager;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -103,9 +104,9 @@ public class ContainerChromatogramLibraryWriter
         _proteinService = ServiceRegistry.get().getService(ProteinService.class);
     }
 
-    public String writeLibrary(int libraryRevision) throws SQLException, IOException
+    public String writeLibrary(LocalDirectory localDirectory, int libraryRevision) throws SQLException, IOException
     {
-        File tempChromLibFile = ChromatogramLibraryUtils.getChromLibTempFile(_container, libraryRevision);
+        Path tempChromLibFile = ChromatogramLibraryUtils.getChromLibTempFile(_container, localDirectory, libraryRevision);
 
         try
         {
@@ -134,18 +135,18 @@ public class ContainerChromatogramLibraryWriter
             close();
         }
 
-        File finalChromLibFile = ChromatogramLibraryUtils.getChromLibFile(_container, libraryRevision);
+        Path finalChromLibFile = ChromatogramLibraryUtils.getChromLibFile(_container, libraryRevision);
         // Rename the temp file
-        if(NetworkDrive.exists(finalChromLibFile))
+        if(Files.exists(finalChromLibFile))
         {
-            File oldFile = new File(finalChromLibFile.getPath()+".old");
-            FileUtils.moveFile(finalChromLibFile, oldFile);
-            FileUtils.deleteQuietly(oldFile);
+            Path oldFile = finalChromLibFile.resolveSibling(FileUtil.getFileName(finalChromLibFile) + ".old");
+            Files.move(finalChromLibFile, oldFile);
+            Files.deleteIfExists(oldFile);
         }
 
-        FileUtils.moveFile(tempChromLibFile, finalChromLibFile);
+        Files.move(tempChromLibFile, finalChromLibFile);
 
-        return finalChromLibFile.getPath();
+        return FileUtil.getAbsolutePath(_container, finalChromLibFile);
     }
 
     public void close() throws SQLException

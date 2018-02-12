@@ -81,6 +81,9 @@ import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.ms2.MS2Urls;
+import org.labkey.api.pipeline.LocalDirectory;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
 import org.labkey.api.protein.ProteinService;
@@ -92,6 +95,7 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserSchema;
+import org.labkey.api.query.ValidationException;
 import org.labkey.api.reports.ReportService;
 import org.labkey.api.reports.model.ViewCategory;
 import org.labkey.api.reports.model.ViewCategoryManager;
@@ -1189,21 +1193,7 @@ public class TargetedMSController extends SpringActionController
             vbox.addView(summaryChartView);
 
             // library spectrum
-            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(precursor, new TargetedMSSchema(getUser(), getContainer()));
-            PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(_run.getRunId());
-            int idx = 0;
-            for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
-            {
-                libSpecMatch.setLorikeetId(idx++);
-                if(modSettings != null)
-                {
-                    libSpecMatch.setMaxNeutralLosses(modSettings.getMaxNeutralLosses());
-                }
-                PeptideSpectrumView spectrumView = new PeptideSpectrumView(libSpecMatch, errors);
-                spectrumView.enableExpandCollapse("PeptideSpectrumView", false);
-                vbox.addView(spectrumView);
-            }
-
+            addSpectrumViews(_run, vbox, precursor, errors);
             return vbox;
         }
 
@@ -1871,24 +1861,7 @@ public class TargetedMSController extends SpringActionController
             summaryChartView.enableExpandCollapse("SummaryChartsView", false);
 
             vbox.addView(summaryChartView);
-
-            PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(_run.getRunId());
-
-            // library spectrum
-            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(peptide, getUser(), getContainer());
-            int idx = 0;
-            for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
-            {
-                libSpecMatch.setLorikeetId(idx++);
-                if(modSettings != null)
-                {
-                    libSpecMatch.setMaxNeutralLosses(modSettings.getMaxNeutralLosses());
-                }
-                PeptideSpectrumView spectrumView = new PeptideSpectrumView(libSpecMatch, errors);
-                spectrumView.enableExpandCollapse("PeptideSpectrumView", false);
-                vbox.addView(spectrumView);
-            }
-
+            addSpectrumViews(_run, vbox, peptide, errors);
             return vbox;
         }
 
@@ -2014,21 +1987,7 @@ public class TargetedMSController extends SpringActionController
             TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(peptideId);
 
             VBox vbox = new VBox();
-            PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(run.getRunId());
-
-            List<LibrarySpectrumMatch> libSpectraMatchList = LibrarySpectrumMatchGetter.getMatches(peptide, getUser(), getContainer());
-            int idx = 0;
-            for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
-            {
-                libSpecMatch.setLorikeetId(idx++);
-                if(modSettings != null)
-                {
-                    libSpecMatch.setMaxNeutralLosses(modSettings.getMaxNeutralLosses());
-                }
-                PeptideSpectrumView spectrumView = new PeptideSpectrumView(libSpecMatch, errors);
-                spectrumView.enableExpandCollapse("PeptideSpectrumView", false);
-                vbox.addView(spectrumView);
-            }
+            addSpectrumViews(run, vbox, peptide, errors);
             return vbox;
         }
 
@@ -2037,6 +1996,68 @@ public class TargetedMSController extends SpringActionController
         {
             return null;  //TODO: link back to peptides details page
         }
+    }
+
+    private void addSpectrumViews(TargetedMSRun run, VBox vbox, Precursor precursor, BindException errors)
+    {
+        PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+        if (null != root)
+        {
+            LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+            try
+            {
+                addSpectrumViews(run, vbox,
+                        LibrarySpectrumMatchGetter.getMatches(precursor, new TargetedMSSchema(getUser(), getContainer()), localDirectory), errors);
+            }
+            finally
+            {
+                localDirectory.cleanUpLocalDirectory();
+            }
+        }
+        else
+        {
+            errors.reject (ERROR_MSG, "Pipeline root not found.");
+        }
+    }
+
+    private void addSpectrumViews(TargetedMSRun run, VBox vbox, Peptide peptide, BindException errors)
+    {
+        PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+        if (null != root)
+        {
+            LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+            try
+            {
+                addSpectrumViews(run, vbox,
+                        LibrarySpectrumMatchGetter.getMatches(peptide, getUser(), getContainer(), localDirectory), errors);
+            }
+            finally
+            {
+                localDirectory.cleanUpLocalDirectory();
+            }
+        }
+        else
+        {
+            errors.reject (ERROR_MSG, "Pipeline root not found.");
+        }
+    }
+
+    private void addSpectrumViews(TargetedMSRun run, VBox vbox, List<LibrarySpectrumMatch> libSpectraMatchList, BindException errors)
+    {
+        PeptideSettings.ModificationSettings modSettings = ModificationManager.getSettings(run.getRunId());
+        int idx = 0;
+        for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
+        {
+            libSpecMatch.setLorikeetId(idx++);
+            if(modSettings != null)
+            {
+                libSpecMatch.setMaxNeutralLosses(modSettings.getMaxNeutralLosses());
+            }
+            PeptideSpectrumView spectrumView = new PeptideSpectrumView(libSpecMatch, errors);
+            spectrumView.enableExpandCollapse("PeptideSpectrumView", false);
+            vbox.addView(spectrumView);
+        }
+
     }
 
     @RequiresPermission(ReadPermission.class)
@@ -2083,31 +2104,47 @@ public class TargetedMSController extends SpringActionController
             }
             String blibFilePath = LibraryManager.getLibraryFilePath(run.getId(), library);
             String redundantBlibFilePath = BlibSpectrumReader.redundantBlibPath(blibFilePath);
-            if (redundantBlibFilePath == null || !(new File(redundantBlibFilePath)).exists())
+            if (!BlibSpectrumReader.redundantBlibExists(getContainer(), blibFilePath))
             {
                 response.put("error", "Redundant library file " + redundantBlibFilePath + " does not exist.");
                 return response;
             }
 
-            LibrarySpectrumMatch spectrumMatch = LibrarySpectrumMatchGetter.getSpectrumMatch(run, peptide, precursor, library,
-                    redundantBlibFilePath,
-                    form.getRedundantRefSpectrumId());
-            if (spectrumMatch == null)
+            PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+            if (null != root)
             {
-                response.put("error", "Could not find spectrum in library " + form.getLibraryName());
-                return response;
-            }
-            Map<String, Object> spectrumDetails = new HashMap<>(4);
-            spectrumDetails.put("sequence", spectrumMatch.getPeptide());
-            spectrumDetails.put("staticMods", spectrumMatch.getStructuralModifications());
-            spectrumDetails.put("variableMods", spectrumMatch.getVariableModifications());
-            spectrumDetails.put("maxNeutralLossCount", spectrumMatch.getMaxNeutralLosses());
-            spectrumDetails.put("charge", spectrumMatch.getCharge());
-            spectrumDetails.put("fileName", spectrumMatch.getSpectrum().getSourceFileName());
-            spectrumDetails.put("retentionTime", spectrumMatch.getSpectrum().getRetentionTimeF2());
-            spectrumDetails.put("peaks", spectrumMatch.getPeaks());
+                LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+                try
+                {
+                    LibrarySpectrumMatch spectrumMatch = LibrarySpectrumMatchGetter.getSpectrumMatch(run, peptide, precursor, library,
+                            localDirectory, redundantBlibFilePath,
+                            form.getRedundantRefSpectrumId());
+                    if (spectrumMatch == null)
+                    {
+                        response.put("error", "Could not find spectrum in library " + form.getLibraryName());
+                        return response;
+                    }
+                    Map<String, Object> spectrumDetails = new HashMap<>(4);
+                    spectrumDetails.put("sequence", spectrumMatch.getPeptide());
+                    spectrumDetails.put("staticMods", spectrumMatch.getStructuralModifications());
+                    spectrumDetails.put("variableMods", spectrumMatch.getVariableModifications());
+                    spectrumDetails.put("maxNeutralLossCount", spectrumMatch.getMaxNeutralLosses());
+                    spectrumDetails.put("charge", spectrumMatch.getCharge());
+                    spectrumDetails.put("fileName", spectrumMatch.getSpectrum().getSourceFileName());
+                    spectrumDetails.put("retentionTime", spectrumMatch.getSpectrum().getRetentionTimeF2());
+                    spectrumDetails.put("peaks", spectrumMatch.getPeaks());
 
-            response.put("spectrum", spectrumDetails);
+                    response.put("spectrum", spectrumDetails);
+                }
+                finally
+                {
+                    localDirectory.cleanUpLocalDirectory();
+                }
+            }
+            else
+            {
+                response.put("error", "Pipeline root not found.");
+            }
 
             return response;
         }
@@ -4101,7 +4138,23 @@ public class TargetedMSController extends SpringActionController
                 }
 
                 // Increment the chromatogram library revision number for this container.
-                ChromatogramLibraryUtils.incrementLibraryRevision(getContainer(), getUser());
+                PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+                if (null != root)
+                {
+                    LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+                    try
+                    {
+                        ChromatogramLibraryUtils.incrementLibraryRevision(getContainer(), getUser(), localDirectory);
+                    }
+                    finally
+                    {
+                        localDirectory.cleanUpLocalDirectory();
+                    }
+                }
+                else
+                {
+                    throw new ValidationException("Pipeline root not found.");      // TODO: set errors?
+                }
 
                 // Add event to audit log.
                 TargetedMsRepresentativeStateAuditProvider.addAuditEntry(getContainer(), getUser(), "Conflict resolved.");
@@ -4194,17 +4247,17 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("No input data found for run "+expRun.getRowId());
             }
             // The first file will be the .zip file since we only use one file as input data.
-            File file = expRun.getAllDataUsedByRun().get(0).getFile();
+            Path file = expRun.getAllDataUsedByRun().get(0).getFilePath();
             if (file == null)
             {
                 throw new NotFoundException("Data file for run " + run.getFileName() + " was not found.");
             }
-            if(!NetworkDrive.exists(file))
+            if(!Files.exists(file))
             {
                 throw new NotFoundException("File " + file + " does not exist.");
             }
 
-            PageFlowUtil.streamFile(getViewContext().getResponse(), file, true);
+            PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), FileUtil.getFileName(file), Files.newInputStream(file), true);
             return null;
         }
 
@@ -4265,22 +4318,42 @@ public class TargetedMSController extends SpringActionController
             int libraryRevision = ( form.getRevision() != 0) ? form.getRevision() : currentRevision;
 
             Container container = getContainer();
-            File chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container, libraryRevision);
+            Path chromLibFile = ChromatogramLibraryUtils.getChromLibFile(container, libraryRevision);
 
             // If the library is not found (i.e. was deleted),
-            if(!chromLibFile.exists())
+            if(!Files.exists(chromLibFile))
             {
                 // create a new library file if the version numbers match
-                if (libraryRevision == currentRevision)
-                    ChromatogramLibraryUtils.writeLibrary(container, libraryRevision, getUser());
+                if(libraryRevision == currentRevision)
+                {
+                    PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
+                    if (null != root)
+                    {
+                        LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+                        try
+                        {
+                            ChromatogramLibraryUtils.writeLibrary(container, getUser(), localDirectory, libraryRevision);
+                        }
+                        finally
+                        {
+                            localDirectory.cleanUpLocalDirectory();
+                        }
+                    }
+                    else
+                    {
+                        throw new ValidationException("Pipeline root not found.");      // TODO: set errors?
+                    }
+                }
                 else
+                {
                     throw new NotFoundException("Unable to find archived library for revision " + libraryRevision);
+                }
             }
 
 
             // construct new filename
             String fileName = ChromatogramLibraryUtils.getDownloadFileName(container, libraryRevision);
-            PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), fileName, new FileInputStream(chromLibFile), true);
+            PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), fileName, Files.newInputStream(chromLibFile), true);
 
             return null;
         }
@@ -4336,7 +4409,7 @@ public class TargetedMSController extends SpringActionController
             }
 
             // Check the schema version and library revision.
-            if(!ChromatogramLibraryUtils.isRevisionCurrent(getContainer(), form.getSchemaVersion(), form.getLibraryRevision(), getUser()))
+            if(!ChromatogramLibraryUtils.isRevisionCurrent(getContainer(), getUser(), form.getSchemaVersion(), form.getLibraryRevision()))
             {
                 response.put("isUptoDate", Boolean.FALSE);
                 return response;

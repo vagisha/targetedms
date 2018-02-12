@@ -56,6 +56,7 @@ import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleProperty;
+import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
@@ -66,11 +67,13 @@ import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SchemaKey;
+import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -951,7 +954,23 @@ public class TargetedMSManager
             // Revert the representative state if any of the runs are representative at the protein or peptide level.
             if(run.isRepresentative())
             {
-                RepresentativeStateManager.setRepresentativeState(user, c, run, TargetedMSRun.RepresentativeDataState.NotRepresentative);
+                PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
+                if (null != root)
+                {
+                    LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+                    try
+                    {
+                        RepresentativeStateManager.setRepresentativeState(user, c, localDirectory, run, TargetedMSRun.RepresentativeDataState.NotRepresentative);
+                    }
+                    finally
+                    {
+                        localDirectory.cleanUpLocalDirectory();
+                    }
+                }
+                else
+                {
+                    throw new RuntimeException("Pipeline root not found.");
+                }
             }
         }
 
