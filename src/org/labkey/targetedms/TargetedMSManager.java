@@ -531,6 +531,12 @@ public class TargetedMSManager
                 }
 
                 @Override
+                public Path getRootPath()
+                {
+                    return path.getParent();
+                }
+
+                @Override
                 public ExperimentArchiveDocument getDocument() throws XmlException, IOException
                 {
                     throw new UnsupportedOperationException();

@@ -39,9 +39,12 @@ import org.labkey.api.writer.ZipUtil;
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -63,6 +66,10 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
 
     @Override
     public void importFile(ExpData data, File dataFile, ViewBackgroundInfo info, Logger log, XarContext context) throws ExperimentException
+    {
+        importFile(data, dataFile != null ? dataFile.toPath() : null, info, log, context);
+    }
+    public void importFile(ExpData data, Path dataFile, ViewBackgroundInfo info, Logger log, XarContext context) throws ExperimentException
     {
         String description = data.getFile().getName();
         SkylineDocImporter importer = new SkylineDocImporter(info.getUser(), context.getContainer(), description,
@@ -160,12 +167,15 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             throw new ExperimentException(error.toString());
         }
 
-        File sourceFile = newData.getFile();
+        Path sourceFile = newData.getFilePath();
+        if(null == sourceFile)
+            throw new ExperimentException("Source file is null.");
 
         // Fail if a Skyline document with the same source file name exists in the new location.
-        if(skylineDocExistsInTarget(sourceFile.getName(), targetContainer))
+        String sourceFileName = FileUtil.getFileName(sourceFile);
+        if(skylineDocExistsInTarget(sourceFileName, targetContainer))
         {
-            throw new ExperimentException("A run with filename " + sourceFile.getName() + " already exists in the target container " + targetContainer.getPath());
+            throw new ExperimentException("A run with filename " + sourceFileName + " already exists in the target container " + targetContainer.getPath());
         }
 
         TargetedMSRun run = TargetedMSManager.getRunByLsid(oldRunLSID, container);
@@ -174,7 +184,8 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             throw new ExperimentException("Run with lsid " + oldRunLSID + " was not found in container " + container.getPath());
         }
 
-        NetworkDrive.ensureDrive(sourceFile.getPath());
+        if(!FileUtil.hasCloudScheme(sourceFile))                              // TODO: do we need to createDirectories for cloud? Probably not
+            NetworkDrive.ensureDrive(sourceFile.toFile().getPath());
 
         PipeRoot targetRoot = PipelineService.get().findPipelineRoot(targetContainer);
         if(targetRoot == null)
@@ -182,12 +193,12 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             throw new ExperimentException("Could not find pipeline root for target container " + targetContainer.getPath());
         }
 
-        String srcFileExt = FileUtil.getExtension(sourceFile.getName());
+        String srcFileExt = FileUtil.getExtension(sourceFileName);
 
         if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(srcFileExt))
         {
             // Copy the source Skyline zip file to the new location.
-            File destFile = new File(targetRoot.getRootPath(), sourceFile.getName());   // TODO: S3 work
+            Path destFile = targetRoot.getRootNioPath().resolve(sourceFileName);
             // It is only meaningful to copy the file it is a shared zip file that may contain spectrum and/or irt libraries.
             // When rendering the MS/MS spectrum we read scan peaks directly from the .blib (spectrum library) files.
             // The contents of these files are not stored in the database.
@@ -200,27 +211,57 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             {
                 try
                 {
-                    FileUtils.copyFile(sourceFile, destFile);
+                    Files.copy(sourceFile, destFile);
                 }
                 catch (IOException e)
                 {
-                    throw new ExperimentException("Could not copy " + sourceFile + " to destination directory " + targetRoot.getRootPath());
+                    throw new ExperimentException("Could not copy " + sourceFile + " to destination directory " + targetRoot.getRootNioPath());
                 }
             }
 
-            // Expand the zip file in the new location
-            File zipDir = new File(destFile.getParent(), SkylineFileUtils.getBaseName(destFile.getName()));
-            try
+            if (!FileUtil.hasCloudScheme(destFile))
             {
-                ZipUtil.unzipToDirectory(destFile, zipDir, null);
+                // Expand the zip file in the new location
+                File zipDir = new File(destFile.toFile().getParent(), SkylineFileUtils.getBaseName(FileUtil.getFileName(destFile)));
+                try
+                {
+                    ZipUtil.unzipToDirectory(destFile.toFile(), zipDir, null);
+                }
+                catch (IOException e)
+                {
+                    throw new ExperimentException("Unable to unzip file " + FileUtil.getFileName(destFile), e);
+                }
             }
-            catch (IOException e)
+            else
             {
-                throw new ExperimentException("Unable to unzip file " + destFile.getPath(), e);
+                // Copy any blibs from source
+                try
+                {
+                    Path sourceDir = sourceFile.getParent().resolve(SkylineFileUtils.getBaseName(sourceFileName));
+                    Path destDir = destFile.getParent().resolve(SkylineFileUtils.getBaseName(sourceFileName));
+                    if (Files.exists(sourceDir) && Files.isDirectory(sourceDir))
+                    {
+                        if (!Files.exists(destDir))
+                            Files.createDirectory(destDir);
+                        if (Files.isDirectory(destDir))
+                        {
+                            for (Path path : Files.list(sourceDir).collect(Collectors.toSet()))
+                            {
+                                String filename = FileUtil.getFileName(path);
+                                if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(FileUtil.getExtension(filename)))
+                                    Files.copy(path, destDir.resolve(filename));
+                            }
+                        }
+                    }
+                }
+                catch (IOException e)
+                {
+                    throw new ExperimentException("Unable copy blibs to cloud " + FileUtil.getFileName(destFile), e);
+                }
             }
-
             // Update the file path in ExpData
-            newData.setDataFileURI(destFile.toURI());
+            newData.setDataFileURI(destFile.toUri());
+            newData.setContainer(targetContainer);
             newData.save(user);
         }
 
@@ -236,12 +277,22 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
 
         if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(srcFileExt))
         {
-            // Delete the Skyline file in the old location
-            sourceFile.delete();
+            try
+            {
+                // Delete the Skyline file in the old location
+                Files.delete(sourceFile);
 
-            // Delete the unzipped directory in the old location
-            File oldZipDir = new File(sourceFile.getParent(), SkylineFileUtils.getBaseName(sourceFile.getName()));
-            FileUtil.deleteDir(oldZipDir);
+                if (!FileUtil.hasCloudScheme(sourceFile))
+                {
+                    // Delete the unzipped directory in the old location
+                    File oldZipDir = new File(sourceFile.toFile().getParent(), SkylineFileUtils.getBaseName(sourceFileName));
+                    FileUtil.deleteDir(oldZipDir);
+                }
+            }
+            catch (IOException e)
+            {
+                throw new ExperimentException(e);
+            }
         }
 
     }
@@ -262,21 +313,35 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             return null;
         ext = ext.toLowerCase();
         // we handle only *.sky or .zip files
-        return "sky".equals(ext) ||
-                ("zip".equals(ext) &&
-                        (TargetedMSManager.getRunByDataId(data.getRowId(), data.getContainer()) != null ||
-                        zipContainsSkyFile(data.getFile()))) ? Priority.HIGH : null;
+        if ("sky".equals(ext))
+            return Priority.HIGH;
+
+        if ("zip".equals(ext))
+        {
+            String firstExt = FileUtil.getExtension(FileUtil.getBaseName(url));     // See if it's sky.zip
+            if (null != firstExt && "sky".equalsIgnoreCase(firstExt))
+                return Priority.HIGH;
+
+            if (TargetedMSManager.getRunByDataId(data.getRowId(), data.getContainer()) != null)
+                return Priority.HIGH;
+
+            if (zipContainsSkyFile(data.getFilePath()))
+                return Priority.HIGH;
+        }
+
+        return null;
     }
 
     /** @return true if the zip file contains a .sky file, which means that we can import it (after extracting) */
-    private boolean zipContainsSkyFile(File f)
+    private boolean zipContainsSkyFile(Path f)
     {
-        if (f == null || !f.exists())
-        {
+        if (f == null || !Files.exists(f))
             return false;
-        }
 
-        try (ZipFile zipFile = new ZipFile(f))
+        if (FileUtil.hasCloudScheme(f))
+            return true;        // If it's in cloud, don't bother to crack open; say it's ours
+
+        try (ZipFile zipFile = new ZipFile(f.toFile()))
         {
             Enumeration<? extends ZipEntry> entries = zipFile.entries();
             while (entries.hasMoreElements())
