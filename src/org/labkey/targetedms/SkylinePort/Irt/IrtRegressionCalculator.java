@@ -53,7 +53,7 @@ public class IrtRegressionCalculator
         ArrayList<Double> listIrts = new ArrayList<>(); // TPG declaration & population mod fromLINQ syntax in C#
         for (IrtPeptide standardPeptide : standardPeptideList)
         {
-            listIrts.add(standardPeptide.getiRTValue()); // TPG declaration & population mod fromLINQ syntax in C#
+            // listIrts.add(standardPeptide.getiRTValue()); // TPG declaration & population mod fromLINQ syntax in C#
 
             Double time = retentionTimes.GetRetentionTime(standardPeptide.getModifiedSequence());
             if (time == null)
@@ -61,9 +61,10 @@ public class IrtRegressionCalculator
                 continue;
             }
             listTimes.add(time);
+            listIrts.add(standardPeptide.getiRTValue()); // TPG declaration & population mod fromLINQ syntax in C#
         }
 
-        if (listTimes.size() == standardPeptideList.size())
+        if (CurrentCalculator.IsAcceptableStandardCount(standardPeptideList.size(), listTimes.size()) /*listTimes.size() == standardPeptideList.size()*/)
         {
             Statistics statTimes = new Statistics(listTimes);
             Statistics statIrts = new Statistics(listIrts);
