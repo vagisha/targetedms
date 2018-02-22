@@ -208,13 +208,12 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -4257,7 +4256,10 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("File " + file + " does not exist.");
             }
 
-            PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), FileUtil.getFileName(file), Files.newInputStream(file), true);
+            try (InputStream inputStream = Files.newInputStream(file))
+            {
+                PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), FileUtil.getFileName(file), inputStream, true);
+            }
             return null;
         }
 
@@ -4353,7 +4355,10 @@ public class TargetedMSController extends SpringActionController
 
             // construct new filename
             String fileName = ChromatogramLibraryUtils.getDownloadFileName(container, libraryRevision);
-            PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), fileName, Files.newInputStream(chromLibFile), true);
+            try (InputStream inputStream = Files.newInputStream(chromLibFile))
+            {
+                PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), fileName, inputStream, true);
+            }
 
             return null;
         }

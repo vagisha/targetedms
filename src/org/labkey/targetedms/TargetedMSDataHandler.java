@@ -45,6 +45,7 @@ import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.DataFormatException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -73,7 +74,8 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     {
         String description = data.getFile().getName();
         SkylineDocImporter importer = new SkylineDocImporter(info.getUser(), context.getContainer(), description,
-                                                             data, log, context, TargetedMSRun.RepresentativeDataState.NotRepresentative, null, null);
+                                                             data, log, context, TargetedMSRun.RepresentativeDataState.NotRepresentative, null,
+                                                             PipelineService.get().findPipelineRoot(context.getContainer()));
         try
         {
             SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
@@ -245,11 +247,14 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
                             Files.createDirectory(destDir);
                         if (Files.isDirectory(destDir))
                         {
-                            for (Path path : Files.list(sourceDir).collect(Collectors.toSet()))
+                            try (Stream<Path> paths = Files.list(sourceDir))
                             {
-                                String filename = FileUtil.getFileName(path);
-                                if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(FileUtil.getExtension(filename)))
-                                    Files.copy(path, destDir.resolve(filename));
+                                for (Path path : paths.collect(Collectors.toSet()))
+                                {
+                                    String filename = FileUtil.getFileName(path);
+                                    if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(FileUtil.getExtension(filename)))
+                                        Files.copy(path, destDir.resolve(filename));
+                                }
                             }
                         }
                     }

@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * User: vsharma
@@ -120,9 +121,9 @@ public class LibraryManager
     {
         // Get the name of the .sky file in the directory
         List<String> skyFiles = new ArrayList<>();
-        try
+        try (Stream<Path> paths = Files.list(skyFilesDir))
         {
-            Files.list(skyFilesDir).forEach(path -> {
+            paths.forEach(path -> {
                 String filename = FileUtil.getFileName(path).toLowerCase();
                 if (filename.endsWith(SkylineFileUtils.EXT_SKY_W_DOT))
                     skyFiles.add(filename);
