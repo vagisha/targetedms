@@ -22,7 +22,9 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.Pair;
 import org.labkey.targetedms.TargetedMSController;
+import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 import org.sqlite.SQLiteConfig;
 
@@ -33,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -194,7 +197,7 @@ public class BlibSpectrumReader
     private static BlibSpectrum readSpectrum(Connection conn, String modifiedPeptide, int charge) throws SQLException
     {
         String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
-
+        blibPeptide = findMatchingModifiedSequence(conn, blibPeptide);
         boolean validRtTable = hasValidRtTable(conn);
         StringBuilder sql;
         if(validRtTable)
@@ -240,6 +243,30 @@ public class BlibSpectrumReader
             }
             return spectrum;
         }
+    }
+
+    public static String findMatchingModifiedSequence(Connection conn, String modifiedSequence) throws SQLException
+    {
+        List<Pair<Integer, String>> mods = new ArrayList<>();
+        String unmodifiedSequence = Peptide.stripModifications(modifiedSequence, mods);
+        if (mods.size() == 0) {
+            return modifiedSequence;
+        }
+        String sql = "SELECT peptideModSeq FROM RefSpectra WHERE peptideSeq = ?";
+
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, unmodifiedSequence);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next())
+                {
+                    String modSeqCompare = rs.getString(1);
+                    if (Peptide.modifiedSequencesMatch(modifiedSequence, modSeqCompare)) {
+                        return modSeqCompare;
+                    }
+                }
+            }
+        }
+        return modifiedSequence;
     }
 
     private static boolean hasRetentionTimesTable(Connection conn) throws SQLException

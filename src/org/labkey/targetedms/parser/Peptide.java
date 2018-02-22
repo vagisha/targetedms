@@ -315,7 +315,7 @@ public class Peptide extends GeneralMolecule
         }
     }
 
-    private static boolean modifiedSequencesMatch(String modSeq1, String modSeq2)
+    public static boolean modifiedSequencesMatch(String modSeq1, String modSeq2)
     {
         if (modSeq1.equals(modSeq2))
         {
@@ -366,7 +366,7 @@ public class Peptide extends GeneralMolecule
     /**
      * Adds to a list all of the modifications in a modifiedSequence, and returns the unmodified sequence.
      */
-    private static String stripModifications(String modifiedSequence, List<Pair<Integer, String>> modifications)
+    public static String stripModifications(String modifiedSequence, List<Pair<Integer, String>> modifications)
     {
         StringBuilder unmodifiedSequence = null;
         Integer modificationStart = null;
