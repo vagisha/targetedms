@@ -312,7 +312,11 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public Integer getUncompressedSize()
     {
-        return _uncompressedSize;
+        if (_uncompressedSize != null)
+        {
+            return _uncompressedSize.intValue();
+        }
+        return _chromatogram == null ? null : _chromatogram.length;
     }
 
     public void setUncompressedSize(Integer uncompressedSize)
