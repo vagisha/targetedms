@@ -118,7 +118,7 @@ div.labkey-download h3 {
 <h3><%= h(c.getName())%> Library</h3>
 <a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, c)) %>" class="banner-button">Download</a> <br/>
         <%= h(ChromatogramLibraryUtils.getDownloadFileName(c, currentRevision)) %>
-    <%= h(!Files.isDirectory(archiveFile) ? "(" + FileUtils.byteCountToDisplaySize(Files.size(archiveFile)) + ")" : "") %>
+    <%= h(Files.exists(archiveFile) ? "(" + FileUtils.byteCountToDisplaySize(Files.size(archiveFile)) + ")" : "") %>
     <br/>
     Revision <%= h(currentRevision)%><br/>
     <br/>
