@@ -21,6 +21,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
+import org.labkey.api.analytics.AnalyticsService;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.*;
 import org.labkey.api.exp.query.ExpRunTable;
@@ -41,6 +42,8 @@ import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.stats.AnalyticsProvider;
+import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.UnexpectedException;
@@ -555,10 +558,21 @@ public class TargetedMSSchema extends UserSchema
                                     Path skyDocFile = SkylineFileUtils.getSkylineFile(runLSID);
                                     if (skyDocFile != null && !Files.isDirectory(skyDocFile))
                                     {
+
+                                        String onClickScript = null;
+                                        if(!StringUtils.isBlank(AnalyticsService.getTrackingScript()))
+                                        {
+                                            // http://www.blastam.com/blog/how-to-track-downloads-in-google-analytics
+                                            // Tell the browser to wait 400ms before going to the download.  This is to ensure
+                                            // that the GA tracking request goes through. Some browsers will interrupt the tracking
+                                            // request if the download opens on the same page.
+                                            String timeout = "setTimeout(function(){location.href=that.href;},400);return false;";
+
+                                            onClickScript = "if(_gaq) {that=this; _gaq.push(['_trackEvent', 'SkyDocDownload', '" + ctx.getContainerPath() + "', '" + FileUtil.getFileName(skyDocFile) + "']); " + timeout + "}";
+                                        }
+                                        out.write(PageFlowUtil.iconLink("fa fa-download", "Download File", PageFlowUtil.filter(downloadUrl),
+                                                                        onClickScript, null, null));
                                         String size = h(" (" + FileUtils.byteCountToDisplaySize(Files.size(skyDocFile)) + ")");
-                                        out.write("<a href=\"");
-                                        out.write(PageFlowUtil.filter(downloadUrl));
-                                        out.write("\"><span class=\"fa fa-download\" data-qtip=\"Download File\" /></a>");
                                         out.write(size);
                                     }
                                     else

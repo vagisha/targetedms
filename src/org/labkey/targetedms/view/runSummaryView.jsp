@@ -27,6 +27,8 @@
 <%@ page import="org.labkey.targetedms.TargetedMSRun" %>
 <%@ page import="java.nio.file.Path" %>
 <%@ page import="java.nio.file.Files" %>
+<%@ page import="org.apache.commons.lang3.StringUtils" %>
+<%@ page import="org.labkey.api.analytics.AnalyticsService" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
 <%!
@@ -91,6 +93,7 @@
             fileName: <%=q(run.getFileName())%>,
             fileSize: <%=q(skyDocFile != null ? FileUtils.byteCountToDisplaySize(Files.size(skyDocFile)) : null)%>,
             downloadAction: <%=q(downloadAction.getLocalURIString())%>,
+            trackEvent: <%=!StringUtils.isBlank(AnalyticsService.getTrackingScript())%>,
             renameAction: <%=q(renameAction)%>,
             softwareVersion: <%=q(run.getSoftwareVersion())%>,
             versionsAction: <%=q(versionsAction.getLocalURIString())%>,

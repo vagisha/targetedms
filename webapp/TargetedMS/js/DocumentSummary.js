@@ -72,7 +72,21 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
                     click: {
                         element: 'el',
                         fn: function () {
-                            window.location = this.downloadAction;
+                            if(this.trackEvent && _gaq)
+                            {
+                                var container = LABKEY.ActionURL.getContainer();
+                                _gaq.push(['_trackEvent', 'SkyDocDownload', container, this.fileName]);
+                                // http://www.blastam.com/blog/how-to-track-downloads-in-google-analytics
+                                // Tell the browser to wait 400ms before going to the download.  This is to ensure
+                                // that the GA tracking request goes through. Some browsers will interrupt the tracking
+                                // request if the download opens on the same page.
+                                var that = this;
+                                setTimeout(function(){window.location = that.downloadAction}, 400);
+                            }
+                            else
+                            {
+                                window.location = this.downloadAction;
+                            }
                         },
                         scope: this
                     }
