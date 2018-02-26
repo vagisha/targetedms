@@ -14,5 +14,6 @@
  * limitations under the License.
  */
 
+-- Commented out 2/26/18.  Upgrade code has been left in place.  May be used later, if required
 -- Add a "Raw Data" tab to all targetedms folders that don't already have it.
-EXEC core.executeJavaUpgradeCode 'addRawDataTab';
+-- EXEC core.executeJavaUpgradeCode 'addRawDataTab';
