@@ -86,6 +86,7 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
+import org.labkey.api.portal.ProjectUrls;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
@@ -438,6 +439,32 @@ public class TargetedMSController extends SpringActionController
         public URLHelper getSuccessURL(FolderSetupForm folderSetupForm)
         {
             return getContainer().getStartURL(getUser());
+        }
+    }
+
+    // ------------------------------------------------------------------------
+    // Action to create a Raw Data tab
+    // ------------------------------------------------------------------------
+    @RequiresPermission(AdminPermission.class)
+    public class AddRawDataTabAction extends RedirectAction
+    {
+        @Override
+        public boolean doAction(Object o, BindException errors) throws Exception
+        {
+            Container c = getContainer(); ;
+            if(!c.hasActiveModuleByName(TargetedMSModule.NAME))
+            {
+                return true; // no TargetedMS module found - do nothing
+            }
+            addRawFilesPipelineTab(c);
+
+            return true;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(Object o)
+        {
+            return PageFlowUtil.urlProvider(ProjectUrls.class).getBeginURL(getContainer(), FolderSetupAction.RAW_FILES_TAB);
         }
     }
 

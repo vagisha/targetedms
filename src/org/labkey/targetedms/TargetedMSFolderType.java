@@ -21,6 +21,8 @@ import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.module.MultiPortalFolderType;
+import org.labkey.api.security.User;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.HelpTopic;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
@@ -31,6 +33,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+
+import static org.labkey.targetedms.TargetedMSController.FolderSetupAction.RAW_FILES_TAB;
 
 /**
  * User: vsharma
@@ -108,5 +112,20 @@ public class TargetedMSFolderType extends MultiPortalFolderType
     public String getStartPageLabel(ViewContext ctx)
     {
         return "Panorama Dashboard";
+    }
+
+    @Override
+    public void addManageLinks(NavTree adminNavTree, Container container, User user)
+    {
+        super.addManageLinks(adminNavTree, container, user);
+
+        if (container.hasPermission(user, AdminPermission.class))
+        {
+            if(Portal.getParts(container, RAW_FILES_TAB).size() == 0)
+            {
+                ActionURL url = new ActionURL(TargetedMSController.AddRawDataTabAction.class, container);
+                adminNavTree.addChild(new NavTree("Add Raw Data Tab", url));
+            }
+        }
     }
 }
