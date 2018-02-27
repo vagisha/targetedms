@@ -42,7 +42,6 @@ public class TargetedMSLibraryIrtTest extends TargetedMSIrtTest
     private static final String IGNORE_ONE_STANDARD_MSG = "Calculated iRT regression line by ignoring import value for standard: ADVTPADFSEWSK";
     private static final String CALCULATED_FROM_SHARED_MSG = "Successfully calculated iRT regression line from 705 shared peptides";
     private static final String CALCULATED_FROM_FULL_STANDARD_LIST = "Calculated iRT regression line from full standard list";
-    private static final String COULDNT_CALCULATE_CORRELATION_MSG = "Unable to find sufficient correlation in standard or shared library peptides";
 
     private int goodImport = 0;
 
@@ -82,12 +81,11 @@ public class TargetedMSLibraryIrtTest extends TargetedMSIrtTest
         assertEquals("Import count is incorrect for peptide " + NEW_PEPTIDE, 1, getImportCount(NEW_PEPTIDE));
         goodImport++;
 
-        // 5. Shared peptide failed correlation test. Import another copy which doesn't match the same set of standards as the first import. Because of the update done in test 4, this will
-        // attempt to calculate a correlation from shared peptides, and fail to find one.
-        importData(SKY_FILE_BAD_STANDARDS, 5, false);
-        assertTextPresent("ERROR");
-        checkLogMessage(COULDNT_CALCULATE_CORRELATION_MSG);
-        checkExpectedErrors(1);
+        // 5. Shared peptide correlation test. Import another copy which doesn't match the same set of standards as the first import.
+        // Allowed, as of Issue 32924: Port Skyline changes to allowable iRT discrepancy during import
+        importData(SKY_FILE_BAD_STANDARDS, 5);
+        checkLogMessage(CALCULATED_FROM_FULL_STANDARD_LIST);
+        goodImport++;
 
         downloadLibraryExport(goodImport);
     }
