@@ -208,7 +208,7 @@ public class LibrarySpectrumMatch
         // Return all isotopic and variable structural modifications.
         mods.append(appendStructuralModifications(_structuralModifications, true)); // only variable mods
         String isotopeMods = appendIsotopeModifications(_isotopeModifications);
-        if(isotopeMods.length() > 1)
+        if(mods.length() > 1)
         {
            mods.append(",");
         }
