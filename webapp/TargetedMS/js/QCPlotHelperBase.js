@@ -181,6 +181,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     processPlotData: function(plotDataRows) {
         var metricProps = this.getMetricPropsById(this.metric);
+        var dateProp = this.groupedX ? "date" : "fullDate";
+        var allPlotDateValues = [];
+        
         this.processedPlotData = this.preprocessPlotData(plotDataRows, this.showMovingRangePlot(), this.showMeanCUSUMPlot(), this.showVariableCUSUMPlot(), this.yAxisScale == 'log');
 
         // process the data to shape it for the JS LeveyJenningsPlot API call
@@ -196,12 +199,18 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 {
                     var data = this.processPlotDataRow(row, fragment, seriesType, metricProps);
                     this.fragmentPlotData[fragment].data.push(data);
-
                     this.setSeriesMinMax(this.fragmentPlotData[fragment], data);
-
+                    allPlotDateValues.push(data[dateProp]);
                 }, this);
             }, this);
         }, this);
+
+        // Issue 31678: get the full set of dates values from the precursor data and from the annotations
+        for (var j = 0; j < this.annotationData.length; j++) {
+            var annDate = this.formatDate(new Date(this.annotationData[j].Date), !this.groupedX);
+            allPlotDateValues.push(annDate);
+        }
+        allPlotDateValues = Ext4.Array.unique(allPlotDateValues).sort();
 
         this.legendHelper = Ext4.create("LABKEY.targetedms.QCPlotLegendHelper");
         this.legendHelper.setupLegendPrefixes(this.fragmentPlotData, 3);
@@ -225,24 +234,18 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     precursorInfo.min -= factor;
                 }
 
-                // add any missing dates from the QC annotation data to the plot data
-                var precursorDates = Ext4.Array.pluck(precursorInfo.data, (this.groupedX ? "date" : "fullDate"));
+                // Issue 31678: add any missing dates from the other plots or from the annotations
+                var precursorDates = Ext4.Array.pluck(precursorInfo.data, dateProp);
                 var datesToAdd = [];
-                for (var j = 0; j < this.annotationData.length; j++)
-                {
-                    var annFullDate = this.formatDate(new Date(this.annotationData[j].Date), true);
-                    var annDate = this.formatDate(new Date(this.annotationData[j].Date));
-
-                    var toAddAnnDate = precursorDates.indexOf(annDate) == -1 && Ext4.Array.pluck(datesToAdd, "date").indexOf(annDate) == -1;
-                    var toAddFullAnnDate = precursorDates.indexOf(annFullDate) == -1 && Ext4.Array.pluck(datesToAdd, "fullDate").indexOf(annFullDate) == -1;
-
-                    if ((this.groupedX && toAddAnnDate) || (!this.groupedX && toAddFullAnnDate))
-                    {
+                for (var j = 0; j < allPlotDateValues.length; j++) {
+                    var dateVal = allPlotDateValues[j];
+                    var dataIsMissingDate = precursorDates.indexOf(dateVal) == -1 && Ext4.Array.pluck(datesToAdd, dateProp).indexOf(dateVal) == -1;
+                    if (dataIsMissingDate) {
                         datesToAdd.push({
-                            type: 'annotation',
-                            fullDate: annFullDate,
-                            date: annDate,
-                            groupedXTick: annDate
+                            type: 'missing',
+                            fullDate: this.formatDate(new Date(dateVal), true),
+                            date: this.formatDate(new Date(dateVal)),
+                            groupedXTick: dateVal
                         });
                     }
                 }

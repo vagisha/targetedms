@@ -89,7 +89,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     @Override
     protected String getProjectName()
     {
-        return "TargetedMSProject";    // + TRICKY_CHARACTERS_FOR_PROJECT_NAMES;
+        return "TargetedMSProject" + TRICKY_CHARACTERS_FOR_PROJECT_NAMES;
     }
 
     protected void setupFolder(FolderType folderType)

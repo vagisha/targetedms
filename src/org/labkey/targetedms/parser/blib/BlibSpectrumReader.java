@@ -76,7 +76,8 @@ public class BlibSpectrumReader
             return null;
 
         // CONSIDER: we are reading directly from Bibliospec SQLite file. Should we store library information in the schema?
-        if(!(Files.exists(FileUtil.stringToPath(container, blibFilePath))))
+        // We know it's local file and string may need encoding to convert to Path
+        if(!(new File(blibFilePath).exists()))
             return null;
 
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath))
@@ -120,7 +121,9 @@ public class BlibSpectrumReader
     public static boolean redundantBlibExists(Container container, String blibPath)
     {
         String redundantBlibFilePath = redundantBlibPath(blibPath);
-        return redundantBlibFilePath != null && Files.exists(FileUtil.stringToPath(container, redundantBlibFilePath));
+
+        // We know it's local file and string may need encoding to convert to Path
+        return redundantBlibFilePath != null && new File(redundantBlibFilePath).exists();
     }
 
     public static String redundantBlibPath(@Nullable String blibPath)
@@ -143,8 +146,8 @@ public class BlibSpectrumReader
         if (null == blibFilePath)
             return Collections.emptyList();
 
-        Path path = FileUtil.stringToPath(container, blibFilePath);
-        if(null == path || !Files.exists(path))
+        // We know it's local file and string may need encoding to convert to Path
+        if(!(new File(blibFilePath).exists()))
         {
             LOG.error("File not found: " + blibFilePath);
             return Collections.emptyList();
