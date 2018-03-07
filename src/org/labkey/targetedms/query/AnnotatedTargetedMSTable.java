@@ -169,7 +169,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
             if (annotationType != null && annotationType != DataSettings.AnnotationType.text)
             {
                 annotationSQL.append("CAST(").append("a.value AS ")
-                        .append(getSqlDialect().sqlCastTypeNameFromJdbcType(annotationType.getDataType()));
+                        .append(getSqlDialect().getSqlCastTypeName(annotationType.getDataType()));
                 annotationSQL.append(")");
                 return annotationType;
             }
