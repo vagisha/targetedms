@@ -181,7 +181,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     processPlotData: function(plotDataRows) {
         var metricProps = this.getMetricPropsById(this.metric);
-        var dateProp = this.groupedX ? "date" : "fullDate";
         var allPlotDateValues = [];
         
         this.processedPlotData = this.preprocessPlotData(plotDataRows, this.showMovingRangePlot(), this.showMeanCUSUMPlot(), this.showVariableCUSUMPlot(), this.yAxisScale == 'log');
@@ -200,15 +199,15 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     var data = this.processPlotDataRow(row, fragment, seriesType, metricProps);
                     this.fragmentPlotData[fragment].data.push(data);
                     this.setSeriesMinMax(this.fragmentPlotData[fragment], data);
-                    allPlotDateValues.push(data[dateProp]);
+                    allPlotDateValues.push(data.fullDate);
                 }, this);
             }, this);
         }, this);
 
         // Issue 31678: get the full set of dates values from the precursor data and from the annotations
         for (var j = 0; j < this.annotationData.length; j++) {
-            var annDate = this.formatDate(new Date(this.annotationData[j].Date), !this.groupedX);
-            allPlotDateValues.push(annDate);
+            var annDate = new Date(this.annotationData[j].Date);
+            allPlotDateValues.push(this.formatDate(annDate, true));
         }
         allPlotDateValues = Ext4.Array.unique(allPlotDateValues).sort();
 
@@ -235,16 +234,17 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 }
 
                 // Issue 31678: add any missing dates from the other plots or from the annotations
+                var dateProp = this.groupedX ? "date" : "fullDate";
                 var precursorDates = Ext4.Array.pluck(precursorInfo.data, dateProp);
                 var datesToAdd = [];
                 for (var j = 0; j < allPlotDateValues.length; j++) {
-                    var dateVal = allPlotDateValues[j];
+                    var dateVal = this.formatDate(new Date(allPlotDateValues[j]), !this.groupedX);
                     var dataIsMissingDate = precursorDates.indexOf(dateVal) == -1 && Ext4.Array.pluck(datesToAdd, dateProp).indexOf(dateVal) == -1;
                     if (dataIsMissingDate) {
                         datesToAdd.push({
                             type: 'missing',
-                            fullDate: this.formatDate(new Date(dateVal), true),
-                            date: this.formatDate(new Date(dateVal)),
+                            fullDate: this.formatDate(new Date(allPlotDateValues[j]), true),
+                            date: this.formatDate(new Date(allPlotDateValues[j])),
                             groupedXTick: dateVal
                         });
                     }
