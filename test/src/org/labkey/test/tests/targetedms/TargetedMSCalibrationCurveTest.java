@@ -99,32 +99,51 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         Locator.tagContainingText("td","7").waitForElement(getDriver(),1000);
 
         log("Verifying the Time content");
-        String expectedValueForTime = "0 0.3 1 1.2 1.5 3 4 5 7";
-        String dataOfTimeCol = columnDataAsString(Locator.tagWithId("table","pk-table-input").findElement(getDriver()),1);
+        String expectedValueForTime = "0 0.3 1 1.2 1.5 4";
+        String dataOfTimeCol = columnDataAsString(Locator.tagWithId("table","pk-table-input-SB1").findElement(getDriver()),1);
+        assertEquals("Missing value in the Time column",expectedValueForTime,dataOfTimeCol);
+        expectedValueForTime = "0 3 4 5 7";
+        dataOfTimeCol = columnDataAsString(Locator.tagWithId("table","pk-table-input-SB2").findElement(getDriver()),1);
         assertEquals("Missing value in the Time column",expectedValueForTime,dataOfTimeCol);
 
         log("Verifying the Concentration content");
-        String expectedValueForConc ="2.169 2.715 3.266 0.801 0.380 19.225 46.520 0.575";
-        String dataOfConcentration = columnDataAsString(Locator.tagWithId("table","pk-table-input").findElement(getDriver()),4);
+        String expectedValueForConc ="2.169 2.715 3.266 0.801 1.702";
+        String dataOfConcentration = columnDataAsString(Locator.tagWithId("table","pk-table-input-SB1").findElement(getDriver()),4);
+        assertEquals("Missing value in the Conc column",expectedValueForConc,dataOfConcentration);
+
+        expectedValueForConc ="0.380 36.747 46.520 0.575";
+        dataOfConcentration = columnDataAsString(Locator.tagWithId("table","pk-table-input-SB2").findElement(getDriver()),4);
         assertEquals("Missing value in the Conc column",expectedValueForConc,dataOfConcentration);
 
         log("Verifying the Statistic - Name content");
         String expectedValueForStatsName ="Dose IV CO k': %AUC Extrap: MRT (0-inf): MRT (0-t): CL (0-inf): CL (0-t): Vdss (0-inf): Vdss (0-t): T1/2: Effective T1/2:";
-        String dataOfStatsName = columnDataAsString(Locator.tagWithId("table","pk-table-stats").findElement(getDriver()),1);
+        String dataOfStatsName = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB1").findElement(getDriver()),1);
+        assertEquals("Missing value in the Statistic - name column",expectedValueForStatsName,dataOfStatsName);
+
+        expectedValueForStatsName ="Dose IV CO k': %AUC Extrap: MRT (0-inf): MRT (0-t): CL (0-inf): CL (0-t): Vdss (0-inf): Vdss (0-t): T1/2: Effective T1/2:";
+        dataOfStatsName = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB2").findElement(getDriver()),1);
         assertEquals("Missing value in the Statistic - name column",expectedValueForStatsName,dataOfStatsName);
 
         log("Verifying the Statistic - Value content");
-        String expectedValueForStatsValue ="1 0.678 1.317 0.112 0.835 0.828 0.000 0.000 0.000 0.000 0.526 0.579";
-        String dataOfStatsValue = columnDataAsString(Locator.tagWithId("table","pk-table-stats").findElement(getDriver()),2);
+        String expectedValueForStatsValue ="1 0.678 0.026 91.011 39.277 1.930 0.000 0.003 0.001 0.000 27.009 27.225";
+        String dataOfStatsValue = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB1").findElement(getDriver()),2);
+        assertEquals("Missing value in the Statistic - value column",expectedValueForStatsValue,dataOfStatsValue);
+        expectedValueForStatsValue ="1 -14.678 1.502 0.005 0.311 0.310 0.000 0.000 0.000 0.000 0.462 0.215";
+        dataOfStatsValue = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB2").findElement(getDriver()),2);
         assertEquals("Missing value in the Statistic - value column",expectedValueForStatsValue,dataOfStatsValue);
 
         log("Checking the check box for Terminal and CO");
-        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input\"]/tbody/tr[4]/td[2]/input"));
-        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input\"]/tbody/tr[6]/td[3]/input"));
-        String expectedValuesAfterAddTerminal = "1 0.635 0.093 8.312 5.660 4.560 0.000 0.000 0.000 0.000 7.474 3.923";
-        String dataofStatsValue2 = columnDataAsString(Locator.tagWithId("table","pk-table-stats").findElement(getDriver()),2);
+        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB1\"]/tbody/tr[4]/td[2]/input"));
+        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB1\"]/tbody/tr[6]/td[3]/input"));
+        String expectedValuesAfterAddTerminal = "1 0.635 0.026 91.011 39.277 1.930 0.000 0.003 0.001 0.000 27.009 27.225";
+        String dataofStatsValue2 = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB1").findElement(getDriver()),2);
         assertEquals("Missing value in the Statistic - value column after adding additional Terminal",expectedValuesAfterAddTerminal,dataofStatsValue2);
 
+        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB2\"]/tbody/tr[4]/td[2]/input"));
+        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB2\"]/tbody/tr[3]/td[3]/input"));
+        expectedValuesAfterAddTerminal = "1 -7.454 1.502 0.005 0.311 0.310 0.000 0.000 0.000 0.000 0.462 0.215";
+        dataofStatsValue2 = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB2").findElement(getDriver()),2);
+        assertEquals("Missing value in the Statistic - value column after adding additional Terminal",expectedValuesAfterAddTerminal,dataofStatsValue2);
     }
 
     private String columnDataAsString (WebElement table,int col)

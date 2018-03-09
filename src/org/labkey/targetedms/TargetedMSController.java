@@ -2882,7 +2882,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowPKAction extends SimpleViewAction
+    public class ShowPKAction extends SimpleViewAction<PKForm>
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
         protected GeneralMolecule _molecule;
@@ -2903,16 +2903,23 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(Object o,BindException errors) throws Exception
+        public ModelAndView getView(PKForm form, BindException errors) throws Exception
         {
             validateInputParams();
             _run = validateRun(Integer.parseInt(getViewContext().getRequest().getParameter("RunId")));
             int generalMoleculeId = Integer.parseInt(getViewContext().getRequest().getParameter("GeneralMoleculeId"));
             _molecule = PeptideManager.getPeptide(getContainer(), generalMoleculeId);
-            if (_molecule == null){
+            if (_molecule == null)
+            {
                 _molecule = MoleculeManager.getMolecule(getContainer(), generalMoleculeId);
             }
-            JspView pharmacokineticsView = new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp");
+
+            if(_molecule == null){
+                throw new NotFoundException("Could not find Molecule " + generalMoleculeId);
+            }
+            String[] subgroupNames = getReplicateSubgroupNames(getUser(), getContainer(), _molecule.getId());
+            form.setSampleGroupNames(subgroupNames);
+            JspView pharmacokineticsView = new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp", form);
             pharmacokineticsView.setTitle("Pharmacokinetics");
 
             return pharmacokineticsView;
@@ -5079,6 +5086,25 @@ public class TargetedMSController extends SpringActionController
         return peptideGroupCount;
     }
 
+    public static final String[] getReplicateSubgroupNames(User user, Container container, int id)
+    {
+
+        UserSchema userSchema = QueryService.get().getUserSchema(user, container, "targetedms");
+        TableInfo tableInfo = userSchema.getTable("pharmacokinetics");
+        SQLFragment sqlFragment = new SQLFragment();
+        sqlFragment.append("SELECT DISTINCT(p.subGroup) FROM ");
+        sqlFragment.append(tableInfo, "p");
+        sqlFragment.append(" where p.MoleculeId = ? ");
+
+        // add variables
+        sqlFragment.add(id);
+
+        SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
+        String[] sampleGroupNames = sqlSelector.getArray(String.class);
+        Arrays.sort(sampleGroupNames);
+        return sampleGroupNames;
+    }
+
     public static final long getNumRepresentativePeptides(Container container) {
 
         SQLFragment sqlFragment = new SQLFragment();
@@ -6449,6 +6475,43 @@ public class TargetedMSController extends SpringActionController
 
         }
     }
+    public static class PKForm
+    {
+        Integer _runId;
+        Integer _generalMoleculeId;
+        private String[] _sampleGroupNames;
+
+        public Integer getRunId()
+        {
+            return _runId;
+        }
+
+        public void setRunId(Integer runId)
+        {
+            _runId = runId;
+        }
+
+        public Integer getGeneralMoleculeId()
+        {
+            return _generalMoleculeId;
+        }
+
+        public void setGeneralMoleculeId(Integer generalMoleculeId)
+        {
+            _generalMoleculeId = generalMoleculeId;
+        }
+
+        public void setSampleGroupNames(String[] sampleGroupNames)
+        {
+            _sampleGroupNames = sampleGroupNames;
+        }
+
+        public String[] getSampleGroupNames()
+        {
+            return _sampleGroupNames;
+        }
+    }
+
 
     public static class FomForm
     {

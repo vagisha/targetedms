@@ -1,6 +1,13 @@
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.api.view.HttpView" %>
+<%@ page import="org.labkey.api.view.JspView" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
+<%
+    JspView<TargetedMSController.PKForm> me = (JspView<TargetedMSController.PKForm>) HttpView.currentView();
+    TargetedMSController.PKForm bean = me.getModelBean();
+%>
 
 <%!
     @Override
@@ -14,48 +21,49 @@
 %>
 
 <div class="container-fluid targetedms-fom">
+<%
+    for(String subgroup : bean.getSampleGroupNames() ){ %>
     <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
-        <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
+        <i class="fa fa-file-excel-o" onclick="exportExcel('<%=subgroup%>')"></i>
     </div>
     <h3 id="pk-title1"></h3>
     <h4 id="pk-title2"></h4>
     <br>
 
 <labkey:panel title="Statistics">
-    <table id="pk-table-input" class="table table-striped table-responsive pk-table-stats"  >
+    <h4 id="sb-title2">Subgroup: <%=subgroup%></h4>
+    <table id="pk-table-input-<%=subgroup%>" class="table table-striped table-responsive pk-table-stats"  >
         <thead><tr><td>Time</td><td>C0</td><td>Terminal</td><td>Concentration</td></tr></thead>
     </table>
-    <table id="pk-table-stats" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
+    <table id="pk-table-stats-<%=subgroup%>" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
         <thead><tr><td colspan="3">Statistic</td></tr></thead>
-        <tr><td class="pk-table-label">Dose            </td><td id="Dose"              class="pk-table-stat"></td><td id="DoseUnits"></td></tr>
-        <tr><td class="pk-table-label">IV CO           </td><td id="IVCO"              class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">k':             </td><td id="k"                 class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">%AUC Extrap:    </td><td id="AUCExtrap"         class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">MRT (0-inf):    </td><td id="Mrt_Zero_Inf"      class="pk-table-stat"></td><td>hr</td></tr>
-        <tr><td class="pk-table-label">MRT (0-t):      </td><td id="Mrt_Zero_T"        class="pk-table-stat"></td><td>hr</td></tr>
-        <tr><td class="pk-table-label">CL (0-inf):     </td><td id="Cl_Zero_Inf"       class="pk-table-stat"></td><td>ml/min/kg</td></tr>
-        <tr><td class="pk-table-label">CL (0-t):       </td><td id="Cl_Zero_T"         class="pk-table-stat"></td><td>ml/min/kg</td></tr>
-        <tr><td class="pk-table-label">Vdss (0-inf):   </td><td id="Vdss_Zero_Inf"     class="pk-table-stat"></td><td>L/kg</td></tr>
-        <tr><td class="pk-table-label">Vdss (0-t):     </td><td id="Vdss_Zero_T"       class="pk-table-stat"></td><td>L/kg</td></tr>
-        <tr><td class="pk-table-label">T1/2:           </td><td id="T1_2"              class="pk-table-stat"></td><td>hr</td></tr>
-        <tr><td class="pk-table-label">Effective T1/2: </td><td id="Effective_T1_2"    class="pk-table-stat"></td><td>hr</td></tr>
+        <tr><td class="pk-table-label">Dose            </td><td id="Dose-<%=subgroup%>"              class="pk-table-stat"></td><td id="DoseUnits-<%=subgroup%>"></td></tr>
+        <tr><td class="pk-table-label">IV CO           </td><td id="IVCO-<%=subgroup%>"              class="pk-table-stat"></td><td></td></tr>
+        <tr><td class="pk-table-label">k':             </td><td id="k-<%=subgroup%>"                 class="pk-table-stat"></td><td></td></tr>
+        <tr><td class="pk-table-label">%AUC Extrap:    </td><td id="AUCExtrap-<%=subgroup%>"         class="pk-table-stat"></td><td></td></tr>
+        <tr><td class="pk-table-label">MRT (0-inf):    </td><td id="Mrt_Zero_Inf-<%=subgroup%>"      class="pk-table-stat"></td><td>hr</td></tr>
+        <tr><td class="pk-table-label">MRT (0-t):      </td><td id="Mrt_Zero_T-<%=subgroup%>"        class="pk-table-stat"></td><td>hr</td></tr>
+        <tr><td class="pk-table-label">CL (0-inf):     </td><td id="Cl_Zero_Inf-<%=subgroup%>"       class="pk-table-stat"></td><td>ml/min/kg</td></tr>
+        <tr><td class="pk-table-label">CL (0-t):       </td><td id="Cl_Zero_T-<%=subgroup%>"         class="pk-table-stat"></td><td>ml/min/kg</td></tr>
+        <tr><td class="pk-table-label">Vdss (0-inf):   </td><td id="Vdss_Zero_Inf-<%=subgroup%>"     class="pk-table-stat"></td><td>L/kg</td></tr>
+        <tr><td class="pk-table-label">Vdss (0-t):     </td><td id="Vdss_Zero_T-<%=subgroup%>"       class="pk-table-stat"></td><td>L/kg</td></tr>
+        <tr><td class="pk-table-label">T1/2:           </td><td id="T1_2-<%=subgroup%>"              class="pk-table-stat"></td><td>hr</td></tr>
+        <tr><td class="pk-table-label">Effective T1/2: </td><td id="Effective_T1_2-<%=subgroup%>"    class="pk-table-stat"></td><td>hr</td></tr>
     </table>
 </labkey:panel>
+
 <labkey:panel title="Charts">
-    <div id="chart"></div>
-    <div id="chartLog"></div>
+    <div id="chart-<%=subgroup%>"></div>
+    <div id="chartLog-<%=subgroup%>"></div>
 </labkey:panel>
 <labkey:panel title="Data">
-    <table id="pk-table-standard" class="table table-striped table-responsive pk-table">
-        <thead id="standard-header" />
-        <tbody id="standard-body" />
-        <tfoot id="standard-footer"/>
-    </table>
-    <table id="pk-table-qc" class="table table-striped table-responsive pk-table">
-        <thead id="qc-header" />
-        <tbody id="qc-body" />
+    <table id="pk-table-standard-<%=subgroup%>" class="table table-striped table-responsive pk-table">
+        <thead id="standard-header-<%=subgroup%>" />
+        <tbody id="standard-body-<%=subgroup%>" />
+        <tfoot id="standard-footer-<%=subgroup%>"/>
     </table>
 </labkey:panel>
+    <%}%>
 </div>
 <script type="application/javascript">
     +function ($) {
@@ -70,32 +78,11 @@
         var dose = null;
         var doseUnits = null;
 
-
-        //These are the values from the sample spreadsheet, sheet IVPO, referenced in
         //Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
         var timeRowZero = {Time: 0 ,          Concentration :  null        };
-        var timeRowsMock=[
-             {Time: .133333333 , Concentration :  0.006184700 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 0.25       , Concentration :  0.006025200 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 0.5        , Concentration :  0.004984600 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 0.75       , Concentration :  0.003525100 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 1          , Concentration :  0.004663500 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 1.5        , Concentration :  0.002800500 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 2          , Concentration :  0.001523200 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 2.5        , Concentration :  0.000978510 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 3          , Concentration :  0.000924980 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 3.5        , Concentration :  0.000632570 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 4          , Concentration :  0.000447090 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 4.5        , Concentration :  0.000438690 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 5          , Concentration :  0.000209690 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 5.5        , Concentration :  0.000260050 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 6          , Concentration :  0.000158830 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 7          , Concentration :  0.000124520 , Dose: 0.53, DoseUnits: 'mg/ml'}
-            ,{Time: 8          , Concentration :  0.000082918 , Dose: 0.53, DoseUnits: 'mg/ml'}];
 
-        function parseRawData(data) {
+        function parseRawData(data, subgroup) {
             // data.rows = timeRowsMock;
-
 
             if(!data.rows || data.rows.length === 0){
                 $('#pk-title1').html("No data to show");
@@ -143,6 +130,8 @@
             if(data.rows[0].Time !== 0){
                 data.rows.unshift(timeRowZero);
             }
+
+            timeRows[subgroup] = [];
             data.rows.forEach(function(timeRow){
                 peptide = timeRow.Peptide;
                 ion = timeRow.ionName;
@@ -156,9 +145,7 @@
                         item.lnCp = Math.log(item.pkConc);
                     }
                     item.concxt = item.time * item.pkConc;
-                timeRows.push(
-                        item
-                )
+                timeRows[subgroup].push(item)
             });
 
             if(peptide !== '' && peptide != null) {
@@ -169,66 +156,76 @@
 
             $('#pk-title2').html("Skyline File: " + fileName);
 
-            $('#Dose').html(dose);
-            $('#DoseUnits').html(doseUnits);
+            $('#Dose-' + subgroup).html(dose);
+            $('#DoseUnits-' + subgroup).html(doseUnits);
 
-            timeRows.forEach(function (row, index) {
+            timeRows[subgroup].forEach(function (row, index) {
                 var checkedC0;
                 if(index < 3 ) {checkedC0='checked';}
                 var checkedT;
-                if(index > timeRows.length - 4) {checkedT='checked';}
+                if(index > timeRows[subgroup].length - 4) {checkedT='checked';}
 
                 $("<tr>" +
                         "<td class='pk-table-stat'>" + row.time + "</td>" +
-                        "<td ><input type='checkbox' rowIndex= " + index + " " + checkedC0 + " class='checkboxC0' /></td>" +
-                        "<td ><input type='checkbox' rowIndex= " + index + " " + checkedT + " class='terminal' /></td>" +
+                        "<td ><input type='checkbox' rowIndex= " + index + " " + checkedC0 + " class='checkboxC0' subgroup='" + subgroup + "' /></td>" +
+                        "<td ><input type='checkbox' rowIndex= " + index + " " + checkedT + " class='terminal' subgroup='" + subgroup + "'/></td>" +
                         "<td class='pk-table-stat'>" + statRound(row.conc) + "</td>" +
                         "</tr>")
-                        .appendTo("#pk-table-input");
+                        .appendTo("#pk-table-input-" + subgroup);
             });
 
 
 
             $("<tr>" +"<td>inf</td><td ></td><td ></td><td ></td>" +
-                    "<td class='pk-table-stat' id='infLinDeltaAUC'></td>" +
-                    "<td class='pk-table-stat' id='infAUCuMhrL'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infLogLinAUCuMhrL'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infCumulativeCorrectPartAUC'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infLinDeltaAUMC'></td>" +
-                    "<td class='pk-table-stat' id='infCumulativeLinAUMC'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infCumulativeLogLinAUMC'></td><td></td>" +
-                    "<td class='pk-table-stat' id='infCorrectAUMC'></td>" +
-                    "</tr>").appendTo("#standard-footer");
+                    "<td class='pk-table-stat' id='infLinDeltaAUC-" + subgroup + "'></td>" +
+                    "<td class='pk-table-stat' id='infAUCuMhrL-" + subgroup + "'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infLogLinAUCuMhrL-" + subgroup + "'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infCumulativeCorrectPartAUC-" + subgroup + "'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infLinDeltaAUMC-" + subgroup + "'></td>" +
+                    "<td class='pk-table-stat' id='infCumulativeLinAUMC-" + subgroup + "'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infCumulativeLogLinAUMC-" + subgroup + "'></td><td></td>" +
+                    "<td class='pk-table-stat' id='infCorrectAUMC-" + subgroup + "'></td>" +
+                    "</tr>").appendTo("#standard-footer-" + subgroup);
 
-            updateStats(checkBoxC0);
-            populateDerivedDataTable();
-            updateStats(checkBoxTerminal);
+            updateStats(checkBoxC0,subgroup);
+            populateDerivedDataTable(subgroup);
+            updateStats(checkBoxTerminal,subgroup);
             return true;
         }
 
-        function populateDerivedDataTable() {
-            $("#standard-body").empty();
-            timeRows.forEach(function (row, index) {
+        function populateDerivedDataTable(subgroup) {
+             this.hdrLabels = ["Time","Concentration","PK Conc","In(Cp)", "LinDeltaAUC", "AUCuMhrL",
+                "LogLinDeltaAUC", "LogLinAUCuMhrL","Correct Part AUC", "Correct Cumulative AUC",
+                "Conc x t","LinDeltaAUMC", "CumulativeLinAUMC", "LogLinDeltaAUMC", "CumulativeLogLinAUMC",
+                "CorrectDeltaAUMC", "CorrectAUMC"];
+
+            $("#standard-header-" + subgroup).empty();
+            this.hdrLabels.forEach(function (label) {
+                $("<td>" + label + "</td>").appendTo("#standard-header-" + subgroup);
+            });
+
+            $("#standard-body-" + subgroup).empty();
+            timeRows[subgroup].forEach(function (row, index) {
                 $("<tr>" +
                         "<td class='pk-table-stat'>" + row.time + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(row.conc) + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(row.pkConc) + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(row.lnCp) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getLinDeltaAUC(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getAUCuMhrL(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getLogLinDeltaAUC(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getLogLinAUCuMhrL(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getCorrectPartAUC(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getCumulativeCorrectPartAUC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLinDeltaAUC(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getAUCuMhrL(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLogLinDeltaAUC(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLogLinAUCuMhrL(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCorrectPartAUC(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCumulativeCorrectPartAUC(index, subgroup)) + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(row.concxt) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getLinDeltaAUMC(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getCumulativeLinAUMC(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getLogLinDeltaAUMC(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getCumulativeLogLinAUMC(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getCorrectDeltaAUMC(index)) + "</td>" +
-                        "<td class='pk-table-stat'>" + statRound(getCorrectAUMC(index)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLinDeltaAUMC(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCumulativeLinAUMC(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getLogLinDeltaAUMC(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCumulativeLogLinAUMC(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCorrectDeltaAUMC(index, subgroup)) + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(getCorrectAUMC(index, subgroup)) + "</td>" +
                         "</tr>")
-                        .appendTo("#standard-body");
+                        .appendTo("#standard-body-" + subgroup);
             });
         }
 
@@ -268,82 +265,99 @@
         const checkBoxC0 = ".checkboxC0";
         const checkBoxTerminal = ".terminal";
         var lr;
-        function updateStats(timeFrame) {
+
+        function updateStats(timeFrame, subgroup) {
+
             var x = [];
             var y = [];
-            $(timeFrame + ":checked").each(function (index, box) {
-                var row = timeRows[box.getAttribute('rowIndex')];
+            $(timeFrame + '[subgroup="' + subgroup + '"]:checked').each(function (index, box) {
+                var row = timeRows[subgroup][box.getAttribute('rowIndex')];
                 if(row.time != 0) {
                     x.push(row.time);
                     y.push(row.lnCp);
                 }
             });
-            lr = getLinearRegression(y, x);
+            lr = getLinearRegression(y, x, subgroup);
 
-            timeRows[0].pkConc = Math.exp(lr.intercept);
-            timeRows[0].lnCp =  Math.log(Math.exp(lr.intercept));
+            timeRows[subgroup][0].pkConc = Math.exp(lr.intercept);
+            timeRows[subgroup][0].lnCp =  Math.log(Math.exp(lr.intercept));
 
             if(timeFrame === checkBoxC0)
             {
-                $('#IVCO').html(statRound(lr.intercept));
+                $('#IVCO-' + subgroup).html(statRound(lr.intercept));
                 var ivcoExp = statRound((Math.exp(lr.intercept)));
-                $('#IVCOEXP').html(ivcoExp);
+                $('#IVCOEXP-' + subgroup).html(ivcoExp);
             }else{
-                $('#k').html(statRound(lr.slope));
-                $('#AUCExtrap     ').html(statRound(getAUCExtrap(lr)));
-                $('#Mrt_Zero_Inf  ').html(statRound(getMrt_Zero_Inf(lr)));
-                $('#Mrt_Zero_T    ').html(statRound(getMrt_Zero_T(lr)));
-                $('#Cl_Zero_Inf   ').html(statRound(getCL_Zero_Inf(lr)));
-                $('#Cl_Zero_T     ').html(statRound(getCL_Zero_T(lr)));
-                $('#Vdss_Zero_Inf ').html(statRound(getVdss_Zero_Inf(lr)));
-                $('#Vdss_Zero_T   ').html(statRound(getVdss_Zero_T(lr)));
-                $('#T1_2          ').html(statRound(getT1_2(lr)));
-                $('#Effective_T1_2').html(statRound(getEffectiveT1_2(lr)));
-                $('#').html();
+                $('#k-' + subgroup).html(statRound(lr.slope));
+                $('#AUCExtrap-' + subgroup).html(statRound(getAUCExtrap(lr, subgroup)));
+                $('#Mrt_Zero_Inf-' + subgroup).html(statRound(getMrt_Zero_Inf(lr, subgroup)));
+                $('#Mrt_Zero_T-' + subgroup).html(statRound(getMrt_Zero_T(subgroup)));
+                $('#Cl_Zero_Inf-' + subgroup).html(statRound(getCL_Zero_Inf(lr, subgroup)));
+                $('#Cl_Zero_T-' + subgroup).html(statRound(getCL_Zero_T(subgroup)));
+                $('#Vdss_Zero_Inf-' + subgroup).html(statRound(getVdss_Zero_Inf(lr, subgroup)));
+                $('#Vdss_Zero_T-' + subgroup).html(statRound(getVdss_Zero_T(lr, subgroup)));
+                $('#T1_2-' + subgroup).html(statRound(getT1_2(lr, subgroup)));
+                $('#Effective_T1_2-' + subgroup).html(statRound(getEffectiveT1_2(lr, subgroup)));
+                $('#' + subgroup).html();
 
-                $('#infLinDeltaAUC').html(statRound(getInfLinDeltaAUC(lr)));
-                $('#infAUCuMhrL').html(statRound(getInfAUCuMhrL(lr)));
-                $('#infLogLinAUCuMhrL').html(statRound(getInfLogLinAUCuMhrL(lr)));
-                $('#infCumulativeCorrectPartAUC').html(statRound(getInfCumulativeCorrectPartAUC(lr)));
-                $('#infLinDeltaAUMC').html(statRound(getInfLinDeltaAUMC(lr)));
-                $('#infCumulativeLinAUMC').html(statRound(getInfCumulativeLinAUMC(lr)));
-                $('#infCumulativeLogLinAUMC').html(statRound(getInfCumulativeLogLinAUMC(lr)));
-                $('#infCorrectAUMC').html(statRound(getInfCorrectAUMC(lr)));
+                $('#infLinDeltaAUC-' + subgroup ).html(statRound(getInfLinDeltaAUC(lr, subgroup)));
+                $('#infAUCuMhrL-' + subgroup ).html(statRound(getInfAUCuMhrL(lr, subgroup)));
+                $('#infLogLinAUCuMhrL-' + subgroup ).html(statRound(getInfLogLinAUCuMhrL(lr, subgroup)));
+                $('#infCumulativeCorrectPartAUC-' + subgroup ).html(statRound(getInfCumulativeCorrectPartAUC(lr, subgroup)));
+                $('#infLinDeltaAUMC-' + subgroup ).html(statRound(getInfLinDeltaAUMC(lr, subgroup)));
+                $('#infCumulativeLinAUMC-' + subgroup ).html(statRound(getInfCumulativeLinAUMC(lr, subgroup)));
+                $('#infCumulativeLogLinAUMC-' + subgroup ).html(statRound(getInfCumulativeLogLinAUMC(lr, subgroup)));
+                $('#infCorrectAUMC-' + subgroup ).html(statRound(getInfCorrectAUMC(lr, subgroup)));
             }
-            populateDerivedDataTable();
+            populateDerivedDataTable(subgroup);
         }
 
         $(document).on("click",checkBoxC0,function () {
-            updateStats.call(this,checkBoxC0);
+            updateStats.call(this,checkBoxC0, this.getAttribute("subgroup"));
         });
 
         $(document).on("click",checkBoxTerminal,function () {
-            updateStats.call(this,checkBoxTerminal);
+            updateStats.call(this,checkBoxTerminal, this.getAttribute("subgroup"));
         });
 
         var createPKTable = function()
         {
             this.rawData = {};
             this.summaryData = {};
-            this.hdrLabels = ["Time","Concentration","PK Conc","In(Cp)", "LinDeltaAUC", "AUCuMhrL",
-                "LogLinDeltaAUC", "LogLinAUCuMhrL","Correct Part AUC", "Correct Cumulative AUC",
-                "Conc x t","LinDeltaAUMC", "CumulativeLinAUMC", "LogLinDeltaAUMC", "CumulativeLogLinAUMC",
-                "CorrectDeltaAUMC", "CorrectAUMC"];
-
-                this.hdrLabels.forEach(function (label) {
-                    $("<td>" + label + "</td>").appendTo("#standard-header");
-                });
 
             LABKEY.Query.selectRows( {
                 schemaName: 'targetedms',
                 queryName: 'Pharmacokinetics',
                 filterArray: [LABKEY.Filter.create('MoleculeId', params['GeneralMoleculeId'])],
-                sort : 'Time',
+                sort : ['SubGroup,Time'],
                 scope: this,
                 success: function (data) {
-                    if(parseRawData(data)){
-                        showCharts();
-                    };
+                    var subgroupData = {rows:[]};
+                    if(!data.rows || data.rows.length === 0){
+                        parseRawData(subgroupData);
+                        return;
+                    }
+
+                    //break up data rows into collections by subgroup
+                    //possibly use  _.groupBy()
+                    var subgroup = data.rows[0].SubGroup;
+                    data.rows.forEach(function (row,index) {
+                            if (row.SubGroup === subgroup) {
+                                subgroupData.rows.push(row);
+                            }else{//build collection of next subgroup
+                                if (parseRawData(subgroupData, subgroup)) {
+                                    showCharts(subgroup);
+                                }
+                                subgroup = row.SubGroup;
+                                subgroupData.rows = [row];
+                            }
+
+                            if(index === data.rows.length - 1 || subgroup != row.SubGroup) {
+                                if (parseRawData(subgroupData, subgroup)) {
+                                    showCharts(subgroup);
+                                }
+                            }
+                    });
                 },
                 failure: function (response) {
                     LABKEY.Utils.alert(response);
@@ -386,27 +400,28 @@
             return myRows;
         }
 
-        this.exportExcel = function() {
+        this.exportExcel = function(subgroup) {
 
             var sheet1Data = [
                     ['Peptide: ' + peptide],
-                    ['Skyline File: ' + fileName]
+                    ['Skyline File: ' + fileName],
+                    ['Subgroup: ' + subgroup]
             ];
             sheet1Data.push(['']);
             sheet1Data.push(['AUC Calculation']);
             sheet1Data.push(['']);
 
-            getTableRows("#pk-table-stats").forEach(function(row){
+            getTableRows("#pk-table-stats-" + subgroup).forEach(function(row){
                 sheet1Data.push(row);
             });
             sheet1Data.push(['','']);
-            getTableRows("#pk-table-input").forEach(function(row){
+            getTableRows("#pk-table-input-" + subgroup).forEach(function(row){
                 sheet1Data.push(row);
             });
 
             var sheet2Data = [getTableHeaders()];
 
-             getTableRows("#standard-body").forEach(function(row){
+             getTableRows("#standard-body-" + subgroup).forEach(function(row){
                  sheet2Data.push(row);
              });
 
@@ -424,11 +439,11 @@
                         ]
             });
         };
-        function showCharts() {
+        function showCharts(subgroup) {
 
-        var labResultsPlotConfig = {
+            var labResultsPlotConfig = {
             rendererType: 'd3',
-            renderTo: 'chart',
+            renderTo: 'chart-' +subgroup ,
             labels: {
                 x: {value: "Time"},
                 y: {value: "Concentration"},
@@ -437,7 +452,7 @@
             width: 1200,
             height: 500,
             clipRect: true,
-            data: timeRows,
+            data: timeRows[subgroup],
             layers: [new LABKEY.vis.Layer({
                 geom: new LABKEY.vis.Geom.Path({})
             }),
@@ -462,114 +477,114 @@
             var labResultsPlot = new LABKEY.vis.Plot(labResultsPlotConfig);
             labResultsPlot.render();
 
-            labResultsPlotConfig.renderTo = 'chartLog';
+            labResultsPlotConfig.renderTo =  'chartLog-' + subgroup;
             labResultsPlotConfig.scales.y.trans = 'log';
             labResultsPlotConfig.labels.main.value = 'Log-Linear';
             var labResultsPlotLog = new LABKEY.vis.Plot(labResultsPlotConfig);
             labResultsPlotLog.render();
         }
-        function getInfLinDeltaAUC(lr) {
-            return timeRows[timeRows.length -1].conc/lr.slope
+        function getInfLinDeltaAUC(lr,subgroup) {
+            return timeRows[subgroup][timeRows[subgroup].length -1].conc/lr.slope
         }
 
         //The comment at the top of each function refers to the related Excel formula from the sample spreadsheet
         //referenced in Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
-        function getLinDeltaAUC(index){
+        function getLinDeltaAUC(index, subgroup){
             //    (C4+C5)*(A5-A4)/2
             if(index===0){
                 return 0;
             }
-            return ((timeRows[index-1].pkConc + timeRows[index].pkConc)*(timeRows[index].time-timeRows[index-1].time))/2
+            return ((timeRows[subgroup][index-1].pkConc + timeRows[subgroup][index].pkConc)*(timeRows[subgroup][index].time-timeRows[subgroup][index-1].time))/2
         }
 
-        function getLogLinDeltaAUC(index){
+        function getLogLinDeltaAUC(index, subgroup){
             //    =(A5-A4)*(C4-C5)/(D4-D5)
             if(index===0){
                 return 0;
             }
-            const timeRow = timeRows[index];
-            const timeRowPrevious = timeRows[index-1];
+            const timeRow = timeRows[subgroup][index];
+            const timeRowPrevious = timeRows[subgroup][index-1];
             return ((timeRow.time-timeRowPrevious.time)*(timeRowPrevious.pkConc - timeRow.pkConc))/(timeRowPrevious.lnCp-timeRow.lnCp)
         }
 
-        function getAUCuMhrL(index){
+        function getAUCuMhrL(index, subgroup){
             //    =J5+I6
             if(index===0){
                 return 0;
             }
             if(index===1){
-                return getLinDeltaAUC(index)
+                return getLinDeltaAUC(index, subgroup)
             }
-            return getLinDeltaAUC(index) + getAUCuMhrL(index -1);
+            return getLinDeltaAUC(index, subgroup) + getAUCuMhrL(index -1, subgroup);
         }
 
-        function getLogLinAUCuMhrL(index){
+        function getLogLinAUCuMhrL(index, subgroup){
             //    =L4+K5
             if(index===0){
                 return 0;
             }
-            return getLogLinAUCuMhrL(index -1) +  getLogLinDeltaAUC(index);
+            return getLogLinAUCuMhrL(index -1, subgroup) +  getLogLinDeltaAUC(index, subgroup);
         }
 
-        function getLinDeltaAUMC(index){
+        function getLinDeltaAUMC(index, subgroup){
             //    =(O4+O5)*(A5-A4)/2
             if(index===0){
                 return 0;
             }
-            return ((timeRows[index-1].concxt + timeRows[index].concxt)*(timeRows[index].time-timeRows[index-1].time))/2
+            return ((timeRows[subgroup][index-1].concxt + timeRows[subgroup][index].concxt)*(timeRows[subgroup][index].time-timeRows[subgroup][index-1].time))/2
         }
 
-        function getCumulativeLinAUMC(index){
+        function getCumulativeLinAUMC(index, subgroup){
             //    =Q4+P5
             if(index===0){
                 return 0;
             }
-            return getCumulativeLinAUMC(index-1) + getLinDeltaAUMC(index);
+            return getCumulativeLinAUMC(index-1, subgroup) + getLinDeltaAUMC(index, subgroup);
         }
 
-        function getCumulativeCorrectPartAUC(index){
+        function getCumulativeCorrectPartAUC(index, subgroup){
             //    =N4+M5
             if(index===0){
                 return 0;
             }
-            return getCumulativeCorrectPartAUC(index-1) + getCorrectPartAUC(index);
+            return getCumulativeCorrectPartAUC(index-1, subgroup) + getCorrectPartAUC(index, subgroup);
         }
 
-        function getCumulativeLogLinAUMC(index){
+        function getCumulativeLogLinAUMC(index, subgroup){
             //    =S4+R5
             if(index===0){
                 return 0;
             }
-            return getCumulativeLogLinAUMC(index-1) + getLogLinDeltaAUMC(index);
+            return getCumulativeLogLinAUMC(index-1, subgroup) + getLogLinDeltaAUMC(index, subgroup);
         }
 
-        function getInfAUCuMhrL(lr){
-            return getAUCuMhrL(timeRows.length -1) + getInfLinDeltaAUC(lr);
+        function getInfAUCuMhrL(lr, subgroup){
+            return getAUCuMhrL(timeRows[subgroup].length -1, subgroup) + getInfLinDeltaAUC(lr, subgroup);
         }
 
-        function getCorrectPartAUC(index) {
+        function getCorrectPartAUC(index, subgroup) {
             //    =IF(C5>=C4,I5,K5)
             if(index===0){
                 return 0;
             }
-            const timeRow = timeRows[index];
-            const timeRowPrevious = timeRows[index-1];
+            const timeRow = timeRows[subgroup][index];
+            const timeRowPrevious = timeRows[subgroup][index-1];
 
             if(timeRow.pkConc >= timeRowPrevious.pkConc){
-                return getLinDeltaAUC(index);
+                return getLinDeltaAUC(index, subgroup);
             }
-            return getLogLinDeltaAUC(index);
+            return getLogLinDeltaAUC(index, subgroup);
         }
 
-        function getLogLinDeltaAUMC(index) {
+        function getLogLinDeltaAUMC(index, subgroup) {
             // =(A5-A4)*
             //  ((O5-O4)/(LN(C5/C4)))-
             //  ((A5-A4)^2)*(C5-C4)/(LN(C5/C4)^2)
             if(index===0){
                 return 0;
             }
-            const timeRow = timeRows[index];
-            const timeRowPrevious = timeRows[index-1];
+            const timeRow = timeRows[subgroup][index];
+            const timeRowPrevious = timeRows[subgroup][index-1];
             const timeDiff = (timeRow.time - timeRowPrevious.time);
             const concxtDiff = timeRow.concxt - timeRowPrevious.concxt;
             const pkconcRatio = timeRow.pkConc / timeRowPrevious.pkConc;
@@ -580,107 +595,103 @@
                     ;
         }
 
-        function getCorrectDeltaAUMC(index) {
+        function getCorrectDeltaAUMC(index, subgroup) {
             //=IF(C5>=C4,P5,R5)
             if(index===0){
                 return 0;
             }
-            const timeRow = timeRows[index];
-            const timeRowPrevious = timeRows[index-1];
+            const timeRow = timeRows[subgroup][index];
+            const timeRowPrevious = timeRows[subgroup][index-1];
 
             if(timeRow.pkConc>= timeRowPrevious.pkConc){
-                return getLinDeltaAUMC(index);
+                return getLinDeltaAUMC(index, subgroup);
             }
-            return getLogLinDeltaAUMC(index);
+            return getLogLinDeltaAUMC(index, subgroup);
 
         }
 
-        function getCorrectAUMC(index) {
+        function getCorrectAUMC(index, subgroup) {
             //=U4+T5
             if(index===0){
                 return 0;
             }
-            return getCorrectAUMC(index-1) + getCorrectDeltaAUMC(index);
+            return getCorrectAUMC(index-1, subgroup) + getCorrectDeltaAUMC(index, subgroup);
 
         }
 
-        function getInfLogLinAUCuMhrL(lr){
-            return getLogLinAUCuMhrL(timeRows.length -1) + getInfLinDeltaAUC(lr);
+        function getInfLogLinAUCuMhrL(lr, subgroup){
+            return getLogLinAUCuMhrL(timeRows[subgroup].length -1, subgroup) + getInfLinDeltaAUC(lr, subgroup);
         }
 
-        function getInfLinDeltaAUMC(lr) {
+        function getInfLinDeltaAUMC(lr, subgroup) {
             //    =(C21/B27^2)+(O21/B27)
-            const timeRow = timeRows[timeRows.length -1];
+            const timeRow = timeRows[subgroup][timeRows[subgroup].length -1];
             return (timeRow.pkConc/(lr.slope*lr.slope)) + (timeRow.concxt/lr.slope);//todo where is the negative coming from
         }
 
-        function getInfCumulativeLinAUMC(lr){
+        function getInfCumulativeLinAUMC(lr, subgroup){
             //=Q21+P23
-            return getCumulativeLinAUMC(timeRows.length -1) + getInfLinDeltaAUMC(lr);
+            return getCumulativeLinAUMC(timeRows[subgroup].length -1, subgroup) + getInfLinDeltaAUMC(lr, subgroup);
         }
 
-        function getInfCumulativeCorrectPartAUC(lr){
+        function getInfCumulativeCorrectPartAUC(lr, subgroup){
             //=N21+I23
-            return getCumulativeCorrectPartAUC(timeRows.length -1) + getInfLinDeltaAUC(lr);
+            return getCumulativeCorrectPartAUC(timeRows[subgroup].length -1, subgroup) + getInfLinDeltaAUC(lr, subgroup);
         }
 
-        function getInfCumulativeLogLinAUMC(lr){
+        function getInfCumulativeLogLinAUMC(lr, subgroup){
             //=S21+P23
-            return getCumulativeLogLinAUMC(timeRows.length -1) + getInfLinDeltaAUMC(lr);
+            return getCumulativeLogLinAUMC(timeRows[subgroup].length -1, subgroup) + getInfLinDeltaAUMC(lr, subgroup);
         }
 
-        function getInfCorrectAUMC(lr){
+        function getInfCorrectAUMC(lr, subgroup){
             //=U21+P23
-            return getCorrectAUMC(timeRows.length -1) + getInfLinDeltaAUMC(lr);
+            return getCorrectAUMC(timeRows[subgroup].length -1, subgroup) + getInfLinDeltaAUMC(lr, subgroup);
         }
 
-        function getAUCExtrap(lr){
+        function getAUCExtrap(lr, subgroup){
             //    =I23/N23*100
-            return getInfLinDeltaAUC(lr)/getInfCumulativeCorrectPartAUC(lr)*100;
+            return getInfLinDeltaAUC(lr, subgroup)/getInfCumulativeCorrectPartAUC(lr, subgroup)*100;
         }
 
-        function getMrt_Zero_Inf(lr){
+        function getMrt_Zero_Inf(lr, subgroup){
             // =U23/N23
-            return getInfCorrectAUMC(lr)/getInfCumulativeCorrectPartAUC(lr);
+            return getInfCorrectAUMC(lr, subgroup)/getInfCumulativeCorrectPartAUC(lr, subgroup);
         }
 
-        function getMrt_Zero_T(){
+        function getMrt_Zero_T(subgroup){
             // =U21/N21
-            return getCorrectAUMC(timeRows.length -1)/getCumulativeCorrectPartAUC(timeRows.length -1);
+            return getCorrectAUMC(timeRows[subgroup].length -1, subgroup)/getCumulativeCorrectPartAUC(timeRows[subgroup].length -1, subgroup);
         }
 
-        function getCL_Zero_Inf(lr){
+        function getCL_Zero_Inf(lr, subgroup){
             // =B26/N23*1/60
-            //todo need Dose (B26). User entered? In Skyline file?
-            return (dose/getInfCumulativeCorrectPartAUC(lr))/60;
+            return (dose/getInfCumulativeCorrectPartAUC(lr, subgroup))/60;
         }
 
-        function getCL_Zero_T(){
+        function getCL_Zero_T(subgroup){
             // =B26/N21*1/60
-            //todo need Dose (B26). User entered? In Skyline file?
-            return (dose/getCumulativeCorrectPartAUC(timeRows.length -1))/60;
+            return (dose/getCumulativeCorrectPartAUC(timeRows[subgroup].length -1, subgroup))/60;
         }
 
-        function getVdss_Zero_Inf(lr){
+        function getVdss_Zero_Inf(lr, subgroup){
             // =(P30*60/1000)*P28
-            //todo need Dose (B26). User entered? In Skyline file?
-            return (getCL_Zero_Inf(lr)*60/1000)*getMrt_Zero_Inf(lr);
+            return (getCL_Zero_Inf(lr, subgroup)*60/1000)*getMrt_Zero_Inf(lr, subgroup);
         }
 
-        function getVdss_Zero_T(lr){
+        function getVdss_Zero_T(lr, subgroup){
             // =(P31*60/1000)*P29
-            //todo need Dose (B26). User entered? In Skyline file?
-            return (getCL_Zero_T(lr)*60/1000)*getMrt_Zero_T(lr);
+            return (getCL_Zero_T(subgroup)*60/1000)*getMrt_Zero_T(subgroup);
         }
 
-        function getT1_2(lr){
+        function getT1_2(lr, subgroup){
             // =LN(2)/B27
             return Math.log(2)/lr.slope;
         }
 
-        function getEffectiveT1_2(lr){
+        function getEffectiveT1_2(lr, subgroup){
             // =LN(2)*P32/P30*1000/60
-            return Math.log(2)*getVdss_Zero_Inf(lr)/getCL_Zero_Inf(lr)*1000/60;
+            return Math.log(2)*getVdss_Zero_Inf(lr, subgroup)/getCL_Zero_Inf(lr, subgroup)*1000/60;
         }
     }(jQuery);
 </script>

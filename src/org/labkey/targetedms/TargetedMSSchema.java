@@ -148,6 +148,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PEPTIDE_CALIBRATION_CURVE = "PeptideCalibrationCurve";
     public static final String TABLE_MOLECULE_CALIBRATION_CURVE = "MoleculeCalibrationCurve";
     public static final String TABLE_MOLECULE_INFO = "MoleculeInfo";
+    public static final String TABLE_PHARMACOKINETICS = "Pharmacokinetics";
 
     public static final String TABLE_REPRESENTATIVE_DATA_STATE_RUN = "RepresentativeDataState_Run";
     public static final String TABLE_REPRESENTATIVE_DATA_STATE = "RepresentativeDataState";

@@ -17,6 +17,7 @@ SELECT
   sub.PeptideId,
   sub.MoleculeId,
   sub.Time,
+  sub.SubGroup,
   (CASE WHEN MAX(sub.Dose)= MIN(sub.Dose) THEN MAX(sub.Dose) ELSE NULL END) AS Dose,
   (CASE WHEN MAX(sub.DoseUnits)= MIN(sub.DoseUnits) THEN MAX(sub.DoseUnits) ELSE NULL END) AS DoseUnits,
   AVG(sub.calculatedConcentration)          AS Concentration,
@@ -32,6 +33,7 @@ FROM
       CAST(ifdefined(rep.Time) AS FLOAT)            AS Time,
       CAST(ifdefined(rep.Dose) AS FLOAT)            AS Dose,
       CAST(ifdefined(rep.DoseUnits) AS VARCHAR(250))AS DoseUnits,
+      CAST(ifdefined(rep.SubGroup) AS VARCHAR(250)) AS SubGroup,
       CAST(ci.calculatedConcentration AS FLOAT)     AS calculatedConcentration,
       CAST(pep.sequence AS VARCHAR(250))            AS sequence,
       CAST(rep.runid.filename AS VARCHAR(250))      AS FileName,
@@ -44,4 +46,4 @@ FROM
       LEFT JOIN peptide pep ON pep.id = ci.peptideid
     WHERE (ci.SampleFileId.ReplicateId.SampleType IS NULL OR lower(ci.SampleFileId.ReplicateId.SampleType) = 'unknown')
   ) sub
-GROUP BY sub.PeptideId, sub.MoleculeId, sub.Time
+GROUP BY sub.PeptideId, sub.MoleculeId, sub.Time, sub.SubGroup

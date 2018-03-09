@@ -4,6 +4,7 @@
         <column name="Peptide" />
         <column name="IonName" />
         <column name="Time" />
+        <column name="SubGroup" />
         <column name="Dose" />
         <column name="DoseUnits" />
         <column name="Concentration" />
