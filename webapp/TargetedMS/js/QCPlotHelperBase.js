@@ -238,13 +238,13 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 var precursorDates = Ext4.Array.pluck(precursorInfo.data, dateProp);
                 var datesToAdd = [];
                 for (var j = 0; j < allPlotDateValues.length; j++) {
-                    var dateVal = this.formatDate(new Date(allPlotDateValues[j]), !this.groupedX);
+                    var dateVal = this.formatDate(allPlotDateValues[j], !this.groupedX);
                     var dataIsMissingDate = precursorDates.indexOf(dateVal) == -1 && Ext4.Array.pluck(datesToAdd, dateProp).indexOf(dateVal) == -1;
                     if (dataIsMissingDate) {
                         datesToAdd.push({
                             type: 'missing',
-                            fullDate: this.formatDate(new Date(allPlotDateValues[j]), true),
-                            date: this.formatDate(new Date(allPlotDateValues[j])),
+                            fullDate: this.formatDate(allPlotDateValues[j], true),
+                            date: this.formatDate(allPlotDateValues[j]),
                             groupedXTick: dateVal
                         });
                     }

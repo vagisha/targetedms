@@ -1580,6 +1580,10 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 return Ext4.util.Format.date(d, 'Y-m-d');
             }
         }
+        else if (typeof(d) === 'string' && d.length === 19) {
+            // support format of strings like "2013-08-27 14:45:49"
+            return includeTime ? d : d.substring(0, d.indexOf(' '));
+        }
         else {
             return d;
         }
