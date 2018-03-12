@@ -4,6 +4,7 @@
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
+<%@ taglib prefix="h" uri="http://www.labkey.org/taglib" %>
 <%
     JspView<TargetedMSController.PKForm> me = (JspView<TargetedMSController.PKForm>) HttpView.currentView();
     TargetedMSController.PKForm bean = me.getModelBean();
@@ -24,43 +25,52 @@
 <%
     for(String subgroup : bean.getSampleGroupNames() ){ %>
     <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
-        <i class="fa fa-file-excel-o" onclick="exportExcel('<%=subgroup%>')"></i>
+        <i class="fa fa-file-excel-o" onclick="exportExcel('<%=h(subgroup)%>')"></i>
     </div>
     <h3 id="pk-title1"></h3>
     <h4 id="pk-title2"></h4>
     <br>
 
 <labkey:panel title="Statistics">
-    <h4 id="sb-title2">Subgroup: <%=subgroup%></h4>
-    <table id="pk-table-input-<%=subgroup%>" class="table table-striped table-responsive pk-table-stats"  >
+    <h4 id="sb-title2">Subgroup: <%=h(subgroup)%></h4>
+    <table id="pk-table-input-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats"  >
         <thead><tr><td>Time</td><td>C0</td><td>Terminal</td><td>Concentration</td></tr></thead>
     </table>
-    <table id="pk-table-stats-<%=subgroup%>" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
+    <table id="pk-table-stats-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
         <thead><tr><td colspan="3">Statistic</td></tr></thead>
-        <tr><td class="pk-table-label">Dose            </td><td id="Dose-<%=subgroup%>"              class="pk-table-stat"></td><td id="DoseUnits-<%=subgroup%>"></td></tr>
-        <tr><td class="pk-table-label">IV CO           </td><td id="IVCO-<%=subgroup%>"              class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">k':             </td><td id="k-<%=subgroup%>"                 class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">%AUC Extrap:    </td><td id="AUCExtrap-<%=subgroup%>"         class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">MRT (0-inf):    </td><td id="Mrt_Zero_Inf-<%=subgroup%>"      class="pk-table-stat"></td><td>hr</td></tr>
-        <tr><td class="pk-table-label">MRT (0-t):      </td><td id="Mrt_Zero_T-<%=subgroup%>"        class="pk-table-stat"></td><td>hr</td></tr>
-        <tr><td class="pk-table-label">CL (0-inf):     </td><td id="Cl_Zero_Inf-<%=subgroup%>"       class="pk-table-stat"></td><td>ml/min/kg</td></tr>
-        <tr><td class="pk-table-label">CL (0-t):       </td><td id="Cl_Zero_T-<%=subgroup%>"         class="pk-table-stat"></td><td>ml/min/kg</td></tr>
-        <tr><td class="pk-table-label">Vdss (0-inf):   </td><td id="Vdss_Zero_Inf-<%=subgroup%>"     class="pk-table-stat"></td><td>L/kg</td></tr>
-        <tr><td class="pk-table-label">Vdss (0-t):     </td><td id="Vdss_Zero_T-<%=subgroup%>"       class="pk-table-stat"></td><td>L/kg</td></tr>
-        <tr><td class="pk-table-label">T1/2:           </td><td id="T1_2-<%=subgroup%>"              class="pk-table-stat"></td><td>hr</td></tr>
-        <tr><td class="pk-table-label">Effective T1/2: </td><td id="Effective_T1_2-<%=subgroup%>"    class="pk-table-stat"></td><td>hr</td></tr>
+        <tr><td class="pk-table-label">Route           </td><td id="Route-<%=h(subgroup)%>"             class="pk-table-stat"></td><td></td></tr>
+        <tr><td class="pk-table-label">Dose            </td><td id="Dose-<%=h(subgroup)%>"              class="pk-table-stat"></td><td id="DoseUnits-<%=h(subgroup)%>"></td></tr>
+        <tr><td class="pk-table-label">IV CO           </td><td id="IVCO-<%=h(subgroup)%>"              class="pk-table-stat"></td><td></td></tr>
+        <tr><td class="pk-table-label">k':             </td><td id="k-<%=h(subgroup)%>"                 class="pk-table-stat"></td><td></td></tr>
+        <tr><td class="pk-table-label">%AUC Extrap:    </td><td id="AUCExtrap-<%=h(subgroup)%>"         class="pk-table-stat"></td><td></td></tr>
+        <tr><td class="pk-table-label">MRT (0-inf):    </td><td id="Mrt_Zero_Inf-<%=h(subgroup)%>"      class="pk-table-stat"></td><td>hr</td></tr>
+        <tr><td class="pk-table-label">MRT (0-t):      </td><td id="Mrt_Zero_T-<%=h(subgroup)%>"        class="pk-table-stat"></td><td>hr</td></tr>
+        <tr><td class="pk-table-label">CL (0-inf):     </td><td id="Cl_Zero_Inf-<%=h(subgroup)%>"       class="pk-table-stat"></td><td>ml/min/kg</td></tr>
+        <tr><td class="pk-table-label">CL (0-t):       </td><td id="Cl_Zero_T-<%=h(subgroup)%>"         class="pk-table-stat"></td><td>ml/min/kg</td></tr>
+        <tr><td class="pk-table-label">Vdss (0-inf):   </td><td id="Vdss_Zero_Inf-<%=h(subgroup)%>"     class="pk-table-stat"></td><td>L/kg</td></tr>
+        <tr><td class="pk-table-label">Vdss (0-t):     </td><td id="Vdss_Zero_T-<%=h(subgroup)%>"       class="pk-table-stat"></td><td>L/kg</td></tr>
+        <tr><td class="pk-table-label">T1/2:           </td><td id="T1_2-<%=h(subgroup)%>"              class="pk-table-stat"></td><td>hr</td></tr>
+        <tr><td class="pk-table-label">Effective T1/2: </td><td id="Effective_T1_2-<%=h(subgroup)%>"    class="pk-table-stat"></td><td>hr</td></tr>
     </table>
+    <div id="nonIVC0Controls-<%=h(subgroup)%>" hidden="true">
+        <span id="nonIVC0Controls-Warn-<%=h(subgroup)%>" class="labkey-error"><h4>WARNING: Please enter enter a non-IV C0 and recalculate.</h4></span>
+        non-IV C0
+        <input type="number" id="nonIvCO-<%=h(subgroup)%>"
+                      label="non-IV C0"/>
+        <button id="btnNonIvCO-<%=h(subgroup)%>" onclick="updateStatsForNonIVC0('<%=h(subgroup)%>')">Recalculate</button>
+
+    </div>
 </labkey:panel>
 
 <labkey:panel title="Charts">
-    <div id="chart-<%=subgroup%>"></div>
-    <div id="chartLog-<%=subgroup%>"></div>
+    <div id="chart-<%=h(subgroup)%>"></div>
+    <div id="chartLog-<%=h(subgroup)%>"></div>
 </labkey:panel>
 <labkey:panel title="Data">
-    <table id="pk-table-standard-<%=subgroup%>" class="table table-striped table-responsive pk-table">
-        <thead id="standard-header-<%=subgroup%>" />
-        <tbody id="standard-body-<%=subgroup%>" />
-        <tfoot id="standard-footer-<%=subgroup%>"/>
+    <table id="pk-table-standard-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table">
+        <thead id="standard-header-<%=h(subgroup)%>" />
+        <tbody id="standard-body-<%=h(subgroup)%>" />
+        <tfoot id="standard-footer-<%=h(subgroup)%>"/>
     </table>
 </labkey:panel>
     <%}%>
@@ -74,15 +84,20 @@
         var peptide='';
         var ion='';
         var fileName='';
-        var timeRows=[];
+        var timeRows={};
+        var subgroups={};
         var dose = null;
         var doseUnits = null;
+        var roa = null;
 
         //Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
         var timeRowZero = {Time: 0 ,          Concentration :  null        };
 
         function parseRawData(data, subgroup) {
             // data.rows = timeRowsMock;
+            dose = null;
+            doseUnits = null;
+            roa = null;
 
             if(!data.rows || data.rows.length === 0){
                 $('#pk-title1').html("No data to show");
@@ -100,6 +115,10 @@
                 if(doseUnits == null){
                     doseUnits = timeRow.DoseUnits;
                 }
+
+                if(roa== null){
+                    roa = timeRow.ROA;
+                }
             });
 
             if(dose == null){
@@ -113,12 +132,23 @@
             }
 
             if(doseUnits == null){
-                var doseMessage = "The replicate annotation named DoseUnits is missing, has no value, or has different values within a subgroup.";
+                var doseUnitsMessage = "The replicate annotation named DoseUnits is missing, has no value, or has different values within a subgroup.";
                 if(!message){
-                    message = doseMessage;
+                    message = doseUnitsMessage;
                 }
                 else{
-                    message += doseMessage;
+                    message += doseUnitsMessage;
+                }
+            }
+
+            if(roa == null){
+
+                var roaMessage = "The replicate annotation named ROA is missing, has no value, or has different values within a subgroup.";
+                if(!message){
+                    message = roaMessage;
+                }
+                else{
+                    message += roaMessage;
                 }
             }
 
@@ -156,8 +186,17 @@
 
             $('#pk-title2').html("Skyline File: " + fileName);
 
+            subgroups[subgroup]={};
+            if(roa === "IV"){
+                subgroups[subgroup]['isIV'] = true;
+            }else{
+                $('#nonIVC0Controls-' + subgroup).removeAttr('hidden');
+                subgroups[subgroup]['isIV'] = false;
+            }
+
             $('#Dose-' + subgroup).html(dose);
             $('#DoseUnits-' + subgroup).html(doseUnits);
+            $('#Route-' + subgroup).html(roa);
 
             timeRows[subgroup].forEach(function (row, index) {
                 var checkedC0;
@@ -266,6 +305,10 @@
         const checkBoxTerminal = ".terminal";
         var lr;
 
+        updateStatsForNonIVC0 = function(subgroup) {
+            updateStats(checkBoxC0,subgroup);
+            updateStats(checkBoxTerminal, subgroup);
+        }
         function updateStats(timeFrame, subgroup) {
 
             var x = [];
@@ -279,8 +322,19 @@
             });
             lr = getLinearRegression(y, x, subgroup);
 
-            timeRows[subgroup][0].pkConc = Math.exp(lr.intercept);
-            timeRows[subgroup][0].lnCp =  Math.log(Math.exp(lr.intercept));
+            var c0 = lr.intercept;
+            if(subgroups[subgroup].isIV === false){
+                c0= $('#nonIvCO-' + subgroup).val();
+                //show warning if no value provided
+                if(c0 === ''){
+                    $('#nonIVC0Controls-' + subgroup + ' span').removeAttr("hidden", "true");
+                }else{
+                    $('#nonIVC0Controls-' + subgroup + ' span').attr("hidden", "true");
+                }
+            }
+
+            timeRows[subgroup][0].pkConc = Math.exp(c0);
+            timeRows[subgroup][0].lnCp =  Math.log(Math.exp(c0));
 
             if(timeFrame === checkBoxC0)
             {

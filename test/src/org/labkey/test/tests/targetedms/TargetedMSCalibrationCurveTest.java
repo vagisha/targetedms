@@ -128,7 +128,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         String expectedValueForStatsValue ="1 0.678 0.026 91.011 39.277 1.930 0.000 0.003 0.001 0.000 27.009 27.225";
         String dataOfStatsValue = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB1").findElement(getDriver()),2);
         assertEquals("Missing value in the Statistic - value column",expectedValueForStatsValue,dataOfStatsValue);
-        expectedValueForStatsValue ="1 -14.678 1.502 0.005 0.311 0.310 0.000 0.000 0.000 0.000 0.462 0.215";
+        expectedValueForStatsValue ="1 -14.678 1.502 0.459 4.589 4.575 0.000 0.000 0.000 0.000 0.462 3.181";
         dataOfStatsValue = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB2").findElement(getDriver()),2);
         assertEquals("Missing value in the Statistic - value column",expectedValueForStatsValue,dataOfStatsValue);
 
@@ -141,9 +141,18 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
         checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB2\"]/tbody/tr[4]/td[2]/input"));
         checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB2\"]/tbody/tr[3]/td[3]/input"));
-        expectedValuesAfterAddTerminal = "1 -7.454 1.502 0.005 0.311 0.310 0.000 0.000 0.000 0.000 0.462 0.215";
+        expectedValuesAfterAddTerminal = "1 -7.454 1.502 0.459 4.589 4.575 0.000 0.000 0.000 0.000 0.462 3.181";
         dataofStatsValue2 = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB2").findElement(getDriver()),2);
         assertEquals("Missing value in the Statistic - value column after adding additional Terminal",expectedValuesAfterAddTerminal,dataofStatsValue2);
+
+        assertElementVisible(Locator.id("nonIVC0Controls-Warn-SB2"));
+        setFormElement(Locator.id("nonIvCO-SB2"),"2");
+        click(Locator.id("btnNonIvCO-SB2"));
+
+        String expectedValuesAfterSetNonIvC0 = "2.000 -0.966 3.604 3.840 -0.554";
+        String dataofInCp = columnDataAsString(Locator.tagWithId("table","pk-table-standard-SB2").findElement(getDriver()),4);
+        assertEquals("Missing value in the In(Cp) column after adding nonIV C0",expectedValuesAfterSetNonIvC0,dataofInCp);
+        assertElementNotVisible(Locator.id("nonIVC0Controls-Warn-SB2"));
     }
 
     private String columnDataAsString (WebElement table,int col)
