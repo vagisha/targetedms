@@ -5097,7 +5097,7 @@ public class TargetedMSController extends SpringActionController
         sqlFragment.append(" where p.MoleculeId = ? ");
 
         // add variables
-        sqlFragment.add(id);
+        sqlFragment.add(Integer.toString(id));
 
         SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
         String[] sampleGroupNames = sqlSelector.getArray(String.class);
