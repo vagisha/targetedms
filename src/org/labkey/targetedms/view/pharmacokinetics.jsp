@@ -53,7 +53,7 @@
         <tr><td class="pk-table-label">Effective T1/2: </td><td id="Effective_T1_2-<%=h(subgroup)%>"    class="pk-table-stat"></td><td>hr</td></tr>
     </table>
     <div id="nonIVC0Controls-<%=h(subgroup)%>" hidden="true">
-        <span id="nonIVC0Controls-Warn-<%=h(subgroup)%>" class="labkey-error"><h4>WARNING: Please enter enter a non-IV C0 and recalculate.</h4></span>
+        <span id="nonIVC0Controls-Warn-<%=h(subgroup)%>" class="labkey-error"><h4>WARNING: Please enter a non-IV C0 and recalculate.</h4></span>
         non-IV C0
         <input type="number" id="nonIvCO-<%=h(subgroup)%>"
                       label="non-IV C0"/>
