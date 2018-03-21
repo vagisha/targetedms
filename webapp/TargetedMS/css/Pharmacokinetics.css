@@ -5,8 +5,9 @@
 
 .pk-table thead td,
 .pk-table-stats thead td {
-    padding: 0 2px;
+    padding: 5px;
     border : solid 1px lightgray !important;
+    vertical-align: top;
 }
 
 .pk-table tr td,
@@ -23,4 +24,9 @@
 .pk-table-stat{
     width: 100px;
     text-align: right;
+}
+
+.targetedms-fom .export-icon {
+    padding-top: 4px;
+    left: 150px;
 }

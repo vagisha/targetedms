@@ -2884,48 +2884,32 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class ShowPKAction extends SimpleViewAction<PKForm>
     {
-        protected TargetedMSRun _run;  // save for use in appendNavTrail
-        protected GeneralMolecule _molecule;
+        private TargetedMSRun _run;  // save for use in appendNavTrail
+        private GeneralMolecule _molecule;
 
-        public void validateInputParams()
+        @Override
+        public void validate(PKForm form, BindException errors)
         {
-            String runId = getViewContext().getRequest().getParameter("RunId");
-            String generalMoleculeId = getViewContext().getRequest().getParameter("GeneralMoleculeId");
-            if (runId == null || generalMoleculeId == null || !isValidInt(runId) || !isValidInt(generalMoleculeId))
-            {
+            if (form.getRunId() == null || form.getGeneralMoleculeId() == null)
                 throw new NotFoundException("Missing one of the required parameters, RunId or GeneralMoleculeId.");
-            }
 
-            _run = TargetedMSManager.getRun(Integer.parseInt(runId));
-            if (_run == null || !_run.getContainer().equals(getContainer()))
-                throw new NotFoundException("Could not find RunId " + runId);
+            _run = validateRun(form.getRunId());
 
+            _molecule = PeptideManager.getPeptide(getContainer(), form.getGeneralMoleculeId());
+            if (_molecule == null)
+                _molecule = MoleculeManager.getMolecule(getContainer(), form.getGeneralMoleculeId());
+            if (_molecule == null)
+                throw new NotFoundException("Could not find Molecule " + form.getGeneralMoleculeId());
         }
 
         @Override
         public ModelAndView getView(PKForm form, BindException errors) throws Exception
         {
-            validateInputParams();
-            _run = validateRun(Integer.parseInt(getViewContext().getRequest().getParameter("RunId")));
-            int generalMoleculeId = Integer.parseInt(getViewContext().getRequest().getParameter("GeneralMoleculeId"));
-            _molecule = PeptideManager.getPeptide(getContainer(), generalMoleculeId);
-            if (_molecule == null)
-            {
-                _molecule = MoleculeManager.getMolecule(getContainer(), generalMoleculeId);
-            }
-
-            if(_molecule == null){
-                throw new NotFoundException("Could not find Molecule " + generalMoleculeId);
-            }
-            String[] subgroupNames = getReplicateSubgroupNames(getUser(), getContainer(), _molecule.getId());
+            List<String> subgroupNames = TargetedMSManager.get().getReplicateSubgroupNames(getUser(), getContainer(), _molecule);
             form.setSampleGroupNames(subgroupNames);
-            JspView pharmacokineticsView = new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp", form);
-            pharmacokineticsView.setTitle("Pharmacokinetics");
-
-            return pharmacokineticsView;
+            return new JspView<>("/org/labkey/targetedms/view/pharmacokinetics.jsp", form);
         }
-
-
+        
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
@@ -2934,21 +2918,10 @@ public class TargetedMSController extends SpringActionController
                 root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
                 ActionURL showCalibrationCurvesURL = getShowCalibrationCurvesURL(getContainer(), _run.getId());
                 root.addChild(_run.getDescription(), showCalibrationCurvesURL);
-                root.addChild(_molecule.getTextId());
             }
+            root.addChild("Pharmacokinetics");
             return root;
         }
-    }
-
-    private boolean isValidInt(String intAsString)
-    {
-        try
-        {
-            Integer.parseInt(intAsString);
-        }catch (NumberFormatException e){
-            return false;
-        }
-        return true;
     }
 
     public abstract class AbstractShowRunDetailsAction <VIEWTYPE extends QueryView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
@@ -5086,25 +5059,6 @@ public class TargetedMSController extends SpringActionController
         return peptideGroupCount;
     }
 
-    public static final String[] getReplicateSubgroupNames(User user, Container container, int id)
-    {
-
-        UserSchema userSchema = QueryService.get().getUserSchema(user, container, "targetedms");
-        TableInfo tableInfo = userSchema.getTable("pharmacokinetics");
-        SQLFragment sqlFragment = new SQLFragment();
-        sqlFragment.append("SELECT DISTINCT(p.subGroup) FROM ");
-        sqlFragment.append(tableInfo, "p");
-        sqlFragment.append(" where p.MoleculeId = ? ");
-
-        // add variables
-        sqlFragment.add(Integer.toString(id));
-
-        SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
-        String[] sampleGroupNames = sqlSelector.getArray(String.class);
-        Arrays.sort(sampleGroupNames);
-        return sampleGroupNames;
-    }
-
     public static final long getNumRepresentativePeptides(Container container) {
 
         SQLFragment sqlFragment = new SQLFragment();
@@ -6475,11 +6429,12 @@ public class TargetedMSController extends SpringActionController
 
         }
     }
+
     public static class PKForm
     {
         Integer _runId;
         Integer _generalMoleculeId;
-        private String[] _sampleGroupNames;
+        private List<String> _sampleGroupNames;
 
         public Integer getRunId()
         {
@@ -6501,17 +6456,16 @@ public class TargetedMSController extends SpringActionController
             _generalMoleculeId = generalMoleculeId;
         }
 
-        public void setSampleGroupNames(String[] sampleGroupNames)
+        public void setSampleGroupNames(List<String> sampleGroupNames)
         {
             _sampleGroupNames = sampleGroupNames;
         }
 
-        public String[] getSampleGroupNames()
+        public List<String> getSampleGroupNames()
         {
             return _sampleGroupNames;
         }
     }
-
 
     public static class FomForm
     {

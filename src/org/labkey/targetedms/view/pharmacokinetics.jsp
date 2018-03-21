@@ -22,17 +22,21 @@
 %>
 
 <div class="container-fluid targetedms-fom">
+    <h3 id="pk-title1"></h3>
+    <h4 id="pk-title2"></h4>
+    <h4 id="pk-title3"></h4>
+    <br/>
 <%
-    for(String subgroup : bean.getSampleGroupNames() ){ %>
+    for (String subgroup : bean.getSampleGroupNames() )
+    {
+        String subgroupTitle = "Subgroup: " + (subgroup != null ? subgroup : "");
+%>
+<labkey:panel title="<%=h(subgroupTitle)%>" type="portal">
     <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
         <i class="fa fa-file-excel-o" onclick="exportExcel('<%=h(subgroup)%>')"></i>
     </div>
-    <h3 id="pk-title1"></h3>
-    <h4 id="pk-title2"></h4>
-    <br>
 
-<labkey:panel title="Statistics">
-    <h4 id="sb-title2">Subgroup: <%=h(subgroup)%></h4>
+    <labkey:panel title="Statistics">
     <table id="pk-table-input-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats"  >
         <thead><tr><td>Time</td><td>C0</td><td>Terminal</td><td>Concentration</td></tr></thead>
     </table>
@@ -58,29 +62,28 @@
         <input type="number" id="nonIvCO-<%=h(subgroup)%>"
                       label="non-IV C0"/>
         <button id="btnNonIvCO-<%=h(subgroup)%>" onclick="updateStatsForNonIVC0('<%=h(subgroup)%>')">Recalculate</button>
-
     </div>
-</labkey:panel>
+    </labkey:panel>
 
-<labkey:panel title="Charts">
+    <labkey:panel title="Charts">
     <div id="chart-<%=h(subgroup)%>"></div>
     <div id="chartLog-<%=h(subgroup)%>"></div>
-</labkey:panel>
-<labkey:panel title="Data">
+    </labkey:panel>
+
+    <labkey:panel title="Data">
     <table id="pk-table-standard-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table">
         <thead id="standard-header-<%=h(subgroup)%>" />
         <tbody id="standard-body-<%=h(subgroup)%>" />
         <tfoot id="standard-footer-<%=h(subgroup)%>"/>
     </table>
+    </labkey:panel>
 </labkey:panel>
     <%}%>
 </div>
 <script type="application/javascript">
     +function ($) {
 
-        var params = LABKEY.ActionURL.getParameters();
-
-        this.moleculeId = params['GeneralMoleculeId'];
+        this.moleculeId = <%=bean.getGeneralMoleculeId()%>;
         var peptide='';
         var ion='';
         var fileName='';
@@ -91,70 +94,48 @@
         var roa = null;
 
         //Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
-        var timeRowZero = {Time: 0 ,          Concentration :  null        };
+        var timeRowZero = {Time: 0, Concentration: null};
 
         function parseRawData(data, subgroup) {
-            // data.rows = timeRowsMock;
             dose = null;
             doseUnits = null;
             roa = null;
 
-            if(!data.rows || data.rows.length === 0){
-                $('#pk-title1').html("No data to show");
+            if (!data.rows || data.rows.length === 0) {
+                $('#pk-title3').html("No data to show");
                 return;
             }
 
-            var message;
+            var message = '', sep = '';
             data.rows.forEach(function(timeRow) {
                 if (timeRow.Time === undefined || timeRow.Time == null) {
                     message = "The replicate annotation named Time is missing or has no value.";
+                    sep = '<br/>';
                 }
-                if(dose == null){
+                if (dose == null) {
                     dose = timeRow.Dose;
                 }
-                if(doseUnits == null){
+                if (doseUnits == null) {
                     doseUnits = timeRow.DoseUnits;
                 }
-
-                if(roa== null){
+                if (roa== null) {
                     roa = timeRow.ROA;
                 }
             });
 
-            if(dose == null){
-                var doseMessage = "The replicate annotation named Dose is missing, has no value, or has different values within a subgroup.";
-                if(!message){
-                    message = doseMessage;
-                }
-                else{
-                    message += doseMessage;
-                }
+            if (dose == null){
+                message += sep + "The replicate annotation named Dose is missing, has no value, or has different values within a subgroup.";
+                sep = '<br/>';
             }
 
-            if(doseUnits == null){
-                var doseUnitsMessage = "The replicate annotation named DoseUnits is missing, has no value, or has different values within a subgroup.";
-                if(!message){
-                    message = doseUnitsMessage;
-                }
-                else{
-                    message += doseUnitsMessage;
-                }
+            if (doseUnits == null) {
+                message += sep + "The replicate annotation named DoseUnits is missing, has no value, or has different values within a subgroup.";
+                sep = '<br/>';
             }
 
-            if(roa == null){
-
-                var roaMessage = "The replicate annotation named ROA is missing, has no value, or has different values within a subgroup.";
-                if(!message){
-                    message = roaMessage;
-                }
-                else{
-                    message += roaMessage;
-                }
-            }
-
-            if(message){
-                $('#pk-title1').html(message);
-                return false;
+            if (roa == null) {
+                message += sep + "The replicate annotation named ROA is missing, has no value, or has different values within a subgroup.";
+                sep = '<br/>';
             }
 
             if(data.rows[0].Time !== 0){
@@ -167,24 +148,30 @@
                 ion = timeRow.ionName;
                 fileName = timeRow.FileName;
                 const item = {
-                            time: timeRow.Time,
-                            conc: timeRow.Concentration
-                        };
-                    item.pkConc = item.conc;
-                    if(item.pkConc != null) {
-                        item.lnCp = Math.log(item.pkConc);
-                    }
-                    item.concxt = item.time * item.pkConc;
+                    time: timeRow.Time,
+                    conc: timeRow.Concentration
+                };
+                item.pkConc = item.conc;
+                if (item.pkConc != null) {
+                    item.lnCp = Math.log(item.pkConc);
+                }
+                item.concxt = item.time * item.pkConc;
                 timeRows[subgroup].push(item)
             });
 
-            if(peptide !== '' && peptide != null) {
+            if (peptide !== '' && peptide != null) {
                 $('#pk-title1').html("Peptide: " + peptide);
-            }else{
+            }
+            else {
                 $('#pk-title1').html("Molecule: " + ion);
             }
 
             $('#pk-title2').html("Skyline File: " + fileName);
+
+            if (message.length > 0) {
+                $('#pk-title3').html(message);
+                return false;
+            }
 
             subgroups[subgroup]={};
             if(roa === "IV"){
@@ -200,20 +187,22 @@
 
             timeRows[subgroup].forEach(function (row, index) {
                 var checkedC0;
-                if(index < 3 ) {checkedC0='checked';}
+                if (index < 3 ) {
+                    checkedC0='checked';
+                }
+
                 var checkedT;
-                if(index > timeRows[subgroup].length - 4) {checkedT='checked';}
+                if (index > timeRows[subgroup].length - 4) {
+                    checkedT='checked';
+                }
 
                 $("<tr>" +
                         "<td class='pk-table-stat'>" + row.time + "</td>" +
                         "<td ><input type='checkbox' rowIndex= " + index + " " + checkedC0 + " class='checkboxC0' subgroup='" + subgroup + "' /></td>" +
                         "<td ><input type='checkbox' rowIndex= " + index + " " + checkedT + " class='terminal' subgroup='" + subgroup + "'/></td>" +
                         "<td class='pk-table-stat'>" + statRound(row.conc) + "</td>" +
-                        "</tr>")
-                        .appendTo("#pk-table-input-" + subgroup);
+                        "</tr>").appendTo("#pk-table-input-" + subgroup);
             });
-
-
 
             $("<tr>" +"<td>inf</td><td ></td><td ></td><td ></td>" +
                     "<td class='pk-table-stat' id='infLinDeltaAUC-" + subgroup + "'></td>" +
@@ -263,8 +252,7 @@
                         "<td class='pk-table-stat'>" + statRound(getCumulativeLogLinAUMC(index, subgroup)) + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(getCorrectDeltaAUMC(index, subgroup)) + "</td>" +
                         "<td class='pk-table-stat'>" + statRound(getCorrectAUMC(index, subgroup)) + "</td>" +
-                        "</tr>")
-                        .appendTo("#standard-body-" + subgroup);
+                        "</tr>").appendTo("#standard-body-" + subgroup);
             });
         }
 
@@ -275,7 +263,7 @@
             return LABKEY.Utils.roundNumber(value,3).toLocaleString(undefined, {minimumFractionDigits: 3,maximumFractionDigits: 3});
         }
 
-        function getLinearRegression (y,x){
+        function getLinearRegression (y,x) {
             var lr = {};
             var n = y.length;
             var sum_x = 0;
@@ -285,7 +273,6 @@
             var sum_yy = 0;
 
             for (var i = 0; i < y.length; i++) {
-
                 sum_x += x[i];
                 sum_y += y[i];
                 sum_xy += (x[i]*y[i]);
@@ -300,7 +287,6 @@
             return lr;
         }
 
-
         const checkBoxC0 = ".checkboxC0";
         const checkBoxTerminal = ".terminal";
         var lr;
@@ -309,13 +295,13 @@
             updateStats(checkBoxC0,subgroup);
             updateStats(checkBoxTerminal, subgroup);
         }
+        
         function updateStats(timeFrame, subgroup) {
-
             var x = [];
             var y = [];
             $(timeFrame + '[subgroup="' + subgroup + '"]:checked').each(function (index, box) {
                 var row = timeRows[subgroup][box.getAttribute('rowIndex')];
-                if(row.time != 0) {
+                if (row.time != 0) {
                     x.push(row.time);
                     y.push(row.lnCp);
                 }
@@ -323,7 +309,7 @@
             lr = getLinearRegression(y, x, subgroup);
 
             var c0 = lr.intercept;
-            if(subgroups[subgroup].isIV === false){
+            if (subgroups[subgroup].isIV === false){
                 c0= $('#nonIvCO-' + subgroup).val();
                 //show warning if no value provided
                 if(c0 === ''){
@@ -336,12 +322,12 @@
             timeRows[subgroup][0].pkConc = Math.exp(c0);
             timeRows[subgroup][0].lnCp =  Math.log(Math.exp(c0));
 
-            if(timeFrame === checkBoxC0)
-            {
+            if (timeFrame === checkBoxC0) {
                 $('#IVCO-' + subgroup).html(statRound(lr.intercept));
                 var ivcoExp = statRound((Math.exp(lr.intercept)));
                 $('#IVCOEXP-' + subgroup).html(ivcoExp);
-            }else{
+            }
+            else {
                 $('#k-' + subgroup).html(statRound(lr.slope));
                 $('#AUCExtrap-' + subgroup).html(statRound(getAUCExtrap(lr, subgroup)));
                 $('#Mrt_Zero_Inf-' + subgroup).html(statRound(getMrt_Zero_Inf(lr, subgroup)));
@@ -374,20 +360,19 @@
             updateStats.call(this,checkBoxTerminal, this.getAttribute("subgroup"));
         });
 
-        var createPKTable = function()
-        {
+        var createPKTable = function() {
             this.rawData = {};
             this.summaryData = {};
 
             LABKEY.Query.selectRows( {
                 schemaName: 'targetedms',
                 queryName: 'Pharmacokinetics',
-                filterArray: [LABKEY.Filter.create('MoleculeId', params['GeneralMoleculeId'])],
+                filterArray: [LABKEY.Filter.create('MoleculeId', this.moleculeId)],
                 sort : ['SubGroup,Time'],
                 scope: this,
                 success: function (data) {
                     var subgroupData = {rows:[]};
-                    if(!data.rows || data.rows.length === 0){
+                    if (!data.rows || data.rows.length === 0) {
                         parseRawData(subgroupData);
                         return;
                     }
@@ -398,7 +383,9 @@
                     data.rows.forEach(function (row,index) {
                             if (row.SubGroup === subgroup) {
                                 subgroupData.rows.push(row);
-                            }else{//build collection of next subgroup
+                            }
+                            else {
+                                //build collection of next subgroup
                                 if (parseRawData(subgroupData, subgroup)) {
                                     showCharts(subgroup);
                                 }
@@ -406,7 +393,7 @@
                                 subgroupData.rows = [row];
                             }
 
-                            if(index === data.rows.length - 1 || subgroup != row.SubGroup) {
+                            if (index === data.rows.length - 1 || subgroup != row.SubGroup) {
                                 if (parseRawData(subgroupData, subgroup)) {
                                     showCharts(subgroup);
                                 }
@@ -435,17 +422,20 @@
                 var cells = $(this).find("td");
                 var row = [];
                 cells.each(function(index) {
-                    if(this.hasChildNodes() && this.firstChild.hasAttribute && this.firstChild.checked){
+                    if (this.hasChildNodes() && this.firstChild.hasAttribute && this.firstChild.checked) {
                         row.push('x')
-                    }else {
-                        if(isNaN(this.innerText.replace(/,/g,''))) {
+                    }
+                    else {
+                        if (isNaN(this.innerText.replace(/,/g,''))) {
                             row.push(this.innerText);
                         }
                         else {
-                            if(index===0)
+                            if (index===0) {
                                 row.push(parseFloat(this.innerText));//Time has a different format
-                            else
+                            }
+                            else {
                                 row.push({ value: parseFloat(this.innerText.replace(/,/g,'')), formatString: '#,##0.000'});
+                            }
                         }
                     }
                 });
@@ -481,52 +471,46 @@
 
             LABKEY.Utils.convertToExcel({
                 fileName : fileName.split(".")[0] + '_' + peptide + '.xlsx',
-                sheets:
-                        [
-                            {
-                                name: 'Statistics',
-                                data: sheet1Data
-                            }, {
-                            name: 'Data',
-                            data: sheet2Data
-                        }
-                        ]
+                sheets: [{
+                    name: 'Statistics',
+                    data: sheet1Data
+                },{
+                    name: 'Data',
+                    data: sheet2Data
+                }]
             });
         };
         function showCharts(subgroup) {
 
             var labResultsPlotConfig = {
-            rendererType: 'd3',
-            renderTo: 'chart-' +subgroup ,
-            labels: {
-                x: {value: "Time"},
-                y: {value: "Concentration"},
-                main: {value: "Linear"}
-            },
-            width: 1200,
-            height: 500,
-            clipRect: true,
-            data: timeRows[subgroup],
-            layers: [new LABKEY.vis.Layer({
-                geom: new LABKEY.vis.Geom.Path({})
-            }),
-                new LABKEY.vis.Layer({
-                    geom: new LABKEY.vis.Geom.Point()
-                })
-            ],
-            aes: {
-                x: 'time',
-                y: 'conc'
-            },
-            scales: {
-                x: {
-                    scaleType: 'continuous'
+                rendererType: 'd3',
+                renderTo: 'chart-' + subgroup ,
+                labels: {
+                    x: {value: "Time"},
+                    y: {value: "Concentration"},
+                    main: {value: "Linear"}
                 },
-                y: {
-                    scaleType: 'continuous'
+                width: 1200,
+                height: 500,
+                clipRect: true,
+                data: timeRows[subgroup],
+                layers: [
+                    new LABKEY.vis.Layer({
+                        geom: new LABKEY.vis.Geom.Path({})
+                    }),
+                    new LABKEY.vis.Layer({
+                        geom: new LABKEY.vis.Geom.Point()
+                    })
+                ],
+                aes: {
+                    x: 'time',
+                    y: 'conc'
+                },
+                scales: {
+                    x: {scaleType: 'continuous'},
+                    y: {scaleType: 'continuous'}
                 }
-            }
-        };
+            };
 
             var labResultsPlot = new LABKEY.vis.Plot(labResultsPlotConfig);
             labResultsPlot.render();
@@ -545,7 +529,7 @@
         //referenced in Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
         function getLinDeltaAUC(index, subgroup){
             //    (C4+C5)*(A5-A4)/2
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             return ((timeRows[subgroup][index-1].pkConc + timeRows[subgroup][index].pkConc)*(timeRows[subgroup][index].time-timeRows[subgroup][index-1].time))/2
@@ -553,7 +537,7 @@
 
         function getLogLinDeltaAUC(index, subgroup){
             //    =(A5-A4)*(C4-C5)/(D4-D5)
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             const timeRow = timeRows[subgroup][index];
@@ -563,10 +547,10 @@
 
         function getAUCuMhrL(index, subgroup){
             //    =J5+I6
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
-            if(index===1){
+            if (index === 1) {
                 return getLinDeltaAUC(index, subgroup)
             }
             return getLinDeltaAUC(index, subgroup) + getAUCuMhrL(index -1, subgroup);
@@ -574,7 +558,7 @@
 
         function getLogLinAUCuMhrL(index, subgroup){
             //    =L4+K5
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             return getLogLinAUCuMhrL(index -1, subgroup) +  getLogLinDeltaAUC(index, subgroup);
@@ -582,7 +566,7 @@
 
         function getLinDeltaAUMC(index, subgroup){
             //    =(O4+O5)*(A5-A4)/2
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             return ((timeRows[subgroup][index-1].concxt + timeRows[subgroup][index].concxt)*(timeRows[subgroup][index].time-timeRows[subgroup][index-1].time))/2
@@ -590,7 +574,7 @@
 
         function getCumulativeLinAUMC(index, subgroup){
             //    =Q4+P5
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             return getCumulativeLinAUMC(index-1, subgroup) + getLinDeltaAUMC(index, subgroup);
@@ -598,7 +582,7 @@
 
         function getCumulativeCorrectPartAUC(index, subgroup){
             //    =N4+M5
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             return getCumulativeCorrectPartAUC(index-1, subgroup) + getCorrectPartAUC(index, subgroup);
@@ -606,7 +590,7 @@
 
         function getCumulativeLogLinAUMC(index, subgroup){
             //    =S4+R5
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             return getCumulativeLogLinAUMC(index-1, subgroup) + getLogLinDeltaAUMC(index, subgroup);
@@ -618,13 +602,13 @@
 
         function getCorrectPartAUC(index, subgroup) {
             //    =IF(C5>=C4,I5,K5)
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             const timeRow = timeRows[subgroup][index];
             const timeRowPrevious = timeRows[subgroup][index-1];
 
-            if(timeRow.pkConc >= timeRowPrevious.pkConc){
+            if (timeRow.pkConc >= timeRowPrevious.pkConc) {
                 return getLinDeltaAUC(index, subgroup);
             }
             return getLogLinDeltaAUC(index, subgroup);
@@ -634,7 +618,7 @@
             // =(A5-A4)*
             //  ((O5-O4)/(LN(C5/C4)))-
             //  ((A5-A4)^2)*(C5-C4)/(LN(C5/C4)^2)
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             const timeRow = timeRows[subgroup][index];
@@ -651,26 +635,24 @@
 
         function getCorrectDeltaAUMC(index, subgroup) {
             //=IF(C5>=C4,P5,R5)
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             const timeRow = timeRows[subgroup][index];
             const timeRowPrevious = timeRows[subgroup][index-1];
 
-            if(timeRow.pkConc>= timeRowPrevious.pkConc){
+            if (timeRow.pkConc>= timeRowPrevious.pkConc) {
                 return getLinDeltaAUMC(index, subgroup);
             }
             return getLogLinDeltaAUMC(index, subgroup);
-
         }
 
         function getCorrectAUMC(index, subgroup) {
             //=U4+T5
-            if(index===0){
+            if (index === 0) {
                 return 0;
             }
             return getCorrectAUMC(index-1, subgroup) + getCorrectDeltaAUMC(index, subgroup);
-
         }
 
         function getInfLogLinAUCuMhrL(lr, subgroup){

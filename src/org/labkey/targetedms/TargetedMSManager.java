@@ -17,7 +17,6 @@
 package org.labkey.targetedms;
 
 import com.google.common.base.Joiner;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
@@ -67,14 +66,14 @@ import org.labkey.api.query.QueryException;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SchemaKey;
-import org.labkey.api.query.ValidationException;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.targetedms.chromlib.ChromatogramLibraryUtils;
 import org.labkey.targetedms.model.QCMetricConfiguration;
+import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.SampleFile;
@@ -92,6 +91,7 @@ import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -1947,4 +1947,19 @@ public class TargetedMSManager
         return getCountForRunFKTable(runId, getTableInfoReplicate());
     }
 
+    public List<String> getReplicateSubgroupNames(User user, Container container, @NotNull GeneralMolecule molecule)
+    {
+        UserSchema userSchema = QueryService.get().getUserSchema(user, container, "targetedms");
+        TableInfo tableInfo = userSchema.getTable("pharmacokinetics");
+
+        SQLFragment sqlFragment = new SQLFragment();
+        sqlFragment.append("SELECT DISTINCT(p.subGroup) FROM ");
+        sqlFragment.append(tableInfo, "p");
+        sqlFragment.append(" WHERE p.MoleculeId = ? ");
+        sqlFragment.add(Integer.toString(molecule.getId()));
+
+        String[] sampleGroupNames = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment).getArray(String.class);
+        Arrays.sort(sampleGroupNames);
+        return Arrays.asList(sampleGroupNames);
+    }
 }
