@@ -331,9 +331,8 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             stddevs.set(grpIndex, Math.round(stats.getStandardDeviation() * 100)/100.00);
             cvs.set(grpIndex, Math.round(((100 * stats.getStandardDeviation())/stats.getMean()) * 100)/100.00);
 
-
-            assertEquals(concentrations.get(rawIndex), getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 1));
-            assertEquals(biases.get(rawIndex), getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 2));
+            assertTrue(concentrations.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 1)));
+            assertTrue(biases.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 2)));
         }
 
         boolean singleValue;
