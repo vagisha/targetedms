@@ -44,7 +44,7 @@
         <thead><tr><td colspan="3">Statistic</td></tr></thead>
         <tr><td class="pk-table-label">Route           </td><td id="Route-<%=h(subgroup)%>"             class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">Dose            </td><td id="Dose-<%=h(subgroup)%>"              class="pk-table-stat"></td><td id="DoseUnits-<%=h(subgroup)%>"></td></tr>
-        <tr><td class="pk-table-label">IV CO           </td><td id="IVCO-<%=h(subgroup)%>"              class="pk-table-stat"></td><td></td></tr>
+        <tr><td class="pk-table-label">IV CO           </td><td id="IVC0-<%=h(subgroup)%>"              class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">k':             </td><td id="k-<%=h(subgroup)%>"                 class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">%AUC Extrap:    </td><td id="AUCExtrap-<%=h(subgroup)%>"         class="pk-table-stat"></td><td></td></tr>
         <tr><td class="pk-table-label">MRT (0-inf):    </td><td id="Mrt_Zero_Inf-<%=h(subgroup)%>"      class="pk-table-stat"></td><td>hr</td></tr>
@@ -59,9 +59,8 @@
     <div id="nonIVC0Controls-<%=h(subgroup)%>" hidden="true">
         <span id="nonIVC0Controls-Warn-<%=h(subgroup)%>" class="labkey-error"><h4>WARNING: Please enter a non-IV C0 and recalculate.</h4></span>
         non-IV C0
-        <input type="number" id="nonIvCO-<%=h(subgroup)%>"
-                      label="non-IV C0"/>
-        <button id="btnNonIvCO-<%=h(subgroup)%>" onclick="updateStatsForNonIVC0('<%=h(subgroup)%>')">Recalculate</button>
+        <input type="number" id="nonIVC0-<%=h(subgroup)%>" label="non-IV C0"/>
+        <button id="btnNonIVC0-<%=h(subgroup)%>" onclick="updateStatsForNonIVC0('<%=h(subgroup)%>')">Recalculate</button>
     </div>
     </labkey:panel>
 
@@ -83,7 +82,7 @@
 <script type="application/javascript">
     +function ($) {
 
-        this.moleculeId = <%=bean.getGeneralMoleculeId()%>;
+        var moleculeId = <%=bean.getGeneralMoleculeId()%>;
         var peptide='';
         var ion='';
         var fileName='';
@@ -92,9 +91,47 @@
         var dose = null;
         var doseUnits = null;
         var roa = null;
+        var lr;
+        var initialValues = {};
+
+        const checkBoxC0 = ".checkboxC0";
+        const checkBoxTerminal = ".terminal";
 
         //Spec ID: 31940 Panorama Partners - Figures of merit and PK calcs
         var timeRowZero = {Time: 0, Concentration: null};
+
+        LABKEY.Utils.onReady(function() {
+            LABKEY.Ajax.request({
+                url: LABKEY.ActionURL.buildURL('targetedms', 'pharmacokineticsOptions.api'),
+                params: {moleculeId: moleculeId},
+                scope: this,
+                success: LABKEY.Utils.getCallbackWrapper(function(response)
+                {
+                    initialValues = response.subgroups;
+                    createPKTable();
+                }, this, false)
+            });
+        });
+
+        function persistPKOptions(subgroup)
+        {
+            // save the selection options for this subgroup so the next time it is viewed, those values are used
+            // as the initial default values for the form fields
+            if (LABKEY.user.canUpdate) {
+                var json = {moleculeId: moleculeId, subgroups: {}};
+                json.subgroups[subgroup] = {
+                    nonIVC0: getNonIVC0BySubgroup(subgroup),
+                    c0: getCheckedBySubgroup(checkBoxC0, subgroup, 'time', true),
+                    terminal: getCheckedBySubgroup(checkBoxTerminal, subgroup, 'time', true)
+                };
+
+                LABKEY.Ajax.request({
+                    url: LABKEY.ActionURL.buildURL('targetedms', 'pharmacokineticsOptions.api'),
+                    method: 'POST',
+                    jsonData: json
+                });
+            }
+        }
 
         function parseRawData(data, subgroup) {
             dose = null;
@@ -185,15 +222,23 @@
             $('#DoseUnits-' + subgroup).html(doseUnits);
             $('#Route-' + subgroup).html(roa);
 
-            timeRows[subgroup].forEach(function (row, index) {
-                var checkedC0;
-                if (index < 3 ) {
-                    checkedC0='checked';
-                }
+            // initial values to use from a previously persisted selection for this container/moleculeId/subgroup
+            var initValues = initialValues[subgroup];
 
-                var checkedT;
-                if (index > timeRows[subgroup].length - 4) {
-                    checkedT='checked';
+            // set the nonIVC0 value if we have one from the initial values
+            if (initValues && initValues.nonIVC0 && initValues.nonIVC0.length > 0) {
+                $('#nonIVC0-' + subgroup).val(initValues.nonIVC0);
+            }
+
+            timeRows[subgroup].forEach(function (row, index) {
+                var checkedC0, checkedT;
+                // use initial values if they exist, default to selecting the first 3 time values for c0
+                if ((initValues && initValues.c0.indexOf(row.time.toString()) > -1) || (!initValues && index < 3)) {
+                    checkedC0 = 'checked';
+                }
+                // use initial values if they exist, default to selecting the last 3 time values for terminal
+                if ((initValues && initValues.terminal.indexOf(row.time.toString()) > -1) || (!initValues && index > timeRows[subgroup].length - 4)) {
+                    checkedT = 'checked';
                 }
 
                 $("<tr>" +
@@ -287,30 +332,35 @@
             return lr;
         }
 
-        const checkBoxC0 = ".checkboxC0";
-        const checkBoxTerminal = ".terminal";
-        var lr;
-
         updateStatsForNonIVC0 = function(subgroup) {
-            updateStats(checkBoxC0,subgroup);
+            updateStats(checkBoxC0, subgroup);
             updateStats(checkBoxTerminal, subgroup);
+            persistPKOptions(subgroup);
+        };
+
+        function getCheckedBySubgroup(timeFrame, subgroup, prop, includeZeroTime) {
+            var vals = [];
+            $(timeFrame + '[subgroup="' + subgroup + '"]:checked').each(function (index, box) {
+                var row = timeRows[subgroup][box.getAttribute('rowIndex')];
+                if (includeZeroTime || row.time != 0) {
+                    vals.push(row[prop]);
+                }
+            });
+            return vals;
+        }
+
+        function getNonIVC0BySubgroup(subgroup) {
+            return $('#nonIVC0-' + subgroup).val();
         }
         
         function updateStats(timeFrame, subgroup) {
-            var x = [];
-            var y = [];
-            $(timeFrame + '[subgroup="' + subgroup + '"]:checked').each(function (index, box) {
-                var row = timeRows[subgroup][box.getAttribute('rowIndex')];
-                if (row.time != 0) {
-                    x.push(row.time);
-                    y.push(row.lnCp);
-                }
-            });
+            var x = getCheckedBySubgroup(timeFrame, subgroup, 'time', false);
+            var y = getCheckedBySubgroup(timeFrame, subgroup, 'lnCp', false);
             lr = getLinearRegression(y, x, subgroup);
 
             var c0 = lr.intercept;
             if (subgroups[subgroup].isIV === false){
-                c0= $('#nonIvCO-' + subgroup).val();
+                c0= getNonIVC0BySubgroup(subgroup);
                 //show warning if no value provided
                 if(c0 === ''){
                     $('#nonIVC0Controls-' + subgroup + ' span').removeAttr("hidden", "true");
@@ -323,9 +373,7 @@
             timeRows[subgroup][0].lnCp =  Math.log(Math.exp(c0));
 
             if (timeFrame === checkBoxC0) {
-                $('#IVCO-' + subgroup).html(statRound(lr.intercept));
-                var ivcoExp = statRound((Math.exp(lr.intercept)));
-                $('#IVCOEXP-' + subgroup).html(ivcoExp);
+                $('#IVC0-' + subgroup).html(statRound(lr.intercept));
             }
             else {
                 $('#k-' + subgroup).html(statRound(lr.slope));
@@ -353,11 +401,15 @@
         }
 
         $(document).on("click",checkBoxC0,function () {
-            updateStats.call(this,checkBoxC0, this.getAttribute("subgroup"));
+            var subgroup = this.getAttribute("subgroup");
+            updateStats.call(this,checkBoxC0, subgroup);
+            persistPKOptions(subgroup);
         });
 
         $(document).on("click",checkBoxTerminal,function () {
-            updateStats.call(this,checkBoxTerminal, this.getAttribute("subgroup"));
+            var subgroup = this.getAttribute("subgroup");
+            updateStats.call(this,checkBoxTerminal, subgroup);
+            persistPKOptions(subgroup);
         });
 
         var createPKTable = function() {
@@ -367,7 +419,7 @@
             LABKEY.Query.selectRows( {
                 schemaName: 'targetedms',
                 queryName: 'Pharmacokinetics',
-                filterArray: [LABKEY.Filter.create('MoleculeId', this.moleculeId)],
+                filterArray: [LABKEY.Filter.create('MoleculeId', moleculeId)],
                 sort : ['SubGroup,Time'],
                 scope: this,
                 success: function (data) {
@@ -405,8 +457,6 @@
                 }
             });
         };
-
-        createPKTable();
 
         function getTableHeaders() {
             var headers = [];
@@ -480,6 +530,7 @@
                 }]
             });
         };
+
         function showCharts(subgroup) {
 
             var labResultsPlotConfig = {
@@ -521,6 +572,7 @@
             var labResultsPlotLog = new LABKEY.vis.Plot(labResultsPlotConfig);
             labResultsPlotLog.render();
         }
+
         function getInfLinDeltaAUC(lr,subgroup) {
             return timeRows[subgroup][timeRows[subgroup].length -1].conc/lr.slope
         }

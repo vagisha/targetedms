@@ -146,12 +146,12 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         assertEquals("Missing value in the Statistic - value column after adding additional Terminal",expectedValuesAfterAddTerminal,dataofStatsValue2);
 
         assertElementVisible(Locator.id("nonIVC0Controls-Warn-SB2"));
-        setFormElement(Locator.id("nonIvCO-SB2"),"2");
-        click(Locator.id("btnNonIvCO-SB2"));
+        setFormElement(Locator.id("nonIVC0-SB2"),"2");
+        click(Locator.id("btnNonIVC0-SB2"));
 
-        String expectedValuesAfterSetNonIvC0 = "2.000 -0.966 3.604 3.840 -0.554";
+        String expectedValuesAfterSetNonIVC0 = "2.000 -0.966 3.604 3.840 -0.554";
         String dataofInCp = columnDataAsString(Locator.tagWithId("table","pk-table-standard-SB2").findElement(getDriver()),4);
-        assertEquals("Missing value in the In(Cp) column after adding nonIV C0",expectedValuesAfterSetNonIvC0,dataofInCp);
+        assertEquals("Missing value in the In(Cp) column after adding nonIV C0",expectedValuesAfterSetNonIVC0,dataofInCp);
         assertElementNotVisible(Locator.id("nonIVC0Controls-Warn-SB2"));
     }
 

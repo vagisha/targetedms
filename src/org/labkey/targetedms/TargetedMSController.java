@@ -43,13 +43,14 @@ import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.FormHandlerAction;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasViewContext;
+import org.labkey.api.action.Marshal;
+import org.labkey.api.action.Marshaller;
 import org.labkey.api.action.QueryViewAction;
 import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
-import org.labkey.api.cloud.CloudStoreService;
 import org.labkey.api.data.BeanViewForm;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.ColumnInfo;
@@ -115,14 +116,12 @@ import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HelpTopic;
-import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DetailsView;
 import org.labkey.api.view.GridView;
-import org.labkey.api.view.HtmlView;
 import org.labkey.api.view.HttpView;
 import org.labkey.api.view.InsertView;
 import org.labkey.api.view.JspView;
@@ -2921,6 +2920,138 @@ public class TargetedMSController extends SpringActionController
             }
             root.addChild("Pharmacokinetics");
             return root;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    @Marshal(Marshaller.Jackson)
+    public class PharmacokineticsOptionsAction extends ApiAction<PKOptions>
+    {
+        private static final String CATEGORY = "TargetedMSPharmacokineticsOptions";
+        private static final char SEPARATOR = '|';
+
+        @Override
+        public Object execute(PKOptions form, BindException errors) throws Exception
+        {
+            PropertyManager.PropertyMap properties = PropertyManager.getWritableProperties(getContainer(), getPropMapName(form), true);
+
+            // only stash option properties for users with editor role (i.e. UpdatePermissions)
+            if (form.getSubgroups() != null && getContainer().hasPermission(getUser(), UpdatePermission.class))
+            {
+                for (Map.Entry<String, PKSubgroupOptions> subgroupEntry : form.getSubgroups().entrySet())
+                {
+                    properties.put(subgroupEntry.getKey() + SEPARATOR + "nonIVC0", subgroupEntry.getValue().getNonIVC0());
+                    properties.put(subgroupEntry.getKey() + SEPARATOR + "c0", subgroupEntry.getValue().getC0AsString());
+                    properties.put(subgroupEntry.getKey() + SEPARATOR + "terminal", subgroupEntry.getValue().getTerminalAsString());
+                }
+                properties.save();
+            }
+
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            Map<String, PKSubgroupOptions> subgroupOptions = new HashMap<>();
+            for (Map.Entry<String, String> prop : properties.entrySet())
+            {
+                // expect the prop key to be subgroup|name, dismiss the prop if it doesn't fit that shape
+                String[] keys = StringUtils.split(prop.getKey(), SEPARATOR);
+                if (keys.length == 2)
+                {
+                    String subgroup = keys[0];
+                    String propName = keys[1];
+                    if (!subgroupOptions.containsKey(subgroup))
+                        subgroupOptions.put(subgroup, new PKSubgroupOptions());
+                    subgroupOptions.get(subgroup).setProp(propName, prop.getValue());
+                }
+            }
+            response.put("subgroups", subgroupOptions);
+            return response;
+        }
+
+        private String getPropMapName(PKOptions form)
+        {
+            return CATEGORY + (form.getMoleculeId() != null ? form.getMoleculeId() : "null");
+        }
+    }
+
+    private static class PKOptions
+    {
+        private Integer _moleculeId;
+        private Map<String, PKSubgroupOptions> _subgroups;
+
+        public void setMoleculeId(Integer moleculeId)
+        {
+            _moleculeId = moleculeId;
+        }
+
+        public Integer getMoleculeId()
+        {
+            return _moleculeId;
+        }
+
+        public Map<String, PKSubgroupOptions> getSubgroups()
+        {
+            return _subgroups;
+        }
+
+        public void setSubgroups(Map<String, PKSubgroupOptions> subgroups)
+        {
+            _subgroups = subgroups;
+        }
+    }
+
+    private static class PKSubgroupOptions
+    {
+        private String _nonIVC0;
+        private List<String> _c0;
+        private List<String> _terminal;
+
+        public void setNonIVC0(String nonIVC0)
+        {
+            _nonIVC0 = nonIVC0;
+        }
+
+        public String getNonIVC0()
+        {
+            return _nonIVC0;
+        }
+
+        public void setC0(List<String> c0)
+        {
+            _c0 = c0;
+        }
+
+        public List<String> getC0()
+        {
+            return _c0;
+        }
+
+        public String getC0AsString()
+        {
+            return _c0 != null ? StringUtils.join(_c0.toArray(), ',') : null;
+        }
+
+        public void setTerminal(List<String> terminal)
+        {
+            _terminal = terminal;
+        }
+
+        public List<String> getTerminal()
+        {
+            return _terminal;
+        }
+
+        public String getTerminalAsString()
+        {
+            return _terminal != null ? StringUtils.join(_terminal.toArray(), ',') : null;
+        }
+
+        public void setProp(String name, String value)
+        {
+            if ("nonIVC0".equalsIgnoreCase(name))
+                setNonIVC0(value);
+            else if ("c0".equalsIgnoreCase(name))
+                setC0(Arrays.asList(StringUtils.split(value, ',')));
+            else if ("terminal".equalsIgnoreCase(name))
+                setTerminal(Arrays.asList(StringUtils.split(value, ',')));
         }
     }
 
