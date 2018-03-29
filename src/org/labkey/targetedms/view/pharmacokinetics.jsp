@@ -242,7 +242,7 @@
                 }
 
                 $("<tr>" +
-                        "<td class='pk-table-stat'>" + row.time + "</td>" +
+                        "<td class='pk-table-stat pk-table-time'>" + row.time + "</td>" +
                         "<td ><input type='checkbox' rowIndex= " + index + " " + checkedC0 + " class='checkboxC0' subgroup='" + subgroup + "' /></td>" +
                         "<td ><input type='checkbox' rowIndex= " + index + " " + checkedT + " class='terminal' subgroup='" + subgroup + "'/></td>" +
                         "<td class='pk-table-stat'>" + statRound(row.conc) + "</td>" +

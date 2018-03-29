@@ -28,10 +28,9 @@ import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.CalibrationCurveWebpart;
+import org.labkey.test.pages.targetedms.PKReportPage;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.Maps;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
 
 import java.io.File;
 import java.io.IOException;
@@ -92,80 +91,73 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         goToProjectHome();
         setupSubfolder(getProjectName(), subFolderName, FolderType.Experiment);
         importData(SAMPLEDATA_FOLDER + subFolderName + ".zip");
-        clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
-        clickAndWait(Locator.linkContainingText(subFolderName + ".zip"));
-        clickAndWait(Locator.linkContainingText("calibration curve"));
-        clickAndWait(Locator.linkWithText("PK"));
-        Locator.tagContainingText("td","7").waitForElement(getDriver(),1000);
+        clickAndWait(Locator.folderTab("Panorama Dashboard"));
+        clickAndWait(Locator.linkWithText(subFolderName + ".zip"));
+        clickAndWait(Locator.linkWithText("27 calibration curves"));
+        clickAndWait(Locator.linkWithText("PK")); // first one in the Peptide Calibration Curves grid
+        PKReportPage pkReportPage = new PKReportPage(getDriver(), 11);
 
         log("Verifying the Time content");
-        String expectedValueForTime = "0 0.3 1 1.2 1.5 4";
-        String dataOfTimeCol = columnDataAsString(Locator.tagWithId("table","pk-table-input-SB1").findElement(getDriver()),1);
-        assertEquals("Missing value in the Time column",expectedValueForTime,dataOfTimeCol);
-        expectedValueForTime = "0 3 4 5 7";
-        dataOfTimeCol = columnDataAsString(Locator.tagWithId("table","pk-table-input-SB2").findElement(getDriver()),1);
-        assertEquals("Missing value in the Time column",expectedValueForTime,dataOfTimeCol);
+        pkReportPage.verifyTableColumnValues("input", "SB1", 1, "0 0.3 1 1.2 1.5 4");
+        pkReportPage.verifyTableColumnValues("input", "SB2", 1, "0 3 4 5 7");
 
         log("Verifying the Concentration content");
-        String expectedValueForConc ="2.169 2.715 3.266 0.801 1.702";
-        String dataOfConcentration = columnDataAsString(Locator.tagWithId("table","pk-table-input-SB1").findElement(getDriver()),4);
-        assertEquals("Missing value in the Conc column",expectedValueForConc,dataOfConcentration);
-
-        expectedValueForConc ="0.380 36.747 46.520 0.575";
-        dataOfConcentration = columnDataAsString(Locator.tagWithId("table","pk-table-input-SB2").findElement(getDriver()),4);
-        assertEquals("Missing value in the Conc column",expectedValueForConc,dataOfConcentration);
+        pkReportPage.verifyTableColumnValues("input", "SB1", 4, "2.169 2.715 3.266 0.801 1.702");
+        pkReportPage.verifyTableColumnValues("input", "SB2", 4, "0.380 36.747 46.520 0.575");
 
         log("Verifying the Statistic - Name content");
         String expectedValueForStatsName ="Route Dose IV CO k': %AUC Extrap: MRT (0-inf): MRT (0-t): CL (0-inf): CL (0-t): Vdss (0-inf): Vdss (0-t): T1/2: Effective T1/2:";
-        String dataOfStatsName = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB1").findElement(getDriver()),1);
-        assertEquals("Missing value in the Statistic - name column",expectedValueForStatsName,dataOfStatsName);
-
-        expectedValueForStatsName ="Route Dose IV CO k': %AUC Extrap: MRT (0-inf): MRT (0-t): CL (0-inf): CL (0-t): Vdss (0-inf): Vdss (0-t): T1/2: Effective T1/2:";
-        dataOfStatsName = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB2").findElement(getDriver()),1);
-        assertEquals("Missing value in the Statistic - name column",expectedValueForStatsName,dataOfStatsName);
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 1, expectedValueForStatsName);
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 1, expectedValueForStatsName);
 
         log("Verifying the Statistic - Value content");
-        String expectedValueForStatsValue ="IV 1 0.678 0.026 91.011 39.277 1.930 0.000 0.003 0.001 0.000 27.009 27.225";
-        String dataOfStatsValue = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB1").findElement(getDriver()),2);
-        assertEquals("Missing value in the Statistic - value column",expectedValueForStatsValue,dataOfStatsValue);
-        expectedValueForStatsValue ="IM 1 -14.678 1.502 0.459 4.589 4.575 0.000 0.000 0.000 0.000 0.462 3.181";
-        dataOfStatsValue = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB2").findElement(getDriver()),2);
-        assertEquals("Missing value in the Statistic - value column",expectedValueForStatsValue,dataOfStatsValue);
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.678 0.026 91.011 39.277 1.930 0.000 0.003 0.001 0.000 27.009 27.225");
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1 -14.678 1.502 0.459 4.589 4.575 0.000 0.000 0.000 0.000 0.462 3.181");
 
-        log("Checking the check box for Terminal and CO");
-        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB1\"]/tbody/tr[4]/td[2]/input"));
-        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB1\"]/tbody/tr[6]/td[3]/input"));
-        String expectedValuesAfterAddTerminal = "IV 1 0.635 0.026 91.011 39.277 1.930 0.000 0.003 0.001 0.000 27.009 27.225";
-        String dataofStatsValue2 = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB1").findElement(getDriver()),2);
-        assertEquals("Missing value in the Statistic - value column after adding additional Terminal",expectedValuesAfterAddTerminal,dataofStatsValue2);
+        log("SB1: Checking input for C0 @ 1.2 and unchecking Terminal @ 4");
+        pkReportPage.setSubgroupTimeCheckbox("SB1", true, 4, true);
+        pkReportPage.setSubgroupTimeCheckbox("SB1", false, 6, false);
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 4.683 0.712 0.319 0.291 0.000 0.000 0.000 0.000 0.148 0.221");
 
-        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB2\"]/tbody/tr[4]/td[2]/input"));
-        checkCheckbox(Locator.xpath("//*[@id=\"pk-table-input-SB2\"]/tbody/tr[3]/td[3]/input"));
-        expectedValuesAfterAddTerminal = "IM 1 -7.454 1.502 0.459 4.589 4.575 0.000 0.000 0.000 0.000 0.462 3.181";
-        dataofStatsValue2 = columnDataAsString(Locator.tagWithId("table","pk-table-stats-SB2").findElement(getDriver()),2);
-        assertEquals("Missing value in the Statistic - value column after adding additional Terminal",expectedValuesAfterAddTerminal,dataofStatsValue2);
+        log("SB2: Set non-IV C0 input and recalculate");
+        pkReportPage.setNonIVC0("SB2", "2");
+        pkReportPage.verifyTableColumnValues("standard", "SB2", 4, "2.000 -0.966 3.604 3.840 -0.554");
 
-        assertElementVisible(Locator.id("nonIVC0Controls-Warn-SB2"));
-        setFormElement(Locator.id("nonIVC0-SB2"),"2");
-        click(Locator.id("btnNonIVC0-SB2"));
+        log("SB2: Unchecking input for C0 @ 4 and unchecking Terminal @ 4");
+        pkReportPage.setSubgroupTimeCheckbox("SB2", true, 3, false);
+        pkReportPage.setSubgroupTimeCheckbox("SB2", false, 2, true);
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1  0.148 4.211 4.743 4.347 0.000 0.000 0.000 0.000 4.675 3.288");
 
-        String expectedValuesAfterSetNonIVC0 = "2.000 -0.966 3.604 3.840 -0.554";
-        String dataofInCp = columnDataAsString(Locator.tagWithId("table","pk-table-standard-SB2").findElement(getDriver()),4);
-        assertEquals("Missing value in the In(Cp) column after adding nonIV C0",expectedValuesAfterSetNonIVC0,dataofInCp);
-        assertElementNotVisible(Locator.id("nonIVC0Controls-Warn-SB2"));
+        // all of the form input changes from above should have been persisted for this container/molecule/subgroup
+        // so verify those by reloading the page and checking again for calculated values
+        refresh();
+        pkReportPage = new PKReportPage(getDriver(), 11);
+        // this verifies that the SB1 C0 and Terminal checkboxes are set according to last selected options
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 4.683 0.712 0.319 0.291 0.000 0.000 0.000 0.000 0.148 0.221");
+        // this verifies that the SB2 C0 and Terminal checkboxes are set according to last selected options
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1  0.148 4.211 4.743 4.347 0.000 0.000 0.000 0.000 4.675 3.288");
+        // this verifies that the SB2 non-IV C0 value is set according to last entered value
+        pkReportPage.verifyTableColumnValues("standard", "SB2", 4, "2.000 -0.966 3.604 3.840 -0.554");
+
+        // impersonate a reader, who should be able to change the settings/inputs but those don't get persisted
+        pushLocation();
+        impersonateRole("Reader");
+        popLocation();
+        pkReportPage = new PKReportPage(getDriver(), 11);
+        // uncheck all the SB1 and SB2 time inputs
+        pkReportPage.setAllSubgroupTimeCheckboxes("SB1", 6, false);
+        pkReportPage.setAllSubgroupTimeCheckboxes("SB2", 5, false);
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1");
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1     4.347  0.000  0.000");
+        // now go back to the admin user, verify the Reader changes weren't persisted
+        pushLocation();
+        stopImpersonating();
+        popLocation();
+        pkReportPage = new PKReportPage(getDriver(), 11);
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 4.683 0.712 0.319 0.291 0.000 0.000 0.000 0.000 0.148 0.221");
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1  0.148 4.211 4.743 4.347 0.000 0.000 0.000 0.000 4.675 3.288");
+        pkReportPage.verifyTableColumnValues("standard", "SB2", 4, "2.000 -0.966 3.604 3.840 -0.554");
     }
-
-    private String columnDataAsString (WebElement table,int col)
-    {
-        String retVal="";
-
-        int size = table.findElements(By.tagName("tr")).size();
-        for (int i=1;i < size ; i++)
-            retVal += Locator.xpath("//tbody/tr[" + i + "]/td[" + col + "]").findElement(table).getText() + " ";
-
-        return retVal.trim();
-    }
-
 
     private void testCalibrationCurvePrecursorsByReplicate()
     {

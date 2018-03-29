@@ -533,6 +533,7 @@ test/src/org/labkey/test/components/targetedms/TargetedMSRunsTable.java -text
 test/src/org/labkey/test/pages/targetedms/AnnotationInsertPage.java -text
 test/src/org/labkey/test/pages/targetedms/AnnotationTypeInsertPage.java -text
 test/src/org/labkey/test/pages/targetedms/GuideSetPage.java -text
+test/src/org/labkey/test/pages/targetedms/PKReportPage.java -text
 test/src/org/labkey/test/pages/targetedms/PanoramaAnnotations.java -text
 test/src/org/labkey/test/pages/targetedms/PanoramaDashboard.java -text
 test/src/org/labkey/test/pages/targetedms/ParetoPlotPage.java -text
