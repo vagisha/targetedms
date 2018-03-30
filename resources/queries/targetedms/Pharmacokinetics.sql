@@ -25,7 +25,9 @@ SELECT
   group_concat(sub.calculatedConcentration) AS Concentrations,
   MAX(sub.Sequence)                         AS Peptide,
   MAX(sub.Filename)                         AS FileName,
-  MAX(sub.ionName)                          AS ionName
+  MAX(sub.ionName)                          AS ionName,
+  STDDEV(sub.calculatedConcentration)       AS StandardDeviation,
+  COUNT(sub.calculatedConcentration)        AS ConcentrationCount
 FROM
   (
     SELECT

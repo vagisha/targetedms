@@ -38,7 +38,7 @@
 
     <labkey:panel title="Statistics">
     <table id="pk-table-input-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats"  >
-        <thead><tr><td>Time</td><td>C0</td><td>Terminal</td><td>Concentration</td></tr></thead>
+        <thead><tr><td>Time</td><td>C0</td><td>Terminal</td><td>Concentration</td><td>Count</td><td>Std Dev</td></tr></thead>
     </table>
     <table id="pk-table-stats-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
         <thead><tr><td colspan="3">Statistic</td></tr></thead>
@@ -184,9 +184,15 @@
                 peptide = timeRow.Peptide;
                 ion = timeRow.ionName;
                 fileName = timeRow.FileName;
+                var count = timeRow.ConcentrationCount;
+                if(count === undefined){
+                    count = '';
+                }
                 const item = {
                     time: timeRow.Time,
-                    conc: timeRow.Concentration
+                    conc: timeRow.Concentration,
+                    stdDev: timeRow.StandardDeviation,
+                    count:  count
                 };
                 item.pkConc = item.conc;
                 if (item.pkConc != null) {
@@ -246,6 +252,8 @@
                         "<td ><input type='checkbox' rowIndex= " + index + " " + checkedC0 + " class='checkboxC0' subgroup='" + subgroup + "' /></td>" +
                         "<td ><input type='checkbox' rowIndex= " + index + " " + checkedT + " class='terminal' subgroup='" + subgroup + "'/></td>" +
                         "<td class='pk-table-stat'>" + statRound(row.conc) + "</td>" +
+                        "<td class='pk-table-stat'>" + row.count + "</td>" +
+                        "<td class='pk-table-stat'>" + statRound(row.stdDev) + "</td>" +
                         "</tr>").appendTo("#pk-table-input-" + subgroup);
             });
 

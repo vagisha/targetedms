@@ -23,7 +23,14 @@ public class PKReportPage extends LabKeyPage<PKReportPage.ElementCache>
     @Override
     protected void waitForPage()
     {
-        waitForElements(elementCache().timeCellLoc, _totalSubgroupTimeRowCount);
+        if(_totalSubgroupTimeRowCount > 0)
+        {
+            waitForElements(elementCache().timeCellLoc, _totalSubgroupTimeRowCount);
+        }
+        else
+        {
+            waitForElement(elementCache().timeCellLoc);
+        }
     }
 
     public void setAllSubgroupTimeCheckboxes(String subgroup, int count, boolean check)

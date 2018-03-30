@@ -95,15 +95,23 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         clickAndWait(Locator.linkWithText(subFolderName + ".zip"));
         clickAndWait(Locator.linkWithText("27 calibration curves"));
         clickAndWait(Locator.linkWithText("PK")); // first one in the Peptide Calibration Curves grid
-        PKReportPage pkReportPage = new PKReportPage(getDriver(), 11);
+        PKReportPage pkReportPage = new PKReportPage(getDriver(), 10);
 
         log("Verifying the Time content");
-        pkReportPage.verifyTableColumnValues("input", "SB1", 1, "0 0.3 1 1.2 1.5 4");
+        pkReportPage.verifyTableColumnValues("input", "SB1", 1, "0 0.3 1 1.2 1.5");
         pkReportPage.verifyTableColumnValues("input", "SB2", 1, "0 3 4 5 7");
 
         log("Verifying the Concentration content");
-        pkReportPage.verifyTableColumnValues("input", "SB1", 4, "2.169 2.715 3.266 0.801 1.702");
-        pkReportPage.verifyTableColumnValues("input", "SB2", 4, "0.380 36.747 46.520 0.575");
+        pkReportPage.verifyTableColumnValues("input", "SB1", 4, "2.169 2.715 3.266 0.801");
+        pkReportPage.verifyTableColumnValues("input", "SB2", 4, "0.380 19.225 46.520 0.575");
+
+        log("Verifying the Count content");
+        pkReportPage.verifyTableColumnValues("input", "SB1", 5, "1 1 1 1");
+        pkReportPage.verifyTableColumnValues("input", "SB2", 5, "1 2 1 1");
+
+        log("Verifying the StdDev content");
+        pkReportPage.verifyTableColumnValues("input", "SB1", 6, "");
+        pkReportPage.verifyTableColumnValues("input", "SB2", 6, "24.781");
 
         log("Verifying the Statistic - Name content");
         String expectedValueForStatsName ="Route Dose IV CO k': %AUC Extrap: MRT (0-inf): MRT (0-t): CL (0-inf): CL (0-t): Vdss (0-inf): Vdss (0-t): T1/2: Effective T1/2:";
@@ -111,52 +119,52 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         pkReportPage.verifyTableColumnValues("stats", "SB2", 1, expectedValueForStatsName);
 
         log("Verifying the Statistic - Value content");
-        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.678 0.026 91.011 39.277 1.930 0.000 0.003 0.001 0.000 27.009 27.225");
-        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1 -14.678 1.502 0.459 4.589 4.575 0.000 0.000 0.000 0.000 0.462 3.181");
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.678 2.618 4.021 0.457 0.397 0.002 0.002 0.000 0.000 0.265 0.317");
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1 -12.734 1.317 0.662 4.748 4.728 0.000 0.000 0.000 0.000 0.526 3.291");
 
         log("SB1: Checking input for C0 @ 1.2 and unchecking Terminal @ 4");
         pkReportPage.setSubgroupTimeCheckbox("SB1", true, 4, true);
-        pkReportPage.setSubgroupTimeCheckbox("SB1", false, 6, false);
-        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 4.683 0.712 0.319 0.291 0.000 0.000 0.000 0.000 0.148 0.221");
+        pkReportPage.setSubgroupTimeCheckbox("SB1", false, 5, false);
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 -0.924 -35.365 0.925 0.792 0.007 0.005 0.000 0.000 -0.750 0.641");
 
         log("SB2: Set non-IV C0 input and recalculate");
         pkReportPage.setNonIVC0("SB2", "2");
-        pkReportPage.verifyTableColumnValues("standard", "SB2", 4, "2.000 -0.966 3.604 3.840 -0.554");
+        pkReportPage.verifyTableColumnValues("standard", "SB2", 4, "2.000 -0.966 2.956 3.840 -0.554");
 
         log("SB2: Unchecking input for C0 @ 4 and unchecking Terminal @ 4");
         pkReportPage.setSubgroupTimeCheckbox("SB2", true, 3, false);
         pkReportPage.setSubgroupTimeCheckbox("SB2", false, 2, true);
-        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1  0.148 4.211 4.743 4.347 0.000 0.000 0.000 0.000 4.675 3.288");
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1  0.093 8.064 5.510 4.434 0.000 0.000 0.000 0.000 7.474 3.819");
 
         // all of the form input changes from above should have been persisted for this container/molecule/subgroup
         // so verify those by reloading the page and checking again for calculated values
         refresh();
-        pkReportPage = new PKReportPage(getDriver(), 11);
+        pkReportPage = new PKReportPage(getDriver(), 10);
         // this verifies that the SB1 C0 and Terminal checkboxes are set according to last selected options
-        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 4.683 0.712 0.319 0.291 0.000 0.000 0.000 0.000 0.148 0.221");
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 -0.924 -35.365 0.925 0.792 0.007 0.005 0.000 0.000 -0.750 0.641");
         // this verifies that the SB2 C0 and Terminal checkboxes are set according to last selected options
-        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1  0.148 4.211 4.743 4.347 0.000 0.000 0.000 0.000 4.675 3.288");
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1  0.093 8.064 5.510 4.434 0.000 0.000 0.000 0.000 7.474 3.819");
         // this verifies that the SB2 non-IV C0 value is set according to last entered value
-        pkReportPage.verifyTableColumnValues("standard", "SB2", 4, "2.000 -0.966 3.604 3.840 -0.554");
+        pkReportPage.verifyTableColumnValues("standard", "SB2", 4, "2.000 -0.966 2.956 3.840 -0.554");
 
         // impersonate a reader, who should be able to change the settings/inputs but those don't get persisted
         pushLocation();
         impersonateRole("Reader");
         popLocation();
-        pkReportPage = new PKReportPage(getDriver(), 11);
+        pkReportPage = new PKReportPage(getDriver(), 10);
         // uncheck all the SB1 and SB2 time inputs
-        pkReportPage.setAllSubgroupTimeCheckboxes("SB1", 6, false);
+        pkReportPage.setAllSubgroupTimeCheckboxes("SB1", 5, false);
         pkReportPage.setAllSubgroupTimeCheckboxes("SB2", 5, false);
         pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1");
-        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1     4.347  0.000  0.000");
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1     4.434  0.000  0.000");
         // now go back to the admin user, verify the Reader changes weren't persisted
         pushLocation();
         stopImpersonating();
         popLocation();
-        pkReportPage = new PKReportPage(getDriver(), 11);
-        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 4.683 0.712 0.319 0.291 0.000 0.000 0.000 0.000 0.148 0.221");
-        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1  0.148 4.211 4.743 4.347 0.000 0.000 0.000 0.000 4.675 3.288");
-        pkReportPage.verifyTableColumnValues("standard", "SB2", 4, "2.000 -0.966 3.604 3.840 -0.554");
+        pkReportPage = new PKReportPage(getDriver(), 10);
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 -0.924 -35.365 0.925 0.792 0.007 0.005 0.000 0.000 -0.750 0.641");
+        pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1  0.093 8.064 5.510 4.434 0.000 0.000 0.000 0.000 7.474 3.819");
+        pkReportPage.verifyTableColumnValues("standard", "SB2", 4, "2.000 -0.966 2.956 3.840 -0.554");
     }
 
     private void testCalibrationCurvePrecursorsByReplicate()

@@ -9,6 +9,8 @@
         <column name="DoseUnits" />
         <column name="ROA" />
         <column name="Concentration" />
+        <column name="StandardDeviation" />
+        <column name="ConcentrationCount" />
         <column name="FileName" />
     </columns>
 </customView>
