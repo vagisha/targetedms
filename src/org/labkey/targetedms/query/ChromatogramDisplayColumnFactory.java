@@ -47,6 +47,9 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
     private final String _annotationsFilter;
     private final String _replicatesFilter;
 
+    public static final int CHART_WIDTH = 400;
+    public static final int CHART_HEIGHT = 400;
+
     public static enum TYPE
     {
         GENERAL_MOLECULE,
@@ -55,7 +58,12 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type)
     {
-        this(container, type, 400, 400, false, false, false, false, null, null);
+        this(container, type, CHART_WIDTH, CHART_HEIGHT, false, false, false, false, null, null);
+    }
+
+    public ChromatogramDisplayColumnFactory(Container container, TYPE type, int chartWidth, int chartHeight)
+    {
+        this(container, type, chartWidth, chartHeight, false, false, false, false, null, null);
     }
 
     public ChromatogramDisplayColumnFactory(Container container, TYPE type,
@@ -121,5 +129,15 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                 out.write(imgLink);
             }
         };
+    }
+
+    public static int calculateChartHeight(int transitionCount)
+    {
+        if (transitionCount > 10)
+        {
+            return 300 + transitionCount * 10;
+        }
+
+        return CHART_HEIGHT;
     }
 }

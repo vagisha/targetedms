@@ -33,6 +33,11 @@ public class PrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSch
 
     public PrecursorChromatogramsTableInfo(TargetedMSSchema schema)
     {
+        this(schema, ChromatogramDisplayColumnFactory.CHART_WIDTH, ChromatogramDisplayColumnFactory.CHART_HEIGHT);
+    }
+
+    public PrecursorChromatogramsTableInfo(TargetedMSSchema schema, int chartWidth, int chartHeight)
+    {
         super(TargetedMSManager.getTableInfoPrecursorChromInfo(), schema);
 
         setName(TargetedMSSchema.TABLE_PRECURSOR_CHROM_INFO);
@@ -43,8 +48,9 @@ public class PrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSch
         ColumnInfo peptideCol = getColumn("Id");
         peptideCol.setLabel("");
 
-        peptideCol.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(getContainer(),
-                                           ChromatogramDisplayColumnFactory.TYPE.PRECURSOR));
+        ChromatogramDisplayColumnFactory colFactory = new ChromatogramDisplayColumnFactory(getContainer(),
+                ChromatogramDisplayColumnFactory.TYPE.PRECURSOR, chartWidth, chartHeight);
+        peptideCol.setDisplayColumnFactory(colFactory);
     }
 
     public void setPrecursorId(int precursorId)

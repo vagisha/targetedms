@@ -72,7 +72,7 @@ public class SkylineFileUtils
         {
             // The first file will be the .zip file since we only use one file as input data.
             Path skyDocfile = inputDatas.get(0).getFilePath();
-            if (Files.exists(skyDocfile))
+            if (null != skyDocfile && Files.exists(skyDocfile))
             {
                 return skyDocfile;
             }

@@ -166,6 +166,7 @@ import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.parser.SkylineDocumentParser;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
+import org.labkey.targetedms.query.ChromatogramDisplayColumnFactory;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
@@ -1177,6 +1178,9 @@ public class TargetedMSController extends SpringActionController
                     new ActionURL(PrecursorAllChromatogramsChartAction.class, getContainer()).getLocalURIString()
             );
 
+            int maxTransitions = TargetedMSManager.getMaxTransitionCountForPrecursor(precursorId);
+            form.setDefaultChartHeight(ChromatogramDisplayColumnFactory.calculateChartHeight(maxTransitions));
+
             bean.setForm(form);
             bean.setPrecursor(precursor);
             bean.setPeptide(peptide);
@@ -1189,7 +1193,7 @@ public class TargetedMSController extends SpringActionController
             precursorInfo.setFrame(WebPartView.FrameType.PORTAL);
             precursorInfo.setTitle("Precursor Summary");
 
-            PrecursorChromatogramsTableInfo tableInfo = new PrecursorChromatogramsTableInfo(new TargetedMSSchema(getUser(), getContainer()));
+            PrecursorChromatogramsTableInfo tableInfo = new PrecursorChromatogramsTableInfo(new TargetedMSSchema(getUser(), getContainer()), form.getChartWidth(), form.getChartHeight());
             tableInfo.setPrecursorId(precursorId);
             tableInfo.addPrecursorFilter();
 
@@ -1828,10 +1832,7 @@ public class TargetedMSController extends SpringActionController
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
 
             int maxTransitions = TargetedMSManager.getMaxTransitionCount(peptideId);
-            if (maxTransitions > 10)
-            {
-                form.setDefaultChartHeight(300 + maxTransitions * 10);
-            }
+            form.setDefaultChartHeight(ChromatogramDisplayColumnFactory.calculateChartHeight(maxTransitions));
 
             List<Precursor> precursorList = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), new TargetedMSSchema(getUser(), getContainer()));
 

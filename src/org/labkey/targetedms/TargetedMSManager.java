@@ -1838,6 +1838,24 @@ public class TargetedMSManager
         return maxCount != null ? maxCount.intValue() : 0;
     }
 
+    public static int getMaxTransitionCountForPrecursor(int precursorId)
+    {
+        SQLFragment maxTransitionSQL = new SQLFragment("select MAX(c) FROM\n" +
+                "(\n" +
+                "select pci.id, COUNT(DISTINCT tci.Id) AS C FROM \n");
+        maxTransitionSQL.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
+        maxTransitionSQL.append(" INNER JOIN \n");
+        maxTransitionSQL.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        maxTransitionSQL.append(" ON tci.precursorchrominfoid = pci.id \n");
+        maxTransitionSQL.append(" WHERE pci.precursorid = ?\n" +
+                "GROUP BY pci.id\n" +
+                ") x\n");
+        maxTransitionSQL.add(precursorId);
+
+        Integer maxCount = new SqlSelector(getSchema(), maxTransitionSQL).getObject(Integer.class);
+        return maxCount != null ? maxCount.intValue() : 0;
+    }
+
     static void moveRun(TargetedMSRun run, Container newContainer, String newRunLSID, int newDataRowId, User user)
     {
         // MoveRunsTask.moveRun ensures a transaction
