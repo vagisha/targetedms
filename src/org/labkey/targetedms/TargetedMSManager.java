@@ -1971,7 +1971,7 @@ public class TargetedMSManager
         TableInfo tableInfo = userSchema.getTable("pharmacokinetics");
 
         SQLFragment sqlFragment = new SQLFragment();
-        sqlFragment.append("SELECT DISTINCT(p.subGroup) FROM ");
+        sqlFragment.append("SELECT DISTINCT(COALESCE(p.SubGroup, 'NA')) FROM ");
         sqlFragment.append(tableInfo, "p");
         sqlFragment.append(" WHERE p.MoleculeId = ? ");
         sqlFragment.add(Integer.toString(molecule.getId()));

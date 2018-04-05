@@ -119,7 +119,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         pkReportPage.verifyTableColumnValues("stats", "SB2", 1, expectedValueForStatsName);
 
         log("Verifying the Statistic - Value content");
-        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.678 2.618 4.021 0.457 0.397 0.002 0.002 0.000 0.000 0.265 0.317");
+        pkReportPage.verifyTableColumnValues("stats", "SB1", 2, "IV 1 0.635 2.618 4.021 0.457 0.397 0.002 0.002 0.000 0.000 0.265 0.317");
         pkReportPage.verifyTableColumnValues("stats", "SB2", 2, "IM 1 -12.734 1.317 0.662 4.748 4.728 0.000 0.000 0.000 0.000 0.526 3.291");
 
         log("SB1: Checking input for C0 @ 1.2 and unchecking Terminal @ 4");

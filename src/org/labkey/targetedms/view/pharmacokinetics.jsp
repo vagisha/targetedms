@@ -217,7 +217,8 @@
             }
 
             subgroups[subgroup]={};
-            if(roa === "IV"){
+            var isIV = roa === "IV";
+            if(isIV){
                 subgroups[subgroup]['isIV'] = true;
             }else{
                 $('#nonIVC0Controls-' + subgroup).removeAttr('hidden');
@@ -238,8 +239,16 @@
 
             timeRows[subgroup].forEach(function (row, index) {
                 var checkedC0, checkedT;
-                // use initial values if they exist, default to selecting the first 3 time values for c0
-                if ((initValues && initValues.c0.indexOf(row.time.toString()) > -1) || (!initValues && index < 3)) {
+
+                function isSelectedC0ByDefault() {
+                    if(isIV){
+                        return (!initValues && (index > 0 && index < 4))
+                    }
+                    return (!initValues && index < 3);
+                }
+
+// use initial values if they exist, default to selecting the first 3 time values for c0
+                if ((initValues && initValues.c0.indexOf(row.time.toString()) > -1) || isSelectedC0ByDefault()) {
                     checkedC0 = 'checked';
                 }
                 // use initial values if they exist, default to selecting the last 3 time values for terminal
