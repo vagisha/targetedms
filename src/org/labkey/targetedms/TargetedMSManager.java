@@ -96,6 +96,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -1160,14 +1161,23 @@ public class TargetedMSManager
 
     private static void deleteRunForFile(URI uri, Container c, User u)
     {
-        SQLFragment sql = new SQLFragment("SELECT d.RunId FROM ");
-        sql.append(ExperimentService.get().getTinfoData(), "d");
-        sql.append( " WHERE d.DataFileUrl = ?");
-        sql.add(FileUtil.uriToString(uri));
+        // Fix issue 33828 by handing legacy URI; TODO: possibly refactor with FileQueryUpdateService.getQueryFilter; also, should we filter by container?
+        TableInfo expDataTable = ExperimentService.get().getTinfoData();
+        String dataFileUrl = FileUtil.uriToString(uri).replaceFirst("^file:/+", "/");
+        SimpleFilter filter = new SimpleFilter(new SimpleFilter.OrClause(
+                new CompareType.EqualsCompareClause(FieldKey.fromParts("DataFileUrl"), CompareType.EQUAL, dataFileUrl),
+                new CompareType.EqualsCompareClause(FieldKey.fromParts("DataFileUrl"), CompareType.EQUAL, "file:" + dataFileUrl),
+                new CompareType.EqualsCompareClause(FieldKey.fromParts("DataFileUrl"), CompareType.EQUAL, "file://" + dataFileUrl)
+        ));
 
-        Integer runId = (Integer) new SqlSelector(getSchema(), sql).getMap().get("runId");
+        // Really List<Map<String, Object>>
+        Set<Integer> runIds = new HashSet<>();
+        for (Map map : new TableSelector(expDataTable, Collections.singleton("RunId"), filter, null).getArrayList(Map.class))
+            runIds.add((Integer) map.get("runId"));
 
-        ExperimentService.get().deleteExperimentRunsByRowIds(c, u, runId);
+        ExperimentService expService = ExperimentService.get();
+        for (Integer runId : runIds)
+            expService.deleteExperimentRunsByRowIds(c, u, runId);
     }
 
     @NotNull
