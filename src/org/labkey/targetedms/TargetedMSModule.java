@@ -333,7 +333,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         addController("targetedms", TargetedMSController.class);
         TargetedMSSchema.register(this);
 
-        UsageMetricsService svc = ServiceRegistry.get().getService(UsageMetricsService.class);
+        UsageMetricsService svc = UsageMetricsService.get();
         if (null != svc)
         {
             svc.registerUsageMetrics(NAME, () ->
@@ -371,12 +371,11 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         //register the Targeted MS folder type
         FolderTypeManager.get().registerFolderType(this, new TargetedMSFolderType(this));
 
-        ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
+        ProteinService proteinService = ProteinService.get();
         proteinService.registerProteinSearchView(new TransitionProteinSearchViewProvider());
         proteinService.registerPeptideSearchView(new TransitionPeptideSearchViewProvider());
 
-        ServiceRegistry svcReg = ServiceRegistry.get();
-        svcReg.registerService(TargetedMSService.class, new TargetedMSServiceImpl());
+        TargetedMSService.setInstance(new TargetedMSServiceImpl());
 
         AuditLogService.get().registerAuditType(new TargetedMsRepresentativeStateAuditProvider());
 
@@ -384,14 +383,14 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         ExperimentService.get().addExperimentListener(listener);
         ContainerManager.addContainerListener(listener);
 
-        ShortURLService shortUrlService = ServiceRegistry.get().getService(ShortURLService.class);
+        ShortURLService shortUrlService = ShortURLService.get();
         shortUrlService.addListener(listener);
 
         // Register the CopyExperimentRole
         RoleManager.registerRole(new CopyTargetedMSExperimentRole());
 
 		// Add a link in the admin console to manage journals.
-		ActionURL url =  new ActionURL(PublishTargetedMSExperimentsController.JournalGroupsAdminViewAction.class, ContainerManager.getRoot());
+		ActionURL url = new ActionURL(PublishTargetedMSExperimentsController.JournalGroupsAdminViewAction.class, ContainerManager.getRoot());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "targeted ms", url, AdminPermission.class);
     }
 

@@ -16,6 +16,7 @@
 package org.labkey.api.targetedms;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.services.ServiceRegistry;
 
 import java.util.List;
 
@@ -26,6 +27,16 @@ import java.util.List;
  */
 public interface TargetedMSService
 {
+    static TargetedMSService get()
+    {
+        return ServiceRegistry.get().getService(TargetedMSService.class);
+    }
+
+    static void setInstance(TargetedMSService impl)
+    {
+        ServiceRegistry.get().registerService(TargetedMSService.class, impl);
+    }
+
     ITargetedMSRun getRun(int runId, Container container);
     List<ITargetedMSRun> getRuns(Container container);
     List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);

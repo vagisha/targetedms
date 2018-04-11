@@ -101,7 +101,7 @@ public class ContainerChromatogramLibraryWriter
         _user = user;
         _representativeRunIds = representativeRunIds != null ? representativeRunIds : Collections.emptyList();
 
-        _proteinService = ServiceRegistry.get().getService(ProteinService.class);
+        _proteinService = ProteinService.get();
     }
 
     public String writeLibrary(LocalDirectory localDirectory, int libraryRevision) throws SQLException, IOException

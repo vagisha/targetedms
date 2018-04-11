@@ -1783,7 +1783,7 @@ public class TargetedMSManager
                 primitiveValues[index++] = value.doubleValue();
             }
 
-            MathStat stats = ServiceRegistry.get().getService(StatsService.class).getStats(primitiveValues);
+            MathStat stats = StatsService.get().getStats(primitiveValues);
 
             for(ColumnInfo column : columns)
             {

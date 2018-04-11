@@ -212,7 +212,7 @@ public class SkylineDocImporter
                         " SET formatVersion = ?, softwareVersion = ? WHERE Id = ?",
                         parser.getFormatVersion(), parser.getSoftwareVersion(), run.getId());
 
-                ProteinService proteinService = ServiceRegistry.get().getService(ProteinService.class);
+                ProteinService proteinService = ProteinService.get();
                 parser.readSettings();
 
                 // Store the document settings
