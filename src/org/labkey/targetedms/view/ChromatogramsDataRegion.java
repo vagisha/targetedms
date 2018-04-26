@@ -120,7 +120,7 @@ public class ChromatogramsDataRegion extends DataRegion
         return rowIndex;
     }
 
-    protected void renderTableRow(RenderContext ctx, Writer out, boolean showRecordSelectors, List<DisplayColumn> renderers, int rowIndex) throws SQLException, IOException
+    protected void renderTableRow(RenderContext ctx, Writer out, boolean showRecordSelectors, List<DisplayColumn> renderers, int rowIndex) throws IOException
     {
         DisplayColumn detailsColumn = getDetailsUpdateColumn(ctx, renderers, true);
         DisplayColumn updateColumn = getDetailsUpdateColumn(ctx, renderers, false);

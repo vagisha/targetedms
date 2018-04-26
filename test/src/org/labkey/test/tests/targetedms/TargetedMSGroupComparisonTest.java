@@ -52,7 +52,7 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
             "Rat_plasma"));
 
     @Test
-    public void testGroupComparisonScenarios() throws Exception
+    public void testGroupComparisonScenarios()
     {
         setupFolder(FolderType.Experiment);
         for (String scenario : scenarioNames)
@@ -61,7 +61,7 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
         }
     }
 
-    private void runScenario(String scenario) throws Exception
+    private void runScenario(String scenario)
     {
         setupSubfolder(getProjectName(), scenario, FolderType.Experiment);
         importData(SAMPLEDATA_FOLDER + scenario + ".sky.zip");
@@ -85,7 +85,7 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
         }
     }
 
-    private void verifyGroupComparison(String scenario, String groupComparisonName) throws Exception
+    private void verifyGroupComparison(String scenario, String groupComparisonName)
     {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
         clickAndWait(Locator.linkContainingText(scenario + ".sky.zip"));
@@ -129,7 +129,7 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
         }
     }
 
-    private List<Map<String, Object>> readScenarioCsv(String scenarioName, String reportName) throws Exception
+    private List<Map<String, Object>> readScenarioCsv(String scenarioName, String reportName)
     {
         File file = TestFileUtils.getSampleData("TargetedMS/" + SAMPLEDATA_FOLDER + scenarioName + "_" + reportName + ".csv");
         try (TabLoader tabLoader = new TabLoader(file, true))

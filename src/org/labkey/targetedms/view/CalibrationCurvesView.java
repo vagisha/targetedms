@@ -43,7 +43,7 @@ public class CalibrationCurvesView extends QuantificationView
     public static final String DATAREGION_NAME_SM_MOL = DATAREGION_NAME + SMALL_MOLECULE_SUFFIX;
 
     public CalibrationCurvesView(ViewContext ctx, TargetedMSSchema schema, TargetedMSController.RunDetailsForm form,
-                                 boolean forExport, String dataRegionName) throws SQLException
+                                 boolean forExport, String dataRegionName)
     {
         super(ctx, schema,
                 isSmallMoleculeRegionName(dataRegionName)

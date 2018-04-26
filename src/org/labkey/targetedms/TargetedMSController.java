@@ -303,7 +303,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public boolean handlePost(FolderSetupForm folderSetupForm, BindException errors) throws Exception
+        public boolean handlePost(FolderSetupForm folderSetupForm, BindException errors)
         {
             Container c = getContainer();
             TargetedMSModule targetedMSModule = null;
@@ -449,7 +449,7 @@ public class TargetedMSController extends SpringActionController
     public class AddRawDataTabAction extends RedirectAction
     {
         @Override
-        public boolean doAction(Object o, BindException errors) throws Exception
+        public boolean doAction(Object o, BindException errors)
         {
             Container c = getContainer(); ;
             if(!c.hasActiveModuleByName(TargetedMSModule.NAME))
@@ -509,7 +509,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class SetupAction extends SimpleViewAction
     {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public ModelAndView getView(Object o, BindException errors)
         {
             JspView view = new JspView("/org/labkey/targetedms/view/folderSetup.jsp");
             view.setFrame(WebPartView.FrameType.NONE);
@@ -535,7 +535,7 @@ public class TargetedMSController extends SpringActionController
     {
 
         @Override
-        public ModelAndView getView(URLParameterBean urlParameterBean, BindException errors) throws Exception
+        public ModelAndView getView(URLParameterBean urlParameterBean, BindException errors)
         {
             return new JspView("/org/labkey/targetedms/view/qcTrendPlotReport.jsp");
         }
@@ -611,7 +611,7 @@ public class TargetedMSController extends SpringActionController
         private static final String CATEGORY = "TargetedMSLeveyJenningsPlotOptions";
 
         @Override
-        public Object execute(LeveyJenningsPlotOptions form, BindException errors) throws Exception
+        public Object execute(LeveyJenningsPlotOptions form, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
@@ -763,7 +763,7 @@ public class TargetedMSController extends SpringActionController
     public class GetQCSummaryAction extends ApiAction<QCSummaryForm>
     {
         @Override
-        public Object execute(QCSummaryForm form, BindException errors) throws Exception
+        public Object execute(QCSummaryForm form, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
             List<Map<String, Object>> containers = new ArrayList<>();
@@ -854,7 +854,7 @@ public class TargetedMSController extends SpringActionController
     public class GetQCMetricConfigurationsAction extends ApiAction
     {
         @Override
-        public Object execute(Object form, BindException errors) throws Exception
+        public Object execute(Object form, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
             Container container = getContainer();
@@ -882,7 +882,7 @@ public class TargetedMSController extends SpringActionController
     public class GetContainerReplicateAnnotationsAction extends ApiAction
     {
         @Override
-        public Object execute(Object form, BindException errors) throws Exception
+        public Object execute(Object form, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
@@ -967,7 +967,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class ArchivedRevisionsAction extends SimpleViewAction
     {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public ModelAndView getView(Object o, BindException errors)
         {
             JspView view = new JspView("/org/labkey/targetedms/view/archivedRevisionsDownload.jsp");
             view.setFrame(WebPartView.FrameType.PORTAL);
@@ -990,7 +990,7 @@ public class TargetedMSController extends SpringActionController
     @ActionNames("showList, begin")
     public class ShowListAction extends SimpleViewAction
     {
-        public ModelAndView getView(Object o, BindException errors) throws Exception
+        public ModelAndView getView(Object o, BindException errors)
         {
             TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext());
             VBox vbox = new VBox();
@@ -1156,7 +1156,7 @@ public class TargetedMSController extends SpringActionController
         private int _peptideId; // save for use in appendNavTrail
 
         @Override
-        public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
+        public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
             int precursorId = form.getId();
             Precursor precursor = PrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
@@ -1252,7 +1252,7 @@ public class TargetedMSController extends SpringActionController
         private int _moleculeId; // save for use in appendNavTrail
 
         @Override
-        public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
+        public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
             int precursorId = form.getId();
             MoleculePrecursor precursor = MoleculePrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
@@ -1334,7 +1334,7 @@ public class TargetedMSController extends SpringActionController
         private TargetedMSRun _run; // save for use in appendNavTrail
 
         @Override
-        public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
+        public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
             int peptideId = form.getId();
             Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
@@ -1814,7 +1814,7 @@ public class TargetedMSController extends SpringActionController
         private String _sequence;
 
         @Override
-        public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
+        public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
             int peptideId = form.getId();  // peptide Id
 
@@ -1914,7 +1914,7 @@ public class TargetedMSController extends SpringActionController
         private String _customIonName;
 
         @Override
-        public ModelAndView getView(ChromatogramForm form, BindException errors) throws Exception
+        public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
             int moleculeId = form.getId();
 
@@ -2000,7 +2000,7 @@ public class TargetedMSController extends SpringActionController
     public class ShowSpectrumAction extends SimpleViewAction<ShowSpectrumForm>
     {
         @Override
-        public ModelAndView getView(ShowSpectrumForm form, BindException errors) throws Exception
+        public ModelAndView getView(ShowSpectrumForm form, BindException errors)
         {
             int peptideId = form.getId();  // peptide Id
 
@@ -2090,7 +2090,7 @@ public class TargetedMSController extends SpringActionController
     public class LibrarySpectrumDataAction extends ApiAction<SpectrumDataForm>
     {
         @Override
-        public Object execute(SpectrumDataForm form, BindException errors) throws Exception
+        public Object execute(SpectrumDataForm form, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
@@ -2217,7 +2217,7 @@ public class TargetedMSController extends SpringActionController
     public class AutoQCPingAction extends ApiAction<Object>
     {
         @Override
-        public Object execute(Object o, BindException errors) throws Exception
+        public Object execute(Object o, BindException errors)
         {
             // Get current record, if present
             Map<String, Object> currentRow = TargetedMSManager.get().getAutoQCPingMap(getContainer());
@@ -2709,14 +2709,14 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(SkylinePipelinePathForm form, boolean reshow, BindException errors) throws Exception
+        public ModelAndView getView(SkylinePipelinePathForm form, boolean reshow, BindException errors)
         {
             form.getValidatedFiles(getContainer());
             return new JspView<>("/org/labkey/targetedms/view/confirmImport.jsp", form, errors);
         }
 
         @Override
-        public boolean handlePost(SkylinePipelinePathForm form, BindException errors) throws Exception
+        public boolean handlePost(SkylinePipelinePathForm form, BindException errors)
         {
             return false;
         }
@@ -2763,7 +2763,7 @@ public class TargetedMSController extends SpringActionController
                 {
                     TargetedMSManager.addRunToQueue(info, path, form.getPipeRoot(getContainer()));
                 }
-                catch (IOException | SQLException e)
+                catch (IOException e)
                 {
                     errors.reject(ERROR_MSG, e.getMessage());
                     return false;
@@ -2799,7 +2799,7 @@ public class TargetedMSController extends SpringActionController
                     detailsMap.put("RowId", jobId);
                     jobDetailsList.add(detailsMap);
                 }
-                catch (IOException | SQLException e)
+                catch (IOException e)
                 {
                     throw new ApiUsageException(e);
                 }
@@ -2812,7 +2812,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresLogin
     public class GetMaxSupportedVersionsAction extends ApiAction
     {
-        public ApiResponse execute(Object object, BindException errors) throws Exception
+        public ApiResponse execute(Object object, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
             response.put("SKY_version", SkylineDocumentParser.MAX_SUPPORTED_VERSION);
@@ -2846,7 +2846,7 @@ public class TargetedMSController extends SpringActionController
         protected TargetedMSRun _run;  // save for use in appendNavTrail
 
         @Override
-        public ModelAndView getView(RunDetailsForm form, BindException errors) throws Exception
+        public ModelAndView getView(RunDetailsForm form, BindException errors)
         {
             //this action requires that a specific experiment run has been specified
             if(!form.hasRunId())
@@ -2903,7 +2903,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(PKForm form, BindException errors) throws Exception
+        public ModelAndView getView(PKForm form, BindException errors)
         {
             List<String> subgroupNames = TargetedMSManager.get().getReplicateSubgroupNames(getUser(), getContainer(), _molecule);
             form.setSampleGroupNames(subgroupNames);
@@ -2932,7 +2932,7 @@ public class TargetedMSController extends SpringActionController
         private static final char SEPARATOR = '|';
 
         @Override
-        public Object execute(PKOptions form, BindException errors) throws Exception
+        public Object execute(PKOptions form, BindException errors)
         {
             PropertyManager.PropertyMap properties = PropertyManager.getWritableProperties(getContainer(), getPropMapName(form), true);
 
@@ -3135,7 +3135,7 @@ public class TargetedMSController extends SpringActionController
     public class ShowTransitionListAction extends ShowRunSplitDetailsAction<DocumentTransitionsView>
     {
         @Override
-        protected DocumentTransitionsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+        protected DocumentTransitionsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
             DocumentTransitionsView view;
 
@@ -3184,7 +3184,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        protected DocumentPrecursorsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+        protected DocumentPrecursorsView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
             DocumentPrecursorsView view;
             if(PeptidePrecursorsView.DATAREGION_NAME.equals(dataRegion))
@@ -3258,7 +3258,7 @@ public class TargetedMSController extends SpringActionController
 
         @Override
         protected GroupComparisonView createQueryView(
-                RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+                RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
             return new GroupComparisonView(getViewContext(),
                     new TargetedMSSchema(getUser(), getContainer()),
@@ -3284,7 +3284,7 @@ public class TargetedMSController extends SpringActionController
 
         @Override
         protected CalibrationCurvesView createQueryView(
-                RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+                RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
             return new CalibrationCurvesView(getViewContext(),
                     new TargetedMSSchema(getUser(), getContainer()),
@@ -3317,7 +3317,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+        protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
             QuerySettings settings = new QuerySettings(getViewContext(), DATA_REGION_NAME, "Replicate");
             settings.getBaseFilter().addCondition(FieldKey.fromParts("RunId"), _run.getRunId());
@@ -3455,7 +3455,7 @@ public class TargetedMSController extends SpringActionController
         private String _proteinLabel;
 
         @Override
-        public ModelAndView getView(final ProteinDetailForm form, BindException errors) throws Exception
+        public ModelAndView getView(final ProteinDetailForm form, BindException errors)
         {
             PeptideGroup group = PeptideGroupManager.getPeptideGroup(getContainer(), form.getId());
             if (group == null)
@@ -3796,7 +3796,7 @@ public class TargetedMSController extends SpringActionController
     public class ShowProteinConflictUiAction extends SimpleViewAction<ConflictUIForm>
     {
         @Override
-        public ModelAndView getView(ConflictUIForm form, BindException errors) throws Exception
+        public ModelAndView getView(ConflictUIForm form, BindException errors)
         {
             List<ConflictProtein> conflictProteinList = ConflictResultsManager.getConflictedProteins(getContainer());
             if(conflictProteinList.size() == 0)
@@ -3924,7 +3924,7 @@ public class TargetedMSController extends SpringActionController
     public class ProteinConflictPeptidesAjaxAction extends ApiAction<ProteinPeptidesForm>
     {
         @Override
-        public ApiResponse execute(ProteinPeptidesForm proteinPeptidesForm, BindException errors) throws Exception
+        public ApiResponse execute(ProteinPeptidesForm proteinPeptidesForm, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
@@ -3995,7 +3995,7 @@ public class TargetedMSController extends SpringActionController
     public class ShowPrecursorConflictUiAction extends SimpleViewAction<ConflictUIForm>
     {
         @Override
-        public ModelAndView getView(ConflictUIForm form, BindException errors) throws Exception
+        public ModelAndView getView(ConflictUIForm form, BindException errors)
         {
             List<ConflictPrecursor> conflictPrecursorList = ConflictResultsManager.getConflictedPrecursors(getContainer());
             if(conflictPrecursorList.size() == 0)
@@ -4109,7 +4109,7 @@ public class TargetedMSController extends SpringActionController
     public class PrecursorConflictTransitionsAjaxAction extends ApiAction<ConflictPrecursorsForm>
     {
         @Override
-        public ApiResponse execute(ConflictPrecursorsForm conflictPrecursorsForm, BindException errors) throws Exception
+        public ApiResponse execute(ConflictPrecursorsForm conflictPrecursorsForm, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
@@ -4621,13 +4621,13 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        protected QueryView createQueryView(ModificationSearchForm form, BindException errors, boolean forExport, String dataRegion) throws Exception
+        protected QueryView createQueryView(ModificationSearchForm form, BindException errors, boolean forExport, String dataRegion)
         {
             return createModificationSearchView(form, errors);
         }
 
         @Override
-        protected ModelAndView getHtmlView(final ModificationSearchForm form, BindException errors) throws Exception
+        protected ModelAndView getHtmlView(final ModificationSearchForm form, BindException errors)
         {
             VBox result = new VBox(new ModificationSearchWebPart(form));
 
@@ -4929,7 +4929,7 @@ public class TargetedMSController extends SpringActionController
     public static class TestCase extends Assert
     {
         @Test
-        public void testModificationSearch() throws Exception
+        public void testModificationSearch()
         {
             // test amino acid parsing and modificaation search string generation
             ModificationSearchForm form = ModificationSearchForm.createDefault();
@@ -4937,32 +4937,32 @@ public class TargetedMSController extends SpringActionController
             form.setDeltaMass(10.0);
             form.setAminoAcids("R");
             assertEquals("Unexpected number of parsed amino acids", 1, form.getAminoAcidArr().length);
-            assertTrue(form.getAminoAcidArr()[0] == 'R');
+            assertEquals('R', form.getAminoAcidArr()[0]);
             assertEquals("Unexpected modification search string", "R[+10.0]", form.getModificationSearchStr());
 
             form.setDeltaMass(8.0);
             form.setAminoAcids("RK");
             assertEquals("Unexpected number of parsed amino acids", 2, form.getAminoAcidArr().length);
-            assertTrue(form.getAminoAcidArr()[0] == 'R');
-            assertTrue(form.getAminoAcidArr()[1] == 'K');
+            assertEquals('R', form.getAminoAcidArr()[0]);
+            assertEquals('K', form.getAminoAcidArr()[1]);
             assertEquals("Unexpected modification search string", "R[+8.0];K[+8.0]", form.getModificationSearchStr());
 
             form.setDeltaMass(8.01);
             form.setAminoAcids("R K N");
             assertEquals("Unexpected number of parsed amino acids", 3, form.getAminoAcidArr().length);
-            assertTrue(form.getAminoAcidArr()[0] == 'R');
-            assertTrue(form.getAminoAcidArr()[1] == 'K');
-            assertTrue(form.getAminoAcidArr()[2] == 'N');
+            assertEquals('R', form.getAminoAcidArr()[0]);
+            assertEquals('K', form.getAminoAcidArr()[1]);
+            assertEquals('N', form.getAminoAcidArr()[2]);
             assertEquals("Unexpected modification search string", "R[+8.0];K[+8.0];N[+8.0]", form.getModificationSearchStr());
 
             form.setDeltaMass(-144.11);
             form.setAminoAcids("R,K;N S|T");
             assertEquals("Unexpected number of parsed amino acids", 5, form.getAminoAcidArr().length);
-            assertTrue(form.getAminoAcidArr()[0] == 'R');
-            assertTrue(form.getAminoAcidArr()[1] == 'K');
-            assertTrue(form.getAminoAcidArr()[2] == 'N');
-            assertTrue(form.getAminoAcidArr()[3] == 'S');
-            assertTrue(form.getAminoAcidArr()[4] == 'T');
+            assertEquals('R', form.getAminoAcidArr()[0]);
+            assertEquals('K', form.getAminoAcidArr()[1]);
+            assertEquals('N', form.getAminoAcidArr()[2]);
+            assertEquals('S', form.getAminoAcidArr()[3]);
+            assertEquals('T', form.getAminoAcidArr()[4]);
             assertEquals("Unexpected modification search string", "R[-144.1];K[-144.1];N[-144.1];S[-144.1];T[-144.1]", form.getModificationSearchStr());
 
             form.setAminoAcids("[");
@@ -5335,7 +5335,7 @@ public class TargetedMSController extends SpringActionController
         {
         }
 
-        public ModelAndView getView(RenameForm form, boolean reshow, BindException errors) throws Exception
+        public ModelAndView getView(RenameForm form, boolean reshow, BindException errors)
         {
             _run = validateRun(form.getRun());
             _returnURL = form.getReturnURLHelper(getShowRunURL(getContainer(), form.getRun()));
@@ -5356,7 +5356,7 @@ public class TargetedMSController extends SpringActionController
             return jview;
         }
 
-        public boolean handlePost(RenameForm form, BindException errors) throws Exception
+        public boolean handlePost(RenameForm form, BindException errors)
         {
             _run = validateRun(form.getRun());
             TargetedMSManager.renameRun(form.getRun(), form.getDescription(), getUser());
@@ -5419,7 +5419,7 @@ public class TargetedMSController extends SpringActionController
     {
 
         @Override
-        public ModelAndView getView(NewExperimentAnnotationsForm form, BindException errors) throws Exception
+        public ModelAndView getView(NewExperimentAnnotationsForm form, BindException errors)
         {
             DataRegion drg = createNewTargetedMsExperimentDataRegion(form, getViewContext());
             InsertView view = new InsertView(drg, errors);
@@ -5445,7 +5445,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(NewExperimentAnnotationsForm form, boolean reshow, BindException errors) throws Exception
+        public ModelAndView getView(NewExperimentAnnotationsForm form, boolean reshow, BindException errors)
         {
             // We are here either because handlePost failed or there were errors in the form (e.g. missing required values)
             ExperimentAnnotations expAnnot = form.getBean();
@@ -5466,7 +5466,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public boolean handlePost(NewExperimentAnnotationsForm form, BindException errors) throws Exception
+        public boolean handlePost(NewExperimentAnnotationsForm form, BindException errors)
         {
             _expAnnot = form.getBean();
 
@@ -5626,7 +5626,7 @@ public class TargetedMSController extends SpringActionController
     public class ShowExperimentAnnotationsAction extends SimpleViewAction<ViewExperimentAnnotationsForm>
     {
         @Override
-        public ModelAndView getView(final ViewExperimentAnnotationsForm form, BindException errors) throws Exception
+        public ModelAndView getView(final ViewExperimentAnnotationsForm form, BindException errors)
         {
             ExperimentAnnotations exptAnnotations = ExperimentAnnotationsManager.get(form.getId());
             if (exptAnnotations == null)
@@ -5791,7 +5791,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(UpdatePermission.class)
     public class ShowUpdateExperimentAnnotationsAction extends SimpleViewAction<ExperimentAnnotationsForm>
     {
-        public ModelAndView getView(ExperimentAnnotationsForm form, BindException errors) throws Exception
+        public ModelAndView getView(ExperimentAnnotationsForm form, BindException errors)
         {
             form.refreshFromDb();
             ExperimentAnnotations experimentAnnotations = form.getBean();
@@ -5820,7 +5820,7 @@ public class TargetedMSController extends SpringActionController
         {}
 
         @Override
-        public ModelAndView getView(ExperimentAnnotationsForm form, boolean reshow, BindException errors) throws Exception
+        public ModelAndView getView(ExperimentAnnotationsForm form, boolean reshow, BindException errors)
         {
             UpdateView view = new UpdateView(new ExperimentAnnotationsFormDataRegion(getViewContext(), form, DataRegion.MODE_UPDATE), form, errors);
             view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
@@ -5869,13 +5869,13 @@ public class TargetedMSController extends SpringActionController
     public class DeleteSelectedExperimentAnnotationsAction extends ConfirmAction<SelectedIdsForm>
     {
         @Override
-        public ModelAndView getConfirmView(SelectedIdsForm deleteForm, BindException errors) throws Exception
+        public ModelAndView getConfirmView(SelectedIdsForm deleteForm, BindException errors)
         {
             return FormPage.getView(TargetedMSController.class, deleteForm, "view/expannotations/deleteExperimentAnnotations.jsp");
         }
 
         @Override
-        public boolean handlePost(SelectedIdsForm deleteForm, BindException errors) throws Exception
+        public boolean handlePost(SelectedIdsForm deleteForm, BindException errors)
         {
             return deleteExperimentAnnotations(errors, deleteForm.getIds(), getUser());
         }
@@ -5959,12 +5959,12 @@ public class TargetedMSController extends SpringActionController
     public class DeleteExperimentAnnotationsAction extends ConfirmAction<DeleteExperimentAnnotationsForm>
     {
         @Override
-        public ModelAndView getConfirmView(DeleteExperimentAnnotationsForm deleteForm, BindException errors) throws Exception
+        public ModelAndView getConfirmView(DeleteExperimentAnnotationsForm deleteForm, BindException errors)
         {
             return FormPage.getView(TargetedMSController.class, deleteForm, "view/expannotations/deleteExperimentAnnotations.jsp");
         }
 
-        public boolean handlePost(DeleteExperimentAnnotationsForm form, BindException errors) throws Exception
+        public boolean handlePost(DeleteExperimentAnnotationsForm form, BindException errors)
         {
             int _experimentAnnotationsId = form.getBean().getId();
             ExperimentAnnotations exptAnnotations = ExperimentAnnotationsManager.get(_experimentAnnotationsId);
@@ -6001,7 +6001,7 @@ public class TargetedMSController extends SpringActionController
         {
         }
 
-        public boolean handlePost(ExperimentForm form, BindException errors) throws Exception
+        public boolean handlePost(ExperimentForm form, BindException errors)
         {
             _expAnnot = form.lookupExperiment();
             if(_expAnnot == null)
@@ -6050,7 +6050,7 @@ public class TargetedMSController extends SpringActionController
         {
         }
 
-        public boolean handlePost(ExperimentForm form, BindException errors) throws Exception
+        public boolean handlePost(ExperimentForm form, BindException errors)
         {
             _expAnnot = form.lookupExperiment();
             if(_expAnnot == null)
@@ -6166,7 +6166,7 @@ public class TargetedMSController extends SpringActionController
     public class GetLinkVersionsAction extends ApiAction<SelectedRowIdsForm>
     {
         @Override
-        public Object execute(SelectedRowIdsForm form, BindException errors) throws Exception
+        public Object execute(SelectedRowIdsForm form, BindException errors)
         {
             List<Integer> linkedRowIds = new ArrayList<>();
 
@@ -6233,7 +6233,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public Object execute(RowIdForm form, BindException errors) throws Exception
+        public Object execute(RowIdForm form, BindException errors)
         {
             ExpRun run = ExperimentService.get().getExpRun(form.getRowId());
             ExpRun replaces = run.getReplacesRuns().isEmpty() ? null : run.getReplacesRuns().get(0);
@@ -6293,7 +6293,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public Object execute(ChainedVersions form, BindException errors) throws Exception
+        public Object execute(ChainedVersions form, BindException errors)
         {
             DbScope scope = ExperimentService.get().getSchema().getScope();
 
@@ -6508,7 +6508,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(FomForm form, BindException errors) throws Exception
+        public ModelAndView getView(FomForm form, BindException errors)
         {
             UserSchema schema = QueryService.get().getUserSchema(getUser(), getViewContext().getContainer(), TargetedMSSchema.SCHEMA_NAME);
             TableInfo tableInfo = schema.getTable(TargetedMSSchema.TABLE_MOLECULE_INFO);
@@ -6704,7 +6704,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        protected QueryView createQueryView(CalibrationCurveForm form, BindException errors, boolean forExport, @Nullable String dataRegion) throws Exception
+        protected QueryView createQueryView(CalibrationCurveForm form, BindException errors, boolean forExport, @Nullable String dataRegion)
         {
             UserSchema schema = new TargetedMSSchema(getUser(), getContainer());
             String queryName = _asProteomics ? "CalibrationCurvePrecursors" : "CalibrationCurveMoleculePrecursors";
@@ -6717,7 +6717,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public ModelAndView getView(CalibrationCurveForm calibrationCurveForm, BindException errors) throws Exception
+        public ModelAndView getView(CalibrationCurveForm calibrationCurveForm, BindException errors)
         {
             _chart = new CalibrationCurveChart(getUser(), getContainer(), calibrationCurveForm);
             JSONObject curveData = _chart.getCalibrationCurveData();

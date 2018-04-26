@@ -75,7 +75,7 @@ public class LibSampleFileDao extends BaseDaoImpl<LibSampleFile>
     }
 
     @Override
-    public List<LibSampleFile> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection) throws SQLException
+    public List<LibSampleFile> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection)
     {
         throw new UnsupportedOperationException(getTableName()+" does not have a foreign key");
     }
@@ -124,7 +124,7 @@ public class LibSampleFileDao extends BaseDaoImpl<LibSampleFile>
     }
 
     @Override
-    public void saveAll(List<LibSampleFile> sampleFiles, Connection connection) throws SQLException
+    public void saveAll(List<LibSampleFile> sampleFiles, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

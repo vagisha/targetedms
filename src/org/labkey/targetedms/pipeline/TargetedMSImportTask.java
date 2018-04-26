@@ -72,7 +72,7 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
                 ExperimentAnnotationsManager.addSelectedRunsToExperiment(expAnnotations.getExperiment(), new int[]{expRun.getRowId()}, job.getUser());
             }
         }
-        catch (ExperimentException | XMLStreamException | IOException | DataFormatException e)
+        catch (ExperimentException | XMLStreamException | IOException e)
         {
             throw new PipelineJobException(e);
         }

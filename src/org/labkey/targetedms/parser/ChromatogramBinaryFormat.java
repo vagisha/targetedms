@@ -37,7 +37,7 @@ public enum ChromatogramBinaryFormat
      */
     Arrays{
         @Override
-        public Chromatogram readChromatogram(byte[] uncompressedBytes, int numPoints, int numTrans) throws IOException
+        public Chromatogram readChromatogram(byte[] uncompressedBytes, int numPoints, int numTrans)
         {
             LittleEndianInput dataInputStream = new LittleEndianByteArrayInputStream(uncompressedBytes);
             float[] sharedTimes = readFloats(dataInputStream, numPoints);
@@ -82,7 +82,7 @@ public enum ChromatogramBinaryFormat
     };
     public abstract Chromatogram readChromatogram(byte[] uncompressedBytes, int numPoints, int numTrans) throws IOException;
 
-    private static float[] readFloats(LittleEndianInput dataInputStream, int count) throws IOException
+    private static float[] readFloats(LittleEndianInput dataInputStream, int count)
     {
         float[] floats = new float[count];
         for (int i = 0; i < count; i++) {

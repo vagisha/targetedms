@@ -33,7 +33,7 @@ public class SmallMoleculePrecursorsView extends DocumentPrecursorsView
     public static final String DATAREGION_NAME = "small_mol_precursors_view";
     public static final String TITLE = "Small Molecule Precursor List";
 
-    public SmallMoleculePrecursorsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport) throws SQLException
+    public SmallMoleculePrecursorsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport)
     {
         super(ctx, schema, queryName, runId, !forExport,
                 new QueryNestingOption(FieldKey.fromParts("MoleculeId", "PeptideGroupId"),

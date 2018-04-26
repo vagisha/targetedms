@@ -97,31 +97,24 @@ public class SkylineBinaryParser
 
     public void parse() throws IOException
     {
-        try
-        {
-            _randomAccessFile = new RandomAccessFile(_file, "r");
-            _channel = _randomAccessFile.getChannel();
-            _cacheHeaderStruct = CacheHeaderStruct.read(_channel);
-            _cacheFormat = new CacheFormat(_cacheHeaderStruct);
+        _randomAccessFile = new RandomAccessFile(_file, "r");
+        _channel = _randomAccessFile.getChannel();
+        _cacheHeaderStruct = CacheHeaderStruct.read(_channel);
+        _cacheFormat = new CacheFormat(_cacheHeaderStruct);
 
-            if (_cacheFormat.getFormatVersion().compareTo(CacheFormatVersion.Two) < 0) {
-                _log.warn("Version " + _cacheFormat.getFormatVersion() + " is not supported for .skyd files. The earliest supported version is " + CacheFormatVersion.Two + ". Skipping chromatogram import.");
-                return;
-            }
-            if (_cacheFormat.getVersionRequired().compareTo(FORMAT_VERSION_CACHE) > 0) {
-                _log.warn("Version " + _cacheFormat.getVersionRequired() + " is not supported for .skyd files. The newest supported version is " + FORMAT_VERSION_CACHE + ". Skipping chromatogram import.");
-                return;
-            }
+        if (_cacheFormat.getFormatVersion().compareTo(CacheFormatVersion.Two) < 0) {
+            _log.warn("Version " + _cacheFormat.getFormatVersion() + " is not supported for .skyd files. The earliest supported version is " + CacheFormatVersion.Two + ". Skipping chromatogram import.");
+            return;
+        }
+        if (_cacheFormat.getVersionRequired().compareTo(FORMAT_VERSION_CACHE) > 0) {
+            _log.warn("Version " + _cacheFormat.getVersionRequired() + " is not supported for .skyd files. The newest supported version is " + FORMAT_VERSION_CACHE + ". Skipping chromatogram import.");
+            return;
+        }
 
-            parseFiles();
-            parsePeaks();
-            parseTransitions();
-            parseChromatograms();
-        }
-        catch (DataFormatException e)
-        {
-            throw new IOException("Invalid ZIP content", e);
-        }
+        parseFiles();
+        parsePeaks();
+        parseTransitions();
+        parseChromatograms();
     }
 
     public static class CachedFile
@@ -200,7 +193,7 @@ public class SkylineBinaryParser
                 .readArray(Channels.newInputStream(_channel), _cacheHeaderStruct.getNumTransitions());
     }
 
-    private void parseChromatograms() throws IOException, DataFormatException
+    private void parseChromatograms() throws IOException
     {
         if (_cacheFormat.getFormatVersion().compareTo(CacheFormatVersion.Four)> 0)
         {

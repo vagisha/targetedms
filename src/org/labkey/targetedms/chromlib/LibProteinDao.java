@@ -102,7 +102,7 @@ public class LibProteinDao extends BaseDaoImpl<LibProtein>
     }
 
     @Override
-    public List<LibProtein> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection) throws SQLException
+    public List<LibProtein> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection)
     {
         throw new UnsupportedOperationException(getTableName()+" does not have a foreign key");
     }

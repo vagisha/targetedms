@@ -31,7 +31,8 @@ public class ChromTransition
     private short _flagBits;
     private short _align1;
 
-    public ChromTransition(CacheFormatVersion cacheFormatVersion, LittleEndianInput dataInputStream) throws IOException {
+    public ChromTransition(CacheFormatVersion cacheFormatVersion, LittleEndianInput dataInputStream)
+    {
         if (cacheFormatVersion.compareTo(CacheFormatVersion.Four) <= 0) {
             _product = Float.intBitsToFloat(dataInputStream.readInt());
         } else if (cacheFormatVersion.compareTo(CacheFormatVersion.Six) <= 0) {

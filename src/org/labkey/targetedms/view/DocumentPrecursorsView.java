@@ -32,7 +32,7 @@ public abstract class DocumentPrecursorsView extends DocumentView
     protected final String _tableName;
 
     public DocumentPrecursorsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport,
-                                  QueryNestingOption nestingOption, String dataRegionName) throws SQLException
+                                  QueryNestingOption nestingOption, String dataRegionName)
     {
         super(ctx, schema, queryName, runId, !forExport, nestingOption, dataRegionName);
         _targetedMsSchema = schema;

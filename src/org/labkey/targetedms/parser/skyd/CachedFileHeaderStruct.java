@@ -42,7 +42,8 @@ public class CachedFileHeaderStruct
     long locationScanIds;
     float ticArea;
 
-    public CachedFileHeaderStruct(LittleEndianInput dataInputStream) throws IOException {
+    public CachedFileHeaderStruct(LittleEndianInput dataInputStream)
+    {
         modified = dataInputStream.readLong();
         lenPath = dataInputStream.readInt();
         runStart = dataInputStream.readLong();

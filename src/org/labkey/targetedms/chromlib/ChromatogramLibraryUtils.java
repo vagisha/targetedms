@@ -86,7 +86,7 @@ public class ChromatogramLibraryUtils
     }
 
     /** @return the name of the file that downloaders will see */
-    public static String getDownloadFileName(Container container, int revision) throws IOException
+    public static String getDownloadFileName(Container container, int revision)
     {
         return container.getName() + "_rev" + revision + ".clib";
     }

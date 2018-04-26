@@ -130,7 +130,7 @@ class PeptideSettingsParser
         return settings;
     }
 
-    private PeptideSettings.EnzymeDigestionSettings readDigestSettings(XMLStreamReader reader) throws XMLStreamException
+    private PeptideSettings.EnzymeDigestionSettings readDigestSettings(XMLStreamReader reader)
     {
         PeptideSettings.EnzymeDigestionSettings result = new PeptideSettings.EnzymeDigestionSettings();
         result.setMaxMissedCleavages(XmlUtil.readIntegerAttribute(reader, "max_missed_cleavages"));
@@ -138,7 +138,7 @@ class PeptideSettingsParser
         return result;
     }
 
-    private PeptideSettings.Enzyme readEnzyme(XMLStreamReader reader) throws XMLStreamException
+    private PeptideSettings.Enzyme readEnzyme(XMLStreamReader reader)
     {
         PeptideSettings.Enzyme enzyme = new PeptideSettings.Enzyme();
         enzyme.setName(XmlUtil.readRequiredAttribute(reader, NAME, ENZYME));
@@ -327,8 +327,8 @@ class PeptideSettingsParser
         return modList;
     }
 
-     private PeptideSettings.RunIsotopeModification readIsotopeModification(XMLStreamReader reader) throws XMLStreamException
-    {
+     private PeptideSettings.RunIsotopeModification readIsotopeModification(XMLStreamReader reader)
+     {
         PeptideSettings.RunIsotopeModification mod = new PeptideSettings.RunIsotopeModification();
         mod.setName(XmlUtil.readRequiredAttribute(reader, NAME, STATIC_MODIFICATION));
         mod.setAminoAcid(reader.getAttributeValue(null, AMINOACID));
@@ -399,7 +399,7 @@ class PeptideSettingsParser
         return library;
     }
 
-    private PeptideSettings.SpectrumLibrary readLibrary(XMLStreamReader reader, String elementName) throws XMLStreamException
+    private PeptideSettings.SpectrumLibrary readLibrary(XMLStreamReader reader, String elementName)
     {
         PeptideSettings.SpectrumLibrary library = new PeptideSettings.SpectrumLibrary();
         library.setName(XmlUtil.readRequiredAttribute(reader, NAME, elementName));
@@ -531,7 +531,7 @@ class PeptideSettingsParser
         }
     }
 
-    private QuantificationSettings readQuantificationSettings(XMLStreamReader reader) throws XMLStreamException
+    private QuantificationSettings readQuantificationSettings(XMLStreamReader reader)
     {
         QuantificationSettings quantificationSettings = new QuantificationSettings();
         quantificationSettings.setRegressionWeighting(XmlUtil.readAttribute(reader, WEIGHTING));

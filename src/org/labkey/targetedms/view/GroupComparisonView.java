@@ -40,7 +40,7 @@ public class GroupComparisonView extends QuantificationView
     public static final String DATAREGION_NAME_SM_MOL = DATAREGION_NAME + SMALL_MOLECULE_SUFFIX;
     private GroupComparisonSettings _groupComparisonSettings;
 
-    public GroupComparisonView(ViewContext ctx, TargetedMSSchema schema, Form form, boolean forExport, String dataRegionName) throws SQLException
+    public GroupComparisonView(ViewContext ctx, TargetedMSSchema schema, Form form, boolean forExport, String dataRegionName)
     {
         super(ctx, schema,
                 isSmallMoleculeRegionName(dataRegionName) ? TargetedMSSchema.TABLE_MOLECULE_FOLD_CHANGE : TargetedMSSchema.TABLE_PEPTIDE_FOLD_CHANGE,

@@ -145,7 +145,7 @@ public class SkylineDocImporter
         _log = (null == log ? _systemLog : log);
     }
 
-    public TargetedMSRun importRun(RunInfo runInfo) throws IOException, XMLStreamException, DataFormatException, PipelineJobException
+    public TargetedMSRun importRun(RunInfo runInfo) throws IOException, XMLStreamException, PipelineJobException
     {
         _runId = runInfo.getRunId();
 
@@ -182,7 +182,7 @@ public class SkylineDocImporter
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
             throw fnfe;
         }
-        catch (DataFormatException | IOException | XMLStreamException | RuntimeException | PipelineJobException e)
+        catch (IOException | XMLStreamException | RuntimeException | PipelineJobException e)
         {
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
             throw e;
@@ -194,7 +194,7 @@ public class SkylineDocImporter
     }
 
 
-    private void importSkylineDoc(TargetedMSRun run, File f) throws XMLStreamException, IOException, DataFormatException, PipelineJobException
+    private void importSkylineDoc(TargetedMSRun run, File f) throws XMLStreamException, IOException, PipelineJobException
     {
         // TODO - Consider if this is too big to fit in a single transaction. If so, need to blow away all existing
         // data for this run before restarting the import in the case of a retry
@@ -909,7 +909,7 @@ public class SkylineDocImporter
                                     Map<String, Integer> structuralModNameIdMap, Map<Integer,
             PeptideSettings.PotentialLoss[]> structuralModLossesMap, Map<String, Integer> isotopeModNameIdMap,
                                     Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser, Set<String> peptides, Set<String> smallMolecules)
-            throws XMLStreamException, IOException, DataFormatException, PipelineJobException
+            throws XMLStreamException, IOException
     {
         pepGroup.setRunId(_runId);
 

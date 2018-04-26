@@ -85,7 +85,7 @@ public class ClustergrammerClient implements HeatMapService
         return null;
     }
 
-    public HttpEntity generateHeatMapViaJSON(HeatMap matrix) throws  Exception
+    public HttpEntity generateHeatMapViaJSON(HeatMap matrix)
     {
         return new StringEntity(serializeToJSON(matrix), ContentType.APPLICATION_JSON);
     }

@@ -93,7 +93,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
 
     // Called at 16.10-16.20 (only on SQLServer)
     @SuppressWarnings({"UnusedDeclaration"})
-    public void updatePrecursorModifiedSequence(final ModuleContext moduleContext) throws SQLException
+    public void updatePrecursorModifiedSequence(final ModuleContext moduleContext)
     {
         DbSchema schema = TargetedMSSchema.getSchema();
         String updateSql = "UPDATE targetedms.precursor SET ModifiedSequence=? WHERE Id=?";
@@ -123,7 +123,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
 
     // Called at 17.12-17.13
     @SuppressWarnings({"UnusedDeclaration"})
-    public void updateExperimentAnnotations(final ModuleContext moduleContext) throws SQLException
+    public void updateExperimentAnnotations(final ModuleContext moduleContext)
     {
         // Populate the sourceExperimentId, sourceExperimentPath and shortUrl columns that were just added.
         // This will be done only for experiments are are journal copies (journalCopy = true).
@@ -201,7 +201,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
     // Called at 17.30-17.31
     @SuppressWarnings({"UnusedDeclaration"})
     @DeferredUpgrade
-    public void addRawDataTab(final ModuleContext moduleContext) throws SQLException
+    public void addRawDataTab(final ModuleContext moduleContext)
     {
         if(moduleContext.isNewInstall())
         {

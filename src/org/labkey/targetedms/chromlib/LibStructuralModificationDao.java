@@ -86,7 +86,7 @@ public class LibStructuralModificationDao extends BaseDaoImpl<LibStructuralModif
     }
 
     @Override
-    public List<LibStructuralModification> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection) throws SQLException
+    public List<LibStructuralModification> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection)
     {
         throw new UnsupportedOperationException(getTableName()+" does not have a foreign key");
     }
@@ -136,7 +136,7 @@ public class LibStructuralModificationDao extends BaseDaoImpl<LibStructuralModif
     }
 
     @Override
-    public void saveAll(List<LibStructuralModification> structuralModifications, Connection connection) throws SQLException
+    public void saveAll(List<LibStructuralModification> structuralModifications, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

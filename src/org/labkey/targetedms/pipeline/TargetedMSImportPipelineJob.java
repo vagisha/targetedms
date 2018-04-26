@@ -44,7 +44,7 @@ public class TargetedMSImportPipelineJob extends PipelineJob
     private SkylineDocImporter.RunInfo _runInfo;
     private final TargetedMSRun.RepresentativeDataState _representative;
 
-    public TargetedMSImportPipelineJob(ViewBackgroundInfo info, ExpData expData, SkylineDocImporter.RunInfo runInfo, PipeRoot root, TargetedMSRun.RepresentativeDataState representative) throws SQLException
+    public TargetedMSImportPipelineJob(ViewBackgroundInfo info, ExpData expData, SkylineDocImporter.RunInfo runInfo, PipeRoot root, TargetedMSRun.RepresentativeDataState representative)
     {
         super(TargetedMSPipelineProvider.name, info, root);
         _expData = expData;

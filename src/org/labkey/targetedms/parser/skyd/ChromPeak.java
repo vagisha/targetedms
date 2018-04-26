@@ -33,7 +33,8 @@ public class ChromPeak
     private int _flagBits;
     private short _pointsAcross;
 
-    public ChromPeak(LittleEndianInput dataInputStream) throws IOException {
+    public ChromPeak(LittleEndianInput dataInputStream)
+    {
         _retentionTime = Float.intBitsToFloat(dataInputStream.readInt());
         _startTime = Float.intBitsToFloat(dataInputStream.readInt());
         _endTime = Float.intBitsToFloat(dataInputStream.readInt());

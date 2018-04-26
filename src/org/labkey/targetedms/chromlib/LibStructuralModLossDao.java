@@ -76,7 +76,7 @@ public class LibStructuralModLossDao extends BaseDaoImpl<LibStructuralModLoss>
     }
 
     @Override
-    public void saveAll(List<LibStructuralModLoss> structuralModLosses, Connection connection) throws SQLException
+    public void saveAll(List<LibStructuralModLoss> structuralModLosses, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

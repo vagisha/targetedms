@@ -595,7 +595,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return iScheme;
     }
 
-    private TransitionSettings.IsolationWindow readIsolationWindow(XMLStreamReader reader) throws XMLStreamException
+    private TransitionSettings.IsolationWindow readIsolationWindow(XMLStreamReader reader)
     {
         TransitionSettings.IsolationWindow iWindow = new TransitionSettings.IsolationWindow();
         iWindow.setWindowStart(XmlUtil.readRequiredDoubleAttribute(reader, "start", ISOLATION_WINDOW));
@@ -983,12 +983,12 @@ public class SkylineDocumentParser implements AutoCloseable
         return false;
     }
 
-    public PeptideGroup nextPeptideGroup() throws XMLStreamException, DataFormatException, IOException
+    public PeptideGroup nextPeptideGroup() throws XMLStreamException
     {
         return readPeptideGroup(_reader);
     }
 
-    private PeptideGroup readPeptideGroup(XMLStreamReader reader) throws XMLStreamException, IOException
+    private PeptideGroup readPeptideGroup(XMLStreamReader reader) throws XMLStreamException
     {
         PeptideGroup pepGroup = new PeptideGroup();
         List<PeptideGroupAnnotation> annotations = new ArrayList<>();
@@ -1096,7 +1096,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return null;
     }
 
-    public Peptide nextPeptide() throws XMLStreamException, DataFormatException, IOException
+    public Peptide nextPeptide() throws XMLStreamException, IOException
     {
         Peptide peptide = new Peptide();
         readGeneralMolecule(_reader, peptide);
@@ -1104,7 +1104,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return peptide;
     }
 
-    public Molecule nextMolecule() throws XMLStreamException, DataFormatException, IOException
+    public Molecule nextMolecule() throws XMLStreamException, IOException
     {
         Molecule molecule = new Molecule();
         readGeneralMolecule(_reader, molecule);
@@ -1112,7 +1112,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return molecule;
     }
 
-    private void readGeneralMolecule(XMLStreamReader reader, GeneralMolecule generalMolecule) throws XMLStreamException, IOException
+    private void readGeneralMolecule(XMLStreamReader reader, GeneralMolecule generalMolecule)
     {
         String predictedRt = reader.getAttributeValue(null, "predicted_retention_time");
         if (null != predictedRt)
@@ -1305,7 +1305,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return result.length() == 0 ? null : result.toString();
     }
 
-    private Peptide.IsotopeModification readIsotopeModification(XMLStreamReader reader, String isotopeLabel) throws XMLStreamException
+    private Peptide.IsotopeModification readIsotopeModification(XMLStreamReader reader, String isotopeLabel)
     {
         Peptide.IsotopeModification mod = new Peptide.IsotopeModification();
         mod.setModificationName(XmlUtil.readRequiredAttribute(reader, "modification_name", VARIABLE_MODIFICATION));
@@ -1320,7 +1320,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return mod;
     }
 
-    private Peptide.StructuralModification readStructuralModification(XMLStreamReader reader) throws XMLStreamException
+    private Peptide.StructuralModification readStructuralModification(XMLStreamReader reader)
     {
         Peptide.StructuralModification mod = new Peptide.StructuralModification();
         mod.setModificationName(XmlUtil.readRequiredAttribute(reader, "modification_name", VARIABLE_MODIFICATION));
@@ -1373,7 +1373,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return modifications;
     }
 
-    private GeneralMoleculeChromInfo readGeneralMoleculeChromInfo(XMLStreamReader reader) throws XMLStreamException
+    private GeneralMoleculeChromInfo readGeneralMoleculeChromInfo(XMLStreamReader reader)
     {
         GeneralMoleculeChromInfo chromInfo = new GeneralMoleculeChromInfo();
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", PEPTIDE_RESULT));
@@ -1383,7 +1383,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return chromInfo;
     }
 
-    private void setSkylineSampleFileId(XMLStreamReader reader, ChromInfo chromInfo) throws XMLStreamException
+    private void setSkylineSampleFileId(XMLStreamReader reader, ChromInfo chromInfo)
     {
         String skylineSampleFileId = XmlUtil.readAttribute(reader, "file");
         if(skylineSampleFileId == null)
@@ -1737,7 +1737,7 @@ public class SkylineDocumentParser implements AutoCloseable
         }
     }
 
-    private Precursor.LibraryInfo readBibliospecLibraryInfo(XMLStreamReader reader) throws XMLStreamException
+    private Precursor.LibraryInfo readBibliospecLibraryInfo(XMLStreamReader reader)
     {
         // <bibliospec_spectrum_info library_name="Yeast_mini" count_measured="895" />
         Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
@@ -1746,7 +1746,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return libInfo;
     }
 
-    private Precursor.LibraryInfo readHunterLibraryInfo(XMLStreamReader reader) throws XMLStreamException
+    private Precursor.LibraryInfo readHunterLibraryInfo(XMLStreamReader reader)
     {
         // <hunter_spectrum_info library_name="GPM_Hunter_yeast" expect="1.030315E-10" processed_intensity="213.6469" />
         Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
@@ -1756,7 +1756,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return libInfo;
     }
 
-    private Precursor.LibraryInfo readNistLibraryInfo(XMLStreamReader reader) throws XMLStreamException
+    private Precursor.LibraryInfo readNistLibraryInfo(XMLStreamReader reader)
     {
         // <nist_spectrum_info library_name="NIST_MSP_Yeast_qtof" count_measured="14" total_intensity="75798" tfratio="17000" />
         Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
@@ -1767,7 +1767,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return libInfo;
     }
 
-    private Precursor.LibraryInfo readSpectrastLibraryInfo(XMLStreamReader reader) throws XMLStreamException
+    private Precursor.LibraryInfo readSpectrastLibraryInfo(XMLStreamReader reader)
     {
         // <spectrast_spectrum_info library_name="ISB_SpectraST_yeast" count_measured="62" total_intensity="94691.2" tfratio="1000" />
         // <spectrast_spectrum_info library_name="NIST_SpectraST_Yeast_qtof" count_measured="14" total_intensity="75798" tfratio="17000" />
@@ -1834,7 +1834,7 @@ public class SkylineDocumentParser implements AutoCloseable
 
         return chromInfo;
     }
-    private Double readMass(XMLStreamReader reader, boolean monoisotopic) throws XMLStreamException
+    private Double readMass(XMLStreamReader reader, boolean monoisotopic)
     {
         Double massH = XmlUtil.readDoubleAttribute(reader, monoisotopic ? MASS_MONOISOTOPIC : MASS_AVERAGE);
         if (massH != null)
@@ -1846,7 +1846,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 monoisotopic ? NEUTRAL_MASS_MONOISOTOPIC : NEUTRAL_MASS_AVERAGE);
     }
 
-    private double readRequiredMass(XMLStreamReader reader, boolean monoisotopic, String elementName) throws XMLStreamException
+    private double readRequiredMass(XMLStreamReader reader, boolean monoisotopic, String elementName)
     {
         Double mass = readMass(reader, monoisotopic);
         if (mass == null)
@@ -2019,7 +2019,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return transition;
     }
 
-    private void readGeneralTransition(XMLStreamReader reader, GeneralTransition transition) throws XMLStreamException
+    private void readGeneralTransition(XMLStreamReader reader, GeneralTransition transition)
     {
         String fragment = reader.getAttributeValue(null, "fragment_type");
         transition.setFragmentType(fragment);
@@ -2195,7 +2195,8 @@ public class SkylineDocumentParser implements AutoCloseable
         return chromInfo;
     }
 
-    private List<TransitionChromInfo> readTransitionResultsData(XMLStreamReader reader) throws XMLStreamException {
+    private List<TransitionChromInfo> readTransitionResultsData(XMLStreamReader reader)
+    {
         try {
             String strContent = reader.getElementText();
             byte[] data = Base64.getDecoder().decode(strContent);

@@ -116,19 +116,19 @@ public class LibInfoDao implements Dao<LibInfo>
     }
 
     @Override
-    public LibInfo queryForId(int id, Connection connection) throws SQLException
+    public LibInfo queryForId(int id, Connection connection)
     {
         throw new UnsupportedOperationException(Table.LibInfo+" does not have an Id field.");
     }
 
     @Override
-    public List<LibInfo> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection) throws SQLException
+    public List<LibInfo> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection)
     {
         throw new UnsupportedOperationException(Table.LibInfo+" does not have a foreign key");
     }
 
     @Override
-    public void saveAll(List<LibInfo> libInfos, Connection connection) throws SQLException
+    public void saveAll(List<LibInfo> libInfos, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

@@ -65,27 +65,27 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     }
 
     @Test
-    public void testMergeDocumentsScenario() throws Exception
+    public void testMergeDocumentsScenario()
     {
         runScenario("MergedDocuments", "none");
         testCalibrationCurveMoleculePrecursorsByReplicate();
     }
 
     @Test
-    public void testCalibrationScenario() throws Exception
+    public void testCalibrationScenario()
     {
         runScenario("CalibrationTest", "none");
         testCalibrationCurvePrecursorsByReplicate();
     }
 
     @Test
-    public void testP180Scenario() throws Exception
+    public void testP180Scenario()
     {
         runScenario("p180test_calibration_DukeApril2016", "1/x");
     }
 
     @Test
-    public void  testCalibrationPK() throws Exception
+    public void  testCalibrationPK()
     {
         String subFolderName = "MergedDocuments.sky";
         goToProjectHome();
@@ -355,7 +355,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
 
 
-    private void testFiguresOfMerit(String scenario) throws Exception
+    private void testFiguresOfMerit(String scenario)
     {
         goToProjectHome();
         clickFolder(scenario);
@@ -410,7 +410,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         assertTrue("Empty pdf downloaded [" + file.getName() + "]", file.length() > 0);
     }
 
-    private void runScenario(String scenario, String expectedWeighting) throws Exception
+    private void runScenario(String scenario, String expectedWeighting)
     {
         setupSubfolder(getProjectName(), scenario, FolderType.Experiment);
         importData(SAMPLEDATA_FOLDER + scenario + ".sky.zip");
@@ -581,7 +581,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         return delta;
     }
 
-    private List<Map<String, Object>> readScenarioCsv(String scenarioName, String reportName) throws Exception
+    private List<Map<String, Object>> readScenarioCsv(String scenarioName, String reportName)
     {
         File file = TestFileUtils.getSampleData("TargetedMS/" + SAMPLEDATA_FOLDER + scenarioName + "_" + reportName + ".csv");
         try (TabLoader tabLoader = new TabLoader(file, true))

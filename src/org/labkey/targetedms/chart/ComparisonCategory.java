@@ -454,7 +454,7 @@ public interface ComparisonCategory
     public static class TestCase extends Assert
     {
         @Test
-        public void testTrimPeptideCategoryLabels() throws Exception
+        public void testTrimPeptideCategoryLabels()
         {
             ComparisonCategory.PeptideCategory category1 = new ComparisonCategory.PeptideCategory("A", 2, "light", null);
             ComparisonCategory.PeptideCategory category2 = new ComparisonCategory.PeptideCategory("AB", 2, "light", null);

@@ -50,7 +50,8 @@ public class ChromGroupHeaderInfo
     private Float endTime;
     private float collisionalCrossSection;
 
-    public ChromGroupHeaderInfo(CacheFormatVersion cacheFormatVersion, LittleEndianInput dataInputStream) throws IOException {
+    public ChromGroupHeaderInfo(CacheFormatVersion cacheFormatVersion, LittleEndianInput dataInputStream)
+    {
         if (cacheFormatVersion.compareTo(CacheFormatVersion.Five) < 0) {
             precursor = Float.intBitsToFloat(dataInputStream.readInt());
             fileIndex = checkUShort(dataInputStream.readInt());

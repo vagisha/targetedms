@@ -66,7 +66,7 @@ public abstract class StructSerializer<TItem>
         return newByteArray;
     }
 
-    public abstract TItem fromByteArray(byte[] bytes) throws IOException;
+    public abstract TItem fromByteArray(byte[] bytes);
 
     public int getItemSizeInMemory()
     {

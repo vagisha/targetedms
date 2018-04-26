@@ -502,7 +502,7 @@ public class TargetedMSManager
 
     public static Integer addRunToQueue(ViewBackgroundInfo info,
                                      final Path path,
-                                     PipeRoot root) throws SQLException, IOException, XarFormatException
+                                     PipeRoot root) throws IOException, XarFormatException
     {
         String description = "Skyline document import - " + FileUtil.getFileName(path);
         XarContext xarContext = new XarContext(description, info.getContainer(), info.getUser());
@@ -517,7 +517,7 @@ public class TargetedMSManager
         {
             XarSource source = new AbstractFileXarSource("Wrap Targeted MS Run", container, user)
             {
-                public File getLogFile() throws IOException
+                public File getLogFile()
                 {
                     throw new UnsupportedOperationException();
                 }
@@ -538,7 +538,7 @@ public class TargetedMSManager
                 }
 
                 @Override
-                public ExperimentArchiveDocument getDocument() throws XmlException, IOException
+                public ExperimentArchiveDocument getDocument()
                 {
                     throw new UnsupportedOperationException();
                 }

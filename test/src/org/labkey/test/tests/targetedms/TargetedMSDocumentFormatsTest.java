@@ -33,7 +33,8 @@ public class TargetedMSDocumentFormatsTest extends TargetedMSTest
             "DocumentSerializerTest",
             "DocumentSerializerTest_compact"));
     @Test
-    public void testDocumentSerialization() throws Exception {
+    public void testDocumentSerialization()
+    {
         setupFolder(FolderType.Experiment);
         for (String filename : skyZipFileNames) {
             testImportDoc(filename);

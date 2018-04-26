@@ -83,12 +83,12 @@ public class XmlUtil
         return null;
     }
 
-    public static Double readDoubleAttribute(XMLStreamReader reader, String attributeName) throws XMLStreamException
+    public static Double readDoubleAttribute(XMLStreamReader reader, String attributeName)
     {
         return readDoubleAttribute(reader, attributeName, null);
     }
 
-    public static Double readDoubleAttribute(XMLStreamReader reader, String attributeName, @Nullable Double defaultValue) throws XMLStreamException
+    public static Double readDoubleAttribute(XMLStreamReader reader, String attributeName, @Nullable Double defaultValue)
     {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)
@@ -96,18 +96,18 @@ public class XmlUtil
         return Double.parseDouble(value.trim());
     }
 
-    public static double readRequiredDoubleAttribute(XMLStreamReader reader, String attributeName, String elementName) throws XMLStreamException
+    public static double readRequiredDoubleAttribute(XMLStreamReader reader, String attributeName, String elementName)
     {
         String value = readRequiredAttribute(reader, attributeName, elementName);
         return Double.parseDouble(value.trim());
     }
 
-    public static Integer readIntegerAttribute(XMLStreamReader reader, String attributeName) throws XMLStreamException
+    public static Integer readIntegerAttribute(XMLStreamReader reader, String attributeName)
     {
         return readIntegerAttribute(reader, attributeName, null);
     }
 
-    public static Integer readIntegerAttribute(XMLStreamReader reader, String attributeName, @Nullable Integer defaultValue) throws XMLStreamException
+    public static Integer readIntegerAttribute(XMLStreamReader reader, String attributeName, @Nullable Integer defaultValue)
     {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)
@@ -115,13 +115,13 @@ public class XmlUtil
         return Integer.parseInt(value.trim());
     }
 
-    public static Integer readRequiredIntegerAttribute(XMLStreamReader reader, String attributeName, String elementName) throws XMLStreamException
+    public static Integer readRequiredIntegerAttribute(XMLStreamReader reader, String attributeName, String elementName)
     {
         String value = readRequiredAttribute(reader, attributeName, elementName);
         return Integer.parseInt(value.trim());
     }
 
-    public static Date readDateAttribute(XMLStreamReader reader, String attributeName) throws XMLStreamException
+    public static Date readDateAttribute(XMLStreamReader reader, String attributeName)
     {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)
@@ -130,7 +130,7 @@ public class XmlUtil
         return (Date) ConvertUtils.convert(value, Date.class);
     }
 
-    public static String readRequiredAttribute(XMLStreamReader reader, String attributeName, String elementName) throws XMLStreamException
+    public static String readRequiredAttribute(XMLStreamReader reader, String attributeName, String elementName)
     {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)
@@ -144,12 +144,12 @@ public class XmlUtil
         return value;
     }
 
-    public static Boolean readBooleanAttribute(XMLStreamReader reader, String attributeName) throws XMLStreamException
+    public static Boolean readBooleanAttribute(XMLStreamReader reader, String attributeName)
     {
         return readBooleanAttribute(reader, attributeName, null);
     }
 
-    public static Boolean readBooleanAttribute(XMLStreamReader reader, String attributeName, @Nullable Boolean defaultValue) throws XMLStreamException
+    public static Boolean readBooleanAttribute(XMLStreamReader reader, String attributeName, @Nullable Boolean defaultValue)
     {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)
@@ -157,12 +157,12 @@ public class XmlUtil
         return Boolean.parseBoolean(value);
     }
 
-    public static String readAttribute(XMLStreamReader reader, String attributeName) throws XMLStreamException
+    public static String readAttribute(XMLStreamReader reader, String attributeName)
     {
         return readAttribute(reader, attributeName, null);
     }
 
-    public static String readAttribute(XMLStreamReader reader, String attributeName, @Nullable String defaultValue) throws XMLStreamException
+    public static String readAttribute(XMLStreamReader reader, String attributeName, @Nullable String defaultValue)
     {
         String value = reader.getAttributeValue(null, attributeName);
         if (value == null)

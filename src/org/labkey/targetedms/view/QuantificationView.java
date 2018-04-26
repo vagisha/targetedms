@@ -33,7 +33,7 @@ public abstract class QuantificationView extends DocumentPrecursorsView
     protected static final String SMALL_MOLECULE_SUFFIX = "_sm_mol";
 
     public QuantificationView(ViewContext ctx, TargetedMSSchema schema, String tableName, TargetedMSController.RunDetailsForm form,
-                              boolean forExport, String dataRegionName) throws SQLException
+                              boolean forExport, String dataRegionName)
     {
         super(ctx, schema, tableName, form.getId(), forExport,
                 new QueryNestingOption(FieldKey.fromParts("PeptideGroupId"),

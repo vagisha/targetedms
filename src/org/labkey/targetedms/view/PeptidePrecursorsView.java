@@ -35,7 +35,7 @@ public class PeptidePrecursorsView extends DocumentPrecursorsView
     public static final String DATAREGION_NAME = "precursors_view";
     public static final String TITLE = "Precursor List";
 
-    public PeptidePrecursorsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport) throws SQLException
+    public PeptidePrecursorsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport)
     {
         super(ctx, schema, queryName, runId, !forExport,
                 new QueryNestingOption(FieldKey.fromParts("PeptideId", "PeptideGroupId"),

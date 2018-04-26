@@ -91,7 +91,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
 
             TargetedMSManager.updateRun(run, info.getUser());
         }
-        catch (IOException | DataFormatException | XMLStreamException | PipelineJobException e)
+        catch (IOException | XMLStreamException | PipelineJobException e)
         {
             throw new ExperimentException(e);
         }
@@ -127,7 +127,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     }
 
     @Override
-    public void beforeDeleteData(List<ExpData> data) throws ExperimentException
+    public void beforeDeleteData(List<ExpData> data)
     {
         for (ExpData expData : data)
         {

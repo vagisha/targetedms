@@ -211,7 +211,7 @@ public class ReplicateLabelMinimizer
     public static class TestCase extends Assert
     {
         @Test
-        public void testReplicateNameMinimization() throws Exception
+        public void testReplicateNameMinimization()
         {
             ComparisonAxis.ReplicateAxis axis = new ComparisonAxis.ReplicateAxis("Replicates");
 

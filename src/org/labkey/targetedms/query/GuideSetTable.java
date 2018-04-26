@@ -100,13 +100,13 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
         }
 
         @Override
-        public GuideSet get(User user, Container container, int key) throws QueryUpdateServiceException, SQLException
+        public GuideSet get(User user, Container container, int key)
         {
             return new TableSelector(TargetedMSManager.getTableInfoGuideSet()).getObject(key, GuideSet.class);
         }
 
         @Override
-        protected GuideSet insert(User user, Container container, GuideSet bean) throws ValidationException, DuplicateKeyException, QueryUpdateServiceException, SQLException
+        protected GuideSet insert(User user, Container container, GuideSet bean) throws ValidationException
         {
             bean.beforeInsert(user, container.getId());
             validateGuideSetDates(bean, container);
@@ -114,7 +114,7 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
         }
 
         @Override
-        protected GuideSet update(User user, Container container, GuideSet bean, Integer oldKey) throws ValidationException, QueryUpdateServiceException, SQLException
+        protected GuideSet update(User user, Container container, GuideSet bean, Integer oldKey) throws ValidationException
         {
             if (oldKey == null)
             {
@@ -126,7 +126,7 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
         }
 
         @Override
-        public void delete(User user, Container container, int key) throws QueryUpdateServiceException, SQLException
+        public void delete(User user, Container container, int key)
         {
             Table.delete(TargetedMSManager.getTableInfoGuideSet(), key);
         }

@@ -55,7 +55,7 @@ public class CacheHeaderStruct
     int numFiles;
     long locationFiles;
 
-    public CacheHeaderStruct(LittleEndianInput inputStream) throws IOException
+    public CacheHeaderStruct(LittleEndianInput inputStream)
     {
         chromPeakSize = inputStream.readInt();
         chromTransitionSize = inputStream.readInt();
@@ -151,7 +151,7 @@ public class CacheHeaderStruct
                 CacheHeaderStruct.class, getStructSize(CacheFormatVersion.CURRENT), getStructSize(cacheFormatVersion))
         {
             @Override
-            public CacheHeaderStruct fromByteArray(byte[] bytes) throws IOException
+            public CacheHeaderStruct fromByteArray(byte[] bytes)
             {
                 return new CacheHeaderStruct(new LittleEndianByteArrayInputStream(bytes));
             }

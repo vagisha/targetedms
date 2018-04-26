@@ -13299,7 +13299,7 @@ public final class SkylineDocument {
     }
 
     public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
+    {
     }
 
     public int getSerializedSize() {

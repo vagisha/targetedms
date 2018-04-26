@@ -64,7 +64,7 @@ public class LibIsotopeModificationDao extends BaseDaoImpl<LibIsotopeModificatio
     }
 
     @Override
-    public List<LibIsotopeModification> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection) throws SQLException
+    public List<LibIsotopeModification> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection)
     {
         throw new UnsupportedOperationException(getTableName()+" does not have a foreign key");
     }
@@ -110,7 +110,7 @@ public class LibIsotopeModificationDao extends BaseDaoImpl<LibIsotopeModificatio
     }
 
     @Override
-    public void saveAll(List<LibIsotopeModification> isotopeModifications, Connection connection) throws SQLException
+    public void saveAll(List<LibIsotopeModification> isotopeModifications, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

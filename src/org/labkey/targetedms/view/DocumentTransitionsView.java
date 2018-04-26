@@ -34,7 +34,7 @@ public abstract class DocumentTransitionsView extends DocumentView
     public String TITLE;
 
     public DocumentTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId,
-                                   boolean forExport, QueryNestingOption queryNestingOption, String dataRegionName, String title) throws SQLException
+                                   boolean forExport, QueryNestingOption queryNestingOption, String dataRegionName, String title)
     {
         super(ctx, schema, queryName, runId, !forExport, queryNestingOption, dataRegionName);
         _targetedMsSchema = schema;

@@ -88,7 +88,7 @@ public class CacheFormat {
                 _cachedFileSize)
         {
             @Override
-            public CachedFileHeaderStruct fromByteArray(byte[] bytes) throws IOException
+            public CachedFileHeaderStruct fromByteArray(byte[] bytes)
             {
                 return new CachedFileHeaderStruct(new LittleEndianByteArrayInputStream(bytes));
             }
@@ -99,7 +99,7 @@ public class CacheFormat {
         return new StructSerializer<ChromGroupHeaderInfo>(ChromGroupHeaderInfo.class, ChromGroupHeaderInfo.getStructSize(CacheFormatVersion.CURRENT), _chromGroupHeaderSize)
         {
             @Override
-            public ChromGroupHeaderInfo fromByteArray(byte[] bytes) throws IOException
+            public ChromGroupHeaderInfo fromByteArray(byte[] bytes)
             {
                 return new ChromGroupHeaderInfo(_formatVersion, new LittleEndianByteArrayInputStream(bytes));
             }
@@ -109,7 +109,7 @@ public class CacheFormat {
         return new StructSerializer<ChromTransition>(ChromTransition.class, ChromTransition.getStructSize(CacheFormatVersion.CURRENT), _chromTransitionSize)
             {
                 @Override
-                public ChromTransition fromByteArray(byte[] bytes) throws IOException
+                public ChromTransition fromByteArray(byte[] bytes)
                 {
                     return new ChromTransition(_formatVersion, new LittleEndianByteArrayInputStream(bytes));
                 }
@@ -120,7 +120,7 @@ public class CacheFormat {
         return new StructSerializer<ChromPeak>(ChromPeak.class, ChromPeak.getStructSize(CacheFormatVersion.CURRENT), _chromPeakSize)
         {
             @Override
-            public ChromPeak fromByteArray(byte[] bytes) throws IOException
+            public ChromPeak fromByteArray(byte[] bytes)
             {
                 return new ChromPeak(new LittleEndianByteArrayInputStream(bytes));
             }
