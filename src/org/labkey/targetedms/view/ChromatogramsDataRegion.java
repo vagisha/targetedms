@@ -73,39 +73,42 @@ public class ChromatogramsDataRegion extends DataRegion
 
     protected int renderTableContents(RenderContext ctx, Writer out, boolean showRecordSelectors, List<DisplayColumn> renderers) throws SQLException, IOException
     {
+        int rowIndex = 0;
+        int maxRowSize = getSettings().getMaxRowSize();
+        int count = 0;
+
         Results results = ctx.getResults();
 
         // unwrap for efficient use of ResultSetRowMapFactory
-        ResultSet rs = results.getResultSet();
-        ResultSetRowMapFactory factory = ResultSetRowMapFactory.create(rs);
-        int rowIndex = 0;
-
-        int maxRowSize = getSettings().getMaxRowSize();
-        int count = 0;
-        assert rs != null;
-
-        while (rs.next())
+        try (ResultSet rs = results.getResultSet())
         {
-            if(count == 0)
+            assert rs != null;
+            ResultSetRowMapFactory factory = ResultSetRowMapFactory.create(rs);
+
+            while (rs.next())
             {
-                out.write("<tr");
-                String rowClass = getRowClass(ctx, rowIndex);
-                if (rowClass != null)
-                    out.write(" class=\"" + rowClass + "\"");
-                out.write(">");
-                out.write("<td><table cellpadding=\"0\" cellspacing=\"0\"><tr>");
-            }
-            ctx.setRow(factory.getRowMap(rs));
-            renderTableRow(ctx, out, showRecordSelectors, renderers, rowIndex++);
-            count++;
-            if(count == maxRowSize)
-            {
-                out.write("</tr></table></td>");
-                out.write("</tr>\n");
-                count = 0;
+                if (count == 0)
+                {
+                    out.write("<tr");
+                    String rowClass = getRowClass(ctx, rowIndex);
+                    if (rowClass != null)
+                        out.write(" class=\"" + rowClass + "\"");
+                    out.write(">");
+                    out.write("<td><table cellpadding=\"0\" cellspacing=\"0\"><tr>");
+                }
+                ctx.setRow(factory.getRowMap(rs));
+                renderTableRow(ctx, out, showRecordSelectors, renderers, rowIndex++);
+                count++;
+                if (count == maxRowSize)
+                {
+                    out.write("</tr></table></td>");
+                    out.write("</tr>\n");
+                    count = 0;
+                }
             }
         }
-        if(count != 0)
+
+        if (count != 0)
         {
             while(count < maxRowSize)
             {
@@ -116,7 +119,6 @@ public class ChromatogramsDataRegion extends DataRegion
             out.write("</tr>\n");
         }
 
-        rs.close();
         return rowIndex;
     }
 

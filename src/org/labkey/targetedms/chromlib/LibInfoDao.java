@@ -47,10 +47,8 @@ public class LibInfoDao implements Dao<LibInfo>
             sql.append(")");
             sql.append(" VALUES (?,?,?,?,?,?,?,?,?);");
 
-            PreparedStatement stmt = null;
-            try
+            try (PreparedStatement stmt = connection.prepareStatement(sql.toString()))
             {
-                stmt = connection.prepareStatement(sql.toString());
                 int colIndex = 1;
                 stmt.setString(colIndex++, libInfo.getPanoramaServer());
                 stmt.setString(colIndex++, libInfo.getContainer());
@@ -63,10 +61,6 @@ public class LibInfoDao implements Dao<LibInfo>
                 stmt.setInt(colIndex, libInfo.getTransitions());
                 stmt.executeUpdate();
             }
-            finally
-            {
-                if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
-            }
         }
     }
 
@@ -76,15 +70,10 @@ public class LibInfoDao implements Dao<LibInfo>
         sql.append("SELECT * FROM ");
         sql.append(Table.LibInfo);
 
-        Statement stmt = null;
-        ResultSet rs = null;
-        try
+        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(sql.toString());)
         {
-            stmt = connection.createStatement();
-            rs = stmt.executeQuery(sql.toString());
-
             List<LibInfo> libInfos = new ArrayList<>();
-            while(rs.next())
+            while (rs.next())
             {
                 LibInfo libInfo = new LibInfo();
                 libInfo.setPanoramaServer(rs.getString(LibInfoColumn.PanoramaServer.baseColumn().name()));
@@ -107,11 +96,6 @@ public class LibInfoDao implements Dao<LibInfo>
                 libInfos.add(libInfo);
             }
             return libInfos;
-        }
-        finally
-        {
-            if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
-            if(rs != null) try {rs.close();} catch(SQLException ignored){}
         }
     }
 

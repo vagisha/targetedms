@@ -25,6 +25,7 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.parser.blib.BlibSpectrum.RedundantSpectrum;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 import org.sqlite.SQLiteConfig;
 
@@ -415,29 +416,23 @@ public class BlibSpectrumReader
 
     private static void addRedundantSpectrumInfo(Connection conn, BlibSpectrum spectrum)
     {
-        Statement stmt = null;
-        ResultSet rs = null;
+        StringBuilder sql = new StringBuilder("SELECT rt.*, sf.fileName ");
+        sql.append("FROM RetentionTimes AS rt INNER JOIN SpectrumSourceFiles AS sf ON rt.spectrumSourceID = sf.id ");
+        sql.append("WHERE RefSpectraID=").append(spectrum.getBlibId());
 
-        try
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql.toString()))
         {
-            stmt = conn.createStatement();
-            StringBuilder sql = new StringBuilder("SELECT rt.*, sf.fileName ");
-            sql.append("FROM RetentionTimes AS rt INNER JOIN SpectrumSourceFiles AS sf ON rt.spectrumSourceID = sf.id ");
-            sql.append("WHERE RefSpectraID=").append(spectrum.getBlibId());
-
-            rs = stmt.executeQuery(sql.toString());
-
-            List<BlibSpectrum.RedundantSpectrum> redundantSpectra = new ArrayList<>();
+            List<RedundantSpectrum> redundantSpectra = new ArrayList<>();
 
             while (rs.next())
             {
-                BlibSpectrum.RedundantSpectrum rSpec = new BlibSpectrum.RedundantSpectrum();
+                RedundantSpectrum rSpec = new RedundantSpectrum();
                 rSpec.setRedundantRefSpectrumId(rs.getInt("RedundantRefSpectraID"));
                 rSpec.setRetentionTime(rs.getDouble("retentionTime"));
                 rSpec.setSourceFile(rs.getString("fileName"));
                 rSpec.setBestSpectrum(rs.getBoolean("bestSpectrum"));
 
-                if(rSpec.isBestSpectrum())
+                if (rSpec.isBestSpectrum())
                 {
                     // If this is the reference spectrum keep it in front of the list.
                     redundantSpectra.add(0, rSpec);
@@ -454,57 +449,41 @@ public class BlibSpectrumReader
         {
             throw new RuntimeException(e);
         }
-        finally
-        {
-            if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
-            if(rs != null) try {rs.close();} catch(SQLException ignored){}
-        }
     }
 
     public static BlibSpectrum getRedundantSpectrum(LocalDirectory localDirectory, String redundantBlibFilePath, int redundantRefSpectrumId)
     {
         redundantBlibFilePath = getLocalBlibPath(localDirectory, redundantBlibFilePath);
+
         if (null == redundantBlibFilePath)
             return null;
 
-        Connection conn = null;
-
-        try
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + redundantBlibFilePath))
         {
-            conn = DriverManager.getConnection("jdbc:sqlite:/" + redundantBlibFilePath);
-
             BlibSpectrum spectrum = readRedundantSpectrum(conn, redundantRefSpectrumId);
             if(spectrum == null)
                 return null;
             readSpectrumPeaks(conn, spectrum);
 
             return spectrum;
-
         }
         catch(SQLException e)
         {
             throw new RuntimeException(e);
         }
-        finally
-        {
-            if(conn != null) try {conn.close();} catch(SQLException ignored){}
-        }
     }
 
     private static BlibSpectrum readRedundantSpectrum(Connection conn, int redundantRefSpectrumid) throws SQLException
     {
-        Statement stmt = null;
-        ResultSet rs = null;
-        try {
-            stmt = conn.createStatement();
-            StringBuilder sql = new StringBuilder("SELECT rf.*, ssf.fileName FROM RefSpectra AS rf ");
-            sql.append("LEFT JOIN SpectrumSourceFiles AS ssf ON rf.FileID = ssf.id ");
-            sql.append(" WHERE rf.id=").append(redundantRefSpectrumid);
+        StringBuilder sql = new StringBuilder("SELECT rf.*, ssf.fileName FROM RefSpectra AS rf ");
+        sql.append("LEFT JOIN SpectrumSourceFiles AS ssf ON rf.FileID = ssf.id ");
+        sql.append(" WHERE rf.id=").append(redundantRefSpectrumid);
 
-            rs = stmt.executeQuery(sql.toString());
-
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(sql.toString()))
+        {
             BlibSpectrum spectrum = null;
-            if(rs.next())
+
+            if (rs.next())
             {
                 spectrum = new BlibSpectrum();
                 spectrum.setBlibId(rs.getInt("id"));
@@ -520,12 +499,8 @@ public class BlibSpectrumReader
                 spectrum.setFileId(rs.getInt("fileID"));
                 spectrum.setSourceFile(rs.getString("fileName"));
             }
+
             return spectrum;
-        }
-        finally
-        {
-            if(stmt != null) try {stmt.close();} catch(SQLException ignored){}
-            if(rs != null) try {rs.close();} catch(SQLException ignored){}
         }
     }
 
