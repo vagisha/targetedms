@@ -515,7 +515,6 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public WebElement openExclusionBubble(String acquiredDate)
     {
-        getWrapper().waitForElementToDisappear(Locator.tagWithClass("div", "x4-form-display-field"));
         WebDriverWrapper.waitFor(() -> {
             getWrapper().mouseOver(getPointByAcquiredDate(acquiredDate));
             return getWrapper().isElementPresent(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
@@ -659,7 +658,9 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public void closeBubble()
     {
-        getWrapper().click(elementCache().hopscotchBubbleClose);
+        WebElement closeButton = elementCache().hopscotchBubbleClose.findElement(getDriver());
+        closeButton.click();
+        getWrapper().shortWait().until(ExpectedConditions.stalenessOf(closeButton));
     }
 
     public void goToPreviousPage()
