@@ -386,14 +386,17 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     },
 
     failureHandler: function(response) {
-        if (response.message) {
-            Ext4.get(this.plotDivId).update("<span>" + response.message +"</span>");
-        }
-        else {
-            Ext4.get(this.plotDivId).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
-        }
+        var plotDiv = Ext4.get(this.plotDivId);
+        if (plotDiv) {
+            if (response.message) {
+                plotDiv.update("<span>" + response.message + "</span>");
+            }
+            else {
+                plotDiv.update("<span class='labkey-error'>Error: " + response.exception + "</span>");
+            }
 
-        Ext4.get(this.plotDivId).unmask();
+            plotDiv.unmask();
+        }
     },
 
     queryInitialQcMetrics : function(successCallback,callbackScope) {

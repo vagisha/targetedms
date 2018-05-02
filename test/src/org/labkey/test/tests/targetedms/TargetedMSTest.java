@@ -15,12 +15,11 @@
  */
 package org.labkey.test.tests.targetedms;
 
-import org.jetbrains.annotations.Nullable;
+import org.junit.BeforeClass;
 import org.labkey.test.BaseWebDriverTest;
-import org.labkey.test.LabKeySiteWrapper;
 import org.labkey.test.Locator;
-import org.labkey.test.Locators;
 import org.labkey.test.TestFileUtils;
+import org.labkey.test.TestProperties;
 import org.labkey.test.TestTimeoutException;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.GuideSetWebPart;
@@ -28,10 +27,13 @@ import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.GuideSetPage;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.APIContainerHelper;
+import org.labkey.test.util.ConfiguresSite;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.DefaultSiteConfigurer;
 import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.LoggedParam;
+import org.labkey.test.util.ReflectionUtils;
 import org.labkey.test.util.UIContainerHelper;
 import org.openqa.selenium.WebElement;
 
@@ -55,6 +57,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     protected static final String QC_4_FILE = "QC_4.sky.zip";
     protected static final String SMALL_MOLECULE = "smallmol_plus_peptides.sky.zip";
     protected static final String USER = "qcuser@targetedms.test";
+    private static ConfiguresSite siteConfigurer;
 
     protected enum SvgShapes
     {
@@ -92,25 +95,43 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         return "TargetedMSProject" + TRICKY_CHARACTERS_FOR_PROJECT_NAMES;
     }
 
-    protected void setupFolder(FolderType folderType)
+    @BeforeClass
+    public static void initPipeline()
     {
-        setupFolder(folderType, null);
+        TargetedMSTest init = (TargetedMSTest)getCurrentTest();
+
+        init.doInitPipeline();
     }
-    @LogMethod
-    protected void setupFolder(FolderType folderType, @Nullable String cloudConfigName)
+
+    protected ConfiguresSite getSiteConfigurer()
+    {
+        if (siteConfigurer == null)
+        {
+            if (TestProperties.isCloudPipelineEnabled())
+                siteConfigurer = ReflectionUtils.getSiteConfigurerOrDefault("org.labkey.test.util.cloud.S3Configurer", this);
+            else
+                siteConfigurer = new DefaultSiteConfigurer();
+        }
+        else
+        {
+            siteConfigurer.setWrapper(this);
+        }
+
+        return siteConfigurer;
+    }
+
+    private void doInitPipeline()
+    {
+        getSiteConfigurer().configureSite();
+    }
+
+    protected void setupFolder(FolderType folderType)
     {
         _containerHelper.createProject(getProjectName(), "Panorama");
         waitForElement(Locator.linkContainingText("Save"));
-        if (null != cloudConfigName)
-        {
-            click(Locator.checkboxByLabel(cloudConfigName, false));
-            clickAndWait(Locator.linkContainingText("Save"));
-            click(Locator.radioButtonById("optionCloudRoot"));
-            selectOptionByText(Locator.tagWithId("select", "cloudRootName"), cloudConfigName);
-            clickAndWait(Locator.linkContainingText("Save"));
-        }
         clickAndWait(Locator.linkContainingText("Next"));
         selectFolderType(folderType);
+        getSiteConfigurer().configureProject(getProjectName());
     }
 
     protected void setupSubfolder(String projectName, String folderName, FolderType folderType)

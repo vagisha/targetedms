@@ -17,6 +17,7 @@
 package org.labkey.targetedms;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.ExperimentException;
@@ -88,6 +89,14 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
                 throw new ExperimentException("ExpRun was null. An entry in the ExperimentRun table should already exist for this data.");
             }
             run.setExperimentRunLSID(expRun.getLSID());
+
+            // We are importing runs from a xar archive.  The runs may be associated with a user-entered description.
+            // Copy the run description to the newly imported run.
+            String runDesc = expRun.getName();
+            if(!StringUtils.isBlank(runDesc) && !runDesc.equals(run.getDescription()))
+            {
+                run.setDescription(runDesc);
+            }
 
             TargetedMSManager.updateRun(run, info.getUser());
         }
