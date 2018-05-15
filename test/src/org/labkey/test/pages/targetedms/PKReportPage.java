@@ -1,11 +1,11 @@
 package org.labkey.test.pages.targetedms;
 
+import org.apache.commons.lang3.StringUtils;
 import org.labkey.test.Locator;
 import org.labkey.test.pages.LabKeyPage;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.springframework.util.StringUtils;
 
 import static org.junit.Assert.assertEquals;
 
