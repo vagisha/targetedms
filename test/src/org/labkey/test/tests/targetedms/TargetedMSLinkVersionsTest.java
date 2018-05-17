@@ -19,6 +19,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.targetedms.LinkVersionsGrid;
@@ -30,6 +31,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 @Category({DailyB.class, MS2.class})
+@BaseWebDriverTest.ClassTimeout(minutes = 25)
 public class TargetedMSLinkVersionsTest extends TargetedMSTest
 {
     public static List<String> QC_DOCUMENT_NAMES = Arrays.asList(QC_1_FILE, QC_2_FILE, QC_3_FILE);

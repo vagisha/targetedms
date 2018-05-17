@@ -17,6 +17,7 @@ package org.labkey.test.tests.targetedms;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
@@ -31,6 +32,7 @@ import java.util.HashSet;
 import static org.junit.Assert.assertEquals;
 
 @Category({DailyB.class, MS2.class})
+@BaseWebDriverTest.ClassTimeout(minutes = 5)
 public class TargetedMSLibraryTest extends TargetedMSTest
 {
     private static final String SKY_FILE1 = "Stergachis-SupplementaryData_2_a.sky.zip";

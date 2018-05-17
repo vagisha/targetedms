@@ -20,6 +20,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
@@ -29,6 +30,7 @@ import org.labkey.test.components.targetedms.TargetedMSRunsTable;
 import java.util.Arrays;
 
 @Category({DailyB.class, MS2.class})
+@BaseWebDriverTest.ClassTimeout(minutes = 5)
 public class ClustergrammerTest extends TargetedMSTest
 {
     private static final String BUTTON_TEXT = "Clustergrammer Heatmap";

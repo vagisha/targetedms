@@ -24,6 +24,7 @@ import org.labkey.remoteapi.Command;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
+import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
@@ -46,6 +47,7 @@ import static org.junit.Assert.assertTrue;
 import static org.labkey.test.components.ext4.Window.Window;
 
 @Category({DailyB.class, MS2.class})
+@BaseWebDriverTest.ClassTimeout(minutes = 12)
 public class TargetedMSQCSummaryTest extends TargetedMSTest
 {
     private static final String FOLDER_1 = "QC Subfolder 1";

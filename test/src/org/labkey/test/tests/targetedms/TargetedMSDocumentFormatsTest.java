@@ -16,6 +16,7 @@ package org.labkey.test.tests.targetedms;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 
@@ -24,6 +25,7 @@ import java.util.Collections;
 import java.util.List;
 
 @Category({DailyB.class, MS2.class})
+@BaseWebDriverTest.ClassTimeout(minutes = 6)
 public class TargetedMSDocumentFormatsTest extends TargetedMSTest
 {
     private static final String SAMPLEDATA_FOLDER = "DocumentFormats/";

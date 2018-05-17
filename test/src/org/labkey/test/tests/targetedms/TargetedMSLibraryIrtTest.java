@@ -17,12 +17,14 @@ package org.labkey.test.tests.targetedms;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 
 import static org.junit.Assert.assertEquals;
 
 @Category({DailyB.class, MS2.class})
+@BaseWebDriverTest.ClassTimeout(minutes = 10)
 public class TargetedMSLibraryIrtTest extends TargetedMSIrtTest
 {
     // One of the sequences has had its value changed in FOR_UPDATE to verify the weighted average calculation.

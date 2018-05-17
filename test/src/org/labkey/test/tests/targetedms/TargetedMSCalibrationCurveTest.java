@@ -22,6 +22,7 @@ import org.labkey.api.reader.TabLoader;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
 import org.labkey.remoteapi.query.UpdateRowsCommand;
+import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
 import org.labkey.test.TestFileUtils;
@@ -52,6 +53,7 @@ import static org.junit.Assert.assertTrue;
  * Those data were generated from the Skyline unit test "CalibrationScenariosTest".
  */
 @Category({DailyB.class, MS2.class})
+@BaseWebDriverTest.ClassTimeout(minutes = 25)
 public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 {
     private static final String SAMPLEDATA_FOLDER = "Quantification/CalibrationScenariosTest/";

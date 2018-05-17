@@ -17,6 +17,7 @@ package org.labkey.test.tests.targetedms;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
@@ -28,6 +29,7 @@ import org.labkey.test.util.WikiHelper;
 import static org.junit.Assert.assertTrue;
 
 @Category({DailyB.class, MS2.class})
+@BaseWebDriverTest.ClassTimeout(minutes = 5)
 public class GetDataAPITest extends TargetedMSTest
 {
     String CLIENT_API_CORE1 = "{"+
