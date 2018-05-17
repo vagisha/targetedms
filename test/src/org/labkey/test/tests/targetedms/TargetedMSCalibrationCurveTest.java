@@ -24,6 +24,7 @@ import org.labkey.remoteapi.Connection;
 import org.labkey.remoteapi.query.UpdateRowsCommand;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.Locators;
 import org.labkey.test.SortDirection;
 import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
@@ -44,6 +45,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -329,9 +331,9 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
             stats.addValue(Double.parseDouble(concentrations.get(rawIndex)));
 
-            means.set(grpIndex, Math.round(stats.getMean() * 100)/100.00);
-            stddevs.set(grpIndex, Math.round(stats.getStandardDeviation() * 100)/100.00);
-            cvs.set(grpIndex, Math.round(((100 * stats.getStandardDeviation())/stats.getMean()) * 100)/100.00);
+            means.set(grpIndex, stats.getMean());
+            stddevs.set(grpIndex, stats.getStandardDeviation());
+            cvs.set(grpIndex, (100 * stats.getStandardDeviation())/stats.getMean());
 
             assertTrue(concentrations.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 1)));
             assertTrue(biases.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 2)));
@@ -341,21 +343,19 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         for (int index = 0; index < means.size(); index++)
         {
             singleValue = Integer.parseInt(getFomTableBodyValue(tableId, maxRow + 2, index * 2 + 1)) == 1;
-            assertTrue(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 3, index * 2 + 1)) == means.get(index));
+            assertEquals(means.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 3, index * 2 + 1)), 0.01);
             if (singleValue)
             {
-                assertTrue(getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1).equals("NA"));
-                assertTrue(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1).equals("NA"));
+                assertEquals("NA", getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1));
+                assertEquals("NA", getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1));
             }
             else
             {
-                assertTrue(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1)) == stddevs.get(index));
-                assertTrue(Math.abs(Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1)) - cvs.get(index)) < .02);
+                assertEquals(stddevs.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1)), 0.01);
+                assertEquals(cvs.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1)), 0.02);
             }
         }
     }
-
-
 
     private void testFiguresOfMerit(String scenario)
     {
@@ -401,8 +401,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
         clickAndWait(Locator.linkContainingText("Fom"));
 
-        waitForText("LoadingDone");
-        sleep(3000);
+        waitForElement(Locators.pageSignal("targetedms-fom-loaded"));
 
         verifyFomTable("fom-table-standard", stdGroups, stdConcentrations, stdBiases);
         verifyFomTable("fom-table-qc", qcGroups, qcConcentrations, qcBiases);
@@ -417,6 +416,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         setupSubfolder(getProjectName(), scenario, FolderType.Experiment);
         importData(SAMPLEDATA_FOLDER + scenario + ".sky.zip");
         List<Map<String, Object>> allCalibrationCurves = readScenarioCsv(scenario, "CalibrationCurves");
+        assertFalse("No calibration curves found for scenario '" + scenario + "', check sample data.", allCalibrationCurves.isEmpty());
 
         for (boolean smallMolecule : Arrays.asList(true, false))
         {

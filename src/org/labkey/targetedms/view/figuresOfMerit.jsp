@@ -1,9 +1,9 @@
 
 
+<%@ page import="org.labkey.api.view.HttpView" %>
+<%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
-<%@ page import="org.labkey.api.view.JspView" %>
-<%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%!
@@ -46,7 +46,6 @@
 
         </div>
     </div>
-    <div id="targetedms-afterload" hidden></div>
 </div>
 
 <script type="text/javascript">
@@ -437,7 +436,7 @@
         };
 
         var afterLoad = function() {
-            $('#targetedms-afterload').html('LoadingDone')
+            LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
         };
 
         var createQcFomTable = function() {
