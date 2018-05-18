@@ -19,7 +19,6 @@ import org.junit.Assert;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
-import org.labkey.test.components.WebPart;
 import org.labkey.test.selenium.LazyWebElement;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -172,7 +171,7 @@ public class ParetoPlotsWebPart extends BodyWebPart<ParetoPlotsWebPart.ElementCa
         return new ElementCache();
     }
 
-    protected class ElementCache extends WebPart.ElementCache
+    protected class ElementCache extends BodyWebPart.ElementCache
     {
         WebElement notFound = new LazyWebElement(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("No Guide Sets found in this folder."), this).withTimeout(1000);
         WebElement qcPlotsLink = new LazyWebElement(Locator.linkWithText("QC Plots"), this);
