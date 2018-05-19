@@ -89,6 +89,7 @@ import org.labkey.api.pipeline.PipelineUrls;
 import org.labkey.api.pipeline.browse.PipelinePathForm;
 import org.labkey.api.portal.ProjectUrls;
 import org.labkey.api.protein.ProteinService;
+import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
@@ -5363,7 +5364,7 @@ public class TargetedMSController extends SpringActionController
             return jview;
         }
 
-        public boolean handlePost(RenameForm form, BindException errors)
+        public boolean handlePost(RenameForm form, BindException errors) throws BatchValidationException
         {
             _run = validateRun(form.getRun());
             TargetedMSManager.renameRun(form.getRun(), form.getDescription(), getUser());
@@ -6240,7 +6241,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public Object execute(RowIdForm form, BindException errors)
+        public Object execute(RowIdForm form, BindException errors) throws BatchValidationException
         {
             ExpRun run = ExperimentService.get().getExpRun(form.getRowId());
             ExpRun replaces = run.getReplacesRuns().isEmpty() ? null : run.getReplacesRuns().get(0);
@@ -6300,7 +6301,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public Object execute(ChainedVersions form, BindException errors)
+        public Object execute(ChainedVersions form, BindException errors) throws BatchValidationException
         {
             DbScope scope = ExperimentService.get().getSchema().getScope();
 

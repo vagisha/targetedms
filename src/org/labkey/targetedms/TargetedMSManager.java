@@ -59,6 +59,7 @@ import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.PipelineValidationException;
+import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.DefaultSchema;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryDefinition;
@@ -640,7 +641,14 @@ public class TargetedMSManager
             if (mostRecentExpRun != null && mostRecentExpRun.getReplacedByRun() == null)
             {
                 mostRecentExpRun.setReplacedByRun(expRun);
-                mostRecentExpRun.save(user);
+                try
+                {
+                    mostRecentExpRun.save(user);
+                }
+                catch (BatchValidationException e)
+                {
+                    throw new ExperimentException(e);
+                }
             }
 
             transaction.commit();
@@ -1632,7 +1640,7 @@ public class TargetedMSManager
         }
     }
 
-    public static void renameRun(int runId, String newDescription, User user)
+    public static void renameRun(int runId, String newDescription, User user) throws BatchValidationException
     {
         if (newDescription == null || newDescription.length() == 0)
             return;
