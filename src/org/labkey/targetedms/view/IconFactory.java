@@ -33,14 +33,14 @@ public class IconFactory
     {
         boolean hasLibInfo = PeptideManager.hasSpectrumLibraryInformation(peptideId, runId);
 
-        String iconFile = "/TargetedMS/images/Peptide.bmp";
+        String iconFile = "/TargetedMS/images/Peptide.png";
         StandardType standardTypeEnum = StandardType.parse(standardType);
 
         if(hasLibInfo)
         {
             if (standardTypeEnum == null)
             {
-                iconFile = isDecoy ? "/TargetedMS/images/PeptideDecoyLib.bmp" : "/TargetedMS/images/PeptideLib.bmp";
+                iconFile = isDecoy ? "/TargetedMS/images/PeptideDecoyLib.png" : "/TargetedMS/images/PeptideLib.png";
             }
             else
             {
@@ -48,13 +48,13 @@ public class IconFactory
                 {
                     case Normalization:
                     case SurrogateStandard:
-                        iconFile = "/TargetedMS/images/PeptideStandardLib.bmp";
+                        iconFile = "/TargetedMS/images/PeptideStandardLib.png";
                         break;
                     case QC:
-                        iconFile = "/TargetedMS/images/PeptideQcLib.bmp";
+                        iconFile = "/TargetedMS/images/PeptideQcLib.png";
                         break;
                     case iRT:
-                        iconFile = "/TargetedMS/images/PeptideIrtLib.bmp";
+                        iconFile = "/TargetedMS/images/PeptideIrtLib.png";
                         break;
                 }
             }
@@ -63,7 +63,7 @@ public class IconFactory
         {
             if(standardTypeEnum == null)
             {
-                iconFile =  isDecoy ? "/TargetedMS/images/PeptideDecoy.bmp" : "/TargetedMS/images/Peptide.bmp";
+                iconFile =  isDecoy ? "/TargetedMS/images/PeptideDecoy.png" : "/TargetedMS/images/Peptide.png";
             }
             else
             {
@@ -71,13 +71,13 @@ public class IconFactory
                 {
                     case Normalization:
                     case SurrogateStandard:
-                        iconFile = "/TargetedMS/images/PeptideStandard.bmp";
+                        iconFile = "/TargetedMS/images/PeptideStandard.png";
                         break;
                     case QC:
-                        iconFile = "/TargetedMS/images/PeptideQc.bmp";
+                        iconFile = "/TargetedMS/images/PeptideQc.png";
                         break;
                     case iRT:
-                        iconFile = "/TargetedMS/images/PeptideIrt.bmp";
+                        iconFile = "/TargetedMS/images/PeptideIrt.png";
                         break;
                 }
             }
@@ -100,14 +100,14 @@ public class IconFactory
 
         if(hasLibSpectrum)
         {
-            iconPath = hasChromatograms ? (isDecoy ? "/TargetedMS/images/TransitionGroupLibDecoy.bmp"
-                                                   : "/TargetedMS/images/TransitionGroupLib.bmp")
+            iconPath = hasChromatograms ? (isDecoy ? "/TargetedMS/images/TransitionGroupLibDecoy.png"
+                                                   : "/TargetedMS/images/TransitionGroupLib.png")
                                         : "/TargetedMS/images/spectrum.gif";
         }
         else
         {
-            iconPath = hasChromatograms ? (isDecoy ? "/TargetedMS/images/TransitionGroupDecoy.bmp"
-                                                   : "/TargetedMS/images/TransitionGroup.bmp")
+            iconPath = hasChromatograms ? (isDecoy ? "/TargetedMS/images/TransitionGroupDecoy.png"
+                                                   : "/TargetedMS/images/TransitionGroup.png")
                                         : "/TargetedMS/images/blank.gif"; // no chromatogram AND no spectrum
         }
 
@@ -116,11 +116,11 @@ public class IconFactory
 
     public static String getTransitionGroupIconPath()
     {
-        return AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroup.bmp";
+        return AppProps.getInstance().getContextPath() + "/TargetedMS/images/TransitionGroup.png";
     }
 
     public static String getMoleculeIconPath()
     {
-       return AppProps.getInstance().getContextPath() + "/TargetedMS/images/Molecule.bmp";
+       return AppProps.getInstance().getContextPath() + "/TargetedMS/images/Molecule.png";
     }
 }
