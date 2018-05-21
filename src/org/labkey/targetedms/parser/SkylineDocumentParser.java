@@ -285,7 +285,8 @@ public class SkylineDocumentParser implements AutoCloseable
             ExpData result = ExperimentService.get().getExpDataByURL(skydFile, container);
             if (result == null)
             {
-                result = ExperimentService.get().createData(container, SkylineBinaryParser.DATA_TYPE, skydFile.getName());
+                result = ExperimentService.get().createData(container, SkylineBinaryParser.DATA_TYPE);
+                result.setName(skydFile.getName());
                 result.setDataFileURI(skydFile.toURI());
                 result.save(user);
             }

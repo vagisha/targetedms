@@ -375,7 +375,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
                 if (skydData != null)
                 {
                     Path skydPath = skydData.getFilePath();
-                    if (skydPath != null)
+                    if (skydPath != null && Files.exists(skydPath))
                     {
                         try (SeekableByteChannel channel = Files.newByteChannel(skydPath, StandardOpenOption.READ))
                         {
