@@ -17,6 +17,7 @@ package org.labkey.targetedms.parser;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+import org.labkey.api.exp.api.DataType;
 import org.labkey.targetedms.parser.skyd.CacheFormat;
 import org.labkey.targetedms.parser.skyd.CacheFormatVersion;
 import org.labkey.targetedms.parser.skyd.CacheHeaderStruct;
@@ -31,9 +32,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
-import java.nio.MappedByteBuffer;
+import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
+import java.nio.channels.SeekableByteChannel;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.zip.DataFormatException;
@@ -64,6 +66,8 @@ public class SkylineBinaryParser
 
     /** Newest supported version */
     public static final CacheFormatVersion FORMAT_VERSION_CACHE = CacheFormatVersion.CURRENT;
+
+    public static final DataType DATA_TYPE = new DataType("skyd");
 
     private CachedFile[] _cacheFiles;
 
@@ -208,7 +212,7 @@ public class SkylineBinaryParser
                 Channels.newInputStream(_channel), _cacheHeaderStruct.getNumChromatograms());
     }
 
-    public FileChannel getChannel()
+    public SeekableByteChannel getChannel()
     {
         return _channel;
     }
@@ -267,7 +271,9 @@ public class SkylineBinaryParser
     public byte[] readChromatogramBytes(ChromGroupHeaderInfo header) throws DataFormatException, IOException
     {
         // Get the compressed bytes
-        MappedByteBuffer buffer = getChannel().map(FileChannel.MapMode.READ_ONLY, header.getLocationPoints(), header.getCompressedSize());
+        ByteBuffer buffer = ByteBuffer.allocate(header.getCompressedSize());
+        getChannel().position(header.getLocationPoints()).read(buffer);
+        buffer.position(0);
         byte[] result = new byte[header.getCompressedSize()];
         buffer.get(result);
         // Make sure it uncompresses successfully so that we don't import bad content into the database

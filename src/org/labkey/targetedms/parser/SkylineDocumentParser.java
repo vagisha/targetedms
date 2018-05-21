@@ -19,7 +19,13 @@ package org.labkey.targetedms.parser;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.NetworkDrive;
@@ -209,7 +215,9 @@ public class SkylineDocumentParser implements AutoCloseable
         }
     }
 
-    public void readSettings() throws XMLStreamException, IOException
+    /** @return the data object for the .skyd file, if available */
+    @Nullable
+    public ExpData readSettings(@NotNull Container container, @NotNull User user) throws XMLStreamException, IOException
     {
         _replicateList = new ArrayList<>();
         _sampleFileIdToFilePathMap = new HashMap<>();
@@ -217,7 +225,7 @@ public class SkylineDocumentParser implements AutoCloseable
 
         readDocumentSettings(_reader);
         parseiRTFile();
-        parseChromatograms();
+        return parseChromatograms(container, user);
     }
 
     private void parseiRTFile()
@@ -264,19 +272,30 @@ public class SkylineDocumentParser implements AutoCloseable
         }
     }
 
-    private void parseChromatograms() throws IOException
+    /** @return the data object for the .skyd file, if available */
+    @Nullable
+    private ExpData parseChromatograms(@NotNull Container container, @NotNull User user) throws IOException
     {
         // Just add a "d" based on the expected file extension
-        File file = new File(_file.getPath() + "d");
-        if (NetworkDrive.exists(file))
+        File skydFile = new File(_file.getPath() + "d");
+        if (NetworkDrive.exists(skydFile))
         {
-            _binaryParser = new SkylineBinaryParser(file, _log);
+            _binaryParser = new SkylineBinaryParser(skydFile, _log);
             _binaryParser.parse();
+            ExpData result = ExperimentService.get().getExpDataByURL(skydFile, container);
+            if (result == null)
+            {
+                result = ExperimentService.get().createData(container, SkylineBinaryParser.DATA_TYPE, skydFile.getName());
+                result.setDataFileURI(skydFile.toURI());
+                result.save(user);
+            }
+            return result;
         }
         else
         {
-            _log.warn("Unable to find file " + file + ", unable to import chromatograms");
+            _log.warn("Unable to find file " + skydFile + ", unable to import chromatograms");
         }
+        return null;
     }
 
     public List<IrtPeptide> getiRTScaleSettings()
@@ -1650,7 +1669,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return oldModMassPattern.matcher(modifiedSequence).replaceAll("$1.0]");
     }
 
-    private void populateChromInfoChromatograms(GeneralPrecursor precursor, List<ChromGroupHeaderInfo> chromatograms) throws IOException
+    private void populateChromInfoChromatograms(GeneralPrecursor<?> precursor, List<ChromGroupHeaderInfo> chromatograms) throws IOException
     {
         Map<String, ChromGroupHeaderInfo> filePathChromatogramMap = new HashMap<>();
         for(ChromGroupHeaderInfo chromatogram : chromatograms)
@@ -1675,6 +1694,8 @@ public class SkylineDocumentParser implements AutoCloseable
                 {
                     chromInfo.setChromatogram(_binaryParser.readChromatogramBytes(chromatogram));
                     chromInfo.setChromatogramFormat(chromatogram.getChromatogramBinaryFormat().ordinal());
+                    chromInfo.setChromatogramOffset(chromatogram.getLocationPoints());
+                    chromInfo.setChromatogramLength(chromatogram.getCompressedSize());
                 }
                 catch (DataFormatException ignored)
                 {

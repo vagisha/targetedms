@@ -73,7 +73,8 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     protected int _transitionCount;
     protected int _replicateCount;
 
-    protected Integer _dataId; // FK to exp.data's RowId column
+    protected Integer _dataId; // FK to exp.data's RowId column for the .sky file
+    protected Integer _skydDataId; // FK to exp.data's RowId column for the .skyd file
     protected Integer _iRTscaleId;
 
     private String _softwareVersion;
@@ -327,6 +328,16 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     public void setDataId(Integer dataId)
     {
         _dataId = dataId;
+    }
+
+    public Integer getSkydDataId()
+    {
+        return _skydDataId;
+    }
+
+    public void setSkydDataId(Integer dataId)
+    {
+        _skydDataId = dataId;
     }
 
     public Integer getiRTscaleId()

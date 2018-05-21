@@ -23,7 +23,24 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.labkey.api.analytics.AnalyticsService;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
-import org.labkey.api.data.*;
+import org.labkey.api.data.AJAXDetailsDisplayColumn;
+import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerForeignKey;
+import org.labkey.api.data.DataColumn;
+import org.labkey.api.data.DbSchema;
+import org.labkey.api.data.DbSchemaType;
+import org.labkey.api.data.DisplayColumn;
+import org.labkey.api.data.DisplayColumnFactory;
+import org.labkey.api.data.EnumTableInfo;
+import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.RenderContext;
+import org.labkey.api.data.RuntimeSQLException;
+import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.UpdateColumn;
+import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
 import org.labkey.api.module.Module;
@@ -42,7 +59,6 @@ import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.stats.AnalyticsProvider;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
@@ -649,6 +665,7 @@ public class TargetedMSSchema extends UserSchema
                 return _fieldKeys;
             }
 
+            @NotNull
             @Override
             public Iterator<FieldKey> iterator()
             {
@@ -717,14 +734,7 @@ public class TargetedMSSchema extends UserSchema
             return new EnumTableInfo<>(
                     TargetedMSRun.RepresentativeDataState.class,
                     this,
-                    new EnumTableInfo.EnumValueGetter<TargetedMSRun.RepresentativeDataState>() {
-
-                        @Override
-                        public String getValue(TargetedMSRun.RepresentativeDataState e)
-                        {
-                            return e.getLabel();
-                        }
-                    },
+                    TargetedMSRun.RepresentativeDataState::getLabel,
                     true,
                     "Possible states a run might be in for resolving representative data after upload"
                     );
@@ -734,27 +744,13 @@ public class TargetedMSSchema extends UserSchema
             EnumTableInfo tableInfo = new EnumTableInfo<>(
                     RepresentativeDataState.class,
                     this,
-                    new EnumTableInfo.EnumValueGetter<RepresentativeDataState>() {
-
-                        @Override
-                        public String getValue(RepresentativeDataState e)
-                        {
-                            return e.getLabel();
-                        }
-                    },
+                    RepresentativeDataState::getLabel,
                     true,
                     "Possible representative states for a peptide group or precursor");
 
             ColumnInfo viewColumn = tableInfo.getColumn("Value");
             viewColumn.setLabel("Library State");
-            viewColumn.setDisplayColumnFactory(new DisplayColumnFactory()
-            {
-                @Override
-                public DisplayColumn createRenderer(ColumnInfo colInfo)
-                {
-                    return new RepresentativeStateDisplayColumn(colInfo);
-                }
-            });
+            viewColumn.setDisplayColumnFactory(RepresentativeStateDisplayColumn::new);
 
             return tableInfo;
         }
@@ -835,14 +831,7 @@ public class TargetedMSSchema extends UserSchema
 
             // Create a WrappedColumn for Note & Annotations
             WrappedColumn noteAnnotation = new WrappedColumn(result.getColumn("Annotations"), "NoteAnnotations");
-            noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
-            {
-                @Override
-                public DisplayColumn createRenderer(ColumnInfo colInfo)
-                {
-                    return new AnnotationUIDisplayColumn(colInfo);
-                }
-            });
+            noteAnnotation.setDisplayColumnFactory(AnnotationUIDisplayColumn::new);
             if (proteomics)
             {
                 noteAnnotation.setLabel("Protein Note/Annotations");
@@ -1107,7 +1096,7 @@ public class TargetedMSSchema extends UserSchema
 
         if(TABLE_JOURNAL.equalsIgnoreCase(name))
         {
-            FilteredTable<TargetedMSSchema> result = new FilteredTable<TargetedMSSchema>(getSchema().getTable(name), this);
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this);
             result.wrapAllColumns(true);
             ColumnInfo projectCol = result.getColumn(FieldKey.fromParts("Project"));
             ContainerForeignKey.initColumn(projectCol, this);
@@ -1118,6 +1107,11 @@ public class TargetedMSSchema extends UserSchema
         {
             FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this);
             result.wrapAllColumns(true);
+            if (name.equalsIgnoreCase(TABLE_RUNS))
+            {
+                result.getColumn("DataId").setFk(new QueryForeignKey(_expSchema, null, ExpSchema.TableType.Data.name(), null, null));
+                result.getColumn("SkydDataId").setFk(new QueryForeignKey(_expSchema, null, ExpSchema.TableType.Data.name(), null, null));
+            }
             return result;
         }
 
@@ -1146,7 +1140,7 @@ public class TargetedMSSchema extends UserSchema
     {
         if(TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(settings.getQueryName()))
         {
-            QueryView view = new QueryView(this, settings, errors)
+            return new QueryView(TargetedMSSchema.this, settings, errors)
             {
                 @Override
                 protected void addDetailsAndUpdateColumns(List<DisplayColumn> ret, TableInfo table)
@@ -1180,7 +1174,6 @@ public class TargetedMSSchema extends UserSchema
                     }
                 }
             };
-            return view;
         }
 
         return super.createView(context, settings, errors);

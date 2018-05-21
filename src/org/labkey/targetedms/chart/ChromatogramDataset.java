@@ -69,6 +69,7 @@ public abstract class ChromatogramDataset
     boolean _syncRt;
     boolean _syncIntensity;
     double _maxDatasetIntensity; // max intensity across all the traces in the displayed range
+    protected TargetedMSRun _run;
 
     private Integer _intensityScale;
 
@@ -278,7 +279,6 @@ public abstract class ChromatogramDataset
         private double _minPeakRt;
         private double _maxPeakRt;
 
-        protected TargetedMSRun _run;
         private Map<Integer, Color> _seriesColors;
 
         public GeneralMoleculeDataset(GeneralMoleculeChromInfo pepChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
@@ -337,7 +337,7 @@ public abstract class ChromatogramDataset
             {
                 PrecursorChromInfo pChromInfo = precursorChromInfoList.get(i);
 
-                Chromatogram chromatogram = pChromInfo.createChromatogram();
+                Chromatogram chromatogram = pChromInfo.createChromatogram(_run);
 
                 // Instead of displaying separate peaks for each transition of this precursor,
                 // we will sum up the intensities and display a single peak for the precursor
@@ -654,6 +654,7 @@ public abstract class ChromatogramDataset
 
         public PrecursorDataset(PrecursorChromInfo pChromInfo, boolean syncIntensity, boolean syncRt, User user, Container container)
         {
+            _run = TargetedMSManager.getRunForPrecursor(pChromInfo.getPrecursorId());
             _pChromInfo = pChromInfo;
             _syncRt = syncRt;
             _syncIntensity = syncIntensity;
@@ -673,7 +674,7 @@ public abstract class ChromatogramDataset
         @Override
         public void build()
         {
-            Chromatogram chromatogram = _pChromInfo.createChromatogram();
+            Chromatogram chromatogram = _pChromInfo.createChromatogram(_run);
 
             // If this plot is being synced with plots for other replicates on the intensity axis, get the
             // maximum range for the intensity axis.
@@ -1154,7 +1155,7 @@ public abstract class ChromatogramDataset
         @Override
         public void build()
         {
-            Chromatogram chromatogram = _pChromInfo.createChromatogram();
+            Chromatogram chromatogram = _pChromInfo.createChromatogram(_run);
 
             if (_tChromInfo.getChromatogramIndex() >= chromatogram.getTransitionsCount())
             {

@@ -16,9 +16,6 @@
 
 package org.labkey.targetedms;
 
-import org.labkey.api.pipeline.LocalDirectory;
-import org.labkey.api.pipeline.PipeRoot;
-import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -35,11 +32,12 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.pipeline.LocalDirectory;
+import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.writer.ZipUtil;
@@ -47,6 +45,7 @@ import org.labkey.targetedms.SkylinePort.Irt.IRegressionFunction;
 import org.labkey.targetedms.SkylinePort.Irt.IrtRegressionCalculator;
 import org.labkey.targetedms.SkylinePort.Irt.RetentionTimeProviderImpl;
 import org.labkey.targetedms.calculations.RunQuantifier;
+import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.targetedms.model.QCMetricExclusion;
 import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.query.LibraryManager;
@@ -75,7 +74,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.zip.DataFormatException;
 
 /**
  * Drives import of the Skyline document, and handles the high-level iteration for inserting
@@ -208,12 +206,12 @@ public class SkylineDocImporter
                 run.setFormatVersion(parser.getFormatVersion());
                 run.setSoftwareVersion(parser.getSoftwareVersion());
 
-                new SqlExecutor(TargetedMSManager.getSchema()).execute("UPDATE " + TargetedMSManager.getTableInfoRuns() +
-                        " SET formatVersion = ?, softwareVersion = ? WHERE Id = ?",
-                        parser.getFormatVersion(), parser.getSoftwareVersion(), run.getId());
-
                 ProteinService proteinService = ProteinService.get();
-                parser.readSettings();
+                ExpData skydData = parser.readSettings(_container, _user);
+                if (skydData != null)
+                {
+                    run.setSkydDataId(skydData.getRowId());
+                }
 
                 // Store the document settings
                 // 0. iRT information

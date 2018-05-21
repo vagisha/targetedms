@@ -27,10 +27,8 @@ import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.targetedms.parser.SkylineBinaryParser;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -50,15 +48,6 @@ public class SkylineBinaryDataHandler extends AbstractExperimentDataHandler
     @Override
     public void importFile(ExpData data, File dataFile, ViewBackgroundInfo info, Logger log, XarContext context) throws ExperimentException
     {
-        SkylineBinaryParser parser = new SkylineBinaryParser(dataFile, log);
-        try
-        {
-            parser.parse();
-        }
-        catch (IOException e)
-        {
-            throw new ExperimentException(e);
-        }
     }
 
     @Override
@@ -87,7 +76,7 @@ public class SkylineBinaryDataHandler extends AbstractExperimentDataHandler
         if (ext == null)
             return null;
         ext = ext.toLowerCase();
-        // we handle only *.skys files
+        // we handle only *.skyd files
         return EXTENSION.equals(ext) ? Handler.Priority.HIGH : null;
     }
 }

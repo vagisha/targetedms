@@ -16,9 +16,18 @@
 package org.labkey.targetedms.parser;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.util.UnexpectedException;
+import org.labkey.targetedms.TargetedMSRun;
 
 import java.io.IOException;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
+import java.util.zip.DataFormatException;
 
 /**
  * User: vsharma
@@ -29,7 +38,6 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 {
     private Container _container;
     private int _precursorId;
-    private int _generalPrecursorId;
     private int _generalMoleculeChromInfoId;
 
     private Double _bestRetentionTime;
@@ -54,6 +62,10 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     private int _numPoints;
     private int _numTransitions;
     private Integer _uncompressedSize;
+    /** Starting byte index in the .skyd file */
+    private Long _chromatogramOffset;
+    /** Number of compressed bytes stored in the .skyd file */
+    private Integer _chromatogramLength;
     private int _chromatogramFormat;
 
     public PrecursorChromInfo()
@@ -83,16 +95,6 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     public void setPrecursorId(int precursorId)
     {
         this._precursorId = precursorId;
-    }
-
-    public int getGeneralPrecursorId()
-    {
-        return _generalPrecursorId;
-    }
-
-    public void setGeneralPrecursorId(int generalPrecursorId)
-    {
-        _generalPrecursorId = generalPrecursorId;
     }
 
     public int getGeneralMoleculeChromInfoId()
@@ -334,17 +336,68 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         _chromatogramFormat = chromatogramFormat == null ? ChromatogramBinaryFormat.Arrays.ordinal() : chromatogramFormat.intValue();
     }
 
-    public Chromatogram createChromatogram()
+    public Long getChromatogramOffset()
     {
-        try {
-            if (_chromatogramFormat < 0 || _chromatogramFormat >= ChromatogramBinaryFormat.values().length) {
+        return _chromatogramOffset;
+    }
+
+    public void setChromatogramOffset(Long chromatogramOffset)
+    {
+        _chromatogramOffset = chromatogramOffset;
+    }
+
+    public Integer getChromatogramLength()
+    {
+        return _chromatogramLength;
+    }
+
+    public void setChromatogramLength(Integer chromatogramLength)
+    {
+        _chromatogramLength = chromatogramLength;
+    }
+
+    public Chromatogram createChromatogram(TargetedMSRun run)
+    {
+        try
+        {
+            if (_chromatogramFormat < 0 || _chromatogramFormat >= ChromatogramBinaryFormat.values().length)
+            {
                 throw new IOException("Unknown format number " + _chromatogramFormat);
             }
 
             ChromatogramBinaryFormat binaryFormat = ChromatogramBinaryFormat.values()[getChromatogramFormat()];
-            byte[] uncompressedBytes = SkylineBinaryParser.uncompressStoredBytes(getChromatogram(), getUncompressedSize(), _numPoints, _numTransitions);
+
+            byte[] compressedBytes = getChromatogram();
+
+            if (run.getSkydDataId() != null && _chromatogramLength != null && _chromatogramOffset != null)
+            {
+                ExpData skydData = ExperimentService.get().getExpData(run.getSkydDataId());
+                if (skydData != null)
+                {
+                    Path skydPath = skydData.getFilePath();
+                    if (skydPath != null)
+                    {
+                        try (SeekableByteChannel channel = Files.newByteChannel(skydPath, StandardOpenOption.READ))
+                        {
+                            channel.position(_chromatogramOffset);
+                            java.nio.ByteBuffer byteBuffer = java.nio.ByteBuffer.allocate(_chromatogramLength);
+                            channel.read(byteBuffer);
+                            byteBuffer.position(0);
+                            byte[] onDemandBytes = byteBuffer.array();
+                            if (!Arrays.equals(compressedBytes, onDemandBytes))
+                            {
+                                throw new IllegalStateException("Bytes don't match between BLOB in DB and .skyd file on disk");
+                            }
+                        }
+                    }
+                }
+            }
+
+            byte[] uncompressedBytes = SkylineBinaryParser.uncompressStoredBytes(compressedBytes, getUncompressedSize(), _numPoints, _numTransitions);
             return binaryFormat.readChromatogram(uncompressedBytes, _numPoints, _numTransitions);
-        } catch (Exception exception) {
+        }
+        catch (IOException | DataFormatException exception)
+        {
             throw new UnexpectedException(exception);
         }
     }

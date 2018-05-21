@@ -31,8 +31,6 @@ import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSRun;
 
-import java.sql.SQLException;
-
 /**
  * Simple wrapper job around a {@link TargetedMSImportTask}.
  * User: vsharma
@@ -55,7 +53,7 @@ public class TargetedMSImportPipelineJob extends PipelineJob
                 FileUtil.getBaseName(_expData.getName(), 1).replace(" ", "_"));     // No space in temp name because Files.copy(from, toS3) throws exception; issue in S3Path.toUri()
 
         if ((_expData.hasFileScheme() && root.isCloudRoot()) || (!_expData.hasFileScheme() && !root.isCloudRoot()))
-            throw new RuntimeException("Cannot process ExpData when its schema does not match root schema.");
+            throw new RuntimeException("Cannot process ExpData when its schema does not match root URI scheme.");
 
         LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME, baseLogFileName,
                 null != _expData.getFile() ? _expData.getFile().getParentFile().getPath() : FileUtil.getTempDirectory().getPath());
