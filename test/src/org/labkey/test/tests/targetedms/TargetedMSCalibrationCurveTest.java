@@ -352,7 +352,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             else
             {
                 assertEquals(stddevs.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1)), 0.01);
-                assertEquals(cvs.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1)), 0.02);
+                assertEquals(cvs.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1)), 0.03);
             }
         }
     }
