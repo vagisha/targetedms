@@ -336,7 +336,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Precursor"));
         assertEquals("1+", drt.getDataAsText(5, "Q1 Z"));
         assertEquals("704.5225", drt.getDataAsText(5, "Q1 m/z"));
-        assertEquals("custom", drt.getDataAsText(5, "Fragment Type"));
+        assertEquals("C5H15N1O4P1", drt.getDataAsText(5, "Fragment"));
         assertEquals("184.0733", drt.getDataAsText(5, "Q3 m/z"));
         assertEquals("1+", drt.getDataAsText(5, "Q3 Z"));
     }

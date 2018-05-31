@@ -38,6 +38,7 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     protected Double explicitDriftTimeHighEnergyOffsetMSec;
     private List<TransitionChromInfo> _chromInfoList;
 
+    protected static final String CUSTOM = "custom";
     protected static final String PRECURSOR = "precursor";
     private static final String Y_ION = "y";
     private static final String Z_ION = "z";
@@ -214,6 +215,11 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     public void setChromInfoList(List<TransitionChromInfo> chromInfoList)
     {
         _chromInfoList = chromInfoList;
+    }
+
+    public boolean isCustomIon()
+    {
+        return fragmentType != null ? fragmentType.equalsIgnoreCase(CUSTOM) : false;
     }
 
     public boolean isPrecursorIon()

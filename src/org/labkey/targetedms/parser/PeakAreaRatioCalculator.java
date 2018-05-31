@@ -322,7 +322,7 @@ public class PeakAreaRatioCalculator
         {
             if(_labelIdChromInfoMap.containsKey(isotopeLabelId))
             {
-                throw new IllegalStateException("Area for isotopel label " + getIsotopeLabelName(isotopeLabelId)
+                throw new IllegalStateException("Area for isotope label " + getIsotopeLabelName(isotopeLabelId)
                                                 + " already exists.");
             }
 
@@ -424,9 +424,9 @@ public class PeakAreaRatioCalculator
         return key.toString();
     }
 
-    private static String getPeptideTransitionKey(Transition transition, Precursor precursor) {
+    private static String getPeptideTransitionKey(Transition transition , Precursor precursor) {
         String fragment = transition.getFragmentType()
-                + (transition.isPrecursorIon() ? transition.getMassIndex() : transition.getFragmentOrdinal());
+                + (transition.isPrecursorIon() ? transition.getMassIndex() : (transition.isCustomIon() ? transition.getMeasuredIonName() : transition.getFragmentOrdinal()));
 
         int fragmentCharge = transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge();
         StringBuilder key = new StringBuilder();

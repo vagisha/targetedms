@@ -71,6 +71,10 @@ public class LabelFactory
                 label.append("+").append(transition.getMassIndex());
             }
         }
+        else if(transition.isCustomIon())
+        {
+            label.append(transition.getMeasuredIonName());
+        }
         else
         {
             label.append(transition.getFragmentType());

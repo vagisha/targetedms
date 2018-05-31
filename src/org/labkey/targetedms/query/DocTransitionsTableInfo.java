@@ -57,8 +57,14 @@ public class DocTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
         sql.append(" CASE WHEN ");
         sql.append(ExprColumn.STR_TABLE_ALIAS).append(".FragmentType != 'precursor'");
         sql.append(" THEN ");
+        sql.append(" CASE WHEN ");
+        sql.append(ExprColumn.STR_TABLE_ALIAS).append(".FragmentType != 'custom'");
+        sql.append(" THEN ");
         sql.append(TargetedMSManager.getSqlDialect().concatenate(ExprColumn.STR_TABLE_ALIAS + ".FragmentType",
                 "CAST(" + ExprColumn.STR_TABLE_ALIAS+".FragmentOrdinal AS VARCHAR)"));
+        sql.append(" ELSE ");
+        sql.append(ExprColumn.STR_TABLE_ALIAS + ".MeasuredIonName");
+        sql.append(" END ");
         sql.append(" ELSE ");
         sql.append("CASE WHEN ");
         sql.append(ExprColumn.STR_TABLE_ALIAS).append(".MassIndex != 0");

@@ -18,10 +18,11 @@ package org.labkey.targetedms.query;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
-import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.JdbcType;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.WrappedColumn;
+import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
@@ -48,6 +49,12 @@ public class MoleculeTransitionsTableInfo extends AbstractGeneralTransitionTable
         precursorIdCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR));
         addColumn(precursorIdCol);
 
+        SQLFragment sql = new SQLFragment(" COALESCE(" + ExprColumn.STR_TABLE_ALIAS + ".CustomIonName, " +
+                ExprColumn.STR_TABLE_ALIAS + ".IonFormula, "  +
+                "CAST (((" + getSqlDialect().getRoundFunction( " 10000.0 * " + ExprColumn.STR_TABLE_ALIAS + ".MassAverage") + ")/10000) AS VARCHAR)) ");
+        ExprColumn fragment = new ExprColumn(this, "Fragment", sql, JdbcType.VARCHAR);
+        addColumn(fragment);
+
         ArrayList<FieldKey> visibleColumns = new ArrayList<>();
         visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId", "Description"));
@@ -65,7 +72,7 @@ public class MoleculeTransitionsTableInfo extends AbstractGeneralTransitionTable
         visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "Mz"));
         visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "Charge"));
         // Molecule Transition level information
-        visibleColumns.add(FieldKey.fromParts("FragmentType"));
+        visibleColumns.add(FieldKey.fromParts("Fragment"));
         visibleColumns.add(FieldKey.fromParts("Mz"));
         visibleColumns.add(FieldKey.fromParts("Charge"));
         setDefaultVisibleColumns(visibleColumns);

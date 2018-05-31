@@ -200,13 +200,15 @@ public class Transition extends GeneralTransition
         private static Map<String, Integer> ionOrder;
         static{
             ionOrder = new HashMap<>();
-            ionOrder.put("precursor", 1);
-            ionOrder.put("y", 2);
-            ionOrder.put("b", 3);
-            ionOrder.put("z", 4);
-            ionOrder.put("c", 5);
-            ionOrder.put("x", 6);
-            ionOrder.put("a", 7);
+            int i = 1;
+            ionOrder.put("custom", i++);
+            ionOrder.put("precursor", i++);
+            ionOrder.put("y", i++);
+            ionOrder.put("b", i++);
+            ionOrder.put("z", i++);
+            ionOrder.put("c", i++);
+            ionOrder.put("x", i++);
+            ionOrder.put("a", i++);
         }
 
         @Override
@@ -219,6 +221,10 @@ public class Transition extends GeneralTransition
                 {
                     // Precursor ions are ordered M, M+1, M+2.
                     return t1.getMassIndex().compareTo(t2.getMassIndex());
+                }
+                else if(t1.isCustomIon() && t2.isCustomIon())
+                {
+                    return t1.getMeasuredIonName().compareTo(t2.getMeasuredIonName());
                 }
                 else
                 {
