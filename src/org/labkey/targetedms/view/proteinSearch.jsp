@@ -18,21 +18,35 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.labkey.api.ms2.MS2Urls" %>
 <%@ page import="org.labkey.api.util.PageFlowUtil" %>
+<%@ page import="org.labkey.targetedms.query.JournalManager" %>
+<%@ page import="org.labkey.api.protein.ProteinService" %>
+<%@ page import="org.labkey.api.view.HttpView" %>
+<%@ page import="org.labkey.api.view.JspView" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
+<%
+    boolean isJournalProject = JournalManager.isJournalProject(getContainer());
+
+    JspView<ProteinService.ProteinSearchForm> me = (JspView<ProteinService.ProteinSearchForm>) HttpView.currentView();
+    ProteinService.ProteinSearchForm bean = me.getModelBean();
+%>
 <labkey:form action="<%= h(PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())) %>">
     <table class="lk-fields-table">
         <tr>
             <td class="labkey-form-label">Protein name *<%= helpPopup("Protein name", "Required to search for proteins. You may use the name as specified by the FASTA file, or an annotation, such as a gene name, that has been loaded from an annotations file. You may comma separate multiple names.") %></td>
-            <td nowrap><input size="20" type="text" id="identifierInput" name="identifier" value=""/></td>
-        </tr>
-        <tr>
-            <td class="labkey-form-label">Search in subfolders<%= helpPopup("Search in subfolders", "If checked, the search will also look in all of this folder's children.") %></td>
-            <td nowrap><input type="checkbox" id="includeSubfoldersInput" name="includeSubfolders"/></td>
+            <td nowrap><input size="20" type="text" id="identifierInput" name="identifier" value="<%= h(bean.getIdentifier()) %>"/></td>
         </tr>
         <tr>
             <td class="labkey-form-label">Exact matches only<%= helpPopup("Exact matches only", "If checked, the search will only find proteins with an exact name match. If not checked, proteins that start with the name entered will also match, but the search may be significantly slower.") %></td>
-            <td nowrap><input type="checkbox" name="exactMatch" checked/></td>
+            <td nowrap><input type="checkbox" name="exactMatch" <%=checked(bean.isExactMatch())%>/></td>
         </tr>
+        <%if(isJournalProject) {%>
+        <input type="hidden" name="includeSubfolders" value="true"/>
+        <%} else {%>
+        <tr>
+            <td class="labkey-form-label">Search in subfolders<%= helpPopup("Search in subfolders", "If checked, the search will also look in all of this folder's children.") %></td>
+            <td nowrap><input type="checkbox" id="includeSubfoldersInput" name="includeSubfolders" <%=checked(bean.isIncludeSubfolders())%>/></td>
+        </tr>
+        <%}%>
         <tr>
             <td colspan="2" style="padding-top: 10px;">
                 <labkey:button text="Search" />

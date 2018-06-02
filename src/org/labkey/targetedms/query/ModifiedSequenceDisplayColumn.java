@@ -18,7 +18,7 @@ package org.labkey.targetedms.query;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.view.ActionURL;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.targetedms.view.IconFactory;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 
@@ -41,9 +41,9 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
     public static final String PEPTIDE_COLUMN_NAME = "ModifiedPeptideDisplayColumn";
     public static final String PRECURSOR_COLUMN_NAME = "ModifiedPrecursorDisplayColumn";
 
-    public ModifiedSequenceDisplayColumn(ColumnInfo colInfo, ActionURL url)
+    public ModifiedSequenceDisplayColumn(ColumnInfo colInfo)
     {
-        super(colInfo, url);
+        super(colInfo);
 
         _htmlMaker = new ModifiedPeptideHtmlMaker();
     }
@@ -76,9 +76,9 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 
     public static class PeptideCol extends ModifiedSequenceDisplayColumn
     {
-        public PeptideCol(ColumnInfo colInfo, ActionURL url)
+        public PeptideCol(ColumnInfo colInfo)
         {
-            super(colInfo, url);
+            super(colInfo);
         }
 
         @Override
@@ -115,7 +115,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 
             if(peptideId == null || sequence == null || runId == null)
             {
-                _cellData = peptideModifiedSequence;
+                _cellData = PageFlowUtil.filter(peptideModifiedSequence);
             }
             else
             {
@@ -127,9 +127,9 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 
     public static class PrecursorCol extends ModifiedSequenceDisplayColumn
     {
-        public PrecursorCol(ColumnInfo colInfo, ActionURL url)
+        public PrecursorCol(ColumnInfo colInfo)
         {
-            super(colInfo, url);
+            super(colInfo);
         }
 
         @Override
@@ -170,7 +170,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 
             if(precursorId == null || peptideId == null || isotopeLabelId == null || precursorModifiedSequence == null || sequence == null || runId == null)
             {
-                _cellData = precursorModifiedSequence;
+                _cellData = PageFlowUtil.filter(precursorModifiedSequence);
             }
             else
             {

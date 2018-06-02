@@ -23,15 +23,12 @@ import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
-
-import java.util.Date;
 
 /**
  * User: binalpatel
@@ -40,12 +37,10 @@ import java.util.Date;
 
 public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
 {
-    protected DetailsURL _detailsURL;
-
     public AbstractGeneralPrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema)
     {
         super(TargetedMSManager.getTableInfoGeneralPrecursor(), tableInfo, schema,
-        TargetedMSSchema.ContainerJoinType.GeneralMoleculeFK.getSQL(),
+        TargetedMSSchema.ContainerJoinType.GeneralMoleculeFK,
         TargetedMSManager.getTableInfoPrecursorAnnotation(),
         "PrecursorId", "Precursor Annotations", "precursor");
 

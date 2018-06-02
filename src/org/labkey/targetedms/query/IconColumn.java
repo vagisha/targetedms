@@ -16,16 +16,15 @@
 package org.labkey.targetedms.query;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.view.IconFactory;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.util.Set;
 
 /**
@@ -33,13 +32,12 @@ import java.util.Set;
  */
 public abstract class IconColumn extends DataColumn
 {
-    private final ActionURL _linkUrl;
-    private final FieldKey _parentFieldKey;
+     private final FieldKey _parentFieldKey;
 
-    public IconColumn(ColumnInfo colInfo, ActionURL url)
+    public IconColumn(@NotNull ColumnInfo colInfo)
     {
         super(colInfo);
-        _linkUrl = url;
+
         _parentFieldKey = colInfo.getFieldKey().getParent();
         setTextAlign("left");
     }
@@ -60,7 +58,7 @@ public abstract class IconColumn extends DataColumn
         return true;
     }
 
-    private static String getIconHtml(String iconPath)
+    private String getIconHtml(String iconPath)
     {
         if(StringUtils.isBlank(iconPath))
         {
@@ -68,53 +66,34 @@ public abstract class IconColumn extends DataColumn
         }
 
         StringBuilder imgHtml = new StringBuilder("<img src=\"");
-        imgHtml.append(PageFlowUtil.filter(iconPath)).append("\"").append(" width=\"16\" height=\"16\" style=\"margin-right: 5px;\"/>");
+        imgHtml.append(PageFlowUtil.filter(iconPath)).append("\"").append(" title=\"" + PageFlowUtil.filter(getLinkTitle()) +"\"").append(" width=\"16\" height=\"16\" style=\"margin-right: 5px;\"/>");
         return imgHtml.toString();
     }
 
     @Override
-    public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+    public @NotNull String getFormattedValue(RenderContext ctx)
     {
         String iconHtml = getIconHtml(getIconPath());
         String cellDataHtml = getCellDataHtml(ctx);
-
-        if(StringUtils.isBlank(cellDataHtml) && StringUtils.isBlank(iconHtml))
-        {
-            super.renderGridCellContents(ctx, out);
-            return;
-        }
-
-        if(_linkUrl != null)
-        {
-            Integer id = (Integer) ctx.get(FieldKey.fromString(getParentFieldKey(), "Id"));
-            if(id != null)
-            {
-                _linkUrl.replaceParameter("id", String.valueOf(id));
-                String linkStartTag = getLinkStartTag(_linkUrl.getLocalURIString(), getLinkTitle(), removeLinkDefaultColor());
-                cellDataHtml = linkStartTag + cellDataHtml + "</a>";
-                iconHtml = linkStartTag + iconHtml + "</a>";
-            }
-        }
-        out.write("<nobr>"
-                + iconHtml
-                + cellDataHtml
-                + "</nobr>");
+        return "<nobr>" + iconHtml + (cellDataHtml == null ? "" : cellDataHtml) + "</nobr>";
     }
 
-    private static String getLinkStartTag(String linkUrl, String title, boolean removeLinkDefaultColor)
+    @Override
+    public @NotNull String getCssStyle(RenderContext ctx)
     {
-        StringBuilder aTag = new StringBuilder("<a href=\"" + linkUrl + "\" ");
-        aTag.append(" title=\"").append(PageFlowUtil.filter(title)).append("\"");
-        if (removeLinkDefaultColor) aTag.append(" style=\"color: #000000\"");
-        aTag.append(">");
-        return aTag.toString();
+        if(removeLinkDefaultColor())
+        {
+            return "color: #000000";
+        }
+
+        return super.getCssStyle(ctx);
     }
 
     public static class MoleculeDisplayCol extends IconColumn
     {
-        public MoleculeDisplayCol(ColumnInfo colInfo, ActionURL url)
+        public MoleculeDisplayCol(ColumnInfo colInfo)
         {
-            super(colInfo, url);
+            super(colInfo);
         }
 
         @Override
@@ -132,7 +111,7 @@ public abstract class IconColumn extends DataColumn
         @Override
         String getCellDataHtml(RenderContext ctx)
         {
-            return (String)getValue(ctx);
+            return PageFlowUtil.filter(ctx.get(getColumnInfo().getFieldKey(), String.class));
         }
 
         boolean removeLinkDefaultColor()

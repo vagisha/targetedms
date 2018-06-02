@@ -38,7 +38,7 @@ public class SampleFileTable extends TargetedMSTable
 {
     public SampleFileTable(TableInfo table, TargetedMSSchema schema)
     {
-        super(table, schema, TargetedMSSchema.ContainerJoinType.ReplicateFK.getSQL());
+        super(table, schema, TargetedMSSchema.ContainerJoinType.ReplicateFK);
     }
 
     @Override

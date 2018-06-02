@@ -17,17 +17,13 @@ package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.LookupForeignKey;
-import org.labkey.api.util.ContainerContext;
-import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.springframework.web.servlet.mvc.Controller;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * User: binalpatel
@@ -45,10 +41,6 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
     {
         super(tableInfo, tableName, schema);
 
-        _detailsURL = new DetailsURL(new ActionURL(TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class, getContainer()), Collections.singletonMap("id", "Id"));
-        _detailsURL.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder")));
-        setDetailsURL(_detailsURL);
-
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE));
         generalMoleculeId.setHidden(true);
@@ -59,7 +51,7 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         addColumn(moleculeIdId);
 
         ColumnInfo customIonName = getColumn("CustomIonName");
-        customIonName.setURL(_detailsURL);
+        customIonName.setURL(getDetailsURL(null, null));
         customIonName.setLabel("Precursor");
 
         ArrayList<FieldKey> visibleColumns = new ArrayList<>();
@@ -84,4 +76,9 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         setDefaultVisibleColumns(visibleColumns);
     }
 
+    @Override
+    protected Class<? extends Controller> getDetailsActionClass()
+    {
+        return TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class;
+    }
 }

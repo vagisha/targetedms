@@ -184,11 +184,22 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
             waitForPipelineJobsToFinish(jobCount);
     }
 
+    protected void verifyRunSummaryCountsSmallMol(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount)
+    {
+        verifyRunSummaryCounts(proteinCount, peptideCount, moleculeCount, precursorCount, transitionCount, replicateCount, calibrationCount, "lists");
+    }
+
+    protected void verifyRunSummaryCountsPep(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount)
+    {
+        verifyRunSummaryCounts(proteinCount, peptideCount, moleculeCount, precursorCount, transitionCount, replicateCount, calibrationCount, "proteins");
+    }
+
     @LogMethod
-    protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount)
+    protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount,
+                                          String peptideGroupLabel)
     {
         log("Verifying expected summary counts");
-        waitForElement(Locator.linkContainingText(proteinCount + " proteins"));
+        waitForElement(Locator.linkContainingText(proteinCount + " " + peptideGroupLabel));
         if (peptideCount > 0)
         {
             assertElementPresent(Locator.linkContainingText(peptideCount + " peptides"));

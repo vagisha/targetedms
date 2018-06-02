@@ -29,6 +29,8 @@
 <%@ page import="java.nio.file.Files" %>
 <%@ page import="org.apache.commons.lang3.StringUtils" %>
 <%@ page import="org.labkey.api.analytics.AnalyticsService" %>
+<%@ page import="org.labkey.targetedms.TargetedMSManager" %>
+<%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
 <%!
@@ -68,6 +70,8 @@
     String renameAction = null;
     if(c.hasPermission(getUser(), UpdatePermission.class))
         renameAction = TargetedMSController.getRenameRunURL(c, run, getActionURL()).getLocalURIString();
+
+    String peptideGroupLabel = TargetedMSManager.containerHasSmallMolecules(getContainer()) ? TargetedMSSchema.COL_LIST.toLowerCase() : TargetedMSSchema.COL_PROTEIN.toLowerCase();
 %>
 
 <%
@@ -86,6 +90,7 @@
             precursorCount: <%=run.getPrecursorCount()%>,
             transitionCount: <%=run.getTransitionCount()%>,
             peptideGroupCount: <%=run.getPeptideGroupCount()%>,
+            peptideGroupLabel: <%=q(peptideGroupLabel)%>,
             calibrationCurveCount: <%=bean.getCalibrationCurveCount()%>,
             replicateCount: <%=run.getReplicateCount()%>,
             versionCount: <%=bean.getVersionCount()%>,

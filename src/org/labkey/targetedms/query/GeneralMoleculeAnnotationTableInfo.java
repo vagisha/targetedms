@@ -16,16 +16,14 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
-import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSSchema;
 
 public class GeneralMoleculeAnnotationTableInfo extends TargetedMSTable
 {
-    public GeneralMoleculeAnnotationTableInfo(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL)
+    public GeneralMoleculeAnnotationTableInfo(TableInfo table, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType)
     {
-        super(table, schema, joinSQL);
+        super(table, schema, joinType);
 
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE));

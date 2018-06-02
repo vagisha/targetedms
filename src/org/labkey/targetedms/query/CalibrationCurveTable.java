@@ -34,7 +34,7 @@ public class CalibrationCurveTable extends TargetedMSTable
 {
     public CalibrationCurveTable(TargetedMSSchema schema)
     {
-        super(TargetedMSManager.getTableInfoCalibrationCurve(), schema, TargetedMSSchema.ContainerJoinType.RunFK.getSQL());
+        super(TargetedMSManager.getTableInfoCalibrationCurve(), schema, TargetedMSSchema.ContainerJoinType.RunFK);
         Map<String, Object> params = new HashMap<>();
         params.put("id", FieldKey.fromParts("RunId"));
         params.put("calibrationCurveId", FieldKey.fromParts("Id"));

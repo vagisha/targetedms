@@ -60,7 +60,7 @@ public class MoleculeTransitionsTableInfo extends AbstractGeneralTransitionTable
         visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId", "Description"));
         visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId", "Annotations"));
         // Molecule level information
-        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "CustomIonName"));
+        visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "Molecule"));
         visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "IonFormula"));
         visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "Annotations"));
         visibleColumns.add(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "MassAverage"));

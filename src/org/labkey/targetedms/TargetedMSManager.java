@@ -1998,4 +1998,15 @@ public class TargetedMSManager
         Arrays.sort(sampleGroupNames);
         return Arrays.asList(sampleGroupNames);
     }
+
+    public static boolean containerHasSmallMolecules(Container container)
+    {
+        return new SqlSelector(TargetedMSManager.getSchema(), new SQLFragment("SELECT Id FROM ", container, false).append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE SmallMoleculeCount > 0 AND Container = ? AND Deleted = ?")).exists();
+    }
+
+    public static boolean containerHasPeptides(Container container)
+    {
+        return new SqlSelector(TargetedMSManager.getSchema(), new SQLFragment("SELECT Id FROM ", container, false).append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE PeptideCount > 0 AND Container = ? AND Deleted = ?")).exists();
+    }
+
 }

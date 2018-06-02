@@ -17,6 +17,7 @@ package org.labkey.targetedms.view;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChartColors;
 import org.labkey.targetedms.parser.Peptide;
@@ -113,7 +114,7 @@ public class ModifiedPeptideHtmlMaker
 
         StringBuilder result = new StringBuilder();
 
-        result.append("<span title='").append(altSequence).append("'>");
+        result.append("<span title='").append(PageFlowUtil.filter(altSequence)).append("'>");
         String labelModColor = "black";
         StringBuilder error = new StringBuilder("");
         if(firstIsotopeLabelIdInDoc != null && isotopeLabelId != null)
@@ -156,7 +157,7 @@ public class ModifiedPeptideHtmlMaker
         result.append("</span>");
         if(error.length() > 0)
         {
-            result.append("<div style='color:red;'>" + error.toString() + "</div>");
+            result.append("<div style='color:red;'>" + PageFlowUtil.filter(error.toString()) + "</div>");
         }
         return result.toString();
     }

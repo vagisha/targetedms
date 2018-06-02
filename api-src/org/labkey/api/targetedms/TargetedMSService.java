@@ -15,6 +15,7 @@
  */
 package org.labkey.api.targetedms;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.services.ServiceRegistry;
 
@@ -38,6 +39,7 @@ public interface TargetedMSService
     }
 
     ITargetedMSRun getRun(int runId, Container container);
+    ITargetedMSRun getRunByFileName(String fileName, Container container);
     List<ITargetedMSRun> getRuns(Container container);
     List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);
 }

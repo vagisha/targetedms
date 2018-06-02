@@ -73,6 +73,7 @@ import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.query.*;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 import org.springframework.validation.BindException;
+import org.springframework.web.servlet.mvc.Controller;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -80,7 +81,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -192,6 +192,9 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_GENERAL_TRANSITION = "GeneralTransition";
     public static final String TABLE_MOLECULE_PRECURSOR = "MoleculePrecursor";
 
+    public static final String COL_PROTEIN = "Protein";
+    public static final String COL_LIST = "List";
+
     private ExpSchema _expSchema;
 
     static public void register(Module module)
@@ -261,6 +264,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Container");
+            }
         },
         GeneralMoleculeChromInfoFK
         {
@@ -273,6 +281,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gmid.PeptideGroupId"));
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
+            }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("GeneralMoleculeChromInfoId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "Container");
             }
         },
         GeneralPrecursorFK
@@ -288,6 +301,11 @@ public class TargetedMSSchema extends UserSchema
                 return sql;
 
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "Container");
+            }
         },
         GeneralTransitionFK
         {
@@ -302,6 +320,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("GeneralTransitionId", "GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "Container");
+            }
         },
         PrecursorChromInfoFK
         {
@@ -314,6 +337,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(makeInnerJoin(TargetedMSManager.getTableInfoReplicate(), "rep", "sfile.ReplicateId"));
                 sql.append(getJoinToRunsTable("rep"));
                 return sql;
+            }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("PrecursorChromInfoId", "SampleFileId", "ReplicateId", "RunId", "Container");
             }
         },
         PrecursorFK
@@ -328,6 +356,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("PrecursorId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "Container");
+            }
         },
         PrecursorTableFK
         {
@@ -341,6 +374,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("Id", "GeneralMoleculeId", "PeptideGroupId", "RunId", "Container");
+            }
         },
         RunFK
         {
@@ -350,6 +388,11 @@ public class TargetedMSSchema extends UserSchema
                 SQLFragment sql = new SQLFragment();
                 sql.append(getJoinToRunsTable(null));
                 return sql;
+            }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("RunId", "Container");
             }
         },
         PeptideGroupFK
@@ -362,17 +405,10 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
-        },
-        PeptideGroupForMoleculeFK
-        {
             @Override
-            public SQLFragment getSQL()
+            public FieldKey getContainerFieldKey()
             {
-                SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gm", "GeneralMoleculeId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gm.PeptideGroupId"));
-                sql.append(getJoinToRunsTable("pg"));
-                return sql;
+                return FieldKey.fromParts("PeptideGroupId", "RunId", "Container");
             }
         },
         PeptideChromInfoFK
@@ -387,6 +423,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("PeptideChromInfoId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "Container");
+            }
         },
         ReplicateFK
         {
@@ -398,21 +439,10 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("rep"));
                 return sql;
             }
-        },
-
-        PrecursorForMoleculeFK
-        {
             @Override
-            public SQLFragment getSQL()
+            public FieldKey getContainerFieldKey()
             {
-                SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralTransition(), "gt", "Id"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp", "gt.GeneralPrecursorId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoGeneralMolecule(), "gm", "gp.GeneralMoleculeId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPeptideGroup(), "pg", "gm.PeptideGroupId"));
-                sql.append(getJoinToRunsTable("pg"));
-                return sql;
-
+                return FieldKey.fromParts("ReplicateId", "RunId", "Container");
             }
         },
         TransitionFK
@@ -428,6 +458,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("TransitionId", "GeneralPrecursorId", "GeneralMoleculeId", "PeptideGroupId", "RunId", "Container");
+            }
         },
         TransitionChromInfoFK
         {
@@ -441,6 +476,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("rep"));
                 return sql;
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("TransitionChromInfoId", "SampleFileId", "ReplicateId", "RunId", "Container");
+            }
         },
         SampleFileFK
         {
@@ -453,6 +493,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("rep"));
                 return sql;
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("SampleFileId", "ReplicateId", "RunId", "Container");
+            }
         },
         iRTScaleFK
         {
@@ -462,14 +507,10 @@ public class TargetedMSSchema extends UserSchema
                 return makeInnerJoin(TargetedMSManager.getTableInfoiRTScale(),
                         TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "iRTScaleId");
             }
-        },
-        QCAnnotationTypeFK
-        {
             @Override
-            public SQLFragment getSQL()
+            public FieldKey getContainerFieldKey()
             {
-                return makeInnerJoin(TargetedMSManager.getTableInfoQCAnnotationType(),
-                        TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "QCAnnotationTypeId");
+                return FieldKey.fromParts("iRTScaleId", "Container");
             }
         },
         IsolationSchemeFK
@@ -481,6 +522,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(makeInnerJoin(TargetedMSManager.getTableInfoIsolationScheme(), "ischeme", "IsolationSchemeId"));
                 sql.append(getJoinToRunsTable("ischeme"));
                 return sql;
+            }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("IsolationSchemeId", "RunId", "Container");
             }
         },
 
@@ -494,6 +540,11 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("driftTimeSettings"));
                 return sql;
             }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("DriftTimePredictionSettingsId", "RunId", "Container");
+            }
         },
         ExperimentAnnotationsFK
         {
@@ -502,6 +553,11 @@ public class TargetedMSSchema extends UserSchema
             {
                 return makeInnerJoin(TargetedMSManager.getTableInfoExperimentAnnotations(),
                         TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "ExperimentAnnotationsId");
+            }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("ExperimentAnnotationsId", "Container");
             }
         },
         ModPeptideFK
@@ -515,9 +571,16 @@ public class TargetedMSSchema extends UserSchema
                 sql.append(getJoinToRunsTable("pg"));
                 return sql;
             }
+
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Container");
+            }
         };
 
         public abstract SQLFragment getSQL();
+        public abstract FieldKey getContainerFieldKey();
     }
 
     public ExpRunTable getTargetedMSRunsTable()
@@ -539,6 +602,11 @@ public class TargetedMSSchema extends UserSchema
 
         ActionURL url = TargetedMSController.getShowRunURL(getContainer());
         final ActionURL downloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
+
+        boolean hasSmallMolecules = TargetedMSManager.containerHasSmallMolecules(getContainer());
+        boolean hasPeptides = TargetedMSManager.containerHasPeptides(getContainer());
+        String peptideGroupColName = (hasSmallMolecules ? COL_LIST : COL_PROTEIN) + "s";
+
         skyDocDetailColumn.setFk(new LookupForeignKey(url, "id", "Id", "Description")
         {
             public TableInfo getLookupTableInfo()
@@ -609,7 +677,7 @@ public class TargetedMSSchema extends UserSchema
                     }
                 });
 
-                result.addWrapColumn("Proteins", result.getRealTable().getColumn("PeptideGroupCount"));
+                result.addWrapColumn(peptideGroupColName, result.getRealTable().getColumn("PeptideGroupCount"));
                 result.addWrapColumn("Peptides", result.getRealTable().getColumn("PeptideCount"));
                 result.addWrapColumn("SmallMolecules", result.getRealTable().getColumn("SmallMoleculeCount"));
                 result.addWrapColumn("Precursors", result.getRealTable().getColumn("PrecursorCount"));
@@ -644,12 +712,9 @@ public class TargetedMSSchema extends UserSchema
 
                     _fieldKeys.add(2, FieldKey.fromParts("File"));
                     _fieldKeys.add(3, FieldKey.fromParts("File", "Download"));
-                    _fieldKeys.add(FieldKey.fromParts("File", "Proteins"));
+                    _fieldKeys.add(FieldKey.fromParts("File", peptideGroupColName));
 
                     // Omit peptides or small molecules if we don't have any in this container
-                    boolean hasSmallMolecules = new SqlSelector(TargetedMSManager.getSchema(), new SQLFragment("SELECT Id FROM ", getContainer(), false).append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE SmallMoleculeCount > 0 AND Container = ? AND Deleted = ?")).exists();
-                    boolean hasPeptides = new SqlSelector(TargetedMSManager.getSchema(), new SQLFragment("SELECT Id FROM ", getContainer(), false).append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE PeptideCount > 0 AND Container = ? AND Deleted = ?")).exists();
-
                     if (hasPeptides || !hasSmallMolecules)
                     {
                         _fieldKeys.add(FieldKey.fromParts("File", "Peptides"));
@@ -697,7 +762,7 @@ public class TargetedMSSchema extends UserSchema
         }
         if (TABLE_IRT_PEPTIDE.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.iRTScaleFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.iRTScaleFK);
         }
         if (TABLE_QC_ANNOTATION_TYPE.equalsIgnoreCase(name))
         {
@@ -761,20 +826,18 @@ public class TargetedMSSchema extends UserSchema
             boolean proteomics = TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name);
             TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(TABLE_PEPTIDE_GROUP),
                                                                   this,
-                                                                  ContainerJoinType.RunFK.getSQL(),
+                                                                  ContainerJoinType.RunFK,
                                                                   TargetedMSManager.getTableInfoPeptideGroupAnnotation(),
                                                                   "PeptideGroupId",
                                                                   "Protein Annotations",
                                                                   "protein") // This may change as more small molecule work is done in Skyline.
             {
                 @Override
-                public FieldKey getContainerFieldKey()
+                protected Class<? extends Controller> getDetailsActionClass()
                 {
-                    return FieldKey.fromParts("RunId", "Folder");
+                    return TargetedMSController.ShowProteinAction.class;
                 }
             };
-            DetailsURL detailsURLs = new DetailsURL(new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer()), Collections.singletonMap("id", "Id"));
-            result.setDetailsURL(detailsURLs);
             result.getColumn("SequenceId").setFk(new LookupForeignKey("SeqId")
             {
                 @Override
@@ -784,7 +847,7 @@ public class TargetedMSSchema extends UserSchema
                 }
             });
             ColumnInfo labelColumn = result.getColumn("Label");
-            labelColumn.setURL(detailsURLs);
+            labelColumn.setURL(result.getDetailsURL(null, null));
             if (proteomics)
             {
                 labelColumn.setDisplayColumnFactory(new DisplayColumnFactory()
@@ -798,7 +861,7 @@ public class TargetedMSSchema extends UserSchema
                         JSONObject props = new JSONObject();
                         props.put("width", 450);
                         props.put("title", "Protein Details");
-                        FieldKey containerFieldKey = new FieldKey(new FieldKey(colInfo.getFieldKey().getParent(), "RunId"), "Folder");
+                        FieldKey containerFieldKey = result.getContainerFieldKey();
                         return new AJAXDetailsDisplayColumn(colInfo, new ActionURL(TargetedMSController.ShowProteinAJAXAction.class, getContainer()), params, props, containerFieldKey)
                         {
                             private boolean _renderedCSS = false;
@@ -822,7 +885,7 @@ public class TargetedMSSchema extends UserSchema
             }
             else
             {
-                labelColumn.setLabel("Molecule / Label");
+                labelColumn.setLabel(TargetedMSSchema.COL_LIST);
                 result.getColumn("SequenceId").setHidden(true);
             }
             result.getColumn("RunId").setFk(new QueryForeignKey(this, null, TABLE_TARGETED_MS_RUNS, "File", null));
@@ -834,11 +897,11 @@ public class TargetedMSSchema extends UserSchema
             noteAnnotation.setDisplayColumnFactory(AnnotationUIDisplayColumn::new);
             if (proteomics)
             {
-                noteAnnotation.setLabel("Protein Note/Annotations");
+                noteAnnotation.setLabel(TargetedMSSchema.COL_PROTEIN + " Note/Annotations");
             }
             else
             {
-                noteAnnotation.setLabel("Molecule Note/Annotations");
+                noteAnnotation.setLabel(TargetedMSSchema.COL_LIST + " Note/Annotations");
             }
             result.addColumn(noteAnnotation);
 
@@ -847,7 +910,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_REPLICATE.equalsIgnoreCase(name))
         {
-            return new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL(), TargetedMSManager.getTableInfoReplicateAnnotation(), "ReplicateId", "Replicate Annotations", "replicate");
+            return new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK, TargetedMSManager.getTableInfoReplicateAnnotation(), "ReplicateId", "Replicate Annotations", "replicate");
         }
 
         // Tables that have a FK to targetedms.Runs
@@ -869,7 +932,7 @@ public class TargetedMSSchema extends UserSchema
             TABLE_QUANTIIFICATION_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_DRIFT_TIME_PREDICTION_SETTINGS.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK);
         }
 
         if (TABLE_CALIBRATION_CURVE.equalsIgnoreCase(name))
@@ -913,7 +976,7 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_PROTEIN.equalsIgnoreCase(name) ||
             TABLE_PEPTIDE_GROUP_ANNOTATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideGroupFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideGroupFK);
         }
 
         // Tables that have a FK to targetedms.replicate
@@ -932,13 +995,13 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name) || TABLE_GENERAL_MOLECULE_CHROM_INFO.equalsIgnoreCase(name))
         {
-            return new GeneralMoleculeChromInfoTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_CHROM_INFO), this, ContainerJoinType.GeneralMoleculeFK.getSQL(), name);
+            return new GeneralMoleculeChromInfoTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_CHROM_INFO), this, ContainerJoinType.GeneralMoleculeFK, name);
         }
 
         // Tables that have a FK to targetedms.peptidechrominfo
         if (TABLE_PEPTIDE_AREA_RATIO.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideChromInfoFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideChromInfoFK);
         }
 
         // Tables that have a FK to targetedms.peptide
@@ -963,17 +1026,17 @@ public class TargetedMSSchema extends UserSchema
         }
         if (TABLE_GENERAL_MOLECULE_ANNOTATION.equalsIgnoreCase(name) || TABLE_PEPTIDE_ANNOTATION.equalsIgnoreCase(name))
         {
-            GeneralMoleculeAnnotationTableInfo result = new GeneralMoleculeAnnotationTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_ANNOTATION), this, ContainerJoinType.GeneralMoleculeFK.getSQL());
+            GeneralMoleculeAnnotationTableInfo result = new GeneralMoleculeAnnotationTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_ANNOTATION), this, ContainerJoinType.GeneralMoleculeFK);
             result.setName(name);
             return result;
         }
         if(TABLE_PEPTIDE_STRUCTURAL_MODIFICATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(new PeptideStructuralModificationTableInfo(this), this, ContainerJoinType.ModPeptideFK.getSQL());
+            return new TargetedMSTable(new PeptideStructuralModificationTableInfo(this), this, ContainerJoinType.ModPeptideFK);
         }
         if(TABLE_PEPTIDE_ISOTOPE_MODIFICATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(new PeptideIsotopeModificationTableInfo(this), this, ContainerJoinType.ModPeptideFK.getSQL());
+            return new TargetedMSTable(new PeptideIsotopeModificationTableInfo(this), this, ContainerJoinType.ModPeptideFK);
         }
         // Tables that have a FK to targetedms.precursor
         if (TABLE_PRECURSOR_CHROM_INFO.equalsIgnoreCase(name))
@@ -993,13 +1056,13 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_PRECURSOR_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name) ||
             TABLE_PRECURSOR_AREA_RATIO.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorChromInfoFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorChromInfoFK);
         }
 
         // Tables that have a FK to targetedms.transition
         if (TABLE_TRANSITION_CHROM_INFO.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.SampleFileFK.getSQL(),
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.SampleFileFK,
                     TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), "TransitionChromInfoId", "Transition Result Annotations", "transition_result");
             TargetedMSSchema targetedMSSchema = this;
 
@@ -1054,7 +1117,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_TRANSITION_ANNOTATION.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionFK.getSQL());
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionFK);
             TargetedMSSchema targetedMSSchema = this;
             result.getColumn("TransitionId").setFk(new LookupForeignKey("Id")
             {
@@ -1072,7 +1135,7 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_TRANSITION_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name) ||
             TABLE_TRANSITION_AREA_RATIO.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionChromInfoFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionChromInfoFK);
         }
 
         // TODO - handle filtering for annotation, predictor
@@ -1080,18 +1143,18 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.isolationScheme
         if (TABLE_ISOLATION_WINDOW.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.IsolationSchemeFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.IsolationSchemeFK);
         }
 
         // Tables that have a FT to targetesms.DriftTimePredictionSettings
         if(TABLE_MEASURED_DRIFT_TIME.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.DriftTimePredictionSettingsFK.getSQL());
+            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.DriftTimePredictionSettingsFK);
         }
 
         if(TABLE_JOURNAL_EXPERIMENT.equalsIgnoreCase(name))
         {
-            return new JournalExperimentTableInfo(this, getContainer(), ContainerJoinType.ExperimentAnnotationsFK.getSQL());
+            return new JournalExperimentTableInfo(this, getContainer());
         }
 
         if(TABLE_JOURNAL.equalsIgnoreCase(name))

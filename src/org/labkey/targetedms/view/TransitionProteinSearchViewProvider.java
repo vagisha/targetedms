@@ -16,13 +16,16 @@
 package org.labkey.targetedms.view;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Aggregate;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.protein.ProteinService;
+import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
@@ -30,6 +33,8 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.query.ExperimentTitleDisplayColumn;
+import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.springframework.validation.BindException;
 
@@ -57,8 +62,8 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
         if (! viewContext.getContainer().getActiveModules().contains(ModuleLoader.getInstance().getModule(TargetedMSModule.class)))
             return null;  // only enable this view if the TargetedMSModule is active
 
-        QuerySettings settings = new QuerySettings(viewContext, getDataRegionName(), "Peptide");
-        settings.addAggregates(new Aggregate(FieldKey.fromParts("PeptideGroupId", "RunId", "File"), Aggregate.BaseType.COUNT, null, true));
+        QuerySettings settings = new QuerySettings(viewContext, getDataRegionName(), "PeptideGroup");
+        settings.addAggregates(new Aggregate(FieldKey.fromParts("RunId", "File"), Aggregate.BaseType.COUNT, null, true));
 
         // Issue 17576: Peptide and Protein searches do not work for searching in subfolders
         if (form.isIncludeSubfolders())
@@ -72,8 +77,7 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
                 TargetedMSTable result = (TargetedMSTable) super.createTable();
 
                 // Apply a filter to restrict to the set of matching proteins
-                SQLFragment sql = new SQLFragment("PeptideGroupId IN (SELECT pg.Id FROM ");
-                sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+                SQLFragment sql = new SQLFragment("Id IN (SELECT pg.Id FROM targetedms.PeptideGroup AS pg ");
 
                 sql.append(" WHERE ( ");
                 if (form.getSeqId().length > 0)
@@ -95,22 +99,45 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
                 sql.append("))");
                 result.addCondition(sql);
 
-                List<FieldKey> visibleColumns = new ArrayList<>();
-                visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "Label"));
-                visibleColumns.add(FieldKey.fromParts("Sequence"));
-                if (form.isIncludeSubfolders())
+                boolean isJournalFolder = JournalManager.isJournalProject(viewContext.getContainer());
+                if(isJournalFolder)
                 {
-                    visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
+                    addExperimentTitleColumn(result, getContainer());
                 }
-                visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
+
+                List<FieldKey> visibleColumns = new ArrayList<>();
+                if(isJournalFolder)
+                {
+                    visibleColumns.add(FieldKey.fromParts("Experiment"));
+                }
+                visibleColumns.add(FieldKey.fromParts("Label"));
+                visibleColumns.add(FieldKey.fromParts("Description"));
+                visibleColumns.add(FieldKey.fromParts("Accession"));
+                visibleColumns.add(FieldKey.fromParts("PreferredName"));
+                visibleColumns.add(FieldKey.fromParts("Gene"));
+                visibleColumns.add(FieldKey.fromParts("Species"));
+                visibleColumns.add(FieldKey.fromParts("RunId", "File"));
+                if(form.isIncludeSubfolders())
+                {
+                    visibleColumns.add(FieldKey.fromParts("RunId", "Folder", "Path"));
+                }
+
                 result.setDefaultVisibleColumns(visibleColumns);
                 return result;
             }
         };
-        result.setTitle("Targeted MS Peptides");
-        result.enableExpandCollapse("TargetedMSPeptides", false);
+        result.setTitle("Targeted MS Proteins");
+        result.enableExpandCollapse("TargetedMSProteins", false);
         result.setUseQueryViewActionExportURLs(true);
         return result;
+    }
+
+    @NotNull
+    private void addExperimentTitleColumn(TargetedMSTable result, Container container)
+    {
+        SQLFragment whereSql = new SQLFragment(" WHERE runs.Id = ").append(ExprColumn.STR_TABLE_ALIAS).append(".runId");
+        ExperimentTitleDisplayColumn col = new ExperimentTitleDisplayColumn(result, container, whereSql, "runs");
+        result.addColumn(col);
     }
 
     private List<String> getProteinLabels(String labels)

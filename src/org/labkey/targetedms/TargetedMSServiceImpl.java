@@ -43,6 +43,12 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
+    public ITargetedMSRun getRunByFileName(String fileName, Container container)
+    {
+        return TargetedMSManager.getRunByFileName(fileName, container);
+    }
+
+    @Override
     public List<ITargetedMSRun> getRuns(Container container)
     {
         return Arrays.asList(TargetedMSManager.getRunsInContainer(container));

@@ -48,7 +48,7 @@ public class ReplicateAnnotationTable extends TargetedMSTable
     public ReplicateAnnotationTable(TargetedMSSchema schema)
     {
         super(TargetedMSSchema.getSchema().getTable(TargetedMSSchema.TABLE_REPLICATE_ANNOTATION),
-              schema, TargetedMSSchema.ContainerJoinType.ReplicateFK.getSQL());
+              schema, TargetedMSSchema.ContainerJoinType.ReplicateFK);
 
         ColumnInfo sourceCol = getColumn(FieldKey.fromParts(SOURCE_COL));
         sourceCol.setReadOnly(true);

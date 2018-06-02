@@ -30,4 +30,5 @@ public interface ITargetedMSRun
     public String getBaseName();
     public String getDescription();
     public Date getCreated();
+    public int getId();
 }

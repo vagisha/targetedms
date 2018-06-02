@@ -21,17 +21,14 @@ import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.util.ContainerContext;
-import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.springframework.web.servlet.mvc.Controller;
 
 import java.util.ArrayList;
-import java.util.Collections;
 
 /**
  * User: vsharma
@@ -49,10 +46,6 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
     public PrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema)
     {
         super(tableInfo, tableName, schema);
-
-        _detailsURL = new DetailsURL(new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer()), Collections.singletonMap("id", "Id"));
-        _detailsURL.setContainerContext(new ContainerContext.FieldKeyContext(FieldKey.fromParts("GeneralMoleculeId", "PeptideGroupId", "RunId", "Folder")));
-        setDetailsURL(_detailsURL);
 
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE));
@@ -72,9 +65,10 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
             @Override
             public DisplayColumn createRenderer(ColumnInfo colInfo)
             {
-                return new ModifiedSequenceDisplayColumn.PrecursorCol(colInfo, _detailsURL.getActionURL());
+                return new ModifiedSequenceDisplayColumn.PrecursorCol(colInfo);
             }
         });
+        modSeqCol.setURL(getDetailsURL(null, null));
         addColumn(modSeqCol);
 
         //only display a subset of the columns by default
@@ -139,5 +133,11 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
         {
             return TargetedMSSchema.TABLE_LIBRARY_PRECURSOR;
         }
+    }
+
+    @Override
+    protected Class<? extends Controller> getDetailsActionClass()
+    {
+        return TargetedMSController.PrecursorAllChromatogramsChartAction.class;
     }
 }

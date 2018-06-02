@@ -33,7 +33,7 @@ public class QCMetricExclusionTable extends TargetedMSTable
     public QCMetricExclusionTable(TargetedMSSchema schema)
     {
         super(TargetedMSSchema.getSchema().getTable(TargetedMSSchema.TABLE_QC_METRIC_EXCLUSION),
-                schema, TargetedMSSchema.ContainerJoinType.ReplicateFK.getSQL());
+                schema, TargetedMSSchema.ContainerJoinType.ReplicateFK);
 
         getColumn(FieldKey.fromParts("MetricId")).setFk(new QueryForeignKey(schema, getUserSchema().getContainer(), TargetedMSSchema.TABLE_QC_METRIC_CONFIGURATION, "Id", "Name")
         {

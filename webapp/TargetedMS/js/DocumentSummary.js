@@ -135,7 +135,7 @@ Ext4.define('LABKEY.targetedms.DocumentSummary', {
     getCounts: function () {
         var items = [];
 
-        items.push(this.getClickableCount(this.peptideGroupCount, 'protein', this.precursorListAction, true));
+        items.push(this.getClickableCount(this.peptideGroupCount, this.peptideGroupLabel, this.precursorListAction, true));
         if (this.peptideCount > 0) {
             items.push(this.getClickableCount(this.peptideCount, 'peptide', this.precursorListAction, false));
         }

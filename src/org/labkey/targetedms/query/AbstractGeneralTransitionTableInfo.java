@@ -31,7 +31,7 @@ public class AbstractGeneralTransitionTableInfo extends JoinedTargetedMSTable
     public AbstractGeneralTransitionTableInfo(final TargetedMSSchema schema, TableInfo tableInfo)
     {
         super(TargetedMSManager.getTableInfoGeneralTransition(), tableInfo,
-                schema, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK.getSQL(),
+                schema, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK,
                 TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations", "transition");
     }
 

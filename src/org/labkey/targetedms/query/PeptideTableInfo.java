@@ -19,16 +19,14 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.WrappedColumn;
-import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
+import org.springframework.web.servlet.mvc.Controller;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
@@ -36,10 +34,6 @@ public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
     public PeptideTableInfo(TargetedMSSchema schema)
     {
         super(schema, TargetedMSManager.getTableInfoPeptide(), "Peptide Annotations");
-
-        final DetailsURL detailsURL = new DetailsURL(new ActionURL(TargetedMSController.ShowPeptideAction.class, getContainer()),
-                Collections.singletonMap("id", "Id"));
-        setDetailsURL(detailsURL);
 
         // Add a WrappedColumn for Note & Annotations
         WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
@@ -58,7 +52,7 @@ public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
         peptideGroupId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE_GROUP));
 
         ColumnInfo sequenceColumn = getColumn("Sequence");
-        sequenceColumn.setURL(detailsURL);
+        sequenceColumn.setURL(getDetailsURL(null, null));
         WrappedColumn modSeqCol = new WrappedColumn(getColumn("PeptideModifiedSequence"), ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME);
         modSeqCol.setLabel("Peptide");
         modSeqCol.setDescription("Modified peptide sequence");
@@ -67,9 +61,10 @@ public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
             @Override
             public DisplayColumn createRenderer(ColumnInfo colInfo)
             {
-                return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo, detailsURL.getActionURL());
+                return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo);
             }
         });
+        modSeqCol.setURL(getDetailsURL(null, null));
         addColumn(modSeqCol);
 
         List<FieldKey> defaultCols = new ArrayList<>(getDefaultVisibleColumns());
@@ -79,5 +74,11 @@ public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
         defaultCols.add(3, FieldKey.fromParts(ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
         defaultCols.remove(FieldKey.fromParts("PeptideGroupId"));
         setDefaultVisibleColumns(defaultCols);
+    }
+
+    @Override
+    protected Class<? extends Controller> getDetailsActionClass()
+    {
+        return TargetedMSController.ShowPeptideAction.class;
     }
 }

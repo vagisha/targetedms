@@ -32,7 +32,7 @@ public class FoldChangeTable extends TargetedMSTable
 {
     public FoldChangeTable(TargetedMSSchema schema)
     {
-        super(TargetedMSManager.getTableInfoFoldChange(), schema, TargetedMSSchema.ContainerJoinType.RunFK.getSQL());
+        super(TargetedMSManager.getTableInfoFoldChange(), schema, TargetedMSSchema.ContainerJoinType.RunFK);
         getColumn(FieldKey.fromParts("Id")).setHidden(true);
         getColumn(FieldKey.fromParts("RunId")).setHidden(true);
         getColumn(FieldKey.fromParts("GroupComparisonSettingsId")).setHidden(true);

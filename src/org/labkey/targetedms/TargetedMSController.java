@@ -91,6 +91,7 @@ import org.labkey.api.portal.ProjectUrls;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.BatchValidationException;
 import org.labkey.api.query.DetailsURL;
+import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryParam;
@@ -170,6 +171,7 @@ import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
 import org.labkey.targetedms.query.ChromatogramDisplayColumnFactory;
 import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
+import org.labkey.targetedms.query.ExperimentTitleDisplayColumn;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.query.LibraryManager;
@@ -4685,15 +4687,33 @@ public class TargetedMSController extends SpringActionController
                         result.addCondition(new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), modStr, modStr != null ? CompareType.CONTAINS_ONE_OF : CompareType.ISBLANK));
                     }
 
+                    if(form.isJournalSearch())
+                    {
+                        SQLFragment sql = new SQLFragment();
+                        sql.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+                        sql.append(" ON ").append("pg.runId = runs.id");
+                        sql.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+                        sql.append(" ON ").append("gm.peptideGroupId = pg.id");
+                        sql.append(" WHERE gm.Id = ").append(ExprColumn.STR_TABLE_ALIAS).append(".generalMoleculeId");
+                        ExperimentTitleDisplayColumn col = new ExperimentTitleDisplayColumn(result, getContainer(), sql, "runs");
+
+                        result.addColumn(col);
+                    }
+
                     List<FieldKey> visibleColumns = new ArrayList<>();
+                    if(form.isJournalSearch())
+                    {
+                        visibleColumns.add(FieldKey.fromParts("Experiment"));
+                    }
                     visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "Label"));
-                    visibleColumns.add(FieldKey.fromParts("PeptideId", "Sequence"));
+                    visibleColumns.add(FieldKey.fromParts("PeptideId", ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
                     visibleColumns.add(FieldKey.fromParts(ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME));
+                    visibleColumns.add(FieldKey.fromParts("NeutralMass"));
+                    visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "File"));
                     if (form.isIncludeSubfolders())
                     {
                         visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "Folder", "Path"));
                     }
-                    visibleColumns.add(FieldKey.fromParts("PeptideId", "PeptideGroupId", "RunId", "File"));
                     result.setDefaultVisibleColumns(visibleColumns);
                     result.setName("Precursor");
                     return result;
@@ -4725,6 +4745,7 @@ public class TargetedMSController extends SpringActionController
         private Double _deltaMass;
         private boolean _includeSubfolders;
         private String _modSearchPairsStr;
+        private boolean _journalSearch;
 
         public static ModificationSearchForm createDefault()
         {
@@ -4931,6 +4952,16 @@ public class TargetedMSController extends SpringActionController
         public void setModSearchPairsStr(String modSearchPairsStr)
         {
             _modSearchPairsStr = modSearchPairsStr;
+        }
+
+        public boolean isJournalSearch()
+        {
+            return _journalSearch;
+        }
+
+        public void setJournalSearch(boolean journalSearch)
+        {
+            _journalSearch = journalSearch;
         }
     }
 

@@ -63,7 +63,7 @@ public class TargetedMSSkydTextIdTest extends TargetedMSTest
         clickAndWait(Locator.xpath("//a[text()='SmMolSkydTest.sky.zip']"));
 
         // Get a list of the details hrefs for all eight molecules.
-        Locator molDetailsLocator = Locator.xpath("//a[@title='Molecule Details']");
+        Locator molDetailsLocator = Locator.xpath("//a[nobr/img[@title='Molecule Details']]");
         List<String> detailsHrefs = molDetailsLocator.findElements(getDriver()).stream()
                 .map(element->element.getAttribute("href"))
                 .distinct()
@@ -90,7 +90,7 @@ public class TargetedMSSkydTextIdTest extends TargetedMSTest
         clickAndWait(Locator.xpath("//a[text()='HighPrecModSkydTest.sky.zip']"));
 
         // Get a list of the details hrefs for all eight molecules.
-        Locator molDetailsLocator = Locator.xpath("//a[@title='Peptide Details']");
+        Locator molDetailsLocator = Locator.xpath("//a[nobr/img[@title='Peptide Details']]");
         List<String> detailsHrefs = molDetailsLocator.findElements(getDriver()).stream()
                 .map(element->element.getAttribute("href"))
                 .distinct()

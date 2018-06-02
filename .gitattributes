@@ -412,6 +412,7 @@ src/org/labkey/targetedms/query/ConflictResultsManager.java -text
 src/org/labkey/targetedms/query/DocTransitionsTableInfo.java -text
 src/org/labkey/targetedms/query/ExperimentAnnotationsManager.java -text
 src/org/labkey/targetedms/query/ExperimentAnnotationsTableInfo.java -text
+src/org/labkey/targetedms/query/ExperimentTitleDisplayColumn.java -text
 src/org/labkey/targetedms/query/FoldChangeTable.java -text
 src/org/labkey/targetedms/query/GeneralMoleculeAnnotationTableInfo.java -text
 src/org/labkey/targetedms/query/GeneralMoleculeChromInfoTableInfo.java -text
@@ -456,7 +457,9 @@ src/org/labkey/targetedms/query/TargetedMSTable.java -text
 src/org/labkey/targetedms/query/TransitionManager.java -text
 src/org/labkey/targetedms/search/ModificationSearchBean.java -text
 src/org/labkey/targetedms/search/ModificationSearchWebPart.java -text
+src/org/labkey/targetedms/search/ProteinSearchWebPart.java -text
 src/org/labkey/targetedms/search/modificationSearch.jsp -text
+src/org/labkey/targetedms/search/peptideSearch.jsp -text
 src/org/labkey/targetedms/security/CopyTargetedMSExperimentRole.java -text
 src/org/labkey/targetedms/view/AnnotationUIDisplayColumn.java -text
 src/org/labkey/targetedms/view/CalibrationCurveChart.java -text

@@ -55,7 +55,9 @@ import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
+import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
+import org.labkey.targetedms.search.ProteinSearchWebPart;
 import org.labkey.targetedms.security.CopyTargetedMSExperimentRole;
 import org.labkey.targetedms.view.LibraryPrecursorViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
@@ -92,6 +94,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String TARGETED_MS_PEPTIDE_GROUP_VIEW = "Targeted MS Protein View";
     public static final String TARGETED_MS_RUNS_WEBPART_NAME = "Targeted MS Runs";
     public static final String TARGETED_MS_PROTEIN_SEARCH = "Targeted MS Protein Search";
+    public static final String TARGETED_MS_PEPTIDE_SEARCH = "Targeted MS Peptide Search";
     public static final String TARGETED_MS_QC_SUMMARY = "Targeted MS QC Summary";
     public static final String TARGETED_MS_QC_PLOTS = "Targeted MS QC Plots";
     public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
@@ -226,8 +229,29 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         {
             public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
-                JspView view = new JspView("/org/labkey/targetedms/view/proteinSearch.jsp");
-                view.setTitle("Protein Search");
+                return new ProteinSearchWebPart(new ProteinService.ProteinSearchForm()
+                {
+                    @Override
+                    public int[] getSeqId()
+                    {
+                        return new int[0];
+                    }
+
+                    @Override
+                    public boolean isExactMatch()
+                    {
+                        return true;
+                    }
+                });
+            }
+        };
+
+        BaseWebPartFactory peptideSearchFactory = new BaseWebPartFactory(TARGETED_MS_PEPTIDE_SEARCH)
+        {
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            {
+                JspView view = new JspView("/org/labkey/targetedms/search/peptideSearch.jsp");
+                view.setTitle("Peptide Search");
                 return view;
             }
         };
@@ -236,7 +260,15 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         {
             public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
-                return new ModificationSearchWebPart(TargetedMSController.ModificationSearchForm.createDefault());
+                Container container = portalCtx.getContainer();
+                TargetedMSController.ModificationSearchForm form = TargetedMSController.ModificationSearchForm.createDefault();
+                if(JournalManager.isJournalProject(container))
+                {
+                    // If this is journal project (e.g. Panorama Public), include sub-folders in search, and show the experiment title column in the results.
+                    form.setIncludeSubfolders(true);
+                    form.setJournalSearch(true);
+                }
+                return new ModificationSearchWebPart(form);
             }
         };
 
@@ -301,6 +333,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         webpartFactoryList.add(peptideGroupView);
         webpartFactoryList.add(runsFactory);
         webpartFactoryList.add(proteinSearchFactory);
+        webpartFactoryList.add(peptideSearchFactory);
         webpartFactoryList.add(modificationSearchFactory);
         webpartFactoryList.add(experimentAnnotationsListFactory);
         webpartFactoryList.add(containerExperimentFactory);
@@ -371,6 +404,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         ProteinService proteinService = ProteinService.get();
         proteinService.registerProteinSearchView(new TransitionProteinSearchViewProvider());
         proteinService.registerPeptideSearchView(new TransitionPeptideSearchViewProvider());
+        proteinService.registerProteinSearchFormView(new ProteinSearchWebPart.ProteinSearchFormViewProvider());
 
         TargetedMSService.setInstance(new TargetedMSServiceImpl());
 

@@ -55,39 +55,39 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
 
     public AnnotatedTargetedMSTable(TableInfo table,
                                     TargetedMSSchema schema,
-                                    SQLFragment joinSQL,
+                                    TargetedMSSchema.ContainerJoinType joinType,
                                     TableInfo annotationTableInfo,
                                     String annotationFKName,
                                     String columnName,
                                     String annotationTarget) // The target of an annotation that applies to this table.
     {
-        this(table, schema, joinSQL, annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget);
+        this(table, schema, joinType, annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget);
     }
 
     public AnnotatedTargetedMSTable(TableInfo table,
                                     TargetedMSSchema schema,
-                                    SQLFragment joinSQL,
+                                    TargetedMSSchema.ContainerJoinType joinType,
                                     SQLFragment containerSQL,
                                     TableInfo annotationTableInfo,
                                     String annotationFKName,
                                     String columnName,
                                     String annotationTarget) // The target of an annotation that applies to this table.
     {
-        super(table, schema, joinSQL, containerSQL);
+        super(table, schema, joinType, containerSQL);
 
         addAnnotationsColumns(annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget);
     }
 
     public AnnotatedTargetedMSTable(TableInfo table,
                                     TargetedMSSchema schema,
-                                    SQLFragment joinSQL,
+                                    TargetedMSSchema.ContainerJoinType joinType,
                                     TableInfo annotationTableInfo,
                                     String annotationFKName,
                                     String columnName,
                                     String pkColumnName,
                                     String annotationTarget) // The target of an annotation that applies to this table.
     {
-        super(table, schema, joinSQL);
+        super(table, schema, joinType);
 
         addAnnotationsColumns(annotationTableInfo, annotationFKName, columnName, pkColumnName, annotationTarget);
     }

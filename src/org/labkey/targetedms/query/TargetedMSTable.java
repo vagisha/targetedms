@@ -22,14 +22,20 @@ import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ForeignKey;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.query.DetailsURL;
+import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.util.ContainerContext;
+import org.labkey.api.view.ActionURL;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.springframework.web.servlet.mvc.Controller;
 
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * User: jeckels
@@ -40,7 +46,7 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
     public static final String CONTAINER_COL_TABLE_ALIAS = "r";
     private static final SQLFragment _defaultContainerSQL = new SQLFragment(CONTAINER_COL_TABLE_ALIAS).append(".Container");
 
-    private final SQLFragment _joinSQL;
+    private final TargetedMSSchema.ContainerJoinType _joinType;
     private final SQLFragment _containerSQL;
 
     private boolean _needsContainerWhereClause = true;
@@ -48,15 +54,15 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
     private CompareType.EqualsCompareClause _containerTableFilter;
 
     /** Assumes that the table has its own container column, instead of needing to join to another table for container info */
-    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL)
+    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType)
     {
-        this(table, schema, joinSQL, _defaultContainerSQL);
+        this(table, schema, joinType, _defaultContainerSQL);
     }
 
-    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL, SQLFragment containerSQL)
+    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType, SQLFragment containerSQL)
     {
         super(table, schema);
-        _joinSQL = joinSQL;
+        _joinType = joinType;
         _containerSQL = containerSQL;
         wrapAllColumns(true);
 
@@ -70,6 +76,13 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
             }
         }
         applyContainerFilter(getContainerFilter());
+
+        if(getDetailsActionClass() != null && getContainerFieldKey() != null)
+        {
+            DetailsURL url = new DetailsURL(new ActionURL(getDetailsActionClass(), getContainer()),getColumnParams());
+            url.setContainerContext(new ContainerContext.FieldKeyContext(getContainerFieldKey()));
+            setDetailsURL(url);
+        }
     }
 
     @Override
@@ -92,7 +105,7 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
 
         if (_needsContainerWhereClause || _containerTableFilter != null)
         {
-            sql.append(_joinSQL);
+            sql.append(_joinType != null ? _joinType.getSQL() : "");
 
             sql.append(" WHERE ");
             sql.append(getContainerFilter().getSQLFragment(getSchema(), _containerSQL, getContainer()));
@@ -128,4 +141,21 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
     {
        _containerTableFilter = filterClause;
     }
+
+    @Override
+    public FieldKey getContainerFieldKey()
+    {
+        return _joinType != null ? _joinType.getContainerFieldKey() : super.getContainerFieldKey();
+    }
+
+    protected Class<? extends Controller> getDetailsActionClass()
+    {
+        return null;
+    }
+
+    protected Map<String, ?> getColumnParams()
+    {
+        return Collections.singletonMap("id", "Id");
+    }
+
 }

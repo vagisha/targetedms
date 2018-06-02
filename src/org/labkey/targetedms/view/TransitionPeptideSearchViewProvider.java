@@ -17,17 +17,24 @@ package org.labkey.targetedms.view;
 
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Aggregate;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.protein.ProteinService;
+import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.view.ViewContext;
+import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.query.ExperimentTitleDisplayColumn;
+import org.labkey.targetedms.query.JournalManager;
+import org.labkey.targetedms.query.ModifiedSequenceDisplayColumn;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.springframework.validation.BindException;
 
@@ -69,14 +76,27 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
                 TargetedMSTable result = (TargetedMSTable) super.createTable();
                 result.addCondition(new SimpleFilter(form.createFilter("Sequence")));
 
+				boolean isJournalFolder = JournalManager.isJournalProject(viewContext.getContainer());
+
+                if(isJournalFolder)
+                {
+                    addExperimentTitleColumn(result, getContainer());
+                }
+
                 List<FieldKey> visibleColumns = new ArrayList<>();
+                if(isJournalFolder)
+                {
+                    visibleColumns.add(FieldKey.fromParts("Experiment"));
+                }
                 visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "Label"));
                 visibleColumns.add(FieldKey.fromParts("Sequence"));
+                visibleColumns.add(FieldKey.fromParts(ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME));
+                visibleColumns.add(FieldKey.fromParts("CalcNeutralMass"));
+                visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
                 if (form.isSubfolders())
                 {
                     visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
                 }
-                visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "File"));
                 result.setDefaultVisibleColumns(visibleColumns);
 
                 return result;
@@ -86,5 +106,18 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
         result.enableExpandCollapse("TargetedMSPeptides", false);
         result.setUseQueryViewActionExportURLs(true);
         return result;
+    }
+
+    private void addExperimentTitleColumn(TargetedMSTable result, Container container)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(" ON ");
+        sql.append("pg.runId = runs.id");
+        sql.append(" WHERE pg.Id = ").append(ExprColumn.STR_TABLE_ALIAS).append(".peptideGroupId");
+        ExperimentTitleDisplayColumn col = new ExperimentTitleDisplayColumn(result, container, sql, "runs");
+
+        result.addColumn(col);
     }
 }

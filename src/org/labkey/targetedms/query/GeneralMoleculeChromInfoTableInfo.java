@@ -29,9 +29,9 @@ import java.util.ArrayList;
 
 public class GeneralMoleculeChromInfoTableInfo extends TargetedMSTable
 {
-    public GeneralMoleculeChromInfoTableInfo(TableInfo table, TargetedMSSchema schema, SQLFragment joinSQL, String name)
+    public GeneralMoleculeChromInfoTableInfo(TableInfo table, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType, String name)
     {
-        super(table, schema, joinSQL);
+        super(table, schema, joinType);
         setName(name);
 
         // Add a link to view the chromatogram an individual transition
