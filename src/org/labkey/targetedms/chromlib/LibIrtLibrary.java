@@ -41,7 +41,7 @@ public class LibIrtLibrary implements ObjectWithId
     @Override
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public String getModifiedSequence()
@@ -51,7 +51,7 @@ public class LibIrtLibrary implements ObjectWithId
 
     public void setModifiedSequence(String modifiedSequence)
     {
-        this._modifiedSequence = modifiedSequence;
+        _modifiedSequence = modifiedSequence;
     }
 
     public Double getIrtValue()

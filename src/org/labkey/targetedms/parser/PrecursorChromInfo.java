@@ -94,7 +94,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setPrecursorId(int precursorId)
     {
-        this._precursorId = precursorId;
+        _precursorId = precursorId;
     }
 
     public int getGeneralMoleculeChromInfoId()
@@ -114,7 +114,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setBestRetentionTime(Double bestRetentionTime)
     {
-        this._bestRetentionTime = bestRetentionTime;
+        _bestRetentionTime = bestRetentionTime;
     }
 
     public Double getMinStartTime()
@@ -124,7 +124,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setMinStartTime(Double minStartTime)
     {
-        this._minStartTime = minStartTime;
+        _minStartTime = minStartTime;
     }
 
     public Double getMaxEndTime()
@@ -134,7 +134,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setMaxEndTime(Double maxEndTime)
     {
-        this._maxEndTime = maxEndTime;
+        _maxEndTime = maxEndTime;
     }
 
     public Double getTotalArea()
@@ -144,7 +144,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setTotalArea(Double totalArea)
     {
-        this._totalArea = totalArea;
+        _totalArea = totalArea;
     }
 
     public Double getTotalAreaNormalized()
@@ -154,7 +154,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setTotalAreaNormalized(Double totalAreaNormalized)
     {
-        this._totalAreaNormalized = totalAreaNormalized;
+        _totalAreaNormalized = totalAreaNormalized;
     }
 
     public Double getTotalBackground()
@@ -164,7 +164,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setTotalBackground(Double totalBackground)
     {
-        this._totalBackground = totalBackground;
+        _totalBackground = totalBackground;
     }
 
     public Double getMaxFwhm()
@@ -174,7 +174,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setMaxFwhm(Double maxFwhm)
     {
-        this._maxFwhm = maxFwhm;
+        _maxFwhm = maxFwhm;
     }
 
     public Double getMaxHeight()
@@ -204,7 +204,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setPeakCountRatio(Double peakCountRatio)
     {
-        this._peakCountRatio = peakCountRatio;
+        _peakCountRatio = peakCountRatio;
     }
 
     public Integer getNumTruncated()
@@ -214,7 +214,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setNumTruncated(Integer numTruncated)
     {
-        this._numTruncated = numTruncated;
+        _numTruncated = numTruncated;
     }
 
     public String getIdentified()
@@ -224,7 +224,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setIdentified(String identified)
     {
-        this._identified = identified;
+        _identified = identified;
     }
 
     public Double getLibraryDotP()
@@ -234,7 +234,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setLibraryDotP(Double libraryDotP)
     {
-        this._libraryDotP = libraryDotP;
+        _libraryDotP = libraryDotP;
     }
 
     public Double getIsotopeDotP()
@@ -244,7 +244,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setIsotopeDotP(Double isotopeDotP)
     {
-        this._isotopeDotP = isotopeDotP;
+        _isotopeDotP = isotopeDotP;
     }
 
     public Integer getOptimizationStep()
@@ -254,7 +254,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setOptimizationStep(Integer optimizationStep)
     {
-        this._optimizationStep = optimizationStep;
+        _optimizationStep = optimizationStep;
     }
 
     public boolean isOptimizationPeak()
@@ -269,7 +269,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setUserSet(String userSet)
     {
-        this._userSet = userSet;
+        _userSet = userSet;
     }
 
     public String getNote()
@@ -279,7 +279,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
     public void setNote(String note)
     {
-        this._note = note;
+        _note = note;
     }
 
     public byte[] getChromatogram()

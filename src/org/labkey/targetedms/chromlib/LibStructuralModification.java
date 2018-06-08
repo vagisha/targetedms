@@ -46,7 +46,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public String getName()
@@ -56,7 +56,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setName(String name)
     {
-        this._name = name;
+        _name = name;
     }
 
     public String getAminoAcid()
@@ -66,7 +66,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setAminoAcid(String aminoAcid)
     {
-        this._aminoAcid = aminoAcid;
+        _aminoAcid = aminoAcid;
     }
 
     public Character getTerminus()
@@ -76,7 +76,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setTerminus(Character terminus)
     {
-        this._terminus = terminus;
+        _terminus = terminus;
     }
 
     public String getFormula()
@@ -86,7 +86,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setFormula(String formula)
     {
-        this._formula = formula;
+        _formula = formula;
     }
 
     public Double getMassDiffMono()
@@ -96,7 +96,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setMassDiffMono(Double massDiffMono)
     {
-        this._massDiffMono = massDiffMono;
+        _massDiffMono = massDiffMono;
     }
 
     public Double getMassDiffAvg()
@@ -106,7 +106,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setMassDiffAvg(Double massDiffAvg)
     {
-        this._massDiffAvg = massDiffAvg;
+        _massDiffAvg = massDiffAvg;
     }
 
     public Integer getUnimodId()
@@ -116,7 +116,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setUnimodId(Integer unimodId)
     {
-        this._unimodId = unimodId;
+        _unimodId = unimodId;
     }
 
     public Boolean getVariable()
@@ -126,7 +126,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setVariable(Boolean variable)
     {
-        this._variable = variable;
+        _variable = variable;
     }
 
     public Boolean getExplicitMod()
@@ -136,7 +136,7 @@ public class LibStructuralModification implements ObjectWithId
 
     public void setExplicitMod(Boolean explicitMod)
     {
-        this._explicitMod = explicitMod;
+        _explicitMod = explicitMod;
     }
 
     public void addModLoss(LibStructuralModLoss modLoss)

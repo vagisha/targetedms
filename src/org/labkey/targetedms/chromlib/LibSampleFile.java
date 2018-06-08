@@ -40,7 +40,7 @@ public class LibSampleFile implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public String getFilePath()
@@ -50,7 +50,7 @@ public class LibSampleFile implements ObjectWithId
 
     public void setFilePath(String filePath)
     {
-        this._filePath = filePath;
+        _filePath = filePath;
     }
 
     public String getSampleName()
@@ -60,7 +60,7 @@ public class LibSampleFile implements ObjectWithId
 
     public void setSampleName(String sampleName)
     {
-        this._sampleName = sampleName;
+        _sampleName = sampleName;
     }
 
     public Date getAcquiredTime()
@@ -70,7 +70,7 @@ public class LibSampleFile implements ObjectWithId
 
     public void setAcquiredTime(Date acquiredTime)
     {
-        this._acquiredTime = acquiredTime;
+        _acquiredTime = acquiredTime;
     }
 
     public Date getModifiedTime()
@@ -80,7 +80,7 @@ public class LibSampleFile implements ObjectWithId
 
     public void setModifiedTime(Date modifiedTime)
     {
-        this._modifiedTime = modifiedTime;
+        _modifiedTime = modifiedTime;
     }
 
     public String getInstrumentIonizationType()
@@ -90,7 +90,7 @@ public class LibSampleFile implements ObjectWithId
 
     public void setInstrumentIonizationType(String instrumentIonizationType)
     {
-        this._instrumentIonizationType = instrumentIonizationType;
+        _instrumentIonizationType = instrumentIonizationType;
     }
 
     public String getInstrumentAnalyzer()
@@ -100,7 +100,7 @@ public class LibSampleFile implements ObjectWithId
 
     public void setInstrumentAnalyzer(String instrumentAnalyzer)
     {
-        this._instrumentAnalyzer = instrumentAnalyzer;
+        _instrumentAnalyzer = instrumentAnalyzer;
     }
 
     public String getInstrumentDetector()
@@ -110,7 +110,7 @@ public class LibSampleFile implements ObjectWithId
 
     public void setInstrumentDetector(String instrumentDetector)
     {
-        this._instrumentDetector = instrumentDetector;
+        _instrumentDetector = instrumentDetector;
     }
 
     @Override

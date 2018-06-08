@@ -35,7 +35,7 @@ public class LibPeptideStructuralModification implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public int getPeptideId()
@@ -65,7 +65,7 @@ public class LibPeptideStructuralModification implements ObjectWithId
 
     public void setIndexAa(Integer indexAa)
     {
-        this._indexAa = indexAa;
+        _indexAa = indexAa;
     }
 
     public Double getMassDiff()
@@ -75,7 +75,7 @@ public class LibPeptideStructuralModification implements ObjectWithId
 
     public void setMassDiff(Double massDiff)
     {
-        this._massDiff = massDiff;
+        _massDiff = massDiff;
     }
 
     @Override

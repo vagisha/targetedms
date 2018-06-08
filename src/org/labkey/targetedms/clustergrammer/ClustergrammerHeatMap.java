@@ -28,7 +28,7 @@ public class ClustergrammerHeatMap implements HeatMap
     public ClustergrammerHeatMap(Map<String, Map<String, Double>> rs, String title)
     {
         _subjectTable = rs;
-        this._title = title;
+        _title = title;
     }
 
     @Override
@@ -40,6 +40,6 @@ public class ClustergrammerHeatMap implements HeatMap
     @Override
     public String getTitle()
     {
-        return this._title;
+        return _title;
     }
 }

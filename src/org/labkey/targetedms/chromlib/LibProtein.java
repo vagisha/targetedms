@@ -40,7 +40,7 @@ public class LibProtein implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public String getName()
@@ -50,7 +50,7 @@ public class LibProtein implements ObjectWithId
 
     public void setName(String name)
     {
-        this._name = name;
+        _name = name;
     }
 
     public String getDescription()
@@ -70,7 +70,7 @@ public class LibProtein implements ObjectWithId
 
     public void setSequence(String sequence)
     {
-        this._sequence = sequence;
+        _sequence = sequence;
     }
 
     public void addPeptide(LibPeptide peptide)

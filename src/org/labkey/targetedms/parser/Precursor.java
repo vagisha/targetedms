@@ -35,7 +35,7 @@ public class Precursor extends GeneralPrecursor<Transition>
 
     public void setModifiedSequence(String modifiedSequence)
     {
-        this._modifiedSequence = modifiedSequence;
+        _modifiedSequence = modifiedSequence;
     }
 
     public double getNeutralMass()
@@ -45,7 +45,7 @@ public class Precursor extends GeneralPrecursor<Transition>
 
     public void setNeutralMass(double neutralMass)
     {
-        this._neutralMass = neutralMass;
+        _neutralMass = neutralMass;
     }
 
     public Double getDecoyMassShift()
@@ -55,7 +55,7 @@ public class Precursor extends GeneralPrecursor<Transition>
 
     public void setDecoyMassShift(Double decoyMassShift)
     {
-        this._decoyMassShift = decoyMassShift;
+        _decoyMassShift = decoyMassShift;
     }
 
     public LibraryInfo getLibraryInfo()

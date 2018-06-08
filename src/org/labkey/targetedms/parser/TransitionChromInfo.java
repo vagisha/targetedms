@@ -52,7 +52,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setTransitionId(int transitionId)
     {
-        this._transitionId = transitionId;
+        _transitionId = transitionId;
     }
 
     public int getPrecursorChromInfoId()
@@ -62,7 +62,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setPrecursorChromInfoId(int precursorChromInfoId)
     {
-        this._precursorChromInfoId = precursorChromInfoId;
+        _precursorChromInfoId = precursorChromInfoId;
     }
 
     public Double getRetentionTime()
@@ -72,7 +72,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setRetentionTime(Double retentionTime)
     {
-        this._retentionTime = retentionTime;
+        _retentionTime = retentionTime;
     }
 
     public Double getStartTime()
@@ -82,7 +82,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setStartTime(Double startTime)
     {
-        this._startTime = startTime;
+        _startTime = startTime;
     }
 
     public Double getEndTime()
@@ -92,7 +92,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setEndTime(Double endTime)
     {
-        this._endTime = endTime;
+        _endTime = endTime;
     }
 
     public Double getHeight()
@@ -102,7 +102,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setHeight(Double height)
     {
-        this._height = height;
+        _height = height;
     }
 
     public Double getArea()
@@ -112,7 +112,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setArea(Double area)
     {
-        this._area = area;
+        _area = area;
     }
 
     public Double getAreaNormalized()
@@ -122,7 +122,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setAreaNormalized(Double areaNormalized)
     {
-        this._areaNormalized = areaNormalized;
+        _areaNormalized = areaNormalized;
     }
 
     public Double getBackground()
@@ -132,7 +132,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setBackground(Double background)
     {
-        this._background = background;
+        _background = background;
     }
 
     public Double getMassErrorPPM()
@@ -152,7 +152,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setFwhm(Double fwhm)
     {
-        this._fwhm = fwhm;
+        _fwhm = fwhm;
     }
 
     public Boolean getFwhmDegenerate()
@@ -162,7 +162,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setFwhmDegenerate(Boolean fwhmDegenerate)
     {
-        this._fwhmDegenerate = fwhmDegenerate;
+        _fwhmDegenerate = fwhmDegenerate;
     }
 
     public Boolean getTruncated()
@@ -172,7 +172,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setTruncated(Boolean truncated)
     {
-        this._truncated = truncated;
+        _truncated = truncated;
     }
 
     public Integer getPeakRank()
@@ -182,7 +182,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setPeakRank(Integer peakRank)
     {
-        this._peakRank = peakRank;
+        _peakRank = peakRank;
     }
 
     public String getIdentified()
@@ -192,7 +192,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setIdentified(String identified)
     {
-        this._identified = identified;
+        _identified = identified;
     }
 
     public Integer getOptimizationStep()
@@ -202,7 +202,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setOptimizationStep(Integer optimizationStep)
     {
-        this._optimizationStep = optimizationStep;
+        _optimizationStep = optimizationStep;
     }
 
     public boolean isOptimizationPeak()
@@ -217,7 +217,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setUserSet(String userSet)
     {
-        this._userSet = userSet;
+        _userSet = userSet;
     }
 
     public String getNote()
@@ -227,7 +227,7 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
 
     public void setNote(String note)
     {
-        this._note = note;
+        _note = note;
     }
 
     public void setChromatogramIndex(int chromatogramIndex)

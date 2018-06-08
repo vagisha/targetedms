@@ -763,7 +763,7 @@ public class SkylineDocumentParser implements AutoCloseable
 
     private void readMeasuredResults(XMLStreamReader reader) throws XMLStreamException
     {
-         this._replicateList = new ArrayList<>();
+         _replicateList = new ArrayList<>();
 
          while(reader.hasNext()) {
 
@@ -776,7 +776,6 @@ public class SkylineDocumentParser implements AutoCloseable
              {
                  _replicateList.add(readReplicate(reader));
              }
-
          }
     }
 
@@ -797,11 +796,11 @@ public class SkylineDocumentParser implements AutoCloseable
 
             int evtType = _reader.next();
 
-            if(XmlUtil.isEndElement(reader, evtType, REPLICATE))
+            if (XmlUtil.isEndElement(reader, evtType, REPLICATE))
             {
                 break;
             }
-            if(XmlUtil.isStartElement(reader, evtType, SAMPLE_FILE))
+            if (XmlUtil.isStartElement(reader, evtType, SAMPLE_FILE))
             {
                 SampleFile sampleFile = readSampleFile(reader);
                 if (sampleFile.getSkylineId() == null)

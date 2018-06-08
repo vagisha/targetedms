@@ -44,7 +44,7 @@ public class LibTransition implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public int getPrecursorId()
@@ -64,7 +64,7 @@ public class LibTransition implements ObjectWithId
 
     public void setMz(Double mz)
     {
-        this._mz = mz;
+        _mz = mz;
     }
 
     public Integer getCharge()
@@ -74,7 +74,7 @@ public class LibTransition implements ObjectWithId
 
     public void setCharge(Integer charge)
     {
-        this._charge = charge;
+        _charge = charge;
     }
 
     public Double getNeutralMass()
@@ -84,7 +84,7 @@ public class LibTransition implements ObjectWithId
 
     public void setNeutralMass(Double neutralMass)
     {
-        this._neutralMass = neutralMass;
+        _neutralMass = neutralMass;
     }
 
     public Double getNeutralLossMass()
@@ -94,7 +94,7 @@ public class LibTransition implements ObjectWithId
 
     public void setNeutralLossMass(Double neutralLossMass)
     {
-        this._neutralLossMass = neutralLossMass;
+        _neutralLossMass = neutralLossMass;
     }
 
     public String getFragmentType()
@@ -104,7 +104,7 @@ public class LibTransition implements ObjectWithId
 
     public void setFragmentType(String fragmentType)
     {
-        this._fragmentType = fragmentType;
+        _fragmentType = fragmentType;
     }
 
     public Integer getFragmentOrdinal()
@@ -114,7 +114,7 @@ public class LibTransition implements ObjectWithId
 
     public void setFragmentOrdinal(Integer fragmentOrdinal)
     {
-        this._fragmentOrdinal = fragmentOrdinal;
+        _fragmentOrdinal = fragmentOrdinal;
     }
 
     public Integer getMassIndex()
@@ -124,7 +124,7 @@ public class LibTransition implements ObjectWithId
 
     public void setMassIndex(Integer massIndex)
     {
-        this._massIndex = massIndex;
+        _massIndex = massIndex;
     }
 
     public Double getArea()
@@ -134,7 +134,7 @@ public class LibTransition implements ObjectWithId
 
     public void setArea(Double area)
     {
-        this._area = area;
+        _area = area;
     }
 
     public Double getHeight()
@@ -144,7 +144,7 @@ public class LibTransition implements ObjectWithId
 
     public void setHeight(Double height)
     {
-        this._height = height;
+        _height = height;
     }
 
     public Double getFwhm()
@@ -154,7 +154,7 @@ public class LibTransition implements ObjectWithId
 
     public void setFwhm(Double fwhm)
     {
-        this._fwhm = fwhm;
+        _fwhm = fwhm;
     }
 
     public Integer getChromatogramIndex()
@@ -164,7 +164,7 @@ public class LibTransition implements ObjectWithId
 
     public void setChromatogramIndex(Integer chromatogramIndex)
     {
-        this._chromatogramIndex = chromatogramIndex;
+        _chromatogramIndex = chromatogramIndex;
     }
 
     @Override

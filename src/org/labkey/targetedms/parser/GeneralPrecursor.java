@@ -42,7 +42,7 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
 
     public void setGeneralMoleculeId(int gmId)
     {
-        this._generalMoleculeId = gmId;
+        _generalMoleculeId = gmId;
     }
 
     public int getCharge()
@@ -52,7 +52,7 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
 
     public void setCharge(int charge)
     {
-        this._charge = charge;
+        _charge = charge;
     }
 
     public double getMz()
@@ -62,7 +62,7 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
 
     public void setMz(double mz)
     {
-        this._mz = mz;
+        _mz = mz;
     }
 
     public Double getCollisionEnergy()
@@ -72,7 +72,7 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
 
     public void setCollisionEnergy(Double collisionEnergy)
     {
-        this._collisionEnergy = collisionEnergy;
+        _collisionEnergy = collisionEnergy;
     }
 
     public Double getDeclusteringPotential()
@@ -82,7 +82,7 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
 
     public void setDeclusteringPotential(Double declusteringPotential)
     {
-        this._declusteringPotential = declusteringPotential;
+        _declusteringPotential = declusteringPotential;
     }
 
     public void setNote(String note)
@@ -177,7 +177,7 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
 
     public void setIsotopeLabelId(int isotopeLabelId)
     {
-        this._isotopeLabelId = isotopeLabelId;
+        _isotopeLabelId = isotopeLabelId;
     }
 
     public String getIsotopeLabel()
@@ -187,6 +187,6 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
 
     public void setIsotopeLabel(String isotopeLabel)
     {
-        this._isotopeLabel = isotopeLabel;
+        _isotopeLabel = isotopeLabel;
     }
 }

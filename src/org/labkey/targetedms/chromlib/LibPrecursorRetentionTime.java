@@ -37,7 +37,7 @@ public class LibPrecursorRetentionTime implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public int getPrecursorId()
@@ -47,7 +47,7 @@ public class LibPrecursorRetentionTime implements ObjectWithId
 
     public void setPrecursorId(int precursorId)
     {
-        this._precursorId = precursorId;
+        _precursorId = precursorId;
     }
 
     public int getSampleFileId()
@@ -57,7 +57,7 @@ public class LibPrecursorRetentionTime implements ObjectWithId
 
     public void setSampleFileId(int sampleFileId)
     {
-        this._sampleFileId = sampleFileId;
+        _sampleFileId = sampleFileId;
     }
 
     public Double getRetentionTime()
@@ -67,7 +67,7 @@ public class LibPrecursorRetentionTime implements ObjectWithId
 
     public void setRetentionTime(Double retentionTime)
     {
-        this._retentionTime = retentionTime;
+        _retentionTime = retentionTime;
     }
 
     public Double getStartTime()
@@ -77,7 +77,7 @@ public class LibPrecursorRetentionTime implements ObjectWithId
 
     public void setStartTime(Double startTime)
     {
-        this._startTime = startTime;
+        _startTime = startTime;
     }
 
     public Double getEndTime()
@@ -87,7 +87,7 @@ public class LibPrecursorRetentionTime implements ObjectWithId
 
     public void setEndTime(Double endTime)
     {
-        this._endTime = endTime;
+        _endTime = endTime;
     }
 
     @Override

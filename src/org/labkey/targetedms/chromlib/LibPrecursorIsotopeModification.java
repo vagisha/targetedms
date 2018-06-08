@@ -35,7 +35,7 @@ public class LibPrecursorIsotopeModification implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public int getPrecursorId()
@@ -45,7 +45,7 @@ public class LibPrecursorIsotopeModification implements ObjectWithId
 
     public void setPrecursorId(int precursorId)
     {
-        this._precursorId = precursorId;
+        _precursorId = precursorId;
     }
 
     public int getIsotopeModificationId()
@@ -55,7 +55,7 @@ public class LibPrecursorIsotopeModification implements ObjectWithId
 
     public void setIsotopeModificationId(int isotopeModificationId)
     {
-        this._isotopeModificationId = isotopeModificationId;
+        _isotopeModificationId = isotopeModificationId;
     }
 
     public Integer getIndexAa()
@@ -65,7 +65,7 @@ public class LibPrecursorIsotopeModification implements ObjectWithId
 
     public void setIndexAa(Integer indexAa)
     {
-        this._indexAa = indexAa;
+        _indexAa = indexAa;
     }
 
     public Double getMassDiff()
@@ -75,7 +75,7 @@ public class LibPrecursorIsotopeModification implements ObjectWithId
 
     public void setMassDiff(Double massDiff)
     {
-        this._massDiff = massDiff;
+        _massDiff = massDiff;
     }
 
     @Override

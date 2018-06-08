@@ -35,7 +35,7 @@ public class GeneralMoleculeChromInfo extends ChromInfo
 
     public void setGeneralMoleculeId(int gMId)
     {
-        this._generalMoleculeId = gMId;
+        _generalMoleculeId = gMId;
     }
 
     public double getPeakCountRatio()
@@ -45,7 +45,7 @@ public class GeneralMoleculeChromInfo extends ChromInfo
 
     public void setPeakCountRatio(double peakCountRatio)
     {
-        this._peakCountRatio = peakCountRatio;
+        _peakCountRatio = peakCountRatio;
     }
 
     public Double getRetentionTime()
@@ -55,7 +55,7 @@ public class GeneralMoleculeChromInfo extends ChromInfo
 
     public void setRetentionTime(Double retentionTime)
     {
-        this._retentionTime = retentionTime;
+        _retentionTime = retentionTime;
     }
 
     public Double getCalculatedConcentration()

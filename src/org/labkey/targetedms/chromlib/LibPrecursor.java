@@ -58,7 +58,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public int getPeptideId()
@@ -78,7 +78,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setIsotopeLabel(String isotopeLabel)
     {
-        this._isotopeLabel = isotopeLabel;
+        _isotopeLabel = isotopeLabel;
     }
 
     public Double getMz()
@@ -88,7 +88,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setMz(Double mz)
     {
-        this._mz = mz;
+        _mz = mz;
     }
 
     public Integer getCharge()
@@ -98,7 +98,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setCharge(Integer charge)
     {
-        this._charge = charge;
+        _charge = charge;
     }
 
     public Double getNeutralMass()
@@ -108,7 +108,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setNeutralMass(Double neutralMass)
     {
-        this._neutralMass = neutralMass;
+        _neutralMass = neutralMass;
     }
 
     public String getModifiedSequence()
@@ -118,7 +118,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setModifiedSequence(String modifiedSequence)
     {
-        this._modifiedSequence = modifiedSequence;
+        _modifiedSequence = modifiedSequence;
     }
 
     public Double getCollisionEnergy()
@@ -128,7 +128,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setCollisionEnergy(Double collisionEnergy)
     {
-        this._collisionEnergy = collisionEnergy;
+        _collisionEnergy = collisionEnergy;
     }
 
     public Double getDeclusteringPotential()
@@ -138,7 +138,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setDeclusteringPotential(Double declusteringPotential)
     {
-        this._declusteringPotential = declusteringPotential;
+        _declusteringPotential = declusteringPotential;
     }
 
     public Double getTotalArea()
@@ -148,7 +148,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setTotalArea(Double totalArea)
     {
-        this._totalArea = totalArea;
+        _totalArea = totalArea;
     }
 
     public byte[] getChromatogram()
@@ -158,7 +158,7 @@ public class LibPrecursor implements ObjectWithId
 
     public void setChromatogram(byte[] chromatogram)
     {
-        this._chromatogram = chromatogram;
+        _chromatogram = chromatogram;
     }
 
     public int getUncompressedSize()

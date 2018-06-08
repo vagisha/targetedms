@@ -33,7 +33,7 @@ public class ChromInfo<AnnotationType extends AbstractAnnotation> extends Annota
 
     public void setSkylineSampleFileId(String skylineSampleFileId)
     {
-        this._skylineSampleFileId = skylineSampleFileId;
+        _skylineSampleFileId = skylineSampleFileId;
     }
 
     public String getReplicateName()
@@ -43,7 +43,7 @@ public class ChromInfo<AnnotationType extends AbstractAnnotation> extends Annota
 
     public void setReplicateName(String replicateName)
     {
-        this._replicateName = replicateName;
+        _replicateName = replicateName;
     }
 
     public int getSampleFileId()
@@ -53,6 +53,6 @@ public class ChromInfo<AnnotationType extends AbstractAnnotation> extends Annota
 
     public void setSampleFileId(int sampleFileId)
     {
-        this._sampleFileId = sampleFileId;
+        _sampleFileId = sampleFileId;
     }
 }

@@ -80,7 +80,7 @@ public class PrecursorChromInfoLitePlus extends SkylineEntity implements Precurs
 
     public void setSampleFileId(int sampleFileId)
     {
-        this._sampleFileId = sampleFileId;
+        _sampleFileId = sampleFileId;
     }
 
     public Double getBestRetentionTime()

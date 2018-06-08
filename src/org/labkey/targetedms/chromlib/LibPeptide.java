@@ -47,7 +47,7 @@ public class LibPeptide implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public Integer getProteinId()
@@ -67,7 +67,7 @@ public class LibPeptide implements ObjectWithId
 
     public void setSequence(String sequence)
     {
-        this._sequence = sequence;
+        _sequence = sequence;
     }
 
     public Integer getStartIndex()
@@ -77,7 +77,7 @@ public class LibPeptide implements ObjectWithId
 
     public void setStartIndex(Integer startIndex)
     {
-        this._startIndex = startIndex;
+        _startIndex = startIndex;
     }
 
     public Integer getEndIndex()
@@ -87,7 +87,7 @@ public class LibPeptide implements ObjectWithId
 
     public void setEndIndex(Integer endIndex)
     {
-        this._endIndex = endIndex;
+        _endIndex = endIndex;
     }
 
     public Character getPreviousAa()
@@ -97,7 +97,7 @@ public class LibPeptide implements ObjectWithId
 
     public void setPreviousAa(Character previousAa)
     {
-        this._previousAa = previousAa;
+        _previousAa = previousAa;
     }
 
     public Character getNextAa()
@@ -107,7 +107,7 @@ public class LibPeptide implements ObjectWithId
 
     public void setNextAa(Character nextAa)
     {
-        this._nextAa = nextAa;
+        _nextAa = nextAa;
     }
 
     public Double getCalcNeutralMass()
@@ -117,7 +117,7 @@ public class LibPeptide implements ObjectWithId
 
     public void setCalcNeutralMass(Double calcNeutralMass)
     {
-        this._calcNeutralMass = calcNeutralMass;
+        _calcNeutralMass = calcNeutralMass;
     }
 
     public Integer getNumMissedCleavages()
@@ -127,7 +127,7 @@ public class LibPeptide implements ObjectWithId
 
     public void setNumMissedCleavages(Integer numMissedCleavages)
     {
-        this._numMissedCleavages = numMissedCleavages;
+        _numMissedCleavages = numMissedCleavages;
     }
 
     public void addStructuralModification(LibPeptideStructuralModification structuralModification)

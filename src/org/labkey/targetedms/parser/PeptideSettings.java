@@ -489,7 +489,7 @@ public class PeptideSettings
 
         public void setVariable(boolean variable)
         {
-            this._variable = variable;
+            _variable = variable;
         }
     }
 

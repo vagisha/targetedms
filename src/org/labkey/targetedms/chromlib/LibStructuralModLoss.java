@@ -35,7 +35,7 @@ public class LibStructuralModLoss implements ObjectWithId
 
     public void setId(int id)
     {
-        this._id = id;
+        _id = id;
     }
 
     public int getStructuralModId()
@@ -55,7 +55,7 @@ public class LibStructuralModLoss implements ObjectWithId
 
     public void setFormula(String formula)
     {
-        this._formula = formula;
+        _formula = formula;
     }
 
     public Double getMassDiffMono()
@@ -65,7 +65,7 @@ public class LibStructuralModLoss implements ObjectWithId
 
     public void setMassDiffMono(Double massDiffMono)
     {
-        this._massDiffMono = massDiffMono;
+        _massDiffMono = massDiffMono;
     }
 
     public Double getMassDiffAvg()
@@ -75,7 +75,7 @@ public class LibStructuralModLoss implements ObjectWithId
 
     public void setMassDiffAvg(Double massDiffAvg)
     {
-        this._massDiffAvg = massDiffAvg;
+        _massDiffAvg = massDiffAvg;
     }
 
     @Override

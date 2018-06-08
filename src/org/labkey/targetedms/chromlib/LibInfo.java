@@ -41,7 +41,7 @@ public class LibInfo
 
     public void setPanoramaServer(String panoramaServer)
     {
-        this._panoramaServer = panoramaServer;
+        _panoramaServer = panoramaServer;
     }
 
     public String getContainer()
@@ -51,7 +51,7 @@ public class LibInfo
 
     public void setContainer(String container)
     {
-        this._container = container;
+        _container = container;
     }
 
     public Date getCreated()
@@ -61,7 +61,7 @@ public class LibInfo
 
     public void setCreated(Date created)
     {
-        this._created = created;
+        _created = created;
     }
 
     public String getSchemaVersion()
@@ -71,7 +71,7 @@ public class LibInfo
 
     public void setSchemaVersion(String schemaVersion)
     {
-        this._schemaVersion = schemaVersion;
+        _schemaVersion = schemaVersion;
     }
 
     public int getLibraryRevision()
@@ -81,7 +81,7 @@ public class LibInfo
 
     public void setLibraryRevision(int libraryRevision)
     {
-        this._libraryRevision = libraryRevision;
+        _libraryRevision = libraryRevision;
     }
 
     public int getProteins()
@@ -91,7 +91,7 @@ public class LibInfo
 
     public void setProteins(int proteins)
     {
-        this._proteins = proteins;
+        _proteins = proteins;
     }
 
     public int getPeptides()
@@ -101,7 +101,7 @@ public class LibInfo
 
     public void setPeptides(int peptides)
     {
-        this._peptides = peptides;
+        _peptides = peptides;
     }
 
     public int getPrecursors()
@@ -111,7 +111,7 @@ public class LibInfo
 
     public void setPrecursors(int precursors)
     {
-        this._precursors = precursors;
+        _precursors = precursors;
     }
 
     public int getTransitions()
@@ -121,7 +121,7 @@ public class LibInfo
 
     public void setTransitions(int transitions)
     {
-        this._transitions = transitions;
+        _transitions = transitions;
     }
 
     @Override
