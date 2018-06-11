@@ -42,6 +42,7 @@ import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.usageMetrics.UsageMetricsService;
 import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.UsageReportingLevel;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.JspView;
@@ -366,7 +367,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         UsageMetricsService svc = UsageMetricsService.get();
         if (null != svc)
         {
-            svc.registerUsageMetrics(NAME, () ->
+            svc.registerUsageMetrics(UsageReportingLevel.MEDIUM, NAME, () ->
             {
                 Map<String, Object> metric = new HashMap<>();
                 metric.put("runCount", new SqlSelector(DbSchema.get("TargetedMS", DbSchemaType.Module), "SELECT COUNT(*) FROM TargetedMS.Runs WHERE Deleted = ?", Boolean.FALSE).getObject(Long.class));
