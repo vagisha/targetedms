@@ -8,3 +8,14 @@ dependencies
    BuildUtils.addLabKeyDependency(project: project, config: "jspCompile", depProjectPath: ":server:modules:ms1", depProjectConfig: "apiCompile")
 
 }
+
+// TODO move resources files into resources directory to avoid this overlap
+sourceSets {
+   main {
+      resources {
+         srcDirs = ['src'] // src is included because it contains some proto files
+         exclude '**/*.java'
+         exclude '**/*.jsp'
+      }
+   }
+}
