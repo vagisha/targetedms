@@ -15,6 +15,7 @@
  */
 package org.labkey.test.components.targetedms;
 
+import com.google.common.base.Predicate;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
@@ -25,6 +26,7 @@ import org.labkey.test.components.ext4.RadioButton;
 import org.labkey.test.components.ext4.Window;
 import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.LogMethod;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -515,10 +517,21 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public WebElement openExclusionBubble(String acquiredDate)
     {
-        WebDriverWrapper.waitFor(() -> {
-            getWrapper().mouseOver(getPointByAcquiredDate(acquiredDate));
-            return getWrapper().isElementPresent(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
-        }, "Exclusion pop-up didn't appear", WebDriverWrapper.WAIT_FOR_JAVASCRIPT);
+        getWrapper().shortWait().ignoring(StaleElementReferenceException.class).until(new Predicate<WebDriver>()
+        {
+            @Override
+            public boolean apply(@javax.annotation.Nullable WebDriver input)
+            {
+                getWrapper().mouseOver(getPointByAcquiredDate(acquiredDate));
+                return getWrapper().isElementPresent(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
+            }
+
+            @Override
+            public String toString()
+            {
+                return "Exclusion pop-up";
+            }
+        });
         return elementCache().hopscotchBubble.findElement(getDriver());
     }
 
