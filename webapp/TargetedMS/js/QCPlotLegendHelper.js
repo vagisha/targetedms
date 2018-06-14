@@ -9,7 +9,7 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
     customIonPrefixDictionary: {},
     ellipsis: '\u2026',
 
-    moleculesStartWith(molecules, prefix) {
+    moleculesStartWith: function (molecules, prefix) {
         return molecules.every(function (molecule) {
             return molecule.startsWith(prefix);
         })
