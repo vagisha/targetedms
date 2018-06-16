@@ -27,6 +27,7 @@ public class GeneralMoleculeChromInfo extends ChromInfo
     private double _peakCountRatio;
     private Double _retentionTime;
     private Double _calculatedConcentration;
+    private boolean _excludeFromCalibration;
 
     public int getGeneralMoleculeId()
     {
@@ -66,5 +67,15 @@ public class GeneralMoleculeChromInfo extends ChromInfo
     public void setCalculatedConcentration(Double calculatedConcentration)
     {
         _calculatedConcentration = calculatedConcentration;
+    }
+
+    public boolean isExcludeFromCalibration()
+    {
+        return _excludeFromCalibration;
+    }
+
+    public void setExcludeFromCalibration(boolean excludeFromCalibration)
+    {
+        _excludeFromCalibration = excludeFromCalibration;
     }
 }

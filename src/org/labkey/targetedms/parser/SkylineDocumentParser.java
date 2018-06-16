@@ -1399,6 +1399,7 @@ public class SkylineDocumentParser implements AutoCloseable
         setSkylineSampleFileId(reader, chromInfo);
         chromInfo.setRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
         chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
+        chromInfo.setExcludeFromCalibration(XmlUtil.readBooleanAttribute(reader, "exclude_from_calibration", false));
         return chromInfo;
     }
 
@@ -2531,11 +2532,11 @@ public class SkylineDocumentParser implements AutoCloseable
             }
 
             List<ChromGroupHeaderInfo> finalList = new ArrayList<>();
-            for(int c = 0; c < chromArray.length; c++)
+            for (ChromGroupHeaderInfo info : chromArray)
             {
-                if(chromArray[c] != null)
+                if (info != null)
                 {
-                    finalList.add(chromArray[c]);
+                    finalList.add(info);
                 }
             }
             return finalList;
@@ -2573,6 +2574,4 @@ public class SkylineDocumentParser implements AutoCloseable
     {
         return _replicateCount;
     }
-
-
 }

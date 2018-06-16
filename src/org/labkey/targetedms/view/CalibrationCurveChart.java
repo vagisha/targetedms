@@ -174,6 +174,7 @@ public class CalibrationCurveChart
             point.put("y", y);
             point.put("type", sampleType.toString());
             point.put("name", replicate.getName());
+            point.put("excluded", chromInfo.isExcludeFromCalibration());
 
             jsonPoints.put(point);
         }

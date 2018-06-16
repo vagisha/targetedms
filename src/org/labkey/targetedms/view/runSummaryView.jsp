@@ -91,7 +91,7 @@
             transitionCount: <%=run.getTransitionCount()%>,
             peptideGroupCount: <%=run.getPeptideGroupCount()%>,
             peptideGroupLabel: <%=q(peptideGroupLabel)%>,
-            calibrationCurveCount: <%=bean.getCalibrationCurveCount()%>,
+            calibrationCurveCount: <%=run.getCalibrationCurveCount()%>,
             replicateCount: <%=run.getReplicateCount()%>,
             versionCount: <%=bean.getVersionCount()%>,
             runName: <%=q(run.getDescription())%>,

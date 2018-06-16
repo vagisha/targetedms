@@ -72,6 +72,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     protected int _precursorCount;
     protected int _transitionCount;
     protected int _replicateCount;
+    protected int _calibrationCurveCount;
 
     protected Integer _dataId; // FK to exp.data's RowId column for the .sky file
     protected Integer _skydDataId; // FK to exp.data's RowId column for the .skyd file
@@ -302,7 +303,15 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         return _replicateCount;
     }
 
+    public int getCalibrationCurveCount()
+    {
+        return _calibrationCurveCount;
+    }
 
+    public void setCalibrationCurveCount(int calibrationCurveCount)
+    {
+        _calibrationCurveCount = calibrationCurveCount;
+    }
 
     public RepresentativeDataState getRepresentativeDataState()
     {

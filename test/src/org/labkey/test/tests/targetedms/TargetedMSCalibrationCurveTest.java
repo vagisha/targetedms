@@ -496,6 +496,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 "Standard",
                 "QC",
                 "Unknown",
+                "Excluded",
                 "Calibration Curve",
                 "Regression Fit: " + (quadratic?"quadratic":"linear"),
                 "Norm. Method: ratio_to_heavy",

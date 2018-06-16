@@ -587,16 +587,6 @@ public class SkylineDocImporter
                     }
                 }
 
-            run.setPeptideGroupCount(parser.getPeptideGroupCount());
-            run.setPeptideCount(parser.getPeptideCount());
-            run.setSmallMoleculeCount(parser.getSmallMoleculeCount());
-            run.setPrecursorCount(parser.getPrecursorCount());
-            run.setTransitionCount(parser.getTransitionCount());
-            run.setReplicateCount(parser.getReplicateCount());
-
-            run.setDocumentGUID(parser.getDocumentGUID());
-            Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
-
             List<GroupComparisonSettings> groupComparisons = new ArrayList<>(dataSettings.getGroupComparisons());
             for (GroupComparisonSettings groupComparison : groupComparisons) {
                 groupComparison.setRunId(_runId);
@@ -608,7 +598,18 @@ public class SkylineDocImporter
                     resolveRepresentativeData(run);
                 }
 
-            quantifyRun(run, quantificationSettings, groupComparisons);
+            int calCurvesCount = quantifyRun(run, quantificationSettings, groupComparisons);
+
+            run.setPeptideGroupCount(parser.getPeptideGroupCount());
+            run.setPeptideCount(parser.getPeptideCount());
+            run.setSmallMoleculeCount(parser.getSmallMoleculeCount());
+            run.setPrecursorCount(parser.getPrecursorCount());
+            run.setTransitionCount(parser.getTransitionCount());
+            run.setReplicateCount(parser.getReplicateCount());
+            run.setCalibrationCurveCount(calCurvesCount);
+
+            run.setDocumentGUID(parser.getDocumentGUID());
+            Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
             if (folderType == TargetedMSModule.FolderType.QC)
             {
@@ -1922,7 +1923,8 @@ public class SkylineDocImporter
         _log.error(message, e);
     }
 
-    void quantifyRun(TargetedMSRun run, QuantificationSettings quantificationSettings, Collection<GroupComparisonSettings> groupComparisons)
+    /** @return number of calibration curves in this run */
+    int quantifyRun(TargetedMSRun run, QuantificationSettings quantificationSettings, Collection<GroupComparisonSettings> groupComparisons)
     {
         RegressionFit regressionFit = RegressionFit.NONE;
         if (quantificationSettings != null)
@@ -1931,7 +1933,7 @@ public class SkylineDocImporter
         }
         if (groupComparisons.isEmpty() && regressionFit == RegressionFit.NONE)
         {
-            return;
+            return 0;
         }
 
         RunQuantifier quantifier = new RunQuantifier(run, _user, _container);
@@ -1945,7 +1947,8 @@ public class SkylineDocImporter
         if (regressionFit != RegressionFit.NONE)
         {
             List<GeneralMoleculeChromInfo> moleculeChromInfos = new ArrayList<>();
-            for (CalibrationCurveEntity calibrationCurve : quantifier.calculateCalibrationCurves(quantificationSettings, moleculeChromInfos))
+            List<CalibrationCurveEntity> calibrationCurves = quantifier.calculateCalibrationCurves(quantificationSettings, moleculeChromInfos);
+            for (CalibrationCurveEntity calibrationCurve : calibrationCurves)
             {
                 Table.insert(_user, TargetedMSManager.getTableInfoCalibrationCurve(), calibrationCurve);
             }
@@ -1953,7 +1956,9 @@ public class SkylineDocImporter
             {
                 Table.update(_user, TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), chromInfo, chromInfo.getId());
             }
+            return calibrationCurves.size();
         }
+        return 0;
     }
 
     @Nullable

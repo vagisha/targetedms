@@ -605,6 +605,7 @@ public class TargetedMSSchema extends UserSchema
 
         boolean hasSmallMolecules = TargetedMSManager.containerHasSmallMolecules(getContainer());
         boolean hasPeptides = TargetedMSManager.containerHasPeptides(getContainer());
+        boolean hasCalibrationCurves = TargetedMSManager.containerHasCalibrationCurves(getContainer());
         String peptideGroupColName = (hasSmallMolecules ? COL_LIST : COL_PROTEIN) + "s";
 
         skyDocDetailColumn.setFk(new LookupForeignKey(url, "id", "Id", "Description")
@@ -683,6 +684,7 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn("Precursors", result.getRealTable().getColumn("PrecursorCount"));
                 result.addWrapColumn("Transitions", result.getRealTable().getColumn("TransitionCount"));
                 result.addWrapColumn("Replicates", result.getRealTable().getColumn("ReplicateCount"));
+                result.addWrapColumn("CalibrationCurves", result.getRealTable().getColumn("CalibrationCurveCount"));
 
                 return result;
             }
@@ -726,6 +728,8 @@ public class TargetedMSSchema extends UserSchema
                     _fieldKeys.add(FieldKey.fromParts("File", "Precursors"));
                     _fieldKeys.add(FieldKey.fromParts("File", "Transitions"));
                     _fieldKeys.add(FieldKey.fromParts("File", "Replicates"));
+                    if (hasCalibrationCurves)
+                        _fieldKeys.add(FieldKey.fromParts("File", "CalibrationCurves"));
                 }
                 return _fieldKeys;
             }

@@ -1966,21 +1966,11 @@ public class TargetedMSManager
         return linkedRowIds;
     }
 
-    public static int getCalibrationCurveCount(int runId)
-    {
-        return getCountForRunFKTable(runId, getTableInfoCalibrationCurve());
-    }
-
     private static int getCountForRunFKTable(int runId, TableInfo table)
     {
         SimpleFilter runFilter = new SimpleFilter(FieldKey.fromParts("RunId"), runId, CompareType.EQUAL);
         TableSelector selector = new TableSelector(table, runFilter, null);
         return toIntExact(selector.getRowCount());
-    }
-
-    public static int getReplicateCount(int runId)
-    {
-        return getCountForRunFKTable(runId, getTableInfoReplicate());
     }
 
     public List<String> getReplicateSubgroupNames(User user, Container container, @NotNull GeneralMolecule molecule)
@@ -2007,6 +1997,11 @@ public class TargetedMSManager
     public static boolean containerHasPeptides(Container container)
     {
         return new SqlSelector(TargetedMSManager.getSchema(), new SQLFragment("SELECT Id FROM ", container, false).append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE PeptideCount > 0 AND Container = ? AND Deleted = ?")).exists();
+    }
+
+    public static boolean containerHasCalibrationCurves(Container container)
+    {
+        return new SqlSelector(TargetedMSManager.getSchema(), new SQLFragment("SELECT Id FROM ", container, false).append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE CalibrationCurveCount > 0 AND Container = ? AND Deleted = ?")).exists();
     }
 
 }

@@ -161,7 +161,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                 }),
                 new LABKEY.vis.Layer({
                     data: this.data.dataPoints,
-                    geom: new LABKEY.vis.Geom.Point({size: 5}),
+                    geom: new LABKEY.vis.Geom.Point({size: 5, opacity: 0.75}),
                     aes: {
                         y: 'y',
                         x: 'x',
@@ -186,7 +186,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                             d3.selectAll('svg g.layer path[stroke-opacity="0"').transition().attr('stroke-opacity', .5)
                         },
                         hoverText: function (row) {
-                            return 'Name: ' + row.name + '\nPeak Area Ratio: ' + me.formatLegendValue(row.y) + '\nConcentration: ' + me.formatLegendValue(row.x);
+                            return 'Name: ' + row.name + '\nPeak Area Ratio: ' + me.formatLegendValue(row.y) + '\nConcentration: ' + me.formatLegendValue(row.x) + (row.excluded ? '\nExcluded from calibration' : '');
                         }
                     }
                 })
@@ -194,6 +194,9 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
             aes: {
                 color: function (row) {
                     return row.type;
+                },
+                shape: function (row) {
+                    return row.excluded ? 'Excluded' : 'Included';
                 }
             },
             scales: {
@@ -228,7 +231,7 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
     getLegendDataPointCalculations: function (scope, point) {
 
-        return [
+        var result = [
             {text: 'Selected Point', separator: true},
             {text: 'Replicate: ' + point.name, color: 'white'},
             {text: 'Peak Area Ratio: ' + scope.formatLegendValue(point.y), color: 'white'},
@@ -237,7 +240,11 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
                 text: 'Calc. Concentration: ' + scope.formatLegendValue(scope.getQuadraticIntersect(scope, point.y)),
                 color: 'white'
             }
-        ]
+        ];
+        if (point.excluded) {
+            result.push({text: 'Excluded from calibration', color: 'white'});
+        }
+        return result
     },
 
     getLegendDataSlopeCalculations: function (scope) {
@@ -261,9 +268,11 @@ Ext4.define('LABKEY.targetedms.CalibrationCurve', {
 
     getLegendDataInfo: function (scope) {
         return [
-            {text: 'Standard', color: scope.colors['standard']},
-            {text: 'QC', color: scope.colors['qc']},
-            {text: 'Unknown', color: scope.colors['unknown']},
+            {text: 'Standard', color: scope.colors['standard'], shape:LABKEY.vis.Scale.Shape()[0]},
+            {text: 'QC', color: scope.colors['qc'], shape:LABKEY.vis.Scale.Shape()[0]},
+            {text: 'Unknown', color: scope.colors['unknown'], shape:LABKEY.vis.Scale.Shape()[0]},
+            {text: '', separator: true},
+            {text: 'Excluded', color: scope.colors['standard'], shape: LABKEY.vis.Scale.Shape()[1]},
             {text: '', separator: true}
         ];
     },

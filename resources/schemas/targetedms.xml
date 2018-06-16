@@ -160,21 +160,31 @@
             <column columnName="DocumentGUID"/>
             <column columnName="PeptideGroupCount">
                 <formatString>#,###</formatString>
+                <url>/targetedms-showPrecursorList.view?id=${Id}</url>
             </column>
             <column columnName="PeptideCount">
                 <formatString>#,###</formatString>
+                <url>/targetedms-showPrecursorList.view?id=${Id}</url>
             </column>
             <column columnName="SmallMoleculeCount">
                 <formatString>#,###</formatString>
+                <url>/targetedms-showPrecursorList.view?id=${Id}</url>
             </column>
             <column columnName="PrecursorCount">
                 <formatString>#,###</formatString>
+                <url>/targetedms-showPrecursorList.view?id=${Id}</url>
             </column>
             <column columnName="TransitionCount">
                 <formatString>#,###</formatString>
+                <url>/targetedms-showTransitionList.view?id=${Id}</url>
             </column>
             <column columnName="ReplicateCount">
                 <formatString>#,###</formatString>
+                <url>/targetedms-showReplicates.view?id=${Id}</url>
+            </column>
+            <column columnName="CalibrationCurveCount">
+                <formatString>#,###</formatString>
+                <url>/targetedms-showCalibrationCurves.view?id=${Id}</url>
             </column>
         </columns>
     </table>
@@ -321,6 +331,7 @@
             <column columnName="CalculatedConcentration">
                 <formatString>0.000</formatString>
             </column>
+            <column columnName="ExcludeFromCalibration" />
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="GeneralPrecursor">
