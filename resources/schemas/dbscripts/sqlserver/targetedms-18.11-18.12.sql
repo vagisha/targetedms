@@ -21,4 +21,7 @@ GO
 UPDATE targetedms.Runs SET CalibrationCurveCount = (SELECT COUNT(c.id) FROM targetedms.CalibrationCurve c WHERE c.RunId = targetedms.Runs.Id);
 
 ALTER TABLE targetedms.GeneralMoleculeChromInfo ADD ExcludeFromCalibration BIT;
+
+GO
+
 UPDATE targetedms.GeneralMoleculeChromInfo SET ExcludeFromCalibration = 0;
