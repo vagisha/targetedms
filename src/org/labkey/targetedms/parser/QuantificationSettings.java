@@ -28,6 +28,9 @@ public class QuantificationSettings extends SkylineEntity
     private String _normalizationMethod;
     private Integer _msLevel;
     private String _units;
+    @Nullable private Double _maxLOQBias;
+    @Nullable private Double _maxLOQCV;
+    @Nullable private String _lodCalculation;
 
     public int getRunId()
     {
@@ -93,5 +96,36 @@ public class QuantificationSettings extends SkylineEntity
     public void setUnits(@Nullable String units)
     {
         _units = units;
+    }
+
+    @Nullable
+    public Double getMaxLOQBias()
+    {
+        return _maxLOQBias;
+    }
+
+    public void setMaxLOQBias(@Nullable Double maxLOQBias)
+    {
+        _maxLOQBias = maxLOQBias;
+    }
+
+    public @Nullable Double getMaxLOQCV()
+    {
+        return _maxLOQCV;
+    }
+
+    public void setMaxLOQCV(@Nullable Double maxLOQCV)
+    {
+        _maxLOQCV = maxLOQCV;
+    }
+
+    public @Nullable String getLODCalculation()
+    {
+        return _lodCalculation;
+    }
+
+    public void setLODCalculation(@Nullable String lodCalculation)
+    {
+        _lodCalculation = lodCalculation;
     }
 }

@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NonNls;
 import org.labkey.api.util.SkipMothershipLogging;
 
 /**
+ * Indicates there was something wrong with an input file.
  * Created by Josh on 10/19/2017.
  */
 public class PanoramaBadDataException extends RuntimeException implements SkipMothershipLogging

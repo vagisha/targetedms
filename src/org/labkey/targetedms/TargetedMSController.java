@@ -114,7 +114,6 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HelpTopic;
@@ -161,6 +160,7 @@ import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
+import org.labkey.targetedms.parser.QuantificationSettings;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -6559,6 +6559,9 @@ public class TargetedMSController extends SpringActionController
             JspView<FomForm> figuresOfMeritView = new JspView<>("/org/labkey/targetedms/view/figuresOfMerit.jsp", form);
             figuresOfMeritView.setTitle("Figures of Merit");
 
+            QuantificationSettings settings = new TableSelector(schema.getTable(TargetedMSSchema.TABLE_QUANTIIFICATION_SETTINGS), new SimpleFilter(FieldKey.fromParts("RunId"), form.getRunId()), null).getObject(QuantificationSettings.class);
+            form.setQuantificationSettings(settings);
+
             if (form.getPeptideName() != null)
             {
                 _generalMolecule = PeptideManager.getPeptide(getContainer(), form.getGeneralMoleculeId());
@@ -6635,6 +6638,7 @@ public class TargetedMSController extends SpringActionController
         String _moleculeName;
         String _fileName;
         String _sampleFiles;
+        QuantificationSettings _settings;
 
         public Integer getRunId()
         {
@@ -6694,6 +6698,29 @@ public class TargetedMSController extends SpringActionController
         public void setSampleFiles(String sampleFiles)
         {
             _sampleFiles = sampleFiles;
+        }
+
+        private void setQuantificationSettings(QuantificationSettings settings)
+        {
+            _settings = settings;
+        }
+
+        /** Defaults to 30 if nothing is set */
+        public double getMaxLOQBias()
+        {
+            return _settings == null || _settings.getMaxLOQBias() == null ? 30.0 : _settings.getMaxLOQBias().doubleValue();
+        }
+
+        /** Defaults to null if nothing is set */
+        public Double getMaxLOQCV()
+        {
+            return _settings == null ? null : _settings.getMaxLOQCV();
+        }
+
+        /** Defaults to "none" if nothing is set */
+        public String getLODCalculation()
+        {
+            return _settings == null || _settings.getLODCalculation() == null ? "none" : _settings.getLODCalculation();
         }
     }
 

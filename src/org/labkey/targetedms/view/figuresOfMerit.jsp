@@ -34,6 +34,7 @@
                     <tbody id="standard-body"/>
                 </table>
                 <div id="bias-limit"></div>
+                <div id="cv-limit"></div>
                 <div id="loq-stat"></div>
                 <div id="uloq-stat"></div>
             </labkey:panel>
@@ -54,12 +55,14 @@
         this.$ = $;
 
         this.moleculeId = <%=bean.getGeneralMoleculeId()%>;
-        this.moleculeName = "<%=bean.getMoleculeName()%>";
-        this.peptideName = "<%=bean.getPeptideName()%>";
-        this.fileName = "<%=bean.getFileName()%>";
-        this.sampleFiles = "<%=bean.getSampleFiles()%>";
+        this.moleculeName = <%=q(bean.getMoleculeName())%>;
+        this.peptideName = <%=q(bean.getPeptideName())%>;
+        this.fileName = <%=q(bean.getFileName())%>;
+        this.sampleFiles = <%=q(bean.getSampleFiles())%>;
         this.runId = <%=bean.getRunId()%>;
-        this.biasLimit = 30;  // percent
+        this.biasLimit = <%=bean.getMaxLOQBias()%>;  // percent
+        this.cvLimit = <%=text(bean.getMaxLOQCV() == null ? "null" : Double.toString(bean.getMaxLOQCV()))%>;  // percent, can be null, in which case CV is ignored as a criteria
+        this.lodCalculation = <%=q(bean.getLODCalculation())%>;  // 'none', etc
         this.xlsExport = [];
         this.title = "Molecule ID: " + this.moleculeId;
         this.sampleListCollapsed = true;
@@ -414,7 +417,8 @@
             var loq = 'NA', uloq = 'NA', bias;
             this.hdrLabels.forEach(function(label, index) {
                 bias = Math.abs(Number(this.summaryData[label]["Bias"]));
-                if (bias <= this.biasLimit) {
+                cv = Math.abs(Number(this.summaryData[label]["CV"]));
+                if (bias <= this.biasLimit && (this.cvLimit == null || cv <= this.cvLimit)) {
                     if (loq === 'NA') {
                         loq = label;
                     }
@@ -426,11 +430,13 @@
 
             var units = this.Units ? this.Units : '';
             $('#bias-limit').html('Bias Limit: ' + this.biasLimit + '%');
+            $('#cv-limit').html('CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A'));
             $('#loq-stat').html('LOQ: ' + loq + ' ' + units);
             $('#uloq-stat').html('ULOQ: ' + uloq + ' ' + units);
 
             this.xlsExport.push([]);
             this.xlsExport.push(['Bias Limit: ' + this.biasLimit + '%']);
+            this.xlsExport.push(['CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A')]);
             this.xlsExport.push(['LOQ: ' + loq + ' ' + units]);
             this.xlsExport.push(['ULOQ: ' + uloq + ' ' + units]);
         };

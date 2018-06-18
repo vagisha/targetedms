@@ -85,6 +85,9 @@ class PeptideSettingsParser
     private static final String NORMALIZATION = "normalization";
     private static final String MS_LEVEL = "ms_level";
     private static final String UNITS = "units";
+    private static final String MAX_LOQ_BIAS = "max_loq_bias";
+    private static final String MAX_LOQ_CV = "max_loq_cv";
+    private static final String LOD_CALCULATION = "lod_calculation";
 
     private String _documentName;
 
@@ -539,6 +542,9 @@ class PeptideSettingsParser
         quantificationSettings.setNormalizationMethod(XmlUtil.readAttribute(reader, NORMALIZATION));
         quantificationSettings.setMsLevel(XmlUtil.readIntegerAttribute(reader, MS_LEVEL));
         quantificationSettings.setUnits(XmlUtil.readAttribute(reader, UNITS));
+        quantificationSettings.setMaxLOQBias(XmlUtil.readDoubleAttribute(reader, MAX_LOQ_BIAS));
+        quantificationSettings.setMaxLOQCV(XmlUtil.readDoubleAttribute(reader, MAX_LOQ_CV));
+        quantificationSettings.setLODCalculation(XmlUtil.readAttribute(reader, LOD_CALCULATION));
         return quantificationSettings;
     }
 }

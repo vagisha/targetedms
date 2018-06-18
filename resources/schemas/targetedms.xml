@@ -1616,6 +1616,9 @@
             <column columnName="Normalizationmethod"/>
             <column columnName="MSLevel"/>
             <column columnName="Units"/>
+            <column columnName="MaxLOQBias"/>
+            <column columnName="MaxLOQCV"/>
+            <column columnName="LODCalculation"/>
         </columns>
     </table>
 </tables>
