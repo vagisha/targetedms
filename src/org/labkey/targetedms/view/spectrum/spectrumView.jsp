@@ -77,6 +77,8 @@ Ext4.onReady(function () {
     $("#<%=bean.getLorikeetId()%>").specview({sequence: <%= PageFlowUtil.jsString(bean.getPeptide()) %>,
         staticMods: <%= bean.getStructuralModifications()%>,
         variableMods: <%= bean.getVariableModifications()%>,
+        ntermMod: <%=bean.getNtermModMass()%>,
+        ctermMod: <%=bean.getCtermModMass()%>,
         maxNeutralLossCount: <%= bean.getMaxNeutralLosses()%>,
         width: 600,
         charge: <%= bean.getCharge()%>,

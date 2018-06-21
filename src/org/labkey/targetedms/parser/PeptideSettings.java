@@ -434,7 +434,7 @@ public class PeptideSettings
         private int _runId;
         private int _structuralModId;
 
-        private Boolean explicitMod;
+        private Boolean _explicitMod;
         private List<PotentialLoss> _potentialLosses;
 
         public int getRunId()
@@ -459,12 +459,17 @@ public class PeptideSettings
 
         public Boolean getExplicitMod()
         {
-            return explicitMod;
+            return _explicitMod;
+        }
+
+        public boolean isModExplicit()
+        {
+            return _explicitMod == null ? false : _explicitMod;
         }
 
         public void setExplicitMod(Boolean explicitMod)
         {
-            this.explicitMod = explicitMod;
+            _explicitMod = explicitMod;
         }
 
         public void setPotentialLosses(List<PotentialLoss> potentialLosses)

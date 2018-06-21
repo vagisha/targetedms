@@ -43,6 +43,9 @@ public class LibrarySpectrumMatch
     private String _lorikeetId;
     List<Peptide.StructuralModification> _structuralModifications;
     private Set<Integer> _variableStructuralMods = new HashSet<>();
+
+    PeptideSettings.RunStructuralModification _ntermMod = null;
+    PeptideSettings.RunStructuralModification _ctermMod = null;
     Map<Integer, List<PeptideSettings.PotentialLoss>> _potentialLossIdMap;
     List<Peptide.IsotopeModification> _isotopeModifications;
     private int _maxNeutralLosses;
@@ -162,7 +165,18 @@ public class LibrarySpectrumMatch
         {
             for(PeptideSettings.RunStructuralModification mod: runMods)
             {
-                if(mod.isVariable())
+                if(mod.getAminoAcid() == null)
+                {
+                    if(mod.getTerminus() != null && mod.getTerminus().equalsIgnoreCase("N"))
+                    {
+                        _ntermMod = mod;
+                    }
+                    else if(mod.getTerminus() != null && mod.getTerminus().equalsIgnoreCase("C"))
+                    {
+                        _ctermMod =  mod;
+                    }
+                }
+                if(mod.isVariable() || mod.isModExplicit())
                 {
                     _variableStructuralMods.add(mod.getStructuralModId());
                 }
@@ -218,6 +232,34 @@ public class LibrarySpectrumMatch
         return mods.toString();
     }
 
+    public String getNtermModMass()
+    {
+        if(_ntermMod == null || _structuralModifications == null || _structuralModifications.isEmpty()) return "0";
+
+        for(Peptide.StructuralModification mod: _structuralModifications)
+        {
+            if (mod.getStructuralModId() == _ntermMod.getStructuralModId())
+            {
+                return String.valueOf(mod.getMassDiff());
+            }
+        }
+        return "0";
+    }
+
+    public String getCtermModMass()
+    {
+        if(_ntermMod == null || _structuralModifications == null || _structuralModifications.isEmpty()) return "0";
+
+        for(Peptide.StructuralModification mod: _structuralModifications)
+        {
+            if (mod.getStructuralModId() == _ctermMod.getStructuralModId())
+            {
+                return String.valueOf(mod.getMassDiff());
+            }
+        }
+        return "0";
+    }
+
     private boolean isEmpty(List<?> list)
     {
         return (list == null || list.isEmpty());
@@ -249,7 +291,6 @@ public class LibrarySpectrumMatch
     private String appendStructuralModifications(List<Peptide.StructuralModification> modifications,
                                              boolean variable)
     {
-
         if(modifications == null || modifications.isEmpty())
             return "";
 
@@ -257,6 +298,14 @@ public class LibrarySpectrumMatch
         String comma = "";
         for(Peptide.StructuralModification mod: modifications)
         {
+            if(_ntermMod != null && (mod.getStructuralModId() == _ntermMod.getStructuralModId()))
+            {
+                continue; // This is a n-term modification
+            }
+            if(_ctermMod != null && (mod.getStructuralModId() == _ctermMod.getStructuralModId()))
+            {
+                continue; // This is a c-term modification
+            }
             if(variable && !_variableStructuralMods.contains(mod.getStructuralModId()))
             {
                 // This is not a variable modification
