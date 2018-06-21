@@ -25,8 +25,8 @@ public class CalibrationCurveDataSet {
     private RegressionWeighting regressionWeighting = RegressionWeighting.NONE;
     private List<Replicate> replicates = new ArrayList<>();
 
-    public Replicate addReplicate(SampleType sampleType, Double analyteConcentration) {
-        Replicate replicate = new Replicate(sampleType, analyteConcentration);
+    public Replicate addReplicate(SampleType sampleType, Double analyteConcentration, boolean excludeFromCalibration) {
+        Replicate replicate = new Replicate(sampleType, analyteConcentration, excludeFromCalibration);
         replicates.add(replicate);
         return replicate;
     }
@@ -64,6 +64,9 @@ public class CalibrationCurveDataSet {
         TransitionKeys featuresToQuantifyOn = getFeaturesToQuantifyOn(label);
         for (Replicate replicate : replicates) {
             if (replicate.getSampleType() != SampleType.standard) {
+                continue;
+            }
+            if (replicate.isExcludeFromCalibration()) {
                 continue;
             }
             Double x = replicate.getAnalyteConcentration();
@@ -114,9 +117,11 @@ public class CalibrationCurveDataSet {
     public class Replicate extends ReplicateData {
         private SampleType sampleType;
         private Double analyteConcentration;
-        public Replicate(SampleType sampleType, Double analyteConcentration) {
+        private boolean excludeFromCalibration;
+        public Replicate(SampleType sampleType, Double analyteConcentration, boolean excludeFromCalibration) {
             this.sampleType = sampleType;
             this.analyteConcentration = analyteConcentration;
+            this.excludeFromCalibration = excludeFromCalibration;
         }
 
         public SampleType getSampleType() {
@@ -125,6 +130,11 @@ public class CalibrationCurveDataSet {
 
         public Double getAnalyteConcentration() {
             return analyteConcentration;
+        }
+
+        public boolean isExcludeFromCalibration()
+        {
+            return excludeFromCalibration;
         }
     }
 }

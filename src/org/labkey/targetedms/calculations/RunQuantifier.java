@@ -180,6 +180,9 @@ public class RunQuantifier
                 RegressionWeighting.parse(quantificationSettings.getRegressionWeighting()));
         GeneralMoleculeResultDataSet generalMoleculeResultDataSet
                 = new GeneralMoleculeResultDataSet(_user, _container, _replicateDataSet, generalMolecule);
+        Collection<GeneralMoleculeChromInfo> moleculeChromInfos
+                = generalMoleculeResultDataSet.getGeneralMoleculeChromInfos();
+        Set<Integer> excludedReplicateIds = getExcludedReplicateIds(moleculeChromInfos);
         Map<Integer, CalibrationCurveDataSet.Replicate> calibrationCurveReplicates = new HashMap<>();
         for (Replicate replicate : _replicateDataSet.listReplicates())
         {
@@ -189,7 +192,8 @@ public class RunQuantifier
                 moleculeConcentration = moleculeConcentration * generalMolecule.getConcentrationMultiplier();
             }
             CalibrationCurveDataSet.Replicate replicateData = calibrationCurveDataSet.addReplicate(
-                    SampleType.fromName(replicate.getSampleType()), moleculeConcentration);
+                    SampleType.fromName(replicate.getSampleType()), moleculeConcentration,
+                    excludedReplicateIds.contains(replicate.getId()));
             calibrationCurveReplicates.put(replicate.getId(), replicateData);
             generalMoleculeResultDataSet.addFeatureData(replicate, replicateData, quantificationSettings.getMsLevel(),
                     _normalizationMethodAreas.getNormalizationFactors(normalizationMethod), normalizationMethod.isAllowTruncatedTransitions());
@@ -199,7 +203,7 @@ public class RunQuantifier
                 = calibrationCurveDataSet.getCalibrationCurve(isotopeLabel.getName());
         if (modifiedChromInfos != null)
         {
-            for (GeneralMoleculeChromInfo generalMoleculeChromInfo : generalMoleculeResultDataSet.getGeneralMoleculeChromInfos())
+            for (GeneralMoleculeChromInfo generalMoleculeChromInfo : moleculeChromInfos)
             {
                 Replicate replicate = _replicateDataSet.getReplicateFromSampleFileId(generalMoleculeChromInfo.getSampleFileId());
                 if (replicate == null)
@@ -410,6 +414,24 @@ public class RunQuantifier
             return NormalizationMethod.NONE;
         }
         return normalizationMethod;
+    }
+
+    private Set<Integer> getExcludedReplicateIds(Collection<GeneralMoleculeChromInfo> generalMoleculeChromInfos)
+    {
+        Set<Integer> excludedReplicateIds = new HashSet<>();
+        for (GeneralMoleculeChromInfo generalMoleculeChromInfo : generalMoleculeChromInfos)
+        {
+            if (generalMoleculeChromInfo.isExcludeFromCalibration())
+            {
+                Replicate replicate = _replicateDataSet.getReplicateFromSampleFileId(
+                        generalMoleculeChromInfo.getSampleFileId());
+                if (replicate != null)
+                {
+                    excludedReplicateIds.add(replicate.getId());
+                }
+            }
+        }
+        return excludedReplicateIds;
     }
 }
 

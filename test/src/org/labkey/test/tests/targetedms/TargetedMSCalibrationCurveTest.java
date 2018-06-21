@@ -83,6 +83,11 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     }
 
     @Test
+    public void testCalibrationExcludeScenario() {
+        runScenario("CalibrationExcludedTest", "none");
+    }
+
+    @Test
     public void testP180Scenario()
     {
         runScenario("p180test_calibration_DukeApril2016", "1/x");
