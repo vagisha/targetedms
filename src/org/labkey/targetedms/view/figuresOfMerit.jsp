@@ -67,10 +67,10 @@
         this.title = "Molecule ID: " + this.moleculeId;
         this.sampleListCollapsed = true;
 
-        if (this.peptideName !== "null") {
+        if (this.peptideName !== null) {
             this.title = "Peptide: " + this.peptideName;
         }
-        else if (this.moleculeName !== "null") {
+        else if (this.moleculeName !== null) {
             this.title = "Molecule: " + this.moleculeName;
         }
 
@@ -414,19 +414,23 @@
         };
 
         var createLoqStats = function() {
-            var loq = 'NA', uloq = 'NA', bias;
-            this.hdrLabels.forEach(function(label, index) {
+            var loq = 'NA', uloq = 'NA', bias, cv, label;
+            var hdrs = this.hdrLabels.reverse();
+
+            for (var i=0; i<hdrs.length; i++) {
+                label = hdrs[i];
                 bias = Math.abs(Number(this.summaryData[label]["Bias"]));
                 cv = Math.abs(Number(this.summaryData[label]["CV"]));
-                if (bias <= this.biasLimit && (this.cvLimit == null || cv <= this.cvLimit)) {
-                    if (loq === 'NA') {
-                        loq = label;
-                    }
-                    else {
+                if (bias <= this.biasLimit && (this.cvLimit === null || cv <= this.cvLimit)) {
+                    if (uloq === 'NA') {
                         uloq = label;
                     }
+                    loq = label;
                 }
-            }, this);
+                else if (uloq !== 'NA') {
+                    break;
+                }
+            }
 
             var units = this.Units ? this.Units : '';
             $('#bias-limit').html('Bias Limit: ' + this.biasLimit + '%');
