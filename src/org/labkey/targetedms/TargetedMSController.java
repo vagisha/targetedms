@@ -5441,6 +5441,7 @@ public class TargetedMSController extends SpringActionController
     // BEGIN Experiment annotation actions
     // ------------------------------------------------------------------------
     private static final String ADD_SELECTED_RUNS = "addSelectedRuns";
+    private static final String SUBMITTER = "submitter";
 
     @RequiresPermission(InsertPermission.class)
     public class ShowNewExperimentAnnotationFormAction extends SimpleViewAction<NewExperimentAnnotationsForm>
@@ -5452,6 +5453,7 @@ public class TargetedMSController extends SpringActionController
             DataRegion drg = createNewTargetedMsExperimentDataRegion(form, getViewContext());
             InsertView view = new InsertView(drg, errors);
             view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
+            view.setInitialValue(SUBMITTER, getUser().getUserId());
             return view;
         }
 
@@ -5613,6 +5615,7 @@ public class TargetedMSController extends SpringActionController
         }
         drg.addHiddenFormField(DataRegionSelection.DATA_REGION_SELECTION_KEY, viewContext.getRequest().getParameter(DataRegionSelection.DATA_REGION_SELECTION_KEY));
 
+        drg.addHiddenFormField(SUBMITTER, String.valueOf(viewContext.getUser().getUserId()));
         return drg;
     }
 

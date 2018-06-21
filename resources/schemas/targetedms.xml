@@ -1149,6 +1149,26 @@
             <column columnName="SourceExperimentId"/>
             <column columnName="SourceExperimentPath"/>
             <column columnName="ShortUrl"/>
+            <column columnName="Keywords"/>
+            <column columnName="LabHead">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="LabHeadAffiliation"/>
+            <column columnName="Submitter">
+                <fk>
+                    <fkColumnName>UserId</fkColumnName>
+                    <fkDbSchema>core</fkDbSchema>
+                    <fkTable>UsersData</fkTable>
+                </fk>
+            </column>
+            <column columnName="SubmitterAffiliation"/>
+            <column columnName="pxid">
+                <isHidden>true</isHidden>
+            </column>
         </columns>
     </table>
 
