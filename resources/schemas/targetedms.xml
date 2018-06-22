@@ -1331,6 +1331,8 @@
                 </fk>
             </column>
             <column columnName="Copied"/>
+            <column columnName="KeepPrivate"/>
+            <column columnName="PxidRequested"/>
         </columns>
     </table>
 

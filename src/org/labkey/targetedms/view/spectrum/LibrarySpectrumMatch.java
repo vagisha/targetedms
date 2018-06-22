@@ -248,7 +248,7 @@ public class LibrarySpectrumMatch
 
     public String getCtermModMass()
     {
-        if(_ntermMod == null || _structuralModifications == null || _structuralModifications.isEmpty()) return "0";
+        if(_ctermMod == null || _structuralModifications == null || _structuralModifications.isEmpty()) return "0";
 
         for(Peptide.StructuralModification mod: _structuralModifications)
         {
