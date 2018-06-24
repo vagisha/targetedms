@@ -123,6 +123,7 @@ resources/schemas/dbscripts/postgresql/targetedms-18.10-18.11.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-18.11-18.12.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-18.12-18.13.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-18.13-18.14.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-18.14-18.15.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-13.10.sql -text
@@ -202,6 +203,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-18.10-18.11.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-18.11-18.12.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-18.12-18.13.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-18.13-18.14.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-18.14-18.15.sql -text
 resources/schemas/targetedms.xml -text
 src/ChromatogramGroupData.proto -text
 src/SkylineDocument.proto -text
