@@ -145,7 +145,7 @@
             var units = '';
 
             if (this.Units)
-                units = ' (' + this.Units + ')';
+                units = ' (' + LABKEY.Utils.encodeHtml(this.Units) + ')';
 
             var css, shade = true;
             this.hdrLabels.forEach(function (label) {
@@ -158,7 +158,7 @@
                     shade = true;
                 }
 
-                hdrs.hdr += '<td class=\'' + css + ' left\'>' + label + units + '</td>' + '<td class=\'' + css + ' right\'>Bias (%)</td>';
+                hdrs.hdr += '<td class=\'' + css + ' left\'>' + LABKEY.Utils.encodeHtml(label) + LABKEY.Utils.encodeHtml(units) + '</td>' + '<td class=\'' + css + ' right\'>Bias (%)</td>';
                 hdrs.expHdrs.push(label + units);
                 hdrs.expHdrs.push("Bias (%)");
             }, this);
@@ -493,8 +493,8 @@
             var units = this.Units ? this.Units : '';
             $('#bias-limit').html('Bias Limit: ' + this.biasLimit + '%');
             $('#cv-limit').html('CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A'));
-            $('#loq-stat').html('LOQ: ' + loq + ' ' + units);
-            $('#uloq-stat').html('ULOQ: ' + uloq + ' ' + units);
+            $('#loq-stat').html('LOQ: ' + loq + ' ' + LABKEY.Utils.encodeHtml(units));
+            $('#uloq-stat').html('ULOQ: ' + uloq + ' ' + LABKEY.Utils.encodeHtml(units));
 
             this.xlsExport.push([]);
             this.xlsExport.push(['Bias Limit: ' + this.biasLimit + '%']);
@@ -526,8 +526,16 @@
                 }
             }
 
+            var calculation = "None";
+            if (this.lodCalculation === "blank_plus_2_sd") {
+                calculation = "Blank plus 2*SD";
+            }
+            else if (this.lodCalculation === "blank_plus_3_sd") {
+                calculation = "Blank plus 3*SD";
+            }
+
             $('#lod-value').html('LOD: ' + lodValue);
-            $('#lod-calc').html('Calculation: ' + LABKEY.utils.htmlEncode(this.lodCalculation) || "NA");
+            $('#lod-calc').html('Calculation: ' + calculation);
         };
 
         var afterLoad = function() {
