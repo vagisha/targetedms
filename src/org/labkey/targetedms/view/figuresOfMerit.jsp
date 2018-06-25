@@ -528,14 +528,18 @@
 
             var calculation = "None";
             if (this.lodCalculation === "blank_plus_2_sd") {
-                calculation = "Blank plus 2*SD";
+                calculation = "Blank plus 2 * SD";
             }
             else if (this.lodCalculation === "blank_plus_3_sd") {
-                calculation = "Blank plus 3*SD";
+                calculation = "Blank plus 3 * SD";
             }
 
             $('#lod-value').html('LOD: ' + lodValue);
             $('#lod-calc').html('Calculation: ' + calculation);
+
+            this.xlsExport.push([]);
+            this.xlsExport.push(['LOD: ' + lodValue]);
+            this.xlsExport.push(['Calculation: ' + calculation]);
         };
 
         var afterLoad = function() {
