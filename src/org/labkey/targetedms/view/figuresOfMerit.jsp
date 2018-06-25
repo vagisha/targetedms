@@ -30,7 +30,7 @@
         <div class="row">
             <labkey:panel title="Summary">
                 <table id="fom-table-summary" class="table table-responsive fom-table summary">
-                    <thead id="summary-header"><tr><td>LOQ</td><td class="shaded">LOD</td></tr></thead>
+                    <thead id="summary-header"><tr><td>Limit of Quantitation</td><td class="shaded">Limit of Detection</td></tr></thead>
                     <tbody id="summary-body">
                     <tr><td id="loq-stat"></td><td class="shaded" id="lod-value"></td></tr>
                         <tr><td id="uloq-stat"></td><td class="shaded" id="lod-calc"></td></tr>
@@ -493,8 +493,8 @@
             var units = this.Units ? this.Units : '';
             $('#bias-limit').html('Bias Limit: ' + this.biasLimit + '%');
             $('#cv-limit').html('CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A'));
-            $('#loq-stat').html('LOQ: ' + loq + ' ' + LABKEY.Utils.encodeHtml(units));
-            $('#uloq-stat').html('ULOQ: ' + uloq + ' ' + LABKEY.Utils.encodeHtml(units));
+            $('#loq-stat').html('Lower: ' + loq + ' ' + LABKEY.Utils.encodeHtml(units));
+            $('#uloq-stat').html('Upper: ' + uloq + ' ' + LABKEY.Utils.encodeHtml(units));
 
             this.xlsExport.push([]);
             this.xlsExport.push(['Bias Limit: ' + this.biasLimit + '%']);
@@ -534,7 +534,7 @@
                 calculation = "Blank plus 3 * SD";
             }
 
-            $('#lod-value').html('LOD: ' + lodValue);
+            $('#lod-value').html('Lower: ' + lodValue);
             $('#lod-calc').html('Calculation: ' + calculation);
 
             this.xlsExport.push([]);
