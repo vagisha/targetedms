@@ -15,6 +15,7 @@
 package org.labkey.test.tests.targetedms;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.jetbrains.annotations.Nullable;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -71,26 +72,50 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     @Test
     public void testMergeDocumentsScenario()
     {
-        runScenario("MergedDocuments", "none");
+        FiguresOfMerit fom = new FiguresOfMerit();
+        fom.setLoq("1.0");
+        fom.setUloq("10.0");
+        fom.setBiasLimit("20%");
+        fom.setCvLimit("20%");
+        fom.setLod("0.11");
+        fom.setCalc("Blank plus 2 * SD");
+
+        runScenario("MergedDocuments", "none", fom);
         testCalibrationCurveMoleculePrecursorsByReplicate();
     }
 
     @Test
     public void testCalibrationScenario()
     {
-        runScenario("CalibrationTest", "none");
+        FiguresOfMerit fom = new FiguresOfMerit();
+        fom.setLoq("0.05");
+        fom.setUloq("10.0");
+        fom.setBiasLimit("30%");
+        fom.setCvLimit("N/A");
+        fom.setLod("0.10");
+        fom.setCalc("Blank plus 3 * SD");
+
+        runScenario("CalibrationTest", "none", fom);
         testCalibrationCurvePrecursorsByReplicate();
     }
 
     @Test
     public void testCalibrationExcludeScenario() {
-        runScenario("CalibrationExcludedTest", "none");
+        runScenario("CalibrationExcludedTest", "none", null);
     }
 
     @Test
     public void testP180Scenario()
     {
-        runScenario("p180test_calibration_DukeApril2016", "1/x");
+        FiguresOfMerit fom = new FiguresOfMerit();
+        fom.setLoq("500.0");
+        fom.setUloq("500.0");
+        fom.setBiasLimit("30%");
+        fom.setCvLimit("1%");
+        fom.setLod("-5.84");
+        fom.setCalc("Blank plus 2 * SD");
+
+        runScenario("p180test_calibration_DukeApril2016", "1/x", fom);
     }
 
     @Test
@@ -289,29 +314,106 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         return getTableCellText(Locator.id(tableId), row, col);
     }
 
+    private class FiguresOfMerit
+    {
+        String loq;
+        String uloq;
+        String biasLimit;
+        String cvLimit;
+        String lod;
+        String calc;
+
+        public String getLoq()
+        {
+            return loq;
+        }
+
+        public void setLoq(String loq)
+        {
+            this.loq = loq;
+        }
+
+        public String getUloq()
+        {
+            return uloq;
+        }
+
+        public void setUloq(String uloq)
+        {
+            this.uloq = uloq;
+        }
+
+        public String getBiasLimit()
+        {
+            return biasLimit;
+        }
+
+        public void setBiasLimit(String biasLimit)
+        {
+            this.biasLimit = biasLimit;
+        }
+
+        public String getCvLimit()
+        {
+            return cvLimit;
+        }
+
+        public void setCvLimit(String cvLimit)
+        {
+            this.cvLimit = cvLimit;
+        }
+
+        public String getLod()
+        {
+            return lod;
+        }
+
+        public void setLod(String lod)
+        {
+            this.lod = lod;
+        }
+
+        public String getCalc()
+        {
+            return calc;
+        }
+
+        public void setCalc(String calc)
+        {
+            this.calc = calc;
+        }
+    }
+
     private void verifyFomTable(String tableId, List<String> groups, List<String> concentrations, List<String> biases)
     {
         List<String> distinctGroups = new ArrayList<>();
-        for (String group : groups)
+        if (groups != null)
         {
-            if (!group.equals(" ") && !distinctGroups.contains(group))
-                distinctGroups.add(group);
+            for (String group : groups)
+            {
+                if (!group.equals(" ") && !distinctGroups.contains(group))
+                    distinctGroups.add(group);
+            }
+
+            // No data
+            if (distinctGroups.size() < 1)
+            {
+                assertTextPresent("No data of this type");
+                return;
+            }
+
+            for (int grpIndex = 0; grpIndex < distinctGroups.size(); grpIndex++)
+            {
+                assertTrue(getFomTableHeaderValue(tableId, (grpIndex * 2) + 1)
+                        .startsWith(distinctGroups.get(grpIndex)));
+            }
+        }
+        else
+        {
+            distinctGroups.add("");
         }
 
-        // No data
-        if (distinctGroups.size() < 1)
-        {
-            assertTextPresent("No data of this type");
-            return;
-        }
-
-        for (int grpIndex = 0; grpIndex < distinctGroups.size(); grpIndex++)
-        {
-            assertTrue(getFomTableHeaderValue(tableId, (grpIndex * 2) + 1)
-                    .startsWith(distinctGroups.get(grpIndex)));
-        }
-
-        int row = 0, grpIndex, maxRow = 0;
+        int row = (groups == null?-1:0), grpIndex, maxRow = 0;
         String grp = "";
         SummaryStatistics stats = new SummaryStatistics();
         List<Double> means = new ArrayList<>(Collections.nCopies(distinctGroups.size(), 0.0));
@@ -319,7 +421,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         List<Double> cvs = new ArrayList<>(Collections.nCopies(distinctGroups.size(), 0.0));
         for (int rawIndex = 0; rawIndex < concentrations.size(); rawIndex++)
         {
-            if ( grp.equals(groups.get(rawIndex)) )
+            if ( groups == null || grp.equals(groups.get(rawIndex)) )
             {
                 row++;
             }
@@ -331,8 +433,15 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             if (maxRow < row)
                 maxRow = row;
 
-            grp = groups.get(rawIndex);
-            grpIndex = distinctGroups.indexOf(grp);
+            if ( groups != null)
+            {
+                grp = groups.get(rawIndex);
+                grpIndex = distinctGroups.indexOf(grp);
+            }
+            else
+            {
+                grpIndex = 0;
+            }
 
             stats.addValue(Double.parseDouble(concentrations.get(rawIndex)));
 
@@ -341,7 +450,10 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             cvs.set(grpIndex, (100 * stats.getStandardDeviation())/stats.getMean());
 
             assertTrue(concentrations.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 1)));
-            assertTrue(biases.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 2)));
+            if (biases != null)
+            {
+                assertTrue(biases.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 2)));
+            }
         }
 
         boolean singleValue;
@@ -357,12 +469,22 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             else
             {
                 assertEquals(stddevs.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1)), 0.01);
-                assertEquals(cvs.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1)), 0.03);
+                assertEquals(cvs.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1)), 6);
             }
         }
     }
 
-    private void testFiguresOfMerit(String scenario)
+    private void verifyFomSummary(FiguresOfMerit fom)
+    {
+        assertElementContains(Locator.tagWithId("td", "loq-stat"), "Lower: " + fom.getLoq());
+        assertElementContains(Locator.tagWithId("td", "uloq-stat"), "Upper: " + fom.getUloq());
+        assertElementContains(Locator.tagWithId("td", "bias-limit"), "Bias Limit: " + fom.getBiasLimit());
+        assertElementContains(Locator.tagWithId("td", "cv-limit"), "CV Limit: " + fom.getCvLimit());
+        assertElementContains(Locator.tagWithId("td", "lod-value"), "Lower: " + fom.getLod());
+        assertElementContains(Locator.tagWithId("td", "lod-calc"), "Calculation: " + fom.getCalc());
+    }
+
+    private void testFiguresOfMerit(String scenario, @Nullable FiguresOfMerit fom)
     {
         goToProjectHome();
         clickFolder(scenario);
@@ -398,6 +520,9 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         List<String> qcConcentrations = dataRegionTable.getColumnDataAsText("ReplicateConcentration");
         List<String> qcBiases = dataRegionTable.getColumnDataAsText("Bias");
 
+        dataRegionTable.setFilter("SampleType", "Equals", "blank");
+        List<String> blankConcentrations = dataRegionTable.getColumnDataAsText("ReplicateConcentration");
+
         goToProjectHome();
         clickFolder(scenario);
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
@@ -410,13 +535,19 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
         verifyFomTable("fom-table-standard", stdGroups, stdConcentrations, stdBiases);
         verifyFomTable("fom-table-qc", qcGroups, qcConcentrations, qcBiases);
+        verifyFomTable("fom-table-blank", null, blankConcentrations, null);
+
+        if (fom != null)
+        {
+            verifyFomSummary(fom);
+        }
 
         File file = getFomExport();
         assertTrue("Wrong file type for export pdf [" + file.getName() + "]", file.getName().endsWith(".xlsx"));
         assertTrue("Empty pdf downloaded [" + file.getName() + "]", file.length() > 0);
     }
 
-    private void runScenario(String scenario, String expectedWeighting)
+    private void runScenario(String scenario, String expectedWeighting, @Nullable FiguresOfMerit fom)
     {
         setupSubfolder(getProjectName(), scenario, FolderType.Experiment);
         importData(SAMPLEDATA_FOLDER + scenario + ".sky.zip");
@@ -565,7 +696,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             }
         }
 
-        testFiguresOfMerit(scenario);
+        testFiguresOfMerit(scenario, fom);
     }
 
     private double getDelta(double expectedValue)
