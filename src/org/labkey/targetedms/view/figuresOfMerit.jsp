@@ -546,19 +546,19 @@
             LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
         };
 
-        var createQcFomTable = function(callback) {
-            createFomTable('qc', callback);
+        var createQcFomTable = function() {
+            createFomTable('qc', afterLoad);
         };
 
         var createStandardFomTable = function(callback) {
             createFomTable('standard', callback);
         };
 
-        var createBlankFomTable = function() {
-            createFomTable('blank', afterLoad);
+        var createBlankFomTable = function(callback) {
+            createFomTable('blank', callback);
         };
 
-        createStandardFomTable(function() {createQcFomTable(createBlankFomTable)});
+        createStandardFomTable(function() {createBlankFomTable(createQcFomTable)});
 
     }(jQuery);
 
