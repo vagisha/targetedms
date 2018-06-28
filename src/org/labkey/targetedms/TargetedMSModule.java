@@ -123,6 +123,9 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static ModuleProperty FOLDER_TYPE_PROPERTY;
     public static final String AUTO_QC_PING_TIMEOUT = "TargetedMS AutoQCPing Timeout";
 
+    public static final String EXPERIMENTAL_SKIP_CHROMATOGRAM_IMPORT = "SkipChromatogramImport";
+    public static final String EXPERIMENTAL_PREFER_SKYD_FILE_CHROMATOGRAMS = "PreferSkydFileChromatograms";
+
     public enum FolderType
     {
         Experiment, Library, LibraryProtein, QC, Undefined
@@ -374,6 +377,11 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 return metric;
             });
         }
+
+        AdminConsole.addExperimentalFeatureFlag(EXPERIMENTAL_SKIP_CHROMATOGRAM_IMPORT, "Skip importing chromatograms",
+                "This will prevent the server from storing chromatograms in the database for newly imported files, and instead load them on demand from the .skyd files", false);
+        AdminConsole.addExperimentalFeatureFlag(EXPERIMENTAL_PREFER_SKYD_FILE_CHROMATOGRAMS, "Prefer SKYD chromatograms",
+                "When the server has the information needed to load a chromatogram on-demand from a .skyd file, fetch it from the file instead of the database", false);
     }
 
     @Override

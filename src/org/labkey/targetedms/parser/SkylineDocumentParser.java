@@ -26,11 +26,13 @@ import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.security.User;
+import org.labkey.api.settings.ExperimentalFeatureService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.targetedms.IrtPeptide;
+import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.chromlib.ConnectionSource;
 import org.labkey.targetedms.parser.proto.SkylineDocument;
 import org.labkey.targetedms.parser.skyd.ChromGroupHeaderInfo;
@@ -1693,7 +1695,10 @@ public class SkylineDocumentParser implements AutoCloseable
                 // Read it out of the file on-demand, so we only load the subset that we need
                 try
                 {
-                    chromInfo.setChromatogram(_binaryParser.readChromatogramBytes(chromatogram));
+                    if (!ExperimentalFeatureService.get().isFeatureEnabled(TargetedMSModule.EXPERIMENTAL_SKIP_CHROMATOGRAM_IMPORT))
+                    {
+                        chromInfo.setChromatogram(_binaryParser.readChromatogramBytes(chromatogram));
+                    }
                     chromInfo.setChromatogramFormat(chromatogram.getChromatogramBinaryFormat().ordinal());
                     chromInfo.setChromatogramOffset(chromatogram.getLocationPoints());
                     chromInfo.setChromatogramLength(chromatogram.getCompressedSize());

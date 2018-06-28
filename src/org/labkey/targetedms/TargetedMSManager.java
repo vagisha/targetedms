@@ -20,7 +20,6 @@ import com.google.common.base.Joiner;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.xmlbeans.XmlException;
 import org.fhcrc.cpas.exp.xml.ExperimentArchiveDocument;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -69,7 +68,6 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.ViewBackgroundInfo;
@@ -89,7 +87,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -730,16 +727,14 @@ public class TargetedMSManager
     @Nullable
     public static TargetedMSRun getRun(int runId)
     {
-        TargetedMSRun run = null;
-
         TargetedMSRun[] runs = getRuns("Id = ? AND deleted = ?", runId, false);
 
-        if (runs != null && runs.length == 1)
+        if (runs.length == 1)
         {
-            run = runs[0];
+            return runs[0];
         }
 
-        return run;
+        return null;
     }
 
     public static TargetedMSRun[] getRunsInContainer(Container container)

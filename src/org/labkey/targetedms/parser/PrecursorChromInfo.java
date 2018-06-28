@@ -15,10 +15,19 @@
 
 package org.labkey.targetedms.parser;
 
+import org.apache.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
+
+import org.labkey.api.cache.BlockingCache;
+import org.labkey.api.cache.CacheLoader;
+import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.settings.ExperimentalFeatureService;
+import org.labkey.api.util.Tuple3;
 import org.labkey.api.util.UnexpectedException;
+import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSRun;
 
 import java.io.IOException;
@@ -67,6 +76,34 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     /** Number of compressed bytes stored in the .skyd file */
     private Integer _chromatogramLength;
     private int _chromatogramFormat;
+
+    private static final Logger LOG = Logger.getLogger(PrecursorChromInfo.class);
+    private static final BlockingCache<Tuple3<Path, Long, Integer>, byte[]> ON_DEMAND_CHROM_CACHE = new BlockingCache<>(CacheManager.getCache(100, CacheManager.HOUR, "SKYD chromatogram cache"), (key, argument) -> {
+        Path path = key.first;
+        long offset = key.second;
+        int length = key.third;
+
+        if (Files.exists(key.first))
+        {
+            LOG.debug("Loading chromatogram from " + path + ", offset " + offset + ", length " + length);
+            try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ))
+            {
+                channel.position(offset);
+                java.nio.ByteBuffer byteBuffer = java.nio.ByteBuffer.allocate(length);
+                channel.read(byteBuffer);
+                byteBuffer.position(0);
+                byte[] results = byteBuffer.array();
+                LOG.debug("Finished loading from " + path + ", offset " + offset + ", length " + length);
+                return results;
+            }
+            catch (IOException e)
+            {
+                throw new UnexpectedException(e);
+            }
+        }
+        LOG.debug("Could not find SKYD file to get chromatogram at path " + path);
+        return null;
+    });
 
     public PrecursorChromInfo()
     {
@@ -356,40 +393,45 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         _chromatogramLength = chromatogramLength;
     }
 
+    @Nullable
     public Chromatogram createChromatogram(TargetedMSRun run)
     {
         try
         {
             if (_chromatogramFormat < 0 || _chromatogramFormat >= ChromatogramBinaryFormat.values().length)
             {
-                throw new IOException("Unknown format number " + _chromatogramFormat);
+                throw new IllegalArgumentException("Unknown format number " + _chromatogramFormat);
             }
 
             ChromatogramBinaryFormat binaryFormat = ChromatogramBinaryFormat.values()[getChromatogramFormat()];
 
-            byte[] compressedBytes = getChromatogram();
+            byte[] databaseBytes = getChromatogram();
+            byte[] compressedBytes = databaseBytes;
+            boolean loadFromSkyd = ExperimentalFeatureService.get().isFeatureEnabled(TargetedMSModule.EXPERIMENTAL_PREFER_SKYD_FILE_CHROMATOGRAMS);
 
-            if (run.getSkydDataId() != null && _chromatogramLength != null && _chromatogramOffset != null)
+            if (loadFromSkyd || databaseBytes == null)
             {
-                ExpData skydData = ExperimentService.get().getExpData(run.getSkydDataId());
-                if (skydData != null)
+                if (run.getSkydDataId() != null && _chromatogramLength != null && _chromatogramOffset != null)
                 {
-                    Path skydPath = skydData.getFilePath();
-                    if (skydPath != null && Files.exists(skydPath))
+                    ExpData skydData = ExperimentService.get().getExpData(run.getSkydDataId());
+                    if (skydData != null)
                     {
-                        try (SeekableByteChannel channel = Files.newByteChannel(skydPath, StandardOpenOption.READ))
+                        Path skydPath = skydData.getFilePath();
+                        LOG.debug("Attempting to fetch chromatogram bytes (possibly cached) from " + skydPath + " for PrecursorChromInfo " + _generalMoleculeChromInfoId);
+                        byte[] onDemandBytes = ON_DEMAND_CHROM_CACHE.get(new Tuple3<>(skydPath, _chromatogramOffset, _chromatogramLength));
+                        if (databaseBytes != null && !Arrays.equals(databaseBytes, onDemandBytes))
                         {
-                            channel.position(_chromatogramOffset);
-                            java.nio.ByteBuffer byteBuffer = java.nio.ByteBuffer.allocate(_chromatogramLength);
-                            channel.read(byteBuffer);
-                            byteBuffer.position(0);
-                            byte[] onDemandBytes = byteBuffer.array();
-                            if (!Arrays.equals(compressedBytes, onDemandBytes))
-                            {
-                                throw new IllegalStateException("Bytes don't match between BLOB in DB and .skyd file on disk");
-                            }
+                            LOG.error("Chromatogram bytes for PrecursorChromInfo " + _generalMoleculeChromInfoId + " do not match between .skyd and DB. Using database copy. Lengths: " + onDemandBytes.length + " vs " + databaseBytes.length);
+                        }
+                        else
+                        {
+                            compressedBytes = onDemandBytes;
                         }
                     }
+                }
+                else
+                {
+                    LOG.debug("No length, offset, and/or SKYD DataId for PrecursorChromInfo " + _generalMoleculeChromInfoId);
                 }
             }
 

@@ -32,6 +32,7 @@ import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
@@ -184,10 +185,6 @@ public class SkylineDocImporter
         {
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
             throw e;
-        }
-        finally
-        {
-            close();
         }
     }
 
@@ -622,20 +619,8 @@ public class SkylineDocImporter
             }
 
             if (_pipeRoot.isCloudRoot())
-                copyBlibsToCloud();
+                copyExtractedFilesToCloud(run);
             transaction.commit();
-        }
-        finally
-        {
-            // TODO: We are not deleting the directory so that we can query any Bibliospec spectrum library
-            //       files contained in the zip file.
-            //       Think about adding tables either in the TargetedMS schema or another LabKey schema
-            //       to store spectrum libraries.
-            // If we uncompressed the contents of a zip file to a directory, delete the directory.
-//            if(zipDir != null)
-//            {
-//                FileUtil.deleteDir(zipDir);
-//            }
         }
     }
 
@@ -1592,29 +1577,56 @@ public class SkylineDocImporter
         }
     }
 
-    private void copyBlibsToCloud()
+    private void copyExtractedFilesToCloud(TargetedMSRun run)
     {
-        if (!_blibSourcePaths.isEmpty())
+        Integer skyDataId = run.getDataId();
+        if (skyDataId != null)
         {
-            try
+            ExpData skyData = ExperimentService.get().getExpData(skyDataId);
+            if (skyData != null && skyData.getFilePath() != null)
             {
-                Path blibDir = _pipeRoot.getRootNioPath().resolve(_blibSourceDir.getName());
-                if (!Files.exists(blibDir))
-                    Files.createDirectory(blibDir);
+                Path skyParentPath = skyData.getFilePath().getParent();
+                Path targetParentPath = skyParentPath.resolve(_blibSourceDir.getName());
 
-                for (Path path : _blibSourcePaths)
+                try
                 {
-                    Path dest = blibDir.resolve(FileUtil.getFileName(path));
-                    Files.copy(path, dest, StandardCopyOption.REPLACE_EXISTING);
-                    _log.info("Copied " + FileUtil.getFileName(path) + " to cloud storage.");
+                    if (!Files.exists(targetParentPath))
+                        Files.createDirectory(targetParentPath);
+
+                    ExpData skydData = run.getSkydDataId() == null ? null : ExperimentService.get().getExpData(run.getSkydDataId());
+                    if (skydData != null)
+                    {
+                        // Copy .skyd file back to the cloud for on-demand usage later
+                        Path skydLocalPath = skydData.getFilePath();
+                        if (skydLocalPath != null && Files.exists(skydLocalPath))
+                        {
+                            Path skydTargetPath = copyFileToCloud(skydLocalPath, targetParentPath);
+                            skydData.setDataFileURI(skydTargetPath.toUri());
+                            skydData.save(_user);
+                        }
+                    }
+
+                    for (Path blibPath : _blibSourcePaths)
+                    {
+                        copyFileToCloud(blibPath, targetParentPath);
+                    }
                 }
-            }
-            catch (IOException e)
-            {
-                logError("Copy Blibs to cloud failed.", e);
+                catch (IOException e)
+                {
+                    logError("Copy files to cloud failed.", e);
+                }
             }
         }
     }
+
+    private Path copyFileToCloud(Path sourcePath, Path targetParentPath) throws IOException
+    {
+        Path dest = targetParentPath.resolve(FileUtil.getFileName(sourcePath));
+        Files.copy(sourcePath, dest, StandardCopyOption.REPLACE_EXISTING);
+        _log.info("Copied " + FileUtil.getFileName(sourcePath) + " to cloud storage.");
+        return dest;
+    }
+
 
     public static class SampleFileKey
     {
@@ -1908,13 +1920,6 @@ public class SkylineDocImporter
 
         run = Table.insert(_user, TargetedMSManager.getTableInfoRuns(), run);
         return run.getId();
-    }
-
-    private void close()
-    {
-        // TODO: close connection and prepared statements used for bulk inserts
-//        if (null != _conn)
-//            TargetedMSManager.getSchema().getScope().releaseConnection(_conn);
     }
 
     protected void logError(String message, Exception e)
