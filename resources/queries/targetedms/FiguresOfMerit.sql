@@ -17,6 +17,7 @@ SELECT
   gm.SampleFileId.ReplicateId.RunId.Id as RunId,
   gm.SampleFileId.ReplicateId.RunId.FileName as FileName,
   gm.SampleFileId.SampleName,
+  gm.ExcludeFromCalibration,
   CAST(qs.Units AS VARCHAR) as Units
 FROM (SELECT * FROM generalmoleculechrominfo WHERE CalculatedConcentration IS NOT NULL AND abs(CalculatedConcentration) < 1E20) as gm
 JOIN QuantificationSettings qs ON gm.SampleFileId.ReplicateId.RunId.Id = qs.RunId.Id
@@ -29,6 +30,7 @@ GROUP BY
   gm.SampleFileId,
   gm.PeakCountRatio,
   gm.RetentionTime,
+  gm.ExcludeFromCalibration,
   gm.SampleFileId.ReplicateId,
   gm.SampleFileId.ReplicateId.AnalyteConcentration,
   gm.SampleFileId.ReplicateId.SampleType,

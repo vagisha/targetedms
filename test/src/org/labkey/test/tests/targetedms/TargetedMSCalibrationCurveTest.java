@@ -384,7 +384,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         }
     }
 
-    private void verifyFomTable(String tableId, List<String> groups, List<String> concentrations, List<String> biases)
+    private void verifyFomTable(String tableId, List<String> groups, List<String> concentrations, List<String> biases, List<String> excluded)
     {
         List<String> distinctGroups = new ArrayList<>();
         if (groups != null)
@@ -443,16 +443,19 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 grpIndex = 0;
             }
 
-            stats.addValue(Double.parseDouble(concentrations.get(rawIndex)));
-
-            means.set(grpIndex, stats.getMean());
-            stddevs.set(grpIndex, stats.getStandardDeviation());
-            cvs.set(grpIndex, (100 * stats.getStandardDeviation())/stats.getMean());
-
-            assertTrue(concentrations.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 1)));
-            if (biases != null)
+            if (excluded != null && excluded.get(rawIndex).equals("false"))
             {
-                assertTrue(biases.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 2)));
+                stats.addValue(Double.parseDouble(concentrations.get(rawIndex)));
+
+                means.set(grpIndex, stats.getMean());
+                stddevs.set(grpIndex, stats.getStandardDeviation());
+                cvs.set(grpIndex, (100 * stats.getStandardDeviation()) / stats.getMean());
+
+                assertTrue(concentrations.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 1)));
+                if (biases != null)
+                {
+                    assertTrue(biases.contains(getFomTableBodyValue(tableId, row, (distinctGroups.indexOf(grp) * 2) + 2)));
+                }
             }
         }
 
@@ -460,8 +463,16 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         for (int index = 0; index < means.size(); index++)
         {
             singleValue = Integer.parseInt(getFomTableBodyValue(tableId, maxRow + 2, index * 2 + 1)) == 1;
-            assertEquals(means.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 3, index * 2 + 1)), 0.01);
-            if (singleValue)
+            if (means.get(index) == 0.0)
+            {
+                assertEquals("NA", getFomTableBodyValue(tableId, maxRow + 3, index * 2 + 1));
+            }
+            else
+            {
+                assertEquals(means.get(index), Double.parseDouble(getFomTableBodyValue(tableId, maxRow + 3, index * 2 + 1)), 0.01);
+            }
+
+            if (singleValue || (stddevs.get(index) == 0.0 && cvs.get(index) == 0.0))
             {
                 assertEquals("NA", getFomTableBodyValue(tableId, maxRow + 4, index * 2 + 1));
                 assertEquals("NA", getFomTableBodyValue(tableId, maxRow + 5, index * 2 + 1));
@@ -507,21 +518,26 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         {
             dataRegionTable.setFilter("MoleculeName", "Equals", molName);
         }
+
+
         dataRegionTable.setFilter("SampleType", "Equals", "standard");
         dataRegionTable.setSort("AnalyteConcentration", SortDirection.ASC);
 
         List<String> stdGroups = dataRegionTable.getColumnDataAsText("AnalyteConcentration");
         List<String> stdConcentrations = dataRegionTable.getColumnDataAsText("ReplicateConcentration");
         List<String> stdBiases = dataRegionTable.getColumnDataAsText("Bias");
+        List<String> stdExcluded = dataRegionTable.getColumnDataAsText("ExcludeFromCalibration");
 
         dataRegionTable.setFilter("SampleType", "Equals", "qc");
 
         List<String> qcGroups = dataRegionTable.getColumnDataAsText("AnalyteConcentration");
         List<String> qcConcentrations = dataRegionTable.getColumnDataAsText("ReplicateConcentration");
         List<String> qcBiases = dataRegionTable.getColumnDataAsText("Bias");
+        List<String> qcExcluded = dataRegionTable.getColumnDataAsText("ExcludeFromCalibration");
 
         dataRegionTable.setFilter("SampleType", "Equals", "blank");
         List<String> blankConcentrations = dataRegionTable.getColumnDataAsText("ReplicateConcentration");
+        List<String> blankExcluded = dataRegionTable.getColumnDataAsText("ExcludeFromCalibration");
 
         goToProjectHome();
         clickFolder(scenario);
@@ -533,9 +549,9 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
         waitForElement(Locators.pageSignal("targetedms-fom-loaded"));
 
-        verifyFomTable("fom-table-standard", stdGroups, stdConcentrations, stdBiases);
-        verifyFomTable("fom-table-qc", qcGroups, qcConcentrations, qcBiases);
-        verifyFomTable("fom-table-blank", null, blankConcentrations, null);
+        verifyFomTable("fom-table-standard", stdGroups, stdConcentrations, stdBiases, stdExcluded);
+        verifyFomTable("fom-table-qc", qcGroups, qcConcentrations, qcBiases, qcExcluded);
+        verifyFomTable("fom-table-blank", null, blankConcentrations, null, blankExcluded);
 
         if (fom != null)
         {

@@ -262,11 +262,24 @@
 
                     if (stat === "n") {
                         data = this.rawData[col];
-                        html += '<td class=\'' + css + ' left\'>' + (data.length ? data.length : "") + '</td>';
-                        exportRow.push(data.length ? data.length : "");
+                        var n = 0;
+                        data.forEach(function(datum) {
+                            if (datum.exclude !== true) {
+                                n++;
+                            }
+                        }, this);
+                        html += '<td class=\'' + css + ' left\'>' + n + '</td>';
+                        exportRow.push(n);
                     }
                     else {
-                        summaryValue = this.summaryData[col][stat];
+                        // If all excluded then no summary data
+                        if (this.summaryData[col] && this.summaryData[col][stat]) {
+                            summaryValue = this.summaryData[col][stat];
+                        }
+                        else {
+                            summaryValue = "";
+                        }
+
                         if (summaryValue === "") {
                             summaryValue = "NA";
                         }
@@ -324,13 +337,25 @@
                     data = this.rawData[label][index];
                     if (data) {
                         found = true;
-                        html += '<td class=\'' + css + ' left\'>' + data.value + '</td>';
+                        html += '<td class=\'' + css + ' left\'>' + (data.exclude === true?'<s>':'') + data.value
+                                + (data.exclude === true?'</s>':'') + '</td>';
                         if (!blanks)
-                                html += '<td class=\'' + css + ' right\'>' + data.bias + '</td>';
+                                html += '<td class=\'' + css + ' right\'>' + (data.exclude === true?'<s>':'') + data.bias
+                                        + (data.exclude === true?'</s>':'') + '</td>';
 
-                        exportRow.push(Number(data.value));
+                        var exportVal;
+                        var exportBias;
+                        if (data.exclude === true) {
+                            exportVal = Number(data.value) + ' excluded';
+                            exportBias = Number(data.bias) + ' excluded';
+                        }
+                        else {
+                            exportVal = Number(data.value);
+                            exportBias = Number(data.bias);
+                        }
+                        exportRow.push(exportVal);
                         if (!blanks)
-                            exportRow.push(Number(data.bias));
+                            exportRow.push(exportBias);
                     }
                     else {
                         html += '<td class=\'' + css + ' left\'>'
@@ -374,7 +399,8 @@
 
                                 this.rawData[colName].push({
                                     'value': row[col].toFixed(2),
-                                    'bias': row['Bias']?row['Bias'].toFixed(2):null
+                                    'bias': row['Bias']?row['Bias'].toFixed(2):null,
+                                    'exclude': row['ExcludeFromCalibration'] ? row['ExcludeFromCalibration'] : 'false'
                                 })
                             }
                         }
@@ -477,6 +503,11 @@
 
             for (var i=0; i<hdrs.length; i++) {
                 label = hdrs[i];
+
+                // All excluded data points
+                if (!this.summaryData[label]) {
+                    continue;
+                }
                 bias = Math.abs(Number(this.summaryData[label]["Bias"]));
                 cv = Math.abs(Number(this.summaryData[label]["CV"]));
                 if (bias <= this.biasLimit && (this.cvLimit === null || cv <= this.cvLimit)) {
