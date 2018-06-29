@@ -355,7 +355,8 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         {
             return _uncompressedSize.intValue();
         }
-        return _chromatogram == null ? null : _chromatogram.length;
+        // For older data that got saved in the database without a value for uncompressedSize
+        return (Integer.SIZE / 8) * _numPoints * (_numTransitions + 1);
     }
 
     public void setUncompressedSize(Integer uncompressedSize)
