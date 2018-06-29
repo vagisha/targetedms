@@ -125,7 +125,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                     highlight = String.valueOf(Id).equals(HttpView.currentRequest().getParameter("chromInfoId"));
                 }
 
-                String imgLink = "<a name=\"ChromInfo" + Id + "\"><img style=\"border: " + (highlight ? "beige" : "white") + " solid 8px\" src=\"" + chromAction.getLocalURIString() + "\" alt=\"Chromatogram "+sampleFile.getSampleName()+"\"></a>";
+                String imgLink = "<a name=\"ChromInfo" + Id + "\"><img style=\"border: " + (highlight ? "beige" : "white") + " solid 8px; width:" + _chartWidth +"px; height:" + _chart_height + "px\" src=\"" + chromAction.getLocalURIString() + "\" alt=\"Chromatogram "+sampleFile.getSampleName()+"\"></a>";
                 out.write(imgLink);
             }
         };
