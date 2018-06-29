@@ -30,12 +30,12 @@
         <div class="row">
             <labkey:panel title="Summary">
                 <table id="fom-table-summary" class="table table-responsive fom-table summary">
-                    <thead id="summary-header"><tr><td>Limit of Quantitation</td><td class="shaded">Limit of Detection</td></tr></thead>
+                    <thead id="summary-header"><tr><td>Limit of Quantitation</td><td class="shaded left">Limit of Detection</td></tr></thead>
                     <tbody id="summary-body">
-                    <tr><td id="loq-stat"></td><td class="shaded" id="lod-value"></td></tr>
-                        <tr><td id="uloq-stat"></td><td class="shaded" id="lod-calc"></td></tr>
-                        <tr><td id="bias-limit"></td><td class="shaded"></td></tr>
-                        <tr><td id="cv-limit"></td><td class="shaded"></td></tr>
+                    <tr><td id="loq-stat"></td><td class="shaded left" id="lod-value"></td></tr>
+                        <tr><td id="uloq-stat"></td><td class="shaded left" id="lod-calc"></td></tr>
+                        <tr><td id="bias-limit"></td><td class="shaded left"></td></tr>
+                        <tr><td id="cv-limit"></td><td class="shaded left"></td></tr>
                     </tbody>
                 </table>
             </labkey:panel>
@@ -135,10 +135,6 @@
             return '<i id="fom-title3-icon" onClick="toggleSampleList();" class="fa fa-caret-down" ></i>';
         };
 
-        var blanksHeader = function(hdrs) {
-            return hdrs;
-        };
-
         var standardHeader = function (hdrs) {
             hdrs.expHdrs.push("");
             hdrs.hdr += '<tr><td>Expected Concentration</td>';
@@ -210,9 +206,6 @@
             else {
                 if (!blanks) {
                     hdrs = standardHeader(hdrs);
-                }
-                else {
-                    hdrs = blanksHeader(hdrs);
                 }
             }
 
@@ -400,7 +393,7 @@
                                 this.rawData[colName].push({
                                     'value': row[col].toFixed(2),
                                     'bias': row['Bias']?row['Bias'].toFixed(2):null,
-                                    'exclude': row['ExcludeFromCalibration'] ? row['ExcludeFromCalibration'] : 'false'
+                                    'exclude': row['ExcludeFromCalibration'] === true
                                 })
                             }
                         }
@@ -528,10 +521,11 @@
             $('#uloq-stat').html('Upper: ' + uloq + ' ' + LABKEY.Utils.encodeHtml(units));
 
             this.xlsExport.push([]);
+            this.xlsExport.push(['Limit of Quantitation']);
+            this.xlsExport.push(['Lower: ' + loq + ' ' + units]);
+            this.xlsExport.push(['Upper: ' + uloq + ' ' + units]);
             this.xlsExport.push(['Bias Limit: ' + this.biasLimit + '%']);
             this.xlsExport.push(['CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A')]);
-            this.xlsExport.push(['LOQ: ' + loq + ' ' + units]);
-            this.xlsExport.push(['ULOQ: ' + uloq + ' ' + units]);
         };
 
         var createLodStats = function () {
@@ -569,27 +563,19 @@
             $('#lod-calc').html('Calculation: ' + calculation);
 
             this.xlsExport.push([]);
-            this.xlsExport.push(['LOD: ' + lodValue]);
+            this.xlsExport.push(["Limit of Detection"]);
+            this.xlsExport.push(['Lower: ' + lodValue]);
             this.xlsExport.push(['Calculation: ' + calculation]);
         };
 
-        var afterLoad = function() {
-            LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
-        };
-
-        var createQcFomTable = function() {
-            createFomTable('qc', afterLoad);
-        };
-
-        var createStandardFomTable = function(callback) {
-            createFomTable('standard', callback);
-        };
-
-        var createBlankFomTable = function(callback) {
-            createFomTable('blank', callback);
-        };
-
-        createStandardFomTable(function() {createBlankFomTable(createQcFomTable)});
+         createFomTable('standard', function() {
+             createFomTable('blank', function() {
+                 createFomTable('qc', function() {
+                     LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
+                 });
+             });
+         });
+//        createStandardFomTable(function() {createBlankFomTable(createQcFomTable)});
 
     }(jQuery);
 
