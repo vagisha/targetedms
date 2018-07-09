@@ -15,6 +15,7 @@
 package org.labkey.targetedms.view;
 
 import org.labkey.api.data.SimpleDisplayColumn;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.UrlColumn;
 import org.labkey.api.view.DataView;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
@@ -51,6 +52,15 @@ public class CalibrationCurvesView extends QuantificationView
                         : TargetedMSSchema.TABLE_PEPTIDE_CALIBRATION_CURVE,
                 form, forExport, dataRegionName);
         setTitle(isSmallMolecule() ? "Molecule Calibration Curves" : "Peptide Calibration Curves");
+
+        if (isSmallMolecule())
+        {
+            getSettings().setBaseSort(new Sort("GeneralMoleculeId/CustomIonName"));
+        }
+        else
+        {
+            getSettings().setBaseSort(new Sort("GeneralMoleculeId/PeptideModifiedSequence"));
+        }
     }
 
     @Override

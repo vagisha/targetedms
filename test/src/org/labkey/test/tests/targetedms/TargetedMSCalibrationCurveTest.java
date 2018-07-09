@@ -15,6 +15,7 @@
 package org.labkey.test.tests.targetedms;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -72,7 +73,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     @Test
     public void testMergeDocumentsScenario()
     {
-        FiguresOfMerit fom = new FiguresOfMerit();
+        FiguresOfMerit fom = new FiguresOfMerit("VIFDANAPVAVR");
         fom.setLoq("1.0");
         fom.setUloq("10.0");
         fom.setBiasLimit("20%");
@@ -87,7 +88,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     @Test
     public void testCalibrationScenario()
     {
-        FiguresOfMerit fom = new FiguresOfMerit();
+        FiguresOfMerit fom = new FiguresOfMerit("VIFDANAPVAVR");
         fom.setLoq("0.05");
         fom.setUloq("10.0");
         fom.setBiasLimit("30%");
@@ -107,7 +108,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     @Test
     public void testP180Scenario()
     {
-        FiguresOfMerit fom = new FiguresOfMerit();
+        FiguresOfMerit fom = new FiguresOfMerit("Gly");
         fom.setLoq("500.0");
         fom.setUloq("500.0");
         fom.setBiasLimit("30%");
@@ -322,6 +323,14 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         String cvLimit;
         String lod;
         String calc;
+        String name;
+
+        private FiguresOfMerit(){}
+
+        public FiguresOfMerit(@NotNull String molName)
+        {
+            setName(molName);
+        }
 
         public String getLoq()
         {
@@ -381,6 +390,16 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         public void setCalc(String calc)
         {
             this.calc = calc;
+        }
+
+        public String getName()
+        {
+            return name;
+        }
+
+        public void setName(String name)
+        {
+            this.name = name;
         }
     }
 
@@ -497,6 +516,9 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
     private void testFiguresOfMerit(String scenario, @Nullable FiguresOfMerit fom)
     {
+        String molName;
+        DataRegionTable calibrationCurvesTable;
+
         goToProjectHome();
         clickFolder(scenario);
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
@@ -504,9 +526,16 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("calibration curve"));
         boolean peptide = countText("Peptide Calibration Curves") > 0;
 
-        DataRegionTable calibrationCurvesTable = new DataRegionTable((peptide?"calibration_curves":"calibration_curves_sm_mol"), this);
-        String molName = calibrationCurvesTable.getDataAsText(0, "GeneralMoleculeId");
-
+        if (fom == null)
+        {
+            calibrationCurvesTable = new DataRegionTable((peptide ? "calibration_curves" : "calibration_curves_sm_mol"), this);
+            calibrationCurvesTable.setFilter("ErrorMessage", "Is Blank");
+            molName = calibrationCurvesTable.getDataAsText(0, "GeneralMoleculeId");
+        }
+        else
+        {
+            molName = fom.getName();
+        }
 
         goToSchemaBrowser();
         DataRegionTable dataRegionTable = viewQueryData("targetedms", "FiguresOfMerit");
@@ -544,6 +573,9 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
         clickAndWait(Locator.linkContainingText(scenario + ".sky.zip"));
         clickAndWait(Locator.linkContainingText("calibration curve"));
+
+        calibrationCurvesTable = new DataRegionTable((peptide?"calibration_curves":"calibration_curves_sm_mol"), this);
+        calibrationCurvesTable.setFilter("GeneralMoleculeId", "Equals", (fom!=null?fom.getName():molName));
 
         clickAndWait(Locator.linkContainingText("Fom"));
 
