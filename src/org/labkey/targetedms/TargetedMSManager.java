@@ -984,7 +984,7 @@ public class TargetedMSManager
             }
         }
 
-        SQLFragment markDeleted = new SQLFragment("UPDATE " + getTableInfoRuns() + " SET ExperimentRunLSID = NULL, Deleted=?, Modified=? ", Boolean.TRUE, new Date());
+        SQLFragment markDeleted = new SQLFragment("UPDATE " + getTableInfoRuns() + " SET ExperimentRunLSID = NULL, DataId = NULL, SkydDataId = NULL, Deleted=?, Modified=? ", Boolean.TRUE, new Date());
         SimpleFilter where = new SimpleFilter();
         where.addCondition(FieldKey.fromParts("Container"), c.getId());
         where.addInClause(FieldKey.fromParts("Id"), runIds);
@@ -1173,9 +1173,8 @@ public class TargetedMSManager
                 new CompareType.EqualsCompareClause(FieldKey.fromParts("DataFileUrl"), CompareType.EQUAL, "file://" + dataFileUrl)
         ));
 
-        // Really List<Map<String, Object>>
         Set<Integer> runIds = new HashSet<>();
-        for (Map map : new TableSelector(expDataTable, Collections.singleton("RunId"), filter, null).getArrayList(Map.class))
+        for (Map<String, Object> map : new TableSelector(expDataTable, Collections.singleton("RunId"), filter, null).getMapCollection())
             runIds.add((Integer) map.get("runId"));
 
         ExperimentService expService = ExperimentService.get();
