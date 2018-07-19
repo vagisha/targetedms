@@ -30,7 +30,6 @@ import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.ConfiguresSite;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.DefaultSiteConfigurer;
-import org.labkey.test.util.FileBrowserHelper;
 import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.LoggedParam;
 import org.labkey.test.util.ReflectionUtils;
@@ -172,9 +171,8 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
             importButton = importButtonLoc.findElement(getDriver());
         }
         clickAndWait(importButton);
-        _fileBrowserHelper.waitForFileGridReady();
         String fileName = Paths.get(file).getFileName().toString();
-        if (!isElementPresent(FileBrowserHelper.Locators.gridRow(fileName)))
+        if (!_fileBrowserHelper.fileIsPresent(fileName))
             _fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
         _fileBrowserHelper.importFile(fileName, "Import Skyline Results");
         waitForText("Skyline document import");
