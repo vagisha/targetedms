@@ -61,6 +61,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         var sqlConfig = {
             schemaName: 'targetedms',
             sql: guideSetSql,
+            sort: 'GuideSetId, SeriesLabel, AcquiredTime', //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
             scope: this,
             success: useRaw? this.processRawGuideSetData : this.processLJGuideSetData,
             failure: this.failureHandler

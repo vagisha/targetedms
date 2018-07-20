@@ -1102,6 +1102,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         LABKEY.Query.executeSql({
             schemaName: 'targetedms',
             sql: sql,
+            sort: 'SeriesLabel',
             scope: this,
             success: function(data) {
                 this.pagingStartIndex = 0;
