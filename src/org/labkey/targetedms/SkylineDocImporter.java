@@ -47,7 +47,6 @@ import org.labkey.targetedms.SkylinePort.Irt.IrtRegressionCalculator;
 import org.labkey.targetedms.SkylinePort.Irt.RetentionTimeProviderImpl;
 import org.labkey.targetedms.calculations.RunQuantifier;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
-import org.labkey.targetedms.model.QCMetricExclusion;
 import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.ReplicateManager;
@@ -627,12 +626,12 @@ public class SkylineDocImporter
     private void handleReplicateExclusions(Replicate replicate, ReplicateAnnotation ignoreInQcAnnot)
     {
         // keep any existing exclusions for this replicate by name
-        List<QCMetricExclusion> existingExclusions = ReplicateManager.getReplicateExclusions(replicate.getName(), _container);
+        List<Integer> existingExclusions = ReplicateManager.getReplicateExclusions(replicate.getName(), _container);
         boolean hasExistingExcludeAllMetrics = false;
-        for (QCMetricExclusion existingExclusion : existingExclusions)
+        for (Integer metricId : existingExclusions)
         {
-            ReplicateManager.insertReplicateExclusion(_user, replicate.getId(), existingExclusion.getMetricId());
-            if (existingExclusion.getMetricId() == null)
+            ReplicateManager.insertReplicateExclusion(_user, replicate.getId(), metricId);
+            if (metricId == null)
                 hasExistingExcludeAllMetrics = true;
         }
 

@@ -32,8 +32,6 @@ import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.SampleFile;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,9 +57,13 @@ public class ReplicateManager
             .getObject(replicateId, Replicate.class);
     }
 
-    public static List<QCMetricExclusion> getReplicateExclusions(String name, Container container)
+    /**
+     * @return the distinct list of metric IDs that are set as exclusions for replicates of the supplied name.
+     * Null indicates that there was an exclusion for all metrics for the replicate.
+     */
+    public static List<Integer> getReplicateExclusions(String name, Container container)
     {
-        SQLFragment sqlFragment = new SQLFragment("SELECT qme.* FROM ");
+        SQLFragment sqlFragment = new SQLFragment("SELECT DISTINCT qme.MetricId FROM ");
         sqlFragment.append(TargetedMSManager.getTableInfoQCMetricExclusion(), "qme");
         sqlFragment.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoReplicate(), "rp");
         sqlFragment.append(" ON qme.ReplicateId = rp.Id");
@@ -70,7 +72,7 @@ public class ReplicateManager
         sqlFragment.append(" WHERE rp.Name=?").add(name);
         sqlFragment.append(" AND r.Container=?").add(container);
 
-        return new SqlSelector(TargetedMSManager.getSchema(), sqlFragment).getArrayList(QCMetricExclusion.class);
+        return new SqlSelector(TargetedMSManager.getSchema(), sqlFragment).getArrayList(Integer.class);
     }
 
     public static QCMetricExclusion insertReplicateExclusion(User user, Integer replicateId, @Nullable Integer metricId)
