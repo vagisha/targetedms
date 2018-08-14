@@ -19,5 +19,6 @@ SELECT
   SampleFileId AS SampleFileId,
   COALESCE(PrecursorId.ModifiedSequence, MoleculePrecursorId.CustomIonName) AS SeriesLabel,
   CASE WHEN PrecursorId.Id IS NOT NULL THEN 'Peptide' ELSE 'Fragment' END AS DataType,
-  TotalArea AS MetricValue
+  TotalArea AS MetricValue,
+  COALESCE(PrecursorId.Mz, MoleculePrecursorId.Mz) AS mz
 FROM PrecursorChromInfo

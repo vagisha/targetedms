@@ -421,7 +421,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
             appropriateLegend.push({
                 name: precursorInfo.fragment + (this.isMultiSeries() ? '|' + legendSeries[0] : ''),
-                text: this.legendHelper.getUniquePrefix(precursorInfo.fragment, (precursorInfo.dataType == 'Peptide')),
+                text: this.legendHelper.getLegendItemText(precursorInfo),
                 hoverText: precursorInfo.fragment,
                 color: groupColors[i % groupColors.length]
             });
@@ -446,7 +446,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 precursorInfo = this.fragmentPlotData[this.precursors[i]];
                 appropriateLegend.push({
                     name: precursorInfo.fragment + '|' + legendSeries[1],
-                    text: this.legendHelper.getUniquePrefix(precursorInfo.fragment, (precursorInfo.dataType == 'Peptide')),
+                    text: this.legendHelper.getLegendItemText(precursorInfo),
                     hoverText: precursorInfo.fragment,
                     color: groupColors[(this.precursors.length + i) % groupColors.length]
                 });

@@ -186,7 +186,12 @@ Ext4.define("LABKEY.targetedms.QCPlotLegendHelper", {
         // If we got here, then it means that there is something else which matches this identifier's suffix
         // and is longer.  Return either the prefix with the length specifier, or the entire identifier.
         return this.shorterOf(prefix + "(" + identifier.length + ")", identifier);
-    }
+    },
 
+    getLegendItemText: function(precursorInfo)
+    {
+        var prefix = this.getUniquePrefix(precursorInfo.fragment, (precursorInfo.dataType == 'Peptide'));
+        return prefix + ", " + precursorInfo.mz;
+    }
 })
 ;

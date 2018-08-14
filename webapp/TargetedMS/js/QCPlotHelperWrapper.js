@@ -56,7 +56,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                 {
                     ids.push(id + '_plotType_' + j);
                 }
-                this.addPlotsToPlotDiv(ids, this.precursors[i], this.plotDivId, 'qc-plot-wp');
+                this.addPlotsToPlotDiv(ids, this.precursors[i] + ", " + precursorInfo.mz, this.plotDivId, 'qc-plot-wp');
                 var plotIndex = 0;
                 // add a new panel for each plot so we can add the title to the frame
                 if (this.showLJPlot())
@@ -104,7 +104,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         for (var i = 0; i < this.precursors.length; i++)
         {
             precursorInfo = this.fragmentPlotData[this.precursors[i]];
-            prefix = this.legendHelper.getUniquePrefix(precursorInfo.fragment, (precursorInfo.dataType == 'Peptide'));
+            prefix = this.legendHelper.getLegendItemText(precursorInfo);
             ellipCount = prefix.match(ellipMatch) ? prefix.match(ellipMatch).length : 0;
             prefLength = prefix.length + ellipCount;  // ellipsis count for two chars
 
@@ -191,12 +191,13 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             return this.getLJPlotTypeProperties(precursorInfo);
     },
 
-    getInitFragmentPlotData: function(fragment, dataType)
+    getInitFragmentPlotData: function(fragment, dataType, mz)
     {
         var fragmentData = {
             fragment: fragment,
             dataType: dataType,
-            data: []
+            data: [],
+            mz: mz
         };
 
         Ext4.apply(fragmentData, this.getInitPlotMinMaxData());
@@ -229,14 +230,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
     processPlotDataRow: function(row, fragment, seriesType, metricProps)
     {
         var dataType = row['DataType'];
+        var mz = Ext4.util.Format.number(row['mz'], '0.0000');
         if (!this.fragmentPlotData[fragment])
         {
-            this.fragmentPlotData[fragment] = this.getInitFragmentPlotData(fragment, dataType);
+            this.fragmentPlotData[fragment] = this.getInitFragmentPlotData(fragment, dataType, mz);
         }
 
         var data = {
             type: 'data',
             fragment: fragment,
+            mz: mz,
             ReplicateId: row['ReplicateId'], // keep in data for click handler
             PrecursorId: row['PrecursorId'], // keep in data for click handler
             PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler

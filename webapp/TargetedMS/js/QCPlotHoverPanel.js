@@ -70,6 +70,7 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
             this.add(this.getPlotPointDetailField('Group', 'CUSUMmN' == this.valueName || 'CUSUMvN' == this.valueName ? 'CUSUM-' : 'CUSUM+'));
         }
 
+        this.add(this.getPlotPointDetailField('m/z', this.pointData['mz']));
         this.add(this.getPlotPointDetailField('Acquired', this.pointData['fullDate']));
         this.add(this.getPlotPointDetailField('Value', this.valueName ? this.pointData[this.valueName] : this.pointData['value']));
         this.add(this.getPlotPointDetailField('File Path', this.pointData['FilePath'].replace(/\\/g, '\\<wbr>').replace(/\//g, '\/<wbr>')));
