@@ -16,6 +16,8 @@
 
 package org.labkey.targetedms;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -120,6 +122,18 @@ public class SkylineDocImporter
 
     // protected Connection _conn;
     // private static final int BATCH_SIZE = 100;
+
+    @JsonCreator
+    private SkylineDocImporter(@JsonProperty("_expData") ExpData expData, @JsonProperty("_context") XarContext context,
+                               @JsonProperty("_representative") TargetedMSRun.RepresentativeDataState representative,
+                               @JsonProperty("_localDirectory") LocalDirectory localDirectory, @JsonProperty("_pipeRoot") PipeRoot pipeRoot)
+    {
+        _representative = representative;
+        _expData = expData;
+        _context = context;
+        _localDirectory = localDirectory;
+        _pipeRoot = pipeRoot;
+    }
 
     public SkylineDocImporter(User user, Container c, String description, ExpData expData, Logger log, XarContext context,
                               TargetedMSRun.RepresentativeDataState representative, @Nullable LocalDirectory localDirectory, @Nullable PipeRoot pipeRoot)
@@ -1851,7 +1865,8 @@ public class SkylineDocImporter
         private final int _runId;
         private final boolean _alreadyImported;
 
-        private RunInfo(int runId, boolean alreadyImported)
+        @JsonCreator
+        private RunInfo(@JsonProperty("_runId") int runId, @JsonProperty("_alreadyImported") boolean alreadyImported)
         {
             _runId = runId;
 
@@ -1869,7 +1884,7 @@ public class SkylineDocImporter
         }
     }
 
-    protected RunInfo prepareRun()
+    public RunInfo prepareRun()
     {
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction(_schemaLock))
         {

@@ -16,20 +16,34 @@
 
 package org.labkey.targetedms.pipeline;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.log4j.Logger;
+import org.junit.Test;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
+import org.labkey.api.exp.api.DataType;
 import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobService;
+import org.labkey.api.pipeline.PipelineService;
+import org.labkey.api.pipeline.RecordedAction;
 import org.labkey.api.pipeline.TaskId;
 import org.labkey.api.pipeline.TaskPipeline;
+import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.TestContext;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSRun;
+
+import java.util.List;
 
 /**
  * Simple wrapper job around a {@link TargetedMSImportTask}.
@@ -41,6 +55,15 @@ public class TargetedMSImportPipelineJob extends PipelineJob
     private final ExpData _expData;
     private SkylineDocImporter.RunInfo _runInfo;
     private final TargetedMSRun.RepresentativeDataState _representative;
+
+    @JsonCreator
+    protected TargetedMSImportPipelineJob(@JsonProperty("_expData") ExpData expData,
+                                          @JsonProperty("_representative") TargetedMSRun.RepresentativeDataState representative)
+    {
+        super();
+        _expData = expData;
+        _representative = representative;
+    }
 
     public TargetedMSImportPipelineJob(ViewBackgroundInfo info, ExpData expData, SkylineDocImporter.RunInfo runInfo, PipeRoot root, TargetedMSRun.RepresentativeDataState representative)
     {
@@ -59,6 +82,12 @@ public class TargetedMSImportPipelineJob extends PipelineJob
                 null != _expData.getFile() ? _expData.getFile().getParentFile().getPath() : FileUtil.getTempDirectory().getPath());
         setLocalDirectory(localDirectory);
         setLogFile(localDirectory.determineLogFile());
+    }
+
+    @Override
+    public boolean hasJacksonSerialization()
+    {
+        return true;
     }
 
     @Override
@@ -94,5 +123,47 @@ public class TargetedMSImportPipelineJob extends PipelineJob
     public TargetedMSRun.RepresentativeDataState getRepresentative()
     {
         return _representative;
+    }
+
+    @Override
+    public List<String> compareJobs(PipelineJob job2)
+    {
+        List<String> errors = super.compareJobs(job2);
+        if (job2 instanceof TargetedMSImportPipelineJob)
+        {
+            TargetedMSImportPipelineJob copyJob2 = (TargetedMSImportPipelineJob)job2;
+            if (!this._representative.equals(copyJob2._representative))
+                errors.add("_representative");
+//            if (!this._expData.equals(copyJob2._expData))
+//                errors.add("_expData");
+//            if (!this._runInfo.equals(copyJob2._runInfo))
+//                errors.add("_runInfo");
+        }
+        else
+        {
+            errors.add("Expected job2 to be TargetedMSImportPipelineJob");
+        }
+        return errors;
+    }
+
+    public static class TestCase extends PipelineJob.TestSerialization
+    {
+        private static Logger LOG = Logger.getLogger(TargetedMSImportPipelineJob.class);
+
+        @Test
+        public void testSerialize()
+        {                                       // TODO: Difficult to dummy this up enough. Maybe don't need since we're deserializing all jobs
+/*            User user = TestContext.get().getUser();
+            Container container = ContainerManager.getRoot();
+            PipeRoot pipeRoot = PipelineService.get().getPipelineRootSetting(container);
+            TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
+            ExpData expData = ExperimentService.get().createData(container, new DataType("dummy"));           // TODO: need actual data in table
+            SkylineDocImporter importer = new SkylineDocImporter(user, container, "dummy", expData, null, null, representative, null, null);
+            SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
+            ViewBackgroundInfo info = new ViewBackgroundInfo(container, user, null);
+            TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, expData, runInfo, pipeRoot, representative);
+            job.getActionSet().add(new RecordedAction("foo"));
+            testSerialize(job, LOG);     */
+        }
     }
 }
