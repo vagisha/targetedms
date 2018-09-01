@@ -679,6 +679,10 @@ public class SkylineDocImporter
         if(SkylineFileUtils.EXT_ZIP.equalsIgnoreCase(ext))
         {
             File zipDir = new File(f.getParent(), SkylineFileUtils.getBaseName(f.getName()));
+            if (zipDir.exists())
+            {
+                FileUtil.deleteDirectoryContents(zipDir);
+            }
             _blibSourceDir = zipDir;
             List<File> files = ZipUtil.unzipToDirectory(f, zipDir, _log);
             File skyFile = null;
