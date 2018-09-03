@@ -89,13 +89,19 @@
         }
 
         this.exportExcel = function() {
+            var data = [];
+            data = data.concat(this.xlsExport);
+            data = data.concat(this['standardxlsExport']);
+            data = data.concat(this['blankxlsExport']);
+            data = data.concat(this['qcxlsExport']);
+
             LABKEY.Utils.convertToExcel({
                 fileName : this.fileName.split(".")[0] + '_' + this.title + '.xlsx',
                 sheets:
                         [
                             {
                                 name: 'Sheet1',
-                                data: this.xlsExport
+                                data: data
                             }
                         ]
             });
@@ -135,7 +141,7 @@
             return '<i id="fom-title3-icon" onClick="toggleSampleList();" class="fa fa-caret-down" ></i>';
         };
 
-        var standardHeader = function (hdrs) {
+        var standardHeader = function (hdrs, sampleType) {
             hdrs.expHdrs.push("");
             hdrs.hdr += '<tr><td>Expected Concentration</td>';
             var units = '';
@@ -144,7 +150,7 @@
                 units = ' (' + LABKEY.Utils.encodeHtml(this.Units) + ')';
 
             var css, shade = true;
-            this.hdrLabels.forEach(function (label) {
+            this[sampleType + 'hdrLabels'].forEach(function (label) {
                 if (shade) {
                     css = 'fom-number shaded';
                     shade = false;
@@ -163,7 +169,7 @@
             return hdrs;
         };
 
-        var displayHeader = function(blanks) {
+        var displayHeader = function(blanks, sampleType) {
             $('#fom-title1').html(this.title);
             $('#fom-title2').html("Skyline File: " + this.fileName);
 
@@ -179,50 +185,53 @@
                 this.xlsExport.push(["Sample(s): " + this.sampleFiles]);
             }
 
+            if (!this[sampleType + 'xlsExport'])
+                this[sampleType + 'xlsExport'] = [];
+
             var title2 = "Concentrations";
-            if(this.sampleType === 'qc') {
+            if(sampleType === 'qc') {
                 title2 = "Concentrations in Quality Control";
             }
-            else if(this.sampleType === 'standard') {
+            else if(sampleType === 'standard') {
                 title2 = "Concentrations in Standards"
             }
-            else if(this.sampleType === 'blank') {
+            else if(sampleType === 'blank') {
                 title2 = "Concentrations in Blanks"
             }
 
-            this.xlsExport.push([]);
-            this.xlsExport.push([title2]);
+            this[sampleType + 'xlsExport'].push([]);
+            this[sampleType + 'xlsExport'].push([title2]);
 
             // Create table headers
             var hdrs = {
                 expHdrs: [],
                 hdr: ""
             };
-            if (this.hdrLabels === null || this.hdrLabels.length < 1) {
-                $('#' + this.sampleType + '-header').html("No data of this type");
+            if (this[sampleType + 'hdrLabels'] === null || this[sampleType + 'hdrLabels'].length < 1) {
+                $('#' + sampleType + '-header').html("No data of this type");
                 hdrs.expHdrs.push("No data of this type");
                 hdrs.hdr += "No data of this type";
             }
             else {
                 if (!blanks) {
-                    hdrs = standardHeader(hdrs);
+                    hdrs = standardHeader(hdrs, sampleType);
                 }
             }
 
-            $('#' + this.sampleType + '-header').html(hdrs.hdr);
-            this.xlsExport.push(hdrs.expHdrs);
+            $('#' + sampleType + '-header').html(hdrs.hdr);
+            this[sampleType + 'xlsExport'].push(hdrs.expHdrs);
         };
 
-        var displayBody = function(blanks) {
-            if (this.hdrLabels != null && this.hdrLabels.length > 0) {
-                var html = getRawDataHtml(blanks);
-                html += getSummaryHtml(blanks);
+        var displayBody = function(blanks, sampleType) {
+            if (this[sampleType + 'hdrLabels'] != null && this[sampleType + 'hdrLabels'].length > 0) {
+                var html = getRawDataHtml(blanks, sampleType);
+                html += getSummaryHtml(blanks, sampleType);
 
-                $('#' + this.sampleType + '-body').html(html);
+                $('#' + sampleType + '-body').html(html);
             }
         };
 
-        var getSummaryHtml = function(blanks) {
+        var getSummaryHtml = function(blanks, sampleType) {
 
             var stats = ["n", "Mean", "StdDev", "CV", "Bias"];
             var units = "";
@@ -243,7 +252,7 @@
                 html += '<tr><td class="fom-label">' + stat + units + '</td>';
                 exportRow = [stat];
                 var data, css, shade = true;
-                this.hdrLabels.forEach(function(col) {
+                this[sampleType + 'hdrLabels'].forEach(function(col) {
                     if (shade) {
                         css = 'fom-number shaded';
                         shade = false;
@@ -254,7 +263,7 @@
                     }
 
                     if (stat === "n") {
-                        data = this.rawData[col];
+                        data = this[sampleType + 'rawData'][col];
                         var n = 0;
                         data.forEach(function(datum) {
                             if (datum.exclude !== true) {
@@ -266,8 +275,8 @@
                     }
                     else {
                         // If all excluded then no summary data
-                        if (this.summaryData[col] && this.summaryData[col][stat]) {
-                            summaryValue = this.summaryData[col][stat];
+                        if (this[sampleType + 'summaryData'][col] && this[sampleType + 'summaryData'][col][stat]) {
+                            summaryValue = this[sampleType + 'summaryData'][col][stat];
                         }
                         else {
                             summaryValue = "";
@@ -293,13 +302,13 @@
 
                 }, this);
                 html += '</tr>';
-                this.xlsExport.push(exportRow);
+                this[sampleType + 'xlsExport'].push(exportRow);
             }, this);
 
             return html;
         };
 
-        var getRawDataHtml = function(blanks) {
+        var getRawDataHtml = function(blanks, sampleType) {
             var index = 0;
             var found;
             var html = "", exportRow;
@@ -318,7 +327,7 @@
                 exportRow = [""];
 
                 var data, css, shade = true;
-                this.hdrLabels.forEach(function (label) {
+                this[sampleType + 'hdrLabels'].forEach(function (label) {
                     if (shade) {
                         css = 'fom-number shaded';
                         shade = false;
@@ -327,7 +336,7 @@
                         css = 'fom-number';
                         shade = true;
                     }
-                    data = this.rawData[label][index];
+                    data = this[sampleType + 'rawData'][label][index];
                     if (data) {
                         found = true;
                         html += '<td class=\'' + css + ' left\'>' + (data.exclude === true?'<s>':'') + data.value
@@ -363,14 +372,14 @@
 
                 html += "</tr>";
                 index++;
-                this.xlsExport.push(exportRow);
+                this[sampleType + 'xlsExport'].push(exportRow);
 
             } while (found);
 
             return html;
         };
 
-        var parseRawData = function(data) {
+        var parseRawData = function(data, sampleType) {
 
             // No data
             if (data.rows.length < 1)
@@ -385,12 +394,12 @@
                         replicate = col.split('::')[1];
                         if (replicate != null && (colName !== 'NULL' || row.SampleType === "blank")) {
                             if (row[col] != null) {
-                                if (!this.rawData[colName]) {
-                                    this.rawData[colName] = [];
-                                    this.hdrLabels.push(colName);
+                                if (!this[sampleType + 'rawData'][colName]) {
+                                    this[sampleType + 'rawData'][colName] = [];
+                                    this[sampleType + 'hdrLabels'].push(colName);
                                 }
 
-                                this.rawData[colName].push({
+                                this[sampleType + 'rawData'][colName].push({
                                     'value': row[col].toFixed(2),
                                     'bias': row['Bias']?row['Bias'].toFixed(2):null,
                                     'exclude': row['ExcludeFromCalibration'] === true
@@ -402,10 +411,10 @@
             }, this);
 
             // Sort columns
-            this.hdrLabels.sort(function(a, b){return a-b;});
+            this[sampleType + 'hdrLabels'].sort(function(a, b){return a-b;});
         };
 
-        var parseSummaryData = function (data) {
+        var parseSummaryData = function (data, sampleType) {
 
             // No data
             if (data.rows.length < 1)
@@ -419,15 +428,15 @@
                         colName = col.split("::")[0];
                         rowName = col.split("::")[1];
                         if (rowName != null && (colName !== 'NULL' || row.SampleType === "blank")) {
-                            if (!this.summaryData[colName]) {
-                                this.summaryData[colName] = {};
+                            if (!this[sampleType + 'summaryData'][colName]) {
+                                this[sampleType + 'summaryData'][colName] = {};
                             }
 
                             if (row[col] != null) {
-                                this.summaryData[colName][rowName] = row[col].toFixed(2);
+                                this[sampleType + 'summaryData'][colName][rowName] = row[col].toFixed(2);
                             }
                             else {
-                                this.summaryData[colName][rowName] = "";
+                                this[sampleType + 'summaryData'][colName][rowName] = "";
                             }
                         }
                     }
@@ -435,28 +444,28 @@
             }, this);
         };
 
-        var handleData = function (blanks) {
+        var handleData = function (blanks, sampleType) {
 
-            displayHeader(blanks);
-            displayBody(blanks);
+            displayHeader(blanks, sampleType);
+            displayBody(blanks, sampleType);
 
-            if (this.sampleType === 'standard')
-                createLoqStats();
+            if (sampleType === 'standard')
+                createLoqStats(sampleType);
 
-            if (this.sampleType === 'blank')
-                createLodStats();
+            if (sampleType === 'blank')
+                createLodStats(sampleType);
 
-            if (this.callback != null)
-                this.callback();
+            if (this[sampleType + 'callback'] != null)
+                this[sampleType + 'callback']();
         };
 
         var createFomTable = function(sampleType, callback) {
-            this.rawData = {};
-            this.summaryData = {};
-            this.hdrLabels = [];
+            this[sampleType + 'rawData'] = {};
+            this[sampleType + 'summaryData'] = {};
+            this[sampleType + 'hdrLabels'] = [];
 
-            this.sampleType = sampleType;
-            this.callback = callback;
+//            this.sampleType = sampleType;
+            this[sampleType + 'callback'] = callback;
             var multi = new LABKEY.MultiRequest();
             var filter = [LABKEY.Filter.create('RunId', this.runId),
                 LABKEY.Filter.create('MoleculeId', this.moleculeId),
@@ -468,7 +477,9 @@
                 queryName: 'FiguresOfMeritPivot',
                 filterArray: filter,
                 scope: this,
-                success: parseRawData,
+                success: function(data) {
+                    parseRawData(data, sampleType);
+                },
                 failure: function (response) {
                     LABKEY.Utils.alert('Error', response.exception);
                 }
@@ -479,30 +490,32 @@
                 queryName: 'FiguresOfMeritSummary',
                 filterArray: filter,
                 scope: this,
-                success: parseSummaryData,
+                success: function(data) {
+                    parseSummaryData(data, sampleType);
+                },
                 failure: function (response) {
                     LABKEY.Utils.alert('Error', response.exception);
                 }
             });
 
             multi.send(function() {
-                handleData(sampleType === "blank");
+                handleData(sampleType === "blank", sampleType);
             }, this);
         };
 
-        var createLoqStats = function() {
+        var createLoqStats = function(sampleType) {
             var loq = 'NA', uloq = 'NA', bias, cv, label;
-            var hdrs = this.hdrLabels.reverse();
+            var hdrs = this[sampleType + 'hdrLabels'].reverse();
 
             for (var i=0; i<hdrs.length; i++) {
                 label = hdrs[i];
 
                 // All excluded data points
-                if (!this.summaryData[label]) {
+                if (!this[sampleType + 'summaryData'][label]) {
                     continue;
                 }
-                bias = Math.abs(Number(this.summaryData[label]["Bias"]));
-                cv = Math.abs(Number(this.summaryData[label]["CV"]));
+                bias = Math.abs(Number(this[sampleType + 'summaryData'][label]["Bias"]));
+                cv = Math.abs(Number(this[sampleType + 'summaryData'][label]["CV"]));
                 if (bias <= this.biasLimit && (this.cvLimit === null || cv <= this.cvLimit)) {
                     if (uloq === 'NA') {
                         uloq = label;
@@ -520,25 +533,25 @@
             $('#loq-stat').html('Lower: ' + loq + ' ' + LABKEY.Utils.encodeHtml(units));
             $('#uloq-stat').html('Upper: ' + uloq + ' ' + LABKEY.Utils.encodeHtml(units));
 
-            this.xlsExport.push([]);
-            this.xlsExport.push(['Limit of Quantitation']);
-            this.xlsExport.push(['Lower: ' + loq + ' ' + units]);
-            this.xlsExport.push(['Upper: ' + uloq + ' ' + units]);
-            this.xlsExport.push(['Bias Limit: ' + this.biasLimit + '%']);
-            this.xlsExport.push(['CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A')]);
+            this[sampleType + 'xlsExport'].push([]);
+            this[sampleType + 'xlsExport'].push(['Limit of Quantitation']);
+            this[sampleType + 'xlsExport'].push(['Lower: ' + loq + ' ' + units]);
+            this[sampleType + 'xlsExport'].push(['Upper: ' + uloq + ' ' + units]);
+            this[sampleType + 'xlsExport'].push(['Bias Limit: ' + this.biasLimit + '%']);
+            this[sampleType + 'xlsExport'].push(['CV Limit: ' + (this.cvLimit ? (this.cvLimit + '%') : 'N/A')]);
         };
 
-        var createLodStats = function () {
+        var createLodStats = function (sampleType) {
             var lodValue = "NA";
 
             if (this.lodCalculation != "none") {
                 var mean = "NA", stddev = 0;
-                if (this.summaryData["NULL"] && this.summaryData["NULL"]["Mean"]) {
-                    mean = Number(this.summaryData["NULL"]["Mean"]);
+                if (this[sampleType + 'summaryData']["NULL"] && this[sampleType + 'summaryData']["NULL"]["Mean"]) {
+                    mean = Number(this[sampleType + 'summaryData']["NULL"]["Mean"]);
                 }
 
-                if (this.summaryData["NULL"] && this.summaryData["NULL"]["StdDev"]) {
-                    stddev = Number(this.summaryData["NULL"]["StdDev"]);
+                if (this[sampleType + 'summaryData']["NULL"] && this[sampleType + 'summaryData']["NULL"]["StdDev"]) {
+                    stddev = Number(this[sampleType + 'summaryData']["NULL"]["StdDev"]);
                 }
 
                 if (mean !== "NA") {
@@ -562,20 +575,17 @@
             $('#lod-value').html('Lower: ' + lodValue);
             $('#lod-calc').html('Calculation: ' + calculation);
 
-            this.xlsExport.push([]);
-            this.xlsExport.push(["Limit of Detection"]);
-            this.xlsExport.push(['Lower: ' + lodValue]);
-            this.xlsExport.push(['Calculation: ' + calculation]);
+            this[sampleType + 'xlsExport'].push([]);
+            this[sampleType + 'xlsExport'].push(["Limit of Detection"]);
+            this[sampleType + 'xlsExport'].push(['Lower: ' + lodValue]);
+            this[sampleType + 'xlsExport'].push(['Calculation: ' + calculation]);
         };
 
-         createFomTable('standard', function() {
-             createFomTable('blank', function() {
-                 createFomTable('qc', function() {
-                     LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
-                 });
-             });
-         });
-//        createStandardFomTable(function() {createBlankFomTable(createQcFomTable)});
+        createFomTable('standard', null);
+        createFomTable('blank', null);
+        createFomTable('qc', function() {
+            LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
+        });
 
     }(jQuery);
 
