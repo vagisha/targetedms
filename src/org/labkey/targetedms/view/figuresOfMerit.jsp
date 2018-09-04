@@ -80,6 +80,7 @@
         this.xlsExport = [];
         this.title = "Molecule ID: " + this.moleculeId;
         this.sampleListCollapsed = true;
+        this.tableCount = 0;
 
         if (this.peptideName !== null) {
             this.title = "Peptide: " + this.peptideName;
@@ -457,9 +458,13 @@
 
             if (this[sampleType + 'callback'] != null)
                 this[sampleType + 'callback']();
+
+            if (--this.tableCount === 0)
+                LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
         };
 
         var createFomTable = function(sampleType, callback) {
+            this.tableCount++;
             this[sampleType + 'rawData'] = {};
             this[sampleType + 'summaryData'] = {};
             this[sampleType + 'hdrLabels'] = [];
@@ -583,9 +588,7 @@
 
         createFomTable('standard', null);
         createFomTable('blank', null);
-        createFomTable('qc', function() {
-            LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
-        });
+        createFomTable('qc', null);
 
     }(jQuery);
 
