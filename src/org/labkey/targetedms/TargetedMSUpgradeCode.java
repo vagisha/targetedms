@@ -40,11 +40,8 @@ import org.labkey.api.view.Portal;
 import org.labkey.api.view.ShortURLRecord;
 import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.model.JournalExperiment;
-import org.labkey.targetedms.parser.Precursor;
-import org.labkey.targetedms.parser.SkylineDocumentParser;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -91,37 +88,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
-    // Called at 16.10-16.20 (only on SQLServer)
-    @SuppressWarnings({"UnusedDeclaration"})
-    public void updatePrecursorModifiedSequence(final ModuleContext moduleContext)
-    {
-        DbSchema schema = TargetedMSSchema.getSchema();
-        String updateSql = "UPDATE targetedms.precursor SET ModifiedSequence=? WHERE Id=?";
-        TableSelector ts = new TableSelector(TargetedMSManager.getTableInfoPrecursor(),
-                                             new SimpleFilter(FieldKey.fromParts("ModifiedSequence"), "[", CompareType.CONTAINS), null);
-        ts.forEachBatch(batch -> {
-            try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
-            {
-                ArrayList<Collection<Object>> paramList = new ArrayList<>();
-                for (Precursor precursor : batch)
-                {
-                    String originalSequence = precursor.getModifiedSequence();
-                    String newSequence = SkylineDocumentParser.ensureDecimalInModMass(originalSequence);
-                    if (!originalSequence.equals(newSequence))
-                    {
-                        List<Object> modSeqPrecursorId = new ArrayList<>();
-                        modSeqPrecursorId.add(newSequence);
-                        modSeqPrecursorId.add(precursor.getId());
-                        paramList.add(modSeqPrecursorId);
-                    }
-                }
-                Table.batchExecute(schema, updateSql, paramList);
-                transaction.commit();
-            }
-        }, Precursor.class, 1000);
-    }
-
-    // Called at 17.12-17.13
+    // Called at 17.10-17.20
     @SuppressWarnings({"UnusedDeclaration"})
     public void updateExperimentAnnotations(final ModuleContext moduleContext)
     {
