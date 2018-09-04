@@ -366,12 +366,11 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
             waitForElement(qcSummaryWebPart.getBubble());
             if (perBubbleTexts != null && !perBubbleTexts.isEmpty())
             {
-                waitForElement(qcSummaryWebPart.getBubbleContent().containing(perBubbleTexts.get(0)));
-                for (String bubbleText : perBubbleTexts)
+                String actualText = waitForElement(qcSummaryWebPart.getBubbleContent().containing(perBubbleTexts.get(0))).getText();
+                for (String expectedText : perBubbleTexts)
                 {
-                    log("Validate that the bubble text for the file detail contains '" + bubbleText + "'.");
-                    actualFileDetailText = qcSummaryWebPart.getBubbleText();
-                    assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + actualFileDetailText + "' Expected: '" + bubbleText + "'", actualFileDetailText.toLowerCase().contains(bubbleText.toLowerCase()));
+                    log("Validate that the bubble text for the file detail contains '" + expectedText + "'.");
+                    assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + actualText + "' Expected: '" + expectedText + "'", actualText.toLowerCase().contains(expectedText.toLowerCase()));
                 }
             }
             qcSummaryWebPart.closeBubble();
