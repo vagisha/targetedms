@@ -35,15 +35,18 @@ import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.TextSearcher;
 import org.openqa.selenium.WebElement;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.labkey.test.components.ext4.Window.Window;
 
 @Category({DailyB.class, MS2.class})
@@ -366,11 +369,11 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
             waitForElement(qcSummaryWebPart.getBubble());
             if (perBubbleTexts != null && !perBubbleTexts.isEmpty())
             {
-                String actualText = waitForElement(qcSummaryWebPart.getBubbleContent().containing(perBubbleTexts.get(0))).getText();
-                for (String expectedText : perBubbleTexts)
+                TextSearcher textSearcher = new TextSearcher(() -> waitForElement(qcSummaryWebPart.getBubbleContent()).getText());
+                if (!waitFor(() -> textSearcher.getMissingTexts(perBubbleTexts).isEmpty(), 10000))
                 {
-                    log("Validate that the bubble text for the file detail contains '" + expectedText + "'.");
-                    assertTrue("The bubble text for the file detail not as expected. Bubble text: '" + actualText + "' Expected: '" + expectedText + "'", actualText.toLowerCase().contains(expectedText.toLowerCase()));
+                    String actualText = textSearcher.getLastSearchedText();
+                    fail("The bubble text for the file detail not as expected. Bubble text: '" + actualText + "' Missing: '" + String.join(",", perBubbleTexts.stream().filter(s -> !actualText.contains(s)).collect(Collectors.toList())) + "'");
                 }
             }
             qcSummaryWebPart.closeBubble();
