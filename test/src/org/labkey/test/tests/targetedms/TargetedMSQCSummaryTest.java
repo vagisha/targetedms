@@ -370,6 +370,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
             if (perBubbleTexts != null && !perBubbleTexts.isEmpty())
             {
                 TextSearcher textSearcher = new TextSearcher(() -> waitForElement(qcSummaryWebPart.getBubbleContent()).getText());
+                textSearcher.setSourceTransformer(String::toLowerCase);
                 if (!waitFor(() -> textSearcher.getMissingTexts(perBubbleTexts).isEmpty(), 10000))
                 {
                     String actualText = textSearcher.getLastSearchedText();
