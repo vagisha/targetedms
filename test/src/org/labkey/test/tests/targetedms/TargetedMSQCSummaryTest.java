@@ -191,8 +191,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         List<List<String>> tempStringList02 = new ArrayList<>();
         tempStringList01.add("2015/01/16 15:08:15 - no outliers");
         tempStringList01.add("2015/01/16 12:47:30 - no outliers");
-        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_04", "acquired date/time: 2015/01/16 15:08:15"));
-        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_03", "acquired date/time: 2015/01/16 12:47:30"));
+        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_04", "Acquired Date/Time: 2015/01/16 15:08:15"));
+        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_03", "Acquired Date/Time: 2015/01/16 12:47:30"));
         validateSampleFile(0, tempStringList01, tempStringList02);
 
         // remove all sample files
@@ -370,7 +370,6 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
             if (perBubbleTexts != null && !perBubbleTexts.isEmpty())
             {
                 TextSearcher textSearcher = new TextSearcher(() -> waitForElement(qcSummaryWebPart.getBubbleContent()).getText());
-                textSearcher.setSourceTransformer(String::toLowerCase);
                 if (!waitFor(() -> textSearcher.getMissingTexts(perBubbleTexts).isEmpty(), 10000))
                 {
                     String actualText = textSearcher.getLastSearchedText();
