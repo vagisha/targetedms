@@ -2043,7 +2043,7 @@ public class TargetedMSController extends SpringActionController
             try
             {
                 addSpectrumViews(run, vbox,
-                        LibrarySpectrumMatchGetter.getMatches(precursor, new TargetedMSSchema(getUser(), getContainer()), localDirectory), errors);
+                        LibrarySpectrumMatchGetter.getMatches(precursor, localDirectory), errors);
             }
             finally
             {
@@ -2084,14 +2084,16 @@ public class TargetedMSController extends SpringActionController
         int idx = 0;
         for(LibrarySpectrumMatch libSpecMatch: libSpectraMatchList)
         {
-            libSpecMatch.setLorikeetId(idx++);
+            libSpecMatch.setLorikeetId(idx);
             if(modSettings != null)
             {
                 libSpecMatch.setMaxNeutralLosses(modSettings.getMaxNeutralLosses());
             }
             PeptideSpectrumView spectrumView = new PeptideSpectrumView(libSpecMatch, errors);
-            spectrumView.enableExpandCollapse("PeptideSpectrumView", false);
+            spectrumView.enableExpandCollapse("PeptideSpectrumView_" + idx, false);
             vbox.addView(spectrumView);
+
+            idx++;
         }
 
     }
@@ -2138,11 +2140,16 @@ public class TargetedMSController extends SpringActionController
                 response.put("error", "Could not find the library :" + form.getLibraryName());
                 return response;
             }
+
             String blibFilePath = LibraryManager.getLibraryFilePath(run.getId(), library);
-            String redundantBlibFilePath = BlibSpectrumReader.redundantBlibPath(blibFilePath);
-            if (!BlibSpectrumReader.redundantBlibExists(getContainer(), blibFilePath))
+            if(form.getRedundantRefSpectrumId() != 0)
             {
-                response.put("error", "Redundant library file " + redundantBlibFilePath + " does not exist.");
+                blibFilePath = BlibSpectrumReader.redundantBlibPath(blibFilePath);
+            }
+
+            if (!new File(blibFilePath).exists())
+            {
+                response.put("error", "Library file " + blibFilePath + " does not exist.");
                 return response;
             }
 
@@ -2152,9 +2159,19 @@ public class TargetedMSController extends SpringActionController
                 LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
                 try
                 {
-                    LibrarySpectrumMatch spectrumMatch = LibrarySpectrumMatchGetter.getSpectrumMatch(run, peptide, precursor, library,
-                            localDirectory, redundantBlibFilePath,
-                            form.getRedundantRefSpectrumId());
+                    LibrarySpectrumMatch spectrumMatch = null;
+                    if(form.getRedundantRefSpectrumId() == 0)
+                    {
+                        spectrumMatch = LibrarySpectrumMatchGetter.getSpectrumMatch(run, peptide, precursor, library,
+                                blibFilePath, localDirectory);
+                    }
+                    else
+                    {
+                        spectrumMatch = LibrarySpectrumMatchGetter.getRedundantSpectrumMatch(run, peptide, precursor, library,
+                                blibFilePath, localDirectory,
+                                form.getRedundantRefSpectrumId());
+                    }
+
                     if (spectrumMatch == null)
                     {
                         response.put("error", "Could not find spectrum in library " + form.getLibraryName());
@@ -2169,6 +2186,7 @@ public class TargetedMSController extends SpringActionController
                     spectrumDetails.put("fileName", spectrumMatch.getSpectrum().getSourceFileName());
                     spectrumDetails.put("retentionTime", spectrumMatch.getSpectrum().getRetentionTimeF2());
                     spectrumDetails.put("peaks", spectrumMatch.getPeaks());
+                    spectrumDetails.put("redundantSpectra", spectrumMatch.getRedundantSpectraList()); // Only spectrum read from the non-redundant library will have a list of redundant spectra.
 
                     response.put("spectrum", spectrumDetails);
                 }

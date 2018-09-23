@@ -32,8 +32,6 @@ import org.sqlite.SQLiteConfig;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -69,7 +67,7 @@ public class BlibSpectrumReader
     private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
 
     @Nullable
-    public static BlibSpectrum getSpectrum(Container container, LocalDirectory localDirectory, String blibFilePath,
+    public static BlibSpectrum getSpectrum(LocalDirectory localDirectory, String blibFilePath,
                                            String modifiedPeptide, int charge)
     {
         blibFilePath = getLocalBlibPath(localDirectory, blibFilePath);
@@ -89,7 +87,7 @@ public class BlibSpectrumReader
             readSpectrumPeaks(conn, spectrum);
 
             if(spectrum.getRetentionTime() != null // retentionTime will be null if RetentionTimes table does not exist.
-                    && redundantBlibExists(container, blibFilePath))
+                    && redundantBlibExists(blibFilePath))
             {
                 // Get the redundant spectra IDs
                 addRedundantSpectrumInfo(conn, spectrum);
@@ -119,7 +117,7 @@ public class BlibSpectrumReader
         return false;
     }
 
-    public static boolean redundantBlibExists(Container container, String blibPath)
+    public static boolean redundantBlibExists(String blibPath)
     {
         String redundantBlibFilePath = redundantBlibPath(blibPath);
 
@@ -249,7 +247,7 @@ public class BlibSpectrumReader
         }
     }
 
-    public static String findMatchingModifiedSequence(Connection conn, String modifiedSequence) throws SQLException
+    private static String findMatchingModifiedSequence(Connection conn, String modifiedSequence) throws SQLException
     {
         List<Pair<Integer, String>> mods = new ArrayList<>();
         String unmodifiedSequence = Peptide.stripModifications(modifiedSequence, mods);

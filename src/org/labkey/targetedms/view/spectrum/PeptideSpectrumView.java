@@ -16,6 +16,7 @@
 package org.labkey.targetedms.view.spectrum;
 
 import org.labkey.api.view.JspView;
+import org.labkey.targetedms.parser.PeptideSettings;
 import org.springframework.validation.BindException;
 
 /**
@@ -29,8 +30,9 @@ public class PeptideSpectrumView extends JspView<LibrarySpectrumMatch>
     public PeptideSpectrumView(LibrarySpectrumMatch specMatch, BindException errors)
     {
         super("/org/labkey/targetedms/view/spectrum/spectrumView.jsp", specMatch, errors);
-        setTitle(String.format("%s, Charge %d",
-                getModelBean().getModifiedSequence(),
-                getModelBean().getCharge()));
+        setTitle(String.format("%s, Charge %d %s",
+                specMatch.getModifiedSequence(),
+                specMatch.getCharge(),
+                PeptideSettings.IsotopeLabel.LIGHT.equals(specMatch.getIsotopeLabel()) ? "" : "(" + specMatch.getIsotopeLabel() + ")"));
     }
 }

@@ -19,6 +19,7 @@ import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.blib.BlibSpectrum;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -39,7 +40,9 @@ public class LibrarySpectrumMatch
     private String _peptide;
     private String _modifiedSequence;
     private int _charge;
+    private String _isotopeLabel;
     private PeptideSettings.SpectrumLibrary _library;
+    private List<PeptideSettings.SpectrumLibrary> _libraries; // All libraries that have a match
     private String _lorikeetId;
     List<Peptide.StructuralModification> _structuralModifications;
     private Set<Integer> _variableStructuralMods = new HashSet<>();
@@ -90,6 +93,16 @@ public class LibrarySpectrumMatch
         _charge = charge;
     }
 
+    public String getIsotopeLabel()
+    {
+        return _isotopeLabel;
+    }
+
+    public void setIsotopeLabel(String isotopeLabel)
+    {
+        _isotopeLabel = isotopeLabel;
+    }
+
     public BlibSpectrum getSpectrum()
     {
         return _spectrum;
@@ -108,6 +121,20 @@ public class LibrarySpectrumMatch
     public void setLibrary(PeptideSettings.SpectrumLibrary library)
     {
         _library = library;
+    }
+
+    public List<PeptideSettings.SpectrumLibrary> getLibraries()
+    {
+        return _libraries;
+    }
+
+    public void addLibrary(PeptideSettings.SpectrumLibrary library)
+    {
+        if(_libraries == null)
+        {
+            _libraries = new ArrayList<>();
+        }
+        _libraries.add(library);
     }
 
     public String getLorikeetId()
@@ -222,7 +249,7 @@ public class LibrarySpectrumMatch
         // Return all isotopic and variable structural modifications.
         mods.append(appendStructuralModifications(_structuralModifications, true)); // only variable mods
         String isotopeMods = appendIsotopeModifications(_isotopeModifications);
-        if(mods.length() > 1)
+        if(mods.length() > 1 && isotopeMods.length() > 1)
         {
            mods.append(",");
         }
@@ -489,5 +516,35 @@ public class LibrarySpectrumMatch
             atomicMasses.put("Mn", new double[]{ 54.9380471, 54.938045});
             atomicMasses.put("Mg", new double[]{ 23.9850423, 24.305});
         }
+    }
+
+    public String getRedundantSpectraList()
+    {
+        if(!hasRedundantSpectra())
+        {
+            return "[]";
+        }
+
+        StringBuilder spectraList = new StringBuilder();
+        spectraList.append("[");
+        int index = 0;
+        for(BlibSpectrum.RedundantSpectrum spectrum: getSpectrum().getRedundantSpectrumList())
+        {
+            if(index++ > 0)
+                spectraList.append(", ");
+            spectraList.append("{");
+            spectraList.append("\"redundantSpectrumId\": ").append(spectrum.getRedundantRefSpectrumId());
+            spectraList.append(", ");
+            spectraList.append("\"fileName\": \"").append(spectrum.getSourceFileName()).append("\"");
+            spectraList.append(", ");
+            spectraList.append("\"retentionTime\": ").append(spectrum.getRetentionTimeF2());
+            spectraList.append(", ");
+            spectraList.append("\"isReference\": ").append(spectrum.isBestSpectrum());
+            spectraList.append(", ");
+            spectraList.append("\"display\": \"").append(spectrum.getSourceFileName() + " (" + spectrum.getRetentionTimeF2() + ")\"");
+            spectraList.append("}");
+        }
+        spectraList.append("] ");
+        return spectraList.toString();
     }
 }

@@ -16,6 +16,7 @@
 package org.labkey.targetedms.view.spectrum;
 
 import org.apache.commons.io.FilenameUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cache.BlockingCache;
 import org.labkey.api.cache.CacheLoader;
@@ -32,6 +33,7 @@ import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.blib.BlibSpectrum;
 import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
+import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideManager;
@@ -40,10 +42,9 @@ import org.labkey.targetedms.query.PrecursorManager;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * User: vsharma
@@ -68,8 +69,7 @@ public class LibrarySpectrumMatchGetter
                     TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
 
                     // Get the spectrum libraries for this run
-                    List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(run.getId());
-                    Map<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId(), libraries);
+                    Map<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId());
 
                     for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
                     {
@@ -95,14 +95,7 @@ public class LibrarySpectrumMatchGetter
         TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(peptide.getId());
 
         // Get the spectrum libraries for this run
-        List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(run.getId());
-        Map<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId(), libraries);
-
-        // Precursors are sorted by charge and label type (light label first).
-        // If there are precursors with different charge we want to display MS/MS spectra for all of them.
-
-        Set<Integer> precursorCharges = new HashSet<>();
-        List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<>();
+        LinkedHashMap<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId());
 
         List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(peptide.getId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
@@ -113,65 +106,28 @@ public class LibrarySpectrumMatchGetter
             potentialLossMap.put(mod.getStructuralModId(), losses);
         }
 
+        List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<>();
+
+        // Precursors are sorted by charge and label type (light label first).
+        // If there are precursors with different charge or isotope label we want to display the reference MS/MS spectra for all of them.
         for(Precursor precursor: precursors)
         {
-            if(precursorCharges.contains(precursor.getCharge()))
-                continue;  // We already have a match for this charge state
+            LibrarySpectrumMatch pepSpec = getMatch(peptide, precursor, localDirectory, libraryFilePathsMap, structuralModifications, runStrMods, potentialLossMap);
 
-            for(PeptideSettings.SpectrumLibrary library: libraries) // Use the "libraries" list instead of keySet on the
-                                                                    // libraryFilePathsMap so that we get a predictable order
+            if(pepSpec != null)
             {
-                if(libraryFilePathsMap.get(library) == null)
-                {
-                    continue;
-                }
-
-                BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(container, localDirectory, libraryFilePathsMap.get(library),
-                        precursor.getModifiedSequence(),
-                        precursor.getCharge());
-
-                // Make sure that the Bibliospec spectrum has peaks.  Minimized libraries in Skyline can have
-                // library entries with no spectrum peaks.  This should be fixed in Skyline.
-                if(spectrum != null && spectrum.getNumPeaks() > 0)
-                {
-                    LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
-                    pepSpec.setPrecursorId(precursor.getId());
-                    pepSpec.setCharge(precursor.getCharge());
-                    pepSpec.setPeptide(peptide.getSequence());
-                    pepSpec.setModifiedSequence(precursor.getModifiedSequence());
-                    pepSpec.setLibrary(library);
-                    pepSpec.setSpectrum(spectrum);
-                    matchedSpectra.add(pepSpec);
-
-                    // Add any structural modifications
-                    pepSpec.setStructuralModifications(structuralModifications, runStrMods);
-                    // Add any potential losses
-                    pepSpec.setPotentialLosses(potentialLossMap);
-
-                    // Add any isotope modifications (can be different for each precursor)
-                    List<Peptide.IsotopeModification> isotopeModifications = ModificationManager.getPeptideIsotopelModifications(peptide.getId(), precursor.getIsotopeLabelId());
-                    pepSpec.setIsotopeModifications(isotopeModifications);
-
-                    precursorCharges.add(precursor.getCharge());
-                    break;  // return spectrum from the first library that has a match
-                }
+                matchedSpectra.add(pepSpec);
             }
         }
         return matchedSpectra;
     }
-
-    public static List<LibrarySpectrumMatch> getMatches(Precursor precursor, TargetedMSSchema schema, LocalDirectory localDirectory)
+    
+    public static List<LibrarySpectrumMatch> getMatches(Precursor precursor, LocalDirectory localDirectory)
     {
         TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
 
         // Get the spectrum libraries for this run
-        List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(run.getId());
-        Map<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId(), libraries);
-
-        // Precursors are sorted by charge and label type (light label first).
-        // If there are precursors with different charge we want to display MS/MS spectra for all of them.
-
-        List<LibrarySpectrumMatch> matchedSpectra = new ArrayList<>();
+        LinkedHashMap<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId());
 
         List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(precursor.getGeneralMoleculeId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
@@ -182,10 +138,27 @@ public class LibrarySpectrumMatchGetter
             potentialLossMap.put(mod.getStructuralModId(), losses);
         }
 
+        Peptide peptide = PeptideManager.getPeptide(run.getContainer(), precursor.getGeneralMoleculeId());
+        LibrarySpectrumMatch match = getMatch(peptide, precursor, localDirectory, libraryFilePathsMap, structuralModifications, runStrMods, potentialLossMap);
+
+        return match != null ? Collections.singletonList(match) : Collections.emptyList();
+    }
+
+    private static LibrarySpectrumMatch getMatch(Peptide peptide, Precursor precursor, LocalDirectory localDirectory,
+                                                 LinkedHashMap<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap,
+                                                 List<Peptide.StructuralModification> structuralModifications, List<PeptideSettings.RunStructuralModification> runStrMods,
+                                                 Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap)
+    {
+        LibrarySpectrumMatch pepSpec = null;
 
         for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
         {
-            BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(schema.getContainer(), localDirectory, libraryFilePathsMap.get(library),
+            if(libraryFilePathsMap.get(library) == null)
+            {
+                continue;
+            }
+
+            BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(localDirectory, libraryFilePathsMap.get(library),
                     precursor.getModifiedSequence(),
                     precursor.getCharge());
 
@@ -193,36 +166,39 @@ public class LibrarySpectrumMatchGetter
             // library entries with no spectrum peaks.  This should be fixed in Skyline.
             if(spectrum != null && spectrum.getNumPeaks() > 0)
             {
-                LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
-                pepSpec.setPrecursorId(precursor.getId());
-                pepSpec.setCharge(precursor.getCharge());
-                pepSpec.setPeptide(PeptideManager.getPeptide(schema.getContainer(), precursor.getGeneralMoleculeId()).getSequence());
-                pepSpec.setModifiedSequence(precursor.getModifiedSequence());
-                pepSpec.setLibrary(library);
-                pepSpec.setSpectrum(spectrum);
-                matchedSpectra.add(pepSpec);
-
-                // Add any structural modifications
-                pepSpec.setStructuralModifications(structuralModifications, runStrMods);
-                // Add any potential losses
-                pepSpec.setPotentialLosses(potentialLossMap);
-
-                // Add any isotope modifications (can be different for each precursor)
-                List<Peptide.IsotopeModification> isotopeModifications = ModificationManager.getPeptideIsotopelModifications(precursor.getGeneralMoleculeId(), precursor.getIsotopeLabelId());
-                pepSpec.setIsotopeModifications(isotopeModifications);
-
-                break;  // return spectrum from the first library that has a match
+                if(pepSpec == null)
+                {
+                    pepSpec = makeLibrarySpectrumMatch(spectrum, peptide, precursor, library, structuralModifications, runStrMods, potentialLossMap);
+                }
+                pepSpec.addLibrary(library); // Add this library to list of libraries that have a match for the precursor.
             }
         }
-
-        return matchedSpectra;
+        return pepSpec;
     }
 
     public static LibrarySpectrumMatch getSpectrumMatch(TargetedMSRun run, Peptide peptide, Precursor precursor,
-                                                        PeptideSettings.SpectrumLibrary library, LocalDirectory localDirectory,
-                                                        String redundantLibPath, int redundantRefSpecId)
+                                                              PeptideSettings.SpectrumLibrary library, String libFilePath, LocalDirectory localDirectory)
     {
-        List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(precursor.getGeneralMoleculeId());
+        BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(localDirectory, libFilePath,
+                precursor.getModifiedSequence(),
+                precursor.getCharge());
+
+        return makeLibrarySpectrumMatch(spectrum, run, peptide, precursor, library);
+    }
+
+    public static LibrarySpectrumMatch getRedundantSpectrumMatch(TargetedMSRun run, Peptide peptide, Precursor precursor,
+                                                                 PeptideSettings.SpectrumLibrary library, String redundantLibPath,
+                                                                 LocalDirectory localDirectory, int redundantRefSpecId)
+    {
+        BlibSpectrum spectrum = BlibSpectrumReader.getRedundantSpectrum(localDirectory, redundantLibPath, redundantRefSpecId);
+
+        return makeLibrarySpectrumMatch(spectrum, run, peptide, precursor, library);
+    }
+
+    private static LibrarySpectrumMatch makeLibrarySpectrumMatch(BlibSpectrum spectrum, TargetedMSRun run, Peptide peptide, Precursor precursor,
+                                                                 PeptideSettings.SpectrumLibrary library)
+    {
+        List<Peptide.StructuralModification> structuralModifications = ModificationManager.getPeptideStructuralModifications(precursor.getGeneralMoleculeId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
         Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
         for(Peptide.StructuralModification mod: structuralModifications)
@@ -231,33 +207,41 @@ public class LibrarySpectrumMatchGetter
             potentialLossMap.put(mod.getStructuralModId(), losses);
         }
 
-        BlibSpectrum spectrum = BlibSpectrumReader.getRedundantSpectrum(localDirectory, redundantLibPath, redundantRefSpecId);
+        LibrarySpectrumMatch pepSpec = null;
 
         // Make sure that the Bibliospec spectrum has peaks.  Minimized libraries in Skyline can have
         // library entries with no spectrum peaks.  This should be fixed in Skyline.
         if(spectrum != null && spectrum.getNumPeaks() > 0)
         {
-            LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
-            pepSpec.setPrecursorId(precursor.getId());
-            pepSpec.setCharge(precursor.getCharge());
-            pepSpec.setPeptide(peptide.getSequence());
-            pepSpec.setModifiedSequence(precursor.getModifiedSequence());
-            pepSpec.setLibrary(library);
-            pepSpec.setSpectrum(spectrum);
-
-            // Add any structural modifications
-            pepSpec.setStructuralModifications(structuralModifications, runStrMods);
-            // Add any potential losses
-            pepSpec.setPotentialLosses(potentialLossMap);
-
-            // Add any isotope modifications (can be different for each precursor)
-            List<Peptide.IsotopeModification> isotopeModifications = ModificationManager.getPeptideIsotopelModifications(peptide.getId(), precursor.getIsotopeLabelId());
-            pepSpec.setIsotopeModifications(isotopeModifications);
-
-            return pepSpec;
+            pepSpec = makeLibrarySpectrumMatch(spectrum, peptide, precursor, library, structuralModifications, runStrMods, potentialLossMap);
         }
+        return pepSpec;
+    }
 
-        return null;
+    @NotNull
+    private static LibrarySpectrumMatch makeLibrarySpectrumMatch(BlibSpectrum spectrum, Peptide peptide, Precursor precursor, PeptideSettings.SpectrumLibrary library,
+                                                                 List<Peptide.StructuralModification> structuralModifications, List<PeptideSettings.RunStructuralModification> runStrMods,
+                                                                 Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap)
+    {
+        LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
+        pepSpec.setPrecursorId(precursor.getId());
+        pepSpec.setCharge(precursor.getCharge());
+        pepSpec.setPeptide(peptide.getSequence());
+        PeptideSettings.IsotopeLabel label = IsotopeLabelManager.getIsotopeLabel(precursor.getIsotopeLabelId());
+        pepSpec.setIsotopeLabel(label.getName());
+        pepSpec.setModifiedSequence(precursor.getModifiedSequence());
+        pepSpec.setLibrary(library);
+        pepSpec.setSpectrum(spectrum);
+
+        // Add any structural modifications
+        pepSpec.setStructuralModifications(structuralModifications, runStrMods);
+        // Add any potential losses
+        pepSpec.setPotentialLosses(potentialLossMap);
+
+        // Add any isotope modifications (can be different for each precursor)
+        List<Peptide.IsotopeModification> isotopeModifications = ModificationManager.getPeptideIsotopelModifications(peptide.getId(), precursor.getIsotopeLabelId());
+        pepSpec.setIsotopeModifications(isotopeModifications);
+        return pepSpec;
     }
 
     public static List<PeptideIdRtInfo> getPeptideIdRts(Precursor precursor, SampleFile sampleFile, LocalDirectory localDirectory)
