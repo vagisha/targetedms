@@ -39,6 +39,7 @@ import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
 
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,11 +70,11 @@ public class LibrarySpectrumMatchGetter
                     TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
 
                     // Get the spectrum libraries for this run
-                    Map<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId());
+                    Map<PeptideSettings.SpectrumLibrary, Path> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId());
 
                     for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
                     {
-                        List<PeptideIdRtInfo> rtInfos = BlibSpectrumReader.getRetentionTimes(run.getContainer(), (LocalDirectory)argument,
+                        List<PeptideIdRtInfo> rtInfos = BlibSpectrumReader.getRetentionTimes((LocalDirectory)argument,
                                 libraryFilePathsMap.get(library), precursor.getModifiedSequence());
 
                         if(rtInfos.size() > 0)
@@ -95,7 +96,7 @@ public class LibrarySpectrumMatchGetter
         TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(peptide.getId());
 
         // Get the spectrum libraries for this run
-        LinkedHashMap<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId());
+        LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId());
 
         List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(peptide.getId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
@@ -127,7 +128,7 @@ public class LibrarySpectrumMatchGetter
         TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
 
         // Get the spectrum libraries for this run
-        LinkedHashMap<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId());
+        LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> libraryFilePathsMap = LibraryManager.getLibraryFilePaths(run.getId());
 
         List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(precursor.getGeneralMoleculeId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
@@ -145,7 +146,7 @@ public class LibrarySpectrumMatchGetter
     }
 
     private static LibrarySpectrumMatch getMatch(Peptide peptide, Precursor precursor, LocalDirectory localDirectory,
-                                                 LinkedHashMap<PeptideSettings.SpectrumLibrary, String> libraryFilePathsMap,
+                                                 LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> libraryFilePathsMap,
                                                  List<Peptide.StructuralModification> structuralModifications, List<PeptideSettings.RunStructuralModification> runStrMods,
                                                  Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap)
     {
@@ -177,7 +178,7 @@ public class LibrarySpectrumMatchGetter
     }
 
     public static LibrarySpectrumMatch getSpectrumMatch(TargetedMSRun run, Peptide peptide, Precursor precursor,
-                                                              PeptideSettings.SpectrumLibrary library, String libFilePath, LocalDirectory localDirectory)
+                                                              PeptideSettings.SpectrumLibrary library, Path libFilePath, LocalDirectory localDirectory)
     {
         BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(localDirectory, libFilePath,
                 precursor.getModifiedSequence(),
@@ -187,7 +188,7 @@ public class LibrarySpectrumMatchGetter
     }
 
     public static LibrarySpectrumMatch getRedundantSpectrumMatch(TargetedMSRun run, Peptide peptide, Precursor precursor,
-                                                                 PeptideSettings.SpectrumLibrary library, String redundantLibPath,
+                                                                 PeptideSettings.SpectrumLibrary library, Path redundantLibPath,
                                                                  LocalDirectory localDirectory, int redundantRefSpecId)
     {
         BlibSpectrum spectrum = BlibSpectrumReader.getRedundantSpectrum(localDirectory, redundantLibPath, redundantRefSpecId);

@@ -33,7 +33,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,19 +62,19 @@ public class LibraryManager
                                null).getArrayList(PeptideSettings.SpectrumLibrary.class);
     }
 
-    public static String getLibraryFilePath(int runId, PeptideSettings.SpectrumLibrary library)
+    public static Path getLibraryFilePath(int runId, PeptideSettings.SpectrumLibrary library)
     {
-        Map<PeptideSettings.SpectrumLibrary, String> libraryFilePaths = getLibraryFilePaths(runId, Collections.singletonList(library));
+        Map<PeptideSettings.SpectrumLibrary, Path> libraryFilePaths = getLibraryFilePaths(runId, Collections.singletonList(library));
         return libraryFilePaths.size() > 0 ? libraryFilePaths.values().iterator().next() : null;
     }
 
-    public static LinkedHashMap<PeptideSettings.SpectrumLibrary, String> getLibraryFilePaths(int runId)
+    public static LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> getLibraryFilePaths(int runId)
     {
         List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(runId);
         return getLibraryFilePaths(runId, libraries);
     }
 
-    private static LinkedHashMap<PeptideSettings.SpectrumLibrary, String> getLibraryFilePaths(int runId, List<PeptideSettings.SpectrumLibrary> libraries)
+    private static LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> getLibraryFilePaths(int runId, List<PeptideSettings.SpectrumLibrary> libraries)
     {
         if(libraries.size() == 0)
             return new LinkedHashMap<>(Collections.emptyMap());
@@ -102,7 +101,7 @@ public class LibraryManager
 
         Path skyFilesDir = file.getParent().resolve(SkylineFileUtils.getBaseName(FileUtil.getFileName(file)));
 
-        LinkedHashMap<PeptideSettings.SpectrumLibrary, String> libraryPathsMap = new LinkedHashMap<>();
+        LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> libraryPathsMap = new LinkedHashMap<>();
         for(PeptideSettings.SpectrumLibrary library: libraries)
         {
             String libFileName = library.getFileNameHint();
@@ -118,7 +117,7 @@ public class LibraryManager
             }
             if(libFileName != null)
             {
-                libraryPathsMap.put(library, FileUtil.getAbsolutePath(expData.getContainer(), skyFilesDir.toUri()) + "/" + libFileName);
+                libraryPathsMap.put(library, skyFilesDir.resolve(libFileName));
             }
         }
         return libraryPathsMap;

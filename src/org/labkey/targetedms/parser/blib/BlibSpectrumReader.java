@@ -18,7 +18,6 @@ package org.labkey.targetedms.parser.blib;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.util.FileUtil;
@@ -32,6 +31,8 @@ import org.sqlite.SQLiteConfig;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -67,10 +68,10 @@ public class BlibSpectrumReader
     private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
 
     @Nullable
-    public static BlibSpectrum getSpectrum(LocalDirectory localDirectory, String blibFilePath,
+    public static BlibSpectrum getSpectrum(LocalDirectory localDirectory, Path blibPath,
                                            String modifiedPeptide, int charge)
     {
-        blibFilePath = getLocalBlibPath(localDirectory, blibFilePath);
+        String blibFilePath = getLocalBlibPath(localDirectory, blibPath);
         if (null == blibFilePath)
             return null;
 
@@ -87,7 +88,7 @@ public class BlibSpectrumReader
             readSpectrumPeaks(conn, spectrum);
 
             if(spectrum.getRetentionTime() != null // retentionTime will be null if RetentionTimes table does not exist.
-                    && redundantBlibExists(blibFilePath))
+                    && redundantBlibExists(blibPath))
             {
                 // Get the redundant spectra IDs
                 addRedundantSpectrumInfo(conn, spectrum);
@@ -117,31 +118,31 @@ public class BlibSpectrumReader
         return false;
     }
 
-    public static boolean redundantBlibExists(String blibPath)
+    private static boolean redundantBlibExists(Path blibPath)
     {
-        String redundantBlibFilePath = redundantBlibPath(blibPath);
-
-        // We know it's local file and string may need encoding to convert to Path
-        return redundantBlibFilePath != null && new File(redundantBlibFilePath).exists();
+        Path redundantBlibFilePath = redundantBlibPath(blibPath);
+        return redundantBlibFilePath != null && Files.exists(redundantBlibFilePath);
     }
 
-    public static String redundantBlibPath(@Nullable String blibPath)
+    public static Path redundantBlibPath(@Nullable Path blibPath)
     {
         if (null != blibPath)
         {
-            int idx = blibPath.indexOf(".blib");
+            String filename = blibPath.getFileName().toString();
+            int idx = filename.indexOf(".blib");
             if (idx != -1)
             {
-                return blibPath.substring(0, idx) + ".redundant.blib";
+                Path parent = blibPath.getParent();
+                return parent.resolve(filename.substring(0, idx) + ".redundant.blib");
             }
         }
         return null;
     }
 
     @NotNull
-    public static List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getRetentionTimes(Container container, LocalDirectory localDirectory, String blibFilePath, String modifiedPeptide)
+    public static List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getRetentionTimes(LocalDirectory localDirectory, Path blibPath, String modifiedPeptide)
     {
-        blibFilePath = getLocalBlibPath(localDirectory, blibFilePath);
+        String blibFilePath = getLocalBlibPath(localDirectory, blibPath);
         if (null == blibFilePath)
             return Collections.emptyList();
 
@@ -449,9 +450,9 @@ public class BlibSpectrumReader
         }
     }
 
-    public static BlibSpectrum getRedundantSpectrum(LocalDirectory localDirectory, String redundantBlibFilePath, int redundantRefSpectrumId)
+    public static BlibSpectrum getRedundantSpectrum(LocalDirectory localDirectory, Path redundantBlibPath, int redundantRefSpectrumId)
     {
-        redundantBlibFilePath = getLocalBlibPath(localDirectory, redundantBlibFilePath);
+        String redundantBlibFilePath = getLocalBlibPath(localDirectory, redundantBlibPath);
 
         if (null == redundantBlibFilePath)
             return null;
@@ -503,20 +504,20 @@ public class BlibSpectrumReader
     }
 
     @Nullable
-    private static String getLocalBlibPath(LocalDirectory localDirectory, String blibPath)
+    private static String getLocalBlibPath(LocalDirectory localDirectory, Path blibPath)
     {
         // If blib is in cloud, copy it locally to read (TODO: cache)
         if (FileUtil.hasCloudScheme(blibPath))
         {
-            File localBlibFile = localDirectory.copyToLocalDirectory(blibPath, LOG);
+            File localBlibFile = localDirectory.copyToLocalDirectory(FileUtil.getAbsolutePath(blibPath), LOG);
             if (null != localBlibFile)
-                blibPath = localBlibFile.getAbsolutePath();
+                return localBlibFile.getAbsolutePath();
             else
             {
                 LOG.error("Unable to copy " + blibPath + " to local file.");
                 return null;
             }
         }
-        return blibPath;
+        return FileUtil.getAbsolutePath(blibPath);
     }
 }

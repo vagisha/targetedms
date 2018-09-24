@@ -2141,13 +2141,13 @@ public class TargetedMSController extends SpringActionController
                 return response;
             }
 
-            String blibFilePath = LibraryManager.getLibraryFilePath(run.getId(), library);
+            Path blibFilePath = LibraryManager.getLibraryFilePath(run.getId(), library);
             if(form.getRedundantRefSpectrumId() != 0)
             {
                 blibFilePath = BlibSpectrumReader.redundantBlibPath(blibFilePath);
             }
 
-            if (!new File(blibFilePath).exists())
+            if (!Files.exists(blibFilePath))
             {
                 response.put("error", "Library file " + blibFilePath + " does not exist.");
                 return response;
