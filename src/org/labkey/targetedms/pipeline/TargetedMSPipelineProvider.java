@@ -16,8 +16,10 @@
 
 package org.labkey.targetedms.pipeline;
 
+import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineActionConfig;
 import org.labkey.api.pipeline.PipelineDirectory;
 import org.labkey.api.pipeline.PipelineProvider;
 import org.labkey.api.security.permissions.InsertPermission;
@@ -27,6 +29,8 @@ import org.labkey.targetedms.TargetedMSController;
 
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * User: vsharma
@@ -36,6 +40,7 @@ import java.nio.file.Path;
 public class TargetedMSPipelineProvider extends PipelineProvider
 {
     static String name = "Targeted MS";
+    private static String ACTION_LABEL = "Import Skyline Results";
 
     public TargetedMSPipelineProvider(Module owningModule)
     {
@@ -49,8 +54,8 @@ public class TargetedMSPipelineProvider extends PipelineProvider
             return;
         }
 
-        String actionId = createActionId(TargetedMSController.SkylineDocUploadAction.class, "Import Skyline Results");
-        addAction(actionId, TargetedMSController.SkylineDocUploadAction.class, "Import Skyline Results",
+        String actionId = getActionId();
+        addAction(actionId, TargetedMSController.SkylineDocUploadAction.class, ACTION_LABEL,
                 directory, directory.listFiles(new UploadFileFilter()), true, false, includeAll);
     }
 
@@ -74,5 +79,15 @@ public class TargetedMSPipelineProvider extends PipelineProvider
     public boolean supportsCloud()
     {
         return true;
+    }
+
+    @Override
+    public List<PipelineActionConfig> getDefaultActionConfigSkipModuleEnabledCheck(Container container)
+    {
+        return Collections.singletonList(new PipelineActionConfig(getActionId(), PipelineActionConfig.displayState.toolbar, ACTION_LABEL, true));
+    }
+    private String getActionId()
+    {
+        return createActionId(TargetedMSController.SkylineDocUploadAction.class, ACTION_LABEL);
     }
 }
