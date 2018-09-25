@@ -1167,7 +1167,7 @@
             </column>
             <column columnName="SubmitterAffiliation"/>
             <column columnName="pxid">
-                <isHidden>true</isHidden>
+                <columnTitle>PX ID</columnTitle>
             </column>
         </columns>
     </table>
