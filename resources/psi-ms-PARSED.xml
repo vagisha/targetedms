@@ -187,47 +187,51 @@
     <instrument id="MS:1000641" name="DSQ II" vendor="Thermo Scientific" description="Thermo Scientific DSQ II GC-MS."/>
     <instrument id="MS:1000449" name="LTQ Orbitrap" vendor="Thermo Scientific" description="Finnigan LTQ Orbitrap MS."/>
     <instrument id="MS:1000640" name="DFS" vendor="Thermo Scientific" description="Thermo Scientific DFS HR GC-MS."/>
-    <instrument id="MS:1000623" name="Accela PDA" vendor="Thermo Scientific" description="Accela PDA."/>
-    <instrument id="MS:1000622" name="Surveyor PDA" vendor="Thermo Scientific" description="Surveyor PDA."/>
+    <instrument id="MS:1002874" name="TSQ Altis" vendor="Thermo Scientific" description="&quot;Thermo Scientific TSQ Altis Triple Quadrupole MS.&quot; [PSI:PI]"/>
     <instrument id="MS:1000447" name="LTQ" vendor="Thermo Scientific" description="Finnigan LTQ MS."/>
-    <instrument id="MS:1002732" name="Orbitrap Fusion Lumos" vendor="Thermo Scientific" description="&quot;Thermo Scientific Orbitrap Fusion Lumos mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers.&quot; [PSI:PI]"/>
     <instrument id="MS:1002835" name="LTQ Orbitrap Classic" vendor="Thermo Scientific" description="Thermo Fisher Scientific LTQ Orbitrap Classic."/>
     <instrument id="MS:1001908" name="ISQ" vendor="Thermo Scientific" description="Thermo Scientific ISQ single quadrupole MS with the ExtractraBrite source."/>
     <instrument id="MS:1001909" name="Velos Plus" vendor="Thermo Scientific" description="Thermo Scientific second generation Velos."/>
     <instrument id="MS:1001742" name="LTQ Orbitrap Velos" vendor="Thermo Scientific" description="Finnigan LTQ Orbitrap Velos MS."/>
     <instrument id="MS:1000648" name="GC IsoLink" vendor="Thermo Scientific" description="Thermo Scientific GC IsoLink Isotope Ratio MS."/>
+    <instrument id="MS:1002876" name="TSQ 9000" vendor="Thermo Scientific" description="&quot;Thermo Scientific TSQ 9000 Triple Quadrupole MS.&quot; [PSI:PI]"/>
     <instrument id="MS:1000649" name="Exactive" vendor="Thermo Scientific" description="Thermo Scientific Exactive MS."/>
-    <instrument id="MS:1000743" name="TSQ Quantum Ultra AM" vendor="Thermo Scientific" description="Thermo Scientific TSQ Quantum Ultra AM."/>
     <instrument id="MS:1002523" name="Q Exactive HF" vendor="Thermo Scientific" description="&quot;Thermo Scientific Q Exactive.&quot; [PSI:PI]"/>
     <instrument id="MS:1000646" name="Element 2" vendor="Thermo Scientific" description="Thermo Scientific Element 2 HR-ICP-MS."/>
     <instrument id="MS:1002526" name="Exactive Plus" vendor="Thermo Scientific" description="&quot;Thermo Scientific Exactive Plus MS.&quot; [PSI:PI]"/>
+    <instrument id="MS:1002875" name="TSQ Quantis" vendor="Thermo Scientific" description="&quot;Thermo Scientific TSQ Quantis Triple Quadrupole MS.&quot; [PSI:PI]"/>
     <instrument id="MS:1000647" name="Element GD" vendor="Thermo Scientific" description="Thermo Scientific Element GD Glow Discharge MS."/>
     <instrument id="MS:1002525" name="TSQ 8000 Evo" vendor="Thermo Scientific" description="&quot;Thermo Scientific TSQ 8000 Evo MS.&quot; [PSI:PI]"/>
+    <instrument id="MS:1002877" name="Q Exactive HF-X" vendor="Thermo Scientific" description="&quot;Thermo Scientific Q Exactive HF-X Hybrid Quadrupole Orbitrap MS.&quot; [PSI:PI]"/>
     <instrument id="MS:1000644" name="TSQ Quantum Access" vendor="Thermo Scientific" description="Thermo Scientific TSQ Quantum Access MS."/>
     <instrument id="MS:1000645" name="Element XR" vendor="Thermo Scientific" description="Thermo Scientific Element XR HR-ICP-MS."/>
     <instrument id="MS:1000642" name="MALDI LTQ XL" vendor="Thermo Scientific" description="Thermo Scientific MALDI LTQ XL MS."/>
     <instrument id="MS:1000643" name="MALDI LTQ Orbitrap" vendor="Thermo Scientific" description="Thermo Scientific MALDI LTQ Orbitrap MS."/>
-    <instrument id="MS:1002416" name="Orbitrap Fusion" vendor="Thermo Scientific" description="&quot;Thermo Scientific Orbitrap Fusion.&quot; [PSI:PI]"/>
     <instrument id="MS:1000637" name="ITQ 1100" vendor="Thermo Scientific" description="Thermo Scientific ITQ 1100 GC-MS."/>
-    <instrument id="MS:1002417" name="Orbitrap Fusion ETD" vendor="Thermo Scientific" description="&quot;Thermo Scientific Orbitrap Fusion with ETD.&quot; [PSI:PI]"/>
     <instrument id="MS:1000638" name="LTQ XL ETD" vendor="Thermo Scientific" description="Thermo Scientific LTQ XL MS with ETD."/>
-    <instrument id="MS:1002418" name="TSQ Quantiva" vendor="Thermo Scientific" description="&quot;Thermo Scientific TSQ Quantiva MS.&quot; [PSI:PI]"/>
     <instrument id="MS:1000635" name="ITQ 700" vendor="Thermo Scientific" description="Thermo Scientific ITQ 700 GC-MS."/>
-    <instrument id="MS:1002419" name="TSQ Endura" vendor="Thermo Scientific" description="&quot;Thermo Scientific TSQ Endura MS.&quot; [PSI:PI]"/>
     <instrument id="MS:1000636" name="ITQ 900" vendor="Thermo Scientific" description="Thermo Scientific ITQ 900 GC-MS."/>
     <instrument id="MS:1000751" name="TSQ Quantum Ultra" vendor="Thermo Scientific" description="Thermo Scientific TSQ Quantum Ultra."/>
     <instrument id="MS:1000639" name="LTQ Orbitrap XL ETD" vendor="Thermo Scientific" description="Thermo Scientific LTQ Orbitrap XL MS with ETD."/>
-    <instrument id="MS:1000854" name="LTQ XL" vendor="Thermo Scientific" description="Thermo Scientific LTQ XL MS."/>
     <instrument id="MS:1002634" name="Q Exactive Plus" vendor="Thermo Scientific" description="&quot;Thermo Scientific Q Exactive Plus.&quot; [PSI:PI]"/>
-    <instrument id="MS:1000856" name="LTQ Velos ETD" vendor="Thermo Scientific" description="Thermo Scientific LTQ Velos MS with ETD."/>
-    <instrument id="MS:1000855" name="LTQ Velos" vendor="Thermo Scientific" description="Thermo Scientific LTQ Velos MS."/>
     <instrument id="MS:1001510" name="TSQ Vantage" vendor="Thermo Scientific" description="TSQ Vantage."/>
-    <instrument id="MS:1000450" name="LXQ" vendor="Thermo Scientific" description="Finnigan LXQ MS."/>
     <instrument id="MS:1001910" name="LTQ Orbitrap Elite" vendor="Thermo Scientific" description="Thermo Scientific second generation Velos and Orbitrap."/>
     <instrument id="MS:1000555" name="LTQ Orbitrap Discovery" vendor="Thermo Scientific" description="LTQ Orbitrap Discovery."/>
     <instrument id="MS:1001911" name="Q Exactive" vendor="Thermo Scientific" description="Thermo Scientific Q Exactive."/>
     <instrument id="MS:1000557" name="LTQ FT Ultra" vendor="Thermo Scientific" description="LTQ FT Ultra."/>
     <instrument id="MS:1000556" name="LTQ Orbitrap XL" vendor="Thermo Scientific" description="LTQ Orbitrap XL."/>
+    <instrument id="MS:1000623" name="Accela PDA" vendor="Thermo Scientific" description="Accela PDA."/>
+    <instrument id="MS:1000622" name="Surveyor PDA" vendor="Thermo Scientific" description="Surveyor PDA."/>
+    <instrument id="MS:1002732" name="Orbitrap Fusion Lumos" vendor="Thermo Scientific" description="&quot;Thermo Scientific Orbitrap Fusion Lumos mass spectrometer with Tribrid architecture consisting of quadrupole mass filter, linear ion trap and Orbitrap mass analyzers.&quot; [PSI:PI]"/>
+    <instrument id="MS:1000743" name="TSQ Quantum Ultra AM" vendor="Thermo Scientific" description="Thermo Scientific TSQ Quantum Ultra AM."/>
+    <instrument id="MS:1002416" name="Orbitrap Fusion" vendor="Thermo Scientific" description="&quot;Thermo Scientific Orbitrap Fusion.&quot; [PSI:PI]"/>
+    <instrument id="MS:1002417" name="Orbitrap Fusion ETD" vendor="Thermo Scientific" description="&quot;Thermo Scientific Orbitrap Fusion with ETD.&quot; [PSI:PI]"/>
+    <instrument id="MS:1002418" name="TSQ Quantiva" vendor="Thermo Scientific" description="&quot;Thermo Scientific TSQ Quantiva MS.&quot; [PSI:PI]"/>
+    <instrument id="MS:1002419" name="TSQ Endura" vendor="Thermo Scientific" description="&quot;Thermo Scientific TSQ Endura MS.&quot; [PSI:PI]"/>
+    <instrument id="MS:1000854" name="LTQ XL" vendor="Thermo Scientific" description="Thermo Scientific LTQ XL MS."/>
+    <instrument id="MS:1000856" name="LTQ Velos ETD" vendor="Thermo Scientific" description="Thermo Scientific LTQ Velos MS with ETD."/>
+    <instrument id="MS:1000855" name="LTQ Velos" vendor="Thermo Scientific" description="Thermo Scientific LTQ Velos MS."/>
+    <instrument id="MS:1000450" name="LXQ" vendor="Thermo Scientific" description="Finnigan LXQ MS."/>
     <instrument id="MS:1000169" name="LCQ Deca XP Plus" vendor="Thermo Finnigan" description="ThermoFinnigan LCQ Deca XP Plus MS."/>
     <instrument id="MS:1000168" name="LCQ Classic" vendor="Thermo Finnigan" description="ThermoFinnigan LCQ Classic MS."/>
     <instrument id="MS:1000167" name="LCQ Advantage" vendor="Thermo Finnigan" description="ThermoFinnigan LCQ Advantage MS."/>

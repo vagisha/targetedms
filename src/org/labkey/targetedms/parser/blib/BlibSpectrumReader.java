@@ -158,17 +158,19 @@ public class BlibSpectrumReader
         SQLiteConfig config = new SQLiteConfig();
         config.setReadOnly(true);
 
-        StringBuilder sql = new StringBuilder("SELECT rt.retentionTime, rt.bestSpectrum, rs.peptideModSeq, rs.precursorCharge, ssf.fileName from RetentionTimes AS rt ");
-        sql.append(" INNER JOIN RefSpectra AS rs ON (rt.RefSpectraID = rs.id)");
-        sql.append(" INNER JOIN SpectrumSourceFiles ssf ON (rt.SpectrumSourceID = ssf.id)");
-        sql.append(" WHERE rs.peptideModSeq='"+blibPeptide+"'");
-
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath, config.toProperties()))
         {
             if(!hasValidRtTable(conn))
             {
                 return Collections.emptyList();
             }
+
+            blibPeptide = findMatchingModifiedSequence(conn, blibPeptide);
+
+            StringBuilder sql = new StringBuilder("SELECT rt.retentionTime, rt.bestSpectrum, rs.peptideModSeq, rs.precursorCharge, ssf.fileName from RetentionTimes AS rt ");
+            sql.append(" INNER JOIN RefSpectra AS rs ON (rt.RefSpectraID = rs.id)");
+            sql.append(" INNER JOIN SpectrumSourceFiles ssf ON (rt.SpectrumSourceID = ssf.id)");
+            sql.append(" WHERE rs.peptideModSeq='"+blibPeptide+"'");
 
             try(Statement stmt = conn.createStatement();
                 ResultSet rs = stmt.executeQuery(sql.toString()))

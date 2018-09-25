@@ -537,6 +537,7 @@ src/org/labkey/targetedms/view/precursorConflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/proteinConflictResolutionView.jsp -text
 src/org/labkey/targetedms/view/proteinSearch.jsp -text
 src/org/labkey/targetedms/view/publish/ShortUrlDisplayColumnFactory.java -text
+src/org/labkey/targetedms/view/publish/confirmSubmit.jsp -text
 src/org/labkey/targetedms/view/publish/copyExperimentForm.jsp -text
 src/org/labkey/targetedms/view/publish/createJournalGroup.jsp -text
 src/org/labkey/targetedms/view/publish/deleteJournal.jsp -text
@@ -630,6 +631,7 @@ webapp/TargetedMS/js/CUSUMPlotHelper.js -text
 webapp/TargetedMS/js/CalibrationCurve.js -text
 webapp/TargetedMS/js/ClustergrammerDialog.js -text
 webapp/TargetedMS/js/DocumentSummary.js -text
+webapp/TargetedMS/js/ExpAnnotAutoComplete.js -text
 webapp/TargetedMS/js/ExperimentAnnotations.js -text
 webapp/TargetedMS/js/LeveyJenningsPlotHelper.js -text
 webapp/TargetedMS/js/LinkVersionsDialog.js -text
@@ -641,11 +643,10 @@ webapp/TargetedMS/js/QCPlotHoverPanel.js -text
 webapp/TargetedMS/js/QCPlotLegendHelper.js -text
 webapp/TargetedMS/js/QCSummaryPanel.js -text
 webapp/TargetedMS/js/QCTrendPlotPanel.js -text
-webapp/TargetedMS/js/autocomplete.js -text
 webapp/TargetedMS/js/bootstrap-tagsinput.min.js -text
 webapp/TargetedMS/js/clipboard.min.js -text
 webapp/TargetedMS/js/dropDownUtil.js -text
-webapp/TargetedMS/js/typeahead.bundle.js -text
+webapp/TargetedMS/js/typeahead.bundle.min.js -text
 webapp/TargetedMS/unimod/unimod_NO_NAMESPACE.xml -text
 webapp/TargetedMS/unimod/unimod_ORIG.xml -text
 webapp/TargetedMS/unimod/unimod_PARSED.xml -text

@@ -20,7 +20,9 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
+import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
+import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
 /**
@@ -94,7 +96,44 @@ public class ChromatogramChartMakerFactory
 
     public JFreeChart createMoleculePrecursorChromChart(PrecursorChromInfo pChromInfo, User user, Container container)
     {
-        return new ChromatogramChartMaker().make(new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container));
+        if(!_splitGraph)
+        {
+            return new ChromatogramChartMaker().make(new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container));
+        }
+        else
+        {
+            ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container)
+            {
+                Transition.Type getTransitionType()
+                {
+                    return Transition.Type.PRECURSOR;
+                }
+
+                @Override
+                <T extends GeneralTransition> boolean include(T transition)
+                {
+                    return transition.isPrecursorIon();
+                }
+            };
+            ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container) {
+
+                Transition.Type getTransitionType()
+                {
+                    return Transition.Type.PRODUCT;
+                }
+                @Override
+                <T extends GeneralTransition> boolean include(T transition)
+                {
+                    return !transition.isPrecursorIon();
+                }
+                int getSeriesOffset()
+                {
+                    XYSeriesCollection jfreePrecIonDataset = precursorIonDataset.getJFreeDataset();
+                    return jfreePrecIonDataset != null ? jfreePrecIonDataset.getSeriesCount() : 0;
+                }
+            };
+            return new ChromatogramChartMaker().make(precursorIonDataset, productIonDataset);
+        }
     }
 
     public JFreeChart createPeptideChromChart(GeneralMoleculeChromInfo pepChromInfo, User user, Container container)

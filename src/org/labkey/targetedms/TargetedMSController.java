@@ -114,6 +114,7 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
+import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HelpTopic;
@@ -137,6 +138,8 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.ViewForm;
 import org.labkey.api.view.ViewServlet;
 import org.labkey.api.view.WebPartView;
+import org.labkey.api.view.template.ClientDependencies;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
 import org.labkey.targetedms.chart.ComparisonChartMaker;
@@ -234,6 +237,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1139,6 +1143,7 @@ public class TargetedMSController extends SpringActionController
             ChromatogramChartMakerFactory factory = new ChromatogramChartMakerFactory();
             factory.setSyncIntensity(form.isSyncY());
             factory.setSyncRt(form.isSyncX());
+            factory.setSplitGraph(form.isSplitGraph());
 
             JFreeChart chart;
             if (PeptideManager.getPeptide(getContainer(), gmChromInfo.getGeneralMoleculeId()) != null)
@@ -1959,6 +1964,13 @@ public class TargetedMSController extends SpringActionController
 
             // Molecule precursor and transition chromatograms. One row per replicate
             VBox chromatogramsBox = new VBox();
+
+            boolean canBeSplitView = PrecursorManager.canBeSplitView(form.getId());
+            bean.setCanBeSplitView(canBeSplitView);
+            if(canBeSplitView && !form.isUpdate())
+            {
+                form.setSplitGraph(true);
+            }
 
             int maxTransitions = TargetedMSManager.getMaxTransitionCount(moleculeId);
             if (maxTransitions > 10)
@@ -5633,7 +5645,7 @@ public class TargetedMSController extends SpringActionController
         }
         drg.addHiddenFormField(DataRegionSelection.DATA_REGION_SELECTION_KEY, viewContext.getRequest().getParameter(DataRegionSelection.DATA_REGION_SELECTION_KEY));
 
-        drg.addHiddenFormField(SUBMITTER, String.valueOf(viewContext.getUser().getUserId()));
+        // drg.addHiddenFormField(SUBMITTER, String.valueOf(viewContext.getUser().getUserId()));
         return drg;
     }
 
@@ -5851,6 +5863,14 @@ public class TargetedMSController extends SpringActionController
             ensureCorrectContainer(getContainer(), experimentAnnotations.getContainer(), getViewContext());
 
             UpdateView view = new UpdateView(new ExperimentAnnotationsFormDataRegion(getViewContext(), form, DataRegion.MODE_UPDATE), form, errors);
+            view.addClientDependency(ClientDependency.fromPath("Ext4"));
+            view.addClientDependency(ClientDependency.fromPath(AppProps.getInstance().getScheme() + "://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"));
+            view.addClientDependency(ClientDependency.fromPath("/TargetedMS/css/bootstrap-tagsinput.css"));
+            view.addClientDependency(ClientDependency.fromPath("TargetedMS/js/bootstrap-tagsinput.min.js"));
+            view.addClientDependency(ClientDependency.fromPath("/TargetedMS/css/typeahead-examples.css"));
+            view.addClientDependency(ClientDependency.fromPath("/TargetedMS/js/typeahead.bundle.min.js"));
+            view.addClientDependency(ClientDependency.fromPath("/TargetedMS/js/autocomplete.js"));
+
             view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
             return view;
         }

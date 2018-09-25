@@ -109,7 +109,10 @@ public class Molecule extends GeneralMolecule
     {
         if (!textId.startsWith("#"))
         {
-            return false;
+            // Comment from Nick's commit (bdb9f707) in the Skyline repo
+            // "Older .skyd files used just the name of the molecule as the TextId.
+            // We can't rely on the formatversion in the .skyd, because of the way that .skyd files can get merged."
+            return textId.equals(getCustomIonName());
         }
         // The separator is whatever appears between the first two "#". Usually it's "$", but could be
         // followed by any number of underscores.

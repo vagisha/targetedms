@@ -1998,4 +1998,13 @@ public class TargetedMSManager
         return new SqlSelector(TargetedMSManager.getSchema(), new SQLFragment("SELECT Id FROM ", container, false).append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE CalibrationCurveCount > 0 AND Container = ? AND Deleted = ?")).exists();
     }
 
+    public static boolean containerHasDocVersions(Container container)
+    {
+        ExperimentService svc = ExperimentService.get();
+        return new SqlSelector(svc.getSchema(), new SQLFragment("SELECT r.rowId FROM ", Boolean.FALSE, container )
+                .append(svc.getTinfoExperimentRun(), "r")
+                .append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), "tRuns")
+                .append(" ON (tRuns.ExperimentRunLSID = r.lsid AND tRuns.Deleted = ?)")
+                .append(" WHERE r.Container = ? AND r.ReplacedByRunId IS NOT NULL")).exists();
+    }
 }

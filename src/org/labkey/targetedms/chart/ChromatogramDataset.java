@@ -31,6 +31,7 @@ import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.model.PrecursorComparator;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
+import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.MoleculeTransition;
 import org.labkey.targetedms.parser.Precursor;
@@ -794,7 +795,7 @@ public abstract class ChromatogramDataset
             return Transition.Type.ALL;
         }
 
-        boolean include (Transition transition)
+        <T extends GeneralTransition> boolean include (T transition)
         {
             return true;
         }
@@ -993,7 +994,10 @@ public abstract class ChromatogramDataset
                 for (TransitionChromInfo tChromInfo: tChromInfoList)
                 {
                     MoleculeTransition transition = MoleculeTransitionManager.get(tChromInfo.getTransitionId(), _user, _container);
-                    tciList.add(new MoleculeTransChromInfoPlusTransition(tChromInfo, transition));
+                    if(include(transition))
+                    {
+                        tciList.add(new MoleculeTransChromInfoPlusTransition(tChromInfo, transition));
+                    }
                 }
             }
             tciList.sort(new MoleculeTransChromInfoPlusTransitionComparator());
@@ -1035,7 +1039,8 @@ public abstract class ChromatogramDataset
             return Transition.Type.PRECURSOR;
         }
 
-        boolean include (Transition transition)
+        @Override
+        <T extends GeneralTransition> boolean include(T transition)
         {
             return transition.isPrecursorIon();
         }
@@ -1053,7 +1058,8 @@ public abstract class ChromatogramDataset
             return Transition.Type.PRODUCT;
         }
 
-        boolean include (Transition transition)
+        @Override
+        <T extends GeneralTransition> boolean include(T transition)
         {
             return !transition.isPrecursorIon();
         }

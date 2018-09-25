@@ -17,9 +17,16 @@ package org.labkey.targetedms.view;
 
 import org.labkey.api.data.ActionButton;
 import org.labkey.api.data.ButtonBar;
+import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataRegion;
+import org.labkey.api.data.DisplayColumn;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.ExperimentRunListView;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.permissions.InsertPermission;
@@ -34,6 +41,10 @@ import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.ExperimentAnnotations;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static org.labkey.targetedms.TargetedMSController.getExcludeSubfoldersInExperimentURL;
 import static org.labkey.targetedms.TargetedMSController.getIncludeSubfoldersInExperimentURL;
 
@@ -47,7 +58,10 @@ public class TargetedMsRunListView extends ExperimentRunListView
 
     private ExperimentAnnotations _expAnnotations;
     private ViewType _viewType;
-
+    private boolean _hasDocVersions;
+    private boolean _showAllVersions;
+    private static final boolean DEFAULT_SHOW_ALL_VERSIONS = true;
+    private static final String DEFAULT_VERSIONS_PARAM = DEFAULT_SHOW_ALL_VERSIONS ? "latestVersions" : "allVersions";
 
     public static enum ViewType
     {
@@ -57,9 +71,11 @@ public class TargetedMsRunListView extends ExperimentRunListView
 
     }
 
-    public TargetedMsRunListView(UserSchema schema, QuerySettings settings)
+    public TargetedMsRunListView(UserSchema schema, QuerySettings settings, boolean hasDocVersions, boolean showAllVersions)
     {
         super(schema, settings, TargetedMSModule.EXP_RUN_TYPE);
+        _hasDocVersions = hasDocVersions;
+        _showAllVersions = showAllVersions;
         setShowAddToRunGroupButton(false);
         setShowMoveRunsButton(false);
         addClientDependency(ClientDependency.fromPath("Ext4"));
@@ -73,7 +89,7 @@ public class TargetedMsRunListView extends ExperimentRunListView
         _expAnnotations = expAnnotations;
     }
 
-    public void setViewType(ViewType viewType)
+    private void setViewType(ViewType viewType)
     {
         _viewType = viewType;
 
@@ -98,6 +114,16 @@ public class TargetedMsRunListView extends ExperimentRunListView
         }
     }
 
+    private boolean isShowAllVersions()
+    {
+        return _showAllVersions;
+    }
+
+    private boolean canChangeDocVersionCols()
+    {
+        return _hasDocVersions && getCustomView() == null;
+    }
+
     protected void populateButtonBar(DataView view, ButtonBar bar)
     {
         super.populateButtonBar(view, bar);
@@ -107,6 +133,31 @@ public class TargetedMsRunListView extends ExperimentRunListView
 
         if(_viewType == ViewType.EDITABLE_EXPERIMENT_VIEW)
             addExperimentDetailsViewButtons(bar);
+
+        if(canChangeDocVersionCols())
+        {
+            // Add the view toggle button if this container has a document version chain AND
+            // we are not looking at a custom view.
+            addDocVersionsButton(view, bar);
+        }
+    }
+
+    private void addDocVersionsButton(DataView view, ButtonBar bar)
+    {
+        String txt = _showAllVersions ? "Latest Versions" : "All Versions";
+        ActionURL url = view.getViewContext().getActionURL().clone();
+        boolean removeParam = DEFAULT_SHOW_ALL_VERSIONS != _showAllVersions;
+        if(removeParam)
+        {
+            url.deleteParameter(DEFAULT_VERSIONS_PARAM);
+        }
+        else
+        {
+            url.replaceParameter(DEFAULT_VERSIONS_PARAM, "true");
+        }
+        ActionButton button = new ActionButton(txt, url);
+        button.setDisplayPermission(ReadPermission.class);
+        bar.add(button);
     }
 
     private void addLinkVersionButton(DataView view, ButtonBar bar)
@@ -144,6 +195,32 @@ public class TargetedMsRunListView extends ExperimentRunListView
         bar.add(includeSubfoldersBtn);
     }
 
+    public List<DisplayColumn> getDisplayColumns()
+    {
+        if(!canChangeDocVersionCols())
+        {
+            return super.getDisplayColumns();
+        }
+
+        TableInfo table = getTable();
+        if (table == null)
+            return Collections.emptyList();
+
+        List<FieldKey> cols = new ArrayList<>(table.getDefaultVisibleColumns());
+        if (!_showAllVersions)
+        {
+            cols.remove(FieldKey.fromParts("ReplacedByRun"));
+        }
+
+        List<DisplayColumn> displayCols = new ArrayList<>();
+        for (ColumnInfo col : QueryService.get().getColumns(table, cols).values())
+        {
+            DisplayColumn displayCol = col.getRenderer();
+            displayCols.add(displayCol);
+        }
+        return displayCols;
+    }
+
     public static TargetedMsRunListView createView(ViewContext model)
     {
         return createView(model, null, ViewType.FOLDER_VIEW);
@@ -154,7 +231,9 @@ public class TargetedMsRunListView extends ExperimentRunListView
         UserSchema schema = new TargetedMSSchema(model.getUser(), model.getContainer());
         QuerySettings querySettings = getRunListQuerySettings(schema, model, TargetedMSModule.EXP_RUN_TYPE.getTableName(), true);
 
-        TargetedMsRunListView view = new TargetedMsRunListView(schema, querySettings);
+        TargetedMsRunListView view = new TargetedMsRunListView(schema, querySettings,
+                TargetedMSManager.containerHasDocVersions(model.getContainer()),
+                isShowAllVersions(model));
         view.setTitle(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME);
         view.setFrame(FrameType.PORTAL);
         view.setViewType(viewType);
@@ -166,6 +245,23 @@ public class TargetedMsRunListView extends ExperimentRunListView
             querySettings.setContainerFilterName(ContainerFilter.Type.CurrentAndSubfolders.name());
             view.setExpAnnotations(expAnnotations);
         }
+
+        if(view.canChangeDocVersionCols() && !view.isShowAllVersions())
+        {
+            // Display only the latest version of a Skyline document.
+            querySettings.setBaseFilter(new SimpleFilter(FieldKey.fromString("ReplacedByRun"), null, CompareType.ISBLANK));
+        }
         return view;
+    }
+
+    private static boolean isShowAllVersions(ViewContext context)
+    {
+        String param = context.getActionURL().getParameter(DEFAULT_VERSIONS_PARAM);
+        boolean paramSet = param != null && !("false").equalsIgnoreCase(param);
+        // (default show all) false  (param: showAllVersions)false  -> false (show all)
+        // (default show all) false  (param: showAllVersions)true   -> true (show all)
+        // (default show all) true   (param: showLatest) false      -> true (show all)
+        // (default show all) true   (param: showLatest) true       -> false (show all)
+        return DEFAULT_SHOW_ALL_VERSIONS != paramSet;
     }
 }

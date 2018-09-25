@@ -37,10 +37,10 @@ import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.UpdateColumn;
 import org.labkey.api.data.WrappedColumn;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.exp.query.ExpRunTable;
 import org.labkey.api.exp.query.ExpSchema;
 import org.labkey.api.module.Module;
@@ -607,6 +607,7 @@ public class TargetedMSSchema extends UserSchema
         boolean hasPeptides = TargetedMSManager.containerHasPeptides(getContainer());
         boolean hasCalibrationCurves = TargetedMSManager.containerHasCalibrationCurves(getContainer());
         String peptideGroupColName = (hasSmallMolecules ? COL_LIST : COL_PROTEIN) + "s";
+        boolean hasDocVersions = TargetedMSManager.containerHasDocVersions(getContainer());
 
         skyDocDetailColumn.setFk(new LookupForeignKey(url, "id", "Id", "Description")
         {
@@ -686,11 +687,100 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn("Replicates", result.getRealTable().getColumn("ReplicateCount"));
                 result.addWrapColumn("CalibrationCurves", result.getRealTable().getColumn("CalibrationCurveCount"));
 
+                addVersionsColumn(result);
+
                 return result;
+            }
+
+            private void addVersionsColumn(FilteredTable result)
+            {
+                ColumnInfo versionsCol = result.addWrapColumn("Versions", result.getRealTable().getColumn("ExperimentRunLSID"));
+                versionsCol.setTextAlign("right");
+                versionsCol.setDisplayColumnFactory(new DisplayColumnFactory()
+                {
+                    @Override
+                    public DisplayColumn createRenderer(ColumnInfo colInfo)
+                    {
+                        return new DataColumn(colInfo){
+                            @Override
+                            public Object getValue(RenderContext ctx)
+                            {
+                                String runLsid = ctx.get(getColumnInfo().getFieldKey(), String.class);
+                                if(runLsid != null)
+                                {
+                                    int rowId = ExperimentService.get().getExpRun(runLsid).getRowId();
+                                    List<Integer> linkedRowIds = new ArrayList();
+                                    linkedRowIds.add(rowId);
+                                    return TargetedMSManager.getLinkedVersions(getUser(), getContainer(), new Integer[]{rowId}, linkedRowIds).size();
+                                }
+                                return super.getValue(ctx);
+                            }
+                            @Override
+                            public Object getDisplayValue(RenderContext ctx)
+                            {
+                                return getValue(ctx);
+                            }
+                            @Override
+                            public @NotNull String getFormattedValue(RenderContext ctx)
+                            {
+                                return PageFlowUtil.filter(getValue(ctx));
+                            }
+                            @Override
+                            public boolean isFilterable()
+                            {
+                                return false;
+                            }
+                            @Override
+                            public boolean isSortable()
+                            {
+                                return false;
+                            }
+                            @Override
+                            public void addQueryFieldKeys(Set<FieldKey> keys)
+                            {
+                                keys.add(FieldKey.fromParts("File", "Id"));
+                            }
+                            @Override
+                            public String renderURL(RenderContext ctx)
+                            {
+                                Integer runId = ctx.get(FieldKey.fromParts("File", "Id"), Integer.class);
+                                if (runId == null)
+                                    return null;
+
+                                ActionURL url = new ActionURL(TargetedMSController.ShowVersionsAction.class, getContainer());
+                                url.addParameter("id", runId);
+                                return url.toString();
+                            }
+                        };
+                    }
+                });
             }
         });
         skyDocDetailColumn.setHidden(false);
         result.addColumn(skyDocDetailColumn);
+
+        ColumnInfo replacedByCol = new WrappedColumn(result.getColumn("ReplacedByRun"), "ReplacedBy"){
+            @Override
+            public SQLFragment getValueSql(String tableAlias)
+            {
+                SQLFragment sql = new SQLFragment(" (SELECT tr.id FROM ")
+                        .append(ExperimentService.get().getTinfoExperimentRun(), "er")
+                        .append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), "tr")
+                        .append(" ON er.LSID = tr.experimentRunLSID")
+                        .append(" WHERE er.rowId=").append(tableAlias).append(".replacedByRunId")
+                        .append(") ");
+                return sql;
+            }
+        };
+        replacedByCol.setFk(new LookupForeignKey(url, "id", "Id", "Description")
+        {
+            @Override
+            public @Nullable TableInfo getLookupTableInfo()
+            {
+                return TargetedMSManager.getTableInfoRuns();
+            }
+        });
+        result.addColumn(replacedByCol);
 
         List<FieldKey> defaultVisibleColumns = result.getDefaultVisibleColumns();
 
@@ -730,6 +820,11 @@ public class TargetedMSSchema extends UserSchema
                     _fieldKeys.add(FieldKey.fromParts("File", "Replicates"));
                     if (hasCalibrationCurves)
                         _fieldKeys.add(FieldKey.fromParts("File", "CalibrationCurves"));
+                    if(hasDocVersions)
+                    {
+                        _fieldKeys.add(FieldKey.fromParts("File", "Versions"));
+                        _fieldKeys.add(FieldKey.fromParts("ReplacedBy"));
+                    }
                 }
                 return _fieldKeys;
             }

@@ -73,6 +73,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
     {
         boolean hasRunsToDelete = false;
         TargetedMSRunsTable table = new TargetedMSRunsTable(this);
+        table.showAllVersions();
 
         for (String documentName : QC_DOCUMENT_NAMES)
         {
@@ -103,6 +104,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         LinkVersionsGrid grid = table.openLinkVersionsDialogForDocuments(Arrays.asList(QC_1_FILE, QC_2_FILE));
         assertElementNotPresent(LinkVersionsGrid.Elements.replaceFooter);
         grid.clickSave();
+        table.verifyDocumentChain(Arrays.asList(QC_2_FILE, QC_3_FILE), new int[] {2,1});
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_2_FILE), 0);
 
         log("add third document to version chain");
@@ -120,6 +122,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         assertEquals(3, grid.findRemoveLinkIcons().size());
         grid.reorderVersions(2, 0);
         grid.clickSave();
+        table.verifyDocumentChain(Arrays.asList(QC_2_FILE), new int[] {3});
         verifyDocumentDetailsChain(Arrays.asList(QC_3_FILE, QC_1_FILE, QC_2_FILE), 1);
     }
 
@@ -135,6 +138,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         grid = table.openLinkVersionsDialogForDocuments(QC_DOCUMENT_NAMES);
         assertEquals(3, grid.findRemoveLinkIcons().size());
         grid.removeLinkVersion(1);
+        table.verifyDocumentChain(Arrays.asList(QC_3_FILE, QC_2_FILE), new int[]{2,1});
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_3_FILE), 0);
 
         log("remove link version from end of chain");
@@ -142,6 +146,7 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         grid = table.openLinkVersionsDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE));
         assertEquals(2, grid.findRemoveLinkIcons().size());
         grid.removeLinkVersion(1);
+        table.verifyNoChain(QC_DOCUMENT_NAMES.size());
         table.goToDocumentDetails(QC_1_FILE);
         waitForElement(LinkVersionsGrid.Elements.noVersions);
     }
@@ -157,9 +162,11 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
 
         log("delete the run which is in a chain");
         goToProjectHome();
+        table.showAllVersions(); // Show all versions
         table.deleteRun(QC_2_FILE);
 
         log("verify that the chain was updated correctly for remaining runs");
+        table.verifyNoChain(2);
         table.goToDocumentDetails(QC_1_FILE);
         waitForElement(LinkVersionsGrid.Elements.noVersions);
         goToProjectHome();
@@ -170,6 +177,8 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
     private void verifyDocumentDetailsChain(List<String> documentNames, int index)
     {
         TargetedMSRunsTable table = new TargetedMSRunsTable(this);
+        table.showAllVersions();
+
         table.goToDocumentDetails(documentNames.get(index));
 
         LinkVersionsGrid grid = new LinkVersionsGrid(this);
