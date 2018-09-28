@@ -46,7 +46,7 @@ public class ClustergrammerTest extends TargetedMSTest
     {
         ClustergrammerTest init = (ClustergrammerTest)getCurrentTest();
         init.setupFolder(FolderType.QC);
-        init.importData(SProCoP_FILE, true);
+        init.importData(SProCoP_FILE);
     }
 
     @Before
