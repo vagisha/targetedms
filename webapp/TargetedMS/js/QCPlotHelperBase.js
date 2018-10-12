@@ -6,7 +6,8 @@
 Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     statics: {
-        qcPlotTypes : ['Levey-Jennings', 'Moving Range', 'CUSUMm', 'CUSUMv']
+        qcPlotTypesWithYOptions : ['Levey-Jennings', 'Moving Range'],
+        qcPlotTypesWithoutYOptions : ['CUSUMm', 'CUSUMv']
     },
 
     showLJPlot: function()

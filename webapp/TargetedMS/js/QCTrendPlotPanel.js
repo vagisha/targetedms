@@ -196,6 +196,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             { tbar: this.getCustomDateRangeToolbar() },
             { tbar: this.getFirstPlotOptionsToolbar() },
             { tbar: this.getSecondPlotOptionsToolbar() },
+            { tbar: this.getThirdPlotOptionsToolbar() },
             { tbar: this.getGuideSetMessageToolbar() }
         ];
 
@@ -214,14 +215,12 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             this.plotTypeOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
                 ui: 'footer',
                 cls: 'levey-jennings-toolbar',
-                padding: 10,
                 layout: { pack: 'center' },
                 items: [
                     this.getPlotSizeOptions(),
                     {xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
-                    this.getScaleCombo(),
-                    {xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
-                    this.getPlotTypeOptions()
+                    this.getPlotTypeWithYOptions(),
+                    this.getScaleCombo()
                 ],
                 listeners: {
                     scope: this,
@@ -233,6 +232,32 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             });
         }
         return this.plotTypeOptionsToolbar;
+    },
+
+    getSecondPlotOptionsToolbar: function() {
+      if(!this.plotTypeWithoutYOptionsToolbar)
+      {
+          this.plotTypeWithoutYOptionsToolbar =  Ext4.create('Ext.toolbar.Toolbar', {
+              ui: 'footer',
+              cls: 'levey-jennings-toolbar',
+              layout: { pack: 'center' },
+              items: [
+                  {xtype: 'tbspacer'},
+                  {xtype: 'tbspacer'},
+                  {xtype: 'tbspacer'},
+                  {xtype: 'tbspacer'},
+                  this.getPlotTypeWithoutYOptions()
+              ],
+              listeners: {
+                  scope: this,
+                  render: function(cmp)
+                  {
+                      cmp.doLayout();
+                  }
+              }
+          });
+      }
+      return this.plotTypeWithoutYOptionsToolbar;
     },
 
     getPlotSizeOptions: function()
@@ -272,11 +297,69 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    getPlotTypeOptions: function()
+    getPlotTypeWithoutYOptions: function ()
     {
         var plotTypeCheckBoxes = [];
         var me = this;
-        Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypes, function(plotType){
+        Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesWithoutYOptions, function(plotType){
+            plotTypeCheckBoxes.push({
+                boxLabel: plotType,
+                name: 'plotTypesWithoutYOptions',
+                inputValue: plotType,
+                cls: 'qc-plot-type-checkbox',
+                checked: this.isPlotTypeSelected(plotType),
+                listeners: {
+                    render: function(cmp)
+                    {
+                        cmp.getEl().on('mouseover', function () {
+                            var calloutMgr = hopscotch.getCalloutManager();
+                            calloutMgr.removeAllCallouts();
+                            calloutMgr.createCallout({
+                                id: Ext4.id(),
+                                target: cmp.getEl().dom,
+                                placement: 'top',
+                                width: 300,
+                                xOffset: -250,
+                                arrowOffset: 270,
+                                showCloseButton: false,
+                                title: plotType + ' Plot Type',
+                                content: me.getPlotTypeHelpTooltip(plotType)
+                            });
+                        }, this);
+
+                        cmp.getEl().on('mouseout', function() {
+                            hopscotch.getCalloutManager().removeAllCallouts();
+                        }, this);
+                    }
+                }
+            });
+        }, this);
+
+        return {
+            xtype: 'checkboxgroup',
+            columns: plotTypeCheckBoxes.length,
+            items: plotTypeCheckBoxes,
+            cls: 'plot-type-checkbox-group',
+            //style: {position: 'absolute', left: 350},
+            listeners: {
+                scope: this,
+                change: function(cmp, newVal, oldVal)
+                {
+                    this.plotTypes = newVal.plotTypesWithoutYOptions ? Ext4.isArray(newVal.plotTypesWithoutYOptions) ? newVal.plotTypesWithoutYOptions : [newVal.plotTypesWithoutYOptions] : [];
+                    this.havePlotOptionsChanged = true;
+                    Ext4.getCmp('plot-size-radio-group').setDisabled(this.plotTypes.length < 2);
+                    this.setBrushingEnabled(false);
+                    this.displayTrendPlot();
+                }
+            }
+        }
+    },
+
+    getPlotTypeWithYOptions: function()
+    {
+        var plotTypeCheckBoxes = [];
+        var me = this;
+        Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesWithYOptions, function(plotType){
             plotTypeCheckBoxes.push({
                 boxLabel: plotType,
                 name: 'plotTypes',
@@ -316,6 +399,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             columns: plotTypeCheckBoxes.length,
             items: plotTypeCheckBoxes,
             cls: 'plot-type-checkbox-group',
+            width: 300,
             listeners: {
                 scope: this,
                 change: function(cmp, newVal, oldVal)
@@ -350,7 +434,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return this.mainPlotOptionsToolbar;
     },
 
-    getSecondPlotOptionsToolbar : function()
+    getThirdPlotOptionsToolbar : function()
     {
         if (!this.otherPlotOptionsToolbar)
         {
@@ -618,14 +702,14 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         {
             this.scaleCombo = Ext4.create('Ext.form.field.ComboBox', {
                 id: 'scale-combo-box',
-                width: 155,
+                width: 255,
                 labelWidth: 80,
                 fieldLabel: 'Y-Axis Scale',
                 triggerAction: 'all',
                 mode: 'local',
                 store: Ext4.create('Ext.data.ArrayStore', {
                     fields: ['value', 'display'],
-                    data: [['linear', 'Linear'], ['log', 'Log']]
+                    data: [['linear', 'Linear'], ['log', 'Log'],['percent deviation','Percent Deviation'],['standard deviation','Standard Deviation']]
                 }),
                 valueField: 'value',
                 displayField: 'display',
