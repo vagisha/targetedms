@@ -83,4 +83,10 @@ public class GuideSet
     {
         return _brushSelectedPoints;
     }
+
+    @Override
+    public String toString()
+    {
+        return _comment;
+    }
 }

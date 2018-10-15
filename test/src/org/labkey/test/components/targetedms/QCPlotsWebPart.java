@@ -26,6 +26,7 @@ import org.labkey.test.components.ext4.RadioButton;
 import org.labkey.test.components.ext4.Window;
 import org.labkey.test.selenium.LazyWebElement;
 import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.LoggedParam;
 import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -174,8 +175,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         WebDriverWrapper.waitFor(() -> elementCache().noRecords().size() > 0, 10000);
     }
 
-    @LogMethod
-    public void setScale(Scale scale)
+    @LogMethod(quiet = true)
+    public void setScale(@LoggedParam Scale scale)
     {
         WebElement plot = elementCache().findPlots().get(0);
         getWrapper()._ext4Helper.selectComboBoxItem(elementCache().scaleCombo, scale.toString());
@@ -189,8 +190,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return Scale.getEnum(scaleInput.getAttribute("value"));
     }
 
-    @LogMethod
-    public void setDateRangeOffset(DateRangeOffset dateRangeOffset)
+    @LogMethod(quiet = true)
+    public void setDateRangeOffset(@LoggedParam DateRangeOffset dateRangeOffset)
     {
         if (dateRangeOffset == null)
             dateRangeOffset = DateRangeOffset.ALL;
@@ -203,7 +204,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return DateRangeOffset.getEnum(scaleInput.getAttribute("value"));
     }
 
-    public void setStartDate(String startDate)
+    @LogMethod(quiet = true)
+    public void setStartDate(@LoggedParam String startDate)
     {
         getWrapper().setFormElement(elementCache().startDate, startDate);
     }
@@ -213,7 +215,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return getWrapper().getFormElement(elementCache().startDate);
     }
 
-    public void setEndDate(String endDate)
+    @LogMethod(quiet = true)
+    public void setEndDate(@LoggedParam String endDate)
     {
         getWrapper().setFormElement(elementCache().endDate, endDate);
     }
@@ -273,7 +276,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
     }
 
     @LogMethod
-    public void setMetricType(MetricType metricType, boolean hasData, boolean hasExistingPlot)
+    public void setMetricType(@LoggedParam MetricType metricType, boolean hasData, boolean hasExistingPlot)
     {
         WebElement plot = null;
         if (hasExistingPlot)
@@ -425,6 +428,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         filterQCPlots("2013-08-09", "2013-08-27", expectedPlotCount);
     }
 
+    @LogMethod
     public void resetInitialQCPlotFields()
     {
         // revert to the initial form values if any of them have changed
@@ -467,7 +471,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         waitForPlots();
     }
 
-    public void filterQCPlots(String startDate, String endDate, int expectedPlotCount)
+    @LogMethod
+    public void filterQCPlots(@LoggedParam String startDate, @LoggedParam String endDate, int expectedPlotCount)
     {
         setDateRangeOffset(DateRangeOffset.CUSTOM);
         setStartDate(startDate);
@@ -535,7 +540,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         return elementCache().hopscotchBubble.findElement(getDriver());
     }
 
-    public void createGuideSet(GuideSet guideSet, String expectErrorMsg)
+    @LogMethod
+    public void createGuideSet(@LoggedParam GuideSet guideSet, String expectErrorMsg)
     {
         waitForPlots(1, false);
         getWrapper().clickButton("Create Guide Set", 0);
