@@ -645,6 +645,16 @@ public class TargetedMSController extends SpringActionController
                     properties.putAll(valuesToPersist);
                     properties.save();
                 }
+                else
+                {
+                    if(properties.containsKey("selectedAnnotations") && (ReplicateManager.getReplicateAnnotationNameValues(getContainer()).size() == 0))
+                    {
+                        // If there are no replicate annotations in this folder anymore, remove any saved annotation filters
+                        // Issue 35726: No way to clear previously saved replicate annotation values in QC plots if folder no longer contains annotations
+                        properties.remove("selectedAnnotations");
+                        properties.save();
+                    }
+                }
 
                 response.put("properties", properties);
             }
