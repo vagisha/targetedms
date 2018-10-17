@@ -16,7 +16,6 @@
 
 package org.labkey.targetedms;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
@@ -31,6 +30,7 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
+import org.labkey.api.settings.ExperimentalFeatureService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.view.ActionURL;
@@ -42,12 +42,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.DataFormatException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -123,16 +121,9 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId(), container);
         if (run != null)
         {
-            deleteRun(container, user, run);
+            TargetedMSManager.deleteRun(container, user, run);
         }
         data.delete(user);
-    }
-
-    private void deleteRun(Container container, User user, TargetedMSRun run)
-    {
-        TargetedMSManager.markDeleted(Arrays.asList(run.getRunId()), container, user);
-        TargetedMSManager.purgeDeletedRuns();
-        TargetedMSManager.deleteiRTscales(container);
     }
 
     @Override
@@ -152,7 +143,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             // it will be deleted via the deleteData() method, in the case of actual run deletion.
             if (run != null && run.getStatusId() != SkylineDocImporter.STATUS_SUCCESS)
             {
-                deleteRun(container, null, run);
+                TargetedMSManager.deleteRun(container, null, run);
             }
         }
     }
@@ -226,7 +217,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
                 }
                 catch (IOException e)
                 {
-                    throw new ExperimentException("Could not copy " + sourceFile + " to destination directory " + targetRoot.getRootNioPath());
+                    throw new ExperimentException("Could not copy " + sourceFile + " to destination directory " + targetRoot.getRootNioPath(), e);
                 }
             }
 
@@ -245,7 +236,9 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             }
             else
             {
-                // Copy any blibs from source
+                // Copy any blibs from source. Copy skyd file if reading chromatograms from skyd file.
+                boolean loadFromSkyd = ExperimentalFeatureService.get().isFeatureEnabled(TargetedMSModule.EXPERIMENTAL_PREFER_SKYD_FILE_CHROMATOGRAMS);
+                boolean skipChromImport = ExperimentalFeatureService.get().isFeatureEnabled(TargetedMSModule.EXPERIMENTAL_SKIP_CHROMATOGRAM_IMPORT);
                 try
                 {
                     Path sourceDir = sourceFile.getParent().resolve(SkylineFileUtils.getBaseName(sourceFileName));
@@ -261,7 +254,9 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
                                 for (Path path : paths.collect(Collectors.toSet()))
                                 {
                                     String filename = FileUtil.getFileName(path);
-                                    if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(FileUtil.getExtension(filename)))
+                                    String fileExt = FileUtil.getExtension(filename);
+                                    if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(fileExt)
+                                        || ((loadFromSkyd || skipChromImport) && SkylineBinaryDataHandler.EXTENSION.equalsIgnoreCase(fileExt)))
                                         Files.copy(path, destDir.resolve(filename));
                                 }
                             }
@@ -296,12 +291,9 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
                 // Delete the Skyline file in the old location
                 Files.delete(sourceFile);
 
-                if (!FileUtil.hasCloudScheme(sourceFile))
-                {
-                    // Delete the unzipped directory in the old location
-                    File oldZipDir = new File(sourceFile.toFile().getParent(), SkylineFileUtils.getBaseName(sourceFileName));
-                    FileUtil.deleteDir(oldZipDir);
-                }
+                // Delete the unzipped directory in the old location, if it exists
+                Path oldZipDir = sourceFile.getParent().resolve(SkylineFileUtils.getBaseName(sourceFileName));
+                FileUtil.deleteDir(oldZipDir);
             }
             catch (IOException e)
             {

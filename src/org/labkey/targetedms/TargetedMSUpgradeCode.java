@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms;
 
+import org.apache.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
@@ -28,9 +29,14 @@ import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.data.UpgradeCode;
+import org.labkey.api.exp.api.ExpData;
+import org.labkey.api.exp.api.ExpRun;
+import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleLoader;
+import org.labkey.api.pipeline.PipeRoot;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.portal.ProjectUrls;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
@@ -42,6 +48,9 @@ import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.model.JournalExperiment;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -58,6 +67,8 @@ import static org.labkey.targetedms.TargetedMSController.FolderSetupAction.RAW_F
  */
 public class TargetedMSUpgradeCode implements UpgradeCode
 {
+    private static final Logger LOG = Logger.getLogger(TargetedMSUpgradeCode.class);
+
     // called at 14.30-15.10
     @SuppressWarnings({"UnusedDeclaration"})
     public void populateDefaultAnnotationTypes(final ModuleContext moduleContext)
@@ -187,5 +198,92 @@ public class TargetedMSUpgradeCode implements UpgradeCode
 
             TargetedMSController.addRawFilesPipelineTab(container);
         }
+    }
+
+    // Called at 18.21 - 18.22
+    @SuppressWarnings({"UnusedDeclaration"})
+    @DeferredUpgrade
+    public void updateExpSkydData(final ModuleContext moduleContext)
+    {
+        String updateRunIdSql = "UPDATE exp.data SET runId=? WHERE rowId=?";;
+        String updateSql = "UPDATE exp.data SET runId=?, container=?, dataFileUrl=? WHERE rowId=?";
+
+        ExperimentService expService = ExperimentService.get();
+        DbSchema expSchema = expService.getSchema();
+
+        TableSelector ts = new TableSelector(TargetedMSManager.getTableInfoRuns(), new SimpleFilter(FieldKey.fromParts("SkydDataId"), null, CompareType.NONBLANK), null);
+        ts.forEachBatch(batch -> {
+            try (DbScope.Transaction transaction = expSchema.getScope().ensureTransaction())
+            {
+                ArrayList<Collection<Object>> runIdParamList = new ArrayList<>();
+                ArrayList<Collection<Object>> paramList = new ArrayList<>();
+
+                for (TargetedMSRun run : batch)
+                {
+                    Integer skydDataId = run.getSkydDataId();
+
+                    ExpRun expRun = expService.getExpRun(run.getExperimentRunLSID());
+                    ExpData expData = expService.getExpData(run.getSkydDataId());
+                    if(expRun != null && expData != null)
+                    {
+                        List<Object> params = new ArrayList<>();
+                        params.add(expRun.getRowId()); // runId
+
+                        if(run.getContainer().equals(expData.getContainer()))
+                        {
+                            params.add(expData.getRowId());
+                            runIdParamList.add(params);
+                        }
+                        else
+                        {
+                            // Run has been moved from the original container.  Update container and datafileurl in exp.data
+                            params.add(run.getContainer()); // container
+
+                            Path sourceFilePath = Paths.get(expData.getDataFileURI());
+                            PipeRoot targetRoot = PipelineService.get().findPipelineRoot(run.getContainer());
+                            if(targetRoot != null && sourceFilePath != null)
+                            {
+                                Path destFile = targetRoot.getRootNioPath().resolve(sourceFilePath.getParent().getFileName()) // Name of the exploded directory
+                                                                           .resolve(sourceFilePath.getFileName());            // Name of the .skyd file
+                                if(Files.exists(destFile))
+                                {
+                                    params.add(destFile.toUri().toString()); // dataFileUrl
+                                }
+                                else
+                                {
+                                    params.add(expData.getDataFileUrl());
+                                    LOG.warn("Target destination file " + destFile.toString() + " does not exist for exp.data rowId " + expData.getRowId());
+                                }
+                            }
+                            else
+                            {
+                                if(targetRoot == null)
+                                {
+                                    LOG.warn("Could not get target pipeline root for container " + run.getContainer().getPath() +", exp.data rowId " + expData.getRowId());
+                                }
+                                if(sourceFilePath == null)
+                                {
+                                    LOG.warn("dataFileUrl not found for exp.data rowId " + expData.getRowId());
+                                }
+                            }
+
+                            params.add(expData.getRowId());
+                            paramList.add(params);
+                        }
+                    }
+                }
+                if(paramList.size() > 0)
+                {
+                    Table.batchExecute(expSchema, updateSql, paramList);
+                }
+                if(runIdParamList.size() > 0)
+                {
+                    Table.batchExecute(expSchema, updateRunIdSql, runIdParamList);
+                }
+
+                transaction.commit();
+            }
+        }, TargetedMSRun.class, 1000);
+
     }
 }

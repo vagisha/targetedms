@@ -46,7 +46,7 @@
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
     TargetedMSController.RunDetailsBean bean = me.getModelBean();
     TargetedMSRun run = bean.getRun();
-    Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID());
+    Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID(), getContainer());
 
     ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
     downloadAction.addParameter("runId", run.getId());

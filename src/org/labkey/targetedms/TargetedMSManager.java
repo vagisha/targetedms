@@ -613,6 +613,16 @@ public class TargetedMSManager
 
             outputDatas.put(expData, "sky");
 
+            ExpData expSkydData = null;
+            if(run.getSkydDataId() != null)
+            {
+                expSkydData = ExperimentService.get().getExpData(run.getSkydDataId());
+            }
+            if(expSkydData != null)
+            {
+                outputDatas.put(expSkydData, "skyd");
+            }
+
             ExpRun mostRecentExpRun = null;
 
             if (run.getDocumentGUID() != null)
@@ -682,6 +692,13 @@ public class TargetedMSManager
         sql.add(run.getId());
         SQLFragment limitedSQL = getSchema().getSqlDialect().limitRows(sql, 1);
         return new SqlSelector(getSchema(), limitedSQL).getObject(TargetedMSRun.class);
+    }
+
+    public static void deleteRun(Container container, User user, TargetedMSRun run)
+    {
+        markDeleted(Arrays.asList(run.getRunId()), container, user);
+        purgeDeletedRuns();
+        deleteiRTscales(container);
 
     }
 
@@ -698,6 +715,21 @@ public class TargetedMSManager
         }
         throw new IllegalStateException("There is more than one non-deleted Targeted MS Run for dataId " + dataId);
     }
+
+    public static TargetedMSRun getRunBySkydDataId(int skydDataId, Container c)
+    {
+        TargetedMSRun[] runs = getRuns("SkydDataId = ? AND Deleted = ? AND Container = ?", skydDataId, Boolean.FALSE, c.getId());
+        if(runs.length == 0)
+        {
+            return null;
+        }
+        if(runs.length == 1)
+        {
+            return runs[0];
+        }
+        throw new IllegalStateException("There is more than one non-deleted Targeted MS Run for skydDataId " + skydDataId);
+    }
+
 
     public static TargetedMSRun getRunByLsid(String lsid, Container c)
     {
@@ -961,6 +993,10 @@ public class TargetedMSManager
         for(int runId: runIds)
         {
             TargetedMSRun run = getRun(runId);
+            if(run.isDeleted())
+            {
+                continue;
+            }
             // Revert the representative state if any of the runs are representative at the protein or peptide level.
             if(run.isRepresentative())
             {

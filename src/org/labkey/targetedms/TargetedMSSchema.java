@@ -638,11 +638,12 @@ public class TargetedMSSchema extends UserSchema
                                 FieldKey parentFK = this.getColumnInfo().getFieldKey().getParent();
                                 String runLSID = ctx.get(new FieldKey(parentFK, "ExperimentRunLSID"), String.class);
                                 Integer runId = ctx.get(this.getColumnInfo().getFieldKey(), Integer.class);
+                                Container container = ctx.get(FieldKey.fromParts("Folder"), Container.class);
                                 if (runId != null && runLSID != null)
                                 {
                                     downloadUrl.replaceParameter("runId", runId.toString());
 
-                                    Path skyDocFile = SkylineFileUtils.getSkylineFile(runLSID);
+                                    Path skyDocFile = SkylineFileUtils.getSkylineFile(runLSID, container);
                                     if (skyDocFile != null && !Files.isDirectory(skyDocFile))
                                     {
 
@@ -674,6 +675,7 @@ public class TargetedMSSchema extends UserSchema
                             {
                                 FieldKey parentFK = this.getColumnInfo().getFieldKey().getParent();
                                 keys.add(new FieldKey(parentFK, "ExperimentRunLSID"));
+                                keys.add(FieldKey.fromParts("Folder"));
                             }
                         };
                     }

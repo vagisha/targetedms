@@ -4412,19 +4412,12 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("No run ID specified.");
             }
             TargetedMSRun run = validateRun(form.getRunId());
-            ExpRun expRun = ExperimentService.get().getExpRun(run.getExperimentRunLSID());
-            if (expRun == null)
+            ExpData data = ExperimentService.get().getExpData(run.getDataId());
+            if(data == null)
             {
-                throw new NotFoundException("Run " + run.getExperimentRunLSID() + " does not exist.");
+                throw new NotFoundException("No input data found for targetedms run " + run.getId());
             }
-
-            List<? extends ExpData> inputDatas = expRun.getAllDataUsedByRun();
-            if(inputDatas == null || inputDatas.isEmpty())
-            {
-                throw new NotFoundException("No input data found for run "+expRun.getRowId());
-            }
-            // The first file will be the .zip file since we only use one file as input data.
-            Path file = expRun.getAllDataUsedByRun().get(0).getFilePath();
+            Path file = data.getFilePath();
             if (file == null)
             {
                 throw new NotFoundException("Data file for run " + run.getFileName() + " was not found.");

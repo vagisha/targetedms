@@ -16,7 +16,9 @@
 package org.labkey.targetedms;
 
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
@@ -53,36 +55,35 @@ public class SkylineFileUtils
     }
 
     @Nullable
-    public static Path getSkylineFile(@Nullable String runLSID)
+    public static Path getSkylineFile(@Nullable String runLSID, @NotNull Container container)
     {
         if (runLSID == null)
         {
             return null;
         }
 
-        ExpRun expRun = ExperimentService.get().getExpRun(runLSID);
-        if (expRun == null)
+        TargetedMSRun run = TargetedMSManager.getRunByLsid(runLSID, container);
+        if (run == null)
         {
-            LOG.warn("Run " + runLSID + " does not exist.");
+            LOG.warn("Run with experimentRunLSID " + runLSID + " does not exist in container " + container.getPath());
             return null;
         }
 
-        List<? extends ExpData> inputDatas = expRun.getAllDataUsedByRun();
-        if (inputDatas != null && !inputDatas.isEmpty())
+        ExpData data = ExperimentService.get().getExpData(run.getDataId());
+        if(data != null)
         {
-            // The first file will be the .zip file since we only use one file as input data.
-            Path skyDocfile = inputDatas.get(0).getFilePath();
+            Path skyDocfile = data.getFilePath();
             if (null != skyDocfile && Files.exists(skyDocfile))
             {
                 return skyDocfile;
             }
             else
             {
-                LOG.warn("Skyline file does not exist: " + (skyDocfile != null ? FileUtil.getFileName(skyDocfile) : null) + ", referenced from " + expRun.getContainer().getPath());
+                LOG.warn("Skyline file does not exist: " + (skyDocfile != null ? FileUtil.getFileName(skyDocfile) : null) + ", referenced from " + container.getPath());
                 return null;
             }
         }
-        LOG.warn("No input data found for run " + expRun.getRowId());
+        LOG.warn("No input data found for targetedms run " + run.getId() + " in container " + container.getPath());
         return null;
     }
 }
