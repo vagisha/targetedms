@@ -13,33 +13,50 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
     },
 
     getLJGuideSetData : function() {
-        this.getGuideSetData(false);
+        this.getGuideSetData(false, false);
     },
 
     processLJGuideSetData : function(data)
     {
         this.guideSetDataMap = {};
+        this.defaultGuideSet = {};
         Ext4.each(data.rows, function(row) {
             var guideSetId = row['GuideSetId'];
-            if (!this.guideSetDataMap[guideSetId])
-            {
-                this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
-                this.hasGuideSetData = true;
-            }
-
             var seriesLabel = row['SeriesLabel'];
-            if (!this.guideSetDataMap[guideSetId].Series[seriesLabel])
-            {
-                this.guideSetDataMap[guideSetId].Series[seriesLabel] = {
-                    NumRecords: row['NumRecords'],
-                    Mean: row['Mean'],
-                    StandardDev: row['StandardDev']
-                };
+            if (guideSetId) {
+                if (!this.guideSetDataMap[guideSetId]) {
+                    this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
+                    this.hasGuideSetData = true;
+                }
+                if (!this.guideSetDataMap[guideSetId].Series[seriesLabel]) {
+                    this.guideSetDataMap[guideSetId].Series[seriesLabel] = {
+                        NumRecords: row['NumRecords'],
+                        Mean: row['Mean'],
+                        StandardDev: row['StandardDev']
+                    };
+                }
+            }
+            else {
+                if (this.defaultGuideSet[seriesLabel] !== undefined) {
+                    this.defaultGuideSet[seriesLabel].LJ = {
+                        NumRecords: row['NumRecords'],
+                        Mean: row['Mean'],
+                        StdDev: row['StandardDev']
+                    };
+                }
+                else {
+                    this.defaultGuideSet[seriesLabel] = {LJ:
+                        {
+                            NumRecords: row['NumRecords'],
+                            Mean: row['Mean'],
+                            StdDev: row['StandardDev']
+                        }};
+                }
             }
         }, this);
 
         if (this.showMovingRangePlot())
-            this.getRawGuideSetData();
+            this.getRawGuideSetData(true);
         else
             this.getPlotData();
     },

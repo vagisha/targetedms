@@ -45,7 +45,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             + '(SELECT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = ' + metricId + ')';
     },
 
-    metricGuideSetSql : function(id, schema1Name, query1Name, schema2Name, query2Name)
+    metricGuideSetSql : function(id, schema1Name, query1Name, schema2Name, query2Name, includeAllValues)
     {
         var includeCalc = !Ext4.isDefined(schema2Name) && !Ext4.isDefined(query2Name),
             selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel' + (includeCalc ? ', MetricValue' : ''),
@@ -60,10 +60,17 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             + '\nFROM guideset gs'
             + '\nLEFT JOIN (' + series1SQL + series2SQL + exclusionWhereSQL + ') as p'
             + '\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd'
-            + '\nGROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel';
+            + '\nGROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel'
+            + (!includeAllValues ? '' : ('\nUNION'
+            + '\nSELECT NULL AS GuideSetId, MIN(SampleFileId.AcquiredTime) AS TrainingStart, MAX(SampleFileId.AcquiredTime) AS TrainingEnd,'
+            + '\nNULL AS ReferenceEnd, SeriesLabel, COUNT(SampleFileId) AS NumRecords, AVG(MetricValue) AS Mean, STDDEV(MetricValue) AS StandardDev'
+            + '\nFROM targetedms.QCMetric_retentionTime'
+            + exclusionWhereSQL
+            + '\nGROUP BY SeriesLabel'))
+            ;
     },
 
-    metricGuideSetRawSql : function(id, schema1Name, query1Name, schema2Name, query2Name)
+    metricGuideSetRawSql : function(id, schema1Name, query1Name, schema2Name, query2Name, includeAllValues)
     {
         var includeCalc = !Ext4.isDefined(schema2Name) && !Ext4.isDefined(query2Name),
             selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel' + (includeCalc ? ', MetricValue' : ''),
@@ -73,7 +80,8 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
         return 'SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.AcquiredTime ' + (includeCalc ? ', p.MetricValue' : '')
                 + '\nFROM guideset gs'
-                + '\nLEFT JOIN (' + series1SQL + series2SQL + exclusionWhereSQL + ') as p'
+                // + '\nLEFT JOIN (' + series1SQL + series2SQL + exclusionWhereSQL + ') as p'
+                + (includeAllValues ? '\nFULL' : '\nLEFT') + ' JOIN (' + series1SQL + series2SQL + exclusionWhereSQL + ') as p'
                 + '\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd'
                 + '\n ORDER BY GuideSetId, p.SeriesLabel, p.AcquiredTime'; //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR
     },
@@ -146,7 +154,10 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 if (metricVals == null || metricVals.length == 0)
                     return;
                 var metricMovingRanges = LABKEY.vis.Stat.getMovingRanges(metricVals, isLogScale);
-                movingRangeMap[guideSetId].Series[seriesLabel] = LABKEY.vis.Stat.getMean(metricMovingRanges);
+                movingRangeMap[guideSetId].Series[seriesLabel] = {
+                    avgMR: LABKEY.vis.Stat.getMean(metricMovingRanges),
+                    stddevMR: LABKEY.vis.Stat.getStdDev(metricMovingRanges)
+                };
             });
         });
         return movingRangeMap;
@@ -417,7 +428,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     getSingleMetricGuideSetRawSql: function(metricId, metricType, schemaName, queryName)
     {
         var guideSetSql = "SELECT s.*, g.Comment, '" +  metricType + "' AS MetricType FROM (";
-        guideSetSql += this.metricGuideSetRawSql(metricId, schemaName, queryName);
+        guideSetSql += this.metricGuideSetRawSql(metricId, schemaName, queryName, undefined, undefined, false);
         guideSetSql +=  ") s"
                 + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
         return guideSetSql;

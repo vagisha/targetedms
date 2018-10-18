@@ -88,6 +88,7 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
             if (Ext4.isDefined(gs) && gs.Series[fragment])
             {
                 data['meanMR'] = gs.Series[fragment]['MeanMR'];
+                data['stddevMR'] = gs.Series[fragment]['StdDevMR'];
             }
         }
 

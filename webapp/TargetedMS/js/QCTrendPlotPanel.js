@@ -340,12 +340,22 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             columns: plotTypeCheckBoxes.length,
             items: plotTypeCheckBoxes,
             cls: 'plot-type-checkbox-group',
+            id: 'qc-plot-types',
             //style: {position: 'absolute', left: 350},
             listeners: {
                 scope: this,
                 change: function(cmp, newVal, oldVal)
                 {
+
                     this.plotTypes = newVal.plotTypesWithoutYOptions ? Ext4.isArray(newVal.plotTypesWithoutYOptions) ? newVal.plotTypesWithoutYOptions : [newVal.plotTypesWithoutYOptions] : [];
+                    var options = Ext4.getCmp('qc-plot-type-with-y-options').getValue();
+                    if (options && options.plotTypes) {
+                        if (Ext4.isArray(options.plotTypes)) {
+                            this.plotTypes = this.plotTypes.concat(options.plotTypes);
+                        } else {
+                            this.plotTypes.push(options.plotTypes);
+                        }
+                    }
                     this.havePlotOptionsChanged = true;
                     Ext4.getCmp('plot-size-radio-group').setDisabled(this.plotTypes.length < 2);
                     this.setBrushingEnabled(false);
@@ -399,12 +409,21 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             columns: plotTypeCheckBoxes.length,
             items: plotTypeCheckBoxes,
             cls: 'plot-type-checkbox-group',
+            id: 'qc-plot-type-with-y-options',
             width: 300,
             listeners: {
                 scope: this,
                 change: function(cmp, newVal, oldVal)
                 {
                     this.plotTypes = newVal.plotTypes ? Ext4.isArray(newVal.plotTypes) ? newVal.plotTypes : [newVal.plotTypes] : [];
+                    var options = Ext4.getCmp('qc-plot-types').getValue();
+                    if (options && options.plotTypesWithoutYOptions) {
+                        if (Ext4.isArray(options.plotTypesWithoutYOptions)) {
+                            this.plotTypes = this.plotTypes.concat(options.plotTypesWithoutYOptions);
+                        } else {
+                            this.plotTypes.push(options.plotTypesWithoutYOptions);
+                        }
+                    }
                     this.havePlotOptionsChanged = true;
                     Ext4.getCmp('plot-size-radio-group').setDisabled(this.plotTypes.length < 2);
                     this.setBrushingEnabled(false);
@@ -709,7 +728,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 mode: 'local',
                 store: Ext4.create('Ext.data.ArrayStore', {
                     fields: ['value', 'display'],
-                    data: [['linear', 'Linear'], ['log', 'Log'],['percent deviation','Percent Deviation'],['standard deviation','Standard Deviation']]
+                    data: [['linear', 'Linear'], ['log', 'Log'],['percentDeviation','Percent of Mean'],['standardDeviation','Standard Deviation']]
                 }),
                 valueField: 'value',
                 displayField: 'display',

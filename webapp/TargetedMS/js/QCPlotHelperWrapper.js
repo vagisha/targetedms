@@ -30,7 +30,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
     prepareAndRenderQCPlot : function() {
         if (this.showLJPlot())
             return this.getLJGuideSetData();
-        return this.getRawGuideSetData();
+        return this.getRawGuideSetData(this.showMovingRangePlot());
     },
 
     addIndividualPrecursorPlots : function()

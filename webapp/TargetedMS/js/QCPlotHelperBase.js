@@ -35,16 +35,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return this.plotTypes.indexOf(plotType) > -1;
     },
 
-    getGuideSetData : function(useRaw) {
+    getGuideSetData : function(useRaw, includeAllValues) {
         var config = this.getReportConfig();
         var metricProps = this.getMetricPropsById(this.metric);
 
         var guideSetSql = "SELECT s.*, g.Comment FROM (";
         if (useRaw) {
-            guideSetSql += this.metricGuideSetRawSql(metricProps.id, metricProps.series1SchemaName, metricProps.series1QueryName, metricProps.series2SchemaName, metricProps.series2QueryName);
+            guideSetSql += this.metricGuideSetRawSql(metricProps.id, metricProps.series1SchemaName, metricProps.series1QueryName, metricProps.series2SchemaName, metricProps.series2QueryName, includeAllValues);
         }
         else {
-            guideSetSql += this.metricGuideSetSql(metricProps.id, metricProps.series1SchemaName, metricProps.series1QueryName, metricProps.series2SchemaName, metricProps.series2QueryName);
+            guideSetSql += this.metricGuideSetSql(metricProps.id, metricProps.series1SchemaName, metricProps.series1QueryName, metricProps.series2SchemaName, metricProps.series2QueryName, true);
         }
             guideSetSql +=  ") s"
                 + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
@@ -56,7 +56,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             separator = " AND ";
         }
         if (config.EndDate) {
-            guideSetSql += separator + "s.TrainingStart < TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP))";
+            // guideSetSql += separator + "s.TrainingStart < TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP))";
+            var sub = separator + "(";
+            if (includeAllValues) {
+                sub += "s.TrainingStart IS NULL OR "
+            }
+            guideSetSql += sub + "s.TrainingStart < TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP)))";
+
+            if (includeAllValues) {
+                guideSetSql += " AND s.AcquiredTime <= TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP)) AND s.AcquiredTime >= TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.StartDate + "' AS TIMESTAMP))";
+            }
         }
 
         var sqlConfig = {
@@ -72,8 +81,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         LABKEY.Query.executeSql(sqlConfig);
     },
 
-    getRawGuideSetData : function() {
-        this.getGuideSetData(true);
+    getRawGuideSetData : function(includeAllValues) {
+        this.getGuideSetData(true, includeAllValues);
     },
 
     getGuideSetDataObj : function(row)
@@ -102,14 +111,33 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             }
 
             var seriesLabel = row['SeriesLabel'];
+            if (guideSetId == null) {
+                if (this.defaultGuideSet[seriesLabel] !== undefined) {
+                    this.defaultGuideSet[seriesLabel].MR = {
+                        Mean: guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR,
+                        StdDev: guideSetAvgMRs[guideSetId].Series[seriesLabel].stddevMR
+                    };
+                }
+                else {
+                    this.defaultGuideSet[seriesLabel] = {MR:
+                                {
+                                    Mean: guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR,
+                                    StdDev: guideSetAvgMRs[guideSetId].Series[seriesLabel].stddevMR
+                                }
+                            };
+                }
+            }
+
             if (!this.guideSetDataMap[guideSetId].Series[seriesLabel])
             {
                 this.guideSetDataMap[guideSetId].Series[seriesLabel] = {
-                    MeanMR: guideSetAvgMRs[guideSetId].Series[seriesLabel]
+                    MeanMR: guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR,
+                    StdDevMR: guideSetAvgMRs[guideSetId].Series[seriesLabel].stddevMR
                 };
             }
             else {
-                this.guideSetDataMap[guideSetId].Series[seriesLabel].MeanMR = guideSetAvgMRs[guideSetId].Series[seriesLabel];
+                this.guideSetDataMap[guideSetId].Series[seriesLabel].MeanMR = guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR;
+                this.guideSetDataMap[guideSetId].Series[seriesLabel].StdDevMR = guideSetAvgMRs[guideSetId].Series[seriesLabel].stddevMR;
             }
         }, this);
 
@@ -478,8 +506,11 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             disableRangeDisplay: true,
             xTick: this.groupedX ? 'groupedXTick' : 'fullDate',
             xTickLabel: 'date',
-            yAxisScale: (showLogInvalid ? 'linear' : this.yAxisScale),
             shape: 'guideSetId',
+            combined: true,
+            yAxisScale: (showLogInvalid ? 'linear' : (this.yAxisScale !== 'log' ? 'linear' : 'log')),
+            valueConversion: (this.yAxisScale === 'percentDeviation' || this.yAxisScale === 'standardDeviation' ? this.yAxisScale : undefined),
+            defaultGuideSets: this.defaultGuideSet,
             groupBy: 'fragment',
             color: 'fragment',
             pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
@@ -538,7 +569,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     addEachIndividualPrecusorPlot: function(plotIndex, id, precursorIndex, precursorInfo, metricProps, plotType, isCUSUMMean, scope)
     {
-        if (this.yAxisScale == 'log' && plotType != LABKEY.vis.TrendingLinePlotType.LeveyJennings)
+        if (this.yAxisScale == 'log' && plotType != LABKEY.vis.TrendingLinePlotType.LeveyJennings && plotType != LABKEY.vis.TrendingLinePlotType.CUSUM)
         {
             Ext4.get(id).update("<span style='font-style: italic;'>Values that are 0 have been replaced with 0.0000001 for log scale plot.</span>");
         }
@@ -555,12 +586,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         var trendLineProps = {
             xTick: this.groupedX ? 'groupedXTick' : 'fullDate',
             xTickLabel: 'date',
-            yAxisScale: (precursorInfo.showLogInvalid ? 'linear' : this.yAxisScale),
+            yAxisScale: (precursorInfo.showLogInvalid ? 'linear' : (this.yAxisScale !== 'log' ? 'linear' : 'log')),
+            valueConversion: (this.yAxisScale === 'percentDeviation' || this.yAxisScale === 'standardDeviation' ? this.yAxisScale : undefined),
             shape: 'guideSetId',
+            combined: false,
             pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
             pointIdAttr: function(row) { return row['fullDate']; },
             showTrendLine: true,
             showDataPoints: true,
+            groupBy: 'fragment',
+            defaultGuideSets: this.defaultGuideSet,
             mouseOverFn: this.plotPointHover,
             mouseOverFnScope: this,
             position: this.groupedX ? 'jitter' : undefined,
