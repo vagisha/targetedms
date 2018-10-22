@@ -471,8 +471,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             toolbarItems.push(this.getSinglePlotCheckbox());
             toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
             toolbarItems.push(this.getShowExcludedCheckbox());
-            toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
-            toolbarItems.push(this.getShowPlotLegendButton());
+            // toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
+            // toolbarItems.push(this.getShowPlotLegendButton());
 
             this.otherPlotOptionsToolbar = Ext4.create('Ext.toolbar.Toolbar', {
                 ui: 'footer',
@@ -715,6 +715,13 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         return null;
     },
 
+    getYAxisOptions: function () {
+        return {
+            fields: ['value', 'display'],
+            data: [['linear', 'Linear'], ['log', 'Log'], ['percentDeviation', 'Percent of Mean'], ['standardDeviation', 'Standard Deviations']]
+        }
+    },
+
     getScaleCombo : function()
     {
         if (!this.scaleCombo)
@@ -726,10 +733,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 fieldLabel: 'Y-Axis Scale',
                 triggerAction: 'all',
                 mode: 'local',
-                store: Ext4.create('Ext.data.ArrayStore', {
-                    fields: ['value', 'display'],
-                    data: [['linear', 'Linear'], ['log', 'Log'],['percentDeviation','Percent of Mean'],['standardDeviation','Standard Deviation']]
-                }),
+                store: Ext4.create('Ext.data.ArrayStore', this.getYAxisOptions()),
                 valueField: 'value',
                 displayField: 'display',
                 value: this.yAxisScale,

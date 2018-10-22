@@ -190,6 +190,38 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
     getLJCombinedPlotLegendSeries: function()
     {
         return ['value_series1', 'value_series2'];
+    },
+
+    getLJLegend: function () {
+        var ljLegend = [];
+
+        if (!this.singlePlot) {
+            ljLegend.push({
+                text: 'Levey-Jennings',
+                separator: true
+            });
+            ljLegend.push({
+                text: '+/-3 x std dev',
+                color: 'red',
+                shape: LABKEY.vis.TrendingLineShape.stdDevLJ
+            });
+            ljLegend.push({
+                text: '+/-2 x std dev',
+                color: 'blue',
+                shape: LABKEY.vis.TrendingLineShape.stdDevLJ
+            });
+            ljLegend.push({
+                text: '+/-1 x std dev',
+                color: 'green',
+                shape: LABKEY.vis.TrendingLineShape.stdDevLJ
+            });
+            ljLegend.push({
+                text: 'Mean',
+                color: 'darkgrey',
+                shape: LABKEY.vis.TrendingLineShape.stdDevLJ
+            });
+        }
+        return ljLegend;
     }
 
 });

@@ -72,7 +72,22 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
 
         this.add(this.getPlotPointDetailField('m/z', this.pointData['mz']));
         this.add(this.getPlotPointDetailField('Acquired', this.pointData['fullDate']));
-        this.add(this.getPlotPointDetailField('Value', this.valueName ? this.pointData[this.valueName] : this.pointData['value']));
+        if (this.pointData.conversion && this.pointData.rawValue !== undefined) {
+            if (this.pointData.conversion === 'percentDeviation') {
+                this.add(this.getPlotPointDetailField('Value', this.pointData.rawValue));
+                this.add(this.getPlotPointDetailField('Percent of Mean', (this.valueName ? this.pointData[this.valueName] : this.pointData['value']) + '%'))
+            }
+            else if (this.pointData.conversion === 'standardDeviation') {
+                this.add(this.getPlotPointDetailField('Value', this.pointData.rawValue));
+                this.add(this.getPlotPointDetailField('Standard Deviations', this.valueName ? this.pointData[this.valueName] : this.pointData['value']))
+            }
+            else {
+                this.add(this.getPlotPointDetailField('Value', this.valueName ? this.pointData[this.valueName] : this.pointData['value']));
+            }
+        }
+        else {
+            this.add(this.getPlotPointDetailField('Value', this.valueName ? this.pointData[this.valueName] : this.pointData['value']));
+        }
         this.add(this.getPlotPointDetailField('File Path', this.pointData['FilePath'].replace(/\\/g, '\\<wbr>').replace(/\//g, '\/<wbr>')));
 
         if (this.canEdit) {

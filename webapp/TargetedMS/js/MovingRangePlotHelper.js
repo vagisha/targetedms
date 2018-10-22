@@ -119,5 +119,23 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
     getMRCombinedPlotLegendSeries: function()
     {
         return ['MR_series1', 'MR_series2'];
+    },
+
+    getMRLegend: function () {
+        var mrLegend = [];
+
+        // Not showing limits for standard deviation
+        if (this.yAxisScale !== 'standardDeviation' && !this.singlePlot) {
+            mrLegend.push({
+                text: 'Moving Range',
+                separator: true
+            });
+            mrLegend.push({
+                text: 'Upper/Lower Limit',
+                color: 'red',
+                shape: LABKEY.vis.TrendingLineShape.limitMR
+            });
+        }
+        return mrLegend;
     }
 });

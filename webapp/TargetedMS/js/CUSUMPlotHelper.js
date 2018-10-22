@@ -209,6 +209,13 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
             color: '#000000',
             shape: LABKEY.vis.TrendingLineShape.positiveCUSUM
         });
+        if (!this.singlePlot) {
+            cusumLegend.push({
+                text: 'Upper/Lower Limit',
+                color: 'red',
+                shape: LABKEY.vis.TrendingLineShape.limitMR
+            });
+        }
         return cusumLegend;
     }
 

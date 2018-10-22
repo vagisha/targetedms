@@ -324,8 +324,12 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
 
     getAdditionalPlotLegend: function(plotType)
     {
-        if (plotType == LABKEY.vis.TrendingLinePlotType.CUSUM)
+        if (plotType === LABKEY.vis.TrendingLinePlotType.CUSUM)
             return this.getCUSUMGroupLegend();
+        if (plotType === LABKEY.vis.TrendingLinePlotType.MovingRange)
+            return this.getMRLegend();
+        if (plotType === LABKEY.vis.TrendingLinePlotType.LeveyJennings)
+            return this.getLJLegend();
         if (this.showMeanCUSUMPlot() || this.showVariableCUSUMPlot())
             return this.getEmptyLegend();
         return [];

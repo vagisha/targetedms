@@ -527,6 +527,17 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, plotLegendData);
 
+        // Y axis scale as label
+        var yScaleLabel = 'Linear';
+        if ((plotType === 'MovingRange' || plotType === 'Levey-Jennings')) {
+            var yScale = trendLineProps.valueConversion ? trendLineProps.valueConversion : trendLineProps.yAxisScale;
+            var options = this.getYAxisOptions();
+            for (var i = 0; i < options.data.length; i++) {
+                if (options.data[i][0] === yScale)
+                    yScaleLabel = options.data[i][1];
+            }
+        }
+
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
                 top: 65 + this.getMaxStackedAnnotations() * 12,
@@ -544,8 +555,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     visibility: 'hidden'
                 },
                 yLeft: {
-                    value: metricProps.series1Label,
-                    visibility: this.isMultiSeries() ? undefined : 'hidden'
+                    value: yScaleLabel
                 },
                 yRight: {
                     value: this.isMultiSeries() ? metricProps.series2Label : undefined,
@@ -623,6 +633,17 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         var mainTitle = LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean);
 
+        // Y axis scale as label
+        var yScaleLabel = 'Linear';
+        if ((plotType === 'MovingRange' || plotType === 'Levey-Jennings')) {
+            var yScale = trendLineProps.valueConversion ? trendLineProps.valueConversion : trendLineProps.yAxisScale;
+            var options = this.getYAxisOptions();
+            for (var i = 0; i < options.data.length; i++) {
+                if (options.data[i][0] === yScale)
+                    yScaleLabel = options.data[i][1];
+            }
+        }
+
         var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, plotLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
@@ -641,8 +662,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     visibility: 'hidden'
                 },
                 yLeft: {
-                    value: metricProps.series1Label,
-                    visibility: this.isMultiSeries() ? undefined : 'hidden',
+                    value: yScaleLabel,
                     color: this.isMultiSeries() ? this.getColorRange()[0] : undefined
                 },
                 yRight: {
@@ -718,11 +738,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return this.peptidePlotCount;
     },
 
-    showInPlotLegends: function()
-    {
-        if (this.singlePlot)// combined plot
-            return this.plotTypes.length == 1;
-        else // single peptide plot
-            return this.getPeptidePlotCount() == 1;
+    showInPlotLegends: function () {
+        return true;
     }
 });
