@@ -63,9 +63,9 @@ public class LibrarySpectrumMatchGetter
                 @Override
                 public List<PeptideIdRtInfo> load(PrecursorKey precursor, @Nullable Object argument)
                 {
-                    if (null == argument || !(argument instanceof LocalDirectory))
+                    if (!(argument instanceof Container))
                     {
-                        throw new IllegalStateException("Expected LocalDirectory argument in PeptideIdRts cache.");
+                        throw new IllegalStateException("Expected Container argument in PeptideIdRts cache.");
                     }
                     TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
 
@@ -74,7 +74,7 @@ public class LibrarySpectrumMatchGetter
 
                     for(PeptideSettings.SpectrumLibrary library: libraryFilePathsMap.keySet())
                     {
-                        List<PeptideIdRtInfo> rtInfos = BlibSpectrumReader.getRetentionTimes((LocalDirectory)argument,
+                        List<PeptideIdRtInfo> rtInfos = BlibSpectrumReader.getRetentionTimes((Container)argument,
                                 libraryFilePathsMap.get(library), precursor.getModifiedSequence());
 
                         if(rtInfos.size() > 0)
@@ -88,7 +88,7 @@ public class LibrarySpectrumMatchGetter
                 }
             });
 
-    public static List<LibrarySpectrumMatch> getMatches(Peptide peptide, User user, Container container, LocalDirectory localDirectory)
+    public static List<LibrarySpectrumMatch> getMatches(Peptide peptide, User user, Container container, Container pipeRootContainer)
     {
         // Get the precursor of this peptide, sorted by label type and charge.
         List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), new TargetedMSSchema(user, container));
@@ -113,7 +113,7 @@ public class LibrarySpectrumMatchGetter
         // If there are precursors with different charge or isotope label we want to display the reference MS/MS spectra for all of them.
         for(Precursor precursor: precursors)
         {
-            LibrarySpectrumMatch pepSpec = getMatch(peptide, precursor, localDirectory, libraryFilePathsMap, structuralModifications, runStrMods, potentialLossMap);
+            LibrarySpectrumMatch pepSpec = getMatch(peptide, precursor, pipeRootContainer, libraryFilePathsMap, structuralModifications, runStrMods, potentialLossMap);
 
             if(pepSpec != null)
             {
@@ -123,7 +123,7 @@ public class LibrarySpectrumMatchGetter
         return matchedSpectra;
     }
     
-    public static List<LibrarySpectrumMatch> getMatches(Precursor precursor, LocalDirectory localDirectory)
+    public static List<LibrarySpectrumMatch> getMatches(Precursor precursor, Container container)
     {
         TargetedMSRun run = TargetedMSManager.getRunForGeneralMolecule(precursor.getGeneralMoleculeId());
 
@@ -140,12 +140,12 @@ public class LibrarySpectrumMatchGetter
         }
 
         Peptide peptide = PeptideManager.getPeptide(run.getContainer(), precursor.getGeneralMoleculeId());
-        LibrarySpectrumMatch match = getMatch(peptide, precursor, localDirectory, libraryFilePathsMap, structuralModifications, runStrMods, potentialLossMap);
+        LibrarySpectrumMatch match = getMatch(peptide, precursor, container, libraryFilePathsMap, structuralModifications, runStrMods, potentialLossMap);
 
         return match != null ? Collections.singletonList(match) : Collections.emptyList();
     }
 
-    private static LibrarySpectrumMatch getMatch(Peptide peptide, Precursor precursor, LocalDirectory localDirectory,
+    private static LibrarySpectrumMatch getMatch(Peptide peptide, Precursor precursor, Container container,
                                                  LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> libraryFilePathsMap,
                                                  List<Peptide.StructuralModification> structuralModifications, List<PeptideSettings.RunStructuralModification> runStrMods,
                                                  Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap)
@@ -159,7 +159,7 @@ public class LibrarySpectrumMatchGetter
                 continue;
             }
 
-            BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(localDirectory, libraryFilePathsMap.get(library),
+            BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(container, libraryFilePathsMap.get(library),
                     precursor.getModifiedSequence(),
                     precursor.getCharge());
 
@@ -178,9 +178,9 @@ public class LibrarySpectrumMatchGetter
     }
 
     public static LibrarySpectrumMatch getSpectrumMatch(TargetedMSRun run, Peptide peptide, Precursor precursor,
-                                                              PeptideSettings.SpectrumLibrary library, Path libFilePath, LocalDirectory localDirectory)
+                                                              PeptideSettings.SpectrumLibrary library, Path libFilePath, Container container)
     {
-        BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(localDirectory, libFilePath,
+        BlibSpectrum spectrum = BlibSpectrumReader.getSpectrum(container, libFilePath,
                 precursor.getModifiedSequence(),
                 precursor.getCharge());
 
@@ -189,9 +189,9 @@ public class LibrarySpectrumMatchGetter
 
     public static LibrarySpectrumMatch getRedundantSpectrumMatch(TargetedMSRun run, Peptide peptide, Precursor precursor,
                                                                  PeptideSettings.SpectrumLibrary library, Path redundantLibPath,
-                                                                 LocalDirectory localDirectory, int redundantRefSpecId)
+                                                                 Container container, int redundantRefSpecId)
     {
-        BlibSpectrum spectrum = BlibSpectrumReader.getRedundantSpectrum(localDirectory, redundantLibPath, redundantRefSpecId);
+        BlibSpectrum spectrum = BlibSpectrumReader.getRedundantSpectrum(container, redundantLibPath, redundantRefSpecId);
 
         return makeLibrarySpectrumMatch(spectrum, run, peptide, precursor, library);
     }
@@ -245,14 +245,14 @@ public class LibrarySpectrumMatchGetter
         return pepSpec;
     }
 
-    public static List<PeptideIdRtInfo> getPeptideIdRts(Precursor precursor, SampleFile sampleFile, LocalDirectory localDirectory)
+    public static List<PeptideIdRtInfo> getPeptideIdRts(Precursor precursor, SampleFile sampleFile, Container container)
     {
         if(precursor == null || sampleFile == null)
         {
             return Collections.emptyList();
         }
 
-        List<PeptideIdRtInfo> peptideIdRtInfos = _peptideIdRtsCache.get(new PrecursorKey(precursor.getModifiedSequence(), precursor.getGeneralMoleculeId()), localDirectory);
+        List<PeptideIdRtInfo> peptideIdRtInfos = _peptideIdRtsCache.get(new PrecursorKey(precursor.getModifiedSequence(), precursor.getGeneralMoleculeId()), container);
 
         if(peptideIdRtInfos == null)
         {

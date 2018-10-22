@@ -700,15 +700,7 @@ public abstract class ChromatogramDataset
             PipeRoot root = PipelineService.get().getPipelineRootSetting(_container);
             if (null != root)
             {
-                LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
-                try
-                {
-                    return LibrarySpectrumMatchGetter.getPeptideIdRts(_precursor, sampleFile, localDirectory);
-                }
-                finally
-                {
-                    localDirectory.cleanUpLocalDirectory();
-                }
+                return LibrarySpectrumMatchGetter.getPeptideIdRts(_precursor, sampleFile, root.getContainer());
             }
             else
             {

@@ -2061,16 +2061,8 @@ public class TargetedMSController extends SpringActionController
         PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
         if (null != root)
         {
-            LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
-            try
-            {
-                addSpectrumViews(run, vbox,
-                        LibrarySpectrumMatchGetter.getMatches(precursor, localDirectory), errors);
-            }
-            finally
-            {
-                localDirectory.cleanUpLocalDirectory();
-            }
+            addSpectrumViews(run, vbox,
+                    LibrarySpectrumMatchGetter.getMatches(precursor, root.getContainer()), errors);
         }
         else
         {
@@ -2087,7 +2079,7 @@ public class TargetedMSController extends SpringActionController
             try
             {
                 addSpectrumViews(run, vbox,
-                        LibrarySpectrumMatchGetter.getMatches(peptide, getUser(), getContainer(), localDirectory), errors);
+                        LibrarySpectrumMatchGetter.getMatches(peptide, getUser(), getContainer(), root.getContainer()), errors);
             }
             finally
             {
@@ -2178,44 +2170,36 @@ public class TargetedMSController extends SpringActionController
             PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
             if (null != root)
             {
-                LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
-                try
+                LibrarySpectrumMatch spectrumMatch = null;
+                if(form.getRedundantRefSpectrumId() == 0)
                 {
-                    LibrarySpectrumMatch spectrumMatch = null;
-                    if(form.getRedundantRefSpectrumId() == 0)
-                    {
-                        spectrumMatch = LibrarySpectrumMatchGetter.getSpectrumMatch(run, peptide, precursor, library,
-                                blibFilePath, localDirectory);
-                    }
-                    else
-                    {
-                        spectrumMatch = LibrarySpectrumMatchGetter.getRedundantSpectrumMatch(run, peptide, precursor, library,
-                                blibFilePath, localDirectory,
-                                form.getRedundantRefSpectrumId());
-                    }
-
-                    if (spectrumMatch == null)
-                    {
-                        response.put("error", "Could not find spectrum in library " + form.getLibraryName());
-                        return response;
-                    }
-                    Map<String, Object> spectrumDetails = new HashMap<>(4);
-                    spectrumDetails.put("sequence", spectrumMatch.getPeptide());
-                    spectrumDetails.put("staticMods", spectrumMatch.getStructuralModifications());
-                    spectrumDetails.put("variableMods", spectrumMatch.getVariableModifications());
-                    spectrumDetails.put("maxNeutralLossCount", spectrumMatch.getMaxNeutralLosses());
-                    spectrumDetails.put("charge", spectrumMatch.getCharge());
-                    spectrumDetails.put("fileName", spectrumMatch.getSpectrum().getSourceFileName());
-                    spectrumDetails.put("retentionTime", spectrumMatch.getSpectrum().getRetentionTimeF2());
-                    spectrumDetails.put("peaks", spectrumMatch.getPeaks());
-                    spectrumDetails.put("redundantSpectra", spectrumMatch.getRedundantSpectraList()); // Only spectrum read from the non-redundant library will have a list of redundant spectra.
-
-                    response.put("spectrum", spectrumDetails);
+                    spectrumMatch = LibrarySpectrumMatchGetter.getSpectrumMatch(run, peptide, precursor, library,
+                            blibFilePath, root.getContainer());
                 }
-                finally
+                else
                 {
-                    localDirectory.cleanUpLocalDirectory();
+                    spectrumMatch = LibrarySpectrumMatchGetter.getRedundantSpectrumMatch(run, peptide, precursor, library,
+                            blibFilePath, root.getContainer(),
+                            form.getRedundantRefSpectrumId());
                 }
+
+                if (spectrumMatch == null)
+                {
+                    response.put("error", "Could not find spectrum in library " + form.getLibraryName());
+                    return response;
+                }
+                Map<String, Object> spectrumDetails = new HashMap<>(4);
+                spectrumDetails.put("sequence", spectrumMatch.getPeptide());
+                spectrumDetails.put("staticMods", spectrumMatch.getStructuralModifications());
+                spectrumDetails.put("variableMods", spectrumMatch.getVariableModifications());
+                spectrumDetails.put("maxNeutralLossCount", spectrumMatch.getMaxNeutralLosses());
+                spectrumDetails.put("charge", spectrumMatch.getCharge());
+                spectrumDetails.put("fileName", spectrumMatch.getSpectrum().getSourceFileName());
+                spectrumDetails.put("retentionTime", spectrumMatch.getSpectrum().getRetentionTimeF2());
+                spectrumDetails.put("peaks", spectrumMatch.getPeaks());
+                spectrumDetails.put("redundantSpectra", spectrumMatch.getRedundantSpectraList()); // Only spectrum read from the non-redundant library will have a list of redundant spectra.
+
+                response.put("spectrum", spectrumDetails);
             }
             else
             {

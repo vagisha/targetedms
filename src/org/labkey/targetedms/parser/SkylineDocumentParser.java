@@ -26,7 +26,6 @@ import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.security.User;
-import org.labkey.api.settings.ExperimentalFeatureService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.NetworkDrive;
@@ -176,15 +175,17 @@ public class SkylineDocumentParser implements AutoCloseable
     private final XMLStreamReader _reader;
     private InputStream _inputStream;
     private final File _file;
+    private final Container _container;
     private Logger _log;
 
     private String _formatVersion;
     private String _softwareVersion;
     private GUID _documentGUID;
 
-    public SkylineDocumentParser(File file, Logger log) throws XMLStreamException, IOException
+    public SkylineDocumentParser(File file, Logger log, Container container) throws XMLStreamException, IOException
     {
         _file = file;
+        _container = container;
         _inputStream = new FileInputStream(_file);
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
         _reader = inputFactory.createXMLStreamReader(_inputStream);
@@ -1695,7 +1696,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 // Read it out of the file on-demand, so we only load the subset that we need
                 try
                 {
-                    if (!ExperimentalFeatureService.get().isFeatureEnabled(TargetedMSModule.EXPERIMENTAL_SKIP_CHROMATOGRAM_IMPORT))
+                    if (!Boolean.parseBoolean(TargetedMSModule.SKIP_CHROMATOGRAM_IMPORT_PROPERTY.getEffectiveValue(_container)))
                     {
                         chromInfo.setChromatogram(_binaryParser.readChromatogramBytes(chromatogram));
                     }

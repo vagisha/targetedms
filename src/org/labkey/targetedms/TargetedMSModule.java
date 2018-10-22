@@ -71,6 +71,7 @@ import org.labkey.targetedms.view.expannotations.TargetedMSExperimentWebPart;
 import org.labkey.targetedms.view.expannotations.TargetedMSExperimentsWebPart;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -122,10 +123,12 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
     public static final String TARGETED_MS_FOLDER_TYPE = "TargetedMS Folder Type";
     public static ModuleProperty FOLDER_TYPE_PROPERTY;
+    public static ModuleProperty SKIP_CHROMATOGRAM_IMPORT_PROPERTY;
+    public static ModuleProperty PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY;
     public static final String AUTO_QC_PING_TIMEOUT = "TargetedMS AutoQCPing Timeout";
 
-    public static final String EXPERIMENTAL_SKIP_CHROMATOGRAM_IMPORT = "SkipChromatogramImport";
-    public static final String EXPERIMENTAL_PREFER_SKYD_FILE_CHROMATOGRAMS = "PreferSkydFileChromatograms";
+    public static final String SKIP_CHROMATOGRAM_IMPORT = "Skip chromatogram import into database";
+    public static final String PREFER_SKYD_FILE_CHROMATOGRAMS = "Prefer loading chromatograms from SKYD file when possible";
 
     public enum FolderType
     {
@@ -140,6 +143,29 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         FOLDER_TYPE_PROPERTY.setCanSetPerContainer(true);
         FOLDER_TYPE_PROPERTY.setShowDescriptionInline(true);
         addModuleProperty(FOLDER_TYPE_PROPERTY);
+
+
+        List<ModuleProperty.Option> options = Arrays.asList(
+                        new ModuleProperty.Option("Enabled", Boolean.TRUE.toString()),
+                        new ModuleProperty.Option("Disabled", Boolean.FALSE.toString()));
+        // Set up the properties for controlling how chromatograms are managed in DB vs files
+        SKIP_CHROMATOGRAM_IMPORT_PROPERTY = new ModuleProperty(this, SKIP_CHROMATOGRAM_IMPORT);
+        SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setInputType(ModuleProperty.InputType.combo);
+        SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setOptions(options);
+        SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setDefaultValue(Boolean.toString(false));
+        SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setCanSetPerContainer(true);
+        SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setDescription("Skyline stores chromatograms in SKYD files. Panorama can import them into its database, or leave them to be loaded from the file on demand");
+        SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setShowDescriptionInline(true);
+        addModuleProperty(SKIP_CHROMATOGRAM_IMPORT_PROPERTY);
+
+        PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY = new ModuleProperty(this, PREFER_SKYD_FILE_CHROMATOGRAMS);
+        PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setInputType(ModuleProperty.InputType.combo);
+        PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setOptions(options);
+        PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setDefaultValue(Boolean.toString(false));
+        PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setCanSetPerContainer(true);
+        PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setDescription("Skyline stores chromatograms in SKYD files. Panorama can load them directly from the file, when preset, even if they have been previously imported into the database.");
+        PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setShowDescriptionInline(true);
+        addModuleProperty(PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY);
 
         // setup the QC Summary webpart AutoQCPing timeout
         ModuleProperty autoQCPingProp = new ModuleProperty(this, AUTO_QC_PING_TIMEOUT);
@@ -378,11 +404,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 return metric;
             });
         }
-
-        AdminConsole.addExperimentalFeatureFlag(EXPERIMENTAL_SKIP_CHROMATOGRAM_IMPORT, "Skip importing chromatograms",
-                "This will prevent the server from storing chromatograms in the database for newly imported files, and instead load them on demand from the .skyd files", false);
-        AdminConsole.addExperimentalFeatureFlag(EXPERIMENTAL_PREFER_SKYD_FILE_CHROMATOGRAMS, "Prefer SKYD chromatograms",
-                "When the server has the information needed to load a chromatogram on-demand from a .skyd file, fetch it from the file instead of the database", false);
     }
 
     @Override

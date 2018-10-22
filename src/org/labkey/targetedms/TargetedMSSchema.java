@@ -892,7 +892,7 @@ public class TargetedMSSchema extends UserSchema
         }
         if(TABLE_EXPERIMENT_ANNOTATIONS.equalsIgnoreCase(name))
         {
-            return new ExperimentAnnotationsTableInfo(this, getUser());
+            return new ExperimentAnnotationsTableInfo(this);
         }
 
         if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))

@@ -159,13 +159,15 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             StringBuilder error = new StringBuilder();
             if(sourceFolderType != TargetedMSModule.FolderType.Experiment)
             {
-                error.append("Source folder \"").append(container.getPath()).append("\" is a \"").append(sourceFolderType.name()).append("\" folder. ");
+                error.append("Source folder \"").append(container.getPath()).append("\" is")
+                .append((sourceFolderType == null) ? " not a Panorama type folder. " : " a \"" + sourceFolderType.name() + "\" folder. ");
             }
             if(targetFolderType != TargetedMSModule.FolderType.Experiment)
             {
-                error.append("Target folder \"").append(targetContainer.getPath()).append("\" is a \"").append(targetFolderType.name()).append("\" folder. ");
+                error.append("Target folder \"").append(targetContainer.getPath()).append("\" is")
+                .append((targetFolderType == null) ? " not a Panorama type folder. " : " a \"" + targetFolderType.name() + "\" folder. ");
             }
-            error.append("Runs can only be moved between \"Experimental Data\" folders. For other folder types please delete the run in the source folder and import it in the target folder.");
+            error.append("Runs can only be moved between Panorama \"Experimental Data\" folders. For other folder types please delete the run in the source folder and import it in the target folder.");
             throw new ExperimentException(error.toString());
         }
 
@@ -236,9 +238,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             }
             else
             {
-                // Copy any blibs from source. Copy skyd file if reading chromatograms from skyd file.
-                boolean loadFromSkyd = ExperimentalFeatureService.get().isFeatureEnabled(TargetedMSModule.EXPERIMENTAL_PREFER_SKYD_FILE_CHROMATOGRAMS);
-                boolean skipChromImport = ExperimentalFeatureService.get().isFeatureEnabled(TargetedMSModule.EXPERIMENTAL_SKIP_CHROMATOGRAM_IMPORT);
+                // Copy any blibs from source
                 try
                 {
                     Path sourceDir = sourceFile.getParent().resolve(SkylineFileUtils.getBaseName(sourceFileName));
@@ -254,9 +254,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
                                 for (Path path : paths.collect(Collectors.toSet()))
                                 {
                                     String filename = FileUtil.getFileName(path);
-                                    String fileExt = FileUtil.getExtension(filename);
-                                    if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(fileExt)
-                                        || ((loadFromSkyd || skipChromImport) && SkylineBinaryDataHandler.EXTENSION.equalsIgnoreCase(fileExt)))
+                                    if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(FileUtil.getExtension(filename)))
                                         Files.copy(path, destDir.resolve(filename));
                                 }
                             }

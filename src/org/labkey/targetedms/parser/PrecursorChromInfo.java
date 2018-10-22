@@ -17,14 +17,11 @@ package org.labkey.targetedms.parser;
 
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
-
 import org.labkey.api.cache.BlockingCache;
-import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
-import org.labkey.api.settings.ExperimentalFeatureService;
 import org.labkey.api.util.Tuple3;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.targetedms.TargetedMSModule;
@@ -85,6 +82,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
         if (Files.exists(key.first))
         {
+            long startTime = System.currentTimeMillis();
             LOG.debug("Loading chromatogram from " + path + ", offset " + offset + ", length " + length);
             try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ))
             {
@@ -93,7 +91,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
                 channel.read(byteBuffer);
                 byteBuffer.position(0);
                 byte[] results = byteBuffer.array();
-                LOG.debug("Finished loading from " + path + ", offset " + offset + ", length " + length);
+                LOG.debug("Finished loading from " + path + ", offset " + offset + ", length " + length + " in " + (System.currentTimeMillis() - startTime) + "ms");
                 return results;
             }
             catch (IOException e)
@@ -408,7 +406,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
             byte[] databaseBytes = getChromatogram();
             byte[] compressedBytes = databaseBytes;
-            boolean loadFromSkyd = ExperimentalFeatureService.get().isFeatureEnabled(TargetedMSModule.EXPERIMENTAL_PREFER_SKYD_FILE_CHROMATOGRAMS);
+            boolean loadFromSkyd = Boolean.parseBoolean(TargetedMSModule.PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.getEffectiveValue(_container));
 
             if (loadFromSkyd || databaseBytes == null)
             {

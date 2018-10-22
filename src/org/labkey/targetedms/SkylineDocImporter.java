@@ -211,7 +211,7 @@ public class SkylineDocImporter
         f = extractIfZip(f);
 
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction();
-             SkylineDocumentParser parser = new SkylineDocumentParser(f, _log))
+             SkylineDocumentParser parser = new SkylineDocumentParser(f, _log, run.getContainer()))
         {
                 run.setFormatVersion(parser.getFormatVersion());
                 run.setSoftwareVersion(parser.getSoftwareVersion());
