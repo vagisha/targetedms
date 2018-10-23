@@ -239,32 +239,42 @@ public class TargetedMSUpgradeCode implements UpgradeCode
                             // Run has been moved from the original container.  Update container and datafileurl in exp.data
                             params.add(run.getContainer()); // container
 
-                            Path sourceFilePath = Paths.get(expData.getDataFileURI());
                             PipeRoot targetRoot = PipelineService.get().findPipelineRoot(run.getContainer());
-                            if(targetRoot != null && sourceFilePath != null)
+                            if(targetRoot != null)
                             {
-                                Path destFile = targetRoot.getRootNioPath().resolve(sourceFilePath.getParent().getFileName()) // Name of the exploded directory
-                                                                           .resolve(sourceFilePath.getFileName());            // Name of the .skyd file
-                                if(Files.exists(destFile))
+                                PipeRoot sourceRoot = PipelineService.get().findPipelineRoot(expData.getContainer());
+                                if(sourceRoot != null)
                                 {
-                                    params.add(destFile.toUri().toString()); // dataFileUrl
+                                    // Issue 35812: TargetedMS upgrade code throws exception if run has been moved from and container whose file root is S3
+                                    // Instead of Paths.get() use PipeRoot.resolveToNioPathFromUrl(URL) or PipeRoot.resolveToNioPath(String), because they know how to use the cloud module for S3 paths
+                                    Path sourceFilePath = sourceRoot.resolveToNioPathFromUrl(expData.getDataFileUrl());
+                                    if (sourceFilePath != null)
+                                    {
+                                        Path destFile = targetRoot.getRootNioPath().resolve(sourceFilePath.getParent().getFileName()) // Name of the exploded directory
+                                                                                   .resolve(sourceFilePath.getFileName());            // Name of the .skyd file
+                                        if (Files.exists(destFile))
+                                        {
+                                            params.add(destFile.toUri().toString()); // dataFileUrl
+                                        }
+                                        else
+                                        {
+                                            params.add(expData.getDataFileUrl());
+                                            LOG.warn("Target destination file " + destFile.toString() + " does not exist for exp.data rowId " + expData.getRowId());
+                                        }
+                                    }
+                                    else
+                                    {
+                                        LOG.warn("Cannot resolve dataFileUrl \"" + expData.getDataFileUrl() + "\" for exp.data rowId " + expData.getRowId());
+                                    }
                                 }
                                 else
                                 {
-                                    params.add(expData.getDataFileUrl());
-                                    LOG.warn("Target destination file " + destFile.toString() + " does not exist for exp.data rowId " + expData.getRowId());
+                                    LOG.warn("Could not get pipeline root for source container " + expData.getContainer().getPath() +", exp.data rowId " + expData.getRowId());
                                 }
                             }
                             else
                             {
-                                if(targetRoot == null)
-                                {
-                                    LOG.warn("Could not get target pipeline root for container " + run.getContainer().getPath() +", exp.data rowId " + expData.getRowId());
-                                }
-                                if(sourceFilePath == null)
-                                {
-                                    LOG.warn("dataFileUrl not found for exp.data rowId " + expData.getRowId());
-                                }
+                                LOG.warn("Could not get pipeline root for target container " + run.getContainer().getPath() +", targetedms runId " + run.getId());
                             }
 
                             params.add(expData.getRowId());
