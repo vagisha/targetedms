@@ -112,13 +112,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
             var seriesLabel = row['SeriesLabel'];
             if (guideSetId == null) {
-                if (this.defaultGuideSet[seriesLabel] !== undefined) {
+                if (this.defaultGuideSet && this.defaultGuideSet[seriesLabel] !== undefined) {
                     this.defaultGuideSet[seriesLabel].MR = {
                         Mean: guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR,
                         StdDev: guideSetAvgMRs[guideSetId].Series[seriesLabel].stddevMR
                     };
                 }
                 else {
+                    if (!this.defaultGuideSet) {
+                        this.defaultGuideSet = {};
+                    }
                     this.defaultGuideSet[seriesLabel] = {MR:
                                 {
                                     Mean: guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR,
@@ -583,11 +586,11 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         {
             Ext4.get(id).update("<span style='font-style: italic;'>Values that are 0 have been replaced with 0.0000001 for log scale plot.</span>");
         }
-        else if (precursorInfo.showLogInvalid)
+        else if (precursorInfo.showLogInvalid && plotType !== LABKEY.vis.TrendingLinePlotType.CUSUM)
         {
             this.showInvalidLogMsg(id, true);
         }
-        else if (precursorInfo.showLogWarning)
+        else if (precursorInfo.showLogWarning && plotType !== LABKEY.vis.TrendingLinePlotType.CUSUM)
         {
             Ext4.get(id).update("<span style='font-style: italic;'>For log scale, standard deviations below "
                     + "the mean with negative values have been omitted.</span>");

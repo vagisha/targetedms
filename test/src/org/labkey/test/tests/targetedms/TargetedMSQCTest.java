@@ -327,7 +327,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LOG);
         assertEquals("Unexpected number of plots with invalid log scale.", 3, qcPlotsWebPart.getLogScaleInvalidCount());
         assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleWarningCount());
-        assertEquals("Unexpected number of plots with log scale 0 value replacement warning.", PRECURSORS.length * 3, qcPlotsWebPart.getLogScaleEpsilonWarningCount());
+        assertEquals("Unexpected number of plots with log scale 0 value replacement warning.", PRECURSORS.length, qcPlotsWebPart.getLogScaleEpsilonWarningCount());
 
         // if the guide set expected range error bar goes beyond zero, show log plot message about it
         createGuideSetFromTable(new GuideSet("2013-08-09", "2013-08-28", "all initial data points"));
@@ -338,7 +338,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.PEAK);
         assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleInvalidCount());
         assertEquals("Unexpected number of plots with invalid log scale.", 1, qcPlotsWebPart.getLogScaleWarningCount());
-        assertEquals("Unexpected number of plots with log scale 0 value replacement warning.", PRECURSORS.length * 3, qcPlotsWebPart.getLogScaleEpsilonWarningCount());
+        assertEquals("Unexpected number of plots with log scale 0 value replacement warning.", PRECURSORS.length, qcPlotsWebPart.getLogScaleEpsilonWarningCount());
 
         qcPlotsWebPart.resetInitialQCPlotFields();
 
@@ -362,10 +362,11 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.waitForPlots(PRECURSORS.length * 2, true);
         assertTrue("Plot Size should be enabled with at least 2 plot types selected", qcPlotsWebPart.isPlotSizeRadioEnabled());
 
-        qcPlotsWebPart.openLegendPopup();
-        waitForElement(legendPopup);
-        assertElementNotPresent(qcPlotsWebPart.getLegendPopupItemLocator("CUSUM Group", true));
-        waitAndClick(Locator.tagWithText("span", "Close"));
+        // TODO: Add legend check here. Legends on every graph now not in popup
+//        qcPlotsWebPart.openLegendPopup();
+//        waitForElement(legendPopup);
+//        assertElementNotPresent(qcPlotsWebPart.getLegendPopupItemLocator("CUSUM Group", true));
+//        waitAndClick(Locator.tagWithText("span", "Close"));
 
         qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.CUSUMm, true);
         qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.CUSUMv, true);
