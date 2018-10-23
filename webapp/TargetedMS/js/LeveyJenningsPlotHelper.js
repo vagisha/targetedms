@@ -201,17 +201,17 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
                 separator: true
             });
             ljLegend.push({
-                text: '+/-3 x std dev',
+                text: '+/-3 x Std Dev',
                 color: 'red',
                 shape: LABKEY.vis.TrendingLineShape.stdDevLJ
             });
             ljLegend.push({
-                text: '+/-2 x std dev',
+                text: '+/-2 x Std Dev',
                 color: 'blue',
                 shape: LABKEY.vis.TrendingLineShape.stdDevLJ
             });
             ljLegend.push({
-                text: '+/-1 x std dev',
+                text: '+/-1 x Std Dev',
                 color: 'green',
                 shape: LABKEY.vis.TrendingLineShape.stdDevLJ
             });

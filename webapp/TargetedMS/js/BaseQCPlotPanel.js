@@ -64,7 +64,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             + (!includeAllValues ? '' : ('\nUNION'
             + '\nSELECT NULL AS GuideSetId, MIN(SampleFileId.AcquiredTime) AS TrainingStart, MAX(SampleFileId.AcquiredTime) AS TrainingEnd,'
             + '\nNULL AS ReferenceEnd, SeriesLabel, COUNT(SampleFileId) AS NumRecords, AVG(MetricValue) AS Mean, STDDEV(MetricValue) AS StandardDev'
-            + '\nFROM targetedms.QCMetric_retentionTime'
+            + '\nFROM '+ schema1Name + '.' + query1Name
             + exclusionWhereSQL
             + '\nGROUP BY SeriesLabel'))
             ;
