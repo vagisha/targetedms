@@ -47,7 +47,7 @@ public class TransitionManager
     @Nullable
     public static Transition get(int transitionId, User user, Container container)
     {
-        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container)), Transition.getColumns()).getObject(transitionId, Transition.class);
+        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container), true), Transition.getColumns()).getObject(transitionId, Transition.class);
     }
 
     @Nullable

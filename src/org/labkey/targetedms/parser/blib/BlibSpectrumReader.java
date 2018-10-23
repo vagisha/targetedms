@@ -70,7 +70,7 @@ public class BlibSpectrumReader
         }
     }
 
-    private static final Logger LOG = Logger.getLogger(TargetedMSController.class);
+    private static final Logger LOG = Logger.getLogger(BlibSpectrumReader.class);
 
     @Nullable
     public static BlibSpectrum getSpectrum(Container container, Path blibPath,
@@ -581,7 +581,7 @@ public class BlibSpectrumReader
             }
             else
             {
-                LOG.error("Unable to copy " + blibPath + " to local file.");
+                LOG.warn("Unable to copy " + blibPath + " to local file.");
                 return null;
             }
         }

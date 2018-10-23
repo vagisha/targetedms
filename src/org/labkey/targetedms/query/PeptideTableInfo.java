@@ -31,22 +31,18 @@ import java.util.List;
 
 public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
 {
-    public PeptideTableInfo(TargetedMSSchema schema)
+    public PeptideTableInfo(TargetedMSSchema schema, boolean omitAnnotations)
     {
-        super(schema, TargetedMSManager.getTableInfoPeptide(), "Peptide Annotations");
+        super(schema, TargetedMSManager.getTableInfoPeptide(), "Peptide Annotations", omitAnnotations);
 
-        // Add a WrappedColumn for Note & Annotations
-        WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
-        noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
+        if (!omitAnnotations)
         {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new AnnotationUIDisplayColumn(colInfo);
-            }
-        });
-        noteAnnotation.setLabel("Peptide Note/Annotations");
-        addColumn(noteAnnotation);
+            // Add a WrappedColumn for Note & Annotations
+            WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
+            noteAnnotation.setDisplayColumnFactory(colInfo -> new AnnotationUIDisplayColumn(colInfo));
+            noteAnnotation.setLabel("Peptide Note/Annotations");
+            addColumn(noteAnnotation);
+        }
 
         ColumnInfo peptideGroupId = getColumn("PeptideGroupId");
         peptideGroupId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE_GROUP));
@@ -56,14 +52,7 @@ public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
         WrappedColumn modSeqCol = new WrappedColumn(getColumn("PeptideModifiedSequence"), ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME);
         modSeqCol.setLabel("Peptide");
         modSeqCol.setDescription("Modified peptide sequence");
-        modSeqCol.setDisplayColumnFactory( new DisplayColumnFactory()
-        {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo);
-            }
-        });
+        modSeqCol.setDisplayColumnFactory(colInfo -> new ModifiedSequenceDisplayColumn.PeptideCol(colInfo));
         modSeqCol.setURL(getDetailsURL(null, null));
         addColumn(modSeqCol);
 

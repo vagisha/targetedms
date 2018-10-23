@@ -37,7 +37,7 @@ public class PrecursorChromInfoTable extends AnnotatedTargetedMSTable
     public PrecursorChromInfoTable(TableInfo table, TargetedMSSchema schema)
     {
         super(table, schema, null, new SQLFragment("Container"),
-                TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), "PrecursorChromInfoId", "Precursor Result Annotations", "precursor_result");
+                TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), "PrecursorChromInfoId", "Precursor Result Annotations", "precursor_result", false);
         ColumnInfo precursorId = getColumn("PrecursorId");
         precursorId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR));
 

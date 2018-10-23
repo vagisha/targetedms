@@ -30,6 +30,7 @@ import org.labkey.targetedms.TargetedMSRun;
 import java.io.IOException;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
@@ -80,27 +81,28 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         long offset = key.second;
         int length = key.third;
 
-        if (Files.exists(key.first))
+        long startTime = System.currentTimeMillis();
+        LOG.debug("Loading chromatogram from " + path + ", offset " + offset + ", length " + length);
+        try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ, StandardOpenOption.SPARSE))
         {
-            long startTime = System.currentTimeMillis();
-            LOG.debug("Loading chromatogram from " + path + ", offset " + offset + ", length " + length);
-            try (SeekableByteChannel channel = Files.newByteChannel(path, StandardOpenOption.READ))
-            {
-                channel.position(offset);
-                java.nio.ByteBuffer byteBuffer = java.nio.ByteBuffer.allocate(length);
-                channel.read(byteBuffer);
-                byteBuffer.position(0);
-                byte[] results = byteBuffer.array();
-                LOG.debug("Finished loading from " + path + ", offset " + offset + ", length " + length + " in " + (System.currentTimeMillis() - startTime) + "ms");
-                return results;
-            }
-            catch (IOException e)
-            {
-                throw new UnexpectedException(e);
-            }
+            channel.position(offset);
+            java.nio.ByteBuffer byteBuffer = java.nio.ByteBuffer.allocate(length);
+            channel.read(byteBuffer);
+            byteBuffer.position(0);
+            byte[] results = byteBuffer.array();
+            LOG.debug("Finished loading from " + path + ", offset " + offset + ", length " + length + " in " + (System.currentTimeMillis() - startTime) + "ms");
+            return results;
         }
-        LOG.debug("Could not find SKYD file to get chromatogram at path " + path);
-        return null;
+        catch (NoSuchFileException e)
+        {
+            // Avoid a separate call to Files.exists() as it adds ~1 second overhead
+            LOG.debug("Could not find SKYD file to get chromatogram at path " + path);
+            return null;
+        }
+        catch (IOException e)
+        {
+            throw new UnexpectedException(e);
+        }
     });
 
     public PrecursorChromInfo()
@@ -420,7 +422,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
                         byte[] onDemandBytes = ON_DEMAND_CHROM_CACHE.get(new Tuple3<>(skydPath, _chromatogramOffset, _chromatogramLength));
                         if (databaseBytes != null && !Arrays.equals(databaseBytes, onDemandBytes))
                         {
-                            LOG.error("Chromatogram bytes for PrecursorChromInfo " + _generalMoleculeChromInfoId + " do not match between .skyd and DB. Using database copy. Lengths: " + onDemandBytes.length + " vs " + databaseBytes.length);
+                            LOG.error("Chromatogram bytes for PrecursorChromInfo " + _generalMoleculeChromInfoId + " do not match between .skyd and DB. Using database copy. Lengths: " + (onDemandBytes == null ? "null" : Integer.toString(onDemandBytes.length)) + " vs " + databaseBytes.length);
                         }
                         else
                         {

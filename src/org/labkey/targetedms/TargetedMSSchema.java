@@ -931,7 +931,7 @@ public class TargetedMSSchema extends UserSchema
                                                                   TargetedMSManager.getTableInfoPeptideGroupAnnotation(),
                                                                   "PeptideGroupId",
                                                                   "Protein Annotations",
-                                                                  "protein") // This may change as more small molecule work is done in Skyline.
+                                                                  "protein", false) // This may change as more small molecule work is done in Skyline.
             {
                 @Override
                 protected Class<? extends Controller> getDetailsActionClass()
@@ -1011,7 +1011,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_REPLICATE.equalsIgnoreCase(name))
         {
-            return new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK, TargetedMSManager.getTableInfoReplicateAnnotation(), "ReplicateId", "Replicate Annotations", "replicate");
+            return new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK, TargetedMSManager.getTableInfoReplicateAnnotation(), "ReplicateId", "Replicate Annotations", "replicate", false);
         }
 
         // Tables that have a FK to targetedms.Runs
@@ -1067,11 +1067,11 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.peptidegroup
         if (TABLE_PEPTIDE.equalsIgnoreCase(name))
         {
-            return new PeptideTableInfo(this);
+            return new PeptideTableInfo(this, false);
         }
         if (TABLE_MOLECULE.equalsIgnoreCase(name))
         {
-            return new MoleculeTableInfo(this);
+            return new MoleculeTableInfo(this, false);
         }
 
         if (TABLE_PROTEIN.equalsIgnoreCase(name) ||
@@ -1108,12 +1108,12 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.peptide
         if (TABLE_PRECURSOR.equalsIgnoreCase(name))
         {
-            return new PrecursorTableInfo(this);
+            return new PrecursorTableInfo(this, false);
         }
 
         if (TABLE_MOLECULE_PRECURSOR.equalsIgnoreCase(name))
         {
-            return new MoleculePrecursorTableInfo(this);
+            return new MoleculePrecursorTableInfo(this, false);
         }
 
         if(TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(name))
@@ -1150,7 +1150,7 @@ public class TargetedMSSchema extends UserSchema
         }
         if(TABLE_MOLECULE_TRANSITION.equalsIgnoreCase(name))
         {
-            return new MoleculeTransitionsTableInfo(this);
+            return new MoleculeTransitionsTableInfo(this, false);
         }
 
         // Tables that have a FK to targetedms.precursorchrominfo
@@ -1164,7 +1164,7 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_TRANSITION_CHROM_INFO.equalsIgnoreCase(name))
         {
             TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.SampleFileFK,
-                    TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), "TransitionChromInfoId", "Transition Result Annotations", "transition_result");
+                    TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), "TransitionChromInfoId", "Transition Result Annotations", "transition_result", false);
             TargetedMSSchema targetedMSSchema = this;
 
             ColumnInfo transitionId = result.getColumn("TransitionId");
@@ -1183,7 +1183,7 @@ public class TargetedMSSchema extends UserSchema
                 @Override
                 public TableInfo getLookupTableInfo()
                 {
-                    return new MoleculeTransitionsTableInfo(targetedMSSchema);
+                    return new MoleculeTransitionsTableInfo(targetedMSSchema, false);
                 }
             });
             result.addColumn(moleculeTransitionId);

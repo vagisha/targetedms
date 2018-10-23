@@ -28,6 +28,7 @@ import org.labkey.targetedms.TargetedMSSchema;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Flattens a "general" and a "specific" table into a single query. For example, can be used to present a single
@@ -39,16 +40,18 @@ public class JoinedTargetedMSTable extends AnnotatedTargetedMSTable
 {
     private final TableInfo _specializedTable;
 
-    public JoinedTargetedMSTable(TableInfo generalTable, TableInfo specializedTable, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType, TableInfo annotationTableInfo, String annotationFKName, String columnName, String annotationTarget)
+    public JoinedTargetedMSTable(TableInfo generalTable, TableInfo specializedTable, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType, TableInfo annotationTableInfo, String annotationFKName, String columnName, String annotationTarget, boolean omitAnnotations)
     {
-        super(generalTable, schema, joinType, annotationTableInfo, annotationFKName, columnName, annotationTarget);
+        super(generalTable, schema, joinType, annotationTableInfo, annotationFKName, columnName, annotationTarget, omitAnnotations);
 
         _specializedTable = specializedTable;
         setName(_specializedTable.getName());
 
+        Set<String> currentColumnNames = getColumnNameSet();
+
         for (ColumnInfo col: _specializedTable.getColumns())
         {
-            if (getColumn(col.getName()) == null)
+            if (!currentColumnNames.contains(col.getName()))
             {
                 ColumnInfo ret = new AliasedColumn(this, col.getName(), col);
                 if (col.isHidden())

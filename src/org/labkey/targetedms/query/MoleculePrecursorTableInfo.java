@@ -32,14 +32,14 @@ import java.util.ArrayList;
 
 public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
 {
-    public MoleculePrecursorTableInfo(final TargetedMSSchema schema)
+    public MoleculePrecursorTableInfo(final TargetedMSSchema schema, boolean omitAnnotations)
     {
-        this(TargetedMSManager.getTableInfoMoleculePrecursor(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, schema);
+        this(TargetedMSManager.getTableInfoMoleculePrecursor(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, schema, omitAnnotations);
     }
 
-    public MoleculePrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema)
+    public MoleculePrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema, boolean omitAnnotations)
     {
-        super(tableInfo, tableName, schema);
+        super(tableInfo, tableName, schema, omitAnnotations);
 
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE));

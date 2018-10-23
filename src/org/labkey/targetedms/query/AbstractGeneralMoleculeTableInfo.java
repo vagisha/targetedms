@@ -30,7 +30,7 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
 
 public abstract class AbstractGeneralMoleculeTableInfo extends JoinedTargetedMSTable
 {
-    public AbstractGeneralMoleculeTableInfo(TargetedMSSchema schema, TableInfo tableInfo, String annotationColumnName)
+    public AbstractGeneralMoleculeTableInfo(TargetedMSSchema schema, TableInfo tableInfo, String annotationColumnName, boolean omitAnnotations)
     {
         super(TargetedMSManager.getTableInfoGeneralMolecule(),
                 tableInfo,
@@ -38,7 +38,7 @@ public abstract class AbstractGeneralMoleculeTableInfo extends JoinedTargetedMST
                 TargetedMSSchema.ContainerJoinType.PeptideGroupFK,
                 TargetedMSManager.getTableInfoGeneralMoleculeAnnotation(),
                 "GeneralMoleculeId", annotationColumnName,
-                "peptide"); // This may change as more small molecule work is done in Skyline.
+                "peptide", omitAnnotations); // This may change as more small molecule work is done in Skyline.
 
         // use the description and title column from the specialized TableInfo
         setDescription(tableInfo.getDescription());

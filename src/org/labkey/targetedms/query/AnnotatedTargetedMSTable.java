@@ -45,6 +45,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
+ * Optionally adds annotation-valued columns as if there were "real" columns. Can be conditionalized via the omitAnnotations
+ * column to optimize for scenarios where they will never be used, such as when populating a Java bean with a fixed set
+ * of get/set methods.
  * User: jeckels
  * Date: Jul 6, 2012
  */
@@ -59,9 +62,9 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                                     TableInfo annotationTableInfo,
                                     String annotationFKName,
                                     String columnName,
-                                    String annotationTarget) // The target of an annotation that applies to this table.
+                                    String annotationTarget, boolean omitAnnotations) // The target of an annotation that applies to this table.
     {
-        this(table, schema, joinType, annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget);
+        this(table, schema, joinType, annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget, omitAnnotations);
     }
 
     public AnnotatedTargetedMSTable(TableInfo table,
@@ -71,11 +74,14 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                                     TableInfo annotationTableInfo,
                                     String annotationFKName,
                                     String columnName,
-                                    String annotationTarget) // The target of an annotation that applies to this table.
+                                    String annotationTarget, boolean omitAnnotations) // The target of an annotation that applies to this table.
     {
         super(table, schema, joinType, containerSQL);
 
-        addAnnotationsColumns(annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget);
+        if (!omitAnnotations)
+        {
+            addAnnotationsColumns(annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget);
+        }
     }
 
     public AnnotatedTargetedMSTable(TableInfo table,
@@ -85,11 +91,14 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                                     String annotationFKName,
                                     String columnName,
                                     String pkColumnName,
-                                    String annotationTarget) // The target of an annotation that applies to this table.
+                                    String annotationTarget, boolean omitAnnotations) // The target of an annotation that applies to this table.
     {
         super(table, schema, joinType);
 
-        addAnnotationsColumns(annotationTableInfo, annotationFKName, columnName, pkColumnName, annotationTarget);
+        if (!omitAnnotations)
+        {
+            addAnnotationsColumns(annotationTableInfo, annotationFKName, columnName, pkColumnName, annotationTarget);
+        }
     }
 
     private void addAnnotationsColumns(TableInfo annotationTableInfo, String annotationFKName, String columnName, String pkColumnName, String annotationTarget)
@@ -113,7 +122,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         annotationsColumn.setFacetingBehaviorType(FacetingBehaviorType.ALWAYS_OFF);
         addColumn(annotationsColumn);
 
-        //get list of replicate annotations for container
+        //get list of annotations the relevant type in this container
         List<AnnotationSettingForTyping> annotationSettingForTypings = getAnnotationSettings(annotationTarget);
         //iterate over list of annotations settings
         for (AnnotationSettingForTyping annotationSettingForTyping : annotationSettingForTypings)

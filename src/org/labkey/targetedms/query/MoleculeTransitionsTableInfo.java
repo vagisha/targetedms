@@ -35,9 +35,9 @@ import java.util.ArrayList;
  */
 public class MoleculeTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
 {
-    public MoleculeTransitionsTableInfo(final TargetedMSSchema schema)
+    public MoleculeTransitionsTableInfo(final TargetedMSSchema schema, boolean omitAnnotations)
     {
-        super(schema, TargetedMSManager.getTableInfoMoleculeTransition());
+        super(schema, TargetedMSManager.getTableInfoMoleculeTransition(), omitAnnotations);
 
         setDescription(TargetedMSManager.getTableInfoMoleculeTransition().getDescription());
 
@@ -77,17 +77,13 @@ public class MoleculeTransitionsTableInfo extends AbstractGeneralTransitionTable
         visibleColumns.add(FieldKey.fromParts("Charge"));
         setDefaultVisibleColumns(visibleColumns);
 
-        // Create a WrappedColumn for Note & Annotations
-        WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
-        noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
+        if (!omitAnnotations)
         {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new AnnotationUIDisplayColumn(colInfo);
-            }
-        });
-        noteAnnotation.setLabel("Molecule Transition Note/Annotations");
-        addColumn(noteAnnotation);
+            // Create a WrappedColumn for Note & Annotations
+            WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
+            noteAnnotation.setDisplayColumnFactory(colInfo -> new AnnotationUIDisplayColumn(colInfo));
+            noteAnnotation.setLabel("Molecule Transition Note/Annotations");
+            addColumn(noteAnnotation);
+        }
     }
 }

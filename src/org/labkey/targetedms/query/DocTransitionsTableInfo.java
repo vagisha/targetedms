@@ -39,7 +39,12 @@ public class DocTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
 {
     public DocTransitionsTableInfo(final TargetedMSSchema schema)
     {
-        super(schema, TargetedMSManager.getTableInfoTransition());
+        this(schema, false);
+    }
+
+    public DocTransitionsTableInfo(final TargetedMSSchema schema, boolean omitAnnotations)
+    {
+        super(schema, TargetedMSManager.getTableInfoTransition(), omitAnnotations);
 
         setDescription(TargetedMSManager.getTableInfoTransition().getDescription());
 
@@ -107,18 +112,13 @@ public class DocTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
 
         setDefaultVisibleColumns(visibleColumns);
 
-        // Create a WrappedColumn for Note & Annotations
-        WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
-        noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
+        if (!omitAnnotations)
         {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new AnnotationUIDisplayColumn(colInfo);
-            }
-        });
-        noteAnnotation.setLabel("Transition Note/Annotations");
-        addColumn(noteAnnotation);
-
+            // Create a WrappedColumn for Note & Annotations
+            WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
+            noteAnnotation.setDisplayColumnFactory(colInfo -> new AnnotationUIDisplayColumn(colInfo));
+            noteAnnotation.setLabel("Transition Note/Annotations");
+            addColumn(noteAnnotation);
+        }
     }
 }

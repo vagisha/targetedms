@@ -71,9 +71,9 @@ public class PrecursorManager
         TargetedMSSchema schema = new TargetedMSSchema(user, c);
 
         SQLFragment sql = new SQLFragment("SELECT pre.* FROM ");
-        sql.append(new PrecursorTableInfo(schema), "pre");
+        sql.append(new PrecursorTableInfo(schema, true), "pre");
         sql.append(", ");
-        sql.append(new PeptideTableInfo(schema), "pep");
+        sql.append(new PeptideTableInfo(schema, true), "pep");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
@@ -119,7 +119,7 @@ public class PrecursorManager
         colNames.addAll(TargetedMSManager.getTableInfoPrecursor().getColumnNameSet());
         colNames.addAll(TargetedMSManager.getTableInfoGeneralPrecursor().getColumnNameSet());
 
-        List<Precursor> precursors = new TableSelector(new PrecursorTableInfo(targetedMSSchema), colNames, filter,  sort).getArrayList(Precursor.class);
+        List<Precursor> precursors = new TableSelector(new PrecursorTableInfo(targetedMSSchema, true), colNames, filter,  sort).getArrayList(Precursor.class);
 
         if (precursors.isEmpty())
             throw new NotFoundException(String.format("No precursors found for peptideId %d", peptideId));
@@ -363,11 +363,11 @@ public class PrecursorManager
 
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" INNER JOIN ");
-        sql.append(new PeptideTableInfo(schema), "pep");
+        sql.append(new PeptideTableInfo(schema, true), "pep");
         sql.append(" ON ");
         sql.append("pg.Id = pep.PeptideGroupId ");
         sql.append(" INNER JOIN ");
-        sql.append(new PrecursorTableInfo(schema), "prec");
+        sql.append(new PrecursorTableInfo(schema, true), "prec");
         sql.append(" ON ");
         sql.append("pep.Id = prec.GeneralMoleculeId ");
         sql.append(" INNER JOIN ");

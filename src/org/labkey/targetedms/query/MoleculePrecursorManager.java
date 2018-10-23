@@ -43,9 +43,9 @@ public class MoleculePrecursorManager
         TargetedMSSchema schema = new TargetedMSSchema(user, c);
 
         SQLFragment sql = new SQLFragment("SELECT pre.* FROM ");
-        sql.append(new MoleculePrecursorTableInfo(schema), "pre");
+        sql.append(new MoleculePrecursorTableInfo(schema, true), "pre");
         sql.append(", ");
-        sql.append(new MoleculeTableInfo(schema), "mol");
+        sql.append(new MoleculeTableInfo(schema, true), "mol");
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(", ");
@@ -70,7 +70,7 @@ public class MoleculePrecursorManager
         colNames.addAll(TargetedMSManager.getTableInfoMoleculePrecursor().getColumnNameSet());
         colNames.addAll(TargetedMSManager.getTableInfoGeneralPrecursor().getColumnNameSet());
 
-        List<MoleculePrecursor> precursors = new TableSelector(new MoleculePrecursorTableInfo(targetedMSSchema), colNames, filter,  sort).getArrayList(MoleculePrecursor.class);
+        List<MoleculePrecursor> precursors = new TableSelector(new MoleculePrecursorTableInfo(targetedMSSchema, true), colNames, filter,  sort).getArrayList(MoleculePrecursor.class);
 
         if (precursors.isEmpty())
         {
@@ -159,10 +159,10 @@ public class MoleculePrecursorManager
 
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
         sql.append(" INNER JOIN ");
-        sql.append(new MoleculeTableInfo(schema), "mol");
+        sql.append(new MoleculeTableInfo(schema, true), "mol");
         sql.append(" ON pg.Id = mol.PeptideGroupId ");
         sql.append(" INNER JOIN ");
-        sql.append(new MoleculePrecursorTableInfo(schema), "prec");
+        sql.append(new MoleculePrecursorTableInfo(schema, true), "prec");
         sql.append(" ON mol.Id = prec.GeneralMoleculeId ");
         sql.append(" INNER JOIN ");
         sql.append(new PrecursorChromInfoTable(schema), "pci");

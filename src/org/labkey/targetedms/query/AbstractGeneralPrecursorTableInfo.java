@@ -37,12 +37,12 @@ import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
 public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
 {
-    public AbstractGeneralPrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema)
+    public AbstractGeneralPrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema, boolean omitAnnotations)
     {
         super(TargetedMSManager.getTableInfoGeneralPrecursor(), tableInfo, schema,
         TargetedMSSchema.ContainerJoinType.GeneralMoleculeFK,
         TargetedMSManager.getTableInfoPrecursorAnnotation(),
-        "PrecursorId", "Precursor Annotations", "precursor");
+        "PrecursorId", "Precursor Annotations", "precursor", omitAnnotations);
 
         setName(tableName);
         // use the description and title column from the specialized TableInfo
@@ -66,18 +66,14 @@ public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
         ExprColumn transitionCountCol = new ExprColumn(this, "TransitionCount", transitionCountSQL, JdbcType.INTEGER);
         addColumn(transitionCountCol);
 
-        // Create a WrappedColumn for Note & Annotations
-        WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
-        noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
+        if (!omitAnnotations)
         {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new AnnotationUIDisplayColumn(colInfo);
-            }
-        });
-        noteAnnotation.setLabel("Precursor Note/Annotations");
-        addColumn(noteAnnotation);
+            // Create a WrappedColumn for Note & Annotations
+            WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
+            noteAnnotation.setDisplayColumnFactory(colInfo -> new AnnotationUIDisplayColumn(colInfo));
+            noteAnnotation.setLabel("Precursor Note/Annotations");
+            addColumn(noteAnnotation);
+        }
     }
 
     public void setRunId(int runId)

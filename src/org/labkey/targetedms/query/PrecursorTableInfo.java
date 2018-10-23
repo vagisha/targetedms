@@ -38,14 +38,14 @@ import java.util.ArrayList;
 
 public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
 {
-    public PrecursorTableInfo(final TargetedMSSchema schema)
+    public PrecursorTableInfo(final TargetedMSSchema schema, boolean omitAnnotations)
     {
-        this(TargetedMSManager.getTableInfoPrecursor(), TargetedMSSchema.TABLE_PRECURSOR, schema);
+        this(TargetedMSManager.getTableInfoPrecursor(), TargetedMSSchema.TABLE_PRECURSOR, schema, omitAnnotations);
     }
 
-    public PrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema)
+    public PrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema, boolean omitAnnotations)
     {
-        super(tableInfo, tableName, schema);
+        super(tableInfo, tableName, schema, omitAnnotations);
 
         ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
         generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE));
@@ -101,7 +101,7 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
     {
         public ExperimentPrecursorTableInfo(final TargetedMSSchema schema)
         {
-            super(TargetedMSManager.getTableInfoPrecursor(), TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR, schema);
+            super(TargetedMSManager.getTableInfoPrecursor(), TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR, schema, false);
         }
 
         @Override
@@ -117,7 +117,7 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
     {
         public LibraryPrecursorTableInfo(final TargetedMSSchema schema)
         {
-            super(TargetedMSManager.getTableInfoPrecursor(), TargetedMSSchema.TABLE_LIBRARY_PRECURSOR, schema);
+            super(TargetedMSManager.getTableInfoPrecursor(), TargetedMSSchema.TABLE_LIBRARY_PRECURSOR, schema, false);
         }
 
         public void selectRepresentative()

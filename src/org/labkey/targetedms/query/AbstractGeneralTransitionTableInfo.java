@@ -28,11 +28,11 @@ import org.labkey.targetedms.TargetedMSSchema;
 
 public class AbstractGeneralTransitionTableInfo extends JoinedTargetedMSTable
 {
-    public AbstractGeneralTransitionTableInfo(final TargetedMSSchema schema, TableInfo tableInfo)
+    public AbstractGeneralTransitionTableInfo(final TargetedMSSchema schema, TableInfo tableInfo, boolean omitAnnotations)
     {
         super(TargetedMSManager.getTableInfoGeneralTransition(), tableInfo,
                 schema, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK,
-                TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations", "transition");
+                TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations", "transition", omitAnnotations);
     }
 
     public void setRunId(int runId)

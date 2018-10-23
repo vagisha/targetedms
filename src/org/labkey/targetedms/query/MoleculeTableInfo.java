@@ -35,22 +35,18 @@ import java.util.List;
 
 public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
 {
-    public MoleculeTableInfo(TargetedMSSchema schema)
+    public MoleculeTableInfo(TargetedMSSchema schema, boolean omitAnnotations)
     {
-        super(schema, TargetedMSManager.getTableInfoMolecule(), "Molecule Annotations");
+        super(schema, TargetedMSManager.getTableInfoMolecule(), "Molecule Annotations", omitAnnotations);
 
-        // Add a WrappedColumn for Note & Annotations
-        WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
-        noteAnnotation.setDisplayColumnFactory(new DisplayColumnFactory()
+        if (!omitAnnotations)
         {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new AnnotationUIDisplayColumn(colInfo);
-            }
-        });
-        noteAnnotation.setLabel("Molecule Note/Annotations");
-        addColumn(noteAnnotation);
+            // Add a WrappedColumn for Note & Annotations
+            WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
+            noteAnnotation.setDisplayColumnFactory(colInfo -> new AnnotationUIDisplayColumn(colInfo));
+            noteAnnotation.setLabel("Molecule Note/Annotations");
+            addColumn(noteAnnotation);
+        }
 
         ColumnInfo peptideGroupId = getColumn("PeptideGroupId");
         peptideGroupId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_GROUP));
