@@ -122,6 +122,7 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.URLHelper;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.DataView;
 import org.labkey.api.view.DetailsView;
 import org.labkey.api.view.GridView;
 import org.labkey.api.view.HttpView;
@@ -5469,6 +5470,7 @@ public class TargetedMSController extends SpringActionController
         {
             DataRegion drg = createNewTargetedMsExperimentDataRegion(form, getViewContext());
             InsertView view = new InsertView(drg, errors);
+            addExperimentViewDependencies(view);
             view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
             view.setInitialValue(SUBMITTER, getUser().getUserId());
             return view;
@@ -5477,7 +5479,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return null;
+            return root.addChild("Create Targeted MS Experiment");
         }
     }
 
@@ -5504,6 +5506,7 @@ public class TargetedMSController extends SpringActionController
 
             DataRegion drg = createNewTargetedMsExperimentDataRegion(form, getViewContext());
             InsertView view = new InsertView(drg, errors);
+            addExperimentViewDependencies(view);
             view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
             if(reshow)
             {
@@ -5615,7 +5618,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
+            return root.addChild("Create Targeted MS Experiment");
         }
     }
 
@@ -5850,13 +5853,7 @@ public class TargetedMSController extends SpringActionController
             ensureCorrectContainer(getContainer(), experimentAnnotations.getContainer(), getViewContext());
 
             UpdateView view = new UpdateView(new ExperimentAnnotationsFormDataRegion(getViewContext(), form, DataRegion.MODE_UPDATE), form, errors);
-            view.addClientDependency(ClientDependency.fromPath("Ext4"));
-            view.addClientDependency(ClientDependency.fromPath(AppProps.getInstance().getScheme() + "://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"));
-            view.addClientDependency(ClientDependency.fromPath("/TargetedMS/css/bootstrap-tagsinput.css"));
-            view.addClientDependency(ClientDependency.fromPath("TargetedMS/js/bootstrap-tagsinput.min.js"));
-            view.addClientDependency(ClientDependency.fromPath("/TargetedMS/css/typeahead-examples.css"));
-            view.addClientDependency(ClientDependency.fromPath("/TargetedMS/js/typeahead.bundle.min.js"));
-            view.addClientDependency(ClientDependency.fromPath("/TargetedMS/js/autocomplete.js"));
+            addExperimentViewDependencies(view);
 
             view.setTitle(TargetedMSExperimentWebPart.WEB_PART_NAME);
             return view;
@@ -5866,6 +5863,17 @@ public class TargetedMSController extends SpringActionController
         {
             return root;
         }
+    }
+
+    private void addExperimentViewDependencies(DataView view)
+    {
+        view.addClientDependency(ClientDependency.fromPath("Ext4"));
+        view.addClientDependency(ClientDependency.fromPath(AppProps.getInstance().getScheme() + "://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"));
+        view.addClientDependency(ClientDependency.fromPath("/TargetedMS/css/bootstrap-tagsinput.css"));
+        view.addClientDependency(ClientDependency.fromPath("TargetedMS/js/bootstrap-tagsinput.min.js"));
+        view.addClientDependency(ClientDependency.fromPath("/TargetedMS/css/typeahead-examples.css"));
+        view.addClientDependency(ClientDependency.fromPath("/TargetedMS/js/typeahead.bundle.min.js"));
+        view.addClientDependency(ClientDependency.fromPath("/TargetedMS/js/autocomplete.js"));
     }
 
     @RequiresPermission(UpdatePermission.class)
@@ -5917,7 +5925,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
+            return root.addChild("Update Targeted MS Experiment");
         }
     }
 
