@@ -53,6 +53,7 @@
                 <columnTitle>DP Predictor</columnTitle>
             </column>
             <column columnName="AnalyteConcentration"/>
+            <column columnName="SampleDilutionFactor"/>
             <column columnName="SampleType"/>
         </columns>
     </table>

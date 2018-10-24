@@ -30,6 +30,7 @@ public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
     private Integer _dpPredictorId;
     private String _sampleType;
     private Double _analyteConcentration;
+    private Double _sampleDilutionFactor;
 
     private List<SampleFile> _sampleFileList;
 
@@ -102,5 +103,15 @@ public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
     public void setAnalyteConcentration(Double analyteConcentration)
     {
         _analyteConcentration = analyteConcentration;
+    }
+
+    public Double getSampleDilutionFactor()
+    {
+        return _sampleDilutionFactor;
+    }
+
+    public void setSampleDilutionFactor(Double sampleDilutionFactor)
+    {
+        _sampleDilutionFactor = sampleDilutionFactor;
     }
 }

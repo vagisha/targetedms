@@ -31,6 +31,7 @@ public class SkylineReplicate extends AnnotatedEntity<ReplicateAnnotation>
     private List<SampleFile> _sampleFileList;
     private String sampleType;
     private Double analyteConcentration;
+    private Double sampleDilutionFactor;
 
     public String getName()
     {
@@ -90,6 +91,16 @@ public class SkylineReplicate extends AnnotatedEntity<ReplicateAnnotation>
     public void setAnalyteConcentration(Double analyteConcentration)
     {
         this.analyteConcentration = analyteConcentration;
+    }
+
+    public Double getSampleDilutionFactor()
+    {
+        return sampleDilutionFactor;
+    }
+
+    public void setSampleDilutionFactor(Double sampleDilutionFactor)
+    {
+        this.sampleDilutionFactor = sampleDilutionFactor;
     }
 }
 

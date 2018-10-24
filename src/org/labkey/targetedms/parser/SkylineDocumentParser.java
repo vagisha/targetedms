@@ -788,6 +788,7 @@ public class SkylineDocumentParser implements AutoCloseable
         replicate.setName(XmlUtil.readRequiredAttribute(reader, "name", REPLICATE));
         replicate.setSampleType(XmlUtil.readAttribute(reader, "sample_type"));
         replicate.setAnalyteConcentration(XmlUtil.readDoubleAttribute(reader, "analyte_concentration"));
+        replicate.setSampleDilutionFactor(XmlUtil.readDoubleAttribute(reader, "sample_dilution_factor"));
 
         List<SampleFile> sampleFileList = new ArrayList<>();
         replicate.setSampleFileList(sampleFileList);
