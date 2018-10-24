@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 import static org.junit.Assert.assertEquals;
+import static org.labkey.test.BaseWebDriverTest.WAIT_FOR_JAVASCRIPT;
 import static org.labkey.test.components.ext4.Checkbox.Ext4Checkbox;
 import static org.labkey.test.components.ext4.Window.Window;
 
@@ -699,9 +700,12 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.XPathLocator scaleCombo = Locator.id("scale-combo-box");
         Locator.XPathLocator dateRangeCombo = Locator.id("daterange-combo-box");
         Locator.XPathLocator metricTypeCombo = Locator.id("metric-type-field");
-        Checkbox groupedXCheckbox = new Checkbox(new LazyWebElement(Locator.css("#grouped-x-field input"), this));
-        Checkbox singlePlotCheckbox = new Checkbox(new LazyWebElement(Locator.css("#peptides-single-plot input"), this));
-        Checkbox showExcludedCheckbox = new Checkbox(new LazyWebElement(Locator.css("#show-excluded-points input"), this));
+        Checkbox groupedXCheckbox = new Checkbox(Locator.css("#grouped-x-field input")
+                .findWhenNeeded(this).withTimeout(WAIT_FOR_JAVASCRIPT));
+        Checkbox singlePlotCheckbox = new Checkbox(Locator.css("#peptides-single-plot input")
+                .findWhenNeeded( this).withTimeout(WAIT_FOR_JAVASCRIPT));
+        Checkbox showExcludedCheckbox = new Checkbox(Locator.css("#show-excluded-points input")
+                .findWhenNeeded(this).withTimeout(WAIT_FOR_JAVASCRIPT));
 
         WebElement plotPanel = new LazyWebElement(Locator.css("div.tiledPlotPanel"), this);
         WebElement paginationPanel = new LazyWebElement(Locator.css("div.plotPaginationHeaderPanel"), this);
