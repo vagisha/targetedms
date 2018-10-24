@@ -372,10 +372,11 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.CUSUMv, true);
         qcPlotsWebPart.waitForPlots(PRECURSORS.length * 4, true);
 
-        qcPlotsWebPart.openLegendPopup();
-        waitForElement(legendPopup);
-        assertElementPresent(qcPlotsWebPart.getLegendPopupItemLocator("CUSUM Group", true));
-        waitAndClick(Locator.tagWithText("span", "Close"));
+        // TODO: Add legend check here. Legends on every graph now not in popup
+//        qcPlotsWebPart.openLegendPopup();
+//        waitForElement(legendPopup);
+//        assertElementPresent(qcPlotsWebPart.getLegendPopupItemLocator("CUSUM Group", true));
+//        waitAndClick(Locator.tagWithText("span", "Close"));
 
         log("Verify Small/Large Plot Size");
         if (!qcPlotsWebPart.isSmallPlotSizeSelected())

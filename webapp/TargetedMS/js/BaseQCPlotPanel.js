@@ -201,61 +201,56 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
 
     preprocessPlotData: function(plotDataRows, hasMR, hasCUSUMm, hasCUSUMv, isLogScale) {
         var plotDataMap = {};
-        for (var i = 0; i < plotDataRows.length; i++)
-        {
-            var row = plotDataRows[i];
-            if (!plotDataMap[row['SeriesLabel']])
-            {
-                plotDataMap[row['SeriesLabel']] = {
-                    Series: {}
-                };
-            }
-            if (!plotDataMap[row['SeriesLabel']].Series[row['SeriesType']])
-            {
-                plotDataMap[row['SeriesLabel']].Series[row['SeriesType']] = {
-                    Rows: [],
-                    MetricValues: []
-                };
-            }
-            plotDataMap[row['SeriesLabel']].Series[row['SeriesType']].MetricValues.push(row.MetricValue);
-            plotDataMap[row['SeriesLabel']].Series[row['SeriesType']].Rows.push(row);
-        }
 
-        if (hasMR || hasCUSUMm || hasCUSUMv)
-        {
-            Ext4.iterate(plotDataMap, function(seriesLabel, seriesVal){
-                Ext4.iterate(seriesVal.Series, function(seriesType, seriesTypeObj){
-                    var mRs, positiveCUSUMm, negativeCUSUMm, positiveCUSUMv, negativeCUSUMv, metricVals = seriesTypeObj.MetricValues;
-                    if (hasMR)
-                        mRs = LABKEY.vis.Stat.getMovingRanges(metricVals, isLogScale);
-                    if (hasCUSUMm)
-                    {
-                        positiveCUSUMm = LABKEY.vis.Stat.getCUSUM(metricVals, false, false, isLogScale);
-                        negativeCUSUMm = LABKEY.vis.Stat.getCUSUM(metricVals, true, false, isLogScale);
-                    }
-                    if (hasCUSUMv)
-                    {
-                        positiveCUSUMv = LABKEY.vis.Stat.getCUSUM(metricVals, false, true, isLogScale);
-                        negativeCUSUMv = LABKEY.vis.Stat.getCUSUM(metricVals, true, true, isLogScale);
-                    }
-                    for (var i = 0; i < seriesTypeObj.Rows.length; i++)
-                    {
-                        var row = seriesTypeObj.Rows[i];
+        if (plotDataRows) {
+            for (var i = 0; i < plotDataRows.length; i++) {
+                var row = plotDataRows[i];
+                if (!plotDataMap[row['SeriesLabel']]) {
+                    plotDataMap[row['SeriesLabel']] = {
+                        Series: {}
+                    };
+                }
+                if (!plotDataMap[row['SeriesLabel']].Series[row['SeriesType']]) {
+                    plotDataMap[row['SeriesLabel']].Series[row['SeriesType']] = {
+                        Rows: [],
+                        MetricValues: []
+                    };
+                }
+                plotDataMap[row['SeriesLabel']].Series[row['SeriesType']].MetricValues.push(row.MetricValue);
+                plotDataMap[row['SeriesLabel']].Series[row['SeriesType']].Rows.push(row);
+            }
+
+            if (hasMR || hasCUSUMm || hasCUSUMv) {
+                Ext4.iterate(plotDataMap, function (seriesLabel, seriesVal) {
+                    Ext4.iterate(seriesVal.Series, function (seriesType, seriesTypeObj) {
+                        var mRs, positiveCUSUMm, negativeCUSUMm, positiveCUSUMv, negativeCUSUMv,
+                                metricVals = seriesTypeObj.MetricValues;
                         if (hasMR)
-                            row['MR'] = mRs[i];
-                        if (hasCUSUMm)
-                        {
-                            row['CUSUMmP'] = positiveCUSUMm[i];
-                            row['CUSUMmN'] = negativeCUSUMm[i];
+                            mRs = LABKEY.vis.Stat.getMovingRanges(metricVals, isLogScale);
+                        if (hasCUSUMm) {
+                            positiveCUSUMm = LABKEY.vis.Stat.getCUSUM(metricVals, false, false, isLogScale);
+                            negativeCUSUMm = LABKEY.vis.Stat.getCUSUM(metricVals, true, false, isLogScale);
                         }
-                        if (hasCUSUMv)
-                        {
-                            row['CUSUMvP'] = positiveCUSUMv[i];
-                            row['CUSUMvN'] = negativeCUSUMv[i];
+                        if (hasCUSUMv) {
+                            positiveCUSUMv = LABKEY.vis.Stat.getCUSUM(metricVals, false, true, isLogScale);
+                            negativeCUSUMv = LABKEY.vis.Stat.getCUSUM(metricVals, true, true, isLogScale);
                         }
-                    }
-                }, this)
-            }, this);
+                        for (var i = 0; i < seriesTypeObj.Rows.length; i++) {
+                            var row = seriesTypeObj.Rows[i];
+                            if (hasMR)
+                                row['MR'] = mRs[i];
+                            if (hasCUSUMm) {
+                                row['CUSUMmP'] = positiveCUSUMm[i];
+                                row['CUSUMmN'] = negativeCUSUMm[i];
+                            }
+                            if (hasCUSUMv) {
+                                row['CUSUMvP'] = positiveCUSUMv[i];
+                                row['CUSUMvN'] = negativeCUSUMv[i];
+                            }
+                        }
+                    }, this)
+                }, this);
+            }
         }
         return plotDataMap;
     },
