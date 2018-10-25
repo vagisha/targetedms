@@ -120,36 +120,11 @@ public class TargetedMSImportPipelineJob extends PipelineJob
             TargetedMSImportPipelineJob copyJob2 = (TargetedMSImportPipelineJob)job2;
             if (!this._representative.equals(copyJob2._representative))
                 errors.add("_representative");
-//            if (!this._expData.equals(copyJob2._expData))
-//                errors.add("_expData");
-//            if (!this._runInfo.equals(copyJob2._runInfo))
-//                errors.add("_runInfo");
         }
         else
         {
             errors.add("Expected job2 to be TargetedMSImportPipelineJob");
         }
         return errors;
-    }
-
-    public static class TestCase extends PipelineJob.TestSerialization
-    {
-        private static Logger LOG = Logger.getLogger(TargetedMSImportPipelineJob.class);
-
-        @Test
-        public void testSerialize()
-        {                                       // TODO: Difficult to dummy this up enough. Maybe don't need since we're deserializing all jobs
-/*            User user = TestContext.get().getUser();
-            Container container = ContainerManager.getRoot();
-            PipeRoot pipeRoot = PipelineService.get().getPipelineRootSetting(container);
-            TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
-            ExpData expData = ExperimentService.get().createData(container, new DataType("dummy"));           // TODO: need actual data in table
-            SkylineDocImporter importer = new SkylineDocImporter(user, container, "dummy", expData, null, null, representative, null, null);
-            SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
-            ViewBackgroundInfo info = new ViewBackgroundInfo(container, user, null);
-            TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, expData, runInfo, pipeRoot, representative);
-            job.getActionSet().add(new RecordedAction("foo"));
-            testSerialize(job, LOG);     */
-        }
     }
 }
