@@ -598,7 +598,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     isValidQCPlotType: function(plotType)
     {
         var valid = false;
-        Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypes, function(type){
+        Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesWithYOptions.concat(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesWithoutYOptions), function(type){
             if (plotType == type)
             {
                 valid = true;

@@ -52,6 +52,9 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.CUSUMm;
+import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.LeveyJennings;
+import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.MovingRange;
 
 @Category({DailyB.class, MS2.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 28)
@@ -280,8 +283,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         // test plot type selection persistence
         qcPlotsWebPart.checkAllPlotTypes(false);
         List<QCPlotsWebPart.QCPlotType> selectedPlotTypes = new ArrayList<>();
-        selectedPlotTypes.add(QCPlotsWebPart.QCPlotType.MovingRange);
-        selectedPlotTypes.add(QCPlotsWebPart.QCPlotType.CUSUMm);
+        selectedPlotTypes.add(MovingRange);
+        selectedPlotTypes.add(CUSUMm);
         qcPlotsWebPart.checkPlotType(selectedPlotTypes.get(0), true);
         qcPlotsWebPart.checkPlotType(selectedPlotTypes.get(1), true);
         qcPlotsWebPart.chooseSmallPlotSize(false);
@@ -354,11 +357,11 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         log("Verify Plot Types and Legends");
         qcPlotsWebPart.checkAllPlotTypes(false);
-        qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.LeveyJennings, true);
+        qcPlotsWebPart.checkPlotType(LeveyJennings, true);
         qcPlotsWebPart.waitForPlots(PRECURSORS.length, true);
         assertFalse("Plot Size should be disabled with less than 2 plot types selected", qcPlotsWebPart.isPlotSizeRadioEnabled());
 
-        qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.MovingRange, true);
+        qcPlotsWebPart.checkPlotType(MovingRange, true);
         qcPlotsWebPart.waitForPlots(PRECURSORS.length * 2, true);
         assertTrue("Plot Size should be enabled with at least 2 plot types selected", qcPlotsWebPart.isPlotSizeRadioEnabled());
 
@@ -368,7 +371,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 //        assertElementNotPresent(qcPlotsWebPart.getLegendPopupItemLocator("CUSUM Group", true));
 //        waitAndClick(Locator.tagWithText("span", "Close"));
 
-        qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.CUSUMm, true);
+        qcPlotsWebPart.checkPlotType(CUSUMm, true);
         qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.CUSUMv, true);
         qcPlotsWebPart.waitForPlots(PRECURSORS.length * 4, true);
 
@@ -431,10 +434,17 @@ public class TargetedMSQCTest extends TargetedMSTest
     {
         log("Test plot type " + plotType.getLongLabel());
 
-        String yLeftColor = "#66C2A5";
-        String yRightColor = "#FC8D62";
+        String yLeftColor = "#A6D854";
+        String yRightColor = "#FFD92F";
+
+        if (plotType == LeveyJennings || plotType == MovingRange)
+        {
+            yLeftColor = "#8DA0CB";
+            yRightColor = "#E78AC3";
+        }
+
         int pointsPerSeries = 47;
-        if (plotType == QCPlotsWebPart.QCPlotType.CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
+        if (plotType == CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
             pointsPerSeries *= 2;
 
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
@@ -458,7 +468,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Change", false), 4);
         assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Transition Area", true));
         assertElementPresent(qcPlotsWebPart.getLegendItemLocator("Precursor Area", true));
-        if (plotType == QCPlotsWebPart.QCPlotType.CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
+        if (plotType == CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
             assertElementPresent(qcPlotsWebPart.getLegendItemLocator("CUSUM Group", true));
         for (String precursor : PRECURSORS)
         {
@@ -634,7 +644,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         log("Testing combined plot for " + plotType.getLongLabel());
         int count;
         int expectedNumPointsPerSeries = 47;
-        if (plotType == QCPlotsWebPart.QCPlotType.CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
+        if (plotType == CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
             expectedNumPointsPerSeries *= 2;
 
         String[] legendItemColors = new String[]{"#66C2A5", "#FC8D62", "#8DA0CB", "#E78AC3", "#A6D854", "#FFD92F", "#E5C494"};

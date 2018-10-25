@@ -103,7 +103,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         goToProjectHome();
         goToFolderManagement();
         clickAndWait(Locator.linkWithText("Module Properties"));
-        setFormElement(Locator.xpath("(//div[contains(@class, 'x4-panel-body')]//input[@type='text'])[4]"), timeOutLength);
+        setFormElement(Locator.xpath("(//div[contains(@class, 'x4-panel-body')]//input[@type='text'])[8]"), timeOutLength);
         clickButton("Save Changes", 0);
         Window success = Window(getDriver()).withTitle("Success").waitFor();
         success.clickButton("OK", true);

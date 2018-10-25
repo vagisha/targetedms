@@ -595,7 +595,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                             if (!processedMetricGuides[metric] || !processedMetricGuides[metric][guideSetId] || !processedMetricGuides[metric][guideSetId].Series)
                                 return;
 
-                            var controlRange = processedMetricGuides[metric][guideSetId].Series[peptide];
+                            var controlRange = processedMetricGuides[metric][guideSetId].Series[peptide].avgMR;
                             if (data.MR > LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
                             {
                                 var sampleFile = data.SampleFile;
