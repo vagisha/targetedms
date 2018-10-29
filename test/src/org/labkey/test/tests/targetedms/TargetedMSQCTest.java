@@ -221,17 +221,30 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
         qcPlotsWebPart.setGroupXAxisValuesByDate(false);
 
-        // test that plot0 changes based on scale (log/linear)
+        // test that plot0 changes based on scale
         for (QCPlotsWebPart.Scale scale : QCPlotsWebPart.Scale.values())
         {
             if (scale != qcPlotsWebPart.getCurrentScale())
             {
                 initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
                 qcPlotsWebPart.setScale(scale);
-                assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
+                String svgPlotText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
+                assertFalse(svgPlotText.isEmpty());
+                assertFalse(initialSVGText.equals(svgPlotText));
             }
         }
         qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LINEAR);
+
+        // test that plot0_plotType_1 (CUSUMm) does not change from linear
+        qcPlotsWebPart.checkPlotType(CUSUMm, true);
+        qcPlotsWebPart.waitForPlots(2, true);
+        initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0_plotType_1");
+        qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LOG);
+        assertTrue(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0_plotType_1")));
+        qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.PERCENT_OF_MEAN);
+        assertTrue(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0_plotType_1")));
+        qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.STANDARD_DEVIATIONS);
+        assertTrue(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0_plotType_1")));
 
         // test that plot0 changes based on metric type
         for (QCPlotsWebPart.MetricType type : QCPlotsWebPart.MetricType.values())
@@ -259,7 +272,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         // change all of the plot input fields and filter to a single date
         String testDateStr = "2013-08-20";
         qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.PEAK);
-        qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LOG);
+        qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.PERCENT_OF_MEAN);
         qcPlotsWebPart.setGroupXAxisValuesByDate(true);
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(true, 1);
         qcPlotsWebPart.filterQCPlots(testDateStr, testDateStr, 1);
@@ -271,7 +284,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.waitForPlots(1, true);
         assertEquals("Metric Type not round tripped as expected", QCPlotsWebPart.MetricType.PEAK, qcPlotsWebPart.getCurrentMetricType());
-        assertEquals("Y-Axis Scale not round tripped as expected", QCPlotsWebPart.Scale.LOG, qcPlotsWebPart.getCurrentScale());
+        assertEquals("Y-Axis Scale not round tripped as expected", QCPlotsWebPart.Scale.PERCENT_OF_MEAN, qcPlotsWebPart.getCurrentScale());
         assertTrue("Group X-Axis not round tripped as expected", qcPlotsWebPart.isGroupXAxisValuesByDateChecked());
         assertTrue("Show All Peptides not round tripped as expected", qcPlotsWebPart.isShowAllPeptidesInSinglePlotChecked());
         assertEquals("Date Range Offset not round tripped as expected", QCPlotsWebPart.DateRangeOffset.CUSTOM, qcPlotsWebPart.getCurrentDateRangeOffset());
@@ -351,7 +364,6 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testQCPlotType()
     {
-        Locator.CssLocator legendPopup = Locator.css(".headerlegendpopup svg g.legend-item");
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
 
@@ -365,21 +377,13 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.waitForPlots(PRECURSORS.length * 2, true);
         assertTrue("Plot Size should be enabled with at least 2 plot types selected", qcPlotsWebPart.isPlotSizeRadioEnabled());
 
-        // TODO: Add legend check here. Legends on every graph now not in popup
-//        qcPlotsWebPart.openLegendPopup();
-//        waitForElement(legendPopup);
-//        assertElementNotPresent(qcPlotsWebPart.getLegendPopupItemLocator("CUSUM Group", true));
-//        waitAndClick(Locator.tagWithText("span", "Close"));
+        assertElementNotPresent(qcPlotsWebPart.getLegendItemLocator("CUSUM Group", true));
 
         qcPlotsWebPart.checkPlotType(CUSUMm, true);
         qcPlotsWebPart.checkPlotType(QCPlotsWebPart.QCPlotType.CUSUMv, true);
         qcPlotsWebPart.waitForPlots(PRECURSORS.length * 4, true);
 
-        // TODO: Add legend check here. Legends on every graph now not in popup
-//        qcPlotsWebPart.openLegendPopup();
-//        waitForElement(legendPopup);
-//        assertElementPresent(qcPlotsWebPart.getLegendPopupItemLocator("CUSUM Group", true));
-//        waitAndClick(Locator.tagWithText("span", "Close"));
+        assertElementPresent(qcPlotsWebPart.getLegendItemLocator("CUSUM Group", true));
 
         log("Verify Small/Large Plot Size");
         if (!qcPlotsWebPart.isSmallPlotSizeSelected())

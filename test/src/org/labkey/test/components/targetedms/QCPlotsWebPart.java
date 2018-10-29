@@ -61,7 +61,9 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
     public enum Scale
     {
         LINEAR("Linear"),
-        LOG("Log");
+        LOG("Log"),
+        PERCENT_OF_MEAN("Percent of Mean"),
+        STANDARD_DEVIATIONS("Standard Deviations");
 
         private String _text;
 
