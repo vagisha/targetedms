@@ -74,11 +74,11 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                         + (includeSeries2 ? this.includeAllValuesSql(schema2Name, query2Name, 'series2', exclusionWhereSQL) : '')));
     },
 
-    metricGuideSetRawSql : function(id, schema1Name, query1Name, schema2Name, query2Name, includeAllValues)
+    metricGuideSetRawSql : function(id, schema1Name, query1Name, schema2Name, query2Name, includeAllValues, series)
     {
             var includeSeries2 = Ext4.isDefined(schema2Name) && Ext4.isDefined(query2Name),
             selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel, MetricValue',
-            series1SQL = 'SELECT \'series1\' AS SeriesType, ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
+            series1SQL = 'SELECT \'' + (series ? series : 'series1') + '\' AS SeriesType, ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
             series2SQL = !includeSeries2 ? '' : ' UNION SELECT \'series2\' AS SeriesType, ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name,
             exclusionWhereSQL = this.getExclusionWhereSql(id);
 
@@ -444,10 +444,10 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         });
     },
 
-    getSingleMetricGuideSetRawSql: function(metricId, metricType, schemaName, queryName)
+    getSingleMetricGuideSetRawSql: function(metricId, metricType, schemaName, queryName, series)
     {
         var guideSetSql = "SELECT s.*, g.Comment, '" +  metricType + "' AS MetricType FROM (";
-        guideSetSql += this.metricGuideSetRawSql(metricId, schemaName, queryName, undefined, undefined, false);
+        guideSetSql += this.metricGuideSetRawSql(metricId, schemaName, queryName, undefined, undefined, false, series);
         guideSetSql +=  ") s"
                 + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
         return guideSetSql;
@@ -505,13 +505,13 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 label = metricType.series1Label,
                 metricProps = this.getMetricPropsById(id);
 
-            sql += sep + '(' + this.getSingleMetricGuideSetRawSql(id, label, metricProps.series1SchemaName, metricProps.series1QueryName) + ')';
+            sql += sep + '(' + this.getSingleMetricGuideSetRawSql(id, label, metricProps.series1SchemaName, metricProps.series1QueryName, 'series1') + ')';
             sep = "\nUNION\n";
 
             if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
             {
                 label = metricType.series2Label;
-                sql += sep + '(' + this.getSingleMetricGuideSetRawSql(id, label, metricProps.series2SchemaName, metricProps.series2QueryName) + ')';
+                sql += sep + '(' + this.getSingleMetricGuideSetRawSql(id, label, metricProps.series2SchemaName, metricProps.series2QueryName, 'series2') + ')';
             }
         }, this);
 
@@ -575,11 +575,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                         if (!seriesVal)
                             return;
 
-                        var dataRows;
-                        if (seriesVal)
-                            dataRows = seriesVal.Rows;
-                        else
-                            return;
+                        var dataRows = seriesVal.Rows;
 
                         if (CUSUMm) {
                             Ext4.each(dataRows, function (data) {
