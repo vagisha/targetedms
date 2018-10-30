@@ -123,30 +123,30 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
         {
             if (this.isMultiSeries())
             {
-                data['CUSUMmN_' + seriesType] = row['CUSUMmN'];
+                data['CUSUMmN_' + seriesType] = this.formatValue(row['CUSUMmN']);
                 data['CUSUMmN_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                data['CUSUMmP_' + seriesType] = row['CUSUMmP'];
+                data['CUSUMmP_' + seriesType] = this.formatValue(row['CUSUMmP']);
                 data['CUSUMmP_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
             }
             else
             {
-                data['CUSUMmN'] = row['CUSUMmN'];
-                data['CUSUMmP'] = row['CUSUMmP'];
+                data['CUSUMmN'] = this.formatValue(row['CUSUMmN']);
+                data['CUSUMmP'] = this.formatValue(row['CUSUMmP']);
             }
         }
         else
         {
             if (this.isMultiSeries())
             {
-                data['CUSUMvP_' + seriesType] = row['CUSUMvP'];
+                data['CUSUMvP_' + seriesType] = this.formatValue(row['CUSUMvP']);
                 data['CUSUMvP_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
-                data['CUSUMvN_' + seriesType] = row['CUSUMvN'];
+                data['CUSUMvN_' + seriesType] = this.formatValue(row['CUSUMvN']);
                 data['CUSUMvN_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
             }
             else
             {
-                data['CUSUMvP'] = row['CUSUMvP'];
-                data['CUSUMvN'] = row['CUSUMvN'];
+                data['CUSUMvP'] = this.formatValue(row['CUSUMvP']);
+                data['CUSUMvN'] = this.formatValue(row['CUSUMvN']);
             }
         }
         return data;

@@ -94,12 +94,12 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
 
         if (this.isMultiSeries())
         {
-            data['MR_' + seriesType] = row['MR'];
+            data['MR_' + seriesType] = this.formatValue(row['MR']);
             data['MR_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
         }
         else
         {
-            data['MR'] = row['MR'];
+            data['MR'] = this.formatValue(row['MR']);
         }
         return data;
     },

@@ -646,6 +646,10 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             }, this);
         }, this);
         return transformedOutliers;
+    },
+
+    formatValue(value) {
+        return Math.round(value * 10000) / 10000;
     }
 });
 
