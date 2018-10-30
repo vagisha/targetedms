@@ -248,7 +248,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             fullDate: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime']), true) : null,
             date: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
             groupedXTick: row['AcquiredTime'] ? this.formatDate(new Date(row['AcquiredTime'])) : null,
-            dataType: dataType //needed for plot point click handler
+            dataType: dataType, //needed for plot point click handler
+            SeriesType: row['SeriesType']
         };
 
         // if a guideSetId is defined for this row, include the guide set stats values in the data object

@@ -23,35 +23,41 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
         Ext4.each(data.rows, function(row) {
             var guideSetId = row['GuideSetId'];
             var seriesLabel = row['SeriesLabel'];
+            var seriesType = row['SeriesType'];
             if (guideSetId) {
                 if (!this.guideSetDataMap[guideSetId]) {
                     this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
                     this.hasGuideSetData = true;
                 }
+
                 if (!this.guideSetDataMap[guideSetId].Series[seriesLabel]) {
-                    this.guideSetDataMap[guideSetId].Series[seriesLabel] = {
-                        NumRecords: row['NumRecords'],
-                        Mean: row['Mean'],
-                        StandardDev: row['StandardDev']
-                    };
+                    this.guideSetDataMap[guideSetId].Series[seriesLabel] = {};
                 }
+
+                this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType] = {
+                    NumRecords: row['NumRecords'],
+                    Mean: row['Mean'],
+                    StandardDev: row['StandardDev']
+                };
             }
             else {
-                if (this.defaultGuideSet[seriesLabel] !== undefined) {
-                    this.defaultGuideSet[seriesLabel].LJ = {
-                        NumRecords: row['NumRecords'],
-                        Mean: row['Mean'],
-                        StdDev: row['StandardDev']
-                    };
+                if (!this.defaultGuideSet) {
+                    this.defaultGuideSet = {};
                 }
-                else {
-                    this.defaultGuideSet[seriesLabel] = {LJ:
-                        {
-                            NumRecords: row['NumRecords'],
-                            Mean: row['Mean'],
-                            StdDev: row['StandardDev']
-                        }};
+
+                if (!this.defaultGuideSet[seriesLabel]) {
+                    this.defaultGuideSet[seriesLabel] = {};
                 }
+
+                if (!this.defaultGuideSet[seriesLabel][seriesType]) {
+                    this.defaultGuideSet[seriesLabel][seriesType] = {};
+                }
+
+                this.defaultGuideSet[seriesLabel][seriesType].LJ = {
+                    NumRecords: row['NumRecords'],
+                    Mean: row['Mean'],
+                    StdDev: row['StandardDev']
+                };
             }
         }, this);
 
@@ -155,10 +161,10 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
         if (Ext4.isDefined(row['GuideSetId']))
         {
             var gs = this.guideSetDataMap[row['GuideSetId']];
-            if (Ext4.isDefined(gs) && gs.Series[fragment])
+            if (Ext4.isDefined(gs) && gs.Series[fragment]&& gs.Series[fragment][seriesType])
             {
-                data['mean'] = gs.Series[fragment]['Mean'];
-                data['stdDev'] = gs.Series[fragment]['StandardDev'];
+                data['mean'] = gs.Series[fragment][seriesType]['Mean'];
+                data['stdDev'] = gs.Series[fragment][seriesType]['StandardDev'];
             }
         }
 
@@ -185,6 +191,8 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
         {
             combinePlotData.max = precursorInfo.max;
         }
+
+        combinePlotData.fragment = precursorInfo.fragment;
     },
 
     getLJCombinedPlotLegendSeries: function()
@@ -218,7 +226,7 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
             ljLegend.push({
                 text: 'Mean',
                 color: 'darkgrey',
-                shape: LABKEY.vis.TrendingLineShape.stdDevLJ
+                shape: LABKEY.vis.TrendingLineShape.meanLJ
             });
         }
         return ljLegend;

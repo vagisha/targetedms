@@ -1395,7 +1395,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     placement: 'top',
                     xOffset: shiftLeft ? -428 : -53,
                     arrowOffset: shiftLeft ? 410 : 35,
-                    yOffset: me.canUserEdit() ? -275 : -170,
+                    yOffset: me.canUserEdit() ? -375 : -270,
                     target: point,
                     content: '<div id="' + contentDivId + '"></div>',
                     onShow: function() {
@@ -1542,7 +1542,15 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 return true; // continue
             }
 
-            var gs = {GuideSetId: guideSetId};
+            var seriesTypes = [];
+            for (var series in guideSetData.Series[precursorInfo.fragment]) {
+                if (guideSetData.Series[precursorInfo.fragment].hasOwnProperty(series)) {
+                    seriesTypes.push(series);
+                }
+            }
+
+            var gs = {GuideSetId: guideSetId,
+                      series: seriesTypes[0]};
             for (var j = 0; j < precursorInfo.data.length; j++)
             {
                 // only use data points that match the GuideSet RowId and are in the training set range
@@ -1585,7 +1593,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
             guideSetTrainingRange.append("title").text(function (d) {
                 var guideSetInfo = me.guideSetDataMap[d.GuideSetId],
-                    seriesGuideSetInfo = guideSetInfo.Series[precursorInfo.fragment],
+                    seriesGuideSetInfo = guideSetInfo.Series[precursorInfo.fragment][d.series],
                     numRecs = seriesGuideSetInfo ? seriesGuideSetInfo.NumRecords : 0,
                     showGuideSetStats = !me.singlePlot && numRecs > 0,
                     mean, stdDev, percentCV;

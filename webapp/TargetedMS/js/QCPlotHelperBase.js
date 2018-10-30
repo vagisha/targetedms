@@ -111,36 +111,43 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             }
 
             var seriesLabel = row['SeriesLabel'];
+            var seriesType = row['SeriesType'];
             if (guideSetId == null) {
-                if (this.defaultGuideSet && this.defaultGuideSet[seriesLabel] !== undefined) {
-                    this.defaultGuideSet[seriesLabel].MR = {
-                        Mean: guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR,
-                        StdDev: guideSetAvgMRs[guideSetId].Series[seriesLabel].stddevMR
+
+                if (!this.defaultGuideSet) {
+                    this.defaultGuideSet = {};
+                }
+
+                if (!this.defaultGuideSet[seriesLabel]) {
+                    this.defaultGuideSet[seriesLabel] = {};
+                }
+
+                if (!this.defaultGuideSet[seriesLabel][seriesType]) {
+                    this.defaultGuideSet[seriesLabel][seriesType] = {};
+                }
+
+                this.defaultGuideSet[seriesLabel][seriesType].MR =
+                        {
+                            Mean: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].avgMR,
+                            StdDev: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].stddevMR
+                        };
+
+            }
+            else {
+                if (!this.guideSetDataMap[guideSetId].Series[seriesLabel]) {
+                    this.guideSetDataMap[guideSetId].Series[seriesLabel] = {};
+                }
+
+                if (!this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType]) {
+                    this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType] = {
+                        MeanMR: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].avgMR,
+                        StdDevMR: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].stddevMR
                     };
                 }
                 else {
-                    if (!this.defaultGuideSet) {
-                        this.defaultGuideSet = {};
-                    }
-                    this.defaultGuideSet[seriesLabel] = {MR:
-                                {
-                                    Mean: guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR,
-                                    StdDev: guideSetAvgMRs[guideSetId].Series[seriesLabel].stddevMR
-                                }
-                            };
+                    this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType].MeanMR = guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].avgMR;
+                    this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType].StdDevMR = guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].stddevMR;
                 }
-            }
-
-            if (!this.guideSetDataMap[guideSetId].Series[seriesLabel])
-            {
-                this.guideSetDataMap[guideSetId].Series[seriesLabel] = {
-                    MeanMR: guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR,
-                    StdDevMR: guideSetAvgMRs[guideSetId].Series[seriesLabel].stddevMR
-                };
-            }
-            else {
-                this.guideSetDataMap[guideSetId].Series[seriesLabel].MeanMR = guideSetAvgMRs[guideSetId].Series[seriesLabel].avgMR;
-                this.guideSetDataMap[guideSetId].Series[seriesLabel].StdDevMR = guideSetAvgMRs[guideSetId].Series[seriesLabel].stddevMR;
             }
         }, this);
 
@@ -612,7 +619,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             mouseOverFn: this.plotPointHover,
             mouseOverFnScope: this,
             position: this.groupedX ? 'jitter' : undefined,
-            disableRangeDisplay: this.isMultiSeries() || !this.hasGuideSetData
+            disableRangeDisplay: this.isMultiSeries()
         };
 
         Ext4.apply(trendLineProps, this.getPlotTypeProperties(precursorInfo, plotType, isCUSUMMean));
@@ -660,7 +667,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     value: mainTitle
                 },
                 subtitle: {
-                    value: this.precursors[precursorIndex],
+                    value: this.precursors[precursorIndex] + '-' + this.getMetricPropsById(this.metric).series1Label,
                     color: '#555555',
                     visibility: 'hidden'
                 },
@@ -706,7 +713,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         this.addGuideSetTrainingRangeToPlot(plot, precursorInfo);
 
         var extraMargin = this.showInPlotLegends() ? 0 : 10 * this.longestLegendText;
-        this.attachPlotExportIcons(id, mainTitle + '-' + this.precursors[precursorIndex], plotIndex, this.getPlotWidth(), extraMargin);
+        this.attachPlotExportIcons(id, mainTitle + '-' + this.precursors[precursorIndex] + '-' + this.getMetricPropsById(this.metric).series1Label, plotIndex, this.getPlotWidth(), extraMargin);
     },
 
     // empty legend to reserve plot space for plot alignment

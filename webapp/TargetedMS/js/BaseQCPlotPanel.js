@@ -45,42 +45,45 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             + '(SELECT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = ' + metricId + ')';
     },
 
+    includeAllValuesSql : function(schema, table, series, exclusion) {
+        return '\nUNION'
+                + '\nSELECT NULL AS GuideSetId, MIN(SampleFileId.AcquiredTime) AS TrainingStart, MAX(SampleFileId.AcquiredTime) AS TrainingEnd,'
+                + '\nNULL AS ReferenceEnd, SeriesLabel, \'' + series + '\' AS SeriesType, COUNT(SampleFileId) AS NumRecords, AVG(MetricValue) AS Mean, STDDEV(MetricValue) AS StandardDev'
+                + '\nFROM '+ schema + '.' + table
+                + exclusion
+                + '\nGROUP BY SeriesLabel';
+    },
+
     metricGuideSetSql : function(id, schema1Name, query1Name, schema2Name, query2Name, includeAllValues)
     {
-        var includeCalc = !Ext4.isDefined(schema2Name) && !Ext4.isDefined(query2Name),
-            selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel' + (includeCalc ? ', MetricValue' : ''),
-            series1SQL = 'SELECT ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
-            series2SQL = includeCalc ? '' : ' UNION SELECT ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name,
+            var includeSeries2 = Ext4.isDefined(schema2Name) && Ext4.isDefined(query2Name),
+            selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel, MetricValue',
+            series1SQL = 'SELECT \'series1\' AS SeriesType, ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
+            series2SQL = !includeSeries2 ? '' : ' UNION SELECT \'series2\' AS SeriesType, ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name,
             exclusionWhereSQL = this.getExclusionWhereSql(id);
 
-        return 'SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, '
+        return 'SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.SeriesType, '
             + '\nCOUNT(p.SampleFileId) AS NumRecords, '
-            + '\n' + (includeCalc ? 'AVG(p.MetricValue)' : 'NULL') + ' AS Mean, '
-            + '\n' + (includeCalc ? 'STDDEV(p.MetricValue)' : 'NULL') + ' AS StandardDev '
+            + '\nAVG(p.MetricValue) AS Mean, '
+            + '\nSTDDEV(p.MetricValue) AS StandardDev '
             + '\nFROM guideset gs'
             + '\nLEFT JOIN (' + series1SQL + series2SQL + exclusionWhereSQL + ') as p'
             + '\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd'
-            + '\nGROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel'
-            + (!includeAllValues ? '' : ('\nUNION'
-            + '\nSELECT NULL AS GuideSetId, MIN(SampleFileId.AcquiredTime) AS TrainingStart, MAX(SampleFileId.AcquiredTime) AS TrainingEnd,'
-            + '\nNULL AS ReferenceEnd, SeriesLabel, COUNT(SampleFileId) AS NumRecords, AVG(MetricValue) AS Mean, STDDEV(MetricValue) AS StandardDev'
-            + '\nFROM '+ schema1Name + '.' + query1Name
-            + exclusionWhereSQL
-            + '\nGROUP BY SeriesLabel'))
-            ;
+            + '\nGROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.SeriesType'
+            + (!includeAllValues ? '' : (this.includeAllValuesSql(schema1Name, query1Name, 'series1', exclusionWhereSQL)
+                        + (includeSeries2 ? this.includeAllValuesSql(schema2Name, query2Name, 'series2', exclusionWhereSQL) : '')));
     },
 
     metricGuideSetRawSql : function(id, schema1Name, query1Name, schema2Name, query2Name, includeAllValues)
     {
-        var includeCalc = !Ext4.isDefined(schema2Name) && !Ext4.isDefined(query2Name),
-            selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel' + (includeCalc ? ', MetricValue' : ''),
-            series1SQL = 'SELECT ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
-            series2SQL = includeCalc ? '' : ' UNION SELECT ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name,
+            var includeSeries2 = Ext4.isDefined(schema2Name) && Ext4.isDefined(query2Name),
+            selectCols = 'SampleFileId, SampleFileId.AcquiredTime, SeriesLabel, MetricValue',
+            series1SQL = 'SELECT \'series1\' AS SeriesType, ' + selectCols + ' FROM '+ schema1Name + '.' + query1Name,
+            series2SQL = !includeSeries2 ? '' : ' UNION SELECT \'series2\' AS SeriesType, ' + selectCols + ' FROM '+ schema2Name + '.' + query2Name,
             exclusionWhereSQL = this.getExclusionWhereSql(id);
 
-        return 'SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.AcquiredTime ' + (includeCalc ? ', p.MetricValue' : '')
+        return 'SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.AcquiredTime, p.MetricValue, p.SeriesType'
                 + '\nFROM guideset gs'
-                // + '\nLEFT JOIN (' + series1SQL + series2SQL + exclusionWhereSQL + ') as p'
                 + (includeAllValues ? '\nFULL' : '\nLEFT') + ' JOIN (' + series1SQL + series2SQL + exclusionWhereSQL + ') as p'
                 + '\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd'
                 + '\n ORDER BY GuideSetId, p.SeriesLabel, p.AcquiredTime'; //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR
@@ -129,35 +132,54 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         var movingRangeMap = {}, guideSetDataMap = {};
         Ext4.each(data, function(row) {
             var guideSetId = row['GuideSetId'];
-            if (!guideSetDataMap[guideSetId])
-            {
-                guideSetDataMap[guideSetId] = {
-                    Series: {}
-                };
+            var seriesLabel = row['SeriesLabel'];
+            var seriesType = row['SeriesType'];
+
+            if (!guideSetDataMap[guideSetId]) {
+                guideSetDataMap[guideSetId] = {};
             }
 
-            var seriesLabel = row['SeriesLabel'];
-            if (!guideSetDataMap[guideSetId].Series[seriesLabel])
+            if (!guideSetDataMap[guideSetId].Series) {
+                guideSetDataMap[guideSetId].Series = {};
+            }
+
+            if (!guideSetDataMap[guideSetId].Series[seriesLabel]) {
+                guideSetDataMap[guideSetId].Series[seriesLabel] = {};
+            }
+
+            if (!guideSetDataMap[guideSetId].Series[seriesLabel][seriesType])
             {
-                guideSetDataMap[guideSetId].Series[seriesLabel] = {
+                guideSetDataMap[guideSetId].Series[seriesLabel][seriesType] = {
                     MetricValues: []
                 };
             }
-            guideSetDataMap[guideSetId].Series[seriesLabel].MetricValues.push(row.MetricValue); //data.rows should already be sorted by AcquiredTime
+            guideSetDataMap[guideSetId].Series[seriesLabel][seriesType].MetricValues.push(row.MetricValue); //data.rows should already be sorted by AcquiredTime
         }, this);
 
         Ext4.iterate(guideSetDataMap, function(guideSetId, setVal){
-            movingRangeMap[guideSetId] = {Series: {}};
+            movingRangeMap[guideSetId] = {};
             var series = setVal.Series;
             Ext4.iterate(series, function(seriesLabel, seriesVal){
-                var metricVals = seriesVal.MetricValues;
-                if (metricVals == null || metricVals.length == 0)
-                    return;
-                var metricMovingRanges = LABKEY.vis.Stat.getMovingRanges(metricVals, isLogScale);
-                movingRangeMap[guideSetId].Series[seriesLabel] = {
-                    avgMR: LABKEY.vis.Stat.getMean(metricMovingRanges),
-                    stddevMR: LABKEY.vis.Stat.getStdDev(metricMovingRanges)
-                };
+                Ext4.iterate(seriesVal, function(typeName, seriesTypeVal){
+                    var metricVals = seriesTypeVal.MetricValues;
+                    if (metricVals == null || metricVals.length === 0)
+                        return;
+                    var metricMovingRanges = LABKEY.vis.Stat.getMovingRanges(metricVals, isLogScale);
+
+                    if (!movingRangeMap[guideSetId].Series) {
+                        movingRangeMap[guideSetId].Series = {};
+                    }
+
+                    if (!movingRangeMap[guideSetId].Series[seriesLabel]) {
+                        movingRangeMap[guideSetId].Series[seriesLabel] = {};
+                    }
+
+                    movingRangeMap[guideSetId].Series[seriesLabel][typeName] = {
+                        avgMR: LABKEY.vis.Stat.getMean(metricMovingRanges),
+                        stddevMR: LABKEY.vis.Stat.getStdDev(metricMovingRanges)
+                    };
+                });
+
             });
         });
         return movingRangeMap;
@@ -216,6 +238,8 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                         MetricValues: []
                     };
                 }
+                row.MetricValue = Math.round(row.MetricValue * 10000) / 10000; // round to four decimals
+
                 plotDataMap[row['SeriesLabel']].Series[row['SeriesType']].MetricValues.push(row.MetricValue);
                 plotDataMap[row['SeriesLabel']].Series[row['SeriesType']].Rows.push(row);
             }
@@ -544,66 +568,57 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             {
                 if (plotOutliers[metric].TotalCount < Object.keys(peptides).length)
                     plotOutliers[metric].TotalCount = Object.keys(peptides).length;
-                Ext4.iterate(peptides, function (peptide, peptideVal)
-                {
+                Ext4.iterate(peptides, function (peptide, peptideVal) {
                     if (!peptideVal || !peptideVal.Series)
                         return;
-                    var dataRows;
-                    if (peptideVal.Series.series1)
-                        dataRows = peptideVal.Series.series1.Rows;
-                    else if (peptideVal.Series.series2)
-                        dataRows = peptideVal.Series.series2.Rows;
-                    else
-                        return;
-                    
-                    if (CUSUMm)
-                    {
-                        Ext4.each(dataRows, function (data)
-                        {
-                            var sampleFile = data.SampleFile;
-                            if (data.CUSUMmN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
-                            {
-                                this.processEachOutlier(groupByGuideSet, countCUSUMmN, guideSetId, sampleFiles, sampleFile);
-                            }
-                            else if (data.CUSUMmP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
-                            {
-                                this.processEachOutlier(groupByGuideSet, countCUSUMmP, guideSetId, sampleFiles, sampleFile);
-                            }
-                        }, this);
+                    Ext4.iterate(peptideVal.Series, function (series, seriesVal) {
+                        if (!seriesVal)
+                            return;
 
-                    }
-                    if (CUSUMv)
-                    {
-                        Ext4.each(dataRows, function (data)
-                        {
-                            var sampleFile = data.SampleFile;
-                            if (data.CUSUMvN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
-                            {
-                                this.processEachOutlier(groupByGuideSet, countCUSUMvN, guideSetId, sampleFiles, sampleFile);
-                            }
-                            else if (data.CUSUMvP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT)
-                            {
-                                this.processEachOutlier(groupByGuideSet, countCUSUMvP, guideSetId, sampleFiles, sampleFile);
-                            }
-                        }, this);
+                        var dataRows;
+                        if (seriesVal)
+                            dataRows = seriesVal.Rows;
+                        else
+                            return;
 
-                    }
-                    if (mR)
-                    {
-                        Ext4.each(dataRows, function (data)
-                        {
-                            if (!processedMetricGuides[metric] || !processedMetricGuides[metric][guideSetId] || !processedMetricGuides[metric][guideSetId].Series)
-                                return;
-
-                            var controlRange = processedMetricGuides[metric][guideSetId].Series[peptide].avgMR;
-                            if (data.MR > LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
-                            {
+                        if (CUSUMm) {
+                            Ext4.each(dataRows, function (data) {
                                 var sampleFile = data.SampleFile;
-                                this.processEachOutlier(groupByGuideSet, countMR, guideSetId, sampleFiles, sampleFile);
-                            }
-                        }, this);
-                    }
+                                if (data.CUSUMmN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT) {
+                                    this.processEachOutlier(groupByGuideSet, countCUSUMmN, guideSetId, sampleFiles, sampleFile);
+                                }
+                                else if (data.CUSUMmP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT) {
+                                    this.processEachOutlier(groupByGuideSet, countCUSUMmP, guideSetId, sampleFiles, sampleFile);
+                                }
+                            }, this);
 
+                        }
+                        if (CUSUMv) {
+                            Ext4.each(dataRows, function (data) {
+                                var sampleFile = data.SampleFile;
+                                if (data.CUSUMvN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT) {
+                                    this.processEachOutlier(groupByGuideSet, countCUSUMvN, guideSetId, sampleFiles, sampleFile);
+                                }
+                                else if (data.CUSUMvP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT) {
+                                    this.processEachOutlier(groupByGuideSet, countCUSUMvP, guideSetId, sampleFiles, sampleFile);
+                                }
+                            }, this);
+
+                        }
+                        if (mR) {
+                            Ext4.each(dataRows, function (data) {
+                                if (!processedMetricGuides[metric] || !processedMetricGuides[metric][guideSetId] || !processedMetricGuides[metric][guideSetId].Series
+                                        || !processedMetricGuides[metric][guideSetId].Series[peptide] || !processedMetricGuides[metric][guideSetId].Series[peptide][series])
+                                    return;
+
+                                var controlRange = processedMetricGuides[metric][guideSetId].Series[peptide][series].avgMR;
+                                if (data.MR > LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange) {
+                                    var sampleFile = data.SampleFile;
+                                    this.processEachOutlier(groupByGuideSet, countMR, guideSetId, sampleFiles, sampleFile);
+                                }
+                            }, this);
+                        }
+                    }, this);
                 }, this);
             }, this);
             plotOutliers[metric].outliers.CUSUMmP = countCUSUMmP;

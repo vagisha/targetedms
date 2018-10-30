@@ -85,10 +85,10 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
         if (Ext4.isDefined(row['GuideSetId']))
         {
             var gs = this.guideSetDataMap[row['GuideSetId']];
-            if (Ext4.isDefined(gs) && gs.Series[fragment])
+            if (Ext4.isDefined(gs) && gs.Series[fragment] && gs.Series[fragment][seriesType])
             {
-                data['meanMR'] = gs.Series[fragment]['MeanMR'];
-                data['stddevMR'] = gs.Series[fragment]['StdDevMR'];
+                data['meanMR'] = gs.Series[fragment][seriesType]['MeanMR'];
+                data['stddevMR'] = gs.Series[fragment][seriesType]['StdDevMR'];
             }
         }
 
@@ -114,6 +114,8 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
         {
             combinePlotData.maxMR = precursorInfo.maxMR;
         }
+
+        combinePlotData.fragment = precursorInfo.fragment;
     },
 
     getMRCombinedPlotLegendSeries: function()

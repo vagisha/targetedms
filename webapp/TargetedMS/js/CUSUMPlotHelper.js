@@ -180,6 +180,7 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
             combinePlotData[maxPositive] = valPositiveMax;
         }
 
+        combinePlotData.fragment = precursorInfo.fragment;
     },
 
     getCUSUMCombinedPlotLegendSeries: function(isMeanCUSUM)
