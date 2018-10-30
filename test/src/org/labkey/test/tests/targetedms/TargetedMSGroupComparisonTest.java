@@ -29,7 +29,6 @@ import org.openqa.selenium.WebElement;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,8 +49,8 @@ public class TargetedMSGroupComparisonTest extends TargetedMSTest
 {
     private static final String SAMPLEDATA_FOLDER = "Quantification/GroupComparisonScenariosTest/";
     private static final String GROUP_COMPARISON_PREFIX = "Group Comparison: ";
-    public static final List<String> scenarioNames = Collections.unmodifiableList(Arrays.asList(
-            "Rat_plasma"));
+    public static final List<String> scenarioNames = Arrays.asList(
+            "Rat_plasma");
 
     @Test
     public void testGroupComparisonScenarios()

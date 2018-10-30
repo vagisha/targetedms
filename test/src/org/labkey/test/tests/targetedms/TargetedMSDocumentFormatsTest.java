@@ -21,7 +21,6 @@ import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 @Category({DailyB.class, MS2.class})
@@ -30,10 +29,11 @@ public class TargetedMSDocumentFormatsTest extends TargetedMSTest
 {
     private static final String SAMPLEDATA_FOLDER = "DocumentFormats/";
 
-    public static final List<String> skyZipFileNames = Collections.unmodifiableList(Arrays.asList(
+    public static final List<String> skyZipFileNames = Arrays.asList(
             "DocumentSerializerTest_36",
             "DocumentSerializerTest",
-            "DocumentSerializerTest_compact"));
+            "DocumentSerializerTest_compact");
+
     @Test
     public void testDocumentSerialization()
     {
