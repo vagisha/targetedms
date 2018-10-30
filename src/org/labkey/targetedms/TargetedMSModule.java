@@ -55,7 +55,6 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
-import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
@@ -185,7 +184,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public double getVersion()
     {
-        return 18.23;
+        return 18.30;
     }
 
     @Override
