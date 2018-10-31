@@ -51,6 +51,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.CUSUMm;
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.LeveyJennings;
@@ -255,7 +256,7 @@ public class TargetedMSQCTest extends TargetedMSTest
                 initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
                 qcPlotsWebPart.setMetricType(type, type.hasData());
                 if (type.hasData())
-                    assertFalse(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0")));
+                    assertNotEquals(initialSVGText, qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0"));
 
                 // back to default metric type for baseline comparison of svg plot change
                 qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.RETENTION, true, type.hasData());
