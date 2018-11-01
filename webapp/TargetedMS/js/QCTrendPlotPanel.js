@@ -219,7 +219,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 items: [
                     this.getPlotSizeOptions(),
                     {xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'},
-                    this.getPlotTypeWithYOptions(),
+                    this.getPlotTypeOptions(true),
                     this.getScaleCombo()
                 ],
                 listeners: {
@@ -246,7 +246,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                   {xtype: 'tbspacer'},
                   {xtype: 'tbspacer'},
                   {xtype: 'tbspacer'},
-                  this.getPlotTypeWithoutYOptions()
+                  this.getPlotTypeOptions(false)
               ],
               listeners: {
                   scope: this,
@@ -297,14 +297,14 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         }
     },
 
-    getPlotTypeWithoutYOptions: function ()
+    getPlotTypeOptions: function(withYOptions)
     {
         var plotTypeCheckBoxes = [];
         var me = this;
-        Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesWithoutYOptions, function(plotType){
+        Ext4.each(LABKEY.targetedms.QCPlotHelperBase[withYOptions ? 'qcPlotTypesWithYOptions' : 'qcPlotTypesWithoutYOptions'], function(plotType){
             plotTypeCheckBoxes.push({
                 boxLabel: plotType,
-                name: 'plotTypesWithoutYOptions',
+                name: (withYOptions ? 'plotTypes' : 'plotTypesWithoutYOptions'),
                 inputValue: plotType,
                 cls: 'qc-plot-type-checkbox',
                 checked: this.isPlotTypeSelected(plotType),
@@ -337,91 +337,26 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
         return {
             xtype: 'checkboxgroup',
+            fieldLabel: (withYOptions ? 'QC Plot Type' : undefined),
             columns: plotTypeCheckBoxes.length,
             items: plotTypeCheckBoxes,
             cls: 'plot-type-checkbox-group',
-            id: 'qc-plot-types',
-            //style: {position: 'absolute', left: 350},
+            id: (withYOptions ? 'qc-plot-type-with-y-options' : 'qc-plot-types'),
+            width: (withYOptions ? 300 : undefined),
             listeners: {
                 scope: this,
                 change: function(cmp, newVal, oldVal)
                 {
+                    var newValues = newVal[withYOptions ? 'plotTypes' : 'plotTypesWithoutYOptions'];
+                    var otherPlotTypeOptions = (withYOptions ? 'plotTypesWithoutYOptions' : 'plotTypes');
 
-                    this.plotTypes = newVal.plotTypesWithoutYOptions ? Ext4.isArray(newVal.plotTypesWithoutYOptions) ? newVal.plotTypesWithoutYOptions : [newVal.plotTypesWithoutYOptions] : [];
-                    var options = Ext4.getCmp('qc-plot-type-with-y-options').getValue();
-                    if (options && options.plotTypes) {
-                        if (Ext4.isArray(options.plotTypes)) {
-                            this.plotTypes = this.plotTypes.concat(options.plotTypes);
+                    this.plotTypes = newValues ? Ext4.isArray(newValues) ? newValues : [newValues] : [];
+                    var options = Ext4.getCmp((withYOptions ? 'qc-plot-types' : 'qc-plot-type-with-y-options')).getValue();
+                    if (options && options[otherPlotTypeOptions]) {
+                        if (Ext4.isArray(options[otherPlotTypeOptions])) {
+                            this.plotTypes = this.plotTypes.concat(options[otherPlotTypeOptions]);
                         } else {
-                            this.plotTypes.push(options.plotTypes);
-                        }
-                    }
-                    this.havePlotOptionsChanged = true;
-                    Ext4.getCmp('plot-size-radio-group').setDisabled(this.plotTypes.length < 2);
-                    this.setBrushingEnabled(false);
-                    this.displayTrendPlot();
-                }
-            }
-        }
-    },
-
-    getPlotTypeWithYOptions: function()
-    {
-        var plotTypeCheckBoxes = [];
-        var me = this;
-        Ext4.each(LABKEY.targetedms.QCPlotHelperBase.qcPlotTypesWithYOptions, function(plotType){
-            plotTypeCheckBoxes.push({
-                boxLabel: plotType,
-                name: 'plotTypes',
-                inputValue: plotType,
-                cls: 'qc-plot-type-checkbox',
-                checked: this.isPlotTypeSelected(plotType),
-                listeners: {
-                    render: function(cmp)
-                    {
-                        cmp.getEl().on('mouseover', function () {
-                            var calloutMgr = hopscotch.getCalloutManager();
-                            calloutMgr.removeAllCallouts();
-                            calloutMgr.createCallout({
-                                id: Ext4.id(),
-                                target: cmp.getEl().dom,
-                                placement: 'top',
-                                width: 300,
-                                xOffset: -250,
-                                arrowOffset: 270,
-                                showCloseButton: false,
-                                title: plotType + ' Plot Type',
-                                content: me.getPlotTypeHelpTooltip(plotType)
-                            });
-                        }, this);
-
-                        cmp.getEl().on('mouseout', function() {
-                            hopscotch.getCalloutManager().removeAllCallouts();
-                        }, this);
-                    }
-                }
-            });
-        }, this);
-
-        return {
-            xtype: 'checkboxgroup',
-            fieldLabel: 'QC Plot Type',
-            columns: plotTypeCheckBoxes.length,
-            items: plotTypeCheckBoxes,
-            cls: 'plot-type-checkbox-group',
-            id: 'qc-plot-type-with-y-options',
-            width: 300,
-            listeners: {
-                scope: this,
-                change: function(cmp, newVal, oldVal)
-                {
-                    this.plotTypes = newVal.plotTypes ? Ext4.isArray(newVal.plotTypes) ? newVal.plotTypes : [newVal.plotTypes] : [];
-                    var options = Ext4.getCmp('qc-plot-types').getValue();
-                    if (options && options.plotTypesWithoutYOptions) {
-                        if (Ext4.isArray(options.plotTypesWithoutYOptions)) {
-                            this.plotTypes = this.plotTypes.concat(options.plotTypesWithoutYOptions);
-                        } else {
-                            this.plotTypes.push(options.plotTypesWithoutYOptions);
+                            this.plotTypes.push(options[otherPlotTypeOptions]);
                         }
                     }
                     this.havePlotOptionsChanged = true;

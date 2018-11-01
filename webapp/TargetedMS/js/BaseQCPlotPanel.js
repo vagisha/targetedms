@@ -71,7 +71,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             + '\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd'
             + '\nGROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.SeriesType'
             + (!includeAllValues ? '' : (this.includeAllValuesSql(schema1Name, query1Name, 'series1', exclusionWhereSQL)
-                        + (includeSeries2 ? this.includeAllValuesSql(schema2Name, query2Name, 'series2', exclusionWhereSQL) : '')));
+            + (includeSeries2 ? this.includeAllValuesSql(schema2Name, query2Name, 'series2', exclusionWhereSQL) : '')));
     },
 
     metricGuideSetRawSql : function(id, schema1Name, query1Name, schema2Name, query2Name, includeAllValues, series)

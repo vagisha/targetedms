@@ -56,10 +56,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             separator = " AND ";
         }
         if (config.EndDate) {
-            // guideSetSql += separator + "s.TrainingStart < TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP))";
             var sub = separator + "(";
             if (includeAllValues) {
-                sub += "s.TrainingStart IS NULL OR "
+                sub += "s.TrainingStart IS NULL OR ";
             }
             guideSetSql += sub + "s.TrainingStart < TIMESTAMPADD('SQL_TSI_DAY', 1, CAST('" + config.EndDate + "' AS TIMESTAMP)))";
 
@@ -507,10 +506,63 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return newLegendData;
     },
 
+    getYScaleLabel: function(plotType, conversion) {
+        var yScaleLabel;
+        if (plotType !== LABKEY.vis.TrendingLinePlotType.MovingRange && plotType !== LABKEY.vis.TrendingLinePlotType.LeveyJennings) {
+            yScaleLabel = 'Sum of Deviations'
+        }
+        else if (conversion) {
+            var options = this.getYAxisOptions();
+            for (var i = 0; i < options.data.length; i++) {
+                if (options.data[i][0] === conversion)
+                    yScaleLabel = options.data[i][1];
+            }
+        }
+
+        // TODO: Add these to targetedms.QCMetricConfiguration
+        if (!yScaleLabel) {
+            var metricName = this.getMetricPropsById(this.metric).name;
+
+            if (metricName === "Full Width at Base (FWB)") {
+                yScaleLabel = "Minutes";
+            }
+            else if (metricName === "Full Width at Half Maximum (FWHM)") {
+                yScaleLabel = "Minutes";
+            }
+            else if (metricName === "Light/Heavy Ratio") {
+                yScaleLabel = "Ratio";
+            }
+            else if (metricName === "Mass Accuracy") {
+                yScaleLabel = "PPM";
+            }
+            else if (metricName === "Peak Area") {
+                yScaleLabel = "Area";
+            }
+            else if (metricName === "Retention Time") {
+                yScaleLabel = "Minutes";
+            }
+            else if (metricName === "Transition/Precursor Area Ratio") {
+                yScaleLabel = "Ratio";
+            }
+            else if (metricName === "Transition Area") {
+                yScaleLabel = "Area";
+            }
+        }
+
+        return yScaleLabel;
+    },
+
+    getSubtitle: function(precursor) {
+        return precursor + ' - ' + this.getMetricPropsById(this.metric).name;;
+    },
+
     addEachCombinedPrecusorPlot: function(plotIndex, id, combinePlotData, groupColors, yAxisCount, metricProps, showLogInvalid, legendMargin, plotType, isCUSUMMean)
     {
         var plotLegendData = this.getCombinedPlotLegendData(metricProps, groupColors, yAxisCount, plotType, isCUSUMMean);
-        this.showInvalidLogMsg(id, showLogInvalid);
+
+        if (plotType !== LABKEY.vis.TrendingLinePlotType.CUSUM) {
+            this.showInvalidLogMsg(id, showLogInvalid);
+        }
 
         var trendLineProps = {
             disableRangeDisplay: true,
@@ -536,18 +588,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         var mainTitle = LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean);
 
         var basePlotConfig = this.getBasePlotConfig(id, combinePlotData.data, plotLegendData);
-
-        // Y axis scale as label
-        var yScaleLabel = 'Linear';
-        if ((plotType === 'MovingRange' || plotType === 'Levey-Jennings')) {
-            var yScale = trendLineProps.valueConversion ? trendLineProps.valueConversion : trendLineProps.yAxisScale;
-            var options = this.getYAxisOptions();
-            for (var i = 0; i < options.data.length; i++) {
-                if (options.data[i][0] === yScale)
-                    yScaleLabel = options.data[i][1];
-            }
-        }
-
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
                 top: 65 + this.getMaxStackedAnnotations() * 12,
@@ -560,12 +600,12 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     value: mainTitle
                 },
                 subtitle: {
-                    value: "All Series",
+                    value: this.getSubtitle("All Series", plotType, trendLineProps.valueConversion),
                     color: '#555555',
                     visibility: 'hidden'
                 },
                 yLeft: {
-                    value: yScaleLabel
+                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion)
                 },
                 yRight: {
                     value: this.isMultiSeries() ? metricProps.series2Label : undefined,
@@ -643,17 +683,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         var mainTitle = LABKEY.targetedms.QCPlotHelperWrapper.getQCPlotTypeLabel(plotType, isCUSUMMean);
 
-        // Y axis scale as label
-        var yScaleLabel = 'Linear';
-        if ((plotType === 'MovingRange' || plotType === 'Levey-Jennings')) {
-            var yScale = trendLineProps.valueConversion ? trendLineProps.valueConversion : trendLineProps.yAxisScale;
-            var options = this.getYAxisOptions();
-            for (var i = 0; i < options.data.length; i++) {
-                if (options.data[i][0] === yScale)
-                    yScaleLabel = options.data[i][1];
-            }
-        }
-
         var basePlotConfig = this.getBasePlotConfig(id, precursorInfo.data, plotLegendData);
         var plotConfig = Ext4.apply(basePlotConfig, {
             margins : {
@@ -667,12 +696,12 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                     value: mainTitle
                 },
                 subtitle: {
-                    value: this.precursors[precursorIndex] + '-' + this.getMetricPropsById(this.metric).series1Label,
+                    value: this.getSubtitle(this.precursors[precursorIndex], plotType, trendLineProps.valueConversion),
                     color: '#555555',
                     visibility: 'hidden'
                 },
                 yLeft: {
-                    value: yScaleLabel,
+                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion),
                     color: this.isMultiSeries() ? this.getColorRange()[0] : undefined
                 },
                 yRight: {
