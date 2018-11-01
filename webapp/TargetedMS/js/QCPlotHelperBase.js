@@ -565,7 +565,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         }
 
         var trendLineProps = {
-            disableRangeDisplay: true,
+            disableRangeDisplay: (this.yAxisScale !== 'standardDeviation' || plotType !== LABKEY.vis.TrendingLinePlotType.LeveyJennings),
             xTick: this.groupedX ? 'groupedXTick' : 'fullDate',
             xTickLabel: 'date',
             shape: 'guideSetId',

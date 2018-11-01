@@ -203,7 +203,7 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
     getLJLegend: function () {
         var ljLegend = [];
 
-        if (!this.singlePlot) {
+        if (!this.singlePlot || this.yAxisScale === 'standardDeviation') {
             ljLegend.push({
                 text: 'Levey-Jennings',
                 separator: true
