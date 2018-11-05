@@ -248,6 +248,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.STANDARD_DEVIATIONS);
         assertTrue(initialSVGText.equals(qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0_plotType_1")));
 
+        qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LINEAR);
+
         // test that plot0 changes based on metric type
         for (QCPlotsWebPart.MetricType type : QCPlotsWebPart.MetricType.values())
         {
