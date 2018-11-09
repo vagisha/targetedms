@@ -506,12 +506,13 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return newLegendData;
     },
 
-    getYScaleLabel: function(plotType, conversion) {
+    getYScaleLabel: function(plotType, conversion, label) {
         var yScaleLabel;
+
         if (plotType !== LABKEY.vis.TrendingLinePlotType.MovingRange && plotType !== LABKEY.vis.TrendingLinePlotType.LeveyJennings) {
             yScaleLabel = 'Sum of Deviations'
         }
-        else if (conversion) {
+        else if (conversion && label !== "Transition Area") {
             var options = this.getYAxisOptions();
             for (var i = 0; i < options.data.length; i++) {
                 if (options.data[i][0] === conversion)
@@ -547,8 +548,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             else if (metricName === "Transition Area") {
                 yScaleLabel = "Area";
             }
+            else {
+                yScaleLabel = label;
+            }
         }
-
         return yScaleLabel;
     },
 
@@ -564,8 +567,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             this.showInvalidLogMsg(id, showLogInvalid);
         }
 
+        var disableRange = true;
+        if (plotType === LABKEY.vis.TrendingLinePlotType.CUSUM && !this.getMetricPropsById(this.metric).series2QueryName) {
+            disableRange = false;
+        }
+        else if (this.yAxisScale === 'standardDeviation' && plotType === LABKEY.vis.TrendingLinePlotType.LeveyJennings) {
+            disableRange = false;
+        }
+
         var trendLineProps = {
-            disableRangeDisplay: (this.yAxisScale !== 'standardDeviation' || plotType !== LABKEY.vis.TrendingLinePlotType.LeveyJennings),
+            disableRangeDisplay: disableRange,
             xTick: this.groupedX ? 'groupedXTick' : 'fullDate',
             xTickLabel: 'date',
             shape: 'guideSetId',
@@ -575,6 +586,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             defaultGuideSets: this.defaultGuideSet,
             groupBy: 'fragment',
             color: 'fragment',
+            defaultGuideSetLabel: 'fragment',
             pointOpacityFn: function(row) { return row.IgnoreInQC ? 0.4 : 1; },
             showTrendLine: true,
             showDataPoints: true,
@@ -601,11 +613,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 },
                 subtitle: {
                     value: this.getSubtitle("All Series", plotType, trendLineProps.valueConversion),
-                    color: '#555555',
-                    visibility: 'hidden'
+                    color: '#555555'
                 },
                 yLeft: {
-                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion)
+                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion, metricProps.series1Label)
                 },
                 yRight: {
                     value: this.isMultiSeries() ? metricProps.series2Label : undefined,
@@ -654,7 +665,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             pointIdAttr: function(row) { return row['fullDate']; },
             showTrendLine: true,
             showDataPoints: true,
-            groupBy: 'fragment',
+            defaultGuideSetLabel: 'fragment',
             defaultGuideSets: this.defaultGuideSet,
             mouseOverFn: this.plotPointHover,
             mouseOverFnScope: this,
@@ -689,7 +700,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 top: 65 + this.getMaxStackedAnnotations() * 12,
                 left: 75,
                 bottom: 75,
-                right: (this.showInPlotLegends() ? 0 : 30) + (this.isMultiSeries() ? 50 : 0) // if in plot, set to 0 to auto calculate margin; otherwise, set to small value to cut off legend
+                right: (this.showInPlotLegends() ? 0 : 30) // if in plot, set to 0 to auto calculate margin; otherwise, set to small value to cut off legend
             },
             labels : {
                 main: {
@@ -697,11 +708,10 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 },
                 subtitle: {
                     value: this.getSubtitle(this.precursors[precursorIndex], plotType, trendLineProps.valueConversion),
-                    color: '#555555',
-                    visibility: 'hidden'
+                    color: '#555555'
                 },
                 yLeft: {
-                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion),
+                    value: this.getYScaleLabel(plotType, trendLineProps.valueConversion, metricProps.series1Label),
                     color: this.isMultiSeries() ? this.getColorRange()[0] : undefined
                 },
                 yRight: {

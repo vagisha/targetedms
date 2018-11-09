@@ -21,7 +21,6 @@ resources/queries/targetedms/CalibrationCurvePrecursorsByReplicate.sql -text
 resources/queries/targetedms/CalibrationCurvePrecursorsByReplicate/.qview.xml -text
 resources/queries/targetedms/FiguresOfMerit.query.xml -text
 resources/queries/targetedms/FiguresOfMerit.sql -text
-resources/queries/targetedms/FiguresOfMeritPivot.sql -text
 resources/queries/targetedms/FiguresOfMeritSummary.sql -text
 resources/queries/targetedms/MoleculeCalibrationCurve.query.xml -text
 resources/queries/targetedms/MoleculeInfo.sql -text

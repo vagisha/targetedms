@@ -210,7 +210,7 @@ Ext4.define("LABKEY.targetedms.CUSUMPlotHelper", {
             color: '#000000',
             shape: LABKEY.vis.TrendingLineShape.positiveCUSUM
         });
-        if (!this.singlePlot) {
+        if (!this.getMetricPropsById(this.metric).series2Label) {
             cusumLegend.push({
                 text: 'Upper/Lower Limit',
                 color: 'red',

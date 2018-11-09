@@ -12,5 +12,3 @@ FROM FiguresOfMerit
 WHERE ExcludeFromCalibration = FALSE
 
 GROUP BY RunId, MoleculeId, SampleType, AnalyteConcentration
-
-PIVOT Mean, "StdDev", CV, Bias BY AnalyteConcentration

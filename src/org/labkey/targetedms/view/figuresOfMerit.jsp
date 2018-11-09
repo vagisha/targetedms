@@ -22,6 +22,7 @@
     <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
         <i class="fa fa-file-excel-o" onclick="exportExcel()"></i>
     </div>
+    <span id="fom-loading">Loading...<i class="fa fa-spinner fa-pulse"></i></span>
     <h3 id="fom-title1"></h3>
     <h4 id="fom-title2"></h4>
     <h4 id="fom-title3"></h4><div id="fom-title3-value" class="collapse"></div>
@@ -380,6 +381,11 @@
             return html;
         };
 
+        // Format to have at least one decimal place, unless the value has more
+        var formatConcentration = function(conc) {
+            return conc.toFixed(Math.max(1, (conc.toString().split('.')[1] || []).length));
+        };
+
         var parseRawData = function(data, sampleType) {
 
             // No data
@@ -388,26 +394,22 @@
 
             // Process data to collapse rows
             data.rows.forEach(function (row) {
-                var colName, replicate;
-                for (var col in row) {
-                    if (row.hasOwnProperty(col)) {
-                        colName = col.split('::')[0];
-                        replicate = col.split('::')[1];
-                        if (replicate != null && (colName !== 'NULL' || row.SampleType === "blank")) {
-                            if (row[col] != null) {
-                                if (!this[sampleType + 'rawData'][colName]) {
-                                    this[sampleType + 'rawData'][colName] = [];
-                                    this[sampleType + 'hdrLabels'].push(colName);
-                                }
+                var analyteConc = row["AnalyteConcentration"];
+                if (analyteConc != null) {
+                    analyteConc = formatConcentration(analyteConc);
+                }
 
-                                this[sampleType + 'rawData'][colName].push({
-                                    'value': row[col].toFixed(2),
-                                    'bias': row['Bias']?row['Bias'].toFixed(2):null,
-                                    'exclude': row['ExcludeFromCalibration'] === true
-                                })
-                            }
-                        }
+                if (analyteConc != null || row.SampleType === "blank") {
+                    if (!this[sampleType + 'rawData'][analyteConc]) {
+                        this[sampleType + 'rawData'][analyteConc] = [];
+                        this[sampleType + 'hdrLabels'].push(analyteConc);
                     }
+
+                    this[sampleType + 'rawData'][analyteConc].push({
+                        'value': row['ReplicateConcentration'].toFixed(2),
+                        'bias': row['Bias'] ? row['Bias'].toFixed(2) : null,
+                        'exclude': row['ExcludeFromCalibration'] === true
+                    });
                 }
             }, this);
 
@@ -423,24 +425,20 @@
 
             // Process data to collapse rows
             data.rows.forEach(function (row) {
-                var colName, rowName;
-                for (var col in row) {
-                    if (row.hasOwnProperty(col)) {
-                        colName = col.split("::")[0];
-                        rowName = col.split("::")[1];
-                        if (rowName != null && (colName !== 'NULL' || row.SampleType === "blank")) {
-                            if (!this[sampleType + 'summaryData'][colName]) {
-                                this[sampleType + 'summaryData'][colName] = {};
-                            }
+                var analyteConc = row["AnalyteConcentration"];
+                if (analyteConc != null) {
+                    analyteConc = formatConcentration(analyteConc);
+                }
 
-                            if (row[col] != null) {
-                                this[sampleType + 'summaryData'][colName][rowName] = row[col].toFixed(2);
-                            }
-                            else {
-                                this[sampleType + 'summaryData'][colName][rowName] = "";
-                            }
-                        }
+                if (analyteConc != null || row.SampleType === "blank") {
+                    if (!this[sampleType + 'summaryData'][analyteConc]) {
+                        this[sampleType + 'summaryData'][analyteConc] = {};
                     }
+
+                    this[sampleType + 'summaryData'][analyteConc]['Mean'] = (row['Mean'] ? row['Mean'].toFixed(2) : "");
+                    this[sampleType + 'summaryData'][analyteConc]['Bias'] = (row['Bias'] ? row['Bias'].toFixed(2) : "");
+                    this[sampleType + 'summaryData'][analyteConc]['CV'] = (row['CV'] ? row['CV'].toFixed(2) : "");
+                    this[sampleType + 'summaryData'][analyteConc]['StdDev'] = (row['StdDev'] ? row['StdDev'].toFixed(2) : "");
                 }
             }, this);
         };
@@ -461,6 +459,8 @@
 
             if (--this.tableCount === 0)
                 LABKEY.Utils.signalWebDriverTest('targetedms-fom-loaded');
+
+            $('#fom-loading').hide();
         };
 
         var createFomTable = function(sampleType, callback) {
@@ -469,7 +469,6 @@
             this[sampleType + 'summaryData'] = {};
             this[sampleType + 'hdrLabels'] = [];
 
-//            this.sampleType = sampleType;
             this[sampleType + 'callback'] = callback;
             var multi = new LABKEY.MultiRequest();
             var filter = [LABKEY.Filter.create('RunId', this.runId),
@@ -479,7 +478,7 @@
 
             multi.add(LABKEY.Query.selectRows, {
                 schemaName: 'targetedms',
-                queryName: 'FiguresOfMeritPivot',
+                queryName: 'FiguresOfMerit',
                 filterArray: filter,
                 scope: this,
                 success: function(data) {
@@ -551,12 +550,12 @@
 
             if (this.lodCalculation != "none") {
                 var mean = "NA", stddev = 0;
-                if (this[sampleType + 'summaryData']["NULL"] && this[sampleType + 'summaryData']["NULL"]["Mean"]) {
-                    mean = Number(this[sampleType + 'summaryData']["NULL"]["Mean"]);
+                if (this[sampleType + 'summaryData'][null] && this[sampleType + 'summaryData'][null]["Mean"]) {
+                    mean = Number(this[sampleType + 'summaryData'][null]["Mean"]);
                 }
 
-                if (this[sampleType + 'summaryData']["NULL"] && this[sampleType + 'summaryData']["NULL"]["StdDev"]) {
-                    stddev = Number(this[sampleType + 'summaryData']["NULL"]["StdDev"]);
+                if (this[sampleType + 'summaryData'][null] && this[sampleType + 'summaryData'][null]["StdDev"]) {
+                    stddev = Number(this[sampleType + 'summaryData'][null]["StdDev"]);
                 }
 
                 if (mean !== "NA") {

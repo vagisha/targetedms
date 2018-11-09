@@ -127,7 +127,7 @@ Ext4.define("LABKEY.targetedms.MovingRangePlotHelper", {
         var mrLegend = [];
 
         // Not showing limits for standard deviation
-        if (this.yAxisScale !== 'standardDeviation' && !this.singlePlot) {
+        if (this.yAxisScale !== 'standardDeviation' && !this.singlePlot && !this.getMetricPropsById(this.metric).series2Label) {
             mrLegend.push({
                 text: 'Moving Range',
                 separator: true

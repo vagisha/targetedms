@@ -442,14 +442,8 @@ public class TargetedMSQCTest extends TargetedMSTest
     {
         log("Test plot type " + plotType.getLongLabel());
 
-        String yLeftColor = "#A6D854";
-        String yRightColor = "#FFD92F";
-
-        if (plotType == LeveyJennings || plotType == MovingRange)
-        {
-            yLeftColor = "#8DA0CB";
-            yRightColor = "#E78AC3";
-        }
+        String yLeftColor = "#66C2A5";
+        String yRightColor = "#FC8D62";
 
         int pointsPerSeries = 47;
         if (plotType == CUSUMm || plotType == QCPlotsWebPart.QCPlotType.CUSUMv)
