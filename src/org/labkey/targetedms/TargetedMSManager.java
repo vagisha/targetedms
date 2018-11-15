@@ -1252,7 +1252,7 @@ public class TargetedMSManager
                     if (Files.exists(skydFile))
                         logMsgs = deleteFileWithLogging(skydFile, logMsgs);
 
-                    if (Files.exists(dir) && Files.isDirectory(dir))
+                    if (Files.isDirectory(dir))
                     {
                         logMsg = "Deleting directory " + dir.toString();
                         logMsgs.add(logMsg);

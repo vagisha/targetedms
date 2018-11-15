@@ -21,8 +21,12 @@ SELECT
   SampleType,
   AVG(ReplicateConcentration) as Mean,
   STDDEV(ReplicateConcentration) as "StdDev",
-  (100 * STDDEV(ReplicateConcentration)) / AVG(ReplicateConcentration) as CV,
-  (100 * (AVG(ReplicateConcentration) - AnalyteConcentration)) / AnalyteConcentration as Bias
+  CASE WHEN (AVG(ReplicateConcentration) IS NOT NULL AND AVG(ReplicateConcentration) != 0) THEN
+    ((100 * STDDEV(ReplicateConcentration)) / AVG(ReplicateConcentration))
+  ELSE NULL END as CV,
+  CASE WHEN (AnalyteConcentration IS NOT NULL AND AnalyteConcentration != 0) THEN
+    ((100 * (AVG(ReplicateConcentration) - AnalyteConcentration)) / AnalyteConcentration)
+  ELSE NULL END as Bias
 FROM FiguresOfMerit
 WHERE ExcludeFromCalibration = FALSE
 

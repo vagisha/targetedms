@@ -424,7 +424,7 @@
 
                     this[sampleType + 'rawData'][analyteConc].push({
                         'value': row['ReplicateConcentration'].toFixed(2),
-                        'bias': row['Bias'] ? row['Bias'].toFixed(2) : null,
+                        'bias': row['Bias'] ? row['Bias'].toFixed(2) : "NA",
                         'exclude': row['ExcludeFromCalibration'] === true
                     });
                 }
