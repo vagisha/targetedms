@@ -222,16 +222,15 @@ public class SkylineBinaryParser
         return _cacheFiles != null ? _cacheFiles.length : 0;
     }
 
-    public Chromatogram.TranMatch matchTransitions(ChromGroupHeaderInfo header, List<? extends GeneralTransition> transitions, Double explicitRt, double tolerance, boolean multiMatch)
+    public int matchTransitions(ChromGroupHeaderInfo header, List<? extends GeneralTransition> transitions, Double explicitRt, double tolerance, boolean multiMatch)
     {
         int match = 0;
-        double errRt = Double.MAX_VALUE;
 
         if (explicitRt != null)
         {
             // We have retention time info, use that in the match
             if (header.excludesTime(explicitRt))
-                return new Chromatogram.TranMatch(match, errRt);
+                return match;
         }
 
         for (GeneralTransition transition : transitions)
@@ -254,18 +253,11 @@ public class SkylineBinaryParser
                     else
                     {
                         match = multiMatch ? match + 1 : 1; // Examine all RT values even if we're not multimatch
-                        int transitionNum = i - start;
-                        // How well does explicit retention time match the best peak for this transition?
-                        if (header.getMaxPeakIndex() != -1)
-                        {
-                            float peakRt = _allPeaksRt[header.getStartPeakIndex() + header.getNumTransitions() * transitionNum + header.getMaxPeakIndex()];
-                            errRt = Math.min(errRt, Math.abs(explicitRt - peakRt));
-                        }
                     }
                 }
             }
         }
-        return new Chromatogram.TranMatch(match, errRt);
+        return match;
     }
 
     public byte[] readChromatogramBytes(ChromGroupHeaderInfo header) throws DataFormatException, IOException

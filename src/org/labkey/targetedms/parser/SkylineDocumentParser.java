@@ -2473,9 +2473,6 @@ public class SkylineDocumentParser implements AutoCloseable
             int[] maxTranMatches = new int[_binaryParser.getCacheFileSize()];
             for(int m = 0; m < maxTranMatches.length; m++) maxTranMatches[m] = 0;
 
-            double[] minErrRts = new double[_binaryParser.getCacheFileSize()];
-            for(int m = 0; m < minErrRts.length; m++) minErrRts[m] = Double.MAX_VALUE;
-
             ChromGroupHeaderInfo[] chromArray = new ChromGroupHeaderInfo[_binaryParser.getCacheFileSize()];
 
             for (ChromGroupHeaderInfo chromInfo : listChromatograms)
@@ -2489,34 +2486,20 @@ public class SkylineDocumentParser implements AutoCloseable
                 // TODO - do we need this on the Java side?
                 boolean multiMatch = false;//chromatogram.OptimizationFunction != null;
 
-                Chromatogram.TranMatch tranMatch = _binaryParser.matchTransitions(chromInfo, transitions, explicitRT, tolerance, multiMatch);
+                int tranMatch = _binaryParser.matchTransitions(chromInfo, transitions, explicitRT, tolerance, multiMatch);
 
                 int fileIndex = chromInfo.getFileIndex();
                 int maxTranMatch = maxTranMatches[fileIndex];
-                double minErrRt = minErrRts[fileIndex];
 
-                if (tranMatch.match >= maxTranMatch || tranMatch.errRt < minErrRt)
+                if (tranMatch >= maxTranMatch)
                 {
-                    if(tranMatch.errRt < minErrRt)
-                    {
-                        // This is the closest peak we've found to the explicit RT
-                        minErrRts[fileIndex] = tranMatch.errRt;
-                        chromArray[fileIndex] = null;
-                    }
-
-                    else if (tranMatch.errRt > minErrRt)
-                    {
-                        // This is not the closest peak we've found to the explicit RT, skip it
-                        continue;
-                    }
-
                     // If new maximum, clear anything collected at the previous maximum
-                    if (tranMatch.match > maxTranMatch)
+                    if (tranMatch > maxTranMatch)
                     {
                         chromArray[fileIndex] = null;
                     }
 
-                    maxTranMatches[fileIndex] = tranMatch.match;
+                    maxTranMatches[fileIndex] = tranMatch;
 
                     if(chromArray[fileIndex] != null)
                     {

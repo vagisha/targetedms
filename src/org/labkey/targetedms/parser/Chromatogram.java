@@ -102,16 +102,4 @@ public class Chromatogram
         Arrays.sort(times);
         return times;
     }
-
-    public static class TranMatch
-    {
-        public final int match;
-        public final double errRt;
-
-        public TranMatch(int match, double errRt)
-        {
-            this.match = match;
-            this.errRt = errRt;
-        }
-    }
 }
