@@ -124,7 +124,6 @@ public final class MeasuredRetentionTime
 	@Override
 	public int hashCode()
 	{
-    	return (getPeptideSequence().hashCode() * 397) ^ (new Double(getRetentionTime())).hashCode();
+    	return (getPeptideSequence().hashCode() * 397) ^ (Double.valueOf(getRetentionTime())).hashCode();
 	}
-
 }

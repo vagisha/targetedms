@@ -118,7 +118,6 @@ public final class RegressionLine implements IRegressionFunction
 	@Override
 	public int hashCode()
 	{
-        return ((new Double(getSlope())).hashCode()*397) ^ (new Double(getIntercept())).hashCode();
+        return ((Double.valueOf(getSlope())).hashCode()*397) ^ (Double.valueOf(getIntercept())).hashCode();
 	}
-
 }

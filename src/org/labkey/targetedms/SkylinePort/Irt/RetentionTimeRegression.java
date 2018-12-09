@@ -488,7 +488,7 @@ public final class RetentionTimeRegression
         int result = super.hashCode();
         result = (result*397) ^ getCalculator().hashCode();
         result = (result*397) ^ (getConversion() != null ? getConversion().hashCode() : 0);
-        result = (result*397) ^ (new Double(getTimeWindow())).hashCode();
+        result = (result*397) ^ (Double.valueOf(getTimeWindow())).hashCode();
         result = (result*397) ^ getPeptideTimes().hashCode();
         //result = (result*397) ^ getPeptideTimes().GetHashCodeDeep();
         //result = (result*397) ^ (_listFileIdToConversion != null ? _listFileIdToConversion.hashCode() : 0);
