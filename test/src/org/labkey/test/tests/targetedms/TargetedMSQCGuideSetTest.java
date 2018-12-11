@@ -141,9 +141,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         // test validation error message from QC plot guide set creation mode
         goToProjectHome();
-        createGuideSet(new GuideSet("2013/08/09 11:39:00", "2013/08/11 18:34:14", null, 2), overlapErrorMsg);
+        createGuideSet(new GuideSet("", "2013/08/11 18:34:14", null, 2), overlapErrorMsg);
         createGuideSet(new GuideSet("2013/08/21 01:12:00", "2013/08/21 07:56:12", null, 5), overlapErrorMsg);
-        createGuideSet(new GuideSet("2013/08/09 11:39:00", "2013/08/27 14:45:49", null, 47), overlapErrorMsg);
+        createGuideSet(new GuideSet("", "", null, 47), overlapErrorMsg);
     }
 
     public void testGuideSetPlotDisplay()

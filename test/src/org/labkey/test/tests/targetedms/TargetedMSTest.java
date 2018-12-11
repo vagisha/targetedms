@@ -284,8 +284,10 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
 
         DataRegionTable table = new DataRegionTable("qwp1", getDriver());
         table.checkAll();
-        table.clickHeaderButton("Delete");
-        assertAlertContains("Are you sure you want to delete the selected row");
+        doAndWaitForPageToLoad(() -> {
+            table.clickHeaderButton("Delete");
+            assertAlertContains("Are you sure you want to delete the selected row");
+        });
     }
 
     @Override

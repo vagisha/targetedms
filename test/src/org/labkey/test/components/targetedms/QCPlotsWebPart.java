@@ -15,7 +15,6 @@
  */
 package org.labkey.test.components.targetedms;
 
-import com.google.common.base.Predicate;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
@@ -38,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.labkey.test.BaseWebDriverTest.WAIT_FOR_JAVASCRIPT;
@@ -525,10 +525,10 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public WebElement openExclusionBubble(String acquiredDate)
     {
-        getWrapper().shortWait().ignoring(StaleElementReferenceException.class).until(new Predicate<WebDriver>()
+        getWrapper().shortWait().ignoring(StaleElementReferenceException.class).until(new Function<WebDriver, Boolean>()
         {
             @Override
-            public boolean apply(@javax.annotation.Nullable WebDriver input)
+            public Boolean apply(@javax.annotation.Nullable WebDriver input)
             {
                 getWrapper().mouseOver(getPointByAcquiredDate(acquiredDate));
                 return getWrapper().isElementPresent(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
@@ -549,11 +549,42 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         waitForPlots(1, false);
         getWrapper().clickButton("Create Guide Set", 0);
 
-        WebElement startPoint = getPointByAcquiredDate(guideSet.getStartDate());
-        WebElement endPoint = getPointByAcquiredDate(guideSet.getEndDate());
+        WebElement startPoint;
+        WebElement endPoint;
+        int xStartOffset, yStartOffset;
+        int xEndOffset, yEndOffset;
+        yStartOffset = 10;
+        yEndOffset = 10;
+
+        // If StartDate is empty use the far left of the svg as the starting point.
+        if(!guideSet.getStartDate().trim().isEmpty())
+        {
+            startPoint = getPointByAcquiredDate(guideSet.getStartDate());
+            xStartOffset = -10;
+        }
+        else
+        {
+            startPoint = elementCache().svgBackgrounds.findElements(this).get(0);
+            xStartOffset = -1 * (Integer.parseInt(startPoint.getAttribute("width")) / 2);
+        }
+
+        // If EndDate is empty use the far right of the svg as the ending point.
+        if(!guideSet.getEndDate().trim().isEmpty())
+        {
+            endPoint = getPointByAcquiredDate(guideSet.getEndDate());
+            xEndOffset = 10;
+        }
+        else
+        {
+            endPoint = elementCache().svgBackgrounds.findElements(this).get(0);
+            xEndOffset = (Integer.parseInt(endPoint.getAttribute("width")) / 2) - 1;;
+        }
+
+        getWrapper().scrollIntoView(startPoint);
 
         Actions builder = new Actions(getWrapper().getDriver());
-        builder.moveToElement(startPoint, -10, 0).clickAndHold().moveToElement(endPoint, 10, 0).release().perform();
+
+        builder.moveToElement(startPoint, xStartOffset, yStartOffset).clickAndHold().moveToElement(endPoint, xEndOffset, yEndOffset).release().perform();
 
         List<WebElement> gsButtons = elementCache().guideSetSvgButton.findElements(this);
         getWrapper().shortWait().until(ExpectedConditions.elementToBeClickable(gsButtons.get(0)));
@@ -731,6 +762,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Locator.CssLocator smallPlotLayoutDiv = Locator.css(".plot-small-layout");
         Locator.CssLocator paginationPrevBtn = Locator.css(".qc-paging-prev");
         Locator.CssLocator paginationNextBtn = Locator.css(".qc-paging-next");
+        Locator.CssLocator svgBackgrounds = Locator.css("svg g.brush rect.background");
 
         Locator.XPathLocator hopscotchBubble = Locator.byClass("hopscotch-bubble-container");
         Locator.XPathLocator hopscotchBubbleClose = Locator.byClass("hopscotch-bubble-close");
