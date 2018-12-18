@@ -26,7 +26,8 @@ import org.labkey.test.util.LogMethod;
 import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.WikiHelper;
 
-import static org.junit.Assert.assertTrue;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.junit.Assert.assertThat;
 
 @Category({DailyB.class, MS2.class})
 @BaseWebDriverTest.ClassTimeout(minutes = 5)
@@ -78,17 +79,17 @@ public class GetDataAPITest extends TargetedMSTest
         waitForElement(Locator.id("jsonWrapperTest").append("/table"));
         String getDataTable = getText(Locator.id("jsonWrapperTest"));
 
-        assertTrue(getDataTable.contains("Sequence"));
-        assertTrue(getDataTable.contains("My Charge"));
-        assertTrue(getDataTable.contains("LLPYWQDVIAK"));
-        assertTrue(getDataTable.contains("LLSEEALPAIR"));
-        assertTrue(getDataTable.contains("LLTTIADAAK"));
-        assertTrue(getDataTable.contains("LSVQDLDLK"));
-        assertTrue(getDataTable.contains("LTSLNVVAGSDLR"));
-        assertTrue(getDataTable.contains("LVEAFQWTDK"));
-        assertTrue(getDataTable.contains("LVEDPQVIAPFLGK"));
-        assertTrue(getDataTable.contains("LWDVATGETYQR"));
-        assertTrue(getDataTable.contains("2"));
+        assertThat(getDataTable, containsString("Sequence"));
+        assertThat(getDataTable, containsString("My Charge"));
+        assertThat(getDataTable, containsString("LLPYWQDVIAK"));
+        assertThat(getDataTable, containsString("LLSEEALPAIR"));
+        assertThat(getDataTable, containsString("LLTTIADAAK"));
+        assertThat(getDataTable, containsString("LSVQDLDLK"));
+        assertThat(getDataTable, containsString("LTSLNVVAGSDLR"));
+        assertThat(getDataTable, containsString("LVEAFQWTDK"));
+        assertThat(getDataTable, containsString("LVEDPQVIAPFLGK"));
+        assertThat(getDataTable, containsString("LWDVATGETYQR"));
+        assertThat(getDataTable, containsString("2"));
     }
 
     private void runClientAPITestCore(String request_core)
