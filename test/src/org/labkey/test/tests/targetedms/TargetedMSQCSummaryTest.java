@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.targetedms;
 
+import org.labkey.api.util.DateUtil;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -39,8 +40,12 @@ import org.labkey.test.util.TextSearcher;
 import org.openqa.selenium.WebElement;
 
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -59,6 +64,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     private static final String FOLDER_3 = "NonQC Subfolder 3";
     private static final int QCPING_WAIT = 61000; // Value used for sleep, in milliseconds.
     private static final String QCPING_TIMEOUT = "1"; // Value set in the Module Properties. This is in minutes.
+    private static final String DATE_FORMAT = "yyyy-MM-dd kk:mm";
 
     @Override
     protected String getProjectName()
@@ -189,10 +195,10 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         log("Validate the recently loaded file content is correct.");
         List<String> tempStringList01 = new ArrayList<>();
         List<List<String>> tempStringList02 = new ArrayList<>();
-        tempStringList01.add("2015/01/16 15:08:15 - no outliers");
-        tempStringList01.add("2015/01/16 12:47:30 - no outliers");
-        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_04", "Acquired Date/Time: 2015/01/16 15:08:15"));
-        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_03", "Acquired Date/Time: 2015/01/16 12:47:30"));
+        tempStringList01.add("2015-01-16 15:08 - no outliers");
+        tempStringList01.add("2015-01-16 12:47 - no outliers");
+        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_04", "Acquired Date/Time: 2015-01-16 15:08"));
+        tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_03", "Acquired Date/Time: 2015-01-16 12:47"));
         validateSampleFile(0, tempStringList01, tempStringList02);
 
         // remove all sample files
@@ -223,11 +229,11 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         setAutoQCPingTimeOut(QCPING_TIMEOUT);
 
         waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
-        tempStringList01.add("2013/08/27 14:45:49 - no outliers");
-        tempStringList01.add("2013/08/27 03:19:45 - no outliers");
-        tempStringList01.add("2013/08/26 04:27:53 - no outliers");
-        tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_58", "Acquired Date/Time: 2013/08/27 14:45:49"));
-        tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_51", "Acquired Date/Time: 2013/08/27 03:19:45"));
+        tempStringList01.add("2013-08-27 14:45 - no outliers");
+        tempStringList01.add("2013-08-27 03:19 - no outliers");
+        tempStringList01.add("2013-08-26 04:27 - no outliers");
+        tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_58", "Acquired Date/Time: 2013-08-27 14:45"));
+        tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_51", "Acquired Date/Time: 2013-08-27 03:19"));
         tempStringList02.add(Arrays.asList("Out of guide set range: no outliers"));
         validateSampleFile(0, tempStringList01, tempStringList02);
 
@@ -298,15 +304,15 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         validateAutoQCStatus(SUB_FOLDER02, tempStringList01, "Was pinged on " + lastPingedDate);
 
         log("Validate that a guide set updates the file info as expected.");
-        GuideSet gs = new GuideSet("2013/08/22 00:00:01", "2013/08/27 00:04:00", null);
+        GuideSet gs = new GuideSet("2013-08-22 00:00", "2013-08-27 00:04", null);
         createGuideSetFromTable(gs);
 
         goToProjectHome();
         waitForRecentSampleFiles(6);
 
         tempStringList01.clear();
-        tempStringList01.add("2013/08/27 14:45:49 - 1/56 (Levey-Jennings), 1/56 (Moving Range)");
-        tempStringList01.add("2013/08/27 03:19:45 - 4/56 (Moving Range) outliers");
+        tempStringList01.add("2013-08-27 14:45 - 1/56 (Levey-Jennings), 1/56 (Moving Range)");
+        tempStringList01.add("2013-08-27 03:19 - 4/56 (Moving Range) outliers");
 
         tempStringList02.clear();
         tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_58", "Full Width at Half Maximum (FWHM) 1 1 0 0 0 0"));
@@ -402,7 +408,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         Connection cn = createDefaultConnection(true);
         AutoQCPing aqcp = new AutoQCPing();
         CommandResponse cr;
-        String lastPingedDate, folderPath = getProjectName();
+        String lastPingedDate, formattedDate, folderPath = getProjectName();
 
         if(null != subFolder)
         {
@@ -413,13 +419,14 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         {
             cr = aqcp.execute(cn, folderPath);
             lastPingedDate = cr.getProperty("Modified");
+            formattedDate = DateUtil.formatDateTimeISO8601(DateUtil.parseDateTime(lastPingedDate, DATE_FORMAT));
         }
-        catch (IOException | CommandException e)
+        catch (IOException | CommandException | ParseException e)
         {
             throw new RuntimeException("Error trying to ping.", e);
         }
 
-        return lastPingedDate;
+        return formattedDate;
     }
 
     public class AutoQCPing extends Command<CommandResponse>

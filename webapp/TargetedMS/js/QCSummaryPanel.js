@@ -181,7 +181,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }
         else
         {
-            content = autoQC.isRecent ? 'Was pinged recently on ' + autoQC.modified : 'Was pinged on ' + autoQC.modified;
+            content = autoQC.isRecent ? 'Was pinged recently on ' + autoQC.modified : 'Was pinged on ' + Ext4.util.Format.date(autoQC.modified, LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s');
             width = autoQC.isRecent ? 160 : 140;
         }
 
@@ -371,7 +371,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
             var iconCls = !sampleFile.IgnoreForAllMetric ? (!sampleFile.hasOutliers ? 'fa-file-o qc-correct' : 'fa-file qc-error') : 'fa-file-o qc-none';
             html += '<div class="sample-file-item" id="' + sampleFile.calloutId + '">'
-                    + '<span class="fa ' + iconCls + '"></span> ' + sampleFile.AcquiredTime + ' - ';
+                    + '<span class="fa ' + iconCls + '"></span> ' + Ext4.util.Format.date(sampleFile.AcquiredTime, LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s') + ' - ';
 
             if (sampleFile.IgnoreForAllMetric) {
                 html += 'not included in QC</div>';
@@ -423,7 +423,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
         // generate the HTML content for the sample file display details
         content += '<span class="sample-file-field-label">Name:</span> ' + sampleFile.SampleFile
-                + '<br/><span class="sample-file-field-label">Acquired Date/Time:</span> ' + sampleFile.AcquiredTime
+                + '<br/><span class="sample-file-field-label">Acquired Date/Time:</span> ' + Ext4.util.Format.date(sampleFile.AcquiredTime, LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s')
                 + '<br/><span class="sample-file-field-label">Number of tracked metrics:</span> ' + sampleFile.Metrics
                 + '<br/><span class="sample-file-field-label">Number of data points:</span> ' + (sampleFile.Metrics > 0 ? sampleFile.TotalCount/sampleFile.Metrics : 'n/a')
                 + '<br/><span class="sample-file-field-label">Out of guide set range:</span> ';

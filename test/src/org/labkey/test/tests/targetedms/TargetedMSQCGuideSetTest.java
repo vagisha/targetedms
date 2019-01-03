@@ -584,7 +584,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
     private Date parseUrlDate(String urlDate)
     {
-        SimpleDateFormat urlDateFormat = new SimpleDateFormat("yyyy/MM/dd");
+        SimpleDateFormat urlDateFormat = new SimpleDateFormat("yyyy-MM-dd");
         try
         {
             return urlDateFormat.parse(urlDate);
