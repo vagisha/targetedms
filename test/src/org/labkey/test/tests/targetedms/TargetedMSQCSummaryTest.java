@@ -15,7 +15,7 @@
  */
 package org.labkey.test.tests.targetedms;
 
-import org.labkey.api.util.DateUtil;
+import org.apache.commons.lang3.time.FastDateFormat;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -40,7 +40,6 @@ import org.labkey.test.util.TextSearcher;
 import org.openqa.selenium.WebElement;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -65,6 +64,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     private static final int QCPING_WAIT = 61000; // Value used for sleep, in milliseconds.
     private static final String QCPING_TIMEOUT = "1"; // Value set in the Module Properties. This is in minutes.
     private static final String DATE_FORMAT = "yyyy-MM-dd kk:mm";
+    private static final String BUBBLE_TIME_FORMAT = "yyyy-MM-dd HH:mm";
+
 
     @Override
     protected String getProjectName()
@@ -408,7 +409,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         Connection cn = createDefaultConnection(true);
         AutoQCPing aqcp = new AutoQCPing();
         CommandResponse cr;
-        String lastPingedDate, formattedDate, folderPath = getProjectName();
+        String folderPath = getProjectName();
 
         if(null != subFolder)
         {
@@ -418,15 +419,14 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         try
         {
             cr = aqcp.execute(cn, folderPath);
-            lastPingedDate = cr.getProperty("Modified");
-            formattedDate = DateUtil.formatDateTimeISO8601(DateUtil.parseDateTime(lastPingedDate, DATE_FORMAT));
+            String lastPingedDate = cr.getProperty("Modified");
+            Date date = new SimpleDateFormat(DATE_FORMAT).parse(lastPingedDate);
+            return FastDateFormat.getInstance(BUBBLE_TIME_FORMAT).format(date);
         }
         catch (IOException | CommandException | ParseException e)
         {
             throw new RuntimeException("Error trying to ping.", e);
         }
-
-        return formattedDate;
     }
 
     public class AutoQCPing extends Command<CommandResponse>
