@@ -63,7 +63,6 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     private static final String FOLDER_3 = "NonQC Subfolder 3";
     private static final int QCPING_WAIT = 61000; // Value used for sleep, in milliseconds.
     private static final String QCPING_TIMEOUT = "1"; // Value set in the Module Properties. This is in minutes.
-    private static final String DATE_FORMAT = "yyyy-MM-dd kk:mm";
     private static final String BUBBLE_TIME_FORMAT = "yyyy-MM-dd HH:mm";
 
 
@@ -420,7 +419,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         {
             cr = aqcp.execute(cn, folderPath);
             String lastPingedDate = cr.getProperty("Modified");
-            Date date = new SimpleDateFormat(DATE_FORMAT).parse(lastPingedDate);
+            Date date = new SimpleDateFormat(BUBBLE_TIME_FORMAT).parse(lastPingedDate);
             return FastDateFormat.getInstance(BUBBLE_TIME_FORMAT).format(date);
         }
         catch (IOException | CommandException | ParseException e)

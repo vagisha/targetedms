@@ -181,7 +181,8 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }
         else
         {
-            content = autoQC.isRecent ? 'Was pinged recently on ' + autoQC.modified : 'Was pinged on ' + Ext4.util.Format.date(autoQC.modified, LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s');
+            var modifiedFormatted = Ext4.util.Format.date(autoQC.modified, LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s');
+            content = autoQC.isRecent ? 'Was pinged recently on ' + modifiedFormatted : 'Was pinged on ' + modifiedFormatted;
             width = autoQC.isRecent ? 160 : 140;
         }
 
