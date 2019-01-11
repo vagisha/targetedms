@@ -164,9 +164,15 @@
     <instrument id="MS:1002728" name="Vion IMS QTof" vendor="Waters" description="&quot;Waters Corporation Vion IMS QTof orthogonal acceleration time-of-flight mass spectrometer.&quot; [PSI:PI]"/>
     <instrument id="MS:1002727" name="MALDI SYNAPT G2-Si" vendor="Waters" description="&quot;Waters Corporation MALDI SYNAPT G2-Si orthogonal acceleration time-of-flight mass spectrometer.&quot; [PSI:PI]"/>
     <instrument id="MS:1000491" name="Dionex instrument model" vendor="instrument model" description="Dionex instrument model."/>
+    <instrument id="MS:1003000" name="LCMS-8050" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-8050 MS."/>
+    <instrument id="MS:1002999" name="LCMS-8060" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-8060 MS."/>
+    <instrument id="MS:1002998" name="LCMS-9030" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-9030 Q-TOF MS."/>
     <instrument id="MS:1000605" name="LCMS-2010EV" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-2010EV MS."/>
+    <instrument id="MS:1003001" name="LCMS-8045" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-8045 MS."/>
     <instrument id="MS:1000604" name="LCMS-IT-TOF" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-IT-TOF MS."/>
+    <instrument id="MS:1003002" name="LCMS-8040" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-8040 MS."/>
     <instrument id="MS:1000606" name="LCMS-2010A" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-2010A MS."/>
+    <instrument id="MS:1003003" name="LCMS-2020" vendor="Shimadzu Scientific Instruments" description="Shimadzu Scientific Instruments LCMS-2020."/>
     <instrument id="MS:1002382" name="Shimadzu MALDI-7090" vendor="Shimadzu MALDI-TOF" description="&quot;Shimadzu MALDI-7090: MALDI-TOF-TOF.&quot; [PSI:PI]"/>
     <instrument id="MS:1000607" name="AXIMA CFR MALDI-TOF" vendor="Shimadzu MALDI-TOF" description="Shimadzu Biotech AXIMA CFR MALDI-TOF MS."/>
     <instrument id="MS:1000608" name="AXIMA-QIT" vendor="Shimadzu MALDI-TOF" description="Shimadzu Biotech AXIMA-QIT MS."/>

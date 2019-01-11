@@ -131,6 +131,7 @@ resources/schemas/dbscripts/postgresql/targetedms-18.20-18.21.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-18.20-18.30.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-18.21-18.22.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-18.22-18.23.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-18.30-18.31.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-13.10.sql -text
@@ -218,6 +219,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-18.20-18.21.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-18.20-18.30.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-18.21-18.22.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-18.22-18.23.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-18.30-18.31.sql -text
 resources/schemas/targetedms.xml -text
 resources/unimod_NO_NAMESPACE.xml -text
 src/ChromatogramGroupData.proto -text

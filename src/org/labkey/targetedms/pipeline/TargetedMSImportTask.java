@@ -23,6 +23,7 @@ import org.labkey.api.pipeline.AbstractTaskFactory;
 import org.labkey.api.pipeline.AbstractTaskFactorySettings;
 import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
+import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.RecordedActionSet;
 import org.labkey.api.util.FileType;
 import org.labkey.targetedms.SkylineDocImporter;
@@ -62,7 +63,8 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
                                                                  job.getLocalDirectory(), job.getPipeRoot());
             TargetedMSRun run = importer.importRun(job.getRunInfo());
 
-            ExpRun expRun = TargetedMSManager.ensureWrapped(run, job.getUser(), job.getPipeRoot());
+            Integer jobId = PipelineService.get().getJobId(getJob().getUser(), getJob().getContainer(), getJob().getJobGUID());
+            ExpRun expRun = TargetedMSManager.ensureWrapped(run, job.getUser(), job.getPipeRoot(), jobId);
 
             // Check if an experiment is defined in the current folder, or if an experiment defined in a parent folder
             // has been configured to include subfolders.

@@ -567,7 +567,7 @@ public class TargetedMSManager
         }
     }
 
-    public static ExpRun ensureWrapped(TargetedMSRun run, User user, PipeRoot pipeRoot) throws ExperimentException
+    public static ExpRun ensureWrapped(TargetedMSRun run, User user, PipeRoot pipeRoot, Integer jobId) throws ExperimentException
     {
         ExpRun expRun;
         if (run.getExperimentRunLSID() != null)
@@ -578,10 +578,10 @@ public class TargetedMSManager
                 return expRun;
             }
         }
-        return wrapRun(run, user, pipeRoot);
+        return wrapRun(run, user, pipeRoot, jobId);
     }
 
-    private static ExpRun wrapRun(TargetedMSRun run, User user, PipeRoot pipeRoot) throws ExperimentException
+    private static ExpRun wrapRun(TargetedMSRun run, User user, PipeRoot pipeRoot, Integer jobId) throws ExperimentException
     {
         try (DbScope.Transaction transaction = ExperimentService.get().getSchema().getScope().ensureTransaction())
         {
@@ -605,6 +605,7 @@ public class TargetedMSManager
 
             ExpRun expRun = ExperimentService.get().createExperimentRun(container, run.getDescription());
             expRun.setProtocol(protocol);
+            expRun.setJobId(jobId);
             expRun.setFilePathRootPath(null != skylineFile ? skylineFile.getParent() : null);
             ViewBackgroundInfo info = new ViewBackgroundInfo(container, user, null);
 

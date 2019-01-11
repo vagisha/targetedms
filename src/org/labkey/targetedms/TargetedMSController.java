@@ -511,9 +511,7 @@ public class TargetedMSController extends SpringActionController
                 }
             }
 
-            String fileRootString = (null == fileRoot || !FileUtil.hasCloudScheme(fileRoot)) ?
-                    FileContentService.FILES_LINK + "/" + FolderSetupAction.RAW_FILE_DIR + "/" :
-                    FileContentService.CLOUD_LINK + "/" + service.getCloudRootName(c) + "/" + FolderSetupAction.RAW_FILE_DIR + "/";
+            String fileRootString = FileContentService.FILES_LINK + "/" + FolderSetupAction.RAW_FILE_DIR + "/";
             webPart.setProperty(FilesWebPart.FILE_ROOT_PROPERTY_NAME, fileRootString);
         }
     }
@@ -5873,7 +5871,6 @@ public class TargetedMSController extends SpringActionController
         view.addClientDependency(ClientDependency.fromPath("TargetedMS/js/bootstrap-tagsinput.min.js"));
         view.addClientDependency(ClientDependency.fromPath("/TargetedMS/css/typeahead-examples.css"));
         view.addClientDependency(ClientDependency.fromPath("/TargetedMS/js/typeahead.bundle.min.js"));
-        view.addClientDependency(ClientDependency.fromPath("/TargetedMS/js/autocomplete.js"));
     }
 
     @RequiresPermission(UpdatePermission.class)
