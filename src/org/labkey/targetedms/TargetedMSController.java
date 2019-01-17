@@ -2778,10 +2778,6 @@ public class TargetedMSController extends SpringActionController
             return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
         }
 
-        public void validateCommand(SkylinePipelinePathForm form, Errors errors)
-        {
-        }
-
         public boolean doAction(SkylinePipelinePathForm form, BindException errors) throws Exception
         {
             for (Path path : form.getValidatedPaths(getContainer(), false))
@@ -4205,14 +4201,8 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public void validateCommand(ResolveConflictForm form, Errors errors)
-        {
-        }
-
-        @Override
         public boolean doAction(ResolveConflictForm resolveConflictForm, BindException errors) throws Exception
         {
-
             if(resolveConflictForm.getConflictLevel() == null)
             {
                 errors.reject(ERROR_MSG, "Missing 'conflictLevel' parameter.");
