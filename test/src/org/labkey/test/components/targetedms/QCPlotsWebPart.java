@@ -37,7 +37,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
 
 import static org.junit.Assert.assertEquals;
 import static org.labkey.test.BaseWebDriverTest.WAIT_FOR_JAVASCRIPT;
@@ -525,21 +524,11 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public WebElement openExclusionBubble(String acquiredDate)
     {
-        getWrapper().shortWait().ignoring(StaleElementReferenceException.class).until(new Function<WebDriver, Boolean>()
-        {
-            @Override
-            public Boolean apply(@javax.annotation.Nullable WebDriver input)
-            {
-                getWrapper().mouseOver(getPointByAcquiredDate(acquiredDate));
-                return getWrapper().isElementPresent(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
-            }
-
-            @Override
-            public String toString()
-            {
-                return "Exclusion pop-up";
-            }
-        });
+        getWrapper().shortWait().ignoring(StaleElementReferenceException.class).withMessage("Exclusion pop-up for Acquired Date = " + acquiredDate)
+                .until(input -> {
+                    getWrapper().mouseOver(getPointByAcquiredDate(acquiredDate));
+                    return getWrapper().isElementPresent(Locator.tagWithClass("div", "x4-form-display-field").withText(acquiredDate));
+                });
         return elementCache().hopscotchBubble.findElement(getDriver());
     }
 
@@ -683,6 +672,13 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         Checkbox checkbox = elementCache().findQCPlotTypeCheckbox(plotType);
         getWrapper().scrollIntoView(checkbox.getComponentElement());
         checkbox.set(checked);
+        dismissTooltip();
+    }
+
+    private void dismissTooltip()
+    {
+        new Actions(getDriver()).moveToElement(elementCache().webPartTitle).perform();
+        getWrapper().shortWait().until(ExpectedConditions.invisibilityOfElementLocated(Locator.byClass("hopscotch-callout")));
     }
 
     public boolean isPlotTypeSelected(QCPlotType plotType)
