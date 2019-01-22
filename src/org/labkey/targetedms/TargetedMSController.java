@@ -45,8 +45,8 @@ import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasViewContext;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
+import org.labkey.api.action.OldRedirectAction;
 import org.labkey.api.action.QueryViewAction;
-import org.labkey.api.action.RedirectAction;
 import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
@@ -139,7 +139,6 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.ViewForm;
 import org.labkey.api.view.ViewServlet;
 import org.labkey.api.view.WebPartView;
-import org.labkey.api.view.template.ClientDependencies;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
@@ -238,7 +237,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -454,7 +452,7 @@ public class TargetedMSController extends SpringActionController
     // Action to create a Raw Data tab
     // ------------------------------------------------------------------------
     @RequiresPermission(AdminPermission.class)
-    public class AddRawDataTabAction extends RedirectAction
+    public class AddRawDataTabAction extends OldRedirectAction
     {
         @Override
         public boolean doAction(Object o, BindException errors)
@@ -2771,7 +2769,7 @@ public class TargetedMSController extends SpringActionController
     // Document upload action
     // ------------------------------------------------------------------------
     @RequiresPermission(InsertPermission.class)
-    public class SkylineDocUploadAction extends RedirectAction<SkylinePipelinePathForm>
+    public class SkylineDocUploadAction extends OldRedirectAction<SkylinePipelinePathForm>
     {
         public ActionURL getSuccessURL(SkylinePipelinePathForm form)
         {
@@ -4192,7 +4190,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ResolveConflictAction extends RedirectAction<ResolveConflictForm>
+    public class ResolveConflictAction extends OldRedirectAction<ResolveConflictForm>
     {
         @Override
         public URLHelper getSuccessURL(ResolveConflictForm resolveConflictForm)
