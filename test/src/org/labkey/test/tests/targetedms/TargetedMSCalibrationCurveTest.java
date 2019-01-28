@@ -774,7 +774,6 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         try (TabLoader tabLoader = new TabLoader(file, true))
         {
             tabLoader.parseAsCSV();
-            tabLoader.setInferTypes(false);
             return tabLoader.load();
         }
     }
