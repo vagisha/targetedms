@@ -349,6 +349,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         return {
             rendererType : 'd3',
             renderTo : id,
+            clipRect: true, // set this to true to prevent lines from running outside of the plot region
             data : Ext4.Array.clone(data),
             width : this.getPlotWidth(),
             height : this.singlePlot ? 500 : 300,
