@@ -59,7 +59,6 @@ import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.UnexpectedException;
@@ -635,20 +634,17 @@ public class TargetedMSSchema extends UserSchema
                         {
                             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {
-                                FieldKey parentFK = this.getColumnInfo().getFieldKey().getParent();
-                                String runLSID = ctx.get(new FieldKey(parentFK, "ExperimentRunLSID"), String.class);
                                 Integer runId = ctx.get(this.getColumnInfo().getFieldKey(), Integer.class);
-                                Container container = ctx.get(FieldKey.fromParts("Folder"), Container.class);
-                                if (runId != null && runLSID != null)
+                                if (runId != null)
                                 {
                                     downloadUrl.replaceParameter("runId", runId.toString());
 
-                                    Path skyDocFile = SkylineFileUtils.getSkylineFile(runLSID, container);
-                                    if (skyDocFile != null && !Files.isDirectory(skyDocFile))
-                                    {
+                                    TargetedMSRun run = TargetedMSManager.getRun(runId);
 
+                                    if(run != null)
+                                    {
                                         String onClickScript = null;
-                                        if(!StringUtils.isBlank(AnalyticsService.getTrackingScript()))
+                                        if (!StringUtils.isBlank(AnalyticsService.getTrackingScript()))
                                         {
                                             // http://www.blastam.com/blog/how-to-track-downloads-in-google-analytics
                                             // Tell the browser to wait 400ms before going to the download.  This is to ensure
@@ -656,18 +652,39 @@ public class TargetedMSSchema extends UserSchema
                                             // request if the download opens on the same page.
                                             String timeout = "setTimeout(function(){location.href=that.href;},400);return false;";
 
-                                            onClickScript = "if(_gaq) {that=this; _gaq.push(['_trackEvent', 'SkyDocDownload', '" + ctx.getContainerPath() + "', '" + FileUtil.getFileName(skyDocFile) + "']); " + timeout + "}";
+                                            onClickScript = "if(_gaq) {that=this; _gaq.push(['_trackEvent', 'SkyDocDownload', '" + ctx.getContainerPath() + "', '" + run.getFileName() + "']); " + timeout + "}";
                                         }
                                         out.write(PageFlowUtil.iconLink("fa fa-download", "Download File", PageFlowUtil.filter(downloadUrl),
-                                                                        onClickScript, null, null));
-                                        String size = h(" (" + FileUtils.byteCountToDisplaySize(Files.size(skyDocFile)) + ")");
-                                        out.write(size);
+                                                onClickScript, null, null));
+
+                                        String documentSize = getDocumentSize(run);
+                                        if(documentSize != null)
+                                        {
+                                            out.write(h(" (" + documentSize + ")"));
+                                        }
                                     }
                                     else
                                     {
                                         out.write("<em>Not available</em>");
                                     }
                                 }
+                            }
+
+                            private String getDocumentSize(TargetedMSRun run) throws IOException
+                            {
+                                if(run.getDocumentSize() != null)
+                                {
+                                    return FileUtils.byteCountToDisplaySize(run.getDocumentSize());
+                                }
+                                else
+                                {
+                                    Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID(), run.getContainer());
+                                    if (skyDocFile != null && !Files.isDirectory(skyDocFile))
+                                    {
+                                        return FileUtils.byteCountToDisplaySize(Files.size(skyDocFile));
+                                    }
+                                }
+                                return null;
                             }
 
                             @Override

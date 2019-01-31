@@ -180,6 +180,10 @@ public class SkylineDocImporter
             if (null == inputFile)
                 throw new FileNotFoundException();
 
+            // Set the size of the Skyline document (.sky.zip) file.
+            run.setDocumentSize(Files.size(inputFile.toPath()));
+            saveRunDocumentSize(run);
+
             updateRunStatus(IMPORT_STARTED);
             _log.info("Starting to import Skyline document from " + run.getFileName());
             importSkylineDoc(run, inputFile);
@@ -1844,6 +1848,12 @@ public class SkylineDocImporter
             result.add(value);
         }
         return result;
+    }
+
+    private void saveRunDocumentSize(TargetedMSRun run)
+    {
+        new SqlExecutor(TargetedMSManager.getSchema()).execute("UPDATE " + TargetedMSManager.getTableInfoRuns() + " SET DocumentSize = ? WHERE Id = ?",
+                run.getDocumentSize(), run.getId());
     }
 
     protected void updateRunStatus(String status)

@@ -187,6 +187,9 @@
                 <formatString>#,###</formatString>
                 <url>/targetedms-showCalibrationCurves.view?id=${Id}</url>
             </column>
+            <column columnName="DocumentSize">
+                <isHidden>true</isHidden>
+            </column>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="PeptideGroup">

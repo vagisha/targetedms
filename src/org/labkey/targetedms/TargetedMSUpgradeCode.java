@@ -24,6 +24,7 @@ import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.DeferredUpgrade;
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
@@ -48,9 +49,10 @@ import org.labkey.targetedms.model.ExperimentAnnotations;
 import org.labkey.targetedms.model.JournalExperiment;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -295,5 +297,89 @@ public class TargetedMSUpgradeCode implements UpgradeCode
             }
         }, TargetedMSRun.class, 1000);
 
+    }
+
+    // Called at 18.31 - 18.32
+    @SuppressWarnings({"UnusedDeclaration"})
+    @DeferredUpgrade
+    public void addDocumentSize(final ModuleContext moduleContext)
+    {
+        TableSelector ts = new TableSelector(TargetedMSManager.getTableInfoRuns(), new SimpleFilter(FieldKey.fromParts("status"), null, CompareType.ISBLANK), null);
+
+        final long documentCount = ts.getRowCount();
+
+        LOG.info("Updating targetedms.DocumentSize for " + documentCount + " rows");
+        AddDocumentSizeBatchBlock batch = new AddDocumentSizeBatchBlock(TargetedMSSchema.getSchema(), documentCount);
+        ts.forEachBatch(batch, TargetedMSRun.class, 500);
+
+        if(batch.getErrorCount() > 0)
+        {
+            LOG.warn("Could not update targetedms.DocumentSize for " + batch.getErrorCount() + " rows.");
+        }
+    }
+
+    private class AddDocumentSizeBatchBlock implements Selector.ForEachBatchBlock<TargetedMSRun>
+    {
+        private final String updateSql = "UPDATE targetedms.runs SET DocumentSize = ? WHERE Id = ?";
+        private final DbSchema _schema;
+        private final long _totalCount;
+        private long _count = 0;
+        private long _errorCount = 0;
+
+        public AddDocumentSizeBatchBlock(DbSchema schema, long totalCount)
+        {
+            _schema = schema;
+            _totalCount = totalCount;
+        }
+
+        @Override
+        public void exec(List<TargetedMSRun> batch) throws SQLException
+        {
+            try (DbScope.Transaction transaction = _schema.getScope().ensureTransaction())
+            {
+                ArrayList<Collection<Object>> paramList = new ArrayList<>();
+
+                for (TargetedMSRun run : batch)
+                {
+                    Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID(), run.getContainer());
+                    if (skyDocFile != null && Files.exists(skyDocFile) && !Files.isDirectory(skyDocFile))
+                    {
+                        try
+                        {
+                            List<Object> params = new ArrayList<>();
+                            params.add(Files.size(skyDocFile));
+                            params.add(run.getId());
+                            paramList.add(params);
+                            _count++;
+
+                            if (_count % 100 == 0)
+                            {
+                                LOG.info(String.format("Processing targetedms.DocumentSize for %d / %d rows.", _count, _totalCount));
+                            }
+                        }
+                        catch (IOException e)
+                        {
+                            LOG.warn("Could not get size of Skyline document: " + skyDocFile.toAbsolutePath(), e);
+                            _errorCount++;
+                        }
+                    }
+                    else
+                    {
+                        _errorCount++;
+                    }
+                }
+                if(paramList.size() > 0)
+                {
+                    Table.batchExecute(_schema, updateSql, paramList);
+                }
+                transaction.commit();
+                LOG.info(String.format("UPDATED targetedms.DocumentSize for %d / %d rows.", _count, _totalCount));
+            }
+        }
+
+        long getErrorCount()
+        {
+            return _errorCount;
+        }
     }
 }

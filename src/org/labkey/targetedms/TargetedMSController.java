@@ -43,6 +43,7 @@ import org.labkey.api.action.ExportAction;
 import org.labkey.api.action.FormHandlerAction;
 import org.labkey.api.action.FormViewAction;
 import org.labkey.api.action.HasViewContext;
+import org.labkey.api.action.LabKeyError;
 import org.labkey.api.action.Marshal;
 import org.labkey.api.action.Marshaller;
 import org.labkey.api.action.OldRedirectAction;
@@ -4395,7 +4396,8 @@ public class TargetedMSController extends SpringActionController
             }
             if(!Files.exists(file))
             {
-                throw new NotFoundException("File " + file + " does not exist.");
+                errors.addError(new LabKeyError("File: " + file + " does not exist. It may have been deleted on the server."));
+                return new SimpleErrorView(errors, true);
             }
 
             try (InputStream inputStream = Files.newInputStream(file))

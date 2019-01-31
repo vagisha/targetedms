@@ -82,6 +82,8 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     private String _formatVersion;
     private GUID _documentGUID;
 
+    private Long _documentSize;
+
     public TargetedMSRun()
     {
         MemTracker.getInstance().put(this);
@@ -387,5 +389,15 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     public void setDocumentGUID(GUID documentGUID)
     {
         _documentGUID = documentGUID;
+    }
+
+    public Long getDocumentSize()
+    {
+        return _documentSize;
+    }
+
+    public void setDocumentSize(Long documentSize)
+    {
+        _documentSize = documentSize;
     }
 }
