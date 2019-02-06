@@ -1,0 +1,147 @@
+package org.labkey.targetedms.model;
+
+import org.json.JSONObject;
+
+import java.util.Date;
+
+public class LJOutlier
+{
+    int _guideSetId;
+    String _metricId;
+    String _metricName;
+    String _metricLabel;
+    String _sampleFile;
+    Date _acquiredTime;
+    boolean _ignoreInQC;
+    int _nonConformers;
+    int _totalCount;
+    int _CUSUMm;
+    int _CUSUMv;
+    int _CUSUMmN;
+    int _CUSUMmP;
+    int _CUSUMvP;
+    int _CUSUMvN;
+    int _mR;
+
+    public LJOutlier()
+    {
+        _CUSUMm = 0;
+        _CUSUMv = 0;
+        _CUSUMmN = 0;
+        _CUSUMmP = 0;
+        _CUSUMvP = 0;
+        _CUSUMvN = 0;
+        _mR = 0;
+    }
+
+    public int getGuideSetId()
+    {
+        return _guideSetId;
+    }
+
+    public void setGuideSetId(int guideSetId)
+    {
+        _guideSetId = guideSetId;
+    }
+
+    public String getMetricId()
+    {
+        return _metricId;
+    }
+
+    public void setMetricId(String metricId)
+    {
+        _metricId = metricId;
+    }
+
+    public String getMetricName()
+    {
+        return _metricName;
+    }
+
+    public void setMetricName(String metricName)
+    {
+        _metricName = metricName;
+    }
+
+    public String getMetricLabel()
+    {
+        return _metricLabel;
+    }
+
+    public void setMetricLabel(String metricLabel)
+    {
+        _metricLabel = metricLabel;
+    }
+
+    public String getSampleFile()
+    {
+        return _sampleFile;
+    }
+
+    public void setSampleFile(String sampleFile)
+    {
+        _sampleFile = sampleFile;
+    }
+
+    public Date getAcquiredTime()
+    {
+        return _acquiredTime;
+    }
+
+    public void setAcquiredTime(Date acquiredTime)
+    {
+        this._acquiredTime = acquiredTime;
+    }
+
+    public boolean isIgnoreInQC()
+    {
+        return _ignoreInQC;
+    }
+
+    public void setIgnoreInQC(boolean ignoreInQC)
+    {
+        this._ignoreInQC = ignoreInQC;
+    }
+
+    public int getNonConformers()
+    {
+        return _nonConformers;
+    }
+
+    public void setNonConformers(int nonConformers)
+    {
+        this._nonConformers = nonConformers;
+    }
+
+    public int getTotalCount()
+    {
+        return _totalCount;
+    }
+
+    public void setTotalCount(int totalCount)
+    {
+        this._totalCount = totalCount;
+    }
+
+    public JSONObject toJSON(){
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("GuideSetId", _guideSetId);
+        jsonObject.put("MetricId", _metricId);
+        jsonObject.put("MetricName", _metricName);
+        jsonObject.put("MetricLabel", _metricLabel);
+        jsonObject.put("SampleFile", _sampleFile);
+        jsonObject.put("AcquiredTime",  _acquiredTime);
+        jsonObject.put("IgnoreInQC",  _ignoreInQC);
+        jsonObject.put("NonConformers",  _nonConformers);
+        jsonObject.put("CUSUMm",  _CUSUMm);
+        jsonObject.put("CUSUMv",  _CUSUMv);
+        jsonObject.put("CUSUMmN",  _CUSUMmN);
+        jsonObject.put("CUSUMmP",  _CUSUMmP);
+        jsonObject.put("CUSUMvP",  _CUSUMvP);
+        jsonObject.put("CUSUMvN",  _CUSUMvN);
+        jsonObject.put("mR",  _mR);
+
+        return jsonObject;
+    }
+}

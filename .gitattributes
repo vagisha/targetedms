@@ -345,11 +345,15 @@ src/org/labkey/targetedms/model/ExperimentAnnotations.java -text
 src/org/labkey/targetedms/model/GuideSet.java -text
 src/org/labkey/targetedms/model/Journal.java -text
 src/org/labkey/targetedms/model/JournalExperiment.java -text
+src/org/labkey/targetedms/model/LJOutlier.java -text
+src/org/labkey/targetedms/model/Outlier.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoLitePlus.java -text
 src/org/labkey/targetedms/model/PrecursorChromInfoPlus.java -text
 src/org/labkey/targetedms/model/PrecursorComparator.java -text
 src/org/labkey/targetedms/model/QCMetricConfiguration.java -text
 src/org/labkey/targetedms/model/QCMetricExclusion.java -text
+src/org/labkey/targetedms/outliers/LevyJenningsOutliers.java -text
+src/org/labkey/targetedms/outliers/Outliers.java -text
 src/org/labkey/targetedms/parser/AbstractAnnotation.java -text
 src/org/labkey/targetedms/parser/AnnotatedEntity.java -text
 src/org/labkey/targetedms/parser/AnnotationSetting.java -text
