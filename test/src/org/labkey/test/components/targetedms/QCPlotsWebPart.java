@@ -512,14 +512,12 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
     public WebElement getPointByAcquiredDate(String dateStr)
     {
         dateStr = dateStr.replaceAll("/", "-"); // convert 2013/08/14 -> 2013-08-14
-        List<WebElement> points = elementCache().svgPoint.findElements(this);
-        for (WebElement p : points)
+        WebElement point = elementCache().svgPoint.attributeStartsWith("id", dateStr).findElementOrNull(this);
+        if (point == null)
         {
-            if (dateStr.equals(p.getAttribute("id")))
-                return p;
+            throw new NoSuchElementException("Unable to find svg point with with acquired date: " + dateStr);
         }
-
-        throw new NoSuchElementException("Unable to find svg point with with acquired date: " + dateStr);
+        return point;
     }
 
     public WebElement openExclusionBubble(String acquiredDate)

@@ -210,6 +210,7 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
 
         public boolean hasRecentSampleFileWithOulierTxt(String acquiredDate, String outlierStr)
         {
+            acquiredDate = acquiredDate.substring(0, acquiredDate.lastIndexOf(":")); // Sample file listing doesn't include seconds
             return Locators.recentSampleFile.withText(" " + acquiredDate + " - " + outlierStr).findElements(this).size() == 1;
         }
     }
