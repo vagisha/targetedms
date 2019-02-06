@@ -735,7 +735,7 @@ public class TargetedMSQCTest extends TargetedMSTest
     @Test
     public void testQCPlotExclusions()
     {
-        String[] sampleFileAcquiredDates = new String[]{"2015/01/16 09:12:39", "2015/01/16 12:26:46", "2015/01/16 14:47:30"};
+        String[] sampleFileAcquiredDates = new String[]{"2015-01-16 09:12", "2015-01-16 12:26", "2015-01-16 14:47"};
         String subFolderName = "QC Plot Exclusions Test";
         setupSubfolder(getProjectName(), subFolderName, FolderType.QC); //create a Panorama folder of type QC
 
