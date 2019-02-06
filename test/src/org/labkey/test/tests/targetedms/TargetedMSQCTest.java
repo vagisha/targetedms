@@ -255,6 +255,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         {
             if (type != qcPlotsWebPart.getCurrentMetricType())
             {
+                log("Verify plot type: " + type);
                 initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
                 qcPlotsWebPart.setMetricType(type, type.hasData());
                 if (type.hasData())
