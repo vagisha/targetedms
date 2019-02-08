@@ -15,7 +15,7 @@ public class RawGuideSet
     String seriesType;
     String comment;
     String referenceEnd;
-    int guideSetId;
+    Integer guideSetId;
 
     public Date getTrainingStart()
     {
@@ -107,12 +107,12 @@ public class RawGuideSet
         this.referenceEnd = referenceEnd;
     }
 
-    public int getGuideSetId()
+    public Integer getGuideSetId()
     {
         return guideSetId;
     }
 
-    public void setGuideSetId(int guideSetId)
+    public void setGuideSetId(Integer guideSetId)
     {
         this.guideSetId = guideSetId;
     }

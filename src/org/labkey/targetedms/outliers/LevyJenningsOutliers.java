@@ -1,18 +1,12 @@
 package org.labkey.targetedms.outliers;
 
-
-import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
-import org.labkey.api.data.SQLFragment;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.Date;
-import java.util.Map;
+import java.util.List;
 
 public class LevyJenningsOutliers extends Outliers
 {
@@ -28,26 +22,9 @@ public class LevyJenningsOutliers extends Outliers
         return _instance;
     }
 
-    public ArrayList<LJOutlier> getLJOutliers(ArrayList<QCMetricConfiguration> configurations, Container container, User user)
+    public List<LJOutlier> getLJOutliers(List<QCMetricConfiguration> configurations, Container container, User user)
     {
-        String sqlFragment = new SQLFragment(queryContainerSampleFileStats(configurations)).getSQL();
-        @NotNull Collection<Map<String, Object>> rows = executeQuery(container, user, sqlFragment).getMapCollection();
-        ArrayList<LJOutlier> ljOutliers = new ArrayList<>();
-
-        rows.forEach(row -> {
-            LJOutlier ljOutlier = new LJOutlier();
-            if(row.get("guideSetId") != null)
-                ljOutlier.setGuideSetId((Integer) (row.get("guideSetId")));
-            ljOutlier.setMetricId((String) row.get("metricId"));
-            ljOutlier.setMetricName((String) row.get("metricName"));
-            ljOutlier.setMetricLabel((String) row.get("metricLabel"));
-            ljOutlier.setSampleFile((String) row.get("sampleFile"));
-            ljOutlier.setAcquiredTime((Date) row.get("acquiredTime"));
-            ljOutlier.setIgnoreInQC((Boolean) row.get("ignoreInQC"));
-            ljOutlier.setNonConformers((Integer) row.get("nonConformers"));
-            ljOutlier.setTotalCount((Integer) row.get("totalCount"));
-            ljOutliers.add(ljOutlier);
-        });
+        List<LJOutlier> ljOutliers =  executeQuery(container, user, queryContainerSampleFileStats(configurations)).getArrayList(LJOutlier.class);
 
         ljOutliers.sort(Comparator.comparing(LJOutlier::getMetricLabel));
         ljOutliers.sort(Comparator.comparing(LJOutlier::getAcquiredTime).reversed());
@@ -55,9 +32,8 @@ public class LevyJenningsOutliers extends Outliers
         return ljOutliers;
     }
 
-    public String queryContainerSampleFileStats(ArrayList<QCMetricConfiguration> configurations)
+    public String queryContainerSampleFileStats(List<QCMetricConfiguration> configurations)
     {
-        // _qcMetricConfigurations = new TargetedMSController().getQCMetricConfigurations(container);
         StringBuilder sqlBuilder = new StringBuilder();
         String sep = "";
 

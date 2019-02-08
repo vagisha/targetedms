@@ -6,7 +6,7 @@ import java.util.Date;
 
 public class LJOutlier
 {
-    int _guideSetId;
+    Integer _guideSetId;
     String _metricId;
     String _metricName;
     String _metricLabel;
@@ -34,12 +34,12 @@ public class LJOutlier
         _mR = 0;
     }
 
-    public int getGuideSetId()
+    public Integer getGuideSetId()
     {
         return _guideSetId;
     }
 
-    public void setGuideSetId(int guideSetId)
+    public void setGuideSetId(Integer guideSetId)
     {
         _guideSetId = guideSetId;
     }
@@ -91,7 +91,7 @@ public class LJOutlier
 
     public void setAcquiredTime(Date acquiredTime)
     {
-        this._acquiredTime = acquiredTime;
+        _acquiredTime = acquiredTime;
     }
 
     public boolean isIgnoreInQC()
@@ -101,7 +101,7 @@ public class LJOutlier
 
     public void setIgnoreInQC(boolean ignoreInQC)
     {
-        this._ignoreInQC = ignoreInQC;
+        _ignoreInQC = ignoreInQC;
     }
 
     public int getNonConformers()
@@ -111,7 +111,7 @@ public class LJOutlier
 
     public void setNonConformers(int nonConformers)
     {
-        this._nonConformers = nonConformers;
+        _nonConformers = nonConformers;
     }
 
     public int getTotalCount()
@@ -121,7 +121,77 @@ public class LJOutlier
 
     public void setTotalCount(int totalCount)
     {
-        this._totalCount = totalCount;
+        _totalCount = totalCount;
+    }
+
+    public int getCUSUMm()
+    {
+        return _CUSUMm;
+    }
+
+    public void setCUSUMm(int CUSUMm)
+    {
+        _CUSUMm = CUSUMm;
+    }
+
+    public int getCUSUMv()
+    {
+        return _CUSUMv;
+    }
+
+    public void setCUSUMv(int CUSUMv)
+    {
+        _CUSUMv = CUSUMv;
+    }
+
+    public int getCUSUMmN()
+    {
+        return _CUSUMmN;
+    }
+
+    public void setCUSUMmN(int CUSUMmN)
+    {
+        _CUSUMmN = CUSUMmN;
+    }
+
+    public int getCUSUMmP()
+    {
+        return _CUSUMmP;
+    }
+
+    public void setCUSUMmP(int CUSUMmP)
+    {
+        _CUSUMmP = CUSUMmP;
+    }
+
+    public int getCUSUMvP()
+    {
+        return _CUSUMvP;
+    }
+
+    public void setCUSUMvP(int CUSUMvP)
+    {
+        _CUSUMvP = CUSUMvP;
+    }
+
+    public int getCUSUMvN()
+    {
+        return _CUSUMvN;
+    }
+
+    public void setCUSUMvN(int CUSUMvN)
+    {
+        _CUSUMvN = CUSUMvN;
+    }
+
+    public int getmR()
+    {
+        return _mR;
+    }
+
+    public void setmR(int mR)
+    {
+        _mR = mR;
     }
 
     public JSONObject toJSON(){

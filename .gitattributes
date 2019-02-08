@@ -353,6 +353,8 @@ src/org/labkey/targetedms/model/PrecursorComparator.java -text
 src/org/labkey/targetedms/model/QCMetricConfiguration.java -text
 src/org/labkey/targetedms/model/QCMetricExclusion.java -text
 src/org/labkey/targetedms/model/RawGuideSet.java -text
+src/org/labkey/targetedms/model/RawMetricDataSet.java -text
+src/org/labkey/targetedms/outliers/CUSUMOutliers.java -text
 src/org/labkey/targetedms/outliers/LevyJenningsOutliers.java -text
 src/org/labkey/targetedms/outliers/MovingRangeOutliers.java -text
 src/org/labkey/targetedms/outliers/Outliers.java -text
