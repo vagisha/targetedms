@@ -21,6 +21,11 @@ public class RawMetricDataSet
     Integer guideSetId;
     boolean ignoreInQC;
     boolean inGuideSetTrainingRange;
+    Double mR;
+    Double cUSUMmP;
+    Double cUSUMmN;
+    Double CUSUMvP;
+    Double CUSUMvN;
 
     public String getSeriesType()
     {
@@ -170,6 +175,56 @@ public class RawMetricDataSet
     public void setInGuideSetTrainingRange(boolean inGuideSetTrainingRange)
     {
         this.inGuideSetTrainingRange = inGuideSetTrainingRange;
+    }
+
+    public Double getmR()
+    {
+        return mR;
+    }
+
+    public void setmR(Double mR)
+    {
+        this.mR = mR;
+    }
+
+    public Double getcUSUMmP()
+    {
+        return cUSUMmP;
+    }
+
+    public void setcUSUMmP(Double cUSUMmP)
+    {
+        this.cUSUMmP = cUSUMmP;
+    }
+
+    public Double getcUSUMmN()
+    {
+        return cUSUMmN;
+    }
+
+    public void setcUSUMmN(Double cUSUMmN)
+    {
+        this.cUSUMmN = cUSUMmN;
+    }
+
+    public Double getCUSUMvP()
+    {
+        return CUSUMvP;
+    }
+
+    public void setCUSUMvP(Double CUSUMvP)
+    {
+        this.CUSUMvP = CUSUMvP;
+    }
+
+    public Double getCUSUMvN()
+    {
+        return CUSUMvN;
+    }
+
+    public void setCUSUMvN(Double CUSUMvN)
+    {
+        this.CUSUMvN = CUSUMvN;
     }
 
     public JSONObject toJSON(){

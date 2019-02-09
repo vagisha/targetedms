@@ -73,10 +73,10 @@ public class MovingRangeOutliers
                 if(metricVals == null || metricVals.size() == 0)
                     return;
 
+                Double[] mVals = metricVals.toArray(new Double[0]);
+                //Double[] mVals = metricVals.stream().mapToDouble(i->i).toArray();
 
-                double[] mVals = metricVals.stream().mapToDouble(i->i).toArray();
-
-                double[] metricMovingRanges = Stats.get().getMovingRanges(mVals, false, null);
+                Double[] metricMovingRanges = Stats.get().getMovingRanges(mVals, false, null);
                 if(movingRangeMap.get(guideSetId).get("Series") == null)
                 {
                     Map<String, Map<String, List<Map<String, Double>>>> serLabelMap = new LinkedHashMap<>();

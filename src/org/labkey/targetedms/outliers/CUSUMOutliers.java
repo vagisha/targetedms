@@ -3,6 +3,7 @@ package org.labkey.targetedms.outliers;
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
+import org.labkey.api.visualization.Stats;
 import org.labkey.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.model.RawGuideSet;
@@ -135,7 +136,7 @@ public class CUSUMOutliers extends  Outliers
         return rawMetricDataSets;
     }
 
-    private Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, Double>>>>>>> getAllProcessedMetricGuideSets(ArrayList<RawGuideSet> rawGuideSets)
+    private Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, Double>>>>>>> getAllProcessedMetricGuideSets(List<RawGuideSet> rawGuideSets)
     {
         Map<String, List<RawGuideSet>> metricGuideSet = new LinkedHashMap<>();
         Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, Double>>>>>>> processedMetricGuides = new LinkedHashMap<>();
@@ -158,13 +159,105 @@ public class CUSUMOutliers extends  Outliers
         return processedMetricGuides;
     }
 
-    private Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>> preprocessPlotData(List<RawMetricDataSet> guideSet, boolean hasMR, boolean hasCUSUMm, boolean hasCUSUMv)
+    private Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>> preprocessPlotData(List<RawMetricDataSet> plotDataRows, boolean hasMR, boolean hasCUSUMm, boolean hasCUSUMv, boolean isLogScale)
     {
         Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>> plotDataMap = new LinkedHashMap<>();
+
+        if(plotDataRows.size() > 0)
+        {
+            plotDataRows.forEach(row-> {
+                String seriesLabel = row.getSeriesLabel();
+                if(plotDataMap.get(seriesLabel) == null)
+                {
+                    Map<String, Map<String, List<Map<String, List<?>>>>> seriesLabelMap = new LinkedHashMap<>();
+                    plotDataMap.put(seriesLabel, seriesLabelMap);
+                    Map<String, List<Map<String, List<?>>>> seriesMap = new LinkedHashMap<>();
+                    plotDataMap.get(seriesLabel).put("Series", seriesMap);
+                }
+                String seriesType = row.getSeriesType();
+                if(plotDataMap.get(seriesLabel).get("Series").get(seriesType) == null)
+                {
+                    List<Map<String, List<?>>> serTypeList = new ArrayList<>();
+                    Map<String, List<?>> rowsMap = new LinkedHashMap<>();
+                    Map<String, List<?>> metricValuesMap = new LinkedHashMap<>();
+                    List<RawMetricDataSet> rowsList = new ArrayList<>();
+                    List<Double> metricValuesList = new ArrayList<>();
+
+                    plotDataRows.forEach(pR ->{
+                        if(pR.getSeriesLabel().equalsIgnoreCase(seriesLabel))
+                        {
+                            rowsList.add(pR);
+                            metricValuesList.add((double) Math.round(pR.getMetricValue() * 10000) / 10000.0);
+
+                        }
+                    });
+
+                    rowsMap.put("Rows", rowsList);
+                    metricValuesMap.put("MetricValues", metricValuesList);
+
+                    serTypeList.add(rowsMap);
+                    serTypeList.add(metricValuesMap);
+
+                    plotDataMap.get(seriesLabel).get("Series").put(seriesType, serTypeList);
+                }
+            });
+
+            if(hasMR || hasCUSUMm || hasCUSUMv)
+            {
+                plotDataMap.forEach((seriesLabel, seriesVal) -> seriesVal.get("Series").forEach((seriesType, seriesTypeObj) -> {
+                    List<?> metricValsList = seriesTypeObj.get(1).get("MetricValues");
+                    Double[] metricVals = metricValsList.toArray(new Double[0]);
+                    Double[] mRs = new Double[0];
+                    double[] positiveCUSUMm = new double[0];
+                    double[] negativeCUSUMm = new double[0];
+                    double[] positiveCUSUMv = new double[0];
+                    double[] negativeCUSUMv = new double[0];
+
+                    if(hasMR)
+                    {
+                        mRs = Stats.get().getMovingRanges(metricVals, isLogScale, null);
+                    }
+
+                    if(hasCUSUMm)
+                    {
+                        positiveCUSUMm = Stats.get().getCUSUMS(metricVals, false, false, isLogScale, null);
+                        negativeCUSUMm = Stats.get().getCUSUMS(metricVals, true, false, isLogScale, null);
+                    }
+
+                    if(hasCUSUMv)
+                    {
+                        positiveCUSUMv = Stats.get().getCUSUMS(metricVals, false, true, isLogScale, null);
+                        negativeCUSUMv = Stats.get().getCUSUMS(metricVals, true, true, isLogScale, null);
+                    }
+
+                    List<?> serTypeObjList =  seriesTypeObj.get(0).get("Rows");
+                    for(int i = 0; i < serTypeObjList.size(); i++)
+                    {
+                        RawMetricDataSet row = (RawMetricDataSet) serTypeObjList.get(i);
+                        if(hasMR)
+                        {
+                            row.setmR(mRs[i]);
+                        }
+                        if(hasCUSUMm)
+                        {
+                            row.setcUSUMmP(positiveCUSUMm[i]);
+                            row.setcUSUMmN(negativeCUSUMm[i]);
+                        }
+                        if(hasCUSUMv)
+                        {
+                            row.setCUSUMvP(positiveCUSUMv[i]);
+                            row.setCUSUMvN(negativeCUSUMv[i]);
+                        }
+                    }
+
+                }));
+            }
+        }
+
         return plotDataMap;
     }
 
-    private void getAllProcessedMetricDataSets(List<RawMetricDataSet> rawMetricDataSets)
+    private Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>>>> getAllProcessedMetricDataSets(List<RawMetricDataSet> rawMetricDataSets)
     {
         //rawMetricDataSets not in order
         Map<String, Map<Integer, List<RawMetricDataSet>>> metricDataSet = new LinkedHashMap<>();
@@ -196,9 +289,11 @@ public class CUSUMOutliers extends  Outliers
                 processedMetricDataSet.put(metric, metricMap);
             }
             guides.forEach((guideId, guideset) -> {
-                processedMetricDataSet.get(metric).put(guideId, preprocessPlotData(guideset, true, true, true));
+                processedMetricDataSet.get(metric).put(guideId, preprocessPlotData(guideset, true, true, true, false));
             });
         });
+
+        return processedMetricDataSet;
     }
 
     public Map<String, Info> getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets)
@@ -206,7 +301,8 @@ public class CUSUMOutliers extends  Outliers
         Map<String, Info> sampleFiles = setSampleFiles(ljOutliers);
         List<Integer> validGuideSetIds = new ArrayList<>();
         sampleFiles.forEach((key,val) -> validGuideSetIds.add(val.getGuideSetId()));
-        //Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, Double>>>>>>> processedMetricGuides = getAllProcessedMetricGuideSets(rawGuideSets);
+        Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, Double>>>>>>> processedMetricGuides = getAllProcessedMetricGuideSets(rawGuideSets);
+
         List<RawMetricDataSet> filteredRawMetricDataSets = new ArrayList<>();
 
         rawMetricDataSets.forEach(row -> {
@@ -214,7 +310,9 @@ public class CUSUMOutliers extends  Outliers
                 filteredRawMetricDataSets.add(row);
         });
 
-        getAllProcessedMetricDataSets(filteredRawMetricDataSets);
+        Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>>>> processedMetricDataSet = getAllProcessedMetricDataSets(filteredRawMetricDataSets);
+        //getQCPlotMetricOutliers
+        //transformedOutliers
 
         return sampleFiles;
     }
