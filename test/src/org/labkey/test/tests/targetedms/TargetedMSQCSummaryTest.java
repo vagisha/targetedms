@@ -27,6 +27,7 @@ import org.labkey.remoteapi.CommandResponse;
 import org.labkey.remoteapi.Connection;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
+import org.labkey.test.ModulePropertyValue;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.ext4.Window;
@@ -109,11 +110,12 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         goToProjectHome();
         goToFolderManagement();
         clickAndWait(Locator.linkWithText("Module Properties"));
-        setFormElement(Locator.xpath("(//div[contains(@class, 'x4-panel-body')]//input[@type='text'])[8]"), timeOutLength);
-        clickButton("Save Changes", 0);
-        Window success = Window(getDriver()).withTitle("Success").waitFor();
-        success.clickButton("OK", true);
-        _ext4Helper.waitForMaskToDisappear();
+
+        List<ModulePropertyValue> values = new ArrayList<>();
+        values.add(new ModulePropertyValue("TargetedMS", "/" + getProjectName(), "TargetedMS AutoQCPing Timeout", timeOutLength));
+
+        setModuleProperties(values);
+
         goToProjectHome();
     }
 
