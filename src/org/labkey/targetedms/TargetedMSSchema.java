@@ -194,6 +194,9 @@ public class TargetedMSSchema extends UserSchema
     public static final String COL_PROTEIN = "Protein";
     public static final String COL_LIST = "List";
 
+    /** Prefix for a run-specific table name, customized based on the data present within that run */
+    public static final String SAMPLE_FILE_RUN_PREFIX = "samplefile_run";
+
     private ExpSchema _expSchema;
 
     static public void register(Module module)
@@ -1100,7 +1103,7 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.replicate
         if (TABLE_SAMPLE_FILE.equalsIgnoreCase(name))
         {
-            return new SampleFileTable(getSchema().getTable(name), this);
+            return new SampleFileTable(this);
         }
         if (TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(name))
         {
@@ -1294,6 +1297,23 @@ public class TargetedMSSchema extends UserSchema
                 result.getColumn("SkydDataId").setFk(new QueryForeignKey(_expSchema, null, ExpSchema.TableType.Data.name(), null, null));
             }
             return result;
+        }
+
+        // Issue 35966 - Show a custom set of columns by default for a run-scoped replicate view
+        if (name.toLowerCase().startsWith(SAMPLE_FILE_RUN_PREFIX))
+        {
+            try
+            {
+                TargetedMSRun run = TargetedMSManager.getRun(Integer.parseInt(name.substring(SAMPLE_FILE_RUN_PREFIX.length())));
+                // If we can't find the run or it's not in the current container, just act like the table doesn't exist
+                if (run != null && run.getContainer().equals(getContainer()))
+                {
+                    SampleFileTable result = new SampleFileTable(this, run);
+                    result.setName(name);
+                    return result;
+                }
+            }
+            catch (NumberFormatException ignored) {}
         }
 
         return null;

@@ -123,7 +123,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         addColumn(annotationsColumn);
 
         //get list of annotations the relevant type in this container
-        List<AnnotationSettingForTyping> annotationSettingForTypings = getAnnotationSettings(annotationTarget);
+        List<AnnotationSettingForTyping> annotationSettingForTypings = getAnnotationSettings(annotationTarget, getUserSchema(), getContainerFilter());
         //iterate over list of annotations settings
         for (AnnotationSettingForTyping annotationSettingForTyping : annotationSettingForTypings)
         {
@@ -188,7 +188,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         return DataSettings.AnnotationType.text;
     }
 
-    private List<AnnotationSettingForTyping> getAnnotationSettings(String annotationTarget)
+    public static List<AnnotationSettingForTyping> getAnnotationSettings(String annotationTarget, TargetedMSSchema schema, ContainerFilter containerFilter)
     {
         SQLFragment annoSettingsSql = new SQLFragment();
         TableInfo annotationSettingsTI = TargetedMSManager.getTableInfoAnnotationSettings();
@@ -197,10 +197,9 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                 "min(Type) minType" +
                 "  FROM ");
         annoSettingsSql.append(annotationSettingsTI, " annoSettings ");
-        ContainerFilter containerFilter = this.getContainerFilter();
         annoSettingsSql.append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), " runs ON runs.Id = annoSettings.RunId");
         annoSettingsSql.append(" WHERE ");
-        annoSettingsSql.append(containerFilter.getSQLFragment(getSchema(), new SQLFragment("runs.Container"), getContainer()));
+        annoSettingsSql.append(containerFilter.getSQLFragment(schema.getDbSchema(), new SQLFragment("runs.Container"), schema.getContainer()));
         // AnnotationSettings table has a "Targets" column that determines which targets
         // (protein, peptide, precursor, transition, precursor/transition results) an annotation applies to.
         // Filter annotations to the target that is relevant to this table.
@@ -209,7 +208,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         annoSettingsSql.append(" GROUP BY name");
         annoSettingsSql.append(" ORDER BY name");
 
-        SqlSelector annotationSettingsSelector = new SqlSelector(_schema, annoSettingsSql);
+        SqlSelector annotationSettingsSelector = new SqlSelector(schema.getDbSchema(), annoSettingsSql);
         List<AnnotationSettingForTyping> annotationSettingForTypings = new ArrayList<>();
         try(TableResultSet rs = annotationSettingsSelector.getResultSet())
         {
@@ -327,7 +326,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         }
     }
 
-    private static class AnnotationSettingForTyping
+    public static class AnnotationSettingForTyping
     {
         private String _name;
         private String _minType;
