@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class CUSUMOutliers extends  Outliers
 {
@@ -296,6 +297,105 @@ public class CUSUMOutliers extends  Outliers
         return processedMetricDataSet;
     }
 
+    private Map<String, List<Map<String, ?>>> getQCPlotMetricOutliers(Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, Double>>>>>>> processedMetricGuides, Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>>>> processedMetricDataSet, boolean CUSUMm, boolean CUSUMv, boolean mR, boolean groupByGuideSet, Set<String> sampleFiles)
+    {
+        Map<String, List<Map<String, ?>>> plotOutliers = new LinkedHashMap<>();
+        processedMetricDataSet.forEach((metric, metricVal) -> {
+            Map<String, Integer> countCUSUMmP = new LinkedHashMap<>();
+            Map<String, Integer> countCUSUMmN = new LinkedHashMap<>();
+            Map<String, Integer> countCUSUMvP = new LinkedHashMap<>();
+            Map<String, Integer> countCUSUMvN = new LinkedHashMap<>();
+            Map<String, Integer> countMR = new LinkedHashMap<>();
+
+            List<Map<String, ?>> metricMapList = new ArrayList<>();
+
+            Map<String, List<Map<String, Integer>>> outliersMap = new LinkedHashMap<>();
+            Map<String, Integer> totalCountMap = new HashMap<>();
+
+            metricVal.forEach((guideSetId, peptides) -> {
+                int totalCount = peptides.keySet().size();
+                totalCountMap.put("TotalCount", totalCount);
+                metricMapList.add(totalCountMap);
+
+                peptides.forEach((peptide, peptideVal) -> {
+                    if(peptideVal == null || peptideVal.get("Series") == null)
+                        return;
+                    peptideVal.get("Series").forEach((series, seriesVal) -> {
+                        if(seriesVal == null)
+                            return;
+
+                        List<RawMetricDataSet> rows = (List<RawMetricDataSet>) seriesVal.get(0).get("Rows");
+
+                        if (CUSUMm) {
+                            rows.forEach(data ->{
+                                String sampleFile = data.getSampleFile();
+                                if (data.getcUSUMmN() > Stats.CUSUM_CONTROL_LIMIT) {
+                                    processEachOutlier(groupByGuideSet, countCUSUMmN, guideSetId, sampleFiles, sampleFile);
+                                }
+                                else if (data.getcUSUMmP() > Stats.CUSUM_CONTROL_LIMIT) {
+                                    processEachOutlier(groupByGuideSet, countCUSUMmP, guideSetId, sampleFiles, sampleFile);
+                                }
+                            });
+
+                        }
+                        if (CUSUMv) {
+                            rows.forEach(data -> {
+                                String sampleFile = data.getSampleFile();
+                                if (data.getCUSUMvN() > Stats.CUSUM_CONTROL_LIMIT) {
+                                    processEachOutlier(groupByGuideSet, countCUSUMvN, guideSetId, sampleFiles, sampleFile);
+                                }
+                                else if (data.getCUSUMvP() > Stats.CUSUM_CONTROL_LIMIT) {
+                                    processEachOutlier(groupByGuideSet, countCUSUMvP, guideSetId, sampleFiles, sampleFile);
+                                }
+                            });
+
+                        }
+
+                        if(mR)
+                        {
+                            rows.forEach(row -> {
+                                double controlRange = processedMetricGuides.get(metric).get(guideSetId).get("Series").get(peptide).get(series).get(0).get("avgMR");
+                                if(row.getmR() > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
+                                {
+                                    String sampleFile = row.getSampleFile();
+                                    processEachOutlier(groupByGuideSet, countMR, guideSetId, sampleFiles, sampleFile);
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+            List<Map<String, Integer>> outliersList = new ArrayList<>();
+            outliersList.add(countCUSUMmP);
+            outliersList.add(countCUSUMmN);
+            outliersList.add(countCUSUMvP);
+            outliersList.add(countCUSUMvN);
+            outliersList.add(countMR);
+
+            outliersMap.put("outliers", outliersList);
+            metricMapList.add(outliersMap);
+            plotOutliers.put(metric, metricMapList);
+
+        });
+
+        return plotOutliers;
+    }
+
+
+    private Map<String, Integer> processEachOutlier(boolean groupByGuideSet, Map<String, Integer> countObj, int guideSetId, Set<String> sampleFiles, String sampleFile)
+    {
+        if(groupByGuideSet)
+        {
+            int count = countObj.get(String.valueOf(guideSetId)) != null ? countObj.get(String.valueOf(guideSetId)) : 0;
+            countObj.put(String.valueOf(guideSetId), ++count);
+        }else if(sampleFiles.contains(sampleFile))
+        {
+            int count = countObj.get(sampleFile) != null ? countObj.get(sampleFile) : 0;
+            countObj.put(sampleFile, ++count);
+        }
+        return countObj;
+    }
+
     public Map<String, Info> getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets)
     {
         Map<String, Info> sampleFiles = setSampleFiles(ljOutliers);
@@ -311,7 +411,7 @@ public class CUSUMOutliers extends  Outliers
         });
 
         Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>>>> processedMetricDataSet = getAllProcessedMetricDataSets(filteredRawMetricDataSets);
-        //getQCPlotMetricOutliers
+        getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, false, sampleFiles.keySet());
         //transformedOutliers
 
         return sampleFiles;

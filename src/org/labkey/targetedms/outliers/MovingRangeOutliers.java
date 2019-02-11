@@ -93,7 +93,7 @@ public class MovingRangeOutliers
                 Map<String, Double> stddevMRMap = new LinkedHashMap<>();
                 List<Map<String, Double>> typeNameList = new ArrayList<>();
 
-                avgMRMap.put("avdMR", Stats.get().getMean(metricMovingRanges));
+                avgMRMap.put("avgMR", Stats.get().getMean(metricMovingRanges));
                 stddevMRMap.put("stddevMR", Stats.get().getStdDev(metricMovingRanges));
                 typeNameList.add(avgMRMap);
                 typeNameList.add(stddevMRMap);
