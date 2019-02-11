@@ -1757,7 +1757,7 @@ public class SkylineDocumentParser implements AutoCloseable
                     }
                     if (matchIndex == -1)
                     {
-                        throw new IllegalStateException("No transition match!");
+                        _log.warn("Unable to find a matching chromatogram for file path " + filePath + ". SKYD file may be out of sync with primary Skyline document. Transition " + transition.toString() + ", " + precursor.toString() + ", " +precursor.getCharge());
                     }
 
                     transChromInfo.setChromatogramIndex(matchIndex);
