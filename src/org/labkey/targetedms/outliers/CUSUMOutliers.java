@@ -2,6 +2,7 @@ package org.labkey.targetedms.outliers;
 
 import org.json.JSONObject;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.Sort;
 import org.labkey.api.security.User;
 import org.labkey.api.visualization.Stats;
 import org.labkey.targetedms.model.LJOutlier;
@@ -128,13 +129,10 @@ public class CUSUMOutliers extends  Outliers
 
     public List<RawMetricDataSet> getRawMetricDataSets(Container container, User user, List<QCMetricConfiguration> configurations)
     {
-        List<RawMetricDataSet> rawMetricDataSets = executeQuery(container, user, queryContainerSampleFileRawData(configurations)).getArrayList(RawMetricDataSet.class);
+        Set<String> columnNames = Set.of("seriesType","sampleFile","metricType","precursorId","precursorChromInfoId","seriesLabel",
+                "dataType","mz","acquiredTime","filePath","metricValue","replicateId","guideSetId","ignoreInQC","inGuideSetTrainingRange");
 
-        rawMetricDataSets.sort(Comparator.comparing(RawMetricDataSet::getSeriesType));
-        rawMetricDataSets.sort(Comparator.comparing(RawMetricDataSet::getSeriesLabel));
-        rawMetricDataSets.sort(Comparator.comparing(RawMetricDataSet::getAcquiredTime));
-
-        return rawMetricDataSets;
+        return executeQuery(container, user, queryContainerSampleFileRawData(configurations), columnNames, new Sort("seriesType,seriesLabel,acquiredTime")).getArrayList(RawMetricDataSet.class);
     }
 
     private Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, Double>>>>>>> getAllProcessedMetricGuideSets(List<RawGuideSet> rawGuideSets)
@@ -260,7 +258,6 @@ public class CUSUMOutliers extends  Outliers
 
     private Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>>>> getAllProcessedMetricDataSets(List<RawMetricDataSet> rawMetricDataSets)
     {
-        //rawMetricDataSets not in order
         Map<String, Map<Integer, List<RawMetricDataSet>>> metricDataSet = new LinkedHashMap<>();
         rawMetricDataSets.forEach(row-> {
             if(metricDataSet.get(row.getMetricType()) == null)
@@ -309,8 +306,21 @@ public class CUSUMOutliers extends  Outliers
 
             List<Map<String, ?>> metricMapList = new ArrayList<>();
 
-            Map<String, List<Map<String, Integer>>> outliersMap = new LinkedHashMap<>();
+            Map<String, List<Map<String, Map<String, Integer>>>> outliersMap = new LinkedHashMap<>();
             Map<String, Integer> totalCountMap = new HashMap<>();
+
+            Map<String, Map<String, Integer>> CUSUMmNmap = new LinkedHashMap<>();
+            Map<String, Map<String, Integer>> CUSUMmPmap = new LinkedHashMap<>();
+            Map<String, Map<String, Integer>> CUSUMvNmap = new LinkedHashMap<>();
+            Map<String, Map<String, Integer>> CUSUMvPmap = new LinkedHashMap<>();
+            Map<String, Map<String, Integer>> mRmap = new LinkedHashMap<>();
+
+
+            CUSUMmNmap.put("CUSUMmN", new HashMap<>());
+            CUSUMmPmap.put("CUSUMmP", new HashMap<>());
+            CUSUMvPmap.put("CUSUMvP", new HashMap<>());
+            CUSUMvNmap.put("CUSUMvN", new HashMap<>());
+            mRmap.put("mR", new HashMap<>());
 
             metricVal.forEach((guideSetId, peptides) -> {
                 int totalCount = peptides.keySet().size();
@@ -330,10 +340,10 @@ public class CUSUMOutliers extends  Outliers
                             rows.forEach(data ->{
                                 String sampleFile = data.getSampleFile();
                                 if (data.getcUSUMmN() > Stats.CUSUM_CONTROL_LIMIT) {
-                                    processEachOutlier(groupByGuideSet, countCUSUMmN, guideSetId, sampleFiles, sampleFile);
+                                    CUSUMmNmap.put("CUSUMmN" ,processEachOutlier(groupByGuideSet, countCUSUMmN, guideSetId, sampleFiles, sampleFile));
                                 }
-                                else if (data.getcUSUMmP() > Stats.CUSUM_CONTROL_LIMIT) {
-                                    processEachOutlier(groupByGuideSet, countCUSUMmP, guideSetId, sampleFiles, sampleFile);
+                                if (data.getcUSUMmP() > Stats.CUSUM_CONTROL_LIMIT) {
+                                    CUSUMmPmap.put("CUSUMmP", processEachOutlier(groupByGuideSet, countCUSUMmP, guideSetId, sampleFiles, sampleFile));
                                 }
                             });
 
@@ -342,10 +352,10 @@ public class CUSUMOutliers extends  Outliers
                             rows.forEach(data -> {
                                 String sampleFile = data.getSampleFile();
                                 if (data.getCUSUMvN() > Stats.CUSUM_CONTROL_LIMIT) {
-                                    processEachOutlier(groupByGuideSet, countCUSUMvN, guideSetId, sampleFiles, sampleFile);
+                                    CUSUMvNmap.put("CUSUMvN",processEachOutlier(groupByGuideSet, countCUSUMvN, guideSetId, sampleFiles, sampleFile));
                                 }
-                                else if (data.getCUSUMvP() > Stats.CUSUM_CONTROL_LIMIT) {
-                                    processEachOutlier(groupByGuideSet, countCUSUMvP, guideSetId, sampleFiles, sampleFile);
+                                if (data.getCUSUMvP() > Stats.CUSUM_CONTROL_LIMIT) {
+                                    CUSUMvPmap.put("CUSUMvP", processEachOutlier(groupByGuideSet, countCUSUMvP, guideSetId, sampleFiles, sampleFile));
                                 }
                             });
 
@@ -358,19 +368,19 @@ public class CUSUMOutliers extends  Outliers
                                 if(row.getmR() > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
                                 {
                                     String sampleFile = row.getSampleFile();
-                                    processEachOutlier(groupByGuideSet, countMR, guideSetId, sampleFiles, sampleFile);
+                                    mRmap.put("mR", processEachOutlier(groupByGuideSet, countMR, guideSetId, sampleFiles, sampleFile));
                                 }
                             });
                         }
                     });
                 });
             });
-            List<Map<String, Integer>> outliersList = new ArrayList<>();
-            outliersList.add(countCUSUMmP);
-            outliersList.add(countCUSUMmN);
-            outliersList.add(countCUSUMvP);
-            outliersList.add(countCUSUMvN);
-            outliersList.add(countMR);
+            List<Map<String, Map<String, Integer>>> outliersList = new ArrayList<>();
+            outliersList.add(CUSUMmNmap);
+            outliersList.add(CUSUMmPmap);
+            outliersList.add(CUSUMvNmap);
+            outliersList.add(CUSUMvPmap);
+            outliersList.add(mRmap);
 
             outliersMap.put("outliers", outliersList);
             metricMapList.add(outliersMap);
@@ -396,6 +406,48 @@ public class CUSUMOutliers extends  Outliers
         return countObj;
     }
 
+    private Map<String, Map<String, Map<String, Integer>>> getMetricOutliersByFileOrGuideSetGroup(Map<String, List<Map<String, ?>>> metricOutlier)
+    {
+        Map<String, Map<String, Map<String, Integer>>> transformedOutliers = new LinkedHashMap<>();
+        metricOutlier.forEach((metric, vals) -> {
+            var totalCount = vals.get(0).get("TotalCount");
+            List<Map<String, Map<String, Integer>>> outliersList = (List<Map<String, Map<String, Integer>>>) vals.get(1).get("outliers");
+
+            outliersList.forEach(outlier -> {
+                outlier.forEach((type, groups) -> {
+
+                    if(groups.size() > 0) {
+                        groups.forEach((group, count) -> {
+                            int groupTypeCount = count;
+                            if(transformedOutliers.get(group) == null)
+                            {
+                                Map<String, Map<String, Integer>> groupMap = new LinkedHashMap<>();
+                                transformedOutliers.put(group, groupMap);
+                            }
+                            Map<String, Integer> metricMap = new LinkedHashMap<>();
+
+                            outliersList.forEach( o ->{
+                                o.forEach((t, g) -> {
+                                    g.forEach((gp, ct) -> {
+
+                                        if(group.equalsIgnoreCase(gp))
+                                        {
+                                            metricMap.put("TotalCount", (int) totalCount);
+                                            metricMap.put(t, ct);
+                                        }
+                                    });
+                                });
+                            });
+
+                            transformedOutliers.get(group).put(metric, metricMap);
+                        });
+                    }
+                });
+            });
+        });
+        return transformedOutliers;
+    }
+
     public Map<String, Info> getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets)
     {
         Map<String, Info> sampleFiles = setSampleFiles(ljOutliers);
@@ -411,8 +463,8 @@ public class CUSUMOutliers extends  Outliers
         });
 
         Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>>>> processedMetricDataSet = getAllProcessedMetricDataSets(filteredRawMetricDataSets);
-        getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, false, sampleFiles.keySet());
-        //transformedOutliers
+        Map<String, List<Map<String, ?>>> metricOutlier = getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, false, sampleFiles.keySet());
+        Map<String, Map<String, Map<String, Integer>>> transformedOutliers = getMetricOutliersByFileOrGuideSetGroup(metricOutlier);
 
         return sampleFiles;
     }
