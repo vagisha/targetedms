@@ -448,7 +448,7 @@ public class CUSUMOutliers extends  Outliers
         return transformedOutliers;
     }
 
-    public Map<String, Info> getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets)
+    public Map<String, Info> getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, List<QCMetricConfiguration> configurations)
     {
         Map<String, Info> sampleFiles = setSampleFiles(ljOutliers);
         List<Integer> validGuideSetIds = new ArrayList<>();
@@ -465,6 +465,60 @@ public class CUSUMOutliers extends  Outliers
         Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, List<?>>>>>>>> processedMetricDataSet = getAllProcessedMetricDataSets(filteredRawMetricDataSets);
         Map<String, List<Map<String, ?>>> metricOutlier = getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, false, sampleFiles.keySet());
         Map<String, Map<String, Map<String, Integer>>> transformedOutliers = getMetricOutliersByFileOrGuideSetGroup(metricOutlier);
+
+        transformedOutliers.forEach((fileName, metrics) -> {
+            Info info = sampleFiles.get(fileName);
+            metrics.forEach((metric, outliers) -> {
+                LJOutlier matchedItem = null;
+                for(LJOutlier item : info.items)
+                {
+                    if(item.getMetricLabel().equalsIgnoreCase(metric))
+                    {
+                        matchedItem = item;
+                    }
+                }
+
+                if(matchedItem != null)
+                {
+                   for(Map.Entry<String, Integer> outlier : outliers.entrySet())
+                    {
+                        if (outlier.getKey().equalsIgnoreCase("mr"))
+                            matchedItem.setmR(outlier.getValue());
+                        if(outlier.getKey().equalsIgnoreCase("CUSUMmP"))
+                            matchedItem.setCUSUMmP(outlier.getValue());
+                        if(outlier.getKey().equalsIgnoreCase("CUSUMmN"))
+                            matchedItem.setCUSUMmN(outlier.getValue());
+                        if(outlier.getKey().equalsIgnoreCase("CUSUMvP"))
+                            matchedItem.setCUSUMvP(outlier.getValue());
+                        if(outlier.getKey().equalsIgnoreCase("CUSUMvN"))
+                            matchedItem.setCUSUMvN(outlier.getValue());
+                    }
+                    matchedItem.setCUSUMm(matchedItem.getCUSUMmP()+matchedItem.getCUSUMmN());
+                    matchedItem.setCUSUMv(matchedItem.getCUSUMvP()+matchedItem.getCUSUMvN());
+                }
+            });
+
+        });
+
+        sampleFiles.forEach((name, sample) -> {
+            int CUSUMmP = 0, CUSUMmN = 0, CUSUMvP = 0, CUSUMvN = 0, mR = 0;
+            for (LJOutlier item : sample.getItems())
+            {
+                CUSUMmN += item.getCUSUMmN();
+                CUSUMmP += item.getCUSUMmP();
+                CUSUMvP += item.getCUSUMvP();
+                CUSUMvN += item.getCUSUMvN();
+                mR += item.getmR();
+            }
+            sample.setCUSUMm(CUSUMmN + CUSUMmP);
+            sample.setCUSUMv(CUSUMvN + CUSUMvP);
+            sample.setCUSUMmP(CUSUMmP);
+            sample.setCUSUMvP(CUSUMvP);
+            sample.setCUSUMmN(CUSUMmN);
+            sample.setCUSUMvN(CUSUMvN);
+            sample.setmR(mR);
+            sample.setHasOutliers(!(sample.getNonConformers() == 0 && sample.getCUSUMm() == 0 && sample.getCUSUMv() == 0 && sample.getmR() == 0));
+        });
 
         return sampleFiles;
     }
@@ -518,6 +572,14 @@ public class CUSUMOutliers extends  Outliers
         ArrayList<LJOutlier> items;
         int guideSetId;
         boolean ignoreForAllMetric;
+        int CUSUMm;
+        int CUSUMv;
+        int CUSUMmP;
+        int CUSUMvP;
+        int CUSUMmN;
+        int CUSUMvN;
+        int mR;
+        boolean hasOutliers;
 
         public Info()
         {
@@ -602,6 +664,96 @@ public class CUSUMOutliers extends  Outliers
         public void setIgnoreForAllMetric(boolean ignoreForAllMetric)
         {
             this.ignoreForAllMetric = ignoreForAllMetric;
+        }
+
+        public ArrayList<LJOutlier> getItems()
+        {
+            return items;
+        }
+
+        public void setItems(ArrayList<LJOutlier> items)
+        {
+            this.items = items;
+        }
+
+        public int getCUSUMm()
+        {
+            return CUSUMm;
+        }
+
+        public void setCUSUMm(int CUSUMm)
+        {
+            this.CUSUMm = CUSUMm;
+        }
+
+        public int getCUSUMv()
+        {
+            return CUSUMv;
+        }
+
+        public void setCUSUMv(int CUSUMv)
+        {
+            this.CUSUMv = CUSUMv;
+        }
+
+        public int getCUSUMmP()
+        {
+            return CUSUMmP;
+        }
+
+        public void setCUSUMmP(int CUSUMmP)
+        {
+            this.CUSUMmP = CUSUMmP;
+        }
+
+        public int getCUSUMvP()
+        {
+            return CUSUMvP;
+        }
+
+        public void setCUSUMvP(int CUSUMvP)
+        {
+            this.CUSUMvP = CUSUMvP;
+        }
+
+        public int getCUSUMmN()
+        {
+            return CUSUMmN;
+        }
+
+        public void setCUSUMmN(int CUSUMmN)
+        {
+            this.CUSUMmN = CUSUMmN;
+        }
+
+        public int getCUSUMvN()
+        {
+            return CUSUMvN;
+        }
+
+        public void setCUSUMvN(int CUSUMvN)
+        {
+            this.CUSUMvN = CUSUMvN;
+        }
+
+        public int getmR()
+        {
+            return mR;
+        }
+
+        public void setmR(int mR)
+        {
+            this.mR = mR;
+        }
+
+        public boolean isHasOutliers()
+        {
+            return hasOutliers;
+        }
+
+        public void setHasOutliers(boolean hasOutliers)
+        {
+            this.hasOutliers = hasOutliers;
         }
 
         public JSONObject toJSON(){
