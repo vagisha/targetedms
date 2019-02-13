@@ -11,7 +11,6 @@ import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -120,11 +119,9 @@ public class CUSUMOutliers extends  Outliers
 
     public List<RawGuideSet> getRawGuideSets(Container container, User user, List<QCMetricConfiguration> configurations)
     {
-        List<RawGuideSet> rawGuideSets = executeQuery(container, user, queryContainerSampleFileRawGuideSetStats(configurations)).getArrayList(RawGuideSet.class);
+        Set<String> columnNames = Set.of("trainingStart","trainingEnd","seriesLabel","metricValue","metricType","acquiredTime","seriesType","comment","referenceEnd","guideSetId");
 
-        rawGuideSets.sort(Comparator.comparing(RawGuideSet::getGuideSetId));
-
-        return rawGuideSets;
+        return executeQuery(container, user, queryContainerSampleFileRawGuideSetStats(configurations), columnNames, new Sort("guideSetId,seriesLabel,acquiredTime")).getArrayList(RawGuideSet.class);
     }
 
     public List<RawMetricDataSet> getRawMetricDataSets(Container container, User user, List<QCMetricConfiguration> configurations)
@@ -418,7 +415,6 @@ public class CUSUMOutliers extends  Outliers
 
                     if(groups.size() > 0) {
                         groups.forEach((group, count) -> {
-                            int groupTypeCount = count;
                             if(transformedOutliers.get(group) == null)
                             {
                                 Map<String, Map<String, Integer>> groupMap = new LinkedHashMap<>();
@@ -448,9 +444,9 @@ public class CUSUMOutliers extends  Outliers
         return transformedOutliers;
     }
 
-    public Map<String, Info> getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, List<QCMetricConfiguration> configurations)
+    public JSONObject  getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, String containerPath)
     {
-        Map<String, Info> sampleFiles = setSampleFiles(ljOutliers);
+        Map<String, Info> sampleFiles = setSampleFiles(ljOutliers, containerPath);
         List<Integer> validGuideSetIds = new ArrayList<>();
         sampleFiles.forEach((key,val) -> validGuideSetIds.add(val.getGuideSetId()));
         Map<String, Map<Integer, Map<String, Map<String, Map<String, List<Map<String, Double>>>>>>> processedMetricGuides = getAllProcessedMetricGuideSets(rawGuideSets);
@@ -520,10 +516,20 @@ public class CUSUMOutliers extends  Outliers
             sample.setHasOutliers(!(sample.getNonConformers() == 0 && sample.getCUSUMm() == 0 && sample.getCUSUMv() == 0 && sample.getmR() == 0));
         });
 
-        return sampleFiles;
+        return getSampleFilesJSON(sampleFiles);
     }
 
-    private Map<String, Info> setSampleFiles(List<LJOutlier> ljOutliers)
+    public JSONObject getSampleFilesJSON(Map<String, Info> sampleFiles)
+    {
+        JSONObject sampleFilesJSON = new JSONObject();
+        sampleFiles.forEach((name, sample) -> {
+            sampleFilesJSON.put(name, sample.toJSON());
+        });
+
+        return sampleFilesJSON;
+    }
+
+    private Map<String, Info> setSampleFiles(List<LJOutlier> ljOutliers, String containerPath)
     {
         int index = 1;
         Info info = null;
@@ -542,7 +548,8 @@ public class CUSUMOutliers extends  Outliers
                 info.setMetrics(0);
                 info.setNonConformers(0);
                 info.setTotalCount(0);
-                info.setGuideSetId(ljOutlier.getGuideSetId());
+                if(ljOutlier.getGuideSetId() != null)
+                    info.setGuideSetId(ljOutlier.getGuideSetId());
                 info.setIgnoreForAllMetric(ljOutlier.isIgnoreInQC());
             }
 
@@ -552,6 +559,7 @@ public class CUSUMOutliers extends  Outliers
                 info.nonConformers += ljOutlier.getNonConformers();
                 info.totalCount += ljOutlier.getTotalCount();
             }
+            ljOutlier.setContainerPath(containerPath);
             info.items.add(ljOutlier);
         }
         assert info != null;
@@ -569,7 +577,7 @@ public class CUSUMOutliers extends  Outliers
         int metrics;
         int nonConformers;
         int totalCount;
-        ArrayList<LJOutlier> items;
+        List<LJOutlier> items;
         int guideSetId;
         boolean ignoreForAllMetric;
         int CUSUMm;
@@ -666,12 +674,12 @@ public class CUSUMOutliers extends  Outliers
             this.ignoreForAllMetric = ignoreForAllMetric;
         }
 
-        public ArrayList<LJOutlier> getItems()
+        public List<LJOutlier> getItems()
         {
             return items;
         }
 
-        public void setItems(ArrayList<LJOutlier> items)
+        public void setItems(List<LJOutlier> items)
         {
             this.items = items;
         }
@@ -756,6 +764,16 @@ public class CUSUMOutliers extends  Outliers
             this.hasOutliers = hasOutliers;
         }
 
+        public List<JSONObject> getItemsJSON(List<LJOutlier> ljOutliers)
+        {
+            List<JSONObject> jsonLJOutliers = new ArrayList<>();
+            for (LJOutlier ljOutlier : ljOutliers)
+            {
+                jsonLJOutliers.add(ljOutlier.toJSON());
+            }
+            return jsonLJOutliers;
+        }
+
         public JSONObject toJSON(){
             JSONObject jsonObject = new JSONObject();
 
@@ -767,7 +785,15 @@ public class CUSUMOutliers extends  Outliers
             jsonObject.put("TotalCount",  totalCount);
             jsonObject.put("GuideSetId",  guideSetId);
             jsonObject.put("IgnoreForAllMetric",  ignoreForAllMetric);
-            jsonObject.put("Items", items);
+            jsonObject.put("Items", getItemsJSON(items));
+            jsonObject.put("CUSUMm", CUSUMm);
+            jsonObject.put("CUSUMv", CUSUMv);
+            jsonObject.put("CUSUMmN", CUSUMmN);
+            jsonObject.put("CUSUMmP", CUSUMmP);
+            jsonObject.put("CUSUMvN", CUSUMvN);
+            jsonObject.put("CUSUMvP", CUSUMvP);
+            jsonObject.put("mR", mR);
+            jsonObject.put("hasOutliers", hasOutliers);
 
             return jsonObject;
         }

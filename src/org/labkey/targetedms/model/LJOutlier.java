@@ -22,6 +22,7 @@ public class LJOutlier
     int _CUSUMvP;
     int _CUSUMvN;
     int _mR;
+    String _containerPath;
 
     public LJOutlier()
     {
@@ -194,6 +195,16 @@ public class LJOutlier
         _mR = mR;
     }
 
+    public String getContainerPath()
+    {
+        return _containerPath;
+    }
+
+    public void setContainerPath(String containerPath)
+    {
+        _containerPath = containerPath;
+    }
+
     public JSONObject toJSON(){
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("GuideSetId", _guideSetId);
@@ -211,6 +222,8 @@ public class LJOutlier
         jsonObject.put("CUSUMvP",  _CUSUMvP);
         jsonObject.put("CUSUMvN",  _CUSUMvN);
         jsonObject.put("mR",  _mR);
+        jsonObject.put("TotalCount", _totalCount);
+        jsonObject.put("ContainerPath",  _containerPath);
 
         return jsonObject;
     }

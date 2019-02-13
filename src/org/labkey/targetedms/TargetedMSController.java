@@ -27,6 +27,12 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.labkey.targetedms.model.LJOutlier;
+import org.labkey.targetedms.model.Outlier;
+import org.labkey.targetedms.model.RawGuideSet;
+import org.labkey.targetedms.model.RawMetricDataSet;
+import org.labkey.targetedms.outliers.CUSUMOutliers;
+import org.labkey.targetedms.outliers.LevyJenningsOutliers;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.json.JSONArray;
@@ -838,6 +844,20 @@ public class TargetedMSController extends SpringActionController
         return properties;
     }
 
+    private ArrayList<QCMetricConfiguration> getQCMetricConfigurations(Container container)
+    {
+        ArrayList<QCMetricConfiguration> configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
+
+        boolean isRoot = false;
+        while (configurations.isEmpty() && !isRoot)
+        {
+            container = getCandidateContainer(container, getUser());
+            isRoot = container.getParent() == null;
+            configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
+        }
+        return configurations;
+    }
+
     @RequiresPermission(ReadPermission.class)
     public class GetQCMetricConfigurationsAction extends ApiAction
     {
@@ -845,16 +865,7 @@ public class TargetedMSController extends SpringActionController
         public Object execute(Object form, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
-            Container container = getContainer();
-            ArrayList<QCMetricConfiguration> configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
-
-            boolean isRoot = false;
-            while (configurations.isEmpty() && !isRoot)
-            {
-                container = getCandidateContainer(container, getUser());
-                isRoot = container.getParent() == null;
-                configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
-            }
+            ArrayList<QCMetricConfiguration> configurations = getQCMetricConfigurations(getContainer());
 
             List<JSONObject> result = new ArrayList<>();
             for (QCMetricConfiguration configuration : configurations)
@@ -946,6 +957,54 @@ public class TargetedMSController extends SpringActionController
         public void setIncludeSubfolders(boolean includeSubfolders)
         {
             this.includeSubfolders = includeSubfolders;
+        }
+    }
+
+
+    @RequiresPermission(ReadPermission.class)
+    public class GetQCMetricOutliersAction extends ApiAction
+    {
+
+        @Override
+        public Object execute(Object o, BindException errors)
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            Outlier outlier = new Outlier();
+            List<QCMetricConfiguration> configurations = getQCMetricConfigurations(getContainer());
+
+            CUSUMOutliers cusumOutliers = new CUSUMOutliers();
+
+            List<LJOutlier> ljOutliers = LevyJenningsOutliers.get().getLJOutliers(configurations, getContainer(), getUser());
+            List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(getContainer(), getUser(), configurations);
+            List<RawMetricDataSet> rawMetricDataSets = new CUSUMOutliers().getRawMetricDataSets(getContainer(), getUser(), configurations);
+
+            JSONObject sampleFiles = cusumOutliers.getOtherQCSampleFileStats(ljOutliers, rawGuideSets,rawMetricDataSets, getContainer().getPath());
+
+            List<JSONObject> jsonLJOutliers = new ArrayList<>();
+            List<JSONObject> jsonRawGuideSets = new ArrayList<>();
+            List<JSONObject> jsonRawMetricDataSet = new ArrayList<>();
+
+            for (LJOutlier ljOutlier : ljOutliers)
+            {
+                jsonLJOutliers.add(ljOutlier.toJSON());
+            }
+            outlier.setDataRowsLJ(jsonLJOutliers);
+
+            for(RawGuideSet rawGuideSet: rawGuideSets)
+            {
+                jsonRawGuideSets.add(rawGuideSet.toJSON());
+            }
+            outlier.setRawGuideSet(jsonRawGuideSets);
+
+            for(RawMetricDataSet rawMetricDataSet: rawMetricDataSets)
+            {
+                jsonRawMetricDataSet.add(rawMetricDataSet.toJSON());
+            }
+            outlier.setRawMetricDataSet(jsonRawMetricDataSet);
+
+            response.put("outliers", outlier.toJSON());
+            response.put("sampleFiles", sampleFiles);
+            return response;
         }
     }
 

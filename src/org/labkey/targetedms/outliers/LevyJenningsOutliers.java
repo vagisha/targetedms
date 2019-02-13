@@ -1,12 +1,13 @@
 package org.labkey.targetedms.outliers;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.data.Sort;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 
-import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 public class LevyJenningsOutliers extends Outliers
 {
@@ -24,12 +25,8 @@ public class LevyJenningsOutliers extends Outliers
 
     public List<LJOutlier> getLJOutliers(List<QCMetricConfiguration> configurations, Container container, User user)
     {
-        List<LJOutlier> ljOutliers =  executeQuery(container, user, queryContainerSampleFileStats(configurations)).getArrayList(LJOutlier.class);
-
-        ljOutliers.sort(Comparator.comparing(LJOutlier::getMetricLabel));
-        ljOutliers.sort(Comparator.comparing(LJOutlier::getAcquiredTime).reversed());
-
-        return ljOutliers;
+        Set<String> columnNames = Set.of("guideSetId","metricId","metricName","metricLabel","sampleFile","acquiredTime","ignoreInQC","nonConformers","totalCount");
+        return executeQuery(container, user, queryContainerSampleFileStats(configurations), columnNames, new Sort("-acquiredTime,metricLabel")).getArrayList(LJOutlier.class);
     }
 
     public String queryContainerSampleFileStats(List<QCMetricConfiguration> configurations)
