@@ -25,6 +25,7 @@ import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.DbScope;
+import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Sort;
@@ -64,6 +65,11 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -120,8 +126,14 @@ public class SkylineDocImporter
     private File _blibSourceDir;
     private final List<Path> _blibSourcePaths = new ArrayList<>();
 
-    // protected Connection _conn;
-    // private static final int BATCH_SIZE = 100;
+    // Hold on to statements so that we can reuse them through the import process
+    private transient PreparedStatement _transitionChromInfoAnnotationStmt;
+    private transient PreparedStatement _transitionAnnotationStmt;
+    private transient PreparedStatement _precursorChromInfoAnnotationStmt;
+    private transient PreparedStatement _generalMoleculeAnnotationStmt;
+    private transient PreparedStatement _precursorAnnotationStmt;
+    private transient PreparedStatement _transitionChromInfoStmt;
+    private transient PreparedStatement _precursorChromInfoStmt;
 
     @JsonCreator
     private SkylineDocImporter(@JsonProperty("_expData") ExpData expData, @JsonProperty("_context") XarContext context,
@@ -640,6 +652,23 @@ public class SkylineDocImporter
                 copyExtractedFilesToCloud(run);
             transaction.commit();
         }
+        finally
+        {
+            if (_transitionChromInfoAnnotationStmt != null) { try { _transitionChromInfoAnnotationStmt.close(); } catch (SQLException ignored) {} }
+            _transitionChromInfoAnnotationStmt = null;
+            if (_transitionAnnotationStmt != null) { try { _transitionAnnotationStmt.close(); } catch (SQLException ignored) {} }
+            _transitionAnnotationStmt = null;
+            if (_precursorChromInfoAnnotationStmt != null) { try { _precursorChromInfoAnnotationStmt.close(); } catch (SQLException ignored) {} }
+            _precursorChromInfoAnnotationStmt = null;
+            if (_precursorAnnotationStmt != null) { try { _precursorAnnotationStmt.close(); } catch (SQLException ignored) {} }
+            _precursorAnnotationStmt = null;
+            if (_transitionChromInfoStmt != null) { try { _transitionChromInfoStmt.close(); } catch (SQLException ignored) {} }
+            _transitionChromInfoStmt = null;
+            if (_precursorChromInfoStmt != null) { try { _precursorChromInfoStmt.close(); } catch (SQLException ignored) {} }
+            _precursorChromInfoStmt = null;
+            if (_generalMoleculeAnnotationStmt != null) { try { _generalMoleculeAnnotationStmt.close(); } catch (SQLException ignored) {} }
+            _generalMoleculeAnnotationStmt = null;
+        }
     }
 
     private void handleReplicateExclusions(Replicate replicate, ReplicateAnnotation ignoreInQcAnnot)
@@ -1113,26 +1142,19 @@ public class SkylineDocImporter
         for (GeneralMoleculeAnnotation annotation : generalMolecule.getAnnotations())
         {
             annotation.setGeneralMoleculeId(generalMolecule.getId());
-            Table.insert(_user, TargetedMSManager.getTableInfoGeneralMoleculeAnnotation(), annotation);
+            insertGeneralMoleculeAnnotation(annotation);
         }
 
         if (peptide != null)
         {
             for (Peptide.StructuralModification mod : peptide.getStructuralMods())
             {
-                int modId = structuralModNameIdMap.get(mod.getModificationName());
-                mod.setStructuralModId(modId);
-                mod.setPeptideId(peptide.getId());
-                Table.insert(_user, TargetedMSManager.getTableInfoPeptideStructuralModification(), mod);
+                insertStructuralModification(structuralModNameIdMap, peptide, mod);
             }
 
             for (Peptide.IsotopeModification mod : peptide.getIsotopeMods())
             {
-                int modId = isotopeModNameIdMap.get(mod.getModificationName());
-                mod.setIsotopeModId(modId);
-                mod.setPeptideId(peptide.getId());
-                mod.setIsotopeLabelId(isotopeLabelIdMap.get(mod.getIsotopeLabel()));
-                Table.insert(_user, TargetedMSManager.getTableInfoPeptideIsotopeModification(), mod);
+                insertIsotopeModification(isotopeLabelIdMap, isotopeModNameIdMap, peptide, mod);
             }
 
             Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = insertGeneralMoleculeChromInfos(generalMolecule.getId(),
@@ -1207,24 +1229,29 @@ public class SkylineDocImporter
         }
     }
 
+    private void insertIsotopeModification(Map<String, Integer> isotopeLabelIdMap, Map<String, Integer> isotopeModNameIdMap, Peptide peptide, Peptide.IsotopeModification mod)
+    {
+        int modId = isotopeModNameIdMap.get(mod.getModificationName());
+        mod.setIsotopeModId(modId);
+        mod.setPeptideId(peptide.getId());
+        mod.setIsotopeLabelId(isotopeLabelIdMap.get(mod.getIsotopeLabel()));
+        Table.insert(_user, TargetedMSManager.getTableInfoPeptideIsotopeModification(), mod);
+    }
+
+    private void insertStructuralModification(Map<String, Integer> structuralModNameIdMap, Peptide peptide, Peptide.StructuralModification mod)
+    {
+        int modId = structuralModNameIdMap.get(mod.getModificationName());
+        mod.setStructuralModId(modId);
+        mod.setPeptideId(peptide.getId());
+        Table.insert(_user, TargetedMSManager.getTableInfoPeptideStructuralModification(), mod);
+    }
+
     private void insertMoleculePrecursor(Molecule molecule, MoleculePrecursor moleculePrecursor,
                                          Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                          Map<String, Integer> isotopeLabelIdMap,
                                          Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap)
     {
-        GeneralPrecursor gp = new GeneralPrecursor();
-        gp.setGeneralMoleculeId(molecule.getId());
-        gp.setMz(moleculePrecursor.getMz());
-        gp.setCharge(moleculePrecursor.getCharge());
-        gp.setCollisionEnergy(moleculePrecursor.getCollisionEnergy());
-        gp.setDeclusteringPotential(moleculePrecursor.getDeclusteringPotential());
-        gp.setDecoy(moleculePrecursor.isDecoy());
-        gp.setNote(moleculePrecursor.getNote());
-        gp.setExplicitCollisionEnergy(moleculePrecursor.getExplicitCollisionEnergy());
-        gp.setExplicitDriftTimeMsec(moleculePrecursor.getExplicitDriftTimeMsec());
-        gp.setExplicitDriftTimeHighEnergyOffsetMsec(moleculePrecursor.getExplicitDriftTimeHighEnergyOffsetMsec());
-        gp.setIsotopeLabelId(isotopeLabelIdMap.get(moleculePrecursor.getIsotopeLabel()));
-        gp = Table.insert(_user, TargetedMSManager.getTableInfoGeneralPrecursor(), gp);
+        GeneralPrecursor gp = insertGeneralPrecursor(isotopeLabelIdMap, molecule, moleculePrecursor);
 
         moleculePrecursor.setIsotopeLabelId(gp.getIsotopeLabelId());
         moleculePrecursor.setId(gp.getId());
@@ -1249,7 +1276,7 @@ public class SkylineDocImporter
         {
             annotation.setPrecursorId(id);
             annotation.setGeneralPrecursorId(gp.getId());
-            Table.insert(_user, TargetedMSManager.getTableInfoPrecursorAnnotation(), annotation);
+            insertPrecursorAnnotation(annotation);
         }
     }
 
@@ -1288,7 +1315,7 @@ public class SkylineDocImporter
         for (TransitionAnnotation annotation : annotations)
         {
             annotation.setTransitionId(id);
-            Table.insert(_user, TargetedMSManager.getTableInfoTransitionAnnotation(), annotation);
+            insertTransitionAnnotation(annotation);
         }
     }
 
@@ -1316,21 +1343,7 @@ public class SkylineDocImporter
             }
         }
 
-        //setting values for GeneralPrecursor here seems odd - is there a better way?
-        GeneralPrecursor gp = new GeneralPrecursor();
-        gp.setGeneralMoleculeId(peptide.getId());
-        gp.setMz(precursor.getMz());
-        gp.setCharge(precursor.getCharge());
-        gp.setCollisionEnergy(precursor.getCollisionEnergy());
-        gp.setDeclusteringPotential(precursor.getDeclusteringPotential());
-        gp.setDecoy(precursor.isDecoy());
-        gp.setNote(precursor.getNote());
-        gp.setExplicitCollisionEnergy(precursor.getExplicitCollisionEnergy());
-        gp.setExplicitDriftTimeMsec(precursor.getExplicitDriftTimeMsec());
-        gp.setExplicitDriftTimeHighEnergyOffsetMsec(precursor.getExplicitDriftTimeHighEnergyOffsetMsec());
-        gp.setIsotopeLabel(precursor.getIsotopeLabel());
-        gp.setIsotopeLabelId(isotopeLabelIdMap.get(precursor.getIsotopeLabel()));
-        gp = Table.insert(_user, TargetedMSManager.getTableInfoGeneralPrecursor(), gp);
+        GeneralPrecursor gp = insertGeneralPrecursor(isotopeLabelIdMap, peptide, precursor);
 
         precursor.setIsotopeLabelId(gp.getIsotopeLabelId());
         precursor.setId(gp.getId());
@@ -1360,6 +1373,28 @@ public class SkylineDocImporter
         {
             insertTransition(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, structuralModNameIdMap, structuralModLossesMap, precursor, sampleFilePrecursorChromInfoIdMap, transition);
         }
+    }
+
+    private GeneralPrecursor insertGeneralPrecursor(Map<String, Integer> isotopeLabelIdMap, GeneralMolecule peptide, GeneralPrecursor precursor)
+    {
+
+
+        //setting values for GeneralPrecursor here seems odd - is there a better way?
+        GeneralPrecursor gp = new GeneralPrecursor();
+        gp.setGeneralMoleculeId(peptide.getId());
+        gp.setMz(precursor.getMz());
+        gp.setCharge(precursor.getCharge());
+        gp.setCollisionEnergy(precursor.getCollisionEnergy());
+        gp.setDeclusteringPotential(precursor.getDeclusteringPotential());
+        gp.setDecoy(precursor.isDecoy());
+        gp.setNote(precursor.getNote());
+        gp.setExplicitCollisionEnergy(precursor.getExplicitCollisionEnergy());
+        gp.setExplicitDriftTimeMsec(precursor.getExplicitDriftTimeMsec());
+        gp.setExplicitDriftTimeHighEnergyOffsetMsec(precursor.getExplicitDriftTimeHighEnergyOffsetMsec());
+        gp.setIsotopeLabel(precursor.getIsotopeLabel());
+        gp.setIsotopeLabelId(isotopeLabelIdMap.get(precursor.getIsotopeLabel()));
+        gp = Table.insert(_user, TargetedMSManager.getTableInfoGeneralPrecursor(), gp);
+        return gp;
     }
 
     private void insertTransition(boolean insertCEOptmizations, boolean insertDPOptmizations, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<String, Integer> structuralModNameIdMap, Map<Integer, PeptideSettings.PotentialLoss[]> structuralModLossesMap, Precursor precursor, Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap, Transition transition)
@@ -1515,13 +1550,14 @@ public class SkylineDocImporter
             precursorChromInfo.setSampleFileId(sampleFile.getId());
             precursorChromInfo.setGeneralMoleculeChromInfoId(sampleFileIdGeneralMolChromInfoIdMap.get(sampleFile.getId()));
 
-            precursorChromInfo = Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfo(), precursorChromInfo);
+            insertPrecursorChromInfo(precursorChromInfo);
+
             sampleFilePrecursorChromInfoIdMap.put(sampleFileKey, precursorChromInfo.getId());
 
             for (PrecursorChromInfoAnnotation annotation : precursorChromInfo.getAnnotations())
             {
                 annotation.setPrecursorChromInfoId(precursorChromInfo.getId());
-                Table.insert(_user, TargetedMSManager.getTableInfoPrecursorChromInfoAnnotation(), annotation);
+                insertPrecursorChromInfoAnnotation(annotation);
             }
         }
 
@@ -1532,7 +1568,7 @@ public class SkylineDocImporter
                                             Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                             Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap)
     {
-        for(TransitionChromInfo transChromInfo: transitionChromInfos)
+        for (TransitionChromInfo transChromInfo : transitionChromInfos)
         {
             SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(transChromInfo));
             if (sampleFile == null)
@@ -1550,14 +1586,274 @@ public class SkylineDocImporter
             }
 
             transChromInfo.setPrecursorChromInfoId(precursorChromInfoId);
-            Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfo(), transChromInfo);
+
+            insertTransitionChromInfo(transChromInfo);
 
             for (TransitionChromInfoAnnotation annotation : transChromInfo.getAnnotations())
             {
                 annotation.setTransitionChromInfoId(transChromInfo.getId());
-                Table.insert(_user, TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), annotation);
+                insertTransitionChromInfoAnnotation(annotation);
             }
         }
+    }
+
+    private void insertTransitionChromInfoAnnotation(TransitionChromInfoAnnotation annotation)
+    {
+        try
+        {
+            _transitionChromInfoAnnotationStmt = ensureStatement(_transitionChromInfoAnnotationStmt,
+                    "INSERT INTO targetedms.transitionchrominfoannotation(transitionchrominfoid, name, value) VALUES (?, ?, ?)",
+                    false);
+
+            insertAnnotation(_transitionChromInfoAnnotationStmt, annotation, annotation.getTransitionChromInfoId());
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+    }
+
+    private void insertPrecursorAnnotation(PrecursorAnnotation annotation)
+    {
+        try
+        {
+            _precursorAnnotationStmt = ensureStatement(_precursorAnnotationStmt,
+                    "INSERT INTO targetedms.precursorannotation(precursorid, name, value) VALUES (?, ?, ?)",
+                    false);
+
+            insertAnnotation(_precursorAnnotationStmt, annotation, annotation.getGeneralPrecursorId());
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+    }
+
+    private void insertGeneralMoleculeAnnotation(GeneralMoleculeAnnotation annotation)
+    {
+        try
+        {
+            _generalMoleculeAnnotationStmt = ensureStatement(_generalMoleculeAnnotationStmt,
+                    "INSERT INTO targetedms.generalmoleculeannotation(generalmoleculeid, name, value) VALUES (?, ?, ?)",
+                    false);
+
+            insertAnnotation(_generalMoleculeAnnotationStmt, annotation, annotation.getGeneralMoleculeId());
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+    }
+
+    private void insertTransitionAnnotation(TransitionAnnotation annotation)
+    {
+        try
+        {
+            _transitionAnnotationStmt = ensureStatement(_transitionAnnotationStmt,
+                    "INSERT INTO targetedms.transitionannotation(transitionid, name, value) VALUES (?, ?, ?)",
+                    false);
+
+            insertAnnotation(_transitionAnnotationStmt, annotation, annotation.getTransitionId());
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+    }
+
+    private void insertPrecursorChromInfoAnnotation(PrecursorChromInfoAnnotation annotation)
+    {
+        try
+        {
+            _precursorChromInfoAnnotationStmt = ensureStatement(_precursorChromInfoAnnotationStmt,
+                    "INSERT INTO targetedms.precursorchrominfoannotation(precursorchrominfoid, name, value) VALUES (?, ?, ?)",
+                    false);
+
+            insertAnnotation(_precursorChromInfoAnnotationStmt, annotation, annotation.getPrecursorChromInfoId());
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+    }
+
+    private void insertAnnotation(PreparedStatement stmt, AbstractAnnotation annotation, int entityId) throws SQLException
+    {
+        int index = 1;
+        stmt.setInt(index++, entityId);
+        stmt.setString(index++, annotation.getName());
+        stmt.setString(index++, annotation.getValue());
+        stmt.execute();
+    }
+
+    /**
+     * Prepares a statement for reuse during the import process. For tables that have a lot of rows, this is worth the
+     * tradeoff between having more custom code and the perf hit from Table.insert() having to prep a statement for
+     * every row
+     */
+    private PreparedStatement ensureStatement(PreparedStatement stmt, String sql, boolean reselect) throws SQLException
+    {
+        if (stmt == null)
+        {
+            assert TargetedMSManager.getSchema().getScope().isTransactionActive();
+            Connection c = TargetedMSManager.getSchema().getScope().getConnection();
+            if (reselect)
+            {
+                SQLFragment reselectSQL = new SQLFragment(sql);
+                // All we really need is a ColumnInfo of the right name and type, so choose one of the TableInfos to supply it
+                TargetedMSManager.getSchema().getSqlDialect().addReselect(reselectSQL, TargetedMSManager.getTableInfoTransitionChromInfo().getColumn("Id"), null);
+                sql = reselectSQL.getSQL();
+            }
+            stmt = c.prepareStatement(sql);
+        }
+        return stmt;
+    }
+
+    private void insertTransitionChromInfo(TransitionChromInfo transChromInfo)
+    {
+        try
+        {
+            _transitionChromInfoStmt = ensureStatement(_transitionChromInfoStmt,
+                    "INSERT INTO targetedms.transitionchrominfo(transitionid, samplefileid, precursorchrominfoid, retentiontime, starttime, endtime, height, area, background, fwhm, fwhmdegenerate, truncated, peakrank, optimizationstep, note, chromatogramindex, masserrorppm, userset, identified, pointsacrosspeak) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    true);
+
+            int index = 1;
+            _transitionChromInfoStmt.setInt(index++, transChromInfo.getTransitionId());
+            _transitionChromInfoStmt.setInt(index++, transChromInfo.getSampleFileId());
+            _transitionChromInfoStmt.setInt(index++, transChromInfo.getPrecursorChromInfoId());
+            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getRetentionTime());
+            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getStartTime());
+            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getEndTime());
+            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getHeight());
+            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getArea());
+            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getBackground());
+            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getFwhm());
+            setBoolean(_transitionChromInfoStmt, index++, transChromInfo.getFwhmDegenerate());
+            setBoolean(_transitionChromInfoStmt, index++, transChromInfo.getTruncated());
+            setInteger(_transitionChromInfoStmt, index++, transChromInfo.getPeakRank());
+            setInteger(_transitionChromInfoStmt, index++, transChromInfo.getOptimizationStep());
+            _transitionChromInfoStmt.setString(index++, transChromInfo.getNote());
+            setInteger(_transitionChromInfoStmt, index++, transChromInfo.getChromatogramIndex());
+            setDouble(_transitionChromInfoStmt, index++, transChromInfo.getMassErrorPPM());
+            _transitionChromInfoStmt.setString(index++, transChromInfo.getUserSet());
+            _transitionChromInfoStmt.setString(index++, transChromInfo.getIdentified());
+            setInteger(_transitionChromInfoStmt, index++, transChromInfo.getPointsAcrossPeak());
+
+            insertAndUpdateId(transChromInfo, _transitionChromInfoStmt);
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+    }
+
+    /** Assumes the statement is an INSERT with a reselect of the new sequence value */
+    private void insertAndUpdateId(SkylineEntity entity, PreparedStatement stmt) throws SQLException
+    {
+        try (ResultSet rs = TargetedMSManager.getSqlDialect().executeWithResults(stmt))
+        {
+            rs.next();
+            entity.setId(rs.getInt(1));
+        }
+    }
+
+    private void insertPrecursorChromInfo(PrecursorChromInfo preChromInfo)
+    {
+        try
+        {
+            _precursorChromInfoStmt = ensureStatement(_precursorChromInfoStmt,
+                    "INSERT INTO targetedms.precursorchrominfo( precursorid, samplefileid, generalmoleculechrominfoid, bestretentiontime, minstarttime, maxendtime, totalarea, totalbackground, maxfwhm, peakcountratio, numtruncated, librarydotp, optimizationstep, note, chromatogram, numtransitions, numpoints, maxheight, isotopedotp, averagemasserrorppm, userset, uncompressedsize, identified, container, chromatogramformat, chromatogramoffset, chromatogramlength) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    true);
+
+            int index = 1;
+            _precursorChromInfoStmt.setInt(index++, preChromInfo.getPrecursorId());
+            _precursorChromInfoStmt.setInt(index++, preChromInfo.getSampleFileId());
+            _precursorChromInfoStmt.setInt(index++, preChromInfo.getGeneralMoleculeChromInfoId());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getBestRetentionTime());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getMinStartTime());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getMaxEndTime());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getTotalArea());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getTotalBackground());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getMaxFwhm());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getPeakCountRatio());
+            setInteger(_precursorChromInfoStmt, index++, preChromInfo.getNumTruncated());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getLibraryDotP());
+            setInteger(_precursorChromInfoStmt, index++, preChromInfo.getOptimizationStep());
+            _precursorChromInfoStmt.setString(index++, preChromInfo.getNote());
+            _precursorChromInfoStmt.setBytes(index++, preChromInfo.getChromatogram());
+            _precursorChromInfoStmt.setInt(index++, preChromInfo.getNumTransitions());
+            _precursorChromInfoStmt.setInt(index++, preChromInfo.getNumPoints());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getMaxHeight());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getIsotopeDotP());
+            setDouble(_precursorChromInfoStmt, index++, preChromInfo.getAverageMassErrorPPM());
+            _precursorChromInfoStmt.setString(index++, preChromInfo.getUserSet());
+            setInteger(_precursorChromInfoStmt, index++, preChromInfo.getUncompressedSize());
+            _precursorChromInfoStmt.setString(index++, preChromInfo.getIdentified());
+            _precursorChromInfoStmt.setString(index++, preChromInfo.getContainer().getEntityId().toString());
+            setInteger(_precursorChromInfoStmt, index++, preChromInfo.getChromatogramFormat());
+            setLong(_precursorChromInfoStmt, index++, preChromInfo.getChromatogramOffset());
+            setInteger(_precursorChromInfoStmt, index++, preChromInfo.getChromatogramLength());
+
+
+            try (ResultSet rs = TargetedMSManager.getSqlDialect().executeWithResults(_precursorChromInfoStmt))
+            {
+                rs.next();
+                preChromInfo.setId(rs.getInt(1));
+            }
+        }
+        catch (SQLException e)
+        {
+            throw new RuntimeSQLException(e);
+        }
+    }
+
+    private void setBoolean(PreparedStatement stmt, int index, Boolean b) throws SQLException
+    {
+        if (b != null)
+        {
+            stmt.setBoolean(index, b);
+        }
+        else
+        {
+            stmt.setNull(index, Types.BOOLEAN);
+        }
+    }
+
+    private void setInteger(PreparedStatement stmt, int index, Integer i) throws SQLException
+    {
+        if (i != null)
+        {
+            stmt.setInt(index, i);
+        }
+        else
+        {
+            stmt.setNull(index, Types.INTEGER);
+        }
+    }
+
+    private void setLong(PreparedStatement stmt, int index, Long i) throws SQLException
+    {
+        if (i != null)
+        {
+            stmt.setLong(index, i);
+        }
+        else
+        {
+            stmt.setNull(index, Types.BIGINT);
+        }
+    }
+
+    private void setDouble(PreparedStatement stmt, int index, Double d) throws SQLException
+    {
+        if (d != null)
+        {
+            stmt.setDouble(index, d);
+        }
+        else
+        {
+            stmt.setNull(index, Types.DECIMAL);
+        }
+
     }
 
     private void insertSampleFiles(Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap, Map<Instrument, Integer> instrumentIdMap, Replicate replicate)

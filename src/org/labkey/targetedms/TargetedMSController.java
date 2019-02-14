@@ -2795,14 +2795,15 @@ public class TargetedMSController extends SpringActionController
     // Document upload action
     // ------------------------------------------------------------------------
     @RequiresPermission(InsertPermission.class)
-    public class SkylineDocUploadAction extends OldRedirectAction<SkylinePipelinePathForm>
+    public class SkylineDocUploadAction extends FormHandlerAction<SkylinePipelinePathForm>
     {
-        public ActionURL getSuccessURL(SkylinePipelinePathForm form)
+        @Override
+        public void validateCommand(SkylinePipelinePathForm form, Errors errors)
         {
-            return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
         }
 
-        public boolean doAction(SkylinePipelinePathForm form, BindException errors) throws Exception
+        @Override
+        public boolean handlePost(SkylinePipelinePathForm form, BindException errors) throws Exception
         {
             for (Path path : form.getValidatedPaths(getContainer(), false))
             {
@@ -2824,6 +2825,11 @@ public class TargetedMSController extends SpringActionController
             }
 
             return true;
+        }
+
+        public ActionURL getSuccessURL(SkylinePipelinePathForm form)
+        {
+            return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
         }
     }
 
