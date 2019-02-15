@@ -243,8 +243,24 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 sort: '-AcquiredTime,MetricLabel', // remove this if the perf is bad and we can sort the data in the success callback
                 scope: this,
                 success: function (data) {
-                    this.qcPlotPanel.queryContainerSampleFileRawGuideSetStats({container: container, dataRowsLJ: data.rows, limitedSampleFiles: true}, this.renderContainerSampleFileStats, this);
+                    this.qcPlotPanel.queryContainerSampleFileRawGuideSetStats({container: container, dataRowsLJ: data.rows, limitedSampleFiles: true}, this.oldRenderContainerSampleFileStats, this);
                 }
+            });
+
+
+            LABKEY.Ajax.request({
+                url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCMetricOutliers.api', container.path),
+                method: 'GET',
+                success: function(response) {
+                    this.data = Ext4.JSON.decode(response.responseText).outliers;
+                    this.sampleFiles = Ext4.JSON.decode(response.responseText).sampleFiles;
+                    this.newRenderContainerSampleFileStats({container: container, dataRowsLJ: this.data.dataRowsLJ, limitedSampleFiles: true, rawGuideSet: this.data.rawGuideSet, rawMetricDataSet: this.data.rawMetricDatSet, sampleFiles: this.sampleFiles})
+                    this.verifyData();
+                },
+                failure: LABKEY.Utils.getCallbackWrapper(function(response) {
+                    this.qcPlotPanel.failureHandler(response);
+                }, null, true),
+                scope: this
             });
         }
         else if (container.docCount > 0)
@@ -325,8 +341,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }, this);
     },
 
-    renderContainerSampleFileStats: function (params)
-    {
+    oldRenderContainerSampleFileStats: function (params) {
         var container = params.container;
         if (!params.rawGuideSet || !params.rawMetricDataSet)
             return;
@@ -363,57 +378,64 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }, this);
 
         this.getOtherQCSampleFileStats(params, sampleFiles);
+        this.oldSampleFiles = Object.assign({}, sampleFiles);
+        this.verifyData();
+    },
 
-        var html = '';
-        Ext4.iterate(sampleFiles, function(name, sampleFile)
-        {
-            // create a new div id for each sampleFile to use for the hover details callout
-            sampleFile.calloutId = Ext4.id();
+    newRenderContainerSampleFileStats: function (params) {
+        var container = params.container;
+        this.newSampleFiles = JSON.parse(JSON.stringify(params.sampleFiles));
+            var html = '';
+            var sampleFiles = this.sortObjectOfObjects(params.sampleFiles, 'Index');
+            Ext4.iterate(sampleFiles, function (sampleFile)
+            {
+                // create a new div id for each sampleFile to use for the hover details callout
+                sampleFile.calloutId = Ext4.id();
 
-            var iconCls = !sampleFile.IgnoreForAllMetric ? (!sampleFile.hasOutliers ? 'fa-file-o qc-correct' : 'fa-file qc-error') : 'fa-file-o qc-none';
-            html += '<div class="sample-file-item" id="' + sampleFile.calloutId + '">'
-                    + '<span class="fa ' + iconCls + '"></span> ' + Ext4.util.Format.date(sampleFile.AcquiredTime, LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s') + ' - ';
+                var iconCls = !sampleFile.IgnoreForAllMetric ? (!sampleFile.hasOutliers ? 'fa-file-o qc-correct' : 'fa-file qc-error') : 'fa-file-o qc-none';
+                html += '<div class="sample-file-item" id="' + sampleFile.calloutId + '">'
+                        + '<span class="fa ' + iconCls + '"></span> ' + Ext4.util.Format.date(sampleFile.AcquiredTime, LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s') + ' - ';
 
-            if (sampleFile.IgnoreForAllMetric) {
-                html += 'not included in QC</div>';
-            }
-            else if (!sampleFile.NonConformers && !sampleFile.mR && !sampleFile.CUSUMm && !sampleFile.CUSUMv) {
-                html += 'no outliers</div>';
-            }
-            else {
-                var sep = '';
-                if (sampleFile.NonConformers > 0) {
-                    html += (sampleFile.NonConformers + '/' + sampleFile.TotalCount) + ' (Levey-Jennings)';
-                    sep = ', ';
+                if (sampleFile.IgnoreForAllMetric) {
+                    html += 'not included in QC</div>';
                 }
-                if (sampleFile.mR > 0) {
-                    html += sep + (sampleFile.mR + '/' + sampleFile.TotalCount) + ' (Moving Range)';
-                    sep = ', ';
+                else if (!sampleFile.NonConformers && !sampleFile.mR && !sampleFile.CUSUMm && !sampleFile.CUSUMv) {
+                    html += 'no outliers</div>';
                 }
-                if (sampleFile.CUSUMm > 0) {
-                    html += sep + (sampleFile.CUSUMm + '/' + sampleFile.TotalCount) + ' (CUSUMm)';
-                    sep = ', ';
+                else {
+                    var sep = '';
+                    if (sampleFile.NonConformers > 0) {
+                        html += (sampleFile.NonConformers + '/' + sampleFile.TotalCount) + ' (Levey-Jennings)';
+                        sep = ', ';
+                    }
+                    if (sampleFile.mR > 0) {
+                        html += sep + (sampleFile.mR + '/' + sampleFile.TotalCount) + ' (Moving Range)';
+                        sep = ', ';
+                    }
+                    if (sampleFile.CUSUMm > 0) {
+                        html += sep + (sampleFile.CUSUMm + '/' + sampleFile.TotalCount) + ' (CUSUMm)';
+                        sep = ', ';
+                    }
+                    if (sampleFile.CUSUMv > 0) {
+                        html += sep + (sampleFile.CUSUMv + '/' + sampleFile.TotalCount) + ' (CUSUMv)';
+                    }
+
+                    html += ' outliers</div>';
                 }
-                if (sampleFile.CUSUMv > 0) {
-                    html += sep +  (sampleFile.CUSUMv + '/' + sampleFile.TotalCount) + ' (CUSUMv)';
-                }
 
-                html += ' outliers</div>';
-            }
+            });
+            var sampleFilesDiv = Ext4.get('qc-summary-samplefiles-' + container.id);
+            sampleFilesDiv.update(html);
+            sampleFilesDiv.removeCls('sample-file-details-loading');
 
-        });
-        var sampleFilesDiv = Ext4.get('qc-summary-samplefiles-' + container.id);
-        sampleFilesDiv.update(html);
-        sampleFilesDiv.removeCls('sample-file-details-loading');
+            // since the height of the panel will change from adding up to three lines of text, need to reset the size of the view
+            this.doLayout();
 
-        // since the height of the panel will change from adding up to three lines of text, need to reset the size of the view
-        this.doLayout();
-
-        // add a hover listener for each of the sample file divs
-        Ext4.iterate(sampleFiles, function(name, sampleFile)
-        {
-            this.showSampleFileStatsDetails(sampleFile.calloutId, sampleFile);
-        }, this);
+            // add a hover listener for each of the sample file divs
+            Ext4.iterate(sampleFiles, function (sampleFile)
+            {
+                this.showSampleFileStatsDetails(sampleFile.calloutId, sampleFile);
+            }, this);
     },
 
     showSampleFileStatsDetails : function(divId, sampleFile)
@@ -536,5 +558,86 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             + "\n   OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
             + "\nGROUP BY stats.GuideSetId, X.SampleFile, X.AcquiredTime, exclusion.ReplicateId"
             + "\nORDER BY X.AcquiredTime DESC";
+    },
+
+    verifyData: function () {
+
+        if(this.oldSampleFiles && this.newSampleFiles) {
+            var eq = this.myEquals(this.oldSampleFiles, this.newSampleFiles);
+            console.log("QC Outliers json - old = new ? " + eq);
+        }
+    },
+
+    myEquals : function( x, y ) {
+        if ( x === y ) return true;
+        // if both x and y are null or undefined and exactly the same
+
+        if ( ! ( x instanceof Object ) || ! ( y instanceof Object ) )
+            return false;
+        // if they are not strictly equal, they both need to be Objects
+
+        if ( x.constructor !== y.constructor ) return false;
+        // they must have the exact same prototype chain, the closest we can do is
+        // test there constructor.
+
+        for ( var p in x ) {
+            if ( ! x.hasOwnProperty( p ) ) continue;
+            // other properties were tested using x.constructor === y.constructor
+
+            if ( ! y.hasOwnProperty( p ) )
+                return p;
+            // allows to compare x[ p ] and y[ p ] when set to undefined
+
+            if ( x[ p ] === y[ p ] ) continue;
+            // if they have the same strict value or identity then they are equal
+
+            if ( typeof( x[ p ] ) !== "object" )
+                return p;
+            // Numbers, Strings, Functions, Booleans must be strictly equal
+
+            var result = this.myEquals( x[ p ],  y[ p ] );
+            if ( result !== true  )
+                return result;
+            // Objects and Arrays must be tested recursively
+        }
+
+        for ( p in y ) {
+            if ( y.hasOwnProperty( p ) && ! x.hasOwnProperty( p ) )
+                return p;
+            // allows x[ p ] to be set to undefined
+        }
+        return true;
+    },
+    
+    sortObjectOfObjects: function (data, attr) {
+        var arr = [];
+        for (var prop in data) {
+            if (data.hasOwnProperty(prop)) {
+                var obj = {};
+                obj[prop] = data[prop];
+                obj.tempSortName = data[prop][attr];
+                arr.push(obj);
+            }
+        }
+
+        arr.sort(function(a, b) {
+            var at = a.tempSortName,
+                    bt = b.tempSortName;
+            return at > bt ? 1 : ( at < bt ? -1 : 0 );
+        });
+
+        var result = [];
+        for (var i=0, l=arr.length; i<l; i++) {
+            var obj = arr[i];
+            delete obj.tempSortName;
+            for (var prop in obj) {
+                if (obj.hasOwnProperty(prop)) {
+                    var id = prop;
+                }
+            }
+            var item = obj[id];
+            result.push(item);
+        }
+        return result;
     }
 });

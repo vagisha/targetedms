@@ -183,7 +183,10 @@ public class CUSUMOutliers extends  Outliers
                         if(pR.getSeriesLabel().equalsIgnoreCase(seriesLabel))
                         {
                             rowsList.add(pR);
-                            metricValuesList.add((double) Math.round(pR.getMetricValue() * 10000) / 10000.0);
+                            if(pR.getMetricValue() == null)
+                                metricValuesList.add(0.0d);
+                            else
+                               metricValuesList.add((double) Math.round(pR.getMetricValue() * 10000) / 10000.0);
 
                         }
                     });
@@ -227,22 +230,25 @@ public class CUSUMOutliers extends  Outliers
                     }
 
                     List<?> serTypeObjList =  seriesTypeObj.get(0).get("Rows");
-                    for(int i = 0; i < serTypeObjList.size(); i++)
+                    if(serTypeObjList.size() == positiveCUSUMm.length)
                     {
-                        RawMetricDataSet row = (RawMetricDataSet) serTypeObjList.get(i);
-                        if(hasMR)
+                        for (int i = 0; i < serTypeObjList.size(); i++)
                         {
-                            row.setmR(mRs[i]);
-                        }
-                        if(hasCUSUMm)
-                        {
-                            row.setcUSUMmP(positiveCUSUMm[i]);
-                            row.setcUSUMmN(negativeCUSUMm[i]);
-                        }
-                        if(hasCUSUMv)
-                        {
-                            row.setCUSUMvP(positiveCUSUMv[i]);
-                            row.setCUSUMvN(negativeCUSUMv[i]);
+                            RawMetricDataSet row = (RawMetricDataSet) serTypeObjList.get(i);
+                            if (hasMR)
+                            {
+                                row.setmR(mRs[i]);
+                            }
+                            if (hasCUSUMm)
+                            {
+                                row.setcUSUMmP(positiveCUSUMm[i]);
+                                row.setcUSUMmN(negativeCUSUMm[i]);
+                            }
+                            if (hasCUSUMv)
+                            {
+                                row.setCUSUMvP(positiveCUSUMv[i]);
+                                row.setCUSUMvN(negativeCUSUMv[i]);
+                            }
                         }
                     }
 
@@ -336,10 +342,10 @@ public class CUSUMOutliers extends  Outliers
                         if (CUSUMm) {
                             rows.forEach(data ->{
                                 String sampleFile = data.getSampleFile();
-                                if (data.getcUSUMmN() > Stats.CUSUM_CONTROL_LIMIT) {
+                                if (data.getcUSUMmN() != null && data.getcUSUMmN() > Stats.CUSUM_CONTROL_LIMIT) {
                                     CUSUMmNmap.put("CUSUMmN" ,processEachOutlier(groupByGuideSet, countCUSUMmN, guideSetId, sampleFiles, sampleFile));
                                 }
-                                if (data.getcUSUMmP() > Stats.CUSUM_CONTROL_LIMIT) {
+                                if (data.getcUSUMmP() != null && data.getcUSUMmP() > Stats.CUSUM_CONTROL_LIMIT) {
                                     CUSUMmPmap.put("CUSUMmP", processEachOutlier(groupByGuideSet, countCUSUMmP, guideSetId, sampleFiles, sampleFile));
                                 }
                             });
@@ -348,10 +354,10 @@ public class CUSUMOutliers extends  Outliers
                         if (CUSUMv) {
                             rows.forEach(data -> {
                                 String sampleFile = data.getSampleFile();
-                                if (data.getCUSUMvN() > Stats.CUSUM_CONTROL_LIMIT) {
+                                if (data.getCUSUMvN() != null && data.getCUSUMvN() > Stats.CUSUM_CONTROL_LIMIT) {
                                     CUSUMvNmap.put("CUSUMvN",processEachOutlier(groupByGuideSet, countCUSUMvN, guideSetId, sampleFiles, sampleFile));
                                 }
-                                if (data.getCUSUMvP() > Stats.CUSUM_CONTROL_LIMIT) {
+                                if (data.getCUSUMvP() != null &&data.getCUSUMvP() > Stats.CUSUM_CONTROL_LIMIT) {
                                     CUSUMvPmap.put("CUSUMvP", processEachOutlier(groupByGuideSet, countCUSUMvP, guideSetId, sampleFiles, sampleFile));
                                 }
                             });
@@ -361,11 +367,14 @@ public class CUSUMOutliers extends  Outliers
                         if(mR)
                         {
                             rows.forEach(row -> {
-                                double controlRange = processedMetricGuides.get(metric).get(guideSetId).get("Series").get(peptide).get(series).get(0).get("avgMR");
-                                if(row.getmR() > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
+                                if(processedMetricGuides.get(metric).get(guideSetId).get("Series") != null)
                                 {
-                                    String sampleFile = row.getSampleFile();
-                                    mRmap.put("mR", processEachOutlier(groupByGuideSet, countMR, guideSetId, sampleFiles, sampleFile));
+                                    double controlRange = processedMetricGuides.get(metric).get(guideSetId).get("Series").get(peptide).get(series).get(0).get("avgMR");
+                                    if (row.getmR()!= null && row.getmR() > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
+                                    {
+                                        String sampleFile = row.getSampleFile();
+                                        mRmap.put("mR", processEachOutlier(groupByGuideSet, countMR, guideSetId, sampleFiles, sampleFile));
+                                    }
                                 }
                             });
                         }
