@@ -93,8 +93,8 @@
                 cls: 'qc-trend-plot-panel',
                 plotDivId: plotPanelId,
                 plotPaginationDivId: plotPaginationPanelId,
-                minAcquiredTime: new Date(data.rows[0]['MinAcquiredTime']),
-                maxAcquiredTime: new Date(data.rows[0]['MaxAcquiredTime'])
+                minAcquiredTime: Ext4.Date.parse(data.rows[0]['MinAcquiredTime'], 'Y-m-d H:i:s.u'),
+                maxAcquiredTime: Ext4.Date.parse(data.rows[0]['MaxAcquiredTime'], 'Y-m-d H:i:s.u')
             });
         }
 
