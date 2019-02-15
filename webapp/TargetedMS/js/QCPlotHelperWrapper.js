@@ -245,9 +245,9 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler
             FilePath: row['FilePath'], // keep in data for hover text display
             IgnoreInQC: row['IgnoreInQC'], // keep in data for hover text display
-            fullDate: row['AcquiredTime'] ? this.formatDate(Ext4.Date.parse(row['AcquiredTime'], 'Y-m-d H:i:s.u'), true) : null,
-            date: row['AcquiredTime'] ? this.formatDate(Ext4.Date.parse(row['AcquiredTime'], 'Y-m-d H:i:s.u')) : null,
-            groupedXTick: row['AcquiredTime'] ? this.formatDate(Ext4.Date.parse(row['AcquiredTime'], 'Y-m-d H:i:s.u')) : null,
+            fullDate: row['AcquiredTime'] ? this.formatDate(Ext4.Date.parse(row['AcquiredTime'], LABKEY.Utils.getDateTimeFormatWithMS()), true) : null,
+            date: row['AcquiredTime'] ? this.formatDate(Ext4.Date.parse(row['AcquiredTime'], LABKEY.Utils.getDateTimeFormatWithMS())) : null,
+            groupedXTick: row['AcquiredTime'] ? this.formatDate(Ext4.Date.parse(row['AcquiredTime'], LABKEY.Utils.getDateTimeFormatWithMS())) : null,
             dataType: dataType, //needed for plot point click handler
             SeriesType: row['SeriesType']
         };

@@ -181,7 +181,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }
         else
         {
-            var modifiedFormatted = Ext4.util.Format.date(Ext4.Date.parse(autoQC.modified, 'Y-m-d H:i:s.u'), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s');
+            var modifiedFormatted = Ext4.util.Format.date(Ext4.Date.parse(autoQC.modified, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s');
             content = autoQC.isRecent ? 'Was pinged recently on ' + modifiedFormatted : 'Was pinged on ' + modifiedFormatted;
             width = autoQC.isRecent ? 160 : 140;
         }
@@ -394,7 +394,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
                 var iconCls = !sampleFile.IgnoreForAllMetric ? (!sampleFile.hasOutliers ? 'fa-file-o qc-correct' : 'fa-file qc-error') : 'fa-file-o qc-none';
                 html += '<div class="sample-file-item" id="' + sampleFile.calloutId + '">'
-                        + '<span class="fa ' + iconCls + '"></span> ' + Ext4.util.Format.date(Ext4.Date.parse(sampleFile.AcquiredTime, 'Y-m-d H:i:s.u'), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s') + ' - ';
+                        + '<span class="fa ' + iconCls + '"></span> ' + Ext4.util.Format.date(Ext4.Date.parse(sampleFile.AcquiredTime, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s') + ' - ';
 
                 if (sampleFile.IgnoreForAllMetric) {
                     html += 'not included in QC</div>';
@@ -446,7 +446,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
         // generate the HTML content for the sample file display details
         content += '<span class="sample-file-field-label">Name:</span> ' + sampleFile.SampleFile
-                + '<br/><span class="sample-file-field-label">Acquired Date/Time:</span> ' + Ext4.util.Format.date(Ext4.Date.parse(sampleFile.AcquiredTime, 'Y-m-d H:i:s.u'), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s')
+                + '<br/><span class="sample-file-field-label">Acquired Date/Time:</span> ' + Ext4.util.Format.date(Ext4.Date.parse(sampleFile.AcquiredTime, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s')
                 + '<br/><span class="sample-file-field-label">Number of tracked metrics:</span> ' + sampleFile.Metrics
                 + '<br/><span class="sample-file-field-label">Number of data points:</span> ' + (sampleFile.Metrics > 0 ? sampleFile.TotalCount/sampleFile.Metrics : 'n/a')
                 + '<br/><span class="sample-file-field-label">Out of guide set range:</span> ';

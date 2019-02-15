@@ -577,7 +577,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             else
             {
                 paramValues['dateRangeOffset'] = -1; // force to custom date range selection
-                paramValues['startDate'] = this.formatDate(Ext4.Date.parse(urlParams['startDate'], 'Y-m-d H:i:s.u'));
+                paramValues['startDate'] = this.formatDate(Ext4.Date.parse(urlParams['startDate'], LABKEY.Utils.getDateTimeFormatWithMS()));
             }
         }
 
@@ -591,7 +591,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             else
             {
                 paramValues['dateRangeOffset'] = -1; // force to custom date range selection
-                paramValues['endDate'] = this.formatDate(Ext4.Date.parse(urlParams['endDate'], 'Y-m-d H:i:s.u'));
+                paramValues['endDate'] = this.formatDate(Ext4.Date.parse(urlParams['endDate'], LABKEY.Utils.getDateTimeFormatWithMS()));
             }
         }
 
@@ -1270,7 +1270,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         for (var i = 0; i < this.annotationData.length; i++)
         {
             var annotation = this.annotationData[i];
-            var annotationDate = this.formatDate(Ext4.Date.parse(annotation['Date'], 'Y-m-d H:i:s.u'), !this.groupedX);
+            var annotationDate = this.formatDate(Ext4.Date.parse(annotation['Date'], LABKEY.Utils.getDateTimeFormatWithMS()), !this.groupedX);
 
             // track if we need to stack annotations that fall on the same date
             if (!dateCount[annotationDate]) {
@@ -1541,8 +1541,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 }
 
                 return "Guide Set ID: " + d.GuideSetId + ","
-                    + "\nStart: " + me.formatDate(Ext4.Date.parse(guideSetInfo.TrainingStart, 'Y-m-d H:i:s.u'), true)
-                    + ",\nEnd: " + me.formatDate(Ext4.Date.parse(guideSetInfo.TrainingEnd, 'Y-m-d H:i:s.u'), true)
+                    + "\nStart: " + me.formatDate(Ext4.Date.parse(guideSetInfo.TrainingStart, LABKEY.Utils.getDateTimeFormatWithMS()), true)
+                    + ",\nEnd: " + me.formatDate(Ext4.Date.parse(guideSetInfo.TrainingEnd, LABKEY.Utils.getDateTimeFormatWithMS()), true)
                     + (showGuideSetStats ? ",\n# Runs: " + numRecs : "")
                     + (showGuideSetStats ? ",\nMean: " + mean : "")
                     + (showGuideSetStats ? ",\nStd Dev: " + stdDev : "")
@@ -1585,7 +1585,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
         // use direct D3 code to inject the annotation icons to the rendered SVG
         var xAcc = function(d) {
-            var annotationDate = me.formatDate(Ext4.Date.parse(d['Date'], 'Y-m-d H:i:s.u'), !me.groupedX);
+            var annotationDate = me.formatDate(Ext4.Date.parse(d['Date'], LABKEY.Utils.getDateTimeFormatWithMS()), !me.groupedX);
             return plot.scales.x.scale(xAxisLabels.indexOf(annotationDate));
         };
         var yAcc = function(d) {
@@ -1607,7 +1607,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             .text(function(d) {
                 return "Created By: " + d['DisplayName'] + ", "
                         + "\nType: " + d['Name'] + ", "
-                    + "\nDate: " + me.formatDate(Ext4.Date.parse(d['Date'], 'Y-m-d H:i:s.u'), true) + ", "
+                    + "\nDate: " + me.formatDate(Ext4.Date.parse(d['Date'], LABKEY.Utils.getDateTimeFormatWithMS()), true) + ", "
                     + "\nDescription: " + d['Description'];
             });
 
