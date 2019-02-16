@@ -56,7 +56,8 @@ public class MovingRangeOutliers
                         String label = gs.getSeriesLabel();
                         if (seriesLabel.equals(label))
                         {
-                            metValues.add(gs.getMetricValue());
+                            if(gs.getMetricValue()!=null)
+                                metValues.add(gs.getMetricValue());
                         }
                     });
                 }

@@ -367,7 +367,8 @@ public class CUSUMOutliers extends  Outliers
                         if(mR)
                         {
                             rows.forEach(row -> {
-                                if(processedMetricGuides.get(metric).get(guideSetId).get("Series") != null)
+                                if(processedMetricGuides.get(metric).get(guideSetId).get("Series") != null &&
+                                        processedMetricGuides.get(metric).get(guideSetId).get("Series").get(peptide) != null)
                                 {
                                     double controlRange = processedMetricGuides.get(metric).get(guideSetId).get("Series").get(peptide).get(series).get(0).get("avgMR");
                                     if (row.getmR()!= null && row.getmR() > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
