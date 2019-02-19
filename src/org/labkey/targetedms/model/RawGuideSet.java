@@ -1,5 +1,6 @@
 package org.labkey.targetedms.model;
 
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.util.Date;
@@ -17,6 +18,7 @@ public class RawGuideSet
     String referenceEnd;
     Integer guideSetId;
 
+    @Nullable
     public Date getTrainingStart()
     {
         return trainingStart;
@@ -27,6 +29,7 @@ public class RawGuideSet
         this.trainingStart = trainingStart;
     }
 
+    @Nullable
     public Date getTrainingEnd()
     {
         return trainingEnd;
@@ -37,6 +40,7 @@ public class RawGuideSet
         this.trainingEnd = trainingEnd;
     }
 
+    @Nullable
     public String getSeriesLabel()
     {
         return seriesLabel;
@@ -47,6 +51,7 @@ public class RawGuideSet
         this.seriesLabel = seriesLabel;
     }
 
+    @Nullable
     public Double getMetricValue()
     {
         return metricValue;
@@ -57,6 +62,7 @@ public class RawGuideSet
         this.metricValue = metricValue;
     }
 
+    @Nullable
     public String getMetricType()
     {
         return metricType;
@@ -67,6 +73,7 @@ public class RawGuideSet
         this.metricType = metricType;
     }
 
+    @Nullable
     public Date getAcquiredTime()
     {
         return acquiredTime;
@@ -77,6 +84,7 @@ public class RawGuideSet
         this.acquiredTime = acquiredTime;
     }
 
+    @Nullable
     public String getSeriesType()
     {
         return seriesType;
@@ -87,6 +95,7 @@ public class RawGuideSet
         this.seriesType = seriesType;
     }
 
+    @Nullable
     public String getComment()
     {
         return comment;
@@ -97,6 +106,7 @@ public class RawGuideSet
         this.comment = comment;
     }
 
+    @Nullable
     public String getReferenceEnd()
     {
         return referenceEnd;
@@ -107,6 +117,7 @@ public class RawGuideSet
         this.referenceEnd = referenceEnd;
     }
 
+    @Nullable
     public Integer getGuideSetId()
     {
         return guideSetId;

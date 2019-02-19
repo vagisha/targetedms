@@ -20,23 +20,18 @@ public class Outliers
      * @param container: container
      * @param user: user
      * @param sql: labkey sql to execute
+     * @param columnNames: set of column names
+     * @param sort: Sort object
      * @return retuns map collection
      */
-    public TableSelector executeQuery(Container container, User user, String sql)
-    {
-        QuerySchema query = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
-        assert query != null;
-        return QueryService.get().selector(query, sql);
-    }
-
-    public TableSelector executeQuery(Container container, User user, String sql, Set<String> columnNames, Sort sort)
+    public static TableSelector executeQuery(Container container, User user, String sql, Set<String> columnNames, Sort sort)
     {
         QuerySchema query = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
         assert query != null;
         return QueryService.get().selector(query, sql, columnNames, null, sort);
     }
 
-    protected String getExclusionWhereSql(int metricId)
+    protected static String getExclusionWhereSql(int metricId)
     {
         return " WHERE SampleFileId.ReplicateId NOT IN "
                 + "(SELECT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = " + metricId + ")";

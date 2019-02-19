@@ -9,27 +9,21 @@ import org.labkey.targetedms.model.QCMetricConfiguration;
 import java.util.List;
 import java.util.Set;
 
-public class LevyJenningsOutliers extends Outliers
+public class LeveyJenningsOutliers extends Outliers
 {
-    private static LevyJenningsOutliers _instance = new LevyJenningsOutliers();
 
-    private LevyJenningsOutliers()
+    private LeveyJenningsOutliers()
     {
         // prevent external construction with a private default constructor
     }
 
-    public static LevyJenningsOutliers get()
-    {
-        return _instance;
-    }
-
-    public List<LJOutlier> getLJOutliers(List<QCMetricConfiguration> configurations, Container container, User user)
+    public static List<LJOutlier> getLJOutliers(List<QCMetricConfiguration> configurations, Container container, User user)
     {
         Set<String> columnNames = Set.of("guideSetId","metricId","metricName","metricLabel","sampleFile","acquiredTime","ignoreInQC","nonConformers","totalCount");
         return executeQuery(container, user, queryContainerSampleFileStats(configurations), columnNames, new Sort("-acquiredTime,metricLabel")).getArrayList(LJOutlier.class);
     }
 
-    public String queryContainerSampleFileStats(List<QCMetricConfiguration> configurations)
+    public static String queryContainerSampleFileStats(List<QCMetricConfiguration> configurations)
     {
         StringBuilder sqlBuilder = new StringBuilder();
         String sep = "";
@@ -59,26 +53,12 @@ public class LevyJenningsOutliers extends Outliers
     }
 
 
-    private String includeAllValuesSql(String schema, String table, String series, String exclusion)
-    {
-        return "\nUNION"
-                + "\nSELECT NULL AS GuideSetId, MIN(SampleFileId.AcquiredTime) AS TrainingStart, MAX(SampleFileId.AcquiredTime) AS TrainingEnd,"
-                + "\nNULL AS ReferenceEnd, SeriesLabel, \'" + series + "\' AS SeriesType, COUNT(SampleFileId) AS NumRecords, AVG(MetricValue) AS Mean, STDDEV(MetricValue) AS StandardDev"
-                + "\nFROM " + schema + "." + table
-                + exclusion
-                + "\nGROUP BY SeriesLabel";
-    }
 
-    private String getMetricGuideSetSql(int id, String schema1Name, String query1Name)
+    private static String getMetricGuideSetSql(int id, String schema1Name, String query1Name)
     {
-        //boolean includeSeries2 = !schema2Name.isEmpty() && !query2Name.isEmpty();
         String selectCols = "SampleFileId, SampleFileId.AcquiredTime, SeriesLabel, MetricValue";
         String series1SQL = "SELECT \'series1\' AS SeriesType, " + selectCols + " FROM "+ schema1Name + "." + query1Name;
-        //String series2SQL = !includeSeries2 ? "" : " UNION SELECT \'series2\' AS SeriesType, " + selectCols + " FROM "+ schema2Name + "." + query2Name;
-        String exclusionWhereSQL = this.getExclusionWhereSql(id);
-
-        //        sqlBuilder.append(!includeAllValues ? "": (this.includeAllValuesSql(schema1Name, query1Name, "series1", exclusionWhereSQL) +
-//                (includeSeries2 ? (includeAllValuesSql(schema2Name, query2Name, "series2", exclusionWhereSQL)) : "")));
+        String exclusionWhereSQL = getExclusionWhereSql(id);
 
         return "SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.SeriesType, " +
                 "\nCOUNT(p.SampleFileId) AS NumRecords, " +
@@ -100,7 +80,7 @@ public class LevyJenningsOutliers extends Outliers
      * @return UNION SQL query for the relevant metrics to get the summary info for the last N sample files
      *
      */
-    private String getLatestSampleFileStatSql(int id, String name, String label, String schema, String query)
+    private static String getLatestSampleFileStatSql(int id, String name, String label, String schema, String query)
     {
         return "SELECT stats.GuideSetId,"
                 + "\n'" + id + "' AS MetricId,"
@@ -123,6 +103,5 @@ public class LevyJenningsOutliers extends Outliers
                 + "\nAND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
                 + "\n   OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
                 + "\nGROUP BY stats.GuideSetId, X.SampleFile, X.AcquiredTime, exclusion.ReplicateId";
-        //+ "\nORDER BY X.AcquiredTime DESC";
     }
 }

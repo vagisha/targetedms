@@ -1,5 +1,6 @@
 package org.labkey.targetedms.model;
 
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.util.Date;
@@ -57,6 +58,7 @@ public class RawMetricDataSet
         this.metricType = metricType;
     }
 
+    @Nullable
     public Integer getPrecursorId()
     {
         return precursorId;
@@ -67,6 +69,7 @@ public class RawMetricDataSet
         this.precursorId = precursorId;
     }
 
+    @Nullable
     public Integer getPrecursorChromInfoId()
     {
         return precursorChromInfoId;
@@ -97,6 +100,7 @@ public class RawMetricDataSet
         this.dataType = dataType;
     }
 
+    @Nullable
     public Double getMz()
     {
         return mz;
@@ -107,6 +111,7 @@ public class RawMetricDataSet
         this.mz = mz;
     }
 
+    @Nullable
     public Date getAcquiredTime()
     {
         return acquiredTime;
@@ -127,6 +132,7 @@ public class RawMetricDataSet
         this.filePath = filePath;
     }
 
+    @Nullable
     public Double getMetricValue()
     {
         return metricValue;
@@ -137,6 +143,7 @@ public class RawMetricDataSet
         this.metricValue = metricValue;
     }
 
+    @Nullable
     public Integer getReplicateId()
     {
         return replicateId;
@@ -147,6 +154,7 @@ public class RawMetricDataSet
         this.replicateId = replicateId;
     }
 
+    @Nullable
     public Integer getGuideSetId()
     {
         return guideSetId;
@@ -177,6 +185,7 @@ public class RawMetricDataSet
         this.inGuideSetTrainingRange = inGuideSetTrainingRange;
     }
 
+    @Nullable
     public Double getmR()
     {
         return mR;
@@ -187,6 +196,7 @@ public class RawMetricDataSet
         this.mR = mR;
     }
 
+    @Nullable
     public Double getcUSUMmP()
     {
         return cUSUMmP;
@@ -197,6 +207,7 @@ public class RawMetricDataSet
         this.cUSUMmP = cUSUMmP;
     }
 
+    @Nullable
     public Double getcUSUMmN()
     {
         return cUSUMmN;
@@ -207,6 +218,7 @@ public class RawMetricDataSet
         this.cUSUMmN = cUSUMmN;
     }
 
+    @Nullable
     public Double getCUSUMvP()
     {
         return CUSUMvP;
@@ -217,6 +229,7 @@ public class RawMetricDataSet
         this.CUSUMvP = CUSUMvP;
     }
 
+    @Nullable
     public Double getCUSUMvN()
     {
         return CUSUMvN;

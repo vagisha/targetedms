@@ -343,6 +343,7 @@ src/org/labkey/targetedms/conflict/ConflictProtein.java -text
 src/org/labkey/targetedms/conflict/ConflictTransition.java -text
 src/org/labkey/targetedms/model/ExperimentAnnotations.java -text
 src/org/labkey/targetedms/model/GuideSet.java -text
+src/org/labkey/targetedms/model/GuideSetAvgMR.java -text
 src/org/labkey/targetedms/model/Journal.java -text
 src/org/labkey/targetedms/model/JournalExperiment.java -text
 src/org/labkey/targetedms/model/LJOutlier.java -text
@@ -355,7 +356,7 @@ src/org/labkey/targetedms/model/QCMetricExclusion.java -text
 src/org/labkey/targetedms/model/RawGuideSet.java -text
 src/org/labkey/targetedms/model/RawMetricDataSet.java -text
 src/org/labkey/targetedms/outliers/CUSUMOutliers.java -text
-src/org/labkey/targetedms/outliers/LevyJenningsOutliers.java -text
+src/org/labkey/targetedms/outliers/LeveyJenningsOutliers.java -text
 src/org/labkey/targetedms/outliers/MovingRangeOutliers.java -text
 src/org/labkey/targetedms/outliers/Outliers.java -text
 src/org/labkey/targetedms/parser/AbstractAnnotation.java -text

@@ -250,10 +250,10 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
             LABKEY.Ajax.request({
                 url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCMetricOutliers.api', container.path),
-                method: 'GET',
+                method: 'POST',
                 success: function(response) {
-                    this.data = Ext4.JSON.decode(response.responseText).outliers;
-                    this.sampleFiles = Ext4.JSON.decode(response.responseText).sampleFiles;
+                    this.data = JSON.parse(response.responseText).outliers;
+                    this.sampleFiles = JSON.parse(response.responseText).sampleFiles;
                     this.newRenderContainerSampleFileStats({container: container, dataRowsLJ: this.data.dataRowsLJ, limitedSampleFiles: true, rawGuideSet: this.data.rawGuideSet, rawMetricDataSet: this.data.rawMetricDatSet, sampleFiles: this.sampleFiles})
                     this.verifyData();
                 },

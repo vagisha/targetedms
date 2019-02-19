@@ -32,7 +32,7 @@ import org.labkey.targetedms.model.Outlier;
 import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
 import org.labkey.targetedms.outliers.CUSUMOutliers;
-import org.labkey.targetedms.outliers.LevyJenningsOutliers;
+import org.labkey.targetedms.outliers.LeveyJenningsOutliers;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.json.JSONArray;
@@ -58,6 +58,7 @@ import org.labkey.api.action.ReturnUrlForm;
 import org.labkey.api.action.SimpleErrorView;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
+import org.labkey.api.action.MutatingApiAction;
 import org.labkey.api.data.*;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpData;
@@ -209,7 +210,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -844,9 +844,9 @@ public class TargetedMSController extends SpringActionController
         return properties;
     }
 
-    private ArrayList<QCMetricConfiguration> getQCMetricConfigurations(Container container)
+    private List<QCMetricConfiguration> getQCMetricConfigurations(Container container)
     {
-        ArrayList<QCMetricConfiguration> configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
+        List<QCMetricConfiguration> configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
 
         boolean isRoot = false;
         while (configurations.isEmpty() && !isRoot)
@@ -865,7 +865,7 @@ public class TargetedMSController extends SpringActionController
         public Object execute(Object form, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
-            ArrayList<QCMetricConfiguration> configurations = getQCMetricConfigurations(getContainer());
+            List<QCMetricConfiguration> configurations = getQCMetricConfigurations(getContainer());
 
             List<JSONObject> result = new ArrayList<>();
             for (QCMetricConfiguration configuration : configurations)
@@ -962,7 +962,7 @@ public class TargetedMSController extends SpringActionController
 
 
     @RequiresPermission(ReadPermission.class)
-    public class GetQCMetricOutliersAction extends ApiAction
+    public class GetQCMetricOutliersAction extends MutatingApiAction
     {
 
         @Override
@@ -974,7 +974,7 @@ public class TargetedMSController extends SpringActionController
 
             CUSUMOutliers cusumOutliers = new CUSUMOutliers();
 
-            List<LJOutlier> ljOutliers = LevyJenningsOutliers.get().getLJOutliers(configurations, getContainer(), getUser());
+            List<LJOutlier> ljOutliers = LeveyJenningsOutliers.getLJOutliers(configurations, getContainer(), getUser());
             List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(getContainer(), getUser(), configurations);
             List<RawMetricDataSet> rawMetricDataSets = new CUSUMOutliers().getRawMetricDataSets(getContainer(), getUser(), configurations);
 

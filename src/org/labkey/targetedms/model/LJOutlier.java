@@ -1,5 +1,6 @@
 package org.labkey.targetedms.model;
 
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 
 import java.util.Date;
@@ -35,6 +36,7 @@ public class LJOutlier
         _mR = 0;
     }
 
+    @Nullable
     public Integer getGuideSetId()
     {
         return _guideSetId;
@@ -45,6 +47,7 @@ public class LJOutlier
         _guideSetId = guideSetId;
     }
 
+    @Nullable
     public String getMetricId()
     {
         return _metricId;
@@ -55,6 +58,7 @@ public class LJOutlier
         _metricId = metricId;
     }
 
+    @Nullable
     public String getMetricName()
     {
         return _metricName;
@@ -65,6 +69,7 @@ public class LJOutlier
         _metricName = metricName;
     }
 
+    @Nullable
     public String getMetricLabel()
     {
         return _metricLabel;
@@ -75,6 +80,7 @@ public class LJOutlier
         _metricLabel = metricLabel;
     }
 
+    @Nullable
     public String getSampleFile()
     {
         return _sampleFile;
@@ -85,6 +91,7 @@ public class LJOutlier
         _sampleFile = sampleFile;
     }
 
+    @Nullable
     public Date getAcquiredTime()
     {
         return _acquiredTime;
@@ -195,6 +202,7 @@ public class LJOutlier
         _mR = mR;
     }
 
+    @Nullable
     public String getContainerPath()
     {
         return _containerPath;
@@ -205,25 +213,26 @@ public class LJOutlier
         _containerPath = containerPath;
     }
 
-    public JSONObject toJSON(){
+    public JSONObject toJSON()
+    {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("GuideSetId", _guideSetId);
         jsonObject.put("MetricId", _metricId);
         jsonObject.put("MetricName", _metricName);
         jsonObject.put("MetricLabel", _metricLabel);
         jsonObject.put("SampleFile", _sampleFile);
-        jsonObject.put("AcquiredTime",  _acquiredTime);
-        jsonObject.put("IgnoreInQC",  _ignoreInQC);
-        jsonObject.put("NonConformers",  _nonConformers);
-        jsonObject.put("CUSUMm",  _CUSUMm);
-        jsonObject.put("CUSUMv",  _CUSUMv);
-        jsonObject.put("CUSUMmN",  _CUSUMmN);
-        jsonObject.put("CUSUMmP",  _CUSUMmP);
-        jsonObject.put("CUSUMvP",  _CUSUMvP);
-        jsonObject.put("CUSUMvN",  _CUSUMvN);
-        jsonObject.put("mR",  _mR);
+        jsonObject.put("AcquiredTime", _acquiredTime);
+        jsonObject.put("IgnoreInQC", _ignoreInQC);
+        jsonObject.put("NonConformers", _nonConformers);
+        jsonObject.put("CUSUMm", _CUSUMm);
+        jsonObject.put("CUSUMv", _CUSUMv);
+        jsonObject.put("CUSUMmN", _CUSUMmN);
+        jsonObject.put("CUSUMmP", _CUSUMmP);
+        jsonObject.put("CUSUMvP", _CUSUMvP);
+        jsonObject.put("CUSUMvN", _CUSUMvN);
+        jsonObject.put("mR", _mR);
         jsonObject.put("TotalCount", _totalCount);
-        jsonObject.put("ContainerPath",  _containerPath);
+        jsonObject.put("ContainerPath", _containerPath);
 
         return jsonObject;
     }
