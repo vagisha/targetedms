@@ -378,7 +378,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }, this);
 
         this.getOtherQCSampleFileStats(params, sampleFiles);
-        this.oldSampleFiles = Object.assign({}, sampleFiles);
+        this.oldSampleFiles = JSON.parse(JSON.stringify(sampleFiles));
         this.verifyData();
     },
 

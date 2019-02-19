@@ -485,8 +485,10 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             sort: 'SeriesType, SeriesLabel, AcquiredTime', //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
             success: function (data)
             {
-                params.rawMetricDataSet = data.rows;
-                cb.call(scope, params);
+               if(data) { //TODO : hack to avoid timing issue until this code is removed
+                   params.rawMetricDataSet = data.rows;
+                   cb.call(scope, params);
+               }
             }
         };
         if (params.container)
