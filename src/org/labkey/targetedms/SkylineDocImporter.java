@@ -1016,7 +1016,8 @@ public class SkylineDocImporter
         SkylineDocumentParser.MoleculeType molType;
         // Issue 24571: Keep track of the peptides in this protein if this is document is being uploaded to a protein library folder.
         Set<String> libProteinPeptides = new HashSet<>();
-        int count = 1;
+        int peptideCount = 0;
+        int moleculeCount = 0;
 
         while((molType = parser.hasNextPeptideOrMolecule()) != null)
         {
@@ -1041,6 +1042,11 @@ public class SkylineDocImporter
                             libProteinPeptides.add(p.getPeptideModifiedSequence());
                         }
                     }
+                    peptideCount++;
+                    if(peptideCount % 50 == 0)
+                    {
+                        _log.info(String.format("Inserted %d peptides", peptideCount));
+                    }
                     break;
                 case MOLECULE:
                     Molecule molecule = parser.nextMolecule();
@@ -1050,12 +1056,25 @@ public class SkylineDocImporter
                         smallMolecules.add(molecule.getIonFormula());
                     }
                     generalMolecule = molecule;
+                    moleculeCount++;
+                    if(moleculeCount % 50 == 0)
+                    {
+                        _log.info(String.format("Inserted %d molecules", moleculeCount));
+                    }
                     break;
             }
 
             insertPeptideOrSmallMolecule(insertCEOptmizations, insertDPOptmizations, skylineIdSampleFileIdMap, isotopeLabelIdMap,
                     internalStandardLabelIds, structuralModNameIdMap, structuralModLossesMap, isotopeModNameIdMap,
                     libraryNameIdMap, pepGroup, generalMolecule);
+        }
+        if(peptideCount > 0)
+        {
+            _log.info(String.format("Total peptides inserted: %d", peptideCount));
+        }
+        if(moleculeCount > 0)
+        {
+            _log.info(String.format("Total molecules inserted: %d", moleculeCount));
         }
     }
 
@@ -1354,15 +1373,21 @@ public class SkylineDocImporter
         Precursor.LibraryInfo libInfo = precursor.getLibraryInfo();
         if(libInfo != null)
         {
-            libInfo.setPrecursorId(precursor.getId());
             Integer specLibId = libraryNameIdMap.get(libInfo.getLibraryName());
             if(specLibId == null)
             {
-                throw new PanoramaBadDataException("'" + libInfo.getLibraryName() + "' library not found in settings.");
+                // Skyline documents can end up in a state where a library name is associated with a precursor but the
+                // library was deselected in "Peptide Settings > Library tab" in Skyline and is no longer part of the
+                // <peptide_libraries> element of the .sky file.  We will ignore such library infos.
+                _log.info("'" + libInfo.getLibraryName() + "' library was not found in settings.");
             }
-            libInfo.setSpectrumLibraryId(specLibId);
-            libInfo.setGeneralPrecursorId(gp.getId());
-            Table.insert(_user, TargetedMSManager.getTableInfoPrecursorLibInfo(), libInfo);
+            else
+            {
+                libInfo.setPrecursorId(precursor.getId());
+                libInfo.setSpectrumLibraryId(specLibId);
+                libInfo.setGeneralPrecursorId(gp.getId());
+                Table.insert(_user, TargetedMSManager.getTableInfoPrecursorLibInfo(), libInfo);
+            }
         }
 
         Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = insertPrecursorChromInfos(gp.getId(),
