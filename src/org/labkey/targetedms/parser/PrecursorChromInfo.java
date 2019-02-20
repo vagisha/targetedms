@@ -64,6 +64,8 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     private Integer _optimizationStep;
     private String _userSet;
     private String _note;
+    private Double _qvalue;
+    private Double _zscore;
 
     private byte[] _chromatogram;
     private int _numPoints;
@@ -317,6 +319,26 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
     public void setNote(String note)
     {
         _note = note;
+    }
+
+    public Double getQvalue()
+    {
+        return _qvalue;
+    }
+
+    public void setQvalue(Double qvalue)
+    {
+        _qvalue = qvalue;
+    }
+
+    public Double getZscore()
+    {
+        return _zscore;
+    }
+
+    public void setZscore(Double zscore)
+    {
+        _zscore = zscore;
     }
 
     public byte[] getChromatogram()

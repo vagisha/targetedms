@@ -1834,6 +1834,8 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setIsotopeDotP(XmlUtil.readDoubleAttribute(reader, "isotope_dotp"));
         chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
         chromInfo.setUserSet(XmlUtil.readAttribute(reader, "user_set"));
+        chromInfo.setQvalue(XmlUtil.readDoubleAttribute(reader, "qvalue"));
+        chromInfo.setZscore(XmlUtil.readDoubleAttribute(reader, "zscore"));
 
         while(reader.hasNext())
         {
