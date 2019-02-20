@@ -119,6 +119,7 @@ Ext4.define('LABKEY.targetedms.Clustergrammer', {
                                             mask.show();
                                             LABKEY.Ajax.request({
                                                 url: LABKEY.ActionURL.buildURL('targetedms', 'clustergrammerHeatMap.api', null),
+                                                method : 'POST',
                                                 jsonData: {
                                                     title: this.titleEditor.getValue(),
                                                     description: this.descriptionEditor.getValue(),

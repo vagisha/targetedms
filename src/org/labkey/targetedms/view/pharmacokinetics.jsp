@@ -120,6 +120,7 @@
         LABKEY.Utils.onReady(function() {
             LABKEY.Ajax.request({
                 url: LABKEY.ActionURL.buildURL('targetedms', 'pharmacokineticsOptions.api'),
+                method : 'POST',
                 params: {moleculeId: moleculeId},
                 scope: this,
                 success: LABKEY.Utils.getCallbackWrapper(function(response)

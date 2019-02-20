@@ -213,6 +213,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
                         win.getEl().mask('Remove...');
                         LABKEY.Ajax.request({
                             url: LABKEY.ActionURL.buildURL('targetedms', 'removeLinkVersion.api', null, {rowId: record.get('RowId')}),
+                            method : 'POST',
                             success: LABKEY.Utils.getCallbackWrapper(function(response) {
                                 //close the dialog and reload the page
                                 win.close();

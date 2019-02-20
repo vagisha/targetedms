@@ -425,10 +425,15 @@ public class TargetedMSController extends SpringActionController
     // Action to create a Raw Data tab
     // ------------------------------------------------------------------------
     @RequiresPermission(AdminPermission.class)
-    public class AddRawDataTabAction extends OldRedirectAction
+    public class AddRawDataTabAction extends FormHandlerAction
     {
         @Override
-        public boolean doAction(Object o, BindException errors)
+        public void validateCommand(Object target, Errors errors)
+        {
+        }
+
+        @Override
+        public boolean handlePost(Object o, BindException errors)
         {
             Container c = getContainer(); ;
             if(!c.hasActiveModuleByName(TargetedMSModule.NAME))
@@ -517,7 +522,6 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class LeveyJenningsAction extends SimpleViewAction<URLParameterBean>
     {
-
         @Override
         public ModelAndView getView(URLParameterBean urlParameterBean, BindException errors)
         {
@@ -528,8 +532,8 @@ public class TargetedMSController extends SpringActionController
         {
             return root.addChild("QC Reports");
         }
-
     }
+
     public static class URLParameterBean
     {
         private String metric;
@@ -590,7 +594,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class LeveyJenningsPlotOptionsAction extends ApiAction<LeveyJenningsPlotOptions>
+    public class LeveyJenningsPlotOptionsAction extends MutatingApiAction<LeveyJenningsPlotOptions>
     {
         private static final String CATEGORY = "TargetedMSLeveyJenningsPlotOptions";
 
@@ -2271,7 +2275,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    public class AutoQCPingAction extends ApiAction<Object>
+    public class AutoQCPingAction extends MutatingApiAction<Object>
     {
         @Override
         public Object execute(Object o, BindException errors)
@@ -2984,7 +2988,7 @@ public class TargetedMSController extends SpringActionController
 
     @RequiresPermission(ReadPermission.class)
     @Marshal(Marshaller.Jackson)
-    public class PharmacokineticsOptionsAction extends ApiAction<PKOptions>
+    public class PharmacokineticsOptionsAction extends MutatingApiAction<PKOptions>
     {
         private static final String CATEGORY = "TargetedMSPharmacokineticsOptions";
         private static final char SEPARATOR = '|';
@@ -4224,25 +4228,26 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ResolveConflictAction extends OldRedirectAction<ResolveConflictForm>
+    public class ResolveConflictAction extends FormHandlerAction<ResolveConflictForm>
     {
         @Override
-        public URLHelper getSuccessURL(ResolveConflictForm resolveConflictForm)
+        public void validateCommand(ResolveConflictForm target, Errors errors)
         {
-            return getContainer().getStartURL(getUser());
         }
 
         @Override
-        public boolean doAction(ResolveConflictForm resolveConflictForm, BindException errors) throws Exception
+        public boolean handlePost(ResolveConflictForm resolveConflictForm, BindException errors) throws Exception
         {
-            if(resolveConflictForm.getConflictLevel() == null)
+            if (resolveConflictForm.getConflictLevel() == null)
             {
                 errors.reject(ERROR_MSG, "Missing 'conflictLevel' parameter.");
                 return false;
             }
+
             boolean resolveProtein = resolveConflictForm.getConflictLevel().equalsIgnoreCase("protein");
             boolean resolvePrecursor = resolveConflictForm.getConflictLevel().equalsIgnoreCase("peptide");
-            if(!resolveProtein && !resolvePrecursor)
+
+            if (!resolveProtein && !resolvePrecursor)
             {
                 errors.reject(ERROR_MSG, resolveConflictForm.getConflictLevel() + " is an invalid value for 'conflictLevel' parameter."+
                         " Valid values are 'peptide' or 'protein'.");
@@ -4252,45 +4257,47 @@ public class TargetedMSController extends SpringActionController
 
             int[] selectedIds = resolveConflictForm.getSelectedIds();
             int[] deselectIds = resolveConflictForm.getDeselectedIds();
-            if(selectedIds == null || selectedIds.length == 0)
+
+            if (selectedIds == null || selectedIds.length == 0)
             {
                 errors.reject(ERROR_MSG, "No IDs were found to be marked as representative.");
                 return false;
             }
-            if(deselectIds == null || deselectIds.length == 0)
+
+            if (deselectIds == null || deselectIds.length == 0)
             {
                 errors.reject(ERROR_MSG, "No IDs were found to be marked as deprecated.");
                 return false;
             }
 
             // ensure that the peptide-group or precursor Ids belong to a run in the container
-            if(resolveProtein)
+            if (resolveProtein)
             {
-                if(!PeptideGroupManager.ensureContainerMembership(selectedIds, getContainer()))
+                if (!PeptideGroupManager.ensureContainerMembership(selectedIds, getContainer()))
                 {
                     throw new NotFoundException("One or more of the selected peptideGroupIds were not found in the container.");
                 }
-                if(!PeptideGroupManager.ensureContainerMembership(deselectIds, getContainer()))
+                if (!PeptideGroupManager.ensureContainerMembership(deselectIds, getContainer()))
                 {
                     throw new NotFoundException("One or more of the deselected peptideGroupIds were not found in the container.");
                 }
             }
-            if(resolvePrecursor)
+
+            if (resolvePrecursor)
             {
-                if(!PrecursorManager.ensureContainerMembership(selectedIds, getContainer()))
+                if (!PrecursorManager.ensureContainerMembership(selectedIds, getContainer()))
                 {
                     throw new NotFoundException("One or more of the selected precursorIds were not found in the container.");
                 }
-                if(!PrecursorManager.ensureContainerMembership(deselectIds, getContainer()))
+                if (!PrecursorManager.ensureContainerMembership(deselectIds, getContainer()))
                 {
                     throw new NotFoundException("One or more of the deselected precursorIds were not found in the container.");
                 }
             }
 
-
             try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
             {
-                if(resolveProtein)
+                if (resolveProtein)
                 {
                     // Set RepresentativeDataState to Representative.
                     PeptideGroupManager.updateRepresentativeStatus(selectedIds, RepresentativeDataState.Representative);
@@ -4343,6 +4350,12 @@ public class TargetedMSController extends SpringActionController
                 transaction.commit();
             }
             return true;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(ResolveConflictForm resolveConflictForm)
+        {
+            return getContainer().getStartURL(getUser());
         }
     }
 
@@ -6295,7 +6308,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    public class RemoveLinkVersionAction extends ApiAction<RowIdForm>
+    public class RemoveLinkVersionAction extends MutatingApiAction<RowIdForm>
     {
         @Override
         public void validateForm(RowIdForm form, Errors errors)
@@ -6361,7 +6374,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(UpdatePermission.class)
-    public class SaveLinkVersionsAction extends ApiAction<ChainedVersions>
+    public class SaveLinkVersionsAction extends MutatingApiAction<ChainedVersions>
     {
         @Override
         public void validateForm(ChainedVersions form, Errors errors)
@@ -6477,7 +6490,7 @@ public class TargetedMSController extends SpringActionController
     // ------------------------------------------------------------------------ 1
 
     @RequiresPermission(InsertPermission.class)
-    public static class ClustergrammerHeatMapAction extends ApiAction<ClustergrammerForm>
+    public static class ClustergrammerHeatMapAction extends MutatingApiAction<ClustergrammerForm>
     {
         @Override
         public void validateForm(ClustergrammerForm form, Errors errors)

@@ -24,6 +24,7 @@ import org.labkey.api.module.MultiPortalFolderType;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.util.HelpTopic;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.Portal;
@@ -121,10 +122,12 @@ public class TargetedMSFolderType extends MultiPortalFolderType
 
         if (container.hasPermission(user, AdminPermission.class))
         {
-            if(Portal.getParts(container, RAW_FILES_TAB).size() == 0)
+            if (Portal.getParts(container, RAW_FILES_TAB).size() == 0)
             {
                 ActionURL url = new ActionURL(TargetedMSController.AddRawDataTabAction.class, container);
-                adminNavTree.addChild(new NavTree("Add Raw Data Tab", url));
+                NavTree addRawData = new NavTree("Add Raw Data Tab", "javascript:{}");
+                addRawData.setScript(PageFlowUtil.postOnClickJavaScript(url));
+                adminNavTree.addChild(addRawData);
             }
         }
     }

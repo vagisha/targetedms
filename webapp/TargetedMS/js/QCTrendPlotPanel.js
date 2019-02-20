@@ -62,6 +62,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         // If there are URL parameters (i.e. from Pareto Plot click), set those as initial values as well.
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'leveyJenningsPlotOptions.api'),
+            method: 'POST',
             scope: this,
             success: LABKEY.Utils.getCallbackWrapper(function(response)
             {
@@ -1877,6 +1878,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
             this.havePlotOptionsChanged = false;
             LABKEY.Ajax.request({
                 url: LABKEY.ActionURL.buildURL('targetedms', 'leveyJenningsPlotOptions.api'),
+                method: 'POST',
                 params: this.getSelectedPlotFormOptions()
             });
         }
