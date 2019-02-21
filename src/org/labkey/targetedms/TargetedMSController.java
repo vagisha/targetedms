@@ -6021,8 +6021,6 @@ public class TargetedMSController extends SpringActionController
     {
         private String _dataRegionSelectionKey;
 
-        public SelectedIdsForm() {super();}
-
         public int[] getIds()
         {
             return PageFlowUtil.toInts(DataRegionSelection.getSelected(getViewContext(), getDataRegionSelectionKey(), false, false));
