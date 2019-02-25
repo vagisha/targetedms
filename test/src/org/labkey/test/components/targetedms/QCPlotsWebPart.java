@@ -675,14 +675,15 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     private void dismissTooltip()
     {
+        int halfWidth = elementCache().webPartTitle.getSize().getWidth() / 2;
+        int xOffset = elementCache().webPartTitle.getLocation().getX() + halfWidth; // distance to edge of window from center of element
+        new Actions(getDriver())
+                .moveToElement(elementCache().webPartTitle) // Start at the center of the title
+                .moveByOffset(-xOffset, 0) // Move all the way to the left edge of the window
+                .perform(); // Should dismiss hover tooltips
         WebElement closeHopscotch = Locator.byClass("hopscotch-close").findElementOrNull(getDriver());
         if (closeHopscotch != null && closeHopscotch.isDisplayed())
             closeHopscotch.click();
-        int halfWidth = elementCache().webPartTitle.getSize().getWidth() / 2 - 1;
-        new Actions(getDriver())
-                .moveToElement(elementCache().webPartTitle, -halfWidth, 0) // Start on left end
-                .moveByOffset(2 * halfWidth, 0) // Sweep all the way to the right
-                .perform(); // Should dismiss hover tooltips
         getWrapper().shortWait().until(ExpectedConditions.invisibilityOfElementLocated(Locator.byClass("hopscotch-callout")));
     }
 
