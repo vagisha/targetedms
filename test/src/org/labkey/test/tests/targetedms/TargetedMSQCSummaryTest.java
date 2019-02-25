@@ -36,6 +36,7 @@ import org.labkey.test.components.targetedms.QCSummaryWebPart;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.util.ApiPermissionsHelper;
 import org.labkey.test.util.DataRegionTable;
+import org.labkey.test.util.PermissionsHelper;
 import org.labkey.test.util.TextSearcher;
 import org.openqa.selenium.WebElement;
 
@@ -139,15 +140,14 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     @Test
     public void testPermissions()
     {
-        ApiPermissionsHelper permissionsHelper = new ApiPermissionsHelper(this);
+        _userHelper.createUser(USER);
 
         // give user reader permissions to all but FOLDER_1
-        createUserWithPermissions(USER, getProjectName(), "Reader");
-        clickButton("Save and Finish");
+        ApiPermissionsHelper permissionsHelper = new ApiPermissionsHelper(this);
+        permissionsHelper.addMemberToRole(USER, "Reader", PermissionsHelper.MemberType.user, getProjectName());
         for (String folder : new String[]{FOLDER_2, FOLDER_2A, FOLDER_3})
         {
-            clickFolder(folder);
-            permissionsHelper.setUserPermissions(USER, "Reader");
+            permissionsHelper.addMemberToRole(USER, "Reader", PermissionsHelper.MemberType.user, getProjectName() + "/" + folder);
         }
 
         // impersonate user and check that the project QC Summary doesn't include the FOLDER_1 details
