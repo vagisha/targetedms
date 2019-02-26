@@ -108,7 +108,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         assertTextPresent(
                 proteinCount + " proteins", peptideCount + " ranked peptides",
                 transitionCount + " ranked transitions");
-        assertElementPresent(Locator.linkWithText("Download"));
+        assertElementPresent(Locator.lkButton("Download"));
         assertTextPresent("Revision " + revision);
     }
 

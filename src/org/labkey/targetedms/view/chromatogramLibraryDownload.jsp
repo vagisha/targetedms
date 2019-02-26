@@ -48,62 +48,7 @@
                                            new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, c).getLocalURIString();
 %>
 
-<div class="labkey-download"><style type="text/css">
-
-    div.banner {
-            margin-top: 15px;
-background: #ffffff; /* Old browsers */
-background: #ffffff; /* Old browsers */
-            /* IE9 SVG, needs conditional override of 'filter' to 'none' */
-            background: -moz-linear-gradient(top,  #ffffff 0%, #e0e6eb 100%); /* FF3.6+ */
-            background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#ffffff), color-stop(100%,#e0e6eb)); /* Chrome,Safari4+ */
-            background: -webkit-linear-gradient(top,  #ffffff 0%,#e0e6eb 100%); /* Chrome10+,Safari5.1+ */
-            background: -o-linear-gradient(top,  #ffffff 0%,#e0e6eb 100%); /* Opera 11.10+ */
-            background: -ms-linear-gradient(top,  #ffffff 0%,#e0e6eb 100%); /* IE10+ */
-            background: linear-gradient(to bottom,  #ffffff 0%,#e0e6eb 100%); /* W3C */
-            filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#ffffff', endColorstr='#e0e6eb',GradientType=0 ); /* IE6-8 */
-    }
-
-
-a.banner-button {
-        display: block;
-        width: 200px;
-        height: 30px;
-        color: #fff;
-        border-radius: 20px;
-        font-size: 115%;
-        font-weight: bold;
-        border: 1px solid #215da0;
-        padding-top: 10px;
-        text-shadow: -1px -1px #2e6db3;
-        box-shadow: 0 2px #ccc;
-
-        background: #73a0e2; /* Old browsers */
-        /* IE9 SVG, needs conditional override of       'filter' to 'none' */
-        background: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+CiAgPGxpbmVhckdyYWRpZW50IGlkPSJncmFkLXVjZ2ctZ2VuZXJhdGVkIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIwJSIgeTI9IjEwMCUiPgogICAgPHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzczYTBlMiIgc3RvcC1vcGFjaXR5PSIxIi8+CiAgICA8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMyMTVkYTAiIHN0b3Atb3BhY2l0eT0iMSIvPgogIDwvbGluZWFyR3JhZGllbnQ+CiAgPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNncmFkLXVjZ2ctZ2VuZXJhdGVkKSIgLz4KPC9zdmc+);
-        background: -moz-linear-gradient(top,  #73a0e2 0%, #215da0 100%); /* FF3.6+ */
-        background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#73a0e2), color-stop(100%,#215da0)); /* Chrome,Safari4+ */
-        background: -webkit-linear-gradient(top,  #73a0e2 0%,#215da0 100%); /* Chrome10+,Safari5.1+ */
-        background: -o-linear-gradient(top,  #73a0e2 0%,#215da0 100%); /* Opera 11.10+ */
-        background: -ms-linear-gradient(top,  #73a0e2 0%,#215da0 100%); /* IE10+ */
-        background: linear-gradient(to bottom,  #73a0e2 0%,#215da0 100%); /* W3C */
-        filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#73a0e2', endColorstr='#215da0',GradientType=0 ); /* IE6-8 */
-}
-
-div.labkey-download h3 {
-    font-size: 125%;
-}
-
-
-</style>
-<!--[if gte IE 9]>
-  <style type="text/css">
-    div.banner {
-       filter: none;
-    }
-  </style>
-<![endif]-->
-
+<div class="labkey-download">
 <%
         if (peptideCount > 0 || peptideGroupCount > 0)
         {
@@ -113,10 +58,11 @@ div.labkey-download h3 {
 <tr>
     <! -- graph # of proteins and peptides in the library -->
 <td><img src="<%= h(new ActionURL(TargetedMSController.GraphLibraryStatisticsAction.class, c)) %>"></td>
-<td valign="top" align="center">
-<br>
+<td style="vert-align: top; text-align: center; padding-left: 2em">
 <h3><%= h(c.getName())%> Library</h3>
-<a href="<%= h(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, c)) %>" class="banner-button">Download</a> <br/>
+<p>
+    <%= button("Download").href(new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, c))%>
+</p>
         <%= h(ChromatogramLibraryUtils.getDownloadFileName(c, currentRevision)) %>
     <%= h(Files.exists(archiveFile) ? "(" + FileUtils.byteCountToDisplaySize(Files.size(archiveFile)) + ")" : "") %>
     <br/>
