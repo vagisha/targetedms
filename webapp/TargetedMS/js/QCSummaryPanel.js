@@ -212,40 +212,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
     {
         if (container.fileCount > 0)
         {
-            // generate a UNION SQL query for the relevant metrics to get the summary info for the last N sample files
-            var sql = "", sep = "";
-            Ext4.each(this.qcPlotPanel.metricPropArr, function (metricType)
-            {
-                var id = metricType.id,
-                    name = metricType.name,
-                    label = metricType.series1Label,
-                    schema = metricType.series1SchemaName,
-                    query = metricType.series1QueryName;
 
-                sql += sep + '(' + this.getLatestSampleFileStatsSql(id, name, label, schema, query) + ')';
-                sep = "\nUNION\n";
-
-                if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
-                {
-                    label = metricType.series2Label;
-                    schema = metricType.series2SchemaName;
-                    query = metricType.series2QueryName;
-
-                    sql += sep + '(' + this.getLatestSampleFileStatsSql(id, name, label, schema, query) + ')';
-                    sep = "\nUNION\n";
-                }
-            }, this);
-
-            LABKEY.Query.executeSql({
-                containerPath: container.path,
-                schemaName: 'targetedms',
-                sql: sql,
-                sort: '-AcquiredTime,MetricLabel', // remove this if the perf is bad and we can sort the data in the success callback
-                scope: this,
-                success: function (data) {
-                    this.qcPlotPanel.queryContainerSampleFileRawGuideSetStats({container: container, dataRowsLJ: data.rows, limitedSampleFiles: true}, this.oldRenderContainerSampleFileStats, this);
-                }
-            });
 
 
             LABKEY.Ajax.request({
@@ -255,7 +222,6 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     this.data = JSON.parse(response.responseText).outliers;
                     this.sampleFiles = JSON.parse(response.responseText).sampleFiles;
                     this.newRenderContainerSampleFileStats({container: container, dataRowsLJ: this.data.dataRowsLJ, limitedSampleFiles: true, rawGuideSet: this.data.rawGuideSet, rawMetricDataSet: this.data.rawMetricDatSet, sampleFiles: this.sampleFiles})
-                    this.verifyData();
                 },
                 failure: LABKEY.Utils.getCallbackWrapper(function(response) {
                     this.qcPlotPanel.failureHandler(response);
@@ -271,120 +237,8 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }
     },
 
-    getOtherQCSampleFileStats: function(params, sampleFiles)
-    {
-        var validGuideSetIds = [];
-        Ext4.iterate(sampleFiles, function(key, val){
-           validGuideSetIds.push(val.GuideSetId);
-        });
-        var processedMetricGuides =  this.qcPlotPanel.getAllProcessedGuideSets(params.rawGuideSet);
-        var processedMetricDataSet = this.qcPlotPanel.getAllProcessedMetricDataSets(params.rawMetricDataSet.filter(function(row) {
-            return validGuideSetIds.indexOf(row.GuideSetId) > -1 && !row.IgnoreInQC;
-        }));
-        var metricOutlier = this.qcPlotPanel.getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, false, Object.keys(sampleFiles));
-        var transformedOutliers = this.qcPlotPanel.getMetricOutliersByFileOrGuideSetGroup(metricOutlier);
-
-        Ext4.iterate(transformedOutliers, function(filename, metrics){
-            var info = sampleFiles[filename];
-            Ext4.iterate(metrics, function(metric, outliers){
-                var matchedItem = null;
-                Ext4.each(info.Items, function(item){
-                   if (item.MetricLabel == metric)
-                   {
-                       matchedItem = item;
-                       return false;
-                   }
-                });
-                if (!matchedItem) {
-                    var metricId = this.qcPlotPanel.getMetricPropsByLabel(metric);
-                    if (metricId)
-                        metricId = metricId.id;
-                    matchedItem = {
-                        MetricLabel: metric,
-                        MetricName: metric,
-                        NonConformers: 0,
-                        ContainerPath: params.container.path,
-                        MetricId: metricId
-                    };
-                    info.Items.push(matchedItem);
-                }
-                Ext4.apply(matchedItem, {CUSUMmN: 0, CUSUMmP: 0, CUSUMvP: 0, CUSUMvN: 0, mR: 0});
-                Ext4.apply(matchedItem, outliers);
-                matchedItem.CUSUMm = matchedItem.CUSUMmN + matchedItem.CUSUMmP;
-                matchedItem.CUSUMv = matchedItem.CUSUMvN + matchedItem.CUSUMvP;
-            }, this);
-
-        }, this);
-
-        Ext4.iterate(sampleFiles, function(name, sample){
-            var CUSUMmP = 0, CUSUMmN = 0, CUSUMvP = 0, CUSUMvN = 0, mR = 0;
-            Ext4.each(sample.Items, function(item){
-                if (item.CUSUMmN)
-                    CUSUMmN += item.CUSUMmN;
-                if (item.CUSUMmP)
-                    CUSUMmP += item.CUSUMmP;
-                if (item.CUSUMvP)
-                    CUSUMvP += item.CUSUMvP;
-                if (item.CUSUMvN)
-                    CUSUMvN += item.CUSUMvN;
-                if (item.mR)
-                    mR += item.mR;
-            }, this);
-            sample.CUSUMm = CUSUMmP + CUSUMmN;
-            sample.CUSUMv = CUSUMvP + CUSUMvN;
-            sample.CUSUMmP = CUSUMmP;
-            sample.CUSUMmN = CUSUMmN;
-            sample.CUSUMvN = CUSUMvN;
-            sample.CUSUMvP = CUSUMvP;
-            sample.mR = mR;
-            sample.hasOutliers = !(sample.NonConformers == 0 && sample.CUSUMm == 0 && sample.CUSUMv == 0 && sample.mR == 0);
-        }, this);
-    },
-
-    oldRenderContainerSampleFileStats: function (params) {
-        var container = params.container;
-        if (!params.rawGuideSet || !params.rawMetricDataSet)
-            return;
-
-        var sampleFiles = {}, info = null, index = 1;
-        Ext4.each(params.dataRowsLJ, function(row)
-        {
-            if (info == null || row.SampleFile != info.SampleFile)
-            {
-                info = {
-                    Index: index++,
-                    SampleFile: row.SampleFile,
-                    AcquiredTime: row.AcquiredTime,
-                    Metrics: 0,
-                    NonConformers: 0,
-                    TotalCount: 0,
-                    Items: [],
-                    GuideSetId: row.GuideSetId,
-                    IgnoreForAllMetric: row.IgnoreInQC
-                };
-                sampleFiles[row.SampleFile] = info;
-            }
-
-            info.IgnoreForAllMetric = info.IgnoreForAllMetric && row.IgnoreInQC;
-            if (!row.IgnoreInQC) {
-                info.Metrics++;
-                info.NonConformers += row.NonConformers;
-                info.TotalCount += row.TotalCount;
-            }
-
-            Ext4.apply(row,{CUSUMm: 0, CUSUMv: 0, CUSUMmN: 0, CUSUMmP: 0, CUSUMvP: 0, CUSUMvN: 0, mR: 0});
-            row.ContainerPath = container.path;
-            info.Items.push(row);
-        }, this);
-
-        this.getOtherQCSampleFileStats(params, sampleFiles);
-        this.oldSampleFiles = JSON.parse(JSON.stringify(sampleFiles));
-        this.verifyData();
-    },
-
     newRenderContainerSampleFileStats: function (params) {
         var container = params.container;
-        this.newSampleFiles = JSON.parse(JSON.stringify(params.sampleFiles));
             var html = '';
             var sampleFiles = this.sortObjectOfObjects(params.sampleFiles, 'Index');
             Ext4.iterate(sampleFiles, function (sampleFile)
@@ -532,81 +386,6 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
     getSampleDetailOutlierDisplayValue : function(item, variable) {
         return item[variable] ? item[variable] : 0
-    },
-
-    getLatestSampleFileStatsSql : function(id, name, label, schema, query)
-    {
-        return "SELECT stats.GuideSetId,"
-            + "\n'" + id + "' AS MetricId,"
-            + "\n'" + name + "' AS MetricName,"
-            + "\n'" + label + "' AS MetricLabel,"
-            + "\nX.SampleFile,"
-            + "\nX.AcquiredTime,"
-            + "\nCASE WHEN (exclusion.ReplicateId IS NOT NULL) THEN TRUE ELSE FALSE END AS IgnoreInQC,"
-            + "\nSUM(CASE WHEN exclusion.ReplicateId IS NULL AND (X.MetricValue > (stats.Mean + (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END)))"
-            + "\n   OR X.MetricValue < (stats.Mean - (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END)))) THEN 1 ELSE 0 END) AS NonConformers,"
-            + "\nCOUNT(*) AS TotalCount"
-            + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.SampleName AS SampleFile, SampleFileId.ReplicateId AS ReplicateId"
-            + "\n      FROM " + schema + "." + query
-            + "\n      WHERE SampleFileId.Id IN (SELECT Id FROM SampleFile WHERE AcquiredTime IS NOT NULL ORDER BY AcquiredTime DESC LIMIT 3)"
-            + "\n) X"
-            + "\nLEFT JOIN (SELECT DISTINCT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = " + id + ") exclusion"
-            + "\nON X.ReplicateId = exclusion.ReplicateId"
-            + "\nLEFT JOIN (" + this.qcPlotPanel.metricGuideSetSql(id, schema, query) + ") stats"
-            + "\nON X.SeriesLabel = stats.SeriesLabel"
-            + "\nAND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
-            + "\n   OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
-            + "\nGROUP BY stats.GuideSetId, X.SampleFile, X.AcquiredTime, exclusion.ReplicateId"
-            + "\nORDER BY X.AcquiredTime DESC";
-    },
-
-    verifyData: function () {
-
-        if(this.oldSampleFiles && this.newSampleFiles) {
-            var eq = this.myEquals(this.oldSampleFiles, this.newSampleFiles);
-            console.log("QC Outliers json - old = new ? " + eq);
-        }
-    },
-
-    myEquals : function( x, y ) {
-        if ( x === y ) return true;
-        // if both x and y are null or undefined and exactly the same
-
-        if ( ! ( x instanceof Object ) || ! ( y instanceof Object ) )
-            return false;
-        // if they are not strictly equal, they both need to be Objects
-
-        if ( x.constructor !== y.constructor ) return false;
-        // they must have the exact same prototype chain, the closest we can do is
-        // test there constructor.
-
-        for ( var p in x ) {
-            if ( ! x.hasOwnProperty( p ) ) continue;
-            // other properties were tested using x.constructor === y.constructor
-
-            if ( ! y.hasOwnProperty( p ) )
-                return p;
-            // allows to compare x[ p ] and y[ p ] when set to undefined
-
-            if ( x[ p ] === y[ p ] ) continue;
-            // if they have the same strict value or identity then they are equal
-
-            if ( typeof( x[ p ] ) !== "object" )
-                return p;
-            // Numbers, Strings, Functions, Booleans must be strictly equal
-
-            var result = this.myEquals( x[ p ],  y[ p ] );
-            if ( result !== true  )
-                return result;
-            // Objects and Arrays must be tested recursively
-        }
-
-        for ( p in y ) {
-            if ( y.hasOwnProperty( p ) && ! x.hasOwnProperty( p ) )
-                return p;
-            // allows x[ p ] to be set to undefined
-        }
-        return true;
     },
     
     sortObjectOfObjects: function (data, attr) {

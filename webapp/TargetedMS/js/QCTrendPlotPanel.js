@@ -1253,45 +1253,47 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     },
 
     processAnnotationData: function(data) {
-        this.annotationData = data.rows;
-        this.annotationShape = LABKEY.vis.Scale.Shape()[4]; // 0: circle, 1: triangle, 2: square, 3: diamond, 4: X
+        if(data) {
+            this.annotationData = data.rows;
+            this.annotationShape = LABKEY.vis.Scale.Shape()[4]; // 0: circle, 1: triangle, 2: square, 3: diamond, 4: X
 
-        var dateCount = {};
-        this.legendData = [];
+            var dateCount = {};
+            this.legendData = [];
 
-        // if more than one type of legend present, add a legend header for annotations
+            // if more than one type of legend present, add a legend header for annotations
         if (this.annotationData.length > 0 && (this.singlePlot || this.showMeanCUSUMPlot() || this.showVariableCUSUMPlot()))
         {
-            this.legendData.push({
-                text: 'Annotations',
-                separator: true
-            });
-        }
+                this.legendData.push({
+                    text: 'Annotations',
+                    separator: true
+                });
+            }
 
         for (var i = 0; i < this.annotationData.length; i++)
         {
-            var annotation = this.annotationData[i];
-            var annotationDate = this.formatDate(Ext4.Date.parse(annotation['Date'], LABKEY.Utils.getDateTimeFormatWithMS()), !this.groupedX);
+                var annotation = this.annotationData[i];
+                var annotationDate = this.formatDate(Ext4.Date.parse(annotation['Date'], LABKEY.Utils.getDateTimeFormatWithMS()), !this.groupedX);
 
-            // track if we need to stack annotations that fall on the same date
-            if (!dateCount[annotationDate]) {
-                dateCount[annotationDate] = 0;
-            }
-            annotation.yStepIndex = dateCount[annotationDate];
-            dateCount[annotationDate]++;
+                // track if we need to stack annotations that fall on the same date
+                if (!dateCount[annotationDate]) {
+                    dateCount[annotationDate] = 0;
+                }
+                annotation.yStepIndex = dateCount[annotationDate];
+                dateCount[annotationDate]++;
 
-            // get unique annotation names and colors for the legend
+                // get unique annotation names and colors for the legend
             if (Ext4.Array.pluck(this.legendData, "text").indexOf(annotation['Name']) == -1)
             {
-                this.legendData.push({
-                    text: annotation['Name'],
-                    color: '#' + annotation['Color'],
-                    shape: this.annotationShape
-                });
+                    this.legendData.push({
+                        text: annotation['Name'],
+                        color: '#' + annotation['Color'],
+                        shape: this.annotationShape
+                    });
+                }
             }
-        }
 
-        this.prepareAndRenderQCPlot();
+            this.prepareAndRenderQCPlot();
+        }
     },
 
     getExportSVGStr: function(btn, extraMargin)

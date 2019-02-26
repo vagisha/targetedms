@@ -98,59 +98,61 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
     processRawGuideSetData : function(data)
     {
-        var guideSetAvgMRs = this.getGuideSetAvgMRs(data.rows, this.yAxisScale == 'log');
-        if (!this.guideSetDataMap)
-            this.guideSetDataMap = {};
-        Ext4.each(data.rows, function(row) {
-            var guideSetId = row['GuideSetId'];
+        if(data) {
+            var guideSetAvgMRs = this.getGuideSetAvgMRs(data.rows, this.yAxisScale == 'log');
+            if (!this.guideSetDataMap)
+                this.guideSetDataMap = {};
+            Ext4.each(data.rows, function (row) {
+                var guideSetId = row['GuideSetId'];
             if (!this.guideSetDataMap[guideSetId])
             {
-                this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
-                this.hasGuideSetData = true;
-            }
-
-            var seriesLabel = row['SeriesLabel'];
-            var seriesType = row['SeriesType'];
-            if (guideSetId == null) {
-
-                if (!this.defaultGuideSet) {
-                    this.defaultGuideSet = {};
+                    this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
+                    this.hasGuideSetData = true;
                 }
 
-                if (!this.defaultGuideSet[seriesLabel]) {
-                    this.defaultGuideSet[seriesLabel] = {};
-                }
+                var seriesLabel = row['SeriesLabel'];
+                var seriesType = row['SeriesType'];
+                if (guideSetId == null) {
 
-                if (!this.defaultGuideSet[seriesLabel][seriesType]) {
-                    this.defaultGuideSet[seriesLabel][seriesType] = {};
-                }
+                    if (!this.defaultGuideSet) {
+                        this.defaultGuideSet = {};
+                    }
 
-                this.defaultGuideSet[seriesLabel][seriesType].MR =
-                        {
-                            Mean: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].avgMR,
-                            StdDev: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].stddevMR
-                        };
+                    if (!this.defaultGuideSet[seriesLabel]) {
+                        this.defaultGuideSet[seriesLabel] = {};
+                    }
 
-            }
-            else {
-                if (!this.guideSetDataMap[guideSetId].Series[seriesLabel]) {
-                    this.guideSetDataMap[guideSetId].Series[seriesLabel] = {};
-                }
+                    if (!this.defaultGuideSet[seriesLabel][seriesType]) {
+                        this.defaultGuideSet[seriesLabel][seriesType] = {};
+                    }
 
-                if (!this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType]) {
-                    this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType] = {
-                        MeanMR: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].avgMR,
-                        StdDevMR: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].stddevMR
-                    };
+                    this.defaultGuideSet[seriesLabel][seriesType].MR =
+                            {
+                                Mean: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].avgMR,
+                                StdDev: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].stddevMR
+                            };
+
                 }
                 else {
-                    this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType].MeanMR = guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].avgMR;
-                    this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType].StdDevMR = guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].stddevMR;
-                }
-            }
-        }, this);
+                    if (!this.guideSetDataMap[guideSetId].Series[seriesLabel]) {
+                        this.guideSetDataMap[guideSetId].Series[seriesLabel] = {};
+                    }
 
-        this.getPlotData();
+                    if (!this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType]) {
+                        this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType] = {
+                            MeanMR: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].avgMR,
+                            StdDevMR: guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].stddevMR
+                        };
+                    }
+                    else {
+                        this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType].MeanMR = guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].avgMR;
+                        this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType].StdDevMR = guideSetAvgMRs[guideSetId].Series[seriesLabel][seriesType].stddevMR;
+                    }
+                }
+            }, this);
+
+            this.getPlotData();
+        }
     },
 
     getPlotData: function ()
@@ -209,9 +211,11 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             scope: this,
             sort: 'SeriesType, SeriesLabel, AcquiredTime', //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
             success: function (data) {
-                this.plotDataRows = this.plotDataRows.concat(data.rows);
+                if(data) {
+                    this.plotDataRows = this.plotDataRows.concat(data.rows);
 
-                this.processPlotData(this.plotDataRows);
+                    this.processPlotData(this.plotDataRows);
+                }
             },
             failure: this.failureHandler
         });
