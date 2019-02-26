@@ -145,10 +145,9 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         // give user reader permissions to all but FOLDER_1
         ApiPermissionsHelper permissionsHelper = new ApiPermissionsHelper(this);
         permissionsHelper.addMemberToRole(USER, "Reader", PermissionsHelper.MemberType.user, getProjectName());
-        for (String folder : new String[]{FOLDER_2, FOLDER_2A, FOLDER_3})
-        {
-            permissionsHelper.addMemberToRole(USER, "Reader", PermissionsHelper.MemberType.user, getProjectName() + "/" + folder);
-        }
+        permissionsHelper.addMemberToRole(USER, "Reader", PermissionsHelper.MemberType.user, getProjectName() + "/" + FOLDER_2);
+        permissionsHelper.addMemberToRole(USER, "Reader", PermissionsHelper.MemberType.user, getProjectName() + "/" + FOLDER_2 + "/" + FOLDER_2A);
+        permissionsHelper.addMemberToRole(USER, "Reader", PermissionsHelper.MemberType.user, getProjectName() + "/" + FOLDER_3);
 
         // impersonate user and check that the project QC Summary doesn't include the FOLDER_1 details
         goToProjectHome();
