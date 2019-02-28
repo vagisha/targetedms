@@ -27,6 +27,7 @@ import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.labkey.api.action.*;
 import org.labkey.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.Outlier;
 import org.labkey.targetedms.model.RawGuideSet;
@@ -39,25 +40,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Test;
-import org.labkey.api.action.ApiAction;
-import org.labkey.api.action.ApiResponse;
-import org.labkey.api.action.ApiSimpleResponse;
-import org.labkey.api.action.ApiUsageException;
-import org.labkey.api.action.ConfirmAction;
-import org.labkey.api.action.CustomApiForm;
-import org.labkey.api.action.ExportAction;
-import org.labkey.api.action.FormHandlerAction;
-import org.labkey.api.action.FormViewAction;
-import org.labkey.api.action.HasViewContext;
-import org.labkey.api.action.LabKeyError;
-import org.labkey.api.action.Marshal;
-import org.labkey.api.action.Marshaller;
-import org.labkey.api.action.MutatingApiAction;
-import org.labkey.api.action.QueryViewAction;
-import org.labkey.api.action.ReturnUrlForm;
-import org.labkey.api.action.SimpleErrorView;
-import org.labkey.api.action.SimpleViewAction;
-import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.*;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpData;
@@ -757,7 +739,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetQCSummaryAction extends ApiAction<QCSummaryForm>
+    public class GetQCSummaryAction extends ReadOnlyApiAction<QCSummaryForm>
     {
         @Override
         public Object execute(QCSummaryForm form, BindException errors)
@@ -862,7 +844,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetQCMetricConfigurationsAction extends ApiAction
+    public class GetQCMetricConfigurationsAction extends ReadOnlyApiAction
     {
         @Override
         public Object execute(Object form, BindException errors)
@@ -881,7 +863,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetContainerReplicateAnnotationsAction extends ApiAction
+    public class GetContainerReplicateAnnotationsAction extends ReadOnlyApiAction
     {
         @Override
         public Object execute(Object form, BindException errors)
@@ -2139,7 +2121,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class LibrarySpectrumDataAction extends ApiAction<SpectrumDataForm>
+    public class LibrarySpectrumDataAction extends ReadOnlyApiAction<SpectrumDataForm>
     {
         @Override
         public Object execute(SpectrumDataForm form, BindException errors)
@@ -2837,7 +2819,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class SkylineDocUploadApiAction extends ApiAction<PipelinePathForm>
+    public class SkylineDocUploadApiAction extends MutatingApiAction<PipelinePathForm>
     {
         public ApiResponse execute(PipelinePathForm form, BindException errors) throws Exception
         {
@@ -2872,7 +2854,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresLogin
-    public class GetMaxSupportedVersionsAction extends ApiAction
+    public class GetMaxSupportedVersionsAction extends ReadOnlyApiAction
     {
         public ApiResponse execute(Object object, BindException errors)
         {
@@ -3974,7 +3956,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class ProteinConflictPeptidesAjaxAction extends ApiAction<ProteinPeptidesForm>
+    public class ProteinConflictPeptidesAjaxAction extends ReadOnlyApiAction<ProteinPeptidesForm>
     {
         @Override
         public ApiResponse execute(ProteinPeptidesForm proteinPeptidesForm, BindException errors)
@@ -4159,7 +4141,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class PrecursorConflictTransitionsAjaxAction extends ApiAction<ConflictPrecursorsForm>
+    public class PrecursorConflictTransitionsAjaxAction extends ReadOnlyApiAction<ConflictPrecursorsForm>
     {
         @Override
         public ApiResponse execute(ConflictPrecursorsForm conflictPrecursorsForm, BindException errors)
@@ -4559,7 +4541,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(InsertPermission.class)
-    public class IsLibraryCurrentAction extends ApiAction<LibraryDetailsForm>
+    public class IsLibraryCurrentAction extends ReadOnlyApiAction<LibraryDetailsForm>
     {
         public ApiResponse execute(LibraryDetailsForm form, BindException errors) throws Exception
         {
@@ -6257,7 +6239,7 @@ public class TargetedMSController extends SpringActionController
     // BEGIN Method building (link versions) actions
     // ------------------------------------------------------------------------
     @RequiresPermission(ReadPermission.class)
-    public class GetLinkVersionsAction extends ApiAction<SelectedRowIdsForm>
+    public class GetLinkVersionsAction extends ReadOnlyApiAction<SelectedRowIdsForm>
     {
         @Override
         public Object execute(SelectedRowIdsForm form, BindException errors)
