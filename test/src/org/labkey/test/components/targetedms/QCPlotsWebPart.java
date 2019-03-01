@@ -495,6 +495,7 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public List<WebElement> getPointElements(String attr, String value, boolean isPrefix)
     {
+        Locator.tag("svg").waitForElement(this, WAIT_FOR_JAVASCRIPT);
         List<WebElement> matchingPoints = new ArrayList<>();
 
         for (WebElement point : elementCache().svgPointPath.findElements(this))
