@@ -182,12 +182,12 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         // Delete the oldest sample (of three), which are sorted in reverse chronological order
         table.checkCheckbox(2);
         doAndWaitForPageToLoad(() -> {
-            table.clickHeaderButtonByText("Delete");
+            table.clickHeaderButton("Delete");
             assertAlert("Are you sure you want to delete the selected row?");
         });
         sampleFileCount--;
-        clickTab("Panorama Dashboard");
-        waitForRecentSampleFiles(2);
+        PanoramaDashboard panoramaDashboard = goToDashboard();
+        panoramaDashboard.getQcSummaryWebPart().waitForRecentSampleFiles(2);
         verifyQcSummary(1, sampleFileCount, 2);
         assertEquals("Unexpected number of points", 2 * sampleFileCount, getQCPlotPointCount());
 
@@ -202,9 +202,9 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
         // remove all sample files
         clickAndWait(Locator.linkWithText(sampleFileCount + " sample files"));
-        table.checkAll();
+        table.checkAllOnPage();
         doAndWaitForPageToLoad(() -> {
-            table.clickHeaderButtonByText("Delete");
+            table.clickHeaderButton("Delete");
             assertAlert("Are you sure you want to delete the selected rows?");
         });
         sampleFileCount = 0;
