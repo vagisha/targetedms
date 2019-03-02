@@ -115,7 +115,7 @@ public class BlibSpectrumReader
 
     private static boolean malformedBlibFileError(String blibFilePath, SQLException e)
     {
-        if(e.getMessage().contains("no such table") || e.getMessage().contains("no such column"))
+        if(e.getMessage().contains("no such table") || e.getMessage().contains("no such column") || e.getMessage().contains("File opened that is not a database file"))
         {
             LOG.error("Malformed .blib file " + blibFilePath + ". Error was: " + e.getMessage());
             return true;
