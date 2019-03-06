@@ -101,6 +101,16 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
             LOG.debug("Could not find SKYD file to get chromatogram at path " + path);
             return null;
         }
+        catch (RuntimeException e)
+        {
+            if (e.getMessage() != null && e.getMessage().contains("The specified key does not exist"))
+            {
+                // Avoid a separate call to Files.exists() as it adds ~1 second overhead
+                LOG.debug("Could not find SKYD file to get chromatogram at path " + path + ": " + e.getMessage());
+                return null;
+            }
+            throw e;
+        }
         catch (IOException e)
         {
             throw new UnexpectedException(e);
