@@ -68,8 +68,13 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.security.UserManager;
+import org.labkey.api.security.permissions.DeletePermission;
+import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.view.NotFoundException;
+import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.parser.GeneralMolecule;
@@ -703,9 +708,22 @@ public class TargetedMSManager
 
     }
 
+    public static TargetedMSRun getRunByDataId(int dataId)
+    {
+        return getRunByDataId(dataId, null);
+    }
+
     public static TargetedMSRun getRunByDataId(int dataId, Container c)
     {
-        TargetedMSRun[] runs = getRuns("DataId = ? AND Deleted = ? AND Container = ?", dataId, Boolean.FALSE, c.getId());
+        TargetedMSRun[] runs;
+        if(c != null)
+        {
+            runs = getRuns("DataId = ? AND Deleted = ? AND Container = ?", dataId, Boolean.FALSE, c.getId());
+        }
+        else
+        {
+            runs = getRuns("DataId = ? AND Deleted = ?", dataId, Boolean.FALSE);
+        }
         if(runs.length == 0)
         {
             return null;
@@ -717,9 +735,22 @@ public class TargetedMSManager
         throw new IllegalStateException("There is more than one non-deleted Targeted MS Run for dataId " + dataId);
     }
 
+    public static TargetedMSRun getRunBySkydDataId(int skydDataId)
+    {
+        return getRunBySkydDataId(skydDataId, null);
+    }
+
     public static TargetedMSRun getRunBySkydDataId(int skydDataId, Container c)
     {
-        TargetedMSRun[] runs = getRuns("SkydDataId = ? AND Deleted = ? AND Container = ?", skydDataId, Boolean.FALSE, c.getId());
+        TargetedMSRun[] runs;
+        if(c != null)
+        {
+            runs = getRuns("SkydDataId = ? AND Deleted = ? AND Container = ?", skydDataId, Boolean.FALSE, c.getId());
+        }
+        else
+        {
+            runs = getRuns("SkydDataId = ? AND Deleted = ?", skydDataId, Boolean.FALSE);
+        }
         if(runs.length == 0)
         {
             return null;
@@ -991,6 +1022,23 @@ public class TargetedMSManager
     // pulled out into separate method so could be called by itself from data handlers
     public static void markDeleted(List<Integer> runIds, Container c, User user)
     {
+        List<Integer> cantDelete = new ArrayList<>();
+        for(int runId: runIds)
+        {
+            TargetedMSRun run = getRun(runId);
+            if(!run.getContainer().equals(c) && !run.getContainer().hasPermission(user, DeletePermission.class))
+            {
+               cantDelete.add(runId);
+            }
+        }
+
+        if(cantDelete.size() > 0)
+        {
+            throw new UnauthorizedException("User does not have permissions to delete run " + (cantDelete.size() > 1 ? "Ids" : "Id")
+                    + " " + StringUtils.join(cantDelete, ',')
+                    + ". " + (cantDelete.size() > 1 ? "They are" : "It is") + " not in container " + c.getName());
+        }
+
         for(int runId: runIds)
         {
             TargetedMSRun run = getRun(runId);
@@ -1001,13 +1049,13 @@ public class TargetedMSManager
             // Revert the representative state if any of the runs are representative at the protein or peptide level.
             if(run.isRepresentative())
             {
-                PipeRoot root = PipelineService.get().getPipelineRootSetting(c);
+                PipeRoot root = PipelineService.get().getPipelineRootSetting(run.getContainer());
                 if (null != root)
                 {
                     LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
                     try
                     {
-                        RepresentativeStateManager.setRepresentativeState(user, c, localDirectory, run, TargetedMSRun.RepresentativeDataState.NotRepresentative);
+                        RepresentativeStateManager.setRepresentativeState(user, run.getContainer(), localDirectory, run, TargetedMSRun.RepresentativeDataState.NotRepresentative);
                     }
                     finally
                     {
@@ -1023,7 +1071,6 @@ public class TargetedMSManager
 
         SQLFragment markDeleted = new SQLFragment("UPDATE " + getTableInfoRuns() + " SET ExperimentRunLSID = NULL, DataId = NULL, SkydDataId = NULL, Deleted=?, Modified=? ", Boolean.TRUE, new Date());
         SimpleFilter where = new SimpleFilter();
-        where.addCondition(FieldKey.fromParts("Container"), c.getId());
         where.addInClause(FieldKey.fromParts("Id"), runIds);
         markDeleted.append(where.getSQLFragment(getSqlDialect()));
 

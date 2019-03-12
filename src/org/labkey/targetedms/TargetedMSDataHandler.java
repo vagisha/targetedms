@@ -30,7 +30,6 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
-import org.labkey.api.settings.ExperimentalFeatureService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.view.ActionURL;
@@ -118,7 +117,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     @Override
     public void deleteData(ExpData data, Container container, User user)
     {
-        TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId(), container);
+        TargetedMSRun run = TargetedMSManager.getRunByDataId(data.getRowId());
         if (run != null)
         {
             TargetedMSManager.deleteRun(container, user, run);

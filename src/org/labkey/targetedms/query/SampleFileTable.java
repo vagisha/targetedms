@@ -73,7 +73,7 @@ public class SampleFileTable extends TargetedMSTable
             List<FieldKey> defaultCols = new ArrayList<>(Arrays.asList(
                     FieldKey.fromParts("ReplicateId", "Name"),
                     FieldKey.fromParts("FilePath"),
-                    FieldKey.fromParts("ReplicateId", "AcquiredTime")));
+                    FieldKey.fromParts("AcquiredTime")));
 
             // Find the columns that have values for the run of interest, and include them in the set of columns in the default
             // view. We don't really care what the value is for the columns, just that it exists, so we arbitrarily use
@@ -95,12 +95,16 @@ public class SampleFileTable extends TargetedMSTable
             TableSelector ts = new TableSelector(this);
             Map<String, List<Aggregate.Result>> aggValues = ts.getAggregates(aggregates);
 
-            for (Map.Entry<String, List<Aggregate.Result>> entry : aggValues.entrySet())
+            for (Aggregate aggregate: aggregates)
             {
-                Aggregate.Result aggResult = entry.getValue().get(0);
-                if (aggResult.getValue() != null)
+                List<Aggregate.Result> result = aggValues.get(aggregate.getFieldKey().toString());
+                if(result != null)
                 {
-                    defaultCols.add(aggResult.getAggregate().getFieldKey());
+                    Aggregate.Result aggResult = result.get(0);
+                    if (aggResult.getValue() != null)
+                    {
+                        defaultCols.add(aggResult.getAggregate().getFieldKey());
+                    }
                 }
             }
             setDefaultVisibleColumns(defaultCols);

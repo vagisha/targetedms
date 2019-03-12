@@ -62,7 +62,7 @@ public class SkylineBinaryDataHandler extends AbstractExperimentDataHandler
     @Override
     public void deleteData(ExpData data, Container container, User user)
     {
-        TargetedMSRun run = TargetedMSManager.getRunBySkydDataId(data.getRowId(), container);
+        TargetedMSRun run = TargetedMSManager.getRunBySkydDataId(data.getRowId());
         if (run != null)
         {
             TargetedMSManager.deleteRun(container, user, run);
