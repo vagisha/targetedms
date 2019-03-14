@@ -947,7 +947,7 @@ public class TargetedMSController extends SpringActionController
 
 
     @RequiresPermission(ReadPermission.class)
-    public class GetQCMetricOutliersAction extends MutatingApiAction
+    public class GetQCMetricOutliersAction extends ReadOnlyApiAction
     {
 
         @Override
@@ -960,35 +960,42 @@ public class TargetedMSController extends SpringActionController
             CUSUMOutliers cusumOutliers = new CUSUMOutliers();
 
             List<LJOutlier> ljOutliers = LeveyJenningsOutliers.getLJOutliers(configurations, getContainer(), getUser());
-            List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(getContainer(), getUser(), configurations);
-            List<RawMetricDataSet> rawMetricDataSets = new CUSUMOutliers().getRawMetricDataSets(getContainer(), getUser(), configurations);
-
-            JSONObject sampleFiles = cusumOutliers.getOtherQCSampleFileStats(ljOutliers, rawGuideSets,rawMetricDataSets, getContainer().getPath());
-
-            List<JSONObject> jsonLJOutliers = new ArrayList<>();
-            List<JSONObject> jsonRawGuideSets = new ArrayList<>();
-            List<JSONObject> jsonRawMetricDataSet = new ArrayList<>();
-
-            for (LJOutlier ljOutlier : ljOutliers)
+            if(!ljOutliers.isEmpty())
             {
-                jsonLJOutliers.add(ljOutlier.toJSON());
-            }
-            outlier.setDataRowsLJ(jsonLJOutliers);
+                List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(getContainer(), getUser(), configurations);
+                List<RawMetricDataSet> rawMetricDataSets = new CUSUMOutliers().getRawMetricDataSets(getContainer(), getUser(), configurations);
 
-            for(RawGuideSet rawGuideSet: rawGuideSets)
+                JSONObject sampleFiles = cusumOutliers.getOtherQCSampleFileStats(ljOutliers, rawGuideSets, rawMetricDataSets, getContainer().getPath());
+
+                List<JSONObject> jsonLJOutliers = new ArrayList<>();
+                List<JSONObject> jsonRawGuideSets = new ArrayList<>();
+                List<JSONObject> jsonRawMetricDataSet = new ArrayList<>();
+
+                for (LJOutlier ljOutlier : ljOutliers)
+                {
+                    jsonLJOutliers.add(ljOutlier.toJSON());
+                }
+                outlier.setDataRowsLJ(jsonLJOutliers);
+
+                for (RawGuideSet rawGuideSet : rawGuideSets)
+                {
+                    jsonRawGuideSets.add(rawGuideSet.toJSON());
+                }
+                outlier.setRawGuideSet(jsonRawGuideSets);
+
+                for (RawMetricDataSet rawMetricDataSet : rawMetricDataSets)
+                {
+                    jsonRawMetricDataSet.add(rawMetricDataSet.toJSON());
+                }
+                outlier.setRawMetricDataSet(jsonRawMetricDataSet);
+
+                response.put("outliers", outlier.toJSON());
+                response.put("sampleFiles", sampleFiles);
+            }
+            else
             {
-                jsonRawGuideSets.add(rawGuideSet.toJSON());
+                response.put("outliers", null);
             }
-            outlier.setRawGuideSet(jsonRawGuideSets);
-
-            for(RawMetricDataSet rawMetricDataSet: rawMetricDataSets)
-            {
-                jsonRawMetricDataSet.add(rawMetricDataSet.toJSON());
-            }
-            outlier.setRawMetricDataSet(jsonRawMetricDataSet);
-
-            response.put("outliers", outlier.toJSON());
-            response.put("sampleFiles", sampleFiles);
             return response;
         }
     }

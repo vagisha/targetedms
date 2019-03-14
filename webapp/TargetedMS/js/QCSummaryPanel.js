@@ -212,16 +212,23 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
     {
         if (container.fileCount > 0)
         {
-
-
-
             LABKEY.Ajax.request({
                 url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCMetricOutliers.api', container.path),
-                method: 'POST',
                 success: function(response) {
                     this.data = JSON.parse(response.responseText).outliers;
-                    this.sampleFiles = JSON.parse(response.responseText).sampleFiles;
-                    this.newRenderContainerSampleFileStats({container: container, dataRowsLJ: this.data.dataRowsLJ, limitedSampleFiles: true, rawGuideSet: this.data.rawGuideSet, rawMetricDataSet: this.data.rawMetricDatSet, sampleFiles: this.sampleFiles})
+                    if(this.data) {
+                        this.sampleFiles = JSON.parse(response.responseText).sampleFiles;
+                        this.newRenderContainerSampleFileStats({
+                            container: container,
+                            dataRowsLJ: this.data.dataRowsLJ,
+                            limitedSampleFiles: true,
+                            rawGuideSet: this.data.rawGuideSet,
+                            rawMetricDataSet: this.data.rawMetricDatSet,
+                            sampleFiles: this.sampleFiles
+                        })
+                    } else {
+                        this.removeSampleFilesDetailsDiv(container);
+                    }
                 },
                 failure: LABKEY.Utils.getCallbackWrapper(function(response) {
                     this.qcPlotPanel.failureHandler(response);
@@ -231,10 +238,14 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }
         else if (container.docCount > 0)
         {
-            var sampleFilesDiv = Ext4.get('qc-summary-samplefiles-' + container.id);
-            sampleFilesDiv.update('');
-            sampleFilesDiv.removeCls('sample-file-details-loading');
+           this.removeSampleFilesDetailsDiv(container);
         }
+    },
+
+    removeSampleFilesDetailsDiv: function (container) {
+        var sampleFilesDiv = Ext4.get('qc-summary-samplefiles-' + container.id);
+        sampleFilesDiv.update('');
+        sampleFilesDiv.removeCls('sample-file-details-loading');
     },
 
     newRenderContainerSampleFileStats: function (params) {
