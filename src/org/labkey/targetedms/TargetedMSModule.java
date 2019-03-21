@@ -28,6 +28,8 @@ import org.labkey.api.data.UpgradeCode;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.exp.ExperimentRunTypeSource;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.files.DirectoryPattern;
+import org.labkey.api.files.FileContentService;
 import org.labkey.api.module.FolderTypeManager;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleContext;
@@ -453,6 +455,34 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 		// Add a link in the admin console to manage journals.
 		ActionURL url = new ActionURL(PublishTargetedMSExperimentsController.JournalGroupsAdminViewAction.class, ContainerManager.getRoot());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "targeted ms", url, AdminPermission.class);
+
+        FileContentService fcs = FileContentService.get();
+        if(null != fcs)
+        {
+            DirectoryPattern extWatersRaw = new DirectoryPattern(this);
+            extWatersRaw.setExt(".*\\.raw$");
+            extWatersRaw.setFileExt("^_FUNC.*\\.DAT$");
+
+            DirectoryPattern extAgilentRaw = new DirectoryPattern(this);
+            extAgilentRaw.setExt(".*\\.d$");
+
+            DirectoryPattern extAgilentRawSubDir = new DirectoryPattern(this);
+            extAgilentRawSubDir.setExt("^AcqData$");
+            extAgilentRaw.setSubDirectory(extAgilentRawSubDir);
+
+            DirectoryPattern extBrukerRaw1 = new DirectoryPattern(this);
+            extBrukerRaw1.setExt(".*\\.d$");
+            extBrukerRaw1.setFileExt("^analysis.baf$");
+
+            DirectoryPattern extBrukerRaw2 = new DirectoryPattern(this);
+            extBrukerRaw2.setExt(".*\\.d$");
+            extBrukerRaw2.setFileExt("^analysis.tdf$");
+
+            fcs.addZipUploadRecognizer(extWatersRaw);
+            fcs.addZipUploadRecognizer(extAgilentRaw);
+            fcs.addZipUploadRecognizer(extBrukerRaw1);
+            fcs.addZipUploadRecognizer(extBrukerRaw2);
+        }
     }
 
     @NotNull
