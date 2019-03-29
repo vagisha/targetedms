@@ -123,7 +123,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
                 return (highlight ? '<strong>' : '') + val + (highlight ? '</strong>' : '');
             }},
             {text: 'Imported', dataIndex: 'Created', xtype: 'datecolumn', format: 'm/d/Y g:i A', width: 160, menuDisabled: true, sortable: false},
-            {text: 'Imported By', dataIndex: 'CreatedBy/DisplayName', width: 100, menuDisabled: true, sortable: false},
+            {text: 'Imported By', dataIndex: 'CreatedBy/DisplayName', width: 100, menuDisabled: true, sortable: false, renderer: 'htmlEncode'},
             {text: 'Note', dataIndex: 'Flag/Comment', menuDisabled: true, sortable: false, renderer: 'htmlEncode'},
             {text: 'Proteins', dataIndex: 'File/Proteins', menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Precursors', dataIndex: 'File/Precursors', menuDisabled: true, sortable: false, align: 'right'},
