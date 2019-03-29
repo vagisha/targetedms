@@ -238,7 +238,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
        return _fileName.toLowerCase().endsWith(".zip");
     }
     /**
-     * Do not use this directly to delete a run - use TargetedMSManager.markAsDeleted
+     * Do not use this directly to delete a run - use TargetedMSManager.deleteRuns
      */
     public void setDeleted(boolean deleted)
     {

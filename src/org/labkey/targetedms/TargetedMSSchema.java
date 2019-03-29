@@ -63,6 +63,8 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.NavTree;
+import org.labkey.api.view.PopupMenu;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.ChromatogramBinaryFormat;
@@ -603,7 +605,6 @@ public class TargetedMSSchema extends UserSchema
         ColumnInfo skyDocDetailColumn = new ExprColumn(result, "File", sql, JdbcType.INTEGER);
 
         ActionURL url = TargetedMSController.getShowRunURL(getContainer());
-        final ActionURL downloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
 
         boolean hasSmallMolecules = TargetedMSManager.containerHasSmallMolecules(getContainer());
         boolean hasPeptides = TargetedMSManager.containerHasPeptides(getContainer());
@@ -640,54 +641,18 @@ public class TargetedMSSchema extends UserSchema
                                 Integer runId = ctx.get(this.getColumnInfo().getFieldKey(), Integer.class);
                                 if (runId != null)
                                 {
-                                    downloadUrl.replaceParameter("runId", runId.toString());
-
                                     TargetedMSRun run = TargetedMSManager.getRun(runId);
 
                                     if(run != null)
                                     {
-                                        String onClickScript = null;
-                                        if (!StringUtils.isBlank(AnalyticsService.getTrackingScript()))
-                                        {
-                                            // http://www.blastam.com/blog/how-to-track-downloads-in-google-analytics
-                                            // Tell the browser to wait 400ms before going to the download.  This is to ensure
-                                            // that the GA tracking request goes through. Some browsers will interrupt the tracking
-                                            // request if the download opens on the same page.
-                                            String timeout = "setTimeout(function(){location.href=that.href;},400);return false;";
-
-                                            onClickScript = "if(_gaq) {that=this; _gaq.push(['_trackEvent', 'SkyDocDownload', '" + ctx.getContainerPath() + "', '" + run.getFileName() + "']); " + timeout + "}";
-                                        }
-                                        out.write(PageFlowUtil.iconLink("fa fa-download", "Download File", PageFlowUtil.filter(downloadUrl),
-                                                onClickScript, null, null));
-
-                                        String documentSize = getDocumentSize(run);
-                                        if(documentSize != null)
-                                        {
-                                            out.write(h(" (" + documentSize + ")"));
-                                        }
+                                        PopupMenu menu = TargetedMSController.createDownloadMenu(run);
+                                        menu.render(out);
                                     }
                                     else
                                     {
                                         out.write("<em>Not available</em>");
                                     }
                                 }
-                            }
-
-                            private String getDocumentSize(TargetedMSRun run) throws IOException
-                            {
-                                if(run.getDocumentSize() != null)
-                                {
-                                    return FileUtils.byteCountToDisplaySize(run.getDocumentSize());
-                                }
-                                else
-                                {
-                                    Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID(), run.getContainer());
-                                    if (skyDocFile != null && !Files.isDirectory(skyDocFile))
-                                    {
-                                        return FileUtils.byteCountToDisplaySize(Files.size(skyDocFile));
-                                    }
-                                }
-                                return null;
                             }
 
                             @Override

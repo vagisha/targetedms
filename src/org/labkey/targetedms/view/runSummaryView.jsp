@@ -21,26 +21,15 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
-<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.SkylineFileUtils" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSRun" %>
 <%@ page import="java.nio.file.Path" %>
 <%@ page import="java.nio.file.Files" %>
-<%@ page import="org.apache.commons.lang3.StringUtils" %>
-<%@ page import="org.labkey.api.analytics.AnalyticsService" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
+<%@ page import="org.labkey.api.util.StringUtilsLabKey" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
-
-<%!
-    @Override
-    public void addClientDependencies(ClientDependencies dependencies)
-    {
-        dependencies.add("Ext4");
-        dependencies.add("targetedms/js/DocumentSummary.js");
-    }
-%>
 
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
@@ -49,7 +38,7 @@
     Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID(), getContainer());
 
     ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
-    downloadAction.addParameter("runId", run.getId());
+    downloadAction.addParameter("id", run.getId());
     Container c = getContainer();
 
     ActionURL versionsAction = new ActionURL(TargetedMSController.ShowVersionsAction.class, getContainer());
@@ -67,46 +56,32 @@
     ActionURL replicateListAction = new ActionURL(TargetedMSController.ShowReplicatesAction.class, getContainer());
     replicateListAction.addParameter("id", run.getId());
 
-    String renameAction = null;
+    ActionURL renameAction = null;
     if(c.hasPermission(getUser(), UpdatePermission.class))
-        renameAction = TargetedMSController.getRenameRunURL(c, run, getActionURL()).getLocalURIString();
+        renameAction = TargetedMSController.getRenameRunURL(c, run, getActionURL());
 
     String peptideGroupLabel = TargetedMSManager.containerHasSmallMolecules(getContainer()) ? TargetedMSSchema.COL_LIST.toLowerCase() : TargetedMSSchema.COL_PROTEIN.toLowerCase();
 %>
 
-<%
-    String elementId = "targetedmsDocumentSummary";
-%>
-<div id=<%=q(elementId)%>> </div>
 
-<script type="text/javascript">
-
-    Ext4.onReady(function () {
-
-        Ext4.create('LABKEY.targetedms.DocumentSummary', {
-            renderTo: <%=q(elementId)%>,
-            peptideCount: <%=run.getPeptideCount()%>,
-            smallMoleculeCount: <%=run.getSmallMoleculeCount()%>,
-            precursorCount: <%=run.getPrecursorCount()%>,
-            transitionCount: <%=run.getTransitionCount()%>,
-            peptideGroupCount: <%=run.getPeptideGroupCount()%>,
-            peptideGroupLabel: <%=q(peptideGroupLabel)%>,
-            calibrationCurveCount: <%=run.getCalibrationCurveCount()%>,
-            replicateCount: <%=run.getReplicateCount()%>,
-            versionCount: <%=bean.getVersionCount()%>,
-            runName: <%=q(run.getDescription())%>,
-            fileName: <%=q(run.getFileName())%>,
-            fileSize: <%=q(skyDocFile != null ? FileUtils.byteCountToDisplaySize(Files.size(skyDocFile)) : null)%>,
-            downloadAction: <%=q(downloadAction.getLocalURIString())%>,
-            trackEvent: <%=!StringUtils.isBlank(AnalyticsService.getTrackingScript())%>,
-            renameAction: <%=q(renameAction)%>,
-            softwareVersion: <%=q(run.getSoftwareVersion())%>,
-            versionsAction: <%=q(versionsAction.getLocalURIString())%>,
-            precursorListAction: <%=q(precursorListAction.getLocalURIString())%>,
-            transitionListAction: <%=q(transitionListAction.getLocalURIString())%>,
-            calibrationCurveListAction: <%=q(calibrationCurveListAction.getLocalURIString())%>,
-            replicateListAction: <%=q(replicateListAction.getLocalURIString())%>
-        });
-    });
-
-</script>
+<div id="targetedmsDocumentSummary">
+    <div><strong>Name:</strong> <%= h(run.getDescription()) %>
+        <%= h(run.getFileName() == null || run.getFileName().equals(run.getDescription()) ? "" : (", from file " + run.getFileName())) %>
+        <%= h(skyDocFile == null ? "" : "(" + FileUtils.byteCountToDisplaySize(Files.size(skyDocFile)) + ")") %>
+        <% if (renameAction != null) { %><%= text(iconLink("edit-views-link fa fa-pencil", "Rename File", renameAction)) %><% } %>
+        <% if (run.getFileName() != null) { TargetedMSController.createDownloadMenu(run).render(out); } %>&nbsp;
+        <a href="<%= h(versionsAction) %>"><%= h(StringUtilsLabKey.pluralize(bean.getVersionCount(), "version"))%></a>
+    </div>
+    &nbsp;
+    <div>
+        <a href="<%= h(precursorListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getPeptideGroupCount(), peptideGroupLabel))%></a>,
+        <% if (run.getPeptideCount() > 0) { %><a href="<%= h(precursorListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getPeptideCount(), "peptide"))%></a>,<% } %>
+        <% if (run.getSmallMoleculeCount() > 0) { %><a href="<%= h(precursorListAction.getLocalURIString() + "#Small Molecule Precursor List") %>"><%= h(StringUtilsLabKey.pluralize(run.getSmallMoleculeCount(), "small molecule"))%></a>,<% } %>
+        <a href="<%= h(precursorListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getPrecursorCount(), "precursor"))%></a>,
+        <a href="<%= h(transitionListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getTransitionCount(), "transition"))%></a>
+        &nbsp;-&nbsp;
+        <a href="<%= h(replicateListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getReplicateCount(), "replicate"))%></a><%
+        if (run.getCalibrationCurveCount() > 0) { %>, <a href="<%= h(calibrationCurveListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getCalibrationCurveCount(), "calibration curve"))%></a><% } %>
+        <% if (run.getSoftwareVersion() != null) { %>&nbsp;-&nbsp; <%= h(run.getSoftwareVersion()) %> <% } %>
+    </div>
+</div>

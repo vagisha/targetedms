@@ -702,10 +702,8 @@ public class TargetedMSManager
 
     public static void deleteRun(Container container, User user, TargetedMSRun run)
     {
-        markDeleted(Arrays.asList(run.getRunId()), container, user);
-        purgeDeletedRuns();
+        deleteRuns(Arrays.asList(run.getRunId()), container, user);
         deleteiRTscales(container);
-
     }
 
     public static TargetedMSRun getRunByDataId(int dataId)
@@ -978,10 +976,11 @@ public class TargetedMSManager
         Table.update(user, getTableInfoRuns(), run, run.getRunId());
     }
 
-    // For safety, simply mark runs as deleted.  This allows them to be (manually) restored.
-    // TODO: Do we really want to hang on to the data of a deleted run?
-    private static void markAsDeleted(List<Integer> runIds, Container c, User user)
+    /** Delete all of the TargetedMS runs in the container, including their experiment run wrappers */
+    public static void deleteIncludingExperimentWrapper(Container c, User user)
     {
+        List<Integer> runIds = new SqlSelector(getSchema(), "SELECT Id FROM " + getTableInfoRuns() + " WHERE Container = ?", c).getArrayList(Integer.class);
+
         if (runIds.isEmpty())
             return;
 
@@ -1005,7 +1004,7 @@ public class TargetedMSManager
             }
         }
 
-        markDeleted(runIds, c, user);
+        deleteRuns(runIds, c, user);
 
         for (ExpRun run : experimentRunsToDelete)
         {
@@ -1013,14 +1012,12 @@ public class TargetedMSManager
         }
     }
 
-    public static void markAsDeleted(Container c, User user)
-    {
-        List<Integer> runIds = new SqlSelector(getSchema(), "SELECT Id FROM " + getTableInfoRuns() + " WHERE Container = ?", c).getArrayList(Integer.class);
-        markAsDeleted(runIds, c, user);
-    }
-
-    // pulled out into separate method so could be called by itself from data handlers
-    public static void markDeleted(List<Integer> runIds, Container c, User user)
+    /**
+     * Delete just the targetedms run and its child tables
+     * Pulled out into separate method so could be called by itself from data handlers
+     * @param runIds targetedms.run.id values
+     */
+    public static void deleteRuns(List<Integer> runIds, Container c, User user)
     {
         List<Integer> cantDelete = new ArrayList<>();
         for(int runId: runIds)
@@ -1069,12 +1066,15 @@ public class TargetedMSManager
             }
         }
 
+        // Mark all of the runs for deletion
         SQLFragment markDeleted = new SQLFragment("UPDATE " + getTableInfoRuns() + " SET ExperimentRunLSID = NULL, DataId = NULL, SkydDataId = NULL, Deleted=?, Modified=? ", Boolean.TRUE, new Date());
         SimpleFilter where = new SimpleFilter();
         where.addInClause(FieldKey.fromParts("Id"), runIds);
         markDeleted.append(where.getSQLFragment(getSqlDialect()));
-
         new SqlExecutor(getSchema()).execute(markDeleted);
+
+        // and then delete them
+        purgeDeletedRuns();
     }
 
     public static TargetedMSRun getRunForPrecursor(int precursorId)
@@ -1403,7 +1403,7 @@ public class TargetedMSManager
     }
 
     /** Actually delete runs that have been marked as deleted from the database */
-    public static void purgeDeletedRuns()
+    private static void purgeDeletedRuns()
     {
         // Delete from FoldChange
         deleteRunDependent(getTableInfoFoldChange());

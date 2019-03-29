@@ -18,6 +18,7 @@ package org.labkey.targetedms;
 
 
 import com.keypoint.PngEncoder;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.validator.routines.UrlValidator;
 import org.apache.log4j.Logger;
@@ -28,6 +29,9 @@ import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.labkey.api.action.*;
+import org.labkey.api.analytics.AnalyticsService;
+import org.labkey.api.util.StringUtilsLabKey;
+import org.labkey.api.view.PopupMenu;
 import org.labkey.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.Outlier;
 import org.labkey.targetedms.model.RawGuideSet;
@@ -172,6 +176,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -4405,19 +4410,70 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    private static String getDocumentSize(TargetedMSRun run) throws IOException
+    {
+        if(run.getDocumentSize() != null)
+        {
+            return FileUtils.byteCountToDisplaySize(run.getDocumentSize());
+        }
+        else
+        {
+            Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID(), run.getContainer());
+            if (skyDocFile != null && !Files.isDirectory(skyDocFile))
+            {
+                return FileUtils.byteCountToDisplaySize(Files.size(skyDocFile));
+            }
+        }
+        return null;
+    }
+
+    public static PopupMenu createDownloadMenu(@NotNull TargetedMSRun run) throws IOException
+    {
+        String onClickScript = null;
+        if (!StringUtils.isBlank(AnalyticsService.getTrackingScript()))
+        {
+            // http://www.blastam.com/blog/how-to-track-downloads-in-google-analytics
+            // Tell the browser to wait 400ms before going to the download.  This is to ensure
+            // that the GA tracking request goes through. Some browsers will interrupt the tracking
+            // request if the download opens on the same page.
+            String timeout = "setTimeout(function(){location.href=that.href;},400);return false;";
+
+            onClickScript = "if(_gaq) {that=this; _gaq.push(['_trackEvent', 'SkyDocDownload', '" + run.getContainer().getPath() + "', '" + run.getFileName() + "']); " + timeout + "}";
+        }
+
+        String documentSize = getDocumentSize(run);
+
+        NavTree navTree = new NavTree("Download File", null, null, "fa fa-download");
+
+        final ActionURL fullDownloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, run.getContainer()).replaceParameter("id", Integer.toString(run.getId()));
+
+        NavTree fullDownloadNavTree = new NavTree("Full Skyline document" + (documentSize == null ? "" : " (" + documentSize + ")"), fullDownloadUrl);
+        fullDownloadNavTree.setScript(onClickScript);
+        navTree.addChild(fullDownloadNavTree);
+
+        ActionURL pointerDownloadUrl = fullDownloadUrl.clone().replaceParameter("view", "skyp");
+
+        NavTree pointerDownloadNavTree = new NavTree("SkyP file (1KB)", pointerDownloadUrl);
+        pointerDownloadNavTree.setScript(onClickScript);
+        navTree.addChild(pointerDownloadNavTree);
+        PopupMenu menu = new PopupMenu(navTree);
+        menu.setButtonStyle(org.labkey.api.view.PopupMenu.ButtonStyle.IMAGE);
+        return menu;
+    }
+
     // ------------------------------------------------------------------------
     // Action to download a Skyline zip file.
     // ------------------------------------------------------------------------
     @RequiresPermission(ReadPermission.class)
-    public class DownloadDocumentAction extends SimpleViewAction<DownloadDocumentForm>
+    public class DownloadDocumentAction extends SimpleViewAction<RunDetailsForm>
     {
-        public ModelAndView getView(DownloadDocumentForm form, BindException errors) throws Exception
+        public ModelAndView getView(RunDetailsForm form, BindException errors) throws Exception
         {
-            if (form.getRunId() < 0)
+            if (form.getId() < 0)
             {
                 throw new NotFoundException("No run ID specified.");
             }
-            TargetedMSRun run = validateRun(form.getRunId());
+            TargetedMSRun run = validateRun(form.getId());
             ExpData data = ExperimentService.get().getExpData(run.getDataId());
             if(data == null)
             {
@@ -4434,31 +4490,41 @@ public class TargetedMSController extends SpringActionController
                 return new SimpleErrorView(errors, true);
             }
 
-            try (InputStream inputStream = Files.newInputStream(file))
+            String fileName = FileUtil.getFileName(file);
+            String baseFileName = SkylineFileUtils.getBaseName(fileName);
+
+            if ("skyp".equalsIgnoreCase(form.getView()))
             {
-                PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), FileUtil.getFileName(file), inputStream, true);
+                String url = data.getWebDavURL(ExpData.PathType.full);
+                if (url != null)
+                {
+                    StringBuilder content = new StringBuilder();
+                    content.append(url);
+                    ByteArrayInputStream inputStream = new ByteArrayInputStream(content.toString().getBytes(StringUtilsLabKey.DEFAULT_CHARSET));
+                    PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), baseFileName + ".skyp", inputStream, true);
+                }
+                else
+                {
+                    errors.addError(new LabKeyError("File: " + file + " cannot be located for download. It may have been deleted on the server."));
+                    return new SimpleErrorView(errors, true);
+                }
+            }
+            else
+            {
+                // Download the full file
+                try (InputStream inputStream = Files.newInputStream(file))
+                {
+                    // Canonicalize file name to use newer preferred convention of .sky.zip to make it easier to recognize on the client side
+                    String preferredFileName = fileName.toLowerCase().endsWith(".zip") ? (baseFileName + ".sky.zip") : fileName;
+                    PageFlowUtil.streamFile(getViewContext().getResponse(), Collections.emptyMap(), preferredFileName, inputStream, true);
+                }
             }
             return null;
         }
 
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
-        }
-    }
-
-    public static class DownloadDocumentForm
-    {
-        private int _runId;
-
-        public int getRunId()
-        {
-            return _runId;
-        }
-
-        public void setRunId(int runId)
-        {
-            _runId = runId;
+            return root.addChild("Unable to find Skyline file");
         }
     }
 
