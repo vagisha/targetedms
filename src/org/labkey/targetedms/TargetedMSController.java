@@ -3139,7 +3139,11 @@ public class TargetedMSController extends SpringActionController
         public NavTree appendNavTrail(NavTree root, TargetedMSRun run)
         {
             root = root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
-            return root.addChild(run.getDescription(), getShowRunURL(getContainer(), run.getId()));
+            if (run != null)
+            {
+                root.addChild(run.getDescription(), getShowRunURL(getContainer(), run.getId()));
+            }
+            return root;
         }
     }
 
@@ -3621,7 +3625,6 @@ public class TargetedMSController extends SpringActionController
         public NavTree appendNavTrail(NavTree root)
         {
             return new ShowPrecursorListAction(getViewContext()).appendNavTrail(root, _run)
-                    .addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()))
                     .addChild(_proteinLabel);
         }
     }
@@ -5520,10 +5523,13 @@ public class TargetedMSController extends SpringActionController
     {
         appendRootNavTrail(root, null, page, helpTopic);
 
-        if (null != runURL)
-            root.addChild(run.getDescription(), runURL);
-        else
-            root.addChild(run.getDescription());
+        if (run != null)
+        {
+            if (null != runURL)
+                root.addChild(run.getDescription(), runURL);
+            else
+                root.addChild(run.getDescription());
+        }
 
         if (null != title)
             root.addChild(title);
