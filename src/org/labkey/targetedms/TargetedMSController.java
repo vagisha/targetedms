@@ -3624,8 +3624,13 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return new ShowPrecursorListAction(getViewContext()).appendNavTrail(root, _run)
-                    .addChild(_proteinLabel);
+            root = new ShowPrecursorListAction(getViewContext()).appendNavTrail(root, _run);
+            if (_run != null)
+            {
+                root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
+                root.addChild(_proteinLabel);
+            }
+            return root;
         }
     }
 
