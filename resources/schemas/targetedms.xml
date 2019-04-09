@@ -1659,6 +1659,7 @@
             <column columnName="Created"/>
             <column columnName="CreatedBy"/>
             <column columnName="Modified"/>
+            <column columnName="ModifiedBy"/>
             <column columnName="Container"/>
         </columns>
     </table>
