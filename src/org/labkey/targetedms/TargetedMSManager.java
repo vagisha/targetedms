@@ -503,6 +503,11 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_MOLECULE_PRECURSOR);
     }
 
+    public static TableInfo getTableInfoQCEnabledMetrics()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_QC_ENABLED_METRICS);
+    }
+
     public static Integer addRunToQueue(ViewBackgroundInfo info,
                                      final Path path,
                                      PipeRoot root) throws IOException, XarFormatException

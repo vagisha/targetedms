@@ -1649,4 +1649,17 @@
             <column columnName="LODCalculation"/>
         </columns>
     </table>
+    <table tableName="QCEnabledMetrics" tableDbType="TABLE">
+        <columns>
+            <column columnName="metric"/>
+            <column columnName="enabled"/>
+            <column columnName="lowerBound"/>
+            <column columnName="upperBound"/>
+            <column columnName="cusumLimit"/>
+            <column columnName="Created"/>
+            <column columnName="CreatedBy"/>
+            <column columnName="Modified"/>
+            <column columnName="Container"/>
+        </columns>
+    </table>
 </tables>

@@ -180,6 +180,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_QC_ANNOTATION = "QCAnnotation";
     public static final String TABLE_QC_METRIC_CONFIGURATION = "QCMetricConfiguration";
     public static final String TABLE_QC_METRIC_EXCLUSION = "QCMetricExclusion";
+    public static final String TABLE_QC_ENABLED_METRICS = "QCEnabledMetrics";
 
     public static final String TABLE_GUIDE_SET = "GuideSet";
 
@@ -862,6 +863,10 @@ public class TargetedMSSchema extends UserSchema
         {
             return new QCMetricConfigurationTable(this);
         }
+        if(TABLE_QC_ENABLED_METRICS.equalsIgnoreCase(name))
+        {
+            return new QCEnabledMetricsTable(this);
+        }
         if (TABLE_GUIDE_SET.equalsIgnoreCase(name))
         {
             return new GuideSetTable(this);
@@ -1423,6 +1428,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_MOLECULE_CALIBRATION_CURVE);
         hs.add(TABLE_QC_METRIC_CONFIGURATION);
         hs.add(TABLE_QC_METRIC_EXCLUSION);
+        hs.add(TABLE_QC_ENABLED_METRICS);
         return hs;
     }
 
