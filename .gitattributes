@@ -44,6 +44,7 @@ resources/queries/targetedms/peptide/FolderPeptides.qview.xml -text
 resources/queries/targetedms/peptide/LibraryPeptides.qview.xml -text
 resources/queries/targetedms/peptidegroup/FolderProteins.qview.xml -text
 resources/queries/targetedms/peptidegroup/LibraryProteins.qview.xml -text
+resources/queries/targetedms/qcMetricsConfig.sql -text
 resources/queries/targetedms/qcannotation/.qview.xml -text
 resources/queries/targetedms/qcannotationtype/.qview.xml -text
 resources/queries/targetedms/samplefile/.qview.xml -text
