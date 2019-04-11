@@ -1600,8 +1600,7 @@ ALTER TABLE targetedms.Precursor ALTER COLUMN NeutralMass FLOAT;
 -- Replace strings like [+80] in the modified sequence with [+80.0].
 -- Example: K[+96.2]VN[-17]K[+34.1]TES[+80]K[+62.1] -> K[+96.2]VN[-17.0]K[+34.1]TES[+80.0]K[+62.1]
 
--- No longer needed, since we don't upgrade pre-16.2 installations any more
---EXEC core.executeJavaUpgradeCode 'updatePrecursorModifiedSequence';
+-- Note: invocation of Java upgrade code 'updatePrecursorModifiedSequence' has been removed, since we don't upgrade pre-16.2 installations any more
 
 /* targetedms-16.20-16.30.sql */
 
