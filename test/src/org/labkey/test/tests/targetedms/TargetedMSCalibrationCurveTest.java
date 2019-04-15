@@ -616,7 +616,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 {
                     continue;
                 }
-                waitAndClickAndWait(Locator.linkContainingText("small molecule"));
+                clickAndWait(Locator.linkContainingText("small molecule"));
             }
             else
             {
@@ -627,9 +627,9 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 {
                     continue;
                 }
-                waitAndClickAndWait(Locator.linkContainingText("precursor"));
+                clickAndWait(Locator.linkContainingText("precursor"));
             }
-            clickAndWait(Locator.linkContainingText("calibration curve"));
+            waitAndClickAndWait(Locator.linkContainingText("calibration curve"));
             waitForText("Calibration Curves");
             DataRegionTable calibrationCurvesTable = new DataRegionTable("calibration_curves" + (smallMolecule ? "_sm_mol" : ""), this);
             int rowWithData = -1;
