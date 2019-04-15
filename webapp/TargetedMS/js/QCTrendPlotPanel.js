@@ -829,6 +829,15 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
     getMetricCombo : function()
     {
+        var qcMetricsStore = Ext4.create('LABKEY.ext4.data.Store', {
+            schemaName: 'targetedms',
+            queryName: 'qcMetricsConfig',
+            columns: 'id,name',
+            autoLoad: true,
+            sort: 'name'
+        });
+
+
         if (!this.metricField)
         {
             this.assignDefaultMetricIfNull();
@@ -838,13 +847,9 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 width: 350,
                 labelWidth: 50,
                 fieldLabel: 'Metric',
+                store: qcMetricsStore,
                 triggerAction: 'all',
                 mode: 'local',
-                store: Ext4.create('Ext.data.Store', {
-                    fields: ['id', 'name'],
-                    sorters: [{property: 'name'}],
-                    data: this.metricPropArr
-                }),
                 valueField: 'id',
                 displayField: 'name',
                 value: this.metric,
