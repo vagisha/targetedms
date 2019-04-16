@@ -24,6 +24,7 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.SortDirection;
+import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.ext4.RadioButton;
@@ -44,6 +45,7 @@ import org.labkey.test.util.PortalHelper;
 import org.labkey.test.util.targetedms.QCHelper;
 import org.openqa.selenium.WebElement;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -53,6 +55,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.CUSUMm;
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.LeveyJennings;
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.MovingRange;
@@ -87,6 +90,7 @@ public class TargetedMSQCTest extends TargetedMSTest
     private static QCHelper.Annotation reagentChange = new QCHelper.Annotation("Reagent Change", "New reagents", "2013-08-10 15:34:00");
     private static QCHelper.Annotation technicianChange = new QCHelper.Annotation("Technician Change", "New guy on the scene", "2013-08-10 08:43:00");
     private static QCHelper.Annotation candyChange = new QCHelper.Annotation("Candy Change", "New candies!", "2013-08-21 6:57:00");
+
 
     private static String longPeptideJSTest =
             "var testVals = {\n" +
@@ -207,6 +211,22 @@ public class TargetedMSQCTest extends TargetedMSTest
         QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
         qcPlotsWebPart.filterQCPlotsToInitialData(PRECURSORS.length, true);
         checkForCorrectAnnotations("Individual Plots", qcPlotsWebPart);
+    }
+
+    @Test
+    public void testZipOfFiles()
+    {
+        File single = TestFileUtils.getSampleData("TargetedMS/first.zipme");
+
+        goToProjectHome();
+        clickTab("Raw Data");
+
+        log("Drops the dataTransferItems object");
+        dragAndDropFileInDropZone(single);
+
+        log("Verifying if the file is uploaded and zipped");
+        waitForElement(Locator.tagWithText("span", "TestZipMeDir.zip"));
+        assertElementPresent(Locator.tagWithText("span", "TestZipMeDir.zip"));
     }
 
     @Test
