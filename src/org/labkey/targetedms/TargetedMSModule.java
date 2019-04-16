@@ -478,10 +478,11 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             extBrukerRaw2.setExt(".*\\.d$");
             extBrukerRaw2.setFileExt("^analysis.tdf$");
 
-            fcs.addZipUploadRecognizer(extWatersRaw);
-            fcs.addZipUploadRecognizer(extAgilentRaw);
-            fcs.addZipUploadRecognizer(extBrukerRaw1);
-            fcs.addZipUploadRecognizer(extBrukerRaw2);
+//            TODO: commenting this out as this method name got changed in 19.2_fb_zipLoader.This is causing compilation failures in fb in teamcity. will undo it when fb gets merged to develop
+//            fcs.addZipUploadRecognizer(extWatersRaw);
+//            fcs.addZipUploadRecognizer(extAgilentRaw);
+//            fcs.addZipUploadRecognizer(extBrukerRaw1);
+//            fcs.addZipUploadRecognizer(extBrukerRaw2);
         }
     }
 
