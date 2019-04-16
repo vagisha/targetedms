@@ -856,9 +856,10 @@ public class TargetedMSController extends SpringActionController
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
             List<QCMetricConfiguration> configurations = getQCMetricConfigurations(getContainer());
+            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(getContainer(), getUser(), configurations);
 
             List<JSONObject> result = new ArrayList<>();
-            for (QCMetricConfiguration configuration : configurations)
+            for (QCMetricConfiguration configuration : enabledQCMetricConfigurations)
             {
                    result.add(configuration.toJSON());
             }
@@ -961,14 +962,15 @@ public class TargetedMSController extends SpringActionController
             ApiSimpleResponse response = new ApiSimpleResponse();
             Outlier outlier = new Outlier();
             List<QCMetricConfiguration> configurations = getQCMetricConfigurations(getContainer());
+            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(getContainer(), getUser(), configurations);
 
             CUSUMOutliers cusumOutliers = new CUSUMOutliers();
 
-            List<LJOutlier> ljOutliers = LeveyJenningsOutliers.getLJOutliers(configurations, getContainer(), getUser());
+            List<LJOutlier> ljOutliers = LeveyJenningsOutliers.getLJOutliers(enabledQCMetricConfigurations, getContainer(), getUser());
             if(!ljOutliers.isEmpty())
             {
-                List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(getContainer(), getUser(), configurations);
-                List<RawMetricDataSet> rawMetricDataSets = new CUSUMOutliers().getRawMetricDataSets(getContainer(), getUser(), configurations);
+                List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(getContainer(), getUser(), enabledQCMetricConfigurations);
+                List<RawMetricDataSet> rawMetricDataSets = new CUSUMOutliers().getRawMetricDataSets(getContainer(), getUser(), enabledQCMetricConfigurations);
 
                 JSONObject sampleFiles = cusumOutliers.getOtherQCSampleFileStats(ljOutliers, rawGuideSets, rawMetricDataSets, getContainer().getPath());
 
