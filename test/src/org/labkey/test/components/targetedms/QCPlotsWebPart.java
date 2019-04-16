@@ -295,6 +295,11 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
             waitForNoRecords();
     }
 
+    public List<String> getMetricTypeOptions()
+    {
+        return getWrapper()._ext4Helper.getComboBoxOptions(elementCache().metricTypeCombo);
+    }
+
     public MetricType getCurrentMetricType()
     {
         WebElement typeInput = elementCache().metricTypeCombo.append("//input").waitForElement(this, 1000);
