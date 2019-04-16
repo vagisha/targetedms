@@ -832,6 +832,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         var qcMetricsStore = Ext4.create('LABKEY.ext4.data.Store', {
             schemaName: 'targetedms',
             queryName: 'qcMetricsConfig',
+            filterArray: [ LABKEY.Filter.create('Enabled', 'true')],
             columns: 'id,name',
             autoLoad: true,
             sort: 'name'
