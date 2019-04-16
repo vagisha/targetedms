@@ -616,7 +616,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 {
                     continue;
                 }
-                clickAndWait(Locator.linkContainingText("small molecule"));
+                waitAndClick(Locator.linkContainingText("small molecule"));
             }
             else
             {
@@ -627,7 +627,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
                 {
                     continue;
                 }
-                clickAndWait(Locator.linkContainingText("precursor"));
+                waitAndClick(Locator.linkContainingText("precursor"));
             }
             waitAndClickAndWait(Locator.linkContainingText("calibration curve"));
             waitForText("Calibration Curves");
