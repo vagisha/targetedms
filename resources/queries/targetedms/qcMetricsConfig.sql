@@ -2,7 +2,8 @@
 SELECT
        qmc.id,
        qmc.name,
-       ifnull(qem.enabled, 1) AS Enabled,
+       CASE WHEN qem.enabled IS NOT NULL THEN qem.enabled
+            ELSE TRUE END AS Enabled,
        CASE WHEN qem.metric IS NULL THEN FALSE
             ELSE TRUE END AS Inserted
 FROM
