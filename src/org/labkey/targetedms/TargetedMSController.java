@@ -834,16 +834,16 @@ public class TargetedMSController extends SpringActionController
         return properties;
     }
 
-    private List<QCMetricConfiguration> getQCMetricConfigurations(Container container)
+    private List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user)
     {
-        List<QCMetricConfiguration> configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
+        List<QCMetricConfiguration> configurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(container, user);
 
         boolean isRoot = false;
         while (configurations.isEmpty() && !isRoot)
         {
             container = getCandidateContainer(container, getUser());
             isRoot = container.getParent() == null;
-            configurations = TargetedMSManager.get().getQCMetricConfigurations(container);
+            configurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(container, user);
         }
         return configurations;
     }
@@ -855,8 +855,8 @@ public class TargetedMSController extends SpringActionController
         public Object execute(Object form, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
-            List<QCMetricConfiguration> configurations = getQCMetricConfigurations(getContainer());
-            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(getContainer(), getUser(), configurations);
+
+            List<QCMetricConfiguration> enabledQCMetricConfigurations = getEnabledQCMetricConfigurations(getContainer(), getUser());
 
             List<JSONObject> result = new ArrayList<>();
             for (QCMetricConfiguration configuration : enabledQCMetricConfigurations)
@@ -961,8 +961,8 @@ public class TargetedMSController extends SpringActionController
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
             Outlier outlier = new Outlier();
-            List<QCMetricConfiguration> configurations = getQCMetricConfigurations(getContainer());
-            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(getContainer(), getUser(), configurations);
+
+            List<QCMetricConfiguration> enabledQCMetricConfigurations = getEnabledQCMetricConfigurations(getContainer(), getUser());
 
             CUSUMOutliers cusumOutliers = new CUSUMOutliers();
 

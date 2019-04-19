@@ -1912,30 +1912,21 @@ public class TargetedMSManager
         return Math.log(value.doubleValue()) / Math.log(2);
     }
 
-    public List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user, List<QCMetricConfiguration> configurations)
+    public List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user)
     {
-        String sql = "select Id from qcMetricsConfig where Enabled = TRUE";
+        String sql = "SELECT Id, " +
+                        "Name, " +
+                        "Series1Label, " +
+                        "Series1SchemaName, " +
+                        "Series1QueryName, " +
+                        "Series2Label, " +
+                        "Series2SchemaName, " +
+                        "Series2QueryName " +
+                      "FROM qcMetricsConfig WHERE Enabled = TRUE";
 
-        Set<String> columnNames = Set.of("Id");
+        Set<String> columnNames = Set.of("Id,Name,Series1Label,Series1SchemaName,Series1SchemaName,Series2Label,Series2SchemaName,Series2QueryName");
         QuerySchema query = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
-        List<Integer> ids = QueryService.get().selector(query, sql, columnNames, null,null).getArrayList(Integer.class);
-
-        List<QCMetricConfiguration> enabledQCMetrics = new ArrayList<>();
-
-        configurations.forEach(qcMetricConfiguration -> ids.forEach(id -> {
-            if(id == qcMetricConfiguration.getId())
-            {
-                enabledQCMetrics.add(qcMetricConfiguration);
-            }
-        }));
-
-        return  enabledQCMetrics;
-    }
-
-    public ArrayList<QCMetricConfiguration> getQCMetricConfigurations(Container container)
-    {
-        TableInfo table = TargetedMSManager.getTableInfoQCMetricConfiguration();
-        return new TableSelector(table, SimpleFilter.createContainerFilter(container), new Sort("Name")).getArrayList(QCMetricConfiguration.class);
+        return QueryService.get().selector(query, sql).getArrayList(QCMetricConfiguration.class);
     }
 
     public static int getMaxTransitionCount(int moleculeId)
