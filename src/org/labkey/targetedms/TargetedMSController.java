@@ -3527,7 +3527,7 @@ public class TargetedMSController extends SpringActionController
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             TableInfo tableInfo = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
             groupDetails.setColumns(tableInfo.getColumns("Label", "Description", "Decoy", "Note", "RunId"));
-            groupDetails.setButtonBar(ButtonBar.BUTTON_BAR_EMPTY);
+            groupDetails.setButtonBar(new ButtonBar());
             DetailsView groupDetailsView = new DetailsView(groupDetails, form.getId());
             groupDetailsView.setTitle(peptideCount != null && peptideCount > 0 ? "Protein" : "Molecule Group");
 
