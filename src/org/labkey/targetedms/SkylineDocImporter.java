@@ -175,8 +175,13 @@ public class SkylineDocImporter
 
         TargetedMSRun run = TargetedMSManager.getRun(_runId);
 
+        if (run == null)
+        {
+            throw new IllegalStateException("Could not find record for runId " + _runId + ", it may have already been deleted. Please try importing again.");
+        }
+
         // Skip if run was already fully imported
-        if (runInfo.isAlreadyImported() && run != null && run.getStatusId() == SkylineDocImporter.STATUS_SUCCESS)
+        if (runInfo.isAlreadyImported() && run.getStatusId() == SkylineDocImporter.STATUS_SUCCESS)
         {
             _log.info(_expData.getName() + " has already been imported so it does not need to be imported again");
             return run;
