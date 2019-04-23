@@ -544,6 +544,7 @@ src/org/labkey/targetedms/view/PeptidePrecursorsView.java -text
 src/org/labkey/targetedms/view/PeptideTransitionsView.java -text
 src/org/labkey/targetedms/view/PeptideViewWebPart.java -text
 src/org/labkey/targetedms/view/PrecursorHtmlMaker.java -text
+src/org/labkey/targetedms/view/QCSummaryWebPart.java -text
 src/org/labkey/targetedms/view/QuantificationView.java -text
 src/org/labkey/targetedms/view/SmallMoleculePrecursorsView.java -text
 src/org/labkey/targetedms/view/SmallMoleculeTransitionsView.java -text

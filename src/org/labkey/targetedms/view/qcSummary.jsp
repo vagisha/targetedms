@@ -32,9 +32,10 @@
         dependencies.add("targetedms/js/QCSummaryPanel.js");
     }
 %>
-<%!
+<%
     int uid = UniqueID.getRequestScopedUID(HttpView.currentRequest());
     String qcSummaryId = "qcSummary-" + uid;
+    Integer sampleLimit = (Integer)HttpView.currentModel();
 %>
 
 <div id=<%=q(qcSummaryId)%>></div>
@@ -43,7 +44,8 @@
     Ext4.onReady(function()
     {
         Ext4.create('LABKEY.targetedms.QCSummary', {
-            renderTo: <%=q(qcSummaryId)%>
+            renderTo: <%=q(qcSummaryId)%>,
+            sampleLimit: <%= sampleLimit %>
         });
     });
 </script>

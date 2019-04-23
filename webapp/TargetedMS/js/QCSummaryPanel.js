@@ -8,16 +8,16 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
     border: false,
 
-    numSampleFileStats: 3,
+    numSampleFileStats: null,
 
-    initComponent: function ()
+    initComponent: function (config)
     {
         this.qcPlotPanel = Ext4.create('LABKEY.targetedms.BaseQCPlotPanel');
 
         this.callParent();
 
         this.qcPlotPanel.queryInitialQcMetrics(this.initPanel, this);
-
+        this.numSampleFileStats = config ? config.sampleLimit : 3;
     },
 
     initPanel : function(){
@@ -135,9 +135,9 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     '<div class="item-text">No data found.</div>',
                 '<tpl elseif="docCount &gt; 0">',
                     '<div class="item-text">',
-                        '<a href="{path:this.getSampleFileLink}">{fileCount} sample file{fileCount:this.pluralize}</a>',
+                        '<a href="{path:this.getSampleFileLink}">{fileCount} sample file{fileCount:this.pluralize}</a> ' +
+                            'tracking {precursorCount} precursor{precursorCount:this.pluralize}',
                     '</div>',
-                    '<div class="item-text">{precursorCount} precursor{precursorCount:this.pluralize}</div>',
                     '<div class="item-text sample-file-details sample-file-details-loading" id="qc-summary-samplefiles-{id}">...</div>',
                     '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
                 '</tpl>',
@@ -155,6 +155,10 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                 {
                     return LABKEY.ActionURL.buildURL('query', 'executeQuery', path,
                             {schemaName: 'targetedms', 'query.queryName': 'SampleFile'});
+                },
+                getFullHistoryLink: function (path)
+                {
+                    return LABKEY.ActionURL.buildURL('targetedms', 'qCSummaryHistory', path);
                 },
                 getAutoQCPingClass: function (val)
                 {
@@ -214,6 +218,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         {
             LABKEY.Ajax.request({
                 url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCMetricOutliers.api', container.path),
+                params: {sampleLimit: this.sampleLimit},
                 success: function(response) {
                     this.data = JSON.parse(response.responseText).outliers;
                     if(this.data) {

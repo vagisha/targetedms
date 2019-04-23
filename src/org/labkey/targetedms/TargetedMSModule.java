@@ -65,6 +65,7 @@ import org.labkey.targetedms.security.CopyTargetedMSExperimentRole;
 import org.labkey.targetedms.view.LibraryPrecursorViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.PeptideViewWebPart;
+import org.labkey.targetedms.view.QCSummaryWebPart;
 import org.labkey.targetedms.view.TargetedMSRunsWebPartView;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
@@ -337,11 +338,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         {
             public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
-                JspView result = new JspView("/org/labkey/targetedms/view/qcSummary.jsp");
-                result.addClientDependency(ClientDependency.fromPath("Ext4"));
-                result.setTitle("QC Summary");
-                result.setFrame(WebPartView.FrameType.PORTAL);
-                return result;
+                return new QCSummaryWebPart(portalCtx, 3);
             }
         };
 

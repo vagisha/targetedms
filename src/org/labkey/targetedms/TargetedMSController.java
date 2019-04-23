@@ -161,6 +161,7 @@ import org.labkey.targetedms.view.MoleculePrecursorChromatogramsView;
 import org.labkey.targetedms.view.PeptidePrecursorChromatogramsView;
 import org.labkey.targetedms.view.PeptidePrecursorsView;
 import org.labkey.targetedms.view.PeptideTransitionsView;
+import org.labkey.targetedms.view.QCSummaryWebPart;
 import org.labkey.targetedms.view.SmallMoleculePrecursorsView;
 import org.labkey.targetedms.view.SmallMoleculeTransitionsView;
 import org.labkey.targetedms.view.TargetedMsRunListView;
@@ -937,13 +938,43 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class QCSummaryHistoryAction extends SimpleViewAction
+    {
+        @Override
+        public ModelAndView getView(Object o, BindException errors) throws Exception
+        {
+            return new QCSummaryWebPart(getViewContext(), null);
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root.addChild("QC Summary History");
+        }
+    }
+
+    public static class QCMetricOutliersForm
+    {
+        private Integer _sampleLimit;
+
+        public Integer getSampleLimit()
+        {
+            return _sampleLimit;
+        }
+
+        public void setSampleLimit(Integer sampleLimit)
+        {
+            _sampleLimit = sampleLimit;
+        }
+    }
 
     @RequiresPermission(ReadPermission.class)
-    public class GetQCMetricOutliersAction extends ReadOnlyApiAction
+    public class GetQCMetricOutliersAction extends ReadOnlyApiAction<QCMetricOutliersForm>
     {
 
         @Override
-        public Object execute(Object o, BindException errors)
+        public Object execute(QCMetricOutliersForm form, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
             Outlier outlier = new Outlier();
@@ -958,7 +989,7 @@ public class TargetedMSController extends SpringActionController
 
             CUSUMOutliers cusumOutliers = new CUSUMOutliers();
 
-            List<LJOutlier> ljOutliers = LeveyJenningsOutliers.getLJOutliers(enabledQCMetricConfigurations, getContainer(), getUser());
+            List<LJOutlier> ljOutliers = LeveyJenningsOutliers.getLJOutliers(enabledQCMetricConfigurations, getContainer(), getUser(), form.getSampleLimit());
             if(!ljOutliers.isEmpty())
             {
                 List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(getContainer(), getUser(), enabledQCMetricConfigurations);

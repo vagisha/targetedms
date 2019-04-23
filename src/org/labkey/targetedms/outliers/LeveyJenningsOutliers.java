@@ -1,5 +1,6 @@
 package org.labkey.targetedms.outliers;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.Sort;
 import org.labkey.api.security.User;
@@ -17,13 +18,13 @@ public class LeveyJenningsOutliers extends Outliers
         // prevent external construction with a private default constructor
     }
 
-    public static List<LJOutlier> getLJOutliers(List<QCMetricConfiguration> configurations, Container container, User user)
+    public static List<LJOutlier> getLJOutliers(List<QCMetricConfiguration> configurations, Container container, User user, @Nullable Integer sampleLimit)
     {
         Set<String> columnNames = Set.of("guideSetId","metricId","metricName","metricLabel","sampleFile","acquiredTime","ignoreInQC","nonConformers","totalCount");
-        return executeQuery(container, user, queryContainerSampleFileStats(configurations), columnNames, new Sort("-acquiredTime,metricLabel")).getArrayList(LJOutlier.class);
+        return executeQuery(container, user, queryContainerSampleFileStats(configurations, sampleLimit), columnNames, new Sort("-acquiredTime,metricLabel")).getArrayList(LJOutlier.class);
     }
 
-    public static String queryContainerSampleFileStats(List<QCMetricConfiguration> configurations)
+    public static String queryContainerSampleFileStats(List<QCMetricConfiguration> configurations, @Nullable Integer sampleLimit)
     {
         StringBuilder sqlBuilder = new StringBuilder();
         String sep = "";
@@ -36,7 +37,7 @@ public class LeveyJenningsOutliers extends Outliers
             String schema = qcMetricConfiguration.getSeries1SchemaName();
             String query = qcMetricConfiguration.getSeries1QueryName();
 
-            sqlBuilder.append(sep).append("(").append(getLatestSampleFileStatSql(id, name, label, schema, query)).append(")");
+            sqlBuilder.append(sep).append("(").append(getLatestSampleFileStatSql(id, name, label, schema, query, sampleLimit)).append(")");
             sep = "\nUNION\n";
 
             if(qcMetricConfiguration.getSeries2SchemaName() != null && qcMetricConfiguration.getSeries2QueryName() != null) {
@@ -44,7 +45,7 @@ public class LeveyJenningsOutliers extends Outliers
                 schema = qcMetricConfiguration.getSeries2SchemaName();
                 query = qcMetricConfiguration.getSeries2QueryName();
 
-                sqlBuilder.append(sep).append("(").append(getLatestSampleFileStatSql(id, name, label, schema, query)).append(")");
+                sqlBuilder.append(sep).append("(").append(getLatestSampleFileStatSql(id, name, label, schema, query, sampleLimit)).append(")");
                 sep = "\nUNION\n";
             }
         }
@@ -80,7 +81,7 @@ public class LeveyJenningsOutliers extends Outliers
      * @return UNION SQL query for the relevant metrics to get the summary info for the last N sample files
      *
      */
-    private static String getLatestSampleFileStatSql(int id, String name, String label, String schema, String query)
+    private static String getLatestSampleFileStatSql(int id, String name, String label, String schema, String query, @Nullable Integer sampleLimit)
     {
         return "SELECT stats.GuideSetId,"
                 + "\n'" + id + "' AS MetricId,"
@@ -94,7 +95,7 @@ public class LeveyJenningsOutliers extends Outliers
                 + "\nCOUNT(*) AS TotalCount"
                 + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime, SampleFileId.SampleName AS SampleFile, SampleFileId.ReplicateId AS ReplicateId"
                 + "\n      FROM " + schema + "." + query
-                + "\n      WHERE SampleFileId.Id IN (SELECT Id FROM SampleFile WHERE AcquiredTime IS NOT NULL ORDER BY AcquiredTime DESC LIMIT 3)"
+                + (sampleLimit == null ? "" : "\n      WHERE SampleFileId.Id IN (SELECT Id FROM SampleFile WHERE AcquiredTime IS NOT NULL ORDER BY AcquiredTime DESC LIMIT " + sampleLimit + ")")
                 + "\n) X"
                 + "\nLEFT JOIN (SELECT DISTINCT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = " + id + ") exclusion"
                 + "\nON X.ReplicateId = exclusion.ReplicateId"
