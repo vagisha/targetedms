@@ -34,7 +34,9 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         if (Ext4.isNumber(metric))
         {
             var metricProps = this.getMetricPropsById(metric);
-            return Ext4.isDefined(metricProps.series2SchemaName) && Ext4.isDefined(metricProps.series2QueryName);
+            if(metricProps) {
+                return Ext4.isDefined(metricProps.series2SchemaName) && Ext4.isDefined(metricProps.series2QueryName);
+            }
         }
         return false;
     },

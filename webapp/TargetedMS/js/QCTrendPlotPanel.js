@@ -823,7 +823,9 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     targetIndex = i;
                 }
             }
-            this.metric = this.metricPropArr[targetIndex].id;
+            if(this.metricPropArr.length > 0) {
+                this.metric = this.metricPropArr[targetIndex].id;
+            }
         }
     },
 
@@ -1120,44 +1122,47 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
         var metricProps = this.getMetricPropsById(this.metric);
 
-        var series1Sql = "SELECT SeriesLabel FROM " + metricProps.series1SchemaName + "." + metricProps.series1QueryName,
-            series2Sql = this.isMultiSeries() ? " UNION SELECT SeriesLabel FROM " + metricProps.series2SchemaName + "." + metricProps.series2QueryName : '',
-            separator = ' WHERE ';
+        if(metricProps) {
+            var series1Sql = "SELECT SeriesLabel FROM " + metricProps.series1SchemaName + "." + metricProps.series1QueryName,
+                    series2Sql = this.isMultiSeries() ? " UNION SELECT SeriesLabel FROM " + metricProps.series2SchemaName + "." + metricProps.series2QueryName : '',
+                    separator = ' WHERE ';
 
-        // CAST as DATE to ignore time portion of value
-        if (this.startDate)
-        {
-            series1Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) >= '" + this.startDate + "'";
-            if (series2Sql.length > 0)
-                series2Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) >= '" + this.startDate + "'";
+            // CAST as DATE to ignore time portion of value
+            if (this.startDate) {
+                series1Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) >= '" + this.startDate + "'";
+                if (series2Sql.length > 0)
+                    series2Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) >= '" + this.startDate + "'";
 
-            separator = " AND ";
+                separator = " AND ";
+            }
+            if (this.endDate) {
+                series1Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
+                if (series2Sql.length > 0)
+                    series2Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
+            }
+
+            var sql = "SELECT DISTINCT SeriesLabel FROM (\n" + series1Sql + series2Sql + "\n) X ORDER BY SeriesLabel";
+
+            LABKEY.Query.executeSql({
+                schemaName: 'targetedms',
+                sql: sql,
+                sort: 'SeriesLabel',
+                scope: this,
+                success: function (data) {
+                    this.pagingStartIndex = 0;
+                    this.pagingEndIndex = this.maxCount;
+
+                    // stash the set of precursor series labels for use with the plot rendering
+                    this.allPrecursors = Ext4.Array.pluck(data.rows, 'SeriesLabel');
+                    this.setPrecursorsForPage();
+                    this.getAnnotationData();
+                },
+                failure: this.failureHandler
+            });
         }
-        if (this.endDate)
-        {
-            series1Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
-            if (series2Sql.length > 0)
-                series2Sql += separator + "CAST(SampleFileId.AcquiredTime AS DATE) <= '" + this.endDate + "'";
+        else {
+            Ext4.get(this.plotDivId).update("There are no enabled QC Metric Configurations.");
         }
-
-        var sql = "SELECT DISTINCT SeriesLabel FROM (\n" + series1Sql + series2Sql + "\n) X ORDER BY SeriesLabel";
-
-        LABKEY.Query.executeSql({
-            schemaName: 'targetedms',
-            sql: sql,
-            sort: 'SeriesLabel',
-            scope: this,
-            success: function(data) {
-                this.pagingStartIndex = 0;
-                this.pagingEndIndex = this.maxCount;
-
-                // stash the set of precursor series labels for use with the plot rendering
-                this.allPrecursors = Ext4.Array.pluck(data.rows, 'SeriesLabel');
-                this.setPrecursorsForPage();
-                this.getAnnotationData();
-            },
-            failure: this.failureHandler
-        });
     },
 
     setPrecursorsForPage: function() {

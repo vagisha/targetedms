@@ -814,21 +814,6 @@ public class TargetedMSQCTest extends TargetedMSTest
         verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "1/14 (Moving Range) outliers");
     }
 
-    @Test
-    public void testConfigureQCMetrics()
-    {
-        PanoramaDashboard qcDashboard = goToDashboard();
-        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
-        qcPlotsWebPart.clickMenuItem("Configure QC Metrics");
-        uncheckCheckbox(Locator.checkboxById("checkbox-2"));
-        click(Locator.buttonContainingText("Save"));
-
-        List<String> qcMetricOptions = qcPlotsWebPart.getMetricTypeOptions();
-
-        log("Verifying disabled metric not present in QC Plot dashboard dropdown");
-        qcMetricOptions.forEach(qcMetric-> assertFalse("Disabled QC Metric found - Peak Area", qcMetric.equalsIgnoreCase("Peak Area")));
-    }
-
     private void verifyQCSummarySampleFileOutliers(String acquiredDate, String outlierInfo)
     {
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);

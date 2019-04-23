@@ -42,7 +42,7 @@ public class QCMetricExclusionTable extends TargetedMSTable
             {
                 // tweak the container filter to get the right set of QC metric configurations
                 FilteredTable result = (FilteredTable) super.getLookupTableInfo();
-                result.setContainerFilter(QCMetricConfigurationTable.getDefaultMetricContainerFilter(getUserSchema().getUser()));
+                result.setContainerFilter(QCMetricConfigurationTable.getDefaultMetricContainerFilter(getUserSchema().getContainer()));
                 return result;
             }
         });

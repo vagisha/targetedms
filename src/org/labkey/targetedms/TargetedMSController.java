@@ -834,20 +834,6 @@ public class TargetedMSController extends SpringActionController
         return properties;
     }
 
-    private List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user)
-    {
-        List<QCMetricConfiguration> configurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(container, user);
-
-        boolean isRoot = false;
-        while (configurations.isEmpty() && !isRoot)
-        {
-            container = getCandidateContainer(container, getUser());
-            isRoot = container.getParent() == null;
-            configurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(container, user);
-        }
-        return configurations;
-    }
-
     @RequiresPermission(ReadPermission.class)
     public class GetQCMetricConfigurationsAction extends ReadOnlyApiAction
     {
@@ -856,7 +842,7 @@ public class TargetedMSController extends SpringActionController
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
 
-            List<QCMetricConfiguration> enabledQCMetricConfigurations = getEnabledQCMetricConfigurations(getContainer(), getUser());
+            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(getContainer(), getUser());
 
             List<JSONObject> result = new ArrayList<>();
             for (QCMetricConfiguration configuration : enabledQCMetricConfigurations)
@@ -962,7 +948,13 @@ public class TargetedMSController extends SpringActionController
             ApiSimpleResponse response = new ApiSimpleResponse();
             Outlier outlier = new Outlier();
 
-            List<QCMetricConfiguration> enabledQCMetricConfigurations = getEnabledQCMetricConfigurations(getContainer(), getUser());
+            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(getContainer(), getUser());
+
+            if(enabledQCMetricConfigurations.isEmpty())
+            {
+                response.put("outliers", "no enabled qc configurations");
+                return response;
+            }
 
             CUSUMOutliers cusumOutliers = new CUSUMOutliers();
 
@@ -978,22 +970,13 @@ public class TargetedMSController extends SpringActionController
                 List<JSONObject> jsonRawGuideSets = new ArrayList<>();
                 List<JSONObject> jsonRawMetricDataSet = new ArrayList<>();
 
-                for (LJOutlier ljOutlier : ljOutliers)
-                {
-                    jsonLJOutliers.add(ljOutlier.toJSON());
-                }
+                ljOutliers.forEach(ljOutlier -> jsonLJOutliers.add(ljOutlier.toJSON()));
                 outlier.setDataRowsLJ(jsonLJOutliers);
 
-                for (RawGuideSet rawGuideSet : rawGuideSets)
-                {
-                    jsonRawGuideSets.add(rawGuideSet.toJSON());
-                }
+                rawGuideSets.forEach(rawGuideSet -> jsonRawGuideSets.add(rawGuideSet.toJSON()));
                 outlier.setRawGuideSet(jsonRawGuideSets);
 
-                for (RawMetricDataSet rawMetricDataSet : rawMetricDataSets)
-                {
-                    jsonRawMetricDataSet.add(rawMetricDataSet.toJSON());
-                }
+                rawMetricDataSets.forEach(rawMetricDataSet -> jsonRawMetricDataSet.add(rawMetricDataSet.toJSON()));
                 outlier.setRawMetricDataSet(jsonRawMetricDataSet);
 
                 response.put("outliers", outlier.toJSON());

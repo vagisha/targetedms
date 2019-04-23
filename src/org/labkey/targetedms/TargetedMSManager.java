@@ -1924,7 +1924,6 @@ public class TargetedMSManager
                         "Series2QueryName " +
                       "FROM qcMetricsConfig WHERE Enabled = TRUE";
 
-        Set<String> columnNames = Set.of("Id,Name,Series1Label,Series1SchemaName,Series1SchemaName,Series2Label,Series2SchemaName,Series2QueryName");
         QuerySchema query = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
         return QueryService.get().selector(query, sql).getArrayList(QCMetricConfiguration.class);
     }
