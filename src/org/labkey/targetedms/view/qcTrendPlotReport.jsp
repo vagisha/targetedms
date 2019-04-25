@@ -47,7 +47,7 @@
         dependencies.add("targetedms/js/QCPlotHoverPanel.js");
     }
 %>
-<%!
+<%
     int uid = UniqueID.getRequestScopedUID(HttpView.currentRequest());
     String reportPanelId = "reportHeaderPanel-" + uid;
     String plotPanelId = "tiledPlotPanel-" + uid;
