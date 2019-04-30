@@ -35,6 +35,7 @@ import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.writer.ZipUtil;
+import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -97,7 +98,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
 
             TargetedMSManager.updateRun(run, info.getUser());
         }
-        catch (IOException | XMLStreamException | PipelineJobException e)
+        catch (IOException | XMLStreamException | PipelineJobException | AuditLogException e)
         {
             throw new ExperimentException(e);
         }

@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.data.SQLFragment;
@@ -51,6 +52,7 @@ import org.labkey.targetedms.SkylinePort.Irt.RetentionTimeProviderImpl;
 import org.labkey.targetedms.calculations.RunQuantifier;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.targetedms.parser.*;
+import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
@@ -126,6 +128,7 @@ public class SkylineDocImporter
     private File _blibSourceDir;
     private final List<Path> _blibSourcePaths = new ArrayList<>();
 
+    private File _auditLogFile;
     // Hold on to statements so that we can reuse them through the import process
     private transient PreparedStatement _transitionChromInfoAnnotationStmt;
     private transient PreparedStatement _transitionAnnotationStmt;
@@ -169,7 +172,7 @@ public class SkylineDocImporter
         _log = (null == log ? _systemLog : log);
     }
 
-    public TargetedMSRun importRun(RunInfo runInfo) throws IOException, XMLStreamException, PipelineJobException
+    public TargetedMSRun importRun(RunInfo runInfo) throws IOException, XMLStreamException, PipelineJobException, AuditLogException
     {
         _runId = runInfo.getRunId();
 
@@ -215,7 +218,7 @@ public class SkylineDocImporter
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
             throw fnfe;
         }
-        catch (IOException | XMLStreamException | RuntimeException | PipelineJobException e)
+        catch (IOException | XMLStreamException | RuntimeException | PipelineJobException | AuditLogException e)
         {
             updateRunStatus("Import failed (see pipeline log)", STATUS_FAILED);
             throw e;
@@ -223,7 +226,7 @@ public class SkylineDocImporter
     }
 
 
-    private void importSkylineDoc(TargetedMSRun run, File f) throws XMLStreamException, IOException, PipelineJobException
+    private void importSkylineDoc(TargetedMSRun run, File f) throws XMLStreamException, IOException, PipelineJobException, AuditLogException
     {
         // TODO - Consider if this is too big to fit in a single transaction. If so, need to blow away all existing
         // data for this run before restarting the import in the case of a retry
@@ -653,6 +656,13 @@ public class SkylineDocImporter
                 }
             }
 
+            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( _log, _auditLogFile, run.getDocumentGUID(), _container, _user);
+
+            if(importer.verifyPreRequisites()) {
+                importer.persistAuditLog();
+                importer.verifyPostRequisites();
+            }
+
             if (_pipeRoot.isCloudRoot())
                 copyExtractedFilesToCloud(run);
             transaction.commit();
@@ -735,6 +745,10 @@ public class SkylineDocImporter
                 else if (SkylineFileUtils.EXT_BLIB.equalsIgnoreCase(ext))
                 {
                     _blibSourcePaths.add(file.toPath());
+                }
+                else if (SkylineFileUtils.EXT_SKY_LOG.equalsIgnoreCase(ext))
+                {
+                    _auditLogFile = file;   //prepare for the log file extraction
                 }
             }
 

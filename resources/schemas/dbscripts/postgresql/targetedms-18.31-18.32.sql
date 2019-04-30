@@ -14,8 +14,4 @@
  * limitations under the License.
  */
 
--- Add a column to store the size of the Skyline document
-ALTER TABLE targetedms.runs ADD COLUMN DocumentSize BIGINT;
-
--- Populate the DocumentSize column for existing rows in targetedms.runs
-SELECT core.executeJavaUpgradeCode('addDocumentSize');
+ALTER TABLE targetedms.Replicate ADD COLUMN SampleDilutionFactor DOUBLE PRECISION;

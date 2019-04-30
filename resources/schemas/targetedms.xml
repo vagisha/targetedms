@@ -1663,4 +1663,31 @@
             <column columnName="Container"/>
         </columns>
     </table>
+    <table tableName="AuditLogEntry" tableDbType="TABLE">
+        <columns>
+            <column columnName="EntryId"/>
+            <column columnName="DocumentGUID"/>
+            <column columnName="EntryHash"/>
+            <column columnName="VersionId"/>
+            <column columnName="CreateTimestamp"/>
+            <column columnName="TimeZoneOffset"/>
+            <column columnName="UserName"/>
+            <column columnName="FormatVersion"/>
+            <column columnName="Reason"/>
+            <column columnName="ParentEntryHash"/>
+            <column columnName="ExtraInfo"/>
+        </columns>
+    </table>
+    <table tableName="AuditLogMessage" tableDbType="TABLE">
+        <columns>
+            <column columnName="MessageId"/>
+            <column columnName="OrderNumber"/>
+            <column columnName="EntryId"/>
+            <column columnName="MessageType"/>
+            <column columnName="EnText">
+                <columnTitle>Log Message</columnTitle>
+            </column>
+            <column columnName="ExpandedText"/>
+        </columns>
+    </table>
 </tables>
