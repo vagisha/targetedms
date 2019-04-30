@@ -48,7 +48,6 @@ resources/queries/targetedms/qcMetricsConfig.sql -text
 resources/queries/targetedms/qcannotation/.qview.xml -text
 resources/queries/targetedms/qcannotationtype/.qview.xml -text
 resources/queries/targetedms/samplefile/.qview.xml -text
-resources/schemas/Skyl.xsd -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/postgresql/obsolete/targetedms-0.00-13.10.sql -text
@@ -142,7 +141,6 @@ resources/schemas/dbscripts/postgresql/targetedms-19.10-19.11.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-19.11-19.12.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-19.12-19.13.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-19.13-19.14.sql -text
-resources/schemas/dbscripts/postgresql/targetedms-19.14-19.15.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-13.10.sql -text
@@ -238,7 +236,6 @@ resources/schemas/dbscripts/sqlserver/targetedms-18.32-18.33.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-19.10-19.11.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-19.12-19.13.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-19.13-19.14.sql -text
-resources/schemas/dbscripts/sqlserver/targetedms-19.14-19.15.sql -text
 resources/schemas/targetedms.xml -text
 resources/skyaudit/AuditLogStrings.resx -text
 resources/skyaudit/ColumnCaptions.resx -text
@@ -251,7 +248,6 @@ src/SkylineDocument.proto -text
 src/org/labkey/targetedms/IrtPeptide.java -text
 src/org/labkey/targetedms/PanoramaBadDataException.java -text
 src/org/labkey/targetedms/PublishTargetedMSExperimentsController.java -text
-src/org/labkey/targetedms/SkylineAuditLogImporter.java -text
 src/org/labkey/targetedms/SkylineBinaryDataHandler.java -text
 src/org/labkey/targetedms/SkylineDocImporter.java -text
 src/org/labkey/targetedms/SkylineFileUtils.java -text

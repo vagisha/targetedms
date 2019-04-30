@@ -193,9 +193,6 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_GENERAL_PRECURSOR = "GeneralPrecursor";
     public static final String TABLE_GENERAL_TRANSITION = "GeneralTransition";
     public static final String TABLE_MOLECULE_PRECURSOR = "MoleculePrecursor";
-    public static final String TABLE_SKYLINE_AUDITLOG_ENTRY = "AuditLogEntry";
-    public static final String TABLE_SKYLINE_AUDITLOG_MESSAGE = "AuditLogMessage";
-
 
     public static final String COL_PROTEIN = "Protein";
     public static final String COL_LIST = "List";

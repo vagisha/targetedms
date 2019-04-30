@@ -508,16 +508,6 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_QC_ENABLED_METRICS);
     }
 
-    public static TableInfo getTableInfoSkylineAuditLogEntry()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_ENTRY);
-    }
-
-    public static TableInfo getTableInfoSkylineAuditLogMessage()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_MESSAGE);
-    }
-
     public static Integer addRunToQueue(ViewBackgroundInfo info,
                                      final Path path,
                                      PipeRoot root) throws IOException, XarFormatException
