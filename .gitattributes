@@ -437,15 +437,6 @@ src/org/labkey/targetedms/parser/blib/BlibSpectrum.java -text
 src/org/labkey/targetedms/parser/blib/BlibSpectrumReader.java -text
 src/org/labkey/targetedms/parser/proto/ChromatogramGroupDataOuterClass.java -text
 src/org/labkey/targetedms/parser/proto/SkylineDocument.java -text
-src/org/labkey/targetedms/parser/skyaudit/AuditLogEntry.java -text
-src/org/labkey/targetedms/parser/skyaudit/AuditLogException.java -text
-src/org/labkey/targetedms/parser/skyaudit/AuditLogMessage.java -text
-src/org/labkey/targetedms/parser/skyaudit/AuditLogMessageExpander.java -text
-src/org/labkey/targetedms/parser/skyaudit/AuditLogParsingException.java -text
-src/org/labkey/targetedms/parser/skyaudit/AuditLogTree.java -text
-src/org/labkey/targetedms/parser/skyaudit/SkylineAuditLogParser.java -text
-src/org/labkey/targetedms/parser/skyaudit/SkylineAuditLogSecurityManager.java -text
-src/org/labkey/targetedms/parser/skyaudit/UnitTestUtil.java -text
 src/org/labkey/targetedms/parser/skyd/CacheFormat.java -text
 src/org/labkey/targetedms/parser/skyd/CacheFormatVersion.java -text
 src/org/labkey/targetedms/parser/skyd/CacheHeaderStruct.java -text
