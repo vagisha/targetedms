@@ -225,7 +225,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         dragAndDropFileInDropZone(single);
 
         log("Verifying if the file is uploaded and zipped");
-        waitForElement(Locator.tagWithText("span", "TestZipMeDir.zip"));
+        waitForElement(Locator.tagWithText("span", "TestZipMeDir.zip"),WAIT_FOR_PAGE);
         assertElementPresent(Locator.tagWithText("span", "TestZipMeDir.zip"));
     }
 
