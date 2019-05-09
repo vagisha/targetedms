@@ -56,6 +56,7 @@ import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
+import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogParser;
 import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.query.JournalManager;
@@ -127,10 +128,14 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static ModuleProperty FOLDER_TYPE_PROPERTY;
     public static ModuleProperty SKIP_CHROMATOGRAM_IMPORT_PROPERTY;
     public static ModuleProperty PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY;
+    public static ModuleProperty SKYLINE_AUDIT_LEVEL_PROPERTY;
+
+
     public static final String AUTO_QC_PING_TIMEOUT = "TargetedMS AutoQCPing Timeout";
 
     public static final String SKIP_CHROMATOGRAM_IMPORT = "Skip chromatogram import into database";
     public static final String PREFER_SKYD_FILE_CHROMATOGRAMS = "Prefer loading chromatograms from SKYD file when possible";
+    public static final String SKYLINE_AUDIT_LEVEL = "Audit log integrity level for the uploaded Skyline documents";
 
     public enum FolderType
     {
@@ -160,6 +165,26 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         SKIP_CHROMATOGRAM_IMPORT_PROPERTY.setShowDescriptionInline(true);
         addModuleProperty(SKIP_CHROMATOGRAM_IMPORT_PROPERTY);
 
+        //------------------------
+        List<ModuleProperty.Option> auditOptions = Arrays.asList(
+                new ModuleProperty.Option("0 - No Verification", "0"),
+                new ModuleProperty.Option("1 - Hash Verification", "1"),
+                new ModuleProperty.Option("2 - RSA Verification", "2")
+        );
+        // Set up the properties for controlling how chromatograms are managed in DB vs files
+        SKYLINE_AUDIT_LEVEL_PROPERTY = new ModuleProperty(this, SKYLINE_AUDIT_LEVEL);
+        SKYLINE_AUDIT_LEVEL_PROPERTY.setInputType(ModuleProperty.InputType.combo);
+        SKYLINE_AUDIT_LEVEL_PROPERTY.setOptions(auditOptions);
+        SKYLINE_AUDIT_LEVEL_PROPERTY.setDefaultValue("0");
+        SKYLINE_AUDIT_LEVEL_PROPERTY.setCanSetPerContainer(true);
+        SKYLINE_AUDIT_LEVEL_PROPERTY.setDescription("Defines requirements for the integrity of the audit log uploaded together with a Skyline document. <br>\n"+
+                "0 means that no audit log is required. If the log file is present in the uploaded file it will be parsed and loaded as is.<br>\n " +
+                "1 means that audit log is required and its integrity will be verified using MD5 hash-based algorythm. If log integrity verification fails the document upload will be cancelled.<br> \n" +
+                "2 means that audit log is required and its integrity will be verified using RSA-encryption algorythm. If log integrity verification fails the document upload will be cancelled.");
+        SKYLINE_AUDIT_LEVEL_PROPERTY.setShowDescriptionInline(true);
+        addModuleProperty(SKYLINE_AUDIT_LEVEL_PROPERTY);
+        //------------------------rr
+
         PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY = new ModuleProperty(this, PREFER_SKYD_FILE_CHROMATOGRAMS);
         PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setInputType(ModuleProperty.InputType.combo);
         PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.setOptions(options);
@@ -187,7 +212,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public double getVersion()
     {
-        return 19.14;
+        return 19.15;
     }
 
     @Override
@@ -497,6 +522,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         set.add(TargetedMSController.TestCase.class);
         set.add(ComparisonCategory.TestCase.class);
         set.add(ReplicateLabelMinimizer.TestCase.class);
+        set.add(SkylineAuditLogParser.TestCase.class);
+        set.add(SkylineAuditLogImporter.TestCase.class);
         return set;
 
     }

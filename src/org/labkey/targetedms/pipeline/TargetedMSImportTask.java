@@ -30,6 +30,7 @@ import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.model.ExperimentAnnotations;
+import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 
 import javax.xml.stream.XMLStreamException;
@@ -74,7 +75,7 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
                 ExperimentAnnotationsManager.addSelectedRunsToExperiment(expAnnotations.getExperiment(), new int[]{expRun.getRowId()}, job.getUser());
             }
         }
-        catch (ExperimentException | XMLStreamException | IOException e)
+        catch (ExperimentException | XMLStreamException | IOException | AuditLogException e)
         {
             throw new PipelineJobException(e);
         }

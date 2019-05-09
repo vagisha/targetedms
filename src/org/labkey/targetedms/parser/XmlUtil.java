@@ -169,4 +169,19 @@ public class XmlUtil
             return defaultValue;
         return value;
     }
+
+
+    public static void skip(XMLStreamReader reader, int eventType) throws XMLStreamException {
+        skip(reader, eventType, null);
+    }
+
+    public static void skip(XMLStreamReader reader, int eventType, String name) throws XMLStreamException {
+        var evt = reader.getEventType();
+        while (evt != eventType || (name != null &&
+                ((eventType == XMLStreamReader.START_ELEMENT || eventType == XMLStreamReader.END_ELEMENT || eventType == XMLStreamReader.ENTITY_REFERENCE)
+                        && !name.equals(reader.getLocalName())))) {
+            evt = reader.next();
+        }
+    }
+
 }
