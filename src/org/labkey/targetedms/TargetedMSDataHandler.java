@@ -98,7 +98,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
 
             TargetedMSManager.updateRun(run, info.getUser());
         }
-        catch (IOException | XMLStreamException | PipelineJobException | AuditLogException e)
+        catch (IOException | XMLStreamException | PipelineJobException e)
         {
             throw new ExperimentException(e);
         }
