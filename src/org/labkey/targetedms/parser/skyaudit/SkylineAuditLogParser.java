@@ -312,11 +312,10 @@ public class SkylineAuditLogParser
         {
             List<AuditLogEntry> entries = new LinkedList<>();
 
-            File f_zip = UnitTestUtil.getSampleDataFile("AuditLogFiles/TargetedMethod_v6.zip");
+            File f_zip = UnitTestUtil.getSampleDataFile("AuditLogFiles/MethodEdit_v6.2.zip");
             _logFile = UnitTestUtil.extractLogFromZip(f_zip, _logger);
             _parser = new SkylineAuditLogParser(_logFile, _logger);
-            //Assert.assertEquals("D5E299587F4040FAD7D4C6A756F38EC23F73E24E", _parser.getDocumentHash());
-            Assert.assertNull(_parser.getEnRootHash());
+            Assert.assertNotNull(_parser.getEnRootHash());
 
             AuditLogMessageExpander expander = new AuditLogMessageExpander(_logger);
             AuditLogEntry prevEntry = null;
@@ -330,11 +329,12 @@ public class SkylineAuditLogParser
                 entries.add(ent.expandEntry(expander));
                 _logger.info(ent.toString());
                 //all messages in this file should have expanded text
-                ent.persist();
+                //ent.persist();
 
                 for(AuditLogMessage msg : ent.getAllInfoMessage())
                 {
                     Assert.assertNotNull(msg.getExpandedText());
+                    Assert.assertNotNull(msg.getEnText());
                     Assert.assertNotEquals("", msg.getExpandedText());
                 }
                 prevEntry = ent;
@@ -345,20 +345,19 @@ public class SkylineAuditLogParser
 
             Assert.assertTrue(expander.areAllMessagesExpanded());
             Assert.assertTrue(expander.areResourcesReady());
-            Assert.assertNotNull(entries.get(3).getExtraInfo());
+            Assert.assertNotNull(entries.get(2).getExtraInfo());
             Assert.assertNull(entries.get(1).getExtraInfo());
 //
-            Assert.assertEquals(19, entries.size());
-            Assert.assertEquals(12, entries.get(0).getAllInfoMessage().size());
-//            Assert.assertEquals(7, entries.get(1).getAllInfoMessage().size());
-            Assert.assertFalse(entries.get(0).canBeHashed(expander));
+            Assert.assertEquals(11, entries.size());
+            Assert.assertEquals(6, entries.get(5).getAllInfoMessage().size());
+            Assert.assertTrue(entries.get(0).canBeHashed(expander));
         }
 
         @Test
         public void testInvalidXmlFile() {
             try
             {
-                File logFile = UnitTestUtil.getSampleDataFile("RitaTest_invalid.skyl");
+                File logFile = UnitTestUtil.getSampleDataFile("AuditLogFiles/InvalidSchemaTest.skyl");
                 SkylineAuditLogParser parser = new SkylineAuditLogParser(logFile, _logger);
                 Assert.assertTrue("Expected file validation failure but it succeeded.", false);
             }
@@ -371,7 +370,7 @@ public class SkylineAuditLogParser
         //TODO: test invalid expansion: missing resource file or missing token in a file.
         @Test
         public void testMissingResourceName() throws XMLStreamException, AuditLogException, AuditLogParsingException,UnsupportedEncodingException {
-            _logFile = UnitTestUtil.getSampleDataFile("AuditLogTest_InvalidResourcet.skyl");
+            _logFile = UnitTestUtil.getSampleDataFile("AuditLogFiles/InvalidResourceTest.skyl");
             _parser = new SkylineAuditLogParser(_logFile, _logger);
 
             AuditLogMessageExpander expander = new AuditLogMessageExpander(_logger);

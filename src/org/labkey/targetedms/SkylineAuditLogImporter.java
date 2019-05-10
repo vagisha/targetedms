@@ -137,7 +137,7 @@ public class SkylineAuditLogImporter
     /***
      * Iterates through the log entries and persists them one by one
      */
-    public void persistAuditLog() throws AuditLogException {
+    public void persistAuditLog(Integer runId) throws AuditLogException {
         try
         {
             AuditLogMessageExpander expander = new AuditLogMessageExpander(_logger);
@@ -178,6 +178,9 @@ public class SkylineAuditLogImporter
                 entries.add(ent);
                 _rootHash.update(ent.getHashString().getBytes(Charset.forName("UTF8")));
             }
+
+            if(runId != null)       //set the document version od on the chronologicaly last log entry.
+                entries.get(0).setVersionId(runId);
 
             Collections.reverse(entries);
             AuditLogTree treePointer = _logTree;
@@ -300,15 +303,18 @@ public class SkylineAuditLogImporter
             _user = TestContext.get().getUser();
         }
 
-        private void persistALogFile(String filePath) throws IOException, AuditLogException, AuditLogParsingException{
+        private AuditLogTree persistALogFile(String filePath, Integer runId) throws IOException, AuditLogException, AuditLogParsingException{
             File f_zip = UnitTestUtil.getSampleDataFile(filePath);
             File logFile = UnitTestUtil.extractLogFromZip(f_zip, _logger);
             SkylineAuditLogImporter importer = new SkylineAuditLogImporter( _logger, logFile, _docGUID, ContainerManager.getForId(_containerId), _user);
 
             if(importer.verifyPreRequisites()) {
-                importer.persistAuditLog();
+                importer.persistAuditLog(runId);
                 importer.verifyPostRequisites();
+                return importer.buildLogTree();
             }
+            else
+                return null;
         }
 
         //@Test
@@ -328,7 +334,7 @@ public class SkylineAuditLogImporter
             SkylineAuditLogImporter importer = new SkylineAuditLogImporter( _logger, logFile, _docGUID, panoramaContainer, _user);
 
             importer.verifyPreRequisites();
-            importer.persistAuditLog();
+            importer.persistAuditLog(null);
             importer.verifyPostRequisites();
             AuditLogTree tree = importer.buildLogTree();
             assertNotNull(tree);
@@ -339,17 +345,19 @@ public class SkylineAuditLogImporter
         public void AddAVersionTest() throws IOException, AuditLogException, AuditLogParsingException
         {
             _logger.info("AuditLogFiles/MethodEdit_v2.zip");
-            persistALogFile("AuditLogFiles/MethodEdit_v2.zip");
+            persistALogFile("AuditLogFiles/MethodEdit_v2.zip", null);
             _logger.info("AuditLogFiles/MethodEdit_v3.zip");
-            persistALogFile("AuditLogFiles/MethodEdit_v3.zip");
+            persistALogFile("AuditLogFiles/MethodEdit_v3.zip", null);
             _logger.info("AuditLogFiles/MethodEdit_v4.zip");
-            persistALogFile("AuditLogFiles/MethodEdit_v4.zip");
+            persistALogFile("AuditLogFiles/MethodEdit_v4.zip", null);
             _logger.info("AuditLogFiles/MethodEdit_v5.1.zip");
-            persistALogFile("AuditLogFiles/MethodEdit_v5.1.zip");
+            persistALogFile("AuditLogFiles/MethodEdit_v5.1.zip", null);
             _logger.info("AuditLogFiles/MethodEdit_v5.2.zip");
-            persistALogFile("AuditLogFiles/MethodEdit_v5.2.zip");
+            persistALogFile("AuditLogFiles/MethodEdit_v5.2.zip", null);
             _logger.info("AuditLogFiles/MethodEdit_v6.2.zip");
-            persistALogFile("AuditLogFiles/MethodEdit_v6.2.zip");
+            AuditLogTree tree = persistALogFile("AuditLogFiles/MethodEdit_v6.2.zip", null);
+            assertNotNull(tree);
+            assertEquals(14, tree.getTreeSize());
         }
 
 
