@@ -206,7 +206,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             });
         }, this);
 
-        // cancel the hover details show event if the user was just passing over the div without stopping for X amount of time
+        // close the hover details on mouseout of the autoQC element
         divEl.on('mouseout', function() {
             hopscotch.getCalloutManager().removeAllCallouts();
         }, this);
@@ -389,7 +389,8 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     placement: 'bottom',
                     width: sampleFile.Items.length > 0 ? 655 : 300,
                     title: 'Recent Sample File Details',
-                    content: content
+                    content: content,
+                    onShow: this.attachHopscotchMouseClose
                 });
             }, this, [divEl]);
         }, this);
@@ -398,6 +399,23 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         divEl.on('mouseout', function() {
             task.cancel();
         }, this);
+    },
+
+    attachHopscotchMouseClose: function() {
+        var closeTask = new Ext4.util.DelayedTask();
+        var h = Ext4.select('.hopscotch-bubble-container');
+
+        // on mouseout call the delayed task to close the callout
+        h.on('mouseout', function() {
+            closeTask.delay(1000, function() {
+                hopscotch.getCalloutManager().removeAllCallouts();
+            });
+        });
+
+        // if the mouseover happens again for this element before the delay, cancel it to keep callout open
+        h.on('mouseover', function() {
+            closeTask.cancel();
+        });
     },
 
     getSampleDetailOutlierDisplayValue : function(item, variable) {

@@ -1342,6 +1342,8 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     target: point,
                     content: '<div id="' + contentDivId + '"></div>',
                     onShow: function() {
+                        me.attachHopscotchMouseClose();
+
                         Ext4.create('LABKEY.targetedms.QCPlotHoverPanel', {
                             renderTo: contentDivId,
                             pointData: row,
@@ -1367,6 +1369,23 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
         Ext4.get(point).on('mouseout', function() {
             showHoverTask.cancel();
         }, this);
+    },
+
+    attachHopscotchMouseClose: function() {
+        var closeTask = new Ext4.util.DelayedTask();
+        var h = Ext4.select('.hopscotch-bubble-container');
+
+        // on mouseout call the delayed task to close the callout
+        h.on('mouseout', function() {
+            closeTask.delay(1000, function() {
+                hopscotch.getCalloutManager().removeAllCallouts();
+            });
+        });
+
+        // if the mouseover happens again for this element before the delay, cancel it to keep callout open
+        h.on('mouseover', function() {
+            closeTask.cancel();
+        });
     },
 
     plotBrushStartEvent : function(plot) {
