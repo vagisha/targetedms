@@ -15,9 +15,7 @@
  */
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.DisplayColumn;
-import org.labkey.api.data.DisplayColumnFactory;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSController;
@@ -31,9 +29,9 @@ import java.util.List;
 
 public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
 {
-    public PeptideTableInfo(TargetedMSSchema schema, boolean omitAnnotations)
+    public PeptideTableInfo(TargetedMSSchema schema, ContainerFilter cf, boolean omitAnnotations)
     {
-        super(schema, TargetedMSManager.getTableInfoPeptide(), "Peptide Annotations", omitAnnotations);
+        super(schema, TargetedMSManager.getTableInfoPeptide(), cf, "Peptide Annotations", omitAnnotations);
 
         if (!omitAnnotations)
         {
@@ -44,10 +42,10 @@ public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
             addColumn(noteAnnotation);
         }
 
-        ColumnInfo peptideGroupId = getColumn("PeptideGroupId");
-        peptideGroupId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE_GROUP));
+        var peptideGroupId = getMutableColumn("PeptideGroupId");
+        peptideGroupId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE_GROUP, cf));
 
-        ColumnInfo sequenceColumn = getColumn("Sequence");
+        var sequenceColumn = getMutableColumn("Sequence");
         sequenceColumn.setURL(getDetailsURL(null, null));
         WrappedColumn modSeqCol = new WrappedColumn(getColumn("PeptideModifiedSequence"), ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME);
         modSeqCol.setLabel("Peptide");

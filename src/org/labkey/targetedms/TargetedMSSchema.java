@@ -16,16 +16,15 @@
 
 package org.labkey.targetedms;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
-import org.labkey.api.analytics.AnalyticsService;
 import org.labkey.api.collections.CaseInsensitiveHashSet;
 import org.labkey.api.data.AJAXDetailsDisplayColumn;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerForeignKey;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DbSchema;
@@ -63,7 +62,6 @@ import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.NavTree;
 import org.labkey.api.view.PopupMenu;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.parser.Chromatogram;
@@ -78,8 +76,6 @@ import org.springframework.web.servlet.mvc.Controller;
 
 import java.io.IOException;
 import java.io.Writer;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -591,10 +587,12 @@ public class TargetedMSSchema extends UserSchema
         public abstract FieldKey getContainerFieldKey();
     }
 
-    public ExpRunTable getTargetedMSRunsTable()
+    public ExpRunTable getTargetedMSRunsTable(ContainerFilter cf)
     {
-        // Start with a standard experiment run table
-        ExpRunTable result = _expSchema.getRunsTable();
+        // Start with a standard experiment run table (forWrite==true because we hack on it)
+        ExpRunTable result = _expSchema.getRunsTable(true);
+        if (null != cf)
+            result.setContainerFilter(cf);
         result.setDescription(TargetedMSManager.getTableInfoRuns().getDescription());
 
         // Filter to just the runs with the Targeted MS protocol
@@ -606,7 +604,7 @@ public class TargetedMSSchema extends UserSchema
                 "\nFROM " + TargetedMSManager.getTableInfoRuns() + " tmsRuns " +
                 "\nWHERE tmsRuns.ExperimentRunLSID = " + ExprColumn.STR_TABLE_ALIAS + ".LSID AND tmsRuns.Deleted = ?)");
         sql.add(Boolean.FALSE);
-        ColumnInfo skyDocDetailColumn = new ExprColumn(result, "File", sql, JdbcType.INTEGER);
+        var skyDocDetailColumn = new ExprColumn(result, "File", sql, JdbcType.INTEGER);
 
         ActionURL url = TargetedMSController.getShowRunURL(getContainer());
 
@@ -627,10 +625,10 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn(result.getRealTable().getColumn("Filename"));
                 result.addWrapColumn(result.getRealTable().getColumn("ExperimentRunLSID"));
                 result.addWrapColumn(result.getRealTable().getColumn("Status"));
-                ColumnInfo stateColumn = result.addWrapColumn(result.getRealTable().getColumn("RepresentativeDataState"));
+                var stateColumn = result.addWrapColumn(result.getRealTable().getColumn("RepresentativeDataState"));
                 stateColumn.setFk(new QueryForeignKey(TargetedMSSchema.this, null, TABLE_REPRESENTATIVE_DATA_STATE_RUN, "RowId", null));
 
-                ColumnInfo downloadLinkColumn = result.addWrapColumn("Download", result.getRealTable().getColumn("Id"));
+                var downloadLinkColumn = result.addWrapColumn("Download", result.getRealTable().getColumn("Id"));
                 downloadLinkColumn.setKeyField(false);
                 downloadLinkColumn.setTextAlign("left");
                 downloadLinkColumn.setDisplayColumnFactory(new DisplayColumnFactory()
@@ -685,7 +683,7 @@ public class TargetedMSSchema extends UserSchema
 
             private void addVersionsColumn(FilteredTable result)
             {
-                ColumnInfo versionsCol = result.addWrapColumn("Versions", result.getRealTable().getColumn("ExperimentRunLSID"));
+                var versionsCol = result.addWrapColumn("Versions", result.getRealTable().getColumn("ExperimentRunLSID"));
                 versionsCol.setTextAlign("right");
                 versionsCol.setDisplayColumnFactory(new DisplayColumnFactory()
                 {
@@ -750,7 +748,7 @@ public class TargetedMSSchema extends UserSchema
         skyDocDetailColumn.setHidden(false);
         result.addColumn(skyDocDetailColumn);
 
-        ColumnInfo replacedByCol = new WrappedColumn(result.getColumn("ReplacedByRun"), "ReplacedBy"){
+        var replacedByCol = new WrappedColumn(result.getColumn("ReplacedByRun"), "ReplacedBy"){
             @Override
             public SQLFragment getValueSql(String tableAlias)
             {
@@ -844,48 +842,48 @@ public class TargetedMSSchema extends UserSchema
     }
 
     @Override
-    public TableInfo createTable(String name)
+    public TableInfo createTable(String name, ContainerFilter cf)
     {
         if (TABLE_TARGETED_MS_RUNS.equalsIgnoreCase(name))
         {
-            return getTargetedMSRunsTable();
+            return getTargetedMSRunsTable(cf);
         }
         if (TABLE_IRT_PEPTIDE.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.iRTScaleFK);
+            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.iRTScaleFK);
         }
         if (TABLE_QC_ANNOTATION_TYPE.equalsIgnoreCase(name))
         {
-            return new QCAnnotationTypeTable(this);
+            return new QCAnnotationTypeTable(this, cf);
         }
         if (TABLE_QC_ANNOTATION.equalsIgnoreCase(name))
         {
-            return new QCAnnotationTable(this);
+            return new QCAnnotationTable(this, cf);
         }
         if (TABLE_QC_METRIC_CONFIGURATION.equalsIgnoreCase(name))
         {
-            return new QCMetricConfigurationTable(this);
+            return new QCMetricConfigurationTable(this, cf);
         }
         if(TABLE_QC_ENABLED_METRICS.equalsIgnoreCase(name))
         {
-            return new QCEnabledMetricsTable(this);
+            return new QCEnabledMetricsTable(this, cf);
         }
         if (TABLE_GUIDE_SET.equalsIgnoreCase(name))
         {
-            return new GuideSetTable(this);
+            return new GuideSetTable(this, cf);
         }
         if (TABLE_AUTOQC_PING.equalsIgnoreCase(name))
         {
-            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(TABLE_AUTOQC_PING), this);
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(TABLE_AUTOQC_PING), this, cf);
             result.wrapAllColumns(true);
-            result.getColumn("CreatedBy").setFk(new UserIdQueryForeignKey(getUser(), getContainer()));
-            result.getColumn("ModifiedBy").setFk(new UserIdQueryForeignKey(getUser(), getContainer()));
-            result.getColumn("Container").setFk(new ContainerForeignKey(this));
+            result.getMutableColumn("CreatedBy").setFk(new UserIdQueryForeignKey(this));
+            result.getMutableColumn("ModifiedBy").setFk(new UserIdQueryForeignKey(this));
+            result.getMutableColumn("Container").setFk(new ContainerForeignKey(this));
             return result;
         }
         if(TABLE_EXPERIMENT_ANNOTATIONS.equalsIgnoreCase(name))
         {
-            return new ExperimentAnnotationsTableInfo(this);
+            return new ExperimentAnnotationsTableInfo(this, cf);
         }
 
         if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
@@ -907,7 +905,7 @@ public class TargetedMSSchema extends UserSchema
                     true,
                     "Possible representative states for a peptide group or precursor");
 
-            ColumnInfo viewColumn = tableInfo.getColumn("Value");
+            var viewColumn = tableInfo.getMutableColumn("Value");
             viewColumn.setLabel("Library State");
             viewColumn.setDisplayColumnFactory(RepresentativeStateDisplayColumn::new);
 
@@ -919,7 +917,7 @@ public class TargetedMSSchema extends UserSchema
         {
             boolean proteomics = TABLE_PEPTIDE_GROUP.equalsIgnoreCase(name);
             TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(TABLE_PEPTIDE_GROUP),
-                                                                  this,
+                                                                  this, cf,
                                                                   ContainerJoinType.RunFK,
                                                                   TargetedMSManager.getTableInfoPeptideGroupAnnotation(),
                                                                   "PeptideGroupId",
@@ -932,7 +930,7 @@ public class TargetedMSSchema extends UserSchema
                     return TargetedMSController.ShowProteinAction.class;
                 }
             };
-            result.getColumn("SequenceId").setFk(new LookupForeignKey("SeqId")
+            result.getMutableColumn("SequenceId").setFk(new LookupForeignKey("SeqId")
             {
                 @Override
                 public TableInfo getLookupTableInfo()
@@ -940,7 +938,7 @@ public class TargetedMSSchema extends UserSchema
                     return MS2Service.get().createSequencesTableInfo(getUser(), getContainer());
                 }
             });
-            ColumnInfo labelColumn = result.getColumn("Label");
+            var labelColumn = result.getMutableColumn("Label");
             labelColumn.setURL(result.getDetailsURL(null, null));
             if (proteomics)
             {
@@ -980,11 +978,11 @@ public class TargetedMSSchema extends UserSchema
             else
             {
                 labelColumn.setLabel(TargetedMSSchema.COL_LIST);
-                result.getColumn("SequenceId").setHidden(true);
+                result.getMutableColumn("SequenceId").setHidden(true);
             }
-            result.getColumn("RunId").setFk(new QueryForeignKey(this, null, TABLE_TARGETED_MS_RUNS, "File", null));
-            result.getColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, null, TargetedMSSchema.TABLE_REPRESENTATIVE_DATA_STATE, "RowId", null));
-            result.getColumn("RepresentativeDataState").setHidden(true);
+            result.getMutableColumn("RunId").setFk(new QueryForeignKey(this, null, TABLE_TARGETED_MS_RUNS, "File", null));
+            result.getMutableColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, null, TargetedMSSchema.TABLE_REPRESENTATIVE_DATA_STATE, "RowId", null));
+            result.getMutableColumn("RepresentativeDataState").setHidden(true);
 
             // Create a WrappedColumn for Note & Annotations
             WrappedColumn noteAnnotation = new WrappedColumn(result.getColumn("Annotations"), "NoteAnnotations");
@@ -1004,7 +1002,7 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_REPLICATE.equalsIgnoreCase(name))
         {
-            return new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK, TargetedMSManager.getTableInfoReplicateAnnotation(), "ReplicateId", "Replicate Annotations", "replicate", false);
+            return new AnnotatedTargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.RunFK, TargetedMSManager.getTableInfoReplicateAnnotation(), "ReplicateId", "Replicate Annotations", "replicate", false);
         }
 
         // Tables that have a FK to targetedms.Runs
@@ -1026,157 +1024,159 @@ public class TargetedMSSchema extends UserSchema
             TABLE_QUANTIIFICATION_SETTINGS.equalsIgnoreCase(name) ||
             TABLE_DRIFT_TIME_PREDICTION_SETTINGS.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.RunFK);
+            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.RunFK);
         }
 
         if (TABLE_CALIBRATION_CURVE.equalsIgnoreCase(name))
         {
-            return new CalibrationCurveTable(this);
+            return new CalibrationCurveTable(this, cf);
         }
         if (TABLE_PEPTIDE_CALIBRATION_CURVE.equalsIgnoreCase(name))
         {
-            return new CalibrationCurveTable.PeptideCalibrationCurveTable(this);
+            return new CalibrationCurveTable.PeptideCalibrationCurveTable(this, cf);
         }
         if (TABLE_MOLECULE_CALIBRATION_CURVE.equalsIgnoreCase(name))
         {
-            return new CalibrationCurveTable.MoleculeCalibrationCurveTable(this);
+            return new CalibrationCurveTable.MoleculeCalibrationCurveTable(this, cf);
         }
 
         if (TABLE_FOLD_CHANGE.equalsIgnoreCase(name))
         {
-            return new FoldChangeTable(this);
+            return new FoldChangeTable(this, cf);
         }
 
         if (TABLE_PEPTIDE_FOLD_CHANGE.equalsIgnoreCase(name))
         {
-            return new FoldChangeTable.PeptideFoldChangeTable(this);
+            return new FoldChangeTable.PeptideFoldChangeTable(this, cf);
         }
 
         if (TABLE_MOLECULE_FOLD_CHANGE.equalsIgnoreCase(name))
         {
-            return new FoldChangeTable.MoleculeFoldChangeTable(this);
+            return new FoldChangeTable.MoleculeFoldChangeTable(this, cf);
         }
 
         // Tables that have a FK to targetedms.peptidegroup
         if (TABLE_PEPTIDE.equalsIgnoreCase(name))
         {
-            return new PeptideTableInfo(this, false);
+            return new PeptideTableInfo(this, cf, false);
         }
         if (TABLE_MOLECULE.equalsIgnoreCase(name))
         {
-            return new MoleculeTableInfo(this, false);
+            return new MoleculeTableInfo(this, cf, false);
         }
 
         if (TABLE_PROTEIN.equalsIgnoreCase(name) ||
             TABLE_PEPTIDE_GROUP_ANNOTATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideGroupFK);
+            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.PeptideGroupFK);
         }
 
         // Tables that have a FK to targetedms.replicate
         if (TABLE_SAMPLE_FILE.equalsIgnoreCase(name))
         {
-            return new SampleFileTable(this);
+            return new SampleFileTable(this, cf);
         }
         if (TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(name))
         {
-            return new ReplicateAnnotationTable(this);
+            return new ReplicateAnnotationTable(this, cf);
         }
         if (TABLE_QC_METRIC_EXCLUSION.equalsIgnoreCase(name))
         {
-            return new QCMetricExclusionTable(this);
+            return new QCMetricExclusionTable(this, cf);
         }
 
         if (TABLE_PEPTIDE_CHROM_INFO.equalsIgnoreCase(name) || TABLE_GENERAL_MOLECULE_CHROM_INFO.equalsIgnoreCase(name))
         {
-            return new GeneralMoleculeChromInfoTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_CHROM_INFO), this, ContainerJoinType.GeneralMoleculeFK, name);
+            return new GeneralMoleculeChromInfoTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_CHROM_INFO), this, cf, ContainerJoinType.GeneralMoleculeFK, name);
         }
 
         // Tables that have a FK to targetedms.peptidechrominfo
         if (TABLE_PEPTIDE_AREA_RATIO.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PeptideChromInfoFK);
+            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.PeptideChromInfoFK);
         }
 
         // Tables that have a FK to targetedms.peptide
         if (TABLE_PRECURSOR.equalsIgnoreCase(name))
         {
-            return new PrecursorTableInfo(this, false);
+            return new PrecursorTableInfo(this, cf, false);
         }
 
         if (TABLE_MOLECULE_PRECURSOR.equalsIgnoreCase(name))
         {
-            return new MoleculePrecursorTableInfo(this, false);
+            return new MoleculePrecursorTableInfo(this, cf, false);
         }
 
-        if(TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(name))
+        if (TABLE_EXPERIMENT_PRECURSOR.equalsIgnoreCase(name))
         {
-            return new PrecursorTableInfo.ExperimentPrecursorTableInfo(this);
+            return new PrecursorTableInfo.ExperimentPrecursorTableInfo(this, cf);
         }
 
-        if(TABLE_LIBRARY_PRECURSOR.equalsIgnoreCase(name) || TABLE_LIBRARY_DOC_PRECURSOR.equalsIgnoreCase(name))
+        if (TABLE_LIBRARY_PRECURSOR.equalsIgnoreCase(name) || TABLE_LIBRARY_DOC_PRECURSOR.equalsIgnoreCase(name))
         {
-            return new PrecursorTableInfo.LibraryPrecursorTableInfo(this);
+            return new PrecursorTableInfo.LibraryPrecursorTableInfo(this, cf);
         }
         if (TABLE_GENERAL_MOLECULE_ANNOTATION.equalsIgnoreCase(name) || TABLE_PEPTIDE_ANNOTATION.equalsIgnoreCase(name))
         {
-            GeneralMoleculeAnnotationTableInfo result = new GeneralMoleculeAnnotationTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_ANNOTATION), this, ContainerJoinType.GeneralMoleculeFK);
+            GeneralMoleculeAnnotationTableInfo result = new GeneralMoleculeAnnotationTableInfo(getSchema().getTable(TABLE_GENERAL_MOLECULE_ANNOTATION), this, cf, ContainerJoinType.GeneralMoleculeFK);
             result.setName(name);
             return result;
         }
-        if(TABLE_PEPTIDE_STRUCTURAL_MODIFICATION.equalsIgnoreCase(name))
+        if (TABLE_PEPTIDE_STRUCTURAL_MODIFICATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(new PeptideStructuralModificationTableInfo(this), this, ContainerJoinType.ModPeptideFK);
+            // TODO ContainerFilter: who is responsible for CF here?
+            return new TargetedMSTable(new PeptideStructuralModificationTableInfo(this, cf), this, cf, ContainerJoinType.ModPeptideFK);
         }
-        if(TABLE_PEPTIDE_ISOTOPE_MODIFICATION.equalsIgnoreCase(name))
+        if (TABLE_PEPTIDE_ISOTOPE_MODIFICATION.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(new PeptideIsotopeModificationTableInfo(this), this, ContainerJoinType.ModPeptideFK);
+            // TODO ContainerFilter: who is responsible for CF here?
+            return new TargetedMSTable(new PeptideIsotopeModificationTableInfo(this, cf), this, cf, ContainerJoinType.ModPeptideFK);
         }
         // Tables that have a FK to targetedms.precursor
         if (TABLE_PRECURSOR_CHROM_INFO.equalsIgnoreCase(name))
         {
-            return new PrecursorChromInfoTable(getSchema().getTable(name), this);
+            return new PrecursorChromInfoTable(getSchema().getTable(name), this, cf);
         }
         if (TABLE_TRANSITION.equalsIgnoreCase(name))
         {
-            return new DocTransitionsTableInfo(this);
+            return new DocTransitionsTableInfo(this, cf);
         }
         if(TABLE_MOLECULE_TRANSITION.equalsIgnoreCase(name))
         {
-            return new MoleculeTransitionsTableInfo(this, false);
+            return new MoleculeTransitionsTableInfo(this, cf, false);
         }
 
         // Tables that have a FK to targetedms.precursorchrominfo
         if (TABLE_PRECURSOR_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name) ||
             TABLE_PRECURSOR_AREA_RATIO.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.PrecursorChromInfoFK);
+            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.PrecursorChromInfoFK);
         }
 
         // Tables that have a FK to targetedms.transition
         if (TABLE_TRANSITION_CHROM_INFO.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.SampleFileFK,
+            TargetedMSTable result = new AnnotatedTargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.SampleFileFK,
                     TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), "TransitionChromInfoId", "Transition Result Annotations", "transition_result", false);
             TargetedMSSchema targetedMSSchema = this;
 
-            ColumnInfo transitionId = result.getColumn("TransitionId");
+            var transitionId = result.getMutableColumn("TransitionId");
             transitionId.setFk(new LookupForeignKey("Id")
             {
                 @Override
                 public TableInfo getLookupTableInfo()
                 {
-                    return new DocTransitionsTableInfo(targetedMSSchema);
+                    return new DocTransitionsTableInfo(targetedMSSchema, cf);
                 }
             });
 
-            ColumnInfo moleculeTransitionId = result.wrapColumn("MoleculeTransitionId", result.getRealTable().getColumn(transitionId.getFieldKey()));
+            var moleculeTransitionId = result.wrapColumn("MoleculeTransitionId", result.getRealTable().getColumn(transitionId.getFieldKey()));
             moleculeTransitionId.setFk(new LookupForeignKey("Id")
             {
                 @Override
                 public TableInfo getLookupTableInfo()
                 {
-                    return new MoleculeTransitionsTableInfo(targetedMSSchema, false);
+                    return new MoleculeTransitionsTableInfo(targetedMSSchema, cf, false);
                 }
             });
             result.addColumn(moleculeTransitionId);
@@ -1201,9 +1201,9 @@ public class TargetedMSSchema extends UserSchema
             result.setDefaultVisibleColumns(defaultCols);
 
             // Doesn't really matter what we wrap, so do a VARCHAR column so the type of the output matches
-            ColumnInfo timesColInfo = result.addWrapColumn("Times", result.getRealTable().getColumn("identified"));
+            var timesColInfo = result.addWrapColumn("Times", result.getRealTable().getColumn("identified"));
             timesColInfo.setDisplayColumnFactory(colInfo -> new TargetedMSSchema.ChromatogramDisplayColumn(colInfo, true));
-            ColumnInfo intensitiesColInfo = result.addWrapColumn("Intensities", result.getRealTable().getColumn("identified"));
+            var intensitiesColInfo = result.addWrapColumn("Intensities", result.getRealTable().getColumn("identified"));
             intensitiesColInfo.setDisplayColumnFactory(colInfo -> new TargetedMSSchema.ChromatogramDisplayColumn(colInfo, false));
 
             return result;
@@ -1211,14 +1211,14 @@ public class TargetedMSSchema extends UserSchema
 
         if (TABLE_TRANSITION_ANNOTATION.equalsIgnoreCase(name))
         {
-            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionFK);
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.TransitionFK);
             TargetedMSSchema targetedMSSchema = this;
-            result.getColumn("TransitionId").setFk(new LookupForeignKey("Id")
+            result.getMutableColumn("TransitionId").setFk(new LookupForeignKey("Id")
             {
                 @Override
                 public TableInfo getLookupTableInfo()
                 {
-                    return new DocTransitionsTableInfo(targetedMSSchema);
+                    return new DocTransitionsTableInfo(targetedMSSchema, cf);
                 }
             });
 
@@ -1229,7 +1229,7 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_TRANSITION_CHROM_INFO_ANNOTATION.equalsIgnoreCase(name) ||
             TABLE_TRANSITION_AREA_RATIO.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.TransitionChromInfoFK);
+            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.TransitionChromInfoFK);
         }
 
         // TODO - handle filtering for annotation, predictor
@@ -1237,37 +1237,37 @@ public class TargetedMSSchema extends UserSchema
         // Tables that have a FK to targetedms.isolationScheme
         if (TABLE_ISOLATION_WINDOW.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.IsolationSchemeFK);
+            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.IsolationSchemeFK);
         }
 
         // Tables that have a FT to targetesms.DriftTimePredictionSettings
         if(TABLE_MEASURED_DRIFT_TIME.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, ContainerJoinType.DriftTimePredictionSettingsFK);
+            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.DriftTimePredictionSettingsFK);
         }
 
         if(TABLE_JOURNAL_EXPERIMENT.equalsIgnoreCase(name))
         {
-            return new JournalExperimentTableInfo(this, getContainer());
+            return new JournalExperimentTableInfo(this, cf, getContainer());
         }
 
         if(TABLE_JOURNAL.equalsIgnoreCase(name))
         {
-            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this);
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this, cf);
             result.wrapAllColumns(true);
-            ColumnInfo projectCol = result.getColumn(FieldKey.fromParts("Project"));
+            var projectCol = result.getMutableColumn(FieldKey.fromParts("Project"));
             ContainerForeignKey.initColumn(projectCol, this);
             return result;
         }
 
         if (getTableNames().contains(name))
         {
-            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this);
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this, cf);
             result.wrapAllColumns(true);
             if (name.equalsIgnoreCase(TABLE_RUNS))
             {
-                result.getColumn("DataId").setFk(new QueryForeignKey(_expSchema, null, ExpSchema.TableType.Data.name(), null, null));
-                result.getColumn("SkydDataId").setFk(new QueryForeignKey(_expSchema, null, ExpSchema.TableType.Data.name(), null, null));
+                result.getMutableColumn("DataId").setFk(new QueryForeignKey(_expSchema, null, ExpSchema.TableType.Data.name(), null, null));
+                result.getMutableColumn("SkydDataId").setFk(new QueryForeignKey(_expSchema, null, ExpSchema.TableType.Data.name(), null, null));
             }
             return result;
         }
@@ -1281,7 +1281,7 @@ public class TargetedMSSchema extends UserSchema
                 // If we can't find the run or it's not in the current container, just act like the table doesn't exist
                 if (run != null && run.getContainer().equals(getContainer()))
                 {
-                    SampleFileTable result = new SampleFileTable(this, run);
+                    SampleFileTable result = new SampleFileTable(this, cf, run);
                     result.setName(name);
                     return result;
                 }

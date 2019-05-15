@@ -16,21 +16,22 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.targetedms.TargetedMSSchema;
 
 public class GeneralMoleculeAnnotationTableInfo extends TargetedMSTable
 {
-    public GeneralMoleculeAnnotationTableInfo(TableInfo table, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType)
+    public GeneralMoleculeAnnotationTableInfo(TableInfo table, TargetedMSSchema schema, ContainerFilter cf, TargetedMSSchema.ContainerJoinType joinType)
     {
-        super(table, schema, joinType);
+        super(table, schema, cf, joinType);
 
-        ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-        generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE));
+        var generalMoleculeId = getMutableColumn("GeneralMoleculeId");
+        generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE, cf));
         generalMoleculeId.setHidden(true);
 
-        ColumnInfo peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
-        peptideId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE));
+        var peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
+        peptideId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE, cf));
         addColumn(peptideId);
     }
 }

@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.query;
 
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
@@ -30,11 +31,12 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
 
 public abstract class AbstractGeneralMoleculeTableInfo extends JoinedTargetedMSTable
 {
-    public AbstractGeneralMoleculeTableInfo(TargetedMSSchema schema, TableInfo tableInfo, String annotationColumnName, boolean omitAnnotations)
+    public AbstractGeneralMoleculeTableInfo(TargetedMSSchema schema, TableInfo tableInfo, ContainerFilter cf, String annotationColumnName, boolean omitAnnotations)
     {
         super(TargetedMSManager.getTableInfoGeneralMolecule(),
                 tableInfo,
                 schema,
+                cf,
                 TargetedMSSchema.ContainerJoinType.PeptideGroupFK,
                 TargetedMSManager.getTableInfoGeneralMoleculeAnnotation(),
                 "GeneralMoleculeId", annotationColumnName,

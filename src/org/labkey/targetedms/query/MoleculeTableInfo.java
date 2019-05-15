@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.JdbcType;
@@ -28,16 +29,15 @@ import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 import org.springframework.web.servlet.mvc.Controller;
-import org.sqlite.JDBC;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
 {
-    public MoleculeTableInfo(TargetedMSSchema schema, boolean omitAnnotations)
+    public MoleculeTableInfo(TargetedMSSchema schema, ContainerFilter cf, boolean omitAnnotations)
     {
-        super(schema, TargetedMSManager.getTableInfoMolecule(), "Molecule Annotations", omitAnnotations);
+        super(schema, TargetedMSManager.getTableInfoMolecule(), cf, "Molecule Annotations", omitAnnotations);
 
         if (!omitAnnotations)
         {
@@ -48,8 +48,8 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
             addColumn(noteAnnotation);
         }
 
-        ColumnInfo peptideGroupId = getColumn("PeptideGroupId");
-        peptideGroupId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_GROUP));
+        var peptideGroupId = getMutableColumn("PeptideGroupId");
+        peptideGroupId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_GROUP, cf));
 
         SQLFragment molSQL = new SQLFragment(" COALESCE(" + ExprColumn.STR_TABLE_ALIAS + ".CustomIonName, " +
                 ExprColumn.STR_TABLE_ALIAS + ".IonFormula, "  +

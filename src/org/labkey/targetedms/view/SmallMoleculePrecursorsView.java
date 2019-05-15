@@ -49,11 +49,12 @@ public class SmallMoleculePrecursorsView extends DocumentPrecursorsView
     {
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in SmallMoleculePrecursorsView class!";
 
-        MoleculePrecursorTableInfo tinfo  = (MoleculePrecursorTableInfo) _targetedMsSchema.getTable(_tableName);
+        MoleculePrecursorTableInfo tinfo  = (MoleculePrecursorTableInfo) _targetedMsSchema.getTable(_tableName, null, true, true);
 
         if (tinfo != null)
             tinfo.setRunId(_runId);
 
+        tinfo.setLocked(true);
         return tinfo;
     }
 }

@@ -20,6 +20,7 @@ import org.apache.commons.beanutils.ConvertUtils;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerForeignKey;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
@@ -45,12 +46,12 @@ import java.util.Map;
 */
 public class QCAnnotationTypeTable extends FilteredTable<TargetedMSSchema>
 {
-    public QCAnnotationTypeTable(TargetedMSSchema schema)
+    public QCAnnotationTypeTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoQCAnnotationType(), schema);
+        super(TargetedMSManager.getTableInfoQCAnnotationType(), schema, cf);
         wrapAllColumns(true);
-        getColumn("Container").setFk(new ContainerForeignKey(schema));
-        getColumn("Color").setDisplayColumnFactory(new DisplayColumnFactory()
+        getMutableColumn("Container").setFk(new ContainerForeignKey(schema));
+        getMutableColumn("Color").setDisplayColumnFactory(new DisplayColumnFactory()
         {
             @Override
             public DisplayColumn createRenderer(ColumnInfo colInfo)

@@ -15,16 +15,12 @@
 
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.DisplayColumn;
-import org.labkey.api.data.DisplayColumnFactory;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
@@ -37,23 +33,23 @@ import java.util.ArrayList;
  */
 public class DocTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
 {
-    public DocTransitionsTableInfo(final TargetedMSSchema schema)
+    public DocTransitionsTableInfo(final TargetedMSSchema schema, ContainerFilter cf)
     {
-        this(schema, false);
+        this(schema, cf, false);
     }
 
-    public DocTransitionsTableInfo(final TargetedMSSchema schema, boolean omitAnnotations)
+    public DocTransitionsTableInfo(final TargetedMSSchema schema, ContainerFilter cf, boolean omitAnnotations)
     {
-        super(schema, TargetedMSManager.getTableInfoTransition(), omitAnnotations);
+        super(schema, TargetedMSManager.getTableInfoTransition(), cf, omitAnnotations);
 
         setDescription(TargetedMSManager.getTableInfoTransition().getDescription());
 
-        ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
-        precursorCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR));
+        var precursorCol = getMutableColumn("GeneralPrecursorId");
+        precursorCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR, cf));
         precursorCol.setHidden(true);
 
-        ColumnInfo precursorIdCol = wrapColumn("PrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
-        precursorIdCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR));
+        var precursorIdCol = wrapColumn("PrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
+        precursorIdCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PRECURSOR, cf));
 
         addColumn(precursorIdCol);
 
@@ -80,7 +76,7 @@ public class DocTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
         sql.append(" END ");
         sql.append(" END ");
         SQLFragment fragmentSql = new SQLFragment(sql.toString());
-        ColumnInfo fragment = new ExprColumn(this, "Fragment", fragmentSql, JdbcType.VARCHAR);
+        var fragment = new ExprColumn(this, "Fragment", fragmentSql, JdbcType.VARCHAR);
         fragment.setTextAlign("Left");
         fragment.setJdbcType(JdbcType.VARCHAR);
         addColumn(fragment);

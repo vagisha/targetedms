@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.CompareType;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSManager;
@@ -28,15 +29,16 @@ import org.labkey.targetedms.TargetedMSSchema;
 
 public class AbstractGeneralTransitionTableInfo extends JoinedTargetedMSTable
 {
-    public AbstractGeneralTransitionTableInfo(final TargetedMSSchema schema, TableInfo tableInfo, boolean omitAnnotations)
+    public AbstractGeneralTransitionTableInfo(final TargetedMSSchema schema, TableInfo tableInfo, ContainerFilter cf, boolean omitAnnotations)
     {
         super(TargetedMSManager.getTableInfoGeneralTransition(), tableInfo,
-                schema, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK,
+                schema, cf, TargetedMSSchema.ContainerJoinType.GeneralPrecursorFK,
                 TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations", "transition", omitAnnotations);
     }
 
     public void setRunId(int runId)
     {
+        checkLocked();
         super.addContainerTableFilter(new CompareType.EqualsCompareClause(FieldKey.fromParts("Id"), CompareType.EQUAL, runId));
     }
 }

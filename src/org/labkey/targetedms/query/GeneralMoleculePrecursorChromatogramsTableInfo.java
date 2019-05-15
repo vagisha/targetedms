@@ -17,6 +17,7 @@ package org.labkey.targetedms.query;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.BaseColumnInfo;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
@@ -37,7 +38,6 @@ import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -68,7 +68,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
     {
         super(tableInfo, schema);
         wrapAllColumns(true);
-        ColumnInfo pepChromCol = getColumn(_generalMoleculeChromInfoCol);
+        var pepChromCol = getMutableColumn(_generalMoleculeChromInfoCol);
         pepChromCol.setLabel("");
 
         pepChromCol.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(
@@ -85,9 +85,9 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
                                                         ));
 
 
-        for(ColumnInfo colInfo: getPrecursorChromInfoColumns())
+        for (ColumnInfo colInfo: getPrecursorChromInfoColumns())
         {
-            colInfo.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(
+            ((BaseColumnInfo)colInfo).setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(
                                                         schema.getContainer(),
                                                         ChromatogramDisplayColumnFactory.TYPE.PRECURSOR,
                                                         form.getChartWidth(),
@@ -99,7 +99,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
                                                         form.getAnnotationsFilter(),
                                                         form.getReplicatesFilter()
                                             ));
-            colInfo.setLabel("");
+            ((BaseColumnInfo)colInfo).setLabel("");
         }
     }
 

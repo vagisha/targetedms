@@ -58,17 +58,19 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
 
     public AnnotatedTargetedMSTable(TableInfo table,
                                     TargetedMSSchema schema,
+                                    ContainerFilter cf,
                                     TargetedMSSchema.ContainerJoinType joinType,
                                     TableInfo annotationTableInfo,
                                     String annotationFKName,
                                     String columnName,
                                     String annotationTarget, boolean omitAnnotations) // The target of an annotation that applies to this table.
     {
-        this(table, schema, joinType, annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget, omitAnnotations);
+        this(table, schema, cf, joinType, annotationTableInfo, annotationFKName, columnName, "Id", annotationTarget, omitAnnotations);
     }
 
     public AnnotatedTargetedMSTable(TableInfo table,
                                     TargetedMSSchema schema,
+                                    ContainerFilter cf,
                                     TargetedMSSchema.ContainerJoinType joinType,
                                     SQLFragment containerSQL,
                                     TableInfo annotationTableInfo,
@@ -76,7 +78,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                                     String columnName,
                                     String annotationTarget, boolean omitAnnotations) // The target of an annotation that applies to this table.
     {
-        super(table, schema, joinType, containerSQL);
+        super(table, schema, cf, joinType, containerSQL);
 
         if (!omitAnnotations)
         {
@@ -86,6 +88,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
 
     public AnnotatedTargetedMSTable(TableInfo table,
                                     TargetedMSSchema schema,
+                                    ContainerFilter cf,
                                     TargetedMSSchema.ContainerJoinType joinType,
                                     TableInfo annotationTableInfo,
                                     String annotationFKName,
@@ -93,7 +96,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                                     String pkColumnName,
                                     String annotationTarget, boolean omitAnnotations) // The target of an annotation that applies to this table.
     {
-        super(table, schema, joinType);
+        super(table, schema, cf, joinType);
 
         if (!omitAnnotations)
         {

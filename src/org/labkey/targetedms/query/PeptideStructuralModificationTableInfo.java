@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.LookupForeignKey;
@@ -24,13 +25,13 @@ import org.labkey.targetedms.TargetedMSSchema;
 
 public class PeptideStructuralModificationTableInfo extends FilteredTable<TargetedMSSchema>
 {
-    public PeptideStructuralModificationTableInfo(TargetedMSSchema schema)
+    public PeptideStructuralModificationTableInfo(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoPeptideStructuralModification(), schema);
+        super(TargetedMSManager.getTableInfoPeptideStructuralModification(), schema, cf);
 
         wrapAllColumns(true);
 
-        ColumnInfo peptideId = getColumn("PeptideId");
-        peptideId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE));
+        var peptideId = getMutableColumn("PeptideId");
+        peptideId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_PEPTIDE, cf));
     }
 }

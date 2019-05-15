@@ -15,7 +15,6 @@
 
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
@@ -40,7 +39,7 @@ public class PeptideChromatogramsTableInfo extends FilteredTable<TargetedMSSchem
         //wrap all the columns
         wrapAllColumns(true);
 
-        ColumnInfo chartCol = getColumn("Id");
+        var chartCol = getMutableColumn("Id");
         chartCol.setLabel("");
         chartCol.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(getContainer(),
                                          ChromatogramDisplayColumnFactory.TYPE.GENERAL_MOLECULE));

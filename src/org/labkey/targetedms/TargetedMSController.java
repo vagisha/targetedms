@@ -3628,20 +3628,16 @@ public class TargetedMSController extends SpringActionController
         {
             String dataRegionName = title.replaceAll(" ", "");
             QuerySettings settings = new QuerySettings(getViewContext(), dataRegionName, queryName);
-            QueryView view = new QueryView(schema, settings, errors)
+            settings.getBaseFilter().addAllClauses(new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), form.getId()));
+            QueryView view = new QueryView(schema, settings, errors);
+
+            if (null == view.getCustomView())
             {
-                @Override
-                protected TableInfo createTable()
-                {
-                    TargetedMSTable result = (TargetedMSTable) super.createTable();
-                    result.addCondition(new SimpleFilter(FieldKey.fromParts("PeptideGroupId"), form.getId()));
-                    baseVisibleColumns.add(FieldKey.fromParts("AvgMeasuredRetentionTime"));
-                    baseVisibleColumns.add(FieldKey.fromParts("PredictedRetentionTime"));
-                    baseVisibleColumns.add(FieldKey.fromParts("RtCalculatorScore"));
-                    result.setDefaultVisibleColumns(baseVisibleColumns);
-                    return result;
-                }
-            };
+                baseVisibleColumns.add(FieldKey.fromParts("AvgMeasuredRetentionTime"));
+                baseVisibleColumns.add(FieldKey.fromParts("PredictedRetentionTime"));
+                baseVisibleColumns.add(FieldKey.fromParts("RtCalculatorScore"));
+                settings.setFieldKeys(baseVisibleColumns);
+            }
             view.setTitle(title);
             view.enableExpandCollapse("TargetedMS" + dataRegionName, false);
             view.setUseQueryViewActionExportURLs(true);

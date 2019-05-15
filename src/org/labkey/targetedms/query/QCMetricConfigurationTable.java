@@ -27,9 +27,9 @@ import java.util.List;
 
 public class QCMetricConfigurationTable extends FilteredTable<TargetedMSSchema>
 {
-    public QCMetricConfigurationTable(TargetedMSSchema schema)
+    public QCMetricConfigurationTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoQCMetricConfiguration(), schema);
+        super(TargetedMSManager.getTableInfoQCMetricConfiguration(), schema, cf);
         wrapAllColumns(true);
     }
 

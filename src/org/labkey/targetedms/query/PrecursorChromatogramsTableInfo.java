@@ -15,7 +15,6 @@
 
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
@@ -45,7 +44,7 @@ public class PrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSch
         //wrap all the columns
         wrapAllColumns(true);
 
-        ColumnInfo peptideCol = getColumn("Id");
+        var peptideCol = getMutableColumn("Id");
         peptideCol.setLabel("");
 
         ChromatogramDisplayColumnFactory colFactory = new ChromatogramDisplayColumnFactory(getContainer(),

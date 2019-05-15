@@ -14,8 +14,8 @@
  */
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.query.FieldKey;
@@ -30,26 +30,26 @@ import org.labkey.targetedms.TargetedMSSchema;
  */
 public class FoldChangeTable extends TargetedMSTable
 {
-    public FoldChangeTable(TargetedMSSchema schema)
+    public FoldChangeTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoFoldChange(), schema, TargetedMSSchema.ContainerJoinType.RunFK);
-        getColumn(FieldKey.fromParts("Id")).setHidden(true);
-        getColumn(FieldKey.fromParts("RunId")).setHidden(true);
-        getColumn(FieldKey.fromParts("GroupComparisonSettingsId")).setHidden(true);
+        super(TargetedMSManager.getTableInfoFoldChange(), schema, cf, TargetedMSSchema.ContainerJoinType.RunFK);
+        getMutableColumn(FieldKey.fromParts("Id")).setHidden(true);
+        getMutableColumn(FieldKey.fromParts("RunId")).setHidden(true);
+        getMutableColumn(FieldKey.fromParts("GroupComparisonSettingsId")).setHidden(true);
         ActionURL peptideGroupDetails = new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer());
         peptideGroupDetails.addParameter("id", "${PeptideGroupId}");
-        getColumn(FieldKey.fromParts("PeptideGroupId")).setURL(StringExpressionFactory.createURL(peptideGroupDetails));
+        getMutableColumn(FieldKey.fromParts("PeptideGroupId")).setURL(StringExpressionFactory.createURL(peptideGroupDetails));
     }
 
 
 
     public static class PeptideFoldChangeTable extends FoldChangeTable
     {
-        public PeptideFoldChangeTable(TargetedMSSchema schema)
+        public PeptideFoldChangeTable(TargetedMSSchema schema, ContainerFilter cf)
         {
-            super(schema);
-            ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-            generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE));
+            super(schema, cf);
+            var generalMoleculeId = getMutableColumn("GeneralMoleculeId");
+            generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE, cf));
             generalMoleculeId.setLabel("Peptide");
 
             SimpleFilter.SQLClause isPeptideClause =
@@ -66,11 +66,11 @@ public class FoldChangeTable extends TargetedMSTable
 
     public static class MoleculeFoldChangeTable extends FoldChangeTable
     {
-        public MoleculeFoldChangeTable(TargetedMSSchema schema)
+        public MoleculeFoldChangeTable(TargetedMSSchema schema, ContainerFilter cf)
         {
-            super(schema);
-            ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-            generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_MOLECULE));
+            super(schema, cf);
+            var generalMoleculeId = getMutableColumn("GeneralMoleculeId");
+            generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_MOLECULE, cf));
             generalMoleculeId.setLabel("Molecule");
             SimpleFilter.SQLClause isMoleculeClause =
                     new SimpleFilter.SQLClause(new SQLFragment(generalMoleculeId.getName()

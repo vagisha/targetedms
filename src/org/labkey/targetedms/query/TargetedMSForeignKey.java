@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.query;
 
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.LookupForeignKey;
 import org.labkey.targetedms.TargetedMSSchema;
@@ -27,9 +28,9 @@ public class TargetedMSForeignKey extends LookupForeignKey
     private final TargetedMSSchema _schema;
     private final String _tableName;
 
-    public TargetedMSForeignKey(TargetedMSSchema schema, String tableName)
+    public TargetedMSForeignKey(TargetedMSSchema schema, String tableName, ContainerFilter cf)
     {
-        super("Id");
+        super(cf,"Id", null);
         _schema = schema;
         _tableName = tableName;
     }

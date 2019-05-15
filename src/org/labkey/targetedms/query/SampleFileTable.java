@@ -21,8 +21,6 @@ import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.FieldKey;
@@ -50,14 +48,14 @@ public class SampleFileTable extends TargetedMSTable
     @Nullable
     private TargetedMSRun _run;
 
-    public SampleFileTable(TargetedMSSchema schema)
+    public SampleFileTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoSampleFile(), schema, TargetedMSSchema.ContainerJoinType.ReplicateFK);
+        super(TargetedMSManager.getTableInfoSampleFile(), schema, cf, TargetedMSSchema.ContainerJoinType.ReplicateFK);
     }
 
-    public SampleFileTable(TargetedMSSchema schema, @Nullable TargetedMSRun run)
+    public SampleFileTable(TargetedMSSchema schema, ContainerFilter cf, @Nullable TargetedMSRun run)
     {
-        this(schema);
+        this(schema, cf);
         _run = run;
         addCondition(new SQLFragment("ReplicateId IN (SELECT Id FROM ").
                 append(TargetedMSManager.getTableInfoReplicate(), "r").
@@ -107,7 +105,8 @@ public class SampleFileTable extends TargetedMSTable
                     }
                 }
             }
-            setDefaultVisibleColumns(defaultCols);
+            // setDefaultVisibleColumns() will call checkLocked(), however this is just being done lazily for perf (I think) so should be legal
+            _defaultVisibleColumns = defaultCols;
         }
 
         return super.getDefaultVisibleColumns();

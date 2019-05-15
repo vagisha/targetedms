@@ -49,11 +49,12 @@ public class SmallMoleculeTransitionsView extends DocumentTransitionsView
     public TableInfo createTable()
     {
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in SmallMoleculeTransitionsView class!";
-        MoleculeTransitionsTableInfo tinfo  =  (MoleculeTransitionsTableInfo) _targetedMsSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_TRANSITION);
+        MoleculeTransitionsTableInfo tinfo  =  (MoleculeTransitionsTableInfo) _targetedMsSchema.getTable(TargetedMSSchema.TABLE_MOLECULE_TRANSITION, null, true, true);
         if (tinfo != null)
         {
             tinfo.setRunId(_runId);
         }
+        tinfo.setLocked(true);
         return tinfo;
     }
 }

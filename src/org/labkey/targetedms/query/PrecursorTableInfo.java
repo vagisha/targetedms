@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.SQLFragment;
@@ -38,24 +39,24 @@ import java.util.ArrayList;
 
 public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
 {
-    public PrecursorTableInfo(final TargetedMSSchema schema, boolean omitAnnotations)
+    public PrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf, boolean omitAnnotations)
     {
-        this(TargetedMSManager.getTableInfoPrecursor(), TargetedMSSchema.TABLE_PRECURSOR, schema, omitAnnotations);
+        this(TargetedMSManager.getTableInfoPrecursor(), cf, TargetedMSSchema.TABLE_PRECURSOR, schema, omitAnnotations);
     }
 
-    public PrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema, boolean omitAnnotations)
+    public PrecursorTableInfo(final TableInfo tableInfo, ContainerFilter cf, String tableName, final TargetedMSSchema schema, boolean omitAnnotations)
     {
-        super(tableInfo, tableName, schema, omitAnnotations);
+        super(tableInfo, tableName, schema, cf, omitAnnotations);
 
-        ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-        generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE));
+        var generalMoleculeId = getMutableColumn("GeneralMoleculeId");
+        generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE, cf));
         generalMoleculeId.setHidden(true);
 
-        ColumnInfo peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
-        peptideId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE));
+        var peptideId = wrapColumn("PeptideId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
+        peptideId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE, cf));
         addColumn(peptideId);
 
-        getColumn("IsotopeLabelId").setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_ISOTOPE_LABEL));
+        getMutableColumn("IsotopeLabelId").setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_ISOTOPE_LABEL, cf));
 
         WrappedColumn modSeqCol = new WrappedColumn(getColumn("ModifiedSequence"), ModifiedSequenceDisplayColumn.PRECURSOR_COLUMN_NAME);
         modSeqCol.setLabel("Precursor");
@@ -99,9 +100,9 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
 
     public static class ExperimentPrecursorTableInfo extends PrecursorTableInfo
     {
-        public ExperimentPrecursorTableInfo(final TargetedMSSchema schema)
+        public ExperimentPrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf)
         {
-            super(TargetedMSManager.getTableInfoPrecursor(), TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR, schema, false);
+            super(TargetedMSManager.getTableInfoPrecursor(), cf, TargetedMSSchema.TABLE_EXPERIMENT_PRECURSOR, schema, false);
         }
 
         @Override
@@ -115,9 +116,9 @@ public class PrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
 
     public static class LibraryPrecursorTableInfo extends PrecursorTableInfo
     {
-        public LibraryPrecursorTableInfo(final TargetedMSSchema schema)
+        public LibraryPrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf)
         {
-            super(TargetedMSManager.getTableInfoPrecursor(), TargetedMSSchema.TABLE_LIBRARY_PRECURSOR, schema, false);
+            super(TargetedMSManager.getTableInfoPrecursor(), cf, TargetedMSSchema.TABLE_LIBRARY_PRECURSOR, schema, false);
         }
 
         public void selectRepresentative()

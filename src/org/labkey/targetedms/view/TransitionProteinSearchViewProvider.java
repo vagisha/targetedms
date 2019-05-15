@@ -27,6 +27,7 @@ import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.view.ViewContext;
@@ -74,7 +75,9 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
             @Override
             protected TableInfo createTable()
             {
-                TargetedMSTable result = (TargetedMSTable) super.createTable();
+                TargetedMSTable inner = (TargetedMSTable) super.createTable();
+                FilteredTable result = new FilteredTable(inner, getSchema());
+                result.wrapAllColumns(true);
 
                 // Apply a filter to restrict to the set of matching proteins
                 SQLFragment sql = new SQLFragment("Id IN (SELECT pg.Id FROM targetedms.PeptideGroup AS pg ");
@@ -100,7 +103,7 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
                 result.addCondition(sql);
 
                 boolean isJournalFolder = JournalManager.isJournalProject(viewContext.getContainer());
-                if(isJournalFolder)
+                if (isJournalFolder)
                 {
                     addExperimentTitleColumn(result, getContainer());
                 }
@@ -133,7 +136,7 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
     }
 
     @NotNull
-    private void addExperimentTitleColumn(TargetedMSTable result, Container container)
+    private void addExperimentTitleColumn(FilteredTable result, Container container)
     {
         SQLFragment whereSql = new SQLFragment(" WHERE runs.Id = ").append(ExprColumn.STR_TABLE_ALIAS).append(".runId");
         ExperimentTitleDisplayColumn col = new ExperimentTitleDisplayColumn(result, container, whereSql, "runs");

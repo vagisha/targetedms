@@ -85,8 +85,9 @@ public class CalibrationCurvesView extends QuantificationView
     @Override
     public TableInfo createTable()
     {
-        CalibrationCurveTable table = (CalibrationCurveTable) _targetedMsSchema.getTable(_tableName);
+        CalibrationCurveTable table = (CalibrationCurveTable) _targetedMsSchema.getTable(_tableName, null, true, true);
         table.addCondition(new SimpleFilter(FieldKey.fromParts("RunId"), _runId));
+        table.setLocked(true);
         return table;
     }
 

@@ -17,6 +17,7 @@ package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.Table;
@@ -40,9 +41,9 @@ public class JoinedTargetedMSTable extends AnnotatedTargetedMSTable
 {
     private final TableInfo _specializedTable;
 
-    public JoinedTargetedMSTable(TableInfo generalTable, TableInfo specializedTable, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType, TableInfo annotationTableInfo, String annotationFKName, String columnName, String annotationTarget, boolean omitAnnotations)
+    public JoinedTargetedMSTable(TableInfo generalTable, TableInfo specializedTable, TargetedMSSchema schema, ContainerFilter cf, TargetedMSSchema.ContainerJoinType joinType, TableInfo annotationTableInfo, String annotationFKName, String columnName, String annotationTarget, boolean omitAnnotations)
     {
-        super(generalTable, schema, joinType, annotationTableInfo, annotationFKName, columnName, annotationTarget, omitAnnotations);
+        super(generalTable, schema, cf, joinType, annotationTableInfo, annotationFKName, columnName, annotationTarget, omitAnnotations);
 
         _specializedTable = specializedTable;
         setName(_specializedTable.getName());
@@ -53,7 +54,7 @@ public class JoinedTargetedMSTable extends AnnotatedTargetedMSTable
         {
             if (!currentColumnNames.contains(col.getName()))
             {
-                ColumnInfo ret = new AliasedColumn(this, col.getName(), col);
+                var ret = new AliasedColumn(this, col.getName(), col);
                 if (col.isHidden())
                 {
                     ret.setHidden(true);

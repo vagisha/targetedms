@@ -15,10 +15,8 @@
  */
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
-import org.labkey.api.data.DisplayColumn;
-import org.labkey.api.data.DisplayColumnFactory;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
@@ -37,9 +35,9 @@ import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
 
 public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
 {
-    public AbstractGeneralPrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema, boolean omitAnnotations)
+    public AbstractGeneralPrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema, ContainerFilter cf, boolean omitAnnotations)
     {
-        super(TargetedMSManager.getTableInfoGeneralPrecursor(), tableInfo, schema,
+        super(TargetedMSManager.getTableInfoGeneralPrecursor(), tableInfo, schema, cf,
         TargetedMSSchema.ContainerJoinType.GeneralMoleculeFK,
         TargetedMSManager.getTableInfoPrecursorAnnotation(),
         "PrecursorId", "Precursor Annotations", "precursor", omitAnnotations);
@@ -49,12 +47,12 @@ public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
         setDescription(tableInfo.getDescription());
         setTitleColumn(tableInfo.getTitleColumn());
 
-        getColumn("RepresentativeDataState").setFk(new LookupForeignKey()
+        getMutableColumn("RepresentativeDataState").setFk(new LookupForeignKey()
         {
             @Override
             public TableInfo getLookupTableInfo()
             {
-                return getUserSchema().getTable(TargetedMSSchema.TABLE_REPRESENTATIVE_DATA_STATE);
+                return getUserSchema().getTable(TargetedMSSchema.TABLE_REPRESENTATIVE_DATA_STATE, cf);
             }
         });
 
@@ -78,6 +76,7 @@ public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
 
     public void setRunId(int runId)
     {
+        checkLocked();
         super.addContainerTableFilter(new CompareType.EqualsCompareClause(FieldKey.fromParts("Id"), CompareType.EQUAL, runId));
     }
 }

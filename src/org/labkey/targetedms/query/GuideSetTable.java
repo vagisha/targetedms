@@ -17,18 +17,17 @@ package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerForeignKey;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
-import org.labkey.api.query.DuplicateKeyException;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryUpdateService;
-import org.labkey.api.query.QueryUpdateServiceException;
 import org.labkey.api.query.RowIdQueryUpdateService;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
@@ -45,12 +44,12 @@ import java.sql.SQLException;
  */
 public class GuideSetTable extends FilteredTable<TargetedMSSchema>
 {
-    public GuideSetTable(TargetedMSSchema schema)
+    public GuideSetTable(TargetedMSSchema schema, ContainerFilter cf)
     {
         super(TargetedMSManager.getTableInfoGuideSet(), schema);
 
         wrapAllColumns(true);
-        getColumn("Container").setFk(new ContainerForeignKey(schema));
+        getMutableColumn("Container").setFk(new ContainerForeignKey(schema));
 
         // add expr column to calculate the reference end date for a guide set, can be null if it is the last guide set
         ExprColumn referenceEndCol = new ExprColumn(this, FieldKey.fromParts("ReferenceEnd"), getReferenceEndSql(), JdbcType.TIMESTAMP);

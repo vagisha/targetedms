@@ -49,11 +49,12 @@ public class PeptideTransitionsView extends DocumentTransitionsView
     public TableInfo createTable()
     {
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in PeptideTransitionsView class!";
-        DocTransitionsTableInfo tinfo  = (DocTransitionsTableInfo) _targetedMsSchema.getTable(TargetedMSSchema.TABLE_TRANSITION);
+        DocTransitionsTableInfo tinfo  = (DocTransitionsTableInfo) _targetedMsSchema.getTable(TargetedMSSchema.TABLE_TRANSITION, null, true, true);
         if (tinfo != null)
         {
             tinfo.setRunId(_runId);
         }
+        tinfo.setLocked(true);
         return tinfo;
     }
 }

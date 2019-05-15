@@ -15,9 +15,7 @@
 
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.DisplayColumn;
-import org.labkey.api.data.DisplayColumnFactory;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.WrappedColumn;
@@ -35,18 +33,18 @@ import java.util.ArrayList;
  */
 public class MoleculeTransitionsTableInfo extends AbstractGeneralTransitionTableInfo
 {
-    public MoleculeTransitionsTableInfo(final TargetedMSSchema schema, boolean omitAnnotations)
+    public MoleculeTransitionsTableInfo(final TargetedMSSchema schema, ContainerFilter cf, boolean omitAnnotations)
     {
-        super(schema, TargetedMSManager.getTableInfoMoleculeTransition(), omitAnnotations);
+        super(schema, TargetedMSManager.getTableInfoMoleculeTransition(), cf, omitAnnotations);
 
         setDescription(TargetedMSManager.getTableInfoMoleculeTransition().getDescription());
 
-        ColumnInfo precursorCol = getColumn("GeneralPrecursorId");
-        precursorCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR));
+        var precursorCol = getMutableColumn("GeneralPrecursorId");
+        precursorCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, cf));
         precursorCol.setHidden(true);
 
-        ColumnInfo precursorIdCol = wrapColumn("MoleculePrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
-        precursorIdCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR));
+        var precursorIdCol = wrapColumn("MoleculePrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
+        precursorIdCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, cf));
         addColumn(precursorIdCol);
 
         SQLFragment sql = new SQLFragment(" COALESCE(" + ExprColumn.STR_TABLE_ALIAS + ".CustomIonName, " +

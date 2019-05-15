@@ -53,7 +53,7 @@ public class PeptidePrecursorsView extends DocumentPrecursorsView
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in PeptidePrecursorsView class!";
         String viewName = getSettings().getViewName();
 
-        PrecursorTableInfo tinfo = (PrecursorTableInfo) _targetedMsSchema.getTable(_tableName);
+        PrecursorTableInfo tinfo = (PrecursorTableInfo) _targetedMsSchema.getTable(_tableName, null, true, true);
 
         if (_tableName.equalsIgnoreCase(TargetedMSSchema.TABLE_LIBRARY_DOC_PRECURSOR) &&
                 (StringUtils.isBlank(viewName)))
@@ -69,6 +69,7 @@ public class PeptidePrecursorsView extends DocumentPrecursorsView
             tinfo.setRunId(_runId);
         }
 
+        tinfo.setLocked(true);
         return tinfo;
     }
 }

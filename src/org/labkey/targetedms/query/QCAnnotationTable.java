@@ -34,23 +34,15 @@ import org.labkey.targetedms.TargetedMSSchema;
 */
 public class QCAnnotationTable extends FilteredTable<TargetedMSSchema>
 {
-    public QCAnnotationTable(TargetedMSSchema schema)
+    public QCAnnotationTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoQCAnnotation(), schema);
+        super(TargetedMSManager.getTableInfoQCAnnotation(), schema, cf);
 
         wrapAllColumns(true);
-        getColumn("Container").setFk(new ContainerForeignKey(schema));
-        getColumn("QCAnnotationTypeId").setFk(new QueryForeignKey(schema, null, TargetedMSSchema.TABLE_QC_ANNOTATION_TYPE, "Id", "Name")
-        {
-            @Override
-            public TableInfo getLookupTableInfo()
-            {
-                // Tweak the container filter based on the scoping rules for annotation types
-                FilteredTable result = (FilteredTable) super.getLookupTableInfo();
-                result.setContainerFilter(new ContainerFilter.CurrentPlusProjectAndShared(getUserSchema().getUser()));
-                return result;
-            }
-        });
+        getMutableColumn("Container").setFk(new ContainerForeignKey(schema));
+        getMutableColumn("QCAnnotationTypeId").setFk(QueryForeignKey
+                .from(schema, new ContainerFilter.CurrentPlusProjectAndShared(getUserSchema().getUser()))
+                .to(TargetedMSSchema.TABLE_QC_ANNOTATION_TYPE, "Id", "Name"));
     }
 
     @Override

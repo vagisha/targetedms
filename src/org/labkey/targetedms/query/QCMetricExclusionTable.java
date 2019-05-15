@@ -16,10 +16,9 @@
 package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.data.TableInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.security.UserPrincipal;
@@ -30,20 +29,17 @@ import org.labkey.targetedms.TargetedMSSchema;
 
 public class QCMetricExclusionTable extends TargetedMSTable
 {
-    public QCMetricExclusionTable(TargetedMSSchema schema)
+    public QCMetricExclusionTable(TargetedMSSchema schema, ContainerFilter cf)
     {
         super(TargetedMSSchema.getSchema().getTable(TargetedMSSchema.TABLE_QC_METRIC_EXCLUSION),
-                schema, TargetedMSSchema.ContainerJoinType.ReplicateFK);
+                schema, cf, TargetedMSSchema.ContainerJoinType.ReplicateFK);
 
-        getColumn(FieldKey.fromParts("MetricId")).setFk(new QueryForeignKey(schema, getUserSchema().getContainer(), TargetedMSSchema.TABLE_QC_METRIC_CONFIGURATION, "Id", "Name")
+        getMutableColumn(FieldKey.fromParts("MetricId")).setFk(new QueryForeignKey(schema, cf, schema, getUserSchema().getContainer(), TargetedMSSchema.TABLE_QC_METRIC_CONFIGURATION, "Id", "Name")
         {
             @Override
-            public TableInfo getLookupTableInfo()
+            protected ContainerFilter getLookupContainerFilter()
             {
-                // tweak the container filter to get the right set of QC metric configurations
-                FilteredTable result = (FilteredTable) super.getLookupTableInfo();
-                result.setContainerFilter(QCMetricConfigurationTable.getDefaultMetricContainerFilter(getUserSchema().getContainer()));
-                return result;
+                return QCMetricConfigurationTable.getDefaultMetricContainerFilter(getUserSchema().getContainer());
             }
         });
     }

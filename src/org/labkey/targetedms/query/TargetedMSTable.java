@@ -54,28 +54,27 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
     private CompareType.EqualsCompareClause _containerTableFilter;
 
     /** Assumes that the table has its own container column, instead of needing to join to another table for container info */
-    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType)
+    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, ContainerFilter cf, TargetedMSSchema.ContainerJoinType joinType)
     {
-        this(table, schema, joinType, _defaultContainerSQL);
+        this(table, schema, cf, joinType, _defaultContainerSQL);
     }
 
-    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, TargetedMSSchema.ContainerJoinType joinType, SQLFragment containerSQL)
+    public TargetedMSTable(TableInfo table, TargetedMSSchema schema, ContainerFilter cf, TargetedMSSchema.ContainerJoinType joinType, SQLFragment containerSQL)
     {
-        super(table, schema);
+        super(table, schema, cf);
         _joinType = joinType;
         _containerSQL = containerSQL;
         wrapAllColumns(true);
 
         // Swap out DbSchema FKs with Query FKs so that we get all the extra calculated columns and such
-        for (ColumnInfo columnInfo : getColumns())
+        for (var columnInfo : getMutableColumns())
         {
             ForeignKey fk = columnInfo.getFk();
             if (fk != null && TargetedMSSchema.SCHEMA_NAME.equalsIgnoreCase(fk.getLookupSchemaName()))
             {
-                columnInfo.setFk(new QueryForeignKey(schema, null, fk.getLookupTableName(), fk.getLookupColumnName(), fk.getLookupDisplayName()));
+                columnInfo.setFk(new QueryForeignKey(schema, cf, schema, null, fk.getLookupTableName(), fk.getLookupColumnName(), fk.getLookupDisplayName()));
             }
         }
-        applyContainerFilter(getContainerFilter());
 
         if(getDetailsActionClass() != null && getContainerFieldKey() != null)
         {

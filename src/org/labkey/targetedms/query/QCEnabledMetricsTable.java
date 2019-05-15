@@ -31,9 +31,9 @@ import org.labkey.targetedms.TargetedMSSchema;
 
 public class QCEnabledMetricsTable extends FilteredTable<TargetedMSSchema>
 {
-    public QCEnabledMetricsTable(TargetedMSSchema schema)
+    public QCEnabledMetricsTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoQCEnabledMetrics(), schema);
+        super(TargetedMSManager.getTableInfoQCEnabledMetrics(), schema, cf);
         wrapAllColumns(true);
     }
 

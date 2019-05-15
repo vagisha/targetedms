@@ -15,11 +15,9 @@
  */
 package org.labkey.targetedms.query;
 
-import org.apache.commons.beanutils.ConversionException;
-import org.apache.commons.beanutils.ConvertUtils;
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.DuplicateKeyException;
 import org.labkey.api.query.FieldKey;
@@ -45,12 +43,12 @@ public class ReplicateAnnotationTable extends TargetedMSTable
 {
     private static final String SOURCE_COL = "Source";
 
-    public ReplicateAnnotationTable(TargetedMSSchema schema)
+    public ReplicateAnnotationTable(TargetedMSSchema schema, ContainerFilter cf)
     {
         super(TargetedMSSchema.getSchema().getTable(TargetedMSSchema.TABLE_REPLICATE_ANNOTATION),
-              schema, TargetedMSSchema.ContainerJoinType.ReplicateFK);
+              schema, cf, TargetedMSSchema.ContainerJoinType.ReplicateFK);
 
-        ColumnInfo sourceCol = getColumn(FieldKey.fromParts(SOURCE_COL));
+        var sourceCol = getMutableColumn(FieldKey.fromParts(SOURCE_COL));
         sourceCol.setReadOnly(true);
         sourceCol.setDefaultValue(ReplicateAnnotation.SOURCE_USER);
     }

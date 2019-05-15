@@ -15,6 +15,7 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.query.DetailsURL;
@@ -32,26 +33,26 @@ import java.util.Map;
  */
 public class CalibrationCurveTable extends TargetedMSTable
 {
-    public CalibrationCurveTable(TargetedMSSchema schema)
+    public CalibrationCurveTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoCalibrationCurve(), schema, TargetedMSSchema.ContainerJoinType.RunFK);
+        super(TargetedMSManager.getTableInfoCalibrationCurve(), schema, cf, TargetedMSSchema.ContainerJoinType.RunFK);
         Map<String, Object> params = new HashMap<>();
         params.put("id", FieldKey.fromParts("RunId"));
         params.put("calibrationCurveId", FieldKey.fromParts("Id"));
         DetailsURL detailsURL = new DetailsURL(new ActionURL(TargetedMSController.ShowCalibrationCurveAction.class, getContainer()), params);
         setDetailsURL(detailsURL);
-        getColumn(FieldKey.fromParts("Id")).setHidden(true);
-        getColumn(FieldKey.fromParts("RunId")).setHidden(true);
-        getColumn(FieldKey.fromParts("QuantificationSettingsId")).setHidden(true);
+        getMutableColumn(FieldKey.fromParts("Id")).setHidden(true);
+        getMutableColumn(FieldKey.fromParts("RunId")).setHidden(true);
+        getMutableColumn(FieldKey.fromParts("QuantificationSettingsId")).setHidden(true);
     }
 
     public static class PeptideCalibrationCurveTable extends CalibrationCurveTable
     {
-        public PeptideCalibrationCurveTable(TargetedMSSchema schema)
+        public PeptideCalibrationCurveTable(TargetedMSSchema schema, ContainerFilter cf)
         {
-            super(schema);
-            ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-            generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE));
+            super(schema, cf);
+            var generalMoleculeId = getMutableColumn("GeneralMoleculeId");
+            generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_PEPTIDE, cf));
             generalMoleculeId.setLabel("Peptide");
             SimpleFilter.SQLClause isPeptideFilter =
                     new SimpleFilter.SQLClause(new SQLFragment(generalMoleculeId.getName()
@@ -63,11 +64,11 @@ public class CalibrationCurveTable extends TargetedMSTable
 
     public static class MoleculeCalibrationCurveTable extends CalibrationCurveTable
     {
-        public MoleculeCalibrationCurveTable(TargetedMSSchema schema)
+        public MoleculeCalibrationCurveTable(TargetedMSSchema schema, ContainerFilter cf)
         {
-            super(schema);
-            ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-            generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_MOLECULE));
+            super(schema, cf);
+            var generalMoleculeId = getMutableColumn("GeneralMoleculeId");
+            generalMoleculeId.setFk(new TargetedMSForeignKey(_userSchema, TargetedMSSchema.TABLE_MOLECULE, cf));
             generalMoleculeId.setLabel("Molecule");
             SimpleFilter.SQLClause isMoleculeFilter =
                     new SimpleFilter.SQLClause(new SQLFragment(generalMoleculeId.getName()

@@ -15,7 +15,7 @@
  */
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSController;
@@ -32,25 +32,25 @@ import java.util.ArrayList;
 
 public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInfo
 {
-    public MoleculePrecursorTableInfo(final TargetedMSSchema schema, boolean omitAnnotations)
+    public MoleculePrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf, boolean omitAnnotations)
     {
-        this(TargetedMSManager.getTableInfoMoleculePrecursor(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, schema, omitAnnotations);
+        this(TargetedMSManager.getTableInfoMoleculePrecursor(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, schema, cf, omitAnnotations);
     }
 
-    public MoleculePrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema, boolean omitAnnotations)
+    public MoleculePrecursorTableInfo(final TableInfo tableInfo, String tableName, final TargetedMSSchema schema, ContainerFilter cf, boolean omitAnnotations)
     {
-        super(tableInfo, tableName, schema, omitAnnotations);
+        super(tableInfo, tableName, schema, cf, omitAnnotations);
 
-        ColumnInfo generalMoleculeId = getColumn("GeneralMoleculeId");
-        generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE));
+        var generalMoleculeId = getMutableColumn("GeneralMoleculeId");
+        generalMoleculeId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE, cf));
         generalMoleculeId.setHidden(true);
 
-        ColumnInfo moleculeIdId = wrapColumn("MoleculeId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
-        moleculeIdId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE));
+        var moleculeIdId = wrapColumn("MoleculeId", getRealTable().getColumn(generalMoleculeId.getFieldKey()));
+        moleculeIdId.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE, cf));
 
         addColumn(moleculeIdId);
 
-        ColumnInfo customIonName = getColumn("CustomIonName");
+        var customIonName = getMutableColumn("CustomIonName");
         customIonName.setURL(getDetailsURL(null, null));
         customIonName.setLabel("Precursor");
 

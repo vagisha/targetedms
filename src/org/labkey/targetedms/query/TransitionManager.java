@@ -47,7 +47,7 @@ public class TransitionManager
     @Nullable
     public static Transition get(int transitionId, User user, Container container)
     {
-        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container), true), Transition.getColumns()).getObject(transitionId, Transition.class);
+        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container), null, true), Transition.getColumns()).getObject(transitionId, Transition.class);
     }
 
     @Nullable
@@ -164,7 +164,7 @@ public class TransitionManager
     @NotNull
     public static Collection<Transition> getTransitionsForPrecursor(int precursorId, User user, Container container)
     {
-        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container)), Transition.getColumns(),
+        return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container), null), Transition.getColumns(),
                                  new SimpleFilter(FieldKey.fromParts("PrecursorId"), precursorId), null).getCollection(Transition.class);
     }
 
