@@ -9,9 +9,11 @@ import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
+import org.labkey.api.util.JunitUtil;
 import org.labkey.api.writer.ZipUtil;
 import org.labkey.targetedms.SkylineFileUtils;
 import org.labkey.targetedms.TargetedMSManager;
@@ -26,14 +28,15 @@ import java.util.List;
 
 public class UnitTestUtil
 {
-
-    private static String[] _samplePath = {"sampledata", "TargetedMS"};
     private static String[] _resourcePath = {"server", "customModules", "targetedms", "resources"};
 
-    public static File getSampleDataFile(String p_fileName) throws UnsupportedEncodingException
+    public static File getSampleDataFile(String p_fileName) throws IOException
     {
-
-        return getTestFile(p_fileName, UnitTestUtil._samplePath);
+        String relativePath = "TargetedMS/" + p_fileName;
+        File sampleDataFile = JunitUtil.getSampleData(ModuleLoader.getInstance().getModule("targetedms"), relativePath);
+        if (sampleDataFile == null)
+            throw new IOException("Sampledata not found: " + relativePath);
+        return sampleDataFile;
     }
 
     public static File getResourcesFile(String p_fileName) throws UnsupportedEncodingException

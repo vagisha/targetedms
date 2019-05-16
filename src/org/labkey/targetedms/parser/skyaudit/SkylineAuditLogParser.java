@@ -13,20 +13,6 @@ import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.parser.XmlUtil;
 import org.xml.sax.SAXException;
 
-import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FilterInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.time.format.DateTimeParseException;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.SimpleTimeZone;
 import javax.xml.XMLConstants;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
@@ -35,6 +21,16 @@ import javax.xml.transform.stream.StreamSource;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import javax.xml.validation.Validator;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilterInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.time.format.DateTimeParseException;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 
 /***
@@ -369,7 +365,8 @@ public class SkylineAuditLogParser
 
         //TODO: test invalid expansion: missing resource file or missing token in a file.
         @Test
-        public void testMissingResourceName() throws XMLStreamException, AuditLogException, AuditLogParsingException,UnsupportedEncodingException {
+        public void testMissingResourceName() throws XMLStreamException, AuditLogException, AuditLogParsingException, IOException
+        {
             _logFile = UnitTestUtil.getSampleDataFile("AuditLogFiles/InvalidResourceTest.skyl");
             _parser = new SkylineAuditLogParser(_logFile, _logger);
 

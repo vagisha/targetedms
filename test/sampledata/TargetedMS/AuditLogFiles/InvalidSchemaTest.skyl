@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<audit_log_root>
+  <document_hash>D5E299587F4040FAD7D4C6A756F38EC23F73E24E</document_hash>
+  <audit_log>
+    <audit_log_entry format_version="4.2" time_stamp="10/31/2018 21:25:27" user="RITACH-DSK\RitaCh">
+      <extra_info>&gt;sp|Q9UHF1|EGFL7_HUMAN Epidermal growth factor-like protein 7 OS=Homo sapiens OX=9606 GN=EGFL7 PE=1 SV=3
+MRGSQEVLLMWLLVLAVGGTEHAYRPGRRVCAVRAHGDPVSESFVQRVYQPFLTTCDGHR
+ACSTYRTIYRTAYRRSPGLAPARPRYACCPGWKRTSGLPGACGAAICQPPCRNGGSCVQP
+GRCRCPAGWRGDTCQSDVDECSARRGGCPQRCVNTAGSYWCQCWEGHSLSADGTLCVPKG
+GPPRVAPNPTGVDSAMKEEVQRLQSRVDLLEEKLQLVLAPLHSLASQALEHGLPDPGSLL
+VHSFQQLGRIDSLSEQISFLEEQLGSCSCKKDS
+&gt;sp|Q96KS0|EGLN2_HUMAN Egl nine homolog 2 OS=Homo sapiens OX=9606 GN=EGLN2 PE=1 SV=1
+MDSPCQPQPLSQALPQLPGSSSEPLEPEPGRARMGVESYLPCPLLPSYHCPGVPSEASAG
+SGTPRATATSTTASPLRDGFGGQDGGELRPLQSEGAAALVTKGCQRLAAQGARPEAPKRK
+WAEDGGDAPSPSKRPWARQENQEAEREGGMSCSCSSGSGEASAGLMEEALPSAPERLALD
+YIVPCMRYYGICVKDSFLGAALGGRVLAEVEALKRGGRLRDGQLVSQRAIPPRSIRGDQI
+AWVEGHEPGCRSIGALMAHVDAVIRHCAGRLGSYVINGRTKAMVACYPGNGLGYVRHVDN
+PHGDGRCITCIYYLNQNWDVKVHGGLLQIFPEGRPVVANIEPLFDRLLIFWSDRRNPHEV
+KPAYATRYAITVWYFDAKERAAAKDKYQLASGQKGVQVPVSQPPTPT
+&gt;sp|Q9NR50|EI2BG_HUMAN Translation initiation factor eIF-2B subunit gamma OS=Homo sapiens OX=9606 GN=EIF2B3 PE=1 SV=1
+MEFQAVVMAVGGGSRMTDLTSSIPKPLLPVGNKPLIWYPLNLLERVGFEEVIVVTTRDVQ
+KALCAEFKMKMKPDIVCIPDDADMGTADSLRYIYPKLKTDVLVLSCDLITDVALHEVVDL
+FRAYDASLAMLMRKGQDSIEPVPGQKGKKKAVEQRDFIGVDSTGKRLLFMANEADLDEEL
+VIKGSILQKHPRIRFHTGLVDAHLYCLKKYIVDFLMENGSITSIRSELIPYLVRKQFSSA
+SSQQGQEEKEEDLKKKELKSLDIYSFIKEANTLNLAPYDACWNACRGDRWEDLSRSQVRC
+YVHIMKEGLCSRVSTLGLYMEANRQVPKLLSALCPEEPPVHSSAQIVSKHLVGVDSLIGP
+ETQIGEKSSIKRSVIGSSCLIKDRVTITNCLLMNSVTVEEGSNIQGSVICNNAVIEKGAD
+IKDCLIGSGQRIEAKAKRVNEVIVGNDQLMEI</extra_info>
+      <message>
+        <type>imported_fasta_paste</type>
+      </message>
+      <message>
+        <type>imported_fasta_paste</type>
+      </message>
+    </audit_log_entry>
+    <audit_log_entry format_version="4.2" time_stamp="10/31/2018 21:25:16" user="RITACH-DSK\RitaCh">
+      <message>
+        <type>start_log_existing_doc</type>
+      </message>
+      <message>
+        <type>start_log_existing_doc</type>
+      </message>
+      <message>
+        <type>added_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_PeptideSettings}{2:TabSeparator}{0:PeptideSettings_Libraries}{2:PropertySeparator}{0:PeptideLibraries_LibrarySpecs}</name>
+        <name>"Human (NIST)"</name>
+      </message>
+      <message>
+        <type>is_</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_PeptideSettings}{2:TabSeparator}{0:PeptideSettings_Libraries}{2:PropertySeparator}{0:PeptideLibraries_LibrarySpecs}{2:PropertySeparator}"Human (NIST)"{2:PropertySeparator}{0:LibrarySpec_FilePathAuditLog}</name>
+        <name>"{4:C:\Users\RitaCh\Workspaces\ProteoData\human_consensus_final_true_lib.msp}"</name>
+      </message>
+      <message>
+        <type>changed_from_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_PeptideIonTypesString}</name>
+        <name>"y"</name>
+        <name>"y, b, a"</name>
+      </message>
+      <message>
+        <type>changed_from_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Filter}{2:PropertySeparator}{0:TransitionFilter_EndFragmentFinderLabel}</name>
+        <name>"{6:DeltaFragmentFinder_3_ions}"</name>
+        <name>"{6:DeltaFragmentFinder_6_ions}"</name>
+      </message>
+      <message>
+        <type>changed_from_to</type>
+        <name>{0:Settings}{2:PropertySeparator}{0:SrmSettings_TransitionSettings}{2:TabSeparator}{0:TransitionSettings_Libraries}{2:PropertySeparator}{0:TransitionLibraries_IonCount}</name>
+        <name>{3:3}</name>
+        <name>{3:6}</name>
+      </message>
+    </audit_log_entry>
+  </audit_log>
+</audit_log_root>

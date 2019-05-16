@@ -1,0 +1,28 @@
+Protein,Peptide,PeptideModifiedSequence,Slope,Intercept,PointCount,QuadraticCoefficient,RSquared,ErrorMessage
+TG|1578-1589|z2,VIFDANAPVAVR,VIFDANAPVAVR,0.11772922696545363,0.01210173851539314,8,#N/A,0.99956552172963353,
+Amino Acids,Gly,#N/A,0.0026220408665457925,0.11201737805066257,6,#N/A,0.99682571990103663,
+Amino Acids,His,#N/A,0.015420118958407239,0.077803445673684329,6,#N/A,0.99791793012553154,
+Amino Acids,Ile,#N/A,0.0011758860103112897,0.0059992304017552223,6,#N/A,0.99880844670729774,
+Amino Acids,Leu,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Amino Acids,Met,#N/A,0.015804754314615702,0.18373447156269546,6,#N/A,0.994092903370834,
+Amino Acids,Orn,#N/A,0.013627276303056522,0.29307154142170505,6,#N/A,0.98143203211087382,
+Amino Acids,Lys,#N/A,14.886334562252882,-65.851571712983258,6,#N/A,0.73448941381315569,
+Amino Acids,Pro,#N/A,0.024382249542078606,-0.068035682881039825,6,#N/A,0.97847291933669078,
+Amino Acids,Ser,#N/A,0.016060668019327685,0.038722077827731939,6,#N/A,0.99738004666214564,
+Amino Acids,Thr,#N/A,0.020720004430707376,-0.026457586143566095,6,#N/A,0.99975538990882373,
+Amino Acids,Trp,#N/A,0.014780411031160933,0.11244001605287603,6,#N/A,0.99749249390485328,
+Amino Acids,Tyr,#N/A,0.020623317313226947,0.080448902000125944,6,#N/A,0.99785186614131682,
+Amino Acids,Val,#N/A,0.016024333158936657,0.26768549838753897,6,#N/A,0.99640859383342906,
+Biogenic Amines,Ac-Orn,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,ADMA,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,SDMA,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,alpha-AAA,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,Carnosine,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,Creatinine,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,Histamine,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,Kynurenine,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,Met-SO,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,Nitro-Tyr,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,c4-OH-Pro,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,t4-OH-Pro,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Biogenic Amines,PEA,#N/A,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
