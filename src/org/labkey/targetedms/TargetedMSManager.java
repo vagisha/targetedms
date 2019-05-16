@@ -2001,6 +2001,7 @@ public class TargetedMSManager
     {
         // add all runs rowIds up the chain to the end of the list, recursively
         Integer replacedBy = replacedByMap.get(rowId);
+        int originalSize = chainRowIds.size();
         if (replacedBy != null)
         {
             if (!chainRowIds.contains(rowId))
@@ -2008,7 +2009,10 @@ public class TargetedMSManager
             if (!chainRowIds.contains(replacedBy))
                 chainRowIds.addLast(replacedBy);
 
-            addParentRunsToChain(chainRowIds, replacedByMap, replacedBy);
+            if (chainRowIds.size() != originalSize)
+            {
+                addParentRunsToChain(chainRowIds, replacedByMap, replacedBy);
+            }
         }
     }
 
@@ -2016,6 +2020,7 @@ public class TargetedMSManager
     {
         // add all runs rowIds down the chain to the front of the list, recursively
         Integer replaces = replacesMap.get(rowId);
+        int originalSize = chainRowIds.size();
         if (replaces != null)
         {
             if (!chainRowIds.contains(rowId))
@@ -2023,12 +2028,16 @@ public class TargetedMSManager
             if (!chainRowIds.contains(replaces))
                 chainRowIds.addFirst(replaces);
 
-            addChildRunsToChain(chainRowIds, replacesMap, replaces);
+            if (chainRowIds.size() != originalSize)
+            {
+                addChildRunsToChain(chainRowIds, replacesMap, replaces);
+            }
         }
     }
 
-    public static List<Integer> getLinkedVersions(User u, Container c, Integer[] selectedRowIds, List<Integer> linkedRowIds)
+    public static Collection<Integer> getLinkedVersions(User u, Container c, Collection<Integer> selectedRowIds, Collection<Integer> linkedRowIds)
     {
+        Set<Integer> result = new HashSet<>(linkedRowIds);
         //get related/linked RowIds from TargetedMSRuns table
         QuerySchema targetedMSRunsQuerySchema = DefaultSchema.get(u, c).getSchema(TargetedMSSchema.getSchema().getName());
         if (targetedMSRunsQuerySchema != null)
@@ -2051,22 +2060,17 @@ public class TargetedMSManager
                 replacesMap.put(entry.getValue(), entry.getKey());
 
             //get full chain for the selected runs to be added to the linkedRowIds list
-            for (int i = 0; i < selectedRowIds.length; i++)
+            for (Integer rowId : selectedRowIds)
             {
-                Integer rowId = selectedRowIds[i];
                 ArrayDeque<Integer> chainRowIds = new ArrayDeque<>();
                 addParentRunsToChain(chainRowIds, replacedByMap, rowId);
                 addChildRunsToChain(chainRowIds, replacesMap, rowId);
 
-                for (Integer chainRowId : chainRowIds)
-                {
-                    if (!linkedRowIds.contains(chainRowId))
-                        linkedRowIds.add(chainRowId);
-                }
+                result.addAll(chainRowIds);
             }
         }
 
-        return linkedRowIds;
+        return result;
     }
 
     private static int getCountForRunFKTable(int runId, TableInfo table)

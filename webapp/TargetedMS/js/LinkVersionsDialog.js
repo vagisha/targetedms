@@ -93,8 +93,11 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             queryName: 'targetedmsruns',
             columns: this.getBaseColumnNames(),
             scope: this,
+            sort: 'Created', // by default get the run ordering by created/imported date
             filterArray: [LABKEY.Filter.create('rowId', this.selectedRowIds.join(';'), LABKEY.Filter.Types.IN)],
             success: function(data) {
+                this.addSortOrderToData(data);
+
                 if (this.asGrid) {
                     this.showGridSaveDialog(data);
                 }
@@ -111,7 +114,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             // These 'dataIndex' look into the model
             {text: 'ExpRunRowId', dataIndex: 'RowId', hidden: true},
             {text: 'ID', dataIndex: 'File/Id', hidden: true},
-            {text: 'Document Name', dataIndex: 'File/FileName', flex: 2, menuDisabled: true, sortable: false, scope: this, renderer: function(value, metadata, record){
+            {text: 'Document Name', dataIndex: 'File/FileName', flex: 10, menuDisabled: true, sortable: false, scope: this, renderer: function(value, metadata, record){
                 var val = Ext4.String.htmlEncode(value),
                     url = LABKEY.ActionURL.buildURL('targetedms', 'showPrecursorList', null, {id: record.get('File/Id')});
 
@@ -130,7 +133,8 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
             {text: 'Transitions', dataIndex: 'File/Transitions', menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Replicates', dataIndex: 'File/Replicates', menuDisabled: true, sortable: false, align: 'right'},
             {text: 'Replaced By', dataIndex: 'ReplacedByRun', hidden: true},
-            {text: 'Replaces', dataIndex: 'ReplacesRun', hidden: true}
+            {text: 'Replaces', dataIndex: 'ReplacesRun', hidden: true},
+            {text: 'SortOrder', dataIndex: 'SortOrder', hidden: true}
         ];
     },
 
@@ -167,15 +171,15 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
     createGrid : function(data) {
         var store = Ext4.create('Ext.data.Store', {
             fields: this.getBaseColumnNames(),
-            sorters: [{property: 'Created', direction: 'ASC'}],
-            data: data
+            sorters: [{property: 'SortOrder', direction: 'ASC'}],
+            data: data.rows
         });
 
         return Ext4.create('Ext.grid.Panel', {
             id: 'LinkVersionsSaveGrid',
             cls: 'link-version-grid',
             padding: 15,
-            width: 1100,
+            width: 1250,
             maxHeight: 300,
             autoScoll: true,
             store: store,
@@ -237,7 +241,7 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
         var grid = this.createGrid(data);
 
         // if we have a run that is part of an existing chain, the sum of the ReplacedByRun and ReplacesRun columns will be > 0
-        var footerText = 'Drag and drop the documents to reorder the chain.';
+        var footerText = 'Drag and drop the documents to reorder the chain. The first version should be at the top, and the most recent at the bottom.';
         if (this.hasDocumentInExistingChain(grid.getStore())) {
             footerText += ' <span>Bold</span> indicates a document that is part of an existing method chain. Saving will replace any existing association.';
         }
@@ -312,25 +316,47 @@ Ext4.define('LABKEY.targetedms.LinkedVersions', {
         }
     },
 
+    addSortOrderToData: function(data) {
+        var replacedByMap = {}, rowIdIndexMap = {}, index = 0, linkedRunId = null;
+
+        var sortOrder = data.rows.length;
+        Ext4.each(data.rows, function(row){
+            // originally set the order by desc created date
+            row.SortOrder = sortOrder++;
+
+            // keep track of the map from RowId to the run that replaces it
+            replacedByMap[row.RowId] = row.ReplacedByRun;
+
+            // keep track fo the first in the link
+            if (row.ReplacedByRun !== null && row.ReplacesRun === null) {
+                linkedRunId = row.RowId;
+            }
+
+            // indicate the current run (last in the link) in the name
+            if (row.ReplacedByRun === null && row.ReplacesRun !== null) {
+                row['File/FileName'] = row['File/FileName'] + ' (CURRENT)';
+            }
+
+            rowIdIndexMap[row.RowId] = index++;
+        });
+
+        // if the runs are in a link, use the ReplacedByRun info
+        var sortOrder = 0;
+        while (linkedRunId !== null) {
+            data.rows[rowIdIndexMap[linkedRunId]].SortOrder = sortOrder++;
+            linkedRunId = replacedByMap[linkedRunId];
+        }
+    },
+
     showDetailsView : function(data) {
-        var orderMap = {}, columns = this.getBaseColumns();
+        var columns = this.getBaseColumns();
 
         Ext4.get(this.divId).setHTML('');
 
         if (this.selectedRowIds.length > 0) {
-            // order the grid rows based on the getLinkVersion response
-            columns.push({dataIndex: 'SortOrder', hidden: true});
-            for (var i = 0; i < this.selectedRowIds.length; i++) {
-                orderMap[this.selectedRowIds[i]] = i;
-            }
-            Ext4.each(data.rows, function(row){
-                row.SortOrder = orderMap[row.RowId];
-            });
-
             Ext4.create('Ext.grid.Panel', {
                 renderTo: this.divId,
                 cls: 'link-version-grid',
-                width: 1100,
                 disableSelection: true,
                 columns: columns,
                 store: Ext4.create('Ext.data.Store', {

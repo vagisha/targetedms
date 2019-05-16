@@ -78,6 +78,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -697,10 +698,8 @@ public class TargetedMSSchema extends UserSchema
                                 String runLsid = ctx.get(getColumnInfo().getFieldKey(), String.class);
                                 if(runLsid != null)
                                 {
-                                    int rowId = ExperimentService.get().getExpRun(runLsid).getRowId();
-                                    List<Integer> linkedRowIds = new ArrayList();
-                                    linkedRowIds.add(rowId);
-                                    return TargetedMSManager.getLinkedVersions(getUser(), getContainer(), new Integer[]{rowId}, linkedRowIds).size();
+                                    Set<Integer> rowIds = Collections.singleton(ExperimentService.get().getExpRun(runLsid).getRowId());
+                                    return TargetedMSManager.getLinkedVersions(getUser(), getContainer(), rowIds, rowIds).size();
                                 }
                                 return super.getValue(ctx);
                             }

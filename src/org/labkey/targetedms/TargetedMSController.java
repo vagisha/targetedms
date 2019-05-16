@@ -31,6 +31,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.labkey.api.action.*;
 import org.labkey.api.analytics.AnalyticsService;
 import org.labkey.api.util.StringUtilsLabKey;
+import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.PopupMenu;
 import org.labkey.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.Outlier;
@@ -195,10 +196,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -2898,14 +2901,12 @@ public class TargetedMSController extends SpringActionController
 
     private JspView getSummaryView(RunDetailsForm form, TargetedMSRun run)
     {
-        Integer[] ids = {Integer.valueOf(ExperimentService.get().getExpRun(run.getExperimentRunLSID()).getRowId())};
-        List<Integer> linkedRowIds = new ArrayList<>();
-        linkedRowIds.addAll(Arrays.asList(ids));
+        Set<Integer> ids = Collections.singleton(ExperimentService.get().getExpRun(run.getExperimentRunLSID()).getRowId());
 
         RunDetailsBean bean = new RunDetailsBean();
         bean.setForm(form);
         bean.setRun(run);
-        bean.setVersionCount(TargetedMSManager.getLinkedVersions(getUser(), getContainer(), ids, linkedRowIds).size());
+        bean.setVersionCount(TargetedMSManager.getLinkedVersions(getUser(), getContainer(), ids, ids).size());
 
         JspView<RunDetailsBean> runSummaryView = new JspView<>("/org/labkey/targetedms/view/runSummaryView.jsp", bean);
         runSummaryView.setFrame(WebPartView.FrameType.PORTAL);
@@ -6351,12 +6352,12 @@ public class TargetedMSController extends SpringActionController
         @Override
         public Object execute(SelectedRowIdsForm form, BindException errors)
         {
-            List<Integer> linkedRowIds = new ArrayList<>();
+            Collection<Integer> linkedRowIds = new ArrayList<>();
 
             //get selectedRowIds params
-            Integer[] selectedRowIds = form.getSelectedRowIds();
+            List<Integer> selectedRowIds = form.getSelectedRowIds();
             if (form.isIncludeSelected())
-                linkedRowIds.addAll(Arrays.asList(selectedRowIds));
+                linkedRowIds.addAll(selectedRowIds);
 
             linkedRowIds = TargetedMSManager.getLinkedVersions(getUser(), getContainer(), selectedRowIds, linkedRowIds);
 
@@ -6369,15 +6370,15 @@ public class TargetedMSController extends SpringActionController
 
     public static class SelectedRowIdsForm
     {
-        Integer[] selectedRowIds;
+        List<Integer> selectedRowIds;
         boolean includeSelected;
 
-        public Integer[] getSelectedRowIds()
+        public List<Integer> getSelectedRowIds()
         {
             return selectedRowIds;
         }
 
-        public void setSelectedRowIds(Integer[] selectedRowIds)
+        public void setSelectedRowIds(List<Integer> selectedRowIds)
         {
             this.selectedRowIds = selectedRowIds;
         }
@@ -6468,10 +6469,18 @@ public class TargetedMSController extends SpringActionController
             // verify that the run and replacedByRun rowIds are valid and match an existing run
             for (Map.Entry<Integer, Integer> entry : form.getRuns().entrySet())
             {
-                if (entry.getKey() == null || ExperimentService.get().getExpRun(entry.getKey()) == null)
+                if (entry.getKey() == null)
                     errors.reject(ERROR_MSG, "No run found for id " + entry.getKey());
-                if (entry.getValue() == null || ExperimentService.get().getExpRun(entry.getValue()) == null)
+                ExpRun run = ExperimentService.get().getExpRun(entry.getKey());
+                if (run == null || !run.getContainer().equals(getContainer()))
+                    errors.reject(ERROR_MSG, "No run found for id " + entry.getKey());
+                if (entry.getValue() == null)
                     errors.reject(ERROR_MSG, "No run found for id " + entry.getValue());
+                ExpRun replacedByRun = ExperimentService.get().getExpRun(entry.getValue());
+                if (replacedByRun == null || !replacedByRun.getContainer().equals(getContainer()))
+                    errors.reject(ERROR_MSG, "No run found for id " + entry.getValue());
+                if (entry.getKey().equals(entry.getValue()))
+                    errors.reject(ERROR_MSG, "Run cannot be replaced by itself: id " + entry.getValue());
             }
         }
 
@@ -6480,21 +6489,43 @@ public class TargetedMSController extends SpringActionController
         {
             DbScope scope = ExperimentService.get().getSchema().getScope();
 
+            Set<Integer> ids = new HashSet<>(form.getRuns().keySet());
+            ids.addAll(form.getRuns().values());
+
+            Collection<Integer> allLinkedIds = TargetedMSManager.getLinkedVersions(getUser(), getContainer(), ids, ids);
+
             try (DbScope.Transaction transaction = scope.ensureTransaction())
             {
-                List<Integer> chainedDocuments = getLinkedListOfChainedDocuments(form.getRuns().entrySet());
-
-                for (int i = 0; i < chainedDocuments.size(); i++)
+                // Clear out any existing links
+                allLinkedIds.forEach((x) ->
                 {
-                    ExpRun run = ExperimentService.get().getExpRun(chainedDocuments.get(i));
-                    ExpRun replacedRun = null;
-                    if ((i + 1) != chainedDocuments.size())
-                        replacedRun = ExperimentService.get().getExpRun(chainedDocuments.get(i + 1));
+                    ExpRun run = ExperimentService.get().getExpRun(x);
+                    if (run.getReplacedByRun() != null)
+                    {
+                        run.setReplacedByRun(null);
+                        try
+                        {
+                            run.save(getUser());
+                        }
+                        catch (BatchValidationException e)
+                        {
+                            throw new UnexpectedException(e);
+                        }
+                    }
+                });
 
-                    run.setReplacedByRun(replacedRun);
-                    run.save(getViewContext().getUser());
+                for (Map.Entry<Integer, Integer> entry : form._runs.entrySet())
+                {
+                    ExpRun run = ExperimentService.get().getExpRun(entry.getKey());
+                    ExpRun replacedByRun = ExperimentService.get().getExpRun(entry.getValue());
 
+                    if (run != null && replacedByRun != null)
+                    {
+                        run.setReplacedByRun(replacedByRun);
+                        run.save(getUser());
+                    }
                 }
+
                 transaction.commit();
             }
 
