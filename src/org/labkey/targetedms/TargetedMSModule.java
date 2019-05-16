@@ -511,7 +511,10 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public Set<Class> getIntegrationTests()
     {
-        return Collections.singleton(PublishTargetedMSExperimentsController.TestCase.class);
+        return Set.of(
+                PublishTargetedMSExperimentsController.TestCase.class,
+                SkylineAuditLogImporter.TestCase.class
+        );
     }
 
     @NotNull
@@ -522,8 +525,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         set.add(TargetedMSController.TestCase.class);
         set.add(ComparisonCategory.TestCase.class);
         set.add(ReplicateLabelMinimizer.TestCase.class);
-//        set.add(SkylineAuditLogParser.TestCase.class);
-//        set.add(SkylineAuditLogImporter.TestCase.class);
+        set.add(SkylineAuditLogParser.TestCase.class);
         return set;
 
     }

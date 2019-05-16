@@ -15,6 +15,7 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.util.GUID;
+import org.labkey.api.util.JunitUtil;
 import org.labkey.api.util.TestContext;
 import org.labkey.targetedms.parser.skyaudit.AuditLogEntry;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
@@ -290,10 +291,11 @@ public class SkylineAuditLogImporter
 
     public static class TestCase extends Assert
     {
-        private static GUID _docGUID = new GUID("50323e78-0e2b-4764-b979-9b71559bbf9f");
-        private static final GUID _containerId = new GUID("E22C3558-54C2-1037-9B63-1E459CB1F54C");
+        private static final String FOLDER_NAME = "TargetedMSAuditLogImportFolder";
+        private static final GUID _docGUID = new GUID("50323e78-0e2b-4764-b979-9b71559bbf9f");
         private static Logger _logger;
         private static User _user;
+        private static Container _container;
 
         @BeforeClass
         public static void InitTest(){
@@ -301,12 +303,13 @@ public class SkylineAuditLogImporter
             _logger = Logger.getLogger(SkylineAuditLogImporter.TestCase.class.getPackageName() + ".test");
             UnitTestUtil.cleanupDatabase(_docGUID);
             _user = TestContext.get().getUser();
+            _container = ContainerManager.ensureContainer(JunitUtil.getTestContainer(), FOLDER_NAME);
         }
 
         private AuditLogTree persistALogFile(String filePath, Integer runId) throws IOException, AuditLogException, AuditLogParsingException{
             File f_zip = UnitTestUtil.getSampleDataFile(filePath);
             File logFile = UnitTestUtil.extractLogFromZip(f_zip, _logger);
-            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( _logger, logFile, _docGUID, ContainerManager.getForId(_containerId), _user);
+            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( _logger, logFile, _docGUID, _container, _user);
 
             if(importer.verifyPreRequisites()) {
                 importer.persistAuditLog(runId);
