@@ -18,7 +18,6 @@ package org.labkey.test.components.targetedms;
 import org.labkey.test.Locator;
 import org.labkey.test.WebDriverWrapper;
 import org.labkey.test.components.Component;
-import org.labkey.test.tests.targetedms.TargetedMSLinkVersionsTest;
 import org.labkey.test.util.Ext4Helper;
 import org.openqa.selenium.WebElement;
 
@@ -57,6 +56,11 @@ public class LinkVersionsGrid extends Component
         for (String documentName : documentNames)
         {
             Locator gridRow = Ext4Helper.Locators.getGridRow(documentName);
+            if (!_test.isElementPresent(gridRow))
+            {
+                // May have a suffix on the end, check for that too
+                gridRow = Ext4Helper.Locators.getGridRow(documentName + " (CURRENT)");
+            }
             _test.assertElementPresent(gridRow);
 
             // verify that the grid rows are in the expected order
@@ -81,7 +85,7 @@ public class LinkVersionsGrid extends Component
         _test._ext4Helper.clickWindowButton("Link Versions", "Cancel", 0, 0);
     }
 
-    public void removeLinkVersion(int index)
+    public void removeLinkVersion(int index, List<String> expectedOrderAfterRemove)
     {
         int initialRemoveIconCount = findRemoveLinkIcons().size();
         findRemoveLinkIcons().get(index).click();
@@ -91,7 +95,7 @@ public class LinkVersionsGrid extends Component
 
         // reopen the link versions dialog to verify it was removed
         TargetedMSRunsTable runsTable = new TargetedMSRunsTable(_test);
-        runsTable.openLinkVersionsDialogForDocuments(TargetedMSLinkVersionsTest.QC_DOCUMENT_NAMES);
+        runsTable.openLinkVersionsDialogForDocuments(expectedOrderAfterRemove);
         if (initialRemoveIconCount > 2)
         {
             _test.waitForElements(Elements.removeIcon, initialRemoveIconCount - 1);

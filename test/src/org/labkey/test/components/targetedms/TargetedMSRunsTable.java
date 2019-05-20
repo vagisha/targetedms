@@ -126,7 +126,7 @@ public class TargetedMSRunsTable extends DataRegionTable
             assertTrue(idx != -1);
             List<String>verCount = getRowDataAsText(idx, "Versions");
             assertEquals(1, verCount.size());
-            assertEquals(verCount.get(0), String.valueOf(verCounts[i]));
+            assertEquals("Expected version count for " + latestVersions, String.valueOf(verCounts[i]), verCount.get(0));
             i++;
         }
     }

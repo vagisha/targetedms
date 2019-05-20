@@ -137,15 +137,15 @@ public class TargetedMSLinkVersionsTest extends TargetedMSTest
         log("remove link version from middle of chain");
         grid = table.openLinkVersionsDialogForDocuments(QC_DOCUMENT_NAMES);
         assertEquals(3, grid.findRemoveLinkIcons().size());
-        grid.removeLinkVersion(1);
-        table.verifyDocumentChain(Arrays.asList(QC_3_FILE, QC_2_FILE), new int[]{2,1});
+        grid.removeLinkVersion(1, Arrays.asList(QC_1_FILE, QC_3_FILE, QC_2_FILE));
+        table.verifyDocumentChain(Arrays.asList(QC_3_FILE, QC_2_FILE), new int[]{2, 1});
         verifyDocumentDetailsChain(Arrays.asList(QC_1_FILE, QC_3_FILE), 0);
 
         log("remove link version from end of chain");
         goToProjectHome();
         grid = table.openLinkVersionsDialogForDocuments(Arrays.asList(QC_1_FILE, QC_3_FILE));
         assertEquals(2, grid.findRemoveLinkIcons().size());
-        grid.removeLinkVersion(1);
+        grid.removeLinkVersion(1, QC_DOCUMENT_NAMES);
         table.verifyNoChain(QC_DOCUMENT_NAMES.size());
         table.goToDocumentDetails(QC_1_FILE);
         waitForElement(LinkVersionsGrid.Elements.noVersions);
