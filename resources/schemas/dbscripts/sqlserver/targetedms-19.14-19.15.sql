@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-DROP TABLE IF EXISTS targetedms.AuditLogEntry;
+EXEC core.fn_dropifexists 'AuditLogEntry','targetedms','TABLE', NULL;
 
 CREATE TABLE targetedms.AuditLogEntry (
     entryId INT IDENTITY(1, 1) not null,
@@ -33,7 +33,7 @@ CREATE TABLE targetedms.AuditLogEntry (
 
 CREATE UNIQUE INDEX uix_auditLogEntry_document on targetedms.AuditLogEntry(documentGUID, entryHash);
 
-DROP TABLE IF EXISTS targetedms.AuditLogMessage;
+EXEC core.fn_dropifexists 'AuditLogMessage','targetedms','TABLE', NULL;
 
 CREATE TABLE targetedms.AuditLogMessage(
   messageId INT IDENTITY(1, 1) not null,
