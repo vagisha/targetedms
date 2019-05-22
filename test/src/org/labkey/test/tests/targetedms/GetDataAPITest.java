@@ -98,7 +98,7 @@ public class GetDataAPITest extends TargetedMSTest
         PortalHelper portalHelper = new PortalHelper(this);
         portalHelper.addWebPart("Wiki");
 
-        String scriptText = TestFileUtils.getFileContents("server/test/data/api/" + "getDataTest.html");
+        String scriptText = TestFileUtils.getFileContents(TestFileUtils.getSampleData("api/getDataTest.html"));
         scriptText = scriptText.replace("REPLACEMENT_STRING", request_core);
 
         WikiHelper wikiHelper = new WikiHelper(this);
