@@ -16,7 +16,6 @@
 package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ForeignKey;
@@ -95,6 +94,7 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
         _needsContainerWhereClause = needsContainerWhereClause;
     }
 
+    @Override
     @NotNull
     public SQLFragment getFromSQL(String alias)
     {
