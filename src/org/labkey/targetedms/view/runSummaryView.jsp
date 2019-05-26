@@ -68,7 +68,7 @@
     <div><strong>Name:</strong> <%= h(run.getDescription()) %>
         <%= h(run.getFileName() == null || run.getFileName().equals(run.getDescription()) ? "" : (", from file " + run.getFileName())) %>
         <%= h(skyDocFile == null ? "" : "(" + FileUtils.byteCountToDisplaySize(Files.size(skyDocFile)) + ")") %>
-        <% if (renameAction != null) { %><%= text(iconLink("edit-views-link fa fa-pencil", "Rename File", renameAction)) %><% } %>
+        <% if (renameAction != null) { %><%= iconLink("edit-views-link fa fa-pencil", "Rename File", renameAction) %><% } %>
         <% if (run.getFileName() != null) { TargetedMSController.createDownloadMenu(run).render(out); } %>&nbsp;
         <a href="<%= h(versionsAction) %>"><%= h(StringUtilsLabKey.pluralize(bean.getVersionCount(), "version"))%></a>
     </div>

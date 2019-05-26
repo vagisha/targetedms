@@ -16,17 +16,16 @@
  */
 %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
-<%@ page import="org.labkey.api.protein.ProteinService" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
-<%@ page import="org.labkey.targetedms.query.JournalManager" %>
 <%@ page import="org.labkey.api.ms1.MS1Urls" %>
+<%@ page import="org.labkey.api.protein.ProteinService" %>
+<%@ page import="org.labkey.targetedms.query.JournalManager" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
 <%
     boolean isJournalProject = JournalManager.isJournalProject(getContainer());
 %>
 
-<labkey:form action="<%=h(PageFlowUtil.urlProvider(MS1Urls.class).getPepSearchUrl(getContainer()))%>" method="get">
+<labkey:form action="<%=h(urlProvider(MS1Urls.class).getPepSearchUrl(getContainer()))%>" method="get">
     <table class="lk-fields-table">
         <tr>
             <td class="labkey-form-label">Peptide sequence *<%=helpPopup("Peptide Sequence", "Enter the peptide sequence to find, or multiple sequences separated by commas. Use * to match any sequence of characters.")%></td>

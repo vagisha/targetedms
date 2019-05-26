@@ -17,16 +17,15 @@
 %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.apache.commons.io.FileUtils" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
+<%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
-<%@ page import="java.util.Date" %>
-<%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="java.nio.file.Files" %>
 <%@ page import="java.nio.file.Path" %>
+<%@ page import="java.util.Date" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     Container c = getContainer();
@@ -55,7 +54,7 @@
 %>
     <tr>
         <td><%= i %></td>
-        <td><%= PageFlowUtil.textLink(ChromatogramLibraryUtils.getDownloadFileName(c, i), u) %></td>
+        <td><%= link(ChromatogramLibraryUtils.getDownloadFileName(c, i), u) %></td>
         <td><%= h(FileUtils.byteCountToDisplaySize(Files.size(archiveFile))) %></td>
         <td><%= formatDateTime(new Date(Files.getLastModifiedTime(archiveFile).toMillis()))%></td>
     </tr>

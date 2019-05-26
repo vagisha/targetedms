@@ -17,11 +17,10 @@
 %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.labkey.api.ms2.MS2Urls" %>
-<%@ page import="org.labkey.api.util.PageFlowUtil" %>
-<%@ page import="org.labkey.targetedms.query.JournalManager" %>
 <%@ page import="org.labkey.api.protein.ProteinService" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
+<%@ page import="org.labkey.targetedms.query.JournalManager" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     boolean isJournalProject = JournalManager.isJournalProject(getContainer());
@@ -29,7 +28,7 @@
     JspView<ProteinService.ProteinSearchForm> me = (JspView<ProteinService.ProteinSearchForm>) HttpView.currentView();
     ProteinService.ProteinSearchForm bean = me.getModelBean();
 %>
-<labkey:form action="<%= h(PageFlowUtil.urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())) %>">
+<labkey:form action="<%= h(urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())) %>">
     <table class="lk-fields-table">
         <tr>
             <td class="labkey-form-label">Protein name *<%= helpPopup("Protein name", "Required to search for proteins. You may use the name as specified by the FASTA file, or an annotation, such as a gene name, that has been loaded from an annotations file. You may comma separate multiple names.") %></td>
