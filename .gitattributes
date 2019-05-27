@@ -143,6 +143,7 @@ resources/schemas/dbscripts/postgresql/targetedms-19.11-19.12.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-19.12-19.13.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-19.13-19.14.sql -text
 resources/schemas/dbscripts/postgresql/targetedms-19.14-19.15.sql -text
+resources/schemas/dbscripts/postgresql/targetedms-19.15-19.16.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.20.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-12.30.sql -text
 resources/schemas/dbscripts/sqlserver/obsolete/targetedms-0.00-13.10.sql -text
@@ -239,6 +240,7 @@ resources/schemas/dbscripts/sqlserver/targetedms-19.10-19.11.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-19.12-19.13.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-19.13-19.14.sql -text
 resources/schemas/dbscripts/sqlserver/targetedms-19.14-19.15.sql -text
+resources/schemas/dbscripts/sqlserver/targetedms-19.15-19.16.sql -text
 resources/schemas/targetedms.xml -text
 resources/skyaudit/AuditLogStrings.resx -text
 resources/skyaudit/ColumnCaptions.resx -text
@@ -527,6 +529,7 @@ src/org/labkey/targetedms/query/PrecursorManager.java -text
 src/org/labkey/targetedms/query/PrecursorTableInfo.java -text
 src/org/labkey/targetedms/query/QCAnnotationTable.java -text
 src/org/labkey/targetedms/query/QCAnnotationTypeTable.java -text
+src/org/labkey/targetedms/query/QCEmailNotificationsTable.java -text
 src/org/labkey/targetedms/query/QCEnabledMetricsTable.java -text
 src/org/labkey/targetedms/query/QCMetricConfigurationTable.java -text
 src/org/labkey/targetedms/query/QCMetricExclusionTable.java -text
