@@ -48,7 +48,7 @@
     {
         String subgroupTitle = "Subgroup: " + (subgroup != null ? subgroup : "");
 %>
-<labkey:panel title="<%=h(subgroupTitle)%>" type="portal">
+<labkey:panel title="<%=subgroupTitle%>" type="portal">
     <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
         <i class="fa fa-file-excel-o" onclick="exportExcel('<%=h(subgroup)%>')"></i>
     </div>
