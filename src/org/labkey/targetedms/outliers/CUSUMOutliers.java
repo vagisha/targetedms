@@ -4,6 +4,14 @@ import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.Sort;
 import org.labkey.api.security.User;
+import org.labkey.api.security.ValidEmail;
+import org.labkey.api.settings.AppProps;
+import org.labkey.api.settings.LookAndFeelFolderProperties;
+import org.labkey.api.settings.LookAndFeelProperties;
+import org.labkey.api.util.DateUtil;
+import org.labkey.api.util.MailHelper;
+import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.ActionURL;
 import org.labkey.api.visualization.Stats;
 import org.labkey.targetedms.model.GuideSetAvgMR;
 import org.labkey.targetedms.model.LJOutlier;
@@ -11,7 +19,10 @@ import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
 
+import javax.mail.Message;
+import javax.mail.MessagingException;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -19,6 +30,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 public class CUSUMOutliers extends  Outliers
 {
@@ -564,7 +577,7 @@ public class CUSUMOutliers extends  Outliers
         return transformedOutliers;
     }
 
-    public JSONObject getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, String containerPath)
+    public Map<String, Info> getSampleFiles(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, String containerPath)
     {
         Map<String, Info> sampleFiles = setSampleFiles(ljOutliers, containerPath);
         List<Integer> validGuideSetIds = new ArrayList<>();
@@ -596,7 +609,7 @@ public class CUSUMOutliers extends  Outliers
 
                 if(matchedItem != null)
                 {
-                   for(Map.Entry<String, Integer> outlier : outliers.entrySet())
+                    for(Map.Entry<String, Integer> outlier : outliers.entrySet())
                     {
                         if (outlier.getKey().equalsIgnoreCase("mr"))
                             matchedItem.setmR(outlier.getValue());
@@ -635,8 +648,12 @@ public class CUSUMOutliers extends  Outliers
             sample.setmR(mR);
             sample.setHasOutliers(!(sample.getNonConformers() == 0 && sample.getCUSUMm() == 0 && sample.getCUSUMv() == 0 && sample.getmR() == 0));
         });
+        return sampleFiles;
+    }
 
-        return getSampleFilesJSON(sampleFiles);
+    public JSONObject getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, String containerPath)
+    {
+        return getSampleFilesJSON(getSampleFiles(ljOutliers, rawGuideSets, rawMetricDataSets, containerPath));
     }
 
     public JSONObject getSampleFilesJSON(Map<String, Info> sampleFiles)
@@ -647,6 +664,115 @@ public class CUSUMOutliers extends  Outliers
         });
 
         return sampleFilesJSON;
+    }
+
+    public void sendEmailNotification(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, String containerPath, User user, Container container) throws MessagingException, ValidEmail.InvalidEmailException
+    {
+        Map<String, Info> sampleFiles = getSampleFiles(ljOutliers,  rawGuideSets, rawMetricDataSets,containerPath);
+
+        StringBuilder html = new StringBuilder();
+
+        int totalOutliers = 0;
+        int totalOutlierSubscribed = 2;
+
+        Map<String, Info> outliersMap = new HashMap<>();
+
+        Integer recentOutliers = null;
+
+        for(Map.Entry<String, Info> entry: sampleFiles.entrySet())
+        {
+            Info sampleFileDetails = entry.getValue();
+
+            if(sampleFileDetails.getNonConformers() > 0 || sampleFileDetails.getmR() > 0 || sampleFileDetails.getCUSUMm() > 0 || sampleFileDetails.getCUSUMv() > 0)
+            {
+                totalOutliers += sampleFileDetails.getNonConformers() + sampleFileDetails.getmR() + sampleFileDetails.getCUSUMm() + sampleFileDetails.getCUSUMv();
+                outliersMap.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        //build html report here
+        if(totalOutliers >= totalOutlierSubscribed)
+        {
+            html.append("<html><body>");
+
+            html.append("<p><a href=\"").append(container.getStartURL(user)).append("\">View in Panorama</a></p>");
+
+            //sorting the tree map to show latest run first
+            Map<String, Info> sortedOutliersMap = outliersMap.entrySet().stream()
+                    .sorted(Map.Entry.comparingByValue(Comparator.comparing(Info::getAcquiredTime).reversed()))
+                    .limit(5)
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
+                            Map.Entry::getValue,
+                            (oldVal, newVal) -> oldVal, LinkedHashMap::new));
+
+            //create separate table for each sample file from outliersMap
+            for(Map.Entry<String, Info> entry: sortedOutliersMap.entrySet())
+            {
+                Info sampleFileDetails = entry.getValue();
+                html.append("<h4>").append(PageFlowUtil.filter(entry.getKey())).append(" - ").append(sampleFileDetails.getNonConformers() + sampleFileDetails.getmR() + sampleFileDetails.getCUSUMm() + sampleFileDetails.getCUSUMv()).append(" total outliers</h4>");
+                html.append("<p>Acquired ").append(DateUtil.formatDateTime(container, sampleFileDetails.getAcquiredTime())).append("</p>");
+                html.append("<table style=\"border: 1px solid #d3d3d3;\"><thead><tr><td style=\"border: 1px solid #d3d3d3;\"></td><td  style=\"border: 1px solid #d3d3d3;\" colspan=\"6\" align=\"center\">Outliers</td></tr>")
+                        .append("<tr>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\"></td><td style=\"border: 1px solid #d3d3d3;\"></td>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\"></td><td style=\"border: 1px solid #d3d3d3;\" colspan=\"4\" align=\"center\">CUSUM</td>")
+                        .append("</tr>")
+                        .append("<tr>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\">Metric</td>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\">Levey-Jennings</td>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\">Moving Range</td>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\" title=\"Mean CUSUM-\">Mean-</td>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\" title=\"Mean CUSUM+\">Mean+</td>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\" title=\"Variability CUSUM-\">Variability-</td>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\" title=\"Variability CUSUM+\">Variability+</td>")
+                        .append("</tr>")
+                        .append("</thead><tbody>");
+
+                sampleFileDetails.getItems().sort(Comparator.comparing(LJOutlier::getMetricLabel));
+
+                sampleFileDetails.getItems().forEach(outlier -> {
+                    html.append("<tr>")
+                            .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(PageFlowUtil.filter(outlier.getMetricLabel())).append("</td>")
+                            .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(outlier.getNonConformers() > 0 ? "<b>" : "").append(PageFlowUtil.filter(outlier.getNonConformers())).append("</td>").append(outlier.getNonConformers() > 0 ? "</b>" : "")
+                            .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(outlier.getmR() > 0 ? "<b>" : "").append(PageFlowUtil.filter(outlier.getmR())).append("</td>").append(outlier.getmR() > 0 ? "</b>" : "")
+                            .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(outlier.getCUSUMmN() > 0 ? "<b>" : "").append(PageFlowUtil.filter(outlier.getCUSUMmN())).append("</td>").append(outlier.getCUSUMmN() > 0 ? "</b>" : "")
+                            .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(outlier.getCUSUMmP() > 0 ? "<b>" : "").append(PageFlowUtil.filter(outlier.getCUSUMmP())).append("</td>").append(outlier.getCUSUMmP() > 0 ? "</b>" : "")
+                            .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(outlier.getCUSUMvN() > 0 ? "<b>" : "").append(PageFlowUtil.filter(outlier.getCUSUMvN())).append("</td>").append(outlier.getCUSUMvN() > 0 ? "</b>" : "")
+                            .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(outlier.getCUSUMvP() > 0 ? "<b>" : "").append(PageFlowUtil.filter(outlier.getCUSUMvP())).append("</td>").append(outlier.getCUSUMvP() > 0 ? "</b>" : "");
+                    html.append("</tr>");
+
+                });
+
+                // Remember the total for the most recent import
+                if (recentOutliers == null)
+                {
+                    recentOutliers = sampleFileDetails.getNonConformers() + sampleFileDetails.getmR() + sampleFileDetails.getCUSUMmN() + sampleFileDetails.getCUSUMmP() + sampleFileDetails.getCUSUMvN() + sampleFileDetails.getCUSUMvP();
+                }
+
+                html.append("<tr>")
+                        .append("<td style=\"border: 1px solid #d3d3d3;\"><b>Total</b></td>")
+                        .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(sampleFileDetails.getNonConformers() > 0 ? "<b>" : "").append(PageFlowUtil.filter(sampleFileDetails.getNonConformers())).append("</td>").append(sampleFileDetails.getNonConformers() > 0 ? "</b>" : "")
+                        .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(sampleFileDetails.getmR() > 0 ? "<b>" : "").append(PageFlowUtil.filter(sampleFileDetails.getmR())).append("</td>").append(sampleFileDetails.getmR() > 0 ? "</b>" : "")
+                        .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(sampleFileDetails.getCUSUMmN() > 0 ? "<b>" : "").append(PageFlowUtil.filter(sampleFileDetails.getCUSUMmN())).append("</td>").append(sampleFileDetails.getCUSUMmN() > 0 ? "</b>" : "")
+                        .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(sampleFileDetails.getCUSUMmP() > 0 ? "<b>" : "").append(PageFlowUtil.filter(sampleFileDetails.getCUSUMmP())).append("</td>").append(sampleFileDetails.getCUSUMmP() > 0 ? "</b>" : "")
+                        .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(sampleFileDetails.getCUSUMvN() > 0 ? "<b>" : "").append(PageFlowUtil.filter(sampleFileDetails.getCUSUMvN())).append("</td>").append(sampleFileDetails.getCUSUMvN() > 0 ? "</b>" : "")
+                        .append("<td style=\"border: 1px solid #d3d3d3; text-align: right;\">").append(sampleFileDetails.getCUSUMvP() > 0 ? "<b>" : "").append(PageFlowUtil.filter(sampleFileDetails.getCUSUMvP())).append("</td>").append(sampleFileDetails.getCUSUMvP() > 0 ? "</b>" : "");
+                html.append("</tr>");
+
+                html.append("</tbody></table><br/>");
+            }
+
+
+            html.append("</body></html>");
+
+            MailHelper.MultipartMessage msg = MailHelper.createMultipartMessage();
+            ValidEmail ve = new ValidEmail(user.getEmail());
+            msg.setFrom(LookAndFeelProperties.getInstance(container).getSystemEmailAddress());
+            msg.setSubject("Panorama QC Notification - " + recentOutliers + " outliers in new sample imported into " + containerPath);
+            msg.setRecipient(Message.RecipientType.TO, ve.getAddress());
+            msg.setEncodedHtmlContent(html.toString());
+            MailHelper.send(msg, user, container);
+        }
     }
 
     private Map<String, Info> setSampleFiles(List<LJOutlier> ljOutliers, String containerPath)

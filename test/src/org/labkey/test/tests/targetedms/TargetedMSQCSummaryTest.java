@@ -46,7 +46,9 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -192,10 +194,10 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         assertEquals("Unexpected number of points", 2 * sampleFileCount, getQCPlotPointCount());
 
         log("Validate the recently loaded file content is correct.");
-        List<String> tempStringList01 = new ArrayList<>();
+        Map<String, String> tempStringList01 = new LinkedHashMap<>();
         List<List<String>> tempStringList02 = new ArrayList<>();
-        tempStringList01.add("2015-01-16 15:08 - no outliers");
-        tempStringList01.add("2015-01-16 12:47 - no outliers");
+        tempStringList01.put("25fmol_Pepmix_spike_SRM_1601_04", "0");
+        tempStringList01.put("25fmol_Pepmix_spike_SRM_1601_03", "0");
         tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_04", "Acquired Date/Time: 2015-01-16 15:08"));
         tempStringList02.add(Arrays.asList("25fmol_Pepmix_spike_SRM_1601_03", "Acquired Date/Time: 2015-01-16 12:47"));
         validateSampleFile(0, tempStringList01, tempStringList02);
@@ -218,7 +220,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     public void testShowAutoQC()
     {
         String lastPingedDate;
-        List<String> tempStringList01 = new ArrayList<>();
+        Map<String, String> tempStringList01 = new LinkedHashMap<>();
         List<List<String>> tempStringList02 = new ArrayList<>();
         final int MAIN_SUMMARY = 0;
         final int SUB_FOLDER01 = 1;
@@ -228,18 +230,15 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         setAutoQCPingTimeOut(QCPING_TIMEOUT);
 
         waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
-        tempStringList01.add("2013-08-27 14:45 - no outliers");
-        tempStringList01.add("2013-08-27 03:19 - no outliers");
-        tempStringList01.add("2013-08-26 04:27 - no outliers");
+        tempStringList01.put("Q_Exactive_08_23_2013_JGB_58", "0");
+        tempStringList01.put("Q_Exactive_08_23_2013_JGB_51", "0");
+        tempStringList01.put("Q_Exactive_08_23_2013_JGB_37", "0");
         tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_58", "Acquired Date/Time: 2013-08-27 14:45"));
         tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_51", "Acquired Date/Time: 2013-08-27 03:19"));
-        tempStringList02.add(Arrays.asList("Out of guide set range: no outliers"));
+        tempStringList02.add(Arrays.asList("No outliers"));
         validateSampleFile(0, tempStringList01, tempStringList02);
 
-        tempStringList01.clear();
-        tempStringList01.add("qc-none");
-        tempStringList01.add("fa-circle-o");
-        validateAutoQCStatus(MAIN_SUMMARY, tempStringList01, "Has never been pinged");
+        validateAutoQCStatus(MAIN_SUMMARY, Arrays.asList("qc-none", "fa-circle-o"), "Has never been pinged");
 
         log("Ping the data.");
         //http://localhost:8080/labkey/TargetedMSQCSummaryTest%20Project/QC%20Subfolder%202/targetedms-autoqcping.view
@@ -249,10 +248,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         refresh();
         waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
 
-        tempStringList01.clear();
-        tempStringList01.add("qc-correct");
-        tempStringList01.add("fa-check-circle");
-        validateAutoQCStatus(MAIN_SUMMARY, tempStringList01, "Was pinged recently on " + lastPingedDate);
+        validateAutoQCStatus(MAIN_SUMMARY, Arrays.asList("qc-correct", "fa-check-circle"), "Was pinged recently on " + lastPingedDate);
 
         log("Now wait for ping limit to occur.");
         sleep(QCPING_WAIT);
@@ -260,22 +256,13 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         log("Again need to refresh the page to see the updated status.");
         refresh();
 
-        tempStringList01.clear();
-        tempStringList01.add("qc-error");
-        tempStringList01.add("fa-circle");
-        validateAutoQCStatus(MAIN_SUMMARY, tempStringList01, "Was pinged on " + lastPingedDate);
+        validateAutoQCStatus(MAIN_SUMMARY, Arrays.asList("qc-error", "fa-circle"), "Was pinged on " + lastPingedDate);
 
         log("Now validate the icon for the sub-folder 1.");
-        tempStringList01.clear();
-        tempStringList01.add("qc-none");
-        tempStringList01.add("fa-circle-o");
-        validateAutoQCStatus(SUB_FOLDER01, tempStringList01, "Has never been pinged");
+        validateAutoQCStatus(SUB_FOLDER01, Arrays.asList("qc-none", "fa-circle-o"), "Has never been pinged");
 
         log("Now validate the icon for the sub-folder 2.");
-        tempStringList01.clear();
-        tempStringList01.add("qc-none");
-        tempStringList01.add("fa-circle-o");
-        validateAutoQCStatus(SUB_FOLDER02, tempStringList01, "Has never been pinged");
+        validateAutoQCStatus(SUB_FOLDER02, Arrays.asList("qc-none", "fa-circle-o"), "Has never been pinged");
 
         log("Ping the data in Subfolder 2.");
         lastPingedDate = doAutoQCPing(FOLDER_2);
@@ -285,10 +272,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
 
         log("Validate the updated icons for the sub-folder 2.");
-        tempStringList01.clear();
-        tempStringList01.add("qc-correct");
-        tempStringList01.add("fa-check-circle");
-        validateAutoQCStatus(SUB_FOLDER02, tempStringList01, "Was pinged recently on " + lastPingedDate);
+        validateAutoQCStatus(SUB_FOLDER02, Arrays.asList("qc-correct", "fa-check-circle"), "Was pinged recently on " + lastPingedDate);
 
         log("Now wait for ping limit to occur.");
         sleep(QCPING_WAIT);
@@ -297,10 +281,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         refresh();
 
         log("Validate the ping timeout icons for the sub-folder 2.");
-        tempStringList01.clear();
-        tempStringList01.add("qc-error");
-        tempStringList01.add("fa-circle");
-        validateAutoQCStatus(SUB_FOLDER02, tempStringList01, "Was pinged on " + lastPingedDate);
+        validateAutoQCStatus(SUB_FOLDER02, Arrays.asList("qc-error", "fa-circle"), "Was pinged on " + lastPingedDate);
 
         log("Validate that a guide set updates the file info as expected.");
         GuideSet gs = new GuideSet("2013-08-22 00:00", "2013-08-27 00:04", null);
@@ -310,8 +291,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         waitForRecentSampleFiles(6);
 
         tempStringList01.clear();
-        tempStringList01.add("2013-08-27 14:45 - 1/56 (Levey-Jennings), 1/56 (Moving Range)");
-        tempStringList01.add("2013-08-27 03:19 - 4/56 (Moving Range) outliers");
+        tempStringList01.put("Q_Exactive_08_23_2013_JGB_58", "2");
+        tempStringList01.put("Q_Exactive_08_23_2013_JGB_51", "4");
 
         tempStringList02.clear();
         tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_58", "Full Width at Half Maximum (FWHM) 1 1 0 0 0 0"));
@@ -352,7 +333,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
     }
 
-    private void validateSampleFile(int fileDetailIndex, List<String> fileDetails, List<List<String>> bubbleTexts)
+    private void validateSampleFile(int fileDetailIndex, Map<String, String> fileDetails, List<List<String>> bubbleTexts)
     {
         if (fileDetails.size() != bubbleTexts.size())
             throw new IllegalArgumentException("The fileDetails and bubbleTexts list are not of equal length.");
@@ -360,15 +341,18 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         QCSummaryWebPart qcSummaryWebPart = qcDashboard.getQcSummaryWebPart();
 
-        for(int i = 0; i< fileDetails.size(); i++)
+        int i = 0;
+        for(Map.Entry<String, String> entry : fileDetails.entrySet())
         {
-            String fileDetailText = fileDetails.get(i);
+            String fileDetailText = entry.getKey();
             List<String> perBubbleTexts = bubbleTexts.get(i);
             QCSummaryWebPart.QcSummaryTile qcSummaryTile = qcSummaryWebPart.getQcSummaryTiles().get(fileDetailIndex);
-
             String actualFileDetailText = qcSummaryTile.getRecentSampleFiles().get(i).getText();
+            String actualOutliersText = qcSummaryTile.getRecentSampleFileOutliers().get(i).getText();
+
             log("Validate that the file detail text is '" + fileDetailText + "'.");
             assertTrue("File detail text not as expected. File detail text: '" + actualFileDetailText + "'" + " Expected: '" + fileDetailText + "'", actualFileDetailText.toLowerCase().contains(fileDetailText.toLowerCase()));
+            assertEquals("Outliers text not as expected for " + actualFileDetailText, entry.getValue(), actualOutliersText);
 
             mouseOver(qcSummaryTile.getRecentSampleFiles().get(i));
             waitForElement(qcSummaryWebPart.getBubble());
@@ -386,6 +370,8 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
             log("Move the mouse to avoid another hopscotch bubble.");
             mouseOver(Locator.css(".labkey-page-nav"));
             waitForElementToDisappear(qcSummaryWebPart.getBubble());
+
+            i++;
         }
 
     }

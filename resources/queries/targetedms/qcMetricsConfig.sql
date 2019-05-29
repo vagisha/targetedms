@@ -8,6 +8,7 @@ SELECT
        qmc.Series2Label,
        qmc.Series2SchemaName,
        qmc.Series2QueryName,
+       qmc.PrecursorScoped,
        CASE WHEN qem.enabled IS NOT NULL THEN qem.enabled
             ELSE TRUE END AS Enabled,
        CASE WHEN qem.metric IS NULL THEN FALSE

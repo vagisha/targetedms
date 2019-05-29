@@ -837,6 +837,7 @@ public class TargetedMSController extends SpringActionController
             autoQCPingMap.put("isRecent", lastModified.getTime() >= timeoutMinutesAgo);
         }
         properties.put("autoQCPing", autoQCPingMap);
+        properties.put("metricCount", TargetedMSManager.get().getEnabledQCMetricConfigurations(instrumentContainer, getUser()).size());
 
         return properties;
     }
@@ -972,6 +973,34 @@ public class TargetedMSController extends SpringActionController
         public void setSampleLimit(Integer sampleLimit)
         {
             _sampleLimit = sampleLimit;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class GetQCMetricOutlierForNotificationAction extends ReadOnlyApiAction<QCMetricOutliersForm>
+    {
+
+        @Override
+        public Object execute(QCMetricOutliersForm form, BindException errors) throws Exception
+        {
+            List<QCMetricConfiguration> enabledQCMetricConfigurations = TargetedMSManager.get().getEnabledQCMetricConfigurations(getContainer(), getUser());
+
+            if(!enabledQCMetricConfigurations.isEmpty())
+            {
+
+                CUSUMOutliers cusumOutliers = new CUSUMOutliers();
+
+                List<LJOutlier> ljOutliers = LeveyJenningsOutliers.getLJOutliers(enabledQCMetricConfigurations, getContainer(), getUser(), form.getSampleLimit());
+                if (!ljOutliers.isEmpty())
+                {
+                    List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(getContainer(), getUser(), enabledQCMetricConfigurations);
+                    List<RawMetricDataSet> rawMetricDataSets = new CUSUMOutliers().getRawMetricDataSets(getContainer(), getUser(), enabledQCMetricConfigurations);
+
+                    cusumOutliers.sendEmailNotification(ljOutliers, rawGuideSets, rawMetricDataSets, getContainer().getPath(), getUser(), getContainer());
+                }
+            }
+
+            return null;
         }
     }
 
