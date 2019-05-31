@@ -32,6 +32,7 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
@@ -106,7 +107,7 @@ public class TargetedMsRunListView extends ExperimentRunListView
         }
         else
         {
-            if(TargetedMSManager.getFolderType(getContainer()) == TargetedMSModule.FolderType.Experiment)
+            if(TargetedMSManager.getFolderType(getContainer()) == TargetedMSService.FolderType.Experiment)
             {
                 // We are only allowing runs to be moved between experimental data folders.
                 setShowMoveRunsButton(true);

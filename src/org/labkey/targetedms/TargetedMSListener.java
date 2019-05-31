@@ -84,6 +84,9 @@ public class TargetedMSListener implements ExperimentListener, ContainerManager.
         //Clean up QC enabled metrics
         new SqlExecutor(TargetedMSManager.getSchema()).execute("DELETE FROM " + TargetedMSManager.getTableInfoQCEnabledMetrics() + " WHERE Container = ?", c);
 
+        //Clean up QC email notifications
+        new SqlExecutor(TargetedMSManager.getSchema()).execute("DELETE FROM " + TargetedMSManager.getTableInfoQCEmailNotifications() + " WHERE Container = ?", c);
+
         BlibSpectrumReader.clearBlibCache(c);
     }
 

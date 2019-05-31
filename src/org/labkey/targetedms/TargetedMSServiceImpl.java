@@ -16,13 +16,18 @@
 package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.security.User;
 import org.labkey.api.targetedms.ITargetedMSRun;
+import org.labkey.api.targetedms.SkyLineDocumentImportListener;
 import org.labkey.api.targetedms.SkylineAnnotation;
 import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.targetedms.query.ReplicateManager;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: vsharma
@@ -31,6 +36,8 @@ import java.util.List;
  */
 public class TargetedMSServiceImpl implements TargetedMSService
 {
+    private List<SkyLineDocumentImportListener> _skyLineDocumentImportListeners = new ArrayList<>();
+
     @Override
     public ITargetedMSRun getRun(int runId, Container container)
     {
@@ -58,5 +65,29 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public List<? extends SkylineAnnotation> getReplicateAnnotations(Container container)
     {
         return ReplicateManager.getReplicateAnnotationNameValues(container);
+    }
+
+    @Override
+    public void registerSkyLineDocumentImportListener(SkyLineDocumentImportListener listener)
+    {
+        _skyLineDocumentImportListeners.add(listener);
+    }
+
+    @Override
+    public List<SkyLineDocumentImportListener> getSkyLineDocumentImportListener()
+    {
+        return _skyLineDocumentImportListeners;
+    }
+
+    @Override
+    public Map<String, SampleFileInfo> getSampleFiles(Container container, User user, Integer sampleFileLimit)
+    {
+        return TargetedMSManager.get().getSampleFiles(container, user, sampleFileLimit);
+    }
+
+    @Override
+    public FolderType getFolderType(Container container)
+    {
+        return TargetedMSManager.getFolderType(container);
     }
 }

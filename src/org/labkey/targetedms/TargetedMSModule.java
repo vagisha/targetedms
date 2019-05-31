@@ -137,16 +137,11 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String PREFER_SKYD_FILE_CHROMATOGRAMS = "Prefer loading chromatograms from SKYD file when possible";
     public static final String SKYLINE_AUDIT_LEVEL = "Audit log integrity level for the uploaded Skyline documents";
 
-    public enum FolderType
-    {
-        Experiment, Library, LibraryProtein, QC, Undefined
-    }
-
     public TargetedMSModule()
     {
         FOLDER_TYPE_PROPERTY = new ModuleProperty(this, TARGETED_MS_FOLDER_TYPE);
         // Set up the TargetedMS Folder Type property
-        FOLDER_TYPE_PROPERTY.setDefaultValue(FolderType.Undefined.toString());
+        FOLDER_TYPE_PROPERTY.setDefaultValue(TargetedMSService.FolderType.Undefined.toString());
         FOLDER_TYPE_PROPERTY.setCanSetPerContainer(true);
         FOLDER_TYPE_PROPERTY.setShowDescriptionInline(true);
         addModuleProperty(FOLDER_TYPE_PROPERTY);
@@ -427,6 +422,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 return metric;
             });
         }
+        TargetedMSService.setInstance(new TargetedMSServiceImpl());
     }
 
     @Override
@@ -459,8 +455,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         proteinService.registerProteinSearchView(new TransitionProteinSearchViewProvider());
         proteinService.registerPeptideSearchView(new TransitionPeptideSearchViewProvider());
         proteinService.registerProteinSearchFormView(new ProteinSearchWebPart.ProteinSearchFormViewProvider());
-
-        TargetedMSService.setInstance(new TargetedMSServiceImpl());
 
         AuditLogService.get().registerAuditType(new TargetedMsRepresentativeStateAuditProvider());
 
@@ -536,7 +530,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         return new TargetedMSUpgradeCode();
     }
 
-    public static FolderType getFolderType(@NotNull Container container)
+    public static TargetedMSService.FolderType getFolderType(@NotNull Container container)
     {
         TargetedMSModule targetedMSModule = null;
         for (Module m : container.getActiveModules())
@@ -550,7 +544,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         if (targetedMSModule != null)
         {
             ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
-            return FolderType.valueOf(moduleProperty.getValueContainerSpecific(container));
+            return TargetedMSService.FolderType.valueOf(moduleProperty.getValueContainerSpecific(container));
         }
 
         return null;

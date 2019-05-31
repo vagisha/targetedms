@@ -32,8 +32,8 @@ import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.targetedms.TargetedMSManager;
-import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
 
@@ -116,8 +116,8 @@ public class SampleFileTable extends TargetedMSTable
     public boolean hasPermission(@NotNull UserPrincipal user, @NotNull Class<? extends Permission> perm)
     {
         // only allow delete of targetedms.SampleFile table for QC folder type
-        TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
-        boolean allowDelete = folderType == TargetedMSModule.FolderType.QC && DeletePermission.class.equals(perm);
+        TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
+        boolean allowDelete = folderType == TargetedMSService.FolderType.QC && DeletePermission.class.equals(perm);
 
         return (ReadPermission.class.equals(perm) || allowDelete) && getContainer().hasPermission(user, perm);
     }

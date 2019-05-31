@@ -22,17 +22,17 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
-<%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
 <%@ page import="org.labkey.targetedms.query.ConflictResultsManager" %>
 <%@ page import="java.nio.file.Files" %>
 <%@ page import="java.nio.file.Path" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     Container c = getContainer();
     User user = getUser();
-    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(c);
+    TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(c);
 
     long peptideGroupCount = TargetedMSController.getNumRepresentativeProteins(user, c);
     long peptideCount = TargetedMSController.getNumRepresentativePeptides(c);
@@ -42,7 +42,7 @@
     Path archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, currentRevision);
 
     long conflictCount = ConflictResultsManager.getConflictCount(user, c);
-    String conflictViewUrl = (folderType == TargetedMSModule.FolderType.LibraryProtein) ?
+    String conflictViewUrl = (folderType == TargetedMSService.FolderType.LibraryProtein) ?
                                            new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, c).getLocalURIString() :
                                            new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, c).getLocalURIString();
 %>
@@ -77,7 +77,7 @@
     <h3>Library Statistics:</h3>
     <p class="banner">
 <%
-            if (folderType == TargetedMSModule.FolderType.Library)
+            if (folderType == TargetedMSService.FolderType.Library)
             {
 %>
         The library contains <%= h(format.format(peptideCount))%> peptides with <%= h(format.format(transitionCount))%> ranked transitions.
@@ -94,7 +94,7 @@
 %>
 <%
             }
-            else if (folderType == TargetedMSModule.FolderType.LibraryProtein)
+            else if (folderType == TargetedMSService.FolderType.LibraryProtein)
             {
 %>
         The library contains <%= h(format.format(peptideGroupCount))%> proteins with <%= h(format.format(peptideCount)) %> ranked peptides.<br>

@@ -42,6 +42,8 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.SkyLineDocumentImportListener;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.writer.ZipUtil;
@@ -187,9 +189,9 @@ public class SkylineDocImporter
             return run;
         }
 
-        TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(_container);
-        _isProteinLibraryDoc = folderType == TargetedMSModule.FolderType.LibraryProtein;
-        _isPeptideLibraryDoc = folderType == TargetedMSModule.FolderType.Library;
+        TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(_container);
+        _isProteinLibraryDoc = folderType == TargetedMSService.FolderType.LibraryProtein;
+        _isPeptideLibraryDoc = folderType == TargetedMSService.FolderType.Library;
 
         try
         {
@@ -207,6 +209,8 @@ public class SkylineDocImporter
             _log.info("Completed import of Skyline document from " + run.getFileName());
 
             updateRunStatus(IMPORT_SUCCEEDED, STATUS_SUCCESS);
+            TargetedMSService.get().getSkyLineDocumentImportListener().forEach(listener -> listener.onDocumentImport(_container, _user, run));
+
             return TargetedMSManager.getRun(_runId);
         }
         catch (FileNotFoundException fnfe)
@@ -317,7 +321,7 @@ public class SkylineDocImporter
                 Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap = new HashMap<>();
                 Map<Instrument, Integer> instrumentIdMap = new HashMap<>();
 
-                TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(run.getContainer());
+                TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(run.getContainer());
                 Set<URI> files = new HashSet<>();
                 SampleFile srcFile;
 
@@ -341,7 +345,7 @@ public class SkylineDocImporter
                         replicate.setDpPredictorId(dpPredictor.getId());
                     }
 
-                    if (folderType == TargetedMSModule.FolderType.QC)
+                    if (folderType == TargetedMSService.FolderType.QC)
                     {
                         // In QC folders insert a replicate only if at least one of the associated sample files will be inserted
                         for (SampleFile sampleFile : replicate.getSampleFileList())
@@ -382,7 +386,7 @@ public class SkylineDocImporter
                         annotation.setSource(ReplicateAnnotation.SOURCE_SKYLINE);
                         Table.insert(_user, TargetedMSManager.getTableInfoReplicateAnnotation(), annotation);
 
-                        if (annotation.isIgnoreInQC() && folderType == TargetedMSModule.FolderType.QC)
+                        if (annotation.isIgnoreInQC() && folderType == TargetedMSService.FolderType.QC)
                             ignoreInQcAnnot = annotation;
                     }
 
@@ -601,7 +605,7 @@ public class SkylineDocImporter
                 Table.insert(_user, TargetedMSManager.getTableInfoQuantificationSettings(), quantificationSettings);
             }
 
-                if (folderType == TargetedMSModule.FolderType.QC)
+                if (folderType == TargetedMSService.FolderType.QC)
                 {
                     Set<String> expectedPeptides = TargetedMSManager.getDistinctPeptides(_container);
                     Set<String> expectedMolecules = TargetedMSManager.getDistinctMolecules(_container);
@@ -643,7 +647,7 @@ public class SkylineDocImporter
             run.setDocumentGUID(parser.getDocumentGUID());
             Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
-            if (folderType == TargetedMSModule.FolderType.QC)
+            if (folderType == TargetedMSService.FolderType.QC)
             {
                 TargetedMSManager.purgeUnreferencedReplicates(_container);
                 List<String> msgs = TargetedMSManager.purgeUnreferencedFiles(files, _container, _user);
@@ -766,7 +770,7 @@ public class SkylineDocImporter
 
             // Experiment folders get a new scale for every imported run
             // Library folders have a single scale which gets updated with a weighted average of observed values on each import.
-            if (scaleIds.isEmpty() || TargetedMSManager.getFolderType(_container) == TargetedMSModule.FolderType.Experiment)
+            if (scaleIds.isEmpty() || TargetedMSManager.getFolderType(_container) == TargetedMSService.FolderType.Experiment)
                 newScale = true;
             else
             {

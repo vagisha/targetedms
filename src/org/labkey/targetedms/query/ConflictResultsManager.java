@@ -23,9 +23,9 @@ import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.Formats;
 import org.labkey.targetedms.TargetedMSManager;
-import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.conflict.ConflictPeptide;
 import org.labkey.targetedms.conflict.ConflictPrecursor;
@@ -41,7 +41,6 @@ import org.labkey.targetedms.parser.TransitionChromInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -463,15 +462,15 @@ public class ConflictResultsManager
 
     public static long getConflictCount(User user, Container container) {
 
-        final TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
+        final TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(container);
 
         long conflictCount = 0;
 
-        if(folderType == TargetedMSModule.FolderType.LibraryProtein)
+        if(folderType == TargetedMSService.FolderType.LibraryProtein)
         {
             conflictCount = getProteinConflictCount(user, container);
         }
-        else if(folderType == TargetedMSModule.FolderType.Library)
+        else if(folderType == TargetedMSService.FolderType.Library)
         {
             conflictCount = getPeptideConflictCount(user, container);
         }

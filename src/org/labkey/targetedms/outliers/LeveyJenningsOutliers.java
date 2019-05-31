@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.Sort;
 import org.labkey.api.security.User;
-import org.labkey.targetedms.model.LJOutlier;
+import org.labkey.api.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 
 import java.util.List;

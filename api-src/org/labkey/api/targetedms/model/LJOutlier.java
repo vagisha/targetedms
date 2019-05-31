@@ -1,4 +1,4 @@
-package org.labkey.targetedms.model;
+package org.labkey.api.targetedms.model;
 
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
