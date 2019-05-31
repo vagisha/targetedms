@@ -89,11 +89,6 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
         // Don't apply the container filter normally, let us apply it in our wrapper around the normally generated SQL
     }
 
-    public void setNeedsContainerWhereClause(boolean needsContainerWhereClause)
-    {
-        _needsContainerWhereClause = needsContainerWhereClause;
-    }
-
     @Override
     @NotNull
     public SQLFragment getFromSQL(String alias)
@@ -102,7 +97,7 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
         sql.append(super.getFromSQL("X"));
         sql.append(" ");
 
-        if (_needsContainerWhereClause || _containerTableFilter != null)
+        if (getContainerFilter() != ContainerFilter.EVERYTHING || _containerTableFilter != null)
         {
             sql.append(_joinType != null ? _joinType.getSQL() : "");
 

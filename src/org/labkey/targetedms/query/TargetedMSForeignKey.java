@@ -38,8 +38,9 @@ public class TargetedMSForeignKey extends LookupForeignKey
     @Override
     public TableInfo getLookupTableInfo()
     {
-        TableInfo table = _schema.getTable(_tableName);
-        ((TargetedMSTable)table).setNeedsContainerWhereClause(false);
-        return table;
+        // Avoid applying a container filter on lookups. The import process should be only creating FKs to data
+        // in the same container. Thus, we can rely on the outer query doing the proper filtering and avoid
+        // what can be expensive multi-table joins to get to a table that has the Container column we need
+        return _schema.getTable(_tableName, ContainerFilter.EVERYTHING);
     }
 }
