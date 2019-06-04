@@ -32,7 +32,7 @@ public class CUSUMOutliers extends  Outliers
         String exclusionWhereSQL = getExclusionWhereSql(id);
 
         return "SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.AcquiredTime, p.MetricValue, p.SeriesType, " +
-                "\nFROM guideset gs" +
+                "\nFROM GuideSetForOutliers gs" +
                 (includeAllValues ? "\nFULL" : "\nLEFT") + " JOIN (" + series1SQL + series2SQL + exclusionWhereSQL + ") as p"+
                 "\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd" +
                 "\n ORDER BY GuideSetId, p.SeriesLabel, p.AcquiredTime";
@@ -87,7 +87,7 @@ public class CUSUMOutliers extends  Outliers
                 + "\n      FROM " + schemaName + '.' + queryName + whereClause + ") X "
                 + "\nLEFT JOIN (SELECT DISTINCT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = " + id + ") exclusion"
                 + "\nON X.ReplicateId = exclusion.ReplicateId"
-                + "\nLEFT JOIN guideset gs"
+                + "\nLEFT JOIN GuideSetForOutliers gs"
                 + "\nON ((X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime < gs.ReferenceEnd) OR (X.AcquiredTime >= gs.TrainingStart AND gs.ReferenceEnd IS NULL))"
                 + "\nORDER BY X.SeriesLabel, SeriesType, X.AcquiredTime");
 
