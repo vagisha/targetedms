@@ -319,10 +319,11 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
         }
         else {
             content += '<table class="labkey-data-region-legacy labkey-show-borders">';
-            content += '<thead><tr><td class="labkey-column-header"></td><td class="labkey-column-header" colspan="6" align="center">Outliers</td></tr>' +
+            content += '<thead><tr><td class="labkey-column-header"></td><td class="labkey-column-header" colspan="7" align="center">Outliers</td></tr>' +
                             '<tr>' +
-                                '<td class="labkey-column-header"></td><td class="labkey-column-header"></td>' +
-                                '<td class="labkey-column-header"></td><td class="labkey-column-header" colspan="4" align="center">CUSUM</td>' +
+                                '<td class="labkey-column-header"/>' +
+                                '<td class="labkey-column-header" colspan="2" /><td class="labkey-column-header" colspan="4" align="center">CUSUM</td>' +
+                                '<td class="labkey-column-header"/>' +
                             '</tr>' +
                             '<tr>' +
                                 '<td class="labkey-column-header outlier-column-header">Metric</td>' +
@@ -332,6 +333,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                                 '<td class="labkey-column-header outlier-column-header" title="Mean CUSUM+">Mean+</td>' +
                                 '<td class="labkey-column-header outlier-column-header" title="Variability CUSUM-">Variability-</td>' +
                                 '<td class="labkey-column-header outlier-column-header" title="Variability CUSUM+">Variability+</td>' +
+                                '<td class="labkey-column-header outlier-column-header"><b>Total</b></td>' +
                             '</tr>' +
                         '</thead><tbody>';
 
@@ -360,6 +362,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'CUSUMmP') + '</td>';
                     content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'CUSUMvN') + '</td>';
                     content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'CUSUMvP') + '</td>';
+                    content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(item, 'Total') + '</td>';
                 }
                 content += '</tr>';
                 rowCount++;
@@ -373,6 +376,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(sampleFile, 'CUSUMmP') + '</td>';
             content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(sampleFile, 'CUSUMvN') + '</td>';
             content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(sampleFile, 'CUSUMvP') + '</td>';
+            content += '<td align="right">' + this.getSampleDetailOutlierDisplayValue(sampleFile, 'Total') + '</td>';
             content += '</tr>';
 
             content += '</tbody>';
@@ -388,7 +392,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     id: Ext4.id(),
                     target: el.dom,
                     placement: 'bottom',
-                    width: sampleFile.Items.length > 0 ? 655 : 300,
+                    width: sampleFile.Items.length > 0 ? 720 : 300,
                     title: 'Sample Details',
                     content: content,
                     onShow: this.attachHopscotchMouseClose
@@ -420,7 +424,11 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
     },
 
     getSampleDetailOutlierDisplayValue : function(item, variable) {
-        return item[variable] ? ('<b>' + item[variable] + '</b>') : 0
+        var value = item[variable];
+        if ('Total' === variable) {
+            value = item['NonConformers'] + item['mR'] + item['CUSUMmN'] + item['CUSUMmP'] + item['CUSUMvN'] + item['CUSUMvP'];
+        }
+        return value ? ('<b>' + value + '</b>') : 0
     },
     
     sortObjectOfObjects: function (data, attr) {
