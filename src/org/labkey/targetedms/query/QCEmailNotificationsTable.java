@@ -12,9 +12,11 @@ import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.QueryUpdateServiceException;
+import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
+import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.targetedms.TargetedMSManager;
@@ -28,7 +30,22 @@ public class QCEmailNotificationsTable extends FilteredTable<TargetedMSSchema>
     public QCEmailNotificationsTable(@NotNull TargetedMSSchema userSchema, @Nullable ContainerFilter containerFilter)
     {
         super(TargetedMSManager.getTableInfoQCEmailNotifications(), userSchema, containerFilter);
-        wrapAllColumns(true);
+        var userColumn = wrapColumn("User", getRealTable().getColumn("userId"));
+        var outlierColumn = wrapColumn("Outlier Count", getRealTable().getColumn("outliers"));
+        var sampleFilesColumn = wrapColumn("Sample Files Count", getRealTable().getColumn("samples"));
+        var enabled = wrapColumn("Subscribed", getRealTable().getColumn("enabled"));
+
+        addColumn(userColumn);
+        userColumn.setFk(new UserIdQueryForeignKey(_userSchema));
+        addColumn(outlierColumn);
+        addColumn(sampleFilesColumn);
+        addColumn(enabled);
+
+        // Only admins can see subscriptions for other users
+        if (!userSchema.getContainer().hasPermission(userSchema.getUser(), AdminPermission.class))
+        {
+            addCondition(getRealTable().getColumn("userId"), userSchema.getUser().getUserId());
+        }
     }
 
     @Override
@@ -68,19 +85,41 @@ public class QCEmailNotificationsTable extends FilteredTable<TargetedMSSchema>
         @Override
         protected Map<String, Object> insertRow(User user, Container container, Map<String, Object> row) throws DuplicateKeyException, ValidationException, QueryUpdateServiceException, SQLException
         {
-            return user.getUserId() == (int) row.get("userId") ? super.insertRow(user, container, row) : null;
+             if(user.getUserId() == (int) row.get("userId"))
+             {
+                 return super.insertRow(user, container, row);
+             }
+             else
+             {
+                 throw new ValidationException("Can't subscribe to notifications for other user.");
+             }
         }
 
         @Override
         protected Map<String, Object> updateRow(User user, Container container, Map<String, Object> row, @NotNull Map<String, Object> oldRow) throws InvalidKeyException, ValidationException, QueryUpdateServiceException, SQLException
         {
-            return user.getUserId() == (int) row.get("userId") ?  super.updateRow(user, container, row, oldRow): null;
+            if(user.getUserId() == (int) row.get("userId"))
+            {
+                return super.updateRow(user, container, row, oldRow);
+
+            }
+            else
+            {
+                throw new ValidationException("Can't modify subscriptions for other user.");
+            }
         }
 
         @Override
         protected Map<String, Object> deleteRow(User user, Container container, Map<String, Object> oldRowMap) throws QueryUpdateServiceException, SQLException, InvalidKeyException
         {
-            return user.getUserId() == (int) oldRowMap.get("userId") ?  super.deleteRow(user, container, oldRowMap): null;
+            if(user.getUserId() == (int) oldRowMap.get("userId"))
+            {
+                return super.deleteRow(user, container, oldRowMap);
+            }
+            else
+            {
+                throw new QueryUpdateServiceException("Can't delete subscriptions of other user."); //super method does not throw ValidationException
+            }
         }
     }
 }
