@@ -1,6 +1,6 @@
 
 SELECT
-       '0' AS RowId,
-       '01/01/1900' AS TrainingStart,
+       0 AS RowId,
+       CAST('01/01/1900' AS TIMESTAMP) AS TrainingStart,
        curdate() AS TrainingEnd,
-       NULL AS ReferenceEnd
+       CAST(NULL AS TIMESTAMP) AS ReferenceEnd
