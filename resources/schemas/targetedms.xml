@@ -33,7 +33,6 @@
                 <columnTitle>Label</columnTitle>
                 <displayWidth>15</displayWidth>
             </column>
-            <column columnName="bogus2"></column>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="Replicate">

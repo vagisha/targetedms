@@ -49,8 +49,8 @@ public interface TargetedMSService
     ITargetedMSRun getRunByFileName(String fileName, Container container);
     List<ITargetedMSRun> getRuns(Container container);
     List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);
-    void registerSkyLineDocumentImportListener(SkyLineDocumentImportListener skyLineDocumentImportListener);
-    List<SkyLineDocumentImportListener> getSkyLineDocumentImportListener();
+    void registerSkylineDocumentImportListener(SkylineDocumentImportListener skyLineDocumentImportListener);
+    List<SkylineDocumentImportListener> getSkylineDocumentImportListener();
     Map<String, SampleFileInfo> getSampleFiles(Container container, User user, Integer sampleFileLimit);
     TargetedMSService.FolderType getFolderType(Container container);
 }

@@ -42,7 +42,6 @@ import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
-import org.labkey.api.targetedms.SkyLineDocumentImportListener;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
@@ -209,7 +208,7 @@ public class SkylineDocImporter
             _log.info("Completed import of Skyline document from " + run.getFileName());
 
             updateRunStatus(IMPORT_SUCCEEDED, STATUS_SUCCESS);
-            TargetedMSService.get().getSkyLineDocumentImportListener().forEach(listener -> listener.onDocumentImport(_container, _user, run));
+            TargetedMSService.get().getSkylineDocumentImportListener().forEach(listener -> listener.onDocumentImport(_container, _user, run));
 
             return TargetedMSManager.getRun(_runId);
         }

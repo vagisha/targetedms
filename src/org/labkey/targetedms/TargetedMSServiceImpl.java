@@ -18,7 +18,7 @@ package org.labkey.targetedms;
 import org.labkey.api.data.Container;
 import org.labkey.api.security.User;
 import org.labkey.api.targetedms.ITargetedMSRun;
-import org.labkey.api.targetedms.SkyLineDocumentImportListener;
+import org.labkey.api.targetedms.SkylineDocumentImportListener;
 import org.labkey.api.targetedms.SkylineAnnotation;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
@@ -36,7 +36,7 @@ import java.util.Map;
  */
 public class TargetedMSServiceImpl implements TargetedMSService
 {
-    private List<SkyLineDocumentImportListener> _skyLineDocumentImportListeners = new ArrayList<>();
+    private List<SkylineDocumentImportListener> _skylineDocumentImportListeners = new ArrayList<>();
 
     @Override
     public ITargetedMSRun getRun(int runId, Container container)
@@ -68,15 +68,15 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public void registerSkyLineDocumentImportListener(SkyLineDocumentImportListener listener)
+    public void registerSkylineDocumentImportListener(SkylineDocumentImportListener listener)
     {
-        _skyLineDocumentImportListeners.add(listener);
+        _skylineDocumentImportListeners.add(listener);
     }
 
     @Override
-    public List<SkyLineDocumentImportListener> getSkyLineDocumentImportListener()
+    public List<SkylineDocumentImportListener> getSkylineDocumentImportListener()
     {
-        return _skyLineDocumentImportListeners;
+        return _skylineDocumentImportListeners;
     }
 
     @Override

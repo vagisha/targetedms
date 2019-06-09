@@ -30,10 +30,10 @@ public class QCEmailNotificationsTable extends FilteredTable<TargetedMSSchema>
     public QCEmailNotificationsTable(@NotNull TargetedMSSchema userSchema, @Nullable ContainerFilter containerFilter)
     {
         super(TargetedMSManager.getTableInfoQCEmailNotifications(), userSchema, containerFilter);
-        var userColumn = wrapColumn("User", getRealTable().getColumn("userId"));
-        var outlierColumn = wrapColumn("Outlier Count", getRealTable().getColumn("outliers"));
-        var sampleFilesColumn = wrapColumn("Sample Files Count", getRealTable().getColumn("samples"));
-        var enabled = wrapColumn("Subscribed", getRealTable().getColumn("enabled"));
+        var userColumn = wrapColumn(getRealTable().getColumn("userId"));
+        var outlierColumn = wrapColumn( getRealTable().getColumn("outliers"));
+        var sampleFilesColumn = wrapColumn( getRealTable().getColumn("samples"));
+        var enabled = wrapColumn(getRealTable().getColumn("enabled"));
 
         addColumn(userColumn);
         userColumn.setFk(new UserIdQueryForeignKey(_userSchema));
