@@ -14,5 +14,4 @@
  * limitations under the License.
  */
 
-DROP TABLE IF EXISTS targetedms.QCEmailNotifications;
-GO
+EXEC core.fn_dropifexists 'QCEmailNotifications','targetedms','TABLE', NULL;
