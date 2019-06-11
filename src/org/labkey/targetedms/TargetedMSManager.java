@@ -511,11 +511,6 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_QC_ENABLED_METRICS);
     }
 
-    public static TableInfo getTableInfoQCEmailNotifications()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_QC_EMAIL_NOTIFICATIONS);
-    }
-
     public static TableInfo getTableInfoSkylineAuditLogEntry()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_ENTRY);

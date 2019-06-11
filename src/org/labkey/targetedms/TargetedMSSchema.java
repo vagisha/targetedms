@@ -178,7 +178,6 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_QC_METRIC_CONFIGURATION = "QCMetricConfiguration";
     public static final String TABLE_QC_METRIC_EXCLUSION = "QCMetricExclusion";
     public static final String TABLE_QC_ENABLED_METRICS = "QCEnabledMetrics";
-    public static final String TABLE_QC_EMAIL_NOTIFICATIONS = "QCEmailNotifications";
 
     public static final String TABLE_GUIDE_SET = "GuideSet";
 
@@ -868,10 +867,6 @@ public class TargetedMSSchema extends UserSchema
         {
             return new QCEnabledMetricsTable(this, cf);
         }
-        if(TABLE_QC_EMAIL_NOTIFICATIONS.equalsIgnoreCase(name))
-        {
-            return new QCEmailNotificationsTable(this, cf);
-        }
         if (TABLE_GUIDE_SET.equalsIgnoreCase(name))
         {
             return new GuideSetTable(this, cf);
@@ -1436,7 +1431,6 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_QC_METRIC_CONFIGURATION);
         hs.add(TABLE_QC_METRIC_EXCLUSION);
         hs.add(TABLE_QC_ENABLED_METRICS);
-        hs.add(TABLE_QC_EMAIL_NOTIFICATIONS);
         return hs;
     }
 
