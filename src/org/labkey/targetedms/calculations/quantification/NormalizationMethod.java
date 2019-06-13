@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 LabKey Corporation
+ * Copyright (c) 2017-2019 LabKey Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * You may obtain a copy of the License at
