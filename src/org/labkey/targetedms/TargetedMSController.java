@@ -802,22 +802,22 @@ public class TargetedMSController extends SpringActionController
 
         // # Skyline documents, count of rows in targetedms.Runs
         // and date of last import, max(created) from targetedms.Runs
-        sql = new SQLFragment("(SELECT COUNT(Id) As docCount, MAX(Created) AS lastImportDate FROM ");
-        sql.append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE Container = ? AND StatusId = ?)");
+        sql = new SQLFragment("SELECT COUNT(Id) As docCount, MAX(Created) AS lastImportDate FROM ");
+        sql.append(TargetedMSManager.getTableInfoRuns(), "r").append(" WHERE Container = ? AND StatusId = ?");
         sql.add(container.getId()).add(SkylineDocImporter.STATUS_SUCCESS);
         Map<String, Object> valueMap = new SqlSelector(TargetedMSSchema.getSchema(), sql).getMap();
         properties.put("docCount", valueMap.get("docCount"));
         properties.put("lastImportDate", valueMap.get("lastImportDate"));
 
         // # sample files, count of rows in targetedms.SampleFile
-        sql = new SQLFragment("(SELECT COUNT(s.Id) FROM ").append(TargetedMSManager.getTableInfoSampleFile(), "s");
+        sql = new SQLFragment("SELECT COUNT(s.Id) FROM ").append(TargetedMSManager.getTableInfoSampleFile(), "s");
         sql.append(" JOIN ").append(TargetedMSManager.getTableInfoReplicate(), "re").append(" ON s.ReplicateId = re.Id");
         sql.append(" JOIN ").append(TargetedMSManager.getTableInfoRuns(), "r").append(" ON re.RunId = r.Id");
-        sql.append(" WHERE r.Container = ?)").add(container.getId());
+        sql.append(" WHERE r.Container = ?").add(container.getId());
         properties.put("fileCount", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class));
 
         // # precursors tracked, count of distinct precursors. Include peptides and small molecules
-        sql = new SQLFragment("SELECT DISTINCT COALESCE(p.ModifiedSequence, mp.CustomIonName), gp.Charge");
+        sql = new SQLFragment("SELECT DISTINCT COALESCE(p.ModifiedSequence, mp.CustomIonName) AS SeriesLabel, gp.Charge");
         sql.append(" FROM ").append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(" JOIN ").append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON gp.GeneralMoleculeId = gm.Id");
         sql.append(" JOIN ").append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(" ON gm.PeptideGroupId = pg.Id");
