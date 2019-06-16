@@ -5,8 +5,6 @@ dependencies
    external 'com.google.protobuf:protobuf-java:3.2.0'
    BuildUtils.addLabKeyDependency(project: project, config: "compile", depProjectPath:  BuildUtils.getCommonAssayModuleProjectPath(project.gradle, "ms2"), depProjectConfig: "apiCompile")
    BuildUtils.addLabKeyDependency(project: project, config: "jspCompile", depProjectPath: BuildUtils.getCommonAssayModuleProjectPath(project.gradle, "ms2"), depProjectConfig: "apiCompile")
-   BuildUtils.addLabKeyDependency(project: project, config: "jspCompile", depProjectPath: BuildUtils.getCommonAssayModuleProjectPath(project.gradle, "ms1"), depProjectConfig: "apiCompile")
-
 }
 
 // TODO move resources files into resources directory to avoid this overlap

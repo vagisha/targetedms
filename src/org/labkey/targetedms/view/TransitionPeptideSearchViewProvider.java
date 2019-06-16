@@ -73,7 +73,7 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
             @Override
             protected TableInfo createTable()
             {
-                TargetedMSTable result = (TargetedMSTable) super.createTable();
+                TargetedMSTable result = (TargetedMSTable) getSchema().getTable(getSettings().getQueryName(), ContainerFilter.getContainerFilterByName(settings.getContainerFilterName(), getUser()), true, true);
                 result.addCondition(new SimpleFilter(form.createFilter("Sequence")));
 
 				boolean isJournalFolder = JournalManager.isJournalProject(viewContext.getContainer());
