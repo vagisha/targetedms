@@ -638,7 +638,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
 
     public Locator getLegendItemLocatorByTitle(String text)
     {
-        return elementCache().legendItemTitle.withText(text);
+        // Use containing instead of withText() to ignore the +2 or other suffices
+        return elementCache().legendItemTitle.containing(text);
     }
 
     public Locator getLegendPopupItemLocator(String text, boolean exactMatch)

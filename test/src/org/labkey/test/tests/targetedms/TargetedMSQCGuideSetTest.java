@@ -347,8 +347,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
             DataRegionTable table = new DataRegionTable("query", this);
             table.setFilter("GuideSetId", "Equals", String.valueOf(gs.getRowId()));
+            // Filter with a Contains to catch the "+2" or similar suffix
             if (stats.getPrecursor() != null)
-                table.setFilter("SeriesLabel", "Equals", stats.getPrecursor());
+                table.setFilter("SeriesLabel", "Contains", stats.getPrecursor() + " ");
             else
                 table.setFilter("SeriesLabel", "Is Blank", null);
 

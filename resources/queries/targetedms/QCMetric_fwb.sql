@@ -17,7 +17,7 @@ SELECT
   COALESCE(PrecursorId.Id, MoleculePrecursorId.Id) AS PrecursorId,
   Id AS PrecursorChromInfoId,
   SampleFileId AS SampleFileId,
-  COALESCE(PrecursorId.ModifiedSequence, MoleculePrecursorId.CustomIonName) AS SeriesLabel,
+  COALESCE(PrecursorId.ModifiedSequence, MoleculePrecursorId.CustomIonName) || (CASE WHEN COALESCE(PrecursorId.Charge, MoleculePrecursorId.Charge) > 0 THEN ' +' ELSE ' ' END) || CAST(COALESCE(PrecursorId.Charge, MoleculePrecursorId.Charge) AS VARCHAR) AS SeriesLabel,
   CASE WHEN PrecursorId.Id IS NOT NULL THEN 'Peptide' ELSE 'Fragment' END AS DataType,
   MaxFWB AS MetricValue,
   COALESCE(PrecursorId.Mz, MoleculePrecursorId.Mz) AS mz

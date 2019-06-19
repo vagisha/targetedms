@@ -31,7 +31,6 @@ import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
 import org.labkey.api.view.ViewContext;
-import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.query.ExperimentTitleDisplayColumn;
@@ -82,7 +81,7 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
                 // Apply a filter to restrict to the set of matching proteins
                 SQLFragment sql = new SQLFragment("Id IN (SELECT pg.Id FROM targetedms.PeptideGroup AS pg ");
 
-                sql.append(" WHERE ( ");
+                sql.append(" WHERE ((");
                 if (form.getSeqId().length > 0)
                 {
                     sql.append("pg.SequenceId IN (");
@@ -99,6 +98,9 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
 
                 sql.append(getProteinLabelCondition("pg.Label", getProteinLabels(form.getIdentifier()), form.isExactMatch()));
 
+                ContainerFilter cf = form.isIncludeSubfolders() ? new ContainerFilter.CurrentAndSubfolders(getUser()) : ContainerFilter.CURRENT;
+                sql.append(")) AND RunId IN (SELECT Id FROM targetedms.runs WHERE ");
+                sql.append(cf.getSQLFragment(result.getSchema(), new SQLFragment("Container"), getContainer()));
                 sql.append("))");
                 result.addCondition(sql);
 

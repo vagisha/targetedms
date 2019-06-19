@@ -98,7 +98,7 @@ public class LeveyJenningsOutliers extends Outliers
      */
     private static String getLatestSampleFileStatSql(int id, String name, String label, String schema, String query, @Nullable Integer sampleLimit)
     {
-        return "SELECT stats.GuideSetId,"
+        return "SELECT MAX(stats.GuideSetId) AS GuideSetId,"
                 + "\n'" + id + "' AS MetricId,"
                 + "\n'" + name + "' AS MetricName,"
                 + "\n'" + label + "' AS MetricLabel,"
@@ -118,6 +118,6 @@ public class LeveyJenningsOutliers extends Outliers
                 + "\nON X.SeriesLabel = stats.SeriesLabel"
                 + "\nAND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
                 + "\n   OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
-                + "\nGROUP BY stats.GuideSetId, X.SampleFile, X.AcquiredTime, exclusion.ReplicateId";
+                + "\nGROUP BY X.SampleFile, X.AcquiredTime, exclusion.ReplicateId";
     }
 }

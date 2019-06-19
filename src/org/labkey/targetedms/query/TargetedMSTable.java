@@ -48,8 +48,6 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
     private final TargetedMSSchema.ContainerJoinType _joinType;
     private final SQLFragment _containerSQL;
 
-    private boolean _needsContainerWhereClause = true;
-
     private CompareType.EqualsCompareClause _containerTableFilter;
 
     /** Assumes that the table has its own container column, instead of needing to join to another table for container info */
