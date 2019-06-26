@@ -22,7 +22,6 @@ import org.junit.Test;
 import org.labkey.api.data.BaseSelector;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.Filter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
@@ -60,18 +59,16 @@ public class SkylineAuditLogImporter
     private Logger _logger;
     private File _logFile;
     private GUID _documentGUID;
-    private Container _container;
     private AuditLogTree _logTree;
     private SkylineAuditLogParser _parser = null;
     private SkylineAuditLogSecurityManager _securityMgr = null;
     private MessageDigest _rootHash = null;
 
-    public SkylineAuditLogImporter(Logger p_logger, File p_logFile, GUID p_documentGUID, Container p_container, User p_user) throws AuditLogException{
+    public SkylineAuditLogImporter(File pLogFile, GUID pDocumentGUID, Container pContainer, User pUser) throws AuditLogException{
         _logger = Logger.getLogger(this.getClass());
-        _logFile = p_logFile;
-        _documentGUID = p_documentGUID;
-        _container = p_container;
-        _securityMgr = new SkylineAuditLogSecurityManager(p_container, p_user);
+        _logFile = pLogFile;
+        _documentGUID = pDocumentGUID;
+        _securityMgr = new SkylineAuditLogSecurityManager(pContainer, pUser);
         try
         {
             _rootHash = MessageDigest.getInstance("SHA1");
@@ -94,7 +91,7 @@ public class SkylineAuditLogImporter
 //        _logIntegrityLevel = getIntegrityLevel().getValue();
 
         //verify if log file and GUID are not empty
-        if(_logFile == null && _logFile.exists()){
+        if(_logFile == null || !_logFile.exists()){
             if(_securityMgr.getIntegrityLevel() == SkylineAuditLogSecurityManager.INTEGRITY_LEVEL.ANY){
                 _logger.warn("Log file is missing. Proceeding without the log.");
             }
@@ -112,10 +109,10 @@ public class SkylineAuditLogImporter
 
         //retrieve number of documents with the same GUID
         TableInfo runsTbl = TargetedMSManager.getTableInfoRuns();
-        Filter guidFilter = new SimpleFilter(FieldKey.fromParts("documentGuid"), _documentGUID.toString());
+        SimpleFilter guidFilter = new SimpleFilter(FieldKey.fromParts("documentGuid"), _documentGUID.toString());
 
         SQLFragment query = new SQLFragment("SELECT count(*) docCount FROM ").append(runsTbl.getSelectName()).append(" ");
-        query.append(((SimpleFilter) guidFilter).getSQLFragment(TargetedMSManager.getSqlDialect()));
+        query.append(guidFilter.getSQLFragment(TargetedMSManager.getSqlDialect()));
 
         BaseSelector.ResultSetHandler<Integer> resultSetHandler = (rs, conn) -> {
             if(rs.next()){
@@ -207,7 +204,6 @@ public class SkylineAuditLogImporter
                 {
                     //advance the tree and proceed to the next entry
                     treePointer = treePointer.getChild(ent.getEntryHash());
-                    continue;
                 }
                 else
                 {
@@ -264,16 +260,16 @@ public class SkylineAuditLogImporter
 
         treeQuery.append("( ");
 
-        Filter entryFilter = new SimpleFilter(FieldKey.fromParts("documentGuid"), "'" + _documentGUID.toString() + "'");
+        SimpleFilter entryFilter = new SimpleFilter(FieldKey.fromParts("documentGuid"), "'" + _documentGUID.toString() + "'");
         treeQuery.append("SELECT entryid, entryhash, parententryhash, 1 \n")
                 .append("FROM " + entryTbl.getSchema().getName() + "." + entryTbl.getName() + " \n")
-                .append("WHERE " + ((SimpleFilter) entryFilter).getFilterText() + "\n")
+                .append("WHERE " + entryFilter.getFilterText() + "\n")
                 .append("  AND parententryhash = '" + AuditLogTree.NULL_STRING + "' \n")
              .append(" UNION ALL \n")
                 .append(" SELECT entryid, entryhash, parententryhash, treedepth + 1 \n")
                 .append("FROM " + entryTbl.getSchema().getName() + "." + entryTbl.getName() + " e \n")
                 .append(" JOIN tree ON tree.hash = e.parententryhash \n")
-                .append("WHERE " + ((SimpleFilter) entryFilter).getFilterText() + "\n")
+                .append("WHERE " + entryFilter.getFilterText() + "\n")
                  .append(" )\n")
                  .append(" SELECT DISTINCT * FROM tree ORDER BY treedepth");
 
@@ -321,10 +317,10 @@ public class SkylineAuditLogImporter
             _container = ContainerManager.ensureContainer(JunitUtil.getTestContainer(), FOLDER_NAME);
         }
 
-        private AuditLogTree persistALogFile(String filePath, Integer runId) throws IOException, AuditLogException, AuditLogParsingException{
-            File f_zip = UnitTestUtil.getSampleDataFile(filePath);
-            File logFile = UnitTestUtil.extractLogFromZip(f_zip, _logger);
-            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( _logger, logFile, _docGUID, _container, _user);
+        private AuditLogTree persistALogFile(String filePath, Integer runId) throws IOException, AuditLogException{
+            File fZip = UnitTestUtil.getSampleDataFile(filePath);
+            File logFile = UnitTestUtil.extractLogFromZip(fZip, _logger);
+            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( logFile, _docGUID, _container, _user);
 
             if(importer.verifyPreRequisites()) {
                 importer.persistAuditLog(runId);
@@ -336,20 +332,13 @@ public class SkylineAuditLogImporter
         }
 
         //@Test
-        public void BuildTreeTest() throws IOException, AuditLogException, AuditLogParsingException
+        public void BuildTreeTest() throws IOException, AuditLogException
         {
-            File f_zip = UnitTestUtil.getSampleDataFile("AuditLogFiles/MethodEdit_v1.zip");
-            File logFile = UnitTestUtil.extractLogFromZip(f_zip, _logger);
 
-            Container panoramaContainer = null;
-            for(Container c :ContainerManager.getHomeContainer().getChildren()){
-                if(c.getName() == "PANORAMA"){
-                    panoramaContainer = c;
-                    break;
-                }
-            }
-            assertNotNull(panoramaContainer);
-            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( _logger, logFile, _docGUID, panoramaContainer, _user);
+            File fZip = UnitTestUtil.getSampleDataFile("AuditLogFiles/MethodEdit_v1.zip");
+            File logFile = UnitTestUtil.extractLogFromZip(fZip, _logger);
+
+            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( logFile, _docGUID, _container, _user);
 
             importer.verifyPreRequisites();
             importer.persistAuditLog(null);
@@ -360,7 +349,7 @@ public class SkylineAuditLogImporter
         }
 
         @Test
-        public void AddAVersionTest() throws IOException, AuditLogException, AuditLogParsingException
+        public void AddAVersionTest() throws IOException, AuditLogException
         {
             _logger.info("AuditLogFiles/MethodEdit_v2.zip");
             persistALogFile("AuditLogFiles/MethodEdit_v2.zip", null);

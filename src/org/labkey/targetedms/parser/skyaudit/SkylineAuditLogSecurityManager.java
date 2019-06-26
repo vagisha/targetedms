@@ -19,19 +19,9 @@ package org.labkey.targetedms.parser.skyaudit;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
-import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.security.User;
-import org.labkey.targetedms.SkylineAuditLogImporter;
 import org.labkey.targetedms.TargetedMSModule;
-import org.labkey.targetedms.TargetedMSRun;
-import org.mozilla.javascript.commonjs.module.ModuleScope;
-
-import java.nio.charset.Charset;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
 
 /**
  * This class determines security level of the current Skyline document upload operation
@@ -45,7 +35,7 @@ public class SkylineAuditLogSecurityManager
         ANY(0), HASH(1), RSA(2);
 
         private int value;
-        private INTEGRITY_LEVEL(int p_value){this.value = p_value;}
+        INTEGRITY_LEVEL(int pValue){this.value = pValue;}
         public int getValue(){return this.value;}
 
     }
@@ -56,9 +46,9 @@ public class SkylineAuditLogSecurityManager
     private Logger _logger;
     private Module _panorama;
 
-    public SkylineAuditLogSecurityManager(Container p_container, User p_user) throws AuditLogException{
-        _container = p_container;
-        _user = p_user;
+    public SkylineAuditLogSecurityManager(Container pContainer, User pUser) throws AuditLogException{
+        _container = pContainer;
+        _user = pUser;
         _logger = Logger.getLogger(this.getClass());
 
 
@@ -82,11 +72,10 @@ public class SkylineAuditLogSecurityManager
     /**
      * Calculate integrity level for the current upload based on the container access
      * and user privileges.
-     * @return
+     * @return returns member if INTEGRITY_LEVEL enum for the current integrity level
      */
     public INTEGRITY_LEVEL getIntegrityLevel(){
 
-        //_container.
         return _verificationLevel;
     }
 
@@ -96,16 +85,16 @@ public class SkylineAuditLogSecurityManager
      */
 
 
-    public void reportErrorForIntegrityLevel(String p_message, INTEGRITY_LEVEL minTolerateLevel, Throwable e) throws AuditLogException
+    public void reportErrorForIntegrityLevel(String pMessage, INTEGRITY_LEVEL minTolerateLevel, Throwable e) throws AuditLogException
     {
         if(getIntegrityLevel().getValue() <= minTolerateLevel.getValue())
-            _logger.warn(p_message, e);
+            _logger.warn(pMessage, e);
         else
-            throw new AuditLogException(p_message, e);
+            throw new AuditLogException(pMessage, e);
     }
 
-    public void reportErrorForIntegrityLevel(String p_message, INTEGRITY_LEVEL minTolerateLevel) throws AuditLogException
+    public void reportErrorForIntegrityLevel(String pMessage, INTEGRITY_LEVEL minTolerateLevel) throws AuditLogException
     {
-        reportErrorForIntegrityLevel(p_message, minTolerateLevel, null);
+        reportErrorForIntegrityLevel(pMessage, minTolerateLevel, null);
     }
 }

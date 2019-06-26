@@ -19,22 +19,23 @@ import org.labkey.api.util.GUID;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 public class AuditLogTree implements Iterable<AuditLogTree>
 {
     public static final String NULL_STRING = "(null)";
 
-    private HashMap<String, AuditLogTree> _children = new HashMap<String, AuditLogTree>();
+    private Map<String, AuditLogTree> _children = new HashMap<>();
     private String _entryHash;
     private GUID _documentGUID;
     private String _parentEntryHash;
     private Integer _entryId;
 
-    public AuditLogTree(Integer p_entryId, GUID p_documentGUID, String p_entryHash, String p_parentEntryHash){
-        _entryHash = p_entryHash;
-        _documentGUID = p_documentGUID;
-        _parentEntryHash = p_parentEntryHash;
-        _entryId = p_entryId;
+    public AuditLogTree(Integer pEntryid, GUID pDocumentGUID, String pEntryHash, String pParentEntryHash){
+        _entryHash = pEntryHash;
+        _documentGUID = pDocumentGUID;
+        _parentEntryHash = pParentEntryHash;
+        _entryId = pEntryid;
     }
 
     public String getEntryHash()
@@ -57,17 +58,17 @@ public class AuditLogTree implements Iterable<AuditLogTree>
         return _entryId;
     }
 
-    public AuditLogTree addChild(AuditLogTree p_child)
+    public AuditLogTree addChild(AuditLogTree pChild)
     {
-        if(!_children.containsKey(p_child._entryHash))
-            _children.put(p_child.getEntryHash(), p_child);
-        return p_child;
+        if(!_children.containsKey(pChild._entryHash))
+            _children.put(pChild.getEntryHash(), pChild);
+        return pChild;
     }
 
-    public int addChildren(Iterable<AuditLogTree> p_children)
+    public int addChildren(Iterable<AuditLogTree> pChildren)
     {
         int i = 0;
-        for(AuditLogTree c : p_children)
+        for(AuditLogTree c : pChildren)
         {
             addChild(c);
             i++;
@@ -75,30 +76,26 @@ public class AuditLogTree implements Iterable<AuditLogTree>
         return i;
     }
 
-    public boolean hasChild(AuditLogTree p_entry)
+    public boolean hasChild(AuditLogTree pEntry)
     {
-        return _children.containsKey(p_entry._entryHash);
+        return _children.containsKey(pEntry._entryHash);
     }
-    public boolean hasChild(String p_entryHash){
-        return _children.containsKey(p_entryHash);
+    public boolean hasChild(String pEntryHash){
+        return _children.containsKey(pEntryHash);
     }
-    public AuditLogTree getChild(String p_entryHash) {
-        if(_children.containsKey(p_entryHash))
-            return _children.get(p_entryHash);
-        else
-            return null;
+    public AuditLogTree getChild(String pEntryHash) {
+        return _children.getOrDefault(pEntryHash, null);
     }
 
     public int getTreeSize(){
-        int result = 1;     //to count the root.
         return getTreeSizeRecursive(0) + 1;
     }
 
-    private int getTreeSizeRecursive(int p_size){
+    private int getTreeSizeRecursive(int pSize){
         int s = 0;
         for(AuditLogTree t : this)
-            s += t.getTreeSizeRecursive(p_size);
-        return p_size + _children.size() + s;
+            s += t.getTreeSizeRecursive(pSize);
+        return pSize + _children.size() + s;
     }
 
     @Override
@@ -118,7 +115,10 @@ public class AuditLogTree implements Iterable<AuditLogTree>
     @Override
     public boolean equals(Object o){
         if( o instanceof AuditLogTree)
-            return (this._entryHash == ((AuditLogTree)o)._entryHash);
+        {
+            if(this._entryHash == null) return false;
+            return (this._entryHash.equals( ((AuditLogTree) o)._entryHash) );
+        }
         else
             return false;
     }

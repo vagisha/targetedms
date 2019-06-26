@@ -31,6 +31,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -44,8 +45,8 @@ import java.util.stream.Collectors;
 public class AuditLogMessageExpander
 {
     private Map<String, Map<String, String>> _resources;
-    private ArrayList<UnaryOperator<String>> _parserFunctions;
-    private ArrayList<Predicate<String>> _checkerFunctions;
+    private List<UnaryOperator<String>> _parserFunctions;
+    private List<Predicate<String>> _checkerFunctions;
     private Logger _logger;
     private AuditLogResourceLoader _loader;
     private static final Pattern _formatMatch = Pattern.compile("\\{(([0-9]+):([a-zA-Z0-9_]+))\\}");
@@ -53,12 +54,12 @@ public class AuditLogMessageExpander
     private boolean _allMessagesExpanded = true;
 
 
-    public AuditLogMessageExpander(Logger p_logger){
-        _logger = p_logger;
+    public AuditLogMessageExpander(Logger pLogger){
+        _logger = pLogger;
         _loader = new AuditLogResourceLoader(_logger);
         _resources = _loader.loadResources();
 
-        _parserFunctions = new ArrayList<UnaryOperator<String>>() {
+        _parserFunctions = new ArrayList<>() {
             {
                 add((s) -> getResource(AuditLogResourceLoader.PROPERTIES, s));
                 add((s) -> getResource(AuditLogResourceLoader.PROPERTY_ELEMENTS, s));
@@ -70,7 +71,7 @@ public class AuditLogMessageExpander
             }
         };
 
-        _checkerFunctions = new ArrayList<Predicate<String>>() {
+        _checkerFunctions = new ArrayList<>() {
             {
                 add((s) -> _resources.get(AuditLogResourceLoader.PROPERTIES).containsKey(s));
                 add((s) -> _resources.get(AuditLogResourceLoader.PROPERTY_ELEMENTS).containsKey(s));
@@ -83,14 +84,14 @@ public class AuditLogMessageExpander
         };
     }
 
-    private String getResource(String p_resourceName, String p_elementName){
-        Map<String, String> resource = _resources.get(p_resourceName);
-        if(resource.containsKey(p_elementName))
-            return resource.get(p_elementName);
+    private String getResource(String pResourceName, String pElementName){
+        Map<String, String> resource = _resources.get(pResourceName);
+        if(resource.containsKey(pElementName))
+            return resource.get(pElementName);
         else
         {
             _allMessagesExpanded = false;
-            return p_elementName;
+            return pElementName;
         }
     }
 
@@ -138,11 +139,11 @@ public class AuditLogMessageExpander
         Matcher match = _cSharpFormatMatch.matcher(s);
         StringBuilder resultBuilder = new StringBuilder();
         boolean hasMatches = false;
-        int last_pos = 0;
+        int lastPos = 0;
         while(match.find()){
-            resultBuilder.append(s.substring(last_pos, match.start()));
+            resultBuilder.append(s.substring(lastPos, match.start()));
             resultBuilder.append( String.format("%%%s$s", match.group(1)));
-            last_pos = match.end();
+            lastPos = match.end();
             hasMatches = true;
         }
         if(hasMatches)
@@ -166,13 +167,13 @@ public class AuditLogMessageExpander
             return str;
 
         StringBuilder resultBuilder = new StringBuilder();
-        int last_pos = 0;
+        int lastPos = 0;
         boolean hasMatches = false;
         //find all possible expansion tokens
         Matcher match = _formatMatch.matcher(str);
         while(match.find())
         {
-            resultBuilder.append(str.substring(last_pos, match.start()));
+            resultBuilder.append(str.substring(lastPos, match.start()));
             //verify that function index is correct and property is in the file
             int functionIndex = Integer.parseInt(match.group(2));
             if (functionIndex <= 6 && _checkerFunctions.get(functionIndex).test(match.group(3)))
@@ -187,7 +188,7 @@ public class AuditLogMessageExpander
                 _logger.warn(String.format("Audit log expansion token %s cannot be expanded. Either invalid function index or unknown name.", match.group(0)));
                 resultBuilder.append(match.group(0));
             }
-            last_pos = match.end();
+            lastPos = match.end();
         }
         if(!hasMatches)    //no format expressions, returning the string as is.
             return str;
@@ -245,8 +246,8 @@ public class AuditLogMessageExpander
         private boolean _resourcesReady = true;
 
 
-        public AuditLogResourceLoader(Logger p_logger){
-            _logger = p_logger;
+        public AuditLogResourceLoader(Logger pLogger){
+            _logger = pLogger;
         }
 
         public Map<String, Map<String, String>> loadResources() 
@@ -294,17 +295,17 @@ public class AuditLogMessageExpander
         }
 
         /**
-         * Parses the resource XML file and returns key-value map of the resource
-         * @param p_file
-         * @return
+         * Parses the resource XML file
+         * @param pFile XML file to parse
+         * @return key-value map of the resources in the file
          * @throws IOException
          * @throws XMLStreamException
          */
-        private Map<String, String> parseResource(File p_file)  throws IOException, XMLStreamException
+        private Map<String, String> parseResource(File pFile)  throws IOException, XMLStreamException
         {
             Map<String, String> result = new HashMap<>();
 
-            var stream = new FileInputStream(p_file);
+            var stream = new FileInputStream(pFile);
             var inputFactory = XMLInputFactory.newInstance();
             var reader = inputFactory.createXMLStreamReader(stream);
 
@@ -330,18 +331,18 @@ public class AuditLogMessageExpander
             return result;
         }
 
-        private String readDataElement(XMLStreamReader p_reader) throws XMLStreamException {
-            XmlUtil.skip(p_reader, XMLStreamReader.START_ELEMENT, VALUE);
-            var result = p_reader.getElementText();
+        private String readDataElement(XMLStreamReader pReader) throws XMLStreamException {
+            XmlUtil.skip(pReader, XMLStreamReader.START_ELEMENT, VALUE);
+            var result = pReader.getElementText();
 
-            XmlUtil.skip(p_reader, XMLStreamReader.END_ELEMENT, VALUE);
-            p_reader.next();
-            XmlUtil.skip(p_reader, XMLStreamReader.END_ELEMENT, DATA);
-            int evt = p_reader.next();
+            XmlUtil.skip(pReader, XMLStreamReader.END_ELEMENT, VALUE);
+            pReader.next();
+            XmlUtil.skip(pReader, XMLStreamReader.END_ELEMENT, DATA);
+            int evt = pReader.next();
 
-            if (XmlUtil.isStartElement(p_reader, evt, COMMENT)) {
-                XmlUtil.skip(p_reader, XMLStreamReader.END_ELEMENT, COMMENT);
-                p_reader.next();
+            if (XmlUtil.isStartElement(pReader, evt, COMMENT)) {
+                XmlUtil.skip(pReader, XMLStreamReader.END_ELEMENT, COMMENT);
+                pReader.next();
             }
             return result;
         }

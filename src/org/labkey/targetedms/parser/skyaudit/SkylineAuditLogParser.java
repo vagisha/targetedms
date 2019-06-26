@@ -55,7 +55,7 @@ import java.util.List;
 public class SkylineAuditLogParser
 {
     //------ log root
-    public static final String AUDIT_LOG_ROOT = "audit_log_root";
+    //public static final String AUDIT_LOG_ROOT = "audit_log_root";
     public static final String FORMAT_VERSION = "format_version";
     public static final String DOCUMENT_HASH = "document_hash";
     public static final String EN_ROOT_HASH = "root_hash";
@@ -88,7 +88,6 @@ public class SkylineAuditLogParser
 
     private String _documentHash;
     private String _enRootHash;
-    private String _formatVersion;
 
 
     public SkylineAuditLogParser(File logFile, Logger logger)  throws AuditLogException{
@@ -133,7 +132,7 @@ public class SkylineAuditLogParser
         auditLogStream = new FilterInputStream(new BufferedInputStream(auditLogStream)) {
             @Override
             public void close() {
-                try{ super.close();} catch(IOException e){};
+                try{ super.close();} catch(IOException e){}
             }
         };
         validator.validate(new StreamSource(auditLogStream));
@@ -145,11 +144,9 @@ public class SkylineAuditLogParser
      * This method parses the beginning of the log: the hashes and audit_log tag and stops at
      * the first log entry, ready to proceed with read/save loop
      * @throws IOException
-     * @throws SAXException
-     * @throws AuditLogParsingException
      * @throws XMLStreamException
      */
-    private void parseLogHeader() throws IOException, SAXException, AuditLogParsingException, XMLStreamException
+    private void parseLogHeader() throws IOException, XMLStreamException
     {
         _fileStream = new FileInputStream(_file);
         XMLInputFactory inputFactory = XMLInputFactory.newInstance();
@@ -157,7 +154,6 @@ public class SkylineAuditLogParser
 
         //Skipping most XML structure validation since the file passed the schema validation
         int evtType = _stream.nextTag();     //log root element read
-        this._formatVersion = _stream.getAttributeValue(null, FORMAT_VERSION);
 
         while(_stream.hasNext()){
             evtType = _stream.nextTag();
@@ -188,13 +184,13 @@ public class SkylineAuditLogParser
 
         result.setFormatVersion(_stream.getAttributeValue(null, SKYLINE_VERSION));
 
-        String time_stamp = _stream.getAttributeValue(null, TIME_STAMP);
+        String timeStamp = _stream.getAttributeValue(null, TIME_STAMP);
         try
         {
-            result.parseCreateTimestamp(time_stamp);
+            result.parseCreateTimestamp(timeStamp);
         }
         catch(DateTimeParseException e){
-            throw new AuditLogParsingException(String.format("Invalid date/time format in audit log file: %s", time_stamp), e);
+            throw new AuditLogParsingException(String.format("Invalid date/time format in audit log file: %s", timeStamp), e);
         }
         result.setUserName(_stream.getAttributeValue(null, USER));
 
@@ -245,7 +241,7 @@ public class SkylineAuditLogParser
     }
 
     private AuditLogMessage parseAuditLogMessage() throws XMLStreamException, AuditLogParsingException{
-        LinkedList<String> names = new LinkedList<String>();
+        List<String> names = new LinkedList<>();
         AuditLogMessage result = new AuditLogMessage();
         while(_stream.hasNext()){
             switch(_stream.nextTag()){
@@ -281,10 +277,7 @@ public class SkylineAuditLogParser
             _stream.close();
             _fileStream.close();
         }
-        catch(XMLStreamException e){
-            _logger.warn("Exception when trying to close audit log XML stream.", e);
-        }
-        catch(IOException e){
+        catch(IOException | XMLStreamException e){
             _logger.warn("Exception when trying to close audit log XML stream.", e);
         }
     }
@@ -312,7 +305,7 @@ public class SkylineAuditLogParser
         private static GUID _docGUID = new GUID("add8ea9c-0b32-1037-a00c-1e459cb1acac");
 
         @BeforeClass
-        public static void GetTestFile(){
+        public static void getTestFile(){
 
             _logger = Logger.getLogger(TestCase.class.getPackageName() + ".test");
             UnitTestUtil.cleanupDatabase(_docGUID);
@@ -323,8 +316,8 @@ public class SkylineAuditLogParser
         {
             List<AuditLogEntry> entries = new LinkedList<>();
 
-            File f_zip = UnitTestUtil.getSampleDataFile("AuditLogFiles/MethodEdit_v6.2.zip");
-            _logFile = UnitTestUtil.extractLogFromZip(f_zip, _logger);
+            File fZip = UnitTestUtil.getSampleDataFile("AuditLogFiles/MethodEdit_v6.2.zip");
+            _logFile = UnitTestUtil.extractLogFromZip(fZip, _logger);
             _parser = new SkylineAuditLogParser(_logFile, _logger);
             Assert.assertNotNull(_parser.getEnRootHash());
 
@@ -370,7 +363,7 @@ public class SkylineAuditLogParser
             {
                 File logFile = UnitTestUtil.getSampleDataFile("AuditLogFiles/InvalidSchemaTest.skyl");
                 SkylineAuditLogParser parser = new SkylineAuditLogParser(logFile, _logger);
-                Assert.assertTrue("Expected file validation failure but it succeeded.", false);
+                Assert.fail("Expected file validation failure but it succeeded.");
             }
             catch(Exception  e) {
                 Assert.assertTrue(true);

@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,28 +46,28 @@ public class UnitTestUtil
 {
     private static String[] _resourcePath = {"server", "customModules", "targetedms", "resources"};
 
-    public static File getSampleDataFile(String p_fileName) throws IOException
+    public static File getSampleDataFile(String pFileName) throws IOException
     {
-        String relativePath = "TargetedMS/" + p_fileName;
+        String relativePath = "TargetedMS/" + pFileName;
         File sampleDataFile = JunitUtil.getSampleData(ModuleLoader.getInstance().getModule("targetedms"), relativePath);
         if (sampleDataFile == null)
             throw new IOException("Sampledata not found: " + relativePath);
         return sampleDataFile;
     }
 
-    public static File getResourcesFile(String p_fileName) throws UnsupportedEncodingException
+    public static File getResourcesFile(String pFileName) throws UnsupportedEncodingException
     {
-        return getTestFile(p_fileName, UnitTestUtil._resourcePath);
+        return getTestFile(pFileName, UnitTestUtil._resourcePath);
     }
 
-    private static File getTestFile(String p_fileName, String[] p_pathList) throws UnsupportedEncodingException{
+    private static File getTestFile(String pFileName, String[] pPathList){
 
         //we get location of the current class file, trace it up tp the LabKey folder (which is
         //not good for production code but for testing util it should be fine) and append the
         //known path and file name to the Labkey root.
         URL r = UnitTestUtil.class.getResource("/");
         String decodedUrl = "";
-        decodedUrl = URLDecoder.decode(r.getFile(), "UTF-8");
+        decodedUrl = URLDecoder.decode(r.getFile(), StandardCharsets.UTF_8);
         if(decodedUrl.startsWith("/"))
             decodedUrl = decodedUrl.replaceFirst("/", "");
 
@@ -75,7 +76,7 @@ public class UnitTestUtil
         while(!currentDir.getFileName().toString().toLowerCase().equals("build"))
             currentDir = currentDir.getParent();
         currentDir = currentDir.getParent();
-        String[] pathComponents = new String[] {currentDir.toString(), String.join(File.separator, p_pathList), p_fileName};
+        String[] pathComponents = new String[] {currentDir.toString(), String.join(File.separator, pPathList), pFileName};
         File result = new File(String.join(File.separator, pathComponents));
         if(result.exists() && result.isFile())
             return result;
@@ -84,10 +85,10 @@ public class UnitTestUtil
     }
 
     //delete testing records from the database;
-    public static void cleanupDatabase(GUID p_documentGUID){
+    public static void cleanupDatabase(GUID pDocumentGUID){
 
         TableInfo entryTbl = TargetedMSManager.getTableInfoSkylineAuditLogEntry();
-        Filter entryFilter = new SimpleFilter(FieldKey.fromParts("documentGuid"), p_documentGUID.toString());
+        Filter entryFilter = new SimpleFilter(FieldKey.fromParts("documentGuid"), pDocumentGUID.toString());
         //retrieving entry record Ids based on the testing document GUID
         SQLFragment query = Table.getSelectSQL(entryTbl, entryTbl.getPkColumns(), entryFilter, null);
         BaseSelector.ResultSetHandler<List<Integer>> resultSetHandler = (rs, conn) -> {
@@ -109,24 +110,29 @@ public class UnitTestUtil
         Table.delete(TargetedMSManager.getTableInfoSkylineAuditLogEntry(), entryFilter);
     }
 
-    public static File extractLogFromZip(File p_zip, Logger p_logger) throws IOException
+    public static File extractLogFromZip(File pZip, Logger pLogger) throws IOException
     {
         File workingDir = new File(System.getProperty(SkylineAuditLogParser.TestCase.SYS_PROPERTY_CWD) + "/temp");
         if(!workingDir.exists())
             throw new FileExistsException("Cannot get a working dir for testing");
-        File zipDir = new File(workingDir, SkylineFileUtils.getBaseName(p_zip.getName()));
+        File zipDir = new File(workingDir, SkylineFileUtils.getBaseName(pZip.getName()));
 
         if (zipDir.exists())
         {
             String[] children = zipDir.list();
-            boolean res = false;
+            if(children == null) return null;
+            boolean res = false;    //this variable is here for debug purposes: to inspect the result of deletion operation
             for(String child : children){
                 File f = new File(zipDir, child);
                 if(f.exists())
+                {
                     res = f.delete();
+                    pLogger.debug(String.format("The file %s exists. Deletion attempt status %s.", f.toString(), res));
+                }
+
             }
         }
-        List<File> files = ZipUtil.unzipToDirectory(p_zip, zipDir, p_logger);
+        List<File> files = ZipUtil.unzipToDirectory(pZip, zipDir, pLogger);
         for(File file : files){
             String ext = FileUtil.getExtension(file.getName());
             if(SkylineAuditLogParser.TestCase.SKYLINE_LOG_EXTENSION.equals(ext))
