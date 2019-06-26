@@ -52,7 +52,7 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                 + '\nSELECT NULL AS GuideSetId, MIN(SampleFileId.AcquiredTime) AS TrainingStart, MAX(SampleFileId.AcquiredTime) AS TrainingEnd,'
                 + '\nNULL AS ReferenceEnd, SeriesLabel, \'' + series + '\' AS SeriesType, COUNT(SampleFileId) AS NumRecords, AVG(MetricValue) AS Mean, STDDEV(MetricValue) AS StandardDev'
                 + '\nFROM '+ schema + '.' + table
-                + exclusion
+                + exclusion + '\nAND (SampleFileId.AcquiredTime < (coalesce((select MIN(TrainingStart) from guideset), now())))'
                 + '\nGROUP BY SeriesLabel';
     },
 
