@@ -21,18 +21,18 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
-<%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.chromlib.ChromatogramLibraryUtils" %>
 <%@ page import="java.nio.file.Files" %>
 <%@ page import="java.nio.file.Path" %>
 <%@ page import="java.util.Date" %>
+<%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     Container c = getContainer();
-    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(c);
+    TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(c);
 
-    boolean isLibrary = ( folderType == TargetedMSModule.FolderType.Library ||
-                          folderType == TargetedMSModule.FolderType.LibraryProtein );
+    boolean isLibrary = ( folderType == TargetedMSService.FolderType.Library ||
+                          folderType == TargetedMSService.FolderType.LibraryProtein );
 
     int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c, getUser());
 %>

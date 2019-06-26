@@ -19,15 +19,15 @@ import org.json.JSONObject;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.Sort;
 import org.labkey.api.security.User;
+import org.labkey.targetedms.model.QCMetricConfiguration;
+import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.visualization.Stats;
 import org.labkey.targetedms.model.GuideSetAvgMR;
-import org.labkey.targetedms.model.LJOutlier;
-import org.labkey.targetedms.model.QCMetricConfiguration;
+import org.labkey.api.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -47,7 +47,7 @@ public class CUSUMOutliers extends  Outliers
         String exclusionWhereSQL = getExclusionWhereSql(id);
 
         return "SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.AcquiredTime, p.MetricValue, p.SeriesType, " +
-                "\nFROM guideset gs" +
+                "\nFROM GuideSetForOutliers gs" +
                 (includeAllValues ? "\nFULL" : "\nLEFT") + " JOIN (" + series1SQL + series2SQL + exclusionWhereSQL + ") as p"+
                 "\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd" +
                 "\n ORDER BY GuideSetId, p.SeriesLabel, p.AcquiredTime";
@@ -102,7 +102,7 @@ public class CUSUMOutliers extends  Outliers
                 + "\n      FROM " + schemaName + '.' + queryName + whereClause + ") X "
                 + "\nLEFT JOIN (SELECT DISTINCT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = " + id + ") exclusion"
                 + "\nON X.ReplicateId = exclusion.ReplicateId"
-                + "\nLEFT JOIN guideset gs"
+                + "\nLEFT JOIN GuideSetForOutliers gs"
                 + "\nON ((X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime < gs.ReferenceEnd) OR (X.AcquiredTime >= gs.TrainingStart AND gs.ReferenceEnd IS NULL))"
                 + "\nORDER BY X.SeriesLabel, SeriesType, X.AcquiredTime");
 
@@ -579,9 +579,9 @@ public class CUSUMOutliers extends  Outliers
         return transformedOutliers;
     }
 
-    public JSONObject getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, String containerPath)
+    public Map<String, SampleFileInfo> getSampleFiles(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, String containerPath)
     {
-        Map<String, Info> sampleFiles = setSampleFiles(ljOutliers, containerPath);
+        Map<String, SampleFileInfo> sampleFiles = setSampleFiles(ljOutliers, containerPath);
         List<Integer> validGuideSetIds = new ArrayList<>();
         sampleFiles.forEach((key,val) -> validGuideSetIds.add(val.getGuideSetId()));
         Map<String, Map<GuideSetAvgMR, List<Map<String, Double>>>> processedMetricGuides = getAllProcessedMetricGuideSets(rawGuideSets);
@@ -598,10 +598,10 @@ public class CUSUMOutliers extends  Outliers
         Map<String, Map<String, Map<String, Integer>>> transformedOutliers = getMetricOutliersByFileOrGuideSetGroup(metricOutlier);
 
         transformedOutliers.forEach((fileName, metrics) -> {
-            Info info = sampleFiles.get(fileName);
+            SampleFileInfo sampleFileInfo = sampleFiles.get(fileName);
             metrics.forEach((metric, outliers) -> {
                 LJOutlier matchedItem = null;
-                for(LJOutlier item : info.items)
+                for(LJOutlier item : sampleFileInfo.getItems())
                 {
                     if(item.getMetricLabel() != null && item.getMetricLabel().equalsIgnoreCase(metric))
                     {
@@ -611,7 +611,7 @@ public class CUSUMOutliers extends  Outliers
 
                 if(matchedItem != null)
                 {
-                   for(Map.Entry<String, Integer> outlier : outliers.entrySet())
+                    for(Map.Entry<String, Integer> outlier : outliers.entrySet())
                     {
                         if (outlier.getKey().equalsIgnoreCase("mr"))
                             matchedItem.setmR(outlier.getValue());
@@ -650,11 +650,15 @@ public class CUSUMOutliers extends  Outliers
             sample.setmR(mR);
             sample.setHasOutliers(!(sample.getNonConformers() == 0 && sample.getCUSUMm() == 0 && sample.getCUSUMv() == 0 && sample.getmR() == 0));
         });
-
-        return getSampleFilesJSON(sampleFiles);
+        return sampleFiles;
     }
 
-    public JSONObject getSampleFilesJSON(Map<String, Info> sampleFiles)
+    public JSONObject getOtherQCSampleFileStats(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, String containerPath)
+    {
+        return getSampleFilesJSON(getSampleFiles(ljOutliers, rawGuideSets, rawMetricDataSets, containerPath));
+    }
+
+    public JSONObject getSampleFilesJSON(Map<String, SampleFileInfo> sampleFiles)
     {
         JSONObject sampleFilesJSON = new JSONObject();
         sampleFiles.forEach((name, sample) -> {
@@ -664,273 +668,42 @@ public class CUSUMOutliers extends  Outliers
         return sampleFilesJSON;
     }
 
-    private Map<String, Info> setSampleFiles(List<LJOutlier> ljOutliers, String containerPath)
+    private Map<String, SampleFileInfo> setSampleFiles(List<LJOutlier> ljOutliers, String containerPath)
     {
         int index = 1;
-        Info info = null;
-        Map<String, Info> sampleFiles = new HashMap<>();
+        SampleFileInfo sampleFileInfo = null;
+        Map<String, SampleFileInfo> sampleFiles = new HashMap<>();
 
         for (LJOutlier ljOutlier : ljOutliers)
         {
-            if(info == null || (!(ljOutlier.getSampleFile() != null && ljOutlier.getSampleFile().equals(info.getSampleFile()))))
+            if(sampleFileInfo == null || (!(ljOutlier.getSampleFile() != null && ljOutlier.getSampleFile().equals(sampleFileInfo.getSampleFile()))))
             {
-                if(info != null)
-                    sampleFiles.put(info.getSampleFile(), info);
-                info = new Info();
-                info.setIndex(index++);
-                info.setSampleFile(ljOutlier.getSampleFile());
-                info.setAcquiredTime(ljOutlier.getAcquiredTime());
-                info.setMetrics(0);
-                info.setNonConformers(0);
-                info.setTotalCount(0);
+                if(sampleFileInfo != null)
+                    sampleFiles.put(sampleFileInfo.getSampleFile(), sampleFileInfo);
+                sampleFileInfo = new SampleFileInfo();
+                sampleFileInfo.setIndex(index++);
+                sampleFileInfo.setSampleFile(ljOutlier.getSampleFile());
+                sampleFileInfo.setAcquiredTime(ljOutlier.getAcquiredTime());
+                sampleFileInfo.setMetrics(0);
+                sampleFileInfo.setNonConformers(0);
+                sampleFileInfo.setTotalCount(0);
                 if(ljOutlier.getGuideSetId() != null)
-                    info.setGuideSetId(ljOutlier.getGuideSetId());
-                info.setIgnoreForAllMetric(ljOutlier.isIgnoreInQC());
+                    sampleFileInfo.setGuideSetId(ljOutlier.getGuideSetId());
+                sampleFileInfo.setIgnoreForAllMetric(ljOutlier.isIgnoreInQC());
             }
 
-            info.setIgnoreForAllMetric(ljOutlier.isIgnoreInQC() && info.isIgnoreForAllMetric());
+            sampleFileInfo.setIgnoreForAllMetric(ljOutlier.isIgnoreInQC() && sampleFileInfo.isIgnoreForAllMetric());
             if(!ljOutlier.isIgnoreInQC()) {
-                info.metrics++;
-                info.nonConformers += ljOutlier.getNonConformers();
-                info.totalCount += ljOutlier.getTotalCount();
+                sampleFileInfo.setMetrics(sampleFileInfo.getMetrics() + 1);
+                sampleFileInfo.setNonConformers(sampleFileInfo.getNonConformers() + ljOutlier.getNonConformers());
+                sampleFileInfo.setTotalCount(sampleFileInfo.getTotalCount() + ljOutlier.getTotalCount());
             }
             ljOutlier.setContainerPath(containerPath);
-            info.items.add(ljOutlier);
+            sampleFileInfo.getItems().add(ljOutlier);
         }
-        assert info != null;
-        sampleFiles.put(info.getSampleFile(), info);
+        assert sampleFileInfo != null;
+        sampleFiles.put(sampleFileInfo.getSampleFile(), sampleFileInfo);
 
         return sampleFiles;
-    }
-
-
-    private class Info
-    {
-        int index;
-        String sampleFile;
-        Date acquiredTime;
-        int metrics;
-        int nonConformers;
-        int totalCount;
-        List<LJOutlier> items;
-        int guideSetId;
-        boolean ignoreForAllMetric;
-        int CUSUMm;
-        int CUSUMv;
-        int CUSUMmP;
-        int CUSUMvP;
-        int CUSUMmN;
-        int CUSUMvN;
-        int mR;
-        boolean hasOutliers;
-
-        public Info()
-        {
-            items = new ArrayList<>();
-        }
-
-        public int getIndex()
-        {
-            return index;
-        }
-
-        public void setIndex(int index)
-        {
-            this.index = index;
-        }
-
-        public String getSampleFile()
-        {
-            return sampleFile;
-        }
-
-        public void setSampleFile(String sampleFile)
-        {
-            this.sampleFile = sampleFile;
-        }
-
-        public Date getAcquiredTime()
-        {
-            return acquiredTime;
-        }
-
-        public void setAcquiredTime(Date acquiredTime)
-        {
-            this.acquiredTime = acquiredTime;
-        }
-
-        public int getMetrics()
-        {
-            return metrics;
-        }
-
-        public void setMetrics(int metrics)
-        {
-            this.metrics = metrics;
-        }
-
-        public int getNonConformers()
-        {
-            return nonConformers;
-        }
-
-        public void setNonConformers(int nonConformers)
-        {
-            this.nonConformers = nonConformers;
-        }
-
-        public int getTotalCount()
-        {
-            return totalCount;
-        }
-
-        public void setTotalCount(int totalCount)
-        {
-            this.totalCount = totalCount;
-        }
-
-        public int getGuideSetId()
-        {
-            return guideSetId;
-        }
-
-        public void setGuideSetId(int guideSetId)
-        {
-            this.guideSetId = guideSetId;
-        }
-
-        public boolean isIgnoreForAllMetric()
-        {
-            return ignoreForAllMetric;
-        }
-
-        public void setIgnoreForAllMetric(boolean ignoreForAllMetric)
-        {
-            this.ignoreForAllMetric = ignoreForAllMetric;
-        }
-
-        public List<LJOutlier> getItems()
-        {
-            return items;
-        }
-
-        public void setItems(List<LJOutlier> items)
-        {
-            this.items = items;
-        }
-
-        public int getCUSUMm()
-        {
-            return CUSUMm;
-        }
-
-        public void setCUSUMm(int CUSUMm)
-        {
-            this.CUSUMm = CUSUMm;
-        }
-
-        public int getCUSUMv()
-        {
-            return CUSUMv;
-        }
-
-        public void setCUSUMv(int CUSUMv)
-        {
-            this.CUSUMv = CUSUMv;
-        }
-
-        public int getCUSUMmP()
-        {
-            return CUSUMmP;
-        }
-
-        public void setCUSUMmP(int CUSUMmP)
-        {
-            this.CUSUMmP = CUSUMmP;
-        }
-
-        public int getCUSUMvP()
-        {
-            return CUSUMvP;
-        }
-
-        public void setCUSUMvP(int CUSUMvP)
-        {
-            this.CUSUMvP = CUSUMvP;
-        }
-
-        public int getCUSUMmN()
-        {
-            return CUSUMmN;
-        }
-
-        public void setCUSUMmN(int CUSUMmN)
-        {
-            this.CUSUMmN = CUSUMmN;
-        }
-
-        public int getCUSUMvN()
-        {
-            return CUSUMvN;
-        }
-
-        public void setCUSUMvN(int CUSUMvN)
-        {
-            this.CUSUMvN = CUSUMvN;
-        }
-
-        public int getmR()
-        {
-            return mR;
-        }
-
-        public void setmR(int mR)
-        {
-            this.mR = mR;
-        }
-
-        public boolean isHasOutliers()
-        {
-            return hasOutliers;
-        }
-
-        public void setHasOutliers(boolean hasOutliers)
-        {
-            this.hasOutliers = hasOutliers;
-        }
-
-        public List<JSONObject> getItemsJSON(List<LJOutlier> ljOutliers)
-        {
-            List<JSONObject> jsonLJOutliers = new ArrayList<>();
-            for (LJOutlier ljOutlier : ljOutliers)
-            {
-                jsonLJOutliers.add(ljOutlier.toJSON());
-            }
-            return jsonLJOutliers;
-        }
-
-        public JSONObject toJSON(){
-            JSONObject jsonObject = new JSONObject();
-
-            jsonObject.put("Index", index);
-            jsonObject.put("SampleFile", sampleFile);
-            jsonObject.put("AcquiredTime", acquiredTime);
-            jsonObject.put("Metrics", metrics);
-            jsonObject.put("NonConformers", nonConformers);
-            jsonObject.put("TotalCount",  totalCount);
-            jsonObject.put("GuideSetId",  guideSetId);
-            jsonObject.put("IgnoreForAllMetric",  ignoreForAllMetric);
-            jsonObject.put("Items", getItemsJSON(items));
-            jsonObject.put("CUSUMm", CUSUMm);
-            jsonObject.put("CUSUMv", CUSUMv);
-            jsonObject.put("CUSUMmN", CUSUMmN);
-            jsonObject.put("CUSUMmP", CUSUMmP);
-            jsonObject.put("CUSUMvN", CUSUMvN);
-            jsonObject.put("CUSUMvP", CUSUMvP);
-            jsonObject.put("mR", mR);
-            jsonObject.put("hasOutliers", hasOutliers);
-
-            return jsonObject;
-        }
     }
 }

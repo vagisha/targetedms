@@ -15,11 +15,13 @@
  */
 package org.labkey.api.targetedms;
 
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
+import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
+import org.labkey.api.targetedms.model.SampleFileInfo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: vsharma
@@ -38,8 +40,17 @@ public interface TargetedMSService
         ServiceRegistry.get().registerService(TargetedMSService.class, impl);
     }
 
+    enum FolderType
+    {
+        Experiment, Library, LibraryProtein, QC, Undefined
+    }
+
     ITargetedMSRun getRun(int runId, Container container);
     ITargetedMSRun getRunByFileName(String fileName, Container container);
     List<ITargetedMSRun> getRuns(Container container);
     List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);
+    void registerSkylineDocumentImportListener(SkylineDocumentImportListener skyLineDocumentImportListener);
+    List<SkylineDocumentImportListener> getSkylineDocumentImportListener();
+    Map<String, SampleFileInfo> getSampleFiles(Container container, User user, Integer sampleFileLimit);
+    TargetedMSService.FolderType getFolderType(Container container);
 }

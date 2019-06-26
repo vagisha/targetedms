@@ -119,6 +119,7 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
         static final Locator summaryTile = Locator.tagWithClass("div", "summary-tile");
         static final Locator recentSampleFilesLoading = Locator.tagWithClass("div", "sample-file-details-loading");
         static final Locator recentSampleFile = Locator.css("div.sample-file-item");
+        static final Locator recentSampleFileOutliers = Locator.css("div.sample-file-item-outliers");
     }
 
     public class QcSummaryTile extends Component
@@ -129,6 +130,7 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
         private final WebElement folderLink = Locator.css("div.folder-name a").findWhenNeeded(this);
         private final WebElement autoQCIcon = Locator.css("div.auto-qc-ping span").findWhenNeeded(this);
         private List<WebElement> _recentSampleFiles;
+        private List<WebElement> _recentSampleFileOutliers;
 
         private String _folderName;
         private Integer _fileCount;
@@ -206,6 +208,16 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
                 _recentSampleFiles.addAll(Locators.recentSampleFile.findElements(this));
             }
             return _recentSampleFiles;
+        }
+
+        public List<WebElement> getRecentSampleFileOutliers()
+        {
+            if (_recentSampleFileOutliers == null)
+            {
+                _recentSampleFileOutliers = new ArrayList<>();
+                _recentSampleFileOutliers.addAll(Locators.recentSampleFileOutliers.findElements(this));
+            }
+            return _recentSampleFileOutliers;
         }
 
         public boolean hasRecentSampleFileWithOulierTxt(String acquiredDate, String outlierStr)

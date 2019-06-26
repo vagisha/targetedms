@@ -19,14 +19,14 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
-<%@ page import="org.labkey.targetedms.TargetedMSModule" %>
 <%@ page import="org.labkey.targetedms.query.ConflictResultsManager" %>
+<%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
 
     long conflictCount = ConflictResultsManager.getConflictCount(getUser(), getContainer());
-    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
-    String conflictViewUrl = (folderType == TargetedMSModule.FolderType.LibraryProtein) ?
+    TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
+    String conflictViewUrl = (folderType == TargetedMSService.FolderType.LibraryProtein) ?
                                            new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getContainer()).getLocalURIString() :
                                            new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getContainer()).getLocalURIString();
 %>
@@ -34,13 +34,13 @@
 <%
     if(conflictCount > 0) {
 %>
-    <%if(folderType == TargetedMSModule.FolderType.LibraryProtein){%>
+    <%if(folderType == TargetedMSService.FolderType.LibraryProtein){%>
         <div style="color:red; font-weight:bold;">
             There are conflicting proteins in this folder.
             <a style="color:red; text-decoration:underline;" href="<%= h(conflictViewUrl) %>">Resolve conflicts.</a>
         </div>
     <%}%>
-    <%if(folderType == TargetedMSModule.FolderType.Library){%>
+    <%if(folderType == TargetedMSService.FolderType.Library){%>
         <div style="color:red; font-weight:bold;">
             There are conflicting peptides in this folder.
             <a style="color:red; text-decoration:underline;" href="<%= h(conflictViewUrl) %>">Resolve conflicts.</a>

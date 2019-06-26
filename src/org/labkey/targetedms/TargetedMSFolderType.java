@@ -23,6 +23,7 @@ import org.labkey.api.module.ModuleProperty;
 import org.labkey.api.module.MultiPortalFolderType;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.HelpTopic;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
@@ -82,7 +83,7 @@ public class TargetedMSFolderType extends MultiPortalFolderType
             if (module instanceof TargetedMSModule)
             {
                 ModuleProperty moduleProperty = module.getModuleProperties().get(TargetedMSModule.TARGETED_MS_FOLDER_TYPE);
-                if(TargetedMSModule.FolderType.valueOf(moduleProperty.getValueContainerSpecific(c)) == TargetedMSModule.FolderType.Undefined)
+                if(TargetedMSService.FolderType.valueOf(moduleProperty.getValueContainerSpecific(c)) == TargetedMSService.FolderType.Undefined)
                 {
                     List<NavTree> extraSteps = new ArrayList<>();
                     ActionURL setupUrl = new ActionURL(TargetedMSController.SetupAction.class, c);

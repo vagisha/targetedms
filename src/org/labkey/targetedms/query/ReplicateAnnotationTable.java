@@ -28,8 +28,8 @@ import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.Permission;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.targetedms.TargetedMSManager;
-import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 
@@ -56,7 +56,7 @@ public class ReplicateAnnotationTable extends TargetedMSTable
     @Override
     public boolean hasPermission(@NotNull UserPrincipal user, @NotNull Class<? extends Permission> perm)
     {
-        if(TargetedMSManager.getFolderType(getContainer()) == TargetedMSModule.FolderType.QC)
+        if(TargetedMSManager.getFolderType(getContainer()) == TargetedMSService.FolderType.QC)
         {
             // Allow edits, deletes and inserts only in QC folder types
             return getContainer().hasPermission(user, perm);

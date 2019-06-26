@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.view;
 
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.VBox;
@@ -33,8 +34,8 @@ public class TargetedMSRunsWebPartView extends VBox
 {
     public TargetedMSRunsWebPartView(ViewContext viewContext)
     {
-        TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(viewContext.getContainer());
-        if(folderType == TargetedMSModule.FolderType.Library || folderType == TargetedMSModule.FolderType.LibraryProtein)
+        TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(viewContext.getContainer());
+        if(folderType == TargetedMSService.FolderType.Library || folderType == TargetedMSService.FolderType.LibraryProtein)
         {
             addView(new JspView("/org/labkey/targetedms/view/conflictSummary.jsp"));
         }

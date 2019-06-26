@@ -30,10 +30,11 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.labkey.api.action.*;
 import org.labkey.api.analytics.AnalyticsService;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.PopupMenu;
-import org.labkey.targetedms.model.LJOutlier;
+import org.labkey.api.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.Outlier;
 import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
@@ -175,8 +176,6 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
-import org.labkey.api.audit.AuditLogService;
-
 
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
@@ -209,7 +208,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.labkey.targetedms.TargetedMSModule.EXPERIMENT_FOLDER_WEB_PARTS;
-import static org.labkey.targetedms.TargetedMSModule.FolderType;
+import static org.labkey.api.targetedms.TargetedMSService.FolderType;
 import static org.labkey.targetedms.TargetedMSModule.LIBRARY_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.PROTEIN_LIBRARY_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.QC_FOLDER_WEB_PARTS;
@@ -770,15 +769,15 @@ public class TargetedMSController extends SpringActionController
                     Container bestContainer = container;
                     Container mostRecentPingContainer = TargetedMSManager.getMostRecentPingChild(getUser(), container);
                     // Find the most recent AutoQC ping for the subfolder or its children
-                    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(mostRecentPingContainer);
+                    TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(mostRecentPingContainer);
                     // Make sure it's a QC folder
-                    if (mostRecentPingContainer.hasPermission(getUser(), ReadPermission.class) && folderType == TargetedMSModule.FolderType.QC)
+                    if (mostRecentPingContainer.hasPermission(getUser(), ReadPermission.class) && folderType == TargetedMSService.FolderType.QC)
                     {
                          bestContainer = mostRecentPingContainer;
                     }
 
                     folderType = TargetedMSManager.getFolderType(bestContainer);
-                    if (bestContainer.hasPermission(getUser(), ReadPermission.class) && folderType == TargetedMSModule.FolderType.QC)
+                    if (bestContainer.hasPermission(getUser(), ReadPermission.class) && folderType == TargetedMSService.FolderType.QC)
                     {
                         containers.add(getContainerQCSummaryProperties(bestContainer, container, true));
                     }
@@ -837,6 +836,7 @@ public class TargetedMSController extends SpringActionController
             autoQCPingMap.put("isRecent", lastModified.getTime() >= timeoutMinutesAgo);
         }
         properties.put("autoQCPing", autoQCPingMap);
+        properties.put("metricCount", TargetedMSManager.get().getEnabledQCMetricConfigurations(instrumentContainer, getUser()).size());
 
         return properties;
     }
@@ -923,7 +923,7 @@ public class TargetedMSController extends SpringActionController
                 return sharedContainer;
             }
 
-            TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
+            FolderType folderType = TargetedMSManager.getFolderType(container);
             isParentValid = container.hasPermission(user, ReadPermission.class) && folderType == FolderType.QC;
         }
         return container;
@@ -1060,8 +1060,8 @@ public class TargetedMSController extends SpringActionController
         {
             TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext());
             VBox vbox = new VBox();
-            TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
-            if(folderType == TargetedMSModule.FolderType.Library || folderType == TargetedMSModule.FolderType.LibraryProtein)
+            FolderType folderType = TargetedMSManager.getFolderType(getContainer());
+            if(folderType == TargetedMSService.FolderType.Library || folderType == TargetedMSService.FolderType.LibraryProtein)
             {
                 vbox.addView(new JspView("/org/labkey/targetedms/view/conflictSummary.jsp"));
             }
@@ -5887,7 +5887,7 @@ public class TargetedMSController extends SpringActionController
             _fullDetails = fullDetails;
 
             Container c = _experimentAnnotations.getContainer();
-            FolderType folderType = TargetedMSModule.getFolderType(c);
+            TargetedMSService.FolderType folderType = TargetedMSModule.getFolderType(c);
             if(folderType == FolderType.Experiment)
             {
                 _lastPublishedRecord = JournalManager.getLastPublishedRecord(_experimentAnnotations.getId());

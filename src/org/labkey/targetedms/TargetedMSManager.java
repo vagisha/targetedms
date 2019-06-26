@@ -33,7 +33,6 @@ import org.labkey.api.data.DbScope;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
@@ -68,15 +67,19 @@ import org.labkey.api.query.QueryService;
 import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.security.UserManager;
 import org.labkey.api.security.permissions.DeletePermission;
-import org.labkey.api.security.permissions.InsertPermission;
+import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.api.targetedms.model.LJOutlier;
+import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.util.FileUtil;
-import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.model.QCMetricConfiguration;
+import org.labkey.targetedms.model.RawGuideSet;
+import org.labkey.targetedms.model.RawMetricDataSet;
+import org.labkey.targetedms.outliers.CUSUMOutliers;
+import org.labkey.targetedms.outliers.LeveyJenningsOutliers;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -508,11 +511,6 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_QC_ENABLED_METRICS);
     }
 
-    public static TableInfo getTableInfoQCEmailNotifications()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_QC_EMAIL_NOTIFICATIONS);
-    }
-
     public static TableInfo getTableInfoSkylineAuditLogEntry()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_ENTRY);
@@ -570,12 +568,12 @@ public class TargetedMSManager
             expData = ExperimentService.get().createData(path.toUri(), source);
         }
 
-        TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(container);
+        TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(container);
         // Default folder type or Experiment is not representative
         TargetedMSRun.RepresentativeDataState representative = TargetedMSRun.RepresentativeDataState.NotRepresentative;
-        if (folderType == TargetedMSModule.FolderType.Library)
+        if (folderType == TargetedMSService.FolderType.Library)
             representative = TargetedMSRun.RepresentativeDataState.Representative_Peptide;
-        else if (folderType == TargetedMSModule.FolderType.LibraryProtein)
+        else if (folderType == TargetedMSService.FolderType.LibraryProtein)
             representative = TargetedMSRun.RepresentativeDataState.Representative_Protein;
 
         SkylineDocImporter importer = new SkylineDocImporter(user, container, FileUtil.getFileName(path), expData, null, xarContext, representative, null, null);
@@ -913,11 +911,11 @@ public class TargetedMSManager
     public static List<Integer> getCurrentRepresentativeRunIds(Container container)
     {
         List<Integer> representativeRunIds = null;
-        if(getFolderType(container) == TargetedMSModule.FolderType.LibraryProtein)
+        if(getFolderType(container) == TargetedMSService.FolderType.LibraryProtein)
         {
             representativeRunIds = getCurrentProteinRepresentativeRunIds(container);
         }
-        else if(getFolderType(container) == TargetedMSModule.FolderType.Library)
+        else if(getFolderType(container) == TargetedMSService.FolderType.Library)
         {
             representativeRunIds = getCurrentPeptideRepresentativeRunIds(container);
         }
@@ -1711,7 +1709,7 @@ public class TargetedMSManager
     }
 
     // return the ModuleProperty value for "TARGETED_MS_FOLDER_TYPE"
-    public static TargetedMSModule.FolderType getFolderType(Container c)
+    public static TargetedMSService.FolderType getFolderType(Container c)
     {
         TargetedMSModule targetedMSModule = null;
         for (Module m : c.getActiveModules())
@@ -1729,12 +1727,12 @@ public class TargetedMSManager
         String svalue = moduleProperty.getValueContainerSpecific(c);
         try
         {
-            return TargetedMSModule.FolderType.valueOf(svalue);
+            return TargetedMSService.FolderType.valueOf(svalue);
         }
         catch (IllegalArgumentException e)
         {
             // return undefined if the string does not match any type
-            return TargetedMSModule.FolderType.Undefined;
+            return TargetedMSService.FolderType.Undefined;
         }
     }
 
@@ -1941,6 +1939,24 @@ public class TargetedMSManager
 
         QuerySchema query = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
         return QueryService.get().selector(query, sql).getArrayList(QCMetricConfiguration.class);
+    }
+
+    public Map<String, SampleFileInfo> getSampleFiles(Container container, User user, Integer sampleFileLimit)
+    {
+        List<QCMetricConfiguration> enabledQCMetricConfigurations = getEnabledQCMetricConfigurations(container, user);
+        if(!enabledQCMetricConfigurations.isEmpty())
+        {
+            CUSUMOutliers cusumOutliers = new CUSUMOutliers();
+
+            List<LJOutlier> ljOutliers = LeveyJenningsOutliers.getLJOutliers(enabledQCMetricConfigurations, container, user, sampleFileLimit);
+            if (!ljOutliers.isEmpty())
+            {
+                List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(container, user, enabledQCMetricConfigurations);
+                List<RawMetricDataSet> rawMetricDataSets = new CUSUMOutliers().getRawMetricDataSets(container, user, enabledQCMetricConfigurations);
+                return cusumOutliers.getSampleFiles(ljOutliers,  rawGuideSets, rawMetricDataSets,container.getPath());
+            }
+        }
+        return null;
     }
 
     public static int getMaxTransitionCount(int moleculeId)

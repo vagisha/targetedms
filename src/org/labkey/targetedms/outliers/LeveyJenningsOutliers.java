@@ -19,7 +19,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.Sort;
 import org.labkey.api.security.User;
-import org.labkey.targetedms.model.LJOutlier;
+import org.labkey.api.targetedms.model.LJOutlier;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 
 import java.util.List;
@@ -80,7 +80,7 @@ public class LeveyJenningsOutliers extends Outliers
                 "\nCOUNT(p.SampleFileId) AS NumRecords, " +
                 "\nAVG(p.MetricValue) AS Mean, " +
                 "\nSTDDEV(p.MetricValue) AS StandardDev " +
-                "\nFROM guideset gs" +
+                "\nFROM GuideSetForOutliers gs" +
                 "\nLEFT JOIN (" + series1SQL + /*series2SQL +*/ exclusionWhereSQL + ") as p" + /*series2SQL +*/
                 "\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd" +
                 "\nGROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.SeriesType";

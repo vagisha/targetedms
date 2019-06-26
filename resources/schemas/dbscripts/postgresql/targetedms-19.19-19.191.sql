@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 LabKey Corporation
+ * Copyright (c) 2017 LabKey Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,5 @@
  * limitations under the License.
  */
 
-SELECT
-       qmc.id,
-       qmc.name,
-       qmc.Series1Label,
-       qmc.Series1SchemaName,
-       qmc.Series1QueryName,
-       qmc.Series2Label,
-       qmc.Series2SchemaName,
-       qmc.Series2QueryName,
-       qmc.PrecursorScoped,
-       CASE WHEN qem.enabled IS NOT NULL THEN qem.enabled
-            ELSE TRUE END AS Enabled,
-       CASE WHEN qem.metric IS NULL THEN FALSE
-            ELSE TRUE END AS Inserted
-FROM
-      qcmetricconfiguration qmc
-FULL JOIN   qcenabledmetrics qem
-       ON   qem.metric=qmc.id
+-- Increase the length of the Gene column. The gene field can contain all possible gene names that a protein product is associated with. This can get really long.
+ALTER TABLE targetedms.PeptideGroup ALTER COLUMN gene TYPE VARCHAR(2000);

@@ -19,17 +19,17 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
-<%@ page import="org.labkey.targetedms.TargetedMSModule" %>
+<%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    TargetedMSModule.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
+    TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
     boolean isNull = folderType == null;
-    boolean isUndefined = folderType == TargetedMSModule.FolderType.Undefined;
-    boolean isExperiment = folderType == TargetedMSModule.FolderType.Experiment;
+    boolean isUndefined = folderType == TargetedMSService.FolderType.Undefined;
+    boolean isExperiment = folderType == TargetedMSService.FolderType.Experiment;
     boolean isSet = ( isExperiment ||
-            folderType == TargetedMSModule.FolderType.Library ||
-            folderType == TargetedMSModule.FolderType.LibraryProtein ||
-            folderType == TargetedMSModule.FolderType.QC);
+            folderType == TargetedMSService.FolderType.Library ||
+            folderType == TargetedMSService.FolderType.LibraryProtein ||
+            folderType == TargetedMSService.FolderType.QC);
 
     if (isNull)
     {
@@ -51,13 +51,13 @@ tr.spaceUnder > td
         <table cellspacing="7" width="100%">
             <tr class="spaceUnder">
                 <td>
-                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSModule.FolderType.Experiment.toString()) %>"<%=checked(isUndefined || isExperiment)%>> <b>Experimental data</b>
+                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSService.FolderType.Experiment.toString()) %>"<%=checked(isUndefined || isExperiment)%>> <b>Experimental data</b>
                     - A collection of published Skyline documents for various experimental designs
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSModule.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - Curated precursor and product ion expression data for use in designing and validating future experiments
+                    <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSService.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - Curated precursor and product ion expression data for use in designing and validating future experiments
                 </td>
             </tr>
             <tr>
@@ -67,7 +67,7 @@ tr.spaceUnder > td
             </tr>
             <tr>
                 <td>
-                    <input type="radio" name="folderType" id="QC" value="<%= h(TargetedMSModule.FolderType.QC.toString()) %>"> <b>QC</b> - Quality control metrics of reagents and instruments
+                    <input type="radio" name="folderType" id="QC" value="<%= h(TargetedMSService.FolderType.QC.toString()) %>"> <b>QC</b> - Quality control metrics of reagents and instruments
                 </td>
             </tr>
             <tr>

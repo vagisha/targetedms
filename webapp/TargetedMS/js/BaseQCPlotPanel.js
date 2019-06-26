@@ -421,10 +421,10 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         var plotDiv = Ext4.get(this.plotDivId);
         if (plotDiv) {
             if (response.message) {
-                plotDiv.update("<span>" + response.message + "</span>");
+                plotDiv.update("<span>" + Ext4.util.Format.htmlEncode(response.message) + "</span>");
             }
             else {
-                plotDiv.update("<span class='labkey-error'>Error: " + response.exception + "</span>");
+                plotDiv.update("<span class='labkey-error'>Error: " + Ext4.util.Format.htmlEncode(response.exception) + "</span>");
             }
 
             plotDiv.unmask();

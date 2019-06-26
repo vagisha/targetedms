@@ -30,12 +30,12 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.api.writer.ZipUtil;
-import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -151,18 +151,18 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     @Override
     public void runMoved(ExpData newData, Container container, Container targetContainer, String oldRunLSID, String newRunLSID, User user, int oldDataRowID) throws ExperimentException
     {
-        TargetedMSModule.FolderType sourceFolderType = TargetedMSManager.getFolderType(container);
-        TargetedMSModule.FolderType targetFolderType = TargetedMSManager.getFolderType(targetContainer);
+        TargetedMSService.FolderType sourceFolderType = TargetedMSManager.getFolderType(container);
+        TargetedMSService.FolderType targetFolderType = TargetedMSManager.getFolderType(targetContainer);
 
-        if(sourceFolderType != TargetedMSModule.FolderType.Experiment || targetFolderType != TargetedMSModule.FolderType.Experiment)
+        if(sourceFolderType != TargetedMSService.FolderType.Experiment || targetFolderType != TargetedMSService.FolderType.Experiment)
         {
             StringBuilder error = new StringBuilder();
-            if(sourceFolderType != TargetedMSModule.FolderType.Experiment)
+            if(sourceFolderType != TargetedMSService.FolderType.Experiment)
             {
                 error.append("Source folder \"").append(container.getPath()).append("\" is")
                 .append((sourceFolderType == null) ? " not a Panorama type folder. " : " a \"" + sourceFolderType.name() + "\" folder. ");
             }
-            if(targetFolderType != TargetedMSModule.FolderType.Experiment)
+            if(targetFolderType != TargetedMSService.FolderType.Experiment)
             {
                 error.append("Target folder \"").append(targetContainer.getPath()).append("\" is")
                 .append((targetFolderType == null) ? " not a Panorama type folder. " : " a \"" + targetFolderType.name() + "\" folder. ");
