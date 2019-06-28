@@ -64,8 +64,8 @@ public class SkylineAuditLogImporter
     private SkylineAuditLogSecurityManager _securityMgr = null;
     private MessageDigest _rootHash = null;
 
-    public SkylineAuditLogImporter(File pLogFile, GUID pDocumentGUID, Container pContainer, User pUser) throws AuditLogException{
-        _logger = Logger.getLogger(this.getClass());
+    public SkylineAuditLogImporter(File pLogFile, GUID pDocumentGUID, Container pContainer, User pUser, Logger logger) throws AuditLogException{
+        _logger = logger;
         _logFile = pLogFile;
         _documentGUID = pDocumentGUID;
         _securityMgr = new SkylineAuditLogSecurityManager(pContainer, pUser);
@@ -102,6 +102,7 @@ public class SkylineAuditLogImporter
             if(_securityMgr.getIntegrityLevel() == SkylineAuditLogSecurityManager.INTEGRITY_LEVEL.ANY){
                 _logger.warn("Cannot process the audit log because the document does not have a valid GUID. " +
                         "You are probably using old version if Skyline. Proceeding without the log.");
+                return false;
             }
             else
                 throw new AuditLogException("Current log integrity setting do not allow to upload a file without a valid document GUID. ");
@@ -320,7 +321,7 @@ public class SkylineAuditLogImporter
         private AuditLogTree persistALogFile(String filePath, Integer runId) throws IOException, AuditLogException{
             File fZip = UnitTestUtil.getSampleDataFile(filePath);
             File logFile = UnitTestUtil.extractLogFromZip(fZip, _logger);
-            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( logFile, _docGUID, _container, _user);
+            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( logFile, _docGUID, _container, _user, _logger);
 
             if(importer.verifyPreRequisites()) {
                 importer.persistAuditLog(runId);
@@ -338,7 +339,7 @@ public class SkylineAuditLogImporter
             File fZip = UnitTestUtil.getSampleDataFile("AuditLogFiles/MethodEdit_v1.zip");
             File logFile = UnitTestUtil.extractLogFromZip(fZip, _logger);
 
-            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( logFile, _docGUID, _container, _user);
+            SkylineAuditLogImporter importer = new SkylineAuditLogImporter( logFile, _docGUID, _container, _user, _logger);
 
             importer.verifyPreRequisites();
             importer.persistAuditLog(null);
