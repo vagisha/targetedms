@@ -494,9 +494,13 @@ class PeptideSettingsParser
                 {
                     PeptideSettings.MeasuredDriftTime measuredDt = new PeptideSettings.MeasuredDriftTime();
                     measuredDt.setModifiedSequence(XmlUtil.readRequiredAttribute(reader, "modified_sequence", MEASURED_DT));
-                    measuredDt.setCharge(XmlUtil.readRequiredIntegerAttribute(reader, "charge", MEASURED_DT));
-                    measuredDt.setDriftTime(XmlUtil.readRequiredDoubleAttribute(reader, "drift_time", MEASURED_DT));
+                    measuredDt.setCharge(XmlUtil.readAttribute(reader, "charge"));
+                    measuredDt.setDriftTime(XmlUtil.readDoubleAttribute(reader, "drift_time"));
                     measuredDt.setHighEnergyDriftTimeOffset(XmlUtil.readDoubleAttribute(reader, "high_energy_drift_time_offset"));
+                    measuredDt.setCcs(XmlUtil.readDoubleAttribute(reader, "ccs"));
+                    measuredDt.setIonMobility(XmlUtil.readDoubleAttribute(reader, "ion_mobility"));
+                    measuredDt.setHighEnergyIonMobilityOffset(XmlUtil.readDoubleAttribute(reader, "high_energy_ion_mobility_offset"));
+                    measuredDt.setIonMobilityUnits(XmlUtil.readAttribute(reader, "ion_mobility_units"));
                     measuredDriftTimes.add(measuredDt);
                 }
             }

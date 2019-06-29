@@ -1232,6 +1232,10 @@
             <column columnName="Charge"/>
             <column columnName="DriftTime"/>
             <column columnName="HighEnergyDriftTimeOffset" />
+            <column columnName="Ccs"/>
+            <column columnName="IonMobility"/>
+            <column columnName="HighEnergyIonMobilityOffset"/>
+            <column columnName="IonMobilityUnits" />
         </columns>
     </table>
 
