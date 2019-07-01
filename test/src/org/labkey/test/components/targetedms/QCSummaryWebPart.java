@@ -120,6 +120,7 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
         static final Locator recentSampleFilesLoading = Locator.tagWithClass("div", "sample-file-details-loading");
         static final Locator recentSampleFile = Locator.css("div.sample-file-item");
         static final Locator recentSampleFileOutliers = Locator.css("div.sample-file-item-outliers");
+        static final Locator recentSampleFileAcquired = Locator.css("div.sample-file-item-acquired");
     }
 
     public class QcSummaryTile extends Component
@@ -131,6 +132,7 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
         private final WebElement autoQCIcon = Locator.css("div.auto-qc-ping span").findWhenNeeded(this);
         private List<WebElement> _recentSampleFiles;
         private List<WebElement> _recentSampleFileOutliers;
+        private List<WebElement> _recentSampleFileAcquired;
 
         private String _folderName;
         private Integer _fileCount;
@@ -220,10 +222,29 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
             return _recentSampleFileOutliers;
         }
 
-        public boolean hasRecentSampleFileWithOulierTxt(String acquiredDate, String outlierStr)
+        public List<WebElement> getRecentSampleFileAcquired()
+        {
+            if (_recentSampleFileAcquired == null)
+            {
+                _recentSampleFileAcquired = new ArrayList<>();
+                _recentSampleFileAcquired.addAll(Locators.recentSampleFileAcquired.findElements(this));
+            }
+            return _recentSampleFileAcquired;
+        }
+
+        public String getRecentSampleFileWithOutliers(String acquiredDate)
         {
             acquiredDate = acquiredDate.substring(0, acquiredDate.lastIndexOf(":")); // Sample file listing doesn't include seconds
-            return Locators.recentSampleFile.withText(" " + acquiredDate + " - " + outlierStr).findElements(this).size() == 1;
+            List<WebElement> acquiredElements = getRecentSampleFileAcquired();
+            List<WebElement> outliersElements = getRecentSampleFileOutliers();
+            for (int i = 0; i < acquiredElements.size(); i++)
+            {
+                if (acquiredElements.get(i).getText().contains(acquiredDate))
+                {
+                    return outliersElements.get(i).getText();
+                }
+            }
+            return null;
         }
     }
 }

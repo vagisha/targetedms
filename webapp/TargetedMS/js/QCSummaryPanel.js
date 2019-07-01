@@ -272,7 +272,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
 
                 var iconCls = !sampleFile.IgnoreForAllMetric ? (!sampleFile.hasOutliers ? 'fa-file-o qc-correct' : 'fa-file qc-error') : 'fa-file-o qc-none';
                 html += '<tr id="' + sampleFile.calloutId + '"><td><div class="sample-file-item">'
-                        + '<span class="fa ' + iconCls + '"></span> ' + Ext4.util.Format.htmlEncode(sampleFile.SampleFile) + '</div></td><td>' + Ext4.util.Format.date(Ext4.Date.parse(sampleFile.AcquiredTime, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s') + '</td>';
+                        + '<span class="fa ' + iconCls + '"></span> ' + Ext4.util.Format.htmlEncode(sampleFile.SampleFile) + '</div></td><td><div class="sample-file-item-acquired">' + Ext4.util.Format.date(Ext4.Date.parse(sampleFile.AcquiredTime, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s') + '</div></td>';
 
                 var totalOutliers = sampleFile.NonConformers + sampleFile.mR + sampleFile.CUSUMm + sampleFile.CUSUMv;
                 html += '<td style="text-align: right"><div class="sample-file-item-outliers">';

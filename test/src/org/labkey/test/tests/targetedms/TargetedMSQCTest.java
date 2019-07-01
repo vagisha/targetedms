@@ -799,19 +799,19 @@ public class TargetedMSQCTest extends TargetedMSTest
         changePointExclusionState(acquiredDateStr, QCPlotsWebPart.QCPlotExclusionState.Include, 2);
 
         // verify initial QC summary outlier info
-        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[0], "no outliers");
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[0], "0");
         verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[1], "not included in QC");
-        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "no outliers");
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "0");
 
         // create a guide set and verify updated QC Summary outliers info
         qcPlotsWebPart.createGuideSet(new GuideSet(sampleFileAcquiredDates[0], sampleFileAcquiredDates[1], null, 2), null);
-        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "10/16 (Levey-Jennings), 10/16 (Moving Range) outliers");
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "20");
 
         // change data point to only be excluded for a single metric and verify outliers changed
         changePointExclusionState(getAcquiredDateDisplayStr(sampleFileAcquiredDates[1]), QCPlotsWebPart.QCPlotExclusionState.ExcludeMetric, 2);
-        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "2/16 (Levey-Jennings), 3/16 (Moving Range) outliers");
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "5");
         changePointExclusionState(getAcquiredDateDisplayStr(sampleFileAcquiredDates[2]), QCPlotsWebPart.QCPlotExclusionState.ExcludeMetric, 2);
-        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "1/14 (Moving Range) outliers");
+        verifyQCSummarySampleFileOutliers(sampleFileAcquiredDates[2], "1");
     }
 
     private void verifyQCSummarySampleFileOutliers(String acquiredDate, String outlierInfo)
@@ -819,8 +819,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
         qcDashboard.getQcSummaryWebPart().waitForRecentSampleFiles(3);
         QCSummaryWebPart.QcSummaryTile qcSummaryTile = qcDashboard.getQcSummaryWebPart().getQcSummaryTiles().get(0);
-        assertTrue("Unexpected outlier information for QC summary sample file, expected: "
-                + acquiredDate + " - " + outlierInfo, qcSummaryTile.hasRecentSampleFileWithOulierTxt(acquiredDate, outlierInfo));
+        assertEquals("Unexpected outlier information for QC summary sample file for "
+                + acquiredDate, outlierInfo, qcSummaryTile.getRecentSampleFileWithOutliers(acquiredDate));
     }
 
     private String getAcquiredDateDisplayStr(String acquiredDate)
