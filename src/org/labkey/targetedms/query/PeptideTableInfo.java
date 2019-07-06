@@ -50,7 +50,7 @@ public class PeptideTableInfo extends AbstractGeneralMoleculeTableInfo
         WrappedColumn modSeqCol = new WrappedColumn(getColumn("PeptideModifiedSequence"), ModifiedSequenceDisplayColumn.PEPTIDE_COLUMN_NAME);
         modSeqCol.setLabel("Peptide");
         modSeqCol.setDescription("Modified peptide sequence");
-        modSeqCol.setDisplayColumnFactory(colInfo -> new ModifiedSequenceDisplayColumn.PeptideCol(colInfo));
+        modSeqCol.setDisplayColumnFactory(new ModifiedSequenceDisplayColumn.PeptideDisplayColumnFactory());
         modSeqCol.setURL(getDetailsURL(null, null));
         addColumn(modSeqCol);
 
