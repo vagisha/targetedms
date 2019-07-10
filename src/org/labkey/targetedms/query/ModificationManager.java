@@ -23,6 +23,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.Selector;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
+import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.Pair;
@@ -126,6 +127,14 @@ public class ModificationManager
         return isotopeModIndexMassDiff;
     }
 
+    /**
+     * Returns a list of isotopic modifications for a run (Skyline document).  This includes all the isotopic modifications
+     * that were checked in the Peptide Settings > Modifications tab in Skyline.  The modifications are under
+     * <peptide_settings> -> <peptide_modification> -> <heavy_modifications> element in the .sky file.  They are stored
+     * in the targetedms.RunIsotopeModification table.
+     * @param runId
+     * @return List of isotopic modifications
+     */
     public static List<PeptideSettings.RunIsotopeModification> getIsotopeModificationsForRun(int runId)
     {
         SQLFragment sql = new SQLFragment();
@@ -141,6 +150,14 @@ public class ModificationManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PeptideSettings.RunIsotopeModification.class);
     }
 
+    /**
+     * Returns a list of structural modifications for a run (Skyline document).  This includes all the structural modifications
+     * that were checked in the Peptide Settings > Modifications tab in Skyline.  The modifications are under
+     * <peptide_settings> -> <peptide_modification> -> <static_modifications> element in the .sky file.  They are stored
+     * in the targetedms.RunStructuralModification table.
+     * @param runId
+     * @return List of structural modifications
+     */
     public static List<PeptideSettings.RunStructuralModification> getStructuralModificationsForRun(int runId)
     {
         SQLFragment sql = new SQLFragment();
@@ -154,6 +171,50 @@ public class ModificationManager
         sql.add(runId);
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PeptideSettings.RunStructuralModification.class);
+    }
+
+    /**
+     * Returns a list of isotopic modifications found in at least one peptide in the run (Skyline document).
+     * @param runId
+     * @return List of isotopic modifications
+     */
+    public static List<PeptideSettings.IsotopeModification> getIsotopeModificationsUsedInRun(int runId)
+    {
+        return getModificationsUsedInRun(runId, TargetedMSManager.getTableInfoPeptideIsotopeModification(),
+                TargetedMSManager.getTableInfoIsotopeModification(), "IsotopeModId",
+                PeptideSettings.IsotopeModification.class);
+    }
+
+    /**
+     * Returns a list of structural modifications found in at least one peptide in the run (Skyline document).
+     * @param runId
+     * @return List of structural modifications
+     */
+    public static List<PeptideSettings.StructuralModification> getStructuralModificationsUsedInRun(int runId)
+    {
+        return getModificationsUsedInRun(runId, TargetedMSManager.getTableInfoPeptideStructuralModification(),
+                TargetedMSManager.getTableInfoStructuralModification(), "StructuralModId",
+                PeptideSettings.StructuralModification.class);
+    }
+
+    private static <T> List<T> getModificationsUsedInRun(int runId, TableInfo peptideModsTable, TableInfo modsTable, String modIdCol, Class<T> type)
+    {
+        SQLFragment sql = new SQLFragment();
+        sql.append("SELECT DISTINCT (pmod.").append(modIdCol).append("), mod.* FROM ");
+        sql.append(peptideModsTable, "pmod");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "m");
+        sql.append(" ON pmod.peptideId = m.Id ");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sql.append(" ON m.peptideGroupId = pg.Id ");
+        sql.append(" INNER JOIN ");
+        sql.append(modsTable, "mod");
+        sql.append(" ON pmod.").append(modIdCol).append(" = mod.Id ");
+        sql.append(" WHERE pg.RunId = ? ");
+        sql.add(runId);
+
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(type);
     }
 
     public static List<PeptideSettings.PotentialLoss> getPotentialLossesForStructuralMod(int modId)

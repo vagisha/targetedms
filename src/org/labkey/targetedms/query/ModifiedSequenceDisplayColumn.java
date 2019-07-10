@@ -16,6 +16,8 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ColumnInfo;
+import org.labkey.api.data.DisplayColumn;
+import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.util.PageFlowUtil;
@@ -72,6 +74,15 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
     String getCellDataHtml(RenderContext ctx)
     {
         return _cellData;
+    }
+
+    public static class PeptideDisplayColumnFactory implements DisplayColumnFactory
+    {
+        @Override
+        public DisplayColumn createRenderer(ColumnInfo colInfo)
+        {
+            return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo);
+        }
     }
 
     public static class PeptideCol extends ModifiedSequenceDisplayColumn

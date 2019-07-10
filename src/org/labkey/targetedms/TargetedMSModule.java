@@ -59,6 +59,7 @@ import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogParser;
 import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
+import org.labkey.targetedms.proteomexchange.SubmissionDataValidator;
 import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.search.ProteinSearchWebPart;
@@ -207,7 +208,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public double getVersion()
     {
-        return 19.193;
+        return 19.20;
     }
 
     @Override
@@ -520,6 +521,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         set.add(ComparisonCategory.TestCase.class);
         set.add(ReplicateLabelMinimizer.TestCase.class);
         set.add(SkylineAuditLogParser.TestCase.class);
+        set.add(SubmissionDataValidator.TestCase.class);
         return set;
 
     }
