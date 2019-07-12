@@ -93,6 +93,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String TRANSITION = "transition";
     private static final String PRECURSOR_MZ = "precursor_mz";
     private static final String ANNOTATION = "annotation";
+    private static final String LIST_DATA = "list_data";
     private static final String PRODUCT_MZ = "product_mz";
     private static final String COLLISION_ENERGY = "collision_energy";
     private static final String DECLUSTERING_POTENTIAL = "declustering_potential";
@@ -474,6 +475,9 @@ public class SkylineDocumentParser implements AutoCloseable
         {
             _documentGUID = new GUID(documentGUID);
         }
+
+        boolean inListData = false;
+
         while(reader.hasNext())
          {
              int evtType = reader.next();
@@ -482,29 +486,42 @@ public class SkylineDocumentParser implements AutoCloseable
                  break;
              }
 
-             if(XmlUtil.isStartElement(reader, evtType, ANNOTATION))
+             if(XmlUtil.isStartElement(reader, evtType, LIST_DATA))
              {
-                 String name = XmlUtil.readRequiredAttribute(reader, "name", DATA_SETTINGS);
-                 String targets = XmlUtil.readRequiredAttribute(reader, "targets", DATA_SETTINGS);
-                 String type = XmlUtil.readRequiredAttribute(reader, "type", DATA_SETTINGS);
-                 _dataSettings.addAnnotations(name, targets, type);
+                 // For now just skip over list definitions
+                 inListData = true;
              }
-             else if (XmlUtil.isStartElement(reader, evtType, GROUP_COMPARISON))
+             else if (XmlUtil.isEndElement(reader, evtType, LIST_DATA))
              {
-                 GroupComparisonSettings groupComparison = new GroupComparisonSettings();
-                 groupComparison.setName(XmlUtil.readAttribute(reader, "name"));
-                 groupComparison.setControlAnnotation(XmlUtil.readAttribute(reader, "control_annotation"));
-                 groupComparison.setControlValue(XmlUtil.readAttribute(reader, "control_value"));
-                 groupComparison.setCaseValue(XmlUtil.readAttribute(reader, "case_value"));
-                 groupComparison.setIdentityAnnotation(XmlUtil.readAttribute(reader, "identity_annotation"));
-                 groupComparison.setNormalizationMethod(XmlUtil.readAttribute(reader, "normalization_method"));
-                 groupComparison.setPerProtein(XmlUtil.readBooleanAttribute(reader, "per_protein", false));
-                 Double confidenceLevel = XmlUtil.readDoubleAttribute(reader, "confidence_level");
-                 if (null != confidenceLevel)
+                 inListData = false;
+             }
+
+             if (!inListData)
+             {
+                 if (XmlUtil.isStartElement(reader, evtType, ANNOTATION))
                  {
-                     groupComparison.setConfidenceLevel(confidenceLevel / 100.0);
+                     String name = XmlUtil.readRequiredAttribute(reader, "name", DATA_SETTINGS);
+                     String targets = XmlUtil.readRequiredAttribute(reader, "targets", DATA_SETTINGS);
+                     String type = XmlUtil.readRequiredAttribute(reader, "type", DATA_SETTINGS);
+                     _dataSettings.addAnnotations(name, targets, type);
                  }
-                 _dataSettings.addGroupComparison(groupComparison);
+                 else if (XmlUtil.isStartElement(reader, evtType, GROUP_COMPARISON))
+                 {
+                     GroupComparisonSettings groupComparison = new GroupComparisonSettings();
+                     groupComparison.setName(XmlUtil.readAttribute(reader, "name"));
+                     groupComparison.setControlAnnotation(XmlUtil.readAttribute(reader, "control_annotation"));
+                     groupComparison.setControlValue(XmlUtil.readAttribute(reader, "control_value"));
+                     groupComparison.setCaseValue(XmlUtil.readAttribute(reader, "case_value"));
+                     groupComparison.setIdentityAnnotation(XmlUtil.readAttribute(reader, "identity_annotation"));
+                     groupComparison.setNormalizationMethod(XmlUtil.readAttribute(reader, "normalization_method"));
+                     groupComparison.setPerProtein(XmlUtil.readBooleanAttribute(reader, "per_protein", false));
+                     Double confidenceLevel = XmlUtil.readDoubleAttribute(reader, "confidence_level");
+                     if (null != confidenceLevel)
+                     {
+                         groupComparison.setConfidenceLevel(confidenceLevel / 100.0);
+                     }
+                     _dataSettings.addGroupComparison(groupComparison);
+                 }
              }
          }
     }
