@@ -73,6 +73,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     protected int _transitionCount;
     protected int _replicateCount;
     protected int _calibrationCurveCount;
+    protected int _auditLogEntriesCount;
 
     protected Integer _dataId; // FK to exp.data's RowId column for the .sky file
     protected Integer _skydDataId; // FK to exp.data's RowId column for the .skyd file
@@ -314,6 +315,10 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     {
         _calibrationCurveCount = calibrationCurveCount;
     }
+
+    public int getAuditLogEntriesCount() {return _auditLogEntriesCount;}
+
+    public void setAuditLogEntriesCount(int auditLogEntriesCount){this._auditLogEntriesCount = auditLogEntriesCount;}
 
     public RepresentativeDataState getRepresentativeDataState()
     {

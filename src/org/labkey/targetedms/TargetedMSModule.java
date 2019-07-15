@@ -208,7 +208,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public double getVersion()
     {
-        return 19.20;
+        return 19.21;
     }
 
     @Override
@@ -508,7 +508,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         return Set.of(
                 PublishTargetedMSExperimentsController.TestCase.class,
-                SkylineAuditLogImporter.TestCase.class
+                SkylineAuditLogManager.TestCase.class
         );
     }
 

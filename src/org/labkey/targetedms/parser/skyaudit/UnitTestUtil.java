@@ -18,6 +18,7 @@ package org.labkey.targetedms.parser.skyaudit;
 import org.apache.commons.io.FileExistsException;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.BaseSelector;
+import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Filter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
@@ -108,6 +109,11 @@ public class UnitTestUtil
 
         //deleting the entries
         Table.delete(TargetedMSManager.getTableInfoSkylineAuditLogEntry(), entryFilter);
+
+        SimpleFilter runDeleteFilter = new SimpleFilter();
+        TableInfo runsTable = TargetedMSManager.getTableInfoRuns();
+        runDeleteFilter.addCondition(runsTable.getColumn("documentGUID"), pDocumentGUID, CompareType.EQUAL);
+        Table.delete(runsTable, runDeleteFilter);
     }
 
     public static File extractLogFromZip(File pZip, Logger pLogger) throws IOException

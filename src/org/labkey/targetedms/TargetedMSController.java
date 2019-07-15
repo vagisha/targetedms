@@ -3409,6 +3409,44 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class ShowSkylineAuditLogAction extends AbstractShowRunDetailsAction<QueryView>
+    {
+        private static final String DATA_REGION_NAME = "SkylineAuditLog";
+        private static final String LOG_QUERY_NAME = "AuditLogTraverse";
+
+        public ShowSkylineAuditLogAction()
+        {
+            super(RunDetailsForm.class);
+        }
+
+        @Override
+        protected ModelAndView getHtmlView(RunDetailsForm form, BindException errors) throws Exception
+        {
+            WebPartView logView = createInitializedQueryView(form, errors, false, DATA_REGION_NAME);
+            logView.setFrame(WebPartView.FrameType.PORTAL);
+            logView.setTitle("Skyline Audit Log");
+
+            VBox vBox = new VBox();
+            vBox.addView(getSummaryView(form, _run));
+            vBox.addView(logView);
+            return vBox;
+        }
+
+        @Override
+        protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
+        {
+            QuerySettings settings = new QuerySettings(getViewContext(), DATA_REGION_NAME, LOG_QUERY_NAME);
+            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+            settings.getQueryParameters().put("RUN_ID", form._id);
+            QueryView view = schema.createView(getViewContext(), settings, errors);
+            view.setShowDetailsColumn(false);
+            view.setShowFilterDescription(false);
+            return view;
+        }
+    }
+
+
     public static class RunDetailsForm extends QueryViewAction.QueryExportForm
     {
         private int _id = 0;

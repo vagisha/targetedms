@@ -1,0 +1,1 @@
+ALTER TABLE targetedms.Runs ADD AuditLogEntriesCount INT DEFAULT 0 NOT NULL;

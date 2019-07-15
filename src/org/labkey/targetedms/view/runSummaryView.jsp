@@ -56,6 +56,9 @@
     ActionURL replicateListAction = new ActionURL(TargetedMSController.ShowReplicatesAction.class, getContainer());
     replicateListAction.addParameter("id", run.getId());
 
+    ActionURL auditLogAction = new ActionURL(TargetedMSController.ShowSkylineAuditLogAction.class, getContainer());
+    auditLogAction.addParameter("id", run.getId());
+
     ActionURL renameAction = null;
     if(c.hasPermission(getUser(), UpdatePermission.class))
         renameAction = TargetedMSController.getRenameRunURL(c, run, getActionURL());
@@ -71,6 +74,7 @@
         <% if (renameAction != null) { %><%= iconLink("edit-views-link fa fa-pencil", "Rename File", renameAction) %><% } %>
         <% if (run.getFileName() != null) { TargetedMSController.createDownloadMenu(run).render(out); } %>&nbsp;
         <a href="<%= h(versionsAction) %>"><%= h(StringUtilsLabKey.pluralize(bean.getVersionCount(), "version"))%></a>
+        <% if (run.getAuditLogEntriesCount() > 0) { %><%= iconLink("edit-views-link fa fa-navicon", "Skyline Audit Log", auditLogAction) %><% } %>
     </div>
     &nbsp;
     <div>

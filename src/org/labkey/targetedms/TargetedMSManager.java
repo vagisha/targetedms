@@ -84,6 +84,7 @@ import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideManager;
@@ -1090,6 +1091,18 @@ public class TargetedMSManager
         where.addInClause(FieldKey.fromParts("Id"), runIds);
         markDeleted.append(where.getSQLFragment(getSqlDialect()));
         new SqlExecutor(getSchema()).execute(markDeleted);
+
+        try
+        {   //deleting audit log data for these runs.
+            SkylineAuditLogManager auditMgr = new SkylineAuditLogManager(c, user);
+            for(Integer runId : runIds)
+                auditMgr.deleteDocumentVersionLog(runId);
+        }
+        catch (AuditLogException e)
+        {
+            throw new RuntimeException("Error while deleting document's audit log", e);
+        }
+
 
         // and then delete them
         purgeDeletedRuns();

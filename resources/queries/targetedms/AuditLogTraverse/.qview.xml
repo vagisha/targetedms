@@ -1,0 +1,10 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="create_timestamp"/>
+        <column name="user_name"/>
+        <column name="message_text"/>
+    </columns>
+    <filters>
+        <filter column="orderNumber" operator="eq" value="0"/>
+    </filters>
+</customView>

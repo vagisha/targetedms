@@ -646,6 +646,11 @@ public class SkylineDocImporter
             run.setCalibrationCurveCount(calCurvesCount);
 
             run.setDocumentGUID(parser.getDocumentGUID());
+
+            SkylineAuditLogManager importer = new SkylineAuditLogManager(_container, _user);
+            int auditLogEntriesCount = importer.importAuditLogFile(_auditLogFile, run.getDocumentGUID(), run.getRunId());
+            run.setAuditLogEntriesCount(auditLogEntriesCount);
+
             Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
 
             if (folderType == TargetedMSService.FolderType.QC)
@@ -656,13 +661,6 @@ public class SkylineDocImporter
                 {
                     _log.info(msg);
                 }
-            }
-
-            SkylineAuditLogImporter importer = new SkylineAuditLogImporter(_auditLogFile, run.getDocumentGUID(), _container, _user, _log);
-
-            if(importer.verifyPreRequisites()) {
-                importer.persistAuditLog(run.getRunId());
-                importer.verifyPostRequisites();
             }
 
             if (_pipeRoot.isCloudRoot())

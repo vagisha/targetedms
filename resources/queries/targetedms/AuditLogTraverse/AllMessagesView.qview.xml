@@ -1,0 +1,13 @@
+<customView xmlns="http://labkey.org/data/xml/queryCustomView">
+    <columns>
+        <column name="entryId"/>
+        <column name="create_timestamp"/>
+        <column name="user_name"/>
+        <column name="message_type"/>
+        <column name="message_text"/>
+    </columns>
+    <sorts>
+        <sort column="entryId" descending="false"/>
+        <sort column="orderNumber" descending="false"/>
+    </sorts>
+</customView>
