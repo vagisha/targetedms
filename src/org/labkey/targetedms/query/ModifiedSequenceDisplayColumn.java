@@ -15,6 +15,7 @@
 
 package org.labkey.targetedms.query;
 
+import org.apache.commons.collections4.MultiValuedMap;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
@@ -26,6 +27,8 @@ import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 
 
@@ -78,18 +81,41 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 
     public static class PeptideDisplayColumnFactory implements DisplayColumnFactory
     {
+        private boolean _showNextAndPrevious = false;
+
+        public PeptideDisplayColumnFactory()
+        {
+        }
+
+        public PeptideDisplayColumnFactory(MultiValuedMap<String, String> map)
+        {
+            Collection<String> values = map == null ? Collections.emptyList() : map.get("showNextAndPrevious");
+            if (!values.isEmpty())
+            {
+                _showNextAndPrevious = Boolean.valueOf(values.iterator().next());
+            }
+        }
+
         @Override
         public DisplayColumn createRenderer(ColumnInfo colInfo)
         {
-            return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo);
+            return new ModifiedSequenceDisplayColumn.PeptideCol(colInfo, _showNextAndPrevious);
         }
     }
 
     public static class PeptideCol extends ModifiedSequenceDisplayColumn
     {
+        private final boolean _showNextAndPrevious;
+
         public PeptideCol(ColumnInfo colInfo)
         {
+            this(colInfo, false);
+        }
+
+        public PeptideCol(ColumnInfo colInfo, boolean showNextAndPrevious)
+        {
             super(colInfo);
+            _showNextAndPrevious = showNextAndPrevious;
         }
 
         @Override
@@ -107,6 +133,11 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "Decoy"));
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "StandardType"));
             keys.add(FieldKey.fromString(super.getParentFieldKey(), "PeptideGroupId/RunId"));
+            if (_showNextAndPrevious)
+            {
+                keys.add(FieldKey.fromString(super.getParentFieldKey(), "PreviousAa"));
+                keys.add(FieldKey.fromString(super.getParentFieldKey(), "NextAa"));
+            }
         }
 
         public void initialize(RenderContext ctx)
@@ -122,6 +153,9 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 
             String standardType = (String)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "StandardType"));
 
+            String previousAA = _showNextAndPrevious ? (String)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PreviousAa")) : null;
+            String nextAA = _showNextAndPrevious ? (String)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "NextAa")) : null;
+
             String peptideModifiedSequence = (String)getValue(ctx);
 
             if(peptideId == null || sequence == null || runId == null)
@@ -130,7 +164,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
             }
             else
             {
-                _cellData = getHtmlMaker().getPeptideHtml(peptideId, sequence, peptideModifiedSequence, runId);
+                _cellData = getHtmlMaker().getPeptideHtml(peptideId, sequence, peptideModifiedSequence, runId, previousAA, nextAA);
                 _iconPath = IconFactory.getPeptideIconPath(peptideId, runId, decoy, standardType);
             }
         }

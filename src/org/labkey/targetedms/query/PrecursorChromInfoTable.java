@@ -102,7 +102,7 @@ public class PrecursorChromInfoTable extends AnnotatedTargetedMSTable
         addColumn(totalAreaNormalizedCol);
 
         // PeptideModifiedAreaProportion = (area of precursor in the replicate) / (total area of all precursors for the same peptide sequence in the replicate / sample file)
-        SQLFragment peptideModifiedAreaProportionSQL = new SQLFragment("(SELECT TotalArea / X.PrecursorAreaInReplicate FROM ");
+        SQLFragment peptideModifiedAreaProportionSQL = new SQLFragment("(SELECT CAST(CASE WHEN X.PrecursorAreaInReplicate = 0 THEN NULL ELSE TotalArea / X.PrecursorAreaInReplicate END AS FLOAT) FROM ");
         peptideModifiedAreaProportionSQL.append(" ( ");
         peptideModifiedAreaProportionSQL.append(" SELECT SUM(TotalArea) AS PrecursorAreaInReplicate FROM ");
         peptideModifiedAreaProportionSQL.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
