@@ -95,7 +95,12 @@ public class ChromatogramLibraryUtils
      * Uses the container's RowId instead of name to handle renames gracefully */
     public static Path getChromLibFile(Container container, int revision) throws IOException
     {
-        Path chromLibDir = getChromLibDir(container, false);
+        return getChromLibFile(container, revision, false);
+    }
+
+    public static Path getChromLibFile(Container container, int revision, boolean createLibdir) throws IOException
+    {
+        Path chromLibDir = getChromLibDir(container, createLibdir);
         return chromLibDir.resolve(Constants.CHROM_LIB_FILE_NAME+"_"+container.getRowId()+"_rev"+revision+"."+Constants.CHROM_LIB_FILE_EXT);
     }
 

@@ -23,7 +23,6 @@ import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
-import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.util.FileUtil;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
@@ -135,7 +134,9 @@ public class ContainerChromatogramLibraryWriter
             close();
         }
 
-        Path finalChromLibFile = ChromatogramLibraryUtils.getChromLibFile(_container, libraryRevision);
+        Path finalChromLibFile = ChromatogramLibraryUtils.getChromLibFile(_container, libraryRevision,
+                true /*Create the lib directory if it does not already exist */);
+
         // Rename the temp file
         if(Files.exists(finalChromLibFile))
         {
