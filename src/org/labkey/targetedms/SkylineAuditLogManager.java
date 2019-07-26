@@ -40,7 +40,6 @@ import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.parser.skyaudit.AuditLogMessageExpander;
 import org.labkey.targetedms.parser.skyaudit.AuditLogParsingException;
 import org.labkey.targetedms.parser.skyaudit.AuditLogTree;
-import org.labkey.targetedms.parser.skyaudit.DatabaseUtil;
 import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogParser;
 import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogSecurityManager;
 import org.labkey.targetedms.parser.skyaudit.TestRun;
@@ -122,6 +121,7 @@ public class SkylineAuditLogManager
         if(pContext._logFile == null || !pContext._logFile.exists()){
             if(_securityMgr.getIntegrityLevel() == SkylineAuditLogSecurityManager.INTEGRITY_LEVEL.ANY){
                 _logger.warn("Log file is missing. Proceeding without the log.");
+                return false;
             }
             else
                 throw new AuditLogException("Current log integrity setting do not allow to upload a file without a valid audit log. ");
@@ -154,8 +154,7 @@ public class SkylineAuditLogManager
                     .append(" ")
                     .append(docFilter.getSQLFragment(TargetedMSManager.getSqlDialect()));
 
-        Integer res = new SqlSelector(TargetedMSManager.getSchema(), query).getObject(Integer.class);
-        Integer docCount = (Integer)res;
+        Integer docCount = new SqlSelector(TargetedMSManager.getSchema(), query).getObject(Integer.class);
         pContext._logTree = buildLogTree(pContext._documentGUID);
 
         //verify that the tree is not empty

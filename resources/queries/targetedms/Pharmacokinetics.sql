@@ -17,7 +17,7 @@ SELECT
   sub.PeptideId,
   sub.MoleculeId,
   sub.Time,
-  sub.SubGroup,
+  COALESCE(sub.SubGroup, 'Default') AS SubGroup,
   (CASE WHEN MAX(sub.Dose)= MIN(sub.Dose) THEN MAX(sub.Dose) ELSE NULL END) AS Dose,
   (CASE WHEN MAX(sub.DoseUnits)= MIN(sub.DoseUnits) THEN MAX(sub.DoseUnits) ELSE NULL END) AS DoseUnits,
   (CASE WHEN MAX(sub.ROA)= MIN(sub.ROA) THEN MAX(sub.ROA) ELSE NULL END) AS ROA,
