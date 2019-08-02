@@ -232,7 +232,7 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
         tempStringList01.put("Q_Exactive_08_23_2013_JGB_58", "27");
         tempStringList01.put("Q_Exactive_08_23_2013_JGB_51", "26");
-        tempStringList01.put("Q_Exactive_08_23_2013_JGB_37", "29");
+        tempStringList01.put("Q_Exactive_08_23_2013_JGB_37", "31");
         tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_58", "Acquired Date/Time: 2013-08-27 14:45"));
         tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_51", "Acquired Date/Time: 2013-08-27 03:19"));
         tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_37", "Acquired Date/Time: 2013-08-26 04:27"));
@@ -293,10 +293,12 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         tempStringList01.clear();
         tempStringList01.put("Q_Exactive_08_23_2013_JGB_58", "2");
         tempStringList01.put("Q_Exactive_08_23_2013_JGB_51", "4");
+        tempStringList01.put("Q_Exactive_08_23_2013_JGB_37", "1");
 
         tempStringList02.clear();
         tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_58", "Full Width at Half Maximum (FWHM) 1 1 0 0 0 0"));
         tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_51", "Peak Area 0 2 0 0 0 0"));
+        tempStringList02.add(Arrays.asList("Q_Exactive_08_23_2013_JGB_37", "TIC Area 0 1 0 0 0 0"));
         validateSampleFile(0, tempStringList01, tempStringList02);
 
         removeAllGuideSets();

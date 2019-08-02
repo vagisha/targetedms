@@ -404,7 +404,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
             toolbarItems.push(this.getGroupedXCheckbox());
             toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
-            toolbarItems.push(this.getSinglePlotCheckbox());
+            var location = toolbarItems.push(this.getSinglePlotCheckbox());
             toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
             toolbarItems.push(this.getShowExcludedCheckbox());
             // toolbarItems.push({xtype: 'tbspacer'}, {xtype: 'tbseparator'}, {xtype: 'tbspacer'});
@@ -417,9 +417,21 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 padding: '0 10px 10px 10px',
                 items: toolbarItems
             });
+
+            //hiding the show All series in a single plot checkbox for run scoped metrics
+            this.showAllSeriesCheckbox(this.getMetricPropsById(this.metric).precursorScoped, location-1);
         }
 
         return this.otherPlotOptionsToolbar;
+    },
+
+    showAllSeriesCheckbox: function (visible, location)
+    {
+        var items = this.otherPlotOptionsToolbar.items.items;
+        items[location-1].setVisible(visible);
+        items[location].setVisible(visible);
+        items[location+1].setVisible(visible);
+        items[location+2].setVisible(visible);
     },
 
     getAnnotationFiltersToolbar : function()
@@ -858,6 +870,16 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                     {
                         this.metric = newVal;
                         this.havePlotOptionsChanged = true;
+                        var items = this.otherPlotOptionsToolbar.items.items;
+                        var showAllSeriesCheckBoxLocation;
+
+                        for(var i=0; i<items.length;i++ ) {
+                            if(items[i].boxLabel ==='Show All Series in a Single Plot')
+                                showAllSeriesCheckBoxLocation = i;
+                        }
+
+                        var showAllSeriesCheckBox = this.getMetricPropsById(newVal).precursorScoped;
+                        this.showAllSeriesCheckbox(showAllSeriesCheckBox, showAllSeriesCheckBoxLocation);
 
                         this.setBrushingEnabled(false);
                         this.displayTrendPlot();

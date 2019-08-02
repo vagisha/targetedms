@@ -1,0 +1,18 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="QCRunMetric_ticArea" tableDbType="NOT_IN_DB">
+                <columns>
+                    <column columnName="SampleFileId">
+                        <fk>
+                            <fkDbSchema>targetedms</fkDbSchema>
+                            <fkTable>SampleFile</fkTable>
+                            <fkColumnName>Id</fkColumnName>
+                            <fkDisplayColumnName>SampleName</fkDisplayColumnName>
+                        </fk>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

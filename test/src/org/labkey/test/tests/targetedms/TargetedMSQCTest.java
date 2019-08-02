@@ -28,6 +28,7 @@ import org.labkey.test.TestFileUtils;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.ext4.RadioButton;
+import org.labkey.test.components.html.SiteNavBar;
 import org.labkey.test.components.targetedms.GuideSet;
 import org.labkey.test.components.targetedms.QCAnnotationTypeWebPart;
 import org.labkey.test.components.targetedms.QCAnnotationWebPart;
@@ -55,7 +56,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.CUSUMm;
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.LeveyJennings;
 import static org.labkey.test.components.targetedms.QCPlotsWebPart.QCPlotType.MovingRange;
@@ -154,6 +154,8 @@ public class TargetedMSQCTest extends TargetedMSTest
                     "    };\n" +
                     "\n" +
                     "    return testLegends();";
+
+    private final PortalHelper portalHelper = new PortalHelper(this);
 
     @Override
     protected String getProjectName()
@@ -364,7 +366,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         qcPlotsWebPart.checkAllPlotTypes(true);
 
         // if metric has negative values and we pick log y-axis scale, we should revert to linear scale and show message
-        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.MASSACCURACTY);
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.MASSACCURACY);
         qcPlotsWebPart.setScale(QCPlotsWebPart.Scale.LOG);
         assertEquals("Unexpected number of plots with invalid log scale.", 3, qcPlotsWebPart.getLogScaleInvalidCount());
         assertEquals("Unexpected number of plots with invalid log scale.", 0, qcPlotsWebPart.getLogScaleWarningCount());
@@ -660,6 +662,42 @@ public class TargetedMSQCTest extends TargetedMSTest
         }
         // reset to avoid test case dependency
         qcPlotsWebPart.resetInitialQCPlotFields();
+    }
+
+    @Test
+    public void testRunScopedMetric()
+    {
+        new SiteNavBar(getDriver()).enterPageAdminMode();
+        portalHelper.moveWebPart("QC Plots", PortalHelper.Direction.UP);
+        String acquiredDate = "2013-08-09 11:39:00";
+        PanoramaDashboard qcDashboard = new PanoramaDashboard(this);
+        QCPlotsWebPart qcPlotsWebPart = qcDashboard.getQcPlotsWebPart();
+
+        log("Verifying TIC Area QC Plots");
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.TICAREA);
+        qcPlotsWebPart.waitForPlots(1, true);
+        String ticPlotSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");
+        assertFalse(ticPlotSVGText.isEmpty());
+
+        log("Verifying Show All Series Checkbox");
+        assertElementNotVisible(Locator.tagContainingText("label", "Show All Series in a Single Plot"));
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.RETENTION);
+        assertElementVisible(Locator.tagContainingText("label", "Show All Series in a Single Plot"));
+
+        log("Verifying tic_area information in hover plot");
+        qcPlotsWebPart.setMetricType(QCPlotsWebPart.MetricType.TICAREA);
+        qcPlotsWebPart.waitForPlots(1, true);
+        mouseOver(qcPlotsWebPart.getPointByAcquiredDate(acquiredDate));
+        waitForElement(qcPlotsWebPart.getBubble());
+        String ticAreahoverText = waitForElement(qcPlotsWebPart.getBubbleContent()).getText();
+        assertTrue("Wrong header present", ticAreahoverText.contains("Total Ion Chromatogram Area"));
+        assertTrue("Wrong Link present", ticAreahoverText.contains("VIEW DOCUMENT"));
+        assertFalse("peptide should not be present", ticAreahoverText.contains("peptide"));
+        assertFalse("View Chromatogram link should not be present", ticAreahoverText.contains("VIEW CHROMATOGRAM"));
+
+        log("Moving QC Plots Webpart down");
+        portalHelper.moveWebPart("QC Plots", PortalHelper.Direction.DOWN);
+        portalHelper.exitAdminMode();
     }
 
     private void testEachCombinedPlots(QCPlotsWebPart.QCPlotType plotType)

@@ -27,6 +27,7 @@ public class QCMetricConfiguration
     private String _series2Label;
     private String _series2SchemaName;
     private String _series2QueryName;
+    private boolean _precursorScoped;
 
     public int getId()
     {
@@ -107,6 +108,16 @@ public class QCMetricConfiguration
         _series2QueryName = series2QueryName;
     }
 
+    public boolean isPrecursorScoped()
+    {
+        return _precursorScoped;
+    }
+
+    public void setPrecursorScoped(boolean precursorScoped)
+    {
+        _precursorScoped = precursorScoped;
+    }
+
     public JSONObject toJSON(){
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", _id);
@@ -114,6 +125,7 @@ public class QCMetricConfiguration
         jsonObject.put("series1Label",      _series1Label);
         jsonObject.put("series1SchemaName", _series1SchemaName);
         jsonObject.put("series1QueryName",  _series1QueryName);
+        jsonObject.put("precursorScoped",  _precursorScoped);
         if(_series2Label != null){
             jsonObject.put("series2Label",      _series2Label);
         }

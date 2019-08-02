@@ -31,6 +31,7 @@ public class SampleFile extends SkylineEntity
     private String _skylineId;
     private Date _acquiredTime;
     private Date _modifiedTime;
+    private Double _ticArea;
 
     private List<Instrument> _instrumentInfoList;
     private boolean _skip;
@@ -115,4 +116,13 @@ public class SampleFile extends SkylineEntity
         _instrumentInfoList = instrumentInfoList;
     }
 
+    public Double getTicArea()
+    {
+        return _ticArea;
+    }
+
+    public void setTicArea(Double ticArea)
+    {
+        _ticArea = ticArea;
+    }
 }

@@ -916,6 +916,7 @@ public class SkylineDocumentParser implements AutoCloseable
 
         sampleFile.setAcquiredTime(XmlUtil.readDateAttribute(reader, "acquired_time"));
         sampleFile.setModifiedTime(XmlUtil.readDateAttribute(reader, "modified_time"));
+        sampleFile.setTicArea(XmlUtil.readDoubleAttribute(reader,"tic_area"));
 
         List<Instrument> instrumentList = new ArrayList<>();
         sampleFile.setInstrumentInfoList(instrumentList);

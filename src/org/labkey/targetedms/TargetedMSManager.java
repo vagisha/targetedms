@@ -1947,8 +1947,10 @@ public class TargetedMSManager
                         "Series1QueryName, " +
                         "Series2Label, " +
                         "Series2SchemaName, " +
-                        "Series2QueryName " +
-                      "FROM qcMetricsConfig WHERE Enabled = TRUE";
+                        "Series2QueryName, " +
+                        "PrecursorScoped " +
+                      "FROM qcMetricsConfig " +
+                      "WHERE Enabled = TRUE ";
 
         QuerySchema query = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
         return QueryService.get().selector(query, sql).getArrayList(QCMetricConfiguration.class);

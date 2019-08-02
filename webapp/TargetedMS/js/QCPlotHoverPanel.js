@@ -31,7 +31,11 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
 
         this.items = [];
         this.callParent();
-        this.getExistingReplicateExclusions();
+
+        if(!this.metricProps.precursorScoped)
+            this.getRunId();
+        else
+            this.getExistingReplicateExclusions();
     },
 
     getExistingReplicateExclusions : function() {
@@ -60,6 +64,7 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
     },
 
     initializePanel : function() {
+
         if (this.pointData[this.valueName + 'Title'] != undefined) {
             this.add(this.getPlotPointDetailField('Metric', this.pointData[this.valueName + 'Title']));
         }
@@ -70,7 +75,8 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
             this.add(this.getPlotPointDetailField('Group', 'CUSUMmN' == this.valueName || 'CUSUMvN' == this.valueName ? 'CUSUM-' : 'CUSUM+'));
         }
 
-        this.add(this.getPlotPointDetailField('m/z', this.pointData['mz']));
+        if(this.metricProps.precursorScoped)
+            this.add(this.getPlotPointDetailField('m/z', this.pointData['mz']));
         this.add(this.getPlotPointDetailField('Acquired', this.pointData['fullDate']));
         if (this.pointData.conversion && this.pointData.rawValue !== undefined && this.valueName.indexOf("CUSUM") === -1) {
             if (this.pointData.conversion === 'percentDeviation') {
@@ -262,8 +268,25 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
             });
 
         return LABKEY.Utils.textLink({
-            text: 'View Chromatogram',
-            href: url + '#ChromInfo' + this.pointData['PrecursorChromInfoId']
+            text: this.metricProps.precursorScoped ? 'View Chromatogram': 'View Document',
+            href: this.metricProps.precursorScoped ? url + '#ChromInfo' + this.pointData['PrecursorChromInfoId'] : this.viewDocumentURL
+        });
+    },
+
+    getRunId: function () {
+        LABKEY.Query.selectRows({
+            schemaName: this.metricProps.series1SchemaName,
+            queryName: this.metricProps.series1QueryName,
+            columns: 'SampleFileId/ReplicateId/RunId/Id',
+            scope: this,
+            success: function (results) {
+                var runId;
+                if(results && results.rows)
+                    runId = results.rows[0]["SampleFileId/ReplicateId/RunId/Id"];
+
+                this.viewDocumentURL = LABKEY.ActionURL.buildURL('targetedms', 'showPrecursorList', null, {id: runId});
+                this.getExistingReplicateExclusions();
+            }
         });
     }
 });

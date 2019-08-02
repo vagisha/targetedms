@@ -237,7 +237,8 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
         LHRATIO("Light/Heavy Ratio", false),
         TPAREARATIO("Transition/Precursor Area Ratio", true),
         TPAREAS("Transition & Precursor Areas", true),
-        MASSACCURACTY("Mass Accuracy", true);
+        MASSACCURACY("Mass Accuracy", true),
+        TICAREA("TIC Area", true);
 
         private String _text;
         private boolean _hasData;
@@ -783,5 +784,16 @@ public final class QCPlotsWebPart extends BodyWebPart<QCPlotsWebPart.Elements>
                 plotTypeCheckboxes.put(plotType, Ext4Checkbox().withLabel(plotType.getLabel()).waitFor(this));
             return plotTypeCheckboxes.get(plotType);
         }
+    }
+
+    public Locator.XPathLocator getBubble()
+    {
+        return Locator.byClass("hopscotch-bubble-container");
+    }
+
+    public Locator.XPathLocator getBubbleContent()
+    {
+        Locator.XPathLocator hopscotchBubble = Locator.byClass("hopscotch-bubble-container");
+        return hopscotchBubble.append(Locator.byClass("hopscotch-bubble-content").append(Locator.byClass("hopscotch-content")));
     }
 }

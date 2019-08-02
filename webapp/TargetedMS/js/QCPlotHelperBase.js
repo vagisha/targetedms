@@ -241,6 +241,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 {
                     var data = this.processPlotDataRow(row, fragment, seriesType, metricProps);
                     this.fragmentPlotData[fragment].data.push(data);
+                    this.fragmentPlotData[fragment].precursorScoped = metricProps.precursorScoped;
                     this.setSeriesMinMax(this.fragmentPlotData[fragment], data);
                     allPlotDateValues.push(data.fullDate);
                 }, this);
