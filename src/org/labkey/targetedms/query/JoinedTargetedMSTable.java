@@ -54,15 +54,26 @@ public class JoinedTargetedMSTable extends AnnotatedTargetedMSTable
         {
             if (!currentColumnNames.contains(col.getName()))
             {
-                var ret = new AliasedColumn(this, col.getName(), col);
-                if (col.isHidden())
-                {
-                    ret.setHidden(true);
-                }
-                propagateKeyField(col, ret);
-                addColumn(ret);
+                addJoinedColumn(col);
+            }
+            else if (getColumn(col.getName()) instanceof AnnotatedTargetedMSTable.AnnotationColumn)
+            {
+                // Don't let an annotation column override a built-in column
+                removeColumn(getColumn(col.getName()));
+                addJoinedColumn(col);
             }
         }
+    }
+
+    private void addJoinedColumn(ColumnInfo col)
+    {
+        var ret = new AliasedColumn(this, col.getName(), col);
+        if (col.isHidden())
+        {
+            ret.setHidden(true);
+        }
+        propagateKeyField(col, ret);
+        addColumn(ret);
     }
 
     @Override

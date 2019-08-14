@@ -15,10 +15,16 @@
  */
 package org.labkey.targetedms.query;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.LookupForeignKey;
+import org.labkey.api.util.GUID;
 import org.labkey.targetedms.TargetedMSSchema;
+
+import java.util.Collection;
 
 /**
  * Created by Josh on 9/20/2016.
@@ -41,6 +47,39 @@ public class TargetedMSForeignKey extends LookupForeignKey
         // Avoid applying a container filter on lookups. The import process should be only creating FKs to data
         // in the same container. Thus, we can rely on the outer query doing the proper filtering and avoid
         // what can be expensive multi-table joins to get to a table that has the Container column we need
-        return _schema.getTable(_tableName, ContainerFilter.EVERYTHING);
+        return _schema.getTable(_tableName, new AnnotationsContainerFilter(getLookupContainerFilter()));
+    }
+
+    /** Special wrapper over the standard container filter. Used to identify lookups that don't need to do container
+     * filtering over their data (see note in getLookupTableInfo() above), but still respect the right filtering
+     * when loading the annotations (in AnnotatedTargetedMSTableInfo) that are in scope and should be added as columns.
+     * See issue 38134 */
+    public static class AnnotationsContainerFilter extends ContainerFilter
+    {
+        @NotNull
+        private final ContainerFilter _annotationContainerFilter;
+
+        public AnnotationsContainerFilter(ContainerFilter annotationContainerFilter)
+        {
+            _annotationContainerFilter = annotationContainerFilter == null ? ContainerFilter.CURRENT : annotationContainerFilter;
+        }
+
+        @Override
+        public @Nullable Collection<GUID> getIds(Container currentContainer)
+        {
+            return _annotationContainerFilter.getIds(currentContainer);
+        }
+
+        @Override
+        public @Nullable Type getType()
+        {
+            return _annotationContainerFilter.getType();
+        }
+
+        @Override
+        public String getCacheKey(Container c)
+        {
+            return "TargetedMSEverything" + _annotationContainerFilter.getCacheKey(c);
+        }
     }
 }

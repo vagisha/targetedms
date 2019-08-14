@@ -146,7 +146,7 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
             annotationSQL.append(".").append(pkColumnName).append(" AND a.name = ?)");
 
             //Create new Expression column representing annotation
-            ExprColumn annotationColumn = new ExprColumn(this, annotationSettingForTyping.getName(), annotationSQL, annotationType.getDataType());
+            ExprColumn annotationColumn = new AnnotationColumn(this, annotationSettingForTyping.getName(), annotationSQL, annotationType.getDataType());
             annotationColumn.setLabel(annotationSettingForTyping.getName());
             annotationColumn.setTextAlign("left");
             annotationColumn.setFacetingBehaviorType(FacetingBehaviorType.ALWAYS_OFF);
@@ -156,14 +156,15 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
             addColumn(annotationColumn);
         }
 
-        annotationsColumn.setDisplayColumnFactory(new DisplayColumnFactory()
+        annotationsColumn.setDisplayColumnFactory(colInfo -> new AnnotationsDisplayColumn(colInfo));
+    }
+
+    public static class AnnotationColumn extends ExprColumn
+    {
+        public AnnotationColumn(AnnotatedTargetedMSTable table, String name, SQLFragment annotationSQL, JdbcType dataType)
         {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new AnnotationsDisplayColumn(colInfo);
-            }
-        });
+            super(table, name, annotationSQL, dataType);
+        }
     }
 
     /**
