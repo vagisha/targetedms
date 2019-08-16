@@ -38,6 +38,7 @@ import org.labkey.targetedms.parser.FoldChange;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.GroupComparisonSettings;
+import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.QuantificationSettings;
@@ -270,6 +271,7 @@ public class RunQuantifier
         {
             Collection<GeneralMoleculeResultDataSet> resultDataSets = generalMolecules.stream()
                     .filter(peptide-> null == peptide.getStandardType())
+                    .filter(peptide-> !(peptide instanceof Peptide && Boolean.TRUE.equals(((Peptide) peptide).getDecoy())))
                     .map(peptide -> new GeneralMoleculeResultDataSet(_user, _container, _replicateDataSet, peptide))
                     .collect(Collectors.toList());
             foldChanges.addAll(calculateFoldChanges(settings, resultDataSets));
