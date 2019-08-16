@@ -1787,15 +1787,56 @@ public class TargetedMSManager
     @Nullable
     public static List<SampleFile> getSampleFile(String filePath, Date acquiredTime, Container container)
     {
+        return getSampleFile(filePath, acquiredTime, container, true);
+    }
+
+    /**
+     *
+     * @param sampleFile
+     * @param container
+     * @return a list of sample files that have the same name and acquired time as the given sample file.
+     * The full file path is used instead of just the file name if the acquired time of the given sample file is null
+     */
+    public static List<SampleFile> getMatchingSampleFiles(@NotNull SampleFile sampleFile, Container container)
+    {
+        if(sampleFile.getAcquiredTime() != null)
+        {
+            // Issue 38270. A file may have been imported from a different path in a previous document.  
+            // If SampleFile has an acquired time check for a file with same name and acquired time.
+            String filePath = sampleFile.getFilePath();
+            String fileName = FilenameUtils.getName(filePath);
+            if(!StringUtils.isBlank(fileName) && fileName.length() < filePath.length())
+            {
+                fileName = filePath.substring(filePath.indexOf(fileName) - 1); // Include the separator char
+            }
+            return getSampleFile(fileName, sampleFile.getAcquiredTime(), container, false);
+        }
+        else
+        {
+            return getSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), container);
+        }
+    }
+
+    private static List<SampleFile> getSampleFile(String filePath, Date acquiredTime, Container container, boolean fullPath)
+    {
         SQLFragment sql = new SQLFragment("SELECT sf.* FROM ");
         sql.append(getTableInfoSampleFile(), "sf");
         sql.append(", ");
         sql.append(getTableInfoReplicate(), "rep");
         sql.append(", ");
         sql.append(getTableInfoRuns(), "r");
-        sql.append( " WHERE r.Id = rep.RunId AND rep.Id = sf.ReplicateId AND r.Container = ? AND sf.FilePath = ? ");
+        sql.append(" WHERE r.Id = rep.RunId AND rep.Id = sf.ReplicateId AND r.Container = ?");
         sql.add(container);
-        sql.add(filePath);
+        if(fullPath)
+        {
+            sql.append(" AND sf.FilePath = ? ");
+            sql.add(filePath);
+        }
+        else
+        {
+            sql.append(" AND sf.FilePath LIKE ? ");
+            sql.add("%" + getSqlDialect().encodeLikeOpSearchString(filePath));
+        }
         if(acquiredTime == null)
             sql.append("AND sf.AcquiredTime IS NULL");
         else

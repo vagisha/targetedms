@@ -352,7 +352,7 @@ public class SkylineDocImporter
                         for (SampleFile sampleFile : replicate.getSampleFileList())
                         {
                             // It's possible that a data file is referenced in multiple replicates, so handle that case
-                            for (SampleFile existingSample : TargetedMSManager.getSampleFile(sampleFile.getFilePath(), sampleFile.getAcquiredTime(), run.getContainer()))
+                            for (SampleFile existingSample : TargetedMSManager.getMatchingSampleFiles(sampleFile, run.getContainer()))
                             {
                                 Replicate existingReplicate = TargetedMSManager.getReplicate(existingSample.getReplicateId(), run.getContainer());
                                 if (existingReplicate.getRunId() != run.getId())

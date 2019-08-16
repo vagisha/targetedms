@@ -1615,7 +1615,9 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
     addAnnotationsToPlot: function(plot, precursorInfo) {
         var me = this;
 
-        var xAxisLabels = Ext4.Array.pluck(precursorInfo.data, "fullDate");
+        // Issue 38270. Get unique dates just in case there are two replicates with the same acquired time. 
+        // This can happen e.g. if a raw file is imported from different locations.
+        var xAxisLabels = Ext4.Array.unique(Ext4.Array.pluck(precursorInfo.data, "fullDate"));
         if (this.groupedX)
         {
             xAxisLabels = [];
