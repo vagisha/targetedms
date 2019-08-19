@@ -126,8 +126,7 @@ public class TargetedMSFolderType extends MultiPortalFolderType
             if (Portal.getParts(container, RAW_FILES_TAB).size() == 0)
             {
                 ActionURL url = new ActionURL(TargetedMSController.AddRawDataTabAction.class, container);
-                NavTree addRawData = new NavTree("Add Raw Data Tab", "javascript:{}");
-                addRawData.setScript(PageFlowUtil.postOnClickJavaScript(url));
+                NavTree addRawData = new NavTree("Add Raw Data Tab", url).usePost();
                 adminNavTree.addChild(addRawData);
             }
         }

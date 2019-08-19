@@ -16,7 +16,6 @@
 
 package org.labkey.targetedms;
 
-
 import com.keypoint.PngEncoder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -3158,7 +3157,7 @@ public class TargetedMSController extends SpringActionController
 
         public NavTree appendNavTrail(NavTree root, TargetedMSRun run)
         {
-            root = root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+            root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
             if (run != null)
             {
                 root.addChild(run.getDescription(), getShowRunURL(getContainer(), run.getId()));
