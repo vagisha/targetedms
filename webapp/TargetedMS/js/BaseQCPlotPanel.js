@@ -240,7 +240,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
                         MetricValues: []
                     };
                 }
-                row.MetricValue = Math.round(row.MetricValue * 10000) / 10000; // round to four decimals
 
                 plotDataMap[row['SeriesLabel']].Series[row['SeriesType']].MetricValues.push(row.MetricValue);
                 plotDataMap[row['SeriesLabel']].Series[row['SeriesType']].Rows.push(row);
