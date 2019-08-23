@@ -15,10 +15,17 @@
  */
 package org.labkey.targetedms.query;
 
+import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.FilteredTable;
+import org.labkey.api.query.QueryUpdateService;
+import org.labkey.api.security.UserPrincipal;
+import org.labkey.api.security.permissions.AdminPermission;
+import org.labkey.api.security.permissions.Permission;
+import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 
@@ -40,6 +47,19 @@ public class QCMetricConfigurationTable extends FilteredTable<TargetedMSSchema>
             filter = getDefaultMetricContainerFilter(getContainer());
 
         super.applyContainerFilter(filter);
+    }
+
+    @Override
+    public boolean hasPermission(@NotNull UserPrincipal user, @NotNull Class<? extends Permission> perm)
+    {
+        Class<? extends Permission> permissionToCheck = perm == ReadPermission.class ? ReadPermission.class : AdminPermission.class;
+        return getContainer().hasPermission(user, permissionToCheck);
+    }
+
+    @Override
+    public QueryUpdateService getUpdateService()
+    {
+        return new DefaultQueryUpdateService(this, getRealTable());
     }
 
     public static ContainerFilter getDefaultMetricContainerFilter(Container currentContainer)
