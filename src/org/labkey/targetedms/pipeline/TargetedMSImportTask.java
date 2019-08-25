@@ -16,6 +16,7 @@
 package org.labkey.targetedms.pipeline;
 
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.ExpRun;
@@ -56,7 +57,7 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
     {
         TargetedMSImportPipelineJob job = (TargetedMSImportPipelineJob)getJob();
 
-        try
+        try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
         {
             XarContext context = new XarContext(job.getDescription(), job.getContainer(), job.getUser());
             SkylineDocImporter importer = new SkylineDocImporter(job.getUser(), job.getContainer(), context.getJobDescription(),
@@ -74,6 +75,7 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
             {
                 ExperimentAnnotationsManager.addSelectedRunsToExperiment(expAnnotations.getExperiment(), new int[]{expRun.getRowId()}, job.getUser());
             }
+            transaction.commit();
         }
         catch (ExperimentException | XMLStreamException | IOException | AuditLogException e)
         {
