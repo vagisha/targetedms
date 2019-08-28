@@ -486,11 +486,6 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_GENERAL_MOLECULE);
     }
 
-    public static TableInfo getTableInfoGeneralMoleculeChomInfo()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_GENERAL_MOLECULE_CHROM_INFO);
-    }
-
     public static TableInfo getTableInfoGeneralTransition()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_GENERAL_TRANSITION);
