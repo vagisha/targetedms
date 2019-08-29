@@ -109,10 +109,8 @@ public class PrecursorChromInfoTable extends AnnotatedTargetedMSTable
         peptideModifiedAreaProportionSQL.append(" INNER JOIN ");
         peptideModifiedAreaProportionSQL.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         peptideModifiedAreaProportionSQL.append(" ON gp.Id = pci.PrecursorId INNER JOIN ");
-        peptideModifiedAreaProportionSQL.append(TargetedMSManager.getTableInfoGeneralMoleculeChomInfo(), "gm");
-        peptideModifiedAreaProportionSQL.append(" ON gp.generalmoleculeid = gm.Id INNER JOIN ");
         peptideModifiedAreaProportionSQL.append(TargetedMSManager.getTableInfoPeptide(), "p");
-        peptideModifiedAreaProportionSQL.append(" ON p.id = gm.Id WHERE pci.SampleFileId = ").append(ExprColumn.STR_TABLE_ALIAS).append(".SampleFileId");
+        peptideModifiedAreaProportionSQL.append(" ON p.id = gp.generalmoleculeid WHERE pci.SampleFileId = ").append(ExprColumn.STR_TABLE_ALIAS).append(".SampleFileId");
         peptideModifiedAreaProportionSQL.append(" AND p.Sequence = (SELECT Sequence FROM ");
         peptideModifiedAreaProportionSQL.append(TargetedMSManager.getTableInfoPeptide(), "p2");
         peptideModifiedAreaProportionSQL.append(" INNER JOIN ");
