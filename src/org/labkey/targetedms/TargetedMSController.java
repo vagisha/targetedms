@@ -6087,7 +6087,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getConfirmView(SelectedIdsForm deleteForm, BindException errors)
         {
-            return FormPage.getView(TargetedMSController.class, deleteForm, "view/expannotations/deleteExperimentAnnotations.jsp");
+            return FormPage.getView("/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp", deleteForm);
         }
 
         @Override
@@ -6175,7 +6175,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getConfirmView(DeleteExperimentAnnotationsForm deleteForm, BindException errors)
         {
-            return FormPage.getView(TargetedMSController.class, deleteForm, "view/expannotations/deleteExperimentAnnotations.jsp");
+            return FormPage.getView("/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp", deleteForm);
         }
 
         public boolean handlePost(DeleteExperimentAnnotationsForm form, BindException errors)
