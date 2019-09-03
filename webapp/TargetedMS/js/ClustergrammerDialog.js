@@ -146,12 +146,12 @@ Ext4.define('LABKEY.targetedms.Clustergrammer', {
                                                 failure: function (request) {
                                                     mask.hide();
                                                     win.close();
-                                                    var json = Ext.decode(request.responseText);
+                                                    var json = Ext4.decode(request.responseText);
                                                     if (json.exception) {
-                                                        Ext.Msg.alert("Error", json.exception);
+                                                        Ext4.Msg.alert("Error", json.exception);
                                                     }
                                                     else {
-                                                        Ext.Msg.alert("Error", "Heat map generation failed.");
+                                                        Ext4.Msg.alert("Error", "Heat map generation failed.");
                                                     }
                                                 }
                                             });

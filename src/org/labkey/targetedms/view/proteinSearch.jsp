@@ -28,7 +28,7 @@
     JspView<ProteinService.ProteinSearchForm> me = (JspView<ProteinService.ProteinSearchForm>) HttpView.currentView();
     ProteinService.ProteinSearchForm bean = me.getModelBean();
 %>
-<labkey:form action="<%= h(urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())) %>">
+<labkey:form action="<%=urlProvider(MS2Urls.class).getProteinSearchUrl(getContainer())%>">
     <table class="lk-fields-table">
         <tr>
             <td class="labkey-form-label">Protein name *<%= helpPopup("Protein name", "Required to search for proteins. You may use the name as specified by the FASTA file, or an annotation, such as a gene name, that has been loaded from an annotations file. You may comma separate multiple names.") %></td>

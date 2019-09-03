@@ -25,7 +25,7 @@
     boolean isJournalProject = JournalManager.isJournalProject(getContainer());
 %>
 
-<labkey:form action="<%=h(urlProvider(MS2Urls.class).getPepSearchUrl(getContainer()))%>" method="get">
+<labkey:form action="<%=urlProvider(MS2Urls.class).getPepSearchUrl(getContainer())%>" method="get">
     <table class="lk-fields-table">
         <tr>
             <td class="labkey-form-label"><label for="pepSeq">Peptide sequence</label> *<%=helpPopup("Peptide Sequence", "Enter the peptide sequence to find, or multiple sequences separated by commas. Use * to match any sequence of characters.")%></td>

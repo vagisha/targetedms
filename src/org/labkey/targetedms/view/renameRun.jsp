@@ -23,7 +23,7 @@
 <%
     TargetedMSController.RenameBean bean = ((JspView<TargetedMSController.RenameBean>) HttpView.currentView()).getModelBean();
 %>
-<labkey:form action="<%=h(buildURL(TargetedMSController.RenameRunAction.class))%>" method="post" layout="horizontal">
+<labkey:form action="<%=buildURL(TargetedMSController.RenameRunAction.class)%>" method="post" layout="horizontal">
 <%=generateReturnUrlFormField(bean.returnURL)%>
     <labkey:input type="hidden" name="run" value="<%=bean.run.getRunId()%>"/>
     <labkey:input type="text" size="70" name="description" id="description" label="Name" value="<%=h(bean.description)%>"/>

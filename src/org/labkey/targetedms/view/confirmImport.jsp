@@ -22,7 +22,7 @@
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     TargetedMSController.SkylinePipelinePathForm form = (TargetedMSController.SkylinePipelinePathForm)HttpView.currentModel();
-    ActionURL targetURL = new org.labkey.api.view.ActionURL(TargetedMSController.SkylineDocUploadAction.class, getContainer());
+    ActionURL targetURL = new ActionURL(TargetedMSController.SkylineDocUploadAction.class, getContainer());
 %>
 <script type="text/javascript">
     Ext.onReady(function() {
@@ -49,7 +49,7 @@
         <th>Representative</th>
         <th>File Name</th>
     </tr>
-    <labkey:form action="<%= h(targetURL) %>" method="POST">
+    <labkey:form action="<%=targetURL%>" method="POST">
         <input type="hidden" name="path" value="<%= h(form.getPath() )%>" />
         <% for (java.io.File file : form.getValidatedFiles(getContainer()))
         { %>
