@@ -6142,7 +6142,7 @@ public class TargetedMSController extends SpringActionController
 
         public int[] getIds()
         {
-            return PageFlowUtil.toInts(DataRegionSelection.getSelected(getViewContext(), getDataRegionSelectionKey(), false, false));
+            return PageFlowUtil.toInts(DataRegionSelection.getSelected(getViewContext(), getDataRegionSelectionKey(), false));
         }
 
         public String getDataRegionSelectionKey()
