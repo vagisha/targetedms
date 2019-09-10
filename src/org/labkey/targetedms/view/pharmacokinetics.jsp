@@ -164,7 +164,7 @@
             var message = '', sep = '';
             data.rows.forEach(function(timeRow) {
                 if (timeRow.Time === undefined || timeRow.Time == null) {
-                    message = "The replicate annotation named Time is missing or has no value.";
+                    message = "The replicate annotation named Time is missing or has no value. Problematic replicates include: " + timeRow.Replicates;
                     sep = '<br/>';
                 }
                 if (dose == null) {

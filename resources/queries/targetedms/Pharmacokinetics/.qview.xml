@@ -12,5 +12,6 @@
         <column name="StandardDeviation" />
         <column name="ConcentrationCount" />
         <column name="FileName" />
+        <column name="Replicates" />
     </columns>
 </customView>

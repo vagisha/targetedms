@@ -27,7 +27,8 @@ SELECT
   MAX(sub.Filename)                         AS FileName,
   MAX(sub.ionName)                          AS ionName,
   STDDEV(sub.calculatedConcentration)       AS StandardDeviation,
-  COUNT(sub.calculatedConcentration)        AS ConcentrationCount
+  COUNT(sub.calculatedConcentration)        AS ConcentrationCount,
+  GROUP_CONCAT(sub.ReplicateName)           AS Replicates
 FROM
   (
     SELECT
@@ -41,7 +42,8 @@ FROM
       CAST(ci.calculatedConcentration AS FLOAT)     AS calculatedConcentration,
       CAST(pep.sequence AS VARCHAR(250))            AS sequence,
       CAST(rep.runid.filename AS VARCHAR(250))      AS FileName,
-      CAST(ci.MoleculeId.Molecule AS VARCHAR(250))  AS IonName
+      CAST(ci.MoleculeId.Molecule AS VARCHAR(250))  AS IonName,
+      CAST(rep.Name AS VARCHAR(250))                AS ReplicateName
     FROM
 
       generalmoleculechrominfo ci
