@@ -28,6 +28,7 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
+        dependencies.add("internal/jQuery");
         dependencies.add("MS2/lorikeet");
     }
 %>
@@ -50,6 +51,7 @@
 <div id="<%=bean.getLorikeetId()%>"></div>
 <script type="text/javascript">
 
++function($){
 Ext4.onReady(function () {
 
     /* render the spectrum with the given options */
@@ -320,6 +322,7 @@ Ext4.define('LABKEY.targetedms.LorikeetOptions', {
         $('#'+this.lorikeetId).html('<div style="margin:20px;color:red;">' + message + '</div>');
     }
 });
+}(jQuery);
 
 </script>
 <% } else { %> Spectrum information unavailable.<% }%>

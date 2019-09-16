@@ -6021,7 +6021,7 @@ public class TargetedMSController extends SpringActionController
     private void addExperimentViewDependencies(DataView view)
     {
         view.addClientDependency(ClientDependency.fromPath("Ext4"));
-        view.addClientDependency(ClientDependency.fromPath(AppProps.getInstance().getScheme() + "://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"));
+        view.addClientDependency(ClientDependency.fromPath("internal/jQuery"));
         view.addClientDependency(ClientDependency.fromPath("/TargetedMS/css/bootstrap-tagsinput.css"));
         view.addClientDependency(ClientDependency.fromPath("TargetedMS/js/bootstrap-tagsinput.min.js"));
         view.addClientDependency(ClientDependency.fromPath("/TargetedMS/css/typeahead-examples.css"));

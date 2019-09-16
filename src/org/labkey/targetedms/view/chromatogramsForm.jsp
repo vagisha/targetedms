@@ -18,19 +18,19 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.parser.Replicate" %>
 <%@ page import="org.labkey.targetedms.parser.ReplicateAnnotation" %>
 <%@ page import="org.labkey.targetedms.query.ReplicateManager" %>
 <%@ page import="java.util.List" %>
-<%@ page import="org.labkey.targetedms.parser.Replicate" %>
-<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
     @Override
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
-        dependencies.add("MS2/lorikeet_0.3/js/jquery-1.4.2.min.js");
+        dependencies.add("internal/jQuery");
     }
 %>
 <%
@@ -92,12 +92,16 @@
     }
 </style>
 <script type="text/javascript">
+
++function($){
+
     var hiddenFields;
     var replicateStore;
     var filterStore;
     var selectedReplicatesFilterList;
     var selectedAnnotationsFilterList;
     var form;
+
     Ext4.onReady(function(){
         replicateStore = Ext4.create('Ext.data.Store', {
             fields: ['replicateName','replicateId'],
@@ -404,14 +408,14 @@
     }
 
     // Clears Annotations filter box selected values.
-    function clearAnnotations() {
+    clearAnnotations = function(){
         form.getForm().findField('annotationsFilter').clearValue();
         $('#annotationFilters').empty();
         manageFilterListVisibility();
     }
 
     // Clears Replicates filter box selected values.
-    function clearReplicates() {
+    clearReplicates = function(){
         form.getForm().findField('replicatesFilter').clearValue();
         $('#replicateFilters').empty();
         manageFilterListVisibility();
@@ -440,7 +444,7 @@
     }
 
     // Triggered by onclick() function in each list element in the [-](delete) button.
-    function deleteFilter(el, parentTable)
+    deleteFilter = function (el, parentTable)
     {
         var values;
         var formId;
@@ -473,7 +477,7 @@
     });
 
     // Handels showing and hiding the form.
-    function showChart()
+    showChart = function()
     {
         if($('#showGraphImg').attr('src') === LABKEY.contextPath + "/_images/plus.gif")
         {
@@ -488,6 +492,7 @@
             $('#allFilters').hide("slow");
         }
     }
+}(jQuery);
 </script>
 <div id="headContainer">
     <div  onclick="showChart()" style="margin-bottom: 10px;"><img id="showGraphImg" src="<%=getViewContext().getContextPath()%>/_images/minus.gif"> <strong>Display Chart Settings</strong></div>

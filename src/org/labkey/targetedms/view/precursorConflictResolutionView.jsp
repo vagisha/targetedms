@@ -32,7 +32,7 @@
     public void addClientDependencies(ClientDependencies dependencies)
     {
         dependencies.add("Ext4");
-        dependencies.add("TargetedMS/jquery/jquery-1.8.3.min.js");
+        dependencies.add("internal/jQuery");
         dependencies.add("TargetedMS/DataTables/jquery.dataTables.min.js");
         dependencies.add("TargetedMS/DataTables/jquery.dataTables.min.css");
     }
@@ -61,7 +61,7 @@
 </style>
 
 <script type="text/javascript">
-
+    var $ = jQuery.noConflict();
     var table;
 
 $(document).ready(function () {
