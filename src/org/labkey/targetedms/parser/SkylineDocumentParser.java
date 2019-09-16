@@ -89,6 +89,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String PEPTIDE = "peptide";
     private static final String MOLECULE = "molecule";
     private static final String NOTE = "note";
+    private static final String ATTRIBUTE_GROUP_ID = "attribute_group_id";
     private static final String PRECURSOR = "precursor";
     private static final String TRANSITION = "transition";
     private static final String PRECURSOR_MZ = "precursor_mz";
@@ -1184,6 +1185,7 @@ public class SkylineDocumentParser implements AutoCloseable
         }
         molecule.setIonFormula(formula);
         molecule.setCustomIonName(reader.getAttributeValue(null, CUSTOM_ION_NAME));
+        molecule.setAttributeGroupId(reader.getAttributeValue(null, ATTRIBUTE_GROUP_ID));
         molecule.setMassMonoisotopic(readRequiredMass(reader, true, MOLECULE));
         molecule.setMassAverage(readRequiredMass(reader, false, MOLECULE));
 
@@ -1266,6 +1268,8 @@ public class SkylineDocumentParser implements AutoCloseable
         String rank = reader.getAttributeValue(null, "rank");
         if (null != rank)
             peptide.setRank(Integer.parseInt(rank));
+
+        peptide.setAttributeGroupId(reader.getAttributeValue(null, ATTRIBUTE_GROUP_ID));
 
         List<Peptide.StructuralModification> structuralMods = new ArrayList<>();
         List<Peptide.IsotopeModification> isotopeMods = new ArrayList<>();

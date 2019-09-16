@@ -29,6 +29,7 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
     protected Double _internalStandardConcentration;
     protected Double _concentrationMultiplier;
     protected String _standardType;
+    protected String _attributeGroupId;
     private List<GeneralMoleculeChromInfo> _generalMoleculeChromInfoList;
 
     public int getPeptideGroupId()
@@ -142,5 +143,15 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
     public void setConcentrationMultiplier(Double concentrationMultiplier)
     {
         _concentrationMultiplier = concentrationMultiplier;
+    }
+
+    public String getAttributeGroupId()
+    {
+        return _attributeGroupId;
+    }
+
+    public void setAttributeGroupId(String attributeGroupId)
+    {
+        _attributeGroupId = attributeGroupId;
     }
 }

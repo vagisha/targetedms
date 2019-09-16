@@ -266,6 +266,7 @@
             <column columnName="InternalStandardConcentration"/>
             <column columnName="NormalizationMethod"/>
             <column columnName="StandardType"/>
+            <column columnName="AttributeGroupId"/>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="Peptide">
