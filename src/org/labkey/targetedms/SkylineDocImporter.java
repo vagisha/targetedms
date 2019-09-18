@@ -74,6 +74,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -589,6 +590,17 @@ public class SkylineDocImporter
                 Set<String> peptides = new TreeSet<>();
                 Set<String> smallMolecules = new TreeSet<>();
 
+                // If this is a QC folder get the set of peptides (or small molucules) in the container before we start parsing the targets in the document.
+                // In PostgreSQL's default, "Read Committed" isolation level: "..SELECT does see the effects of previous updates executed within its own transaction,
+                // even though they are not yet committed". https://www.postgresql.org/docs/current/transaction-iso.html
+                Set<String> expectedPeptides = Collections.emptySet();
+                Set<String> expectedMolecules = Collections.emptySet();
+                if (folderType == TargetedMSService.FolderType.QC)
+                {
+                    expectedPeptides = TargetedMSManager.getDistinctPeptides(_container);
+                    expectedMolecules = TargetedMSManager.getDistinctMolecules(_container);
+                }
+
                 while (parser.hasNextPeptideGroup())
                 {
                     PeptideGroup pepGroup = parser.nextPeptideGroup();
@@ -608,9 +620,6 @@ public class SkylineDocImporter
 
                 if (folderType == TargetedMSService.FolderType.QC)
                 {
-                    Set<String> expectedPeptides = TargetedMSManager.getDistinctPeptides(_container);
-                    Set<String> expectedMolecules = TargetedMSManager.getDistinctMolecules(_container);
-
                     if (!expectedMolecules.isEmpty() || !expectedPeptides.isEmpty())
                     {
                         if (!expectedPeptides.equals(peptides))
