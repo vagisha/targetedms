@@ -41,6 +41,8 @@ public class CachedFileHeaderStruct
     int sizeScanIds;
     long locationScanIds;
     float ticArea;
+    int lenSampleId;
+    int lenSerialNumber;
 
     public CachedFileHeaderStruct(LittleEndianInput dataInputStream)
     {
@@ -54,9 +56,14 @@ public class CachedFileHeaderStruct
         sizeScanIds = dataInputStream.readInt();
         locationScanIds = dataInputStream.readLong();
         ticArea = Float.intBitsToFloat(dataInputStream.readInt());
+        lenSampleId = dataInputStream.readInt();
+        lenSerialNumber = dataInputStream.readInt();
     }
 
     public static int getStructSize(CacheFormatVersion formatVersion) {
+        if (formatVersion.compareTo(CacheFormatVersion.Fourteen) >= 0) {
+            return 60;
+        }
         if (formatVersion.compareTo(CacheFormatVersion.Thirteen) >= 0) {
             return 52;
         }
@@ -103,6 +110,16 @@ public class CachedFileHeaderStruct
     public int getLenInstrumentInfo()
     {
         return lenInstrumentInfo;
+    }
+
+    public int getLenSampleId()
+    {
+        return lenSampleId;
+    }
+
+    public int getLenSerialNumber()
+    {
+        return lenSerialNumber;
     }
 
     public float getMaxRetentionTime()

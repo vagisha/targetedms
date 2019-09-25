@@ -33,6 +33,7 @@ public enum CacheFormatVersion
     Eleven,// Adds chromatogram start, stop times, and uncompressed size info, and new flag bit for SignedMz
     Twelve,// Adds structure sizes to CacheHeaderStruct
     Thirteen, // Adds total ion current to CachedFileHeaderStruct
+    Fourteen, // Adds sample id to CachedFileHeaderStruct
     UnknownFutureVersion;
     public static CacheFormatVersion fromInteger(int i) {
         if (i <= Zero.ordinal()) {
@@ -43,5 +44,5 @@ public enum CacheFormatVersion
         }
         return values()[i];
     }
-    public static final CacheFormatVersion CURRENT = Thirteen;
+    public static final CacheFormatVersion CURRENT = Fourteen;
 }
