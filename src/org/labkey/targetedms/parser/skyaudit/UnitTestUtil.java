@@ -120,7 +120,9 @@ public class UnitTestUtil
     {
         File workingDir = new File(System.getProperty(SkylineAuditLogParser.TestCase.SYS_PROPERTY_CWD) + "/temp");
         if(!workingDir.exists())
-            throw new FileExistsException("Cannot get a working dir for testing");
+            workingDir.mkdir();
+        if (!workingDir.exists())
+            throw new FileExistsException("Cannot get a working dir for testing: " + workingDir.getPath());
         File zipDir = new File(workingDir, SkylineFileUtils.getBaseName(pZip.getName()));
 
         if (zipDir.exists())
