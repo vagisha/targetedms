@@ -79,7 +79,9 @@
                 <columnTitle>Replicate</columnTitle>
             </column>
             <column columnName="FilePath"/>
-            <column columnName="SampleName"/>
+            <column columnName="SampleName">
+                <description>User-specified value</description>
+            </column>
             <column columnName="AcquiredTime"/>
             <column columnName="ModifiedTime"/>
             <column columnName="SkylineId">
@@ -89,6 +91,10 @@
                 <columnTitle>Instrument</columnTitle>
             </column>
             <column columnName="TicArea"/>
+            <column columnName="InstrumentSerialNumber"/>
+            <column columnName="SampleId">
+                <description>Extracted from raw data file, when available</description>
+            </column>
         </columns>
     </table>
     <table tableName="Runs" tableDbType="TABLE">

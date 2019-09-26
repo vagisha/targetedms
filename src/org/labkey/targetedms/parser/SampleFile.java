@@ -27,14 +27,17 @@ public class SampleFile extends SkylineEntity
     private int _replicateId;
     private Integer _instrumentId;
     private String _filePath;
+    /** User-specified in Skyline */
     private String _sampleName;
     private String _skylineId;
     private Date _acquiredTime;
     private Date _modifiedTime;
     private Double _ticArea;
+    private String _instrumentSerialNumber;
+    /** Extracted by Skyline from raw file */
+    private String _sampleId;
 
     private List<Instrument> _instrumentInfoList;
-    private boolean _skip;
 
     public int getReplicateId()
     {
@@ -124,5 +127,25 @@ public class SampleFile extends SkylineEntity
     public void setTicArea(Double ticArea)
     {
         _ticArea = ticArea;
+    }
+
+    public String getInstrumentSerialNumber()
+    {
+        return _instrumentSerialNumber;
+    }
+
+    public void setInstrumentSerialNumber(String instrumentSerialNumber)
+    {
+        _instrumentSerialNumber = instrumentSerialNumber;
+    }
+
+    public String getSampleId()
+    {
+        return _sampleId;
+    }
+
+    public void setSampleId(String sampleId)
+    {
+        _sampleId = sampleId;
     }
 }

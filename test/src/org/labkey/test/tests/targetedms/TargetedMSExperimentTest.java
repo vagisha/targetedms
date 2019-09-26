@@ -17,6 +17,10 @@ package org.labkey.test.tests.targetedms;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.query.Filter;
+import org.labkey.remoteapi.query.SelectRowsCommand;
+import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
@@ -27,6 +31,8 @@ import org.labkey.test.util.Ext4Helper;
 import org.labkey.test.util.LogMethod;
 import org.openqa.selenium.WebElement;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -40,9 +46,10 @@ public class TargetedMSExperimentTest extends TargetedMSTest
     private static final String SKY_FILE2 = "MRMer_renamed_protein.zip";
 
     private static final String SKY_FILE_SMALLMOL_PEP = "smallmol_plus_peptides.sky.zip";
+    private static final String SKY_FILE_SKYD_14 = "SampleIdTest.sky.zip";
 
     @Test
-    public void testSteps()
+    public void testSteps() throws IOException, CommandException
     {
         setupFolder(FolderType.Experiment);
         importData(SKY_FILE);
@@ -55,6 +62,25 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //small molecule
         importData(SKY_FILE_SMALLMOL_PEP, 3);
         verifyImportedSmallMoleculeData();
+
+        // SKYD version 14
+        importData(SKY_FILE_SKYD_14, 4);
+        verifyInstrumentSerialNumber();
+    }
+
+    @LogMethod
+    private void verifyInstrumentSerialNumber() throws IOException, CommandException
+    {
+        SelectRowsCommand cmd = new SelectRowsCommand("targetedms", "samplefile");
+        cmd.setRequiredVersion(9.1);
+        cmd.setColumns(Arrays.asList("ReplicateId/Name", "FilePath", "AcquiredTime", "InstrumentId", "InstrumentSerialNumber", "SampleId"));
+        cmd.addFilter("InstrumentSerialNumber", "6147F", Filter.Operator.EQUAL);
+        SelectRowsResponse response = cmd.execute(createDefaultConnection(false), getCurrentContainerPath());
+
+        assertEquals("Matching row count", 1, response.getRowset().getSize());
+        assertEquals("Matching FilePath", "E:\\skydata\\20110215_MikeB\\S_1.RAW?centroid_ms1=true", response.getRowset().iterator().next().getValue("FilePath"));
+        assertEquals("Matching SampleId", "1:A,1", response.getRowset().iterator().next().getValue("SampleId"));
+        assertEquals("Matching replicate name", "S_1", response.getRowset().iterator().next().getValue("ReplicateId/Name"));
     }
 
     @LogMethod
