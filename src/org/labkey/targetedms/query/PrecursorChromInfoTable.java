@@ -110,13 +110,23 @@ public class PrecursorChromInfoTable extends AnnotatedTargetedMSTable
         proportionSQL.append(" INNER JOIN ");
         proportionSQL.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         proportionSQL.append(" ON gp.Id = pci.PrecursorId INNER JOIN ");
+        proportionSQL.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        proportionSQL.append(" ON gp.GeneralMoleculeId = gm.Id LEFT OUTER JOIN ");
+        proportionSQL.append(TargetedMSManager.getTableInfoMolecule(), "m");
+        proportionSQL.append(" ON gm.Id = m.Id LEFT OUTER JOIN ");
         proportionSQL.append(TargetedMSManager.getTableInfoPeptide(), "p");
         proportionSQL.append(" ON p.id = gp.generalmoleculeid WHERE pci.SampleFileId = ").append(ExprColumn.STR_TABLE_ALIAS).append(".SampleFileId");
-        proportionSQL.append(" AND p.Sequence = (SELECT Sequence FROM ");
-        proportionSQL.append(TargetedMSManager.getTableInfoPeptide(), "p2");
-        proportionSQL.append(" INNER JOIN ");
+        // Group based on user-specified grouping ID if present, and fall back on peptide sequence, custom ion name,
+        // and ion formula (the latter two are for small molecules only), in that order
+        proportionSQL.append(" AND COALESCE(gm.AttributeGroupId, p.Sequence, m.CustomIonName, m.IonFormula) = (SELECT COALESCE(gm2.AttributeGroupId, p2.Sequence, m2.CustomIonName, m2.IonFormula) FROM ");
         proportionSQL.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp2");
-        proportionSQL.append(" ON gp2.GeneralMoleculeId = p2.Id WHERE gp2.Id = ").append(ExprColumn.STR_TABLE_ALIAS).append(".PrecursorId");;
+        proportionSQL.append(" INNER JOIN ");
+        proportionSQL.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm2");
+        proportionSQL.append(" ON gp2.GeneralMoleculeId = gm2.Id LEFT OUTER JOIN ");
+        proportionSQL.append(TargetedMSManager.getTableInfoPeptide(), "p2");
+        proportionSQL.append(" ON p2.Id = gm2.Id LEFT OUTER JOIN ");
+        proportionSQL.append(TargetedMSManager.getTableInfoMolecule(), "m2");
+        proportionSQL.append(" ON gm2.Id = m2.Id WHERE gp2.Id = ").append(ExprColumn.STR_TABLE_ALIAS).append(".PrecursorId");
         proportionSQL.append(")) X )");
         ExprColumn peptideModifiedAreaProportionCol = new ExprColumn(this, "PrecursorModifiedAreaProportion", proportionSQL, JdbcType.DOUBLE);
         peptideModifiedAreaProportionCol.setFormat("##0.####%");

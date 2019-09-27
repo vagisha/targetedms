@@ -54,7 +54,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     protected static final String QC_2_FILE = "QC_2.sky.zip";
     protected static final String QC_3_FILE = "QC_3.sky.zip";
     protected static final String QC_4_FILE = "QC_4.sky.zip";
-    protected static final String SMALL_MOLECULE = "smallmol_plus_peptides.sky.zip";
+    protected static final String SKY_FILE_SMALLMOL_PEP = "smallmol_plus_peptides.sky.zip";
     protected static final String USER = "qcuser@targetedms.test";
     private static ConfiguresSite siteConfigurer;
 

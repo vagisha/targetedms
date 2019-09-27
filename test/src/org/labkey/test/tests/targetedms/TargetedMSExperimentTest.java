@@ -21,6 +21,10 @@ import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.query.Filter;
 import org.labkey.remoteapi.query.SelectRowsCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
+import org.labkey.remoteapi.Connection;
+import org.labkey.remoteapi.query.Row;
+import org.labkey.remoteapi.query.Rowset;
+import org.labkey.remoteapi.query.Sort;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
@@ -33,6 +37,7 @@ import org.openqa.selenium.WebElement;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -62,10 +67,47 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //small molecule
         importData(SKY_FILE_SMALLMOL_PEP, 3);
         verifyImportedSmallMoleculeData();
+        verifyAttributeGroupIdCalcs();
 
         // SKYD version 14
         importData(SKY_FILE_SKYD_14, 4);
         verifyInstrumentSerialNumber();
+    }
+
+    @LogMethod
+    protected void verifyAttributeGroupIdCalcs() throws IOException, CommandException
+    {
+        Connection cn = createDefaultConnection(false);
+        // Query for small molecule data
+        SelectRowsCommand smallMoleculeCommand = new SelectRowsCommand("targetedms", "generalmoleculechrominfo");
+        smallMoleculeCommand.setRequiredVersion(9.1);
+        smallMoleculeCommand.setColumns(Arrays.asList("MoleculeId/CustomIonName", "SampleFileId", "PeakCountRatio", "RetentionTime", "PeptideModifiedAreaProportion", "SampleFileId/ReplicateId/RunId", "MoleculeId/AttributeGroupId", "PeptideId/AttributeGroupId"));
+        smallMoleculeCommand.addFilter("MoleculeId/AttributeGroupId", "C2X", Filter.Operator.EQUAL);
+        smallMoleculeCommand.addFilter("SampleFileId/SampleName", "13417_02_WAA283_3805_071514", Filter.Operator.EQUAL);
+        smallMoleculeCommand.setSorts(Collections.singletonList(new Sort("MoleculeId/CustomIonName")));
+        SelectRowsResponse smallMoleculesResponse = smallMoleculeCommand.execute(cn, getCurrentContainerPath());
+        // Verify proportions are calculated appropriately
+        Rowset smallMoleculeRowSet = smallMoleculesResponse.getRowset();
+        assertEquals("Wrong number of attribute group ID small molecule rows", 4, smallMoleculeRowSet.getSize());
+        Row smallMoleculeRow = smallMoleculeRowSet.iterator().next();
+        assertEquals("Wrong first molecule", "PC aa C24:0", smallMoleculeRow.getValue("MoleculeId/CustomIonName"));
+        // Round to avoid floating point precision false positives
+        assertEquals("Wrong first molecule proportion", 3475, Math.round(((Number)smallMoleculeRow.getValue("PeptideModifiedAreaProportion")).doubleValue() * 10000));
+
+        // Query for peptide data
+        SelectRowsCommand peptideCommand = new SelectRowsCommand("targetedms", "generalmoleculechrominfo");
+        peptideCommand.setRequiredVersion(9.1);
+        peptideCommand.setColumns(Arrays.asList("PeptideId/PeptideModifiedSequence", "SampleFileId", "PeakCountRatio", "RetentionTime", "PeptideModifiedAreaProportion", "PeptideId/AttributeGroupId"));
+        peptideCommand.addFilter("PeptideId/AttributeGroupId", "YAL038WPeptide", Filter.Operator.EQUAL);
+        peptideCommand.setSorts(Arrays.asList(new Sort("PeptideId/PeptideModifiedSequence")));
+        SelectRowsResponse peptideResponse = peptideCommand.execute(cn, getCurrentContainerPath());
+        Rowset peptideRowSet = peptideResponse.getRowset();
+        // Verify proportions are calculated appropriately
+        assertEquals("Wrong number of attribute group ID peptide rows", 3, peptideRowSet.getSize());
+        Row peptideRow = peptideRowSet.iterator().next();
+        assertEquals("Wrong first peptide", "GVNLPGTDVDLPALSEK", peptideRow.getValue("PeptideId/PeptideModifiedSequence"));
+        // Round to avoid floating point precision false positives
+        assertEquals("Wrong first peptide proportion", 2160, Math.round(((Number)peptideRow.getValue("PeptideModifiedAreaProportion")).doubleValue() * 10000));
     }
 
     @LogMethod
@@ -282,9 +324,9 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //Go to SmallMolecules data region
         DataRegionTable drt = new DataRegionTable("SmallMolecules", getDriver());
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
-        assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
-        assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
-        assertEquals("704.5230", drt.getDataAsText(5, "Mass Monoisotopic"));
+        assertEquals("C38H74NO8P", drt.getDataAsText(5, "Ion Formula"));
+        assertEquals("703.9755", drt.getDataAsText(5, "Mass Average"));
+        assertEquals("703.5152", drt.getDataAsText(5, "Mass Monoisotopic"));
         assertEquals(" ", drt.getDataAsText(5, "Avg. Measured RT"));
         assertElementPresent(Locator.xpath("//img[contains(@src, 'showPeakAreas.view')]"));
         assertElementPresent(Locator.xpath("//img[contains(@src, 'showRetentionTimesChart.view')]"));
@@ -293,9 +335,9 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.linkContainingText("PC aa C26:0").index(0)); //two links with this text, want the first one under Custom Ion Name hence index(0).
         waitForElement(Locator.xpath("//tr[td[text()='Group']][td[a[normalize-space()='PC']]]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='Custom Ion Name']][td[normalize-space()='PC aa C26:0']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Ion Formula']][td[normalize-space()='C34H69N1O8P1']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Average']][td[normalize-space()='650.8924']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Monoisotopic']][td[normalize-space()='650.4761']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Ion Formula']][td[normalize-space()='C34H68NO8P']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Average']][td[normalize-space()='649.8845']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Mass Monoisotopic']][td[normalize-space()='649.4683']]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='Avg. RT']][td[normalize-space()='0.9701']]"));
         assertTextPresent("Molecule Precursors");
 
@@ -324,9 +366,9 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //Look for Small Molecule Precursor List data region
         drt = DataRegion(getDriver()).withName("small_mol_precursors_view").index(1).find();
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Custom Ion Name"));
-        assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
-        assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
-        assertEquals("704.5230", drt.getDataAsText(5, "Mass Monoisotopic"));
+        assertEquals("C38H74NO8P", drt.getDataAsText(5, "Ion Formula"));
+        assertEquals("703.9755", drt.getDataAsText(5, "Mass Average"));
+        assertEquals("703.5152", drt.getDataAsText(5, "Mass Monoisotopic"));
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Precursor"));
         assertEquals("1+", drt.getDataAsText(5, "Q1 Z"));
         assertEquals("704.5225", drt.getDataAsText(5, "Q1 m/z"));
@@ -355,13 +397,13 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
         drt = DataRegion(getDriver()).withName("small_mol_transitions_view").index(1).find();
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Molecule"));
-        assertEquals("C38H75N1O8P1", drt.getDataAsText(5, "Ion Formula"));
-        assertEquals("704.9835", drt.getDataAsText(5, "Mass Average"));
-        assertEquals("704.5230", drt.getDataAsText(5, "Mass Monoisotopic"));
+        assertEquals("C38H74NO8P", drt.getDataAsText(5, "Ion Formula"));
+        assertEquals("703.9755", drt.getDataAsText(5, "Mass Average"));
+        assertEquals("703.5152", drt.getDataAsText(5, "Mass Monoisotopic"));
         assertEquals("PC aa C30:1", drt.getDataAsText(5, "Precursor"));
         assertEquals("1+", drt.getDataAsText(5, "Q1 Z"));
         assertEquals("704.5225", drt.getDataAsText(5, "Q1 m/z"));
-        assertEquals("C5H15N1O4P1", drt.getDataAsText(5, "Fragment"));
+        assertEquals("C5H14NO4P[M+H]", drt.getDataAsText(5, "Fragment"));
         assertEquals("184.0733", drt.getDataAsText(5, "Q3 m/z"));
         assertEquals("1+", drt.getDataAsText(5, "Q3 Z"));
     }

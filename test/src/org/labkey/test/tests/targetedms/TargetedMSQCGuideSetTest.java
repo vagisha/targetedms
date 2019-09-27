@@ -21,8 +21,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.CommandException;
+import org.labkey.remoteapi.query.Filter;
 import org.labkey.remoteapi.query.GetQueryDetailsCommand;
 import org.labkey.remoteapi.query.GetQueryDetailsResponse;
+import org.labkey.remoteapi.query.Row;
+import org.labkey.remoteapi.query.Rowset;
+import org.labkey.remoteapi.query.SelectRowsCommand;
+import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.TestTimeoutException;
@@ -36,17 +41,16 @@ import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.pages.targetedms.ParetoPlotPage;
 import org.labkey.test.util.DataRegionTable;
-import org.labkey.test.util.RelativeUrl;
 
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @Category({DailyB.class, MS2.class})
@@ -116,10 +120,28 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         testReplicateAnnotations();
     }
 
-    public void testGuideSetStats()
+    private void createQueries()
+    {
+        List<String> metricNames = Arrays.asList("retentionTime", "peakArea", "fwhm", "fwb", "lhRatio", "transitionPrecursorRatio", "massAccuracy", "transitionArea", "precursorArea");
+        for (String metricName : metricNames)
+        {
+            String sql = "SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, SeriesLabel,\n" +
+                    "COUNT(MetricValue) AS NumRecords, AVG(MetricValue) AS Mean, STDDEV(MetricValue) AS StandardDev\n" +
+                    "FROM guideset gs\n" +
+                    "LEFT JOIN QCMetric_" + metricName + " as p\n" +
+                    "  ON p.SampleFileId.AcquiredTime >= gs.TrainingStart AND p.SampleFileId.AcquiredTime <= gs.TrainingEnd\n" +
+                    "GROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel";
+            createQuery(getCurrentContainerPath(), "GuideSetStats_" + metricName, "targetedms", sql, null, false);
+        }
+    }
+
+    public void testGuideSetStats() throws IOException, CommandException
     {
         // verify guide set mean/std dev/num records from SQL queries
         preTest();
+
+        createQueries();
+
         verifyGuideSet1Stats(gs1);
         verifyGuideSet2Stats(gs2);
         verifyGuideSet3Stats(gs3);
@@ -258,14 +280,17 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         assertElementPresent(Locator.tagWithClass("span", "labkey-wp-title-text").withText(QCPlotsWebPart.DEFAULT_TITLE));
     }
 
-    public void testSmallMoleculePareto()
+    public void testSmallMoleculePareto() throws IOException, CommandException
     {
         preTest();
         String subFolderName = "Small Molecule Pareto Plot Test";
         setupSubfolder(getProjectName(), subFolderName, FolderType.QC); //create a Panorama folder of type QC
 
-        importData(SMALL_MOLECULE);
+        importData(SKY_FILE_SMALLMOL_PEP);
         createGuideSet(gsSmallMolecule, null, subFolderName);
+
+        createQueries();
+
         verifyGuideSetSmallMoleculeStats(gsSmallMolecule);
 
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
@@ -339,64 +364,44 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         assertEquals("Unexpected number of error bar elements", axisTickCount * PRECURSORS.length * 4, qcPlotsWebPart.getGuideSetErrorBarPathCount("error-bar-vert"));
     }
 
-    private void validateGuideSetStats(GuideSet gs)
+    private void validateGuideSetStats(GuideSet gs) throws IOException, CommandException
     {
         for (GuideSetStats stats : gs.getStats())
         {
-            navigateToGuideSetStatsQuery(stats.getMetricName());
 
-            DataRegionTable table = new DataRegionTable("query", this);
-            table.setFilter("GuideSetId", "Equals", String.valueOf(gs.getRowId()));
+            SelectRowsCommand cmd = new SelectRowsCommand("targetedms", "GuideSetStats_" + stats.getMetricName());
+            cmd.setRequiredVersion(9.1);
+            cmd.setColumns(Arrays.asList("GuideSetId", "TrainingStart", "TrainingEnd", "ReferenceEnd", "SeriesLabel", "NumRecords", "Mean", "StandardDev"));
+            cmd.addFilter("GuideSetId", gs.getRowId(), Filter.Operator.EQUAL);
+
             // Filter with a Contains to catch the "+2" or similar suffix
             if (stats.getPrecursor() != null)
-                table.setFilter("SeriesLabel", "Contains", stats.getPrecursor() + " ");
+                cmd.addFilter("SeriesLabel", stats.getPrecursor() + " ", Filter.Operator.CONTAINS);
             else
-                table.setFilter("SeriesLabel", "Is Blank", null);
+                cmd.addFilter("SeriesLabel", null, Filter.Operator.ISBLANK);
 
-            assertEquals("Unexpected number of filtered rows", 1, table.getDataRowCount());
-            assertEquals("Unexpected guide set stats record count", stats.getNumRecords(), Integer.parseInt(table.getDataAsText(0, "NumRecords")));
+            SelectRowsResponse response = cmd.execute(createDefaultConnection(false), getCurrentContainerPath());
+
+            Rowset rowset = response.getRowset();
+            assertEquals("Unexpected number of filtered rows", 1, rowset.getSize());
+            Row row = rowset.iterator().next();
+            assertEquals("Unexpected guide set stats record count", stats.getNumRecords(), ((Number)row.getValue("NumRecords")).intValue());
 
             if (stats.getMean() != null)
             {
-                Double delta = stats.getMean() > 1E8 ? 5000.0 : 0.0005;
-                assertEquals("Unexpected guide set stats mean", stats.getMean(), Double.parseDouble(table.getDataAsText(0, "Mean").replace(",", "")), delta);
+                double delta = stats.getMean() * 0.001;
+                assertEquals("Unexpected guide set stats mean for " + stats.getMetricName(), stats.getMean(), ((Number)row.getValue("Mean")).doubleValue(), delta);
             }
-            else
-                assertNull("Unexpected guide set stats mean", stats.getMean());
 
             if (stats.getStdDev() != null)
             {
-                Double delta = stats.getMean() > 1E8 ? 5000.0 : 0.0005;
-                assertEquals("Unexpected guide set stats std dev", stats.getStdDev(), Double.parseDouble(table.getDataAsText(0, "StandardDev").replace(",", "")), delta);
+                double delta = stats.getMean() * 0.001;
+                assertEquals("Unexpected guide set stats std dev for " + stats.getMetricName(), stats.getStdDev(), ((Number)row.getValue("StandardDev")).doubleValue(), delta);
             }
-            else
-                assertNull("Unexpected guide set stats std dev", stats.getStdDev());
         }
     }
 
-    private void navigateToGuideSetStatsQuery(String metricName)
-    {
-        RelativeUrl queryURL = new RelativeUrl("query", "executequery");
-        queryURL.setContainerPath(getCurrentContainerPath());
-        queryURL.addParameter("schemaName", "targetedms");
-        queryURL.addParameter("query.queryName", "GuideSetStats_" + metricName);
-        queryURL.navigate(this);
-
-        // if the query does not exist, create it
-        if (isElementPresent(Locator.tagContainingText("h3", "doesn't exist")))
-        {
-            String sql = "SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, SeriesLabel,\n" +
-                    "COUNT(MetricValue) AS NumRecords, AVG(MetricValue) AS Mean, STDDEV(MetricValue) AS StandardDev\n" +
-                    "FROM guideset gs\n" +
-                    "LEFT JOIN QCMetric_" + metricName + " as p\n" +
-                    "  ON p.SampleFileId.AcquiredTime >= gs.TrainingStart AND p.SampleFileId.AcquiredTime <= gs.TrainingEnd\n" +
-                    "GROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel";
-            createQuery(getCurrentContainerPath(), "GuideSetStats_" + metricName, "targetedms", sql, null, false);
-            queryURL.navigate(this);
-        }
-    }
-
-    private void verifyGuideSet1Stats(GuideSet gs)
+    private void verifyGuideSet1Stats(GuideSet gs) throws IOException, CommandException
     {
         gs.addStats(new GuideSetStats("retentionTime", 0));
         gs.addStats(new GuideSetStats("peakArea", 0));
@@ -411,77 +416,77 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         validateGuideSetStats(gs);
     }
 
-    private void verifyGuideSet2Stats(GuideSet gs)
+    private void verifyGuideSet2Stats(GuideSet gs) throws IOException, CommandException
     {
         gs.addStats(new GuideSetStats("retentionTime", 1, PRECURSORS[0], 14.8795, null));
         gs.addStats(new GuideSetStats("peakArea", 1, PRECURSORS[0], 1.1613580288E10, null));
-        gs.addStats(new GuideSetStats("fwhm", 1, PRECURSORS[0], 0.096, null));
-        gs.addStats(new GuideSetStats("fwb", 1, PRECURSORS[0], 0.292, null));
+        gs.addStats(new GuideSetStats("fwhm", 1, PRECURSORS[0], 0.0962, null));
+        gs.addStats(new GuideSetStats("fwb", 1, PRECURSORS[0], 0.29160022735595703, null));
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 1, PRECURSORS[0], 0.06410326063632965, null));
         gs.addStats(new GuideSetStats("massAccuracy", 1, PRECURSORS[0], -0.0025051420088857412, null));
-        gs.addStats(new GuideSetStats("transitionArea", 1, PRECURSORS[0], 6.99620390375E8, null));
-        gs.addStats(new GuideSetStats("precursorArea", 1, PRECURSORS[0], 1.0913960576E10, null));
+        gs.addStats(new GuideSetStats("transitionArea", 1, PRECURSORS[0], 6.99620416E8, null));
+        gs.addStats(new GuideSetStats("precursorArea", 1, PRECURSORS[0], 1.0913959936E10, null));
 
         validateGuideSetStats(gs);
     }
 
-    private void verifyGuideSet3Stats(GuideSet gs)
+    private void verifyGuideSet3Stats(GuideSet gs) throws IOException, CommandException
     {
-        gs.addStats(new GuideSetStats("retentionTime", 10, PRECURSORS[1], 32.151, 0.0265));
-        gs.addStats(new GuideSetStats("peakArea", 10, PRECURSORS[1], 2.930734907392E11, 6.454531590675328E10));
-        gs.addStats(new GuideSetStats("fwhm", 10, PRECURSORS[1], 0.11, 0.015));
-        gs.addStats(new GuideSetStats("fwb", 10, PRECURSORS[1], 0.326, 0.025));
+        gs.addStats(new GuideSetStats("retentionTime", 10, PRECURSORS[1], 32.1514, 0.0265));
+        gs.addStats(new GuideSetStats("peakArea", 10, PRECURSORS[1], 293_073_490_739.2000, 64_545_315_906.7533));
+        gs.addStats(new GuideSetStats("fwhm", 10, PRECURSORS[1], 0.1096, 0.0149));
+        gs.addStats(new GuideSetStats("fwb", 10, PRECURSORS[1], 0.32562103271484377, 0.02468766649130722));
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 10, PRECURSORS[1], 0.16636697351932525, 0.024998646348985));
         gs.addStats(new GuideSetStats("massAccuracy", 10, PRECURSORS[1], -0.14503030776977538, 0.5113428116648383));
-        gs.addStats(new GuideSetStats("transitionArea", 10, PRECURSORS[1], 4.0861855873442184E10, 6.243547152656243E9));
-        gs.addStats(new GuideSetStats("precursorArea", 10, PRECURSORS[1], 2.522116655104E11, 5.881135711787484E10));
+        gs.addStats(new GuideSetStats("transitionArea", 10, PRECURSORS[1], 4.086185472E10, 6.243547152656243E9));
+        gs.addStats(new GuideSetStats("precursorArea", 10, PRECURSORS[1], 2.52211666944E11, 5.881135711787484E10));
 
         validateGuideSetStats(gs);
     }
 
-    private void verifyGuideSet4Stats(GuideSet gs)
+    private void verifyGuideSet4Stats(GuideSet gs) throws IOException, CommandException
     {
         gs.addStats(new GuideSetStats("retentionTime", 4, PRECURSORS[2], 14.031, 0.244));
         gs.addStats(new GuideSetStats("peakArea", 4, PRECURSORS[2], 1.1564451072E10, 1.5713155146840603E9));
-        gs.addStats(new GuideSetStats("fwhm", 4, PRECURSORS[2], 0.088, 0.006));
-        gs.addStats(new GuideSetStats("fwb", 4, PRECURSORS[2], 0.259, 0.013));
+        gs.addStats(new GuideSetStats("fwhm", 4, PRECURSORS[2], 0.08786291070282459, 0.006));
+        gs.addStats(new GuideSetStats("fwb", 4, PRECURSORS[2], 0.2592000961303711, 0.013227298183650286));
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 4, PRECURSORS[2], 0.0, 0.0));
         gs.addStats(new GuideSetStats("massAccuracy", 4, PRECURSORS[2], 1.7878320217132568, 0.09473514310269647));
         gs.addStats(new GuideSetStats("transitionArea", 4, PRECURSORS[2], 0.0, 0.0));
-        gs.addStats(new GuideSetStats("precursorArea", 4, PRECURSORS[2], 1.15644516E10, 1.57131477994273E9));
+        gs.addStats(new GuideSetStats("precursorArea", 4, PRECURSORS[2], 1.1564451584E10, 1.5713148731374376E9));
 
         validateGuideSetStats(gs);
     }
 
-    private void verifyGuideSet5Stats(GuideSet gs)
+    private void verifyGuideSet5Stats(GuideSet gs) throws IOException, CommandException
     {
-        gs.addStats(new GuideSetStats("retentionTime", 2, PRECURSORS[3], 24.581, 0.011));
-        gs.addStats(new GuideSetStats("peakArea", 2, PRECURSORS[3], 5.6306905088E10, 1.5347948865359387E9));
-        gs.addStats(new GuideSetStats("fwhm", 2, PRECURSORS[3], 0.072, 0.009));
-        gs.addStats(new GuideSetStats("fwb", 2, PRECURSORS[3], 0.219, 0.011));
+        gs.addStats(new GuideSetStats("retentionTime", 2, PRECURSORS[3], 24.5812, 0.0114));
+        gs.addStats(new GuideSetStats("peakArea", 2, PRECURSORS[3], 56_306_905_088.0000, 1_534_794_886.5359));
+        gs.addStats(new GuideSetStats("fwhm", 2, PRECURSORS[3], 0.072, 0.0085));
+        gs.addStats(new GuideSetStats("fwb", 2, PRECURSORS[3], 0.21870040893554688, 0.011455850600049085));
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 2, PRECURSORS[3], 0.06426714546978474, 0.02016935064728605));
         gs.addStats(new GuideSetStats("massAccuracy", 2, PRECURSORS[3], 1.6756309866905212, 0.23667992679147354));
-        gs.addStats(new GuideSetStats("transitionArea", 2, PRECURSORS[3], 3.376995236234375E9, 9.104157411050748E8));
-        gs.addStats(new GuideSetStats("precursorArea", 2, PRECURSORS[3], 5.2929907456E10, 2.4452102765845675E9));
+        gs.addStats(new GuideSetStats("transitionArea", 2, PRECURSORS[3], 3.376995072E9, 9.104153900486555E8));
+        gs.addStats(new GuideSetStats("precursorArea", 2, PRECURSORS[3], 5.2929908736E10, 2.4452091904685783E9));
 
         validateGuideSetStats(gs);
     }
 
-    private void verifyGuideSetSmallMoleculeStats(GuideSet gs)
+    private void verifyGuideSetSmallMoleculeStats(GuideSet gs) throws IOException, CommandException
     {
         String precursor = "C16";
 
         gs.addStats(new GuideSetStats("retentionTime", 2, precursor, 0.7729333639144897, 9.424035327035906E-5));
-        gs.addStats(new GuideSetStats("peakArea", 2, precursor, 2.4647615E7, 5061166.2838173965));
+        gs.addStats(new GuideSetStats("peakArea", 2, precursor, 2.4647614E7, 5061170.5265));
         gs.addStats(new GuideSetStats("fwhm", 2, precursor, 0.023859419859945774, 0.0010710133238455678));
         gs.addStats(new GuideSetStats("fwb", 2, precursor, 0.11544176936149597, 0.012810408164340708));
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 0, precursor, null, null));
-        gs.addStats(new GuideSetStats("transitionArea", 2, precursor, 2.4647615E7, 5061166.2838173965));
+        gs.addStats(new GuideSetStats("transitionArea", 2, precursor, 2.4647614E7, 5061170.5265));
         gs.addStats(new GuideSetStats("precursorArea", 2, precursor, 0.0, 0.0));
 
         validateGuideSetStats(gs);

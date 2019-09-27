@@ -763,7 +763,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         String subFolderName = "Small Molecule QC Plot Test";
         setupSubfolder(getProjectName(), subFolderName, FolderType.QC); //create a Panorama folder of type QC
 
-        importData(SMALL_MOLECULE);
+        importData(SKY_FILE_SMALLMOL_PEP);
         clickFolder(subFolderName);
         verifyQcSummary(1, 5, 186);
 
