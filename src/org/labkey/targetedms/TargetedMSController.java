@@ -5898,7 +5898,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
+            return root.addChild("Targeted MS Experiment Details");
         }
 
     }
@@ -6012,9 +6012,10 @@ public class TargetedMSController extends SpringActionController
             return view;
         }
 
+        @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
+            return root.addChild("Update Targeted MS Experiment Details");
         }
     }
 
@@ -6087,6 +6088,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getConfirmView(SelectedIdsForm deleteForm, BindException errors)
         {
+            setTitle("Confirm Delete Experiments");
             return FormPage.getView("/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp", deleteForm);
         }
 
@@ -6175,6 +6177,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getConfirmView(DeleteExperimentAnnotationsForm deleteForm, BindException errors)
         {
+            setTitle("Confirm Delete Experiment");
             return FormPage.getView("/org/labkey/targetedms/view/expannotations/deleteExperimentAnnotations.jsp", deleteForm);
         }
 

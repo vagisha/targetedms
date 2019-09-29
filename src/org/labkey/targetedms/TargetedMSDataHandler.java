@@ -19,6 +19,7 @@ package org.labkey.targetedms;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.exp.ExperimentException;
 import org.labkey.api.exp.XarContext;
 import org.labkey.api.exp.api.AbstractExperimentDataHandler;
@@ -76,7 +77,8 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         SkylineDocImporter importer = new SkylineDocImporter(info.getUser(), context.getContainer(), description,
                                                              data, log, context, TargetedMSRun.RepresentativeDataState.NotRepresentative, null,
                                                              PipelineService.get().findPipelineRoot(context.getContainer()));
-        try
+
+        try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
         {
             SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
             TargetedMSRun run = importer.importRun(runInfo);
@@ -98,6 +100,8 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             }
 
             TargetedMSManager.updateRun(run, info.getUser());
+
+            transaction.commit();
         }
         catch (IOException | XMLStreamException | PipelineJobException | AuditLogException e)
         {

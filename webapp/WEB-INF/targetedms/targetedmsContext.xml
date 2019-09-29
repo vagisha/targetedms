@@ -7,13 +7,13 @@
         <property name="factoryImpls">
             <list>
                 <bean class="org.labkey.targetedms.pipeline.ExperimentExportTask$Factory">
-                    <property name="location" value="webserver-high-priority" />
+                    <property name="location" value="webserver" />
                 </bean>
                 <bean class="org.labkey.targetedms.pipeline.ExperimentImportTask$Factory">
-                    <property name="location" value="webserver-high-priority" />
+                    <property name="location" value="webserver" />
                 </bean>
                 <bean class="org.labkey.targetedms.pipeline.CopyExperimentFinalTask$Factory">
-                    <property name="location" value="webserver-high-priority" />
+                    <property name="location" value="webserver" />
                 </bean>
                 <bean class="org.labkey.targetedms.pipeline.TargetedMSImportTask$Factory">
                     <property name="location" value="webserver-high-priority" />
