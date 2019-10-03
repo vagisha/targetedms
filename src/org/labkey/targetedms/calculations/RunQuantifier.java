@@ -14,6 +14,7 @@
  */
 package org.labkey.targetedms.calculations;
 
+import org.labkey.targetedms.SkylineDocImporter.IProgressStatus;
 import org.labkey.targetedms.calculations.quantification.CalibrationCurve;
 import org.labkey.targetedms.calculations.quantification.CalibrationCurveDataSet;
 import org.labkey.targetedms.calculations.quantification.GroupComparisonDataSet;
@@ -100,7 +101,8 @@ public class RunQuantifier
         return foldChanges;
     }
 
-    public List<CalibrationCurveEntity> calculateCalibrationCurves(QuantificationSettings quantificationSettings, List<GeneralMoleculeChromInfo> modifiedChromInfos)
+    public List<CalibrationCurveEntity> calculateCalibrationCurves(QuantificationSettings quantificationSettings, List<GeneralMoleculeChromInfo> modifiedChromInfos,
+                                                                   IProgressStatus progressStatus)
     {
         RegressionFit regressionFit = RegressionFit.parse(quantificationSettings.getRegressionFit());
         if (RegressionFit.NONE == regressionFit)
@@ -110,8 +112,14 @@ public class RunQuantifier
 
         TargetedMSSchema schema = new TargetedMSSchema(_user, _container);
         List<CalibrationCurveEntity> calibrationCurves = new ArrayList<>();
-        for (PeptideGroup peptideGroup : listPeptideGroups())
+        Collection<PeptideGroup> peptideGroups = listPeptideGroups();
+        int done = 0;
+        for (PeptideGroup peptideGroup : peptideGroups)
         {
+            progressStatus.setStatus(String.format("Calculating calibration curve for %s, %d of %d",(peptideGroup.getLabel() == null ? "peptide group" : peptideGroup.getLabel().trim()),
+                    ++done,
+                    peptideGroups.size()));
+
             List<GeneralMolecule> generalMolecules = new ArrayList<>();
             generalMolecules.addAll(MoleculeManager.getMoleculesForGroup(peptideGroup.getId()));
             generalMolecules.addAll(PeptideManager.getPeptidesForGroup(peptideGroup.getId(), schema));
@@ -133,6 +141,7 @@ public class RunQuantifier
                     calibrationCurves.add(calibrationCurve);
                 }
             }
+            progressStatus.updateProgress(done, peptideGroups.size());
         }
         return calibrationCurves;
     }

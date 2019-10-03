@@ -63,7 +63,7 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
             SkylineDocImporter importer = new SkylineDocImporter(job.getUser(), job.getContainer(), context.getJobDescription(),
                                                                  job.getExpData(), job.getLogger(), context, job.getRepresentative(),
                                                                  job.getLocalDirectory(), job.getPipeRoot());
-            TargetedMSRun run = importer.importRun(job.getRunInfo());
+            TargetedMSRun run = importer.importRun(job.getRunInfo(), job);
 
             Integer jobId = PipelineService.get().getJobId(getJob().getUser(), getJob().getContainer(), getJob().getJobGUID());
             ExpRun expRun = TargetedMSManager.ensureWrapped(run, job.getUser(), job.getPipeRoot(), jobId);

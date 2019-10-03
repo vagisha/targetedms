@@ -81,7 +81,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
         try (DbScope.Transaction transaction = TargetedMSManager.getSchema().getScope().ensureTransaction())
         {
             SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
-            TargetedMSRun run = importer.importRun(runInfo);
+            TargetedMSRun run = importer.importRun(runInfo, context.getJob());
 
             ExpRun expRun = data.getRun();
             if(expRun == null)
