@@ -30,6 +30,7 @@
     <xs:attribute name="skyline_version" type="xs:string" use="required"/>
     <xs:attribute name="time_stamp" type="xs:string" use="required"/>
     <xs:attribute name="user" type="xs:string" use="required"/>
+    <xs:attribute name="mode" type="xs:string"/>
   </xs:complexType>
 
   <xs:complexType name="message_type">

@@ -34,6 +34,7 @@ SELECT tree.entryId
      , CASE when msg.orderNumber = 0 THEN ent.reason END			reason
      , CASE when msg.orderNumber = 0 THEN (ent.timezoneOffset/60) END timezone_offset
      , CASE when msg.orderNumber = 0 THEN ent.userName END			user_name
+     , CASE WHEN msg.orderNumber = 0 AND ent.extraInfo IS NOT NULL THEN '(info)' END has_extra_info
      , msg.orderNumber
      , CASE msg.orderNumber
          WHEN 0 THEN 'UndoRedo'

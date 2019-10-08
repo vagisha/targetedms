@@ -3,6 +3,7 @@
         <column name="create_timestamp"/>
         <column name="user_name"/>
         <column name="message_text"/>
+        <column name="has_extra_info"/>
     </columns>
     <filters>
         <filter column="orderNumber" operator="eq" value="0"/>

@@ -91,7 +91,6 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
-import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HelpTopic;
@@ -148,6 +147,7 @@ import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.parser.SkylineDocumentParser;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
+import org.labkey.targetedms.parser.skyaudit.AuditLogEntry;
 import org.labkey.targetedms.query.*;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.view.CalibrationCurveChart;
@@ -3438,13 +3438,81 @@ public class TargetedMSController extends SpringActionController
             QuerySettings settings = new QuerySettings(getViewContext(), DATA_REGION_NAME, LOG_QUERY_NAME);
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             settings.getQueryParameters().put("RUN_ID", form._id);
-            QueryView view = schema.createView(getViewContext(), settings, errors);
-            view.setShowDetailsColumn(false);
-            view.setShowFilterDescription(false);
-            return view;
+            return schema.createView(getViewContext(), settings, errors);
         }
     }
 
+    @RequiresPermission(ReadPermission.class)
+    public class ShowSkylineAuditLogExtraInfoAJAXAction extends SimpleViewAction<SkylineAuditLogExtraInfoForm>
+    {
+        @Override
+        public ModelAndView getView(SkylineAuditLogExtraInfoForm form, BindException errors) throws Exception
+        {
+            SkylineAuditLogExtraInfoBean bean;
+            String errMessage = null;
+            AuditLogEntry ent = AuditLogEntry.retrieve(form.getEntryId(), getViewContext());
+            if(ent == null)
+                errMessage = String.format("Entry with id %d does not exist", form.getEntryId());
+            if(errMessage != null)
+                bean = new SkylineAuditLogExtraInfoBean(null, errMessage);
+            else
+                bean = new SkylineAuditLogExtraInfoBean(ent, null);
+
+
+            WebPartView extraInfoView = new JspView<>("/org/labkey/targetedms/view/skylineAuditLogExtraInfoView.jsp", bean);
+            getPageConfig().setTemplate(PageConfig.Template.None);
+            return extraInfoView;
+
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root;
+        }
+    }
+
+    public static class SkylineAuditLogExtraInfoBean
+    {
+        private AuditLogEntry _entry;
+        private String _error;
+
+        public SkylineAuditLogExtraInfoBean(AuditLogEntry pEntry, String pError){
+            _entry = pEntry;
+            _error = pError;
+        }
+        public AuditLogEntry getEntry()
+        {
+            return _entry;
+        }
+    }
+
+    public static class SkylineAuditLogExtraInfoForm
+    {
+        private int _runId;
+        private int _entryId;
+
+
+        public int getRunId()
+        {
+            return _runId;
+        }
+
+        public void setRunId(int runId)
+        {
+            _runId = runId;
+        }
+
+        public int getEntryId()
+        {
+            return _entryId;
+        }
+
+        public void setEntryId(int entryId)
+        {
+            _entryId = entryId;
+        }
+    }
 
     public static class RunDetailsForm extends QueryViewAction.QueryExportForm
     {

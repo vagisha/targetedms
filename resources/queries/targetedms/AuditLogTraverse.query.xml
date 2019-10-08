@@ -1,0 +1,16 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="AuditLogViewTable" tableDbType="TABLE">
+                <columns>
+                    <column columnName="has_extra_info">
+                        <columnTitle>Extra Info</columnTitle>
+                        <displayColumnFactory>
+                            <className>org.labkey.targetedms.view.SkylineAuditLogExtraInfoAJAXDisplayColumnFactory</className>
+                        </displayColumnFactory>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

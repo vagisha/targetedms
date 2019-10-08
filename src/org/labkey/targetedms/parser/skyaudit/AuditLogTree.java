@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.parser.skyaudit;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.util.GUID;
 
@@ -136,11 +137,14 @@ public class AuditLogTree implements Iterable<AuditLogTree>
         {
             if (this._versionId == null)
             {
-                Logger.getLogger(this.getClass().getCanonicalName()).warning(
-                        String.format("Audit log entry with ID %d is a leaf but has no version ID. This might be a data corruption.", this._entryId));
+                if(this._entryId != 0)                  //No need to check for the root node.
+                {
+                    Logger.getLogger(this.getClass().getCanonicalName()).warning(
+                            String.format("Audit log entry with ID %d is a leaf but has no version ID. This might be a data corruption.", this._entryId));
+                }
                 return null;
             }
-            else if (this._versionId == versionId)      //check if it is the right version id
+            else if (versionId == this._versionId)      //check if it is the right version id
                 return versionId;
             else
                 return null;
@@ -182,6 +186,7 @@ public class AuditLogTree implements Iterable<AuditLogTree>
     }
 
     @Override
+    @NotNull
     public Iterator<AuditLogTree> iterator()
     {
         return _children.values().iterator();

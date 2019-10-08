@@ -16,10 +16,16 @@
 package org.labkey.targetedms.parser.skyaudit;
 
 import org.labkey.api.data.SQLFragment;
+import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.util.GUID;
+import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSSchema;
 
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -31,10 +37,13 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.Map;
 
 public class AuditLogEntry
 {
@@ -51,6 +60,19 @@ public class AuditLogEntry
     protected GUID _documentGUID;
 
     byte[] _calculatedHashBytes;
+
+    public static AuditLogEntry retrieve(int pEntryId, ViewContext viewContext)
+    {
+        TargetedMSSchema schema = new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer());
+        QueryDefinition qTableDef = schema.getQueryDef("AuditLogEntryContainers");
+        TableSelector sel =  new TableSelector(qTableDef.getTable(new ArrayList<>(), true));
+        Map<String, Object> params =  new HashMap<>();
+        params.put("ENTRY_ID", pEntryId);
+        params.put("CONTAINER_ID", viewContext.getContainer().getEntityId().toString());
+        sel.setNamedParameters(params);
+        AuditLogEntry res = sel.getObject(AuditLogEntry.class);
+        return res;
+    }
 
     public AuditLogTree getTreeEntry(){
         if(_entryId != null)
@@ -208,9 +230,8 @@ public class AuditLogEntry
         digest.update(_userName.getBytes(utf8));
         if(_extraInfo != null)
             digest.update(_extraInfo.getBytes(utf8));
-//TODO: Make sure reason is hashed on the client side.
-//        if(_reason != null)
-//            digest.update(_reason.getBytes(utf8));
+        if(_reason != null)
+            digest.update(_reason.getBytes(utf8));
 
         for(AuditLogMessage msg : _allInfoMessage)
             digest.update(msg.getHashBytes(utf8));
@@ -305,7 +326,10 @@ public class AuditLogEntry
                 ", _documentGUID=" + _documentGUID +
                 ", _allInfoMessage=");
         for(AuditLogMessage msg : _allInfoMessage)
-            result.append("\n\t" + msg.toString());
+        {
+            result.append("\n\t");
+            result.append(msg.toString());
+        }
 
         return result.toString();
     }

@@ -35,6 +35,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.JunitUtil;
 import org.labkey.api.util.TestContext;
+import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.parser.skyaudit.AuditLogEntry;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.parser.skyaudit.AuditLogMessageExpander;
@@ -250,6 +251,7 @@ public class SkylineAuditLogManager
                     ent.persist();
                     persistedEntriesCount++;
                     AuditLogTree newTreeEntry = ent.getTreeEntry();
+                    assert newTreeEntry != null;
                     treePointer.addChild(newTreeEntry);
                     //advance the tree
                     treePointer = newTreeEntry;
@@ -489,6 +491,20 @@ public class SkylineAuditLogManager
             importer.deleteDocumentVersionLog(runIds.pop());
             tree = importer.buildLogTree(_docGUID);
             assertEquals(11, tree.getTreeSize());
+
+        }
+
+        @Test
+        public void TestEntryRetrieval() throws AuditLogException
+        {
+            AuditLogTree node = new SkylineAuditLogManager(_container, _user).buildLogTree(_docGUID);
+            ViewContext vc = new ViewContext();
+            vc.setContainer(_container);
+            vc.setUser(_user);
+            while(node.iterator().hasNext()){
+                AuditLogEntry ent = AuditLogEntry.retrieve(node.getEntryId(), vc);
+                node = node.iterator().next();
+            }
         }
 
         @AfterClass
