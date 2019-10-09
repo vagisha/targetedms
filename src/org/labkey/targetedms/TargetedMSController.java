@@ -29,11 +29,16 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.labkey.api.action.*;
 import org.labkey.api.analytics.AnalyticsService;
+import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.api.util.Button;
+import org.labkey.api.util.DOM;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.UnexpectedException;
-import org.labkey.api.view.PopupMenu;
+import org.labkey.api.view.*;
 import org.labkey.api.targetedms.model.LJOutlier;
+import org.labkey.api.view.PopupMenu;
 import org.labkey.targetedms.model.Outlier;
 import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
@@ -97,24 +102,6 @@ import org.labkey.api.util.HelpTopic;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.URLHelper;
-import org.labkey.api.view.ActionURL;
-import org.labkey.api.view.DataView;
-import org.labkey.api.view.DetailsView;
-import org.labkey.api.view.GridView;
-import org.labkey.api.view.HttpView;
-import org.labkey.api.view.InsertView;
-import org.labkey.api.view.JspView;
-import org.labkey.api.view.NavTree;
-import org.labkey.api.view.NotFoundException;
-import org.labkey.api.view.Portal;
-import org.labkey.api.view.RedirectException;
-import org.labkey.api.view.UpdateView;
-import org.labkey.api.view.VBox;
-import org.labkey.api.view.ViewBackgroundInfo;
-import org.labkey.api.view.ViewContext;
-import org.labkey.api.view.ViewForm;
-import org.labkey.api.view.ViewServlet;
-import org.labkey.api.view.WebPartView;
 import org.labkey.api.view.template.ClientDependency;
 import org.labkey.api.view.template.PageConfig;
 import org.labkey.targetedms.chart.ChromatogramChartMakerFactory;
@@ -147,6 +134,7 @@ import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.parser.SkylineDocumentParser;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
+import org.labkey.targetedms.pipeline.ChromatogramCrawlerJob;
 import org.labkey.targetedms.parser.skyaudit.AuditLogEntry;
 import org.labkey.targetedms.query.*;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
@@ -206,6 +194,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.api.util.DOM.Attribute.method;
+import static org.labkey.api.util.DOM.DIV;
+import static org.labkey.api.util.DOM.X.FORM;
+import static org.labkey.api.util.DOM.at;
 import static org.labkey.targetedms.TargetedMSModule.EXPERIMENT_FOLDER_WEB_PARTS;
 import static org.labkey.api.targetedms.TargetedMSService.FolderType;
 import static org.labkey.targetedms.TargetedMSModule.LIBRARY_FOLDER_WEB_PARTS;
@@ -409,6 +401,49 @@ public class TargetedMSController extends SpringActionController
         public URLHelper getSuccessURL(FolderSetupForm folderSetupForm)
         {
             return getContainer().getStartURL(getUser());
+        }
+    }
+
+    private static class ChromatogramCrawlerForm
+    {
+
+    }
+
+    @RequiresSiteAdmin
+    public class ChromatogramCrawlerAction extends FormViewAction<ChromatogramCrawlerForm>
+    {
+        @Override
+        public void validateCommand(ChromatogramCrawlerForm target, Errors errors)
+        {
+
+        }
+
+        @Override
+        public ModelAndView getView(ChromatogramCrawlerForm form, boolean reshow, BindException errors) throws Exception
+        {
+            return new HtmlView("Chromatogram Crawler", DIV("Crawl all containers under the parent " + getContainer().getPath(),
+                    FORM(at(method, "POST"),
+                    new Button.ButtonBuilder("Start Crawl").submit(true).build())));
+        }
+
+        @Override
+        public boolean handlePost(ChromatogramCrawlerForm form, BindException errors) throws Exception
+        {
+            PipelineJob job = new ChromatogramCrawlerJob(getViewBackgroundInfo(), PipelineService.get().getPipelineRootSetting(ContainerManager.getRoot()));
+            PipelineService.get().queueJob(job);
+            return true;
+        }
+
+        @Override
+        public URLHelper getSuccessURL(ChromatogramCrawlerForm form)
+        {
+            return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            return root.addChild("Chromatogram Crawler");
         }
     }
 
@@ -1090,8 +1125,7 @@ public class TargetedMSController extends SpringActionController
             {
                 throw new NotFoundException("No such TransitionChromInfo found in this folder: " + form.getId());
             }
-            PrecursorChromInfo pci = PrecursorManager.getPrecursorChromInfo(getContainer(), tci.getPrecursorChromInfoId(),
-                    getUser(), getContainer());
+            PrecursorChromInfo pci = PrecursorManager.getPrecursorChromInfo(getContainer(), tci.getPrecursorChromInfoId());
             if (pci == null)
             {
                 throw new NotFoundException("No such PrecursorChromInfo found in this folder: " + tci.getPrecursorChromInfoId());
@@ -1121,7 +1155,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public void export(ChromatogramForm form, HttpServletResponse response, BindException errors) throws Exception
         {
-            PrecursorChromInfo pChromInfo = PrecursorManager.getPrecursorChromInfo(getContainer(), form.getId(), getUser(), getContainer());
+            PrecursorChromInfo pChromInfo = PrecursorManager.getPrecursorChromInfo(getContainer(), form.getId());
             if (pChromInfo == null)
             {
                 throw new NotFoundException("No PrecursorChromInfo found in this folder for precursorChromInfoId: " + form.getId());

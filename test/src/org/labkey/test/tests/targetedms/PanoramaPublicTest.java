@@ -50,7 +50,7 @@ public class PanoramaPublicTest extends TargetedMSTest
     {
         // Create a "Panorama Public" project where we will copy data.
         goToAdminConsole().goToSettingsSection();
-        clickAndWait(Locator.linkWithText("Targeted MS"));
+        clickAndWait(Locator.linkWithText("Targeted MS Journal Groups"));
         clickAndWait(Locator.linkWithText("Create a new journal group"));
         setFormElement(Locator.id("journalNameTextField"), PANORAMA_PUBLIC);
         setFormElement(Locator.id("groupNameTextField"), PANORAMA_PUBLIC_GROUP);

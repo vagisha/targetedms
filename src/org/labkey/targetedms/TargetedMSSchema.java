@@ -1477,7 +1477,7 @@ public class TargetedMSSchema extends UserSchema
                     ChromatogramBinaryFormat format = formatOrdinal == null
                             ? ChromatogramBinaryFormat.Arrays : ChromatogramBinaryFormat.values()[formatOrdinal];
                     byte[] uncompressedBytes = SkylineBinaryParser.uncompressStoredBytes(bytes, uncompressedSize, numPoints, numTransitions);
-                    Chromatogram chromatogram = format.readChromatogram(uncompressedBytes, numPoints, numTransitions);
+                    Chromatogram chromatogram = format.readChromatogram(uncompressedBytes, numPoints, numTransitions, Chromatogram.SourceStatus.dbOnly);
                     return StringUtils.join(_times ? chromatogram.getTimes() : chromatogram.getIntensities(chromatogramIndex.intValue()), ',');
                 }
             }

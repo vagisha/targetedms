@@ -478,18 +478,18 @@ public class SkylineDocImporter
         {
             for (SampleFile existingSample : entry.getValue())
             {
-                SampleFile srcFile = TargetedMSManager.deleteSampleFileAndDependencies(existingSample.getId());
+                String srcFile = TargetedMSManager.deleteSampleFileAndDependencies(existingSample.getId());
                 _log.debug(String.format("Updating previously imported data for sample file " + entry.getKey() + " in QC folder. %d of %d", ++s, total));
 
-                if (null != srcFile && !srcFile.getFilePath().isEmpty())
+                if (null != srcFile)
                 {
                     try
                     {
-                        replicateInfo.potentiallyUnusedFiles.add(new URI(srcFile.getFilePath()));
+                        replicateInfo.potentiallyUnusedFiles.add(new URI(srcFile));
                     }
                     catch (URISyntaxException e)
                     {
-                        _log.error("Unable to delete file " + srcFile.getFilePath() + ". May be an invalid path. This file is no longer needed on the server.");
+                        _log.error("Unable to delete file " + srcFile + ". May be an invalid path. This file is no longer needed on the server.");
                     }
                 }
                 status.updateProgress(s, total);

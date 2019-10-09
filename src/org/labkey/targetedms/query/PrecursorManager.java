@@ -87,7 +87,7 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Precursor.class);
     }
 
-    public static PrecursorChromInfo getPrecursorChromInfo(Container c, int id, User user, Container container)
+    public static PrecursorChromInfo getPrecursorChromInfo(Container c, int id)
     {
         SQLFragment sql = new SQLFragment("SELECT pci.* FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");

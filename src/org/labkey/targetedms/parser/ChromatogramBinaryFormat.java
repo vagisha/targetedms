@@ -37,7 +37,7 @@ public enum ChromatogramBinaryFormat
      */
     Arrays{
         @Override
-        public Chromatogram readChromatogram(byte[] uncompressedBytes, int numPoints, int numTrans)
+        public Chromatogram readChromatogram(byte[] uncompressedBytes, int numPoints, int numTrans, Chromatogram.SourceStatus status)
         {
             LittleEndianInput dataInputStream = new LittleEndianByteArrayInputStream(uncompressedBytes);
             float[] sharedTimes = readFloats(dataInputStream, numPoints);
@@ -51,7 +51,7 @@ public enum ChromatogramBinaryFormat
                     .map(intensities->new TimeIntensities(sharedTimes, intensities))
                     .collect(Collectors.toList());
 
-            return new Chromatogram(transitionTimeIntensities);
+            return new Chromatogram(transitionTimeIntensities, status);
         }
     },
     /**
@@ -61,7 +61,7 @@ public enum ChromatogramBinaryFormat
      */
     ChromatogramGroupData {
         @Override
-        public Chromatogram readChromatogram(byte[] uncompressedBytes, int numPoints, int numTrans) throws IOException
+        public Chromatogram readChromatogram(byte[] uncompressedBytes, int numPoints, int numTrans, Chromatogram.SourceStatus status) throws IOException
         {
             ChromatogramGroupDataOuterClass.ChromatogramGroupData chromatogramGroupData
                     = ChromatogramGroupDataOuterClass.ChromatogramGroupData.parseFrom(uncompressedBytes);
@@ -76,11 +76,11 @@ public enum ChromatogramBinaryFormat
                 transitionTimeIntensities.add(new TimeIntensities(timeLists.get(chromatogram.getTimeListIndex() - 1),
                         Floats.toArray(chromatogram.getIntensitiesList())));
             }
-            return new Chromatogram(transitionTimeIntensities);
+            return new Chromatogram(transitionTimeIntensities, status);
         }
-
     };
-    public abstract Chromatogram readChromatogram(byte[] uncompressedBytes, int numPoints, int numTrans) throws IOException;
+
+    public abstract Chromatogram readChromatogram(byte[] uncompressedBytes, int numPoints, int numTrans, Chromatogram.SourceStatus status) throws IOException;
 
     private static float[] readFloats(LittleEndianInput dataInputStream, int count)
     {

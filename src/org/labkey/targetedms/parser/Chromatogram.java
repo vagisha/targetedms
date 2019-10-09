@@ -27,14 +27,46 @@ import java.util.List;
 public class Chromatogram
 {
     protected List<TimeIntensities> _transitionTimeIntensities;
+    private final SourceStatus _status;
     private float[] _mergedTimes;
     private TimeIntensities[] _mergedTimeIntensities;
-    public Chromatogram(List<TimeIntensities> transitionTimeIntensities) {
-        _transitionTimeIntensities = transitionTimeIntensities;
-	}
 
-    public int getTransitionsCount() {
+    public Chromatogram(List<TimeIntensities> transitionTimeIntensities, SourceStatus status)
+    {
+        _transitionTimeIntensities = transitionTimeIntensities;
+        _status = status;
+    }
+
+    public int getTransitionsCount()
+    {
         return getTransitionTimeIntensities().size();
+    }
+
+    public enum SourceStatus
+    {
+        dbOnly("DB contains bytes, but not offset so impossible to retrieve directly from file"),
+        diskOnly("DB does not contain bytes, but does have indices and data was retrieved successfully from file"),
+        noSkydResolved("DB contains bytes and offset, but we can't resolve the SKYD path, perhaps because the S3 bucket is no longer configured"),
+        skydMissing("DB contains bytes and offset, but we can't find the SKYD file that's referenced"),
+        mismatch("Both DB-based and file-based bytes available, but they didn't match"),
+        match("Both DB-based and file-based bytes available, and they match");
+
+        private final String _description;
+
+        SourceStatus(String description)
+        {
+            _description = description;
+        }
+
+        public String getDescription()
+        {
+            return _description;
+        }
+    }
+
+    public SourceStatus getStatus()
+    {
+        return _status;
     }
 
     /**

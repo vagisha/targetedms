@@ -470,8 +470,11 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         RoleManager.registerRole(new CopyTargetedMSExperimentRole());
 
 		// Add a link in the admin console to manage journals.
-		ActionURL url = new ActionURL(PublishTargetedMSExperimentsController.JournalGroupsAdminViewAction.class, ContainerManager.getRoot());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "targeted ms", url, AdminPermission.class);
+		ActionURL journalsURL = new ActionURL(PublishTargetedMSExperimentsController.JournalGroupsAdminViewAction.class, ContainerManager.getRoot());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "Targeted MS Journal Groups", journalsURL, AdminPermission.class);
+
+		ActionURL chromatogramURL = new ActionURL(TargetedMSController.ChromatogramCrawlerAction.class, ContainerManager.getRoot());
+        AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "Targeted MS Chromatogram Crawler", chromatogramURL, AdminPermission.class);
 
         FileContentService fcs = FileContentService.get();
         if(null != fcs)

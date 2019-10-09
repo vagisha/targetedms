@@ -426,8 +426,15 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
         _chromatogramLength = chromatogramLength;
     }
 
+    /** Use the module property to decide whether to try fetching from disk*/
     @Nullable
     public Chromatogram createChromatogram(TargetedMSRun run)
+    {
+        return createChromatogram(run, Boolean.parseBoolean(TargetedMSModule.PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.getEffectiveValue(_container)));
+    }
+
+    @Nullable
+    public Chromatogram createChromatogram(TargetedMSRun run, boolean loadFromSkyd)
     {
         try
         {
@@ -440,7 +447,8 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
 
             byte[] databaseBytes = getChromatogram();
             byte[] compressedBytes = databaseBytes;
-            boolean loadFromSkyd = Boolean.parseBoolean(TargetedMSModule.PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.getEffectiveValue(_container));
+
+            Chromatogram.SourceStatus status;
 
             if (loadFromSkyd || databaseBytes == null)
             {
@@ -450,26 +458,54 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
                     if (skydData != null)
                     {
                         Path skydPath = skydData.getFilePath();
-                        LOG.debug("Attempting to fetch chromatogram bytes (possibly cached) from " + skydPath + " for PrecursorChromInfo " + _generalMoleculeChromInfoId);
-                        byte[] onDemandBytes = ON_DEMAND_CHROM_CACHE.get(new Tuple3<>(skydPath, _chromatogramOffset, _chromatogramLength));
-                        if (databaseBytes != null && !Arrays.equals(databaseBytes, onDemandBytes))
+                        if (skydPath == null)
                         {
-                            LOG.error("Chromatogram bytes for PrecursorChromInfo " + _generalMoleculeChromInfoId + " do not match between .skyd and DB. Using database copy. Lengths: " + (onDemandBytes == null ? "null" : Integer.toString(onDemandBytes.length)) + " vs " + databaseBytes.length);
+                            status = Chromatogram.SourceStatus.skydMissing;
+                            LOG.debug("No path available for PrecursorChromInfo " + _generalMoleculeChromInfoId + ", bucket may be unavailable for URL " + skydData.getDataFileUrl());
                         }
                         else
                         {
-                            compressedBytes = onDemandBytes;
+                            LOG.debug("Attempting to fetch chromatogram bytes (possibly cached) from " + skydPath + " for PrecursorChromInfo " + _generalMoleculeChromInfoId);
+                            byte[] diskBytes = ON_DEMAND_CHROM_CACHE.get(new Tuple3<>(skydPath, _chromatogramOffset, _chromatogramLength));
+                            if (diskBytes == null)
+                            {
+                                status = Chromatogram.SourceStatus.skydMissing;
+                            }
+                            else if (!Arrays.equals(databaseBytes, diskBytes))
+                            {
+                                LOG.error("Chromatogram bytes for PrecursorChromInfo " + _generalMoleculeChromInfoId + " do not match between .skyd and DB. Using database copy. Lengths: " + diskBytes.length + " vs " + (databaseBytes == null ? "null" : Integer.toString(databaseBytes.length)));
+                                status = Chromatogram.SourceStatus.mismatch;
+                            }
+                            else
+                            {
+                                compressedBytes = diskBytes;
+                                status = Chromatogram.SourceStatus.match;
+                            }
                         }
+                    }
+                    else
+                    {
+                        status = Chromatogram.SourceStatus.noSkydResolved;
                     }
                 }
                 else
                 {
                     LOG.debug("No length, offset, and/or SKYD DataId for PrecursorChromInfo " + _generalMoleculeChromInfoId);
+                    status = Chromatogram.SourceStatus.dbOnly;
                 }
+            }
+            else
+            {
+                status = Chromatogram.SourceStatus.dbOnly;
+            }
+
+            if (compressedBytes == null)
+            {
+                return null;
             }
 
             byte[] uncompressedBytes = SkylineBinaryParser.uncompressStoredBytes(compressedBytes, getUncompressedSize(), _numPoints, _numTransitions);
-            return binaryFormat.readChromatogram(uncompressedBytes, _numPoints, _numTransitions);
+            return binaryFormat.readChromatogram(uncompressedBytes, _numPoints, _numTransitions, status);
         }
         catch (IOException | DataFormatException exception)
         {
