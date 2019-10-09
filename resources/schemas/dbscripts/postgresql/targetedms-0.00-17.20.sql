@@ -1116,7 +1116,7 @@ CREATE TABLE targetedms.QCAnnotation
 );
 
 -- Poke a few rows into the /Shared project
-SELECT core.executeJavaUpgradeCode('populateDefaultAnnotationTypes');
+SELECT core.executeJavaInitializationCode('populateDefaultAnnotationTypes');
 
 -- ----------------------------------------------------------------------------
 -- Molecule
@@ -1689,5 +1689,3 @@ CREATE INDEX IX_ExperimentAnnotations_SourceExperimentId ON targetedms.Experimen
 ALTER TABLE targetedms.ExperimentAnnotations ADD CONSTRAINT UQ_ExperimentAnnotations_ShortUrl UNIQUE (shortUrl);
 ALTER TABLE targetedms.ExperimentAnnotations ADD CONSTRAINT FK_ExperimentAnnotations_ShortUrl FOREIGN KEY (shorturl)
 REFERENCES core.shorturl (entityId);
-
-SELECT core.executeJavaUpgradeCode('updateExperimentAnnotations');

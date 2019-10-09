@@ -19,7 +19,6 @@ import org.apache.log4j.Logger;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
-import org.labkey.api.data.CoreSchema;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
 import org.labkey.api.data.DeferredUpgrade;
@@ -38,16 +37,9 @@ import org.labkey.api.module.ModuleContext;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
-import org.labkey.api.portal.ProjectUrls;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
-import org.labkey.api.util.PageFlowUtil;
-import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.Portal;
-import org.labkey.api.view.ShortURLRecord;
-import org.labkey.targetedms.model.ExperimentAnnotations;
-import org.labkey.targetedms.model.JournalExperiment;
-import org.labkey.targetedms.query.ExperimentAnnotationsManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,7 +63,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
 {
     private static final Logger LOG = Logger.getLogger(TargetedMSUpgradeCode.class);
 
-    // called at 14.30-15.10
+    // called at every bootstrap to initialize annotation types
     @SuppressWarnings({"UnusedDeclaration"})
     public void populateDefaultAnnotationTypes(final ModuleContext moduleContext)
     {
@@ -99,83 +91,6 @@ public class TargetedMSUpgradeCode implements UpgradeCode
         sql.add(name);
         sql.add(color);
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
-    }
-
-    // Called at 17.10-17.20
-    @SuppressWarnings({"UnusedDeclaration"})
-    public void updateExperimentAnnotations(final ModuleContext moduleContext)
-    {
-        // Populate the sourceExperimentId, sourceExperimentPath and shortUrl columns that were just added.
-        // This will be done only for experiments are are journal copies (journalCopy = true).
-        DbSchema schema = TargetedMSSchema.getSchema();
-        String updateSql = "UPDATE targetedms.ExperimentAnnotations SET sourceExperimentId=?, sourceExperimentPath=?, shortUrl=? WHERE Id=?";
-        String updateShortUrlSql = "UPDATE targetedms.ExperimentAnnotations SET shortUrl=? WHERE Id=?";
-
-        TableSelector ts = new TableSelector(TargetedMSManager.getTableInfoExperimentAnnotations(),
-                new SimpleFilter(FieldKey.fromParts("journalCopy"), true, CompareType.EQUAL), null);
-        ts.forEachBatch(batch -> {
-            try (DbScope.Transaction transaction = schema.getScope().ensureTransaction())
-            {
-                ArrayList<Collection<Object>> paramList = new ArrayList<>();
-                ArrayList<Collection<Object>> paramList_shortUrlOnly = new ArrayList<>();
-
-                for (ExperimentAnnotations expAnnotations : batch)
-                {
-                    Container container = expAnnotations.getContainer();
-                    ActionURL url = PageFlowUtil.urlProvider(ProjectUrls.class).getBeginURL(container);
-                    // Get any existing short URLs for this container
-                    List<ShortURLRecord> shortUrls =  new TableSelector(CoreSchema.getInstance().getTableInfoShortURL(),
-                                                                 new SimpleFilter(FieldKey.fromParts("fullurl"), url.toString()),
-                                                            null).getArrayList(ShortURLRecord.class);
-
-                    boolean found = false;
-                    for(ShortURLRecord shortUrl: shortUrls)
-                    {
-                        JournalExperiment je = getRecordForShortAccessUrl(shortUrl);
-                        if (je != null && je.getCopied() != null)
-                        {
-                            ExperimentAnnotations sourceExperiment = ExperimentAnnotationsManager.get(je.getExperimentAnnotationsId());
-                            if(sourceExperiment != null)
-                            {
-                                List<Object> params = new ArrayList<>();
-                                params.add(sourceExperiment.getId()); // sourceExperimentId
-                                params.add(sourceExperiment.getContainer().getPath()); // sourceExperimentPath
-                                params.add(shortUrl.getEntityId()); // shortUrl
-                                params.add(expAnnotations.getId());
-
-                                paramList.add(params);
-                                found = true;
-                                break;
-                            }
-                        }
-                    }
-                    if(shortUrls.size() == 1 && !found)
-                    {
-                        // We did not find a matching record in JournalExperiment for any of the short URLs
-                        // On panoramaweb.org this means that the source experiment was deleted (along with
-                        // the corresponding record in JournalExperiment)
-                        // Set the shortURL only in this case
-                        List<Object> params = new ArrayList<>();
-                        params.add(shortUrls.get(0).getEntityId()); // shortUrl
-                        params.add(expAnnotations.getId());
-
-                        paramList_shortUrlOnly.add(params);
-                    }
-                }
-                Table.batchExecute(schema, updateSql, paramList);
-                if(paramList_shortUrlOnly.size() > 0)
-                {
-                    Table.batchExecute(schema, updateShortUrlSql, paramList_shortUrlOnly);
-                }
-                transaction.commit();
-            }
-        }, ExperimentAnnotations.class, 1000);
-    }
-
-    public JournalExperiment getRecordForShortAccessUrl(ShortURLRecord shortUrl)
-    {
-        SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("shortAccessUrl"), shortUrl);
-        return new TableSelector(TargetedMSManager.getTableInfoJournalExperiment(), filter, null).getObject(JournalExperiment.class);
     }
 
     // Called at 17.30-17.31
