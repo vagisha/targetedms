@@ -6,15 +6,6 @@
     <bean id="targetedmsPipelineRegistry" class="org.labkey.api.pipeline.TaskPipelineRegistrar">
         <property name="factoryImpls">
             <list>
-                <bean class="org.labkey.targetedms.pipeline.ExperimentExportTask$Factory">
-                    <property name="location" value="webserver" />
-                </bean>
-                <bean class="org.labkey.targetedms.pipeline.ExperimentImportTask$Factory">
-                    <property name="location" value="webserver" />
-                </bean>
-                <bean class="org.labkey.targetedms.pipeline.CopyExperimentFinalTask$Factory">
-                    <property name="location" value="webserver" />
-                </bean>
                 <bean class="org.labkey.targetedms.pipeline.TargetedMSImportTask$Factory">
                     <property name="location" value="webserver-high-priority" />
                 </bean>
@@ -23,23 +14,6 @@
 
         <property name="pipelines">
             <list>
-                <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
-                    <constructor-arg type="java.lang.Class" value="org.labkey.targetedms.pipeline.CopyExperimentPipelineJob"/>
-                    <property name="taskProgressionSpec">
-                        <list>
-                            <bean id="exportTask" class="org.labkey.api.pipeline.TaskId">
-                                <constructor-arg><value type="java.lang.Class">org.labkey.targetedms.pipeline.ExperimentExportTask</value></constructor-arg>
-                            </bean>
-                            <bean id="importTask" class="org.labkey.api.pipeline.TaskId">
-                                <constructor-arg><value type="java.lang.Class">org.labkey.targetedms.pipeline.ExperimentImportTask</value></constructor-arg>
-                            </bean>
-                            <bean id="finalTask" class="org.labkey.api.pipeline.TaskId">
-                                <constructor-arg><value type="java.lang.Class">org.labkey.targetedms.pipeline.CopyExperimentFinalTask</value></constructor-arg>
-                            </bean>
-                        </list>
-                    </property>
-                </bean>
-
                 <bean class="org.labkey.api.pipeline.TaskPipelineSettings">
                     <constructor-arg type="java.lang.Class" value="org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob"/>
                     <property name="taskProgressionSpec">

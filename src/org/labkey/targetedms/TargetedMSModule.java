@@ -39,7 +39,6 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.protein.ProteomicsModule;
 import org.labkey.api.security.permissions.AdminPermission;
-import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.usageMetrics.UsageMetricsService;
@@ -57,13 +56,9 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogParser;
-import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
-import org.labkey.targetedms.proteomexchange.SubmissionDataValidator;
-import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.search.ProteinSearchWebPart;
-import org.labkey.targetedms.security.CopyTargetedMSExperimentRole;
 import org.labkey.targetedms.view.LibraryPrecursorViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.PeptideViewWebPart;
@@ -71,8 +66,6 @@ import org.labkey.targetedms.view.QCSummaryWebPart;
 import org.labkey.targetedms.view.TargetedMSRunsWebPartView;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
-import org.labkey.targetedms.view.expannotations.TargetedMSExperimentWebPart;
-import org.labkey.targetedms.view.expannotations.TargetedMSExperimentsWebPart;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -316,30 +309,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             {
                 Container container = portalCtx.getContainer();
                 TargetedMSController.ModificationSearchForm form = TargetedMSController.ModificationSearchForm.createDefault();
-                if(JournalManager.isJournalProject(container))
-                {
-                    // If this is journal project (e.g. Panorama Public), include sub-folders in search, and show the experiment title column in the results.
-                    form.setIncludeSubfolders(true);
-                    form.setJournalSearch(true);
-                }
                 return new ModificationSearchWebPart(form);
-            }
-        };
-
-        BaseWebPartFactory experimentAnnotationsListFactory = new BaseWebPartFactory(TargetedMSExperimentsWebPart.WEB_PART_NAME)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                return new TargetedMSExperimentsWebPart(portalCtx);
-            }
-        };
-
-        BaseWebPartFactory containerExperimentFactory = new BaseWebPartFactory(TargetedMSExperimentWebPart.WEB_PART_NAME)
-        {
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                return new TargetedMSExperimentWebPart(portalCtx);
             }
         };
 
@@ -385,8 +355,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         webpartFactoryList.add(proteinSearchFactory);
         webpartFactoryList.add(peptideSearchFactory);
         webpartFactoryList.add(modificationSearchFactory);
-        webpartFactoryList.add(experimentAnnotationsListFactory);
-        webpartFactoryList.add(containerExperimentFactory);
         webpartFactoryList.add(qcPlotsFactory);
         webpartFactoryList.add(qcSummaryFactory);
         webpartFactoryList.add(paretoPlotFactory);
@@ -431,7 +399,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         PipelineService service = PipelineService.get();
         service.registerPipelineProvider(new TargetedMSPipelineProvider(this));
-        service.registerPipelineProvider(new CopyExperimentPipelineProvider(this));
 
         ExperimentService.get().registerExperimentDataHandler(new TargetedMSDataHandler());
         ExperimentService.get().registerExperimentDataHandler(new SkylineBinaryDataHandler());
@@ -460,18 +427,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         AuditLogService.get().registerAuditType(new TargetedMsRepresentativeStateAuditProvider());
 
         TargetedMSListener listener = new TargetedMSListener();
-        ExperimentService.get().addExperimentListener(listener);
         ContainerManager.addContainerListener(listener);
-
-        ShortURLService shortUrlService = ShortURLService.get();
-        shortUrlService.addListener(listener);
-
-        // Register the CopyExperimentRole
-        RoleManager.registerRole(new CopyTargetedMSExperimentRole());
-
-		// Add a link in the admin console to manage journals.
-		ActionURL journalsURL = new ActionURL(PublishTargetedMSExperimentsController.JournalGroupsAdminViewAction.class, ContainerManager.getRoot());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "Targeted MS Journal Groups", journalsURL, AdminPermission.class);
 
 		ActionURL chromatogramURL = new ActionURL(TargetedMSController.ChromatogramCrawlerAction.class, ContainerManager.getRoot());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "Targeted MS Chromatogram Crawler", chromatogramURL, AdminPermission.class);
@@ -510,7 +466,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public Set<Class> getIntegrationTests()
     {
         return Set.of(
-                PublishTargetedMSExperimentsController.TestCase.class,
                 SkylineAuditLogManager.TestCase.class
         );
     }
@@ -524,7 +479,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         set.add(ComparisonCategory.TestCase.class);
         set.add(ReplicateLabelMinimizer.TestCase.class);
         set.add(SkylineAuditLogParser.TestCase.class);
-        set.add(SubmissionDataValidator.TestCase.class);
         return set;
 
     }

@@ -16,16 +16,13 @@
 package org.labkey.targetedms.view;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Aggregate;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.protein.ProteinService;
-import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QuerySettings;
@@ -33,8 +30,6 @@ import org.labkey.api.query.QueryView;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.query.ExperimentTitleDisplayColumn;
-import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.query.TargetedMSTable;
 import org.springframework.validation.BindException;
 
@@ -104,17 +99,7 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
                 sql.append("))");
                 result.addCondition(sql);
 
-                boolean isJournalFolder = JournalManager.isJournalProject(viewContext.getContainer());
-                if (isJournalFolder)
-                {
-                    addExperimentTitleColumn(result, getContainer());
-                }
-
                 List<FieldKey> visibleColumns = new ArrayList<>();
-                if(isJournalFolder)
-                {
-                    visibleColumns.add(FieldKey.fromParts("Experiment"));
-                }
                 visibleColumns.add(FieldKey.fromParts("Label"));
                 visibleColumns.add(FieldKey.fromParts("Description"));
                 visibleColumns.add(FieldKey.fromParts("Accession"));
@@ -135,14 +120,6 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
         result.enableExpandCollapse("TargetedMSProteins", false);
         result.setUseQueryViewActionExportURLs(true);
         return result;
-    }
-
-    @NotNull
-    private void addExperimentTitleColumn(FilteredTable result, Container container)
-    {
-        SQLFragment whereSql = new SQLFragment(" WHERE runs.Id = ").append(ExprColumn.STR_TABLE_ALIAS).append(".runId");
-        ExperimentTitleDisplayColumn col = new ExperimentTitleDisplayColumn(result, container, whereSql, "runs");
-        result.addColumn(col);
     }
 
     private List<String> getProteinLabels(String labels)

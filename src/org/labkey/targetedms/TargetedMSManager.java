@@ -144,11 +144,6 @@ public class TargetedMSManager
         return getSchema().getSqlDialect();
     }
 
-    public static TableInfo getTableInfoExperimentAnnotations()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_EXPERIMENT_ANNOTATIONS);
-    }
-
     public static TableInfo getTableInfoRuns()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_RUNS);
@@ -437,16 +432,6 @@ public class TargetedMSManager
     public static TableInfo getTableInfoAutoQCPing()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_AUTOQC_PING);
-    }
-
-    public static TableInfo getTableInfoJournal()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_JOURNAL);
-    }
-
-    public static TableInfo getTableInfoJournalExperiment()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_JOURNAL_EXPERIMENT);
     }
 
     public static TableInfo getTableInfoQCAnnotationType()

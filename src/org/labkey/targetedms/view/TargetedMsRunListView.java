@@ -19,7 +19,6 @@ import org.labkey.api.data.ActionButton;
 import org.labkey.api.data.ButtonBar;
 import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.CompareType;
-import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.DataRegion;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.SimpleFilter;
@@ -29,7 +28,6 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QueryService;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.UserSchema;
-import org.labkey.api.security.permissions.InsertPermission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.security.permissions.UpdatePermission;
 import org.labkey.api.targetedms.TargetedMSService;
@@ -40,14 +38,10 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
-import org.labkey.targetedms.model.ExperimentAnnotations;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static org.labkey.targetedms.TargetedMSController.getExcludeSubfoldersInExperimentURL;
-import static org.labkey.targetedms.TargetedMSController.getIncludeSubfoldersInExperimentURL;
 
 /**
  * User: vsharma
@@ -57,7 +51,6 @@ import static org.labkey.targetedms.TargetedMSController.getIncludeSubfoldersInE
 public class TargetedMsRunListView extends ExperimentRunListView
 {
 
-    private ExperimentAnnotations _expAnnotations;
     private ViewType _viewType;
     private boolean _hasDocVersions;
     private boolean _showAllVersions;
@@ -83,11 +76,6 @@ public class TargetedMsRunListView extends ExperimentRunListView
         addClientDependency(ClientDependency.fromPath("targetedms/js/LinkVersionsDialog.js"));
         addClientDependency(ClientDependency.fromPath("targetedms/css/LinkVersionsDialog.css"));
         addClientDependency(ClientDependency.fromPath("targetedms/js/ClustergrammerDialog.js"));
-    }
-
-    private void setExpAnnotations(ExperimentAnnotations expAnnotations)
-    {
-        _expAnnotations = expAnnotations;
     }
 
     private void setViewType(ViewType viewType)
@@ -131,9 +119,6 @@ public class TargetedMsRunListView extends ExperimentRunListView
 
         addLinkVersionButton(view, bar);
         addClusterGrammerButton(view, bar);
-
-        if(_viewType == ViewType.EDITABLE_EXPERIMENT_VIEW)
-            addExperimentDetailsViewButtons(bar);
 
         if(canChangeDocVersionCols())
         {
@@ -180,22 +165,6 @@ public class TargetedMsRunListView extends ExperimentRunListView
         bar.add(cgButton);
     }
 
-    private void addExperimentDetailsViewButtons(ButtonBar bar)
-    {
-        if(_expAnnotations == null)
-            return;
-
-        String buttonText = _expAnnotations.isIncludeSubfolders() ? "Exclude Subfolders" : "Include Subfolders";
-        ActionURL url = _expAnnotations.isIncludeSubfolders() ?
-                getExcludeSubfoldersInExperimentURL(_expAnnotations.getId(), getViewContext().getContainer(), getReturnURL()) :
-                getIncludeSubfoldersInExperimentURL(_expAnnotations.getId(), getViewContext().getContainer(), getReturnURL());
-
-        ActionButton includeSubfoldersBtn = new ActionButton(buttonText, url);
-        includeSubfoldersBtn.setDisplayPermission(InsertPermission.class);
-        includeSubfoldersBtn.setActionType(ActionButton.Action.POST);
-        bar.add(includeSubfoldersBtn);
-    }
-
     public List<DisplayColumn> getDisplayColumns()
     {
         if(!canChangeDocVersionCols())
@@ -224,10 +193,10 @@ public class TargetedMsRunListView extends ExperimentRunListView
 
     public static TargetedMsRunListView createView(ViewContext model)
     {
-        return createView(model, null, ViewType.FOLDER_VIEW);
+        return createView(model, ViewType.FOLDER_VIEW);
     }
 
-    public static TargetedMsRunListView createView(ViewContext model, ExperimentAnnotations expAnnotations, ViewType viewType)
+    public static TargetedMsRunListView createView(ViewContext model, ViewType viewType)
     {
         UserSchema schema = new TargetedMSSchema(model.getUser(), model.getContainer());
         QuerySettings querySettings = getRunListQuerySettings(schema, model, TargetedMSModule.EXP_RUN_TYPE.getTableName(), true);
@@ -238,14 +207,6 @@ public class TargetedMsRunListView extends ExperimentRunListView
         view.setTitle(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME);
         view.setFrame(FrameType.PORTAL);
         view.setViewType(viewType);
-
-        if(viewType == ViewType.EDITABLE_EXPERIMENT_VIEW || viewType == ViewType.EXPERIMENT_VIEW)
-        {
-            // If we are looking at the details of an experiment, set the container filter to CurrentAndSubfolders so that
-            // runs in subfolders are visible (if the experiment includes subfolders).
-            querySettings.setContainerFilterName(ContainerFilter.Type.CurrentAndSubfolders.name());
-            view.setExpAnnotations(expAnnotations);
-        }
 
         if(view.canChangeDocVersionCols() && !view.isShowAllVersions())
         {

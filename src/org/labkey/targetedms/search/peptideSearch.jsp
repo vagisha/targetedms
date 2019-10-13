@@ -18,12 +18,7 @@
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page import="org.labkey.api.ms2.MS2Urls" %>
 <%@ page import="org.labkey.api.protein.ProteinService" %>
-<%@ page import="org.labkey.targetedms.query.JournalManager" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
-
-<%
-    boolean isJournalProject = JournalManager.isJournalProject(getContainer());
-%>
 
 <labkey:form action="<%=urlProvider(MS2Urls.class).getPepSearchUrl(getContainer())%>" method="get">
     <table class="lk-fields-table">
@@ -35,14 +30,10 @@
             <td class="labkey-form-label"><label for="cbxExact">Exact matches only</label><%=helpPopup("Exact matches only", "If checked, the search will match the peptides exactly; if unchecked, it will match any peptide that starts with the specified sequence and ignore modifications.")%></td>
             <td><input id="cbxExact" type="checkbox" name="<%=h(ProteinService.PeptideSearchForm.ParamNames.exact.name())%>" style="vertical-align:middle"<%=checked(true)%> />
         </tr>
-        <% if (isJournalProject) {%>
-            <input type="hidden" name="<%=h(ProteinService.PeptideSearchForm.ParamNames.subfolders.name())%>" value="true"/>
-        <% }else{ %>
         <tr>
             <td class="labkey-form-label"><label for="cbxSubfolders">Search in subfolders</label><%=helpPopup("Search in subfolders", "Check to search this folder and all of its descendants.")%></td>
             <td><input id="cbxSubfolders" type="checkbox" name="<%=h(ProteinService.PeptideSearchForm.ParamNames.subfolders.name())%>" style="vertical-align:middle"<%=checked(false)%> /></td>
         </tr>
-        <% } %>
         <tr>
             <td colspan="2" style="padding-top: 10px;">
                 <labkey:button text="Search" />

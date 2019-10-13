@@ -171,8 +171,6 @@ public class TargetedMSSchema extends UserSchema
 
     public static final String TABLE_AUTOQC_PING = "AutoQCPing";
 
-    public static final String TABLE_EXPERIMENT_ANNOTATIONS = "ExperimentAnnotations";
-
     public static final String TABLE_QC_ANNOTATION_TYPE = "QCAnnotationType";
     public static final String TABLE_QC_ANNOTATION = "QCAnnotation";
     public static final String TABLE_QC_METRIC_CONFIGURATION = "QCMetricConfiguration";
@@ -180,9 +178,6 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_QC_ENABLED_METRICS = "QCEnabledMetrics";
 
     public static final String TABLE_GUIDE_SET = "GuideSet";
-
-    public static final String TABLE_JOURNAL = "Journal";
-    public static final String TABLE_JOURNAL_EXPERIMENT = "JournalExperiment";
 
     private static final String PROTOCOL_PATTERN_PREFIX = "urn:lsid:%:Protocol.%:";
 
@@ -551,20 +546,6 @@ public class TargetedMSSchema extends UserSchema
                 return FieldKey.fromParts("DriftTimePredictionSettingsId", "RunId", "Container");
             }
         },
-        ExperimentAnnotationsFK
-        {
-            @Override
-            public SQLFragment getSQL()
-            {
-                return makeInnerJoin(TargetedMSManager.getTableInfoExperimentAnnotations(),
-                        TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "ExperimentAnnotationsId");
-            }
-            @Override
-            public FieldKey getContainerFieldKey()
-            {
-                return FieldKey.fromParts("ExperimentAnnotationsId", "Container");
-            }
-        },
         ModPeptideFK
         {
             @Override
@@ -879,10 +860,6 @@ public class TargetedMSSchema extends UserSchema
             result.getMutableColumn("ModifiedBy").setFk(new UserIdQueryForeignKey(this));
             result.getMutableColumn("Container").setFk(new ContainerForeignKey(this));
             return result;
-        }
-        if(TABLE_EXPERIMENT_ANNOTATIONS.equalsIgnoreCase(name))
-        {
-            return new ExperimentAnnotationsTableInfo(this, cf);
         }
 
         if (TABLE_REPRESENTATIVE_DATA_STATE_RUN.equalsIgnoreCase(name))
@@ -1245,20 +1222,6 @@ public class TargetedMSSchema extends UserSchema
             return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.DriftTimePredictionSettingsFK);
         }
 
-        if(TABLE_JOURNAL_EXPERIMENT.equalsIgnoreCase(name))
-        {
-            return new JournalExperimentTableInfo(this, cf, getContainer());
-        }
-
-        if(TABLE_JOURNAL.equalsIgnoreCase(name))
-        {
-            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this, cf);
-            result.wrapAllColumns(true);
-            var projectCol = result.getMutableColumn(FieldKey.fromParts("Project"));
-            ContainerForeignKey.initColumn(projectCol, this);
-            return result;
-        }
-
         if (getTableNames().contains(name))
         {
             FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this, cf);
@@ -1417,9 +1380,6 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_PREDICTOR_SETTINGS);
         hs.add(TABLE_DRIFT_TIME_PREDICTION_SETTINGS);
         hs.add(TABLE_MEASURED_DRIFT_TIME);
-        hs.add(TABLE_JOURNAL);
-        hs.add(TABLE_JOURNAL_EXPERIMENT);
-        hs.add(TABLE_EXPERIMENT_ANNOTATIONS);
         hs.add(TABLE_QC_ANNOTATION_TYPE);
         hs.add(TABLE_QC_ANNOTATION);
         hs.add(TABLE_GUIDE_SET);
