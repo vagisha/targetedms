@@ -38,6 +38,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -124,12 +125,16 @@ public class SkylineBinaryParser
     public static class CachedFile
     {
         private final String _filePath;
+        private final String _sampleId;
+        private final String _serialNumber;
         private final String _instrumentInfo;
         private final EnumSet<CachedFileHeaderStruct.Flags> _flags;
 
-        public CachedFile(String filePath, String instrumentInfo, EnumSet<CachedFileHeaderStruct.Flags> flags)
+        public CachedFile(String filePath, String sampleId, String serialNumber, String instrumentInfo, EnumSet<CachedFileHeaderStruct.Flags> flags)
         {
             _filePath = filePath;
+            _sampleId = sampleId;
+            _serialNumber = serialNumber;
             _instrumentInfo = instrumentInfo;
             _flags = flags;
         }
@@ -137,6 +142,16 @@ public class SkylineBinaryParser
         public String getFilePath()
         {
             return _filePath;
+        }
+
+        public String getSampleId()
+        {
+            return _sampleId;
+        }
+
+        public String getSerialNumber()
+        {
+            return _serialNumber;
         }
 
         public String getInstrumentInfo()
@@ -161,20 +176,24 @@ public class SkylineBinaryParser
         for (int i = 0; i < cacheHeaderStruct.getNumFiles(); i++)
         {
             CachedFileHeaderStruct cachedFileStruct = cachedFileHeaderSerializer.readArray(stream, 1)[0];
-            byte[] filePathBuffer = new byte[cachedFileStruct.getLenPath()];
-            IOUtils.readFully(stream, filePathBuffer);
-            String filePath = new String(filePathBuffer, cacheFormat.getCharset());
+            String filePath = Objects.toString(readStringOfByteLength(stream, cachedFileStruct.getLenPath()), "");
+            String sampleId = readStringOfByteLength(stream, cachedFileStruct.getLenSampleId());
+            String serialNumber = readStringOfByteLength(stream, cachedFileStruct.getLenSerialNumber());
+            String instrumentInfoStr = readStringOfByteLength(stream, cachedFileStruct.getLenInstrumentInfo());
 
-            String instrumentInfoStr = null;
-            if (cachedFileStruct.getLenInstrumentInfo() >= 0)
-            {
-                byte[] instrumentInfoBuffer = new byte[cachedFileStruct.getLenInstrumentInfo()];
-                IOUtils.readFully(stream, instrumentInfoBuffer);
-                instrumentInfoStr = new String(instrumentInfoBuffer, cacheFormat.getCharset());
-            }
-
-            _cacheFiles[i] = new CachedFile(filePath, instrumentInfoStr, cachedFileStruct.getFlags());
+            _cacheFiles[i] = new CachedFile(filePath, sampleId, serialNumber, instrumentInfoStr, cachedFileStruct.getFlags());
         }
+    }
+
+    private String readStringOfByteLength(InputStream inputStream, int length) throws IOException
+    {
+        if (length <= 0)
+        {
+            return null;
+        }
+        byte[] buffer = new byte[length];
+        IOUtils.readFully(inputStream, buffer);
+        return new String(buffer, _cacheFormat.getCharset());
     }
 
     private void parsePeaks() throws IOException
