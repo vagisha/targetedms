@@ -55,10 +55,12 @@ import org.labkey.targetedms.SkylinePort.Irt.RetentionTimeProviderImpl;
 import org.labkey.targetedms.calculations.RunQuantifier;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.targetedms.parser.*;
+import org.labkey.targetedms.parser.list.ListData;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
+import org.labkey.targetedms.query.SkylineListManager;
 
 import javax.xml.stream.XMLStreamException;
 import java.io.File;
@@ -512,6 +514,10 @@ public class SkylineDocImporter
         {
             groupComparison.setRunId(_runId);
             Table.insert(_user, TargetedMSManager.getTableInfoGroupComparisonSettings(), groupComparison);
+        }
+        for (ListData listData : dataSettings.getListDatas()) {
+            listData.getListDefinition().setRunId(_runId);
+            SkylineListManager.saveListData(_user, listData);
         }
         return groupComparisons;
     }

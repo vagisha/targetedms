@@ -517,6 +517,22 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_MESSAGE);
     }
 
+    public static TableInfo getTableInfoListDefinition() {
+        return getSchema().getTable(TargetedMSSchema.TABLE_LIST_DEFINITION);
+    }
+
+    public static TableInfo getTableInfoListColumnDefinition() {
+        return getSchema().getTable(TargetedMSSchema.TABLE_LIST_COLUMN_DEFINITION);
+    }
+
+    public static TableInfo getTableInfoListItem() {
+        return getSchema().getTable(TargetedMSSchema.TABLE_LIST_ITEM);
+    }
+
+    public static TableInfo getTableInfoListItemValue() {
+        return getSchema().getTable(TargetedMSSchema.TABLE_LIST_ITEM_VALUE);
+    }
+
     public static Integer addRunToQueue(ViewBackgroundInfo info,
                                      final Path path,
                                      PipeRoot root) throws IOException, XarFormatException
@@ -815,7 +831,8 @@ public class TargetedMSManager
 
     public static TargetedMSRun[] getRunsInContainer(Container container)
     {
-        return getRuns("Container=? AND StatusId=? AND deleted=?", container.getId(), 1, Boolean.FALSE);
+        return getRuns("Container=? AND StatusId=? AND deleted=?",
+                container.getId(), SkylineDocImporter.STATUS_SUCCESS, Boolean.FALSE);
     }
 
     public static TargetedMSRun getRunByFileName(String fileName, Container container)
@@ -1552,6 +1569,9 @@ public class TargetedMSManager
         // Delete from IsolationScheme
         deleteRunDependent(getTableInfoIsolationScheme());
 
+        // Delete from all list-related tables
+        deleteListDependent();
+
         // Delete from runs
         execute("DELETE FROM " + getTableInfoRuns() + " WHERE Deleted = ?", true);
 
@@ -1681,6 +1701,22 @@ public class TargetedMSManager
     {
         execute("DELETE FROM " + tableInfo + " WHERE DriftTimePredictionSettingsId IN (SELECT Id FROM " +
                 getTableInfoDriftTimePredictionSettings() + " WHERE RunId IN (SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted = ?))", true);
+    }
+
+    private static void deleteListDefinitionIdDependent(TableInfo tableInfo)
+    {
+        execute("DELETE FROM " + tableInfo + " WHERE ListDefinitionId IN (SELECT Id FROM " + getTableInfoListDefinition() + " WHERE RunId IN (SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted = ?))", true);
+    }
+
+    private static void deleteListDependent()
+    {
+        execute("DELETE FROM " + getTableInfoListItemValue() + " WHERE ListItemId IN" +
+                " (SELECT Id FROM " + getTableInfoListItem() + " WHERE ListDefinitionId IN" +
+                " (SELECT Id FROM " + getTableInfoListDefinition() + " WHERE RunId IN" +
+                " (SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted = ?)))", true);
+        deleteListDefinitionIdDependent(getTableInfoListItem());
+        deleteListDefinitionIdDependent(getTableInfoListColumnDefinition());
+        deleteRunDependent(getTableInfoListDefinition());
     }
 
     private static void execute(String sql, @NotNull Object... parameters)

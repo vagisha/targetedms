@@ -193,6 +193,11 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_SKYLINE_AUDITLOG_ENTRY = "AuditLogEntry";
     public static final String TABLE_SKYLINE_AUDITLOG_MESSAGE = "AuditLogMessage";
 
+    public static final String TABLE_LIST_DEFINITION = "ListDefinition";
+    public static final String TABLE_LIST_COLUMN_DEFINITION = "ListColumnDefinition";
+    public static final String TABLE_LIST_ITEM = "ListItem";
+    public static final String TABLE_LIST_ITEM_VALUE = "ListItemValue";
+
 
     public static final String COL_PROTEIN = "Protein";
     public static final String COL_LIST = "List";
