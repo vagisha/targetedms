@@ -17,6 +17,8 @@ package org.labkey.targetedms.parser;
 
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.JdbcType;
+import org.labkey.targetedms.parser.list.ListData;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -90,6 +92,7 @@ public class DataSettings
     private Map<AnnotationTarget, List<AnnotationDefinition>> _targetAnnotationsMap =
                         new HashMap<>();
     private List<GroupComparisonSettings> _groupComparisons = new ArrayList<>();
+    private List<ListData> _listDatas = new ArrayList<>();
 
     public void addAnnotations(String name, String targetsString, String type)
     {
@@ -143,6 +146,16 @@ public class DataSettings
     public List<GroupComparisonSettings> getGroupComparisons()
     {
         return _groupComparisons;
+    }
+
+    public void addListData(ListData listData)
+    {
+        _listDatas.add(listData);
+    }
+
+    public List<ListData> getListDatas()
+    {
+        return _listDatas;
     }
 
     public boolean isBooleanAnnotation(String name) {

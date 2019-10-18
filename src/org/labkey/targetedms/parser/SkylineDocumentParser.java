@@ -16,8 +16,10 @@
 
 package org.labkey.targetedms.parser;
 
+import com.google.common.collect.Iterables;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fop.util.XMLUtil;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,6 +27,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.exp.api.ExperimentService;
+import org.labkey.api.reader.TabLoader;
 import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
@@ -34,6 +37,9 @@ import org.labkey.targetedms.IrtPeptide;
 import org.labkey.targetedms.SkylineDocImporter.IProgressStatus;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.chromlib.ConnectionSource;
+import org.labkey.targetedms.parser.list.ListColumn;
+import org.labkey.targetedms.parser.list.ListData;
+import org.labkey.targetedms.parser.list.ListDefinition;
 import org.labkey.targetedms.parser.proto.SkylineDocument;
 import org.labkey.targetedms.parser.skyd.ChromGroupHeaderInfo;
 
@@ -58,6 +64,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.zip.DataFormatException;
 
 /**
@@ -97,6 +104,8 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String PRECURSOR_MZ = "precursor_mz";
     private static final String ANNOTATION = "annotation";
     private static final String LIST_DATA = "list_data";
+    private static final String LIST_DEF = "list_def";
+    private static final String COLUMN = "column";
     private static final String PRODUCT_MZ = "product_mz";
     private static final String COLLISION_ENERGY = "collision_energy";
     private static final String DECLUSTERING_POTENTIAL = "declustering_potential";
@@ -486,9 +495,7 @@ public class SkylineDocumentParser implements AutoCloseable
             _documentGUID = new GUID(documentGUID);
         }
 
-        boolean inListData = false;
-
-        while(reader.hasNext())
+         while(reader.hasNext())
          {
              int evtType = reader.next();
              if(XmlUtil.isEndElement(reader, evtType, DATA_SETTINGS))
@@ -499,41 +506,117 @@ public class SkylineDocumentParser implements AutoCloseable
              if(XmlUtil.isStartElement(reader, evtType, LIST_DATA))
              {
                  // For now just skip over list definitions
-                 inListData = true;
+                 _dataSettings.addListData(readListData(reader));
              }
-             else if (XmlUtil.isEndElement(reader, evtType, LIST_DATA))
+             if (XmlUtil.isStartElement(reader, evtType, ANNOTATION))
              {
-                 inListData = false;
+                 String name = XmlUtil.readRequiredAttribute(reader, "name", ANNOTATION);
+                 String targets = XmlUtil.readRequiredAttribute(reader, "targets", ANNOTATION);
+                 String type = XmlUtil.readRequiredAttribute(reader, "type", ANNOTATION);
+                 _dataSettings.addAnnotations(name, targets, type);
              }
-
-             if (!inListData)
+             else if (XmlUtil.isStartElement(reader, evtType, GROUP_COMPARISON))
              {
-                 if (XmlUtil.isStartElement(reader, evtType, ANNOTATION))
+                 GroupComparisonSettings groupComparison = new GroupComparisonSettings();
+                 groupComparison.setName(XmlUtil.readAttribute(reader, "name"));
+                 groupComparison.setControlAnnotation(XmlUtil.readAttribute(reader, "control_annotation"));
+                 groupComparison.setControlValue(XmlUtil.readAttribute(reader, "control_value"));
+                 groupComparison.setCaseValue(XmlUtil.readAttribute(reader, "case_value"));
+                 groupComparison.setIdentityAnnotation(XmlUtil.readAttribute(reader, "identity_annotation"));
+                 groupComparison.setNormalizationMethod(XmlUtil.readAttribute(reader, "normalization_method"));
+                 groupComparison.setPerProtein(XmlUtil.readBooleanAttribute(reader, "per_protein", false));
+                 Double confidenceLevel = XmlUtil.readDoubleAttribute(reader, "confidence_level");
+                 if (null != confidenceLevel)
                  {
-                     String name = XmlUtil.readRequiredAttribute(reader, "name", DATA_SETTINGS);
-                     String targets = XmlUtil.readRequiredAttribute(reader, "targets", DATA_SETTINGS);
-                     String type = XmlUtil.readRequiredAttribute(reader, "type", DATA_SETTINGS);
-                     _dataSettings.addAnnotations(name, targets, type);
+                     groupComparison.setConfidenceLevel(confidenceLevel / 100.0);
                  }
-                 else if (XmlUtil.isStartElement(reader, evtType, GROUP_COMPARISON))
-                 {
-                     GroupComparisonSettings groupComparison = new GroupComparisonSettings();
-                     groupComparison.setName(XmlUtil.readAttribute(reader, "name"));
-                     groupComparison.setControlAnnotation(XmlUtil.readAttribute(reader, "control_annotation"));
-                     groupComparison.setControlValue(XmlUtil.readAttribute(reader, "control_value"));
-                     groupComparison.setCaseValue(XmlUtil.readAttribute(reader, "case_value"));
-                     groupComparison.setIdentityAnnotation(XmlUtil.readAttribute(reader, "identity_annotation"));
-                     groupComparison.setNormalizationMethod(XmlUtil.readAttribute(reader, "normalization_method"));
-                     groupComparison.setPerProtein(XmlUtil.readBooleanAttribute(reader, "per_protein", false));
-                     Double confidenceLevel = XmlUtil.readDoubleAttribute(reader, "confidence_level");
-                     if (null != confidenceLevel)
-                     {
-                         groupComparison.setConfidenceLevel(confidenceLevel / 100.0);
-                     }
-                     _dataSettings.addGroupComparison(groupComparison);
-                 }
+                 _dataSettings.addGroupComparison(groupComparison);
              }
          }
+    }
+
+    private ListData readListData(XMLStreamReader reader) throws XMLStreamException
+    {
+        ListData listData = new ListData();
+        while (reader.hasNext()) {
+            int evtType = reader.next();
+            if (XmlUtil.isEndElement(reader, evtType, LIST_DATA)) {
+                break;
+            }
+            if (XmlUtil.isStartElement(reader, evtType, LIST_DEF))
+            {
+                readListDefinition(reader, listData);
+            }
+            if (XmlUtil.isStartElement(reader, evtType, COLUMN))
+            {
+                String columnText = reader.getElementText();
+                ListColumn listColumn = listData.getColumnDef(listData.getColumnDatas().size());
+                listData.addColumnData(makeColumnData(DataSettings.AnnotationType.fromString(listColumn.getAnnotationType()), columnText));
+            }
+        }
+        return listData;
+    }
+
+    private List<Object> makeColumnData(DataSettings.AnnotationType annotationType, String persistedString)
+    {
+        try
+        {
+            TabLoader tabLoader = new TabLoader(persistedString, false);
+            tabLoader.parseAsCSV();
+            String[][] lines = tabLoader.getFirstNLines(1);
+            if (lines.length == 0)
+            {
+                return Collections.emptyList();
+            }
+            List<String> values = Arrays.asList(lines[0]);
+
+            switch (annotationType)
+            {
+                case true_false:
+                    return values.stream().map(v->"1".equals(v) ? Boolean.TRUE : Boolean.FALSE).collect(Collectors.toList());
+                case number:
+                    return values.stream().map(v->StringUtils.isEmpty(v) ? null : Double.parseDouble(v)).collect(Collectors.toList());
+                default:
+                    return values.stream().map(v->StringUtils.isEmpty(v) ? null : v).collect(Collectors.toList());
+            }
+        }
+        catch (IOException ioException)
+        {
+            throw new UnexpectedException(ioException);
+        }
+    }
+
+    private void readListDefinition(XMLStreamReader reader, ListData listData) throws XMLStreamException
+    {
+        listData.getListDefinition().setName(XmlUtil.readAttribute(reader, "name"));
+        String idColumnName = XmlUtil.readAttribute(reader, "id_property");
+        String displayColumnName = XmlUtil.readAttribute(reader, "display_property");
+        while (reader.hasNext())
+        {
+            int evtType = reader.next();
+            if (XmlUtil.isEndElement(reader, evtType, LIST_DEF)) {
+                break;
+            }
+            if (XmlUtil.isStartElement(reader, evtType, ANNOTATION))
+            {
+                ListColumn listColumn = new ListColumn();
+                listColumn.setAnnotationType(XmlUtil.readRequiredAttribute(reader, "type", ANNOTATION));
+                listColumn.setColumnIndex(listData.getColumnCount());
+                listColumn.setLookup(XmlUtil.readAttribute(reader, "lookup"));
+                listColumn.setName(XmlUtil.readRequiredAttribute(reader, "name", ANNOTATION));
+                listData.addColumnDefinition(listColumn);
+            }
+        }
+        if (idColumnName != null)
+        {
+            listData.getListDefinition().setPkColumnIndex(Iterables.indexOf(
+                    listData.getColumnDefinitions(), col->idColumnName.equals(col.getName())));
+        }
+        if (displayColumnName != null)
+        {
+            listData.getListDefinition().setDisplayColumnIndex(Iterables.indexOf(
+                    listData.getColumnDefinitions(), col->displayColumnName.equals(col.getName())));
+        }
     }
 
     private void readTransitionSettings(XMLStreamReader reader) throws XMLStreamException

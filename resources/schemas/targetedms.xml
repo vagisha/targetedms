@@ -1705,4 +1705,38 @@
             <column columnName="Reason"/>
         </columns>
     </table>
+    <table tableName="ListDefinition" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id" />
+            <column columnName="RunId" />
+            <column columnName="Name" />
+            <column columnName="PkColumnIndex" />
+            <column columnName="DisplayColumnIndex" />
+        </columns>
+    </table>
+    <table tableName="ListColumnDefinition" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id" />
+            <column columnName="ListDefinitionId" />
+            <column columnName="ColumnIndex" />
+            <column columnName="AnnotationType" />
+            <column columnName="Name" />
+            <column columnName="Lookup" />
+        </columns>
+    </table>
+    <table tableName="ListItem" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id" />
+            <column columnName="ListDefinitionId" />
+        </columns>
+    </table>
+    <table tableName="ListItemValue" tableDbType="TABLE">
+        <columns>
+            <column columnName="Id" />
+            <column columnName="ListItemId" />
+            <column columnName="ColumnIndex" />
+            <column columnName="TextValue" />
+            <column columnName="NumericValue" />
+        </columns>
+    </table>
 </tables>

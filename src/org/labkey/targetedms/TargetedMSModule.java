@@ -57,6 +57,7 @@ import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogParser;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
+import org.labkey.targetedms.query.SkylineListSchema;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.search.ProteinSearchWebPart;
 import org.labkey.targetedms.view.LibraryPrecursorViewWebPart;
@@ -201,7 +202,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public double getVersion()
     {
-        return 19.25;
+        return 19.26;
     }
 
     @Override
@@ -380,6 +381,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         addController("targetedms", TargetedMSController.class);
         TargetedMSSchema.register(this);
+        SkylineListSchema.register(this);
 
         UsageMetricsService svc = UsageMetricsService.get();
         if (null != svc)
