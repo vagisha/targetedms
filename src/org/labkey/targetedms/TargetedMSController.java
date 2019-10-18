@@ -355,6 +355,9 @@ public class TargetedMSController extends SpringActionController
             addDataPipelineTab(c);
             addRawFilesPipelineTab(c);
 
+            // Inform listeners so that any additinal folder configuration can be done.
+            TargetedMSService.get().getTargetedMSFolderTypeListeners().forEach(listener -> listener.folderCreated(c, getUser()));
+
             return true;
         }
 

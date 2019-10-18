@@ -218,7 +218,6 @@ public class SkylineDocImporter
             _log.info("Completed import of Skyline document from " + run.getFileName());
 
             updateRunStatus(IMPORT_SUCCEEDED, STATUS_SUCCESS);
-            TargetedMSService.get().getSkylineDocumentImportListener().forEach(listener -> listener.onDocumentImport(_container, _user, run));
 
             _progressMonitor.complete();
             return TargetedMSManager.getRun(_runId);

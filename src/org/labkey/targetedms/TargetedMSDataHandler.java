@@ -101,6 +101,8 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
 
             TargetedMSManager.updateRun(run, info.getUser());
 
+            TargetedMSService.get().getSkylineDocumentImportListener().forEach(listener -> listener.onDocumentImport(context.getContainer(), info.getUser(), run));
+
             transaction.commit();
         }
         catch (IOException | XMLStreamException | PipelineJobException | AuditLogException e)

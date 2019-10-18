@@ -28,7 +28,10 @@ public interface ITargetedMSRun
 {
     public Container getContainer();
     public String getBaseName();
+    public String getFileName();
     public String getDescription();
     public Date getCreated();
     public int getId();
+    public Integer getDataId();
+    public Integer getSkydDataId();
 }

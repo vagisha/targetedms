@@ -26,6 +26,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineJobException;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.pipeline.RecordedActionSet;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.FileType;
 import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSManager;
@@ -64,8 +65,8 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
             TargetedMSRun run = importer.importRun(job.getRunInfo(), job);
 
             Integer jobId = PipelineService.get().getJobId(getJob().getUser(), getJob().getContainer(), getJob().getJobGUID());
-            ExpRun expRun = TargetedMSManager.ensureWrapped(run, job.getUser(), job.getPipeRoot(), jobId);
-
+            TargetedMSManager.ensureWrapped(run, job.getUser(), job.getPipeRoot(), jobId);
+            TargetedMSService.get().getSkylineDocumentImportListener().forEach(listener -> listener.onDocumentImport(job.getContainer(), job.getUser(), run));
             transaction.commit();
         }
         catch (ExperimentException | XMLStreamException | IOException | AuditLogException e)

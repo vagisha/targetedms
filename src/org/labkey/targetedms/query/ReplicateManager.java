@@ -141,6 +141,19 @@ public class ReplicateManager
         return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sf).getCollection(SampleFile.class));
     }
 
+    public static List<String> getSampleFilePaths(int runId)
+    {
+        String sql = "SELECT sf.filePath FROM "+
+                TargetedMSManager.getTableInfoSampleFile()+" AS sf, "+
+                TargetedMSManager.getTableInfoReplicate()+" AS rep "+
+                "WHERE rep.Id=sf.ReplicateId "+
+                "AND rep.RunId=?";
+        SQLFragment sf = new SQLFragment(sql);
+        sf.add(runId);
+
+        return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sf).getCollection(String.class));
+    }
+
     public static List<Replicate> getReplicatesForRun(int runId)
     {
         return new ArrayList<>(

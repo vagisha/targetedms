@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.labkey.api.targetedms.IModification;
+
 import java.util.List;
 
 /**
@@ -293,7 +295,7 @@ public class PeptideSettings
         }
     }
 
-    public static class IsotopeModification extends Modification
+    public static class IsotopeModification extends Modification implements IModification.IIsotopeModification
     {
         private Boolean _label13C;
         private Boolean _label15N;
@@ -483,7 +485,7 @@ public class PeptideSettings
         }
     }
 
-    public static class StructuralModification extends Modification
+    public static class StructuralModification extends Modification implements IModification.IStructuralModification
     {
         private boolean _variable;
 
@@ -498,7 +500,7 @@ public class PeptideSettings
         }
     }
 
-    public static class Modification extends SkylineEntity
+    public static class Modification extends SkylineEntity implements IModification
     {
         private String _name;
         private String _aminoAcid;

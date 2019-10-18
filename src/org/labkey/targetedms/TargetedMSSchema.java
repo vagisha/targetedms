@@ -600,7 +600,7 @@ public class TargetedMSSchema extends UserSchema
         {
             public TableInfo getLookupTableInfo()
             {
-                FilteredTable result = new FilteredTable<>(TargetedMSManager.getTableInfoRuns(), TargetedMSSchema.this);
+                FilteredTable result = new FilteredTable<>(TargetedMSManager.getTableInfoRuns(), TargetedMSSchema.this, cf);
                 result.addWrapColumn(result.getRealTable().getColumn("Id"));
                 result.addWrapColumn(result.getRealTable().getColumn("Description"));
                 result.addWrapColumn(result.getRealTable().getColumn("Created"));
