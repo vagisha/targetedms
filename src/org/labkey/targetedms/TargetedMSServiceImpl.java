@@ -105,16 +105,6 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public boolean isPanoramaExperimentalDataFolder(Container c)
-    {
-        if(c.getFolderType() instanceof TargetedMSFolderType)
-        {
-
-        }
-        return false;
-    }
-
-    @Override
     public TableInfo getTableInfoPeptideGroup()
     {
         return TargetedMSManager.getTableInfoPeptideGroup();

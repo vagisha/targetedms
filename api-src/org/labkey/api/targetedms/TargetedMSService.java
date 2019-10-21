@@ -73,6 +73,4 @@ public interface TargetedMSService
     TableInfo getTableInfoPeptideGroup();
     void registerTargetedMSFolderTypeListener(TargetedMSFolderTypeListener listener);
     List<TargetedMSFolderTypeListener> getTargetedMSFolderTypeListeners();
-
-    boolean isPanoramaExperimentalDataFolder(Container c);
 }
