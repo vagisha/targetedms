@@ -861,6 +861,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 }),
                 valueField: 'id',
                 displayField: 'name',
+                tpl : '<tpl for="."><li role="option" class="x4-boundlist-item">{name:htmlEncode}</li></tpl>',
                 value: this.metric,
                 forceSelection: true,
                 editable: false,

@@ -351,7 +351,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             {
                 var href = LABKEY.ActionURL.buildURL('project', 'begin', item.ContainerPath, {metric: item.MetricId});
                 content += '<tr class="' + (rowCount % 2 === 0 ? 'labkey-alternate-row' : 'labkey-row') + '">';
-                content += '<td class="outlier-metric-label"><a href="' + href + '">' + item.MetricLabel + '</a></td>';
+                content += '<td class="outlier-metric-label"><a href="' + href + '">' + Ext4.util.Format.htmlEncode(item.MetricLabel) + '</a></td>';
                 if (item.IgnoreInQC) {
                     content += '<td align="center" colspan="6"><em>not included in QC</em></td>';
                 }
