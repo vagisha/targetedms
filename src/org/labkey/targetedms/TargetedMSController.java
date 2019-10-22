@@ -2927,7 +2927,7 @@ public class TargetedMSController extends SpringActionController
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
             response.put("SKY_version", SkylineDocumentParser.MAX_SUPPORTED_VERSION);
-            response.put("SKYD_version", SkylineBinaryParser.FORMAT_VERSION_CACHE);
+            response.put("SKYD_version", SkylineBinaryParser.FORMAT_VERSION_CACHE.ordinal());
             return response;
         }
     }
