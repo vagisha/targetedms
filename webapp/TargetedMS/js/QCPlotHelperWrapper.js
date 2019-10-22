@@ -94,7 +94,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                 combinePlotData = this.getCombinedPlotInitData(),
                 lengthOfLongestLegend = 8,  // At least length of label 'Peptides'
                 lengthOfLongestAnnot = 1,
-                showLogInvalid,
+                showLogInvalid = false,
                 precursorInfo,
                 prefix, ellipCount, prefLength, ellipMatch = new RegExp(this.legendHelper.ellipsis, 'g');
 
@@ -108,19 +108,22 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         for (var i = 0; i < this.precursors.length; i++)
         {
             precursorInfo = this.fragmentPlotData[this.precursors[i]];
-            prefix = this.legendHelper.getLegendItemText(precursorInfo);
-            ellipCount = prefix.match(ellipMatch) ? prefix.match(ellipMatch).length : 0;
-            prefLength = prefix.length + ellipCount;  // ellipsis count for two chars
+            // We may not have a match if it's been filtered out - see issue 38720
+            if (precursorInfo) {
+                prefix = this.legendHelper.getLegendItemText(precursorInfo);
+                ellipCount = prefix.match(ellipMatch) ? prefix.match(ellipMatch).length : 0;
+                prefLength = prefix.length + ellipCount;  // ellipsis count for two chars
 
-            if (prefLength > lengthOfLongestLegend) {
-                lengthOfLongestLegend = prefLength;
+                if (prefLength > lengthOfLongestLegend) {
+                    lengthOfLongestLegend = prefLength;
+                }
+
+                // for combined plot, concat all data together into a single array and track min/max for all
+                combinePlotData.data = combinePlotData.data.concat(precursorInfo.data);
+                this.processCombinedPlotMinMax(combinePlotData, precursorInfo);
+
+                showLogInvalid = showLogInvalid || precursorInfo.showLogInvalid;
             }
-
-            // for combined plot, concat all data together into a single array and track min/max for all
-            combinePlotData.data = combinePlotData.data.concat(precursorInfo.data);
-            this.processCombinedPlotMinMax(combinePlotData, precursorInfo);
-
-            showLogInvalid = showLogInvalid || precursorInfo.showLogInvalid;
         }
 
         // Annotations

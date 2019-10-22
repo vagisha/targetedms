@@ -459,15 +459,17 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
         for (var i = 0; i < this.precursors.length; i++)
         {
             precursorInfo = this.fragmentPlotData[this.precursors[i]];
+            // We may not have a match if it's been filtered out - see issue 38720
+            if (precursorInfo) {
+                var appropriateLegend = precursorInfo.dataType == 'Peptide' ? proteomicsLegend : ionLegend;
 
-            var appropriateLegend = precursorInfo.dataType == 'Peptide' ?  proteomicsLegend : ionLegend;
-
-            appropriateLegend.push({
-                name: precursorInfo.fragment + (this.isMultiSeries() ? '|' + legendSeries[0] : ''),
-                text: this.legendHelper.getLegendItemText(precursorInfo),
-                hoverText: precursorInfo.fragment,
-                color: groupColors[i % groupColors.length]
-            });
+                appropriateLegend.push({
+                    name: precursorInfo.fragment + (this.isMultiSeries() ? '|' + legendSeries[0] : ''),
+                    text: this.legendHelper.getLegendItemText(precursorInfo),
+                    hoverText: precursorInfo.fragment,
+                    color: groupColors[i % groupColors.length]
+                });
+            }
         }
 
         // add the fragment name for each group to the legend again for the series2 axis metric series
