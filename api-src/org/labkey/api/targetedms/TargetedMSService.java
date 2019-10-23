@@ -48,6 +48,12 @@ public interface TargetedMSService
         Experiment, Library, LibraryProtein, QC, Undefined
     }
 
+    String MODULE_NAME = "TargetedMS";
+    String FOLDER_TYPE_NAME = "Targeted MS";
+    String FOLDER_TYPE_PROP_NAME = "TargetedMS Folder Type"; // module property name
+    String RAW_FILES_DIR = "RawFiles";
+    String RAW_FILES_TAB = "Raw Data";
+
     ITargetedMSRun getRun(int runId, Container container);
     ITargetedMSRun getRunByFileName(String fileName, Container container);
     List<ITargetedMSRun> getRuns(Container container);
@@ -55,22 +61,16 @@ public interface TargetedMSService
     List<? extends SkylineAnnotation> getReplicateAnnotations(Container container);
     void registerSkylineDocumentImportListener(SkylineDocumentImportListener skyLineDocumentImportListener);
     List<SkylineDocumentImportListener> getSkylineDocumentImportListener();
+    void registerTargetedMSFolderTypeListener(TargetedMSFolderTypeListener listener);
+    List<TargetedMSFolderTypeListener> getTargetedMSFolderTypeListeners();
     Map<String, SampleFileInfo> getSampleFiles(Container container, User user, Integer sampleFileLimit);
     TargetedMSService.FolderType getFolderType(Container container);
 
-    String getModuleName();
-    String getFolderTypeName(); // Name of TargetedMSFolderType
-    String getFolderTypePropertyName(); // "TargetedMS Folder Type" module property name
     ExperimentRunType getExperimentRunType();
     UserSchema getUserSchema( User user, Container c);
-
-    List<String> getSampleFilePaths(int runId);
-    String getRawFilesDir();
-    List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(int runId);
-    List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(int runId);
-
     TableInfo getTableInfoRuns();
     TableInfo getTableInfoPeptideGroup();
-    void registerTargetedMSFolderTypeListener(TargetedMSFolderTypeListener listener);
-    List<TargetedMSFolderTypeListener> getTargetedMSFolderTypeListeners();
+    List<String> getSampleFilePaths(int runId);
+    List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(int runId);
+    List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(int runId);
 }

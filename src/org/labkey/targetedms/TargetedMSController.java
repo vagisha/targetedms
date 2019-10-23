@@ -182,6 +182,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
+import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_TAB;
+import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_DIR;
+import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
 import static org.labkey.api.util.DOM.Attribute.method;
 import static org.labkey.api.util.DOM.DIV;
 import static org.labkey.api.util.DOM.X.FORM;
@@ -191,7 +195,6 @@ import static org.labkey.api.targetedms.TargetedMSService.FolderType;
 import static org.labkey.targetedms.TargetedMSModule.LIBRARY_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.PROTEIN_LIBRARY_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.QC_FOLDER_WEB_PARTS;
-import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
 
 public class TargetedMSController extends SpringActionController
 {
@@ -240,11 +243,8 @@ public class TargetedMSController extends SpringActionController
         public static final String ANNOTATIONS_TAB = "Annotations";
         public static final String GUIDE_SETS_TAB = "Guide Sets";
         public static final String PARETO_PLOT_TAB = "Pareto Plot";
-        public static final String RAW_FILES_TAB = "Raw Data";
 
         public static final String DATA_PIPELINE_WEBPART = "Data Pipeline";
-
-        public static final String RAW_FILE_DIR = "RawFiles";
 
         @Override
         public void validateCommand(FolderSetupForm target, Errors errors)
@@ -267,7 +267,7 @@ public class TargetedMSController extends SpringActionController
             {
                 return true; // no TargetedMS module found - do nothing
             }
-            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
+            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(FOLDER_TYPE_PROP_NAME);
             switch (FolderType.valueOf(moduleProperty.getValueContainerSpecific(c)))
             {
                 case Experiment:
@@ -452,7 +452,7 @@ public class TargetedMSController extends SpringActionController
         public boolean handlePost(Object o, BindException errors)
         {
             Container c = getContainer(); ;
-            if(!c.hasActiveModuleByName(TargetedMSModule.NAME))
+            if(!c.hasActiveModuleByName(MODULE_NAME))
             {
                 return true; // no TargetedMS module found - do nothing
             }
@@ -464,7 +464,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public URLHelper getSuccessURL(Object o)
         {
-            return PageFlowUtil.urlProvider(ProjectUrls.class).getBeginURL(getContainer(), FolderSetupAction.RAW_FILES_TAB);
+            return PageFlowUtil.urlProvider(ProjectUrls.class).getBeginURL(getContainer(), RAW_FILES_TAB);
         }
     }
 
@@ -477,8 +477,8 @@ public class TargetedMSController extends SpringActionController
             Portal.WebPart webPart = Portal.getPortalPart(FilesWebPart.PART_NAME).createWebPart();
             configureRawDataTab(webPart, c, service);
             tab.add(webPart);
-            Portal.saveParts(c, FolderSetupAction.RAW_FILES_TAB, tab);
-            Portal.addProperty(c, FolderSetupAction.RAW_FILES_TAB, Portal.PROP_CUSTOMTAB);
+            Portal.saveParts(c, RAW_FILES_TAB, tab);
+            Portal.addProperty(c, RAW_FILES_TAB, Portal.PROP_CUSTOMTAB);
         }
     }
 
@@ -489,7 +489,7 @@ public class TargetedMSController extends SpringActionController
             Path fileRoot = service.getFileRootPath(c, FileContentService.ContentType.files);
             if (fileRoot != null)
             {
-                Path rawFileDir = fileRoot.resolve(FolderSetupAction.RAW_FILE_DIR);
+                Path rawFileDir = fileRoot.resolve(RAW_FILES_DIR);
                 if (!Files.exists(rawFileDir))
                 {
                     try
@@ -503,7 +503,7 @@ public class TargetedMSController extends SpringActionController
                 }
             }
 
-            String fileRootString = FileContentService.FILES_LINK + "/" + FolderSetupAction.RAW_FILE_DIR + "/";
+            String fileRootString = FileContentService.FILES_LINK + "/" + RAW_FILES_DIR + "/";
             webPart.setProperty(FilesWebPart.FILE_ROOT_PROPERTY_NAME, fileRootString);
         }
     }
@@ -2140,7 +2140,7 @@ public class TargetedMSController extends SpringActionController
         PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
         if (null != root)
         {
-            LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+            LocalDirectory localDirectory = LocalDirectory.create(root, MODULE_NAME);
             try
             {
                 addSpectrumViews(run, vbox,
@@ -4477,7 +4477,7 @@ public class TargetedMSController extends SpringActionController
                 PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
                 if (null != root)
                 {
-                    LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+                    LocalDirectory localDirectory = LocalDirectory.create(root, MODULE_NAME);
                     try
                     {
                         ChromatogramLibraryUtils.incrementLibraryRevision(getContainer(), getUser(), localDirectory);
@@ -4729,7 +4729,7 @@ public class TargetedMSController extends SpringActionController
                     PipeRoot root = PipelineService.get().getPipelineRootSetting(getContainer());
                     if (null != root)
                     {
-                        LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+                        LocalDirectory localDirectory = LocalDirectory.create(root, MODULE_NAME);
                         try
                         {
                             ChromatogramLibraryUtils.writeLibrary(container, getUser(), localDirectory, libraryRevision);

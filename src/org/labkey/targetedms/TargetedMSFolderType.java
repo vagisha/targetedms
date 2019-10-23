@@ -25,7 +25,6 @@ import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.AdminPermission;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.HelpTopic;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.Portal;
@@ -36,7 +35,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
-import static org.labkey.targetedms.TargetedMSController.FolderSetupAction.RAW_FILES_TAB;
+import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
+import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_TAB;
 
 /**
  * User: vsharma
@@ -45,12 +45,10 @@ import static org.labkey.targetedms.TargetedMSController.FolderSetupAction.RAW_F
  */
 public class TargetedMSFolderType extends MultiPortalFolderType
 {
-    public static final String NAME = "Targeted MS";
-
     public TargetedMSFolderType(TargetedMSModule module)
     {
         this(module,
-             NAME,
+             TargetedMSService.FOLDER_TYPE_NAME,
              "Manage targeted MS assays generated in Skyline.",
              getDefaultModuleSet(module, getModule("TargetedMS"), getModule("Pipeline"), getModule("Experiment")));
     }
@@ -82,7 +80,7 @@ public class TargetedMSFolderType extends MultiPortalFolderType
         {
             if (module instanceof TargetedMSModule)
             {
-                ModuleProperty moduleProperty = module.getModuleProperties().get(TargetedMSModule.TARGETED_MS_FOLDER_TYPE);
+                ModuleProperty moduleProperty = module.getModuleProperties().get(FOLDER_TYPE_PROP_NAME);
                 if(TargetedMSService.FolderType.valueOf(moduleProperty.getValueContainerSpecific(c)) == TargetedMSService.FolderType.Undefined)
                 {
                     List<NavTree> extraSteps = new ArrayList<>();

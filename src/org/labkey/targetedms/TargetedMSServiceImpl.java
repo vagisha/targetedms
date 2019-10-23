@@ -111,12 +111,6 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public String getRawFilesDir()
-    {
-        return TargetedMSController.FolderSetupAction.RAW_FILE_DIR;
-    }
-
-    @Override
     public List<String> getSampleFilePaths(int runId)
     {
         return ReplicateManager.getSampleFilePaths(runId);
@@ -138,24 +132,6 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public ITargetedMSRun getRunByLsid(String lsid, Container container)
     {
         return TargetedMSManager.getRunByLsid(lsid, container);
-    }
-
-    @Override
-    public String getModuleName()
-    {
-        return TargetedMSModule.NAME;
-    }
-
-    @Override
-    public String getFolderTypeName()
-    {
-        return TargetedMSFolderType.NAME;
-    }
-
-    @Override
-    public String getFolderTypePropertyName()
-    {
-        return TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
     }
 
     @Override

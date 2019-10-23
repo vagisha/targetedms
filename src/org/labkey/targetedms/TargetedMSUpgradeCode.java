@@ -52,7 +52,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.labkey.targetedms.TargetedMSController.FolderSetupAction.RAW_FILES_TAB;
+import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_TAB;
 
 
 /**

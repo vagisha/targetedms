@@ -48,7 +48,6 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.Portal;
-import org.labkey.api.view.ShortURLService;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
@@ -78,10 +77,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
+import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
+
 public class TargetedMSModule extends SpringModule implements ProteomicsModule
 {
-    public static final String NAME = "TargetedMS";
-
     // Protocol prefix for importing .sky documents from Skyline
     public static final String IMPORT_SKYDOC_PROTOCOL_OBJECT_PREFIX = "TargetedMS.ImportSky";
     // Protocol prefix for importing .zip archives from Skyline
@@ -119,7 +119,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
     public static final String[] QC_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_QC_SUMMARY, TARGETED_MS_QC_PLOTS};
 
-    public static final String TARGETED_MS_FOLDER_TYPE = "TargetedMS Folder Type";
     public static ModuleProperty FOLDER_TYPE_PROPERTY;
     public static ModuleProperty SKIP_CHROMATOGRAM_IMPORT_PROPERTY;
     public static ModuleProperty PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY;
@@ -134,7 +133,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
     public TargetedMSModule()
     {
-        FOLDER_TYPE_PROPERTY = new ModuleProperty(this, TARGETED_MS_FOLDER_TYPE);
+        FOLDER_TYPE_PROPERTY = new ModuleProperty(this, FOLDER_TYPE_PROP_NAME);
         // Set up the TargetedMS Folder Type property
         FOLDER_TYPE_PROPERTY.setDefaultValue(TargetedMSService.FolderType.Undefined.toString());
         FOLDER_TYPE_PROPERTY.setCanSetPerContainer(true);
@@ -196,7 +195,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public String getName()
     {
-        return NAME;
+        return MODULE_NAME;
     }
 
     @Override
@@ -386,7 +385,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         UsageMetricsService svc = UsageMetricsService.get();
         if (null != svc)
         {
-            svc.registerUsageMetrics(UsageReportingLevel.MEDIUM, NAME, () ->
+            svc.registerUsageMetrics(UsageReportingLevel.MEDIUM, MODULE_NAME, () ->
             {
                 Map<String, Object> metric = new HashMap<>();
                 metric.put("runCount", new SqlSelector(DbSchema.get("TargetedMS", DbSchemaType.Module), "SELECT COUNT(*) FROM TargetedMS.Runs WHERE Deleted = ?", Boolean.FALSE).getObject(Long.class));
@@ -504,7 +503,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         }
         if (targetedMSModule != null)
         {
-            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
+            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(FOLDER_TYPE_PROP_NAME);
             return TargetedMSService.FolderType.valueOf(moduleProperty.getValueContainerSpecific(container));
         }
 
