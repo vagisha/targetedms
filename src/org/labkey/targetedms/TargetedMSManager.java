@@ -111,7 +111,8 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import static java.lang.Math.toIntExact;
-import static org.labkey.targetedms.TargetedMSModule.TARGETED_MS_FOLDER_TYPE;
+import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
+import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
 
 public class TargetedMSManager
 {
@@ -142,11 +143,6 @@ public class TargetedMSManager
     public static SqlDialect getSqlDialect()
     {
         return getSchema().getSqlDialect();
-    }
-
-    public static TableInfo getTableInfoExperimentAnnotations()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_EXPERIMENT_ANNOTATIONS);
     }
 
     public static TableInfo getTableInfoRuns()
@@ -437,16 +433,6 @@ public class TargetedMSManager
     public static TableInfo getTableInfoAutoQCPing()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_AUTOQC_PING);
-    }
-
-    public static TableInfo getTableInfoJournal()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_JOURNAL);
-    }
-
-    public static TableInfo getTableInfoJournalExperiment()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_JOURNAL_EXPERIMENT);
     }
 
     public static TableInfo getTableInfoQCAnnotationType()
@@ -1080,7 +1066,7 @@ public class TargetedMSManager
                 PipeRoot root = PipelineService.get().getPipelineRootSetting(run.getContainer());
                 if (null != root)
                 {
-                    LocalDirectory localDirectory = LocalDirectory.create(root, TargetedMSModule.NAME);
+                    LocalDirectory localDirectory = LocalDirectory.create(root, MODULE_NAME);
                     try
                     {
                         RepresentativeStateManager.setRepresentativeState(user, run.getContainer(), localDirectory, run, TargetedMSRun.RepresentativeDataState.NotRepresentative);
@@ -1761,7 +1747,7 @@ public class TargetedMSManager
         {
             return null; // no TargetedMS module found - do nothing
         }
-        ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
+        ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(FOLDER_TYPE_PROP_NAME);
         String svalue = moduleProperty.getValueContainerSpecific(c);
         try
         {

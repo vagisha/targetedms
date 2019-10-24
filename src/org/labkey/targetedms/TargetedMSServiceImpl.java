@@ -16,12 +16,18 @@
 package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.data.TableInfo;
+import org.labkey.api.exp.ExperimentRunType;
+import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.targetedms.IModification;
 import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.targetedms.SkylineDocumentImportListener;
 import org.labkey.api.targetedms.SkylineAnnotation;
+import org.labkey.api.targetedms.TargetedMSFolderTypeListener;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
+import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
 import java.util.ArrayList;
@@ -37,6 +43,7 @@ import java.util.Map;
 public class TargetedMSServiceImpl implements TargetedMSService
 {
     private List<SkylineDocumentImportListener> _skylineDocumentImportListeners = new ArrayList<>();
+    private List<TargetedMSFolderTypeListener> _targetedMsFolderTypeListeners = new ArrayList<>();
 
     @Override
     public ITargetedMSRun getRun(int runId, Container container)
@@ -89,5 +96,65 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public FolderType getFolderType(Container container)
     {
         return TargetedMSManager.getFolderType(container);
+    }
+
+    @Override
+    public TableInfo getTableInfoRuns()
+    {
+        return TargetedMSManager.getTableInfoRuns();
+    }
+
+    @Override
+    public TableInfo getTableInfoPeptideGroup()
+    {
+        return TargetedMSManager.getTableInfoPeptideGroup();
+    }
+
+    @Override
+    public List<String> getSampleFilePaths(int runId)
+    {
+        return ReplicateManager.getSampleFilePaths(runId);
+    }
+
+    @Override
+    public List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(int runId)
+    {
+        return ModificationManager.getStructuralModificationsUsedInRun(runId);
+    }
+
+    @Override
+    public List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(int runId)
+    {
+        return ModificationManager.getIsotopeModificationsUsedInRun(runId);
+    }
+
+    @Override
+    public ITargetedMSRun getRunByLsid(String lsid, Container container)
+    {
+        return TargetedMSManager.getRunByLsid(lsid, container);
+    }
+
+    @Override
+    public ExperimentRunType getExperimentRunType()
+    {
+        return TargetedMSModule.EXP_RUN_TYPE;
+    }
+
+    @Override
+    public UserSchema getUserSchema(User user, Container c)
+    {
+        return new TargetedMSSchema(user, c);
+    }
+
+    @Override
+    public void registerTargetedMSFolderTypeListener(TargetedMSFolderTypeListener listener)
+    {
+        _targetedMsFolderTypeListeners.add(listener);
+    }
+
+    @Override
+    public List<TargetedMSFolderTypeListener> getTargetedMSFolderTypeListeners()
+    {
+        return _targetedMsFolderTypeListeners;
     }
 }

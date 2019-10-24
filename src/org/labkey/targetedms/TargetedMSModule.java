@@ -39,7 +39,6 @@ import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.protein.ProteomicsModule;
 import org.labkey.api.security.permissions.AdminPermission;
-import org.labkey.api.security.roles.RoleManager;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.usageMetrics.UsageMetricsService;
@@ -49,7 +48,6 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.BaseWebPartFactory;
 import org.labkey.api.view.JspView;
 import org.labkey.api.view.Portal;
-import org.labkey.api.view.ShortURLService;
 import org.labkey.api.view.ViewContext;
 import org.labkey.api.view.WebPartFactory;
 import org.labkey.api.view.WebPartView;
@@ -57,14 +55,10 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogParser;
-import org.labkey.targetedms.pipeline.CopyExperimentPipelineProvider;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
-import org.labkey.targetedms.proteomexchange.SubmissionDataValidator;
-import org.labkey.targetedms.query.JournalManager;
 import org.labkey.targetedms.query.SkylineListSchema;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.search.ProteinSearchWebPart;
-import org.labkey.targetedms.security.CopyTargetedMSExperimentRole;
 import org.labkey.targetedms.view.LibraryPrecursorViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
 import org.labkey.targetedms.view.PeptideViewWebPart;
@@ -72,8 +66,6 @@ import org.labkey.targetedms.view.QCSummaryWebPart;
 import org.labkey.targetedms.view.TargetedMSRunsWebPartView;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
-import org.labkey.targetedms.view.expannotations.TargetedMSExperimentWebPart;
-import org.labkey.targetedms.view.expannotations.TargetedMSExperimentsWebPart;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -85,10 +77,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
+import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
+
 public class TargetedMSModule extends SpringModule implements ProteomicsModule
 {
-    public static final String NAME = "TargetedMS";
-
     // Protocol prefix for importing .sky documents from Skyline
     public static final String IMPORT_SKYDOC_PROTOCOL_OBJECT_PREFIX = "TargetedMS.ImportSky";
     // Protocol prefix for importing .zip archives from Skyline
@@ -126,7 +119,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
     public static final String[] QC_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_QC_SUMMARY, TARGETED_MS_QC_PLOTS};
 
-    public static final String TARGETED_MS_FOLDER_TYPE = "TargetedMS Folder Type";
     public static ModuleProperty FOLDER_TYPE_PROPERTY;
     public static ModuleProperty SKIP_CHROMATOGRAM_IMPORT_PROPERTY;
     public static ModuleProperty PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY;
@@ -141,7 +133,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
 
     public TargetedMSModule()
     {
-        FOLDER_TYPE_PROPERTY = new ModuleProperty(this, TARGETED_MS_FOLDER_TYPE);
+        FOLDER_TYPE_PROPERTY = new ModuleProperty(this, FOLDER_TYPE_PROP_NAME);
         // Set up the TargetedMS Folder Type property
         FOLDER_TYPE_PROPERTY.setDefaultValue(TargetedMSService.FolderType.Undefined.toString());
         FOLDER_TYPE_PROPERTY.setCanSetPerContainer(true);
@@ -203,7 +195,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public String getName()
     {
-        return NAME;
+        return MODULE_NAME;
     }
 
     @Override
@@ -317,30 +309,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             {
                 Container container = portalCtx.getContainer();
                 TargetedMSController.ModificationSearchForm form = TargetedMSController.ModificationSearchForm.createDefault();
-                if(JournalManager.isJournalProject(container))
-                {
-                    // If this is journal project (e.g. Panorama Public), include sub-folders in search, and show the experiment title column in the results.
-                    form.setIncludeSubfolders(true);
-                    form.setJournalSearch(true);
-                }
                 return new ModificationSearchWebPart(form);
-            }
-        };
-
-        BaseWebPartFactory experimentAnnotationsListFactory = new BaseWebPartFactory(TargetedMSExperimentsWebPart.WEB_PART_NAME)
-        {
-            @Override
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                return new TargetedMSExperimentsWebPart(portalCtx);
-            }
-        };
-
-        BaseWebPartFactory containerExperimentFactory = new BaseWebPartFactory(TargetedMSExperimentWebPart.WEB_PART_NAME)
-        {
-            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
-            {
-                return new TargetedMSExperimentWebPart(portalCtx);
             }
         };
 
@@ -386,8 +355,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         webpartFactoryList.add(proteinSearchFactory);
         webpartFactoryList.add(peptideSearchFactory);
         webpartFactoryList.add(modificationSearchFactory);
-        webpartFactoryList.add(experimentAnnotationsListFactory);
-        webpartFactoryList.add(containerExperimentFactory);
         webpartFactoryList.add(qcPlotsFactory);
         webpartFactoryList.add(qcSummaryFactory);
         webpartFactoryList.add(paretoPlotFactory);
@@ -418,7 +385,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         UsageMetricsService svc = UsageMetricsService.get();
         if (null != svc)
         {
-            svc.registerUsageMetrics(UsageReportingLevel.MEDIUM, NAME, () ->
+            svc.registerUsageMetrics(UsageReportingLevel.MEDIUM, MODULE_NAME, () ->
             {
                 Map<String, Object> metric = new HashMap<>();
                 metric.put("runCount", new SqlSelector(DbSchema.get("TargetedMS", DbSchemaType.Module), "SELECT COUNT(*) FROM TargetedMS.Runs WHERE Deleted = ?", Boolean.FALSE).getObject(Long.class));
@@ -433,7 +400,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     {
         PipelineService service = PipelineService.get();
         service.registerPipelineProvider(new TargetedMSPipelineProvider(this));
-        service.registerPipelineProvider(new CopyExperimentPipelineProvider(this));
 
         ExperimentService.get().registerExperimentDataHandler(new TargetedMSDataHandler());
         ExperimentService.get().registerExperimentDataHandler(new SkylineBinaryDataHandler());
@@ -462,18 +428,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         AuditLogService.get().registerAuditType(new TargetedMsRepresentativeStateAuditProvider());
 
         TargetedMSListener listener = new TargetedMSListener();
-        ExperimentService.get().addExperimentListener(listener);
         ContainerManager.addContainerListener(listener);
-
-        ShortURLService shortUrlService = ShortURLService.get();
-        shortUrlService.addListener(listener);
-
-        // Register the CopyExperimentRole
-        RoleManager.registerRole(new CopyTargetedMSExperimentRole());
-
-		// Add a link in the admin console to manage journals.
-		ActionURL journalsURL = new ActionURL(PublishTargetedMSExperimentsController.JournalGroupsAdminViewAction.class, ContainerManager.getRoot());
-        AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "Targeted MS Journal Groups", journalsURL, AdminPermission.class);
 
 		ActionURL chromatogramURL = new ActionURL(TargetedMSController.ChromatogramCrawlerAction.class, ContainerManager.getRoot());
         AdminConsole.addLink(AdminConsole.SettingsLinkType.Configuration, "Targeted MS Chromatogram Crawler", chromatogramURL, AdminPermission.class);
@@ -512,7 +467,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public Set<Class> getIntegrationTests()
     {
         return Set.of(
-                PublishTargetedMSExperimentsController.TestCase.class,
                 SkylineAuditLogManager.TestCase.class
         );
     }
@@ -526,7 +480,6 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         set.add(ComparisonCategory.TestCase.class);
         set.add(ReplicateLabelMinimizer.TestCase.class);
         set.add(SkylineAuditLogParser.TestCase.class);
-        set.add(SubmissionDataValidator.TestCase.class);
         return set;
 
     }
@@ -550,7 +503,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         }
         if (targetedMSModule != null)
         {
-            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(TARGETED_MS_FOLDER_TYPE);
+            ModuleProperty moduleProperty = targetedMSModule.getModuleProperties().get(FOLDER_TYPE_PROP_NAME);
             return TargetedMSService.FolderType.valueOf(moduleProperty.getValueContainerSpecific(container));
         }
 
