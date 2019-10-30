@@ -1,0 +1,17 @@
+Protein,Peptide,PeptideModifiedSequence,Slope,Intercept,PointCount,QuadraticCoefficient,RSquared,ErrorMessage
+Clozapine,Clozapine-Drug1,,8.0799780023057169E-05,0.00016694878657426006,10,#N/A,0.99130195259802889,
+Clozapine,IS-Imipramine,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Clozapine,IS-Labetalol,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Alprenolol,Alprenolol-Drug2,,1.3847323399044413E-05,9.5570493188321164E-05,10,#N/A,0.9962732610378251,
+Alprenolol,IS-Labetalol,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Alprenolol,IS-Imipramine,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Ritonavir,Ritonavir-Drug3,,8.8590037188235714E-06,2.0616317468493619E-05,10,#N/A,0.99899419112924859,
+Ritonavir,IS-Labetalol,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Ritonavir,IS-Imipramine,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Ritonavir,IS-Diclofenac,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Tamoxifen,Tamoxifen-Drug4,,2.876155554561428E-05,0.00010995732718169464,10,#N/A,0.99928500207869664,
+Tamoxifen,IS-Labetalol,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Tamoxifen,IS-Imipramine,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Warfarin,Warfarin-Drug5,,2.2640032883864614E-05,0.00033915010700439089,10,#N/A,0.99680776859582643,
+Warfarin,IS-Labetalol,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.
+Warfarin,IS-Imipramine,,#N/A,#N/A,#N/A,#N/A,#N/A,All of the external standards are missing one or more peaks.

@@ -203,6 +203,7 @@ public class RunQuantifier
             }
             CalibrationCurveDataSet.Replicate replicateData = calibrationCurveDataSet.addReplicate(
                     SampleType.fromName(replicate.getSampleType()), moleculeConcentration,
+                    replicate.getSampleDilutionFactorOrOne(),
                     excludedReplicateIds.contains(replicate.getId()));
             calibrationCurveReplicates.put(replicate.getId(), replicateData);
             generalMoleculeResultDataSet.addFeatureData(replicate, replicateData, quantificationSettings.getMsLevel(),
@@ -223,7 +224,7 @@ public class RunQuantifier
                 CalibrationCurveDataSet.Replicate calibrationCurveReplicate = calibrationCurveReplicates.get(replicate.getId());
                 Double calculatedConcentration = calibrationCurveDataSet.getCalculatedConcentration(
                         isotopeLabel.getName(), calibrationCurve, calibrationCurveReplicate);
-                if (calculatedConcentration != null)
+                if (calculatedConcentration != null && Double.isFinite(calculatedConcentration))
                 {
                     generalMoleculeChromInfo.setCalculatedConcentration(calculatedConcentration);
                     modifiedChromInfos.add(generalMoleculeChromInfo);

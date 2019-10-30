@@ -25,8 +25,8 @@ public class CalibrationCurveDataSet {
     private RegressionWeighting regressionWeighting = RegressionWeighting.NONE;
     private List<Replicate> replicates = new ArrayList<>();
 
-    public Replicate addReplicate(SampleType sampleType, Double analyteConcentration, boolean excludeFromCalibration) {
-        Replicate replicate = new Replicate(sampleType, analyteConcentration, excludeFromCalibration);
+    public Replicate addReplicate(SampleType sampleType, Double analyteConcentration, double sampleDilutionFactor, boolean excludeFromCalibration) {
+        Replicate replicate = new Replicate(sampleType, analyteConcentration, sampleDilutionFactor, excludeFromCalibration);
         replicates.add(replicate);
         return replicate;
     }
@@ -108,7 +108,7 @@ public class CalibrationCurveDataSet {
         if (y == null) {
             return null;
         }
-        return calibrationCurve.getX(y);
+        return calibrationCurve.getX(y) * replicate.getSampleDilutionFactor();
     }
 
     /**
@@ -117,10 +117,12 @@ public class CalibrationCurveDataSet {
     public class Replicate extends ReplicateData {
         private SampleType sampleType;
         private Double analyteConcentration;
+        private double sampleDilutionFactor;
         private boolean excludeFromCalibration;
-        public Replicate(SampleType sampleType, Double analyteConcentration, boolean excludeFromCalibration) {
+        public Replicate(SampleType sampleType, Double analyteConcentration, double sampleDilutionFactor, boolean excludeFromCalibration) {
             this.sampleType = sampleType;
             this.analyteConcentration = analyteConcentration;
+            this.sampleDilutionFactor = sampleDilutionFactor;
             this.excludeFromCalibration = excludeFromCalibration;
         }
 
@@ -129,7 +131,12 @@ public class CalibrationCurveDataSet {
         }
 
         public Double getAnalyteConcentration() {
-            return analyteConcentration;
+            return analyteConcentration / sampleDilutionFactor;
+        }
+
+        public double getSampleDilutionFactor()
+        {
+            return sampleDilutionFactor;
         }
 
         public boolean isExcludeFromCalibration()

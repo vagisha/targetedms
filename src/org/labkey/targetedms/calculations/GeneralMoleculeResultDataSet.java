@@ -199,7 +199,7 @@ public class GeneralMoleculeResultDataSet
             }
             TransitionAreas transitionAreas = replicateData.ensureResultFileData().getTransitionAreas(record.getLabel());
             double normalizationFactor = normalizationFactors.getNormalizationFactor(record.getTransitionChromInfo().getSampleFileId());
-            double area = Math.max(1.0, record.getTransitionChromInfo().getArea()) * normalizationFactor;
+            double area = record.getTransitionChromInfo().getArea() * normalizationFactor;
             transitionAreas = transitionAreas.setArea(record.getFeatureName(), area);
             replicateData.ensureResultFileData().setTransitionAreas(record.getLabel(), transitionAreas);
         }

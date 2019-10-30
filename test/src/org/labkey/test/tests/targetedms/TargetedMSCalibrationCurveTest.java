@@ -23,6 +23,8 @@ import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
 import org.labkey.remoteapi.query.UpdateRowsCommand;
+import org.labkey.remoteapi.query.ExecuteSqlCommand;
+import org.labkey.remoteapi.query.SelectRowsResponse;
 import org.labkey.serverapi.reader.TabLoader;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
@@ -44,11 +46,14 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -71,7 +76,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     }
 
     @Test
-    public void testMergeDocumentsScenario()
+    public void testMergeDocumentsScenario() throws Exception
     {
         FiguresOfMerit fom = new FiguresOfMerit("VIFDANAPVAVR");
         fom.setLoq("1.0");
@@ -86,7 +91,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     }
 
     @Test
-    public void testCalibrationScenario()
+    public void testCalibrationScenario() throws Exception
     {
         FiguresOfMerit fom = new FiguresOfMerit("VIFDANAPVAVR");
         fom.setLoq("0.05");
@@ -101,12 +106,13 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
     }
 
     @Test
-    public void testCalibrationExcludeScenario() {
+    public void testCalibrationExcludeScenario() throws Exception
+    {
         runScenario("CalibrationExcludedTest", "none", null);
     }
 
     @Test
-    public void testP180Scenario()
+    public void testP180Scenario() throws Exception
     {
         FiguresOfMerit fom = new FiguresOfMerit("Gly");
         fom.setLoq("500.0");
@@ -117,6 +123,12 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         fom.setCalc("Blank plus 2 * SD");
 
         runScenario("p180test_calibration_DukeApril2016", "1/x", fom);
+    }
+
+    @Test
+    public void testDilutionFactorScenario() throws Exception
+    {
+        runScenario("DilutionFactorTest", "1/(x*x)", null);
     }
 
     @Test
@@ -595,10 +607,11 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         assertTrue("Empty pdf downloaded [" + file.getName() + "]", file.length() > 0);
     }
 
-    private void runScenario(String scenario, String expectedWeighting, @Nullable FiguresOfMerit fom)
+    private void runScenario(String scenario, String expectedWeighting, @Nullable FiguresOfMerit fom) throws Exception
     {
         setupSubfolder(getProjectName(), scenario, FolderType.Experiment);
         importData(SAMPLEDATA_FOLDER + scenario + ".sky.zip");
+        testCalculatedConcentrations(scenario);
         List<Map<String, Object>> allCalibrationCurves = readScenarioCsv(scenario, "CalibrationCurves");
         assertFalse("No calibration curves found for scenario '" + scenario + "', check sample data.", allCalibrationCurves.isEmpty());
 
@@ -610,7 +623,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             if (smallMolecule)
             {
                 expected = allCalibrationCurves.stream()
-                        .filter(row -> "#N/A".equals(row.get("PeptideModifiedSequence")))
+                        .filter(row -> isValueMissing(row.get("PeptideModifiedSequence")))
                         .collect(Collectors.toList());
                 if (expected.isEmpty())
                 {
@@ -621,7 +634,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             else
             {
                 expected = allCalibrationCurves.stream()
-                        .filter(row -> !"#N/A".equals(row.get("PeptideModifiedSequence")))
+                        .filter(row -> !isValueMissing(row.get("PeptideModifiedSequence")))
                         .collect(Collectors.toList());
                 if (expected.isEmpty())
                 {
@@ -776,5 +789,82 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
             tabLoader.parseAsCSV();
             return tabLoader.load();
         }
+    }
+
+    private void testCalculatedConcentrations(String scenario) throws Exception
+    {
+        String query = "SELECT COALESCE(generalmoleculechrominfo.PeptideId.Sequence, \n" +
+                "generalmoleculechrominfo.MoleculeId.Molecule) AS Peptide, \n" +
+                "generalmoleculechrominfo.SampleFileId.ReplicateId.Name AS Replicate, \n" +
+                "generalmoleculechrominfo.CalculatedConcentration, \n" +
+                "generalmoleculechrominfo.SampleFileId.ReplicateId.RunId.FileName\n" +
+                "FROM generalmoleculechrominfo";
+        ExecuteSqlCommand sc = new ExecuteSqlCommand("targetedms");
+        sc.setSql(query);
+        SelectRowsResponse resp = sc.execute(createDefaultConnection(true), getProjectName() + "/" + scenario);
+        List<Map<String, Object>> expectedRows = readScenarioCsv(scenario, "PeptideResultQuantification");
+        for (Map<String, Object> expectedRow : expectedRows)
+        {
+            String peptide = (String) expectedRow.get("Peptide");
+            String replicate = (String) expectedRow.get("Replicate");
+            if (replicate == null)
+            {
+                continue;
+            }
+            String message = "Peptide:" + peptide + " Replicate:" + replicate;
+            Optional<Map<String, Object>> optional = resp.getRows().stream().filter(
+                    row->peptide.equals(row.get("Peptide")) && replicate.equals(row.get("Replicate")))
+                    .findFirst();
+            assertTrue(message, optional.isPresent());
+            Map<String, Object> actualRow = optional.get();
+            Double expectedConcentration = parseOptionalDouble((String)expectedRow.get("CalculatedConcentration"));
+            Double actualConcentration = toDouble(actualRow.get("CalculatedConcentration"));
+            if (expectedConcentration != null)
+            {
+                if (Double.isInfinite(expectedConcentration) || Double.isNaN(expectedConcentration))
+                {
+                    assertTrue(actualConcentration == null || Double.isNaN(actualConcentration) || Double.isInfinite(actualConcentration));
+                }
+                else
+                {
+                    assertNotNull(message, actualConcentration);
+                    assertEquals(message, expectedConcentration, actualConcentration, getDelta(expectedConcentration));
+                }
+            }
+            else
+            {
+                assertNull(message, actualConcentration);
+            }
+        }
+    }
+
+    private Double parseOptionalDouble(String value)
+    {
+        if (value == null || "".equals(value) || "#N/A".equals(value))
+        {
+            return null;
+        }
+        return Double.parseDouble(value);
+    }
+
+    private Double toDouble(Object value)
+    {
+        if (value == null)
+        {
+            return null;
+        }
+        if (value instanceof String)
+        {
+            return parseOptionalDouble((String) value);
+        }
+        return (Double) value;
+    }
+
+    /**
+     * Returns true if the value is either null or "#N/A".
+     */
+    private boolean isValueMissing(Object value)
+    {
+        return null == value || "#N/A".equals(value);
     }
 }

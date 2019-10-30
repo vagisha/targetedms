@@ -114,4 +114,10 @@ public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
     {
         _sampleDilutionFactor = sampleDilutionFactor;
     }
+
+    public double getSampleDilutionFactorOrOne()
+    {
+        Double dilutionFactor = getSampleDilutionFactor();
+        return dilutionFactor == null ? 1.0 : dilutionFactor;
+    }
 }
