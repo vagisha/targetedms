@@ -613,7 +613,7 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn(result.getRealTable().getColumn("ExperimentRunLSID"));
                 result.addWrapColumn(result.getRealTable().getColumn("Status"));
                 var stateColumn = result.addWrapColumn(result.getRealTable().getColumn("RepresentativeDataState"));
-                stateColumn.setFk(new QueryForeignKey(TargetedMSSchema.this, null, TABLE_REPRESENTATIVE_DATA_STATE_RUN, "RowId", null));
+                stateColumn.setFk(QueryForeignKey.from(TargetedMSSchema.this, cf).to(TABLE_REPRESENTATIVE_DATA_STATE_RUN, "RowId", null));
 
                 var downloadLinkColumn = result.addWrapColumn("Download", result.getRealTable().getColumn("Id"));
                 downloadLinkColumn.setKeyField(false);
@@ -961,8 +961,8 @@ public class TargetedMSSchema extends UserSchema
                 labelColumn.setLabel(TargetedMSSchema.COL_LIST);
                 result.getMutableColumn("SequenceId").setHidden(true);
             }
-            result.getMutableColumn("RunId").setFk(new QueryForeignKey(this, null, TABLE_TARGETED_MS_RUNS, "File", null));
-            result.getMutableColumn("RepresentativeDataState").setFk(new QueryForeignKey(this, null, TargetedMSSchema.TABLE_REPRESENTATIVE_DATA_STATE, "RowId", null));
+            result.getMutableColumn("RunId").setFk(QueryForeignKey.from(this, cf).to(TABLE_TARGETED_MS_RUNS, "File", null));
+            result.getMutableColumn("RepresentativeDataState").setFk(QueryForeignKey.from(this, cf).to(TargetedMSSchema.TABLE_REPRESENTATIVE_DATA_STATE, "RowId", null));
             result.getMutableColumn("RepresentativeDataState").setHidden(true);
 
             // Create a WrappedColumn for Note & Annotations
@@ -1233,8 +1233,8 @@ public class TargetedMSSchema extends UserSchema
             result.wrapAllColumns(true);
             if (name.equalsIgnoreCase(TABLE_RUNS))
             {
-                result.getMutableColumn("DataId").setFk(new QueryForeignKey(_expSchema, null, ExpSchema.TableType.Data.name(), null, null));
-                result.getMutableColumn("SkydDataId").setFk(new QueryForeignKey(_expSchema, null, ExpSchema.TableType.Data.name(), null, null));
+                result.getMutableColumn("DataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
+                result.getMutableColumn("SkydDataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
             }
             return result;
         }
