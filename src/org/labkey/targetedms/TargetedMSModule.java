@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.audit.AuditLogService;
@@ -307,8 +308,22 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         {
             public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
-                Container container = portalCtx.getContainer();
                 TargetedMSController.ModificationSearchForm form = TargetedMSController.ModificationSearchForm.createDefault();
+                // When rendering a webpart with LABKEY.WebPart in a wiki page, config.partConfig can be used to set the
+                // configuration parameters for the webpart. Read the parameters from the ViewContext and initialize the
+                // form accordingly.
+                // For example, partConfig: {hideIncludeSubfolder: true, includeSubfolders: true} should hide the
+                // "includeSubfolders" checkbox and set the value of "includeSubfolders" to true.
+                String inclSubFolders = (String)portalCtx.get("includeSubfolders");
+                if(!StringUtils.isBlank(inclSubFolders))
+                {
+                    form.setIncludeSubfolders(Boolean.valueOf(inclSubFolders));
+                }
+                String hideIncludeSubfolder = (String)portalCtx.get("hideIncludeSubfolder");
+                if(!StringUtils.isBlank(hideIncludeSubfolder))
+                {
+                    form.setHideIncludeSubfolders(Boolean.valueOf(hideIncludeSubfolder));
+                }
                 return new ModificationSearchWebPart(form);
             }
         };

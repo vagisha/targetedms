@@ -16,6 +16,7 @@
 package org.labkey.api.targetedms;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.query.UserSchema;
@@ -70,7 +71,17 @@ public interface TargetedMSService
     UserSchema getUserSchema( User user, Container c);
     TableInfo getTableInfoRuns();
     TableInfo getTableInfoPeptideGroup();
+    TableInfo getTableInfoGeneralMolecule();
     List<String> getSampleFilePaths(int runId);
     List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(int runId);
     List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(int runId);
+
+    // Add table customizers for the protein / peptide / modification search results
+    void addProteinSearchResultCustomizer(TableCustomizer customizer);
+    List<TableCustomizer> getProteinSearchResultCustomizer();
+    void addPeptideSearchResultCustomizers(TableCustomizer customizer);
+    List<TableCustomizer> getPeptideSearchResultCustomizers();
+    void addModificationSearchResultCustomizer(TableCustomizer columnInfo);
+    List<TableCustomizer> getModificationSearchResultCustomizers();
+
 }

@@ -19,12 +19,14 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.module.ModuleLoader;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
+import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSSchema;
@@ -81,6 +83,12 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
                     visibleColumns.add(FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));
                 }
                 result.setDefaultVisibleColumns(visibleColumns);
+
+                List<TableCustomizer> customizers = TargetedMSService.get().getPeptideSearchResultCustomizers();
+                for(TableCustomizer customizer : customizers)
+                {
+                    customizer.customize(result);
+                }
 
                 return result;
             }

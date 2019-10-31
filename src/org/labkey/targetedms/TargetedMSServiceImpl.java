@@ -16,6 +16,7 @@
 package org.labkey.targetedms;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.ExperimentRunType;
 import org.labkey.api.query.UserSchema;
@@ -30,10 +31,11 @@ import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * User: vsharma
@@ -42,8 +44,14 @@ import java.util.Map;
  */
 public class TargetedMSServiceImpl implements TargetedMSService
 {
-    private List<SkylineDocumentImportListener> _skylineDocumentImportListeners = new ArrayList<>();
-    private List<TargetedMSFolderTypeListener> _targetedMsFolderTypeListeners = new ArrayList<>();
+    // CopyOnWriteArrayList is a thread-safe variant of ArrayList in which all mutative operations (add, set, and so on)
+    // are implemented by making a fresh copy of the underlying array.
+    private List<SkylineDocumentImportListener> _skylineDocumentImportListeners = new CopyOnWriteArrayList<>();
+    private List<TargetedMSFolderTypeListener> _targetedMsFolderTypeListeners = new CopyOnWriteArrayList<>();
+
+    private List<TableCustomizer> _peptideSearchCustomizers = new CopyOnWriteArrayList<>();
+    private List<TableCustomizer> _proteinSearchCustomizers = new CopyOnWriteArrayList<>();
+    private List<TableCustomizer> _modificationSearchCustomizers = new CopyOnWriteArrayList<>();
 
     @Override
     public ITargetedMSRun getRun(int runId, Container container)
@@ -83,7 +91,7 @@ public class TargetedMSServiceImpl implements TargetedMSService
     @Override
     public List<SkylineDocumentImportListener> getSkylineDocumentImportListener()
     {
-        return _skylineDocumentImportListeners;
+        return Collections.unmodifiableList(_skylineDocumentImportListeners);
     }
 
     @Override
@@ -108,6 +116,12 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public TableInfo getTableInfoPeptideGroup()
     {
         return TargetedMSManager.getTableInfoPeptideGroup();
+    }
+
+    @Override
+    public TableInfo getTableInfoGeneralMolecule()
+    {
+        return TargetedMSManager.getTableInfoGeneralMolecule();
     }
 
     @Override
@@ -155,6 +169,45 @@ public class TargetedMSServiceImpl implements TargetedMSService
     @Override
     public List<TargetedMSFolderTypeListener> getTargetedMSFolderTypeListeners()
     {
-        return _targetedMsFolderTypeListeners;
+        return Collections.unmodifiableList(_targetedMsFolderTypeListeners);
+    }
+
+    @Override
+    public void addProteinSearchResultCustomizer(TableCustomizer customizer)
+    {
+        if(customizer == null) return;
+        _proteinSearchCustomizers.add(customizer);
+    }
+
+    @Override
+    public List<TableCustomizer> getProteinSearchResultCustomizer()
+    {
+        return Collections.unmodifiableList(_proteinSearchCustomizers);
+    }
+
+    @Override
+    public void addPeptideSearchResultCustomizers(TableCustomizer customizer)
+    {
+        if(customizer == null) return;
+        _peptideSearchCustomizers.add(customizer);
+    }
+
+    @Override
+    public List<TableCustomizer> getPeptideSearchResultCustomizers()
+    {
+        return Collections.unmodifiableList(_peptideSearchCustomizers);
+    }
+
+    @Override
+    public void addModificationSearchResultCustomizer(TableCustomizer customizer)
+    {
+        if(customizer == null) return;
+        _modificationSearchCustomizers.add(customizer);
+    }
+
+    @Override
+    public List<TableCustomizer> getModificationSearchResultCustomizers()
+    {
+        return Collections.unmodifiableList(_modificationSearchCustomizers);
     }
 }

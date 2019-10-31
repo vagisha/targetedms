@@ -357,7 +357,7 @@
                     name: 'includeSubfolders',
                     fieldLabel: 'Search in subfolders',
                     inputValue: true,
-                    <%if(bean.getForm().isJournalSearch()){%>hidden: true,<%}%> // Do not show the checkbox if we are searching in a journal project e.g. Panorama Public
+                    <%if(bean.getForm().isHideIncludeSubfolders()){%>hidden: true,<%}%> // Do not show the checkbox if we are searching in a journal project e.g. Panorama Public
                     checked: <%=bean.getForm().isIncludeSubfolders()%>,
                     listeners: {
                         change: function(cb, newValue) {
@@ -369,8 +369,8 @@
                 },
                 {
                     xtype: 'hidden',
-                    name: 'journalSearch',
-                    value: <%=bean.getForm().isJournalSearch()%>
+                    name: 'hideIncludeSubfolders',
+                    value: <%=bean.getForm().isHideIncludeSubfolders()%>
                 }
             ],
             buttonAlign: 'left',

@@ -4949,6 +4949,13 @@ public class TargetedMSController extends SpringActionController
                     }
                     result.setDefaultVisibleColumns(visibleColumns);
                     result.setName("Precursor");
+
+                    List<TableCustomizer> customizers = TargetedMSService.get().getModificationSearchResultCustomizers();
+                    for(TableCustomizer customizer : customizers)
+                    {
+                        customizer.customize(result);
+                    }
+
                     return result;
                 }
             };
@@ -4978,7 +4985,7 @@ public class TargetedMSController extends SpringActionController
         private Double _deltaMass;
         private boolean _includeSubfolders;
         private String _modSearchPairsStr;
-        private boolean _journalSearch;
+        private boolean _hideIncludeSubfolders; // Hide or show the includeSubfolders checkbox
 
         public static ModificationSearchForm createDefault()
         {
@@ -5187,14 +5194,14 @@ public class TargetedMSController extends SpringActionController
             _modSearchPairsStr = modSearchPairsStr;
         }
 
-        public boolean isJournalSearch()
+        public boolean isHideIncludeSubfolders()
         {
-            return _journalSearch;
+            return _hideIncludeSubfolders;
         }
 
-        public void setJournalSearch(boolean journalSearch)
+        public void setHideIncludeSubfolders(boolean hideIncludeSubfolders)
         {
-            _journalSearch = journalSearch;
+            _hideIncludeSubfolders = hideIncludeSubfolders;
         }
     }
 
