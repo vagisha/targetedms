@@ -33,6 +33,7 @@ import org.labkey.api.data.DbScope;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.Table;
@@ -2008,20 +2009,49 @@ public class TargetedMSManager
 
     public List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user)
     {
-        String sql = "SELECT Id, " +
-                        "Name, " +
-                        "Series1Label, " +
-                        "Series1SchemaName, " +
-                        "Series1QueryName, " +
-                        "Series2Label, " +
-                        "Series2SchemaName, " +
-                        "Series2QueryName, " +
-                        "PrecursorScoped " +
-                      "FROM qcMetricsConfig " +
-                      "WHERE Enabled = TRUE ";
-
-        QuerySchema query = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
-        return QueryService.get().selector(query, sql).getArrayList(QCMetricConfiguration.class);
+        QuerySchema targetedMSSchema = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
+        TableInfo metricsTable = targetedMSSchema.getTable("qcMetricsConfig", null);
+        List<QCMetricConfiguration> metrics = new TableSelector(metricsTable, new SimpleFilter(FieldKey.fromParts("Enabled"), false, CompareType.NEQ_OR_NULL), new Sort(FieldKey.fromParts("Name"))).getArrayList(QCMetricConfiguration.class);
+        List<QCMetricConfiguration> result = new ArrayList<>();
+        for (QCMetricConfiguration metric : metrics)
+        {
+            if (metric.getEnabled() == null)
+            {
+                if (metric.getEnabledQueryName() == null || metric.getEnabledSchemaName() == null)
+                {
+                    // Metrics without a query to define their default enabled status are on by default
+                    result.add(metric);
+                }
+                else
+                {
+                    QuerySchema enabledSchema = TargetedMSSchema.SCHEMA_NAME.equalsIgnoreCase(metric.getEnabledSchemaName()) ? targetedMSSchema : DefaultSchema.get(user, container).getSchema(metric.getEnabledSchemaName());
+                    if (enabledSchema != null)
+                    {
+                        TableInfo enabledQuery = enabledSchema.getTable(metric.getEnabledQueryName(), null);
+                        if (enabledQuery != null)
+                        {
+                            if (new TableSelector(enabledQuery).exists())
+                            {
+                                result.add(metric);
+                            }
+                        }
+                        else
+                        {
+                            _log.warn("Could not find query " + metric.getEnabledSchemaName() + "." + metric.getEnabledQueryName() + " to determine if metric " + metric.getName() + " should be enabled in container " + container.getPath());
+                        }
+                    }
+                    else
+                    {
+                        _log.warn("Could not find schema " + metric.getEnabledSchemaName() + " to determine if metric " + metric.getName() + " should be enabled in container " + container.getPath());
+                    }
+                }
+            }
+            else
+            {
+                result.add(metric);
+            }
+        }
+        return result;
     }
 
     public Map<String, SampleFileInfo> getSampleFiles(Container container, User user, Integer sampleFileLimit)

@@ -28,6 +28,9 @@ public class QCMetricConfiguration
     private String _series2SchemaName;
     private String _series2QueryName;
     private boolean _precursorScoped;
+    private String _enabledQueryName;
+    private String _enabledSchemaName;
+    private Boolean _enabled;
 
     public int getId()
     {
@@ -118,6 +121,36 @@ public class QCMetricConfiguration
         _precursorScoped = precursorScoped;
     }
 
+    public String getEnabledQueryName()
+    {
+        return _enabledQueryName;
+    }
+
+    public void setEnabledQueryName(String enabledQueryName)
+    {
+        _enabledQueryName = enabledQueryName;
+    }
+
+    public Boolean getEnabled()
+    {
+        return _enabled;
+    }
+
+    public void setEnabled(Boolean enabled)
+    {
+        _enabled = enabled;
+    }
+
+    public String getEnabledSchemaName()
+    {
+        return _enabledSchemaName;
+    }
+
+    public void setEnabledSchemaName(String enabledSchemaName)
+    {
+        _enabledSchemaName = enabledSchemaName;
+    }
+
     public JSONObject toJSON(){
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("id", _id);
@@ -134,6 +167,12 @@ public class QCMetricConfiguration
         }
         if(_series2QueryName != null){
             jsonObject.put("series2QueryName",  _series2QueryName);
+        }
+        if(_enabledQueryName != null){
+            jsonObject.put("enabledQueryName", _enabledQueryName);
+        }
+        if(_enabledQueryName != null){
+            jsonObject.put("enabledSchemaName", _enabledSchemaName);
         }
         return jsonObject;
     }

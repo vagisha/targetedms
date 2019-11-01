@@ -904,7 +904,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 id: 'annotation-filter-field',
                 width: 440,
                 height: 150,
-                title: 'Replicate Annotations',
+                title: 'Filter: Replicate Annotations',
                 store: store,
                 rootVisible: false,
                 titleCollapse: true,

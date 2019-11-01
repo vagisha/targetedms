@@ -1470,6 +1470,8 @@
             <column columnName="Series2SchemaName"/>
             <column columnName="Series2QueryName"/>
             <column columnName="PrecursorScoped"/>
+            <column columnName="EnabledQueryName"/>
+            <column columnName="EnabledSchemaName"/>
         </columns>
     </table>
     <table tableName="QCMetricExclusion" tableDbType="TABLE">

@@ -275,7 +275,8 @@ public class TargetedMSQCTest extends TargetedMSTest
         // test that plot0 changes based on metric type
         for (QCPlotsWebPart.MetricType type : QCPlotsWebPart.MetricType.values())
         {
-            if (type != qcPlotsWebPart.getCurrentMetricType())
+            // Skip over metrics that auto-hide when they don't have data
+            if (type.hasData() && type != qcPlotsWebPart.getCurrentMetricType())
             {
                 log("Verify plot type: " + type);
                 initialSVGText = qcPlotsWebPart.getSVGPlotText("tiledPlotPanel-2-precursorPlot0");

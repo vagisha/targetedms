@@ -20,6 +20,7 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.query.DefaultQueryUpdateService;
+import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.security.UserPrincipal;
@@ -38,6 +39,10 @@ public class QCMetricConfigurationTable extends FilteredTable<TargetedMSSchema>
     {
         super(TargetedMSManager.getTableInfoQCMetricConfiguration(), schema, cf);
         wrapAllColumns(true);
+        setInsertURL(LINK_DISABLER);
+        setDeleteURL(LINK_DISABLER);
+        setUpdateURL(LINK_DISABLER);
+        setImportURL(LINK_DISABLER);
     }
 
     @Override
