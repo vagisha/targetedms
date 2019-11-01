@@ -52,7 +52,7 @@ public class LeveyJenningsOutliers extends Outliers
             String schema = qcMetricConfiguration.getSeries1SchemaName();
             String query = qcMetricConfiguration.getSeries1QueryName();
 
-            sqlBuilder.append(sep).append("(").append(getLatestSampleFileStatSql(id, name, label, schema, query, sampleLimit)).append(")");
+            sqlBuilder.append(sep).append("(").append(getLatestSampleFileStatSql(id,"Series1Label", schema, query, sampleLimit)).append(")");
             sep = "\nUNION\n";
 
             if(qcMetricConfiguration.getSeries2SchemaName() != null && qcMetricConfiguration.getSeries2QueryName() != null) {
@@ -60,7 +60,7 @@ public class LeveyJenningsOutliers extends Outliers
                 schema = qcMetricConfiguration.getSeries2SchemaName();
                 query = qcMetricConfiguration.getSeries2QueryName();
 
-                sqlBuilder.append(sep).append("(").append(getLatestSampleFileStatSql(id, name, label, schema, query, sampleLimit)).append(")");
+                sqlBuilder.append(sep).append("(").append(getLatestSampleFileStatSql(id,"Series2Label", schema, query, sampleLimit)).append(")");
                 sep = "\nUNION\n";
             }
         }
@@ -89,19 +89,18 @@ public class LeveyJenningsOutliers extends Outliers
     /**
      *
      * @param id - metricId
-     * @param name - metricName
      * @param label - metricLabel
      * @param schema - schemaName
      * @param query - queryName
      * @return UNION SQL query for the relevant metrics to get the summary info for the last N sample files
      *
      */
-    private static String getLatestSampleFileStatSql(int id, String name, String label, String schema, String query, @Nullable Integer sampleLimit)
+    private static String getLatestSampleFileStatSql(int id, String label, String schema, String query, @Nullable Integer sampleLimit)
     {
         return "SELECT MAX(stats.GuideSetId) AS GuideSetId,"
                 + "\n'" + id + "' AS MetricId,"
-                + "\n'" + name + "' AS MetricName,"
-                + "\n'" + label + "' AS MetricLabel,"
+                + "\n" + "(SELECT name FROM qcmetricconfiguration where id = " + id + ")" + " AS MetricName,"
+                + "\n" + "(SELECT " + label + " FROM qcmetricconfiguration where id = " + id + ")" + " AS MetricLabel,"
                 + "\nX.SampleFile,"
                 + "\nX.AcquiredTime,"
                 + "\nCASE WHEN (exclusion.ReplicateId IS NOT NULL) THEN TRUE ELSE FALSE END AS IgnoreInQC,"

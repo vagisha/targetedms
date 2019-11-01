@@ -55,7 +55,7 @@ public class CUSUMOutliers extends  Outliers
 
     private String getSingleMetricGuideSetRawSql(int metricId, String metricType, String schemaName, String queryName, String series)
     {
-        return  "SELECT s.*, g.Comment, '" +  metricType + "' AS MetricType FROM (" +
+        return  "SELECT s.*, g.Comment, " +  "(SELECT " + metricType + " FROM qcmetricconfiguration where id = " + metricId + ")" + " AS MetricType FROM (" +
                 metricGuideSetRawSql(metricId, schemaName, queryName, null, null, false, series) +
                 ") s" +
                 " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
@@ -69,17 +69,15 @@ public class CUSUMOutliers extends  Outliers
         for(QCMetricConfiguration configuration: configurations)
         {
             int id = configuration.getId();
-            String label = configuration.getSeries1Label();
             String schema1Name = configuration.getSeries1SchemaName();
             String query1Name = configuration.getSeries1QueryName();
-            sqlBuilder.append(sep).append("(").append(getSingleMetricGuideSetRawSql(id, label, schema1Name, query1Name, "series1")).append(")");
+            sqlBuilder.append(sep).append("(").append(getSingleMetricGuideSetRawSql(id, "Series1Label", schema1Name, query1Name, "series1")).append(")");
             sep = "\nUNION\n";
 
             if(configuration.getSeries2SchemaName() != null && configuration.getSeries2QueryName() != null) {
                 String schema2Name = configuration.getSeries2SchemaName();
                 String query2Name = configuration.getSeries2QueryName();
-                label = configuration.getSeries2Label();
-                sqlBuilder.append(sep).append("(").append(getSingleMetricGuideSetRawSql(id, label, schema2Name, query2Name, "series2")).append(")");
+                sqlBuilder.append(sep).append("(").append(getSingleMetricGuideSetRawSql(id, "Series2Label", schema2Name, query2Name, "series2")).append(")");
             }
         }
         return "SELECT * FROM (" + sqlBuilder.toString() + ") a"; //wrap unioned results in sql to support sorting
@@ -89,10 +87,7 @@ public class CUSUMOutliers extends  Outliers
     {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT '").append(type).append("' AS SeriesType, X.SampleFile, ");
-        if(metricType != null)
-        {
-            sb.append("'").append(metricType).append("'").append(" AS MetricType, ");
-        }
+        sb.append("(SELECT " + metricType + " FROM qcmetricconfiguration where id = " + id + ")").append(" AS MetricType, ");
         sb.append("\nX.PrecursorId, X.PrecursorChromInfoId, X.SeriesLabel, X.DataType, X.mz, X.AcquiredTime,"
                 + "\nX.FilePath, X.MetricValue, x.ReplicateId, gs.RowId AS GuideSetId,"
                 + "\nCASE WHEN (exclusion.ReplicateId IS NOT NULL) THEN TRUE ELSE FALSE END AS IgnoreInQC,"
@@ -118,17 +113,15 @@ public class CUSUMOutliers extends  Outliers
         for(QCMetricConfiguration configuration: configurations)
         {
             int id = configuration.getId();
-            String label = configuration.getSeries1Label();
             String schema1Name = configuration.getSeries1SchemaName();
             String query1Name = configuration.getSeries1QueryName();
-            sqlBuilder.append(sep).append("(").append(getEachSeriesTypePlotDataSql("series1", id, schema1Name, query1Name, where, label)).append(")");
+            sqlBuilder.append(sep).append("(").append(getEachSeriesTypePlotDataSql("series1", id, schema1Name, query1Name, where, "Series1Label")).append(")");
             sep = "\nUNION\n";
 
             if(configuration.getSeries2SchemaName() != null && configuration.getSeries2QueryName() != null) {
                 String schema2Name = configuration.getSeries2SchemaName();
                 String query2Name = configuration.getSeries2QueryName();
-                label = configuration.getSeries2Label();
-                sqlBuilder.append(sep).append("(").append(getEachSeriesTypePlotDataSql("series2", id, schema2Name, query2Name, where, label)).append(")");
+                sqlBuilder.append(sep).append("(").append(getEachSeriesTypePlotDataSql("series2", id, schema2Name, query2Name, where, "Series2Label")).append(")");
             }
         }
         return "SELECT * FROM (" + sqlBuilder.toString() + ") a"; //wrap unioned results in sql to support sorting
