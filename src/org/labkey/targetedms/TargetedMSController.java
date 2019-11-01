@@ -124,6 +124,7 @@ import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.parser.SkylineDocumentParser;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
+import org.labkey.targetedms.parser.list.ListDefinition;
 import org.labkey.targetedms.pipeline.ChromatogramCrawlerJob;
 import org.labkey.targetedms.parser.skyaudit.AuditLogEntry;
 import org.labkey.targetedms.query.*;
@@ -3154,11 +3155,12 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    public abstract class AbstractShowRunDetailsAction <VIEWTYPE extends QueryView> extends QueryViewAction<RunDetailsForm, VIEWTYPE>
+    public abstract class AbstractShowRunDetailsAction<FormType extends RunDetailsForm, ViewType extends QueryView>
+            extends QueryViewAction<FormType, ViewType>
     {
         protected TargetedMSRun _run;  // save for use in appendNavTrail
 
-        protected AbstractShowRunDetailsAction(Class<? extends RunDetailsForm> formClass)
+        protected AbstractShowRunDetailsAction(Class<FormType> formClass)
         {
             super(formClass);
         }
@@ -3194,7 +3196,7 @@ public class TargetedMSController extends SpringActionController
     // Action to display a document's transition or precursor list, with both proteomics and small molecule views
     // ------------------------------------------------------------------------
     @RequiresPermission(ReadPermission.class)
-    public abstract class ShowRunSplitDetailsAction<VIEWTYPE extends DocumentView> extends AbstractShowRunDetailsAction<VIEWTYPE>
+    public abstract class ShowRunSplitDetailsAction<VIEWTYPE extends DocumentView> extends AbstractShowRunDetailsAction<RunDetailsForm, VIEWTYPE>
     {
         protected String _dataRegion;
 
@@ -3397,26 +3399,13 @@ public class TargetedMSController extends SpringActionController
     }
 
     @RequiresPermission(ReadPermission.class)
-    public class ShowReplicatesAction extends AbstractShowRunDetailsAction<QueryView>
+    public class ShowReplicatesAction extends ShowRunSingleDetailsAction<RunDetailsForm>
     {
         private static final String DATA_REGION_NAME = "Replicate";
 
         public ShowReplicatesAction()
         {
-            super(RunDetailsForm.class);
-        }
-
-        @Override
-        protected ModelAndView getHtmlView(RunDetailsForm form, BindException errors) throws Exception
-        {
-            WebPartView replicatesView = createInitializedQueryView(form, errors, false, DATA_REGION_NAME);
-            replicatesView.setFrame(WebPartView.FrameType.PORTAL);
-            replicatesView.setTitle("Replicate List");
-
-            VBox vBox = new VBox();
-            vBox.addView(getSummaryView(form, _run));
-            vBox.addView(replicatesView);
-            return vBox;
+            super(RunDetailsForm.class, "Replicate List", "Replicate");
         }
 
         @Override
@@ -3432,34 +3421,115 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    @RequiresPermission(ReadPermission.class)
-    public class ShowSkylineAuditLogAction extends AbstractShowRunDetailsAction<QueryView>
+    public abstract class ShowRunSingleDetailsAction<FormType extends RunDetailsForm> extends AbstractShowRunDetailsAction<FormType, QueryView>
     {
-        private static final String DATA_REGION_NAME = "SkylineAuditLog";
-        private static final String LOG_QUERY_NAME = "AuditLogTraverse";
+        protected String _title;
+        protected final String _dataRegionName;
 
-        public ShowSkylineAuditLogAction()
+        public ShowRunSingleDetailsAction(Class<FormType> formClass, String title, String dataRegionName)
         {
-            super(RunDetailsForm.class);
+            super(formClass);
+            _title = title;
+            _dataRegionName = dataRegionName;
         }
 
         @Override
-        protected ModelAndView getHtmlView(RunDetailsForm form, BindException errors) throws Exception
+        protected ModelAndView getHtmlView(FormType form, BindException errors) throws Exception
         {
-            WebPartView logView = createInitializedQueryView(form, errors, false, DATA_REGION_NAME);
-            logView.setFrame(WebPartView.FrameType.PORTAL);
-            logView.setTitle("Skyline Audit Log");
+            WebPartView replicatesView = createInitializedQueryView(form, errors, false, _dataRegionName);
+            replicatesView.setFrame(WebPartView.FrameType.PORTAL);
+            replicatesView.setTitle(_title);
 
             VBox vBox = new VBox();
             vBox.addView(getSummaryView(form, _run));
-            vBox.addView(logView);
+            vBox.addView(replicatesView);
             return vBox;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowListsAction extends ShowRunSingleDetailsAction<RunDetailsForm>
+    {
+        public ShowListsAction()
+        {
+            super(RunDetailsForm.class, "Skyline Lists", "List");
         }
 
         @Override
         protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
-            QuerySettings settings = new QuerySettings(getViewContext(), DATA_REGION_NAME, LOG_QUERY_NAME);
+            QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, TargetedMSSchema.TABLE_LIST_DEFINITION);
+            settings.setBaseSort(new Sort(FieldKey.fromParts("Name")));
+            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+            QueryView view = schema.createView(getViewContext(), settings, errors);
+            view.setShowDetailsColumn(false);
+            return view;
+        }
+    }
+
+    public static class ListDetailsForm extends RunDetailsForm
+    {
+        private int _listId;
+
+        public int getListId()
+        {
+            return _listId;
+        }
+
+        public void setListId(int listId)
+        {
+            _listId = listId;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowListContentAction extends ShowRunSingleDetailsAction<ListDetailsForm>
+    {
+        private ListDefinition _listDef;
+
+        public ShowListContentAction()
+        {
+            super(ListDetailsForm.class,"Skyline List", "ListContents");
+        }
+
+        @Override
+        public void validate(ListDetailsForm form, BindException errors)
+        {
+            _listDef = SkylineListManager.getListDefinition(getContainer(), form.getListId());
+            if (_listDef == null)
+            {
+                throw new NotFoundException("No list found with ID " + form.getListId());
+            }
+            form.setId(_listDef.getRunId());
+            _title = "Skyline List: " + _listDef.getName();
+            super.validate(form, errors);
+        }
+
+        @Override
+        protected QueryView createQueryView(ListDetailsForm form, BindException errors, boolean forExport, String dataRegion)
+        {
+            QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, _listDef.getUserSchemaTableName());
+            SkylineListSchema schema = new SkylineListSchema(getUser(), getContainer());
+            QueryView view = schema.createView(getViewContext(), settings, errors);
+            view.setShowDetailsColumn(false);
+            return view;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowSkylineAuditLogAction extends ShowRunSingleDetailsAction<RunDetailsForm>
+    {
+        private static final String LOG_QUERY_NAME = "AuditLogTraverse";
+
+        public ShowSkylineAuditLogAction()
+        {
+            super(RunDetailsForm.class,"Skyline Audit Log", "SkylineAuditLog");
+        }
+
+        @Override
+        protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
+        {
+            QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, LOG_QUERY_NAME);
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             settings.getQueryParameters().put("RUN_ID", form._id);
             return schema.createView(getViewContext(), settings, errors);
@@ -3609,12 +3679,6 @@ public class TargetedMSController extends SpringActionController
     @NotNull
     private TargetedMSRun validateRun(int runId)
     {
-        return validateRun(runId, true);
-    }
-
-    @NotNull
-    private TargetedMSRun validateRun(int runId, boolean redirect)
-    {
         Container c = getContainer();
         TargetedMSRun run = TargetedMSManager.getRun(runId);
 
@@ -3631,16 +3695,9 @@ public class TargetedMSController extends SpringActionController
 
         if (null == container || !container.equals(c))
         {
-            if(redirect)
-            {
-                ActionURL url = getViewContext().getActionURL().clone();
-                url.setContainer(run.getContainer());
-                throw new RedirectException(url);
-            }
-            else
-            {
-                throw new NotFoundException("Run " + runId +" does not exist in folder " + c.getPath());
-            }
+            ActionURL url = getViewContext().getActionURL().clone();
+            url.setContainer(run.getContainer());
+            throw new RedirectException(url);
         }
 
         return run;
@@ -5388,16 +5445,12 @@ public class TargetedMSController extends SpringActionController
             final LinkedHashMap<Date, Integer> pepMap = new LinkedHashMap<>();
 
             // add data to maps - binning by the date specified in simpleDateFormat
-            sqlSelector.forEach(new Selector.ForEachBlock<ResultSet>() {
-                @Override
-                public void exec(ResultSet rs) throws SQLException
-                {
-                    Date runDate = rs.getDate("runDate");
-                    int protCount = protMap.containsKey(runDate) ? protMap.get(runDate) : 0;
-                    protMap.put(runDate, protCount + rs.getInt("ProteinCount"));
-                    int pepCount = pepMap.containsKey(runDate) ? pepMap.get(runDate) : 0;
-                    pepMap.put(runDate, pepCount + rs.getInt("PeptideCount"));
-                }
+            sqlSelector.forEach(rs -> {
+                Date runDate = rs.getDate("runDate");
+                int protCount = protMap.containsKey(runDate) ? protMap.get(runDate) : 0;
+                protMap.put(runDate, protCount + rs.getInt("ProteinCount"));
+                int pepCount = pepMap.containsKey(runDate) ? pepMap.get(runDate) : 0;
+                pepMap.put(runDate, pepCount + rs.getInt("PeptideCount"));
             });
 
             LinkedHashMap<Date, Integer> binnedProtMap = binDateHashMap(protMap, 0);
@@ -5458,7 +5511,7 @@ public class TargetedMSController extends SpringActionController
         return newMap;
     }
 
-    public static final long getNumRepresentativeProteins(User user, Container container) {
+    public static long getNumRepresentativeProteins(User user, Container container) {
         long peptideGroupCount = 0;
         TargetedMSSchema schema = new TargetedMSSchema(user, container);
         TableInfo peptideGroup = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
@@ -5470,7 +5523,7 @@ public class TargetedMSController extends SpringActionController
         return peptideGroupCount;
     }
 
-    public static final long getNumRepresentativePeptides(Container container) {
+    public static long getNumRepresentativePeptides(Container container) {
 
         SQLFragment sqlFragment = new SQLFragment();
         sqlFragment.append("SELECT DISTINCT(p.Id) FROM ");
@@ -5492,9 +5545,8 @@ public class TargetedMSController extends SpringActionController
 
         // run the query on the database and count rows
         SqlSelector sqlSelector = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment);
-        long peptideCount = sqlSelector.getRowCount();
 
-        return peptideCount;
+        return sqlSelector.getRowCount();
     }
 
     public static long getNumRankedTransitions(Container container) {
@@ -5610,10 +5662,12 @@ public class TargetedMSController extends SpringActionController
         private TargetedMSRun _run;
         private URLHelper _returnURL;
 
+        @Override
         public void validateCommand(RenameForm target, Errors errors)
         {
         }
 
+        @Override
         public ModelAndView getView(RenameForm form, boolean reshow, BindException errors)
         {
             _run = validateRun(form.getRun());
@@ -5635,6 +5689,7 @@ public class TargetedMSController extends SpringActionController
             return jview;
         }
 
+        @Override
         public boolean handlePost(RenameForm form, BindException errors) throws BatchValidationException
         {
             _run = validateRun(form.getRun());
@@ -5642,11 +5697,13 @@ public class TargetedMSController extends SpringActionController
             return true;
         }
 
+        @Override
         public URLHelper getSuccessURL(RenameForm form)
         {
             return form.getReturnURLHelper();
         }
 
+        @Override
         public NavTree appendNavTrail(NavTree root)
         {
             return appendRunNavTrail(root, _run, _returnURL, "Rename Run", getPageConfig(), null);

@@ -74,6 +74,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     protected int _replicateCount;
     protected int _calibrationCurveCount;
     protected int _auditLogEntriesCount;
+    protected int _listCount;
 
     protected Integer _dataId; // FK to exp.data's RowId column for the .sky file
     protected Integer _skydDataId; // FK to exp.data's RowId column for the .skyd file
@@ -404,5 +405,15 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     public void setDocumentSize(Long documentSize)
     {
         _documentSize = documentSize;
+    }
+
+    public int getListCount()
+    {
+        return _listCount;
+    }
+
+    public void setListCount(int listCount)
+    {
+        _listCount = listCount;
     }
 }

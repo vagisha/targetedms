@@ -94,7 +94,7 @@ public class DataSettings
     private List<GroupComparisonSettings> _groupComparisons = new ArrayList<>();
     private List<ListData> _listDatas = new ArrayList<>();
 
-    public void addAnnotations(String name, String targetsString, String type)
+    public void addAnnotations(String name, String targetsString, String type, String lookup)
     {
         String[] targetsArr = targetsString.replaceAll("\\s", "").split(",");
         if(targetsArr.length == 0)
@@ -123,17 +123,12 @@ public class DataSettings
         AnnotationDefinition annot = new AnnotationDefinition(
                                         name,
                                         targets,
-                                        annotationType);
+                                        annotationType, lookup);
         _annotationDefinitions.put(name, annot);
 
         for(AnnotationTarget target: annot.getTargets())
         {
-            List<AnnotationDefinition> targetAnnotations = _targetAnnotationsMap.get(target);
-            if(targetAnnotations == null)
-            {
-                targetAnnotations = new ArrayList<>();
-                _targetAnnotationsMap.put(target, targetAnnotations);
-            }
+            List<AnnotationDefinition> targetAnnotations = _targetAnnotationsMap.computeIfAbsent(target, k -> new ArrayList<>());
             targetAnnotations.add(annot);
         }
     }
@@ -203,6 +198,7 @@ public class DataSettings
                 setting.setName(annotDef.getName());
                 setting.setTargets(target.toString());
                 setting.setType(annotDef.getType().toString());
+                setting.setLookup(annotDef.getLookup());
                 settingsList.add(setting);
             }
         }
@@ -211,15 +207,17 @@ public class DataSettings
 
     private class AnnotationDefinition
     {
-        private String _name;
-        private AnnotationType _type;
-        private List<AnnotationTarget> _targetList;
+        private final String _name;
+        private final AnnotationType _type;
+        private final List<AnnotationTarget> _targetList;
+        private final String _lookup;
 
-        AnnotationDefinition(String name, List<AnnotationTarget> targets, AnnotationType type)
+        AnnotationDefinition(String name, List<AnnotationTarget> targets, AnnotationType type, String lookup)
         {
             _name = name;
             _type = type;
             _targetList = targets;
+            _lookup = lookup;
         }
 
         public String getName()
@@ -235,6 +233,11 @@ public class DataSettings
         public List<AnnotationTarget> getTargets()
         {
             return _targetList;
+        }
+
+        public String getLookup()
+        {
+            return _lookup;
         }
     }
 }

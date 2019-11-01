@@ -38,14 +38,13 @@ public class SmallMoleculeTransitionsView extends DocumentTransitionsView
         super(ctx, schema, queryName, runId, !forExport,
                 new QueryNestingOption(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId"),
                         FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId", "Id"), null), DATAREGION_NAME, TITLE);
-
-        setTitle(TITLE);
     }
 
     /**
      * Overridden to add the run id filter condition.
      * @return A document transitions TableInfo filtered to the current run id
      */
+    @Override
     public TableInfo createTable()
     {
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in SmallMoleculeTransitionsView class!";
@@ -53,8 +52,8 @@ public class SmallMoleculeTransitionsView extends DocumentTransitionsView
         if (tinfo != null)
         {
             tinfo.setRunId(_runId);
+            tinfo.setLocked(true);
         }
-        tinfo.setLocked(true);
         return tinfo;
     }
 }

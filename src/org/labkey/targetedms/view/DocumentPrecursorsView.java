@@ -28,7 +28,7 @@ import java.sql.SQLException;
  */
 public abstract class DocumentPrecursorsView extends DocumentView
 {
-    protected TargetedMSSchema _targetedMsSchema = null;
+    protected final TargetedMSSchema _targetedMsSchema;
     protected final String _tableName;
 
     public DocumentPrecursorsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport,

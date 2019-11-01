@@ -368,6 +368,7 @@ public class SkylineDocImporter
             run.setTransitionCount(parser.getTransitionCount());
             run.setReplicateCount(parser.getReplicateCount());
             run.setCalibrationCurveCount(calCurvesCount);
+            run.setListCount(parser.getListCount());
             run.setDocumentGUID(parser.getDocumentGUID());
 
             Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());

@@ -18,6 +18,8 @@ package org.labkey.targetedms.parser.list;
 import org.labkey.targetedms.parser.DataSettings;
 import org.labkey.targetedms.parser.SkylineEntity;
 
+import java.util.Objects;
+
 public class ListColumn extends SkylineEntity
 {
     private int _listDefinitionId;
@@ -78,5 +80,20 @@ public class ListColumn extends SkylineEntity
 
     public DataSettings.AnnotationType getAnnotationTypeEnum() {
         return DataSettings.AnnotationType.fromString(getAnnotationType());
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(_listDefinitionId, _columnIndex, _name, _lookup, _annotationType);
+    }
+
+    /** return true if this object matches the supplied column for unioning purposes */
+    public boolean matches(ListColumn that)
+    {
+        return _columnIndex == that._columnIndex &&
+                Objects.equals(_name, that._name) &&
+                Objects.equals(_lookup, that._lookup) &&
+                Objects.equals(_annotationType, that._annotationType);
     }
 }

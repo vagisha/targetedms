@@ -58,6 +58,7 @@ import org.labkey.api.query.QueryView;
 import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
+import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.UnexpectedException;
@@ -90,7 +91,7 @@ import java.util.function.Consumer;
 public class TargetedMSSchema extends UserSchema
 {
     public static final String SCHEMA_NAME = "targetedms";
-    public static final String SCHEMA_DESCR = "Contains data about Targeted MS experiments.";
+    public static final String SCHEMA_DESCR = "Contains targeted mass spec data imported from Skyline documents";
 
     // Tables
     public static final String TABLE_TARGETED_MS_RUNS = "TargetedMSRuns";
@@ -162,7 +163,6 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PEPTIDE_CALIBRATION_CURVE = "PeptideCalibrationCurve";
     public static final String TABLE_MOLECULE_CALIBRATION_CURVE = "MoleculeCalibrationCurve";
     public static final String TABLE_MOLECULE_INFO = "MoleculeInfo";
-    public static final String TABLE_PHARMACOKINETICS = "Pharmacokinetics";
 
     public static final String TABLE_REPRESENTATIVE_DATA_STATE_RUN = "RepresentativeDataState_Run";
     public static final String TABLE_REPRESENTATIVE_DATA_STATE = "RepresentativeDataState";
@@ -206,6 +206,7 @@ public class TargetedMSSchema extends UserSchema
     {
         DefaultSchema.registerProvider(SCHEMA_NAME, new DefaultSchema.SchemaProvider(module)
         {
+            @Override
             public QuerySchema createSchema(DefaultSchema schema, Module module)
             {
                 return new TargetedMSSchema(schema.getUser(), schema.getContainer());
@@ -235,18 +236,6 @@ public class TargetedMSSchema extends UserSchema
     private static SQLFragment makeInnerJoin(TableInfo table, String alias, String colRight)
     {
         SQLFragment sql = new SQLFragment("INNER JOIN ");
-        sql.append(table, alias);
-        sql.append(" ON ( ");
-        sql.append(alias).append(".id");
-        sql.append(" = ");
-        sql.append(colRight);
-        sql.append(" ) ");
-        return sql;
-    }
-
-    private static SQLFragment makeLeftJoin(TableInfo table, String alias, String colRight)
-    {
-        SQLFragment sql = new SQLFragment("LEFT JOIN ");
         sql.append(table, alias);
         sql.append(" ON ( ");
         sql.append(alias).append(".id");
@@ -517,6 +506,12 @@ public class TargetedMSSchema extends UserSchema
             {
                 return FieldKey.fromParts("iRTScaleId", "Container");
             }
+
+            @Override
+            public FieldKey getRunIdFieldKey()
+            {
+                throw new UnsupportedOperationException();
+            }
         },
         IsolationSchemeFK
         {
@@ -570,6 +565,11 @@ public class TargetedMSSchema extends UserSchema
             }
         };
 
+        public FieldKey getRunIdFieldKey()
+        {
+            return getContainerFieldKey().getParent();
+        }
+
         public abstract SQLFragment getSQL();
         public abstract FieldKey getContainerFieldKey();
     }
@@ -597,12 +597,11 @@ public class TargetedMSSchema extends UserSchema
 
         boolean hasSmallMolecules = TargetedMSManager.containerHasSmallMolecules(getContainer());
         boolean hasPeptides = TargetedMSManager.containerHasPeptides(getContainer());
-        boolean hasCalibrationCurves = TargetedMSManager.containerHasCalibrationCurves(getContainer());
         String peptideGroupColName = (hasSmallMolecules ? COL_LIST : COL_PROTEIN) + "s";
-        boolean hasDocVersions = TargetedMSManager.containerHasDocVersions(getContainer());
 
         skyDocDetailColumn.setFk(new LookupForeignKey(url, "id", "Id", "Description")
         {
+            @Override
             public TableInfo getLookupTableInfo()
             {
                 FilteredTable result = new FilteredTable<>(TargetedMSManager.getTableInfoRuns(), TargetedMSSchema.this, cf);
@@ -625,6 +624,7 @@ public class TargetedMSSchema extends UserSchema
                     {
                         return new DataColumn(colInfo)
                         {
+                            @Override
                             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {
                                 Integer runId = ctx.get(this.getColumnInfo().getFieldKey(), Integer.class);
@@ -662,6 +662,7 @@ public class TargetedMSSchema extends UserSchema
                 result.addWrapColumn("Transitions", result.getRealTable().getColumn("TransitionCount"));
                 result.addWrapColumn("Replicates", result.getRealTable().getColumn("ReplicateCount"));
                 result.addWrapColumn("CalibrationCurves", result.getRealTable().getColumn("CalibrationCurveCount"));
+                result.addWrapColumn("SkylineLists", result.getRealTable().getColumn("ListCount"));
 
                 addVersionsColumn(result);
 
@@ -737,13 +738,12 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public SQLFragment getValueSql(String tableAlias)
             {
-                SQLFragment sql = new SQLFragment(" (SELECT tr.id FROM ")
+                return new SQLFragment(" (SELECT tr.id FROM ")
                         .append(ExperimentService.get().getTinfoExperimentRun(), "er")
                         .append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), "tr")
                         .append(" ON er.LSID = tr.experimentRunLSID")
                         .append(" WHERE er.rowId=").append(tableAlias).append(".replacedByRunId")
                         .append(") ");
-                return sql;
             }
         };
         replacedByCol.setFk(new LookupForeignKey(url, "id", "Id", "Description")
@@ -759,7 +759,7 @@ public class TargetedMSSchema extends UserSchema
         List<FieldKey> defaultVisibleColumns = result.getDefaultVisibleColumns();
 
         // Create the list lazily to avoid extra DB queries when we don't need any
-        result.setDefaultVisibleColumns(new Iterable<FieldKey>()
+        result.setDefaultVisibleColumns(new Iterable<>()
         {
             private List<FieldKey> _fieldKeys;
 
@@ -792,12 +792,16 @@ public class TargetedMSSchema extends UserSchema
                     _fieldKeys.add(FieldKey.fromParts("File", "Precursors"));
                     _fieldKeys.add(FieldKey.fromParts("File", "Transitions"));
                     _fieldKeys.add(FieldKey.fromParts("File", "Replicates"));
-                    if (hasCalibrationCurves)
+                    if (TargetedMSManager.containerHasCalibrationCurves(getContainer()))
                         _fieldKeys.add(FieldKey.fromParts("File", "CalibrationCurves"));
-                    if(hasDocVersions)
+                    if (TargetedMSManager.containerHasDocVersions(getContainer()))
                     {
                         _fieldKeys.add(FieldKey.fromParts("File", "Versions"));
                         _fieldKeys.add(FieldKey.fromParts("ReplacedBy"));
+                    }
+                    if (TargetedMSManager.containerHasLists(getContainer()))
+                    {
+                        _fieldKeys.add(FieldKey.fromParts("File", "SkylineLists"));
                     }
                 }
                 return _fieldKeys;
@@ -1006,6 +1010,16 @@ public class TargetedMSSchema extends UserSchema
             TABLE_DRIFT_TIME_PREDICTION_SETTINGS.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.RunFK);
+        }
+
+        if (TABLE_LIST_DEFINITION.equalsIgnoreCase(name))
+        {
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.RunFK);
+            ContainerContext context = new ContainerContext.FieldKeyContext(FieldKey.fromParts("RunId", "Container"));
+            DetailsURL url = DetailsURL.fromString("targetedms-showListContent.view?id=${RunId}&listId=${Id}", context);
+            result.setDetailsURL(url);
+            result.getMutableColumn("Name").setURL(url);
+            return result;
         }
 
         if (TABLE_CALIBRATION_CURVE.equalsIgnoreCase(name))
@@ -1259,6 +1273,7 @@ public class TargetedMSSchema extends UserSchema
         return null;
     }
 
+    @Override
     protected QuerySettings createQuerySettings(String dataRegionName, String queryName, String viewName)
     {
         if(TABLE_PRECURSOR.equalsIgnoreCase(queryName)
@@ -1276,7 +1291,7 @@ public class TargetedMSSchema extends UserSchema
         return super.createQuerySettings(dataRegionName, queryName, viewName);
     }
 
-    @Override
+    @Override @NotNull
     public QueryView createView(ViewContext context, @NotNull QuerySettings settings, BindException errors)
     {
         if(TABLE_REPLICATE_ANNOTATION.equalsIgnoreCase(settings.getQueryName()))
@@ -1398,6 +1413,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_QC_ENABLED_METRICS);
         hs.add(TABLE_SKYLINE_AUDITLOG_ENTRY);
         hs.add(TABLE_SKYLINE_AUDITLOG_MESSAGE);
+        hs.add(TABLE_LIST_DEFINITION);
 
         return hs;
     }

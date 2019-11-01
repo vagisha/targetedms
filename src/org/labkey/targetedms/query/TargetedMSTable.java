@@ -45,7 +45,7 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
     public static final String CONTAINER_COL_TABLE_ALIAS = "r";
     private static final SQLFragment _defaultContainerSQL = new SQLFragment(CONTAINER_COL_TABLE_ALIAS).append(".Container");
 
-    private final TargetedMSSchema.ContainerJoinType _joinType;
+    protected final TargetedMSSchema.ContainerJoinType _joinType;
     private final SQLFragment _containerSQL;
 
     private CompareType.EqualsCompareClause _containerTableFilter;

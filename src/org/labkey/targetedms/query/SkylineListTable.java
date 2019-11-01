@@ -24,20 +24,31 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.targetedms.parser.list.ListColumn;
 import org.labkey.targetedms.parser.list.ListDefinition;
 
-import java.util.List;
-
+/**
+ * A table backed by a list definition imported from a Skyline document. These are similar to LabKey lists,
+ * but implemented separately because they have different scoping rules, more limited design options, and need to
+ * be read-only.
+ */
 public class SkylineListTable extends AbstractTableInfo
 {
     UserSchema _userSchema;
     ListDefinition _listDefinition;
-    List<ListColumn> _listColumns;
-    public SkylineListTable(UserSchema schema, ListDefinition listDefinition, List<ListColumn> columns) {
-        super(schema.getDbSchema(), listDefinition.getName());
+
+    public SkylineListTable(UserSchema schema, ListDefinition listDefinition)
+    {
+        super(schema.getDbSchema(), listDefinition.getUserSchemaTableName());
         _userSchema = schema;
         _listDefinition = listDefinition;
-        _listColumns = columns;
-        for (ListColumn listColumn : _listColumns) {
-            addColumn(new ListColumnInfo(this, listColumn));
+        for (ListColumn listColumn : _listDefinition.fetchColumns())
+        {
+            boolean pk = _listDefinition.getPkColumnIndex() != null && _listDefinition.getPkColumnIndex().intValue() == listColumn.getColumnIndex();
+            boolean title = _listDefinition.getDisplayColumnIndex() != null && _listDefinition.getDisplayColumnIndex().intValue() == listColumn.getColumnIndex();
+            ListColumnInfo colInfo = new ListColumnInfo(this, listColumn, pk);
+            addColumn(colInfo);
+            if (title)
+            {
+                setTitleColumn(colInfo.getName());
+            }
         }
     }
 
@@ -50,16 +61,17 @@ public class SkylineListTable extends AbstractTableInfo
     @Override
     protected SQLFragment getFromSQL()
     {
-        SQLFragment fragment = new SQLFragment("SELECT Id FROM targetedms.ListItem WHERE ListDefinitionId = ?", _listDefinition.getId());
-        return fragment;
+        return new SQLFragment("SELECT Id FROM targetedms.ListItem WHERE ListDefinitionId = " + _listDefinition.getId());
     }
 
     class ListColumnInfo extends BaseColumnInfo
     {
         ListColumn _listColumn;
-        public ListColumnInfo(SkylineListTable listTable, ListColumn listColumn) {
+        public ListColumnInfo(SkylineListTable listTable, ListColumn listColumn, boolean pk)
+        {
             super(new FieldKey(null, listColumn.getName()), listTable);
             _listColumn = listColumn;
+            setKeyField(pk);
             setJdbcType(listColumn.getAnnotationTypeEnum().getDataType());
         }
 
@@ -80,9 +92,8 @@ public class SkylineListTable extends AbstractTableInfo
                     sqlFragment.append("NumericValue = 1");
                     break;
             }
-            sqlFragment.append(new SQLFragment(" FROM targetedms.ListItemValue WHERE ListItemId = " + tableAliasName +".Id AND ColumnIndex = ?",
-                    _listColumn.getColumnIndex()));
-            sqlFragment.append(")");
+            sqlFragment.append(new SQLFragment(" FROM targetedms.ListItemValue WHERE ListItemId = " + tableAliasName +".Id AND ColumnIndex = ")
+                    .append(_listColumn.getColumnIndex())).append(")");
             return sqlFragment;
         }
     }

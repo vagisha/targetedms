@@ -167,6 +167,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private int _precursorCount;
     private int _transitionCount;
     private int _replicateCount;
+    private int _listCount;
 
     private SkylineBinaryParser _binaryParser;
 
@@ -513,7 +514,8 @@ public class SkylineDocumentParser implements AutoCloseable
                  String name = XmlUtil.readRequiredAttribute(reader, "name", ANNOTATION);
                  String targets = XmlUtil.readRequiredAttribute(reader, "targets", ANNOTATION);
                  String type = XmlUtil.readRequiredAttribute(reader, "type", ANNOTATION);
-                 _dataSettings.addAnnotations(name, targets, type);
+                 String lookup = XmlUtil.readAttribute(reader, "lookup", ANNOTATION);
+                 _dataSettings.addAnnotations(name, targets, type, lookup);
              }
              else if (XmlUtil.isStartElement(reader, evtType, GROUP_COMPARISON))
              {
@@ -588,6 +590,7 @@ public class SkylineDocumentParser implements AutoCloseable
 
     private void readListDefinition(XMLStreamReader reader, ListData listData) throws XMLStreamException
     {
+        _listCount++;
         listData.getListDefinition().setName(XmlUtil.readAttribute(reader, "name"));
         String idColumnName = XmlUtil.readAttribute(reader, "id_property");
         String displayColumnName = XmlUtil.readAttribute(reader, "display_property");
@@ -2687,6 +2690,11 @@ public class SkylineDocumentParser implements AutoCloseable
     public int getReplicateCount()
     {
         return _replicateCount;
+    }
+
+    public int getListCount()
+    {
+        return _listCount;
     }
 
     private void updateProgress()

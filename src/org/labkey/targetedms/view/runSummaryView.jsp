@@ -53,6 +53,9 @@
     ActionURL calibrationCurveListAction = new ActionURL(TargetedMSController.ShowCalibrationCurvesAction.class, getContainer());
     calibrationCurveListAction.addParameter("id", run.getId());
 
+    ActionURL listAction = new ActionURL(TargetedMSController.ShowListsAction.class, getContainer());
+    listAction.addParameter("id", run.getId());
+
     ActionURL replicateListAction = new ActionURL(TargetedMSController.ShowReplicatesAction.class, getContainer());
     replicateListAction.addParameter("id", run.getId());
 
@@ -85,7 +88,8 @@
         <a href="<%= h(transitionListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getTransitionCount(), "transition"))%></a>
         &nbsp;-&nbsp;
         <a href="<%= h(replicateListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getReplicateCount(), "replicate"))%></a><%
-        if (run.getCalibrationCurveCount() > 0) { %>, <a href="<%= h(calibrationCurveListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getCalibrationCurveCount(), "calibration curve"))%></a><% } %>
+        if (run.getCalibrationCurveCount() > 0) { %>, <a href="<%= h(calibrationCurveListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getCalibrationCurveCount(), "calibration curve"))%></a><% }
+        if (run.getListCount() > 0) { %>, <a href="<%= h(listAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getListCount(), "list"))%></a><% } %>
         <% if (run.getSoftwareVersion() != null) { %>&nbsp;-&nbsp; <%= h(run.getSoftwareVersion()) %> <% } %>
     </div>
 </div>

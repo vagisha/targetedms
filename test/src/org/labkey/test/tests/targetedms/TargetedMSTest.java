@@ -169,19 +169,19 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         waitForPipelineJobsToComplete(jobCount, file, false);
     }
 
-    protected void verifyRunSummaryCountsSmallMol(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount)
+    protected void verifyRunSummaryCountsSmallMol(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount, int listCount)
     {
-        verifyRunSummaryCounts(proteinCount, peptideCount, moleculeCount, precursorCount, transitionCount, replicateCount, calibrationCount, "lists");
+        verifyRunSummaryCounts(proteinCount, peptideCount, moleculeCount, precursorCount, transitionCount, replicateCount, calibrationCount, listCount, "lists");
     }
 
-    protected void verifyRunSummaryCountsPep(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount)
+    protected void verifyRunSummaryCountsPep(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount, int listCount)
     {
-        verifyRunSummaryCounts(proteinCount, peptideCount, moleculeCount, precursorCount, transitionCount, replicateCount, calibrationCount, "proteins");
+        verifyRunSummaryCounts(proteinCount, peptideCount, moleculeCount, precursorCount, transitionCount, replicateCount, calibrationCount, listCount, "proteins");
     }
 
     @LogMethod
-    protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount,
-                                          String peptideGroupLabel)
+    protected void verifyRunSummaryCounts(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount,
+                                          int replicateCount, int calibrationCount, int listCount, String peptideGroupLabel)
     {
         log("Verifying expected summary counts");
         waitForElement(Locator.linkContainingText(proteinCount + " " + peptideGroupLabel));
@@ -210,8 +210,15 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
         }
         else
         {
-            assertElementNotPresent(Locator.linkContainingText(" calibration curves"));
+            assertElementNotPresent(Locator.linkContainingText(" calibration curve" + (precursorCount > 1 ? "s" : "")));
         }
+
+        if (listCount > 0)
+        {
+            assertElementPresent(Locator.linkContainingText(listCount + " list" + (listCount > 1 ? "s" : "")));
+        }
+        // At the moment, we use "list" to refer to both small molecule groups and Skyline lists, so don't explicitly
+        // check for absence here
     }
 
     @LogMethod

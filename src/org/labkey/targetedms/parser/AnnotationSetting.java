@@ -26,6 +26,7 @@ public class AnnotationSetting extends SkylineEntity
     private String _name;
     private String _type;
     private String _targets;
+    private String _lookup;
 
     public int getRunId()
     {
@@ -65,5 +66,15 @@ public class AnnotationSetting extends SkylineEntity
     public void setTargets(String targets)
     {
         _targets = targets;
+    }
+
+    public String getLookup()
+    {
+        return _lookup;
+    }
+
+    public void setLookup(String lookup)
+    {
+        _lookup = lookup;
     }
 }

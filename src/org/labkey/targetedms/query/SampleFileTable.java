@@ -20,9 +20,11 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.DefaultQueryUpdateService;
+import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.InvalidKeyException;
 import org.labkey.api.query.QueryUpdateService;
@@ -57,6 +59,10 @@ public class SampleFileTable extends TargetedMSTable
     {
         this(schema, cf);
         _run = run;
+        SQLFragment runIdSQL = new SQLFragment("(SELECT r.RunId FROM ").
+                append(TargetedMSManager.getTableInfoReplicate(), "r").
+                append(" WHERE r.Id = ").append(ExprColumn.STR_TABLE_ALIAS).append(".ReplicateId)");
+        addColumn(new ExprColumn(this, "RunId", runIdSQL, JdbcType.INTEGER));
         addCondition(new SQLFragment("ReplicateId IN (SELECT Id FROM ").
                 append(TargetedMSManager.getTableInfoReplicate(), "r").
                 append(" WHERE RunId = ?)").add(run.getId()), FieldKey.fromParts("ReplicateId"));

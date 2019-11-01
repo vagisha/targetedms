@@ -29,9 +29,8 @@ import java.sql.SQLException;
  */
 public abstract class DocumentTransitionsView extends DocumentView
 {
-    protected TargetedMSSchema _targetedMsSchema = null;
+    protected TargetedMSSchema _targetedMsSchema;
     protected ViewContext _context;
-    public String TITLE;
 
     public DocumentTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId,
                                    boolean forExport, QueryNestingOption queryNestingOption, String dataRegionName, String title)
@@ -39,7 +38,7 @@ public abstract class DocumentTransitionsView extends DocumentView
         super(ctx, schema, queryName, runId, !forExport, queryNestingOption, dataRegionName);
         _targetedMsSchema = schema;
         _context = ctx;
-        TITLE = title;
+        setTitle(title);
     }
 
     protected Sort getBaseSort()
