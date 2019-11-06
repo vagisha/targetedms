@@ -71,9 +71,9 @@
 
             LABKEY.Query.executeSql({
                 schemaName: 'targetedms',
-                sql: 'SELECT MIN(SampleFileId.AcquiredTime) AS MinAcquiredTime, MAX(SampleFileId.AcquiredTime) AS MaxAcquiredTime FROM generalmoleculechrominfo',
+                sql: 'SELECT MIN(AcquiredTime) AS MinAcquiredTime, MAX(AcquiredTime) AS MaxAcquiredTime FROM SampleFile',
                 success: function(data) {
-                    if (data.rows.length == 0 || !data.rows[0]['MinAcquiredTime']) {
+                    if (data.rows.length === 0 || !data.rows[0]['MinAcquiredTime']) {
                         Ext4.get(plotPanelId).update("No data found. Please upload runs using the Data Pipeline or directly from Skyline.");
                     }
                     else {
