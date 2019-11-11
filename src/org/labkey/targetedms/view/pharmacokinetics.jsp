@@ -1,19 +1,19 @@
 <%
-/*
- * Copyright (c) 2018-2019 LabKey Corporation
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+    /*
+     * Copyright (c) 2018-2019 LabKey Corporation
+     *
+     * Licensed under the Apache License, Version 2.0 (the "License");
+     * you may not use this file except in compliance with the License.
+     * You may obtain a copy of the License at
+     *
+     *     http://www.apache.org/licenses/LICENSE-2.0
+     *
+     * Unless required by applicable law or agreed to in writing, software
+     * distributed under the License is distributed on an "AS IS" BASIS,
+     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     * See the License for the specific language governing permissions and
+     * limitations under the License.
+     */
 %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
@@ -43,57 +43,59 @@
     <h4 id="pk-title2"></h4>
     <h4 id="pk-title3"></h4>
     <br/>
-<%
-    for (String subgroup : bean.getSampleGroupNames() )
-    {
-        String subgroupTitle = "Subgroup: " + (subgroup != null ? subgroup : "");
-%>
-<labkey:panel title="<%=subgroupTitle%>" type="portal">
-    <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
-        <i class="fa fa-file-excel-o" onclick="exportExcel('<%=h(subgroup)%>')"></i>
-    </div>
+    <%
+        for (String subgroup : bean.getSampleGroupNames() )
+        {
+            String subgroupTitle = "Subgroup: " + (subgroup != null ? subgroup : "");
+    %>
+    <labkey:panel title="<%=subgroupTitle%>" type="portal">
+        <div id="targetedms-fom-export" class="export-icon" data-toggle="tooltip" title="Export to Excel">
+            <i class="fa fa-file-excel-o" onclick="exportExcel('<%=h(subgroup)%>')"></i>
+        </div>
 
-    <labkey:panel title="Statistics">
-    <table id="pk-table-input-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats"  >
-        <thead><tr><td>Time</td><td>C0</td><td>Terminal</td><td>Concentration</td><td>Count</td><td>Std Dev</td></tr></thead>
-    </table>
-    <table id="pk-table-stats-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
-        <thead><tr><td colspan="3">Statistic</td></tr></thead>
-        <tr><td class="pk-table-label">Route           </td><td id="Route-<%=h(subgroup)%>"             class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">Dose            </td><td id="Dose-<%=h(subgroup)%>"              class="pk-table-stat"></td><td id="DoseUnits-<%=h(subgroup)%>"></td></tr>
-        <tr><td class="pk-table-label">IV CO           </td><td id="IVC0-<%=h(subgroup)%>"              class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">k':             </td><td id="k-<%=h(subgroup)%>"                 class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">%AUC Extrap:    </td><td id="AUCExtrap-<%=h(subgroup)%>"         class="pk-table-stat"></td><td></td></tr>
-        <tr><td class="pk-table-label">MRT (0-inf):    </td><td id="Mrt_Zero_Inf-<%=h(subgroup)%>"      class="pk-table-stat"></td><td>hr</td></tr>
-        <tr><td class="pk-table-label">MRT (0-t):      </td><td id="Mrt_Zero_T-<%=h(subgroup)%>"        class="pk-table-stat"></td><td>hr</td></tr>
-        <tr><td class="pk-table-label">CL (0-inf):     </td><td id="Cl_Zero_Inf-<%=h(subgroup)%>"       class="pk-table-stat"></td><td>ml/min/kg</td></tr>
-        <tr><td class="pk-table-label">CL (0-t):       </td><td id="Cl_Zero_T-<%=h(subgroup)%>"         class="pk-table-stat"></td><td>ml/min/kg</td></tr>
-        <tr><td class="pk-table-label">Vdss (0-inf):   </td><td id="Vdss_Zero_Inf-<%=h(subgroup)%>"     class="pk-table-stat"></td><td>L/kg</td></tr>
-        <tr><td class="pk-table-label">Vdss (0-t):     </td><td id="Vdss_Zero_T-<%=h(subgroup)%>"       class="pk-table-stat"></td><td>L/kg</td></tr>
-        <tr><td class="pk-table-label">T1/2:           </td><td id="T1_2-<%=h(subgroup)%>"              class="pk-table-stat"></td><td>hr</td></tr>
-        <tr><td class="pk-table-label">Effective T1/2: </td><td id="Effective_T1_2-<%=h(subgroup)%>"    class="pk-table-stat"></td><td>hr</td></tr>
-    </table>
-    <div id="nonIVC0Controls-<%=h(subgroup)%>" hidden="true">
-        <span id="nonIVC0Controls-Warn-<%=h(subgroup)%>" class="labkey-error"><h4>WARNING: Please enter a non-IV C0 and recalculate.</h4></span>
-        non-IV C0
-        <input type="number" id="nonIVC0-<%=h(subgroup)%>" label="non-IV C0"/>
-        <button id="btnNonIVC0-<%=h(subgroup)%>" onclick="updateStatsForNonIVC0('<%=h(subgroup)%>')">Recalculate</button>
-    </div>
-    </labkey:panel>
+        <labkey:panel title="Statistics">
+            <table id="pk-table-input-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats"  >
+                <thead><tr><td>Time</td><td>C0</td><td>Terminal</td><td>Concentration</td><td>Count</td><td>Std Dev</td></tr></thead>
+            </table>
+            <table id="pk-table-stats-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
+                <thead><tr><td colspan="3">Statistic</td></tr></thead>
+                <tr><td class="pk-table-label">Route           </td><td id="Route-<%=h(subgroup)%>"             class="pk-table-stat"></td><td></td></tr>
+                <tr><td class="pk-table-label">Dose            </td><td id="Dose-<%=h(subgroup)%>"              class="pk-table-stat"></td><td id="DoseUnits-<%=h(subgroup)%>"></td></tr>
+                <tr><td class="pk-table-label">IV CO           </td><td id="IVC0-<%=h(subgroup)%>"              class="pk-table-stat"></td><td></td></tr>
+                <tr><td class="pk-table-label">k':             </td><td id="k-<%=h(subgroup)%>"                 class="pk-table-stat"></td><td></td></tr>
+                <tr><td class="pk-table-label">%AUC Extrap:    </td><td id="AUCExtrap-<%=h(subgroup)%>"         class="pk-table-stat"></td><td></td></tr>
+                <tr><td class="pk-table-label">AUC (0-inf):    </td><td id="AUCInf-<%=h(subgroup)%>"            class="pk-table-stat"></td><td></td></tr>
+                <tr><td class="pk-table-label">AUC (0-t):      </td><td id="AUCT-<%=h(subgroup)%>"              class="pk-table-stat"></td><td></td></tr>
+                <tr><td class="pk-table-label">MRT (0-inf):    </td><td id="Mrt_Zero_Inf-<%=h(subgroup)%>"      class="pk-table-stat"></td><td>hr</td></tr>
+                <tr><td class="pk-table-label">MRT (0-t):      </td><td id="Mrt_Zero_T-<%=h(subgroup)%>"        class="pk-table-stat"></td><td>hr</td></tr>
+                <tr><td class="pk-table-label">CL (0-inf):     </td><td id="Cl_Zero_Inf-<%=h(subgroup)%>"       class="pk-table-stat"></td><td>ml/min/kg</td></tr>
+                <tr><td class="pk-table-label">CL (0-t):       </td><td id="Cl_Zero_T-<%=h(subgroup)%>"         class="pk-table-stat"></td><td>ml/min/kg</td></tr>
+                <tr><td class="pk-table-label">Vdss (0-inf):   </td><td id="Vdss_Zero_Inf-<%=h(subgroup)%>"     class="pk-table-stat"></td><td>ml/kg</td></tr>
+                <tr><td class="pk-table-label">Vdss (0-t):     </td><td id="Vdss_Zero_T-<%=h(subgroup)%>"       class="pk-table-stat"></td><td>ml/kg</td></tr>
+                <tr><td class="pk-table-label">T1/2:           </td><td id="T1_2-<%=h(subgroup)%>"              class="pk-table-stat"></td><td>hr</td></tr>
+                <tr><td class="pk-table-label">Effective T1/2: </td><td id="Effective_T1_2-<%=h(subgroup)%>"    class="pk-table-stat"></td><td>hr</td></tr>
+            </table>
+            <div id="nonIVC0Controls-<%=h(subgroup)%>" hidden="true">
+                <span id="nonIVC0Controls-Warn-<%=h(subgroup)%>" class="labkey-error"><h4>WARNING: Please enter a non-IV C0 and recalculate.</h4></span>
+                non-IV C0
+                <input type="number" id="nonIVC0-<%=h(subgroup)%>" label="non-IV C0"/>
+                <button id="btnNonIVC0-<%=h(subgroup)%>" onclick="updateStatsForNonIVC0('<%=h(subgroup)%>')">Recalculate</button>
+            </div>
+        </labkey:panel>
 
-    <labkey:panel title="Charts">
-    <div id="chart-<%=h(subgroup)%>"></div>
-    <div id="chartLog-<%=h(subgroup)%>"></div>
-    </labkey:panel>
+        <labkey:panel title="Charts">
+            <div id="chart-<%=h(subgroup)%>"></div>
+            <div id="chartLog-<%=h(subgroup)%>"></div>
+        </labkey:panel>
 
-    <labkey:panel title="Data">
-    <table id="pk-table-standard-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table">
-        <thead id="standard-header-<%=h(subgroup)%>" />
-        <tbody id="standard-body-<%=h(subgroup)%>" />
-        <tfoot id="standard-footer-<%=h(subgroup)%>"/>
-    </table>
+        <labkey:panel title="Data">
+            <table id="pk-table-standard-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table">
+                <thead id="standard-header-<%=h(subgroup)%>" />
+                <tbody id="standard-body-<%=h(subgroup)%>" />
+                <tfoot id="standard-footer-<%=h(subgroup)%>"/>
+            </table>
+        </labkey:panel>
     </labkey:panel>
-</labkey:panel>
     <%}%>
 </div>
 <script type="application/javascript">
@@ -302,7 +304,7 @@
         }
 
         function populateDerivedDataTable(subgroup) {
-             this.hdrLabels = ["Time","Concentration","PK Conc","In(Cp)", "LinDeltaAUC", "AUCuMhrL",
+            this.hdrLabels = ["Time","Concentration","PK Conc","In(Cp)", "LinDeltaAUC", "AUCuMhrL",
                 "LogLinDeltaAUC", "LogLinAUCuMhrL","Correct Part AUC", "Correct Cumulative AUC",
                 "Conc x t","LinDeltaAUMC", "CumulativeLinAUMC", "LogLinDeltaAUMC", "CumulativeLogLinAUMC",
                 "CorrectDeltaAUMC", "CorrectAUMC"];
@@ -387,7 +389,7 @@
         function getNonIVC0BySubgroup(subgroup) {
             return $('#nonIVC0-' + subgroup).val();
         }
-        
+
         function updateStats(timeFrame, subgroup) {
             var x = getCheckedBySubgroup(timeFrame, subgroup, 'time', false);
             var y = getCheckedBySubgroup(timeFrame, subgroup, 'lnCp', false);
@@ -413,6 +415,8 @@
             else {
                 $('#k-' + subgroup).html(statRound(lr.slope));
                 $('#AUCExtrap-' + subgroup).html(statRound(getAUCExtrap(lr, subgroup)));
+                $('#AUCInf-' + subgroup).html(statRound(getInfCumulativeCorrectPartAUC(lr, subgroup)));
+                $('#AUCT-' + subgroup).html(statRound(getAUC_Zero_T(lr, subgroup)));
                 $('#Mrt_Zero_Inf-' + subgroup).html(statRound(getMrt_Zero_Inf(lr, subgroup)));
                 $('#Mrt_Zero_T-' + subgroup).html(statRound(getMrt_Zero_T(subgroup)));
                 $('#Cl_Zero_Inf-' + subgroup).html(statRound(getCL_Zero_Inf(lr, subgroup)));
@@ -468,23 +472,23 @@
                     //possibly use  _.groupBy()
                     var subgroup = data.rows[0].SubGroup;
                     data.rows.forEach(function (row,index) {
-                            if (row.SubGroup === subgroup) {
-                                subgroupData.rows.push(row);
+                        if (row.SubGroup === subgroup) {
+                            subgroupData.rows.push(row);
+                        }
+                        else {
+                            //build collection of next subgroup
+                            if (parseRawData(subgroupData, subgroup)) {
+                                showCharts(subgroup);
                             }
-                            else {
-                                //build collection of next subgroup
-                                if (parseRawData(subgroupData, subgroup)) {
-                                    showCharts(subgroup);
-                                }
-                                subgroup = row.SubGroup;
-                                subgroupData.rows = [row];
-                            }
+                            subgroup = row.SubGroup;
+                            subgroupData.rows = [row];
+                        }
 
-                            if (index === data.rows.length - 1 || subgroup != row.SubGroup) {
-                                if (parseRawData(subgroupData, subgroup)) {
-                                    showCharts(subgroup);
-                                }
+                        if (index === data.rows.length - 1 || subgroup != row.SubGroup) {
+                            if (parseRawData(subgroupData, subgroup)) {
+                                showCharts(subgroup);
                             }
+                        }
                     });
                 },
                 failure: function (response) {
@@ -532,9 +536,9 @@
         this.exportExcel = function(subgroup) {
 
             var sheet1Data = [
-                    ['Peptide: ' + peptide],
-                    ['Skyline File: ' + fileName],
-                    ['Subgroup: ' + subgroup]
+                ['Peptide: ' + peptide],
+                ['Skyline File: ' + fileName],
+                ['Subgroup: ' + subgroup]
             ];
             sheet1Data.push(['']);
             sheet1Data.push(['AUC Calculation']);
@@ -550,9 +554,9 @@
 
             var sheet2Data = [getTableHeaders()];
 
-             getTableRows("#standard-body-" + subgroup).forEach(function(row){
-                 sheet2Data.push(row);
-             });
+            getTableRows("#standard-body-" + subgroup).forEach(function(row){
+                sheet2Data.push(row);
+            });
 
             LABKEY.Utils.convertToExcel({
                 fileName : fileName.split(".")[0] + '_' + peptide + '.xlsx',
@@ -762,6 +766,11 @@
             return getCumulativeCorrectPartAUC(timeRows[subgroup].length -1, subgroup) + getInfLinDeltaAUC(lr, subgroup);
         }
 
+        function getAUC_Zero_T(lr, subgroup){
+
+            return getCumulativeCorrectPartAUC(timeRows[subgroup].length -1, subgroup);
+        }
+
         function getInfCumulativeLogLinAUMC(lr, subgroup){
             //=S21+P23
             return getCumulativeLogLinAUMC(timeRows[subgroup].length -1, subgroup) + getInfLinDeltaAUMC(lr, subgroup);
@@ -788,23 +797,23 @@
         }
 
         function getCL_Zero_Inf(lr, subgroup){
-            // =B26/N23*1/60
-            return (dose/getInfCumulativeCorrectPartAUC(lr, subgroup))/60;
+            // =B26/N23*1/60 - but represent in mL instead of L
+            return (dose/getInfCumulativeCorrectPartAUC(lr, subgroup))/60 * 1000;
         }
 
         function getCL_Zero_T(subgroup){
-            // =B26/N21*1/60
-            return (dose/getCumulativeCorrectPartAUC(timeRows[subgroup].length -1, subgroup))/60;
+            // =B26/N21*1/60 - but represent in mL instead of L
+            return (dose/getCumulativeCorrectPartAUC(timeRows[subgroup].length -1, subgroup))/60 * 1000;
         }
 
         function getVdss_Zero_Inf(lr, subgroup){
-            // =(P30*60/1000)*P28
-            return (getCL_Zero_Inf(lr, subgroup)*60/1000)*getMrt_Zero_Inf(lr, subgroup);
+            // =(P30*60/1000)*P28 - but handle mL instead of L coming from getCL_Zero_Inf()
+            return (getCL_Zero_Inf(lr, subgroup)*60)*getMrt_Zero_Inf(lr, subgroup);
         }
 
         function getVdss_Zero_T(lr, subgroup){
-            // =(P31*60/1000)*P29
-            return (getCL_Zero_T(subgroup)*60/1000)*getMrt_Zero_T(subgroup);
+            // =(P31*60/1000)*P29 - but handle mL instead of L coming from getCL_Zero_T()
+            return (getCL_Zero_T(subgroup)*60)*getMrt_Zero_T(subgroup);
         }
 
         function getT1_2(lr, subgroup){
@@ -814,7 +823,7 @@
 
         function getEffectiveT1_2(lr, subgroup){
             // =LN(2)*P32/P30*1000/60
-            return Math.log(2)*getVdss_Zero_Inf(lr, subgroup)/getCL_Zero_Inf(lr, subgroup)*1000/60;
+            return Math.log(2)*getVdss_Zero_Inf(lr, subgroup)/getCL_Zero_Inf(lr, subgroup)/60;
         }
     }(jQuery);
 </script>
