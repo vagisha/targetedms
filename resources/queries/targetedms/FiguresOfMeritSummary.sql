@@ -17,6 +17,7 @@
 SELECT
   RunId,
   MoleculeId,
+  PeptideId,
   AnalyteConcentration,
   SampleType,
   AVG(ReplicateConcentration) as Mean,
@@ -30,4 +31,4 @@ SELECT
 FROM FiguresOfMerit
 WHERE ExcludeFromCalibration = FALSE
 
-GROUP BY RunId, MoleculeId, SampleType, AnalyteConcentration
+GROUP BY RunId, MoleculeId, PeptideId, SampleType, AnalyteConcentration
