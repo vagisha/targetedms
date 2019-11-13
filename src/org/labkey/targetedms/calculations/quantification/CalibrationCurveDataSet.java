@@ -131,7 +131,7 @@ public class CalibrationCurveDataSet {
         }
 
         public Double getAnalyteConcentration() {
-            return analyteConcentration / sampleDilutionFactor;
+            return analyteConcentration == null ? null : (analyteConcentration / sampleDilutionFactor);
         }
 
         public double getSampleDilutionFactor()
