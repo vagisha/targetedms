@@ -211,7 +211,12 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
                     DataSettings.AnnotationType.fromString(annotationSettingForTyping.getMaxType());
             if (annotationType != null && annotationType != DataSettings.AnnotationType.text)
             {
-                annotationSQL.append("CAST(").append("a.value AS ")
+                // Issue 39003 - It's up to DB to decide if it applies the WHERE filter first to get to just the annotation
+                // values we expect based on replicate and name, so on SQL Server be permissive on the conversion
+                // in case we encounter other annotation values first that are of different types
+                annotationSQL.append(getSqlDialect().isSqlServer() ? "TRY_CAST" : "CAST");
+
+                annotationSQL.append("(").append("a.value AS ")
                         .append(getSqlDialect().getSqlCastTypeName(annotationType.getDataType()));
                 annotationSQL.append(")");
                 return annotationType;
