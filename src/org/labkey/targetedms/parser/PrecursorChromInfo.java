@@ -471,7 +471,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
                             {
                                 status = Chromatogram.SourceStatus.skydMissing;
                             }
-                            else if (!Arrays.equals(databaseBytes, diskBytes))
+                            else if (databaseBytes != null && !Arrays.equals(databaseBytes, diskBytes))
                             {
                                 LOG.error("Chromatogram bytes for PrecursorChromInfo " + _generalMoleculeChromInfoId + " do not match between .skyd and DB. Using database copy. Lengths: " + diskBytes.length + " vs " + (databaseBytes == null ? "null" : Integer.toString(databaseBytes.length)));
                                 status = Chromatogram.SourceStatus.mismatch;
@@ -479,7 +479,7 @@ public class PrecursorChromInfo extends ChromInfo<PrecursorChromInfoAnnotation>
                             else
                             {
                                 compressedBytes = diskBytes;
-                                status = Chromatogram.SourceStatus.match;
+                                status = databaseBytes == null ? Chromatogram.SourceStatus.diskOnly : Chromatogram.SourceStatus.match;
                             }
                         }
                     }
