@@ -134,7 +134,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
     }
 
     @Override
-    public void beforeDeleteData(List<ExpData> data)
+    public void beforeDeleteData(List<ExpData> data, User user)
     {
         for (ExpData expData : data)
         {
@@ -150,7 +150,7 @@ public class TargetedMSDataHandler extends AbstractExperimentDataHandler
             // it will be deleted via the deleteData() method, in the case of actual run deletion.
             if (run != null && run.getStatusId() != SkylineDocImporter.STATUS_SUCCESS)
             {
-                TargetedMSManager.deleteRun(container, null, run);
+                TargetedMSManager.deleteRun(container, user, run);
             }
         }
     }
