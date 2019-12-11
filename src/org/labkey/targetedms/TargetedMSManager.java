@@ -1376,7 +1376,7 @@ public class TargetedMSManager
         sql.add(sampleFileId);
 
         String filePath = (String) new SqlSelector(getSchema(), sql).getMap().get("dataFileUrl");
-        return filePath != null || !filePath.isEmpty() ? filePath : null;
+        return filePath != null && !filePath.isEmpty() ? filePath : null;
     }
 
     /**
