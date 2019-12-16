@@ -50,7 +50,7 @@
         ActionURL u = new ActionURL(TargetedMSController.DownloadChromLibraryAction.class, c);
         u.addParameter("revision", i);
         Path archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, i);
-        if (!Files.isDirectory(archiveFile)) {
+        if (Files.exists(archiveFile) && !Files.isDirectory(archiveFile)) {
 %>
     <tr>
         <td><%= i %></td>
