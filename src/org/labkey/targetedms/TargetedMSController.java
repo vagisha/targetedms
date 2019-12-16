@@ -393,6 +393,7 @@ public class TargetedMSController extends SpringActionController
         {
             return getContainer().getStartURL(getUser());
         }
+
     }
 
     private static class ChromatogramCrawlerForm
@@ -4122,7 +4123,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public NavTree appendNavTrail(NavTree root)
         {
-            return root;
+            return root.addChild("Protein Conflicts");
         }
     }
 
