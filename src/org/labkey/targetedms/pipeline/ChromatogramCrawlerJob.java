@@ -1,7 +1,6 @@
 package org.labkey.targetedms.pipeline;
 
 import org.jetbrains.annotations.NotNull;
-import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
@@ -61,7 +60,7 @@ public class ChromatogramCrawlerJob extends PipelineJob
             @Override
             public SimpleFilter getFilter()
             {
-                return new SimpleFilter(FieldKey.fromParts("chromatogramoffset"), null, CompareType.NONBLANK);
+                return new SimpleFilter();
             }
         },
         /** Not supported yet, but coming soon */
@@ -82,9 +81,10 @@ public class ChromatogramCrawlerJob extends PipelineJob
     {
         setStatus(TaskStatus.running);
         var containers = ContainerManager.getAllChildren(getContainer(), getUser());
-        long totalPCI = new TableSelector(TargetedMSManager.getTableInfoPrecursorChromInfo(), _crawlType.getFilter(), null).getRowCount();
 
-        getLogger().info("Starting processing of " + totalPCI + " chromatogram rows over " + containers.size() + " containers");
+        getLogger().info("Starting to process chromatogram rows over " + containers.size() + " containers");
+
+        CrawlSummary crawlSummary = new CrawlSummary();
 
         int containerCount = 0;
         // Loop through all containers
@@ -127,10 +127,12 @@ public class ChromatogramCrawlerJob extends PipelineJob
                 for (RunSummary summary : handler._summaries)
                 {
                     getLogger().info(summary);
+                    crawlSummary.add(summary);
                 }
             }
         }
         getLogger().info("All done!");
+        getLogger().info(crawlSummary.toString());
         setStatus(TaskStatus.complete);
     }
 
@@ -144,6 +146,62 @@ public class ChromatogramCrawlerJob extends PipelineJob
     public String getDescription()
     {
         return "Crawling chromatograms: " + _crawlType;
+    }
+
+    private static class CrawlSummary
+    {
+        private int _dbOnlyCount;
+        private int _diskOnlyCount;
+        private int _noSkydResolvedCount;
+        private int _skydNotPresentCount;
+        private int _mismatchCount;
+        private int _matchCount;
+        private int _noChromatogramCount;
+
+        public void add(RunSummary runSummary)
+        {
+            if (runSummary._dbOnlyCount > 0)
+            {
+                _dbOnlyCount++;
+            }
+            if (runSummary._diskOnlyCount > 0)
+            {
+                _diskOnlyCount++;
+            }
+            if (runSummary._noSkydResolvedCount > 0)
+            {
+                _noSkydResolvedCount++;
+            }
+            if (runSummary._skydNotPresentCount > 0)
+            {
+                _skydNotPresentCount++;
+            }
+            if (runSummary._mismatchCount > 0)
+            {
+                _mismatchCount++;
+            }
+            if (runSummary._matchCount > 0)
+            {
+                _matchCount++;
+            }
+            if (runSummary._noChromatogramCount > 0)
+            {
+                _noChromatogramCount++;
+            }
+        }
+
+        @Override
+        public String toString()
+        {
+            return String.format("Crawl summary by Skyline document counts. Match: %3d,   No SKYD resolved: %3d, DB only: %3d,   Disk only: %3d,   SKYD not present: %3d,   Mismatch: %3d",
+                    _matchCount,
+                    _noSkydResolvedCount,
+                    _dbOnlyCount,
+                    _diskOnlyCount,
+                    _skydNotPresentCount,
+                    _mismatchCount,
+                    _noChromatogramCount);
+        }
     }
 
     /**  */
@@ -168,7 +226,16 @@ public class ChromatogramCrawlerJob extends PipelineJob
         @Override
         public String toString()
         {
-            return String.format("Run %7d.  Match: %3d,   No SKYD resolved: %3d, DB only: %3d,   Disk only: %3d,   SKYD not present: %3d,   Mismatch: %3d,   No chromatogram: %7d,   Skipped: %7d",
+            // Count the number of different states we found for chromatograms, excluding the "skipped" one
+            int states = (_matchCount > 0 ? 1 : 0) +
+                    (_noSkydResolvedCount > 0 ? 1 : 0) +
+                    (_dbOnlyCount > 0 ? 1 : 0) +
+                    (_diskOnlyCount > 0 ? 1 : 0) +
+                    (_skydNotPresentCount > 0 ? 1 : 0) +
+                    (_mismatchCount > 0 ? 1 : 0) +
+                    (_noChromatogramCount > 0 ? 1 : 0);
+
+            return String.format("Skyline document %7d.  Match: %3d,   No SKYD resolved: %3d, DB only: %3d,   Disk only: %3d,   SKYD not present: %3d,   Mismatch: %3d,   No chromatogram: %7d,   Skipped: %7d" + (states > 1 ? "  - MIXED STATES!!!" : ""),
                     _run.getId(),
                     _matchCount,
                     _noSkydResolvedCount,
