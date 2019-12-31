@@ -19,13 +19,11 @@ import org.jfree.chart.ChartColor;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.labkey.api.data.Container;
-import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.security.User;
 import org.labkey.api.util.Formats;
 import org.labkey.targetedms.TargetedMSManager;
-import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.model.PrecursorComparator;
@@ -36,7 +34,9 @@ import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.MoleculeTransition;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
+import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.parser.SampleFileChromInfo;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.MoleculePrecursorManager;
@@ -231,6 +231,66 @@ public abstract class ChromatogramDataset
         }
     }
 
+    static class SampleFileDataset extends ChromatogramDataset
+    {
+        private final SampleFileChromInfo _chromInfo;
+
+        public SampleFileDataset(SampleFileChromInfo chromInfo, User user, Container container)
+        {
+            _chromInfo = chromInfo;
+            SampleFile sampleFile = TargetedMSManager.getSampleFile(chromInfo.getSampleFileId(), container);
+            Replicate replicate = TargetedMSManager.getReplicate(sampleFile.getReplicateId(), container);
+            _run = TargetedMSManager.getRun(replicate.getRunId());
+        }
+
+        @Override
+        public String getChartTitle()
+        {
+            return _chromInfo.getTextId();
+        }
+
+        @Override
+        public Double getPeakStartTime()
+        {
+            return null;
+        }
+
+        @Override
+        public Double getPeakEndTime()
+        {
+            return null;
+        }
+
+        @Override
+        public List<ChartAnnotation> getChartAnnotations()
+        {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public Color getSeriesColor(int seriesIndex)
+        {
+            return ChartColors.getPrecursorColor(0);
+        }
+
+        @Override
+        public void build()
+        {
+            Chromatogram chromatogram = _chromInfo.createChromatogram(_run);
+
+            _jfreeDataset = new XYSeriesCollection();
+            XYSeries series = new XYSeries(_chromInfo.getTextId());
+            float[] times = chromatogram.getTimes();
+            float[] intensities = chromatogram.getIntensities(0);
+            assert times.length == intensities.length;
+            for (int i = 0; i < times.length; i++)
+            {
+                series.add(times[i], intensities[i]);
+            }
+            _jfreeDataset.addSeries(series);
+        }
+    }
+
     static class MoleculeDataset extends GeneralMoleculeDataset
     {
         private MoleculePrecursorColorIndexer _colorIndexer;
@@ -239,11 +299,6 @@ public abstract class ChromatogramDataset
         {
             super(pepChromInfo, syncIntensity, syncRt, user, container);
             _colorIndexer = new MoleculePrecursorColorIndexer(_generalMoleculeId, user, container);
-        }
-
-        MoleculeDataset(int generalMoleculeId, int sampleFileId, boolean syncIntensity, boolean syncRt, User user, Container container)
-        {
-            super(generalMoleculeId, sampleFileId, syncIntensity, syncRt, user, container);
         }
 
         @Override

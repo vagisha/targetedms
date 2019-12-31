@@ -78,12 +78,17 @@ class ChromatogramChartMaker
 
     public JFreeChart make(final ChromatogramDataset chromatogramDataset)
     {
+        return make(chromatogramDataset, "Retention Time", "Intensity " + getIntensityScaleString(chromatogramDataset), true);
+    }
+
+    public JFreeChart make(final ChromatogramDataset chromatogramDataset, String xLabel, String yLabel, boolean legend)
+    {
         chromatogramDataset.build();
 
         JFreeChart chart = ChartFactory.createXYLineChart(chromatogramDataset.getChartTitle(),
-                "Retention Time", "Intensity " + getIntensityScaleString(chromatogramDataset),
+                xLabel, yLabel,
                  chromatogramDataset.getJFreeDataset(),
-                PlotOrientation.VERTICAL, true, false, false);
+                PlotOrientation.VERTICAL, legend, false, false);
 
          setupSeriesColors(chart, chromatogramDataset);
 

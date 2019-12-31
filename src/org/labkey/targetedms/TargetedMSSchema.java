@@ -134,6 +134,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_GENERAL_MOLECULE_CHROM_INFO = "GeneralMoleculeChromInfo";
     public static final String TABLE_PEPTIDE_CHROM_INFO = "PeptideChromInfo";
     public static final String TABLE_PRECURSOR_CHROM_INFO = "PrecursorChromInfo";
+    public static final String TABLE_SAMPLE_FILE_CHROM_INFO = "SampleFileChromInfo";
     public static final String TABLE_PRECURSOR_CHROM_INFO_ANNOTATION = "PrecursorChromInfoAnnotation";
     public static final String TABLE_PEPTIDE_AREA_RATIO = "PeptideAreaRatio";
     public static final String TABLE_PRECURSOR_AREA_RATIO = "PrecursorAreaRatio";
@@ -1235,10 +1236,17 @@ public class TargetedMSSchema extends UserSchema
             return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.IsolationSchemeFK);
         }
 
-        // Tables that have a FT to targetesms.DriftTimePredictionSettings
+        // Tables that have a FK to targetedms.DriftTimePredictionSettings
         if(TABLE_MEASURED_DRIFT_TIME.equalsIgnoreCase(name))
         {
             return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.DriftTimePredictionSettingsFK);
+        }
+
+        if(TABLE_SAMPLE_FILE_CHROM_INFO.equalsIgnoreCase(name))
+        {
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.SampleFileFK);
+            result.getMutableColumn("SampleFileId").setFk(new QueryForeignKey.Builder(this, cf).table(TABLE_SAMPLE_FILE));
+            return result;
         }
 
         if (getTableNames().contains(name))
@@ -1414,6 +1422,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_SKYLINE_AUDITLOG_ENTRY);
         hs.add(TABLE_SKYLINE_AUDITLOG_MESSAGE);
         hs.add(TABLE_LIST_DEFINITION);
+        hs.add(TABLE_SAMPLE_FILE_CHROM_INFO);
 
         return hs;
     }

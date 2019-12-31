@@ -412,6 +412,8 @@ public class SkylineDocImporter
         ReplicateInfo replicateInfo = new ReplicateInfo();
 
         Map<Instrument, Integer> instrumentIdMap = new HashMap<>();
+
+        Map<String, SampleFile> pathToSampleFile = new HashMap<>();
         for(SkylineReplicate skyReplicate: parser.getReplicates())
         {
             Replicate replicate = new Replicate();
@@ -465,7 +467,12 @@ public class SkylineDocImporter
 
             handleReplicateExclusions(replicate, ignoreInQcAnnot);
 
-            insertSampleFiles(replicateInfo, instrumentIdMap, replicate);
+            insertSampleFiles(replicateInfo, instrumentIdMap, replicate, pathToSampleFile);
+        }
+
+        for (SampleFileChromInfo sampleFileChromInfo : parser.getSampleFileChromInfos(pathToSampleFile))
+        {
+            Table.insert(_user, TargetedMSManager.getTableInfoSampleFileChromInfo(), sampleFileChromInfo);
         }
 
         return replicateInfo;
@@ -1964,7 +1971,8 @@ public class SkylineDocImporter
 
     }
 
-    private void insertSampleFiles(ReplicateInfo replicateInfo, Map<Instrument, Integer> instrumentIdMap, Replicate replicate)
+
+    private void insertSampleFiles(ReplicateInfo replicateInfo, Map<Instrument, Integer> instrumentIdMap, Replicate replicate, Map<String, SampleFile> pathToSampleFile)
     {
         for(SampleFile sampleFile: replicate.getSampleFileList())
         {
@@ -1995,6 +2003,14 @@ public class SkylineDocImporter
 
             sampleFile = Table.insert(_user, TargetedMSManager.getTableInfoSampleFile(), sampleFile);
 
+            if (pathToSampleFile.containsKey(sampleFile.getFilePath()))
+            {
+                _log.warn("Duplicate entries found for file path " + sampleFile.getFilePath() + ", may not resolve sample file-scoped chromatograms correctly");
+            }
+            else
+            {
+                pathToSampleFile.put(sampleFile.getFilePath(), sampleFile);
+            }
 
             // Remember the ids we inserted so we can reference them later
             replicateInfo.skylineIdSampleFileIdMap.put(sampleFileKey, sampleFile);

@@ -85,6 +85,7 @@ import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.parser.SampleFileChromInfo;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
 import org.labkey.targetedms.query.ModificationManager;
@@ -129,6 +130,15 @@ public class TargetedMSManager
     public static TargetedMSManager get()
     {
         return _instance;
+    }
+
+    public static List<SampleFileChromInfo> getSampleFileChromInfos(SampleFile sampleFile)
+    {
+        return new TableSelector(getTableInfoSampleFileChromInfo(), new SimpleFilter(FieldKey.fromParts("SampleFileId"), sampleFile.getId()), new Sort("TextId")).getArrayList(SampleFileChromInfo.class);    }
+
+    public static SampleFileChromInfo getSampleFileChromInfo(int id, Container c)
+    {
+        return new TableSelector(getTableInfoSampleFileChromInfo(), new SimpleFilter(FieldKey.fromParts("Id"), id).addCondition(FieldKey.fromParts("Container"), c), null).getObject(SampleFileChromInfo.class);
     }
 
     public String getSchemaName()
@@ -234,6 +244,11 @@ public class TargetedMSManager
     public static TableInfo getTableInfoPrecursorChromInfo()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_PRECURSOR_CHROM_INFO);
+    }
+
+    public static TableInfo getTableInfoSampleFileChromInfo()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_SAMPLE_FILE_CHROM_INFO);
     }
 
     public static TableInfo getTableInfoPrecursorAreaRatio()
@@ -1419,6 +1434,9 @@ public class TargetedMSManager
 
         // Delete from PeptideChromInfo
         execute("DELETE FROM " + getTableInfoGeneralMoleculeChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
+
+        // Delete from SampleFileChromInfo
+        execute("DELETE FROM " + getTableInfoSampleFileChromInfo() + " WHERE SampleFileId = ?", sampleFileId);
     }
 
     private static String getDependentSampleFileDeleteSql(TableInfo fromTable, String fromFk, TableInfo dependentTable)
@@ -1495,6 +1513,9 @@ public class TargetedMSManager
         deletePeptideGroupDependent(getTableInfoProtein());
         // Delete from PeptideGroupAnnotation
         deletePeptideGroupDependent(getTableInfoPeptideGroupAnnotation());
+
+        // Delete from SampleFileChromInfo
+        deleteSampleFileDependent(getTableInfoSampleFileChromInfo());
 
         // Delete from sampleFile
         deleteReplicateDependent(getTableInfoSampleFile());
@@ -1660,6 +1681,15 @@ public class TargetedMSManager
     {
         execute(" DELETE FROM " + tableInfo +
                 " WHERE ReplicateId IN (SELECT rep.Id FROM " + getTableInfoReplicate() + " rep "+
+                " INNER JOIN " + getTableInfoRuns() + " r ON rep.RunId = r.Id " +
+                " WHERE r.Deleted = ?)", true);
+    }
+
+    private static void deleteSampleFileDependent(TableInfo tableInfo)
+    {
+        execute(" DELETE FROM " + tableInfo +
+                " WHERE SampleFileId IN (SELECT sf.Id FROM " + getTableInfoSampleFile() + " sf " +
+                " INNER JOIN " + getTableInfoReplicate() + " rep ON rep.Id = sf.ReplicateId "+
                 " INNER JOIN " + getTableInfoRuns() + " r ON rep.RunId = r.Id " +
                 " WHERE r.Deleted = ?)", true);
     }

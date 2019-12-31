@@ -19,7 +19,6 @@ package org.labkey.targetedms.parser;
 import com.google.common.collect.Iterables;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.fop.util.XMLUtil;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -39,7 +38,6 @@ import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.chromlib.ConnectionSource;
 import org.labkey.targetedms.parser.list.ListColumn;
 import org.labkey.targetedms.parser.list.ListData;
-import org.labkey.targetedms.parser.list.ListDefinition;
 import org.labkey.targetedms.parser.proto.SkylineDocument;
 import org.labkey.targetedms.parser.skyd.ChromGroupHeaderInfo;
 
@@ -169,6 +167,8 @@ public class SkylineDocumentParser implements AutoCloseable
     private int _replicateCount;
     private int _listCount;
 
+    /** Null if we haven't found a SKYD to parse */
+    @Nullable
     private SkylineBinaryParser _binaryParser;
 
     private TransitionSettings _transitionSettings;
@@ -213,6 +213,7 @@ public class SkylineDocumentParser implements AutoCloseable
         readDocumentVersion(_reader);
     }
 
+    @Override
     public void close()
     {
         if (_reader != null) try
@@ -2546,6 +2547,42 @@ public class SkylineDocumentParser implements AutoCloseable
         return precursorMz1.compareTolerant(precursorMz2, tolerance);
     }
 
+    public List<SampleFileChromInfo> getSampleFileChromInfos(Map<String, SampleFile> pathToSampleFile)
+    {
+        List<SampleFileChromInfo> result = new ArrayList<>();
+        if (_binaryParser == null)
+        {
+            return Collections.emptyList();
+        }
+        for (ChromGroupHeaderInfo chromatogram : _binaryParser.getChromatograms())
+        {
+            if (chromatogram.getPrecursorMz() == 0.0)
+            {
+                String path = _binaryParser.getFilePath(chromatogram);
+                SampleFile sampleFile = pathToSampleFile.get(path);
+                if (sampleFile == null)
+                {
+                    _log.warn("Unable to resolve " + path + " to SampleFile, will not import its sample-scoped chromatogram");
+                }
+                else
+                {
+                    SampleFileChromInfo info = new SampleFileChromInfo(_container);
+                    info.setSampleFileId(sampleFile.getId());
+                    info.setStartTime(chromatogram.getStartTime());
+                    info.setEndTime(chromatogram.getEndTime());
+                    info.setTextId(_binaryParser.getTextId(chromatogram));
+                    info.setChromatogramFormat(chromatogram.getChromatogramBinaryFormat().ordinal());
+                    info.setChromatogramOffset(chromatogram.getLocationPoints());
+                    info.setChromatogramLength(chromatogram.getCompressedSize());
+                    info.setNumPoints(chromatogram.getNumPoints());
+                    info.setUncompressedSize(chromatogram.getUncompressedSize());
+
+                    result.add(info);
+                }
+            }
+        }
+        return result;
+    }
 
     private List<ChromGroupHeaderInfo> tryLoadChromatogram(
             List<? extends GeneralTransition> transitions,

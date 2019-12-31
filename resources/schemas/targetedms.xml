@@ -432,6 +432,27 @@
             <column columnName="DecoyMassShift"/>
         </columns>
     </table>
+    <table tableDbType="TABLE" tableName="SampleFileChromInfo">
+        <description>Contains a row for each sample file-scoped chromatogram, such as pressure traces or TIC.</description>
+        <titleColumn>TextId</titleColumn>
+        <columns>
+            <column columnName="Id">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="SampleFileId" />
+            <column columnName="StartTime" />
+            <column columnName="EndTime" />
+            <column columnName="TextId" />
+            <column columnName="NumPoints" />
+            <column columnName="UncompressedSize" />
+            <column columnName="Container">
+                <isHidden>true</isHidden>
+            </column>
+            <column columnName="ChromatogramFormat" />
+            <column columnName="ChromatogramOffset" />
+            <column columnName="ChromatogramLength" />
+        </columns>
+    </table>
     <table tableDbType="TABLE" tableName="PrecursorChromInfo">
         <titleColumn>SampleName</titleColumn>
         <description>Contains a row for each precursor chromatogram loaded in a targeted MS run.</description>

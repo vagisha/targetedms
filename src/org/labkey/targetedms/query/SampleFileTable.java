@@ -17,6 +17,7 @@ package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.assay.AssayUrls;
 import org.labkey.api.data.Aggregate;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
@@ -24,6 +25,7 @@ import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.DefaultQueryUpdateService;
+import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.InvalidKeyException;
@@ -35,6 +37,9 @@ import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
 import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.view.ActionURL;
+import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
@@ -42,6 +47,7 @@ import org.labkey.targetedms.TargetedMSSchema;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -66,6 +72,11 @@ public class SampleFileTable extends TargetedMSTable
         addCondition(new SQLFragment("ReplicateId IN (SELECT Id FROM ").
                 append(TargetedMSManager.getTableInfoReplicate(), "r").
                 append(" WHERE RunId = ?)").add(run.getId()), FieldKey.fromParts("ReplicateId"));
+
+        ActionURL url = new ActionURL(TargetedMSController.ShowSampleFileAction.class, getContainer());
+        Map<String, String> urlParams = new HashMap<>();
+        urlParams.put("id", "Id");
+        setDetailsURL(new DetailsURL(url, urlParams));
     }
 
     @Override
@@ -140,7 +151,7 @@ public class SampleFileTable extends TargetedMSTable
                 Object id = oldRowMap.get("id");
                 if (id != null)
                 {
-                    Integer convertedId = Integer.parseInt(id.toString());
+                    int convertedId = Integer.parseInt(id.toString());
                     TargetedMSManager.purgeDeletedSampleFiles(convertedId);
                 }
                 return super.deleteRow(user, container, oldRowMap);

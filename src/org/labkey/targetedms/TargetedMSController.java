@@ -32,6 +32,8 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.Button;
+import org.labkey.api.util.DOM;
+import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.*;
@@ -120,6 +122,8 @@ import org.labkey.targetedms.parser.QuantificationSettings;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
 import org.labkey.targetedms.parser.RepresentativeDataState;
+import org.labkey.targetedms.parser.SampleFile;
+import org.labkey.targetedms.parser.SampleFileChromInfo;
 import org.labkey.targetedms.parser.SkylineBinaryParser;
 import org.labkey.targetedms.parser.SkylineDocumentParser;
 import org.labkey.targetedms.parser.TransitionChromInfo;
@@ -163,8 +167,6 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -188,9 +190,13 @@ import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_TAB;
 import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_DIR;
 import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
 import static org.labkey.api.util.DOM.Attribute.method;
+import static org.labkey.api.util.DOM.Attribute.src;
 import static org.labkey.api.util.DOM.DIV;
+import static org.labkey.api.util.DOM.TD;
+import static org.labkey.api.util.DOM.TR;
 import static org.labkey.api.util.DOM.X.FORM;
 import static org.labkey.api.util.DOM.at;
+import static org.labkey.api.util.DOM.cl;
 import static org.labkey.targetedms.TargetedMSModule.EXPERIMENT_FOLDER_WEB_PARTS;
 import static org.labkey.api.targetedms.TargetedMSService.FolderType;
 import static org.labkey.targetedms.TargetedMSModule.LIBRARY_FOLDER_WEB_PARTS;
@@ -3415,10 +3421,7 @@ public class TargetedMSController extends SpringActionController
             QuerySettings settings = new QuerySettings(getViewContext(), DATA_REGION_NAME, TargetedMSSchema.SAMPLE_FILE_RUN_PREFIX + _run.getRunId());
             settings.setBaseSort(new Sort(FieldKey.fromParts("ReplicateId", "Name")));
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
-            QueryView view = schema.createView(getViewContext(), settings, errors);
-
-            view.setShowDetailsColumn(false);
-            return view;
+            return schema.createView(getViewContext(), settings, errors);
         }
     }
 
@@ -3702,6 +3705,132 @@ public class TargetedMSController extends SpringActionController
         }
 
         return run;
+    }
+
+    public static class IdForm
+    {
+        private int _id;
+
+        public int getId()
+        {
+            return _id;
+        }
+
+        public void setId(int id)
+        {
+            _id = id;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowSampleFileAction extends SimpleViewAction<IdForm>
+    {
+        private TargetedMSRun _run; // save for use in appendNavTrail
+        private SampleFile _sampleFile;
+
+        @Override
+        public ModelAndView getView(IdForm form, BindException errors) throws Exception
+        {
+            _sampleFile = TargetedMSManager.getSampleFile(form.getId(), getContainer());
+            if (_sampleFile == null)
+            {
+                throw new NotFoundException("Could not find SampleFile with ID " + form.getId());
+            }
+            Replicate replicate = TargetedMSManager.getReplicate(_sampleFile.getReplicateId(), getContainer());
+            if (replicate == null)
+            {
+                throw new NotFoundException("Could not find Replicate with ID " + _sampleFile.getReplicateId());
+            }
+            _run = TargetedMSManager.getRun(replicate.getRunId());
+
+            VBox result = new VBox();
+
+            // Summary for this sample file
+            DOM.Renderable renderable = DOM.TABLE(cl("lk-fields-table"),
+                    TR(TD(cl("labkey-form-label"), "Sample File Name"),
+                            TD(_sampleFile.getSampleName())),
+                    TR(TD(cl("labkey-form-label"), "File Path"),
+                            TD(_sampleFile.getFilePath())),
+                    TR(TD(cl("labkey-form-label"), "Acquired Time"),
+                            TD(DateUtil.formatDateTime(getContainer(), _sampleFile.getAcquiredTime()))),
+                    TR(TD(cl("labkey-form-label"), "Modified Time"),
+                            TD(DateUtil.formatDateTime(getContainer(), _sampleFile.getModifiedTime()))),
+                    TR(TD(cl("labkey-form-label"), "Skyline ID"),
+                            TD(_sampleFile.getSkylineId())),
+                    TR(TD(cl("labkey-form-label"), "Instrument Serial Number"),
+                            TD(_sampleFile.getInstrumentSerialNumber())),
+                    TR(TD(cl("labkey-form-label"), "Replicate Name"),
+                            TD(replicate.getName()))
+            );
+
+            HtmlView summaryView = new HtmlView(renderable);
+            summaryView.setFrame(WebPartView.FrameType.PORTAL);
+            summaryView.setTitle("Sample File Summary");
+            result.addView(summaryView);
+
+            List<SampleFileChromInfo> sampleFileChromInfos = TargetedMSManager.getSampleFileChromInfos(_sampleFile);
+
+            for (SampleFileChromInfo sampleFileChromInfo : sampleFileChromInfos)
+            {
+                ActionURL chromURL = new ActionURL(SampleFileChromatogramChartAction.class, getContainer());
+                chromURL.addParameter("id", sampleFileChromInfo.getId());
+                HtmlView chromView = new HtmlView(DOM.IMG(at(src, chromURL.toString())));
+                chromView.setFrame(WebPartView.FrameType.PORTAL);
+                chromView.setTitle(sampleFileChromInfo.getTextId());
+                result.addView(chromView);
+            }
+
+            return result;
+        }
+
+        @Override
+        public NavTree appendNavTrail(NavTree root)
+        {
+            root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
+            root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
+            root.addChild(_sampleFile.getSampleName());
+            return root;
+        }
+    }
+
+    public static class SampleFileChromInfoForm extends AbstractChartForm
+    {
+        private int _id;
+
+        public SampleFileChromInfoForm()
+        {
+            setChartWidth(1200);
+            setChartHeight(300);
+        }
+
+        public int getId()
+        {
+            return _id;
+        }
+
+        public void setId(int id)
+        {
+            _id = id;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class SampleFileChromatogramChartAction extends ExportAction<SampleFileChromInfoForm>
+    {
+        @Override
+        public void export(SampleFileChromInfoForm form, HttpServletResponse response, BindException errors) throws Exception
+        {
+            SampleFileChromInfo chromInfo = TargetedMSManager.getSampleFileChromInfo(form.getId(), getContainer());
+            if (chromInfo == null)
+            {
+                throw new NotFoundException("No SampleFileChromInfo found in this folder for id: " + form.getId());
+            }
+
+            ChromatogramChartMakerFactory factory = new ChromatogramChartMakerFactory();
+            JFreeChart chart = factory.createSampleFileChromChart(chromInfo, getUser(), getContainer());
+
+            writePNG(form, response, chart);
+        }
     }
 
     // ------------------------------------------------------------------------

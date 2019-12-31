@@ -22,6 +22,7 @@ import org.labkey.api.security.User;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
+import org.labkey.targetedms.parser.SampleFileChromInfo;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
@@ -144,5 +145,10 @@ public class ChromatogramChartMakerFactory
     public JFreeChart createMoleculeChromChart(GeneralMoleculeChromInfo molChromInfo, User user, Container container)
     {
         return new ChromatogramChartMaker().make(new ChromatogramDataset.MoleculeDataset(molChromInfo, _syncIntensity, _syncRt, user, container));
+    }
+
+    public JFreeChart createSampleFileChromChart(SampleFileChromInfo chromInfo, User user, Container container)
+    {
+        return new ChromatogramChartMaker().make(new ChromatogramDataset.SampleFileDataset(chromInfo, user, container), "Time", "Value", false);
     }
 }
