@@ -389,13 +389,13 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
             if (stats.getMean() != null)
             {
-                double delta = stats.getMean() * 0.001;
+                double delta = Math.abs(stats.getMean() * 0.001);
                 assertEquals("Unexpected guide set stats mean for " + stats.getMetricName(), stats.getMean(), ((Number)row.getValue("Mean")).doubleValue(), delta);
             }
 
             if (stats.getStdDev() != null)
             {
-                double delta = stats.getMean() * 0.001;
+                double delta = Math.abs(stats.getStdDev() * 0.001);
                 assertEquals("Unexpected guide set stats std dev for " + stats.getMetricName(), stats.getStdDev(), ((Number)row.getValue("StandardDev")).doubleValue(), delta);
             }
         }
