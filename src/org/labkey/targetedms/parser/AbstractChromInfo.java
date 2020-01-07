@@ -190,59 +190,9 @@ public abstract class AbstractChromInfo extends ChromInfo<PrecursorChromInfoAnno
 
             ChromatogramBinaryFormat binaryFormat = ChromatogramBinaryFormat.values()[getChromatogramFormat()];
 
-            byte[] databaseBytes = getChromatogram();
-            byte[] compressedBytes = databaseBytes;
-
-            Chromatogram.SourceStatus status;
-
-            if (loadFromSkyd || databaseBytes == null)
-            {
-                if (run.getSkydDataId() != null && _chromatogramLength != null && _chromatogramOffset != null)
-                {
-                    ExpData skydData = ExperimentService.get().getExpData(run.getSkydDataId());
-                    if (skydData != null)
-                    {
-                        Path skydPath = skydData.getFilePath();
-                        if (skydPath == null)
-                        {
-                            status = Chromatogram.SourceStatus.skydMissing;
-                            LOG.debug("No path available for " + this + ", bucket may be unavailable for URL " + skydData.getDataFileUrl());
-                        }
-                        else
-                        {
-                            LOG.debug("Attempting to fetch chromatogram bytes (possibly cached) from " + skydPath + " for " + this);
-                            byte[] diskBytes = ON_DEMAND_CHROM_CACHE.get(new Tuple3<>(skydPath, _chromatogramOffset, _chromatogramLength));
-                            if (diskBytes == null)
-                            {
-                                status = Chromatogram.SourceStatus.skydMissing;
-                            }
-                            else if (databaseBytes != null && !Arrays.equals(databaseBytes, diskBytes))
-                            {
-                                LOG.error("Chromatogram bytes for " + this + " do not match between .skyd and DB. Using database copy. Lengths: " + diskBytes.length + " vs " + Integer.toString(databaseBytes.length));
-                                status = Chromatogram.SourceStatus.mismatch;
-                            }
-                            else
-                            {
-                                compressedBytes = diskBytes;
-                                status = databaseBytes == null ? Chromatogram.SourceStatus.diskOnly : Chromatogram.SourceStatus.match;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        status = Chromatogram.SourceStatus.noSkydResolved;
-                    }
-                }
-                else
-                {
-                    LOG.debug("No length, offset, and/or SKYD DataId for " + this);
-                    status = Chromatogram.SourceStatus.dbOnly;
-                }
-            }
-            else
-            {
-                status = Chromatogram.SourceStatus.dbOnly;
-            }
+            CompressedBytesAndStatus compressedBytesAndStatus = getCompressedBytesAndStatus(run, loadFromSkyd);
+            byte[] compressedBytes = compressedBytesAndStatus.getCompressedBytes();
+            Chromatogram.SourceStatus status = compressedBytesAndStatus.getStatus();
 
             if (compressedBytes == null)
             {
@@ -256,5 +206,92 @@ public abstract class AbstractChromInfo extends ChromInfo<PrecursorChromInfoAnno
         {
             throw new UnexpectedException(exception);
         }
+    }
+
+    private CompressedBytesAndStatus getCompressedBytesAndStatus(TargetedMSRun run, boolean loadFromSkyd)
+    {
+        byte[] databaseBytes = getChromatogram();
+        byte[] compressedBytes = databaseBytes;
+        Chromatogram.SourceStatus status;
+
+        if (loadFromSkyd || databaseBytes == null)
+        {
+            if (run.getSkydDataId() != null && _chromatogramLength != null && _chromatogramOffset != null)
+            {
+                ExpData skydData = ExperimentService.get().getExpData(run.getSkydDataId());
+                if (skydData != null)
+                {
+                    Path skydPath = skydData.getFilePath();
+                    if (skydPath == null)
+                    {
+                        status = Chromatogram.SourceStatus.skydMissing;
+                        LOG.debug("No path available for " + toString() + ", bucket may be unavailable for URL " + skydData.getDataFileUrl());
+                    }
+                    else
+                    {
+                        LOG.debug("Attempting to fetch chromatogram bytes (possibly cached) from " + skydPath + " for " + toString());
+                        byte[] diskBytes = ON_DEMAND_CHROM_CACHE.get(new Tuple3<>(skydPath, _chromatogramOffset, _chromatogramLength));
+                        if (diskBytes == null)
+                        {
+                            status = Chromatogram.SourceStatus.skydMissing;
+                        }
+                        else if (databaseBytes != null && !Arrays.equals(databaseBytes, diskBytes))
+                        {
+                            LOG.error("Chromatogram bytes for " + toString() + " do not match between .skyd and DB. Using database copy. Lengths: " + diskBytes.length + " vs " + (databaseBytes == null ? "null" : Integer.toString(databaseBytes.length)));
+                            status = Chromatogram.SourceStatus.mismatch;
+                        }
+                        else
+                        {
+                            compressedBytes = diskBytes;
+                            status = databaseBytes == null ? Chromatogram.SourceStatus.diskOnly : Chromatogram.SourceStatus.match;
+                        }
+                    }
+                }
+                else
+                {
+                    status = Chromatogram.SourceStatus.noSkydResolved;
+                }
+            }
+            else
+            {
+                LOG.debug("No length, offset, and/or SKYD DataId for " + toString());
+                status = Chromatogram.SourceStatus.dbOnly;
+            }
+        }
+        else
+        {
+            status = Chromatogram.SourceStatus.dbOnly;
+        }
+        return new CompressedBytesAndStatus(compressedBytes, status);
+    }
+
+    private class CompressedBytesAndStatus
+    {
+        private final byte[] _compressedBytes;
+        private final Chromatogram.SourceStatus _status;
+
+        private CompressedBytesAndStatus(byte[] compressedBytes, Chromatogram.SourceStatus status)
+        {
+            _compressedBytes = compressedBytes;
+            _status = status;
+        }
+
+        public byte[] getCompressedBytes()
+        {
+            return _compressedBytes;
+        }
+
+        public Chromatogram.SourceStatus getStatus()
+        {
+            return _status;
+        }
+    }
+
+    @Nullable
+    public byte[] getChromatogramBytes(TargetedMSRun run)
+    {
+        boolean loadFromSkyd = Boolean.parseBoolean(TargetedMSModule.PREFER_SKYD_FILE_CHROMATOGRAMS_PROPERTY.getEffectiveValue(_container));
+        CompressedBytesAndStatus compressedBytesAndStatus = getCompressedBytesAndStatus(run, loadFromSkyd);
+        return compressedBytesAndStatus.getCompressedBytes();
     }
 }
