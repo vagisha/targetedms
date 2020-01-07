@@ -352,6 +352,9 @@ public class SkylineDocImporter
 
             if (run.isRepresentative())
             {
+                // Persist the run so that the skydDataId is available when writing the updated chromatogram library.
+                // skydDataId is required to get to the skyd file for reading chromatograms when they are not saved in the db.
+                Table.update(_user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
                 RepresentativeStateManager.setRepresentativeState(_user, _container, _localDirectory, run, run.getRepresentativeDataState());
             }
 
