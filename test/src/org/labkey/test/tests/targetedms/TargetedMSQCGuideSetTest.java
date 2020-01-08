@@ -390,13 +390,15 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
             if (stats.getMean() != null)
             {
                 double delta = Math.abs(stats.getMean() * 0.001);
-                assertEquals("Unexpected guide set stats mean for " + stats.getMetricName(), stats.getMean(), ((Number)row.getValue("Mean")).doubleValue(), delta);
+                double actual = ((Number) row.getValue("Mean")).doubleValue();
+                assertEquals("Unexpected guide set stats mean for " + stats.getMetricName(), stats.getMean(), actual, delta);
             }
 
             if (stats.getStdDev() != null)
             {
                 double delta = Math.abs(stats.getStdDev() * 0.001);
-                assertEquals("Unexpected guide set stats std dev for " + stats.getMetricName(), stats.getStdDev(), ((Number)row.getValue("StandardDev")).doubleValue(), delta);
+                double actual = ((Number)row.getValue("StandardDev")).doubleValue();
+                assertEquals("Unexpected guide set stats std dev for " + stats.getMetricName(), stats.getStdDev(), actual, delta);
             }
         }
     }
@@ -420,7 +422,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     {
         gs.addStats(new GuideSetStats("retentionTime", 1, PRECURSORS[0], 14.8795, null));
         gs.addStats(new GuideSetStats("peakArea", 1, PRECURSORS[0], 1.1613580288E10, null));
-        gs.addStats(new GuideSetStats("fwhm", 1, PRECURSORS[0], 0.0962, null));
+        gs.addStats(new GuideSetStats("fwhm", 1, PRECURSORS[0], 0.0962294191122055, null));
         gs.addStats(new GuideSetStats("fwb", 1, PRECURSORS[0], 0.29160022735595703, null));
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 1, PRECURSORS[0], 0.06410326063632965, null));
@@ -435,7 +437,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     {
         gs.addStats(new GuideSetStats("retentionTime", 10, PRECURSORS[1], 32.1514, 0.0265));
         gs.addStats(new GuideSetStats("peakArea", 10, PRECURSORS[1], 293_073_490_739.2000, 64_545_315_906.7533));
-        gs.addStats(new GuideSetStats("fwhm", 10, PRECURSORS[1], 0.1096, 0.0149));
+        gs.addStats(new GuideSetStats("fwhm", 10, PRECURSORS[1], 0.1096, 0.014915757937698814));
         gs.addStats(new GuideSetStats("fwb", 10, PRECURSORS[1], 0.32562103271484377, 0.02468766649130722));
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 10, PRECURSORS[1], 0.16636697351932525, 0.024998646348985));
@@ -448,7 +450,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
     private void verifyGuideSet4Stats(GuideSet gs) throws IOException, CommandException
     {
-        gs.addStats(new GuideSetStats("retentionTime", 4, PRECURSORS[2], 14.031, 0.244));
+        gs.addStats(new GuideSetStats("retentionTime", 4, PRECURSORS[2], 14.031, 0.24425653767257782));
         gs.addStats(new GuideSetStats("peakArea", 4, PRECURSORS[2], 1.1564451072E10, 1.5713155146840603E9));
         gs.addStats(new GuideSetStats("fwhm", 4, PRECURSORS[2], 0.08786291070282459, 0.006));
         gs.addStats(new GuideSetStats("fwb", 4, PRECURSORS[2], 0.2592000961303711, 0.013227298183650286));
@@ -463,9 +465,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
     private void verifyGuideSet5Stats(GuideSet gs) throws IOException, CommandException
     {
-        gs.addStats(new GuideSetStats("retentionTime", 2, PRECURSORS[3], 24.5812, 0.0114));
+        gs.addStats(new GuideSetStats("retentionTime", 2, PRECURSORS[3], 24.5812, 0.01144101490937325));
         gs.addStats(new GuideSetStats("peakArea", 2, PRECURSORS[3], 56_306_905_088.0000, 1_534_794_886.5359));
-        gs.addStats(new GuideSetStats("fwhm", 2, PRECURSORS[3], 0.072, 0.0085));
+        gs.addStats(new GuideSetStats("fwhm", 2, PRECURSORS[3], 0.072, 0.008541938666195341));
         gs.addStats(new GuideSetStats("fwb", 2, PRECURSORS[3], 0.21870040893554688, 0.011455850600049085));
         gs.addStats(new GuideSetStats("lhRatio", 0));
         gs.addStats(new GuideSetStats("transitionPrecursorRatio", 2, PRECURSORS[3], 0.06426714546978474, 0.02016935064728605));

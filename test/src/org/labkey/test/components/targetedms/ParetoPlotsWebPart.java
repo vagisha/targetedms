@@ -138,8 +138,10 @@ public class ParetoPlotsWebPart extends BodyWebPart<ParetoPlotsWebPart.ElementCa
 
     public int getPlotBarHeight(int guideSetId, ParetoPlotType plotType, int barPlotNum)
     {
-       return Integer.parseInt(Locator.css("#paretoPlot-GuideSet-" + guideSetId + plotType.getIdSuffix() + "-0" +
-               " > a:nth-child(" + (barPlotNum+1) + ")").findElement(getDriver()).getText());
+        String text = Locator.css("#paretoPlot-GuideSet-" + guideSetId + plotType.getIdSuffix() + "-0" +
+                " > a:nth-child(" + (barPlotNum + 1) + ")").findElement(getDriver()).getText();
+
+        return Integer.parseInt(text.substring("Value: ".length()));
     }
 
     public String getPlotBarTooltip(int guideSetId, ParetoPlotType plotType, int barPlotNum)
