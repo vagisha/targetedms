@@ -476,10 +476,10 @@ public class SkylineDocImporter
 
     private void deleteOldSampleFiles(ReplicateInfo replicateInfo)
     {
-        int total = replicateInfo.oldSamplesToDelete.values().stream().mapToInt(List::size).sum();
+        int total = replicateInfo.oldSamplesToDelete.values().stream().mapToInt(Set::size).sum();
         int s = 0;
         IProgressStatus status = _progressMonitor.getQcCleanupProgressTracker();
-        for(Map.Entry<String, List<SampleFile>> entry: replicateInfo.oldSamplesToDelete.entrySet())
+        for(Map.Entry<String, Set<SampleFile>> entry: replicateInfo.oldSamplesToDelete.entrySet())
         {
             for (SampleFile existingSample : entry.getValue())
             {
@@ -531,15 +531,16 @@ public class SkylineDocImporter
         private final Set<URI> potentiallyUnusedFiles = new HashSet<>();
         // In QC folders any sample files from older documents that match a sample file in the current document
         // are deleted. We keep only the most current version of a sample file.
-        // Key in the map below is the sample file path in the current document; Value is a list of sample files
+        // Key in the map below is the sample file path in the current document; Value is a Set of sample files
         // from older documents that match (same file name and acquisition time).
-        private final Map<String, List<SampleFile>> oldSamplesToDelete = new HashMap<>();
+        // Issue 39401 - Keep unique sample files so that we don't try to delete the same file twice.
+        private final Map<String, Set<SampleFile>> oldSamplesToDelete = new HashMap<>();
 
         public void addSampleToDelete(String currentSamplePath, SampleFile oldSampleFile)
         {
             if(oldSamplesToDelete.get(currentSamplePath) == null)
             {
-                oldSamplesToDelete.put(currentSamplePath, new ArrayList<>());
+                oldSamplesToDelete.put(currentSamplePath, new HashSet<>());
             }
             oldSamplesToDelete.get(currentSamplePath).add(oldSampleFile);
         }
