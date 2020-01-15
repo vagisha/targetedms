@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import java.util.Objects;
+
 /**
  * User: jeckels
  * Date: Apr 18, 2012
@@ -31,5 +33,20 @@ public abstract class SkylineEntity
     public void setId(int id)
     {
         _id = id;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        SkylineEntity that = (SkylineEntity) o;
+        return _id == that._id;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(_id, getClass());
     }
 }

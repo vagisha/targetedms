@@ -1390,7 +1390,12 @@ public class TargetedMSManager
         sql.append(" WHERE rep.Id = sf.ReplicateId AND rep.RunId = r.Id AND d.RowId = r.DataId AND sf.Id = ? ");
         sql.add(sampleFileId);
 
-        String filePath = (String) new SqlSelector(getSchema(), sql).getMap().get("dataFileUrl");
+        var map = new SqlSelector(getSchema(), sql).getMap();
+        String filePath = null;
+        if(map != null)
+        {
+            filePath = (String) map.get("dataFileUrl");
+        }
         return filePath != null && !filePath.isEmpty() ? filePath : null;
     }
 
