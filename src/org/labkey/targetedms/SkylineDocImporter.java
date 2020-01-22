@@ -484,7 +484,7 @@ public class SkylineDocImporter
             for (SampleFile existingSample : entry.getValue())
             {
                 String srcFile = TargetedMSManager.deleteSampleFileAndDependencies(existingSample.getId());
-                _log.debug(String.format("Updating previously imported data for sample file " + entry.getKey() + " in QC folder. %d of %d", ++s, total));
+                _log.debug(String.format("Updating previously imported data for sample file %s in QC folder. %d of %d", entry.getKey(), ++s, total));
 
                 if (null != srcFile)
                 {
