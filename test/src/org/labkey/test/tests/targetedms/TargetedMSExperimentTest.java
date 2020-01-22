@@ -443,9 +443,9 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         // Test query against targetedms.precursor
         querySql = "SELECT \n" +
                 "Id, PeptideId, IsotopeLabelId,\n" +
-                "Mz, Charge, NeutralMass, ModifiedSequence, CollisionEnergy, DeclusteringPotential, Decoy,\n" +
-                "DecoyMassShift, Note, Modified, RepresentativeDataState, ExplicitCollisionEnergy,\n" +
-                "ExplicitDriftTimeMsec, ExplicitDriftTimeHighEnergyOffsetMsec, Annotations, TransitionCount,\n" +
+                "Mz, Charge, NeutralMass, ModifiedSequence, CollisionEnergy, DeclusteringPotential, \n" +
+                "DecoyMassShift, Note, RepresentativeDataState,\n" +
+                "ExplicitIonMobility, Annotations, TransitionCount,\n" +
                 "ModifiedPrecursorDisplayColumn, NoteAnnotations, \n" +
                 "PeptideId.PeptideGroupId.Label, \n" +
                 "PeptideId.PeptideGroupId.Description,\n" +
@@ -474,8 +474,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         // Test query against targetedms.transition
         querySql = "SELECT \n" +
                 "Id, PrecursorId, Mz, Charge, NeutralMass, NeutralLossMass, FragmentType, FragmentOrdinal,\n" +
-                "CleavageAa, LibraryRank, LibraryIntensity, IsotopeDistIndex, IsotopeDistRank,\n" +
-                "IsotopeDistProportion, Decoy, DecoyMassShift, Note, MassIndex, MeasuredIonName,\n" +
+                "CleavageAa, IsotopeDistIndex, IsotopeDistRank,\n" +
+                "IsotopeDistProportion, DecoyMassShift, Note, MassIndex, MeasuredIonName,\n" +
                 "Annotations, Fragment, NoteAnnotations,\n" +
                 "PrecursorId.PeptideId.PeptideGroupId.Label,\n" +
                 "PrecursorId.PeptideId.PeptideGroupId.Description,\n" +

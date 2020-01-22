@@ -28,6 +28,7 @@ public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
     private String _customIonName;
     private Double _massMonoisotopic;
     private Double _massAverage;
+    private String _moleculePrecursorId;
 
     public String getIonFormula()
     {
@@ -67,6 +68,16 @@ public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
     public void setMassAverage(Double massAverage)
     {
         _massAverage = massAverage;
+    }
+
+    public String getMoleculePrecursorId()
+    {
+        return _moleculePrecursorId;
+    }
+
+    public void setMoleculePrecursorId(String moleculePrecursorId)
+    {
+        _moleculePrecursorId = moleculePrecursorId;
     }
 
     @Override

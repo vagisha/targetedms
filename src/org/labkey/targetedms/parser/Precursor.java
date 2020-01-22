@@ -26,7 +26,11 @@ public class Precursor extends GeneralPrecursor<Transition>
     private String _modifiedSequence;
     private double _neutralMass;
     private Double _decoyMassShift;
-    private LibraryInfo _libraryInfo;
+    private BibliospecLibraryInfo _bibliospecLibraryInfo;
+    private HunterLibraryInfo _hunterLibraryInfo;
+    private NistLibraryInfo _nistLibraryInfo;
+    private SpectrastLibraryInfo _spectrastLibraryInfo;
+    private ChromatogramLibraryInfo _chromatogramLibraryInfo;
 
     public String getModifiedSequence()
     {
@@ -58,14 +62,54 @@ public class Precursor extends GeneralPrecursor<Transition>
         _decoyMassShift = decoyMassShift;
     }
 
-    public LibraryInfo getLibraryInfo()
+    public BibliospecLibraryInfo getBibliospecLibraryInfo()
     {
-        return _libraryInfo;
+        return _bibliospecLibraryInfo;
     }
 
-    public void setLibraryInfo(LibraryInfo libraryInfo)
+    public void setBibliospecLibraryInfo(BibliospecLibraryInfo bibliospecLibraryInfo)
     {
-        _libraryInfo = libraryInfo;
+        _bibliospecLibraryInfo = bibliospecLibraryInfo;
+    }
+
+    public HunterLibraryInfo getHunterLibraryInfo()
+    {
+        return _hunterLibraryInfo;
+    }
+
+    public void setHunterLibraryInfo(HunterLibraryInfo hunterLibraryInfo)
+    {
+        _hunterLibraryInfo = hunterLibraryInfo;
+    }
+
+    public NistLibraryInfo getNistLibraryInfo()
+    {
+        return _nistLibraryInfo;
+    }
+
+    public void setNistLibraryInfo(NistLibraryInfo nistLibraryInfo)
+    {
+        _nistLibraryInfo = nistLibraryInfo;
+    }
+
+    public SpectrastLibraryInfo getSpectrastLibraryInfo()
+    {
+        return _spectrastLibraryInfo;
+    }
+
+    public void setSpectrastLibraryInfo(SpectrastLibraryInfo spectrastLibraryInfo)
+    {
+        _spectrastLibraryInfo = spectrastLibraryInfo;
+    }
+
+    public ChromatogramLibraryInfo getChromatogramLibraryInfo()
+    {
+        return _chromatogramLibraryInfo;
+    }
+
+    public void setChromatogramLibraryInfo(ChromatogramLibraryInfo chromatogramLibraryInfo)
+    {
+        _chromatogramLibraryInfo = chromatogramLibraryInfo;
     }
 
     @Override
@@ -74,16 +118,13 @@ public class Precursor extends GeneralPrecursor<Transition>
         return getModifiedSequence();
     }
 
-    public static final class LibraryInfo extends SkylineEntity
+    public static class LibraryInfo extends SkylineEntity
     {
         private int _precursorId;
         private int _generalPrecursorId;
         private int _spectrumLibraryId;
 
         private String _libraryName;
-        private double _score1;
-        private double _score2;
-        private double _score3;
 
         public int getPrecursorId()
         {
@@ -124,35 +165,157 @@ public class Precursor extends GeneralPrecursor<Transition>
         {
             _libraryName = libraryName;
         }
+    }
 
-        public double getScore1()
+    public static final class BibliospecLibraryInfo extends LibraryInfo
+    {
+        private Double _countMeasured;
+        private Double _score;
+        private String _scoreType;
+
+        public Double getCountMeasured()
         {
-            return _score1;
+            return _countMeasured;
         }
 
-        public void setScore1(double score1)
+        public void setCountMeasured(Double countMeasured)
         {
-            _score1 = score1;
+            _countMeasured = countMeasured;
         }
 
-        public double getScore2()
+        public Double getScore()
         {
-            return _score2;
+            return _score;
         }
 
-        public void setScore2(double score2)
+        public void setScore(Double score)
         {
-            _score2 = score2;
+            _score = score;
         }
 
-        public double getScore3()
+        public String getScoreType()
         {
-            return _score3;
+            return _scoreType;
         }
 
-        public void setScore3(double score3)
+        public void setScoreType(String scoreType)
         {
-            _score3 = score3;
+            _scoreType = scoreType;
+        }
+    }
+
+    public static final class HunterLibraryInfo extends LibraryInfo
+    {
+        private Double _expect;
+        private Double _processedIntensity;
+
+        public Double getExpect()
+        {
+            return _expect;
+        }
+
+        public void setExpect(Double expect)
+        {
+            _expect = expect;
+        }
+
+        public Double getProcessedIntensity()
+        {
+            return _processedIntensity;
+        }
+
+        public void setProcessedIntensity(Double processedIntensity)
+        {
+            _processedIntensity = processedIntensity;
+        }
+    }
+
+    public static final class NistLibraryInfo extends LibraryInfo
+    {
+        private Double _countMeasured;
+        private Double _totalIntensity;
+        private Double _tfRatio;
+
+        public Double getCountMeasured()
+        {
+            return _countMeasured;
+        }
+
+        public void setCountMeasured(Double countMeasured)
+        {
+            _countMeasured = countMeasured;
+        }
+
+        public Double getTotalIntensity()
+        {
+            return _totalIntensity;
+        }
+
+        public void setTotalIntensity(Double totalIntensity)
+        {
+            _totalIntensity = totalIntensity;
+        }
+
+        public Double getTfRatio()
+        {
+            return _tfRatio;
+        }
+
+        public void setTfRatio(Double tfRatio)
+        {
+            _tfRatio = tfRatio;
+        }
+    }
+
+    public static final class SpectrastLibraryInfo extends LibraryInfo
+    {
+        private Double _countMeasured;
+        private Double _totalIntensity;
+        private Double _tfRatio;
+
+        public Double getCountMeasured()
+        {
+            return _countMeasured;
+        }
+
+        public void setCountMeasured(Double countMeasured)
+        {
+            _countMeasured = countMeasured;
+        }
+
+        public Double getTotalIntensity()
+        {
+            return _totalIntensity;
+        }
+
+        public void setTotalIntensity(Double totalIntensity)
+        {
+            _totalIntensity = totalIntensity;
+        }
+
+        public Double getTfRatio()
+        {
+            return _tfRatio;
+        }
+
+        public void setTfRatio(Double tfRatio)
+        {
+            _tfRatio = tfRatio;
+        }
+    }
+
+    public static final class ChromatogramLibraryInfo extends LibraryInfo
+    {
+        private Double _peakArea;
+
+        public Double getPeakArea()
+        {
+            return _peakArea;
+        }
+
+        public void setPeakArea(Double peakArea)
+        {
+            _peakArea = peakArea;
         }
     }
 }

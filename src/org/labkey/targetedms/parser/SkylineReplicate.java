@@ -32,6 +32,8 @@ public class SkylineReplicate extends AnnotatedEntity<ReplicateAnnotation>
     private String sampleType;
     private Double analyteConcentration;
     private Double sampleDilutionFactor;
+    private Boolean hasMidasSpectra;
+    private String batchName;
 
     public String getName()
     {
@@ -101,6 +103,26 @@ public class SkylineReplicate extends AnnotatedEntity<ReplicateAnnotation>
     public void setSampleDilutionFactor(Double sampleDilutionFactor)
     {
         this.sampleDilutionFactor = sampleDilutionFactor;
+    }
+
+    public Boolean hasMidasSpectra()
+    {
+        return hasMidasSpectra;
+    }
+
+    public void setHasMidasSpectra(Boolean hasMidasSpectra)
+    {
+        this.hasMidasSpectra = hasMidasSpectra;
+    }
+
+    public String getBatchName()
+    {
+        return batchName;
+    }
+
+    public void setBatchName(String batchName)
+    {
+        this.batchName = batchName;
     }
 }
 

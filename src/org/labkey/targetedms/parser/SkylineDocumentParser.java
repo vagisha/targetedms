@@ -75,6 +75,7 @@ public class SkylineDocumentParser implements AutoCloseable
     public static final float DEFAULT_TOLERANCE = 0.055f;
 
     private static final String SETTINGS_SUMMARY = "settings_summary";
+    private static final String TRANSITION_LIBRARIES = "transition_libraries";
     private static final String TRANSITION_SETTINGS = "transition_settings";
     private static final String TRANSITION_PREDICTION = "transition_prediction";
     private static final String PREDICT_COLLISION_ENERGY = "predict_collision_energy";
@@ -125,12 +126,16 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String HUNTER_SPECTRUM_INFO = "hunter_spectrum_info";
     private static final String NIST_SPECTRUM_INFO = "nist_spectrum_info";
     private static final String SPECTRAST_SPECTRUM_INFO = "spectrast_spectrum_info";
+    private static final String CHROMATOGRAM_LIBRARY_SPECTRUM_INFO = "chromatogram_library_spectrum_header_info";
     private static final String LIBRARY_NAME = "library_name";
     private static final String COUNT_MEASURED = "count_measured";
+    private static final String SCORE = "score";
+    private static final String SCORE_TYPE = "score_type";
     private static final String EXPECT = "expect";
     private static final String PROCESSED_INTENSITY =  "processed_intensity";
     private static final String TOTAL_INTENSITY = "total_intensity";
     private static final String TFRATIO = "tfratio";
+    private static final String PEAK_AREA = "peak_area";
     private static final String ISOLATION_SCHEME = "isolation_scheme";
     private static final String ISOLATION_WINDOW = "isolation_window";
     private static final String ION_FORMULA = "ion_formula";
@@ -154,6 +159,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String XML_NON_ID_SEPARATOR_CHARS = ";[]{}()!|\\/\"'<>";
     private static final String XML_NON_ID_PUNCTUATION_CHARS = ",?";
 
+    private static final String ID = "id";
 
     public static final Pattern oldModMassPattern = Pattern.compile("(\\[[+-]\\d+)\\]"); // e.g. KVN[-17]KTES[+80]K will match [-17] and [+80]
 
@@ -528,6 +534,10 @@ public class SkylineDocumentParser implements AutoCloseable
                  groupComparison.setIdentityAnnotation(XmlUtil.readAttribute(reader, "identity_annotation"));
                  groupComparison.setNormalizationMethod(XmlUtil.readAttribute(reader, "normalization_method"));
                  groupComparison.setPerProtein(XmlUtil.readBooleanAttribute(reader, "per_protein", false));
+                 groupComparison.setAvgTechReplicates(XmlUtil.readBooleanAttribute(reader, "avg_tech_replicates"));
+                 groupComparison.setSumTransitions(XmlUtil.readBooleanAttribute(reader, "sum_transitions"));
+                 groupComparison.setIncludeInteractionTransitions(XmlUtil.readBooleanAttribute(reader, "include_interaction_transitions"));
+                 groupComparison.setSummarizationMethod(XmlUtil.readAttribute(reader, "summarization_method"));
                  Double confidenceLevel = XmlUtil.readDoubleAttribute(reader, "confidence_level");
                  if (null != confidenceLevel)
                  {
@@ -903,6 +913,8 @@ public class SkylineDocumentParser implements AutoCloseable
         replicate.setSampleType(XmlUtil.readAttribute(reader, "sample_type"));
         replicate.setAnalyteConcentration(XmlUtil.readDoubleAttribute(reader, "analyte_concentration"));
         replicate.setSampleDilutionFactor(XmlUtil.readDoubleAttribute(reader, "sample_dilution_factor"));
+        replicate.setHasMidasSpectra(XmlUtil.readBooleanAttribute(reader, "has_midas_spectra"));
+        replicate.setBatchName(XmlUtil.readAttribute(reader, "batch_name"));
 
         List<SampleFile> sampleFileList = new ArrayList<>();
         replicate.setSampleFileList(sampleFileList);
@@ -1016,6 +1028,8 @@ public class SkylineDocumentParser implements AutoCloseable
         sampleFile.setTicArea(XmlUtil.readDoubleAttribute(reader,"tic_area"));
         sampleFile.setSampleId(XmlUtil.readAttribute(reader,"sample_id"));
         sampleFile.setInstrumentSerialNumber(XmlUtil.readAttribute(reader,"instrument_serial_number"));
+        sampleFile.setExplicitGlobalStandardArea(XmlUtil.readDoubleAttribute(reader, "explicit_global_standard_area"));
+        sampleFile.setIonMobilityType(XmlUtil.readAttribute(reader, "ion_mobility_type"));
 
         List<Instrument> instrumentList = new ArrayList<>();
         sampleFile.setInstrumentInfoList(instrumentList);
@@ -1274,6 +1288,7 @@ public class SkylineDocumentParser implements AutoCloseable
         generalMolecule.setInternalStandardConcentration(XmlUtil.readDoubleAttribute(reader, "internal_standard_concentration"));
         generalMolecule.setConcentrationMultiplier(XmlUtil.readDoubleAttribute(reader, "concentration_multiplier"));
         generalMolecule.setStandardType(reader.getAttributeValue(null, "standard_type"));
+        generalMolecule.setExplicitRetentionTimeWindow(XmlUtil.readDoubleAttribute(reader, "explicit_retention_time_window"));
     }
 
     private void readSmallMolecule(XMLStreamReader reader, Molecule molecule) throws XMLStreamException, IOException
@@ -1289,6 +1304,7 @@ public class SkylineDocumentParser implements AutoCloseable
         molecule.setAttributeGroupId(reader.getAttributeValue(null, ATTRIBUTE_GROUP_ID));
         molecule.setMassMonoisotopic(readRequiredMass(reader, true, MOLECULE));
         molecule.setMassAverage(readRequiredMass(reader, false, MOLECULE));
+        molecule.setMoleculeId(XmlUtil.readAttribute(reader, ID));
 
         List<MoleculePrecursor> moleculePrecursorList = new ArrayList<>();
         molecule.setMoleculePrecursorsList(moleculePrecursorList);
@@ -1527,6 +1543,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
         chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
         chromInfo.setExcludeFromCalibration(XmlUtil.readBooleanAttribute(reader, "exclude_from_calibration", false));
+        chromInfo.setPredictedRetentionTime(XmlUtil.readDoubleAttribute(reader, "predicted_retention_time"));
         return chromInfo;
     }
 
@@ -1569,8 +1586,25 @@ public class SkylineDocumentParser implements AutoCloseable
         if(null != ionFormula)
             moleculePrecursor.setIonFormula(ionFormula);
 
-        moleculePrecursor.setMassMonoisotopic(readMass(reader, true));
-        moleculePrecursor.setMassAverage(readMass(reader, false));
+        moleculePrecursor.setMassMonoisotopic(readRequiredMass(reader, true, MASS_MONOISOTOPIC));
+        moleculePrecursor.setMassAverage(readRequiredMass(reader, false, MASS_AVERAGE));
+        moleculePrecursor.setMoleculePrecursorId(XmlUtil.readAttribute(reader, ID));
+
+        Double explicitIonMobility = XmlUtil.readDoubleAttribute(reader, "explicit_ion_mobility");
+        // fall back to support older documents
+        if (null == explicitIonMobility)
+            explicitIonMobility = XmlUtil.readDoubleAttribute(reader, "explicit_drift_time_msec");
+        moleculePrecursor.setExplicitIonMobility(explicitIonMobility);
+
+        moleculePrecursor.setCcs(XmlUtil.readDoubleAttribute(reader, "ccs"));
+
+        String explicitIonMobilityUnits = XmlUtil.readAttribute(reader, "explicit_ion_mobility_units");
+        if (null != explicitIonMobilityUnits)
+            moleculePrecursor.setExplicitIonMobilityUnits(explicitIonMobilityUnits);
+
+        moleculePrecursor.setExplicitCcsSqa(XmlUtil.readDoubleAttribute(reader, "explicit_ccs_sqa"));
+        moleculePrecursor.setExplicitCompensationVoltage(XmlUtil.readDoubleAttribute(reader, "explicit_compensation_voltage"));
+        moleculePrecursor.setPrecursorConcentration(XmlUtil.readDoubleAttribute(reader, "precursor_concentration"));
 
         String customIonName = reader.getAttributeValue(null, CUSTOM_ION_NAME);
         if(null != customIonName)
@@ -1648,33 +1682,49 @@ public class SkylineDocumentParser implements AutoCloseable
         if(null != declustPotential)
             precursor.setDeclusteringPotential(Double.parseDouble(declustPotential));
 
-        precursor.setExplicitCollisionEnergy(XmlUtil.readDoubleAttribute(reader, "explicit_collision_energy"));
-        precursor.setExplicitDriftTimeMsec(XmlUtil.readDoubleAttribute(reader, "explicit_drift_time_msec"));
-        precursor.setExplicitDriftTimeHighEnergyOffsetMsec(XmlUtil.readDoubleAttribute(reader, "explicit_drift_time_high_energy_offset_msec"));
+        Double explicitIonMobility = XmlUtil.readDoubleAttribute(reader, "explicit_ion_mobility");
+        // fall back to support older documents
+        if (null == explicitIonMobility)
+            explicitIonMobility = XmlUtil.readDoubleAttribute(reader, "explicit_drift_time_msec");
+        precursor.setExplicitIonMobility(explicitIonMobility);
 
-        while(reader.hasNext()) {
+        precursor.setCcs(XmlUtil.readDoubleAttribute(reader, "ccs"));
+
+        String explicitIonMobilityUnits = XmlUtil.readAttribute(reader, "explicit_ion_mobility_units");
+        if (null != explicitIonMobilityUnits)
+            precursor.setExplicitIonMobilityUnits(explicitIonMobilityUnits);
+
+        precursor.setExplicitCcsSqa(XmlUtil.readDoubleAttribute(reader, "explicit_ccs_sqa"));
+        precursor.setExplicitCompensationVoltage(XmlUtil.readDoubleAttribute(reader, "explicit_compensation_voltage"));
+        precursor.setPrecursorConcentration(XmlUtil.readDoubleAttribute(reader, "precursor_concentration"));
+
+        while (reader.hasNext()) {
 
             int evtType = reader.next();
-            if(evtType == XMLStreamReader.END_ELEMENT &&
+            if (evtType == XMLStreamReader.END_ELEMENT &&
                PRECURSOR.equalsIgnoreCase(reader.getLocalName()))
             {
                 break;
             }
-            else if(XmlUtil.isStartElement(reader, evtType, BIBLIOSPEC_SPECTRUM_INFO))
+            else if (XmlUtil.isStartElement(reader, evtType, BIBLIOSPEC_SPECTRUM_INFO))
             {
-                precursor.setLibraryInfo(readBibliospecLibraryInfo(reader));
+                precursor.setBibliospecLibraryInfo(readBibliospecLibraryInfo(reader));
             }
-            else if(XmlUtil.isStartElement(reader, evtType, HUNTER_SPECTRUM_INFO))
+            else if (XmlUtil.isStartElement(reader, evtType, HUNTER_SPECTRUM_INFO))
             {
-                precursor.setLibraryInfo(readHunterLibraryInfo(reader));
+                precursor.setHunterLibraryInfo(readHunterLibraryInfo(reader));
             }
-            else if(XmlUtil.isStartElement(reader, evtType, NIST_SPECTRUM_INFO))
+            else if (XmlUtil.isStartElement(reader, evtType, NIST_SPECTRUM_INFO))
             {
-                precursor.setLibraryInfo(readNistLibraryInfo(reader));
+                precursor.setNistLibraryInfo(readNistLibraryInfo(reader));
             }
-            else if(XmlUtil.isStartElement(reader, evtType, SPECTRAST_SPECTRUM_INFO))
+            else if (XmlUtil.isStartElement(reader, evtType, SPECTRAST_SPECTRUM_INFO))
             {
-                precursor.setLibraryInfo(readSpectrastLibraryInfo(reader));
+                precursor.setSpectrastLibraryInfo(readSpectrastLibraryInfo(reader));
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, CHROMATOGRAM_LIBRARY_SPECTRUM_INFO))
+            {
+                precursor.setChromatogramLibraryInfo(readChromatogramLibraryInfo(reader));
             }
             else if (XmlUtil.isStartElement(reader, evtType, TRANSITION))
             {
@@ -1683,7 +1733,7 @@ public class SkylineDocumentParser implements AutoCloseable
             else if (XmlUtil.isStartElement(reader, evtType, TRANSITION_DATA)) {
                 transitionList.addAll(readTransitionData(reader, this::transitionProtoToTransition));
             }
-            else if(XmlUtil.isStartElement(reader, evtType, PRECURSOR_PEAK))
+            else if (XmlUtil.isStartElement(reader, evtType, PRECURSOR_PEAK))
             {
                chromInfoList.add(readPrecursorChromInfo(reader));
             }
@@ -1730,10 +1780,6 @@ public class SkylineDocumentParser implements AutoCloseable
         transition.setPrecursorMz(transitionProto.getPrecursorMz());
         transition.setCollisionEnergy(fromOptional(transitionProto.getCollisionEnergy()));
         transition.setDeclusteringPotential(fromOptional(transitionProto.getDeclusteringPotential()));
-        if (null != transitionProto.getLibInfo()) {
-            transition.setLibraryRank(transitionProto.getLibInfo().getRank());
-            transition.setLibraryIntensity((double) transitionProto.getLibInfo().getIntensity());
-        }
         for (SkylineDocument.SkylineDocumentProto.TransitionLoss transitionLossProto : transitionProto.getLossesList()) {
             transition.getNeutralLosses().add(toTransitionLoss(transitionLossProto));
         }
@@ -1889,45 +1935,55 @@ public class SkylineDocumentParser implements AutoCloseable
         }
     }
 
-    private Precursor.LibraryInfo readBibliospecLibraryInfo(XMLStreamReader reader)
+    private Precursor.BibliospecLibraryInfo readBibliospecLibraryInfo(XMLStreamReader reader)
     {
         // <bibliospec_spectrum_info library_name="Yeast_mini" count_measured="895" />
-        Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
-        libInfo.setLibraryName(XmlUtil.readRequiredAttribute(reader, LIBRARY_NAME, BIBLIOSPEC_SPECTRUM_INFO));
-        libInfo.setScore1(XmlUtil.readRequiredDoubleAttribute(reader, COUNT_MEASURED, BIBLIOSPEC_SPECTRUM_INFO));
+        Precursor.BibliospecLibraryInfo libInfo = new Precursor.BibliospecLibraryInfo();
+        libInfo.setLibraryName(XmlUtil.readAttribute(reader, LIBRARY_NAME, BIBLIOSPEC_SPECTRUM_INFO));
+        libInfo.setCountMeasured(XmlUtil.readDoubleAttribute(reader, COUNT_MEASURED));
+        libInfo.setScore(XmlUtil.readDoubleAttribute(reader, SCORE));
+        libInfo.setScoreType(XmlUtil.readAttribute(reader, SCORE_TYPE, BIBLIOSPEC_SPECTRUM_INFO));
         return libInfo;
     }
 
-    private Precursor.LibraryInfo readHunterLibraryInfo(XMLStreamReader reader)
+    private Precursor.HunterLibraryInfo readHunterLibraryInfo(XMLStreamReader reader)
     {
         // <hunter_spectrum_info library_name="GPM_Hunter_yeast" expect="1.030315E-10" processed_intensity="213.6469" />
-        Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
-        libInfo.setLibraryName(XmlUtil.readRequiredAttribute(reader, LIBRARY_NAME, HUNTER_SPECTRUM_INFO));
-        libInfo.setScore1(XmlUtil.readRequiredDoubleAttribute(reader, EXPECT, HUNTER_SPECTRUM_INFO));
-        libInfo.setScore2(XmlUtil.readRequiredDoubleAttribute(reader, PROCESSED_INTENSITY, HUNTER_SPECTRUM_INFO));
+        Precursor.HunterLibraryInfo libInfo = new Precursor.HunterLibraryInfo();
+        libInfo.setLibraryName(XmlUtil.readAttribute(reader, LIBRARY_NAME, HUNTER_SPECTRUM_INFO));
+        libInfo.setExpect(XmlUtil.readDoubleAttribute(reader, EXPECT));
+        libInfo.setProcessedIntensity(XmlUtil.readDoubleAttribute(reader, PROCESSED_INTENSITY));
         return libInfo;
     }
 
-    private Precursor.LibraryInfo readNistLibraryInfo(XMLStreamReader reader)
+    private Precursor.NistLibraryInfo readNistLibraryInfo(XMLStreamReader reader)
     {
         // <nist_spectrum_info library_name="NIST_MSP_Yeast_qtof" count_measured="14" total_intensity="75798" tfratio="17000" />
-        Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
-        libInfo.setLibraryName(XmlUtil.readRequiredAttribute(reader, LIBRARY_NAME, NIST_SPECTRUM_INFO));
-        libInfo.setScore1(XmlUtil.readRequiredIntegerAttribute(reader, COUNT_MEASURED, NIST_SPECTRUM_INFO));
-        libInfo.setScore2(XmlUtil.readRequiredDoubleAttribute(reader, TOTAL_INTENSITY, NIST_SPECTRUM_INFO));
-        libInfo.setScore3(XmlUtil.readRequiredDoubleAttribute(reader, TFRATIO, NIST_SPECTRUM_INFO));
+        Precursor.NistLibraryInfo libInfo = new Precursor.NistLibraryInfo();
+        libInfo.setLibraryName(XmlUtil.readAttribute(reader, LIBRARY_NAME, NIST_SPECTRUM_INFO));
+        libInfo.setCountMeasured(XmlUtil.readDoubleAttribute(reader, COUNT_MEASURED));
+        libInfo.setTotalIntensity(XmlUtil.readDoubleAttribute(reader,TOTAL_INTENSITY ));
+        libInfo.setTfRatio(XmlUtil.readDoubleAttribute(reader, TFRATIO));
         return libInfo;
     }
 
-    private Precursor.LibraryInfo readSpectrastLibraryInfo(XMLStreamReader reader)
+    private Precursor.SpectrastLibraryInfo readSpectrastLibraryInfo(XMLStreamReader reader)
     {
         // <spectrast_spectrum_info library_name="ISB_SpectraST_yeast" count_measured="62" total_intensity="94691.2" tfratio="1000" />
         // <spectrast_spectrum_info library_name="NIST_SpectraST_Yeast_qtof" count_measured="14" total_intensity="75798" tfratio="17000" />
-        Precursor.LibraryInfo libInfo = new Precursor.LibraryInfo();
-        libInfo.setLibraryName(XmlUtil.readRequiredAttribute(reader, LIBRARY_NAME, SPECTRAST_SPECTRUM_INFO));
-        libInfo.setScore1(XmlUtil.readRequiredIntegerAttribute(reader, COUNT_MEASURED, SPECTRAST_SPECTRUM_INFO));
-        libInfo.setScore2(XmlUtil.readRequiredDoubleAttribute(reader, TOTAL_INTENSITY, SPECTRAST_SPECTRUM_INFO));
-        libInfo.setScore3(XmlUtil.readRequiredDoubleAttribute(reader, TFRATIO, SPECTRAST_SPECTRUM_INFO));
+        Precursor.SpectrastLibraryInfo libInfo = new Precursor.SpectrastLibraryInfo();
+        libInfo.setLibraryName(XmlUtil.readAttribute(reader, LIBRARY_NAME, SPECTRAST_SPECTRUM_INFO));
+        libInfo.setCountMeasured(XmlUtil.readDoubleAttribute(reader, COUNT_MEASURED));
+        libInfo.setTotalIntensity(XmlUtil.readDoubleAttribute(reader, TOTAL_INTENSITY));
+        libInfo.setTfRatio(XmlUtil.readDoubleAttribute(reader, TFRATIO));
+        return libInfo;
+    }
+
+    private Precursor.ChromatogramLibraryInfo readChromatogramLibraryInfo(XMLStreamReader reader)
+    {
+        Precursor.ChromatogramLibraryInfo libInfo = new Precursor.ChromatogramLibraryInfo();
+        libInfo.setLibraryName(XmlUtil.readAttribute(reader, LIBRARY_NAME, CHROMATOGRAM_LIBRARY_SPECTRUM_INFO));
+        libInfo.setPeakArea(XmlUtil.readDoubleAttribute(reader, PEAK_AREA));
         return libInfo;
     }
 
@@ -1959,6 +2015,14 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setUserSet(XmlUtil.readAttribute(reader, "user_set"));
         chromInfo.setQvalue(XmlUtil.readDoubleAttribute(reader, "qvalue"));
         chromInfo.setZscore(XmlUtil.readDoubleAttribute(reader, "zscore"));
+        chromInfo.setCcs(XmlUtil.readDoubleAttribute(reader, "ccs"));
+        chromInfo.setDriftTimeMs1(XmlUtil.readDoubleAttribute(reader, "drift_time_ms1"));
+        chromInfo.setDriftTimeFragment(XmlUtil.readDoubleAttribute(reader, "drift_time_fragment"));
+        chromInfo.setDriftTimeWindow(XmlUtil.readDoubleAttribute(reader, "drift_time_window"));
+        chromInfo.setIonMobilityMs1(XmlUtil.readDoubleAttribute(reader, "ion_mobility_ms1"));
+        chromInfo.setIonMobilityFragment(XmlUtil.readDoubleAttribute(reader, "ion_mobility_fragment"));
+        chromInfo.setIonMobilityWindow(XmlUtil.readDoubleAttribute(reader, "ion_mobility_window"));
+        chromInfo.setIonMobilityType(XmlUtil.readAttribute(reader, "ion_mobility_type"));
 
         while(reader.hasNext())
         {
@@ -2020,6 +2084,7 @@ public class SkylineDocumentParser implements AutoCloseable
         transition.setCustomIonName(_reader.getAttributeValue(null, CUSTOM_ION_NAME));
         transition.setMassMonoisotopic(readRequiredMass(reader, true, TRANSITION));
         transition.setMassAverage(readRequiredMass(reader, false, TRANSITION));
+        transition.setMoleculeTransitionId(XmlUtil.readAttribute(reader, ID));
 
         List<TransitionChromInfo> chromInfoList = new ArrayList<>();
         transition.setChromInfoList(chromInfoList);
@@ -2054,6 +2119,12 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, RESULTS_DATA)) {
                 chromInfoList.addAll(readTransitionResultsData(reader));
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, TRANSITION_LIB_INFO))
+            {
+                transition.setRank(XmlUtil.readIntegerAttribute(reader, "rank"));
+                transition.setIntensity(Double.parseDouble(reader.getAttributeValue(null, "intensity")));
+                reader.nextTag();
             }
         }
 
@@ -2150,12 +2221,6 @@ public class SkylineDocumentParser implements AutoCloseable
             else if (XmlUtil.isStartElement(reader, evtType, RESULTS_DATA)) {
                 chromInfoList.addAll(readTransitionResultsData(reader));
             }
-            else if (XmlUtil.isStartElement(reader, evtType, TRANSITION_LIB_INFO))
-            {
-                transition.setLibraryRank(Integer.parseInt(reader.getAttributeValue(null, "rank")));
-                transition.setLibraryIntensity(Double.parseDouble(reader.getAttributeValue(null, "intensity")));
-                reader.nextTag();
-            }
             else if (XmlUtil.isStartElement(reader, evtType, LOSSES))
             {
                 neutralLosses.addAll(readLosses(reader));
@@ -2204,32 +2269,32 @@ public class SkylineDocumentParser implements AutoCloseable
         if(explicitCollisionEnergy != null)
             transition.setExplicitCollisionEnergy(Double.valueOf(explicitCollisionEnergy));
 
-        String sLens = reader.getAttributeValue(null, "explicit_s_lens");
-        if (sLens == null)
+        String explicitSLens = reader.getAttributeValue(null, "explicit_s_lens");
+        if (explicitSLens == null)
             // Fall back on older attribute name
-            sLens = reader.getAttributeValue(null, "s_lens");
-        if(sLens != null)
-            transition.setsLens(Double.valueOf(sLens));
+            explicitSLens = reader.getAttributeValue(null, "s_lens");
+        if(explicitSLens != null)
+            transition.setExplicitSLens(Double.valueOf(explicitSLens));
 
-        String coneVoltage = reader.getAttributeValue(null, "explicit_cone_voltage");
-        if (coneVoltage == null)
-            coneVoltage = reader.getAttributeValue(null, "cone_voltage");
-        if(coneVoltage != null)
-            transition.setConeVoltage(Double.valueOf(coneVoltage));
-
-        String explicitCompensationVoltage = reader.getAttributeValue(null, "explicit_compensation_voltage");
-        if(explicitCompensationVoltage != null)
-            transition.setExplicitCompensationVoltage(Double.valueOf(explicitCompensationVoltage));
+        String explicitConeVoltage = reader.getAttributeValue(null, "explicit_cone_voltage");
+        if (explicitConeVoltage == null)
+            explicitConeVoltage = reader.getAttributeValue(null, "cone_voltage");
+        if(explicitConeVoltage != null)
+            transition.setExplicitConeVoltage(Double.valueOf(explicitConeVoltage));
 
         String explicitDeclusteringPotential = reader.getAttributeValue(null, "explicit_declustering_potential");
         if(explicitDeclusteringPotential != null)
             transition.setExplicitDeclusteringPotential(Double.valueOf(explicitDeclusteringPotential));
 
-        String explicitDriftTimeHighEnergyOffsetMsec = reader.getAttributeValue(null, "explicit_ion_mobility_high_energy_offset");
-        if (explicitDriftTimeHighEnergyOffsetMsec == null)
-            explicitDriftTimeHighEnergyOffsetMsec = reader.getAttributeValue(null, "explicit_drift_time_high_energy_offset_msec");
-        if(explicitDriftTimeHighEnergyOffsetMsec != null)
-            transition.setExplicitDriftTimeHighEnergyOffsetMSec(Double.valueOf(explicitDriftTimeHighEnergyOffsetMsec));
+        String explicitIonMobilityHighEnergyOffsetMsec = reader.getAttributeValue(null, "explicit_ion_mobility_high_energy_offset");
+        if (explicitIonMobilityHighEnergyOffsetMsec == null)
+            explicitIonMobilityHighEnergyOffsetMsec = reader.getAttributeValue(null, "explicit_drift_time_high_energy_offset_msec");
+        if(explicitIonMobilityHighEnergyOffsetMsec != null)
+            transition.setExplicitIonMobilityHighEnergyOffset(Double.valueOf(explicitIonMobilityHighEnergyOffsetMsec));
+
+        transition.setQuantitative(XmlUtil.readBooleanAttribute(reader, "quantitative"));
+        transition.setCollisionEnergy(XmlUtil.readDoubleAttribute(reader, "collision_energy"));
+        transition.setDeclusteringPotential(XmlUtil.readDoubleAttribute(reader, "declustering_potential"));
 
         _transitionCount++;
     }
@@ -2322,6 +2387,15 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setPeakRank(XmlUtil.readIntegerAttribute(reader, "rank"));
         chromInfo.setUserSet(XmlUtil.readAttribute(reader, "user_set"));
         chromInfo.setPointsAcrossPeak(XmlUtil.readIntegerAttribute(reader, "points_across", null));
+        chromInfo.setCcs(XmlUtil.readDoubleAttribute(reader, "ccs"));
+        chromInfo.setDriftTime(XmlUtil.readDoubleAttribute(reader, "drift_time"));
+        chromInfo.setDriftTimeWindow(XmlUtil.readDoubleAttribute(reader, "drift_time_window"));
+        chromInfo.setIonMobility(XmlUtil.readDoubleAttribute(reader, "ion_mobility"));
+        chromInfo.setIonMobilityWindow(XmlUtil.readDoubleAttribute(reader, "ion_mobility_window"));
+        chromInfo.setIonMobilityType(XmlUtil.readAttribute(reader, "ion_mobility_type"));
+        chromInfo.setRank(XmlUtil.readIntegerAttribute(reader, "rank"));
+        chromInfo.setRankByLevel(XmlUtil.readIntegerAttribute(reader, "rank_by_level"));
+        chromInfo.setForcedIntegration(XmlUtil.readBooleanAttribute(reader, "forced_integration"));
 
         while(reader.hasNext())
         {

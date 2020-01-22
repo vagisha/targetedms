@@ -47,10 +47,6 @@ public class Transition extends GeneralTransition
     private String cleavageAa;
     private Double decoyMassShift;
 
-    // Library values
-    private Integer _libraryRank;
-    private Double _libraryIntensity;
-
     // These fields will be set if the fragmentType is 'precursor'.
     private double precursorMz;
     private Double collisionEnergy;
@@ -109,26 +105,6 @@ public class Transition extends GeneralTransition
     public void setDecoyMassShift(Double decoyMassShift)
     {
         this.decoyMassShift = decoyMassShift;
-    }
-
-    public Integer getLibraryRank()
-    {
-        return _libraryRank;
-    }
-
-    public void setLibraryRank(Integer libraryRank)
-    {
-        _libraryRank = libraryRank;
-    }
-
-    public Double getLibraryIntensity()
-    {
-        return _libraryIntensity;
-    }
-
-    public void setLibraryIntensity(Double libraryIntensity)
-    {
-        _libraryIntensity = libraryIntensity;
     }
 
     public double getPrecursorMz()

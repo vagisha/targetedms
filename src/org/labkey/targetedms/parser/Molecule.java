@@ -32,6 +32,7 @@ public class Molecule extends GeneralMolecule
     private Double _massAverage; // not null
     private String _customIonName;
     private List<MoleculePrecursor> _moleculePrecursorsList;
+    private String _moleculeId;
 
     public String getIonFormula()
     {
@@ -81,6 +82,16 @@ public class Molecule extends GeneralMolecule
     public void setMoleculePrecursorsList(List<MoleculePrecursor> moleculePrecursorsList)
     {
         _moleculePrecursorsList = moleculePrecursorsList;
+    }
+
+    public String getMoleculeId()
+    {
+        return _moleculeId;
+    }
+
+    public void setMoleculeId(String moleculeId)
+    {
+        _moleculeId = moleculeId;
     }
 
     @Override

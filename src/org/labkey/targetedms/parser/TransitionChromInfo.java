@@ -43,6 +43,15 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     private String _note;
     private int _chromatogramIndex;
     private Integer _pointsAcrossPeak;
+    private Double _ccs;
+    private Double _driftTime;
+    private Double _driftTimeWindow;
+    private Double _ionMobility;
+    private Double _ionMobilityWindow;
+    private String _ionMobilityType;
+    private Integer Rank;
+    private Integer RankByLevel;
+    private Boolean ForcedIntegration;
 
 
     public int getTransitionId()
@@ -248,5 +257,95 @@ public class TransitionChromInfo extends ChromInfo<TransitionChromInfoAnnotation
     public void setPointsAcrossPeak(Integer pointsAcrossPeak)
     {
         _pointsAcrossPeak = pointsAcrossPeak;
+    }
+
+    public Double getCcs()
+    {
+        return _ccs;
+    }
+
+    public void setCcs(Double ccs)
+    {
+        _ccs = ccs;
+    }
+
+    public Double getDriftTime()
+    {
+        return _driftTime;
+    }
+
+    public void setDriftTime(Double driftTime)
+    {
+        _driftTime = driftTime;
+    }
+
+    public Double getDriftTimeWindow()
+    {
+        return _driftTimeWindow;
+    }
+
+    public void setDriftTimeWindow(Double driftTimeWindow)
+    {
+        _driftTimeWindow = driftTimeWindow;
+    }
+
+    public Double getIonMobility()
+    {
+        return _ionMobility;
+    }
+
+    public void setIonMobility(Double ionMobility)
+    {
+        _ionMobility = ionMobility;
+    }
+
+    public Double getIonMobilityWindow()
+    {
+        return _ionMobilityWindow;
+    }
+
+    public void setIonMobilityWindow(Double ionMobilityWindow)
+    {
+        _ionMobilityWindow = ionMobilityWindow;
+    }
+
+    public String getIonMobilityType()
+    {
+        return _ionMobilityType;
+    }
+
+    public void setIonMobilityType(String ionMobilityType)
+    {
+        _ionMobilityType = ionMobilityType;
+    }
+
+    public Integer getRank()
+    {
+        return Rank;
+    }
+
+    public void setRank(Integer rank)
+    {
+        Rank = rank;
+    }
+
+    public Integer getRankByLevel()
+    {
+        return RankByLevel;
+    }
+
+    public void setRankByLevel(Integer rankByLevel)
+    {
+        RankByLevel = rankByLevel;
+    }
+
+    public Boolean getForcedIntegration()
+    {
+        return ForcedIntegration;
+    }
+
+    public void setForcedIntegration(Boolean forcedIntegration)
+    {
+        ForcedIntegration = forcedIntegration;
     }
 }

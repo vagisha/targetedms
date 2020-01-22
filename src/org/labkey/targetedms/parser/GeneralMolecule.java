@@ -31,6 +31,7 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
     protected String _standardType;
     protected String _attributeGroupId;
     private List<GeneralMoleculeChromInfo> _generalMoleculeChromInfoList;
+    private Double _explicitRetentionTimeWindow;
 
     public int getPeptideGroupId()
     {
@@ -153,5 +154,15 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
     public void setAttributeGroupId(String attributeGroupId)
     {
         _attributeGroupId = attributeGroupId;
+    }
+
+    public Double getExplicitRetentionTimeWindow()
+    {
+        return _explicitRetentionTimeWindow;
+    }
+
+    public void setExplicitRetentionTimeWindow(Double explicitRetentionTimeWindow)
+    {
+        _explicitRetentionTimeWindow = explicitRetentionTimeWindow;
     }
 }

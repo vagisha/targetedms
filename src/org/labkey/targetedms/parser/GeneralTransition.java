@@ -26,17 +26,19 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     protected String fragmentType;  // 'a', 'b', 'c', 'x', 'y', 'z' or 'precursor'
     protected Integer isotopeDistRank;
     protected Double isotopeDistProportion;
-    protected Boolean decoy;
     protected String note;
     protected Integer massIndex;
     protected Double explicitCollisionEnergy;
-    protected Double sLens;
-    protected Double coneVoltage;
-    protected Double explicitCompensationVoltage;
+    protected Double explicitSLens;
+    protected Double explicitConeVoltage;
     protected Double explicitDeclusteringPotential;
-    protected Double explicitDriftTimeMSec;
-    protected Double explicitDriftTimeHighEnergyOffsetMSec;
     private List<TransitionChromInfo> _chromInfoList;
+    private Boolean quantitative;
+    private Double explicitIonMobilityHighEnergyOffset;
+    private Double collisionEnergy;
+    private Double declusteringPotential;
+    private Integer rank;
+    private Double intensity;
 
     protected static final String CUSTOM = "custom";
     protected static final String PRECURSOR = "precursor";
@@ -107,16 +109,6 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
         this.isotopeDistProportion = isotopeDistProportion;
     }
 
-    public Boolean isDecoy()
-    {
-        return decoy;
-    }
-
-    public void setDecoy(Boolean decoy)
-    {
-        this.decoy = decoy;
-    }
-
     public String getNote()
     {
         return note;
@@ -147,35 +139,26 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
         this.explicitCollisionEnergy = explicitCollisionEnergy;
     }
 
-    public Double getsLens()
+    public Double getExplicitSLens()
     {
-        return sLens;
+        return explicitSLens;
     }
 
-    public void setsLens(Double sLens)
+    public void setExplicitSLens(Double explicitSLens)
     {
-        this.sLens = sLens;
+        this.explicitSLens = explicitSLens;
     }
 
-    public Double getConeVoltage()
+    public Double getExplicitConeVoltage()
     {
-        return coneVoltage;
+        return explicitConeVoltage;
     }
 
-    public void setConeVoltage(Double coneVoltage)
+    public void setExplicitConeVoltage(Double explicitConeVoltage)
     {
-        this.coneVoltage = coneVoltage;
+        this.explicitConeVoltage = explicitConeVoltage;
     }
 
-    public Double getExplicitCompensationVoltage()
-    {
-        return explicitCompensationVoltage;
-    }
-
-    public void setExplicitCompensationVoltage(Double explicitCompensationVoltage)
-    {
-        this.explicitCompensationVoltage = explicitCompensationVoltage;
-    }
 
     public Double getExplicitDeclusteringPotential()
     {
@@ -187,26 +170,6 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
         this.explicitDeclusteringPotential = explicitDeclusteringPotential;
     }
 
-    public Double getExplicitDriftTimeMSec()
-    {
-        return explicitDriftTimeMSec;
-    }
-
-    public void setExplicitDriftTimeMSec(Double explicitDriftTimeMSec)
-    {
-        this.explicitDriftTimeMSec = explicitDriftTimeMSec;
-    }
-
-    public Double getExplicitDriftTimeHighEnergyOffsetMSec()
-    {
-        return explicitDriftTimeHighEnergyOffsetMSec;
-    }
-
-    public void setExplicitDriftTimeHighEnergyOffsetMSec(Double explicitDriftTimeHighEnergyOffsetMSec)
-    {
-        this.explicitDriftTimeHighEnergyOffsetMSec = explicitDriftTimeHighEnergyOffsetMSec;
-    }
-
     public List<TransitionChromInfo> getChromInfoList()
     {
         return _chromInfoList;
@@ -215,6 +178,66 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     public void setChromInfoList(List<TransitionChromInfo> chromInfoList)
     {
         _chromInfoList = chromInfoList;
+    }
+
+    public Boolean getQuantitative()
+    {
+        return quantitative;
+    }
+
+    public void setQuantitative(Boolean quantitative)
+    {
+        this.quantitative = quantitative;
+    }
+
+    public Double getExplicitIonMobilityHighEnergyOffset()
+    {
+        return explicitIonMobilityHighEnergyOffset;
+    }
+
+    public void setExplicitIonMobilityHighEnergyOffset(Double explicitIonMobilityHighEnergyOffset)
+    {
+        this.explicitIonMobilityHighEnergyOffset = explicitIonMobilityHighEnergyOffset;
+    }
+
+    public Double getCollisionEnergy()
+    {
+        return collisionEnergy;
+    }
+
+    public void setCollisionEnergy(Double collisionEnergy)
+    {
+        this.collisionEnergy = collisionEnergy;
+    }
+
+    public Double getDeclusteringPotential()
+    {
+        return declusteringPotential;
+    }
+
+    public void setDeclusteringPotential(Double declusteringPotential)
+    {
+        this.declusteringPotential = declusteringPotential;
+    }
+
+    public Integer getRank()
+    {
+        return rank;
+    }
+
+    public void setRank(Integer rank)
+    {
+        this.rank = rank;
+    }
+
+    public Double getIntensity()
+    {
+        return intensity;
+    }
+
+    public void setIntensity(Double intensity)
+    {
+        this.intensity = intensity;
     }
 
     public boolean isCustomIon()
@@ -229,8 +252,7 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
 
     public boolean isNterm()
     {
-        return fragmentType == null ? false
-                : (fragmentType.equalsIgnoreCase(B_ION)
+        return fragmentType != null && (fragmentType.equalsIgnoreCase(B_ION)
                 || fragmentType.equalsIgnoreCase(C_ION)
                 || fragmentType.equalsIgnoreCase(A_ION));
     }
@@ -238,8 +260,7 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
 
     public boolean isCterm()
     {
-        return fragmentType == null ? false
-                : (fragmentType.equalsIgnoreCase(Y_ION)
+        return fragmentType != null && (fragmentType.equalsIgnoreCase(Y_ION)
                 || fragmentType.equalsIgnoreCase(Z_ION)
                 || fragmentType.equalsIgnoreCase(X_ION));
     }

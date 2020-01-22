@@ -669,32 +669,91 @@ public class PrecursorManager
     {
         if(runId == null)
         {
-            SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
-            sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
+            SQLFragment sql = new SQLFragment("SELECT bib.PrecursorId FROM ");
+            sql.append(TargetedMSManager.getTableInfoBibliospec(), "bib");
             sql.append(" WHERE ");
-            sql.append("pcilib.PrecursorId=?");
+            sql.append("bib.PrecursorId=?");
+            sql.add(precursorId);
+            sql.append(" UNION ");
+            sql.append("SELECT hun.PrecursorId FROM ");
+            sql.append(TargetedMSManager.getTableInfoHunterLib(), "hun");
+            sql.append(" WHERE ");
+            sql.append("hun.PrecursorId=?");
+            sql.add(precursorId);
+            sql.append(" UNION ");
+            sql.append("SELECT nis.PrecursorId FROM ");
+            sql.append(TargetedMSManager.getTableInfoNistLib(), "nis");
+            sql.append(" WHERE ");
+            sql.append("nis.PrecursorId=?");
+            sql.add(precursorId);
+            sql.append(" UNION ");
+            sql.append("SELECT sp.PrecursorId FROM ");
+            sql.append(TargetedMSManager.getTableInfoSpectrastLib(), "sp");
+            sql.append(" WHERE ");
+            sql.append("sp.PrecursorId=?");
+            sql.add(precursorId);
+            sql.append(" UNION ");
+            sql.append("SELECT ch.PrecursorId FROM ");
+            sql.append(TargetedMSManager.getTableInfoChromatogramLib(), "ch");
+            sql.append(" WHERE ");
+            sql.append("ch.PrecursorId=?");
             sql.add(precursorId);
 
-            Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-            return count != null ? count > 0 : false;
+            return new SqlSelector(TargetedMSManager.getSchema(), sql).exists();
         }
         else
         {
-            Set<Integer> precursorIds = _precursorIdsWithSpectra.get(String.valueOf(runId), null, new CacheLoader<String, Set<Integer>>(){
-                @Override
-                public Set<Integer> load(String runId, @Nullable Object argument)
-                {
-                    SQLFragment sql = new SQLFragment("SELECT DISTINCT pcilib.PrecursorId FROM ");
-                    sql.append(TargetedMSManager.getTableInfoPrecursorLibInfo(), "pcilib");
-                    sql.append(" , ");
-                    sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
-                    sql.append(" WHERE ");
-                    sql.append("pcilib.SpectrumLibraryId = specLib.Id");
-                    sql.append(" AND ");
-                    sql.append("specLib.RunId = ?");
-                    sql.add(Integer.valueOf(runId));
-                    return Collections.unmodifiableSet(new HashSet<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class)));
-                }
+            Set<Integer> precursorIds = _precursorIdsWithSpectra.get(String.valueOf(runId), null, (runId1, argument) -> {
+                SQLFragment sql = new SQLFragment("SELECT DISTINCT bib.PrecursorId FROM ");
+                sql.append(TargetedMSManager.getTableInfoBibliospec(), "bib");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(" WHERE ");
+                sql.append("bib.SpectrumLibraryId = specLib.Id");
+                sql.append(" AND ");
+                sql.append("specLib.RunId = ?");
+                sql.add(Integer.valueOf(runId1));
+                sql.append(" UNION ");
+                sql.append("SELECT DISTINCT hun.PrecursorId FROM ");
+                sql.append(TargetedMSManager.getTableInfoHunterLib(), "hun");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(" WHERE ");
+                sql.append("hun.SpectrumLibraryId = specLib.Id");
+                sql.append(" AND ");
+                sql.append("specLib.RunId = ?");
+                sql.add(Integer.valueOf(runId1));
+                sql.append(" UNION ");
+                sql.append("SELECT DISTINCT nis.PrecursorId FROM ");
+                sql.append(TargetedMSManager.getTableInfoNistLib(), "nis");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(" WHERE ");
+                sql.append("nis.SpectrumLibraryId = specLib.Id");
+                sql.append(" AND ");
+                sql.append("specLib.RunId = ?");
+                sql.add(Integer.valueOf(runId1));
+                sql.append(" UNION ");
+                sql.append("SELECT DISTINCT sp.PrecursorId FROM ");
+                sql.append(TargetedMSManager.getTableInfoSpectrastLib(), "sp");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(" WHERE ");
+                sql.append("sp.SpectrumLibraryId = specLib.Id");
+                sql.append(" AND ");
+                sql.append("specLib.RunId = ?");
+                sql.add(Integer.valueOf(runId1));
+                sql.append(" UNION ");
+                sql.append("SELECT DISTINCT ch.PrecursorId FROM ");
+                sql.append(TargetedMSManager.getTableInfoChromatogramLib(), "ch");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(" WHERE ");
+                sql.append("ch.SpectrumLibraryId = specLib.Id");
+                sql.append(" AND ");
+                sql.append("specLib.RunId = ?");
+                sql.add(Integer.valueOf(runId1));
+                return Set.copyOf(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class));
             });
 
             return precursorIds.contains(precursorId);

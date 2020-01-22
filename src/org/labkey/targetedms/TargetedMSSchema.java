@@ -153,7 +153,6 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_ENZYME = "Enzyme";
     public static final String TABLE_LIBRARY_SETTINGS = "LibrarySettings";
     public static final String TABLE_LIBRARY_SOURCE = "LibrarySource";
-    public static final String TABLE_PRECURSOR_LIB_INFO = "PrecursorLibInfo";
     public static final String TABLE_ANNOTATION_SETTINGS = "AnnotationSettings";
     public static final String TABLE_GROUP_COMPARISON_SETTINGS = "GroupComparisonSettings";
     public static final String TABLE_FOLD_CHANGE = "FoldChange";
@@ -194,6 +193,11 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_LIST_ITEM = "ListItem";
     public static final String TABLE_LIST_ITEM_VALUE = "ListItemValue";
 
+    public static final String TABLE_BIBLIOSPEC_LIB_INFO = "BibliospecLibInfo";
+    public static final String TABLE_HUNTER_LIB_INFO = "BibliospecLibInfo";
+    public static final String TABLE_NIST_LIB_INFO = "NistLibInfo";
+    public static final String TABLE_SPECTRAST_LIB_INFO = "SpectrastLibInfo";
+    public static final String TABLE_CHROMATOGRAM_LIB_INFO = "SpectrastLibInfo";
 
     public static final String COL_PROTEIN = "Protein";
     public static final String COL_LIST = "List";
@@ -1278,6 +1282,16 @@ public class TargetedMSSchema extends UserSchema
             catch (NumberFormatException ignored) {}
         }
 
+        if (TABLE_BIBLIOSPEC_LIB_INFO.equalsIgnoreCase(name) ||
+            TABLE_HUNTER_LIB_INFO.equalsIgnoreCase(name) ||
+            TABLE_NIST_LIB_INFO.equalsIgnoreCase(name) ||
+            TABLE_SPECTRAST_LIB_INFO.equalsIgnoreCase(name) ||
+            TABLE_CHROMATOGRAM_LIB_INFO.equalsIgnoreCase(name))
+        {
+            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.PrecursorFK);
+        }
+
+
         return null;
     }
 
@@ -1391,7 +1405,6 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_LIBRARY_SETTINGS);
         hs.add(TABLE_SPECTRUM_LIBRARY);
         hs.add(TABLE_LIBRARY_SOURCE);
-        hs.add(TABLE_PRECURSOR_LIB_INFO);
         hs.add(TABLE_ANNOTATION_SETTINGS);
         hs.add(TABLE_QUANTIIFICATION_SETTINGS);
         hs.add(TABLE_REPRESENTATIVE_DATA_STATE_RUN);
@@ -1422,6 +1435,11 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_SKYLINE_AUDITLOG_ENTRY);
         hs.add(TABLE_SKYLINE_AUDITLOG_MESSAGE);
         hs.add(TABLE_LIST_DEFINITION);
+        hs.add(TABLE_BIBLIOSPEC_LIB_INFO);
+        hs.add(TABLE_HUNTER_LIB_INFO);
+        hs.add(TABLE_NIST_LIB_INFO);
+        hs.add(TABLE_SPECTRAST_LIB_INFO);
+        hs.add(TABLE_CHROMATOGRAM_LIB_INFO);
         hs.add(TABLE_SAMPLE_FILE_CHROM_INFO);
 
         return hs;

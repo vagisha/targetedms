@@ -53,6 +53,16 @@ public class PrecursorChromInfo extends AbstractChromInfo
     private byte[] _chromatogram;
     private int _numTransitions;
 
+    private Double _ccs;
+    private Double _driftTimeMs1;
+    private Double _driftTimeFragment;
+    private Double _driftTimeWindow;
+    private Double _ionMobilityMs1;
+    private Double _ionMobilityFragment;
+    private Double _ionMobilityWindow;
+    private String _ionMobilityType;
+
+
     public PrecursorChromInfo()
     {
     }
@@ -275,6 +285,86 @@ public class PrecursorChromInfo extends AbstractChromInfo
     public void setZscore(Double zscore)
     {
         _zscore = zscore;
+    }
+
+    public Double getCcs()
+    {
+        return _ccs;
+    }
+
+    public void setCcs(Double ccs)
+    {
+        _ccs = ccs;
+    }
+
+    public Double getDriftTimeMs1()
+    {
+        return _driftTimeMs1;
+    }
+
+    public void setDriftTimeMs1(Double driftTimeMs1)
+    {
+        _driftTimeMs1 = driftTimeMs1;
+    }
+
+    public Double getDriftTimeFragment()
+    {
+        return _driftTimeFragment;
+    }
+
+    public void setDriftTimeFragment(Double driftTimeFragment)
+    {
+        _driftTimeFragment = driftTimeFragment;
+    }
+
+    public Double getDriftTimeWindow()
+    {
+        return _driftTimeWindow;
+    }
+
+    public void setDriftTimeWindow(Double driftTimeWindow)
+    {
+        _driftTimeWindow = driftTimeWindow;
+    }
+
+    public Double getIonMobilityMs1()
+    {
+        return _ionMobilityMs1;
+    }
+
+    public void setIonMobilityMs1(Double ionMobilityMs1)
+    {
+        _ionMobilityMs1 = ionMobilityMs1;
+    }
+
+    public Double getIonMobilityFragment()
+    {
+        return _ionMobilityFragment;
+    }
+
+    public void setIonMobilityFragment(Double ionMobilityFragment)
+    {
+        _ionMobilityFragment = ionMobilityFragment;
+    }
+
+    public Double getIonMobilityWindow()
+    {
+        return _ionMobilityWindow;
+    }
+
+    public void setIonMobilityWindow(Double ionMobilityWindow)
+    {
+        _ionMobilityWindow = ionMobilityWindow;
+    }
+
+    public String getIonMobilityType()
+    {
+        return _ionMobilityType;
+    }
+
+    public void setIonMobilityType(String ionMobilityType)
+    {
+        _ionMobilityType = ionMobilityType;
     }
 
     @Override @Nullable

@@ -31,6 +31,8 @@ public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
     private String _sampleType;
     private Double _analyteConcentration;
     private Double _sampleDilutionFactor;
+    private Boolean _hasMidasSpectra;
+    private String _batchName;
 
     private List<SampleFile> _sampleFileList;
 
@@ -119,5 +121,25 @@ public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
     {
         Double dilutionFactor = getSampleDilutionFactor();
         return dilutionFactor == null ? 1.0 : dilutionFactor;
+    }
+
+    public Boolean hasMidasSpectra()
+    {
+        return _hasMidasSpectra;
+    }
+
+    public void setHasMidasSpectra(Boolean hasMidasSpectra)
+    {
+        _hasMidasSpectra = hasMidasSpectra;
+    }
+
+    public String getBatchName()
+    {
+        return _batchName;
+    }
+
+    public void setBatchName(String batchName)
+    {
+        _batchName = batchName;
     }
 }

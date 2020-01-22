@@ -35,6 +35,7 @@ public class MoleculeTransition extends GeneralTransition
     private String _customIonName;
     private Double _massMonoisotopic;
     private Double _massAverage;
+    private String _moleculeTransitionId;
 
     public int getTransitionId()
     {
@@ -84,6 +85,16 @@ public class MoleculeTransition extends GeneralTransition
     public void setMassAverage(Double massAverage)
     {
         _massAverage = massAverage;
+    }
+
+    public String getMoleculeTransitionId()
+    {
+        return _moleculeTransitionId;
+    }
+
+    public void setMoleculeTransitionId(String moleculeTransitionId)
+    {
+        _moleculeTransitionId = moleculeTransitionId;
     }
 
     public static Set<String> getColumns()

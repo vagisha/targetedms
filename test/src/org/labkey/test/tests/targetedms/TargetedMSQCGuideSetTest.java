@@ -317,17 +317,17 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         GetQueryDetailsResponse queryDetailsResponse = queryDetailsCommand.execute(createDefaultConnection(true),getProjectName() + "/" + folderName);
         List<GetQueryDetailsResponse.Column> columns = queryDetailsResponse.getColumns();
 
-        int groupingIndex = 9;
+        int groupingIndex = 11;
         assertEquals("","Grouping", columns.get(groupingIndex).getName());
         assertEquals("","Grouping", columns.get(groupingIndex).getCaption());
         assertEquals("", "Text (String)", columns.get(groupingIndex).getType());
 
-        int ignoreIndex = 10;
+        int ignoreIndex = 12;
         assertEquals("","ignore_in_QC", columns.get(ignoreIndex).getName());
         assertEquals("","ignore_in_QC", columns.get(ignoreIndex).getCaption());
         assertEquals("", "True/False (Boolean)", columns.get(ignoreIndex).getType());
 
-        int timeIndex = 11;
+        int timeIndex = 13;
         assertEquals("","Time", columns.get(timeIndex).getName());
         assertEquals("","Time", columns.get(timeIndex).getCaption());
         assertEquals("", "Number (Double)", columns.get(timeIndex).getType());
@@ -339,6 +339,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         List<String> expected = new ArrayList<>();
         expected.add("SProCoPTutorial_withAnnotations.zip");
         expected.add("Q_Exactive_08_09_2013_JGB_02");
+        expected.add(" ");
+        expected.add(" ");
         expected.add(" ");
         expected.add(" ");
         expected.add(" ");

@@ -36,6 +36,8 @@ public class SampleFile extends SkylineEntity
     private String _instrumentSerialNumber;
     /** Extracted by Skyline from raw file */
     private String _sampleId;
+    private Double _explicitGlobalStandardArea;
+    private String _ionMobilityType;
 
     private List<Instrument> _instrumentInfoList;
 
@@ -147,5 +149,25 @@ public class SampleFile extends SkylineEntity
     public void setSampleId(String sampleId)
     {
         _sampleId = sampleId;
+    }
+
+    public Double getExplicitGlobalStandardArea()
+    {
+        return _explicitGlobalStandardArea;
+    }
+
+    public void setExplicitGlobalStandardArea(Double explicitGlobalStandardArea)
+    {
+        _explicitGlobalStandardArea = explicitGlobalStandardArea;
+    }
+
+    public String getIonMobilityType()
+    {
+        return _ionMobilityType;
+    }
+
+    public void setIonMobilityType(String ionMobilityType)
+    {
+        _ionMobilityType = ionMobilityType;
     }
 }

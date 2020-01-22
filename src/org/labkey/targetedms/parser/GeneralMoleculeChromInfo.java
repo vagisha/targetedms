@@ -28,6 +28,7 @@ public class GeneralMoleculeChromInfo extends ChromInfo
     private Double _retentionTime;
     private Double _calculatedConcentration;
     private boolean _excludeFromCalibration;
+    private Double _predictedRetentionTime;
 
     public int getGeneralMoleculeId()
     {
@@ -77,5 +78,15 @@ public class GeneralMoleculeChromInfo extends ChromInfo
     public void setExcludeFromCalibration(boolean excludeFromCalibration)
     {
         _excludeFromCalibration = excludeFromCalibration;
+    }
+
+    public Double getPredictedRetentionTime()
+    {
+        return _predictedRetentionTime;
+    }
+
+    public void setPredictedRetentionTime(Double predictedRetentionTime)
+    {
+        _predictedRetentionTime = predictedRetentionTime;
     }
 }

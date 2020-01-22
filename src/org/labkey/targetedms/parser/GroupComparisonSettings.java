@@ -29,6 +29,10 @@ public class GroupComparisonSettings extends SkylineEntity
     private String _caseValue;
     private String _identityAnnotation;
     private boolean _perProtein;
+    private Boolean _avgTechReplicates;
+    private Boolean _sumTransitions;
+    private Boolean _includeInteractionTransitions;
+    private String _summarizationMethod;
 
     public int getRunId()
     {
@@ -118,5 +122,45 @@ public class GroupComparisonSettings extends SkylineEntity
     public void setPerProtein(boolean perProtein)
     {
         _perProtein = perProtein;
+    }
+
+    public Boolean isAvgTechReplicates()
+    {
+        return _avgTechReplicates;
+    }
+
+    public void setAvgTechReplicates(Boolean avgTechReplicates)
+    {
+        _avgTechReplicates = avgTechReplicates;
+    }
+
+    public Boolean isSumTransitions()
+    {
+        return _sumTransitions;
+    }
+
+    public void setSumTransitions(Boolean sumTransitions)
+    {
+        _sumTransitions = sumTransitions;
+    }
+
+    public Boolean isIncludeInteractionTransitions()
+    {
+        return _includeInteractionTransitions;
+    }
+
+    public void setIncludeInteractionTransitions(Boolean includeInteractionTransitions)
+    {
+        _includeInteractionTransitions = includeInteractionTransitions;
+    }
+
+    public String getSummarizationMethod()
+    {
+        return _summarizationMethod;
+    }
+
+    public void setSummarizationMethod(String summarizationMethod)
+    {
+        _summarizationMethod = summarizationMethod;
     }
 }

@@ -24,16 +24,18 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
     protected double _mz;
     protected Double _collisionEnergy;
     protected Double _declusteringPotential;
-    protected Boolean _decoy;
     protected String _note;
     protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
-    protected Double _explicitCollisionEnergy;
-    protected Double _explicitDriftTimeMsec;
-    protected Double _explicitDriftTimeHighEnergyOffsetMsec;
+    protected Double _explicitIonMobility;
     private List<PrecursorChromInfo> _chromInfoList;
     private List<TransitionType> _transitionsList;
     private String _isotopeLabel;
     private int _isotopeLabelId;
+    private Double _ccs;
+    private String _explicitIonMobilityUnits;
+    private Double _explicitCcsSqa;
+    private Double _explicitCompensationVoltage;
+    private Double _precursorConcentration;
 
     public int getGeneralMoleculeId()
     {
@@ -95,44 +97,14 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
         return _note;
     }
 
-    public Double getExplicitCollisionEnergy()
+    public Double getExplicitIonMobility()
     {
-        return _explicitCollisionEnergy;
+        return _explicitIonMobility;
     }
 
-    public void setExplicitCollisionEnergy(Double explicitCollisionEnergy)
+    public void setExplicitIonMobility(Double explicitIonMobility)
     {
-        _explicitCollisionEnergy = explicitCollisionEnergy;
-    }
-
-    public Double getExplicitDriftTimeMsec()
-    {
-        return _explicitDriftTimeMsec;
-    }
-
-    public void setExplicitDriftTimeMsec(Double explicitDriftTimeMsec)
-    {
-        _explicitDriftTimeMsec = explicitDriftTimeMsec;
-    }
-
-    public Double getExplicitDriftTimeHighEnergyOffsetMsec()
-    {
-        return _explicitDriftTimeHighEnergyOffsetMsec;
-    }
-
-    public void setExplicitDriftTimeHighEnergyOffsetMsec(Double explicitDriftTimeHighEnergyOffsetMsec)
-    {
-        _explicitDriftTimeHighEnergyOffsetMsec = explicitDriftTimeHighEnergyOffsetMsec;
-    }
-
-    public Boolean isDecoy()
-    {
-        return _decoy;
-    }
-
-    public void setDecoy(Boolean decoy)
-    {
-        _decoy = decoy;
+        _explicitIonMobility = explicitIonMobility;
     }
 
     public RepresentativeDataState getRepresentativeDataState()
@@ -188,5 +160,55 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
     public void setIsotopeLabel(String isotopeLabel)
     {
         _isotopeLabel = isotopeLabel;
+    }
+
+    public Double getCcs()
+    {
+        return _ccs;
+    }
+
+    public void setCcs(Double ccs)
+    {
+        _ccs = ccs;
+    }
+
+    public String getExplicitIonMobilityUnits()
+    {
+        return _explicitIonMobilityUnits;
+    }
+
+    public void setExplicitIonMobilityUnits(String explicitIonMobilityUnits)
+    {
+        _explicitIonMobilityUnits = explicitIonMobilityUnits;
+    }
+
+    public Double getExplicitCcsSqa()
+    {
+        return _explicitCcsSqa;
+    }
+
+    public void setExplicitCcsSqa(Double explicitCcsSqa)
+    {
+        _explicitCcsSqa = explicitCcsSqa;
+    }
+
+    public Double getExplicitCompensationVoltage()
+    {
+        return _explicitCompensationVoltage;
+    }
+
+    public void setExplicitCompensationVoltage(Double explicitCompensationVoltage)
+    {
+        _explicitCompensationVoltage = explicitCompensationVoltage;
+    }
+
+    public Double getPrecursorConcentration()
+    {
+        return _precursorConcentration;
+    }
+
+    public void setPrecursorConcentration(Double precursorConcentration)
+    {
+        _precursorConcentration = precursorConcentration;
     }
 }

@@ -301,6 +301,8 @@ public class PeptideSettings
         private Boolean _label15N;
         private Boolean _label18O;
         private Boolean _label2H;
+        private Boolean _label37Cl;
+        private Boolean _label81Br;
 
         public Boolean getLabel13C()
         {
@@ -340,6 +342,26 @@ public class PeptideSettings
         public void setLabel2H(Boolean label2H)
         {
             _label2H = label2H;
+        }
+
+        public Boolean getLabel37Cl()
+        {
+            return _label37Cl;
+        }
+
+        public void setLabel37Cl(Boolean label37Cl)
+        {
+            _label37Cl = label37Cl;
+        }
+
+        public Boolean getLabel81Br()
+        {
+            return _label81Br;
+        }
+
+        public void setLabel81Br(Boolean label81Br)
+        {
+            _label81Br = label81Br;
         }
     }
 
@@ -642,6 +664,7 @@ public class PeptideSettings
         private String _noCutC;
         private String _cutN;
         private String _noCutN;
+        private Boolean _semi;
 
         public String getName()
         {
@@ -722,6 +745,16 @@ public class PeptideSettings
         {
             _noCutN = noCutN;
         }
+
+        public Boolean getSemi()
+        {
+            return _semi;
+        }
+
+        public void setSemi(Boolean semi)
+        {
+            _semi = semi;
+        }
     }
 
     // ------------------------------------------------------------------------
@@ -733,6 +766,7 @@ public class PeptideSettings
         private String _pick;  // One of 'library', 'filter', 'both', 'either'
         private String _rankType; // One of 'Picked intensity' or 'Spectrum count'
         private Integer _peptideCount;
+        private Double _ionMatchTolerance;
 
         private List<SpectrumLibrary> libraries;
 
@@ -776,6 +810,16 @@ public class PeptideSettings
             _peptideCount = peptideCount;
         }
 
+        public Double getIonMatchTolerance()
+        {
+            return _ionMatchTolerance;
+        }
+
+        public void setIonMatchTolerance(Double ionMatchTolerance)
+        {
+            _ionMatchTolerance = ionMatchTolerance;
+        }
+
         public List<SpectrumLibrary> getLibraries()
         {
             return libraries;
@@ -796,6 +840,8 @@ public class PeptideSettings
         private String _skylineLibraryId;  // lsid in <bibliospec_lite_library> element, id in others
         private String _revision;
         private String _libraryType;
+        private Boolean _useExplicitPeakBounds;
+        private String _panoramaServer;
 
         public int getRunId()
         {
@@ -865,6 +911,26 @@ public class PeptideSettings
         public void setLibraryType(String libraryType)
         {
             _libraryType = libraryType;
+        }
+
+        public Boolean getUseExplicitPeakBounds()
+        {
+            return _useExplicitPeakBounds;
+        }
+
+        public void setUseExplicitPeakBounds(Boolean useExplicitPeakBounds)
+        {
+            _useExplicitPeakBounds = useExplicitPeakBounds;
+        }
+
+        public String getPanoramaServer()
+        {
+            return _panoramaServer;
+        }
+
+        public void setPanoramaServer(String panoramaServer)
+        {
+            _panoramaServer = panoramaServer;
         }
     }
 
