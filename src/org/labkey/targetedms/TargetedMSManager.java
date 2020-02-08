@@ -73,6 +73,7 @@ import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.LJOutlier;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.util.FileUtil;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.TabStripView;
 import org.labkey.api.view.UnauthorizedException;
@@ -1292,7 +1293,7 @@ public class TargetedMSManager
         logs.add(logMsg);
         _log.info(logMsg);
 
-        boolean success = true;
+        boolean success;
         try
         {
             success = Files.deleteIfExists(file);
@@ -1860,7 +1861,6 @@ public class TargetedMSManager
     }
 
     /** @return the sample file if it has already been imported in the container */
-    @Nullable
     public static List<SampleFile> getSampleFile(String filePath, Date acquiredTime, Container container)
     {
         return getSampleFile(filePath, acquiredTime, container, true);
@@ -1883,9 +1883,6 @@ public class TargetedMSManager
     }
 
     /**
-     *
-     * @param sampleFile
-     * @param container
      * @return a list of sample files that have the same name and acquired time as the given sample file.
      * The full file path is used instead of just the file name if the acquired time of the given sample file is null
      */
@@ -2041,12 +2038,7 @@ public class TargetedMSManager
                 if (colName.compareToIgnoreCase(intensityColumnName) == 0 || colName.compareToIgnoreCase(rowHeadingColumnName) == 0)
                     continue;
 
-                Map<String, Double> intensityMap = intensities.get(column.getLabel());
-                if (intensityMap == null)
-                {
-                    intensityMap = new HashMap<>();
-                    intensities.put(column.getLabel(), intensityMap);
-                }
+                Map<String, Double> intensityMap = intensities.computeIfAbsent(column.getLabel(), k -> new HashMap<>());
 
                 Double value = getValue(column.getValue(rowMap));
                 if (value != null)
@@ -2271,13 +2263,6 @@ public class TargetedMSManager
         return result;
     }
 
-    private static int getCountForRunFKTable(int runId, TableInfo table)
-    {
-        SimpleFilter runFilter = new SimpleFilter(FieldKey.fromParts("RunId"), runId, CompareType.EQUAL);
-        TableSelector selector = new TableSelector(table, runFilter, null);
-        return toIntExact(selector.getRowCount());
-    }
-
     public List<String> getReplicateSubgroupNames(User user, Container container, @NotNull GeneralMolecule molecule)
     {
         UserSchema userSchema = QueryService.get().getUserSchema(user, container, "targetedms");
@@ -2322,5 +2307,88 @@ public class TargetedMSManager
                 .append(" INNER JOIN ").append(TargetedMSManager.getTableInfoRuns(), "tRuns")
                 .append(" ON (tRuns.ExperimentRunLSID = r.lsid AND tRuns.Deleted = ?)")
                 .append(" WHERE r.Container = ? AND r.ReplacedByRunId IS NOT NULL")).exists();
+    }
+
+    public static void updateModifiedAreaProportions(Logger log, @NotNull TargetedMSRun run)
+    {
+        final String suffix = StringUtilsLabKey.getPaddedUniquifier(9);
+        final String precursorGroupingsTableName = getSqlDialect().getTempTablePrefix() + "PrecursorGroupings" + suffix;
+        final String moleculeGroupingsTableName = getSqlDialect().getTempTablePrefix() + "MoleculeGroupings" + suffix;
+        final String areasTableName = getSqlDialect().getTempTablePrefix() +  "Areas" + suffix;
+
+        log.info("Creating and populating temp tables for Proportion values");
+
+        // Create temp tables to help make the rollups efficient
+        SqlExecutor executor = new SqlExecutor(getSchema());
+        executor.execute("CREATE " + getSqlDialect().getTempTableKeyword() + " TABLE " +
+                precursorGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), PrecursorId INT)");
+        executor.execute("CREATE " + getSqlDialect().getTempTableKeyword() + " TABLE " +
+                moleculeGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), GeneralMoleculeId INT)");
+        executor.execute("CREATE " + getSqlDialect().getTempTableKeyword() + " TABLE " +
+                areasTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), SampleFileId INT, Area REAL);");
+
+        // Populate the temp tables
+        // TODO - filter based on run
+        SQLFragment precursorGroupingsSQL = new SQLFragment("INSERT INTO ").append(precursorGroupingsTableName).append("(Grouping, PrecursorId)\n")
+                .append("SELECT DISTINCT COALESCE(gm.AttributeGroupId, p.Sequence, m.CustomIonName, m.IonFormula) AS Grouping, pci.PrecursorId \n")
+                .append(" FROM ").append(getTableInfoPrecursorChromInfo(), "pci").append(" INNER JOIN \n")
+                .append(getTableInfoGeneralPrecursor(), "gp").append(" ON gp.Id = pci.PrecursorId INNER JOIN \n")
+                .append(getTableInfoGeneralMolecule(), "gm").append(" ON gp.GeneralMoleculeId = gm.Id LEFT OUTER JOIN \n")
+                .append(getTableInfoMolecule(), "m").append(" ON gm.Id = m.Id LEFT OUTER JOIN \n").append(getTableInfoPeptide(), "p")
+                .append(" ON p.id = gp.generalmoleculeid");
+        precursorGroupingsSQL.append(" INNER JOIN \n")
+                .append(getTableInfoSampleFile(), "sf").append(" ON sf.Id = pci.SampleFileId INNER JOIN \n")
+                .append(getTableInfoReplicate(), "r").append(" ON sf.ReplicateId = r.Id AND r.RunId = ?");
+        precursorGroupingsSQL.add(run.getId());
+        executor.execute(precursorGroupingsSQL);
+
+        executor.execute(new SQLFragment("INSERT INTO ").append(moleculeGroupingsTableName).append("(Grouping, GeneralMoleculeId)\n")
+                .append("SELECT DISTINCT g.grouping, gp.GeneralMoleculeId FROM \n")
+                .append(precursorGroupingsTableName).append(" g INNER JOIN \n")
+                .append(getTableInfoGeneralPrecursor(), "gp").append(" ON gp.Id = g.PrecursorId"));
+
+        executor.execute(new SQLFragment("INSERT INTO ").append(areasTableName).append("(Grouping, SampleFileId, Area)\n")
+                .append("SELECT g.Grouping, pci.SampleFileId, SUM(pci.TotalArea) AS Area FROM \n")
+                .append(getTableInfoPrecursorChromInfo(), "pci").append(" INNER JOIN \n")
+                .append(precursorGroupingsTableName).append(" g ON pci.PrecursorId = g.PrecursorId \n")
+                .append("GROUP BY g.grouping, pci.SampleFileId"));
+
+        // Add indices to temp tables to make them faster to use
+        executor.execute("CREATE INDEX IDX_PrecursorGroupings  ON " + precursorGroupingsTableName + "(PrecursorId, Grouping)");
+        executor.execute("CREATE INDEX IDX_MoleculeGroupings ON " + moleculeGroupingsTableName + "(GeneralMoleculeId, Grouping)");
+        executor.execute("CREATE INDEX IDX_Areas ON " + areasTableName + "(Grouping, SampleFileId)");
+
+        // Populate the permanent tables
+        SQLFragment updatePrecursorSQL = new SQLFragment("UPDATE targetedms.precursorchrominfo SET PrecursorModifiedAreaProportion = \n")
+                .append("(SELECT CASE WHEN X.PrecursorAreaInReplicate = 0 THEN NULL ELSE TotalArea / X.PrecursorAreaInReplicate END \n")
+                .append("FROM (SELECT Area AS PrecursorAreaInReplicate FROM ").append(areasTableName).append(" a INNER JOIN \n")
+                .append(precursorGroupingsTableName).append(" g ON a.grouping = g.grouping \n")
+                .append("WHERE g.PrecursorId = targetedms.precursorchrominfo.PrecursorId AND \n")
+                .append("a.SampleFileId = targetedms.precursorchrominfo.SampleFileId) X) ");
+        updatePrecursorSQL.append(" WHERE PrecursorId IN \n")
+            .append("(SELECT PrecursorId FROM ").append(precursorGroupingsTableName).append(")");
+
+        log.info("Setting PrecursorModifiedAreaProportion values on precursorchrominfo");
+        executor.execute(updatePrecursorSQL);
+
+        SQLFragment updateMoleculeSQL = new SQLFragment("UPDATE targetedms.generalmoleculechrominfo SET ModifiedAreaProportion = \n")
+                .append("(SELECT CASE WHEN X.MoleculeAreaInReplicate = 0 THEN NULL ELSE \n")
+                .append("(SELECT SUM(TotalArea) FROM ").append(getTableInfoPrecursorChromInfo(), "pci")
+                .append(" WHERE pci.generalmoleculechrominfoid = targetedms.generalmoleculechrominfo.Id) / X.MoleculeAreaInReplicate END \n")
+                .append(" FROM (SELECT SUM(a.Area) AS MoleculeAreaInReplicate FROM ").append(areasTableName)
+                .append("\n a INNER JOIN ").append(moleculeGroupingsTableName).append(" g ON a.grouping = g.grouping \n")
+                .append("WHERE g.GeneralMoleculeId = targetedms.generalmoleculechrominfo.GeneralMoleculeId AND \n")
+                .append("a.SampleFileId = targetedms.generalmoleculechrominfo.SampleFileId) X)");
+        updateMoleculeSQL.append(" WHERE GeneralMoleculeId IN \n")
+            .append("(SELECT GeneralMoleculeId FROM ").append(moleculeGroupingsTableName).append(")");
+
+        log.info("Setting ModifiedAreaProportion values on generalmoleculechrominfo");
+        executor.execute(updateMoleculeSQL);
+
+        // Drop the temp tables
+        log.info("Cleaning up temp tables");
+        executor.execute("DROP TABLE " + precursorGroupingsTableName);
+        executor.execute("DROP TABLE " + moleculeGroupingsTableName);
+        executor.execute("DROP TABLE " + areasTableName);
     }
 }

@@ -1,0 +1,21 @@
+<query xmlns="http://labkey.org/data/xml/query">
+    <metadata>
+        <tables xmlns="http://labkey.org/data/xml">
+            <table tableName="PTMPercents" tableDbType="TABLE">
+                <columns>
+                    <column columnName="Sequence">
+                        <displayColumnFactory>
+                            <className>org.labkey.targetedms.query.ModifiedSequenceDisplayColumn$PeptideDisplayColumnFactory</className>
+                            <properties>
+                                <property name="showNextAndPrevious">true</property>
+                            </properties>
+                        </displayColumnFactory>
+                    </column>
+                    <column columnName="PeptideGroupId">
+                        <columnTitle>Chain</columnTitle>
+                    </column>
+                </columns>
+            </table>
+        </tables>
+    </metadata>
+</query>

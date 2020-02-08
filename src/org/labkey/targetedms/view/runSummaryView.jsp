@@ -47,6 +47,12 @@
     ActionURL precursorListAction = new ActionURL(TargetedMSController.ShowPrecursorListAction.class, getContainer());
     precursorListAction.addParameter("id", run.getId());
 
+    ActionURL ptmReportAction = new ActionURL(TargetedMSController.ShowPTMReportAction.class, getContainer());
+    ptmReportAction.addParameter("id", run.getId());
+
+    ActionURL peptideMapAction = new ActionURL(TargetedMSController.ShowPeptideMapAction.class, getContainer());
+    peptideMapAction.addParameter("id", run.getId());
+
     ActionURL transitionListAction = new ActionURL(TargetedMSController.ShowTransitionListAction.class, getContainer());
     transitionListAction.addParameter("id", run.getId());
 
@@ -91,5 +97,10 @@
         if (run.getCalibrationCurveCount() > 0) { %>, <a href="<%= h(calibrationCurveListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getCalibrationCurveCount(), "calibration curve"))%></a><% }
         if (run.getListCount() > 0) { %>, <a href="<%= h(listAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getListCount(), "list"))%></a><% } %>
         <% if (run.getSoftwareVersion() != null) { %>&nbsp;-&nbsp; <%= h(run.getSoftwareVersion()) %> <% } %>
+        <% if (run.getPeptideCount() > 0) { %>
+            &nbsp;-&nbsp;
+            <a href="<%= h(ptmReportAction.getLocalURIString()) %>">PTM Report</a>,
+            <a href="<%= h(peptideMapAction.getLocalURIString()) %>">Peptide Map</a>
+        <% } %>
     </div>
 </div>

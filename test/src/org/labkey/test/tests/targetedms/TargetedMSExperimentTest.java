@@ -81,7 +81,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         // Query for small molecule data
         SelectRowsCommand smallMoleculeCommand = new SelectRowsCommand("targetedms", "generalmoleculechrominfo");
         smallMoleculeCommand.setRequiredVersion(9.1);
-        smallMoleculeCommand.setColumns(Arrays.asList("MoleculeId/CustomIonName", "SampleFileId", "PeakCountRatio", "RetentionTime", "PeptideModifiedAreaProportion", "SampleFileId/ReplicateId/RunId", "MoleculeId/AttributeGroupId", "PeptideId/AttributeGroupId"));
+        smallMoleculeCommand.setColumns(Arrays.asList("MoleculeId/CustomIonName", "SampleFileId", "PeakCountRatio", "RetentionTime", "ModifiedAreaProportion", "SampleFileId/ReplicateId/RunId", "MoleculeId/AttributeGroupId", "PeptideId/AttributeGroupId"));
         smallMoleculeCommand.addFilter("MoleculeId/AttributeGroupId", "C2X", Filter.Operator.EQUAL);
         smallMoleculeCommand.addFilter("SampleFileId/SampleName", "13417_02_WAA283_3805_071514", Filter.Operator.EQUAL);
         smallMoleculeCommand.setSorts(Collections.singletonList(new Sort("MoleculeId/CustomIonName")));
@@ -92,12 +92,12 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         Row smallMoleculeRow = smallMoleculeRowSet.iterator().next();
         assertEquals("Wrong first molecule", "PC aa C24:0", smallMoleculeRow.getValue("MoleculeId/CustomIonName"));
         // Round to avoid floating point precision false positives
-        assertEquals("Wrong first molecule proportion", 3475, Math.round(((Number)smallMoleculeRow.getValue("PeptideModifiedAreaProportion")).doubleValue() * 10000));
+        assertEquals("Wrong first molecule proportion", 3475, Math.round(((Number)smallMoleculeRow.getValue("ModifiedAreaProportion")).doubleValue() * 10000));
 
         // Query for peptide data
         SelectRowsCommand peptideCommand = new SelectRowsCommand("targetedms", "generalmoleculechrominfo");
         peptideCommand.setRequiredVersion(9.1);
-        peptideCommand.setColumns(Arrays.asList("PeptideId/PeptideModifiedSequence", "SampleFileId", "PeakCountRatio", "RetentionTime", "PeptideModifiedAreaProportion", "PeptideId/AttributeGroupId"));
+        peptideCommand.setColumns(Arrays.asList("PeptideId/PeptideModifiedSequence", "SampleFileId", "PeakCountRatio", "RetentionTime", "ModifiedAreaProportion", "PeptideId/AttributeGroupId"));
         peptideCommand.addFilter("PeptideId/AttributeGroupId", "YAL038WPeptide", Filter.Operator.EQUAL);
         peptideCommand.setSorts(Arrays.asList(new Sort("PeptideId/PeptideModifiedSequence")));
         SelectRowsResponse peptideResponse = peptideCommand.execute(cn, getCurrentContainerPath());
@@ -107,7 +107,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         Row peptideRow = peptideRowSet.iterator().next();
         assertEquals("Wrong first peptide", "GVNLPGTDVDLPALSEK", peptideRow.getValue("PeptideId/PeptideModifiedSequence"));
         // Round to avoid floating point precision false positives
-        assertEquals("Wrong first peptide proportion", 2160, Math.round(((Number)peptideRow.getValue("PeptideModifiedAreaProportion")).doubleValue() * 10000));
+        assertEquals("Wrong first peptide proportion", 2160, Math.round(((Number)peptideRow.getValue("ModifiedAreaProportion")).doubleValue() * 10000));
     }
 
     @LogMethod

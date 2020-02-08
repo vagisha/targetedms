@@ -356,6 +356,10 @@
             </column>
             <column columnName="ExcludeFromCalibration" />
             <column columnName="PredictedRetentionTime" />
+            <column columnName="ModifiedAreaProportion">
+                <formatString>##0.####%</formatString>
+                <description>(area of precursor in the sample) / (total area of all precursors for the same grouping in the sample)</description>
+            </column>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="GeneralPrecursor">
@@ -547,6 +551,10 @@
             <column columnName="IonMobilityFragment"/>
             <column columnName="IonMobilityWindow"/>
             <column columnName="IonMobilityType"/>
+            <column columnName="PrecursorModifiedAreaProportion">
+                <formatString>##0.####%</formatString>
+                <description>(sum area of precursors for this peptide in the same sample) / (total area of all precursors for the same grouping in the sample)</description>
+            </column>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="GeneralTransition">

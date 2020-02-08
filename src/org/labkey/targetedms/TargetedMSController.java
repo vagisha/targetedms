@@ -29,16 +29,27 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.labkey.api.action.*;
 import org.labkey.api.analytics.AnalyticsService;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.query.CustomView;
+import org.labkey.api.query.QueryAction;
+import org.labkey.api.query.QueryChangeListener;
+import org.labkey.api.query.QueryDefinition;
+import org.labkey.api.query.QueryException;
+import org.labkey.api.query.QueryParseException;
+import org.labkey.api.query.QuerySchema;
+import org.labkey.api.query.SchemaKey;
+import org.labkey.api.query.ViewOptions;
 import org.labkey.api.security.RequiresSiteAdmin;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.Button;
 import org.labkey.api.util.DOM;
 import org.labkey.api.util.DateUtil;
+import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.*;
 import org.labkey.api.targetedms.model.LJOutlier;
 import org.labkey.api.view.PopupMenu;
+import org.labkey.data.xml.TableType;
 import org.labkey.targetedms.model.Outlier;
 import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
@@ -157,6 +168,7 @@ import org.springframework.validation.Errors;
 import org.springframework.web.servlet.ModelAndView;
 
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -167,6 +179,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -3468,6 +3481,58 @@ public class TargetedMSController extends SpringActionController
             QueryView view = schema.createView(getViewContext(), settings, errors);
             view.setShowDetailsColumn(false);
             return view;
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowPTMReportAction extends ShowRunSingleDetailsAction<RunDetailsForm>
+    {
+        public ShowPTMReportAction()
+        {
+            super(RunDetailsForm.class, "PTM Report", "ptmReport");
+        }
+
+        @Override
+        protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
+        {
+            QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, "PTMPercents")
+            {
+                @Override
+                protected QueryDefinition createQueryDef(UserSchema schema)
+                {
+                    QueryDefinition queryDef = super.createQueryDef(schema);
+
+                    String queryName = "PTMPercents" + form.getId();
+                    QueryDefinition tempDef = QueryService.get().createQueryDef(getUser(), getContainer(), schema.getSchemaPath(), queryName);
+                    tempDef.setIsHidden(true);
+                    tempDef.setIsTemporary(true);
+                    tempDef.setSql(queryDef.getSql() + " IN (SELECT sf.SampleName FROM targetedms.SampleFile sf WHERE sf.ReplicateId.RunId = " + form.getId() + ")");
+                    tempDef.setMetadataXml(queryDef.getMetadataXml());
+
+                    return tempDef;
+                }
+            };
+            settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("PeptideGroupId", "RunId"), form.getId()));
+            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+            return schema.createView(getViewContext(), settings, errors);
+        }
+    }
+
+    @RequiresPermission(ReadPermission.class)
+    public class ShowPeptideMapAction extends ShowRunSingleDetailsAction<RunDetailsForm>
+    {
+        public ShowPeptideMapAction()
+        {
+            super(RunDetailsForm.class, "Peptide Map", "PeptideIds");
+        }
+
+        @Override
+        protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
+        {
+            QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, "PeptideIds");
+            settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("PeptideGroupId", "RunId"), form.getId()));
+            TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+            return schema.createView(getViewContext(), settings, errors);
         }
     }
 
