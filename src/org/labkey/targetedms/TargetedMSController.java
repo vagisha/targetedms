@@ -4654,21 +4654,22 @@ public class TargetedMSController extends SpringActionController
 
         String documentSize = getDocumentSize(run);
 
-        NavTree navTree = new NavTree("Download File", null, null, "fa fa-download");
+        NavTree navTree = new NavTree(documentSize, null, null, "fa fa-download");
+        navTree.setTip("Download");
 
         final ActionURL fullDownloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, run.getContainer()).replaceParameter("id", Integer.toString(run.getId()));
 
-        NavTree fullDownloadNavTree = new NavTree("Full Skyline document" + (documentSize == null ? "" : " (" + documentSize + ")"), fullDownloadUrl);
+        NavTree fullDownloadNavTree = new NavTree("Full Skyline file", fullDownloadUrl);
         fullDownloadNavTree.setScript(onClickScript);
         navTree.addChild(fullDownloadNavTree);
 
         ActionURL pointerDownloadUrl = fullDownloadUrl.clone().replaceParameter("view", "skyp");
 
-        NavTree pointerDownloadNavTree = new NavTree("SkyP file (1KB)", pointerDownloadUrl);
+        NavTree pointerDownloadNavTree = new NavTree("SkyP file (link only, 1KB)", pointerDownloadUrl);
         pointerDownloadNavTree.setScript(onClickScript);
         navTree.addChild(pointerDownloadNavTree);
         PopupMenu menu = new PopupMenu(navTree);
-        menu.setButtonStyle(org.labkey.api.view.PopupMenu.ButtonStyle.IMAGE);
+        menu.setButtonStyle(org.labkey.api.view.PopupMenu.ButtonStyle.IMAGE_AND_TEXT);
         return menu;
     }
 
