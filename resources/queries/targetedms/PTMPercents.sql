@@ -8,7 +8,8 @@ SELECT
   NextAA @hidden,
   PeptideModifiedSequence @hidden,
   SampleName,
-  SUBSTRING(Sequence, IndexAA + 1, 1) || (StartIndex + IndexAA + 1) AS SiteLocation,
+  -- Explicitly cast for SQLServer to avoid trying to add as numeric types
+  SUBSTRING(Sequence, IndexAA + 1, 1) || CAST(StartIndex + IndexAA + 1 AS VARCHAR) AS SiteLocation,
   PeptideGroupId
 FROM PTMPercentsPrepivot
 GROUP BY
