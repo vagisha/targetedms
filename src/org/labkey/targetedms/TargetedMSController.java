@@ -1062,7 +1062,7 @@ public class TargetedMSController extends SpringActionController
                 outlier.setRawMetricDataSet(jsonRawMetricDataSet);
 
                 response.put("outliers", outlier.toJSON());
-                    response.put("sampleFiles", sampleFiles);
+                response.put("sampleFiles", sampleFiles);
             }
             else
             {
