@@ -1498,7 +1498,7 @@ public class SkylineDocImporter
                 libraryInfo.setPrecursorId(precursor.getId());
                 libraryInfo.setSpectrumLibraryId(specLibId);
                 libraryInfo.setGeneralPrecursorId(gp.getId());
-                Table.insert(_user, TargetedMSManager.getTableInfoBibliospec(), libraryInfo);
+                Table.insert(_user, tableInfo, libraryInfo);
             }
         }
     }
