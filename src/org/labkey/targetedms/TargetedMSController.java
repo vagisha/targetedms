@@ -38,7 +38,9 @@ import org.labkey.api.query.QueryParseException;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.ViewOptions;
+import org.labkey.api.security.AdminConsoleAction;
 import org.labkey.api.security.RequiresSiteAdmin;
+import org.labkey.api.security.permissions.ApplicationAdminPermission;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.Button;
 import org.labkey.api.util.DOM;
@@ -420,7 +422,7 @@ public class TargetedMSController extends SpringActionController
 
     }
 
-    @RequiresSiteAdmin
+    @RequiresPermission(ApplicationAdminPermission.class)
     public class ChromatogramCrawlerAction extends FormViewAction<ChromatogramCrawlerForm>
     {
         @Override
@@ -434,7 +436,7 @@ public class TargetedMSController extends SpringActionController
         {
             return new HtmlView("Chromatogram Crawler", DIV("Crawl all containers under the parent " + getContainer().getPath(),
                     FORM(at(method, "POST"),
-                    new Button.ButtonBuilder("Start Crawl").submit(true).build())));
+                            new Button.ButtonBuilder("Start Crawl").submit(true).build())));
         }
 
         @Override
