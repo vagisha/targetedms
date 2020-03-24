@@ -172,6 +172,13 @@ public class SkylineDocumentParser implements AutoCloseable
     private int _transitionCount;
     private int _replicateCount;
     private int _listCount;
+    private int _transitionChromInfoCount;
+
+    /**
+     * To prevent giant DIA documents from overwhelming the DB, we skip importing TransitionChromInfos if the document
+     * has more than 100,000
+     */
+    public static final int MAX_TRANSITION_CHROM_INFOS = 100_000;
 
     /** Null if we haven't found a SKYD to parse */
     @Nullable
@@ -1179,7 +1186,8 @@ public class SkylineDocumentParser implements AutoCloseable
         pepGroup.setGene(reader.getAttributeValue(null, "gene"));
         pepGroup.setSpecies(reader.getAttributeValue(null, "species"));
 
-        pepGroup.setDecoy(Boolean.parseBoolean(reader.getAttributeValue(null, "decoy")));
+        boolean decoy = Boolean.parseBoolean(reader.getAttributeValue(null, "decoy"));
+        pepGroup.setDecoy(decoy);
 
         while(reader.hasNext())
         {
@@ -1251,20 +1259,20 @@ public class SkylineDocumentParser implements AutoCloseable
         return null;
     }
 
-    public Peptide nextPeptide() throws XMLStreamException, IOException
+    public Peptide nextPeptide(boolean decoy) throws XMLStreamException, IOException
     {
         Peptide peptide = new Peptide();
         readGeneralMolecule(_reader, peptide);
-        readPeptide(_reader, peptide);
+        readPeptide(_reader, peptide, decoy);
         updateProgress();
         return peptide;
     }
 
-    public Molecule nextMolecule() throws XMLStreamException, IOException
+    public Molecule nextMolecule(boolean decoy) throws XMLStreamException, IOException
     {
         Molecule molecule = new Molecule();
         readGeneralMolecule(_reader, molecule);
-        readSmallMolecule(_reader, molecule);
+        readSmallMolecule(_reader, molecule, decoy);
         updateProgress();
         return molecule;
     }
@@ -1291,7 +1299,7 @@ public class SkylineDocumentParser implements AutoCloseable
         generalMolecule.setExplicitRetentionTimeWindow(XmlUtil.readDoubleAttribute(reader, "explicit_retention_time_window"));
     }
 
-    private void readSmallMolecule(XMLStreamReader reader, Molecule molecule) throws XMLStreamException, IOException
+    private void readSmallMolecule(XMLStreamReader reader, Molecule molecule, boolean decoy) throws XMLStreamException, IOException
     {
         // read molecule-specific attributes
         String formula = reader.getAttributeValue(null, ION_FORMULA);
@@ -1325,7 +1333,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 break;
 
             if (XmlUtil.isStartElement(_reader, evtType, PRECURSOR))
-                moleculePrecursorList.add(readMoleculePrecursor(_reader, molecule));
+                moleculePrecursorList.add(readMoleculePrecursor(_reader, molecule, decoy));
 
             else if (XmlUtil.isStartElement(_reader, evtType, ANNOTATION))
                 annotations.add(readAnnotation(_reader, new GeneralMoleculeAnnotation()));
@@ -1339,7 +1347,7 @@ public class SkylineDocumentParser implements AutoCloseable
         _smallMoleculeCount++;
     }
 
-    private void readPeptide(XMLStreamReader reader, Peptide peptide) throws XMLStreamException, IOException
+    private void readPeptide(XMLStreamReader reader, Peptide peptide, boolean decoyForSkipping) throws XMLStreamException, IOException
     {
         List<Precursor> precursorList = new ArrayList<>();
         peptide.setPrecursorList(precursorList);
@@ -1372,7 +1380,11 @@ public class SkylineDocumentParser implements AutoCloseable
 
         String decoy = reader.getAttributeValue(null, "decoy");
         if (null != decoy)
+        {
             peptide.setDecoy(Boolean.parseBoolean(decoy));
+            // We will skip TransitionChromInfo insertion if either the protein or the peptide is marked as a decoy
+            decoyForSkipping |= peptide.isDecoyPeptide();
+        }
 
         String calcNeutralPepMass = reader.getAttributeValue(null, "calc_neutral_pep_mass");
         if (null != calcNeutralPepMass)
@@ -1402,7 +1414,7 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, PRECURSOR))
             {
-                precursorList.add(readPrecursor(reader, peptide));
+                precursorList.add(readPrecursor(reader, peptide, decoyForSkipping));
             }
             else if (XmlUtil.isStartElement(reader, evtType, NOTE))
             {
@@ -1561,7 +1573,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setSkylineSampleFileId(skylineSampleFileId);
     }
 
-    private MoleculePrecursor readMoleculePrecursor(XMLStreamReader reader, Molecule molecule) throws XMLStreamException, IOException
+    private MoleculePrecursor readMoleculePrecursor(XMLStreamReader reader, Molecule molecule, boolean decoy) throws XMLStreamException, IOException
     {
         MoleculePrecursor moleculePrecursor = new MoleculePrecursor();
         List<MoleculeTransition> moleculeTransitionList = new ArrayList<>();
@@ -1622,7 +1634,7 @@ public class SkylineDocumentParser implements AutoCloseable
                 break;
 
             if (XmlUtil.isStartElement(reader, evtType, TRANSITION))
-                moleculeTransitionList.add(readSmallMoleculeTransition(reader));
+                moleculeTransitionList.add(readSmallMoleculeTransition(reader, decoy));
             else if (XmlUtil.isStartElement(reader, evtType, TRANSITION_DATA)) {
                 moleculeTransitionList.addAll(readTransitionData(reader, this::transitionProtoToMoleculeTransition));
             }
@@ -1642,7 +1654,7 @@ public class SkylineDocumentParser implements AutoCloseable
         return moleculePrecursor;
     }
 
-    private Precursor readPrecursor(XMLStreamReader reader, Peptide peptide) throws XMLStreamException, IOException
+    private Precursor readPrecursor(XMLStreamReader reader, Peptide peptide, boolean decoy) throws XMLStreamException, IOException
     {
         Precursor precursor = new Precursor();
         List<Transition> transitionList = new ArrayList<>();
@@ -1728,7 +1740,7 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, TRANSITION))
             {
-                transitionList.add(readProteomicTransition(reader));
+                transitionList.add(readProteomicTransition(reader, decoy));
             }
             else if (XmlUtil.isStartElement(reader, evtType, TRANSITION_DATA)) {
                 transitionList.addAll(readTransitionData(reader, this::transitionProtoToTransition));
@@ -2074,7 +2086,8 @@ public class SkylineDocumentParser implements AutoCloseable
         return mass;
     }
 
-    private MoleculeTransition readSmallMoleculeTransition(XMLStreamReader reader) throws XMLStreamException
+    /** @param decoy if the transition is associated with a molecule group that's marked as a decoy and we can skip inserting its TransitionChromInfos*/
+    private MoleculeTransition readSmallMoleculeTransition(XMLStreamReader reader, boolean decoy) throws XMLStreamException
     {
         MoleculeTransition transition = new MoleculeTransition();
         readGeneralTransition(reader, transition);
@@ -2115,7 +2128,10 @@ public class SkylineDocumentParser implements AutoCloseable
             else if(XmlUtil.isStartElement(reader, evtType, TRANSITION_PEAK))
             {
                 TransitionChromInfo chromInfo = readTransitionChromInfo(reader);
-                chromInfoList.add(chromInfo);
+                if (++_transitionChromInfoCount <= MAX_TRANSITION_CHROM_INFOS && !decoy)
+                {
+                    chromInfoList.add(chromInfo);
+                }
             }
             else if (XmlUtil.isStartElement(reader, evtType, RESULTS_DATA)) {
                 chromInfoList.addAll(readTransitionResultsData(reader));
@@ -2139,7 +2155,8 @@ public class SkylineDocumentParser implements AutoCloseable
         return transition;
     }
 
-    private Transition readProteomicTransition(XMLStreamReader reader) throws XMLStreamException
+    /** @param decoy if the transition is associated with a peptide or protein that's marked as a decoy and we can skip inserting its TransitionChromInfos*/
+    private Transition readProteomicTransition(XMLStreamReader reader, boolean decoy) throws XMLStreamException
     {
         Transition transition = new Transition();
         readGeneralTransition(reader, transition);
@@ -2216,7 +2233,10 @@ public class SkylineDocumentParser implements AutoCloseable
             else if(XmlUtil.isStartElement(reader, evtType, TRANSITION_PEAK))
             {
                 TransitionChromInfo chromInfo = readTransitionChromInfo(reader);
-                chromInfoList.add(chromInfo);
+                if (++_transitionChromInfoCount <= MAX_TRANSITION_CHROM_INFOS && !decoy)
+                {
+                    chromInfoList.add(chromInfo);
+                }
             }
             else if (XmlUtil.isStartElement(reader, evtType, RESULTS_DATA)) {
                 chromInfoList.addAll(readTransitionResultsData(reader));
@@ -2446,6 +2466,13 @@ public class SkylineDocumentParser implements AutoCloseable
 
         for (SkylineDocument.SkylineDocumentProto.TransitionPeak transitionPeak : transitionResults.getPeaksList()) {
             TransitionChromInfo chromInfo = new TransitionChromInfo();
+
+            if (++_transitionChromInfoCount > MAX_TRANSITION_CHROM_INFOS)
+            {
+                // Bail out, though previously parsed records will still be in memory
+                return Collections.emptyList();
+            }
+
             List<TransitionChromInfoAnnotation> annotations = new ArrayList<>();
             chromInfo.setAnnotations(annotations);
             SkylineReplicate replicate = _replicateList.get(transitionPeak.getReplicateIndex());
@@ -2796,6 +2823,11 @@ public class SkylineDocumentParser implements AutoCloseable
     public int getTransitionCount()
     {
         return _transitionCount;
+    }
+
+    public int getTransitionChromInfoCount()
+    {
+        return _transitionChromInfoCount;
     }
 
     public int getReplicateCount()

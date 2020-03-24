@@ -93,6 +93,8 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.labkey.targetedms.TargetedMSManager.getTableInfoTransitionChromInfo;
+
 /**
  * Drives import of the Skyline document, and handles the high-level iteration for inserting
  * the document's contents into the database but not the parsing of the XML.
@@ -146,6 +148,8 @@ public class SkylineDocImporter
     private transient PreparedStatement _transitionChromInfoStmt;
     private transient PreparedStatement _precursorChromInfoStmt;
     private File _auditLogFile;
+
+    private boolean _importTransitionChromInfos = true;
 
     @JsonCreator
     private SkylineDocImporter(@JsonProperty("_expData") ExpData expData, @JsonProperty("_context") XarContext context,
@@ -331,6 +335,18 @@ public class SkylineDocImporter
                 {
                     _log.info("Imported " + peptideGroupCount + " peptide groups.");
                 }
+            }
+
+            if (parser.getTransitionChromInfoCount() > SkylineDocumentParser.MAX_TRANSITION_CHROM_INFOS)
+            {
+                _log.info("None of the " + parser.getTransitionChromInfoCount() + " TransitionChromInfos in the file were imported because they exceed the limit of " + SkylineDocumentParser.MAX_TRANSITION_CHROM_INFOS);
+                SQLFragment whereClause = new SQLFragment("WHERE r.Id = ?", _runId);
+
+                // Clear out any of the TransitionChromInfo and related tables that we inserted before we exceeded
+                // the max
+                TargetedMSManager.deleteTransitionChromInfoDependent(TargetedMSManager.getTableInfoTransitionChromInfoAnnotation(), whereClause);
+                TargetedMSManager.deleteTransitionChromInfoDependent(TargetedMSManager.getTableInfoTransitionAreaRatio(), whereClause);
+                TargetedMSManager.deleteGeneralTransitionDependent(getTableInfoTransitionChromInfo(), "TransitionId", whereClause);
             }
 
             // Done parsing document
@@ -1123,7 +1139,7 @@ public class SkylineDocImporter
             switch(molType)
             {
                 case PEPTIDE:
-                    Peptide peptide = parser.nextPeptide();
+                    Peptide peptide = parser.nextPeptide(pepGroup.isDecoy());
                     peptides.add(peptide.getSequence());
                     generalMolecule = peptide;
                     if(_isProteinLibraryDoc)
@@ -1147,7 +1163,7 @@ public class SkylineDocImporter
                     }
                     break;
                 case MOLECULE:
-                    Molecule molecule = parser.nextMolecule();
+                    Molecule molecule = parser.nextMolecule(pepGroup.isDecoy());
                     if (molecule.getIonFormula() != null)
                     {
                         // Some molecules only have a mass, no formula. Just omit them from the check.
@@ -1704,6 +1720,11 @@ public class SkylineDocImporter
                                             Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                             Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap)
     {
+        if (!_importTransitionChromInfos)
+        {
+            return;
+        }
+
         for (TransitionChromInfo transChromInfo : transitionChromInfos)
         {
             SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(transChromInfo));
@@ -1837,7 +1858,7 @@ public class SkylineDocImporter
             {
                 SQLFragment reselectSQL = new SQLFragment(sql);
                 // All we really need is a ColumnInfo of the right name and type, so choose one of the TableInfos to supply it
-                TargetedMSManager.getSchema().getSqlDialect().addReselect(reselectSQL, TargetedMSManager.getTableInfoTransitionChromInfo().getColumn("Id"), null);
+                TargetedMSManager.getSchema().getSqlDialect().addReselect(reselectSQL, getTableInfoTransitionChromInfo().getColumn("Id"), null);
                 sql = reselectSQL.getSQL();
             }
             stmt = c.prepareStatement(sql);

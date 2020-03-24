@@ -1479,10 +1479,12 @@ public class TargetedMSManager
         // Delete from CalibrationCurve
         deleteRunDependent(getTableInfoCalibrationCurve());
 
+        SQLFragment whereClause = new SQLFragment("WHERE r.Deleted = ?", true);
+
         // Delete from TransitionChromInfoAnnotation
-        deleteTransitionChromInfoDependent(getTableInfoTransitionChromInfoAnnotation());
+        deleteTransitionChromInfoDependent(getTableInfoTransitionChromInfoAnnotation(), whereClause);
         // Delete from TransitionAreaRatio
-        deleteTransitionChromInfoDependent(getTableInfoTransitionAreaRatio());
+        deleteTransitionChromInfoDependent(getTableInfoTransitionAreaRatio(), whereClause);
 
         // Delete from PrecursorChromInfoAnnotation
         deletePrecursorChromInfoDependent(getTableInfoPrecursorChromInfoAnnotation());
@@ -1493,17 +1495,17 @@ public class TargetedMSManager
         deleteGeneralMoleculeChromInfoDependent(getTableInfoPeptideAreaRatio());
 
         // Delete from TransitionChromInfo
-        deleteGeneralTransitionDependent(getTableInfoTransitionChromInfo(), "TransitionId");
+        deleteGeneralTransitionDependent(getTableInfoTransitionChromInfo(), "TransitionId", whereClause);
         // Delete from TransitionAnnotation
-        deleteGeneralTransitionDependent(getTableInfoTransitionAnnotation(), "TransitionId");
+        deleteGeneralTransitionDependent(getTableInfoTransitionAnnotation(), "TransitionId", whereClause);
         // Delete from TransitionLoss
-        deleteGeneralTransitionDependent(getTableInfoTransitionLoss(), "TransitionId");
+        deleteGeneralTransitionDependent(getTableInfoTransitionLoss(), "TransitionId", whereClause);
         // Delete from TransitionOptimization
-        deleteGeneralTransitionDependent(getTableInfoTransitionOptimization(), "TransitionId");
+        deleteGeneralTransitionDependent(getTableInfoTransitionOptimization(), "TransitionId", whereClause);
         // Delete from MoleculeTransition
-        deleteGeneralTransitionDependent(getTableInfoMoleculeTransition(), "TransitionId");
+        deleteGeneralTransitionDependent(getTableInfoMoleculeTransition(), "TransitionId", whereClause);
         // Delete from Transition
-        deleteGeneralTransitionDependent(getTableInfoTransition(), "Id");
+        deleteGeneralTransitionDependent(getTableInfoTransition(), "Id", whereClause);
 
         //Delete GeneralTransition
         deleteGeneralPrecursorDependent(getTableInfoGeneralTransition(), "GeneralPrecursorId");
@@ -1635,16 +1637,15 @@ public class TargetedMSManager
         }
     }
 
-    public static void deleteTransitionChromInfoDependent(TableInfo tableInfo)
+    public static void deleteTransitionChromInfoDependent(TableInfo tableInfo, SQLFragment whereClause)
     {
-        execute(" DELETE FROM " + tableInfo +
+        execute(new SQLFragment(" DELETE FROM " + tableInfo +
                 " WHERE TransitionChromInfoId IN (SELECT tci.Id FROM " + getTableInfoTransitionChromInfo() + " tci "+
                 " INNER JOIN " + getTableInfoGeneralTransition() + " gt ON tci.TransitionId = gt.Id " +
                 " INNER JOIN " + getTableInfoGeneralPrecursor() + " gp ON gt.GeneralPrecursorId = gp.Id "+
                 " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON gp.GeneralMoleculeId = gm.Id " +
                 " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
-                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
-                " WHERE r.Deleted = ?)", true);
+                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id ").append(whereClause).append(")"));
     }
 
     public static void deletePrecursorChromInfoDependent(TableInfo tableInfo)
@@ -1668,15 +1669,14 @@ public class TargetedMSManager
                 " WHERE r.Deleted = ?)", true);
     }
 
-    public static void deleteGeneralTransitionDependent(TableInfo tableInfo, String colName)
+    public static void deleteGeneralTransitionDependent(TableInfo tableInfo, String colName, SQLFragment whereClause)
     {
-        execute(" DELETE FROM " + tableInfo +
+        execute(new SQLFragment(" DELETE FROM " + tableInfo +
                 " WHERE " + colName + " IN (SELECT gt.Id FROM " + getTableInfoGeneralTransition() + " gt "+
                 " INNER JOIN " + getTableInfoGeneralPrecursor() + " gp ON gt.GeneralPrecursorId = gp.Id "+
                 " INNER JOIN " + getTableInfoGeneralMolecule() + " gm ON gp.GeneralMoleculeId = gm.Id " +
                 " INNER JOIN " + getTableInfoPeptideGroup() + " pg ON gm.PeptideGroupId = pg.Id " +
-                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id " +
-                " WHERE r.Deleted = ?)", true);
+                " INNER JOIN " + getTableInfoRuns() + " r ON pg.RunId = r.Id ").append(whereClause).append(")"));
     }
 
     private static void deleteGeneralPrecursorDependent(TableInfo tableInfo, String colName)
@@ -1774,6 +1774,11 @@ public class TargetedMSManager
     private static void execute(String sql, @NotNull Object... parameters)
     {
         new SqlExecutor(getSchema()).execute(sql, parameters);
+    }
+
+    private static void execute(SQLFragment sql)
+    {
+        new SqlExecutor(getSchema()).execute(sql);
     }
 
     public static void deleteiRTscales(Container c)
