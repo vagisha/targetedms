@@ -809,7 +809,7 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).exists();
     }
 
-    private static class PrecursorIdsWithSpectra extends DatabaseCache<Set<Integer>>
+    private static class PrecursorIdsWithSpectra extends DatabaseCache<String, Set<Integer>>
     {
        public PrecursorIdsWithSpectra()
         {
@@ -817,7 +817,7 @@ public class PrecursorManager
         }
     }
 
-    private static class PrecursorIdsWithChromatograms extends DatabaseCache<Set<Integer>>
+    private static class PrecursorIdsWithChromatograms extends DatabaseCache<String, Set<Integer>>
     {
         public PrecursorIdsWithChromatograms()
         {

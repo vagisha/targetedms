@@ -18,7 +18,7 @@ package org.labkey.targetedms.parser.blib;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.labkey.api.cache.BlockingStringKeyCache;
+import org.labkey.api.cache.BlockingCache;
 import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
@@ -26,7 +26,6 @@ import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
-import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.blib.BlibSpectrum.RedundantSpectrum;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
@@ -536,8 +535,8 @@ public class BlibSpectrumReader
         return null;
     };
 
-    private static final BlockingStringKeyCache<String> _blibCache =
-        new BlockingStringKeyCache<String>(CacheManager.getStringKeyCache(BLIBCACHE_LIMIT, BLIBCACHE_LIFETIME, "BlibCache"), _blibCacheLoader)
+    private static final BlockingCache<String, String> _blibCache =
+        new BlockingCache<>(CacheManager.getStringKeyCache(BLIBCACHE_LIMIT, BLIBCACHE_LIFETIME, "BlibCache"), _blibCacheLoader)
         {
             @Override
             public void remove(String key)

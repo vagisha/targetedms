@@ -418,7 +418,7 @@ public class ModificationManager
         }
     }
 
-    private static class PeptideIsotopeModIndexes extends DatabaseCache<Map<Pair<Integer,Integer>, Set<Integer>>>
+    private static class PeptideIsotopeModIndexes extends DatabaseCache<String, Map<Pair<Integer,Integer>, Set<Integer>>>
     {
         public PeptideIsotopeModIndexes()
         {
@@ -426,7 +426,7 @@ public class ModificationManager
         }
     }
 
-    private static class PeptideStrModIndexes extends DatabaseCache<Map<Integer, Set<Integer>>>
+    private static class PeptideStrModIndexes extends DatabaseCache<String, Map<Integer, Set<Integer>>>
     {
         public PeptideStrModIndexes()
         {

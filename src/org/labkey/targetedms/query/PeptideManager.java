@@ -353,7 +353,7 @@ public class PeptideManager
         }
     }
 
-    private static class PeptideIdsWithSpectra extends DatabaseCache<Set<Integer>>
+    private static class PeptideIdsWithSpectra extends DatabaseCache<String, Set<Integer>>
     {
         public PeptideIdsWithSpectra()
         {
