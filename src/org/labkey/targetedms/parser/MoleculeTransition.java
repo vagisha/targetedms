@@ -29,8 +29,6 @@ import java.util.Set;
  */
 public class MoleculeTransition extends GeneralTransition
 {
-    private int _transitionId;
-
     private String _ionFormula;
     private String _customIonName;
     private Double _massMonoisotopic;
@@ -39,12 +37,14 @@ public class MoleculeTransition extends GeneralTransition
 
     public int getTransitionId()
     {
-        return _transitionId;
+        return getId();
     }
 
     public void setTransitionId(int transitionId)
     {
-        _transitionId = transitionId;
+        // Issue 40075 - small molecule-specific table needs to match id column of generaltransition table, so bind to the same
+        // underlying property to avoid more problems in the future
+        setId(transitionId);
     }
 
     public String getIonFormula()
