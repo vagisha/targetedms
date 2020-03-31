@@ -328,7 +328,7 @@ class Constants
         Id(Column.Id),
         Name(Column.Name, "VARCHAR(100) NOT NULL"),
         IsotopeLabel(Column.IsotopeLabel),
-        AminoAcid(Column.AminoAcid, "CHAR(1)"),
+        AminoAcid(Column.AminoAcid, "VARCHAR(30)"),
         Terminus(Column.Terminus),
         Formula(Column.Formula),
         MassDiffMono(Column.MassDiffMono),
