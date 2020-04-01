@@ -93,30 +93,6 @@ public class TargetedMSUpgradeCode implements UpgradeCode
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
-    // Called at 17.30-17.31
-    @SuppressWarnings({"UnusedDeclaration"})
-    @DeferredUpgrade
-    public void addRawDataTab(final ModuleContext moduleContext)
-    {
-        if(moduleContext.isNewInstall())
-        {
-            // This is a new install.  There are no "targetedms" folders.
-            return;
-        }
-
-        Set<Container> containers = ContainerManager.getAllChildrenWithModule(ContainerManager.getRoot(), ModuleLoader.getInstance().getModule(TargetedMSModule.class));
-
-        for(Container container: containers)
-        {
-            if(Portal.getParts(container, RAW_FILES_TAB).size() != 0)
-            {
-                continue;
-            }
-
-            TargetedMSController.addRawFilesPipelineTab(container);
-        }
-    }
-
     // Called at 18.21 - 18.22
     @SuppressWarnings({"UnusedDeclaration"})
     @DeferredUpgrade
