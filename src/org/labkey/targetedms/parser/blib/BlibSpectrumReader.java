@@ -539,7 +539,7 @@ public class BlibSpectrumReader
         new BlockingCache<>(CacheManager.getStringKeyCache(BLIBCACHE_LIMIT, BLIBCACHE_LIFETIME, "BlibCache"), _blibCacheLoader)
         {
             @Override
-            public void remove(String key)
+            public void remove(@NotNull String key)
             {
                 deleteTempFile(key);
                 super.remove(key);
