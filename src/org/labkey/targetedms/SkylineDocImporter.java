@@ -660,6 +660,8 @@ public class SkylineDocImporter
                         break;
                     case "nist":
                     case "spectrast":
+                    default: // Set a librarySourceId even if there is no match.
+                             // The librarySourceId is meaningless now and will be dropped in the next schema update (Issue 40227).
                         library.setLibrarySourceId(librarySourceTypes.get("NIST"));
                         break;
                 }
