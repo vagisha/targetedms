@@ -1051,17 +1051,9 @@ public class TargetedMSController extends SpringActionController
                 JSONObject sampleFiles = cusumOutliers.getOtherQCSampleFileStats(ljOutliers, rawGuideSets, rawMetricDataSets, getContainer().getPath());
 
                 List<JSONObject> jsonLJOutliers = new ArrayList<>();
-                List<JSONObject> jsonRawGuideSets = new ArrayList<>();
-                List<JSONObject> jsonRawMetricDataSet = new ArrayList<>();
 
                 ljOutliers.forEach(ljOutlier -> jsonLJOutliers.add(ljOutlier.toJSON()));
                 outlier.setDataRowsLJ(jsonLJOutliers);
-
-                rawGuideSets.forEach(rawGuideSet -> jsonRawGuideSets.add(rawGuideSet.toJSON()));
-                outlier.setRawGuideSet(jsonRawGuideSets);
-
-                rawMetricDataSets.forEach(rawMetricDataSet -> jsonRawMetricDataSet.add(rawMetricDataSet.toJSON()));
-                outlier.setRawMetricDataSet(jsonRawMetricDataSet);
 
                 response.put("outliers", outlier.toJSON());
                 response.put("sampleFiles", sampleFiles);
