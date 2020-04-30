@@ -16,7 +16,6 @@
 package org.labkey.test.components.targetedms;
 
 import org.junit.Assert;
-import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
 import org.labkey.test.components.BodyWebPart;
 import org.labkey.test.selenium.LazyWebElement;
@@ -150,10 +149,9 @@ public class ParetoPlotsWebPart extends BodyWebPart<ParetoPlotsWebPart.ElementCa
                 " > a:nth-child(" + (barPlotNum+1) + ")").findElement(getDriver()).getText();
     }
 
-    public void clickQCPlotsLink(BaseWebDriverTest test)
+    public void verifyEmpty()
     {
-        Assert.assertTrue(elementCache().notFound.isDisplayed()); //Check for no guide sets
-        test.clickAndWait(elementCache().qcPlotsLink); //click on the link to take user to the QC Plots webpart
+        Assert.assertTrue(elementCache().notFound.isDisplayed()); //Check for no data
     }
 
     public void waitForTickLoad(int guideSetNum)
@@ -175,7 +173,6 @@ public class ParetoPlotsWebPart extends BodyWebPart<ParetoPlotsWebPart.ElementCa
 
     protected class ElementCache extends BodyWebPart.ElementCache
     {
-        WebElement notFound = new LazyWebElement(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("No Guide Sets found in this folder."), this).withTimeout(1000);
-        WebElement qcPlotsLink = new LazyWebElement(Locator.linkWithText("QC Plots"), this);
+        WebElement notFound = new LazyWebElement(Locator.tagWithClass("div", "tiledPlotPanel").startsWith("No sample files loaded yet."), this).withTimeout(10000);
     }
 }

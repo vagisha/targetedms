@@ -29,7 +29,9 @@ import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,17 +41,15 @@ import java.util.Set;
 public class CUSUMOutliers extends  Outliers
 {
 
-    private String metricGuideSetRawSql(int id, String schema1Name, String query1Name, String schema2Name, String query2Name, boolean includeAllValues, String series)
+    private String metricGuideSetRawSql(int id, String schema1Name, String query1Name, String series)
     {
-        boolean includeSeries2 = schema2Name != null && query2Name != null;
         String selectCols = "SampleFileId, SampleFileId.AcquiredTime, SeriesLabel, MetricValue";
-        String series1SQL = "SELECT \'" + (series != null ? series : "series1") + "\' AS SeriesType, " + selectCols + " FROM "+ schema1Name + "." + query1Name;
-        String series2SQL = !includeSeries2 ? "" : " UNION SELECT \'series2\' AS SeriesType, " + selectCols + " FROM "+ schema2Name + "." + query2Name;
+        String series1SQL = "SELECT '" + (series != null ? series : "series1") + "' AS SeriesType, " + selectCols + " FROM "+ schema1Name + "." + query1Name;
         String exclusionWhereSQL = getExclusionWhereSql(id);
 
         return "SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel, p.AcquiredTime, p.MetricValue, p.SeriesType, " +
                 "\nFROM GuideSetForOutliers gs" +
-                (includeAllValues ? "\nFULL" : "\nLEFT") + " JOIN (" + series1SQL + series2SQL + exclusionWhereSQL + ") as p"+
+                "\nLEFT JOIN (" + series1SQL + exclusionWhereSQL + ") as p"+
                 "\n  ON p.AcquiredTime >= gs.TrainingStart AND p.AcquiredTime <= gs.TrainingEnd" +
                 "\n ORDER BY GuideSetId, p.SeriesLabel, p.AcquiredTime";
     }
@@ -57,7 +57,7 @@ public class CUSUMOutliers extends  Outliers
     private String getSingleMetricGuideSetRawSql(int metricId, String metricType, String schemaName, String queryName, String series)
     {
         return  "SELECT s.*, g.Comment, " +  "(SELECT " + metricType + " FROM qcmetricconfiguration where id = " + metricId + ")" + " AS MetricType FROM (" +
-                metricGuideSetRawSql(metricId, schemaName, queryName, null, null, false, series) +
+                metricGuideSetRawSql(metricId, schemaName, queryName, series) +
                 ") s" +
                 " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
     }
@@ -86,10 +86,9 @@ public class CUSUMOutliers extends  Outliers
 
     private String getEachSeriesTypePlotDataSql(String type, int id, String schemaName, String queryName, String whereClause, String metricType)
     {
-        StringBuilder sb = new StringBuilder();
-        sb.append("SELECT '").append(type).append("' AS SeriesType, X.SampleFile, ");
-        sb.append("(SELECT " + metricType + " FROM qcmetricconfiguration where id = " + id + ")").append(" AS MetricType, ");
-        sb.append("\nX.PrecursorId, X.PrecursorChromInfoId, X.SeriesLabel, X.DataType, X.mz, X.AcquiredTime,"
+        return "(SELECT '" + type + "' AS SeriesType, X.SampleFile, " +
+                "(SELECT " + metricType + " FROM qcmetricconfiguration where id = " + id + ")" + " AS MetricType, " +
+                "\nX.PrecursorId, X.PrecursorChromInfoId, X.SeriesLabel, X.DataType, X.mz, X.AcquiredTime,"
                 + "\nX.FilePath, X.MetricValue, x.ReplicateId, gs.RowId AS GuideSetId,"
                 + "\nCASE WHEN (exclusion.ReplicateId IS NOT NULL) THEN TRUE ELSE FALSE END AS IgnoreInQC,"
                 + "\nCASE WHEN (X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime <= gs.TrainingEnd) THEN TRUE ELSE FALSE END AS InGuideSetTrainingRange"
@@ -100,9 +99,7 @@ public class CUSUMOutliers extends  Outliers
                 + "\nON X.ReplicateId = exclusion.ReplicateId"
                 + "\nLEFT JOIN GuideSetForOutliers gs"
                 + "\nON ((X.AcquiredTime >= gs.TrainingStart AND X.AcquiredTime < gs.ReferenceEnd) OR (X.AcquiredTime >= gs.TrainingStart AND gs.ReferenceEnd IS NULL))"
-                + "\nORDER BY X.SeriesLabel, SeriesType, X.AcquiredTime");
-
-        return "(" + sb.toString() + ")";
+                + "\nORDER BY X.SeriesLabel, SeriesType, X.AcquiredTime)";
     }
 
     private String queryContainerSampleFileRawData(List<QCMetricConfiguration> configurations)
@@ -143,10 +140,10 @@ public class CUSUMOutliers extends  Outliers
         return executeQuery(container, user, queryContainerSampleFileRawData(configurations), columnNames, new Sort("seriesType,seriesLabel,acquiredTime")).getArrayList(RawMetricDataSet.class);
     }
 
-    private Map<String, Map<GuideSetAvgMR, List<Map<String, Double>>>> getAllProcessedMetricGuideSets(List<RawGuideSet> rawGuideSets)
+    private Map<String, List<GuideSetAvgMR>> getAllProcessedMetricGuideSets(List<RawGuideSet> rawGuideSets)
     {
         Map<String, List<RawGuideSet>> metricGuideSet = new LinkedHashMap<>();
-        Map<String, Map<GuideSetAvgMR, List<Map<String, Double>>>> processedMetricGuides = new LinkedHashMap<>();
+        Map<String, List<GuideSetAvgMR>> processedMetricGuides = new LinkedHashMap<>();
         MovingRangeOutliers mr = new MovingRangeOutliers();
 
         for (RawGuideSet row : rawGuideSets)
@@ -166,7 +163,7 @@ public class CUSUMOutliers extends  Outliers
         return processedMetricGuides;
     }
 
-    private class PlotData
+    private static class PlotData
     {
         String seriesLabel;
         String series;
@@ -180,11 +177,6 @@ public class CUSUMOutliers extends  Outliers
         public void setSeriesLabel(String seriesLabel)
         {
             this.seriesLabel = seriesLabel;
-        }
-
-        public String getSeries()
-        {
-            return series;
         }
 
         public void setSeries(String series)
@@ -220,9 +212,21 @@ public class CUSUMOutliers extends  Outliers
         }
     }
 
-    private Map<PlotData, List<Map<String, List<?>>>> preprocessPlotData(List<RawMetricDataSet> plotDataRows, boolean hasMR, boolean hasCUSUMm, boolean hasCUSUMv, boolean isLogScale)
+    private static class RowsAndMetricValues
     {
-        Map<PlotData, List<Map<String, List<?>>>> plotDataMap = new LinkedHashMap<>();
+        private final List<RawMetricDataSet> rows;
+        private final List<Double> values;
+
+        public RowsAndMetricValues(List<RawMetricDataSet> rows, List<Double> values)
+        {
+            this.rows = rows;
+            this.values = values;
+        }
+    }
+
+    private Map<PlotData, RowsAndMetricValues> preprocessPlotData(List<RawMetricDataSet> plotDataRows)
+    {
+        Map<PlotData, RowsAndMetricValues> plotDataMap = new LinkedHashMap<>();
 
         if (plotDataRows.size() > 0)
         {
@@ -234,9 +238,6 @@ public class CUSUMOutliers extends  Outliers
 
                 if (plotDataMap.get(plotData) == null)
                 {
-                    List<Map<String, List<?>>> serTypeList = new ArrayList<>();
-                    Map<String, List<?>> rowsMap = new LinkedHashMap<>();
-                    Map<String, List<?>> metricValuesMap = new LinkedHashMap<>();
                     List<RawMetricDataSet> rowsList = new ArrayList<>();
                     List<Double> metricValuesList = new ArrayList<>();
 
@@ -253,75 +254,42 @@ public class CUSUMOutliers extends  Outliers
                         }
                     });
 
-                    rowsMap.put("Rows", rowsList);
-                    metricValuesMap.put("MetricValues", metricValuesList);
-
-                    serTypeList.add(rowsMap);
-                    serTypeList.add(metricValuesMap);
-
-                    plotDataMap.put(plotData, serTypeList);
+                    plotDataMap.put(plotData, new RowsAndMetricValues(rowsList, metricValuesList));
                 }
             });
 
-            if (hasMR || hasCUSUMm || hasCUSUMv)
-            {
-                plotDataMap.forEach((plotData, seriesList) ->  {
-                    List<?> metricValsList = seriesList.get(1).get("MetricValues");
-                    Double[] metricVals = metricValsList.toArray(new Double[0]);
-                    Double[] mRs = new Double[0];
-                    double[] positiveCUSUMm = new double[0];
-                    double[] negativeCUSUMm = new double[0];
-                    double[] positiveCUSUMv = new double[0];
-                    double[] negativeCUSUMv = new double[0];
+            plotDataMap.forEach((plotData, values) ->  {
+                List<Double> metricValsList = values.values;
+                Double[] metricVals = metricValsList.toArray(new Double[0]);
 
-                    if (hasMR)
+                Double[] mRs = Stats.getMovingRanges(metricVals, false, null);
+
+                double[] positiveCUSUMm = Stats.getCUSUMS(metricVals, false, false, false, null);
+                double[] negativeCUSUMm = Stats.getCUSUMS(metricVals, true, false, false, null);
+
+                double[] positiveCUSUMv = Stats.getCUSUMS(metricVals, false, true, false, null);
+                double[] negativeCUSUMv = Stats.getCUSUMS(metricVals, true, true, false, null);
+
+                List<RawMetricDataSet> serTypeObjList = values.rows;
+                if (serTypeObjList.size() == positiveCUSUMm.length)
+                {
+                    for (int i = 0; i < serTypeObjList.size(); i++)
                     {
-                        mRs = Stats.getMovingRanges(metricVals, isLogScale, null);
+                        RawMetricDataSet row = serTypeObjList.get(i);
+                        row.setmR(mRs[i]);
+                        row.setcUSUMmP(positiveCUSUMm[i]);
+                        row.setcUSUMmN(negativeCUSUMm[i]);
+                        row.setCUSUMvP(positiveCUSUMv[i]);
+                        row.setCUSUMvN(negativeCUSUMv[i]);
                     }
-
-                    if (hasCUSUMm)
-                    {
-                        positiveCUSUMm = Stats.getCUSUMS(metricVals, false, false, isLogScale, null);
-                        negativeCUSUMm = Stats.getCUSUMS(metricVals, true, false, isLogScale, null);
-                    }
-
-                    if (hasCUSUMv)
-                    {
-                        positiveCUSUMv = Stats.getCUSUMS(metricVals, false, true, isLogScale, null);
-                        negativeCUSUMv = Stats.getCUSUMS(metricVals, true, true, isLogScale, null);
-                    }
-
-                    List<?> serTypeObjList =  seriesList.get(0).get("Rows");
-                    if (serTypeObjList.size() == positiveCUSUMm.length)
-                    {
-                        for (int i = 0; i < serTypeObjList.size(); i++)
-                        {
-                            RawMetricDataSet row = (RawMetricDataSet) serTypeObjList.get(i);
-                            if (hasMR)
-                            {
-                                row.setmR(mRs[i]);
-                            }
-                            if (hasCUSUMm)
-                            {
-                                row.setcUSUMmP(positiveCUSUMm[i]);
-                                row.setcUSUMmN(negativeCUSUMm[i]);
-                            }
-                            if (hasCUSUMv)
-                            {
-                                row.setCUSUMvP(positiveCUSUMv[i]);
-                                row.setCUSUMvN(negativeCUSUMv[i]);
-                            }
-                        }
-                    }
-
-                });
-            }
+                }
+            });
         }
 
         return plotDataMap;
     }
 
-    private Map<String, Map<Integer, Map<PlotData, List<Map<String, List<?>>>>>> getAllProcessedMetricDataSets(List<RawMetricDataSet> rawMetricDataSets)
+    private Map<String, Map<Integer, Map<PlotData, RowsAndMetricValues>>> getAllProcessedMetricDataSets(List<RawMetricDataSet> rawMetricDataSets)
     {
         Map<String, Map<Integer, List<RawMetricDataSet>>> metricDataSet = new LinkedHashMap<>();
         rawMetricDataSets.forEach(row-> {
@@ -345,16 +313,14 @@ public class CUSUMOutliers extends  Outliers
             }
         });
 
-        Map<String, Map<Integer, Map<PlotData, List<Map<String, List<?>>>>>> processedMetricDataSet = new LinkedHashMap<>();
+        Map<String, Map<Integer, Map<PlotData, RowsAndMetricValues>>> processedMetricDataSet = new LinkedHashMap<>();
         metricDataSet.forEach((metric, guides) -> {
             if (processedMetricDataSet.get(metric) == null)
             {
-                Map<Integer, Map<PlotData, List<Map<String, List<?>>>>> metricMap = new LinkedHashMap<>();
+                Map<Integer, Map<PlotData, RowsAndMetricValues>> metricMap = new LinkedHashMap<>();
                 processedMetricDataSet.put(metric, metricMap);
             }
-            guides.forEach((guideId, guideset) -> {
-                processedMetricDataSet.get(metric).put(guideId, preprocessPlotData(guideset, true, true, true, false));
-            });
+            guides.forEach((guideId, guideset) -> processedMetricDataSet.get(metric).put(guideId, preprocessPlotData(guideset)));
         });
 
         return processedMetricDataSet;
@@ -363,7 +329,7 @@ public class CUSUMOutliers extends  Outliers
     private static class PlotOutlier
     {
         int totalCount;
-        List<Map<String, Map<String, Integer>>> outliers;
+        Map<String, Map<String, Integer>> outliers;
 
         public int getTotalCount()
         {
@@ -375,12 +341,12 @@ public class CUSUMOutliers extends  Outliers
             this.totalCount = totalCount;
         }
 
-        public List<Map<String, Map<String, Integer>>> getOutliers()
+        public Map<String, Map<String, Integer>> getOutliers()
         {
             return outliers;
         }
 
-        public void setOutliers(List<Map<String, Map<String, Integer>>> outliers)
+        public void setOutliers(Map<String, Map<String, Integer>> outliers)
         {
             this.outliers = outliers;
         }
@@ -402,29 +368,24 @@ public class CUSUMOutliers extends  Outliers
         }
     }
 
-    private Map<String, PlotOutlier> getQCPlotMetricOutliers(Map<String, Map<GuideSetAvgMR, List<Map<String, Double>>>> processedMetricGuides, Map<String, Map<Integer, Map<PlotData, List<Map<String, List<?>>>>>> processedMetricDataSet, Set<String> sampleFiles)
+    private Map<String, PlotOutlier> getQCPlotMetricOutliers(Map<String, List<GuideSetAvgMR>> processedMetricGuides, Map<String, Map<Integer, Map<PlotData, RowsAndMetricValues>>> processedMetricDataSet, Set<String> sampleFiles)
     {
         Map<String, PlotOutlier> plotOutliers = new LinkedHashMap<>();
         processedMetricDataSet.forEach((metric, metricVal) -> {
-            Map<String, Integer> countCUSUMmP = new LinkedHashMap<>();
             Map<String, Integer> countCUSUMmN = new LinkedHashMap<>();
+            Map<String, Integer> countCUSUMmP = new LinkedHashMap<>();
             Map<String, Integer> countCUSUMvP = new LinkedHashMap<>();
             Map<String, Integer> countCUSUMvN = new LinkedHashMap<>();
             Map<String, Integer> countMR = new LinkedHashMap<>();
 
 
-            Map<String, Map<String, Integer>> CUSUMmNmap = new LinkedHashMap<>();
-            Map<String, Map<String, Integer>> CUSUMmPmap = new LinkedHashMap<>();
-            Map<String, Map<String, Integer>> CUSUMvNmap = new LinkedHashMap<>();
-            Map<String, Map<String, Integer>> CUSUMvPmap = new LinkedHashMap<>();
-            Map<String, Map<String, Integer>> mRmap = new LinkedHashMap<>();
+            Map<String, Map<String, Integer>> outliersByTypeAndSampleFile = new HashMap<>();
 
-
-            CUSUMmNmap.put("CUSUMmN", new HashMap<>());
-            CUSUMmPmap.put("CUSUMmP", new HashMap<>());
-            CUSUMvPmap.put("CUSUMvP", new HashMap<>());
-            CUSUMvNmap.put("CUSUMvN", new HashMap<>());
-            mRmap.put("mR", new HashMap<>());
+            outliersByTypeAndSampleFile.put("CUSUMmN", countCUSUMmN);
+            outliersByTypeAndSampleFile.put("CUSUMmP", countCUSUMmP);
+            outliersByTypeAndSampleFile.put("CUSUMvP", countCUSUMvP);
+            outliersByTypeAndSampleFile.put("CUSUMvN", countCUSUMvN);
+            outliersByTypeAndSampleFile.put("mR", countMR);
             PlotOutlier plotOutlier = new PlotOutlier();
 
             metricVal.forEach((guideSetId, peptides) -> {
@@ -436,62 +397,45 @@ public class CUSUMOutliers extends  Outliers
                 peptides.forEach((plotData, plotDataList) -> {
                     if (plotDataList == null)
                         return;
-                    plotDataList.forEach((series) -> {
-                        if(series == null)
-                            return;
 
-                        List<RawMetricDataSet> rows = (List<RawMetricDataSet>) series.get("Rows");
+                    List<RawMetricDataSet> rows = plotDataList.rows;
 
-                        if (rows != null)
+                    rows.forEach(data -> {
+                        String sampleFile = data.getSampleFile();
+                        String sampleFileString = sampleFile + "_" + data.getAcquiredTime();
+                        if (data.getcUSUMmN() != null && data.getcUSUMmN() > Stats.CUSUM_CONTROL_LIMIT)
                         {
-                            rows.forEach(data -> {
-                                String sampleFile = data.getSampleFile();
-                                String sampleFileString = sampleFile + "_" + data.getAcquiredTime();
-                                if (data.getcUSUMmN() != null && data.getcUSUMmN() > Stats.CUSUM_CONTROL_LIMIT)
+                            processEachOutlier(countCUSUMmN, sampleFiles, sampleFileString);
+                        }
+                        if (data.getcUSUMmP() != null && data.getcUSUMmP() > Stats.CUSUM_CONTROL_LIMIT)
+                        {
+                            processEachOutlier(countCUSUMmP, sampleFiles, sampleFileString);
+                        }
+                        if (data.getCUSUMvN() != null && data.getCUSUMvN() > Stats.CUSUM_CONTROL_LIMIT)
+                        {
+                            processEachOutlier(countCUSUMvN, sampleFiles, sampleFileString);
+                        }
+                        if (data.getCUSUMvP() != null && data.getCUSUMvP() > Stats.CUSUM_CONTROL_LIMIT)
+                        {
+                            processEachOutlier(countCUSUMvP, sampleFiles, sampleFileString);
+                        }
+                        if (processedMetricGuides.get(metric) != null)
+                        {
+                            List<GuideSetAvgMR> averages = processedMetricGuides.get(metric);
+                            int index = averages.indexOf(new GuideSetAvgMR(guideSetId, plotData.getSeriesLabel(), plotData.getSeriesType()));
+                            if (index >= 0)
+                            {
+                                GuideSetAvgMR guideSetAvgMR = averages.get(index);
+                                if (data.getmR() != null && data.getmR() > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * guideSetAvgMR.getAverage())
                                 {
-                                    CUSUMmNmap.put("CUSUMmN", processEachOutlier(countCUSUMmN, sampleFiles, sampleFileString));
+                                    processEachOutlier(countMR, sampleFiles, sampleFileString);
                                 }
-                                if (data.getcUSUMmP() != null && data.getcUSUMmP() > Stats.CUSUM_CONTROL_LIMIT)
-                                {
-                                    CUSUMmPmap.put("CUSUMmP", processEachOutlier(countCUSUMmP, sampleFiles, sampleFileString));
-                                }
-                                if (data.getCUSUMvN() != null && data.getCUSUMvN() > Stats.CUSUM_CONTROL_LIMIT)
-                                {
-                                    CUSUMvNmap.put("CUSUMvN", processEachOutlier(countCUSUMvN, sampleFiles, sampleFileString));
-                                }
-                                if (data.getCUSUMvP() != null && data.getCUSUMvP() > Stats.CUSUM_CONTROL_LIMIT)
-                                {
-                                    CUSUMvPmap.put("CUSUMvP", processEachOutlier(countCUSUMvP, sampleFiles, sampleFileString));
-                                }
-                                if (processedMetricGuides.get(metric) != null)
-                                {
-                                    GuideSetAvgMR guideSetAvgMR = new GuideSetAvgMR();
-                                    guideSetAvgMR.setGuideSetid(guideSetId);
-                                    guideSetAvgMR.setSeriesLabel(plotData.getSeriesLabel());
-                                    guideSetAvgMR.setSeriesType(plotData.getSeriesType());
-                                    guideSetAvgMR.setSeries("Series");
-                                    if (processedMetricGuides.get(metric).get(guideSetAvgMR) != null)
-                                    {
-                                        double controlRange = processedMetricGuides.get(metric).get(guideSetAvgMR).get(0).get("avgMR");
-                                        if (data.getmR() != null && data.getmR() > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange)
-                                        {
-                                            mRmap.put("mR", processEachOutlier(countMR, sampleFiles, sampleFileString));
-                                        }
-                                    }
-                                }
-                            });
+                            }
                         }
                     });
-
                 });
             });
-            List<Map<String, Map<String, Integer>>> outliersList = new ArrayList<>();
-            outliersList.add(CUSUMmNmap);
-            outliersList.add(CUSUMmPmap);
-            outliersList.add(CUSUMvNmap);
-            outliersList.add(CUSUMvPmap);
-            outliersList.add(mRmap);
-            plotOutlier.setOutliers(outliersList);
+            plotOutlier.setOutliers(outliersByTypeAndSampleFile);
 
             plotOutliers.put(metric, plotOutlier);
 
@@ -502,19 +446,17 @@ public class CUSUMOutliers extends  Outliers
 
 
     /**
-     * Returns the processed outlier.
      * @param countObj count of the out of range metric - cusum or moving range.
      * @param sampleFiles Set of uploaded sample files.
      * @param sampleFileString unique string to identify each sample file
      */
-    private Map<String, Integer> processEachOutlier(Map<String, Integer> countObj, Set<String> sampleFiles, String sampleFileString)
+    private void processEachOutlier(Map<String, Integer> countObj, Set<String> sampleFiles, String sampleFileString)
     {
         if (sampleFiles.contains(sampleFileString))
         {
             int count = countObj.get(sampleFileString) != null ? countObj.get(sampleFileString) : 0;
             countObj.put(sampleFileString, ++count);
         }
-        return countObj;
     }
 
     private Map<String, Map<String, Map<String, Integer>>> getMetricOutliersByFileOrGuideSetGroup(Map<String, PlotOutlier> metricOutlier)
@@ -522,9 +464,9 @@ public class CUSUMOutliers extends  Outliers
         Map<String, Map<String, Map<String, Integer>>> transformedOutliers = new LinkedHashMap<>();
         metricOutlier.forEach((metric, vals) -> {
             int totalCount = vals.getTotalCount();
-            List<Map<String, Map<String, Integer>>> outliersList = vals.getOutliers();
+            Map<String, Map<String, Integer>> outliers = vals.getOutliers();
 
-            outliersList.forEach(outlier -> outlier.forEach((type, groups) -> {
+            outliers.forEach((type, groups) -> {
 
                 if (groups.size() > 0) {
                     groups.forEach((group, count) -> {
@@ -535,7 +477,7 @@ public class CUSUMOutliers extends  Outliers
                         }
                         Map<String, Integer> metricMap = new LinkedHashMap<>();
 
-                        outliersList.forEach( o -> o.forEach((t, g) -> {
+                        outliers.forEach((t, g) -> {
                             g.forEach((gp, ct) -> {
 
                                 if(group.equalsIgnoreCase(gp))
@@ -544,12 +486,12 @@ public class CUSUMOutliers extends  Outliers
                                     metricMap.put(t, ct);
                                 }
                             });
-                        }));
+                        });
 
                         transformedOutliers.get(group).put(metric, metricMap);
                     });
                 }
-            }));
+            });
         });
         return transformedOutliers;
     }
@@ -557,9 +499,9 @@ public class CUSUMOutliers extends  Outliers
     public Map<String, SampleFileInfo> getSampleFiles(List<LJOutlier> ljOutliers, List<RawGuideSet> rawGuideSets, List<RawMetricDataSet> rawMetricDataSets, String containerPath)
     {
         Map<String, SampleFileInfo> sampleFiles = setSampleFiles(ljOutliers, containerPath);
-        List<Integer> validGuideSetIds = new ArrayList<>();
+        Set<Integer> validGuideSetIds = new HashSet<>();
         sampleFiles.forEach((key,val) -> validGuideSetIds.add(val.getGuideSetId()));
-        Map<String, Map<GuideSetAvgMR, List<Map<String, Double>>>> processedMetricGuides = getAllProcessedMetricGuideSets(rawGuideSets);
+        Map<String, List<GuideSetAvgMR>> processedMetricGuides = getAllProcessedMetricGuideSets(rawGuideSets);
 
         List<RawMetricDataSet> filteredRawMetricDataSets = new ArrayList<>();
 
@@ -568,7 +510,7 @@ public class CUSUMOutliers extends  Outliers
                 filteredRawMetricDataSets.add(row);
         });
 
-        Map<String, Map<Integer, Map<PlotData, List<Map<String, List<?>>>>>> processedMetricDataSet = getAllProcessedMetricDataSets(filteredRawMetricDataSets);
+        Map<String, Map<Integer, Map<PlotData, RowsAndMetricValues>>> processedMetricDataSet = getAllProcessedMetricDataSets(filteredRawMetricDataSets);
         Map<String, PlotOutlier> metricOutlier = getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, sampleFiles.keySet());
         Map<String, Map<String, Map<String, Integer>>> transformedOutliers = getMetricOutliersByFileOrGuideSetGroup(metricOutlier);
 
@@ -599,8 +541,6 @@ public class CUSUMOutliers extends  Outliers
                         if(outlier.getKey().equalsIgnoreCase("CUSUMvN"))
                             matchedItem.setCUSUMvN(outlier.getValue());
                     }
-                    matchedItem.setCUSUMm(matchedItem.getCUSUMmP()+matchedItem.getCUSUMmN());
-                    matchedItem.setCUSUMv(matchedItem.getCUSUMvP()+matchedItem.getCUSUMvN());
                 }
             });
 
@@ -616,14 +556,11 @@ public class CUSUMOutliers extends  Outliers
                 CUSUMvN += item.getCUSUMvN();
                 mR += item.getmR();
             }
-            sample.setCUSUMm(CUSUMmN + CUSUMmP);
-            sample.setCUSUMv(CUSUMvN + CUSUMvP);
             sample.setCUSUMmP(CUSUMmP);
             sample.setCUSUMvP(CUSUMvP);
             sample.setCUSUMmN(CUSUMmN);
             sample.setCUSUMvN(CUSUMvN);
             sample.setmR(mR);
-            sample.setHasOutliers(!(sample.getNonConformers() == 0 && sample.getCUSUMm() == 0 && sample.getCUSUMv() == 0 && sample.getmR() == 0));
         });
         return sampleFiles;
     }
@@ -636,15 +573,16 @@ public class CUSUMOutliers extends  Outliers
     public JSONObject getSampleFilesJSON(Map<String, SampleFileInfo> sampleFiles)
     {
         JSONObject sampleFilesJSON = new JSONObject();
-        sampleFiles.forEach((name, sample) -> {
-            sampleFilesJSON.put(name, sample.toJSON());
-        });
+        sampleFiles.forEach((name, sample) -> sampleFilesJSON.put(name, sample.toJSON()));
 
         return sampleFilesJSON;
     }
 
     private Map<String, SampleFileInfo> setSampleFiles(List<LJOutlier> ljOutliers, String containerPath)
     {
+        if (ljOutliers.isEmpty())
+            return Collections.emptyMap();
+
         int index = 1;
         SampleFileInfo sampleFileInfo = null;
         Map<String, SampleFileInfo> sampleFiles = new HashMap<>();
@@ -654,32 +592,25 @@ public class CUSUMOutliers extends  Outliers
             String sampleFileString = ljOutlier.getSampleFile() + "_" + ljOutlier.getAcquiredTime();
             if (sampleFileInfo == null || (!(ljOutlier.getSampleFile() != null && sampleFileString.equals(getUniqueSampleFile(sampleFileInfo)))))
             {
-                if (sampleFileInfo != null)
-                    sampleFiles.put(getUniqueSampleFile(sampleFileInfo), sampleFileInfo);
                 sampleFileInfo = new SampleFileInfo();
                 sampleFileInfo.setIndex(index++);
                 sampleFileInfo.setSampleFile(ljOutlier.getSampleFile());
                 sampleFileInfo.setAcquiredTime(ljOutlier.getAcquiredTime());
-                sampleFileInfo.setMetrics(0);
-                sampleFileInfo.setNonConformers(0);
-                sampleFileInfo.setTotalCount(0);
-                if(ljOutlier.getGuideSetId() != null)
-                    sampleFileInfo.setGuideSetId(ljOutlier.getGuideSetId());
+                sampleFileInfo.setGuideSetId(ljOutlier.getGuideSetId());
                 sampleFileInfo.setIgnoreForAllMetric(ljOutlier.isIgnoreInQC());
+                sampleFiles.put(getUniqueSampleFile(sampleFileInfo), sampleFileInfo);
             }
 
             sampleFileInfo.setIgnoreForAllMetric(ljOutlier.isIgnoreInQC() && sampleFileInfo.isIgnoreForAllMetric());
             if (!ljOutlier.isIgnoreInQC())
             {
                 sampleFileInfo.setMetrics(sampleFileInfo.getMetrics() + 1);
-                sampleFileInfo.setNonConformers(sampleFileInfo.getNonConformers() + ljOutlier.getNonConformers());
+                sampleFileInfo.setLeveyJennings(sampleFileInfo.getLeveyJennings() + ljOutlier.getLeveyJennings());
                 sampleFileInfo.setTotalCount(sampleFileInfo.getTotalCount() + ljOutlier.getTotalCount());
             }
             ljOutlier.setContainerPath(containerPath);
             sampleFileInfo.getItems().add(ljOutlier);
         }
-        assert sampleFileInfo != null;
-        sampleFiles.put(getUniqueSampleFile(sampleFileInfo), sampleFileInfo);
 
         return sampleFiles;
     }

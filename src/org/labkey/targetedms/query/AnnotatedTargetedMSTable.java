@@ -270,6 +270,10 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
         {
             throw new RuntimeSQLException(e);
         }
+
+        // Do a case-insensitive sort since different DBs have different default collations
+        annotationSettingForTypings.sort((a, b) -> a.getName().compareToIgnoreCase(b.getName()));
+
         return annotationSettingForTypings;
     }
 

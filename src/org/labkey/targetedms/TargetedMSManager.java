@@ -75,14 +75,14 @@ import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.view.NotFoundException;
-import org.labkey.api.view.TabStripView;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.model.GuideSet;
 import org.labkey.targetedms.model.QCMetricConfiguration;
 import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
 import org.labkey.targetedms.outliers.CUSUMOutliers;
-import org.labkey.targetedms.outliers.LeveyJenningsOutliers;
+import org.labkey.targetedms.outliers.Outliers;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -114,7 +114,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import static java.lang.Math.toIntExact;
 import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
 import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
 
@@ -574,6 +573,7 @@ public class TargetedMSManager
         {
             XarSource source = new AbstractFileXarSource("Wrap Targeted MS Run", container, user)
             {
+                @Override
                 public File getLogFile()
                 {
                     throw new UnsupportedOperationException();
@@ -864,54 +864,6 @@ public class TargetedMSManager
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("Container"), container.getId());
         filter.addCondition(FieldKey.fromParts("FileName"), fileName);
         return new TableSelector(TargetedMSManager.getTableInfoRuns(), filter, null).getObject(TargetedMSRun.class);
-    }
-
-    public static boolean isRunConflicted(TargetedMSRun run)
-    {
-        if(run == null)
-            return false;
-
-        TargetedMSRun.RepresentativeDataState representativeState = run.getRepresentativeDataState();
-        switch (representativeState)
-        {
-            case NotRepresentative:
-                return false;
-            case Representative_Protein:
-                return getConflictedProteinCount(run.getId()) > 0;
-            case Representative_Peptide:
-                return getConflictedPeptideCount(run.getId()) > 0;
-        }
-        return false;
-    }
-
-    private static int getConflictedProteinCount(int runId)
-    {
-        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
-        sql.append(" WHERE runid = ?");
-        sql.add(runId);
-        sql.append(" AND representativedatastate = ?");
-        sql.add(RepresentativeDataState.Conflicted.ordinal());
-        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null ? count : 0;
-    }
-
-    private static int getConflictedPeptideCount(int runId)
-    {
-        SQLFragment sql = new SQLFragment("SELECT COUNT(*) FROM ");
-        sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
-        sql.append(", ");
-        sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pepgrp");
-        sql.append(" WHERE pepgrp.runid = ?");
-        sql.add(runId);
-        sql.append(" AND prec.representativedatastate = ?");
-        sql.add(RepresentativeDataState.Conflicted.ordinal());
-        sql.append(" AND gp.GeneralMoleculeId = gm.Id");
-        sql.append(" AND gm.PeptideGroupId = pepgrp.Id");
-        Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null ? count : 0;
     }
 
     public static void markRunsNotRepresentative(Container container, TargetedMSRun.RepresentativeDataState representativeState)
@@ -1311,6 +1263,13 @@ public class TargetedMSManager
         }
 
         return logs;
+    }
+
+    public static List<GuideSet> getGuideSets(Container c, User u)
+    {
+        TargetedMSSchema schema = new TargetedMSSchema(u, c);
+        TableInfo table = schema.getTable("GuideSetForOutliers", null);
+        return new TableSelector(table, null, new Sort("TrainingStart")).getArrayList(GuideSet.class);
     }
 
     private static void deleteRunForFile(URI uri, Container c, User u)
@@ -2071,6 +2030,11 @@ public class TargetedMSManager
     public List<QCMetricConfiguration> getEnabledQCMetricConfigurations(Container container, User user)
     {
         QuerySchema targetedMSSchema = DefaultSchema.get(user, container).getSchema(TargetedMSSchema.SCHEMA_NAME);
+        if (targetedMSSchema == null)
+        {
+            // Module must not be enabled in this folder, so bail out
+            return Collections.emptyList();
+        }
         TableInfo metricsTable = targetedMSSchema.getTable("qcMetricsConfig", null);
         List<QCMetricConfiguration> metrics = new TableSelector(metricsTable, new SimpleFilter(FieldKey.fromParts("Enabled"), false, CompareType.NEQ_OR_NULL), new Sort(FieldKey.fromParts("Name"))).getArrayList(QCMetricConfiguration.class);
         List<QCMetricConfiguration> result = new ArrayList<>();
@@ -2122,11 +2086,11 @@ public class TargetedMSManager
         {
             CUSUMOutliers cusumOutliers = new CUSUMOutliers();
 
-            List<LJOutlier> ljOutliers = LeveyJenningsOutliers.getLJOutliers(enabledQCMetricConfigurations, container, user, sampleFileLimit);
+            List<LJOutlier> ljOutliers = Outliers.getLJOutliers(enabledQCMetricConfigurations, container, user, sampleFileLimit);
             if (!ljOutliers.isEmpty())
             {
                 List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(container, user, enabledQCMetricConfigurations);
-                List<RawMetricDataSet> rawMetricDataSets = new CUSUMOutliers().getRawMetricDataSets(container, user, enabledQCMetricConfigurations);
+                List<RawMetricDataSet> rawMetricDataSets = cusumOutliers.getRawMetricDataSets(container, user, enabledQCMetricConfigurations);
                 return cusumOutliers.getSampleFiles(ljOutliers,  rawGuideSets, rawMetricDataSets,container.getPath());
             }
         }

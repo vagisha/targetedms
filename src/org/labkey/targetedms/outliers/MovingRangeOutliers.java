@@ -26,34 +26,23 @@ import java.util.Map;
 
 public class MovingRangeOutliers
 {
-    public Map<GuideSetAvgMR, List<Map<String, Double>>> getGuideSetAvgMRs(List<RawGuideSet> rawGuideSet)
+    public List<GuideSetAvgMR> getGuideSetAvgMRs(List<RawGuideSet> rawGuideSet)
     {
-        Map<GuideSetAvgMR, Map<String, List<Double>>> guideSetDataMap = new LinkedHashMap<>();
-        Map<GuideSetAvgMR, List<Map<String, Double>>> movingRangeMap = new LinkedHashMap<>();
+        Map<GuideSetAvgMR, List<Double>> guideSetDataMap = new LinkedHashMap<>();
+        List<GuideSetAvgMR> movingRangeMap = new ArrayList<>();
 
         for (RawGuideSet row : rawGuideSet)
         {
-            GuideSetAvgMR guideSetAvgMR = new GuideSetAvgMR();
-            guideSetAvgMR.setGuideSetid(row.getGuideSetId());
-            guideSetAvgMR.setSeriesLabel(row.getSeriesLabel());
-            guideSetAvgMR.setSeriesType(row.getSeriesType());
-            guideSetAvgMR.setSeries("Series");
-            String metricValues = "MetricValues";
+            GuideSetAvgMR guideSetAvgMR = new GuideSetAvgMR(row.getGuideSetId(), row.getSeriesLabel(), row.getSeriesType());
 
             if (guideSetDataMap.get(guideSetAvgMR) == null)
-            {
-                Map<String, List<Double>> serTypeMap = new LinkedHashMap<>();
-                guideSetDataMap.put(guideSetAvgMR, serTypeMap);
-            }
-
-            if (guideSetDataMap.get(guideSetAvgMR).get(metricValues) == null)
             {
                 List<Double> metValues = new ArrayList<>();
                 if (row.getMetricValue() != null)
                 {
                     rawGuideSet.forEach(gs -> {
                         String label = gs.getSeriesLabel();
-                        Integer guideSetId = gs.getGuideSetId();
+                        int guideSetId = gs.getGuideSetId();
                         if (guideSetAvgMR.getSeriesLabel().equals(label) && guideSetAvgMR.getGuideSetid() == guideSetId)
                         {
                             if (gs.getMetricValue() != null)
@@ -61,29 +50,24 @@ public class MovingRangeOutliers
                         }
                     });
                 }
-                guideSetDataMap.get(guideSetAvgMR).put(metricValues, metValues);
+                guideSetDataMap.put(guideSetAvgMR, metValues);
             }
         }
 
-        guideSetDataMap.forEach((guideSetAvgMR, seriesTypeVal) -> {
-            List<Map<String, Double>> typeNameList = new ArrayList<>();
-            List<Double> metricVals = seriesTypeVal.get("MetricValues");
-
+        guideSetDataMap.forEach((guideSetAvgMR, metricVals) -> {
             if (metricVals == null || metricVals.size() == 0)
                 return;
 
             Double[] mVals = metricVals.toArray(new Double[0]);
             Double[] metricMovingRanges = Stats.getMovingRanges(mVals, false, null);
 
-            Map<String, Double> avgMRMap = new LinkedHashMap<>();
-            Map<String, Double> stddevMRMap = new LinkedHashMap<>();
+            double mean = Stats.getMean(metricMovingRanges);
+            double standardDev = Stats.getStdDev(metricMovingRanges);
 
-            avgMRMap.put("avgMR", Stats.getMean(metricMovingRanges));
-            stddevMRMap.put("stddevMR", Stats.getStdDev(metricMovingRanges));
-            typeNameList.add(avgMRMap);
-            typeNameList.add(stddevMRMap);
+            guideSetAvgMR.setAverage(mean);
+            guideSetAvgMR.setStandardDev(standardDev);
 
-            movingRangeMap.put(guideSetAvgMR, typeNameList);
+            movingRangeMap.add(guideSetAvgMR);
 
         });
 

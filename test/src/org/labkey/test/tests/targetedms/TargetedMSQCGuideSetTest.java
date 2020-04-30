@@ -209,11 +209,11 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         ParetoPlotPage paretoPage = new ParetoPlotPage(getDriver());
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
-        assertEquals("Wrong number of Pareto plots", 16, paretoPlotsWebPart.getNumOfParetoPlots());
+        assertEquals("Wrong number of Pareto plots", 20, paretoPlotsWebPart.getNumOfParetoPlots());
         verifyDownloadableParetoPlots(paretoPlotsWebPart.getNumOfParetoPlots());
 
         ParetoPlotsWebPart.ParetoPlotType plotType = ParetoPlotsWebPart.ParetoPlotType.LeveyJennings;
-        int guideSetId = 3;
+        int guideSetId = 4;
         log("Verifying Pareto Plots for " + plotType.getLabel());
         assertEquals("Wrong number of non-conformers for PA", 69, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 0));
         assertEquals("Wrong number of non-conformers for P Area", 64, paretoPlotsWebPart.getPlotBarHeight(guideSetId, 1));
@@ -253,7 +253,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         clickAndWait(Locator.linkWithText("Pareto Plot")); //go to Pareto Plot tab
         waitForElement(Locator.css("svg"));
         plotType = ParetoPlotsWebPart.ParetoPlotType.CUSUMm;
-        guideSetId = 2;
+        guideSetId = 3;
         log("Verifying non-conformers for " + plotType.getLabel());
         assertEquals("Wrong number of non-conformers for PA", "CUSUM-: 3 CUSUM+: 4 Total: 7", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 0));
         assertEquals("Wrong number of non-conformers for P Area", "CUSUM-: 2 CUSUM+: 4 Total: 6", paretoPlotsWebPart.getPlotBarTooltip(guideSetId, plotType, 1));
@@ -275,10 +275,8 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         ParetoPlotPage paretoPage = new ParetoPlotPage(getDriver());
         ParetoPlotsWebPart paretoPlotsWebPart = paretoPage.getParetoPlotsWebPart();
 
-        paretoPlotsWebPart.clickQCPlotsLink(this);
-
-        assertElementPresent(Locator.tagWithClass("span", "labkey-wp-title-text").withText(QCPlotsWebPart.DEFAULT_TITLE));
-    }
+        paretoPlotsWebPart.verifyEmpty();
+   }
 
     public void testSmallMoleculePareto() throws IOException, CommandException
     {
@@ -301,7 +299,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
         clickExportPDFIcon("chart-render-div", 0);
         clickExportPNGIcon("chart-render-div", 0);
-        verifyNavigationToPanoramaDashboard(1, 0, QCPlotsWebPart.MetricType.FWHM, false);
+        verifyNavigationToPanoramaDashboard(2, 0, QCPlotsWebPart.MetricType.FWHM, false);
     }
 
     public void testReplicateAnnotations() throws IOException, CommandException

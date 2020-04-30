@@ -19,15 +19,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
         return undefined;
     },
 
-    getMetricPropsByLabel: function(label) {
-        for (var i = 0; i < this.metricPropArr.length; i++) {
-            if (this.metricPropArr[i].name == label || this.metricPropArr[i].series1Label == label || this.metricPropArr[i].series2Label == label) {
-                return this.metricPropArr[i];
-            }
-        }
-        return undefined;
-    },
-
     isMultiSeries : function(metricId)
     {
         var metric = Ext4.isNumber(this.metric) ? this.metric : metricId;
@@ -185,42 +176,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             });
         });
         return movingRangeMap;
-    },
-
-    getAllProcessedMetricDataSets: function(rawData)
-    {
-        var metricDataSet =  {};
-        Ext4.each(rawData, function (row){
-            if (!metricDataSet[row['MetricType']])
-                metricDataSet[row['MetricType']] = {};
-            if (!metricDataSet[row['MetricType']][row.GuideSetId])
-                metricDataSet[row['MetricType']][row.GuideSetId] = [];
-            metricDataSet[row['MetricType']][row.GuideSetId].push(row);
-        });
-
-        var processedMetricDataSet = {};
-        Ext4.iterate(metricDataSet, function(metric, guides){
-            processedMetricDataSet[metric] = {};
-            Ext4.iterate(guides, function(guideId, guideset){
-                processedMetricDataSet[metric][guideId] = this.preprocessPlotData(guideset, true, true, true);
-            }, this);
-        }, this);
-        return processedMetricDataSet;
-    },
-
-    getAllProcessedGuideSets: function(rawData)
-    {
-        var metricGuideSet =  {};
-        Ext4.each(rawData, function (row){
-            if (!metricGuideSet[row['MetricType']])
-                metricGuideSet[row['MetricType']] = [];
-            metricGuideSet[row['MetricType']].push(row);
-        });
-        var processedMetricGuides = {};
-        Ext4.iterate(metricGuideSet, function(key, val){
-            processedMetricGuides[key] = this.getGuideSetAvgMRs(val);
-        }, this);
-        return processedMetricGuides;
     },
 
     preprocessPlotData: function(plotDataRows, hasMR, hasCUSUMm, hasCUSUMv, isLogScale) {
@@ -419,7 +374,10 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
     failureHandler: function(response) {
         var plotDiv = Ext4.get(this.plotDivId);
         if (plotDiv) {
-            if (response.message) {
+            if (!response) {
+                plotDiv.update("<span>Failure loading data</span>");
+            }
+            else if (response.message) {
                 plotDiv.update("<span>" + Ext4.util.Format.htmlEncode(response.message) + "</span>");
             }
             else {
@@ -443,208 +401,6 @@ Ext4.define('LABKEY.targetedms.BaseQCPlotPanel', {
             }, null, true),
             scope: this
         });
-    },
-
-    getSingleMetricGuideSetRawSql: function(metricId, metricType, schemaName, queryName, series)
-    {
-        var guideSetSql = "SELECT s.*, g.Comment, '" +  metricType + "' AS MetricType FROM (";
-        guideSetSql += this.metricGuideSetRawSql(metricId, schemaName, queryName, undefined, undefined, false, series);
-        guideSetSql +=  ") s"
-                + " LEFT JOIN GuideSet g ON g.RowId = s.GuideSetId";
-        return guideSetSql;
-    },
-
-    queryContainerSampleFileRawData: function(params, cb, scope)
-    {
-        // build query to query for all raw data
-        var sql = "", sep = "", where = '';
-        Ext4.each(this.metricPropArr, function (metricType)
-        {
-            var id = metricType.id,
-                label = metricType.series1Label,
-                metricProps = this.getMetricPropsById(id);
-
-            var newSql = this.getEachSeriesTypePlotDataSql('series1', metricProps, where, label);
-
-            sql += sep + '(' + newSql + ')';
-            sep = "\nUNION\n";
-
-            if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
-            {
-                label = metricType.series2Label;
-                newSql = this.getEachSeriesTypePlotDataSql('series2', metricProps, where, label);
-                sql += sep + '(' + newSql + ')';
-            }
-        }, this);
-
-        sql = "SELECT * FROM (" + sql + ") a";  //wrap unioned results in sql to support sorting
-
-        var sqlObj = {
-            schemaName: 'targetedms',
-            sql: sql,
-            scope: this,
-            sort: 'SeriesType, SeriesLabel, AcquiredTime', //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
-            success: function (data)
-            {
-               if(data) { //TODO : hack to avoid timing issue until this code is removed
-                   params.rawMetricDataSet = data.rows;
-                   cb.call(scope, params);
-               }
-            }
-        };
-        if (params.container)
-            sqlObj.containerPath = params.container.path;
-
-        LABKEY.Query.executeSql(sqlObj);
-    },
-
-    queryContainerSampleFileRawGuideSetStats: function(params, cb, scope)
-    {
-        // build query to query for all metric guide set
-        var sql = "", sep = "";
-        Ext4.each(this.metricPropArr, function (metricType)
-        {
-            var id = metricType.id,
-                label = metricType.series1Label,
-                metricProps = this.getMetricPropsById(id);
-
-            sql += sep + '(' + this.getSingleMetricGuideSetRawSql(id, label, metricProps.series1SchemaName, metricProps.series1QueryName, 'series1') + ')';
-            sep = "\nUNION\n";
-
-            if (Ext4.isDefined(metricType.series2SchemaName) && Ext4.isDefined(metricType.series2QueryName))
-            {
-                label = metricType.series2Label;
-                sql += sep + '(' + this.getSingleMetricGuideSetRawSql(id, label, metricProps.series2SchemaName, metricProps.series2QueryName, 'series2') + ')';
-            }
-        }, this);
-
-        sql = "SELECT * FROM (" + sql + ") a"; //wrap unioned results in sql to support sorting
-
-        var sqlObj = {
-            schemaName: 'targetedms',
-            sql: sql,
-            scope: this,
-            sort: 'GuideSetId, SeriesLabel, AcquiredTime', //it's important that record is sorted by AcquiredTime asc as ordering is critical in calculating mR and CUSUM
-            success: function (data)
-            {
-                params.rawGuideSet = data.rows;
-                this.queryContainerSampleFileRawData(params, cb, scope);
-                cb.call(scope, params);
-            }
-        };
-        if (params && params.container)
-            sqlObj.containerPath = params.container.path;
-        LABKEY.Query.executeSql(sqlObj);
-    },
-
-    processEachOutlier: function(groupByGuideSet, countObj, guideSetId, sampleFiles, targetSampleFile)
-    {
-        if (groupByGuideSet)
-        {
-            if (!countObj[guideSetId])
-                countObj[guideSetId] = 0;
-            countObj[guideSetId]++;
-        }
-        else
-        {
-            if (sampleFiles.indexOf(targetSampleFile) > -1)
-            {
-                if (!countObj[targetSampleFile])
-                    countObj[targetSampleFile] = 0;
-                countObj[targetSampleFile]++;
-            }
-        }
-    },
-
-    getQCPlotMetricOutliers: function(processedMetricGuides, processedMetricDataSet, CUSUMm, CUSUMv, mR, groupByGuideSet, sampleFiles)
-    {
-        if (!processedMetricGuides || Object.keys(processedMetricGuides).length == 0)
-            return null;
-        if (!groupByGuideSet && !sampleFiles)
-            return null;
-        var plotOutliers = {};
-
-        Ext4.iterate(processedMetricDataSet, function(metric, metricVal){
-            var countCUSUMmP = {}, countCUSUMmN = {}, countCUSUMvP = {}, countCUSUMvN = {}, countMR = {};
-            plotOutliers[metric] = {TotalCount: 0, outliers: {}};
-            Ext4.iterate(metricVal, function(guideSetId, peptides)
-            {
-                if (plotOutliers[metric].TotalCount < Object.keys(peptides).length)
-                    plotOutliers[metric].TotalCount = Object.keys(peptides).length;
-                Ext4.iterate(peptides, function (peptide, peptideVal) {
-                    if (!peptideVal || !peptideVal.Series)
-                        return;
-                    Ext4.iterate(peptideVal.Series, function (series, seriesVal) {
-                        if (!seriesVal)
-                            return;
-
-                        var dataRows = seriesVal.Rows;
-
-                        if (CUSUMm) {
-                            Ext4.each(dataRows, function (data) {
-                                var sampleFile = data.SampleFile;
-                                if (data.CUSUMmN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT) {
-                                    this.processEachOutlier(groupByGuideSet, countCUSUMmN, guideSetId, sampleFiles, sampleFile);
-                                }
-                                else if (data.CUSUMmP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT) {
-                                    this.processEachOutlier(groupByGuideSet, countCUSUMmP, guideSetId, sampleFiles, sampleFile);
-                                }
-                            }, this);
-
-                        }
-                        if (CUSUMv) {
-                            Ext4.each(dataRows, function (data) {
-                                var sampleFile = data.SampleFile;
-                                if (data.CUSUMvN > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT) {
-                                    this.processEachOutlier(groupByGuideSet, countCUSUMvN, guideSetId, sampleFiles, sampleFile);
-                                }
-                                else if (data.CUSUMvP > LABKEY.vis.Stat.CUSUM_CONTROL_LIMIT) {
-                                    this.processEachOutlier(groupByGuideSet, countCUSUMvP, guideSetId, sampleFiles, sampleFile);
-                                }
-                            }, this);
-
-                        }
-                        if (mR) {
-                            Ext4.each(dataRows, function (data) {
-                                if (!processedMetricGuides[metric] || !processedMetricGuides[metric][guideSetId] || !processedMetricGuides[metric][guideSetId].Series
-                                        || !processedMetricGuides[metric][guideSetId].Series[peptide] || !processedMetricGuides[metric][guideSetId].Series[peptide][series])
-                                    return;
-
-                                var controlRange = processedMetricGuides[metric][guideSetId].Series[peptide][series].avgMR;
-                                if (data.MR > LABKEY.vis.Stat.MOVING_RANGE_UPPER_LIMIT_WEIGHT * controlRange) {
-                                    var sampleFile = data.SampleFile;
-                                    this.processEachOutlier(groupByGuideSet, countMR, guideSetId, sampleFiles, sampleFile);
-                                }
-                            }, this);
-                        }
-                    }, this);
-                }, this);
-            }, this);
-            plotOutliers[metric].outliers.CUSUMmP = countCUSUMmP;
-            plotOutliers[metric].outliers.CUSUMvP = countCUSUMvP;
-            plotOutliers[metric].outliers.CUSUMmN = countCUSUMmN;
-            plotOutliers[metric].outliers.CUSUMvN = countCUSUMvN;
-            plotOutliers[metric].outliers.mR = countMR;
-        }, this);
-
-        return plotOutliers;
-    },
-
-    getMetricOutliersByFileOrGuideSetGroup: function(metricOutlier) {
-        var transformedOutliers = {};
-        Ext4.iterate(metricOutlier, function(metric, vals){
-            var totalCount = vals.TotalCount;
-            Ext4.iterate(vals.outliers, function(type, groups){
-                Ext4.iterate(groups, function(group, count){
-                    if (!transformedOutliers[group])
-                        transformedOutliers[group] = {};
-                    if (!transformedOutliers[group][metric])
-                        transformedOutliers[group][metric] = {TotalCount: totalCount};
-                    transformedOutliers[group][metric][type] = count;
-                }, this);
-            }, this);
-        }, this);
-        return transformedOutliers;
     },
 
     formatValue: function(value) {

@@ -19,29 +19,23 @@ import java.util.Objects;
 
 public class GuideSetAvgMR
 {
-    private int guideSetid;
-    private String series;
-    private String seriesLabel;
-    private String seriesType;
+    private final int guideSetid;
+    private final String seriesLabel;
+    private final String seriesType;
+
+    private double _average;
+    private double _standardDev;
+
+    public GuideSetAvgMR(int guideSetid, String seriesLabel, String seriesType)
+    {
+        this.guideSetid = guideSetid;
+        this.seriesLabel = seriesLabel;
+        this.seriesType = seriesType;
+    }
 
     public int getGuideSetid()
     {
         return guideSetid;
-    }
-
-    public void setGuideSetid(int guideSetid)
-    {
-        this.guideSetid = guideSetid;
-    }
-
-    public String getSeries()
-    {
-        return series;
-    }
-
-    public void setSeries(String series)
-    {
-        this.series = series;
     }
 
     public String getSeriesLabel()
@@ -49,21 +43,25 @@ public class GuideSetAvgMR
         return seriesLabel;
     }
 
-    public void setSeriesLabel(String seriesLabel)
+    public double getAverage()
     {
-        this.seriesLabel = seriesLabel;
+        return _average;
     }
 
-    public String getSeriesType()
+    public void setAverage(double average)
     {
-        return seriesType;
+        _average = average;
     }
 
-    public void setSeriesType(String seriesType)
+    public double getStandardDev()
     {
-        this.seriesType = seriesType;
+        return _standardDev;
     }
 
+    public void setStandardDev(double standardDev)
+    {
+        _standardDev = standardDev;
+    }
 
     @Override
     public boolean equals(Object o)
@@ -72,7 +70,6 @@ public class GuideSetAvgMR
         if (o == null || getClass() != o.getClass()) return false;
         GuideSetAvgMR that = (GuideSetAvgMR) o;
         return guideSetid == that.guideSetid &&
-                series.equals(that.series) &&
                 seriesLabel.equals(that.seriesLabel) &&
                 seriesType.equals(that.seriesType);
     }
@@ -80,6 +77,6 @@ public class GuideSetAvgMR
     @Override
     public int hashCode()
     {
-        return Objects.hash(guideSetid, series, seriesLabel, seriesType);
+        return Objects.hash(guideSetid, seriesLabel, seriesType);
     }
 }

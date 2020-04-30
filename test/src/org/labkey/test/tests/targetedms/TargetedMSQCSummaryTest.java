@@ -219,7 +219,6 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
     @Test
     public void testShowAutoQC()
     {
-        String lastPingedDate;
         Map<String, String> tempStringList01 = new LinkedHashMap<>();
         List<List<String>> tempStringList02 = new ArrayList<>();
         final int MAIN_SUMMARY = 0;
@@ -240,39 +239,26 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
 
         validateAutoQCStatus(MAIN_SUMMARY, Arrays.asList("qc-none", "fa-circle-o"), "Has never been pinged");
 
-        log("Ping the data.");
-        //http://localhost:8080/labkey/TargetedMSQCSummaryTest%20Project/QC%20Subfolder%202/targetedms-autoqcping.view
-        lastPingedDate = doAutoQCPing(null);
-
-        log("Need to refresh the page to see the updated status.");
-        refresh();
-        waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
-
-        validateAutoQCStatus(MAIN_SUMMARY, Arrays.asList("qc-correct", "fa-check-circle"), "Was pinged recently on " + lastPingedDate);
-
-        log("Now wait for ping limit to occur.");
-        sleep(QCPING_WAIT);
-
-        log("Again need to refresh the page to see the updated status.");
-        refresh();
-
-        validateAutoQCStatus(MAIN_SUMMARY, Arrays.asList("qc-error", "fa-circle"), "Was pinged on " + lastPingedDate);
-
         log("Now validate the icon for the sub-folder 1.");
         validateAutoQCStatus(SUB_FOLDER01, Arrays.asList("qc-none", "fa-circle-o"), "Has never been pinged");
 
         log("Now validate the icon for the sub-folder 2.");
         validateAutoQCStatus(SUB_FOLDER02, Arrays.asList("qc-none", "fa-circle-o"), "Has never been pinged");
 
+        log("Ping to simulate AutoQC checking in.");
+        //http://localhost:8080/labkey/TargetedMSQCSummaryTest%20Project/QC%20Subfolder%202/targetedms-autoqcping.view
+        String mainFolderLastPingDate = doAutoQCPing(null);
         log("Ping the data in Subfolder 2.");
-        lastPingedDate = doAutoQCPing(FOLDER_2);
+        String subfolder2LastPingDate = doAutoQCPing(FOLDER_2);
 
-        log("Refresh the page.");
+
+        log("Need to refresh the page to see the updated status.");
         refresh();
         waitForElements(Locator.tagWithClass("div", "sample-file-item"), 6);
 
-        log("Validate the updated icons for the sub-folder 2.");
-        validateAutoQCStatus(SUB_FOLDER02, Arrays.asList("qc-correct", "fa-check-circle"), "Was pinged recently on " + lastPingedDate);
+        validateAutoQCStatus(MAIN_SUMMARY, Arrays.asList("qc-correct", "fa-check-circle"), "Was pinged recently on " + mainFolderLastPingDate);
+        validateAutoQCStatus(SUB_FOLDER02, Arrays.asList("qc-correct", "fa-check-circle"), "Was pinged recently on " + subfolder2LastPingDate);
+
 
         log("Now wait for ping limit to occur.");
         sleep(QCPING_WAIT);
@@ -280,8 +266,13 @@ public class TargetedMSQCSummaryTest extends TargetedMSTest
         log("Again need to refresh the page to see the updated status.");
         refresh();
 
-        log("Validate the ping timeout icons for the sub-folder 2.");
-        validateAutoQCStatus(SUB_FOLDER02, Arrays.asList("qc-error", "fa-circle"), "Was pinged on " + lastPingedDate);
+        log("Validate the ping timeout icons for the main folder and sub-folder 2.");
+        validateAutoQCStatus(MAIN_SUMMARY, Arrays.asList("qc-error", "fa-circle"), "Was pinged on " + mainFolderLastPingDate);
+        validateAutoQCStatus(SUB_FOLDER02, Arrays.asList("qc-error", "fa-circle"), "Was pinged on " + subfolder2LastPingDate);
+
+        log("Subfolder 1 should still think it's never been pinged");
+        validateAutoQCStatus(SUB_FOLDER01, Arrays.asList("qc-none", "fa-circle-o"), "Has never been pinged");
+
 
         log("Validate that a guide set updates the file info as expected.");
         GuideSet gs = new GuideSet("2013-08-22 00:00", "2013-08-27 00:04", null);

@@ -53,32 +53,15 @@
                 return;
             }
 
-            LABKEY.Query.executeSql({
-                schemaName: 'targetedms',
-                sql: 'SELECT * FROM guideset',
-                success: function(data) {
-                    if (data.rows.length == 0)
-                    {
-                        Ext4.get(tiledPlotPanelId).update("No Guide Sets found in this folder. Please create a Guide Set using the <a href=" + LABKEY.ActionURL.buildURL('project', 'begin', null, null) + ">QC Plots</a>" + " webpart.");
-                    }
-                    else
-                    {
-                        initializeParetoPlotPanel(data, tiledPlotPanelId);
-                    }
-                },
-                failure: function(response) {
-                    Ext4.get(tiledPlotPanelId).update("<span class='labkey-error'>Error: " + response.exception + "</span>");
-                }
-            });
+            initializeParetoPlotPanel(tiledPlotPanelId);
         }
 
-        function initializeParetoPlotPanel(data, tiledPlotPanelId) {
+        function initializeParetoPlotPanel(tiledPlotPanelId) {
 
             // initialize the panel that displays Pareto plot
             Ext4.create('LABKEY.targetedms.ParetoPlotPanel', {
                 cls: 'themed-panel',
-                plotPanelDiv: tiledPlotPanelId,
-                guideSetData: data
+                plotDivId: tiledPlotPanelId
             });
         }
 

@@ -1,6 +1,9 @@
 
 SELECT
        0 AS RowId,
-       CAST('01/01/1900' AS TIMESTAMP) AS TrainingStart,
-       curdate() AS TrainingEnd,
-       CAST(NULL AS TIMESTAMP) AS ReferenceEnd
+       COALESCE(MIN(AcquiredTime), curdate()) AS TrainingStart,
+       COALESCE(MAX(AcquiredTime), curdate()) AS TrainingEnd,
+       -- ReferenceEnd should be null if there's no subsequent guide set, or the value of the start of the next guide
+       -- set if there is
+       (SELECT MIN(TrainingStart) FROM GuideSet) AS ReferenceEnd
+FROM targetedms.SampleFile WHERE AcquiredTime < COALESCE((SELECT MIN(TrainingStart) FROM GuideSet), curdate())

@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.model;
 
+import org.json.JSONObject;
 import org.labkey.api.data.Entity;
 
 import java.util.Date;
@@ -29,6 +30,7 @@ public class GuideSet extends Entity
     private String _comment;
     private Date _trainingStart;
     private Date _trainingEnd;
+    private Date _referenceEnd;
 
     public int getRowId()
     {
@@ -69,4 +71,27 @@ public class GuideSet extends Entity
     {
         _trainingEnd = trainingEnd;
     }
+
+    public Date getReferenceEnd()
+    {
+        return _referenceEnd;
+    }
+
+    public void setReferenceEnd(Date referenceEnd)
+    {
+        _referenceEnd = referenceEnd;
+    }
+
+    public JSONObject toJSON()
+    {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("RowId", getRowId());
+        jsonObject.put("Comment", getComment());
+        jsonObject.put("TrainingStart", getTrainingStart());
+        jsonObject.put("TrainingEnd", getTrainingEnd());
+        jsonObject.put("ReferenceEnd", getReferenceEnd());
+
+        return jsonObject;
+    }
+
 }

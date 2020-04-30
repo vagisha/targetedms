@@ -13,151 +13,76 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
     initComponent : function()
     {
-
         this.callParent();
 
         this.queryInitialQcMetrics(this.initPlot, this);
     },
 
-    initPlot : function(){
+    initPlot : function() {
 
-        var guideSetDataRows = this.guideSetData.rows;
+        Ext4.get(this.plotDivId).mask("Loading...");
+
+        LABKEY.Ajax.request({
+            url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCMetricOutliers.api'),
+            params: {sampleLimit: this.sampleLimit},
+            success: this.processResponse,
+            failure: LABKEY.Utils.getCallbackWrapper(this.failureHandler),
+            scope: this
+        });
+    },
+
+    processResponse: function(response) {
+        Ext4.get(this.plotDivId).unmask();
+
+        var parsed = JSON.parse(response.responseText);
+
+        if (Object.keys(parsed.sampleFiles).length === 0) {
+            Ext4.get(this.plotDivId).update('<div class="tiledPlotPanel">No sample files loaded yet. Import some via Skyline, AutoQC, or the Data Pipeline tab here in Panorama.</div>');
+            return;
+        }
+
         this.guideSetIdTrainingDatesMap = {};
 
-        //gather training start, end, and reference dates per guideSetId for Pareto Plot title
+        var guideSetDataRows = parsed.guideSets;
         for(var i = 0; i < guideSetDataRows.length; i++)
         {
-            var key = guideSetDataRows[i].RowId;
-
-            if(this.guideSetIdTrainingDatesMap[key] == undefined) {
-                this.guideSetIdTrainingDatesMap[key] = {trainingStart :  guideSetDataRows[i].TrainingStart,
-                    trainingEnd :  guideSetDataRows[i].TrainingEnd,
-                    referenceEnd :  guideSetDataRows[i].ReferenceEnd};
-            }
+            this.guideSetIdTrainingDatesMap[guideSetDataRows[i].RowId] = {
+                trainingStart: guideSetDataRows[i].TrainingStart,
+                trainingEnd: guideSetDataRows[i].TrainingEnd,
+                referenceEnd: guideSetDataRows[i].ReferenceEnd,
+                stats: {
+                    CUSUMm: {count: 0, data: []},
+                    CUSUMmN: {count: 0, data: []},
+                    CUSUMmP: {count: 0, data: []},
+                    CUSUMv: {count: 0, data: []},
+                    CUSUMvN: {count: 0, data: []},
+                    CUSUMvP: {count: 0, data: []},
+                    movingRange: {count: 0, data: []},
+                    leveyJennings: {count: 0, data: []}
+                }
+            };
         }
 
-        var applicableChartTypes = [];
-        Ext4.each(this.metricPropArr, function(chartTypeProps)
+        var outliers = parsed.outliers;
+        for (var j = 0; j < outliers.length; j++)
         {
-            if (Ext4.isDefined(chartTypeProps['series1Label']))
-            {
-                applicableChartTypes.push({
-                    id: chartTypeProps['id'],
-                    name: chartTypeProps['series1Label'],
-                    schemaName: chartTypeProps['series1SchemaName'],
-                    queryName: chartTypeProps['series1QueryName']
-                });
-            }
+            var outlier = outliers[j];
 
-            if (Ext4.isDefined(chartTypeProps['series2Label']))
-            {
-                applicableChartTypes.push({
-                    id: chartTypeProps['id'],
-                    name: chartTypeProps['series2Label'],
-                    schemaName: chartTypeProps['series2SchemaName'],
-                    queryName: chartTypeProps['series2QueryName']
-                });
-            }
-        });
+            var guideSet = this.guideSetIdTrainingDatesMap[outlier.GuideSetId];
 
-        var queryCounter = applicableChartTypes.length;
-        var dataRows = [];
-        Ext4.each(applicableChartTypes, function(chartTypeProps)
-        {
-            LABKEY.Query.executeSql({
-                schemaName: 'targetedms',
-                sql: this.getGuideSetNonConformersSql(chartTypeProps),
-                sort: 'GuideSetId',
-                scope: this,
-                success: function(data) {
-                    dataRows = dataRows.concat(data.rows);
-                    queryCounter--;
-
-                    if (queryCounter == 0) {
-                        this.queryContainerSampleFileRawGuideSetStats({dataRowsLJ: dataRows}, this.nonConformersForParetoPlot, this);
-                    }
-                },
-                failure: this.failureHandler
-            });
-        }, this);
-    },
-
-    getGuideSetNonConformersSql : function(chartTypeProps)
-    {
-        return "SELECT stats.GuideSetId,"
-            + "\n'" + chartTypeProps.id + "' AS MetricId,"
-            + "\n'" + chartTypeProps.name + "' AS MetricLabel,"
-            + "\nSUM(CASE WHEN exclusion.ReplicateId IS NULL AND (X.MetricValue > (stats.Mean + (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END))) OR"
-            + "\n   X.MetricValue < (stats.Mean - (3 * (CASE WHEN stats.StandardDev IS NULL THEN 0 ELSE stats.StandardDev END)))) THEN 1 ELSE 0 END) AS NonConformers"
-            + "\nFROM (SELECT *, SampleFileId.AcquiredTime AS AcquiredTime,"
-            + "\n  SampleFileId.FilePath AS FilePath, SampleFileId.ReplicateId AS ReplicateId"
-            + "\n  FROM " + chartTypeProps.schemaName + "." + chartTypeProps.queryName + ") X"
-            + "\nLEFT JOIN (SELECT DISTINCT ReplicateId FROM QCMetricExclusion WHERE MetricId IS NULL OR MetricId = " + chartTypeProps.id + ") exclusion"
-            + "\nON X.ReplicateId = exclusion.ReplicateId"
-            + "\nLEFT JOIN (" + this.metricGuideSetSql(chartTypeProps.id, chartTypeProps.schemaName, chartTypeProps.queryName) + ") stats"
-            + "\n  ON X.SeriesLabel = stats.SeriesLabel"
-            + "\n  AND ((X.AcquiredTime >= stats.TrainingStart AND X.AcquiredTime < stats.ReferenceEnd)"
-            + "\n  OR (X.AcquiredTime >= stats.TrainingStart AND stats.ReferenceEnd IS NULL))"
-            + "\nWHERE stats.GuideSetId IS NOT NULL"
-            + "\nGROUP BY stats.GuideSetId";
-    },
-
-    getGuideSetDataObj: function(key, metricLabel, metricId, count, CUSUMpositive, CUSUMnegative, plotType)
-    {
-        return {
-            guidesetId: key,
-            metricLabel : metricLabel,
-            metricId: metricId,
-            count : count,
-            CUSUMNegative: CUSUMnegative,
-            CUSUMPositive: CUSUMpositive,
-            plotType: plotType,
-            percent: 0,
-            trainingStart: this.guideSetIdTrainingDatesMap[key].trainingStart,
-            trainingEnd: this.guideSetIdTrainingDatesMap[key].trainingEnd,
-            referenceEnd: this.guideSetIdTrainingDatesMap[key].referenceEnd
+            this.addOutlierToCounts(guideSet.stats.CUSUMm, 'CUSUMm', outlier, 'CUSUMm', true, guideSet);
+            this.addOutlierToCounts(guideSet.stats.CUSUMv, 'CUSUMv', outlier, 'CUSUMv', true, guideSet);
+            this.addOutlierToCounts(guideSet.stats.leveyJennings, 'LeveyJennings', outlier, 'Levey-Jennings', false, guideSet);
+            this.addOutlierToCounts(guideSet.stats.movingRange, 'mR', outlier, 'Moving Range', false, guideSet);
         }
-    },
 
-    populateQCGuideSetMapData: function(guideSetMap, transformedOutliers, CUSUMm, CUSUMv, mR)
-    {
-        Ext4.iterate(guideSetMap, function(key, guideSet){
-            guideSet.stats.CUSUMm = {data : []};
-            guideSet.stats.CUSUMv = {data : []};
-            guideSet.stats.rM = {data : []};
+        var guideSetMap = this.guideSetIdTrainingDatesMap;
 
-            var metricOutliers = transformedOutliers[key] || {},
-                metricNames = Ext4.Array.clean(Ext4.Array.pluck(this.metricPropArr, 'series1Label').concat(Ext4.Array.pluck(this.metricPropArr, 'series2Label'))),
-                ljMetricNames = Ext4.Array.pluck(guideSet.stats.LJ.data, 'metricLabel');
-
-            Ext4.each(metricNames, function(metric) {
-                var metricProps = this.getMetricPropsByLabel(metric),
-                    metricId = metricProps['id'],
-                    outliers = metricOutliers[metric] || {};
-
-                if (CUSUMm) {
-                    var positive = outliers.CUSUMmP ? outliers.CUSUMmP : 0, negative = outliers.CUSUMmN ? outliers.CUSUMmN : 0;
-                    guideSet.stats.CUSUMm.data.push(this.getGuideSetDataObj(key, metric, metricId, positive + negative, positive, negative, 'CUSUMm'));
-                }
-                if (CUSUMv) {
-                    var positive = outliers.CUSUMvP ? outliers.CUSUMvP : 0, negative = outliers.CUSUMvN ? outliers.CUSUMvN : 0;
-                    guideSet.stats.CUSUMv.data.push(this.getGuideSetDataObj(key, metric, metricId, positive + negative, positive, negative, 'CUSUMv'));
-                }
-                if (mR) {
-                    var count = outliers.mR ? outliers.mR : 0;
-                    guideSet.stats.rM.data.push(this.getGuideSetDataObj(key, metric, metricId, count, null, null, 'Moving Range'));
-                }
-
-                // also add any missing metrics to the LJ data array so we have a full metric set for each plot type
-                if (ljMetricNames.indexOf(metric) == -1) {
-                    guideSet.stats.LJ.data.push(this.getGuideSetDataObj(key, metric, metricId, 0, null, null, 'Levey-Jennings'));
-                }
-            }, this);
-        }, this);
+        var guideSetCount = 1;
 
         Ext4.iterate(guideSetMap, function(key, guideSet){
             Ext4.iterate(guideSet.stats, function(statsName, data){
-                var maxNumNonConformers = 0;
+                var maxOutliers = 0;
                 var dataSet = data.data;
                 var totalCount = 0;
 
@@ -165,16 +90,16 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                 for (var i = 0; i < dataSet.length; i++) {
                     totalCount += dataSet[i]['count'];
 
-                    if(maxNumNonConformers < dataSet[i]['count'])
+                    if(maxOutliers < dataSet[i]['count'])
                     {
-                        maxNumNonConformers = dataSet[i]['count'];
+                        maxOutliers = dataSet[i]['count'];
                     }
                 }
 
                 //sort by count in descending order
                 var sortedDataset = dataSet.sort(function(a, b) {
                     var order = parseFloat(b.count) - parseFloat(a.count);
-                    if (order != 0)
+                    if (order !== 0)
                         return order;
                     return a.metricLabel.localeCompare(b.metricLabel);
                 });
@@ -183,49 +108,10 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                 for(var j = 0; j < sortedDataset.length; j++) {
                     sortedDataset[j]['percent'] = (j == 0 ? 0 : sortedDataset[j-1]['percent']) + ((sortedDataset[j]['count'] / totalCount) * 100);
                 }
-                data.maxNumNonConformers = maxNumNonConformers;
+                data.maxOutliers = maxOutliers;
             }, this)
         }, this);
-    },
 
-    nonConformersForParetoPlot : function(params)
-    {
-        if (!params.rawGuideSet || !params.rawMetricDataSet)
-            return;
-        var processedMetricGuides =  this.getAllProcessedGuideSets(params.rawGuideSet);
-        var processedMetricDataSet = this.getAllProcessedMetricDataSets(params.rawMetricDataSet.filter(function(row) {
-            return !row.IgnoreInQC;
-        }));
-
-        var metricOutlier = this.getQCPlotMetricOutliers(processedMetricGuides, processedMetricDataSet, true, true, true, true);
-        var transformedOutliers = this.getMetricOutliersByFileOrGuideSetGroup(metricOutlier);
-
-        var nonConformers = params.dataRowsLJ;
-
-        var guideSetMap = {};
-        var guideSetCount = 1;
-
-        for (var i = 0; i < nonConformers.length; i++)
-        {
-            var key = nonConformers[i]['GuideSetId'];
-            var count = nonConformers[i]['NonConformers'];
-
-            if(guideSetMap[key] == undefined) {
-                guideSetMap[key] = {
-                    trainingStart: this.guideSetIdTrainingDatesMap[key].trainingStart,
-                    trainingEnd: this.guideSetIdTrainingDatesMap[key].trainingEnd,
-                    referenceEnd: this.guideSetIdTrainingDatesMap[key].referenceEnd,
-                    stats: {
-                        LJ: {
-                            data: []
-                        }
-                    }
-                };
-            }
-            guideSetMap[key].stats.LJ.data.push(this.getGuideSetDataObj(key, nonConformers[i]['MetricLabel'], nonConformers[i]['MetricId'], count, null, null, 'Levey-Jennings'));
-        }
-
-        this.populateQCGuideSetMapData(guideSetMap, transformedOutliers, true, true, true);
 
         for (var key in guideSetMap)
         {
@@ -233,35 +119,78 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             var id = "paretoPlot-GuideSet-"+guideSetCount;
 
             var title = "Training Start: " + guideSetData.trainingStart
-                + (guideSetData.referenceEnd ? " - Reference End: " + guideSetData.referenceEnd : " - Training End: " + guideSetData.trainingEnd);
+                    + (guideSetData.referenceEnd ? " - Reference End: " + guideSetData.referenceEnd : " - Training End: " + guideSetData.trainingEnd);
 
-            var plotIdSuffix = '', plotType = "Levey-Jennings", plotWp = 'pareto-plot-wp', plotData = guideSetData.stats.LJ.data, plotMaxY = guideSetData.stats.LJ.maxNumNonConformers;
+            var plotIdSuffix = '', plotType = "Levey-Jennings", plotWp = 'pareto-plot-wp', plotData = guideSetData.stats.leveyJennings.data, plotMaxY = guideSetData.stats.leveyJennings.maxOutliers;
             var webpartTitleBase = "Guide Set " + guideSetCount + ' ';
             this.addEachParetoPlot(id, webpartTitleBase, plotType, plotWp, title, "ParetoPlot-Guide Set "+guideSetCount + plotIdSuffix, plotData, plotMaxY);
 
-            plotIdSuffix = '_mR'; plotType = "Moving Range"; plotData = guideSetData.stats.rM.data; plotMaxY = guideSetData.stats.rM.maxNumNonConformers;
+            plotIdSuffix = '_mR'; plotType = "Moving Range"; plotData = guideSetData.stats.movingRange.data; plotMaxY = guideSetData.stats.movingRange.maxOutliers;
             this.addEachParetoPlot(id + plotIdSuffix, webpartTitleBase, plotType, plotWp, title, "ParetoPlot-Guide Set "+guideSetCount + plotIdSuffix, plotData, plotMaxY);
 
-            plotIdSuffix = '_CUSUMm'; plotType = "Mean CUSUM"; plotData = guideSetData.stats.CUSUMm.data; plotMaxY = guideSetData.stats.CUSUMm.maxNumNonConformers;
+            plotIdSuffix = '_CUSUMm'; plotType = "Mean CUSUM"; plotData = guideSetData.stats.CUSUMm.data; plotMaxY = guideSetData.stats.CUSUMm.maxOutliers;
             this.addEachParetoPlot(id + plotIdSuffix, webpartTitleBase, plotType, plotWp, title, "ParetoPlot-Guide Set "+guideSetCount + plotIdSuffix, plotData, plotMaxY);
 
-            plotIdSuffix = '_CUSUMv'; plotType = "Variability CUSUM"; plotData = guideSetData.stats.CUSUMv.data; plotMaxY = guideSetData.stats.CUSUMv.maxNumNonConformers;
+            plotIdSuffix = '_CUSUMv'; plotType = "Variability CUSUM"; plotData = guideSetData.stats.CUSUMv.data; plotMaxY = guideSetData.stats.CUSUMv.maxOutliers;
             this.addEachParetoPlot(id + plotIdSuffix, webpartTitleBase, plotType, plotWp, title, "ParetoPlot-Guide Set "+guideSetCount + plotIdSuffix, plotData, plotMaxY);
 
             guideSetCount++;
         }
     },
 
+    addOutlierToCounts: function(stat, outlierCountProperty, outlier, plotType, isCusum, guideSet) {
+        var dataElement;
+        for (var i = 0; i < stat.data.length; i++) {
+            if (outlier.MetricId === stat.data[i].metricId && outlier.MetricLabel === stat.data[i].metricLabel)
+            {
+                dataElement = stat.data[i];
+                break;
+            }
+        }
+
+        if (!dataElement) {
+            dataElement = {
+                count: 0,
+                metricId: outlier.MetricId,
+                metricLabel: outlier.MetricLabel,
+                metricName: outlier.MetricName,
+                guideSetId: outlier.GuideSetId,
+                trainingStart: guideSet.trainingStart,
+                referenceEnd: guideSet.referenceEnd,
+                plotType: plotType,
+                percent: 0
+            };
+            if (isCusum) {
+                dataElement.CUSUMNegative = 0;
+                dataElement.CUSUMPositive = 0;
+            }
+            stat.data.push(dataElement);
+        }
+
+        dataElement.count += outlier[outlierCountProperty];
+        if (isCusum) {
+            dataElement.CUSUMNegative += outlier[outlierCountProperty + 'N'];
+            dataElement.CUSUMPositive += outlier[outlierCountProperty + 'P'];
+        }
+    },
+
     addEachParetoPlot: function (id, wpTitle, plotType, wp, plotTitle, fileName, plotData, yAxisMax)
     {
-        this.addPlotWebPartToPlotDiv(id, wpTitle, this.plotPanelDiv, wp);
-        this.setPlotWidth(this.plotPanelDiv);
+        this.addPlotWebPartToPlotDiv(id, wpTitle, this.plotDivId, wp);
+        this.setPlotWidth(this.plotDivId);
         this.plotPareto(id, plotData, plotTitle, yAxisMax, plotType);
         this.attachPlotExportIcons(id, id, 0, this.plotWidth - 30, 0);
     },
 
     plotPareto: function(id, data, title, yAxisMax, plotType)
     {
+        var tickValues;
+        if (yAxisMax < 10) {
+            tickValues = [];
+            for (var i = 0; i <= yAxisMax; i++) {
+                tickValues.push(i);
+            }
+        }
         var hoverFn = plotType.indexOf('CUSUM') > -1 ? this.plotBarHoverEvent : undefined;
         var barChart = new LABKEY.vis.Plot({
             renderTo: id,
@@ -272,7 +201,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             labels: {
                 main: {value: "Pareto Plot - " + plotType},
                 subtitle: {value: title, color: '#555555'},
-                yLeft: {value: '# Nonconformers'},
+                yLeft: {value: '# Outliers'},
                 yRight: {value: 'Cumulative Percentage'}
             },
             layers : [
@@ -300,7 +229,8 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
                     }
                 },
                 yLeft : {
-                    domain: [0, (yAxisMax==0 ? 1 : yAxisMax)]
+                    domain: [0, (yAxisMax==0 ? 1 : yAxisMax)],
+                    tickValues: tickValues
                 },
                 yRight : {
                     domain: [0, 100]

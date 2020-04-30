@@ -44,8 +44,8 @@
     Ext4.onReady(function()
     {
         Ext4.create('LABKEY.targetedms.QCSummary', {
-            renderTo: <%=q(qcSummaryId)%>,
-            sampleLimit: <%= sampleLimit %>
+            renderTo: <%=q(qcSummaryId)%>
+            <% if (sampleLimit != null) { %>, sampleLimit: <%= sampleLimit %> <% } %>
         });
     });
 </script>

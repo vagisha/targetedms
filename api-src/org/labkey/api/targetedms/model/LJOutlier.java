@@ -21,7 +21,7 @@ import org.json.JSONObject;
 
 import java.util.Date;
 
-public class LJOutlier
+public class LJOutlier extends OutlierCounts
 {
     Integer _guideSetId;
     String _metricId;
@@ -30,32 +30,13 @@ public class LJOutlier
     String _sampleFile;
     Date _acquiredTime;
     boolean _ignoreInQC;
-    int _nonConformers;
     int _totalCount;
-    int _CUSUMm;
-    int _CUSUMv;
-    int _CUSUMmN;
-    int _CUSUMmP;
-    int _CUSUMvP;
-    int _CUSUMvN;
-    int _mR;
     String _containerPath;
-
-    public LJOutlier()
-    {
-        _CUSUMm = 0;
-        _CUSUMv = 0;
-        _CUSUMmN = 0;
-        _CUSUMmP = 0;
-        _CUSUMvP = 0;
-        _CUSUMvN = 0;
-        _mR = 0;
-    }
 
     @Nullable
     public Integer getGuideSetId()
     {
-        return _guideSetId;
+        return _guideSetId == null ? 0 : _guideSetId;
     }
 
     public void setGuideSetId(Integer guideSetId)
@@ -128,16 +109,6 @@ public class LJOutlier
         _ignoreInQC = ignoreInQC;
     }
 
-    public int getNonConformers()
-    {
-        return _nonConformers;
-    }
-
-    public void setNonConformers(int nonConformers)
-    {
-        _nonConformers = nonConformers;
-    }
-
     public int getTotalCount()
     {
         return _totalCount;
@@ -146,76 +117,6 @@ public class LJOutlier
     public void setTotalCount(int totalCount)
     {
         _totalCount = totalCount;
-    }
-
-    public int getCUSUMm()
-    {
-        return _CUSUMm;
-    }
-
-    public void setCUSUMm(int CUSUMm)
-    {
-        _CUSUMm = CUSUMm;
-    }
-
-    public int getCUSUMv()
-    {
-        return _CUSUMv;
-    }
-
-    public void setCUSUMv(int CUSUMv)
-    {
-        _CUSUMv = CUSUMv;
-    }
-
-    public int getCUSUMmN()
-    {
-        return _CUSUMmN;
-    }
-
-    public void setCUSUMmN(int CUSUMmN)
-    {
-        _CUSUMmN = CUSUMmN;
-    }
-
-    public int getCUSUMmP()
-    {
-        return _CUSUMmP;
-    }
-
-    public void setCUSUMmP(int CUSUMmP)
-    {
-        _CUSUMmP = CUSUMmP;
-    }
-
-    public int getCUSUMvP()
-    {
-        return _CUSUMvP;
-    }
-
-    public void setCUSUMvP(int CUSUMvP)
-    {
-        _CUSUMvP = CUSUMvP;
-    }
-
-    public int getCUSUMvN()
-    {
-        return _CUSUMvN;
-    }
-
-    public void setCUSUMvN(int CUSUMvN)
-    {
-        _CUSUMvN = CUSUMvN;
-    }
-
-    public int getmR()
-    {
-        return _mR;
-    }
-
-    public void setmR(int mR)
-    {
-        _mR = mR;
     }
 
     @Nullable
@@ -231,22 +132,15 @@ public class LJOutlier
 
     public JSONObject toJSON()
     {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("GuideSetId", _guideSetId);
+        JSONObject jsonObject = super.toJSON();
+
+        jsonObject.put("GuideSetId", _guideSetId == null ? 0 : _guideSetId);
         jsonObject.put("MetricId", _metricId);
         jsonObject.put("MetricName", _metricName);
         jsonObject.put("MetricLabel", _metricLabel);
         jsonObject.put("SampleFile", _sampleFile);
         jsonObject.put("AcquiredTime", _acquiredTime);
         jsonObject.put("IgnoreInQC", _ignoreInQC);
-        jsonObject.put("NonConformers", _nonConformers);
-        jsonObject.put("CUSUMm", _CUSUMm);
-        jsonObject.put("CUSUMv", _CUSUMv);
-        jsonObject.put("CUSUMmN", _CUSUMmN);
-        jsonObject.put("CUSUMmP", _CUSUMmP);
-        jsonObject.put("CUSUMvP", _CUSUMvP);
-        jsonObject.put("CUSUMvN", _CUSUMvN);
-        jsonObject.put("mR", _mR);
         jsonObject.put("TotalCount", _totalCount);
         jsonObject.put("ContainerPath", _containerPath);
 
