@@ -32,7 +32,7 @@ public class TargetedMSExperimentRunType extends ExperimentRunType
 
     public TargetedMSExperimentRunType()
     {
-        super("Imported Targeted MS Results", TargetedMSSchema.SCHEMA_NAME, TargetedMSSchema.TABLE_TARGETED_MS_RUNS);
+        super("Imported Targeted MS Results", TargetedMSSchema.SCHEMA_KEY, TargetedMSSchema.TABLE_TARGETED_MS_RUNS);
         _protocolPrefixes = new String[] {TargetedMSModule.IMPORT_SKYDOC_PROTOCOL_OBJECT_PREFIX,
                                           TargetedMSModule.IMPORT_SKYZIP_PROTOCOL_OBJECT_PREFIX};
     }

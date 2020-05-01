@@ -55,6 +55,7 @@ import org.labkey.api.query.QueryForeignKey;
 import org.labkey.api.query.QuerySchema;
 import org.labkey.api.query.QuerySettings;
 import org.labkey.api.query.QueryView;
+import org.labkey.api.query.SchemaKey;
 import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
@@ -91,6 +92,7 @@ import java.util.function.Consumer;
 public class TargetedMSSchema extends UserSchema
 {
     public static final String SCHEMA_NAME = "targetedms";
+    public static final SchemaKey SCHEMA_KEY = SchemaKey.fromParts("targetedms");
     public static final String SCHEMA_DESCR = "Contains targeted mass spec data imported from Skyline documents";
 
     // Tables
@@ -221,7 +223,7 @@ public class TargetedMSSchema extends UserSchema
 
     public TargetedMSSchema(User user, Container container)
     {
-        super(SCHEMA_NAME, SCHEMA_DESCR, user, container, TargetedMSManager.getSchema());
+        super(SCHEMA_KEY, SCHEMA_DESCR, user, container, TargetedMSManager.getSchema(), null);
         _expSchema = new ExpSchema(user, container);
     }
 
