@@ -246,7 +246,7 @@ public abstract class ChromatogramDataset
         @Override
         public String getChartTitle()
         {
-            return _chromInfo.getTextId();
+            return _chromInfo.getTextId() == null ? "Unknown trace" : _chromInfo.getTextId();
         }
 
         @Override
@@ -279,7 +279,7 @@ public abstract class ChromatogramDataset
             Chromatogram chromatogram = _chromInfo.createChromatogram(_run);
 
             _jfreeDataset = new XYSeriesCollection();
-            XYSeries series = new XYSeries(_chromInfo.getTextId());
+            XYSeries series = new XYSeries(getChartTitle());
             float[] times = chromatogram.getTimes();
             float[] intensities = chromatogram.getIntensities(0);
             assert times.length == intensities.length;

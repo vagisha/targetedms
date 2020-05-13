@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
+import org.labkey.api.targetedms.model.SampleFileInfo;
+
 import java.util.Date;
 import java.util.List;
 
@@ -38,6 +40,10 @@ public class SampleFile extends SkylineEntity
     private String _sampleId;
     private Double _explicitGlobalStandardArea;
     private String _ionMobilityType;
+
+    // Calculated values loaded via TargetedMSManager.getSampleFiles()
+    private Integer _guideSetId;
+    private boolean _ignoreForAllMetric;
 
     private List<Instrument> _instrumentInfoList;
 
@@ -169,5 +175,30 @@ public class SampleFile extends SkylineEntity
     public void setIonMobilityType(String ionMobilityType)
     {
         _ionMobilityType = ionMobilityType;
+    }
+
+    public Integer getGuideSetId()
+    {
+        return _guideSetId;
+    }
+
+    public void setGuideSetId(Integer guideSetId)
+    {
+        _guideSetId = guideSetId;
+    }
+
+    public boolean isIgnoreForAllMetric()
+    {
+        return _ignoreForAllMetric;
+    }
+
+    public void setIgnoreForAllMetric(boolean ignoreForAllMetric)
+    {
+        _ignoreForAllMetric = ignoreForAllMetric;
+    }
+
+    public SampleFileInfo toSampleFileInfo()
+    {
+        return new SampleFileInfo(getId(), getAcquiredTime(), getSampleName(), _guideSetId, _ignoreForAllMetric);
     }
 }

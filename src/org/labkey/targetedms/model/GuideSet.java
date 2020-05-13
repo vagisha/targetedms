@@ -17,8 +17,14 @@ package org.labkey.targetedms.model;
 
 import org.json.JSONObject;
 import org.labkey.api.data.Entity;
+import org.labkey.api.targetedms.model.OutlierCounts;
+import org.labkey.api.util.Pair;
+import org.labkey.targetedms.outliers.OutlierGenerator;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by cnathe on 4/9/2015.
@@ -82,7 +88,7 @@ public class GuideSet extends Entity
         _referenceEnd = referenceEnd;
     }
 
-    public JSONObject toJSON()
+    public JSONObject toJSON(List<RawMetricDataSet> dataRows, Map<Integer, QCMetricConfiguration> metrics, Map<GuideSetKey, GuideSetStats> stats)
     {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put("RowId", getRowId());
@@ -90,6 +96,31 @@ public class GuideSet extends Entity
         jsonObject.put("TrainingStart", getTrainingStart());
         jsonObject.put("TrainingEnd", getTrainingEnd());
         jsonObject.put("ReferenceEnd", getReferenceEnd());
+
+        // Metric ID and label form the key
+        Map<Pair<Integer, String>, OutlierCounts> allMetricOutliers = new HashMap<>();
+
+        for (RawMetricDataSet dataRow : dataRows)
+        {
+            if (dataRow.getGuideSetId() == getRowId())
+            {
+                String metricLabel = OutlierGenerator.get().getMetricLabel(metrics, dataRow);
+
+                OutlierCounts counts = allMetricOutliers.computeIfAbsent(new Pair<>(dataRow.getMetricId(), metricLabel), x -> new OutlierCounts());
+                GuideSetStats s = stats.get(dataRow.getGuideSetKey());
+                dataRow.increment(counts, s);
+            }
+        }
+
+        JSONObject metricCounts = new JSONObject();
+        for (Map.Entry<Pair<Integer, String>, OutlierCounts> entry : allMetricOutliers.entrySet())
+        {
+            JSONObject counts = entry.getValue().toJSON();
+            counts.put("MetricId", entry.getKey().first);
+            metricCounts.put(entry.getKey().second, counts);
+        }
+
+        jsonObject.put("MetricCounts", metricCounts);
 
         return jsonObject;
     }

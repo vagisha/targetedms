@@ -64,7 +64,7 @@ public interface TargetedMSService
     List<SkylineDocumentImportListener> getSkylineDocumentImportListener();
     void registerTargetedMSFolderTypeListener(TargetedMSFolderTypeListener listener);
     List<TargetedMSFolderTypeListener> getTargetedMSFolderTypeListeners();
-    Map<String, SampleFileInfo> getSampleFiles(Container container, User user, Integer sampleFileLimit);
+    List<SampleFileInfo> getSampleFiles(Container container, User user, Integer sampleFileLimit);
     TargetedMSService.FolderType getFolderType(Container container);
 
     ExperimentRunType getExperimentRunType();

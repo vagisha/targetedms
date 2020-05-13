@@ -6,4 +6,4 @@ SELECT
        -- ReferenceEnd should be null if there's no subsequent guide set, or the value of the start of the next guide
        -- set if there is
        (SELECT MIN(TrainingStart) FROM GuideSet) AS ReferenceEnd
-FROM targetedms.SampleFile WHERE AcquiredTime < COALESCE((SELECT MIN(TrainingStart) FROM GuideSet), curdate())
+FROM targetedms.SampleFile WHERE (NOT EXISTS (SELECT 1 FROM GuideSet)) OR AcquiredTime < (SELECT MIN(TrainingStart) FROM GuideSet)

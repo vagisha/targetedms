@@ -42,6 +42,11 @@ public enum ChromatogramBinaryFormat
             LittleEndianInput dataInputStream = new LittleEndianByteArrayInputStream(uncompressedBytes);
             float[] sharedTimes = readFloats(dataInputStream, numPoints);
             List<float[]> transitionIntensities = new ArrayList<>();
+            if (numTrans == -1)
+            {
+                // We don't have any transitions, but there should still be a chromatogram
+                transitionIntensities.add(readFloats(dataInputStream, numPoints));
+            }
             for (int i = 0; i < numTrans; i++) {
                 transitionIntensities.add(readFloats(dataInputStream, numPoints));
             }

@@ -58,20 +58,33 @@ public class SampleFileTable extends TargetedMSTable
 
     public SampleFileTable(TargetedMSSchema schema, ContainerFilter cf)
     {
-        super(TargetedMSManager.getTableInfoSampleFile(), schema, cf, TargetedMSSchema.ContainerJoinType.ReplicateFK);
+        this(schema, cf, null);
     }
 
     public SampleFileTable(TargetedMSSchema schema, ContainerFilter cf, @Nullable TargetedMSRun run)
     {
-        this(schema, cf);
+        super(TargetedMSManager.getTableInfoSampleFile(), schema, cf, TargetedMSSchema.ContainerJoinType.ReplicateFK);
+
         _run = run;
         SQLFragment runIdSQL = new SQLFragment("(SELECT r.RunId FROM ").
                 append(TargetedMSManager.getTableInfoReplicate(), "r").
                 append(" WHERE r.Id = ").append(ExprColumn.STR_TABLE_ALIAS).append(".ReplicateId)");
         addColumn(new ExprColumn(this, "RunId", runIdSQL, JdbcType.INTEGER));
-        addCondition(new SQLFragment("ReplicateId IN (SELECT Id FROM ").
-                append(TargetedMSManager.getTableInfoReplicate(), "r").
-                append(" WHERE RunId = ?)").add(run.getId()), FieldKey.fromParts("ReplicateId"));
+
+        if (_run != null)
+        {
+            addCondition(new SQLFragment("ReplicateId IN (SELECT Id FROM ").
+                    append(TargetedMSManager.getTableInfoReplicate(), "r").
+                    append(" WHERE RunId = ?)").add(run.getId()), FieldKey.fromParts("ReplicateId"));
+        }
+
+        SQLFragment excludedSQL = new SQLFragment("CASE WHEN ReplicateId IN (SELECT ReplicateId FROM ");
+        excludedSQL.append(TargetedMSManager.getTableInfoQCMetricExclusion(), "x");
+        excludedSQL.append(" WHERE x.MetricId IS NULL) THEN ? ELSE ? END");
+        excludedSQL.add(true);
+        excludedSQL.add(false);
+        ExprColumn excludedColumn = new ExprColumn(this, "Excluded", excludedSQL, JdbcType.BOOLEAN);
+        addColumn(excludedColumn);
 
         ActionURL url = new ActionURL(TargetedMSController.ShowSampleFileAction.class, getContainer());
         Map<String, String> urlParams = new HashMap<>();

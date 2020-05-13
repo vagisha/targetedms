@@ -3,7 +3,7 @@ package org.labkey.api.targetedms.model;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 
-public abstract class OutlierCounts
+public class OutlierCounts
 {
     private int _CUSUMmP;
     private int _CUSUMvP;
@@ -11,6 +11,9 @@ public abstract class OutlierCounts
     private int _CUSUMvN;
     private int _mR;
     private int _leveyJennings;
+
+    /** Total number of data points under consideration */
+    private int _totalCount;
 
     public int getCUSUMm()
     {
@@ -82,10 +85,21 @@ public abstract class OutlierCounts
         _leveyJennings = leveyJennings;
     }
 
+    public int getTotalCount()
+    {
+        return _totalCount;
+    }
+
+    public void setTotalCount(int totalCount)
+    {
+        this._totalCount = totalCount;
+    }
+
     @NotNull
     public JSONObject toJSON()
     {
         JSONObject jsonObject = new JSONObject();
+        jsonObject.put("TotalCount", getTotalCount());
         jsonObject.put("CUSUMm", getCUSUMm());
         jsonObject.put("CUSUMv", getCUSUMv());
         jsonObject.put("CUSUMmN", getCUSUMmN());

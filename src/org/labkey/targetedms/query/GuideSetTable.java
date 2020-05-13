@@ -52,7 +52,7 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
         getMutableColumn("Container").setFk(new ContainerForeignKey(schema));
 
         // add expr column to calculate the reference end date for a guide set, can be null if it is the last guide set
-        ExprColumn referenceEndCol = new ExprColumn(this, FieldKey.fromParts("ReferenceEnd"), getReferenceEndSql(), JdbcType.TIMESTAMP);
+        ExprColumn referenceEndCol = new ExprColumn(this, FieldKey.fromParts("ReferenceEnd"), getReferenceEndSql(ExprColumn.STR_TABLE_ALIAS), JdbcType.TIMESTAMP);
         referenceEndCol.setDescription("The end date and time for runs that reference this guide set. A null value in "
                 + "this field indicates that the guide is open-ended and still in use.");
         referenceEndCol.setFormat("yyyy-MM-dd HH:mm");
@@ -61,14 +61,14 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
         setImportURL(LINK_DISABLER);
     }
 
-    private SQLFragment getReferenceEndSql()
+    public static SQLFragment getReferenceEndSql(String alias)
     {
         SQLFragment sql = new SQLFragment("(SELECT MIN(gs2.TrainingStart) FROM ");
         sql.append(TargetedMSManager.getTableInfoGuideSet(), "gs2");
         sql.append(" WHERE gs2.TrainingStart > ");
-        sql.append(ExprColumn.STR_TABLE_ALIAS);
+        sql.append(alias);
         sql.append(".TrainingEnd AND gs2.Container = ");
-        sql.append(ExprColumn.STR_TABLE_ALIAS);
+        sql.append(alias);
         sql.append(".Container)");
         return sql;
     }

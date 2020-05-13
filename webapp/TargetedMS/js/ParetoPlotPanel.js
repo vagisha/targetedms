@@ -24,7 +24,6 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
         LABKEY.Ajax.request({
             url: LABKEY.ActionURL.buildURL('targetedms', 'GetQCMetricOutliers.api'),
-            params: {sampleLimit: this.sampleLimit},
             success: this.processResponse,
             failure: LABKEY.Utils.getCallbackWrapper(this.failureHandler),
             scope: this
@@ -41,50 +40,28 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             return;
         }
 
-        this.guideSetIdTrainingDatesMap = {};
+        var guideSets = parsed.guideSets;
 
-        var guideSetDataRows = parsed.guideSets;
-        for(var i = 0; i < guideSetDataRows.length; i++)
-        {
-            this.guideSetIdTrainingDatesMap[guideSetDataRows[i].RowId] = {
-                trainingStart: guideSetDataRows[i].TrainingStart,
-                trainingEnd: guideSetDataRows[i].TrainingEnd,
-                referenceEnd: guideSetDataRows[i].ReferenceEnd,
-                stats: {
-                    CUSUMm: {count: 0, data: []},
-                    CUSUMmN: {count: 0, data: []},
-                    CUSUMmP: {count: 0, data: []},
-                    CUSUMv: {count: 0, data: []},
-                    CUSUMvN: {count: 0, data: []},
-                    CUSUMvP: {count: 0, data: []},
-                    movingRange: {count: 0, data: []},
-                    leveyJennings: {count: 0, data: []}
-                }
+        Ext4.each(guideSets, function(guideSet) {
+            guideSet.stats = {
+                CUSUMm: {count: 0, data: []},
+                CUSUMv: {count: 0, data: []},
+                mR: {count: 0, data: []},
+                LeveyJennings: {count: 0, data: []}
             };
-        }
 
-        var outliers = parsed.outliers;
-        for (var j = 0; j < outliers.length; j++)
-        {
-            var outlier = outliers[j];
+            Ext4.iterate(guideSet.MetricCounts, function(metricName, data) {
+                this.addOutlierToCounts(guideSet, data, metricName,'CUSUMm', 'CUSUMm', true);
+                this.addOutlierToCounts(guideSet, data, metricName, 'CUSUMv', 'CUSUMv', true);
+                this.addOutlierToCounts(guideSet, data, metricName, 'mR', 'Moving Range', true);
+                this.addOutlierToCounts(guideSet, data, metricName, 'LeveyJennings', 'Levey-Jennings', true);
+            }, this);
 
-            var guideSet = this.guideSetIdTrainingDatesMap[outlier.GuideSetId];
-
-            this.addOutlierToCounts(guideSet.stats.CUSUMm, 'CUSUMm', outlier, 'CUSUMm', true, guideSet);
-            this.addOutlierToCounts(guideSet.stats.CUSUMv, 'CUSUMv', outlier, 'CUSUMv', true, guideSet);
-            this.addOutlierToCounts(guideSet.stats.leveyJennings, 'LeveyJennings', outlier, 'Levey-Jennings', false, guideSet);
-            this.addOutlierToCounts(guideSet.stats.movingRange, 'mR', outlier, 'Moving Range', false, guideSet);
-        }
-
-        var guideSetMap = this.guideSetIdTrainingDatesMap;
-
-        var guideSetCount = 1;
-
-        Ext4.iterate(guideSetMap, function(key, guideSet){
-            Ext4.iterate(guideSet.stats, function(statsName, data){
-                var maxOutliers = 0;
+            Ext4.iterate(guideSet.stats, function(outlierType, data) {
                 var dataSet = data.data;
+
                 var totalCount = 0;
+                var maxOutliers = 0;
 
                 //find total count per guidesetID
                 for (var i = 0; i < dataSet.length; i++) {
@@ -98,7 +75,7 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
                 //sort by count in descending order
                 var sortedDataset = dataSet.sort(function(a, b) {
-                    var order = parseFloat(b.count) - parseFloat(a.count);
+                    var order = b.count - a.count;
                     if (order !== 0)
                         return order;
                     return a.metricLabel.localeCompare(b.metricLabel);
@@ -106,26 +83,25 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
 
                 //calculate cumulative percentage on sorted data
                 for(var j = 0; j < sortedDataset.length; j++) {
-                    sortedDataset[j]['percent'] = (j == 0 ? 0 : sortedDataset[j-1]['percent']) + ((sortedDataset[j]['count'] / totalCount) * 100);
+                    sortedDataset[j].percent = (j == 0 ? 0 : sortedDataset[j-1].percent) + ((sortedDataset[j].count / totalCount) * 100);
                 }
                 data.maxOutliers = maxOutliers;
             }, this)
         }, this);
 
 
-        for (var key in guideSetMap)
-        {
-            var guideSetData = guideSetMap[key];
+        var guideSetCount = 1;
+        Ext4.each(guideSets, function(guideSetData) {
             var id = "paretoPlot-GuideSet-"+guideSetCount;
 
-            var title = "Training Start: " + guideSetData.trainingStart
-                    + (guideSetData.referenceEnd ? " - Reference End: " + guideSetData.referenceEnd : " - Training End: " + guideSetData.trainingEnd);
+            var title = "Training Start: " + guideSetData.TrainingStart
+                    + (guideSetData.ReferenceEnd ? " - Reference End: " + guideSetData.ReferenceEnd : " - Training End: " + guideSetData.TrainingEnd);
 
-            var plotIdSuffix = '', plotType = "Levey-Jennings", plotWp = 'pareto-plot-wp', plotData = guideSetData.stats.leveyJennings.data, plotMaxY = guideSetData.stats.leveyJennings.maxOutliers;
+            var plotIdSuffix = '', plotType = "Levey-Jennings", plotWp = 'pareto-plot-wp', plotData = guideSetData.stats.LeveyJennings.data, plotMaxY = guideSetData.stats.LeveyJennings.maxOutliers;
             var webpartTitleBase = "Guide Set " + guideSetCount + ' ';
             this.addEachParetoPlot(id, webpartTitleBase, plotType, plotWp, title, "ParetoPlot-Guide Set "+guideSetCount + plotIdSuffix, plotData, plotMaxY);
 
-            plotIdSuffix = '_mR'; plotType = "Moving Range"; plotData = guideSetData.stats.movingRange.data; plotMaxY = guideSetData.stats.movingRange.maxOutliers;
+            plotIdSuffix = '_mR'; plotType = "Moving Range"; plotData = guideSetData.stats.mR.data; plotMaxY = guideSetData.stats.mR.maxOutliers;
             this.addEachParetoPlot(id + plotIdSuffix, webpartTitleBase, plotType, plotWp, title, "ParetoPlot-Guide Set "+guideSetCount + plotIdSuffix, plotData, plotMaxY);
 
             plotIdSuffix = '_CUSUMm'; plotType = "Mean CUSUM"; plotData = guideSetData.stats.CUSUMm.data; plotMaxY = guideSetData.stats.CUSUMm.maxOutliers;
@@ -135,43 +111,27 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
             this.addEachParetoPlot(id + plotIdSuffix, webpartTitleBase, plotType, plotWp, title, "ParetoPlot-Guide Set "+guideSetCount + plotIdSuffix, plotData, plotMaxY);
 
             guideSetCount++;
-        }
+        }, this);
     },
 
-    addOutlierToCounts: function(stat, outlierCountProperty, outlier, plotType, isCusum, guideSet) {
-        var dataElement;
-        for (var i = 0; i < stat.data.length; i++) {
-            if (outlier.MetricId === stat.data[i].metricId && outlier.MetricLabel === stat.data[i].metricLabel)
-            {
-                dataElement = stat.data[i];
-                break;
-            }
-        }
-
-        if (!dataElement) {
-            dataElement = {
-                count: 0,
-                metricId: outlier.MetricId,
-                metricLabel: outlier.MetricLabel,
-                metricName: outlier.MetricName,
-                guideSetId: outlier.GuideSetId,
-                trainingStart: guideSet.trainingStart,
-                referenceEnd: guideSet.referenceEnd,
-                plotType: plotType,
-                percent: 0
-            };
-            if (isCusum) {
-                dataElement.CUSUMNegative = 0;
-                dataElement.CUSUMPositive = 0;
-            }
-            stat.data.push(dataElement);
-        }
-
-        dataElement.count += outlier[outlierCountProperty];
+    addOutlierToCounts: function(guideSet, data, metricName, propertyName, plotTypeParamValue, isCusum) {
+        var count = data[propertyName];
+        guideSet.stats[propertyName].count += count;
+        var newData = {
+            metricLabel: metricName,
+            count: count,
+            metricId: data.MetricId,
+            TrainingStart: guideSet.TrainingStart,
+            ReferenceEnd: guideSet.ReferenceEnd,
+            plotType: plotTypeParamValue
+        };
         if (isCusum) {
-            dataElement.CUSUMNegative += outlier[outlierCountProperty + 'N'];
-            dataElement.CUSUMPositive += outlier[outlierCountProperty + 'P'];
+            newData.CUSUMNegative = data[propertyName + 'N'];
+            newData.CUSUMPositive = data[propertyName + 'P'];
         }
+
+        guideSet.stats[propertyName].data.push(newData);
+
     },
 
     addEachParetoPlot: function (id, wpTitle, plotType, wp, plotTitle, fileName, plotData, yAxisMax)
@@ -244,10 +204,10 @@ Ext4.define('LABKEY.targetedms.ParetoPlotPanel', {
     },
 
     plotBarClickEvent : function(event, row) {
-        var params = {startDate: row.trainingStart, metric: row.metricId, plotTypes: row.plotType};
-        if (row.referenceEnd)
+        var params = {startDate: row.TrainingStart, metric: row.metricId, plotTypes: row.plotType};
+        if (row.ReferenceEnd)
         {
-            params.endDate = row.referenceEnd;
+            params.endDate = row.ReferenceEnd;
         }
         window.location = LABKEY.ActionURL.buildURL('project', 'begin', null, params);
     },

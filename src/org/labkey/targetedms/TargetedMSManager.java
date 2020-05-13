@@ -70,7 +70,6 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.security.permissions.DeletePermission;
 import org.labkey.api.targetedms.TargetedMSService;
-import org.labkey.api.targetedms.model.LJOutlier;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.StringUtilsLabKey;
@@ -78,11 +77,11 @@ import org.labkey.api.view.NotFoundException;
 import org.labkey.api.view.UnauthorizedException;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.model.GuideSet;
+import org.labkey.targetedms.model.GuideSetKey;
+import org.labkey.targetedms.model.GuideSetStats;
 import org.labkey.targetedms.model.QCMetricConfiguration;
-import org.labkey.targetedms.model.RawGuideSet;
 import org.labkey.targetedms.model.RawMetricDataSet;
-import org.labkey.targetedms.outliers.CUSUMOutliers;
-import org.labkey.targetedms.outliers.Outliers;
+import org.labkey.targetedms.outliers.OutlierGenerator;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.Replicate;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -90,6 +89,7 @@ import org.labkey.targetedms.parser.SampleFile;
 import org.labkey.targetedms.parser.SampleFileChromInfo;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.pipeline.TargetedMSImportPipelineJob;
+import org.labkey.targetedms.query.GuideSetTable;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
@@ -113,9 +113,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
 import static org.labkey.api.targetedms.TargetedMSService.FOLDER_TYPE_PROP_NAME;
+import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
 
 public class TargetedMSManager
 {
@@ -1834,16 +1836,41 @@ public class TargetedMSManager
     @Nullable
     public static SampleFile getSampleFile(int id, Container container)
     {
-        SQLFragment sql = new SQLFragment("SELECT sf.* FROM ");
+        List<SampleFile> matches = getSampleFiles(container, new SQLFragment("sf.Id = ?", id));
+        if (matches.size() > 1)
+        {
+            throw new IllegalStateException("More than one SampleFile for Id " + id);
+        }
+        return matches.isEmpty() ? null : matches.get(0);
+    }
+
+    public static List<SampleFile> getSampleFiles(Container container, @Nullable SQLFragment whereClause)
+    {
+        SQLFragment sql = new SQLFragment("SELECT sf.*, CASE WHEN x.Id IS NOT NULL THEN ? ELSE ? END AS IgnoreForAllMetric, COALESCE(gs.RowId, 0) AS GuideSetId  FROM ");
+        sql.add(true);
+        sql.add(false);
         sql.append(getTableInfoSampleFile(), "sf");
-        sql.append(", ");
+        sql.append("\n INNER JOIN  ");
         sql.append(getTableInfoReplicate(), "rep");
-        sql.append(", ");
+        sql.append("\n ON sf.ReplicateId = rep.Id INNER JOIN ");
         sql.append(getTableInfoRuns(), "r");
-        sql.append(" WHERE r.Id = rep.RunId AND rep.Id = sf.ReplicateId AND r.Container = ? AND sf.Id = ?");
+        sql.append("\n ON rep.RunId = r.Id AND r.Container = ? LEFT JOIN ");
         sql.add(container);
-        sql.add(id);
-        return new SqlSelector(getSchema(), sql).getObject(SampleFile.class);
+        sql.append(getTableInfoQCMetricExclusion(), "x");
+        sql.append("\n ON x.MetricId IS NULL AND x.ReplicateId = rep.Id LEFT JOIN (SELECT g.*, ");
+        sql.append(GuideSetTable.getReferenceEndSql("g"));
+        sql.append(" AS ReferenceEnd FROM ");
+        sql.append(getTableInfoGuideSet(), "g");
+        sql.append(" WHERE g.Container = ?) gs ");
+        sql.add(container);
+        sql.append("\n ON ((sf.AcquiredTime >= gs.TrainingStart AND sf.AcquiredTime < gs.ReferenceEnd) OR (sf.AcquiredTime >= gs.TrainingStart AND gs.ReferenceEnd IS NULL))");
+
+        if (whereClause != null)
+        {
+            sql.append("\nWHERE ");
+            sql.append(whereClause);
+        }
+        return new SqlSelector(getSchema(), sql).getArrayList(SampleFile.class);
     }
 
     /**
@@ -1872,32 +1899,25 @@ public class TargetedMSManager
 
     private static List<SampleFile> getSampleFile(String filePath, Date acquiredTime, Container container, boolean fullPath)
     {
-        SQLFragment sql = new SQLFragment("SELECT sf.* FROM ");
-        sql.append(getTableInfoSampleFile(), "sf");
-        sql.append(", ");
-        sql.append(getTableInfoReplicate(), "rep");
-        sql.append(", ");
-        sql.append(getTableInfoRuns(), "r");
-        sql.append(" WHERE r.Id = rep.RunId AND rep.Id = sf.ReplicateId AND r.Container = ?");
-        sql.add(container);
+        SQLFragment sql = new SQLFragment();
         if(fullPath)
         {
-            sql.append(" AND sf.FilePath = ? ");
+            sql.append(" sf.FilePath = ? ");
             sql.add(filePath);
         }
         else
         {
-            sql.append(" AND sf.FilePath LIKE ? ");
+            sql.append(" sf.FilePath LIKE ? ");
             sql.add("%" + getSqlDialect().encodeLikeOpSearchString(filePath));
         }
         if(acquiredTime == null)
-            sql.append("AND sf.AcquiredTime IS NULL");
+            sql.append(" AND sf.AcquiredTime IS NULL");
         else
         {
-            sql.append("AND sf.AcquiredTime = ?");
+            sql.append(" AND sf.AcquiredTime = ?");
             sql.add(acquiredTime);
         }
-        return new SqlSelector(getSchema(), sql).getArrayList(SampleFile.class);
+        return getSampleFiles(container, sql);
     }
 
     public Map<String, Object> getAutoQCPingMap(Container container)
@@ -2079,20 +2099,19 @@ public class TargetedMSManager
         return result;
     }
 
-    public Map<String, SampleFileInfo> getSampleFiles(Container container, User user, Integer sampleFileLimit)
+    public List<SampleFileInfo> getSampleFileInfos(Container container, User user, Integer sampleFileLimit)
     {
         List<QCMetricConfiguration> enabledQCMetricConfigurations = getEnabledQCMetricConfigurations(container, user);
         if(!enabledQCMetricConfigurations.isEmpty())
         {
-            CUSUMOutliers cusumOutliers = new CUSUMOutliers();
+            List<GuideSet> guideSets = TargetedMSManager.getGuideSets(container, user);
+            Map<Integer, QCMetricConfiguration> metricMap = enabledQCMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
 
-            List<LJOutlier> ljOutliers = Outliers.getLJOutliers(enabledQCMetricConfigurations, container, user, sampleFileLimit);
-            if (!ljOutliers.isEmpty())
-            {
-                List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(container, user, enabledQCMetricConfigurations);
-                List<RawMetricDataSet> rawMetricDataSets = cusumOutliers.getRawMetricDataSets(container, user, enabledQCMetricConfigurations);
-                return cusumOutliers.getSampleFiles(ljOutliers,  rawGuideSets, rawMetricDataSets,container.getPath());
-            }
+            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(container, user, enabledQCMetricConfigurations);
+
+            Map<GuideSetKey, GuideSetStats> stats = OutlierGenerator.get().getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
+
+            return OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, container, sampleFileLimit);
         }
         return null;
     }

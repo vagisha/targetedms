@@ -32,18 +32,19 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.security.permissions.ApplicationAdminPermission;
 import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.util.Button;
 import org.labkey.api.util.DOM;
 import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.*;
-import org.labkey.api.targetedms.model.LJOutlier;
 import org.labkey.api.view.PopupMenu;
 import org.labkey.targetedms.model.GuideSet;
-import org.labkey.targetedms.model.RawGuideSet;
+import org.labkey.targetedms.model.GuideSetKey;
+import org.labkey.targetedms.model.GuideSetStats;
 import org.labkey.targetedms.model.RawMetricDataSet;
-import org.labkey.targetedms.outliers.CUSUMOutliers;
+import org.labkey.targetedms.outliers.OutlierGenerator;
 import org.jfree.chart.title.TextTitle;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.json.JSONArray;
@@ -109,7 +110,6 @@ import org.labkey.targetedms.conflict.ConflictPrecursor;
 import org.labkey.targetedms.conflict.ConflictProtein;
 import org.labkey.targetedms.conflict.ConflictTransition;
 import org.labkey.targetedms.model.QCMetricConfiguration;
-import org.labkey.targetedms.outliers.Outliers;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.Molecule;
@@ -185,6 +185,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static org.labkey.api.targetedms.TargetedMSService.MODULE_NAME;
@@ -1026,19 +1027,17 @@ public class TargetedMSController extends SpringActionController
                 return response;
             }
 
-            CUSUMOutliers cusumOutliers = new CUSUMOutliers();
-
-            List<LJOutlier> ljOutliers = Outliers.getLJOutliers(enabledQCMetricConfigurations, getContainer(), getUser(), form.getSampleLimit());
-
-            List<RawGuideSet> rawGuideSets = cusumOutliers.getRawGuideSets(getContainer(), getUser(), enabledQCMetricConfigurations);
-            List<RawMetricDataSet> rawMetricDataSets = cusumOutliers.getRawMetricDataSets(getContainer(), getUser(), enabledQCMetricConfigurations);
-            JSONObject sampleFiles = cusumOutliers.getOtherQCSampleFileStats(ljOutliers, rawGuideSets, rawMetricDataSets, getContainer().getPath());
-
             List<GuideSet> guideSets = TargetedMSManager.getGuideSets(getContainer(), getUser());
+            Map<Integer, QCMetricConfiguration> metricMap = enabledQCMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
 
-            response.put("outliers", ljOutliers.stream().map(LJOutlier::toJSON).collect(Collectors.toList()));
-            response.put("sampleFiles", sampleFiles);
-            response.put("guideSets", guideSets.stream().map(GuideSet::toJSON).collect(Collectors.toList()));
+            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(getContainer(), getUser(), enabledQCMetricConfigurations);
+
+            Map<GuideSetKey, GuideSetStats> stats = OutlierGenerator.get().getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
+
+            List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, getContainer(), form.getSampleLimit());
+
+            response.put("sampleFiles", sampleFiles.stream().map(sample -> sample.toJSON()).collect(Collectors.toList()));
+            response.put("guideSets", guideSets.stream().map(x -> x.toJSON(rawMetricDataSets, metricMap, stats)).collect(Collectors.toList()));
 
             return response;
         }

@@ -16,61 +16,88 @@
 package org.labkey.targetedms.model;
 
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONObject;
+import org.labkey.api.targetedms.model.OutlierCounts;
+import org.labkey.api.visualization.Stats;
 
 import java.util.Date;
 
 public class RawMetricDataSet
 {
-    String seriesType;
-    String sampleFile;
-    String metricType;
+    String seriesLabel;
+    Double metricValue;
+    int metricId;
+    int metricSeriesIndex;
+    int guideSetId;
+    int sampleFileId;
+
     Integer precursorId;
     Integer precursorChromInfoId;
-    String seriesLabel;
     String dataType;
     Double mz;
     Date acquiredTime;
-    String filePath;
-    Double metricValue;
-    Integer replicateId;
-    Integer guideSetId;
     boolean ignoreInQC;
     boolean inGuideSetTrainingRange;
     Double mR;
-    Double cUSUMmP;
-    Double cUSUMmN;
-    Double CUSUMvP;
-    Double CUSUMvN;
+    Double cusumMP;
+    Double cusumMN;
+    Double cusumVP;
+    Double cusumVN;
 
-    public String getSeriesType()
+    @Nullable
+    public String getSeriesLabel()
     {
-        return seriesType;
+        return seriesLabel;
     }
 
-    public void setSeriesType(String seriesType)
+    public void setSeriesLabel(String seriesLabel)
     {
-        this.seriesType = seriesType;
+        this.seriesLabel = seriesLabel;
     }
 
-    public String getSampleFile()
+    @Nullable
+    public Double getMetricValue()
     {
-        return sampleFile;
+        return metricValue;
     }
 
-    public void setSampleFile(String sampleFile)
+    public void setMetricValue(Double metricValue)
     {
-        this.sampleFile = sampleFile;
+        this.metricValue = metricValue;
     }
 
-    public String getMetricType()
+    public int getMetricId()
     {
-        return metricType;
+        return metricId;
     }
 
-    public void setMetricType(String metricType)
+    public void setMetricId(int metricId)
     {
-        this.metricType = metricType;
+        this.metricId = metricId;
+    }
+
+    public int getMetricSeriesIndex()
+    {
+        return metricSeriesIndex;
+    }
+
+    public void setMetricSeriesIndex(int metricSeriesIndex)
+    {
+        this.metricSeriesIndex = metricSeriesIndex;
+    }
+
+    public GuideSetKey getGuideSetKey()
+    {
+        return new GuideSetKey(getMetricId(), getMetricSeriesIndex(), getGuideSetId(), getSeriesLabel());
+    }
+
+    public int getGuideSetId()
+    {
+        return guideSetId;
+    }
+
+    public void setGuideSetId(int guideSetId)
+    {
+        this.guideSetId = guideSetId;
     }
 
     @Nullable
@@ -93,16 +120,6 @@ public class RawMetricDataSet
     public void setPrecursorChromInfoId(Integer precursorChromInfoId)
     {
         this.precursorChromInfoId = precursorChromInfoId;
-    }
-
-    public String getSeriesLabel()
-    {
-        return seriesLabel;
-    }
-
-    public void setSeriesLabel(String seriesLabel)
-    {
-        this.seriesLabel = seriesLabel;
     }
 
     public String getDataType()
@@ -137,49 +154,6 @@ public class RawMetricDataSet
         this.acquiredTime = acquiredTime;
     }
 
-    public String getFilePath()
-    {
-        return filePath;
-    }
-
-    public void setFilePath(String filePath)
-    {
-        this.filePath = filePath;
-    }
-
-    @Nullable
-    public Double getMetricValue()
-    {
-        return metricValue;
-    }
-
-    public void setMetricValue(Double metricValue)
-    {
-        this.metricValue = metricValue;
-    }
-
-    @Nullable
-    public Integer getReplicateId()
-    {
-        return replicateId;
-    }
-
-    public void setReplicateId(Integer replicateId)
-    {
-        this.replicateId = replicateId;
-    }
-
-    @Nullable
-    public Integer getGuideSetId()
-    {
-        return guideSetId;
-    }
-
-    public void setGuideSetId(Integer guideSetId)
-    {
-        this.guideSetId = guideSetId;
-    }
-
     public boolean isIgnoreInQC()
     {
         return ignoreInQC;
@@ -200,6 +174,16 @@ public class RawMetricDataSet
         this.inGuideSetTrainingRange = inGuideSetTrainingRange;
     }
 
+    public int getSampleFileId()
+    {
+        return sampleFileId;
+    }
+
+    public void setSampleFileId(int sampleFileId)
+    {
+        this.sampleFileId = sampleFileId;
+    }
+
     @Nullable
     public Double getmR()
     {
@@ -212,68 +196,118 @@ public class RawMetricDataSet
     }
 
     @Nullable
-    public Double getcUSUMmP()
+    public Double getCUSUMmP()
     {
-        return cUSUMmP;
+        return cusumMP;
     }
 
-    public void setcUSUMmP(Double cUSUMmP)
+    public void setCUSUMmP(Double d)
     {
-        this.cUSUMmP = cUSUMmP;
+        this.cusumMP = d;
     }
 
     @Nullable
-    public Double getcUSUMmN()
+    public Double getCUSUMmN()
     {
-        return cUSUMmN;
+        return cusumMN;
     }
 
-    public void setcUSUMmN(Double cUSUMmN)
+    public void setCUSUMmN(Double d)
     {
-        this.cUSUMmN = cUSUMmN;
+        this.cusumMN = d;
     }
 
     @Nullable
     public Double getCUSUMvP()
     {
-        return CUSUMvP;
+        return cusumVP;
     }
 
-    public void setCUSUMvP(Double CUSUMvP)
+    public void setCUSUMvP(Double d)
     {
-        this.CUSUMvP = CUSUMvP;
+        this.cusumVP = d;
     }
 
     @Nullable
     public Double getCUSUMvN()
     {
-        return CUSUMvN;
+        return cusumVN;
     }
 
-    public void setCUSUMvN(Double CUSUMvN)
+    public void setCUSUMvN(Double d)
     {
-        this.CUSUMvN = CUSUMvN;
+        this.cusumVN = d;
     }
 
-    public JSONObject toJSON(){
-        JSONObject jsonObject = new JSONObject();
+    public boolean isLeveyJenningsOutlier(GuideSetStats stat)
+    {
+        if (ignoreInQC || metricValue == null || stat == null)
+        {
+            return false;
+        }
 
-        jsonObject.put("MetricValue", metricValue);
-        jsonObject.put("ReplicateId", replicateId);
-        jsonObject.put("SeriesLabel", seriesLabel);
-        jsonObject.put("MetricType", metricType);
-        jsonObject.put("AcquiredTime", acquiredTime);
-        jsonObject.put("SeriesType",  seriesType);
-        jsonObject.put("IgnoreInQC",  ignoreInQC);
-        jsonObject.put("InGuideSetTrainingRange",  inGuideSetTrainingRange);
-        jsonObject.put("FilePath",  filePath);
-        jsonObject.put("mz",  mz);
-        jsonObject.put("DataType", dataType);
-        jsonObject.put("PrecursorId", precursorId);
-        jsonObject.put("PrecursorChromInfoId", precursorChromInfoId);
-        jsonObject.put("SampleFile", sampleFile);
-        jsonObject.put("GuideSetId", guideSetId);
+        double upperLimit = stat.getAverage() + stat.getStandardDeviation() * 3;
+        double lowerLimit = stat.getAverage() - stat.getStandardDeviation() * 3;
 
-        return jsonObject;
+        return metricValue > upperLimit || metricValue < lowerLimit || (Double.isNaN(stat.getStandardDeviation()) && metricValue != stat.getAverage());
+    }
+
+    public boolean isMovingRangeOutlier(GuideSetStats stat)
+    {
+        return !isIgnoreInQC() && stat != null && mR != null && mR > Stats.MOVING_RANGE_UPPER_LIMIT_WEIGHT * stat.getMovingRangeAverage();
+    }
+
+    private boolean isCUSUMOutlier(Double value)
+    {
+        return !isIgnoreInQC() && value != null && value > Stats.CUSUM_CONTROL_LIMIT;
+    }
+
+    public boolean isCUSUMvPOutlier()
+    {
+        return isCUSUMOutlier(cusumVP);
+    }
+
+    public boolean isCUSUMvNOutlier()
+    {
+        return isCUSUMOutlier(cusumVN);
+    }
+
+    public boolean isCUSUMmPOutlier()
+    {
+        return isCUSUMOutlier(cusumMP);
+    }
+
+    public boolean isCUSUMmNOutlier()
+    {
+        return isCUSUMOutlier(cusumMN);
+    }
+
+    public void increment(OutlierCounts counts, GuideSetStats stats)
+    {
+        counts.setTotalCount(counts.getTotalCount() + 1);
+        if (isLeveyJenningsOutlier(stats))
+        {
+            counts.setLeveyJennings(counts.getLeveyJennings() + 1);
+        }
+        if (isMovingRangeOutlier(stats))
+        {
+            counts.setmR(counts.getmR() + 1);
+        }
+        if (isCUSUMmPOutlier())
+        {
+            counts.setCUSUMmP(counts.getCUSUMmP() + 1);
+        }
+        if (isCUSUMmNOutlier())
+        {
+            counts.setCUSUMmN(counts.getCUSUMmN() + 1);
+        }
+        if (isCUSUMvPOutlier())
+        {
+            counts.setCUSUMvP(counts.getCUSUMvP() + 1);
+        }
+        if (isCUSUMvNOutlier())
+        {
+            counts.setCUSUMvN(counts.getCUSUMvN() + 1);
+        }
     }
 }
