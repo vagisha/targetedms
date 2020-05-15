@@ -69,7 +69,7 @@ public class TransitionPeptideSearchViewProvider implements ProteinService.Query
             @Override
             protected TableInfo createTable()
             {
-                TargetedMSTable result = (TargetedMSTable) getSchema().getTable(getSettings().getQueryName(), ContainerFilter.getContainerFilterByName(settings.getContainerFilterName(), getUser()), true, true);
+                TargetedMSTable result = (TargetedMSTable) getSchema().getTable(getSettings().getQueryName(), ContainerFilter.getContainerFilterByName(settings.getContainerFilterName(), getContainer(), getUser()), true, true);
                 result.addCondition(new SimpleFilter(form.createFilter("Sequence")));
 
                 List<FieldKey> visibleColumns = new ArrayList<>();

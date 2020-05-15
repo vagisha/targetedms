@@ -730,9 +730,9 @@ public class TargetedMSManager
     {
         SQLFragment sql = new SQLFragment("SELECT Container FROM ");
         sql.append(getTableInfoAutoQCPing(), "p");
-        ContainerFilter f = new ContainerFilter.CurrentAndSubfolders(user);
+        ContainerFilter f = ContainerFilter.Type.CurrentAndSubfolders.create(c, user);
         sql.append(" WHERE ");
-        sql.append(f.getSQLFragment(getSchema(), new SQLFragment("Container"), c));
+        sql.append(f.getSQLFragment(getSchema(), new SQLFragment("Container")));
         sql.append(" ORDER BY Modified DESC");
 
         String containerId = new SqlSelector(getSchema(), getSqlDialect().limitRows(sql, 1)).getObject(String.class);

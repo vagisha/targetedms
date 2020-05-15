@@ -48,7 +48,7 @@ public class QCMetricConfigurationTable extends FilteredTable<TargetedMSSchema>
     @Override
     protected void applyContainerFilter(ContainerFilter filter)
     {
-        if (filter.equals(ContainerFilter.CURRENT))
+        if (filter.getType() == ContainerFilter.Type.Current)
             filter = getDefaultMetricContainerFilter(getContainer());
 
         super.applyContainerFilter(filter);

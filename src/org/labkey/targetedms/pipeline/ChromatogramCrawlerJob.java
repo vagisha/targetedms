@@ -94,7 +94,7 @@ public class ChromatogramCrawlerJob extends PipelineJob
 
             // See how many rows we have to process in this container
             var schema = new TargetedMSSchema(getUser(), container);
-            var table = schema.getTable(TargetedMSSchema.TABLE_PRECURSOR_CHROM_INFO, ContainerFilter.CURRENT);
+            var table = schema.getTable(TargetedMSSchema.TABLE_PRECURSOR_CHROM_INFO, ContainerFilter.current(container));
             var selector = new TableSelector(table, PageFlowUtil.set("Id", "SampleFileID"), _crawlType.getFilter(), new Sort(FieldKey.fromParts("SampleFileId")));
             long containerPCICount = selector.getRowCount();
 

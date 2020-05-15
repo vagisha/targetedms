@@ -95,7 +95,7 @@ public class TransitionProteinSearchViewProvider implements ProteinService.Query
 
                 sql.append(getProteinLabelCondition("pg.Label", getProteinLabels(form.getIdentifier()), form.isExactMatch()));
 
-                ContainerFilter cf = form.isIncludeSubfolders() ? new ContainerFilter.CurrentAndSubfolders(getUser()) : ContainerFilter.CURRENT;
+                ContainerFilter cf = form.isIncludeSubfolders() ? ContainerFilter.Type.CurrentAndSubfolders.create(getContainer(), getUser()) : ContainerFilter.current(getContainer());
                 sql.append(")) AND RunId IN (SELECT Id FROM targetedms.runs WHERE ");
                 sql.append(cf.getSQLFragment(result.getSchema(), new SQLFragment("Container"), getContainer()));
                 sql.append("))");

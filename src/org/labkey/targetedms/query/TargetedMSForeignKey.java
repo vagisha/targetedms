@@ -47,7 +47,7 @@ public class TargetedMSForeignKey extends LookupForeignKey
         // Avoid applying a container filter on lookups. The import process should be only creating FKs to data
         // in the same container. Thus, we can rely on the outer query doing the proper filtering and avoid
         // what can be expensive multi-table joins to get to a table that has the Container column we need
-        return _schema.getTable(_tableName, new AnnotationsContainerFilter(getLookupContainerFilter()));
+        return _schema.getTable(_tableName, new AnnotationsContainerFilter(_schema.getContainer(), getLookupContainerFilter()));
     }
 
     /** Special wrapper over the standard container filter. Used to identify lookups that don't need to do container
@@ -59,15 +59,16 @@ public class TargetedMSForeignKey extends LookupForeignKey
         @NotNull
         private final ContainerFilter _annotationContainerFilter;
 
-        public AnnotationsContainerFilter(ContainerFilter annotationContainerFilter)
+        public AnnotationsContainerFilter(Container currentContainer, ContainerFilter annotationContainerFilter)
         {
-            _annotationContainerFilter = annotationContainerFilter == null ? ContainerFilter.CURRENT : annotationContainerFilter;
+            super(null,null);
+            _annotationContainerFilter = annotationContainerFilter == null ? ContainerFilter.current(currentContainer) : annotationContainerFilter;
         }
 
         @Override
-        public @Nullable Collection<GUID> getIds(Container currentContainer)
+        public @Nullable Collection<GUID> getIds()
         {
-            return _annotationContainerFilter.getIds(currentContainer);
+            return _annotationContainerFilter.getIds();
         }
 
         @Override
@@ -77,9 +78,9 @@ public class TargetedMSForeignKey extends LookupForeignKey
         }
 
         @Override
-        public String getCacheKey(Container c)
+        public String getCacheKey()
         {
-            return "TargetedMSEverything" + _annotationContainerFilter.getCacheKey(c);
+            return "TargetedMSEverything" + _annotationContainerFilter.getCacheKey();
         }
     }
 }

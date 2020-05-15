@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerForeignKey;
 import org.labkey.api.data.TableInfo;
+import org.labkey.api.exp.query.ExpSchema;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryForeignKey;
@@ -41,7 +42,7 @@ public class QCAnnotationTable extends FilteredTable<TargetedMSSchema>
         wrapAllColumns(true);
         getMutableColumn("Container").setFk(new ContainerForeignKey(schema));
         getMutableColumn("QCAnnotationTypeId").setFk(QueryForeignKey
-                .from(schema, new ContainerFilter.CurrentPlusProjectAndShared(getUserSchema().getUser()))
+                .from(schema, ContainerFilter.Type.CurrentPlusProjectAndShared.create(schema))
                 .to(TargetedMSSchema.TABLE_QC_ANNOTATION_TYPE, "Id", "Name"));
     }
 

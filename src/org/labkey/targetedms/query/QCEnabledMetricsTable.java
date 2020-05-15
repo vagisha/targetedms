@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
+import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.query.DefaultQueryUpdateService;
@@ -40,16 +41,16 @@ public class QCEnabledMetricsTable extends FilteredTable<TargetedMSSchema>
     @Override
     protected void applyContainerFilter(ContainerFilter filter)
     {
-        if (filter.equals(ContainerFilter.CURRENT))
-            filter = getDefaultMetricContainerFilter(getUserSchema().getUser());
+        if (filter.getType() == ContainerFilter.Type.Current)
+            filter = getDefaultMetricContainerFilter(getUserSchema().getContainer(), getUserSchema().getUser());
 
         super.applyContainerFilter(filter);
     }
 
-    public static ContainerFilter getDefaultMetricContainerFilter(User user)
+    public static ContainerFilter getDefaultMetricContainerFilter(Container c, User user)
     {
         // the base set of configuration live at the root container
-        return new ContainerFilter.CurrentPlusExtras(user, ContainerManager.getRoot());
+        return new ContainerFilter.CurrentPlusExtras(c, user, ContainerManager.getRoot());
     }
 
     @Override
