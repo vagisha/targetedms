@@ -834,7 +834,6 @@ public class PeptideSettings
     public static final class SpectrumLibrary extends SkylineEntity
     {
         private int _runId;
-        private int _librarySourceId;
         private String _name;
         private String _fileNameHint;
         private String _skylineLibraryId;  // lsid in <bibliospec_lite_library> element, id in others
@@ -851,16 +850,6 @@ public class PeptideSettings
         public void setRunId(int runId)
         {
             _runId = runId;
-        }
-
-        public int getLibrarySourceId()
-        {
-            return _librarySourceId;
-        }
-
-        public void setLibrarySourceId(int librarySourceId)
-        {
-            _librarySourceId = librarySourceId;
         }
 
         public String getName()

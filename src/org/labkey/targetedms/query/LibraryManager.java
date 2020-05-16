@@ -47,11 +47,6 @@ public class LibraryManager
 {
     private LibraryManager() {}
 
-    public static Map<String, Integer> getLibrarySourceTypes()
-    {
-        return new TableSelector(TargetedMSManager.getTableInfoLibrarySource(), new CsvSet("Type, Id")).getValueMap();
-    }
-
     public static List<PeptideSettings.SpectrumLibrary> getLibraries(int runId)
     {
         SimpleFilter filter = new SimpleFilter();

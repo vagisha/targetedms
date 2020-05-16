@@ -414,11 +414,6 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_ENZYME);
     }
 
-    public static TableInfo getTableInfoLibrarySource()
-    {
-        return getSchema().getTable(TargetedMSSchema.TABLE_LIBRARY_SOURCE);
-    }
-
     public static TableInfo getTableInfoAnnotationSettings()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_ANNOTATION_SETTINGS);

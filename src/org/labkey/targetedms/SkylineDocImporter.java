@@ -658,29 +658,12 @@ public class SkylineDocImporter
         PeptideSettings.SpectrumLibrarySettings librarySettings = pepSettings.getLibrarySettings();
         if(librarySettings != null)
         {
-            Map<String, Integer> librarySourceTypes = LibraryManager.getLibrarySourceTypes();
             librarySettings.setRunId(_runId);
             Table.insert(_user, TargetedMSManager.getTableInfoLibrarySettings(), librarySettings);
 
             for(PeptideSettings.SpectrumLibrary library: librarySettings.getLibraries())
             {
                 library.setRunId(_runId);
-                switch (library.getLibraryType())
-                {
-                    case "bibliospec_lite":
-                    case "bibliospec":
-                        library.setLibrarySourceId(librarySourceTypes.get("BiblioSpec"));
-                        break;
-                    case "hunter":
-                        library.setLibrarySourceId(librarySourceTypes.get("GPM"));
-                        break;
-                    case "nist":
-                    case "spectrast":
-                    default: // Set a librarySourceId even if there is no match.
-                             // The librarySourceId is meaningless now and will be dropped in the next schema update (Issue 40227).
-                        library.setLibrarySourceId(librarySourceTypes.get("NIST"));
-                        break;
-                }
                 library = Table.insert(_user, TargetedMSManager.getTableInfoSpectrumLibrary(), library);
                 libraryNameIdMap.put(library.getName(), library.getId());
             }
