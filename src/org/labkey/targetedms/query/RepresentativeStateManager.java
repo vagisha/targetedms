@@ -157,23 +157,49 @@ public class RepresentativeStateManager
         {
             makeActiveSQL.append(" AND Id NOT IN (" + StringUtils.join(peptideGroupIdsToExclude, ',') + ")");
         }
-        makeActiveSQL.append(" AND( ");
-        // If this peptide group has a SequenceId make sure we don't have another peptide group in this container
-        // with the same SequenceId that has been previously marked as representative
-        makeActiveSQL.append(" (SequenceId IS NOT NULL AND (SequenceId NOT IN (SELECT SequenceId FROM ");
+        makeActiveSQL.append(" AND Id NOT IN ( ");
+        // Issue 40407: Chromatogram library folder issues
+        // We will ignore (not mark as representative) all proteins that are already in the library - i.e. the protein
+        // either has a sequenceId that is the same as a library protein OR it has a label that is the same as a
+        // library protein. Library proteins are the ones that have their RepresentativeDataState set to
+        // RepresentativeDataState.Representative.ordinal()
+
+        // Get protein Ids that have the same sequenceId as a library protein
+        /*
+        SELECT id from targetedms.peptidegroup where runId = <runId> AND sequenceId IN
+   	    (SELECT sequenceId from targetedms.peptidegroup pg1 INNER JOIN targetedms.runs r1 ON pg1.RunId = r1.Id
+        WHERE r1.Container=<container> AND pg1.RepresentativeDataState=1 AND pg1.SequenceId IS NOT NULL
+         */
+        makeActiveSQL.append(" (SELECT Id FROM ").append(TargetedMSManager.getTableInfoPeptideGroup(), "pg_seq");
+        makeActiveSQL.append(" WHERE RunId = ?").add(run.getId());
+        makeActiveSQL.append(" AND SequenceId IN ( ");
+        makeActiveSQL.append(" SELECT SequenceId FROM ");
         makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg1");
-        makeActiveSQL.append(", ");
+        makeActiveSQL.append(" INNER JOIN ");
         makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r1");
-        makeActiveSQL.append(" WHERE pg1.RunId = r1.Id AND r1.Container=? AND pg1.RepresentativeDataState=?))) ");
+        makeActiveSQL.append(" ON pg1.RunID = r1.Id ");
+        makeActiveSQL.append(" WHERE r1.Container=? AND pg1.RepresentativeDataState=? ");
+        makeActiveSQL.append(" AND  pg1.SequenceId IS NOT NULL)) ");
         makeActiveSQL.add(container);
         makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
-        // If the peptide group does not have a SequenceId or there isn't an older peptide group with the same
-        // SequenceId, compare the Labels to look for conflicting proteins.
-        makeActiveSQL.append(" OR (Label NOT IN (SELECT Label FROM ");
+
+        makeActiveSQL.append(" UNION ");
+
+        // Get protein Ids that have the same label as a library protein
+        /*
+        SELECT id from targetedms.peptidegroup where runId = <runId> AND Label in
+        (SELECT Label from targetedms.peptidegroup pg2 INNER JOIN targetedms.runs r2 ON pg2.RunId = r2.Id
+        WHERE r2.Container=<container> AND pg2.RepresentativeDataState=1
+         */
+        makeActiveSQL.append(" (SELECT Id FROM ").append(TargetedMSManager.getTableInfoPeptideGroup(), "pg_label");
+        makeActiveSQL.append(" WHERE RunId = ?").add(run.getId());
+        makeActiveSQL.append(" AND Label IN ( ");
+        makeActiveSQL.append(" SELECT Label FROM ");
         makeActiveSQL.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg2");
-        makeActiveSQL.append(", ");
+        makeActiveSQL.append(" INNER JOIN ");
         makeActiveSQL.append(TargetedMSManager.getTableInfoRuns(), "r2");
-        makeActiveSQL.append(" WHERE pg2.RunID = r2.Id AND r2.Container=? AND pg2.RepresentativeDataState=?)) ");
+        makeActiveSQL.append(" ON pg2.RunID = r2.Id ");
+        makeActiveSQL.append(" WHERE r2.Container=? AND pg2.RepresentativeDataState=?)) ");
         makeActiveSQL.add(container);
         makeActiveSQL.add(RepresentativeDataState.Representative.ordinal());
         makeActiveSQL.append(")");

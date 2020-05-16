@@ -32,6 +32,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * User: vsharma
@@ -211,8 +214,10 @@ public class PeptideGroupManager
         if(peptideGroupIds == null || peptideGroupIds.length == 0)
             return false;
 
+        Set<Integer> uniqueIds = IntStream.of(peptideGroupIds).boxed().collect(Collectors.toSet());
+
         StringBuilder pepGrpIds = new StringBuilder();
-        for(int id: peptideGroupIds)
+        for(Integer id: uniqueIds)
         {
             pepGrpIds.append(",").append(id);
         }
@@ -227,7 +232,7 @@ public class PeptideGroupManager
         sql.add(container.getId());
 
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null && count == peptideGroupIds.length;
+        return count != null && count == uniqueIds.size();
     }
 
     public static Integer getBestReplicateId(PeptideGroup peptideGroup)

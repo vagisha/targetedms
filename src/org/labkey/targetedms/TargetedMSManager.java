@@ -940,6 +940,11 @@ public class TargetedMSManager
         updateSql.add(container);
         updateSql.append(" AND RepresentativeDataState = ? ");
         updateSql.add(representativeState.ordinal());
+        // Issue 40407. Change the representative state only for documents that have already successfully imported.
+        // If multiple documents were queued for import in this folder, there will be rows in targetedms.runs
+        // for the documents not yet imported.
+        updateSql.append(" AND StatusId = ? ");
+        updateSql.add(SkylineDocImporter.STATUS_SUCCESS);
         updateSql.append(" AND Id NOT IN ("+StringUtils.join(representativeRunIds, ",")+")");
 
         new SqlExecutor(TargetedMSManager.getSchema()).execute(updateSql);

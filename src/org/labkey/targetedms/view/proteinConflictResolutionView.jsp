@@ -47,7 +47,7 @@
 
 <style type="text/css">
     td.representative {background-color:#8FBC8F;}
-    span.label {text-decoration: underline; cursor: pointer;}
+    span.conflictEntityLabel {text-decoration: underline; cursor: pointer;}
     table.dataTable.myTable thead th,
     table.dataTable.myTable thead td,
     table.dataTable.myTable tbody td,
@@ -187,13 +187,13 @@ function toggleCheckboxSelection(element)
 
     if(element.is(":checked"))
     {
-        $("."+cls).attr('checked', false); // Both old and new protein checkboxes have the same class. First deselect all.
-        element.attr('checked', 'checked'); // Select the one that triggered this function call.
+        $("."+cls).removeAttr('checked'); // Both old and new protein checkboxes have the same class. First deselect all.
+        element.prop('checked', 'checked'); // Select the one that triggered this function call.
     }
     else
     {
-        $("."+cls).attr('checked', 'checked'); // First select all.
-        element.attr('checked', false);        // Deselect the one that triggered the function call.
+        $("."+cls).prop('checked', 'checked'); // First select all.
+        element.removeAttr('checked');        // Deselect the one that triggered the function call.
     }
 }
 
@@ -276,7 +276,7 @@ function toggleCheckboxSelection(element)
                  </span>
              </td>
              <td class="representative newProtein <%=protein.getNewProteinId()%>">
-                 <span class="label">
+                 <span class="conflictEntityLabel">
                      <%=protein.getNewProteinLabel()%>
                  </span>
              </td>
@@ -295,8 +295,8 @@ function toggleCheckboxSelection(element)
                      <img src="<%=getWebappURL("_images/plus.gif")%>"/>
                  </span>
              </td>
-             <td class="oldProtein label <%=protein.getNewProteinId()%>">
-                 <span class="label">
+             <td class="oldProtein <%=protein.getNewProteinId()%>">
+                 <span class="conflictEntityLabel">
                      <%=protein.getOldProteinLabel()%>
                  </span>
              </td>
