@@ -300,7 +300,23 @@ public class SkylineBinaryParser
             // For older data that got saved in the database without a value for uncompressedSize
             uncompressedSize = (Integer.SIZE / 8) * numPoints * (numTransitions + 1);
         }
-        return uncompress(bytes, uncompressedSize);
+        try
+        {
+            return uncompress(bytes, uncompressedSize);
+        }
+        catch (DataFormatException e)
+        {
+            // Issue 40469 - we may have -1 from a legacy import, but not have compressed data. If so, the attempt
+            // to uncompress will blow up and we can just return the original bytes
+            if (uncompressedSize.intValue() == -1)
+            {
+                return bytes;
+            }
+            else
+            {
+                throw e;
+            }
+        }
     }
 
     public static byte[] uncompress(byte[] bytes, Integer uncompressedSize) throws DataFormatException
