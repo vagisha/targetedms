@@ -19,6 +19,8 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.ExperimentRunType;
+import org.labkey.api.exp.XarFormatException;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.targetedms.IModification;
@@ -28,9 +30,11 @@ import org.labkey.api.targetedms.SkylineAnnotation;
 import org.labkey.api.targetedms.TargetedMSFolderTypeListener;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
+import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -208,5 +212,11 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public List<TableCustomizer> getModificationSearchResultCustomizers()
     {
         return Collections.unmodifiableList(_modificationSearchCustomizers);
+    }
+
+    @Override
+    public Integer importSkylineDocument(ViewBackgroundInfo info, Path skylinePath) throws XarFormatException, PipelineValidationException
+    {
+        return TargetedMSManager.addRunToQueue(info, skylinePath);
     }
 }

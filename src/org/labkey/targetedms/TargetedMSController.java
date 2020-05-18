@@ -29,6 +29,7 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.labkey.api.action.*;
 import org.labkey.api.analytics.AnalyticsService;
 import org.labkey.api.pipeline.PipelineJob;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.security.permissions.ApplicationAdminPermission;
 import org.labkey.api.targetedms.TargetedMSService;
@@ -2849,9 +2850,9 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    TargetedMSManager.addRunToQueue(info, path, form.getPipeRoot(getContainer()));
+                    TargetedMSManager.addRunToQueue(info, path);
                 }
-                catch (IOException e)
+                catch (PipelineValidationException e)
                 {
                     errors.reject(ERROR_MSG, e.getMessage());
                     return false;
@@ -2885,14 +2886,14 @@ public class TargetedMSController extends SpringActionController
                 ViewBackgroundInfo info = getViewBackgroundInfo();
                 try
                 {
-                    Integer jobId = TargetedMSManager.addRunToQueue(info, path, form.getPipeRoot(getContainer()));
+                    Integer jobId = TargetedMSManager.addRunToQueue(info, path);
                     Map<String, Object> detailsMap = new HashMap<>(4);
                     detailsMap.put("Path", form.getPath());
                     detailsMap.put("File", FileUtil.getFileName(path));
                     detailsMap.put("RowId", jobId);
                     jobDetailsList.add(detailsMap);
                 }
-                catch (IOException e)
+                catch (PipelineValidationException e)
                 {
                     throw new ApiUsageException(e);
                 }

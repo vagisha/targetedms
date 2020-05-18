@@ -19,11 +19,15 @@ import org.labkey.api.data.Container;
 import org.labkey.api.data.TableCustomizer;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.exp.ExperimentRunType;
+import org.labkey.api.exp.XarFormatException;
+import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.services.ServiceRegistry;
 import org.labkey.api.targetedms.model.SampleFileInfo;
+import org.labkey.api.view.ViewBackgroundInfo;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -84,4 +88,6 @@ public interface TargetedMSService
     void addModificationSearchResultCustomizer(TableCustomizer columnInfo);
     List<TableCustomizer> getModificationSearchResultCustomizers();
 
+    /** @return rowId for pipeline job that will perform the import asynchronously */
+    Integer importSkylineDocument(ViewBackgroundInfo info, Path skylinePath) throws XarFormatException, PipelineValidationException;
 }

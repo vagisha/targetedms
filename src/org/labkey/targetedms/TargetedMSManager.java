@@ -553,9 +553,9 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_CHROMATOGRAM_LIB_INFO);
     }
 
+    /** @return rowId for pipeline job that will perform the import asynchronously */
     public static Integer addRunToQueue(ViewBackgroundInfo info,
-                                     final Path path,
-                                     PipeRoot root) throws IOException, XarFormatException
+                                        final Path path) throws XarFormatException, PipelineValidationException
     {
         String description = "Skyline document import - " + FileUtil.getFileName(path);
         XarContext xarContext = new XarContext(description, info.getContainer(), info.getUser());
@@ -611,16 +611,14 @@ public class TargetedMSManager
 
         SkylineDocImporter importer = new SkylineDocImporter(user, container, FileUtil.getFileName(path), expData, null, xarContext, representative, null, null);
         SkylineDocImporter.RunInfo runInfo = importer.prepareRun();
+        PipeRoot root = PipelineService.get().findPipelineRoot(info.getContainer());
+        if (root == null)
+        {
+            throw new IllegalStateException("Could not resolve PipeRoot for " + info.getContainer().getPath());
+        }
         TargetedMSImportPipelineJob job = new TargetedMSImportPipelineJob(info, expData, runInfo, root, representative);
-        try
-        {
-            PipelineService.get().queueJob(job);
-            return PipelineService.get().getJobId(user, container, job.getJobGUID());
-        }
-        catch (PipelineValidationException e)
-        {
-            throw new IOException(e);
-        }
+        PipelineService.get().queueJob(job);
+        return PipelineService.get().getJobId(user, container, job.getJobGUID());
     }
 
     public static ExpRun ensureWrapped(TargetedMSRun run, User user, PipeRoot pipeRoot, Integer jobId) throws ExperimentException
