@@ -50,7 +50,7 @@ public interface TargetedMSService
 
     enum FolderType
     {
-        Experiment, Library, LibraryProtein, QC, Undefined
+        Experiment, ExperimentMAM, Library, LibraryProtein, QC, Undefined
     }
 
     String MODULE_NAME = "TargetedMS";

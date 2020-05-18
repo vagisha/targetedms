@@ -55,6 +55,11 @@ tr.spaceUnder > td
                     - A collection of published Skyline documents for various experimental designs
                 </td>
             </tr>
+            <tr class="spaceUnder">
+                <td>
+                    <input type="radio" name="folderType" id="multiAttributeMethod" value="<%= h(TargetedMSService.FolderType.Experiment.toString()) %>"> <b>Multi-attribute method (MAM)</b> - An experimental data folder variant with additional reporting for multi-attribute method analyses
+                </td>
+            </tr>
             <tr>
                 <td>
                     <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSService.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - Curated precursor and product ion expression data for use in designing and validating future experiments
@@ -67,7 +72,7 @@ tr.spaceUnder > td
             </tr>
             <tr>
                 <td>
-                    <input type="radio" name="folderType" id="QC" value="<%= h(TargetedMSService.FolderType.QC.toString()) %>"> <b>QC</b> - Quality control metrics of reagents and instruments
+                    <input type="radio" name="folderType" id="QC" value="<%= h(TargetedMSService.FolderType.QC.toString()) %>"> <b>Quality control</b> - System suitability monitoring of reagents and instruments
                 </td>
             </tr>
             <tr>

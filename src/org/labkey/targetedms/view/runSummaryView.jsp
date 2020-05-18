@@ -29,6 +29,7 @@
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
 <%@ page import="org.labkey.api.util.StringUtilsLabKey" %>
+<%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
 <%
@@ -96,7 +97,7 @@
         if (run.getCalibrationCurveCount() > 0) { %>, <a href="<%= h(calibrationCurveListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getCalibrationCurveCount(), "calibration curve"))%></a><% }
         if (run.getListCount() > 0) { %>, <a href="<%= h(listAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getListCount(), "list"))%></a><% } %>
         <% if (run.getSoftwareVersion() != null) { %>&nbsp;-&nbsp; <%= h(run.getSoftwareVersion()) %> <% } %>
-        <% if (run.getPeptideCount() > 0) { %>
+        <% if (TargetedMSService.get().getFolderType(run.getContainer()) == TargetedMSService.FolderType.ExperimentMAM && run.getPeptideCount() > 0) { %>
             &nbsp;-&nbsp;
             <a href="<%= h(ptmReportAction.getLocalURIString()) %>">PTM Report</a>,
             <a href="<%= h(peptideMapAction.getLocalURIString()) %>">Peptide Map</a>
