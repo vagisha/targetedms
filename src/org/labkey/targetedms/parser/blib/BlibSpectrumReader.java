@@ -153,7 +153,7 @@ public class BlibSpectrumReader
         // We know it's local file and string may need encoding to convert to Path
         if(!(new File(blibFilePath).exists()))
         {
-            LOG.error("File not found: " + blibFilePath);
+            LOG.debug("File not found: " + blibFilePath + ", referenced from container " + container.getPath());
             return Collections.emptyList();
         }
 
@@ -580,7 +580,7 @@ public class BlibSpectrumReader
             }
             else
             {
-                LOG.warn("Unable to copy " + blibPath + " to local file.");
+                LOG.debug("Unable to copy " + blibPath + " to local file, referenced from " + container.getPath());
                 return null;
             }
         }
