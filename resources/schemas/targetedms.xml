@@ -419,7 +419,6 @@
             <column columnName="MassAverage">
                 <formatString>0.0000</formatString>
             </column>
-            <column columnName="MoleculePrecursorId"/>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="Precursor">

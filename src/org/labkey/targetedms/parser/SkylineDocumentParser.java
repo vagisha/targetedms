@@ -1600,7 +1600,6 @@ public class SkylineDocumentParser implements AutoCloseable
 
         moleculePrecursor.setMassMonoisotopic(readRequiredMass(reader, true, MASS_MONOISOTOPIC));
         moleculePrecursor.setMassAverage(readRequiredMass(reader, false, MASS_AVERAGE));
-        moleculePrecursor.setMoleculePrecursorId(XmlUtil.readAttribute(reader, ID));
 
         Double explicitIonMobility = XmlUtil.readDoubleAttribute(reader, "explicit_ion_mobility");
         // fall back to support older documents
