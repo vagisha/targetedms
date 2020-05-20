@@ -859,11 +859,17 @@ public class TargetedMSManager
                 container.getId(), SkylineDocImporter.STATUS_SUCCESS, Boolean.FALSE);
     }
 
+    @Nullable
     public static TargetedMSRun getRunByFileName(String fileName, Container container)
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("Container"), container.getId());
         filter.addCondition(FieldKey.fromParts("FileName"), fileName);
-        return new TableSelector(TargetedMSManager.getTableInfoRuns(), filter, null).getObject(TargetedMSRun.class);
+        List<TargetedMSRun> matches = new TableSelector(TargetedMSManager.getTableInfoRuns(), filter, null).getArrayList(TargetedMSRun.class);
+        if (matches.size() == 1)
+        {
+            return matches.get(0);
+        }
+        return null;
     }
 
     public static boolean isRunConflicted(TargetedMSRun run)
