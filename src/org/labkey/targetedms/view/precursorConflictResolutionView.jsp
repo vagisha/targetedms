@@ -50,7 +50,7 @@
 
 <style type="text/css">
     td.representative {background-color:#8FBC8F;}
-    span.label {text-decoration: underline; cursor: pointer;}
+    span.conflictEntityLabel {text-decoration: underline; cursor: pointer;}
     table.dataTable.myTable thead th,
     table.dataTable.myTable thead td,
     table.dataTable.myTable tbody td,
@@ -69,7 +69,7 @@ $(document).ready(function () {
          toggleCheckboxSelection($(this));
     });
 
-    $("span.label").click(function() {
+    $("span.conflictEntityLabel").click(function() {
         var id = $(this).attr('id');
         //alert("You clicked "+id);
         var tokens = id.split('_');
@@ -195,13 +195,13 @@ function toggleCheckboxSelection(element)
 
     if(element.is(":checked"))
     {
-        $("."+cls).attr('checked', false); // Both old and new precursor checkboxes have the same class. First deselect all.
-        element.attr('checked', 'checked'); // Select the one that triggered this function call.
+        $("."+cls).removeAttr('checked'); // Both old and new precursor checkboxes have the same class. First deselect all.
+        element.prop('checked', 'checked'); // Select the one that triggered this function call.
     }
     else
     {
-        $("."+cls).attr('checked', 'checked'); // First select all.
-        element.attr('checked', false);        // Deselect the one that triggered the function call.
+        $("."+cls).prop('checked', 'checked'); // First select all.
+        element.removeAttr('checked');        // Deselect the one that triggered the function call.
     }
 }
 
@@ -282,7 +282,7 @@ function toggleCheckboxSelection(element)
                  </span>
              </td>
              <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
-                 <span class="label">
+                 <span class="conflictEntityLabel">
                      <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.getPrecursor(getContainer(), precursor.getNewPrecursorId(),
                              getUser()), precursor.getNewPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
                  </span>
@@ -303,7 +303,7 @@ function toggleCheckboxSelection(element)
                  </span>
              </td>
              <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">
-                 <span class="label">
+                 <span class="conflictEntityLabel">
                      <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.getPrecursor(getContainer(), precursor.getOldPrecursorId(),
                              getUser()), precursor.getOldPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
                  </span>

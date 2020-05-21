@@ -854,11 +854,17 @@ public class TargetedMSManager
                 container.getId(), SkylineDocImporter.STATUS_SUCCESS, Boolean.FALSE);
     }
 
+    @Nullable
     public static TargetedMSRun getRunByFileName(String fileName, Container container)
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("Container"), container.getId());
         filter.addCondition(FieldKey.fromParts("FileName"), fileName);
-        return new TableSelector(TargetedMSManager.getTableInfoRuns(), filter, null).getObject(TargetedMSRun.class);
+        List<TargetedMSRun> matches = new TableSelector(TargetedMSManager.getTableInfoRuns(), filter, null).getArrayList(TargetedMSRun.class);
+        if (matches.size() == 1)
+        {
+            return matches.get(0);
+        }
+        return null;
     }
 
     public static void markRunsNotRepresentative(Container container, TargetedMSRun.RepresentativeDataState representativeState)
@@ -887,6 +893,11 @@ public class TargetedMSManager
         updateSql.add(container);
         updateSql.append(" AND RepresentativeDataState = ? ");
         updateSql.add(representativeState.ordinal());
+        // Issue 40407. Change the representative state only for documents that have already successfully imported.
+        // If multiple documents were queued for import in this folder, there will be rows in targetedms.runs
+        // for the documents not yet imported.
+        updateSql.append(" AND StatusId = ? ");
+        updateSql.add(SkylineDocImporter.STATUS_SUCCESS);
         updateSql.append(" AND Id NOT IN ("+StringUtils.join(representativeRunIds, ",")+")");
 
         new SqlExecutor(TargetedMSManager.getSchema()).execute(updateSql);
