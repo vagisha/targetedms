@@ -31,7 +31,6 @@
             </column>
             <column columnName="Name">
                 <columnTitle>Label</columnTitle>
-                <displayWidth>15</displayWidth>
             </column>
         </columns>
     </table>
