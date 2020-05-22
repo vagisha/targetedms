@@ -247,6 +247,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             type: 'data',
             fragment: fragment,
             mz: mz,
+            SampleFileId: row['SampleFileId'], // keep in data for click handler
             ReplicateId: row['ReplicateId'], // keep in data for click handler
             PrecursorId: row['PrecursorId'], // keep in data for click handler
             PrecursorChromInfoId: row['PrecursorChromInfoId'], // keep in data for click handler

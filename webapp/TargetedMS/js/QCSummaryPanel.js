@@ -305,8 +305,10 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             divEl = Ext4.get(divId),
             content = '';
 
+        var sampleHREF = LABKEY.ActionURL.buildURL('targetedms', 'showSampleFile', LABKEY.ActionURL.getContainer(), {id: sampleFile.SampleId});
+
         // generate the HTML content for the sample file display details
-        content += '<span class="sample-file-field-label">Name:</span> ' + Ext4.util.Format.htmlEncode(sampleFile.SampleFile)
+        content += '<span class="sample-file-field-label">Name:</span> <a href="' + sampleHREF + '">' + Ext4.util.Format.htmlEncode(sampleFile.SampleFile) + '</a>'
                 + '<br/><span class="sample-file-field-label">Acquired Date/Time:</span> ' + Ext4.util.Format.date(Ext4.Date.parse(sampleFile.AcquiredTime, LABKEY.Utils.getDateTimeFormatWithMS()), LABKEY.extDefaultDateTimeFormat || 'Y-m-d H:i:s')
         if (sampleFile.IgnoreForAllMetric) {
             content += '<div>Not included in QC</div>';

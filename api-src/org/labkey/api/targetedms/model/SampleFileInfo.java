@@ -82,6 +82,7 @@ public class SampleFileInfo extends OutlierCounts
     {
         JSONObject jsonObject = super.toJSON();
 
+        jsonObject.put("SampleId", getSampleId());
         jsonObject.put("SampleFile", getSampleFile());
         jsonObject.put("AcquiredTime", getAcquiredTime());
         jsonObject.put("GuideSetId", getGuideSetId());

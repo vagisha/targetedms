@@ -94,7 +94,7 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
         else {
             this.add(this.getPlotPointDetailField('Value', this.valueName ? this.pointData[this.valueName] : this.pointData['value']));
         }
-        this.add(this.getPlotPointDetailField('File Path', this.pointData['FilePath'].replace(/\\/g, '\\<wbr>').replace(/\//g, '\/<wbr>')));
+        this.add(this.getPlotPointDetailField('File Path', this.pointData['FilePath'].replace(/\\/g, '\\<wbr>').replace(/\//g, '\/<wbr>').replace(/_/g, '_<wbr>')));
 
         if (this.canEdit) {
             this.add(this.getPlotPointExclusionPanel());
@@ -103,7 +103,7 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
             this.add(this.getPlotPointDetailField('Status', this.pointData['IgnoreInQC'] ? 'Not included in QC' : 'Included in QC'));
         }
 
-        this.add(Ext4.create('Ext.Component', { html: this.getPlotPointClickLink() }));
+        this.add(Ext4.create('Ext.Component', { html: this.getPlotPointClickLinks() }));
     },
 
     getPlotPointDetailField : function(label, value, includeCls) {
@@ -259,7 +259,7 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
         return this.exclusionRadioGroup;
     },
 
-    getPlotPointClickLink : function() {
+    getPlotPointClickLinks : function() {
         //Choose action target based on precursor type
         var action = this.pointData['dataType'] == 'Peptide' ? "precursorAllChromatogramsChart" : "moleculePrecursorAllChromatogramsChart",
             url = LABKEY.ActionURL.buildURL('targetedms', action, LABKEY.ActionURL.getContainer(), {
@@ -270,7 +270,11 @@ Ext4.define('LABKEY.targetedms.QCPlotHoverPanel', {
         return LABKEY.Utils.textLink({
             text: this.metricProps.precursorScoped ? 'View Chromatogram': 'View Document',
             href: this.metricProps.precursorScoped ? url + '#ChromInfo' + this.pointData['PrecursorChromInfoId'] : this.viewDocumentURL
-        });
+        }) + ' ' +
+            LABKEY.Utils.textLink({
+                text: 'View Sample File',
+                href: LABKEY.ActionURL.buildURL('targetedms', 'showSampleFile', LABKEY.ActionURL.getContainer(), {id: this.pointData['SampleFileId']})
+            });
     },
 
     getRunId: function () {
