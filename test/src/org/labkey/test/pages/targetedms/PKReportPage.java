@@ -102,6 +102,7 @@ public class PKReportPage extends LabKeyPage<PKReportPage.ElementCache>
         return retVal.trim();
     }
 
+    @Override
     protected ElementCache newElementCache()
     {
         return new ElementCache();

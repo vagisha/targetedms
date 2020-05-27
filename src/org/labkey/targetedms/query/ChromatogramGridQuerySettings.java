@@ -37,6 +37,7 @@ public class ChromatogramGridQuerySettings extends QuerySettings
         setAllowChooseView(false);
     }
 
+    @Override
     public void init(ViewContext context)
     {
         super.init(context);

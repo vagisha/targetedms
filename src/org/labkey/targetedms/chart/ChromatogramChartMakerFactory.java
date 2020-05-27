@@ -85,6 +85,7 @@ public class ChromatogramChartMakerFactory
         {
             ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.PrecursorSplitDataset(pChromInfo, _syncIntensity, _syncRt, user, container);
             ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.ProductSplitDataset(pChromInfo, _syncIntensity, _syncRt, user, container) {
+                @Override
                 int getSeriesOffset()
                 {
                     XYSeriesCollection jfreePrecIonDataset = precursorIonDataset.getJFreeDataset();
@@ -105,6 +106,7 @@ public class ChromatogramChartMakerFactory
         {
             ChromatogramDataset.PrecursorDataset precursorIonDataset = new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container)
             {
+                @Override
                 Transition.Type getTransitionType()
                 {
                     return Transition.Type.PRECURSOR;
@@ -118,6 +120,7 @@ public class ChromatogramChartMakerFactory
             };
             ChromatogramDataset.PrecursorDataset productIonDataset = new ChromatogramDataset.MoleculePrecursorDataset(pChromInfo, _syncIntensity, _syncRt, user, container) {
 
+                @Override
                 Transition.Type getTransitionType()
                 {
                     return Transition.Type.PRODUCT;
@@ -127,6 +130,7 @@ public class ChromatogramChartMakerFactory
                 {
                     return !transition.isPrecursorIon();
                 }
+                @Override
                 int getSeriesOffset()
                 {
                     XYSeriesCollection jfreePrecIonDataset = precursorIonDataset.getJFreeDataset();

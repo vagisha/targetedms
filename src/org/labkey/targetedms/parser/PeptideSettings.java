@@ -304,6 +304,7 @@ public class PeptideSettings
         private Boolean _label37Cl;
         private Boolean _label81Br;
 
+        @Override
         public Boolean getLabel13C()
         {
             return _label13C;
@@ -314,6 +315,7 @@ public class PeptideSettings
             _label13C = label13C;
         }
 
+        @Override
         public Boolean getLabel15N()
         {
             return _label15N;
@@ -324,6 +326,7 @@ public class PeptideSettings
             _label15N = label15N;
         }
 
+        @Override
         public Boolean getLabel18O()
         {
             return _label18O;
@@ -334,6 +337,7 @@ public class PeptideSettings
             _label18O = label18O;
         }
 
+        @Override
         public Boolean getLabel2H()
         {
             return _label2H;
@@ -511,6 +515,7 @@ public class PeptideSettings
     {
         private boolean _variable;
 
+        @Override
         public boolean isVariable()
         {
             return _variable;
@@ -532,6 +537,7 @@ public class PeptideSettings
         private Double _massDiffAvg;
         private Integer _unimodId;
 
+        @Override
         public String getName()
         {
             return _name;
@@ -542,6 +548,7 @@ public class PeptideSettings
             _name = name;
         }
 
+        @Override
         public String getAminoAcid()
         {
             return _aminoAcid;
@@ -552,6 +559,7 @@ public class PeptideSettings
             _aminoAcid = aminoAcid;
         }
 
+        @Override
         public String getTerminus()
         {
             return _terminus;
@@ -562,6 +570,7 @@ public class PeptideSettings
             _terminus = terminus;
         }
 
+        @Override
         public String getFormula()
         {
             return _formula;
@@ -572,6 +581,7 @@ public class PeptideSettings
             _formula = formula;
         }
 
+        @Override
         public Double getMassDiffMono()
         {
             return _massDiffMono;
@@ -582,6 +592,7 @@ public class PeptideSettings
             _massDiffMono = massDiffMono;
         }
 
+        @Override
         public Double getMassDiffAvg()
         {
             return _massDiffAvg;
@@ -592,6 +603,7 @@ public class PeptideSettings
             _massDiffAvg = massDiffAvg;
         }
 
+        @Override
         public Integer getUnimodId()
         {
             return _unimodId;

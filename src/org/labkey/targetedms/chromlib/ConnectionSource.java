@@ -84,6 +84,7 @@ public class ConnectionSource implements AutoCloseable
         return _dataSource.getConnection();
     }
 
+    @Override
     public void close()
     {
         _connectionPool.clear();

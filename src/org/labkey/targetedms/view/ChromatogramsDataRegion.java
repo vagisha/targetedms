@@ -71,6 +71,7 @@ public class ChromatogramsDataRegion extends DataRegion
         setButtonBar(bar);
     }
 
+    @Override
     protected int renderTableContents(RenderContext ctx, Writer out, boolean showRecordSelectors, List<DisplayColumn> renderers) throws SQLException, IOException
     {
         int rowIndex = 0;
@@ -122,6 +123,7 @@ public class ChromatogramsDataRegion extends DataRegion
         return rowIndex;
     }
 
+    @Override
     protected void renderTableRow(RenderContext ctx, Writer out, boolean showRecordSelectors, List<DisplayColumn> renderers, int rowIndex) throws IOException
     {
         DisplayColumn detailsColumn = getDetailsUpdateColumn(ctx, renderers, true);
@@ -141,6 +143,7 @@ public class ChromatogramsDataRegion extends DataRegion
 
     }
 
+    @Override
     public ChromatogramGridQuerySettings getSettings()
     {
         return (ChromatogramGridQuerySettings) super.getSettings();

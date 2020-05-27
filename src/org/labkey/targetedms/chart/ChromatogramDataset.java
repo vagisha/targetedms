@@ -214,11 +214,13 @@ public abstract class ChromatogramDataset
             return PrecursorManager.getPrecursorChromInfosForPeptide(_generalMoleculeId, _sampleFileId, _user, _container);
         }
 
+        @Override
         protected Color getSeriesColor(PrecursorChromInfo pChromInfo, int seriesIndex)
         {
             return ChartColors.getPrecursorColor(_colorIndexer.getColorIndex(pChromInfo.getPrecursorId(), _user, _container));
         }
 
+        @Override
         protected String getLabel(PrecursorChromInfo pChromInfo)
         {
             return LabelFactory.precursorLabel(pChromInfo.getPrecursorId());
@@ -307,11 +309,13 @@ public abstract class ChromatogramDataset
             return MoleculePrecursorManager.getPrecursorChromInfosForMolecule(_generalMoleculeId, _sampleFileId, _user, _container);
         }
 
+        @Override
         protected Color getSeriesColor(PrecursorChromInfo pChromInfo, int seriesIndex)
         {
             return ChartColors.getPrecursorColor(_colorIndexer.getColorIndex(pChromInfo.getPrecursorId(), _user, _container));
         }
 
+        @Override
         protected String getLabel(PrecursorChromInfo pChromInfo)
         {
             return LabelFactory.moleculePrecursorLabel(pChromInfo.getPrecursorId(), _user, _container);
@@ -1081,6 +1085,7 @@ public abstract class ChromatogramDataset
             super(pChromInfo, syncIntensity, syncRt, user, container);
         }
 
+        @Override
         Transition.Type getTransitionType()
         {
             return Transition.Type.PRECURSOR;
@@ -1100,6 +1105,7 @@ public abstract class ChromatogramDataset
             super(pChromInfo, syncIntensity, syncRt, user, container);
         }
 
+        @Override
         Transition.Type getTransitionType()
         {
             return Transition.Type.PRODUCT;

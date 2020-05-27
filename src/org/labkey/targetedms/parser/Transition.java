@@ -117,21 +117,25 @@ public class Transition extends GeneralTransition
         this.precursorMz = precursorMz;
     }
 
+    @Override
     public Double getCollisionEnergy()
     {
         return collisionEnergy;
     }
 
+    @Override
     public void setCollisionEnergy(Double collisionEnergy)
     {
         this.collisionEnergy = collisionEnergy;
     }
 
+    @Override
     public Double getDeclusteringPotential()
     {
         return declusteringPotential;
     }
 
+    @Override
     public void setDeclusteringPotential(Double declusteringPotential)
     {
         this.declusteringPotential = declusteringPotential;

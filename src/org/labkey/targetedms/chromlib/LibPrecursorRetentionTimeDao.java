@@ -55,6 +55,7 @@ public class LibPrecursorRetentionTimeDao extends BaseDaoImpl<LibPrecursorRetent
         return PrecursorRetentionTimeColumn.values();
     }
 
+    @Override
     protected List<LibPrecursorRetentionTime> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibPrecursorRetentionTime> precursorRetentionTimes = new ArrayList<>();

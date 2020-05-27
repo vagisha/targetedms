@@ -32,7 +32,7 @@ package org.labkey.targetedms.SkylinePort.Irt;
 */
 public final class RegressionLineElement implements IRegressionFunction
 {
-	private RegressionLine _regressionLine;
+    private RegressionLine _regressionLine;
 
     public RegressionLine getRegressionLine()
     {
@@ -40,44 +40,45 @@ public final class RegressionLineElement implements IRegressionFunction
     }
 
     public RegressionLineElement(double slope, double intercept)
-	{
-		_regressionLine = new RegressionLine(slope, intercept);
-	}
+    {
+        _regressionLine = new RegressionLine(slope, intercept);
+    }
 
-	public RegressionLineElement(RegressionLine regressionLine)
-	{
-		_regressionLine = regressionLine;
-	}
+    public RegressionLineElement(RegressionLine regressionLine)
+    {
+        _regressionLine = regressionLine;
+    }
 
-	public double getSlope()
-	{
-		return _regressionLine.getSlope();
-	}
+    public double getSlope()
+    {
+        return _regressionLine.getSlope();
+    }
 
-	public double getIntercept()
-	{
-		return _regressionLine.getIntercept();
-	}
+    public double getIntercept()
+    {
+        return _regressionLine.getIntercept();
+    }
 
-	public double GetY(double x)
-	{
-		return _regressionLine.GetY(x);
-	}
+    @Override
+    public double GetY(double x)
+    {
+        return _regressionLine.GetY(x);
+    }
 
-	@Override
-	public boolean equals(Object obj)
-	{
-		if (null == obj || !(obj instanceof RegressionLineElement))
-		{
-			return false;
-		}
-		return _regressionLine.equals(((RegressionLineElement) obj).getRegressionLine());
-	}
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (null == obj || !(obj instanceof RegressionLineElement))
+        {
+            return false;
+        }
+        return _regressionLine.equals(((RegressionLineElement) obj).getRegressionLine());
+    }
 
-	@Override
-	public int hashCode()
-	{
-		return _regressionLine.hashCode();
-	}
+    @Override
+    public int hashCode()
+    {
+        return _regressionLine.hashCode();
+    }
 
 }

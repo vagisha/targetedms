@@ -63,6 +63,7 @@ public class LibTransitionDao extends BaseDaoImpl<LibTransition>
         return TransitionColumn.values();
     }
 
+    @Override
     protected List<LibTransition> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibTransition> transitions = new ArrayList<>();

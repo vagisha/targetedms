@@ -107,6 +107,7 @@ public class LibProteinDao extends BaseDaoImpl<LibProtein>
         throw new UnsupportedOperationException(getTableName()+" does not have a foreign key");
     }
 
+    @Override
     protected List<LibProtein> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibProtein> proteins = new ArrayList<>();

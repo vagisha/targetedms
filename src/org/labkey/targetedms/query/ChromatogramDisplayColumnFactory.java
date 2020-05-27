@@ -84,6 +84,7 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
         _replicatesFilter = replicatesFilter;
     }
 
+    @Override
     public DisplayColumn createRenderer(ColumnInfo colInfo)
     {
         return new DataColumn(colInfo) {

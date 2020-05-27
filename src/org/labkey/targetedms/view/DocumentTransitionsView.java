@@ -41,6 +41,7 @@ public abstract class DocumentTransitionsView extends DocumentView
         setTitle(title);
     }
 
+    @Override
     protected Sort getBaseSort()
     {
         return new Sort("Id");

@@ -139,6 +139,7 @@ public class LibPeptideDao extends BaseDaoImpl<LibPeptide>
         throw new UnsupportedOperationException(getTableName()+" does not have a foreign key");
     }
 
+    @Override
     protected List<LibPeptide> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibPeptide> peptides = new ArrayList<>();

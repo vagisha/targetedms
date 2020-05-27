@@ -39,85 +39,86 @@ package org.labkey.targetedms.SkylinePort.Irt;
 */
 public final class RegressionLine implements IRegressionFunction
 {
-	public RegressionLine(double slope, double intercept)
-	{
-		setSlope(slope);
-		setIntercept(intercept);
-	}
+    public RegressionLine(double slope, double intercept)
+    {
+        setSlope(slope);
+        setIntercept(intercept);
+    }
 
-	private double privateSlope;
-	public double getSlope()
-	{
-		return privateSlope;
-	}
-	private void setSlope(double value)
-	{
-		privateSlope = value;
-	}
+    private double privateSlope;
+    public double getSlope()
+    {
+        return privateSlope;
+    }
+    private void setSlope(double value)
+    {
+        privateSlope = value;
+    }
 
-	private double privateIntercept;
-	public double getIntercept()
-	{
-		return privateIntercept;
-	}
-	private void setIntercept(double value)
-	{
-		privateIntercept = value;
-	}
+    private double privateIntercept;
+    public double getIntercept()
+    {
+        return privateIntercept;
+    }
+    private void setIntercept(double value)
+    {
+        privateIntercept = value;
+    }
 
-	/** 
-	 Use the y = m*x + b formula to calculate the desired y
-	 for a given x.
-	 
-	 @param x Value in x dimension
-	 @return 
-	*/
-	public double GetY(double x)
-	{
-		return getSlope() * x + getIntercept();
-	}
+    /**
+     Use the y = m*x + b formula to calculate the desired y
+     for a given x.
 
-	/** 
-	 Use the y = m*x + b formula to calculate the desired x
-	 for a given y.
-	 
-	 @param y Value in y dimension
-	 @return 
-	*/
-	public double GetX(double y)
-	{
-		return (y - getIntercept()) / getSlope();
-	}
+     @param x Value in x dimension
+     @return
+    */
+    @Override
+    public double GetY(double x)
+    {
+        return getSlope() * x + getIntercept();
+    }
 
-	private enum ATTR
-	{
-		slope,
-		intercept;
+    /**
+     Use the y = m*x + b formula to calculate the desired x
+     for a given y.
 
-		public int getValue()
-		{
-			return this.ordinal();
-		}
+     @param y Value in y dimension
+     @return
+    */
+    public double GetX(double y)
+    {
+        return (y - getIntercept()) / getSlope();
+    }
 
-		public static ATTR forValue(int value)
-		{
-			return values()[value];
-		}
-	}
+    private enum ATTR
+    {
+        slope,
+        intercept;
 
-	@Override
-	public boolean equals(Object obj)
-	{
-		if (null == obj || ! (obj instanceof RegressionLine))
-		{
-			return false;
-		}
+        public int getValue()
+        {
+            return this.ordinal();
+        }
+
+        public static ATTR forValue(int value)
+        {
+            return values()[value];
+        }
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (null == obj || ! (obj instanceof RegressionLine))
+        {
+            return false;
+        }
         return ((RegressionLine)obj).getSlope() == getSlope() && ((RegressionLine)obj).getIntercept() == getIntercept();
-	}
+    }
 
-	@Override
-	public int hashCode()
-	{
+    @Override
+    public int hashCode()
+    {
         return ((Double.valueOf(getSlope())).hashCode()*397) ^ (Double.valueOf(getIntercept())).hashCode();
-	}
+    }
 }

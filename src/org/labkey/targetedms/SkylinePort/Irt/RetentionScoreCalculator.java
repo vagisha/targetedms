@@ -31,13 +31,13 @@ import java.util.ArrayList;
 //[XmlRoot("retention_score_calculator")]
 public class RetentionScoreCalculator extends RetentionScoreCalculatorSpec
 {
-	private IRetentionScoreCalculator _impl;
+    private IRetentionScoreCalculator _impl;
 
-	public RetentionScoreCalculator(String name)
-	{
+    public RetentionScoreCalculator(String name)
+    {
 //		super(name);
-		Validate();
-	}
+        Validate();
+    }
 
     @Override
     public String getName()
@@ -46,41 +46,41 @@ public class RetentionScoreCalculator extends RetentionScoreCalculatorSpec
     }
 
     @Override
-	public Double ScoreSequence(String sequence)
-	{
-		return _impl.ScoreSequence(sequence);
-	}
-
-	@Override
-	public double getUnknownScore()
-	{
-		return _impl.getUnknownScore();
-	}
-
-	@Override
-	public ArrayList<String> GetStandardPeptides(Iterable<String> peptides)
-	{
-		return _impl.GetStandardPeptides(peptides);
-	}
-
-	private RetentionScoreCalculator()
-	{
-	}
-
-	@Override
-	public ArrayList<String> ChooseRegressionPeptides(Iterable<String> peptides)
+    public Double ScoreSequence(String sequence)
     {
-		return _impl.ChooseRegressionPeptides(peptides);
-	}
+        return _impl.ScoreSequence(sequence);
+    }
 
-	private void Validate()
-	{
+    @Override
+    public double getUnknownScore()
+    {
+        return _impl.getUnknownScore();
+    }
+
+    @Override
+    public ArrayList<String> GetStandardPeptides(Iterable<String> peptides)
+    {
+        return _impl.GetStandardPeptides(peptides);
+    }
+
+    private RetentionScoreCalculator()
+    {
+    }
+
+    @Override
+    public ArrayList<String> ChooseRegressionPeptides(Iterable<String> peptides)
+    {
+        return _impl.ChooseRegressionPeptides(peptides);
+    }
+
+    private void Validate()
+    {
 //		_impl = RetentionTimeRegression.GetCalculatorByName(getName());
 //		if (_impl == null)
 //		{
 //			throw new InvalidDataException(String.format(Resources.getRetentionScoreCalculator_Validate_The_retention_time_calculator__0__is_not_valid(), getName()));
 //		}
-	}
+    }
 
 //	@Override
 //	public void ReadXml(XmlReader reader)

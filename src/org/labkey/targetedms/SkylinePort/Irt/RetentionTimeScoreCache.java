@@ -33,62 +33,62 @@ import java.util.Map;
 
 public final class RetentionTimeScoreCache
 {
-	private final LinkedHashMap<String, LinkedHashMap<String, Double>> _cache = new LinkedHashMap<>();
+    private final LinkedHashMap<String, LinkedHashMap<String, Double>> _cache = new LinkedHashMap<>();
 
-	public RetentionTimeScoreCache(Iterable<RetentionScoreCalculatorSpec> calculators, ArrayList<MeasuredRetentionTime> peptidesTimes, RetentionTimeScoreCache cachePrevious)
-	{
-		for (IRetentionScoreCalculator calculator : calculators)
-		{
-			LinkedHashMap<String, Double> cacheCalc = new LinkedHashMap<>();
-			_cache.put(calculator.getName(), cacheCalc);
-			LinkedHashMap<String, Double> cacheCalcPrevious;
-			if (cachePrevious == null || !((cacheCalcPrevious = cachePrevious._cache.get(calculator.getName())) != null))
-			{
-				cacheCalcPrevious = null;
-			}
+    public RetentionTimeScoreCache(Iterable<RetentionScoreCalculatorSpec> calculators, ArrayList<MeasuredRetentionTime> peptidesTimes, RetentionTimeScoreCache cachePrevious)
+    {
+        for (IRetentionScoreCalculator calculator : calculators)
+        {
+            LinkedHashMap<String, Double> cacheCalc = new LinkedHashMap<>();
+            _cache.put(calculator.getName(), cacheCalc);
+            LinkedHashMap<String, Double> cacheCalcPrevious;
+            if (cachePrevious == null || !((cacheCalcPrevious = cachePrevious._cache.get(calculator.getName())) != null))
+            {
+                cacheCalcPrevious = null;
+            }
 
-			for (MeasuredRetentionTime mrt : peptidesTimes)
-			{
-				String seq = mrt.getPeptideSequence();
-				if (!cacheCalc.containsKey(seq))
-				{
-					cacheCalc.put(seq, CalcScore(calculator, seq, cacheCalcPrevious));
-				}
-			}
-		}
-	}
+            for (MeasuredRetentionTime mrt : peptidesTimes)
+            {
+                String seq = mrt.getPeptideSequence();
+                if (!cacheCalc.containsKey(seq))
+                {
+                    cacheCalc.put(seq, CalcScore(calculator, seq, cacheCalcPrevious));
+                }
+            }
+        }
+    }
 
-	public void RecalculateCalcCache(RetentionScoreCalculatorSpec calculator)
-	{
-		Map<String, Double> calcCache = _cache.get(calculator.getName());
-		if(calcCache != null)
-		{
-			LinkedHashMap<String, Double> newCalcCache = new LinkedHashMap<String, Double>();
+    public void RecalculateCalcCache(RetentionScoreCalculatorSpec calculator)
+    {
+        Map<String, Double> calcCache = _cache.get(calculator.getName());
+        if(calcCache != null)
+        {
+            LinkedHashMap<String, Double> newCalcCache = new LinkedHashMap<String, Double>();
 
-			for (String key : calcCache.keySet())
-			{
-				//force recalculation
-				newCalcCache.put(key, CalcScore(calculator, key, null));
-			}
+            for (String key : calcCache.keySet())
+            {
+                //force recalculation
+                newCalcCache.put(key, CalcScore(calculator, key, null));
+            }
 
-			_cache.put(calculator.getName(), newCalcCache);
-		}
-	}
+            _cache.put(calculator.getName(), newCalcCache);
+        }
+    }
 
-	public double CalcScore(IRetentionScoreCalculator calculator, String peptide)
-	{
-		LinkedHashMap<String, Double> cacheCalc = null;
-		cacheCalc = _cache.get(calculator.getName());
-		return CalcScore(calculator, peptide, cacheCalc);
-	}
+    public double CalcScore(IRetentionScoreCalculator calculator, String peptide)
+    {
+        LinkedHashMap<String, Double> cacheCalc = null;
+        cacheCalc = _cache.get(calculator.getName());
+        return CalcScore(calculator, peptide, cacheCalc);
+    }
 
-	public static ArrayList<Double> CalcScores(IRetentionScoreCalculator calculator, ArrayList<String> peptides, RetentionTimeScoreCache scoreCache)
-	{
-		HashMap<String, Double> cacheCalc;
+    public static ArrayList<Double> CalcScores(IRetentionScoreCalculator calculator, ArrayList<String> peptides, RetentionTimeScoreCache scoreCache)
+    {
+        HashMap<String, Double> cacheCalc;
         if (scoreCache == null || (cacheCalc = scoreCache._cache.get(calculator.getName())) == null)
-		{
-			cacheCalc = null;
-		}
+        {
+            cacheCalc = null;
+        }
 
         ArrayList<Double> scores = new ArrayList<>();
         for (String sequence : peptides)
@@ -97,16 +97,16 @@ public final class RetentionTimeScoreCache
         }
         return scores;
 //		return peptides.ConvertAll(pep => CalcScore(calculator, pep, cacheCalc));
-	}
+    }
 
-	private static double CalcScore(IRetentionScoreCalculator calculator, String peptide, java.util.Map<String, Double> cacheCalc)
-	{
-		Double score;
-		if (cacheCalc == null || (score = cacheCalc.get(peptide)) == null)
-		{
-			Double tempVar = calculator.ScoreSequence(peptide);
-			score = (tempVar != null) ? tempVar : calculator.getUnknownScore();
-		}
-		return score;
-	}
+    private static double CalcScore(IRetentionScoreCalculator calculator, String peptide, java.util.Map<String, Double> cacheCalc)
+    {
+        Double score;
+        if (cacheCalc == null || (score = cacheCalc.get(peptide)) == null)
+        {
+            Double tempVar = calculator.ScoreSequence(peptide);
+            score = (tempVar != null) ? tempVar : calculator.getUnknownScore();
+        }
+        return score;
+    }
 }

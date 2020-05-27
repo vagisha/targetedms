@@ -75,6 +75,7 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo implements Precur
         _modifiedSequence = modifiedSequence;
     }
 
+    @Override
     public int getCharge()
     {
         return _charge;
@@ -95,6 +96,7 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo implements Precur
         _isotopeLabel = isotopeLabel;
     }
 
+    @Override
     public int getIsotopeLabelId()
     {
         return _isotopeLabelId;

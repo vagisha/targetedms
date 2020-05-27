@@ -443,9 +443,9 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild("Chromatogram Crawler");
+            root.addChild("Chromatogram Crawler");
         }
     }
 
@@ -526,6 +526,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(AdminPermission.class)
     public class SetupAction extends SimpleViewAction
     {
+        @Override
         public ModelAndView getView(Object o, BindException errors)
         {
             JspView view = new JspView("/org/labkey/targetedms/view/folderSetup.jsp");
@@ -538,9 +539,9 @@ public class TargetedMSController extends SpringActionController
             return view;
         }
 
-        public NavTree appendNavTrail(NavTree root)
+        @Override
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
@@ -556,9 +557,10 @@ public class TargetedMSController extends SpringActionController
             return new JspView("/org/labkey/targetedms/view/qcTrendPlotReport.jsp");
         }
 
-        public NavTree appendNavTrail(NavTree root)
+        @Override
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild("QC Reports");
+            root.addChild("QC Reports");
         }
     }
 
@@ -990,9 +992,9 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild("QC Summary History");
+            root.addChild("QC Summary History");
         }
     }
 
@@ -1050,6 +1052,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class ArchivedRevisionsAction extends SimpleViewAction
     {
+        @Override
         public ModelAndView getView(Object o, BindException errors)
         {
             JspView view = new JspView("/org/labkey/targetedms/view/archivedRevisionsDownload.jsp");
@@ -1059,9 +1062,10 @@ public class TargetedMSController extends SpringActionController
             return view;
         }
 
-        public NavTree appendNavTrail(NavTree root)
+        @Override
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild("Download Chromatogram Library");
+            root.addChild("Download Chromatogram Library");
         }
     }
 
@@ -1073,6 +1077,7 @@ public class TargetedMSController extends SpringActionController
     @ActionNames("showList, begin")
     public class ShowListAction extends SimpleViewAction
     {
+        @Override
         public ModelAndView getView(Object o, BindException errors)
         {
             TargetedMsRunListView runListView = TargetedMsRunListView.createView(getViewContext());
@@ -1086,10 +1091,10 @@ public class TargetedMSController extends SpringActionController
             return vbox;
         }
 
-        public NavTree appendNavTrail(NavTree root)
+        @Override
+        public void addNavTrail(NavTree root)
         {
             root.addChild("Skyline Documents");
-            return root;
         }
     }
 
@@ -1310,7 +1315,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             if (null != _run)
             {
@@ -1324,7 +1329,6 @@ public class TargetedMSController extends SpringActionController
 
                 root.addChild("Precursor Chromatograms");
             }
-            return root;
         }
     }
 
@@ -1393,7 +1397,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             if (null != _run)
             {
@@ -1407,7 +1411,6 @@ public class TargetedMSController extends SpringActionController
 
                 root.addChild("Molecule Precursor Chromatograms");
             }
-            return root;
         }
     }
 
@@ -1462,7 +1465,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             if (null != _run)
             {
@@ -1470,7 +1473,6 @@ public class TargetedMSController extends SpringActionController
                 root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
                 root.addChild("Peptide Chromatograms");
             }
-            return root;
         }
     }
 
@@ -1975,7 +1977,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             if (null != _run)
             {
@@ -1983,7 +1985,6 @@ public class TargetedMSController extends SpringActionController
                 root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
                 root.addChild(_sequence);
             }
-            return root;
         }
     }
 
@@ -2071,7 +2072,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             if (null != _run)
             {
@@ -2079,7 +2080,6 @@ public class TargetedMSController extends SpringActionController
                 root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
                 root.addChild(_customIonName);
             }
-            return root;
         }
     }
 
@@ -2108,9 +2108,9 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return null;  //TODO: link back to peptides details page
+            //TODO: link back to peptides details page
         }
     }
 
@@ -2820,9 +2820,9 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild("Confirm TargetedMS Data Import");
+            root.addChild("Confirm TargetedMS Data Import");
         }
     }
 
@@ -2862,6 +2862,7 @@ public class TargetedMSController extends SpringActionController
             return true;
         }
 
+        @Override
         public ActionURL getSuccessURL(SkylinePipelinePathForm form)
         {
             return PageFlowUtil.urlProvider(PipelineUrls.class).urlBegin(getContainer());
@@ -2871,6 +2872,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(InsertPermission.class)
     public class SkylineDocUploadApiAction extends MutatingApiAction<PipelinePathForm>
     {
+        @Override
         public ApiResponse execute(PipelinePathForm form, BindException errors) throws Exception
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
@@ -2906,6 +2908,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresLogin
     public class GetMaxSupportedVersionsAction extends ReadOnlyApiAction
     {
+        @Override
         public ApiResponse execute(Object object, BindException errors)
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
@@ -2961,14 +2964,13 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             if (null != _run)
             {
                 root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
                 root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
             }
-            return root;
         }
     }
 
@@ -3002,7 +3004,7 @@ public class TargetedMSController extends SpringActionController
         }
         
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             if (null != _run)
             {
@@ -3011,7 +3013,6 @@ public class TargetedMSController extends SpringActionController
                 root.addChild(_run.getDescription(), showCalibrationCurvesURL);
             }
             root.addChild("Pharmacokinetics");
-            return root;
         }
     }
 
@@ -3168,19 +3169,19 @@ public class TargetedMSController extends SpringActionController
             _run = validateRun(form.getId());
         }
 
-        public NavTree appendNavTrail(NavTree root)
+        @Override
+        public void addNavTrail(NavTree root)
         {
-            return appendNavTrail(root, _run);
+            addNavTrail(root, _run);
         }
 
-        public NavTree appendNavTrail(NavTree root, TargetedMSRun run)
+        public void addNavTrail(NavTree root, TargetedMSRun run)
         {
             root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
             if (run != null)
             {
                 root.addChild(run.getDescription(), getShowRunURL(getContainer(), run.getId()));
             }
-            return root;
         }
     }
 
@@ -3197,6 +3198,7 @@ public class TargetedMSController extends SpringActionController
             super(RunDetailsForm.class);
         }
 
+        @Override
         public ModelAndView getHtmlView(final RunDetailsForm form, BindException errors) throws Exception
         {
             VBox vBox = new VBox();
@@ -3601,9 +3603,8 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
@@ -3843,12 +3844,11 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             root.addChild("Targeted MS Runs", getShowListURL(getContainer()));
             root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
             root.addChild(_sampleFile.getSampleName());
-            return root;
         }
     }
 
@@ -4014,15 +4014,14 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            root = new ShowPrecursorListAction(getViewContext()).appendNavTrail(root, _run);
+            new ShowPrecursorListAction(getViewContext()).addNavTrail(root, _run);
             if (_run != null)
             {
                 root.addChild(_run.getDescription(), getShowRunURL(getContainer(), _run.getId()));
                 root.addChild(_proteinLabel);
             }
-            return root;
         }
     }
 
@@ -4230,9 +4229,8 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
@@ -4309,9 +4307,9 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild("Protein Conflicts");
+            root.addChild("Protein Conflicts");
         }
     }
 
@@ -4509,9 +4507,8 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
@@ -4868,6 +4865,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class DownloadDocumentAction extends SimpleViewAction<RunDetailsForm>
     {
+        @Override
         public ModelAndView getView(RunDetailsForm form, BindException errors) throws Exception
         {
             if (form.getId() < 0)
@@ -4923,9 +4921,10 @@ public class TargetedMSController extends SpringActionController
             return null;
         }
 
-        public NavTree appendNavTrail(NavTree root)
+        @Override
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild("Unable to find Skyline file");
+            root.addChild("Unable to find Skyline file");
         }
     }
 
@@ -4949,6 +4948,7 @@ public class TargetedMSController extends SpringActionController
     @RequiresPermission(ReadPermission.class)
     public class DownloadChromLibraryAction extends SimpleViewAction<DownloadForm>
     {
+        @Override
         public ModelAndView getView(DownloadForm form, BindException errors) throws Exception
         {
             // Check if the folder has any representative data
@@ -5008,15 +5008,16 @@ public class TargetedMSController extends SpringActionController
             return null;
         }
 
-        public NavTree appendNavTrail(NavTree root)
+        @Override
+        public void addNavTrail(NavTree root)
         {
-            return root;
         }
     }
 
     @RequiresPermission(InsertPermission.class)
     public class IsLibraryCurrentAction extends ReadOnlyApiAction<LibraryDetailsForm>
     {
+        @Override
         public ApiResponse execute(LibraryDetailsForm form, BindException errors) throws Exception
         {
             ApiSimpleResponse response = new ApiSimpleResponse();
@@ -5212,9 +5213,9 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return root.addChild("Modification Search Results");
+            root.addChild("Modification Search Results");
         }
     }
 
@@ -5299,11 +5300,13 @@ public class TargetedMSController extends SpringActionController
             return _aminoAcids != null && _aminoAcids.equals("[");
         }
 
+        @Override
         public void setViewContext(ViewContext context)
         {
             _context = context;
         }
 
+        @Override
         public ViewContext getViewContext()
         {
             return _context;
@@ -5797,6 +5800,7 @@ public class TargetedMSController extends SpringActionController
             this.columns = columns;
         }
 
+        @Override
         public ActionURL getReturnActionURL()
         {
             ActionURL result;
@@ -5894,9 +5898,9 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
-            return appendRunNavTrail(root, _run, _returnURL, "Rename Run", getPageConfig(), null);
+            addRunNavTrail(root, _run, _returnURL, "Rename Run", getPageConfig(), null);
         }
     }
 
@@ -5908,9 +5912,9 @@ public class TargetedMSController extends SpringActionController
         public URLHelper returnURL;
     }
 
-    private NavTree appendRunNavTrail(NavTree root, TargetedMSRun run, URLHelper runURL, String title, PageConfig page, String helpTopic)
+    private void addRunNavTrail(NavTree root, TargetedMSRun run, URLHelper runURL, String title, PageConfig page, String helpTopic)
     {
-        appendRootNavTrail(root, null, page, helpTopic);
+        addRootNavTrail(root, null, page, helpTopic);
 
         if (run != null)
         {
@@ -5922,16 +5926,14 @@ public class TargetedMSController extends SpringActionController
 
         if (null != title)
             root.addChild(title);
-        return root;
     }
 
-    private NavTree appendRootNavTrail(NavTree root, String title, PageConfig page, String helpTopic)
+    private void addRootNavTrail(NavTree root, String title, PageConfig page, String helpTopic)
     {
         page.setHelpTopic(new HelpTopic(null == helpTopic ? "targetedms" : helpTopic));
         root.addChild("TargetedMS Runs", getShowListURL(getContainer()));
         if (null != title)
             root.addChild(title);
-        return root;
     }
 
     /*
@@ -6175,6 +6177,7 @@ public class TargetedMSController extends SpringActionController
     {
         private Map<Integer, Integer> _runs = new HashMap<>();
 
+        @Override
         public void bindProperties(Map<String,Object> properties)
         {
             JSONObject json;
@@ -6356,7 +6359,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             if (null != _run)
             {
@@ -6369,8 +6372,6 @@ public class TargetedMSController extends SpringActionController
                 }
 
             }
-            return root;
-
         }
     }
 
@@ -6518,7 +6519,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public NavTree appendNavTrail(NavTree root)
+        public void addNavTrail(NavTree root)
         {
             if (null != _run)
             {
@@ -6529,7 +6530,6 @@ public class TargetedMSController extends SpringActionController
                     root.addChild(_chart.getMolecule().getTextId());
                 }
             }
-            return root;
         }
 
         @Override

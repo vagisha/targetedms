@@ -84,6 +84,7 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         return PipelineJobService.get().getTaskPipeline(new TaskId(TargetedMSImportPipelineJob.class));
     }
 
+    @Override
     public ActionURL getStatusHref()
     {
         if (_runInfo.getRunId() > 0)
@@ -93,6 +94,7 @@ public class TargetedMSImportPipelineJob extends PipelineJob
         return null;
     }
 
+    @Override
     public String getDescription()
     {
         return "Skyline document import - " + _expData.getName();

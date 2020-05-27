@@ -106,6 +106,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         return _experimentRunLSID;
     }
 
+    @Override
     public int getId() {
         return getRunId();
     }
@@ -124,6 +125,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _runId = runId;
     }
 
+    @Override
     public Container getContainer()
     {
         return _container;
@@ -136,6 +138,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     }
 
 
+    @Override
     public String getDescription()
     {
         return _description;
@@ -147,11 +150,13 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _description = description;
     }
 
-	public String getFileName()
+	@Override
+    public String getFileName()
     {
         return _fileName;
     }
 
+    @Override
     public String getBaseName()
     {
         if(_fileName != null)
@@ -167,6 +172,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _fileName = fileName;
     }
 
+    @Override
     public Date getCreated()
     {
         return _created;
@@ -337,6 +343,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
                _representativeDataState == RepresentativeDataState.Representative_Peptide;
     }
 
+    @Override
     public Integer getDataId()
     {
         return _dataId;
@@ -347,6 +354,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         _dataId = dataId;
     }
 
+    @Override
     public Integer getSkydDataId()
     {
         return _skydDataId;

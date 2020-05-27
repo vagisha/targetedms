@@ -47,6 +47,7 @@ public class TargetedMSPipelineProvider extends PipelineProvider
         super(name, owningModule);
     }
 
+    @Override
     public void updateFileProperties(ViewContext context, PipeRoot pr, PipelineDirectory directory, boolean includeAll)
     {
         if (!context.getContainer().hasPermission(context.getUser(), InsertPermission.class))

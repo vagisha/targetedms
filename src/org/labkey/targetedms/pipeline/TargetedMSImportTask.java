@@ -84,26 +84,31 @@ public class TargetedMSImportTask extends PipelineJob.Task<TargetedMSImportTask.
             super(TargetedMSImportTask.class);
         }
 
+        @Override
         public PipelineJob.Task createTask(PipelineJob job)
         {
             return new TargetedMSImportTask(this, job);
         }
 
+        @Override
         public List<FileType> getInputTypes()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public List<String> getProtocolActionNames()
         {
             return Collections.emptyList();
         }
 
+        @Override
         public String getStatusName()
         {
             return "IMPORT";
         }
 
+        @Override
         public boolean isJobComplete(PipelineJob job)
         {
             return false;

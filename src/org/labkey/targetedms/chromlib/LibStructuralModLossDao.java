@@ -55,6 +55,7 @@ public class LibStructuralModLossDao extends BaseDaoImpl<LibStructuralModLoss>
         return StructuralModLossColumn.values();
     }
 
+    @Override
     protected List<LibStructuralModLoss> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibStructuralModLoss> modLosses = new ArrayList<>();

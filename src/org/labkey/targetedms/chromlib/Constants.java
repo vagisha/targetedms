@@ -505,6 +505,7 @@ class Constants
             return _column;
         }
 
+        @Override
         public String definition()
         {
             return _definition;
@@ -603,6 +604,7 @@ class Constants
         {
             return _column;
         }
+        @Override
         public String definition()
         {
             return _definition;
@@ -637,6 +639,7 @@ class Constants
             return _column;
         }
 
+        @Override
         public String definition()
         {
             return _definition;

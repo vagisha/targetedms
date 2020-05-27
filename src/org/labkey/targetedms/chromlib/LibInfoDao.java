@@ -35,6 +35,7 @@ import java.util.List;
  */
 public class LibInfoDao implements Dao<LibInfo>
 {
+    @Override
     public void save(LibInfo libInfo, Connection connection) throws SQLException
     {
         if(libInfo != null)
@@ -64,6 +65,7 @@ public class LibInfoDao implements Dao<LibInfo>
         }
     }
 
+    @Override
     public List<LibInfo> queryAll(Connection connection) throws SQLException
     {
         StringBuilder sql = new StringBuilder();

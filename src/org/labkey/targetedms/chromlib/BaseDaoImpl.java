@@ -39,6 +39,7 @@ public abstract class BaseDaoImpl<T extends ObjectWithId> implements Dao<T>
         return connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
     }
 
+    @Override
     public void save(T t, Connection connection) throws SQLException
     {
         if(t != null)
@@ -55,6 +56,7 @@ public abstract class BaseDaoImpl<T extends ObjectWithId> implements Dao<T>
         }
     }
 
+    @Override
     public void saveAll(List<T> list, Connection connection) throws SQLException
     {
         _log.info("Batch insert of "+list.size()+" objects");
@@ -145,6 +147,7 @@ public abstract class BaseDaoImpl<T extends ObjectWithId> implements Dao<T>
         }
     }
 
+    @Override
     public List<T> queryAll(Connection connection) throws SQLException
     {
         StringBuilder sql = new StringBuilder();
@@ -154,6 +157,7 @@ public abstract class BaseDaoImpl<T extends ObjectWithId> implements Dao<T>
         return query(connection, sql);
     }
 
+    @Override
     public T queryForId(int id, Connection connection) throws SQLException
     {
         StringBuilder sql = new StringBuilder();
@@ -173,6 +177,7 @@ public abstract class BaseDaoImpl<T extends ObjectWithId> implements Dao<T>
         return results.get(0);
     }
 
+    @Override
     public List<T> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection) throws SQLException
     {
         StringBuilder sql = new StringBuilder();

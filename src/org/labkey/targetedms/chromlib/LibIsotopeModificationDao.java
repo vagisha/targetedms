@@ -69,6 +69,7 @@ public class LibIsotopeModificationDao extends BaseDaoImpl<LibIsotopeModificatio
         throw new UnsupportedOperationException(getTableName()+" does not have a foreign key");
     }
 
+    @Override
     protected List<LibIsotopeModification> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibIsotopeModification> isotopeMods = new ArrayList<>();

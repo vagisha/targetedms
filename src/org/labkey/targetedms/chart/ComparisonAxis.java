@@ -160,6 +160,7 @@ abstract class ComparisonAxis extends CategoryAxis
             _categoryMap = categoryMap;
         }
 
+        @Override
         protected Map<String, String> getFullLengthLabels(Collection<String> categories)
         {
             Iterator iterator = categories.iterator();
@@ -199,6 +200,7 @@ abstract class ComparisonAxis extends CategoryAxis
             super(label);
         }
 
+        @Override
         protected Map<String, String> getFullLengthLabels(Collection<String> categories)
         {
             Iterator iterator = categories.iterator();

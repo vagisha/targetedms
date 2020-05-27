@@ -136,6 +136,7 @@ public interface ComparisonCategory
             return _isotopeLabel;
         }
 
+        @Override
         public String getCategoryLabel()
         {
             return makeLabel(false);
@@ -369,6 +370,7 @@ public interface ComparisonCategory
             return _useChargeInDisplayLabel;
         }
 
+        @Override
         public String getCategoryLabel()
         {
             return makeLabel(false);

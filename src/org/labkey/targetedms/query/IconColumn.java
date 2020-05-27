@@ -114,6 +114,7 @@ public abstract class IconColumn extends DataColumn
             return PageFlowUtil.filter(ctx.get(getColumnInfo().getFieldKey(), String.class));
         }
 
+        @Override
         boolean removeLinkDefaultColor()
         {
             return false;

@@ -164,6 +164,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         }
     }
 
+    @Override
     protected List<LibPrecursor> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibPrecursor> precursors = new ArrayList<>();

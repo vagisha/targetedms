@@ -53,6 +53,7 @@ public class LibPeptideStructuralModDao extends BaseDaoImpl<LibPeptideStructural
         return PeptideStructuralModificationColumn.values();
     }
 
+    @Override
     protected List<LibPeptideStructuralModification> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibPeptideStructuralModification> pepStrMods = new ArrayList<>();

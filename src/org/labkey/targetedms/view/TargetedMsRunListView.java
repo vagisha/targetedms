@@ -113,6 +113,7 @@ public class TargetedMsRunListView extends ExperimentRunListView
         return _hasDocVersions && getCustomView() == null;
     }
 
+    @Override
     protected void populateButtonBar(DataView view, ButtonBar bar)
     {
         super.populateButtonBar(view, bar);
@@ -165,6 +166,7 @@ public class TargetedMsRunListView extends ExperimentRunListView
         bar.add(cgButton);
     }
 
+    @Override
     public List<DisplayColumn> getDisplayColumns()
     {
         if(!canChangeDocVersionCols())

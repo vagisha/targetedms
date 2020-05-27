@@ -534,6 +534,7 @@ public class ComparisonDataset
             _isStatistical = isStatistical;
         }
 
+        @Override
         public double getValue()
         {
             return _value;
@@ -544,6 +545,7 @@ public class ComparisonDataset
             return _sdev;
         }
 
+        @Override
         public boolean isStatistical()
         {
             return _isStatistical;
@@ -622,6 +624,7 @@ public class ComparisonDataset
     {
         public abstract Double getValue(PrecursorChromInfoLitePlus pciPlus);
 
+        @Override
         public BarChartSeriesItemData make(List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues)
         {
             double value = 0.0;
@@ -674,6 +677,7 @@ public class ComparisonDataset
     // Makes a series item with the min, max and peak apex retention times as well as fwhm.
     public static class RetentionTimesAllValuesSeriesItemMaker implements SeriesItemMaker
     {
+        @Override
         public BoxAndWhiskerSeriesItemData make(List<PrecursorChromInfoLitePlus> pciPlusList, boolean cvValues)
         {
             if(pciPlusList.size() == 1)

@@ -53,6 +53,7 @@ public class LibPrecursorIsotopeModificationDao extends BaseDaoImpl<LibPrecursor
         return PrecursorIsotopeModificationColumn.values();
     }
 
+    @Override
     protected List<LibPrecursorIsotopeModification> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibPrecursorIsotopeModification> precIsotopeModifications = new ArrayList<>();

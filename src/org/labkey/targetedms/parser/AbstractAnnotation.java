@@ -29,6 +29,7 @@ public class AbstractAnnotation extends SkylineEntity implements SkylineAnnotati
     private String _name;
     private String _value;
 
+    @Override
     public String getName()
     {
         return _name;
@@ -39,6 +40,7 @@ public class AbstractAnnotation extends SkylineEntity implements SkylineAnnotati
         _name = name;
     }
 
+    @Override
     public String getValue()
     {
         return _value;

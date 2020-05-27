@@ -41,6 +41,7 @@ public class LibStructuralModificationDao extends BaseDaoImpl<LibStructuralModif
         _modLossDao = modLossDao;
     }
 
+    @Override
     public void save(LibStructuralModification structuralMod, Connection connection) throws SQLException
     {
         if(structuralMod != null)
@@ -91,6 +92,7 @@ public class LibStructuralModificationDao extends BaseDaoImpl<LibStructuralModif
         throw new UnsupportedOperationException(getTableName()+" does not have a foreign key");
     }
 
+    @Override
     protected List<LibStructuralModification> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibStructuralModification> structuralMods = new ArrayList<>();

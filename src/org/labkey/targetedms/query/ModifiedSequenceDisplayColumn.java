@@ -140,6 +140,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
             }
         }
 
+        @Override
         public void initialize(RenderContext ctx)
         {
             Integer peptideId = (Integer)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Id"));

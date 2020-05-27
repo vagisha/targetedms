@@ -80,6 +80,7 @@ public class LibSampleFileDao extends BaseDaoImpl<LibSampleFile>
         throw new UnsupportedOperationException(getTableName()+" does not have a foreign key");
     }
 
+    @Override
     protected List<LibSampleFile> parseQueryResult(ResultSet rs) throws SQLException
     {
         List<LibSampleFile> sampleFiles = new ArrayList<>();

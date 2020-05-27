@@ -45,6 +45,7 @@ public class LibPeptide implements ObjectWithId
         return _id;
     }
 
+    @Override
     public void setId(int id)
     {
         _id = id;

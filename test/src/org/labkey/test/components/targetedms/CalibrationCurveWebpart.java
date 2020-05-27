@@ -90,6 +90,7 @@ public class CalibrationCurveWebpart extends BodyWebPart<CalibrationCurveWebpart
         return getWrapper().doAndWaitForDownload(() -> elementCache().exportToPng.click());
     }
 
+    @Override
     protected ElementCache newElementCache()
     {
         return new ElementCache();

@@ -45,6 +45,7 @@ public class SmallMoleculePrecursorsView extends DocumentPrecursorsView
      * Overridden to add the run id filter condition.
      * @return A document transitions TableInfo filtered to the current run id
      */
+    @Override
     public TableInfo createTable()
     {
         assert null != _targetedMsSchema : "Targeted MS Schema was not set in SmallMoleculePrecursorsView class!";

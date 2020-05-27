@@ -39,6 +39,7 @@ public abstract class DocumentView extends NestableQueryView
         _runId = runId;
     }
 
+    @Override
     protected Sort getBaseSort()
     {
         return new Sort("Id");
