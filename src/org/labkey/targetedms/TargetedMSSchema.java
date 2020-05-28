@@ -66,6 +66,7 @@ import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.PopupMenu;
 import org.labkey.api.view.ViewContext;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.parser.Chromatogram;
 import org.labkey.targetedms.parser.ChromatogramBinaryFormat;
 import org.labkey.targetedms.parser.ReplicateAnnotation;
@@ -630,6 +631,15 @@ public class TargetedMSSchema extends UserSchema
                     {
                         return new DataColumn(colInfo)
                         {
+
+                            @Override
+                            public @NotNull Set<ClientDependency> getClientDependencies()
+                            {
+                                Set<ClientDependency> result = super.getClientDependencies();
+                                result.add(TargetedMSController.getDownloadMenuClientDependency());
+                                return result;
+                            }
+
                             @Override
                             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {

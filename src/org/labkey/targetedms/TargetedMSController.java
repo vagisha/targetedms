@@ -32,6 +32,7 @@ import org.labkey.api.pipeline.PipelineJob;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.security.permissions.ApplicationAdminPermission;
+import org.labkey.api.settings.AppProps;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.util.Button;
@@ -41,6 +42,7 @@ import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.*;
 import org.labkey.api.view.PopupMenu;
+import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.model.GuideSet;
 import org.labkey.targetedms.model.GuideSetKey;
 import org.labkey.targetedms.model.GuideSetStats;
@@ -4807,9 +4809,9 @@ public class TargetedMSController extends SpringActionController
         }
     }
 
-    private static String getDocumentSize(TargetedMSRun run) throws IOException
+    private static String getDocumentSize(TargetedMSRun run)
     {
-        if(run.getDocumentSize() != null)
+        if (run.getDocumentSize() != null)
         {
             return FileUtils.byteCountToDisplaySize(run.getDocumentSize());
         }
@@ -4818,13 +4820,25 @@ public class TargetedMSController extends SpringActionController
             Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID(), run.getContainer());
             if (skyDocFile != null && !Files.isDirectory(skyDocFile))
             {
-                return FileUtils.byteCountToDisplaySize(Files.size(skyDocFile));
+                try
+                {
+                    return FileUtils.byteCountToDisplaySize(Files.size(skyDocFile));
+                }
+                catch (IOException ignored) {}
             }
         }
-        return null;
+        return "Unknown size";
     }
 
-    public static PopupMenu createDownloadMenu(@NotNull TargetedMSRun run) throws IOException
+    public static ClientDependency getDownloadMenuClientDependency()
+    {
+        return ClientDependency.fromPath("/TargetedMS/js/clipboardHelper.js");
+    }
+
+    /**
+     * Has a dependency on JavaScript utility to help with copying to clipboard, which is up to the caller to add to
+     *  the page via a call to getDownloadMenuClientDependency() */
+    public static PopupMenu createDownloadMenu(@NotNull TargetedMSRun run)
     {
         String onClickScript = null;
         if (!StringUtils.isBlank(AnalyticsService.getTrackingScript()))
@@ -4854,6 +4868,21 @@ public class TargetedMSController extends SpringActionController
         NavTree pointerDownloadNavTree = new NavTree("SkyP file (link only, 1KB)", pointerDownloadUrl);
         pointerDownloadNavTree.setScript(onClickScript);
         navTree.addChild(pointerDownloadNavTree);
+
+        ActionURL runURL = new ActionURL(ShowPrecursorListAction.class, run.getContainer()).addParameter("fileName", run.getFileName());
+        if (AppProps.getInstance().getUseContainerRelativeURL())
+        {
+            NavTree relativeURLNavTree = new NavTree("Copy relative URL to clipboard", runURL.toContainerRelativeURL());
+            relativeURLNavTree.setScript("copyStringToClipboard(" + PageFlowUtil.jsString(runURL.toContainerRelativeURL()) + ");return false;");
+            relativeURLNavTree.setTip("Relative URLs are good for using in wiki pages in this folder, especially for folders that may later move or be copied");
+            navTree.addChild(relativeURLNavTree);
+        }
+
+        NavTree fullURL = new NavTree("Copy full URL to clipboard", runURL.getURIString());
+        fullURL.setScript("copyStringToClipboard(" + PageFlowUtil.jsString(runURL.getURIString()) + ");return false;");
+        fullURL.setTip("Full URLs are good for using in emails and publications");
+        navTree.addChild(fullURL);
+
         PopupMenu menu = new PopupMenu(navTree);
         menu.setButtonStyle(org.labkey.api.view.PopupMenu.ButtonStyle.IMAGE_AND_TEXT);
         return menu;

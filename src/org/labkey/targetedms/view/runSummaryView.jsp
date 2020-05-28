@@ -30,13 +30,25 @@
 <%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
 <%@ page import="org.labkey.api.util.StringUtilsLabKey" %>
 <%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
+<%@ page import="org.labkey.api.view.PopupMenu" %>
+<%@ page import="org.labkey.api.view.template.ClientDependency" %>
+<%@ page import="org.labkey.api.util.Pair" %>
+<%@ page import="java.io.IOException" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
+
+<%!
+    @Override
+    public void addClientDependencies(ClientDependencies dependencies)
+    {
+        dependencies.add(TargetedMSController.getDownloadMenuClientDependency());
+    }
+%>
 
 <%
     JspView<TargetedMSController.RunDetailsBean> me = (JspView<TargetedMSController.RunDetailsBean>) HttpView.currentView();
     TargetedMSController.RunDetailsBean bean = me.getModelBean();
     TargetedMSRun run = bean.getRun();
-    Path skyDocFile = SkylineFileUtils.getSkylineFile(run.getExperimentRunLSID(), getContainer());
 
     ActionURL downloadAction = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
     downloadAction.addParameter("id", run.getId());
