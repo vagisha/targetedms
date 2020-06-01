@@ -295,33 +295,17 @@ public class SkylineBinaryParser
 
     public static byte[] uncompressStoredBytes(byte[] bytes, Integer uncompressedSize, int numPoints, int numTransitions) throws DataFormatException
     {
-        if(uncompressedSize == null)
+        if(uncompressedSize == null || uncompressedSize == -1)
         {
             // For older data that got saved in the database without a value for uncompressedSize
             uncompressedSize = (Integer.SIZE / 8) * numPoints * (numTransitions + 1);
         }
-        try
-        {
-            return uncompress(bytes, uncompressedSize);
-        }
-        catch (DataFormatException e)
-        {
-            // Issue 40469 - we may have -1 from a legacy import, but not have compressed data. If so, the attempt
-            // to uncompress will blow up and we can just return the original bytes
-            if (uncompressedSize.intValue() == -1)
-            {
-                return bytes;
-            }
-            else
-            {
-                throw e;
-            }
-        }
+        return uncompress(bytes, uncompressedSize);
     }
 
-    public static byte[] uncompress(byte[] bytes, Integer uncompressedSize) throws DataFormatException
+    public static byte[] uncompress(byte[] bytes, int uncompressedSize) throws DataFormatException
     {
-        if (uncompressedSize != null && uncompressedSize == bytes.length) {
+        if (uncompressedSize == bytes.length) {
             return bytes;
         }
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
