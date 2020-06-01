@@ -134,19 +134,26 @@ public class OutlierGenerator
 
     /**
      * @param metrics id to QC metric  */
-    public List<SampleFileInfo> getSampleFiles(List<RawMetricDataSet> dataRows, Map<GuideSetKey, GuideSetStats> stats, Map<Integer, QCMetricConfiguration> metrics, Container container, Integer limit)
+    public List<SampleFileInfo> getSampleFiles(List<RawMetricDataSet> dataRows, Map<GuideSetKey, GuideSetStats> allStats, Map<Integer, QCMetricConfiguration> metrics, Container container, Integer limit)
     {
         List<SampleFileInfo> result = TargetedMSManager.getSampleFiles(container, new SQLFragment("sf.AcquiredTime IS NOT NULL")).stream().map(SampleFile::toSampleFileInfo).collect(Collectors.toList());
         Map<Integer, SampleFileInfo> sampleFiles = result.stream().collect(Collectors.toMap(SampleFileInfo::getSampleId, Function.identity()));
 
         for (RawMetricDataSet dataRow : dataRows)
         {
-            SampleFileInfo info = sampleFiles.get(dataRow.getSampleFileId());
-            dataRow.increment(info, stats.get(dataRow.getGuideSetKey()));
+            SampleFileInfo sampleFile = sampleFiles.get(dataRow.getSampleFileId());
+            GuideSetStats stats = allStats.get(dataRow.getGuideSetKey());
 
-            String metricLabel = getMetricLabel(metrics, dataRow);
+            // If data was deleted after the full metric data was queried, but before we got here, the sample file
+            // might not be present anymore. Not a real-world scenario, but turns up when TeamCity is deleting
+            // the container at the end of the test run immediately after the crawler has fired a bunch of requests
+            if (sampleFile != null)
+            {
+                dataRow.increment(sampleFile, stats);
 
-            dataRow.increment(info.getMetricCounts(metricLabel), stats.get(dataRow.getGuideSetKey()));
+                String metricLabel = getMetricLabel(metrics, dataRow);
+                dataRow.increment(sampleFile.getMetricCounts(metricLabel), stats);
+            }
         }
 
         // Order so most recent are at the top, and limit if requested

@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.model;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.targetedms.model.OutlierCounts;
 import org.labkey.api.visualization.Stats;
@@ -282,7 +283,7 @@ public class RawMetricDataSet
         return isCUSUMOutlier(cusumMN);
     }
 
-    public void increment(OutlierCounts counts, GuideSetStats stats)
+    public void increment(@NotNull OutlierCounts counts, @NotNull GuideSetStats stats)
     {
         counts.setTotalCount(counts.getTotalCount() + 1);
         if (isLeveyJenningsOutlier(stats))

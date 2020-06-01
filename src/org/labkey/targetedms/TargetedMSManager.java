@@ -2117,7 +2117,7 @@ public class TargetedMSManager
 
             return OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, container, sampleFileLimit);
         }
-        return null;
+        return Collections.emptyList();
     }
 
     public static int getMaxTransitionCount(int moleculeId)
