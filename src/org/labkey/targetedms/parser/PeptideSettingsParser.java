@@ -371,7 +371,6 @@ class PeptideSettingsParser
         settings.setPick(XmlUtil.readRequiredAttribute(reader, PICK, PEPTIDE_LIBRARIES));
         settings.setRankType(XmlUtil.readAttribute(reader, RANK_TYPE, null));
         settings.setPeptideCount(XmlUtil.readIntegerAttribute(reader, PEPTIDE_COUNT));
-        settings.setIonMatchTolerance(XmlUtil.readDoubleAttribute(reader, "ion_match_tolerance"));
 
         List<PeptideSettings.SpectrumLibrary> libraryList = new ArrayList<>();
         settings.setLibraries(libraryList);

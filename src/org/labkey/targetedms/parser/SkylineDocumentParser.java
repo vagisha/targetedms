@@ -650,6 +650,10 @@ public class SkylineDocumentParser implements AutoCloseable
             {
                 break;
             }
+            if (XmlUtil.isStartElement(reader, evtType, TRANSITION_LIBRARIES))
+            {
+                _peptideSettings.getLibrarySettings().setIonMatchTolerance(XmlUtil.readDoubleAttribute(reader, "ion_match_tolerance"));
+            }
 
             if (XmlUtil.isStartElement(reader, evtType, TRANSITION_PREDICTION))
             {
