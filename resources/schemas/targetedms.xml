@@ -768,6 +768,7 @@
             <column columnName="Pick"/>
             <column columnName="RankType"/>
             <column columnName="PeptideCount"/>
+            <column columnName="IonMatchTolerance"/>
         </columns>
     </table>
     <table tableName="ModificationSettings" tableDbType="TABLE">
