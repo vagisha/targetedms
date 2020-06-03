@@ -856,7 +856,8 @@ public class TargetedMSController extends SpringActionController
         properties.put("fileCount", new SqlSelector(TargetedMSSchema.getSchema(), sql).getObject(Integer.class));
 
         // # precursors tracked, count of distinct precursors. Include peptides and small molecules
-        sql = new SQLFragment("SELECT DISTINCT COALESCE(p.ModifiedSequence, mp.CustomIonName) AS SeriesLabel, gp.Charge");
+        sql = new SQLFragment("SELECT DISTINCT COALESCE(p.ModifiedSequence, ");
+        sql.append(" concat(mp.CustomIonName, mp.IonFormula,mp.massMonoisotopic, mp.massAverage, gp.mz)) AS SeriesLabel, gp.Charge");
         sql.append(" FROM ").append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(" JOIN ").append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm").append(" ON gp.GeneralMoleculeId = gm.Id");
         sql.append(" JOIN ").append(TargetedMSManager.getTableInfoPeptideGroup(), "pg").append(" ON gm.PeptideGroupId = pg.Id");
