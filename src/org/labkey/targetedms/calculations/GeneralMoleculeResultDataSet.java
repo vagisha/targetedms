@@ -91,7 +91,8 @@ public class GeneralMoleculeResultDataSet
         {
             for (ChromInfoRecord chromInfoRecord : records)
             {
-                if (chromInfoRecord.getTransitionChromInfo().getSampleFileId() != sampleFileId)
+                TransitionChromInfo tci = chromInfoRecord.getTransitionChromInfo();
+                if (tci.getSampleFileId() != sampleFileId)
                 {
                     continue;
                 }
@@ -99,7 +100,10 @@ public class GeneralMoleculeResultDataSet
                 {
                     continue;
                 }
-                total += chromInfoRecord.getTransitionChromInfo().getArea();
+                if (tci.getArea() != null)
+                {
+                    total += tci.getArea();
+                }
             }
         }
         return total;
