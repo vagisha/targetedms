@@ -18,6 +18,7 @@ package org.labkey.targetedms.query;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.ContainerForeignKey;
 import org.labkey.api.data.ForeignKey;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
@@ -25,6 +26,7 @@ import org.labkey.api.query.DetailsURL;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryForeignKey;
+import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.security.UserPrincipal;
 import org.labkey.api.security.permissions.Permission;
 import org.labkey.api.security.permissions.ReadPermission;
@@ -63,21 +65,38 @@ public class TargetedMSTable extends FilteredTable<TargetedMSSchema>
         _containerSQL = containerSQL;
         wrapAllColumns(true);
 
-        // Swap out DbSchema FKs with Query FKs so that we get all the extra calculated columns and such
-        for (var columnInfo : getMutableColumns())
-        {
-            ForeignKey fk = columnInfo.getFk();
-            if (fk != null && TargetedMSSchema.SCHEMA_NAME.equalsIgnoreCase(fk.getLookupSchemaName()))
-            {
-                columnInfo.setFk(new QueryForeignKey(schema, cf, schema, null, fk.getLookupTableName(), fk.getLookupColumnName(), fk.getLookupDisplayName()));
-            }
-        }
+        fixupLookups(this);
 
-        if(getDetailsActionClass() != null && getContainerFieldKey() != null)
+        if (getDetailsActionClass() != null && getContainerFieldKey() != null)
         {
             DetailsURL url = new DetailsURL(new ActionURL(getDetailsActionClass(), getContainer()),getColumnParams());
             url.setContainerContext(new ContainerContext.FieldKeyContext(getContainerFieldKey()));
             setDetailsURL(url);
+        }
+    }
+
+    public static void fixupLookups(FilteredTable<?> table)
+    {
+        // Swap out DbSchema FKs with Query FKs so that we get all the extra calculated columns and such
+        for (var columnInfo : table.getMutableColumns())
+        {
+            ForeignKey fk = columnInfo.getFk();
+            if (fk != null && TargetedMSSchema.SCHEMA_NAME.equalsIgnoreCase(fk.getLookupSchemaName()))
+            {
+                columnInfo.setFk(new QueryForeignKey(table.getUserSchema(), table.getContainerFilter(), table.getUserSchema(), null, fk.getLookupTableName(), fk.getLookupColumnName(), fk.getLookupDisplayName()));
+            }
+            else
+            {
+                String name = columnInfo.getName();
+                if ("Container".equalsIgnoreCase(name))
+                {
+                    columnInfo.setFk(new ContainerForeignKey(table.getUserSchema()));
+                }
+                if ("CreatedBy".equalsIgnoreCase(columnInfo.getName()) || "ModifiedBy".equalsIgnoreCase(columnInfo.getName()))
+                {
+                    columnInfo.setFk(new UserIdQueryForeignKey(table.getUserSchema(), true));
+                }
+            }
         }
     }
 

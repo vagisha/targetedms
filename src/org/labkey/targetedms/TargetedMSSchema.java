@@ -235,17 +235,27 @@ public class TargetedMSSchema extends UserSchema
 
     private static SQLFragment getJoinToRunsTable(String tableAlias)
     {
+        return getJoinToRunsTable(tableAlias, "RunId");
+    }
+
+    private static SQLFragment getJoinToRunsTable(String tableAlias, String columnName)
+    {
         tableAlias = tableAlias == null ? "" : tableAlias + ".";
         return makeInnerJoin(TargetedMSManager.getTableInfoRuns(),
-                TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, tableAlias + "RunId");
+                TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, tableAlias + columnName);
     }
 
     private static SQLFragment makeInnerJoin(TableInfo table, String alias, String colRight)
     {
+        return makeInnerJoin(table, alias, colRight, "id");
+    }
+
+    private static SQLFragment makeInnerJoin(TableInfo table, String alias, String colRight, String colLeft)
+    {
         SQLFragment sql = new SQLFragment("INNER JOIN ");
         sql.append(table, alias);
         sql.append(" ON ( ");
-        sql.append(alias).append(".id");
+        sql.append(alias).append(".").append(colLeft);
         sql.append(" = ");
         sql.append(colRight);
         sql.append(" ) ");
@@ -394,6 +404,37 @@ public class TargetedMSSchema extends UserSchema
             public FieldKey getContainerFieldKey()
             {
                 return FieldKey.fromParts("RunId", "Container");
+            }
+        },
+        RunVersionFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment();
+                sql.append(getJoinToRunsTable(null, "VersionId"));
+                return sql;
+            }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("VersionId", "Container");
+            }
+        },
+        EntryVersionFK
+        {
+            @Override
+            public SQLFragment getSQL()
+            {
+                SQLFragment sql = new SQLFragment();
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSkylineAuditLogEntry(), "e", "X.EntryId", "EntryId"));
+                sql.append(getJoinToRunsTable("e", "VersionId"));
+                return sql;
+            }
+            @Override
+            public FieldKey getContainerFieldKey()
+            {
+                return FieldKey.fromParts("EntryId", "VersionId", "Container");
             }
         },
         PeptideGroupFK
@@ -611,7 +652,7 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public TableInfo getLookupTableInfo()
             {
-                FilteredTable result = new FilteredTable<>(TargetedMSManager.getTableInfoRuns(), TargetedMSSchema.this, cf);
+                FilteredTable<TargetedMSSchema> result = new FilteredTable<>(TargetedMSManager.getTableInfoRuns(), TargetedMSSchema.this, cf);
                 result.addWrapColumn(result.getRealTable().getColumn("Id"));
                 result.addWrapColumn(result.getRealTable().getColumn("Description"));
                 result.addWrapColumn(result.getRealTable().getColumn("Created"));
@@ -685,7 +726,7 @@ public class TargetedMSSchema extends UserSchema
                 return result;
             }
 
-            private void addVersionsColumn(FilteredTable result)
+            private void addVersionsColumn(FilteredTable<?> result)
             {
                 var versionsCol = result.addWrapColumn("Versions", result.getRealTable().getColumn("ExperimentRunLSID"));
                 versionsCol.setTextAlign("right");
@@ -767,7 +808,7 @@ public class TargetedMSSchema extends UserSchema
             @Override
             public @Nullable TableInfo getLookupTableInfo()
             {
-                return TargetedMSManager.getTableInfoRuns();
+                return getTable(TABLE_RUNS, cf);
             }
         });
         result.addColumn(replacedByCol);
@@ -899,7 +940,7 @@ public class TargetedMSSchema extends UserSchema
         }
         if (TABLE_REPRESENTATIVE_DATA_STATE.equalsIgnoreCase(name))
         {
-            EnumTableInfo tableInfo = new EnumTableInfo<>(
+            EnumTableInfo<RepresentativeDataState> tableInfo = new EnumTableInfo<>(
                     RepresentativeDataState.class,
                     this,
                     RepresentativeDataState::getLabel,
@@ -1264,18 +1305,6 @@ public class TargetedMSSchema extends UserSchema
             return result;
         }
 
-        if (getTableNames().contains(name))
-        {
-            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this, cf);
-            result.wrapAllColumns(true);
-            if (name.equalsIgnoreCase(TABLE_RUNS))
-            {
-                result.getMutableColumn("DataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
-                result.getMutableColumn("SkydDataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
-            }
-            return result;
-        }
-
         // Issue 35966 - Show a custom set of columns by default for a run-scoped replicate view
         if (name.toLowerCase().startsWith(SAMPLE_FILE_RUN_PREFIX))
         {
@@ -1302,6 +1331,30 @@ public class TargetedMSSchema extends UserSchema
             return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.PrecursorFK);
         }
 
+        // TODO - partial fix for 40235
+//        if (TABLE_SKYLINE_AUDITLOG_ENTRY.equalsIgnoreCase(name))
+//        {
+//            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.RunVersionFK);
+//        }
+//
+//        if (TABLE_SKYLINE_AUDITLOG_MESSAGE.equalsIgnoreCase(name))
+//        {
+//            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.EntryVersionFK);
+//        }
+
+        if (getTableNames().contains(name))
+        {
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this, cf);
+            result.wrapAllColumns(true);
+            if (name.equalsIgnoreCase(TABLE_RUNS))
+            {
+                result.getMutableColumn("DataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
+                result.getMutableColumn("Owner").setFk(new UserIdQueryForeignKey(this, true));
+                result.getMutableColumn("SkydDataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
+            }
+            TargetedMSTable.fixupLookups(result);
+            return result;
+        }
 
         return null;
     }

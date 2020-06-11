@@ -192,6 +192,7 @@ public class SkylineAuditLogManager
             //since entries in the log file are in reverse chronological order we have to
             //read them in the list and then reverse it before the tree processing
             List<AuditLogEntry> entries = new ArrayList<>();
+            int hashValidationFailures = 0;
             //while next entry is not null
             while (pContext._parser.hasNextEntry())
             {
@@ -202,9 +203,13 @@ public class SkylineAuditLogManager
                     //throw or log the results based on the integrity level setting
                     if (!ent.verifyHash())
                     {
-                        _securityMgr.reportErrorForIntegrityLevel(
-                                String.format("Hash value verification failed for the log entry timestamped with %s", ent.getOffsetCreateTimestamp().toString()),
-                                SkylineAuditLogSecurityManager.INTEGRITY_LEVEL.ANY);
+                        if (hashValidationFailures == 0)
+                        {
+                            _securityMgr.reportErrorForIntegrityLevel(
+                                    String.format("Hash value verification failed for the log entry timestamped with %s. This is expected for older Skyline documents with audit logs that do not contain hashes. Suppressing warning for remainder of file", ent.getOffsetCreateTimestamp().toString()),
+                                    SkylineAuditLogSecurityManager.INTEGRITY_LEVEL.ANY);
+                        }
+                        hashValidationFailures++;
                     }
                     ent.setDocumentGUID(pContext._documentGUID);
                     entries.add(ent);
@@ -224,6 +229,24 @@ public class SkylineAuditLogManager
                             "Error when parsing audit log file.",
                             SkylineAuditLogSecurityManager.INTEGRITY_LEVEL.ANY, e);
                 }
+            }
+
+            if (!expander.areAllMessagesExpanded())
+            {
+                _logger.warn("At least one audit log expansion token failed to expand. This is expected for old Skyline documents, but not for newer ones");
+            }
+
+            if (hashValidationFailures > 0)
+            {
+                _securityMgr.reportErrorForIntegrityLevel(
+                        "Hash value verification failed for " + hashValidationFailures + " of " + entries.size() + " total entries",
+                        SkylineAuditLogSecurityManager.INTEGRITY_LEVEL.ANY);
+            }
+
+            // Issue 39455 - bail out if there were no audit log entries
+            if (entries.isEmpty())
+            {
+                return 0;
             }
 
             if(pContext._runId != null)       //set the document version id on the chronologically last log entry.

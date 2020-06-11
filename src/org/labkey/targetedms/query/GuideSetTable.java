@@ -29,6 +29,7 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.RowIdQueryUpdateService;
+import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
@@ -49,7 +50,7 @@ public class GuideSetTable extends FilteredTable<TargetedMSSchema>
         super(TargetedMSManager.getTableInfoGuideSet(), schema);
 
         wrapAllColumns(true);
-        getMutableColumn("Container").setFk(new ContainerForeignKey(schema));
+        TargetedMSTable.fixupLookups(this);
 
         // add expr column to calculate the reference end date for a guide set, can be null if it is the last guide set
         ExprColumn referenceEndCol = new ExprColumn(this, FieldKey.fromParts("ReferenceEnd"), getReferenceEndSql(ExprColumn.STR_TABLE_ALIAS), JdbcType.TIMESTAMP);

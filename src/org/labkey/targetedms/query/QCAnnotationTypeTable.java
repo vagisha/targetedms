@@ -50,7 +50,7 @@ public class QCAnnotationTypeTable extends FilteredTable<TargetedMSSchema>
     {
         super(TargetedMSManager.getTableInfoQCAnnotationType(), schema, cf);
         wrapAllColumns(true);
-        getMutableColumn("Container").setFk(new ContainerForeignKey(schema));
+        TargetedMSTable.fixupLookups(this);
         getMutableColumn("Color").setDisplayColumnFactory(new DisplayColumnFactory()
         {
             @Override

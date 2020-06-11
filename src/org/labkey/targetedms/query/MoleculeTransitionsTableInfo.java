@@ -21,6 +21,7 @@ import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.WrappedColumn;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.query.QueryForeignKey;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.view.AnnotationUIDisplayColumn;
@@ -46,6 +47,8 @@ public class MoleculeTransitionsTableInfo extends AbstractGeneralTransitionTable
         var precursorIdCol = wrapColumn("MoleculePrecursorId", getRealTable().getColumn(precursorCol.getFieldKey()));
         precursorIdCol.setFk(new TargetedMSForeignKey(getUserSchema(), TargetedMSSchema.TABLE_MOLECULE_PRECURSOR, cf));
         addColumn(precursorIdCol);
+
+        getMutableColumn("TransitionId").setFk(QueryForeignKey.from(getUserSchema(), cf).schema(getUserSchema()).table("transition"));
 
         SQLFragment sql = new SQLFragment(" COALESCE(" + ExprColumn.STR_TABLE_ALIAS + ".CustomIonName, " +
                 ExprColumn.STR_TABLE_ALIAS + ".IonFormula, "  +

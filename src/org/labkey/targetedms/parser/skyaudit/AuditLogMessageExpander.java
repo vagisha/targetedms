@@ -183,9 +183,9 @@ public class AuditLogMessageExpander
                 );
                 hasMatches = true;
             }
-            else{
+            else
+            {
                 _allMessagesExpanded = false;
-                _logger.warn(String.format("Audit log expansion token %s cannot be expanded. Either invalid function index or unknown name.", match.group(0)));
                 resultBuilder.append(match.group(0));
             }
             lastPos = match.end();

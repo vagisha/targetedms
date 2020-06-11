@@ -35,6 +35,7 @@ public class QCEnabledMetricsTable extends FilteredTable<TargetedMSSchema>
     public QCEnabledMetricsTable(TargetedMSSchema schema, ContainerFilter cf)
     {
         super(TargetedMSManager.getTableInfoQCEnabledMetrics(), schema, cf);
+        TargetedMSTable.fixupLookups(this);
         wrapAllColumns(true);
     }
 

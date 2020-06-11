@@ -42,15 +42,12 @@ public class SkylineAuditLogSecurityManager
 
     private INTEGRITY_LEVEL _verificationLevel;
     private Container _container;
-    private User _user;
     private Logger _logger;
-    private Module _panorama;
 
-    public SkylineAuditLogSecurityManager(Container pContainer, User pUser) throws AuditLogException{
+    public SkylineAuditLogSecurityManager(Container pContainer, User pUser) throws AuditLogException
+    {
         _container = pContainer;
-        _user = pUser;
         _logger = Logger.getLogger(this.getClass());
-
 
         TargetedMSModule targetedMSModule = null;
         for (Module m : _container.getActiveModules())
