@@ -15,6 +15,7 @@
 
 package org.labkey.targetedms.parser.blib;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -24,11 +25,14 @@ import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.pipeline.LocalDirectory;
+import org.labkey.api.targetedms.ITargetedMSRun;
+import org.labkey.api.targetedms.BlibSourceFiles;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
-import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.blib.BlibSpectrum.RedundantSpectrum;
+import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.view.spectrum.LibrarySpectrumMatchGetter;
 import org.sqlite.SQLiteConfig;
 
@@ -38,15 +42,21 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
 
@@ -85,7 +95,7 @@ public class BlibSpectrumReader
         if(!(new File(blibFilePath).exists()))
             return null;
 
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath))
+        try (Connection conn = getBlibConnection(blibFilePath))
         {
             BlibSpectrum spectrum = readSpectrum(conn, modifiedPeptide, charge);
             if(spectrum == null)
@@ -160,10 +170,7 @@ public class BlibSpectrumReader
 
         String blibPeptide = makePeptideBlibFormat(modifiedPeptide);
 
-        SQLiteConfig config = new SQLiteConfig();
-        config.setReadOnly(true);
-
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath, config.toProperties()))
+        try (Connection conn = getBlibConnection(blibFilePath))
         {
             if(!hasValidRtTable(conn))
             {
@@ -279,9 +286,9 @@ public class BlibSpectrumReader
         return modifiedSequence;
     }
 
-    private static boolean hasRetentionTimesTable(Connection conn) throws SQLException
+    private static boolean hasTable(Connection conn, String tableName) throws SQLException
     {
-        String tableCheckStmt = "SELECT name FROM sqlite_master WHERE type='table' AND name='RetentionTimes'";
+        String tableCheckStmt = "SELECT name FROM sqlite_master WHERE type='table' AND name='" + tableName + "'";
 
         try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery(tableCheckStmt))
         {
@@ -295,7 +302,7 @@ public class BlibSpectrumReader
 
     private static boolean hasValidRtTable(Connection conn) throws SQLException
     {
-        if(!hasRetentionTimesTable(conn))
+        if(!hasTable(conn, "RetentionTimes"))
         {
             return false;
         }
@@ -464,7 +471,7 @@ public class BlibSpectrumReader
         if (null == redundantBlibFilePath)
             return null;
 
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + redundantBlibFilePath))
+        try (Connection conn = getBlibConnection(redundantBlibFilePath))
         {
             BlibSpectrum spectrum = readRedundantSpectrum(conn, redundantRefSpectrumId);
             if(spectrum == null)
@@ -508,6 +515,71 @@ public class BlibSpectrumReader
 
             return spectrum;
         }
+    }
+
+    // Return a map of (blib file) -> (spectrum source files, id files)
+    public static Map<String, BlibSourceFiles> readBlibSourceFiles(ITargetedMSRun run)
+    {
+        Map<PeptideSettings.SpectrumLibrary, Path> libs = LibraryManager.getLibraryFilePaths(run.getId());
+
+        Map<String, BlibSourceFiles> m = new TreeMap<>();
+        for (Map.Entry<PeptideSettings.SpectrumLibrary, Path> entry : libs.entrySet())
+        {
+            if (!entry.getKey().getLibraryType().contains("bibliospec_lite"))
+                continue;
+
+            Path path = entry.getValue();
+            String blibFilePath = getLocalBlibPath(run.getContainer(), path);
+            if (null == blibFilePath)
+                continue;
+
+            Set<String> sourceFiles = new HashSet<>();
+            Set<String> idFiles = new HashSet<>();
+            try (Connection conn = getBlibConnection(blibFilePath))
+            {
+                if (!hasTable(conn, "SpectrumSourceFiles"))
+                {
+                    continue;
+                }
+                try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT * FROM SpectrumSourceFiles"))
+                {
+                    int fileNameColumn = -1;
+                    int idFileNameColumn = -1;
+                    ResultSetMetaData metadata = rs.getMetaData();
+                    for (int i = 1; i <= metadata.getColumnCount(); i++)
+                    {
+                        switch (metadata.getColumnName(i).toLowerCase())
+                        {
+                            case "filename":
+                                fileNameColumn = i;
+                                break;
+                            case "idfilename":
+                                idFileNameColumn = i;
+                                break;
+                        }
+                    }
+                    while (rs.next())
+                    {
+                        String fileName = rs.getString(fileNameColumn);
+                        String idFileName = idFileNameColumn >= 0 ? rs.getString(idFileNameColumn) : null;
+
+                        // Source spectrum file can be the same as the ID file if embedded spectra are used.
+                        // In this case, we only want it added once (as an ID file).
+                        if (!StringUtils.isBlank(fileName) && !fileName.equalsIgnoreCase(idFileName))
+                            sourceFiles.add(Paths.get(fileName).getFileName().toString());
+
+                        if (!StringUtils.isBlank(idFileName))
+                            idFiles.add(Paths.get(idFileName).getFileName().toString());
+                    }
+                }
+            }
+            catch (SQLException e)
+            {
+                throw new RuntimeException(e);
+            }
+            m.put(path.getFileName().toString(), new BlibSourceFiles(new ArrayList<>(sourceFiles), new ArrayList<>(idFiles)));
+        }
+        return m;
     }
 
 
@@ -591,5 +663,12 @@ public class BlibSpectrumReader
     public static void clearBlibCache(Container container)
     {
         _blibCache.clear();     // TODO: we could clear only keys from this container
+    }
+
+    private static Connection getBlibConnection(String blibFilePath) throws SQLException
+    {
+        SQLiteConfig config = new SQLiteConfig();
+        config.setReadOnly(true);
+        return DriverManager.getConnection("jdbc:sqlite:/" + blibFilePath, config.toProperties());
     }
 }
