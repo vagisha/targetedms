@@ -34,6 +34,7 @@ import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.security.permissions.ApplicationAdminPermission;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.targetedms.TargetedMSService;
+import org.labkey.api.targetedms.TargetedMSUrls;
 import org.labkey.api.targetedms.model.SampleFileInfo;
 import org.labkey.api.util.Button;
 import org.labkey.api.util.DOM;
@@ -6654,6 +6655,45 @@ public class TargetedMSController extends SpringActionController
         public void setJsonData(JSONObject jsonData)
         {
             this.jsonData = jsonData;
+        }
+    }
+
+    public static class TargetedMSUrlsImpl implements TargetedMSUrls
+    {
+        public static TargetedMSUrlsImpl get()
+        {
+            return (TargetedMSUrlsImpl) PageFlowUtil.urlProvider(TargetedMSUrls.class);
+        }
+        @Override
+        public ActionURL getDownloadDocumentUrl(Container container, int runId)
+        {
+            ActionURL url = new ActionURL(TargetedMSController.DownloadDocumentAction.class, container);
+            url.addParameter("id", runId);
+            return url;
+        }
+
+        @Override
+        public ActionURL getShowRunUrl(Container container, int runId)
+        {
+            ActionURL url = new ActionURL(TargetedMSController.ShowPrecursorListAction.class, container);
+            url.addParameter("id", runId);
+            return url;
+        }
+
+        @Override
+        public ActionURL getShowProteinUrl(Container container, int proteinId)
+        {
+            ActionURL url = new ActionURL(TargetedMSController.ShowProteinAction.class, container);
+            url.addParameter("id", proteinId);
+            return url;
+        }
+
+        @Override
+        public ActionURL getShowPeptideUrl(Container container, int peptideId)
+        {
+            ActionURL url = new ActionURL(TargetedMSController.ShowPeptideAction.class, container);
+            url.addParameter("id", peptideId);
+            return url;
         }
     }
 }
