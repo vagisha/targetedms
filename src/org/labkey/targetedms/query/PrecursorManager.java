@@ -472,7 +472,7 @@ public class PrecursorManager
         sql.append(" AND");
         sql.append(" prec.ModifiedSequence = ?");
         sql.add(prec.getModifiedSequence());
-        sql.append(" ORDER BY gp.Modified DESC ");
+        sql.append(" ORDER BY run.Modified DESC ");
 
         Precursor[] deprecatedPrecursors = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Precursor.class);
         if (deprecatedPrecursors.length == 0)
