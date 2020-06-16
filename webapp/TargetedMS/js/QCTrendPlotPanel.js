@@ -696,7 +696,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
 
                         // call processPlotData instead of renderPlots so that we recalculate min y-axis scale for log
                         this.setLoadingMsg();
-                        this.processPlotData(this.plotDataRows);
+                        this.getPlotsData();
                     }
                 }
             });
@@ -1320,7 +1320,7 @@ Ext4.define('LABKEY.targetedms.QCTrendPlotPanel', {
                 }
             }
 
-            this.prepareAndRenderQCPlot();
+            this.getPlotsData();
         }
     },
 

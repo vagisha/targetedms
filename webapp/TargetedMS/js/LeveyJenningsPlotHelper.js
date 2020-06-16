@@ -12,59 +12,53 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
         }
     },
 
-    getLJGuideSetData : function() {
-        this.getGuideSetData(false, false);
-    },
-
-    processLJGuideSetData : function(data)
+    processLJGuideSetData : function(plotDataRows)
     {
         this.guideSetDataMap = {};
         this.defaultGuideSet = {};
-        Ext4.each(data.rows, function(row) {
-            var guideSetId = row['GuideSetId'];
-            var seriesLabel = row['SeriesLabel'];
-            var seriesType = row['SeriesType'];
-            if (guideSetId) {
-                if (!this.guideSetDataMap[guideSetId]) {
-                    this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(row);
-                    this.hasGuideSetData = true;
-                }
+        Ext4.each(plotDataRows, function(plotDataRow) {
+            Ext4.each(plotDataRow.GuideSetStats, function(guideSetStat) {
+                var guideSetId = guideSetStat['GuideSetId'];
+                var seriesLabel = plotDataRow['SeriesLabel'];
+                var seriesType = guideSetStat['SeriesType'] === 2 ? 'series2' : 'series1';
 
-                if (!this.guideSetDataMap[guideSetId].Series[seriesLabel]) {
-                    this.guideSetDataMap[guideSetId].Series[seriesLabel] = {};
-                }
+                if (guideSetId > 0) {
+                    if (!this.guideSetDataMap[guideSetId]) {
+                        this.guideSetDataMap[guideSetId] = this.getGuideSetDataObj(guideSetStat);
+                    }
 
-                this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType] = {
-                    NumRecords: row['NumRecords'],
-                    Mean: row['Mean'],
-                    StandardDev: row['StandardDev']
-                };
-            }
-            else {
-                if (!this.defaultGuideSet) {
-                    this.defaultGuideSet = {};
-                }
+                    if (!this.guideSetDataMap[guideSetId].Series[seriesLabel]) {
+                        this.guideSetDataMap[guideSetId].Series[seriesLabel] = {};
+                    }
 
-                if (!this.defaultGuideSet[seriesLabel]) {
-                    this.defaultGuideSet[seriesLabel] = {};
+                    this.guideSetDataMap[guideSetId].Series[seriesLabel][seriesType] = {
+                        NumRecords: guideSetStat['NumRecords'],
+                        Mean: guideSetStat['LJMean'],
+                        StdDev: guideSetStat['LJStdDev']
+                    };
                 }
+                else {
+                    if (!this.defaultGuideSet) {
+                        this.defaultGuideSet = {};
+                    }
 
-                if (!this.defaultGuideSet[seriesLabel][seriesType]) {
-                    this.defaultGuideSet[seriesLabel][seriesType] = {};
+                    if (!this.defaultGuideSet[seriesLabel]) {
+                        this.defaultGuideSet[seriesLabel] = {};
+                    }
+
+                    if (!this.defaultGuideSet[seriesLabel][seriesType]) {
+                        this.defaultGuideSet[seriesLabel][seriesType] = {};
+                    }
+
+                    this.defaultGuideSet[seriesLabel][seriesType].LJ = {
+                        NumRecords: guideSetStat['NumRecords'],
+                        Mean: guideSetStat['LJMean'],
+                        StdDev: guideSetStat['LJStdDev']
+                    };
                 }
+            }, this);
 
-                this.defaultGuideSet[seriesLabel][seriesType].LJ = {
-                    NumRecords: row['NumRecords'],
-                    Mean: row['Mean'],
-                    StdDev: row['StandardDev']
-                };
-            }
         }, this);
-
-        if (this.showMovingRangePlot())
-            this.getRawGuideSetData(true);
-        else
-            this.getPlotData();
     },
 
     setLJSeriesMinMax: function(dataObject, row) {
@@ -158,24 +152,24 @@ Ext4.define("LABKEY.targetedms.LeveyJenningsPlotHelper", {
     {
         var data = {};
         // if a guideSetId is defined for this row, include the guide set stats values in the data object
-        if (Ext4.isDefined(row['GuideSetId']))
+        if (Ext4.isDefined(row['GuideSetId']) && row['GuideSetId'] > 0)
         {
             var gs = this.guideSetDataMap[row['GuideSetId']];
             if (Ext4.isDefined(gs) && gs.Series[fragment]&& gs.Series[fragment][seriesType])
             {
                 data['mean'] = gs.Series[fragment][seriesType]['Mean'];
-                data['stdDev'] = gs.Series[fragment][seriesType]['StandardDev'];
+                data['stdDev'] = gs.Series[fragment][seriesType]['StdDev'];
             }
         }
 
         if (this.isMultiSeries())
         {
-            data['value_' + seriesType] = row['MetricValue'];
+            data['value_' + seriesType] = row['Value'];
             data['value_' + seriesType + 'Title'] = metricProps[seriesType + 'Label'];
         }
         else
         {
-            data['value'] = row['MetricValue'];
+            data['value'] = row['Value'];
         }
         return data;
 

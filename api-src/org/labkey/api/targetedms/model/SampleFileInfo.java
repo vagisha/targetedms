@@ -18,16 +18,20 @@ public class SampleFileInfo extends OutlierCounts
     final Date acquiredTime;
     final int guideSetId;
     final boolean ignoreForAllMetric;
+    final String filePath;
+    final int replicateId;
     /** Use a TreeMap to keep the metrics sorted by name */
     final Map<String, OutlierCounts> byMetric = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-    public SampleFileInfo(int sampleId, Date acquiredTime, String sampleFile, int guideSetId, boolean ignoreForAllMetric)
+    public SampleFileInfo(int sampleId, Date acquiredTime, String sampleFile, int guideSetId, boolean ignoreForAllMetric, String filePath, Integer replicateId)
     {
         this.sampleId = sampleId;
         this.acquiredTime = acquiredTime;
         this.sampleFile = sampleFile;
         this.guideSetId = guideSetId;
         this.ignoreForAllMetric = ignoreForAllMetric;
+        this.filePath = filePath;
+        this.replicateId = replicateId;
     }
 
     public String getSampleFile()
@@ -60,6 +64,16 @@ public class SampleFileInfo extends OutlierCounts
         return byMetric;
     }
 
+    public String getFilePath()
+    {
+        return filePath;
+    }
+
+    public int getReplicateId()
+    {
+        return replicateId;
+    }
+
     public JSONArray getMetricsJSON()
     {
         JSONArray result = new JSONArray();
@@ -88,6 +102,18 @@ public class SampleFileInfo extends OutlierCounts
         jsonObject.put("GuideSetId", getGuideSetId());
         jsonObject.put("IgnoreForAllMetric", isIgnoreForAllMetric());
         jsonObject.put("Metrics", getMetricsJSON());
+
+        return jsonObject;
+    }
+
+    public JSONObject toQCPlotJSON()
+    {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put("SampleId", getSampleId());
+        jsonObject.put("ReplicateId", getReplicateId());
+        jsonObject.put("FilePath", getFilePath());
+        jsonObject.put("AcquiredTime", getAcquiredTime());
 
         return jsonObject;
     }

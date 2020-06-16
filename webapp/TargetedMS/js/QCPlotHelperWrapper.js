@@ -27,12 +27,6 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         }
     },
 
-    prepareAndRenderQCPlot : function() {
-        if (this.showLJPlot())
-            return this.getLJGuideSetData();
-        return this.getRawGuideSetData(this.showMovingRangePlot());
-    },
-
     addIndividualPrecursorPlots : function()
     {
         var addedPlot = false,
@@ -57,7 +51,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                     ids.push(id + '_plotType_' + j);
                 }
 
-                precursorInfo.precursorScoped ?
+                metricProps.precursorScoped ?
                         this.addPlotsToPlotDiv(ids, this.precursors[i] + ", " + precursorInfo.mz, this.plotDivId, 'qc-plot-wp'):
                         this.addPlotsToPlotDiv(ids, this.precursors[i], this.plotDivId, 'qc-plot-wp');
 
@@ -234,14 +228,16 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
         return plotData;
     },
 
-    processPlotDataRow: function(row, fragment, seriesType, metricProps)
+    processPlotDataRow: function(row, plotDataRow, fragment, metricProps)
     {
-        var dataType = row['DataType'];
-        var mz = Ext4.util.Format.number(row['mz'], '0.0000');
+        var dataType = plotDataRow['DataType'];
+        var mz = Ext4.util.Format.number(plotDataRow['mz'], '0.0000');
         if (!this.fragmentPlotData[fragment])
         {
             this.fragmentPlotData[fragment] = this.getInitFragmentPlotData(fragment, dataType, mz);
         }
+
+        var seriesType = row['SeriesType'] === 2 ? 'series2' : 'series1';
 
         var data = {
             type: 'data',
@@ -257,11 +253,11 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
             date: row['AcquiredTime'] ? this.formatDate(Ext4.Date.parse(row['AcquiredTime'], LABKEY.Utils.getDateTimeFormatWithMS())) : null,
             groupedXTick: row['AcquiredTime'] ? this.formatDate(Ext4.Date.parse(row['AcquiredTime'], LABKEY.Utils.getDateTimeFormatWithMS())) : null,
             dataType: dataType, //needed for plot point click handler
-            SeriesType: row['SeriesType']
+            SeriesType: seriesType
         };
 
         // if a guideSetId is defined for this row, include the guide set stats values in the data object
-        if (Ext4.isDefined(row['GuideSetId']))
+        if (Ext4.isDefined(row['GuideSetId']) && row['GuideSetId'] > 0)
         {
             var gs = this.guideSetDataMap[row['GuideSetId']];
             if (Ext4.isDefined(gs) && gs.Series[fragment])

@@ -16,6 +16,7 @@
 
 package org.labkey.targetedms;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.keypoint.PngEncoder;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -47,6 +48,7 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.model.GuideSet;
 import org.labkey.targetedms.model.GuideSetKey;
 import org.labkey.targetedms.model.GuideSetStats;
+import org.labkey.targetedms.model.QCPlotFragment;
 import org.labkey.targetedms.model.RawMetricDataSet;
 import org.labkey.targetedms.outliers.OutlierGenerator;
 import org.jfree.chart.title.TextTitle;
@@ -1037,19 +1039,160 @@ public class TargetedMSController extends SpringActionController
             List<GuideSet> guideSets = TargetedMSManager.getGuideSets(getContainer(), getUser());
             Map<Integer, QCMetricConfiguration> metricMap = enabledQCMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
 
-            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(getContainer(), getUser(), enabledQCMetricConfigurations);
+            List<RawMetricDataSet> rawMetricDataSets = OutlierGenerator.get().getRawMetricDataSets(getContainer(), getUser(), enabledQCMetricConfigurations, null, null, Collections.emptyList());
 
             Map<GuideSetKey, GuideSetStats> stats = OutlierGenerator.get().getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
 
             List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, getContainer(), form.getSampleLimit());
 
-            response.put("sampleFiles", sampleFiles.stream().map(sample -> sample.toJSON()).collect(Collectors.toList()));
+            response.put("sampleFiles", sampleFiles.stream().map(SampleFileInfo::toJSON).collect(Collectors.toList()));
             response.put("guideSets", guideSets.stream().map(x -> x.toJSON(rawMetricDataSets, metricMap, stats)).collect(Collectors.toList()));
 
             return response;
         }
     }
 
+    public static class QCPlotsDataForm
+    {
+        private int _metricId;
+        private boolean _includeLJ;
+        private boolean _includeMR;
+        private boolean _includeMeanCusum;
+        private boolean _includeVariableCusum;
+        private Date _startDate;
+        private Date _endDate;
+        private List<OutlierGenerator.AnnotationGroup> _selectedAnnotations;
+
+        public int getMetricId()
+        {
+            return _metricId;
+        }
+
+        public void setMetricId(int metricId)
+        {
+            this._metricId = metricId;
+        }
+
+        public boolean isIncludeLJ()
+        {
+            return _includeLJ;
+        }
+
+        public void setIncludeLJ(boolean includeLJ)
+        {
+            this._includeLJ = includeLJ;
+        }
+
+        public boolean isIncludeMR()
+        {
+            return _includeMR;
+        }
+
+        public void setIncludeMR(boolean includeMR)
+        {
+            this._includeMR = includeMR;
+        }
+
+        public boolean isIncludeMeanCusum()
+        {
+            return _includeMeanCusum;
+        }
+
+        public void setIncludeMeanCusum(boolean includeMeanCusum)
+        {
+            this._includeMeanCusum = includeMeanCusum;
+        }
+
+        public boolean isIncludeVariableCusum()
+        {
+            return _includeVariableCusum;
+        }
+
+        public void setIncludeVariableCusum(boolean includeVariableCusum)
+        {
+            this._includeVariableCusum = includeVariableCusum;
+        }
+
+        public Date getStartDate()
+        {
+            return _startDate;
+        }
+
+        public void setStartDate(java.sql.Date startDate)
+        {
+            _startDate = startDate;
+        }
+
+        public Date getEndDate()
+        {
+            return _endDate;
+        }
+
+        public void setEndDate(java.sql.Date endDate)
+        {
+            _endDate = endDate;
+        }
+
+        public List<OutlierGenerator.AnnotationGroup> getSelectedAnnotations()
+        {
+            return _selectedAnnotations;
+        }
+
+        public void setSelectedAnnotations(List<OutlierGenerator.AnnotationGroup> selectedAnnotations)
+        {
+            _selectedAnnotations = selectedAnnotations;
+        }
+    }
+
+    /**
+     * Action to get quality control plots data
+     * The returned data {@link QCPlotFragment} is separated by the peptide
+     * */
+    @RequiresPermission(ReadPermission.class)
+    @Marshal(Marshaller.Jackson)
+    public class GetQCPlotsDataAction extends ReadOnlyApiAction<QCPlotsDataForm>
+    {
+
+        @Override
+        protected ObjectMapper createRequestObjectMapper()
+        {
+            SimpleDateFormat df = new SimpleDateFormat("y-M-d");
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.setDateFormat(df);
+            return mapper;
+        }
+
+        @Override
+        public Object execute(QCPlotsDataForm form, BindException errors) throws Exception
+        {
+            ApiSimpleResponse response = new ApiSimpleResponse();
+            OutlierGenerator generator = OutlierGenerator.get();
+
+            int passedMetricId = form.getMetricId();
+
+            List<GuideSet> guideSets = TargetedMSManager.getGuideSets(getContainer(), getUser());
+
+            List<QCMetricConfiguration> qcMetricConfigurations = TargetedMSManager.get()
+                    .getEnabledQCMetricConfigurations(getContainer(), getUser())
+                    .stream()
+                    .filter(qcMetricConfiguration -> qcMetricConfiguration.getId() == passedMetricId)
+                    .collect(Collectors.toList());
+            List<RawMetricDataSet> rawMetricDataSets = generator.getRawMetricDataSets(getContainer(), getUser(), qcMetricConfigurations, form.getStartDate(), form.getEndDate(), form.getSelectedAnnotations());
+            Map<GuideSetKey, GuideSetStats> stats = generator.getAllProcessedMetricGuideSets(rawMetricDataSets, guideSets.stream().collect(Collectors.toMap(GuideSet::getRowId, Function.identity())));
+            Map<Integer, QCMetricConfiguration> metricMap = qcMetricConfigurations.stream().collect(Collectors.toMap(QCMetricConfiguration::getId, Function.identity()));
+            List<SampleFileInfo> sampleFiles = OutlierGenerator.get().getSampleFiles(rawMetricDataSets, stats, metricMap, getContainer(), null);
+            List<QCPlotFragment> qcPlotFragments = OutlierGenerator.get().getQCPlotFragment(rawMetricDataSets, stats);
+
+            response.put("sampleFiles", sampleFiles.stream().map(SampleFileInfo::toQCPlotJSON).collect(Collectors.toList()));
+            response.put("plotDataRows", qcPlotFragments
+                    .stream()
+                    .map(qcPlotFragment -> qcPlotFragment.toJSON(form.isIncludeLJ(), form.isIncludeMR(), form.isIncludeMeanCusum(), form.isIncludeVariableCusum()))
+                    .collect(Collectors.toList()));
+            response.put("metricProps", metricMap.get(passedMetricId).toJSON());
+
+            return response;
+        }
+    }
     // ------------------------------------------------------------------------
     // Action to show a list of chromatogram library archived revisions
     // ------------------------------------------------------------------------

@@ -199,6 +199,6 @@ public class SampleFile extends SkylineEntity
 
     public SampleFileInfo toSampleFileInfo()
     {
-        return new SampleFileInfo(getId(), getAcquiredTime(), getSampleName(), _guideSetId, _ignoreForAllMetric);
+        return new SampleFileInfo(getId(), getAcquiredTime(), getSampleName(), _guideSetId, _ignoreForAllMetric, getFilePath(), getReplicateId());
     }
 }

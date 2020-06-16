@@ -44,6 +44,9 @@ public class RawMetricDataSet
     Double cusumVP;
     Double cusumVN;
 
+    String filePath;
+    int replicateId;
+
     @Nullable
     public String getSeriesLabel()
     {
@@ -238,6 +241,26 @@ public class RawMetricDataSet
     public void setCUSUMvN(Double d)
     {
         this.cusumVN = d;
+    }
+
+    public String getFilePath()
+    {
+        return filePath;
+    }
+
+    public void setFilePath(String filePath)
+    {
+        this.filePath = filePath;
+    }
+
+    public int getReplicateId()
+    {
+        return replicateId;
+    }
+
+    public void setReplicateId(int replicateId)
+    {
+        this.replicateId = replicateId;
     }
 
     public boolean isLeveyJenningsOutlier(GuideSetStats stat)
