@@ -3594,7 +3594,7 @@ public class TargetedMSController extends SpringActionController
         {
             QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, LOG_QUERY_NAME);
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
-            settings.getQueryParameters().put("RUN_ID", form._id);
+            settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("RunId"), form.getId()));
             return schema.createView(getViewContext(), settings, errors);
         }
     }

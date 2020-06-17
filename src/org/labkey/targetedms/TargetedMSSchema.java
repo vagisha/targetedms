@@ -185,6 +185,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_GENERAL_PRECURSOR = "GeneralPrecursor";
     public static final String TABLE_GENERAL_TRANSITION = "GeneralTransition";
     public static final String TABLE_MOLECULE_PRECURSOR = "MoleculePrecursor";
+    public static final String TABLE_SKYLINE_AUDITLOG = "AuditLog";
     public static final String TABLE_SKYLINE_AUDITLOG_ENTRY = "AuditLogEntry";
     public static final String TABLE_SKYLINE_AUDITLOG_MESSAGE = "AuditLogMessage";
 
@@ -194,10 +195,10 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_LIST_ITEM_VALUE = "ListItemValue";
 
     public static final String TABLE_BIBLIOSPEC_LIB_INFO = "BibliospecLibInfo";
-    public static final String TABLE_HUNTER_LIB_INFO = "BibliospecLibInfo";
+    public static final String TABLE_HUNTER_LIB_INFO = "HunterLibInfo";
     public static final String TABLE_NIST_LIB_INFO = "NistLibInfo";
     public static final String TABLE_SPECTRAST_LIB_INFO = "SpectrastLibInfo";
-    public static final String TABLE_CHROMATOGRAM_LIB_INFO = "SpectrastLibInfo";
+    public static final String TABLE_CHROMATOGRAM_LIB_INFO = "ChromatogramLibInfo";
 
     public static final String COL_PROTEIN = "Protein";
     public static final String COL_LIST = "List";
@@ -205,7 +206,7 @@ public class TargetedMSSchema extends UserSchema
     /** Prefix for a run-specific table name, customized based on the data present within that run */
     public static final String SAMPLE_FILE_RUN_PREFIX = "samplefile_run";
 
-    private ExpSchema _expSchema;
+    private final ExpSchema _expSchema;
 
     static public void register(Module module)
     {
@@ -233,17 +234,27 @@ public class TargetedMSSchema extends UserSchema
 
     private static SQLFragment getJoinToRunsTable(String tableAlias)
     {
+        return getJoinToRunsTable(tableAlias, "RunId");
+    }
+
+    private static SQLFragment getJoinToRunsTable(String tableAlias, String columnName)
+    {
         tableAlias = tableAlias == null ? "" : tableAlias + ".";
         return makeInnerJoin(TargetedMSManager.getTableInfoRuns(),
-                TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, tableAlias + "RunId");
+                TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, tableAlias + columnName);
     }
 
     private static SQLFragment makeInnerJoin(TableInfo table, String alias, String colRight)
     {
+        return makeInnerJoin(table, alias, colRight, "id");
+    }
+
+    private static SQLFragment makeInnerJoin(TableInfo table, String alias, String colRight, String colLeft)
+    {
         SQLFragment sql = new SQLFragment("INNER JOIN ");
         sql.append(table, alias);
         sql.append(" ON ( ");
-        sql.append(alias).append(".id");
+        sql.append(alias).append(".").append(colLeft);
         sql.append(" = ");
         sql.append(colRight);
         sql.append(" ) ");
@@ -394,6 +405,22 @@ public class TargetedMSSchema extends UserSchema
                 return FieldKey.fromParts("RunId", "Container");
             }
         },
+        EntryVersionFK
+                {
+                    @Override
+                    public SQLFragment getSQL()
+                    {
+                        SQLFragment sql = new SQLFragment();
+                        sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSkylineAuditLog(), "e", "X.EntryId", "EntryId"));
+                        sql.append(getJoinToRunsTable("e", "RunId"));
+                        return sql;
+                    }
+                    @Override
+                    public FieldKey getContainerFieldKey()
+                    {
+                        return FieldKey.fromParts("EntryId", "RunId", "Container");
+                    }
+                },
         PeptideGroupFK
         {
             @Override
@@ -1250,6 +1277,23 @@ public class TargetedMSSchema extends UserSchema
         {
             TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.SampleFileFK);
             result.getMutableColumn("SampleFileId").setFk(new QueryForeignKey.Builder(this, cf).table(TABLE_SAMPLE_FILE));
+            return result;
+        }
+
+        if (TABLE_SKYLINE_AUDITLOG_ENTRY.equalsIgnoreCase(name))
+        {
+            // Swap for the view that pulls in the VersionId/RunId for every row. We keep its name the as AuditLogEntry
+            // for backwards compatibility with queries
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(TABLE_SKYLINE_AUDITLOG), this, cf, ContainerJoinType.RunFK);
+            result.setName(TABLE_SKYLINE_AUDITLOG_ENTRY);
+            result.getMutableColumn("RunId").setFk(QueryForeignKey.from(this, cf).table(TABLE_RUNS));
+            return result;
+        }
+
+        if (TABLE_SKYLINE_AUDITLOG_MESSAGE.equalsIgnoreCase(name))
+        {
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.EntryVersionFK);
+            result.getMutableColumn("EntryId").setFk(QueryForeignKey.from(this, cf).table(TABLE_SKYLINE_AUDITLOG_ENTRY));
             return result;
         }
 
