@@ -7,7 +7,7 @@
         <column name="message_text"/>
     </columns>
     <sorts>
-        <sort column="entryId" descending="false"/>
-        <sort column="orderNumber" descending="false"/>
+        <sort column="entryId" />
+        <sort column="orderNumber" />
     </sorts>
 </customView>

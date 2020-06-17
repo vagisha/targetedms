@@ -13,22 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-PARAMETERS(RUN_ID INTEGER)
-WITH logTree as (
-  SELECT entryId
-       , entryHash
-       , parentEntryHash
-  FROM targetedms.AuditLogEntry e
-  WHERE e.versionId = RUN_ID
-  UNION ALL
-  SELECT nxt.entryId
-       , nxt.entryHash
-       , nxt.parentEntryHash
-  FROM targetedms.AuditLogEntry nxt
-         JOIN logTree prev
-              ON prev.parentEntryHash = nxt.entryHash
-)
-SELECT tree.entryId
+SELECT ent.RunId,
+       ent.entryId
      , CASE when msg.orderNumber = 0 THEN ent.createTimestamp END	create_timestamp
      , CASE when msg.orderNumber = 0 THEN ent.documentGUID END		document_guid
      , CASE when msg.orderNumber = 0 THEN ent.reason END			reason
@@ -43,9 +29,6 @@ SELECT tree.entryId
   END					message_type
      , msg.messageType		message_info_type
      , msg.enText			message_text
-FROM logTree tree
-       JOIN targetedms.AuditLogEntry ent
-            ON tree.entryId = ent.entryId
+FROM targetedms.AuditLogEntry ent
        JOIN targetedms.AuditLogMessage msg
             ON ent.entryId = msg.entryId
-ORDER BY ent.createTimestamp, msg.orderNumber

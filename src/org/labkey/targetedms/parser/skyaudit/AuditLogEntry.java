@@ -64,14 +64,8 @@ public class AuditLogEntry
     public static AuditLogEntry retrieve(int pEntryId, ViewContext viewContext)
     {
         TargetedMSSchema schema = new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer());
-        QueryDefinition qTableDef = schema.getQueryDef("AuditLogEntryContainers");
-        TableSelector sel =  new TableSelector(qTableDef.getTable(new ArrayList<>(), true));
-        Map<String, Object> params =  new HashMap<>();
-        params.put("ENTRY_ID", pEntryId);
-        params.put("CONTAINER_ID", viewContext.getContainer().getEntityId().toString());
-        sel.setNamedParameters(params);
-        AuditLogEntry res = sel.getObject(AuditLogEntry.class);
-        return res;
+        TableSelector sel =  new TableSelector(schema.getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_ENTRY), new SimpleFilter(FieldKey.fromParts("EntryId"), pEntryId), null);
+        return sel.getObject(AuditLogEntry.class);
     }
 
     public AuditLogTree getTreeEntry(){
@@ -98,6 +92,16 @@ public class AuditLogEntry
         _entryId = entryId;
     }
 
+    /** RunId is a synonym for VersionId */
+    public Integer getRunId()
+    {
+        return getVersionId();
+    }
+
+    public void setRunId(Integer runId)
+    {
+        setVersionId(runId);
+    }
 
     public Integer getVersionId()
     {

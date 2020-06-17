@@ -187,6 +187,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_GENERAL_PRECURSOR = "GeneralPrecursor";
     public static final String TABLE_GENERAL_TRANSITION = "GeneralTransition";
     public static final String TABLE_MOLECULE_PRECURSOR = "MoleculePrecursor";
+    public static final String TABLE_SKYLINE_AUDITLOG = "AuditLog";
     public static final String TABLE_SKYLINE_AUDITLOG_ENTRY = "AuditLogEntry";
     public static final String TABLE_SKYLINE_AUDITLOG_MESSAGE = "AuditLogMessage";
 
@@ -196,10 +197,10 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_LIST_ITEM_VALUE = "ListItemValue";
 
     public static final String TABLE_BIBLIOSPEC_LIB_INFO = "BibliospecLibInfo";
-    public static final String TABLE_HUNTER_LIB_INFO = "BibliospecLibInfo";
+    public static final String TABLE_HUNTER_LIB_INFO = "HunterLibInfo";
     public static final String TABLE_NIST_LIB_INFO = "NistLibInfo";
     public static final String TABLE_SPECTRAST_LIB_INFO = "SpectrastLibInfo";
-    public static final String TABLE_CHROMATOGRAM_LIB_INFO = "SpectrastLibInfo";
+    public static final String TABLE_CHROMATOGRAM_LIB_INFO = "ChromatogramLibInfo";
 
     public static final String COL_PROTEIN = "Protein";
     public static final String COL_LIST = "List";
@@ -207,7 +208,7 @@ public class TargetedMSSchema extends UserSchema
     /** Prefix for a run-specific table name, customized based on the data present within that run */
     public static final String SAMPLE_FILE_RUN_PREFIX = "samplefile_run";
 
-    private ExpSchema _expSchema;
+    private final ExpSchema _expSchema;
 
     static public void register(Module module)
     {
@@ -1302,6 +1303,35 @@ public class TargetedMSSchema extends UserSchema
         {
             TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.SampleFileFK);
             result.getMutableColumn("SampleFileId").setFk(new QueryForeignKey.Builder(this, cf).table(TABLE_SAMPLE_FILE));
+            return result;
+        }
+
+        if (TABLE_SKYLINE_AUDITLOG_ENTRY.equalsIgnoreCase(name))
+        {
+            // Swap for the view that pulls in the VersionId/RunId for every row. We keep its name the as AuditLogEntry
+            // for backwards compatibility with queries
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(TABLE_SKYLINE_AUDITLOG), this, cf, ContainerJoinType.RunFK);
+            result.setName(TABLE_SKYLINE_AUDITLOG_ENTRY);
+            result.getMutableColumn("RunId").setFk(QueryForeignKey.from(this, cf).table(TABLE_RUNS));
+            return result;
+        }
+
+        if (TABLE_SKYLINE_AUDITLOG_MESSAGE.equalsIgnoreCase(name))
+        {
+            TargetedMSTable result = new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.EntryVersionFK);
+            result.getMutableColumn("EntryId").setFk(QueryForeignKey.from(this, cf).table(TABLE_SKYLINE_AUDITLOG_ENTRY));
+            return result;
+        }
+
+        if (getTableNames().contains(name))
+        {
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this, cf);
+            result.wrapAllColumns(true);
+            if (name.equalsIgnoreCase(TABLE_RUNS))
+            {
+                result.getMutableColumn("DataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
+                result.getMutableColumn("SkydDataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
+            }
             return result;
         }
 

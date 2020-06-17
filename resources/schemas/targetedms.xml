@@ -1538,6 +1538,28 @@
             <column columnName="ExtraInfo"/>
         </columns>
     </table>
+    <!-- View version of the AuditLogEntry table that uses a CTE to get the VersionId/RunId for every row -->
+    <table tableName="AuditLog" tableDbType="VIEW">
+        <columns>
+            <column columnName="EntryId"/>
+            <column columnName="DocumentGUID"/>
+            <column columnName="EntryHash" />
+            <column columnName="RunId">
+                <fk>
+                    <fkColumnName>Id</fkColumnName>
+                    <fkDbSchema>targetedms</fkDbSchema>
+                    <fkTable>Runs</fkTable>
+                </fk>
+            </column>
+            <column columnName="CreateTimestamp"/>
+            <column columnName="TimeZoneOffset"/>
+            <column columnName="UserName"/>
+            <column columnName="FormatVersion"/>
+            <column columnName="ParentEntryHash"/>
+            <column columnName="Reason"/>
+            <column columnName="ExtraInfo"/>
+        </columns>
+    </table>
     <table tableName="AuditLogMessage" tableDbType="TABLE">
         <columns>
             <column columnName="MessageId"/>

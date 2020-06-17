@@ -30,7 +30,9 @@ import org.labkey.api.targetedms.SkylineAnnotation;
 import org.labkey.api.targetedms.TargetedMSFolderTypeListener;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.targetedms.model.SampleFileInfo;
+import org.labkey.api.targetedms.BlibSourceFiles;
 import org.labkey.api.view.ViewBackgroundInfo;
+import org.labkey.targetedms.parser.blib.BlibSpectrumReader;
 import org.labkey.targetedms.query.ModificationManager;
 import org.labkey.targetedms.query.ReplicateManager;
 
@@ -38,6 +40,7 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -143,6 +146,12 @@ public class TargetedMSServiceImpl implements TargetedMSService
     public List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(int runId)
     {
         return ModificationManager.getIsotopeModificationsUsedInRun(runId);
+    }
+
+    @Override
+    public Map<String, BlibSourceFiles> getBlibSourceFiles(ITargetedMSRun run)
+    {
+        return BlibSpectrumReader.readBlibSourceFiles(run);
     }
 
     @Override

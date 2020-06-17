@@ -507,6 +507,12 @@ public class TargetedMSManager
         return getSchema().getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_ENTRY);
     }
 
+    /** View that's a CTE to pull in the RunId */
+    public static TableInfo getTableInfoSkylineAuditLog()
+    {
+        return getSchema().getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG);
+    }
+
     public static TableInfo getTableInfoSkylineAuditLogMessage()
     {
         return getSchema().getTable(TargetedMSSchema.TABLE_SKYLINE_AUDITLOG_MESSAGE);
