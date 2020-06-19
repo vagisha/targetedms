@@ -314,7 +314,7 @@ function toggleCheckboxSelection(element)
          </tr>
     <%}%>
     </tbody>
-    <thead>
+    <tfoot>
         <tr>
             <th colspan="<%=colspan%>"><span style="text-decoration:underline;cursor:pointer;" id="selectAllNew">Select All</span></th>
             <th colspan="<%=colspan%>"><span style="text-decoration:underline;cursor:pointer;" id="selectAllOld">Select All</span></th>
@@ -328,5 +328,5 @@ function toggleCheckboxSelection(element)
                 </div>
             </th>
         </tr>
-    </thead>
+    </tfoot>
 </table>

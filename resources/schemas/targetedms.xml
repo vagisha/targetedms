@@ -401,6 +401,9 @@
             <column columnName="ExplicitCcsSqa"/>
             <column columnName="ExplicitCompensationVoltage"/>
             <column columnName="PrecursorConcentration"/>
+            <column columnName="Modified">
+                <formatString>DateTime</formatString>
+            </column>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="MoleculePrecursor">
