@@ -407,35 +407,20 @@ public class TargetedMSSchema extends UserSchema
                 return FieldKey.fromParts("RunId", "Container");
             }
         },
-        RunVersionFK
-        {
-            @Override
-            public SQLFragment getSQL()
-            {
-                SQLFragment sql = new SQLFragment();
-                sql.append(getJoinToRunsTable(null, "VersionId"));
-                return sql;
-            }
-            @Override
-            public FieldKey getContainerFieldKey()
-            {
-                return FieldKey.fromParts("VersionId", "Container");
-            }
-        },
         EntryVersionFK
         {
             @Override
             public SQLFragment getSQL()
             {
                 SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSkylineAuditLogEntry(), "e", "X.EntryId", "EntryId"));
-                sql.append(getJoinToRunsTable("e", "VersionId"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSkylineAuditLog(), "e", "X.EntryId", "EntryId"));
+                sql.append(getJoinToRunsTable("e", "RunId"));
                 return sql;
             }
             @Override
             public FieldKey getContainerFieldKey()
             {
-                return FieldKey.fromParts("EntryId", "VersionId", "Container");
+                return FieldKey.fromParts("EntryId", "RunId", "Container");
             }
         },
         PeptideGroupFK
