@@ -15,8 +15,8 @@
  */
 package org.labkey.targetedms.parser.skyaudit;
 
+import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.labkey.api.util.GUID;
 
 import java.util.ArrayList;
@@ -24,20 +24,22 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 public class AuditLogTree implements Iterable<AuditLogTree>
 {
     public static final String NULL_STRING = "(null)";
 
-    private Map<String, AuditLogTree> _children = new HashMap<>();
-    private String _entryHash;
-    private GUID _documentGUID;
-    private String _parentEntryHash;
-    private int _entryId;
+    private static final Logger LOG = Logger.getLogger(AuditLogTree.class);
+
+    private final Map<String, AuditLogTree> _children = new HashMap<>();
+    private final String _entryHash;
+    private final GUID _documentGUID;
+    private final String _parentEntryHash;
+    private final int _entryId;
     private Integer _versionId;     //runId of the document if this record is the last in that document's log. Null otherwise.
 
-    public AuditLogTree(int pEntryid, GUID pDocumentGUID, String pEntryHash, String pParentEntryHash, Integer pVersionId){
+    public AuditLogTree(int pEntryid, GUID pDocumentGUID, String pEntryHash, String pParentEntryHash, Integer pVersionId)
+    {
         _entryHash = pEntryHash;
         _documentGUID = pDocumentGUID;
         _parentEntryHash = pParentEntryHash;
@@ -77,24 +79,11 @@ public class AuditLogTree implements Iterable<AuditLogTree>
         return pChild;
     }
 
-    public int addChildren(Iterable<AuditLogTree> pChildren)
+    public boolean hasChild(String pEntryHash)
     {
-        int i = 0;
-        for(AuditLogTree c : pChildren)
-        {
-            addChild(c);
-            i++;
-        }
-        return i;
-    }
-
-    public boolean hasChild(AuditLogTree pEntry)
-    {
-        return _children.containsKey(pEntry._entryHash);
-    }
-    public boolean hasChild(String pEntryHash){
         return _children.containsKey(pEntryHash);
     }
+
     public AuditLogTree getChild(String pEntryHash) {
         return _children.getOrDefault(pEntryHash, null);
     }
@@ -105,7 +94,7 @@ public class AuditLogTree implements Iterable<AuditLogTree>
 
     private int getTreeSizeRecursive(int pSize){
         int s = 0;
-        for(AuditLogTree t : this)
+        for (AuditLogTree t : this)
             s += t.getTreeSizeRecursive(pSize);
         return pSize + _children.size() + s;
     }
@@ -117,61 +106,79 @@ public class AuditLogTree implements Iterable<AuditLogTree>
      * @param versionId  runId of the document version to be deleted
      * @return list of entries that can be deleted safely without corrupting other versions' logs.
      */
-    public List<AuditLogTree> deleteList(int versionId){
-        List<AuditLogTree> result = new ArrayList<>();
-        recursiveDeleteList(versionId, result);
-        return result;
-    }
-
-    /***
-     * Finds log entries that belong to the given document version only and not to any other version.
-     * The found entries are removed from the tree and moved to the deletedEntries list.
-     * @param versionId run ID of the document being deleted
-     * @param deleteEntries list of elements to be physically deleted.
-     * @return versionId if this child should be deleted, null otherwise.
-     */
-    @Nullable
-    private Integer recursiveDeleteList(int versionId, List<AuditLogTree> deleteEntries)
+    public List<AuditLogTree> deleteList(int versionId)
     {
-        if (_children.size() == 0)      //if this is a leaf
+        List<AuditLogTree> toDelete = new ArrayList<>();
+        List<StackEntry> stack = new ArrayList<>();
+        stack.add(new StackEntry(null, this));
+
+        int index = 0;
+
+        // Do a breadth-first traversal to build our stack. Don't use the call stack to avoid StackOverflowErrors - see issue 40693
+        while (index < stack.size())
         {
-            if (this._versionId == null)
+            StackEntry stackEntry = stack.get(index++);
+            for (AuditLogTree child : stackEntry._entry._children.values())
             {
-                if(this._entryId != 0)                  //No need to check for the root node.
-                {
-                    Logger.getLogger(this.getClass().getCanonicalName()).warning(
-                            String.format("Audit log entry with ID %d is a leaf but has no version ID. This might be a data corruption.", this._entryId));
-                }
-                return null;
+                stack.add(new StackEntry(stackEntry._entry, child));
             }
-            else if (versionId == this._versionId)      //check if it is the right version id
-                return versionId;
-            else
-                return null;
         }
-        else
+
+        // Now look at them in reverse order,
+        for (int i = stack.size() - 1; i >= 0; i--)
         {
-            for (Map.Entry<String, AuditLogTree> child : _children.entrySet())
-            {       //performing depth-first search because audit log trees are typically deeper than wider.
-                if (child.getValue().recursiveDeleteList(versionId, deleteEntries) != null)
-                {       //if the child is from the right branch add it to the deletion list and remove from the tree.
-                    deleteEntries.add(child.getValue());
-                    _children.remove(child.getKey());
-                    if (_children.size() == 0 && _versionId == null)      //if there are no other children and the entry does not belong to another version continue down the branch
-                        return versionId;
-                    else
-                        return null;    //otherwise stop because this entry belongs to more than one version.
+            StackEntry stackEntry = stack.get(i);
+            AuditLogTree currentEntry = stackEntry._entry;
+            if (currentEntry._children.size() == 0)      //if this is a leaf
+            {
+                if (currentEntry._versionId == null)
+                {
+                    if (currentEntry._entryId != 0)                  //No need to check for the root node.
+                    {
+                        LOG.warn(String.format("Audit log entry with ID %d is a leaf but has no version ID. This might be a data corruption.", this._entryId));
+                    }
+                }
+                else if (versionId == currentEntry._versionId)      //check if it is the right version id
+                {
+                    // Stash it for deletion
+                    toDelete.add(currentEntry);
+                    AuditLogTree parent = stackEntry._parent;
+                    if (parent != null)
+                    {
+                        parent._children.remove(currentEntry.getEntryHash());
+                        // Check if the parent is now the last hop in the chain
+                        if (parent._children.isEmpty() && parent._versionId == null)
+                        {
+                            parent._versionId = versionId;
+                        }
+                    }
                 }
             }
-            return null;    //We didn't find the versionId in any of the children.
+        }
+
+        return toDelete;
+    }
+
+    /** For traversing the tree of audit entries, we need to hold both the parent and the child in the relationship */
+    private static class StackEntry
+    {
+        private final AuditLogTree _parent;
+        private final AuditLogTree _entry;
+
+        public StackEntry(AuditLogTree parent, AuditLogTree entry)
+        {
+            _parent = parent;
+            _entry = entry;
         }
     }
 
-    public AuditLogTree findVersionEntry(int pVersionId){
+    public AuditLogTree findVersionEntry(int pVersionId)
+    {
         return recursiveFindVersionEntry(pVersionId);
     }
 
-    private AuditLogTree recursiveFindVersionEntry(int pVersionId){
+    private AuditLogTree recursiveFindVersionEntry(int pVersionId)
+    {
         if (this._versionId != null && this._versionId == pVersionId)      //check if it is the right version id
             return this;
         else
@@ -193,16 +200,18 @@ public class AuditLogTree implements Iterable<AuditLogTree>
     }
 
     @Override
-    public int hashCode(){
-        if(this._entryHash != null)
+    public int hashCode()
+    {
+        if (this._entryHash != null)
             return this._entryHash.hashCode();
         else
             return super.hashCode();
     }
 
     @Override
-    public boolean equals(Object o){
-        if( o instanceof AuditLogTree)
+    public boolean equals(Object o)
+    {
+        if (o instanceof AuditLogTree)
         {
             if(this._entryHash == null) return false;
             return (this._entryHash.equals( ((AuditLogTree) o)._entryHash) );

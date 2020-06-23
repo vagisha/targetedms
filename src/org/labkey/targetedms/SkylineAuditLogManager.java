@@ -24,6 +24,7 @@ import org.labkey.api.data.BaseSelector;
 import org.labkey.api.data.CompareType;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
+import org.labkey.api.data.DbScope;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlExecutor;
@@ -381,22 +382,27 @@ public class SkylineAuditLogManager
         AuditLogTree root = buildLogTree(new GUID(objGUID));
         List<Integer> deleteEntryIds = root.deleteList(pRunId).stream().map(AuditLogTree::getEntryId).collect(Collectors.toList());
 
-        if(deleteEntryIds.size() > 0)
+        try (DbScope.Transaction t = TargetedMSManager.getSchema().getScope().ensureTransaction())
         {
-            SimpleFilter entryFilter = new SimpleFilter(
-                    new SimpleFilter.InClause(FieldKey.fromParts("entryId"), deleteEntryIds, false)
-            );
-            Table.delete(TargetedMSManager.getTableInfoSkylineAuditLogMessage(), entryFilter);
-            Table.delete(TargetedMSManager.getTableInfoSkylineAuditLogEntry(), entryFilter);
-        }
-        else{
-            AuditLogTree versionTree = root.findVersionEntry(pRunId);
-            if(versionTree != null)
+            if (deleteEntryIds.size() > 0)
             {
-                SQLFragment sqlUpdate = new SQLFragment("UPDATE targetedms.AuditLogEntry SET versionId = NULL WHERE entryId = ?");
-                sqlUpdate.add(versionTree.getEntryId());
-                new SqlExecutor(TargetedMSManager.getSchema()).execute(sqlUpdate);
+                SimpleFilter entryFilter = new SimpleFilter(
+                        new SimpleFilter.InClause(FieldKey.fromParts("entryId"), deleteEntryIds, false)
+                );
+                Table.delete(TargetedMSManager.getTableInfoSkylineAuditLogMessage(), entryFilter);
+                Table.delete(TargetedMSManager.getTableInfoSkylineAuditLogEntry(), entryFilter);
             }
+            else
+            {
+                AuditLogTree versionTree = root.findVersionEntry(pRunId);
+                if (versionTree != null)
+                {
+                    SQLFragment sqlUpdate = new SQLFragment("UPDATE targetedms.AuditLogEntry SET versionId = NULL WHERE entryId = ?");
+                    sqlUpdate.add(versionTree.getEntryId());
+                    new SqlExecutor(TargetedMSManager.getSchema()).execute(sqlUpdate);
+                }
+            }
+            t.commit();
         }
     }
 
