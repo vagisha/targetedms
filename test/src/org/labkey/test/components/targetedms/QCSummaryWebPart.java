@@ -127,7 +127,7 @@ public final class QCSummaryWebPart extends BodyWebPart<QCSummaryWebPart.Element
     {
         private final WebElement _el;
 
-        private final Locator emptyText = Locator.tagWithClass("div", "item-text").withText("No sample files imported");
+        private final Locator emptyText = Locator.tagWithClass("div", "qc-summary-text").withText("No sample files imported");
         private final WebElement folderLink = Locator.css("div.folder-name a").findWhenNeeded(this);
         private final WebElement autoQCIcon = Locator.css("div.auto-qc-ping span").findWhenNeeded(this);
         private List<WebElement> _recentSampleFiles;

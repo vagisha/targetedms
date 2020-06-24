@@ -129,16 +129,16 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
                     '</div>',
                 '</tpl>',
                 '<tpl if="docCount == 0 && isParent !== true">',
-                    '<div class="item-text">No sample files imported</div>',
+                    '<div class="qc-summary-text">No sample files imported</div>',
                     '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
                 '<tpl elseif="docCount == 0 && parentOnly">',
-                    '<div class="item-text">No data found.</div>',
+                    '<div class="qc-summary-text">No data found.</div>',
                 '<tpl elseif="docCount &gt; 0">',
-                    '<div class="item-text">',
+                    '<div class="qc-summary-text">',
                         '<a href="{path:this.getSampleFileLink}">{fileCount} sample file{fileCount:this.pluralize}</a> ' +
                             'tracking {precursorCount} precursor{precursorCount:this.pluralize} with {metricCount} metric{metricCount:this.pluralize}',
                     '</div>',
-                    '<div class="item-text sample-file-details sample-file-details-loading" id="qc-summary-samplefiles-{id}">...</div>',
+                    '<div class="item-text sample-file-details sample-file-details-loading" id="qc-summary-samplefiles-{id}">Loading...</div>',
                     '<div class="auto-qc-ping" id="{autoQcCalloutId}">AutoQC <span class="{autoQCPing:this.getAutoQCPingClass}"></span></div>',
                 '</tpl>',
             '</tpl>',
@@ -283,7 +283,7 @@ Ext4.define('LABKEY.targetedms.QCSummary', {
             });
             html += '</table>';
             if (container.fileCount > sampleFiles.length) {
-                html += '<div class="item-text">Showing only the most recently imported samples. <a href="' + LABKEY.ActionURL.buildURL('targetedms', 'qcSummaryHistory.view', container.path) + '">View all</a></div>';
+                html += '<div class="qc-summary-text">Showing only the most recently imported samples. <a href="' + LABKEY.ActionURL.buildURL('targetedms', 'qcSummaryHistory.view', container.path) + '">View all</a></div>';
             }
             var sampleFilesDiv = Ext4.get('qc-summary-samplefiles-' + container.id);
             sampleFilesDiv.update(html);

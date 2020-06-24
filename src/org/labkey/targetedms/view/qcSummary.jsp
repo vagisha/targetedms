@@ -38,7 +38,7 @@
     Integer sampleLimit = (Integer)HttpView.currentModel();
 %>
 
-<div id=<%=q(qcSummaryId)%>></div>
+<div style="min-height: 160px;" id=<%=q(qcSummaryId)%> ></div>
 
 <script type="text/javascript">
     Ext4.onReady(function()
