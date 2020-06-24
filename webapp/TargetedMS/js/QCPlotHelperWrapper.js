@@ -51,9 +51,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperWrapper", {
                     ids.push(id + '_plotType_' + j);
                 }
 
-                metricProps.precursorScoped ?
-                        this.addPlotsToPlotDiv(ids, this.precursors[i] + ", " + precursorInfo.mz, this.plotDivId, 'qc-plot-wp'):
-                        this.addPlotsToPlotDiv(ids, this.precursors[i], this.plotDivId, 'qc-plot-wp');
+                this.addPlotsToPlotDiv(ids, this.precursors[i], this.plotDivId, 'qc-plot-wp');
 
                 var plotIndex = 0;
                 // add a new panel for each plot so we can add the title to the frame

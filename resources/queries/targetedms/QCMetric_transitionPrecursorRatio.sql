@@ -14,11 +14,7 @@
  * limitations under the License.
  */
 SELECT
-  COALESCE(PrecursorId.Id, MoleculePrecursorId.Id) AS PrecursorId,
   Id AS PrecursorChromInfoId,
   SampleFileId AS SampleFileId,
-  COALESCE(PrecursorId.ModifiedSequence, MoleculePrecursorId.CustomIonName, MoleculePrecursorId.IonFormula) || (CASE WHEN COALESCE(PrecursorId.Charge, MoleculePrecursorId.Charge) > 0 THEN ' +' ELSE ' ' END) || CAST(COALESCE(PrecursorId.Charge, MoleculePrecursorId.Charge) AS VARCHAR) AS SeriesLabel,
-  CASE WHEN PrecursorId.Id IS NOT NULL THEN 'Peptide' ELSE 'Fragment' END AS DataType,
-  TransitionPrecursorRatio AS MetricValue,
-  COALESCE(PrecursorId.Mz, MoleculePrecursorId.Mz) AS mz
+  TransitionPrecursorRatio AS MetricValue
 FROM PrecursorChromInfo

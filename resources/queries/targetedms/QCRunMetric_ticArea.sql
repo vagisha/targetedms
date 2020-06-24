@@ -15,11 +15,8 @@
  */
 
 SELECT
-  0 AS PrecursorId,
   0 AS PrecursorChromInfoId,
   Id AS SampleFileId,
   'Total Ion Chromatogram Area' AS SeriesLabel,
-  NULL AS DataType,
-  TicArea AS MetricValue,
-  0.0 AS mz
+  TicArea AS MetricValue
 FROM SampleFile

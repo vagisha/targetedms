@@ -125,12 +125,26 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         List<String> metricNames = Arrays.asList("retentionTime", "peakArea", "fwhm", "fwb", "lhRatio", "transitionPrecursorRatio", "massAccuracy", "transitionArea", "precursorArea");
         for (String metricName : metricNames)
         {
-            String sql = "SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, SeriesLabel,\n" +
+            String sql = "SELECT gs.RowId AS GuideSetId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, \n" +
+                    "COALESCE(pci.PrecursorId.PeptideId.Sequence, COALESCE(pci.PrecursorId.ModifiedSequence,\n" +
+                    "((CASE WHEN pci.MoleculePrecursorId.CustomIonName IS NULL THEN '' ELSE (pci.MoleculePrecursorId.CustomIonName || ', ') END)\n" +
+                    "   || (CASE WHEN pci.MoleculePrecursorId.IonFormula IS NULL THEN '' ELSE (pci.MoleculePrecursorId.IonFormula || ', ') END)\n" +
+                    "   || ('[' || CAST (ROUND(pci.MoleculePrecursorId.massMonoisotopic, 4) AS VARCHAR) || '/') \n" +
+                    "   || CAST (ROUND(pci.MoleculePrecursorId.massAverage, 4) AS VARCHAR) || '] '))) \n" +
+                    "|| (CASE WHEN COALESCE(pci.PrecursorId.Charge, pci.MoleculePrecursorId.Charge) > 0 THEN ' +' ELSE ' ' END) \n" +
+                    "|| CAST(COALESCE(pci.PrecursorId.Charge, pci.MoleculePrecursorId.Charge) AS VARCHAR) || ' ' \n" +
+                    "|| CAST (ROUND(COALESCE (pci.PrecursorId.Mz, pci.MoleculePrecursorId.Mz), 4) AS VARCHAR)" +
+                    " AS SeriesLabel, \n" +
                     "COUNT(MetricValue) AS NumRecords, AVG(MetricValue) AS Mean, STDDEV(MetricValue) AS StandardDev\n" +
                     "FROM guideset gs\n" +
                     "LEFT JOIN QCMetric_" + metricName + " as p\n" +
                     "  ON p.SampleFileId.AcquiredTime >= gs.TrainingStart AND p.SampleFileId.AcquiredTime <= gs.TrainingEnd\n" +
-                    "GROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, p.SeriesLabel";
+                    "LEFT JOIN PrecursorChromInfo pci ON p.precursorchrominfoid = pci.Id\n" +
+                    "GROUP BY gs.RowId, gs.TrainingStart, gs.TrainingEnd, gs.ReferenceEnd, \n"+
+                    " pci.PrecursorId.PeptideId.Sequence, pci.PrecursorId.Charge, \n" +
+                    "pci.PrecursorId.ModifiedSequence, pci.MoleculePrecursorId.CustomIonName, \n" +
+                    "pci.MoleculePrecursorId.IonFormula, pci.MoleculePrecursorId.massMonoisotopic, pci.MoleculePrecursorId.massAverage, \n" +
+                    "pci.MoleculePrecursorId.Charge, pci.PrecursorId.Mz, pci.MoleculePrecursorId.Mz";
             createQuery(getCurrentContainerPath(), "GuideSetStats_" + metricName, "targetedms", sql, null, false);
         }
     }
@@ -480,7 +494,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
 
     private void verifyGuideSetSmallMoleculeStats(GuideSet gs) throws IOException, CommandException
     {
-        String precursor = "C16";
+        String precursor = "C16,";
 
         gs.addStats(new GuideSetStats("retentionTime", 2, precursor, 0.7729333639144897, 9.424035327035906E-5));
         gs.addStats(new GuideSetStats("peakArea", 2, precursor, 2.4647614E7, 5061170.5265));

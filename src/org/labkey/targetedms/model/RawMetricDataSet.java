@@ -20,6 +20,7 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.targetedms.model.OutlierCounts;
 import org.labkey.api.visualization.Stats;
 
+import java.text.DecimalFormat;
 import java.util.Date;
 
 public class RawMetricDataSet
@@ -47,10 +48,68 @@ public class RawMetricDataSet
     String filePath;
     int replicateId;
 
+    String modifiedSequence;
+    String customIonName;
+    String ionFormula;
+    Double massMonoisotopic;
+    Double massAverage;
+    String precursorCharge;
+
     @Nullable
     public String getSeriesLabel()
     {
-        return seriesLabel;
+        if (null != seriesLabel)
+        {
+            return seriesLabel;
+        }
+        else
+        {
+            DecimalFormat df = new DecimalFormat();
+            df.setMinimumFractionDigits(4);
+            StringBuilder modifiedSL = new StringBuilder();
+
+            if (null != modifiedSequence)
+            {
+                modifiedSL.append(modifiedSequence);
+            }
+            else
+            {
+                if (null != customIonName)
+                {
+                    modifiedSL.append(customIonName);
+                    modifiedSL.append(", ");
+                }
+
+                if (null != ionFormula)
+                {
+                    modifiedSL.append(ionFormula);
+                    modifiedSL.append(",");
+                }
+
+                if (null != massMonoisotopic && null != massAverage)
+                {
+                    modifiedSL.append(" [");
+                    modifiedSL.append(df.format(massMonoisotopic));
+                    modifiedSL.append("/");
+                    modifiedSL.append(df.format(massAverage));
+                    modifiedSL.append("] ");
+                }
+            }
+
+            if (null != precursorCharge)
+            {
+                modifiedSL.append(" ");
+                modifiedSL.append(precursorCharge);
+            }
+
+            if (null != mz)
+            {
+                modifiedSL.append(", ");
+                modifiedSL.append(df.format(mz));
+            }
+
+            return modifiedSL.toString();
+        }
     }
 
     public void setSeriesLabel(String seriesLabel)
@@ -261,6 +320,66 @@ public class RawMetricDataSet
     public void setReplicateId(int replicateId)
     {
         this.replicateId = replicateId;
+    }
+
+    public String getModifiedSequence()
+    {
+        return modifiedSequence;
+    }
+
+    public void setModifiedSequence(String modifiedSequence)
+    {
+        this.modifiedSequence = modifiedSequence;
+    }
+
+    public String getCustomIonName()
+    {
+        return customIonName;
+    }
+
+    public void setCustomIonName(String customIonName)
+    {
+        this.customIonName = customIonName;
+    }
+
+    public String getIonFormula()
+    {
+        return ionFormula;
+    }
+
+    public void setIonFormula(String ionFormula)
+    {
+        this.ionFormula = ionFormula;
+    }
+
+    public Double getMassMonoisotopic()
+    {
+        return massMonoisotopic;
+    }
+
+    public void setMassMonoisotopic(Double massMonoisotopic)
+    {
+        this.massMonoisotopic = massMonoisotopic;
+    }
+
+    public Double getMassAverage()
+    {
+        return massAverage;
+    }
+
+    public void setMassAverage(Double massAverage)
+    {
+        this.massAverage = massAverage;
+    }
+
+    public String getPrecursorCharge()
+    {
+        return precursorCharge;
+    }
+
+    public void setPrecursorCharge(String precursorCharge)
+    {
+        this.precursorCharge = precursorCharge;
     }
 
     public boolean isLeveyJenningsOutlier(GuideSetStats stat)

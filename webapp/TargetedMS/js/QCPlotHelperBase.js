@@ -142,6 +142,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
 
         var allPlotDateValues = [];
 
+        this.setPrecursorsForPage(plotDataRows);
+
         // process the data to shape it for the JS LeveyJenningsPlot API call
         this.fragmentPlotData = {};
 
@@ -152,8 +154,8 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
             this.processRawGuideSetData(plotDataRows);
         }
 
-        Ext4.iterate(plotDataRows, function(plotDataRow)
-        {
+        for (var i = this.pagingStartIndex; i < this.pagingEndIndex; i++) {
+            var plotDataRow = plotDataRows[i];
             var fragment = plotDataRow.SeriesLabel;
             Ext4.iterate(plotDataRow.data, function (plotData)
             {
@@ -172,7 +174,7 @@ Ext4.define("LABKEY.targetedms.QCPlotHelperBase", {
                 allPlotDateValues.push(data.fullDate);
 
             }, this);
-        }, this);
+        }
 
         // Issue 31678: get the full set of dates values from the precursor data and from the annotations
         for (var j = 0; j < this.annotationData.length; j++) {

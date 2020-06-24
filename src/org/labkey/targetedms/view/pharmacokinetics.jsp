@@ -56,6 +56,7 @@
         <labkey:panel title="Statistics">
             <table id="pk-table-input-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats"  >
                 <thead><tr><td>Time</td><td>C0</td><td>Terminal</td><td>Concentration</td><td>Count</td><td>Std Dev</td></tr></thead>
+                <tbody></tbody>
             </table>
             <table id="pk-table-stats-<%=h(subgroup)%>" class="table table-striped table-responsive pk-table-stats" style="width: 600px">
                 <thead><tr><td colspan="3">Statistic</td></tr></thead>
