@@ -3506,6 +3506,9 @@ public class TargetedMSController extends SpringActionController
                     return tempDef;
                 }
             };
+            // Issue 40731- prevent expensive cross-folder queries when the results will always be scoped to the current
+            // run anyway
+            settings.setContainerFilterName(null);
             settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("PeptideGroupId", "RunId"), form.getId()));
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             return schema.createView(getViewContext(), settings, errors);
@@ -3524,6 +3527,9 @@ public class TargetedMSController extends SpringActionController
         protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
             QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, "PeptideIds");
+            // Issue 40731- prevent expensive cross-folder queries when the results will always be scoped to the current
+            // run anyway
+            settings.setContainerFilterName(null);
             settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("PeptideGroupId", "RunId"), form.getId()));
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             return schema.createView(getViewContext(), settings, errors);
