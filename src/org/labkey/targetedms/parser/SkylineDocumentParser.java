@@ -31,6 +31,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.GUID;
 import org.labkey.api.util.NetworkDrive;
+import org.labkey.api.util.Pair;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.targetedms.IrtPeptide;
 import org.labkey.targetedms.SkylineDocImporter.IProgressStatus;
@@ -149,6 +150,7 @@ public class SkylineDocumentParser implements AutoCloseable
     private static final String CHARGE = "charge" ;
     private static final String TRANSITION_DATA = "transition_data";
     private static final String RESULTS_DATA = "results_data";
+    private static final String LINKED_FRAGMENT_ION = "linked_fragment_ion";
 
     private static final double MIN_SUPPORTED_VERSION = 1.2;
     public static final double MAX_SUPPORTED_VERSION = 4.1;
@@ -1798,6 +1800,26 @@ public class SkylineDocumentParser implements AutoCloseable
         for (SkylineDocument.SkylineDocumentProto.TransitionLoss transitionLossProto : transitionProto.getLossesList()) {
             transition.getNeutralLosses().add(toTransitionLoss(transitionLossProto));
         }
+        if (transitionProto.getLinkedIonsCount() != 0)
+        {
+            ComplexFragmentIonName complexFragmentIonName;
+            if (transitionProto.getOrphanedCrosslinkIon())
+            {
+                complexFragmentIonName = new ComplexFragmentIonName(null, 0);
+            }
+            else
+            {
+                complexFragmentIonName = new ComplexFragmentIonName(transition.fragmentType, transitionProto.getFragmentOrdinal());
+            }
+            for (SkylineDocument.SkylineDocumentProto.LinkedIon linkedIon : transitionProto.getLinkedIonsList())
+            {
+                complexFragmentIonName.addChild(readLinkedIon(linkedIon));
+            }
+            transition.setComplexFragmentIon(complexFragmentIonName.toString());
+            transition.setCharge(transitionProto.getCharge());
+
+        }
+
         return transition;
     }
 
@@ -1851,6 +1873,26 @@ public class SkylineDocumentParser implements AutoCloseable
             throw new UnexpectedException(e);
         }
     }
+
+    private Pair<ComplexFragmentIonName.ModificationSite, ComplexFragmentIonName> readLinkedIon(SkylineDocument.SkylineDocumentProto.LinkedIon linkedIon)
+    {
+        ComplexFragmentIonName complexFragmentIonName;
+        if (linkedIon.getOrphan())
+        {
+            complexFragmentIonName = new ComplexFragmentIonName(null, null);
+        }
+        else
+        {
+            complexFragmentIonName = new ComplexFragmentIonName(ionTypeToString(linkedIon.getIonType()), linkedIon.getOrdinal());
+
+        }
+        for (SkylineDocument.SkylineDocumentProto.LinkedIon child : linkedIon.getChildrenList())
+        {
+            complexFragmentIonName.addChild(readLinkedIon(child));
+        }
+        return Pair.of(new ComplexFragmentIonName.ModificationSite(linkedIon.getModificationIndex(), linkedIon.getModificationName()), complexFragmentIonName);
+    }
+
     // Replace strings like [+80] in the modified sequence with [+80.0]
     // e.g. K[+96.2]VN[-17]K[+34.1]TES[+80]K[+62.1] --> K[+96.2]VN[-17.0]K[+34.1]TES[+80.0]K[+62.1]
     public static String ensureDecimalInModMass(String modifiedSequence)
@@ -2196,6 +2238,15 @@ public class SkylineDocumentParser implements AutoCloseable
         List<TransitionLoss> neutralLosses = new ArrayList<>();
         transition.setNeutralLosses(neutralLosses);
 
+        ComplexFragmentIonName complexFragmentIonName;
+        if (XmlUtil.readBooleanAttribute(reader, "orphaned_crosslink_ion", false)) {
+            complexFragmentIonName = new ComplexFragmentIonName(null, 0);
+        }
+        else {
+            complexFragmentIonName = new ComplexFragmentIonName(transition.getFragmentType(),
+                    transition.getFragmentOrdinal());
+        }
+
         while(reader.hasNext()) {
 
             int evtType = reader.next();
@@ -2248,6 +2299,14 @@ public class SkylineDocumentParser implements AutoCloseable
             {
                 neutralLosses.addAll(readLosses(reader));
             }
+            else if (XmlUtil.isStartElement(reader, evtType, LINKED_FRAGMENT_ION)) {
+                complexFragmentIonName.addChild( readLinkedFragmentIon(reader));
+            }
+        }
+
+        if (complexFragmentIonName.hasChildren())
+        {
+            transition.setComplexFragmentIon(complexFragmentIonName.toString());
         }
 
         // Boolean type annotations are not listed in the .sky file if their value was false.
@@ -2897,5 +2956,53 @@ public class SkylineDocumentParser implements AutoCloseable
         {
             return _bytesRead;
         }
+    }
+
+    private Pair<ComplexFragmentIonName.ModificationSite, ComplexFragmentIonName> readLinkedFragmentIon(
+            XMLStreamReader reader) throws XMLStreamException
+    {
+        ComplexFragmentIonName linkedIon;
+        String strFragmentType = reader.getAttributeValue(null, "fragment_type");
+        if (strFragmentType == null)
+        {
+            // blank fragment type means orphaned fragment ion
+            linkedIon = new ComplexFragmentIonName(null, 0);
+        }
+        else
+        {
+            linkedIon = new ComplexFragmentIonName(strFragmentType, XmlUtil.readIntegerAttribute(reader, "fragment_ordinal"));
+        }
+
+        ComplexFragmentIonName.ModificationSite modificationSite = new ComplexFragmentIonName.ModificationSite(
+                XmlUtil.readIntegerAttribute(reader, "index_aa"),
+                reader.getAttributeValue(null, "modification_name"));
+        while(reader.hasNext()) {
+
+            int evtType = reader.next();
+            if(XmlUtil.isEndElement(reader, evtType, LINKED_FRAGMENT_ION))
+            {
+                break;
+            }
+
+            if (XmlUtil.isStartElement(reader, evtType, LOSSES))
+            {
+                var losses = readLosses(reader);
+                if (losses != null)
+                {
+                    for  (TransitionLoss loss : losses)
+                    {
+                        // TODO
+                    }
+                }
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, LINKED_FRAGMENT_ION))
+            {
+                linkedIon.addChild(readLinkedFragmentIon(reader));
+            }
+            reader.next();
+        }
+
+        return Pair.of(modificationSite, linkedIon);
+
     }
 }

@@ -49,8 +49,8 @@ message SkylineDocumentProto {
 		float retentionTime = 4;
 		float startRetentionTime = 5;
 		float endRetentionTime = 6;
-		OptionalDouble driftTime = 7;
-		OptionalDouble driftTimeWindow = 8;
+		OptionalDouble ionMobility = 7;
+		OptionalDouble ionMobilityWindow = 8;
 		float area = 9;
 		float backgroundArea = 10;
 		float height = 11;
@@ -64,15 +64,16 @@ message SkylineDocumentProto {
 		UserSet userSet = 19;
 		sint32 optimizationStep = 23;
 		Annotations annotations = 24;
+		bool forcedIntegration = 25;
 	}
 	message TransitionResults {
 		repeated TransitionPeak peaks = 1;
 	}
 	message Transition {
 		OptionalString formula = 1;
-		OptionalDouble averageMass = 2;
-		OptionalDouble monoMass = 3;
-		OptionalString custom_ion_name = 6;
+		OptionalDouble averageMassH = 2; // See also: averageMass = 27;
+		OptionalDouble monoMassH = 3; // See also:  monoMass = 28;
+		OptionalString custom_ion_name = 6; // See also: custom_ion_id = 30;
 		OptionalString measured_ion_name = 7;
 		OptionalInt decoyMassShift = 8;
 		sint32 massIndex = 9;
@@ -80,7 +81,7 @@ message SkylineDocumentProto {
 		OptionalFloat isotopeDistProportion = 12; 
 		sint32 fragmentOrdinal = 13;
 		double calc_neutral_mass = 14;
-		sint32 charge = 15;
+		sint32 charge = 15; // See also: adduct = 29;
 		int32 cleavageAa = 16;
 		double lostMass = 17;
 		Annotations annotations = 18;
@@ -92,6 +93,18 @@ message SkylineDocumentProto {
 		IonType fragmentType = 24;
 		TransitionLibInfo libInfo = 25;
 		TransitionResults results = 26;
+		OptionalDouble averageMass = 27;
+		OptionalDouble monoMass = 28;
+		OptionalString adduct = 29;
+		OptionalString molecule_id = 30;
+		bool not_quantitative = 31;
+		OptionalDouble explicitCollisionEnergy = 32;
+		OptionalDouble explicitIonMobilityHighEnergyOffset = 33;
+		OptionalDouble explicitSLens = 34;
+		OptionalDouble explicitConeVoltage = 35;
+		OptionalDouble explicitDeclusteringPotential = 36;
+		bool orphanedCrosslinkIon = 37;
+		repeated LinkedIon linkedIons = 38;
 	}
 
 	message OptionalFloat {
@@ -123,6 +136,7 @@ message SkylineDocumentProto {
 		LossInclusion lossInclusion = 4;
 		string modificationName = 5;
 		int32 lossIndex = 6;
+		int32 charge = 7;
 	}
 
 
@@ -134,5 +148,43 @@ message SkylineDocumentProto {
 	message TransitionData {
 		repeated Transition transitions = 1;
 	}
+
+	message LinkedIon {
+		IonType ionType = 1;
+		int32 ordinal = 2;
+		int32 modificationIndex = 3;
+		string modificationName = 4;
+		repeated LinkedIon children = 5;
+		bool orphan = 7;
+	}
+}
+
+message LibraryKeyProto
+{
+	enum KeyType {
+		peptide = 0;
+		small_molecule = 1;
+		precursor_mz = 2;
+		crosslink = 3;
+	}
+	message Crosslinker {
+		string name = 1;
+		repeated Positions positions = 2;
+	}
+	message Positions {
+		repeated int32 position = 1;
+	}
+	KeyType keyType = 1;
+	string modifiedSequence = 2;
+	int32 charge = 3;
+	string moleculeName = 4;
+	string chemicalFormula = 5;
+	string inChiKey = 6;
+	string otherKeys = 7;
+	string adduct = 8;
+	double precursorMz = 9;
+	double retentionTime = 10;
+	repeated string crosslinkedSequences = 11;
+	repeated Crosslinker crosslinkers = 12;
 }
 

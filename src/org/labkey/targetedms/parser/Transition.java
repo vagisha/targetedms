@@ -57,6 +57,8 @@ public class Transition extends GeneralTransition
     // The name of the measured ion that this transition uses (Only for reporter ions and other non proteomic transitions)
     private String measuredIonName;
 
+    private String _complexFragmentIon;
+
     public Integer getFragmentOrdinal()
     {
         return fragmentOrdinal;
@@ -159,6 +161,16 @@ public class Transition extends GeneralTransition
     public void setMeasuredIonName(String measuredIonName)
     {
         this.measuredIonName = measuredIonName;
+    }
+
+    public String getComplexFragmentIon()
+    {
+        return _complexFragmentIon;
+    }
+
+    public void setComplexFragmentIon(String complexFragmentIon)
+    {
+        _complexFragmentIon = complexFragmentIon;
     }
 
     @Override

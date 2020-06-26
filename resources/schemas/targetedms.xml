@@ -621,6 +621,7 @@
             </column>
             <column columnName="DecoyMassShift"/>
             <column columnName="MeasuredIonName"/>
+            <column columnName="ComplexFragmentIon"/>
         </columns>
     </table>
     <table tableDbType="TABLE" tableName="MoleculeTransition">

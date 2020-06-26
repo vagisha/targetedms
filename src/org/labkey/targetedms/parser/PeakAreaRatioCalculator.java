@@ -428,7 +428,7 @@ public class PeakAreaRatioCalculator
         String fragment = transition.getFragmentType()
                 + (transition.isPrecursorIon() ? transition.getMassIndex() : (transition.isCustomIon() ? transition.getMeasuredIonName() : transition.getFragmentOrdinal()));
 
-        int fragmentCharge = transition.isPrecursorIon() ? precursor.getCharge() : transition.getCharge();
+        int fragmentCharge = transition.getCharge() == null ? precursor.getCharge() : transition.getCharge();
         StringBuilder key = new StringBuilder();
         key.append(fragment)
                 .append("_")
@@ -440,6 +440,10 @@ public class PeakAreaRatioCalculator
             {
                 key.append("_").append(loss.toString());
             }
+        }
+        if (transition.getComplexFragmentIon() != null)
+        {
+            key.append(transition.getComplexFragmentIon());
         }
         return key.toString();
     }
