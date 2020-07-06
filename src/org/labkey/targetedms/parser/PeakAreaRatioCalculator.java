@@ -282,7 +282,7 @@ public class PeakAreaRatioCalculator
         }
     }
 
-    // Calculator for transition area ratios for a single transtion from one precursor
+    // Calculator for transition area ratios for a single transition from one precursor
     // in one sample file.
     private class TransitionAreaRatioCalculator extends AreaRatioCalculator<TransitionChromInfo, TransitionAreaRatio>
     {
@@ -309,7 +309,7 @@ public class PeakAreaRatioCalculator
         }
     }
 
-    private abstract class AreaRatioCalculator <T extends ChromInfo, R extends AreaRatio>
+    private abstract class AreaRatioCalculator <T, R extends AreaRatio>
     {
         private Map<Integer, T> _labelIdChromInfoMap;
 

@@ -66,7 +66,7 @@ public class PrecursorManager
 
     private PrecursorManager() {}
 
-    public static Precursor getPrecursor(Container c, int id, User user)
+    public static Precursor getPrecursor(Container c, long id, User user)
     {
         TargetedMSSchema schema = new TargetedMSSchema(user, c);
 
@@ -87,7 +87,7 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Precursor.class);
     }
 
-    public static PrecursorChromInfo getPrecursorChromInfo(Container c, int id)
+    public static PrecursorChromInfo getPrecursorChromInfo(Container c, long id)
     {
         SQLFragment sql = new SQLFragment("SELECT pci.* FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
@@ -769,7 +769,7 @@ public class PrecursorManager
         }
     }
 
-    public static boolean canBeSplitView(int peptideId)
+    public static boolean canBeSplitView(long peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT DISTINCT gt.fragmenttype FROM ");
         sql.append(TargetedMSManager.getTableInfoGeneralTransition(), "gt");
@@ -790,7 +790,7 @@ public class PrecursorManager
         return false;
     }
 
-    public static boolean hasOptimizationPeaks(int peptideId)
+    public static boolean hasOptimizationPeaks(long peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT pci.Id FROM ");
         sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");

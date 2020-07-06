@@ -1161,7 +1161,7 @@ public class TargetedMSManager
         purgeDeletedRuns();
     }
 
-    public static TargetedMSRun getRunForPrecursor(int precursorId)
+    public static TargetedMSRun getRunForPrecursor(long precursorId)
     {
         String sql = "SELECT run.* FROM "+
                      getTableInfoRuns()+" AS run, "+
@@ -1183,7 +1183,7 @@ public class TargetedMSManager
         return run;
     }
 
-    public static TargetedMSRun getRunForGeneralMolecule(int id)
+    public static TargetedMSRun getRunForGeneralMolecule(long id)
     {
         String sql = "SELECT run.* FROM "+
                      getTableInfoRuns()+" AS run, "+
@@ -2145,7 +2145,7 @@ public class TargetedMSManager
         return null;
     }
 
-    public static int getMaxTransitionCount(int moleculeId)
+    public static int getMaxTransitionCount(long moleculeId)
     {
         SQLFragment maxTransitionSQL = new SQLFragment("select MAX(c) FROM\n" +
                 "(\n" +
@@ -2166,7 +2166,7 @@ public class TargetedMSManager
         return maxCount != null ? maxCount.intValue() : 0;
     }
 
-    public static int getMaxTransitionCountForPrecursor(int precursorId)
+    public static int getMaxTransitionCountForPrecursor(long precursorId)
     {
         SQLFragment maxTransitionSQL = new SQLFragment("select MAX(c) FROM\n" +
                 "(\n" +

@@ -38,7 +38,7 @@ public class MoleculePrecursorManager
 {
     private MoleculePrecursorManager() {}
 
-    public static MoleculePrecursor getPrecursor(Container c, int id, User user)
+    public static MoleculePrecursor getPrecursor(Container c, long id, User user)
     {
         TargetedMSSchema schema = new TargetedMSSchema(user, c);
 
