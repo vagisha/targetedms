@@ -1712,7 +1712,7 @@ public class SkylineDocImporter
 
         for (TransitionChromInfo transChromInfo : transitionChromInfos)
         {
-            SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(transChromInfo));
+            SampleFile sampleFile = skylineIdSampleFileIdMap.get(SampleFileKey.getKey(transChromInfo.getReplicateName(), transChromInfo.getSkylineSampleFileId()));
             if (sampleFile == null)
             {
                 throw new PanoramaBadDataException("Database ID not found for Skyline samplefile id " + transChromInfo.getSkylineSampleFileId() + " in replicate " + transChromInfo.getReplicateName());
@@ -1819,10 +1819,20 @@ public class SkylineDocImporter
         }
     }
 
+    /** Remove this overloaded version when all tables have migrated to 8-byte ID columns */
     private void insertAnnotation(PreparedStatement stmt, AbstractAnnotation annotation, int entityId) throws SQLException
     {
         int index = 1;
         stmt.setInt(index++, entityId);
+        stmt.setString(index++, annotation.getName());
+        stmt.setString(index++, annotation.getValue());
+        stmt.execute();
+    }
+
+    private void insertAnnotation(PreparedStatement stmt, AbstractAnnotation annotation, long entityId) throws SQLException
+    {
+        int index = 1;
+        stmt.setLong(index++, entityId);
         stmt.setString(index++, annotation.getName());
         stmt.setString(index++, annotation.getValue());
         stmt.execute();
@@ -1890,7 +1900,11 @@ public class SkylineDocImporter
             setInteger(_transitionChromInfoStmt, index++, transChromInfo.getRankByLevel());
             setBoolean(_transitionChromInfoStmt, index, transChromInfo.getForcedIntegration());
 
-            insertAndUpdateId(transChromInfo, _transitionChromInfoStmt);
+            try (ResultSet rs = TargetedMSManager.getSqlDialect().executeWithResults(_transitionChromInfoStmt))
+            {
+                rs.next();
+                transChromInfo.setId(rs.getLong(1));
+            }
         }
         catch (SQLException e)
         {
@@ -2128,12 +2142,17 @@ public class SkylineDocImporter
 
         public static SampleFileKey getKey(ChromInfo chromInfo)
         {
-            return new SampleFileKey(chromInfo.getReplicateName(), chromInfo.getSkylineSampleFileId());
+            return getKey(chromInfo.getReplicateName(), chromInfo.getSkylineSampleFileId());
         }
 
         public static SampleFileKey getKey(Replicate replicate, SampleFile sampleFile)
         {
-            return new SampleFileKey(replicate.getName(), sampleFile.getSkylineId());
+            return getKey(replicate.getName(), sampleFile.getSkylineId());
+        }
+
+        public static SampleFileKey getKey(String replicateName, String sampleFileName)
+        {
+            return new SampleFileKey(replicateName, sampleFileName);
         }
 
         @Override

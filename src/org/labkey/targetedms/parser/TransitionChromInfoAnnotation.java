@@ -21,14 +21,14 @@ package org.labkey.targetedms.parser;
  */
 public class TransitionChromInfoAnnotation extends AbstractAnnotation
 {
-    private int _transitionChromInfoId;
+    private long _transitionChromInfoId;
 
-    public int getTransitionChromInfoId()
+    public long getTransitionChromInfoId()
     {
         return _transitionChromInfoId;
     }
 
-    public void setTransitionChromInfoId(int transitionChromInfoId)
+    public void setTransitionChromInfoId(long transitionChromInfoId)
     {
         _transitionChromInfoId = transitionChromInfoId;
     }

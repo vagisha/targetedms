@@ -47,13 +47,13 @@
 
     // for proteomics summary charts
     List<Peptide> peptideList = bean.getPeptideList();
-    int peptideId = bean.getPeptideId(); // Used when displaying peak areas for a single peptide in multiple replicates
+    long peptideId = bean.getPeptideId(); // Used when displaying peak areas for a single peptide in multiple replicates
                                          // or grouped by replicate annotation.
-    int precursorId = bean.getPrecursorId(); // Used when displaying peak areas for a single precursor
+    long precursorId = bean.getPrecursorId(); // Used when displaying peak areas for a single precursor
 
     // for small molecule summary charts
     List<Molecule> moleculeList = bean.getMoleculeList();
-    int moleculeId = bean.getMoleculeId();
+    long moleculeId = bean.getMoleculeId();
     int moleculePrecursorId = bean.getMoleculePrecursorId();
 
     if ((peptideList != null && !peptideList.isEmpty()) || peptideId != 0 || precursorId != 0)

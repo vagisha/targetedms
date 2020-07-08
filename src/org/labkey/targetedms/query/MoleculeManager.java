@@ -27,7 +27,7 @@ public class MoleculeManager
 {
     private MoleculeManager() {}
 
-    public static Molecule getMolecule(Container c, int id)
+    public static Molecule getMolecule(Container c, long id)
     {
         SQLFragment sql = new SQLFragment("SELECT mol.*, gm.* FROM ");
         sql.append(TargetedMSManager.getTableInfoMolecule(), "mol");

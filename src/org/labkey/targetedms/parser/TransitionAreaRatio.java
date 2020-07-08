@@ -22,25 +22,25 @@ package org.labkey.targetedms.parser;
  */
 public class TransitionAreaRatio extends AreaRatio
 {
-    private int _transitionChromInfoId;
-    private int _transitionChromInfoStdId;
+    private long _transitionChromInfoId;
+    private long _transitionChromInfoStdId;
 
-    public int getTransitionChromInfoId()
+    public long getTransitionChromInfoId()
     {
         return _transitionChromInfoId;
     }
 
-    public void setTransitionChromInfoId(int transitionChromInfoId)
+    public void setTransitionChromInfoId(long transitionChromInfoId)
     {
         _transitionChromInfoId = transitionChromInfoId;
     }
 
-    public int getTransitionChromInfoStdId()
+    public long getTransitionChromInfoStdId()
     {
         return _transitionChromInfoStdId;
     }
 
-    public void setTransitionChromInfoStdId(int transitionChromInfoStdId)
+    public void setTransitionChromInfoStdId(long transitionChromInfoStdId)
     {
         _transitionChromInfoStdId = transitionChromInfoStdId;
     }

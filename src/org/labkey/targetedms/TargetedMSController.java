@@ -1393,7 +1393,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
-            int precursorId = form.getId();
+            long precursorId = form.getId();
             Precursor precursor = PrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
             if (precursor == null)
             {
@@ -1488,7 +1488,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
-            int precursorId = form.getId();
+            long precursorId = form.getId();
             MoleculePrecursor precursor = MoleculePrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
             if (precursor == null)
             {
@@ -1569,7 +1569,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
-            int peptideId = form.getId();
+            long peptideId = form.getId();
             Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
             if (peptide == null)
             {
@@ -1885,7 +1885,7 @@ public class TargetedMSController extends SpringActionController
 
     public static class ChromatogramForm extends AbstractChartForm
     {
-        private int _id;
+        private long _id;
         private boolean _syncY = false;
         private boolean _syncX = false;
         private boolean _splitGraph = false;
@@ -1899,12 +1899,12 @@ public class TargetedMSController extends SpringActionController
             setDefaultChartWidth(400);
         }
 
-        public int getId()
+        public long getId()
         {
             return _id;
         }
 
-        public void setId(int id)
+        public void setId(long id)
         {
             _id = id;
         }
@@ -2048,7 +2048,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
-            int peptideId = form.getId();  // peptide Id
+            long peptideId = form.getId();  // peptide Id
 
             Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
             if(peptide == null)
@@ -2147,7 +2147,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
-            int moleculeId = form.getId();
+            long moleculeId = form.getId();
 
             Molecule molecule = MoleculeManager.getMolecule(getContainer(), moleculeId);
             if (molecule == null)
@@ -3633,6 +3633,9 @@ public class TargetedMSController extends SpringActionController
                     return tempDef;
                 }
             };
+            // Issue 40731- prevent expensive cross-folder queries when the results will always be scoped to the current
+            // run anyway
+            settings.setContainerFilterName(null);
             settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("PeptideGroupId", "RunId"), form.getId()));
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             return schema.createView(getViewContext(), settings, errors);
@@ -3651,6 +3654,9 @@ public class TargetedMSController extends SpringActionController
         protected QueryView createQueryView(RunDetailsForm form, BindException errors, boolean forExport, String dataRegion)
         {
             QuerySettings settings = new QuerySettings(getViewContext(), _dataRegionName, "PeptideIds");
+            // Issue 40731- prevent expensive cross-folder queries when the results will always be scoped to the current
+            // run anyway
+            settings.setContainerFilterName(null);
             settings.setBaseFilter(new SimpleFilter(FieldKey.fromParts("PeptideGroupId", "RunId"), form.getId()));
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
             return schema.createView(getViewContext(), settings, errors);
@@ -4199,12 +4205,12 @@ public class TargetedMSController extends SpringActionController
         private List<ReplicateAnnotation> _replicateAnnotationValueList;
 
         // fields for proteomics
-        private int _peptideId;
-        private int _precursorId;
+        private long _peptideId;
+        private long _precursorId;
         private List<Peptide> _peptideList;
 
         // fields for small molecule
-        private int _moleculeId;
+        private long _moleculeId;
         private int _moleculePrecursorId;
         private List<Molecule> _moleculeList;
 
@@ -4248,32 +4254,32 @@ public class TargetedMSController extends SpringActionController
             _peptideGroupId = peptideGroupId;
         }
 
-        public int getPeptideId()
+        public long getPeptideId()
         {
             return _peptideId;
         }
 
-        public void setPeptideId(int peptideId)
+        public void setPeptideId(long peptideId)
         {
             _peptideId = peptideId;
         }
 
-        public int getPrecursorId()
+        public long getPrecursorId()
         {
             return _precursorId;
         }
 
-        public void setPrecursorId(int precursorId)
+        public void setPrecursorId(long precursorId)
         {
             _precursorId = precursorId;
         }
 
-        public int getMoleculeId()
+        public long getMoleculeId()
         {
             return _moleculeId;
         }
 
-        public void setMoleculeId(int moleculeId)
+        public void setMoleculeId(long moleculeId)
         {
             _moleculeId = moleculeId;
         }
