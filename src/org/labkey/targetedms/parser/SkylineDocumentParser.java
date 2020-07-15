@@ -1557,7 +1557,7 @@ public class SkylineDocumentParser implements AutoCloseable
     {
         GeneralMoleculeChromInfo chromInfo = new GeneralMoleculeChromInfo();
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", PEPTIDE_RESULT));
-        setSkylineSampleFileId(reader, chromInfo);
+        chromInfo.setSkylineSampleFileId(getSkylineSampleFileId(reader, chromInfo.getReplicateName()));
         chromInfo.setRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
         chromInfo.setPeakCountRatio(XmlUtil.readDoubleAttribute(reader, "peak_count_ratio"));
         chromInfo.setExcludeFromCalibration(XmlUtil.readBooleanAttribute(reader, "exclude_from_calibration", false));
@@ -1565,18 +1565,18 @@ public class SkylineDocumentParser implements AutoCloseable
         return chromInfo;
     }
 
-    private void setSkylineSampleFileId(XMLStreamReader reader, ChromInfo chromInfo)
+    private String getSkylineSampleFileId(XMLStreamReader reader, String replicateName)
     {
         String skylineSampleFileId = XmlUtil.readAttribute(reader, "file");
         if(skylineSampleFileId == null)
         {
-            skylineSampleFileId = _replicateSampleFileIdMap.get(chromInfo.getReplicateName());
+            skylineSampleFileId = _replicateSampleFileIdMap.get(replicateName);
             if(skylineSampleFileId == null)
             {
-                throw new IllegalStateException("Could not find Skyline-given sample file Id for chrom info in replicate "+chromInfo.getReplicateName());
+                throw new IllegalStateException("Could not find Skyline-given sample file Id for chrom info in replicate " + replicateName);
             }
         }
-        chromInfo.setSkylineSampleFileId(skylineSampleFileId);
+        return skylineSampleFileId;
     }
 
     private MoleculePrecursor readMoleculePrecursor(XMLStreamReader reader, Molecule molecule, boolean decoy) throws XMLStreamException, IOException
@@ -2051,7 +2051,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setAnnotations(annotations);
 
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", PRECURSOR_PEAK));
-        setSkylineSampleFileId(reader, chromInfo);
+        chromInfo.setSkylineSampleFileId(getSkylineSampleFileId(reader, chromInfo.getReplicateName()));
         chromInfo.setOptimizationStep(XmlUtil.readIntegerAttribute(reader, "step"));
         chromInfo.setBestRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
         chromInfo.setMinStartTime(XmlUtil.readDoubleAttribute(reader, "start_time"));
@@ -2450,7 +2450,7 @@ public class SkylineDocumentParser implements AutoCloseable
         chromInfo.setAnnotations(annotations);
 
         chromInfo.setReplicateName(XmlUtil.readRequiredAttribute(reader, "replicate", TRANSITION_PEAK));
-        setSkylineSampleFileId(reader, chromInfo);
+        chromInfo.setSkylineSampleFileId(getSkylineSampleFileId(reader, chromInfo.getReplicateName()));
         chromInfo.setOptimizationStep(XmlUtil.readIntegerAttribute(reader, "step"));
         chromInfo.setRetentionTime(XmlUtil.readDoubleAttribute(reader, "retention_time"));
         chromInfo.setStartTime(XmlUtil.readDoubleAttribute(reader, "start_time"));

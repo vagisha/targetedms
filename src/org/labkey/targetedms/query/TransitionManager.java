@@ -51,7 +51,7 @@ public class TransitionManager
     }
 
     @Nullable
-    public static TransitionChromInfo getTransitionChromInfo(Container c, int id)
+    public static TransitionChromInfo getTransitionChromInfo(Container c, long id)
     {
         SQLFragment sql = new SQLFragment("SELECT tci.* FROM ");
         sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");

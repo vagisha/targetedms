@@ -28,7 +28,7 @@ import org.labkey.targetedms.TargetedMSSchema;
  */
 public class PrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSchema>
 {
-    private int _precursorId;
+    private long _precursorId;
 
     public PrecursorChromatogramsTableInfo(TargetedMSSchema schema)
     {
@@ -52,7 +52,7 @@ public class PrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSch
         peptideCol.setDisplayColumnFactory(colFactory);
     }
 
-    public void setPrecursorId(int precursorId)
+    public void setPrecursorId(long precursorId)
     {
         _precursorId = precursorId;
     }

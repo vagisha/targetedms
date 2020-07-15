@@ -28,7 +28,7 @@ import org.labkey.targetedms.TargetedMSSchema;
  */
 public class PeptideChromatogramsTableInfo extends FilteredTable<TargetedMSSchema>
 {
-    private int _peptideId;
+    private long _peptideId;
 
     public PeptideChromatogramsTableInfo(TargetedMSSchema schema)
     {
@@ -45,7 +45,7 @@ public class PeptideChromatogramsTableInfo extends FilteredTable<TargetedMSSchem
                                          ChromatogramDisplayColumnFactory.TYPE.GENERAL_MOLECULE));
     }
 
-    public void setPeptideId(int peptideId)
+    public void setPeptideId(long peptideId)
     {
         _peptideId = peptideId;
     }

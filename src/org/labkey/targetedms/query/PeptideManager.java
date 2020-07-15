@@ -45,7 +45,7 @@ public class PeptideManager
 
     private PeptideManager() {}
 
-    public static Peptide getPeptide(Container c, int id)
+    public static Peptide getPeptide(Container c, long id)
     {
         SQLFragment sql = new SQLFragment("SELECT pep.*, gm.* FROM ");
         sql.append(TargetedMSManager.getTableInfoPeptide(), "pep");
@@ -64,7 +64,7 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Peptide.class);
     }
 
-    public static GeneralMoleculeChromInfo getGeneralMoleculeChromInfo(Container c, int id)
+    public static GeneralMoleculeChromInfo getGeneralMoleculeChromInfo(Container c, long id)
     {
         SQLFragment sql = new SQLFragment("SELECT gmci.* FROM ");
         sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
