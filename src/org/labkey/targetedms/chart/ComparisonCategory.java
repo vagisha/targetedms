@@ -423,7 +423,7 @@ public interface ComparisonCategory
         @Override
         public int hashCode()
         {
-            int result = _customIonName.hashCode();
+            int result = _customIonName != null ? _customIonName.hashCode() : 0;
             result = 31 * result + _charge;
             result = 31 * result + (_annotationValue != null ? _annotationValue.hashCode() : 0);
             return result;
