@@ -58,7 +58,6 @@ import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.parser.list.ListData;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
-import org.labkey.targetedms.query.LibraryManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
 import org.labkey.targetedms.query.SkylineListManager;
@@ -150,6 +149,8 @@ public class SkylineDocImporter
     private File _auditLogFile;
 
     private boolean _importTransitionChromInfos = true;
+
+    private Set<String> _missingLibraries = new HashSet<>();
 
     @JsonCreator
     private SkylineDocImporter(@JsonProperty("_expData") ExpData expData, @JsonProperty("_context") XarContext context,
@@ -404,6 +405,8 @@ public class SkylineDocImporter
                     _log.info(msg);
                 }
             }
+
+            parser.logMissingChromatogramCounts();
 
             TargetedMSManager.updateModifiedAreaProportions(_log, run);
 
@@ -1492,7 +1495,11 @@ public class SkylineDocImporter
                 // Skyline documents can end up in a state where a library name is associated with a precursor but the
                 // library was deselected in "Peptide Settings > Library tab" in Skyline and is no longer part of the
                 // <peptide_libraries> element of the .sky file.  We will ignore such library infos.
-                _log.info("'" + libraryInfo.getLibraryName() + "' library was not found in settings.");
+                if (_missingLibraries.add(libraryInfo.getLibraryName()))
+                {
+                    // Only log the first time
+                    _log.warn("'" + libraryInfo.getLibraryName() + "' library was not found in settings.");
+                }
             }
             else
             {
