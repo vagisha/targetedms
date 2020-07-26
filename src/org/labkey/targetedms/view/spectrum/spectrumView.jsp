@@ -15,12 +15,11 @@
  * limitations under the License.
  */
 %>
-<%@ page import="org.labkey.api.util.PageFlowUtil"%>
 <%@ page import="org.labkey.api.view.HttpView"%>
 <%@ page import="org.labkey.api.view.JspView"%>
-<%@ page import="org.labkey.targetedms.view.spectrum.LibrarySpectrumMatch" %>
-<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies"%>
 <%@ page import="org.labkey.targetedms.parser.PeptideSettings" %>
+<%@ page import="org.labkey.targetedms.view.spectrum.LibrarySpectrumMatch" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 
 <%!
@@ -55,7 +54,7 @@
 Ext4.onReady(function () {
 
     /* render the spectrum with the given options */
-    $("#<%=bean.getLorikeetId()%>").specview({sequence: <%= PageFlowUtil.jsString(bean.getPeptide()) %>,
+    $("#<%=bean.getLorikeetId()%>").specview({sequence: <%= q(bean.getPeptide()) %>,
         staticMods: <%= bean.getStructuralModifications()%>,
         variableMods: <%= bean.getVariableModifications()%>,
         ntermMod: <%=bean.getNtermModMass()%>,

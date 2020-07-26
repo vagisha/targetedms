@@ -14,7 +14,7 @@
 <div id="targetedmsAuditLogExtraInfo" >
     <table>
         <tr><td><strong>User Name:</strong> <%= h(entry.getUserName()) %></td><td><span class="fa fa-times">&nbsp;</span></td></tr>
-        <tr><td colspan="2"><strong>Entry Timestamp:</strong> <%=h(formatDateTime(entry.getCreateTimestamp()))%></td></tr>
+        <tr><td colspan="2"><strong>Entry Timestamp:</strong> <%=formatDateTime(entry.getCreateTimestamp())%></td></tr>
     </table><br/>
     <pre style="overflow: scroll; max-height: 400px"><%=h(entry.getExtraInfo()) %></pre>
 </div>

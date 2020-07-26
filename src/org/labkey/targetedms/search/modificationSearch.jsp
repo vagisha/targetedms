@@ -37,9 +37,9 @@
 
     String initSearchType = bean.getForm().getSearchType() != null ? bean.getForm().getSearchType() : "deltaMass";
     String initAminoAcids = bean.getForm().getAminoAcids() != null ? bean.getForm().getAminoAcids() : "";
-    Double initDeltaMass = bean.getForm().getDeltaMass() != null ? bean.getForm().getDeltaMass() : null;
+    Double initDeltaMass = bean.getForm().getDeltaMass();
     String initNameType = bean.getForm().getModificationNameType() != null ? bean.getForm().getModificationNameType() : "custom";
-    String initModSearchPairsStr = bean.getForm().getModSearchPairsStr() != null ? bean.getForm().getModSearchPairsStr() : null;
+    String initModSearchPairsStr = bean.getForm().getModSearchPairsStr();
     boolean initStructuralCheck = (bean.getForm().isStructural() != null && bean.getForm().isStructural()) || initSearchType.equals("deltaMass");
     boolean initIsotopeLabelCheck = (bean.getForm().isIsotopeLabel() != null && bean.getForm().isIsotopeLabel()) || initSearchType.equals("deltaMass");
 
@@ -151,7 +151,7 @@
                     name: 'deltaMass',
                     hideTrigger: true,
                     allowDecimal: true,
-                    decimalPrecision: 1, // round valeus to tenth
+                    decimalPrecision: 1, // round values to tenth
                     hidden: <%=!initSearchType.equals("deltaMass")%>,
                     value: '<%=initDeltaMass%>'
                 },
