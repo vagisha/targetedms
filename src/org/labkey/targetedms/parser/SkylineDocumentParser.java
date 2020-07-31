@@ -61,6 +61,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -213,6 +214,8 @@ public class SkylineDocumentParser implements AutoCloseable
 
     private long _fileSize;
     private IProgressStatus _progressStatus;
+
+    private Map<String, AtomicInteger> _missingChromatograms = new HashMap<>();
 
     public SkylineDocumentParser(File file, Logger log, Container container, IProgressStatus progressStatus) throws XMLStreamException, IOException
     {
@@ -1235,6 +1238,14 @@ public class SkylineDocumentParser implements AutoCloseable
         return pepGroup;
     }
 
+    public void logMissingChromatogramCounts()
+    {
+        for (Map.Entry<String, AtomicInteger> entry : _missingChromatograms.entrySet())
+        {
+            _log.warn("Missed importing " + entry.getValue().intValue() + " chromatograms from sample file " + entry.getKey());
+        }
+    }
+
     public enum MoleculeType
     {
         PEPTIDE,
@@ -1912,13 +1923,9 @@ public class SkylineDocumentParser implements AutoCloseable
         {
             PrecursorChromInfo chromInfo = i.next();
             String filePath = _sampleFileIdToFilePathMap.get(chromInfo.getSkylineSampleFileId());
-            ChromGroupHeaderInfo chromatogram = filePathChromatogramMap.get(filePath);
-            if (chromatogram == null)
-            {
-                _log.warn("Unable to find chromatograms for file path " + filePath + ". Precursor " + precursor.toString() + ", " +precursor.getCharge());
-                i.remove();
-            }
-            else
+            ChromGroupHeaderInfo chromatogram = getChromGroupHeaderInfoForFile(filePathChromatogramMap, i, filePath);
+
+            if (chromatogram != null)
             {
                 // Read it out of the file on-demand, so we only load the subset that we need
                 try
@@ -1948,13 +1955,8 @@ public class SkylineDocumentParser implements AutoCloseable
             {
                 TransitionChromInfo transChromInfo = iter.next();
                 String filePath = _sampleFileIdToFilePathMap.get(transChromInfo.getSkylineSampleFileId());
-                ChromGroupHeaderInfo c = filePathChromatogramMap.get(filePath);
-                if (c == null)
-                {
-                    _log.warn("Unable to find chromatograms for file path " + filePath + ". Transition " + transition.toString() + ", " + precursor.toString() + ", " +precursor.getCharge());
-                    iter.remove();
-                }
-                else
+                ChromGroupHeaderInfo c = getChromGroupHeaderInfoForFile(filePathChromatogramMap, iter, filePath);
+                if (c != null)
                 {
                     int matchIndex = -1;
                     // Figure out which index into the list of transitions we're inserting.
@@ -1990,6 +1992,48 @@ public class SkylineDocumentParser implements AutoCloseable
                 }
             }
         }
+    }
+
+    @Nullable
+    private ChromGroupHeaderInfo getChromGroupHeaderInfoForFile(Map<String, ChromGroupHeaderInfo> filePathChromatogramMap, Iterator<?> i, String filePath)
+    {
+        ChromGroupHeaderInfo chromatogram = filePathChromatogramMap.get(filePath);
+
+        // Issue 40959 - Try stripping off the URI parameters if we don't have a match
+        if (chromatogram == null)
+        {
+            int queryParamIdx = filePath.lastIndexOf('?');
+            if (queryParamIdx != -1)
+            {
+                filePath = filePath.substring(0, queryParamIdx);
+                chromatogram = filePathChromatogramMap.get(filePath);
+            }
+        }
+
+        // Issue 40959 - If we still don't have a match, strip off values from the map for more possible matches
+        if (chromatogram == null)
+        {
+            for (Map.Entry<String, ChromGroupHeaderInfo> entry : filePathChromatogramMap.entrySet())
+            {
+                if (entry.getKey().startsWith(filePath + "?"))
+                {
+                    chromatogram = entry.getValue();
+                    break;
+                }
+            }
+        }
+
+        if (chromatogram == null)
+        {
+            AtomicInteger count = _missingChromatograms.computeIfAbsent(filePath, s -> {
+                _log.warn("Unable to find at least one chromatogram for file path " + s);
+                return new AtomicInteger(0);
+            });
+            count.incrementAndGet();
+
+            i.remove();
+        }
+        return chromatogram;
     }
 
     private Precursor.BibliospecLibraryInfo readBibliospecLibraryInfo(XMLStreamReader reader)
@@ -2719,13 +2763,29 @@ public class SkylineDocumentParser implements AutoCloseable
         }
         for (ChromGroupHeaderInfo chromatogram : _binaryParser.getChromatograms())
         {
+            // Sample-scoped chromatograms have a magic precursor MZ value
             if (chromatogram.getPrecursorMz() == 0.0)
             {
                 String path = _binaryParser.getFilePath(chromatogram);
                 SampleFile sampleFile = pathToSampleFile.get(path);
+
+                // Issue 40959 - Try stripping off the URI parameters if we don't have a match
                 if (sampleFile == null)
                 {
-                    _log.warn("Unable to resolve " + path + " to SampleFile, will not import its sample-scoped chromatogram");
+                    int queryParamIdx = path.lastIndexOf('?');
+                    if (queryParamIdx != -1)
+                    {
+                        sampleFile = pathToSampleFile.get(path.substring(0, queryParamIdx));
+                    }
+                }
+
+                if (sampleFile == null)
+                {
+                    AtomicInteger count = _missingChromatograms.computeIfAbsent(path, s -> {
+                        _log.warn("Unable to resolve " + path + " to SampleFile, will not import its sample-scoped chromatogram");
+                        return new AtomicInteger(0);
+                    });
+                    count.incrementAndGet();
                 }
                 else
                 {
