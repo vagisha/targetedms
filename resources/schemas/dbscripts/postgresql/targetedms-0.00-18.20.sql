@@ -1700,3 +1700,35 @@ ALTER TABLE targetedms.TransitionChromInfo ADD COLUMN PointsAcrossPeak INT;
 /* targetedms-17.30-18.10.sql */
 
 ALTER TABLE targetedms.ReplicateAnnotation ALTER COLUMN Value TYPE VARCHAR(500);
+
+/* targetedms-18.10-18.20.sql */
+
+ALTER TABLE targetedms.Runs ADD COLUMN SkydDataId INT;
+
+ALTER TABLE targetedms.Runs ADD CONSTRAINT FK_Runs_SkydData FOREIGN KEY (SkydDataId) REFERENCES exp.Data(RowId);
+
+
+ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN ChromatogramOffset BIGINT;
+ALTER TABLE targetedms.PrecursorChromInfo ADD COLUMN ChromatogramLength INT;
+
+ALTER TABLE targetedms.Runs ADD COLUMN CalibrationCurveCount INT;
+UPDATE targetedms.Runs SET CalibrationCurveCount = (SELECT COUNT(c.id) FROM targetedms.CalibrationCurve c WHERE c.RunId = targetedms.Runs.Id);
+
+ALTER TABLE targetedms.GeneralMoleculeChromInfo ADD COLUMN ExcludeFromCalibration BOOLEAN;
+UPDATE targetedms.GeneralMoleculeChromInfo SET ExcludeFromCalibration = false;
+
+ALTER TABLE targetedms.QuantificationSettings ADD COLUMN MaxLOQBias FLOAT;
+ALTER TABLE targetedms.QuantificationSettings ADD COLUMN MaxLOQCV FLOAT;
+ALTER TABLE targetedms.QuantificationSettings ADD COLUMN LODCalculation VARCHAR(50);
+
+ALTER TABLE targetedms.ExperimentAnnotations ADD COLUMN Keywords VARCHAR(200);
+ALTER TABLE targetedms.ExperimentAnnotations ADD COLUMN LabHead USERID;
+ALTER TABLE targetedms.ExperimentAnnotations ADD COLUMN LabHeadAffiliation VARCHAR(200);
+ALTER TABLE targetedms.ExperimentAnnotations ADD COLUMN Submitter USERID;
+ALTER TABLE targetedms.ExperimentAnnotations ADD COLUMN SubmitterAffiliation VARCHAR(200);
+ALTER TABLE targetedms.ExperimentAnnotations ADD COLUMN pxid VARCHAR(10);
+
+ALTER TABLE targetedms.JournalExperiment ADD COLUMN PxidRequested BOOLEAN NOT NULL DEFAULT '0';
+ALTER TABLE targetedms.JournalExperiment ADD COLUMN KeepPrivate BOOLEAN NOT NULL DEFAULT '1';
+
+ALTER TABLE targetedms.spectrumlibrary ALTER COLUMN Name TYPE VARCHAR(400);
