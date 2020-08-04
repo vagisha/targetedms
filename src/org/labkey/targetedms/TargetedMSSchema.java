@@ -83,6 +83,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -1308,18 +1309,6 @@ public class TargetedMSSchema extends UserSchema
             return result;
         }
 
-        if (getTableNames().contains(name))
-        {
-            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this, cf);
-            result.wrapAllColumns(true);
-            if (name.equalsIgnoreCase(TABLE_RUNS))
-            {
-                result.getMutableColumn("DataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
-                result.getMutableColumn("SkydDataId").setFk(QueryForeignKey.from(_expSchema, cf).to(ExpSchema.TableType.Data.name(), null, null));
-            }
-            return result;
-        }
-
         // Issue 35966 - Show a custom set of columns by default for a run-scoped replicate view
         if (name.toLowerCase().startsWith(SAMPLE_FILE_RUN_PREFIX))
         {
@@ -1345,17 +1334,6 @@ public class TargetedMSSchema extends UserSchema
         {
             return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.PrecursorFK);
         }
-
-        // TODO - partial fix for 40235
-//        if (TABLE_SKYLINE_AUDITLOG_ENTRY.equalsIgnoreCase(name))
-//        {
-//            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.RunVersionFK);
-//        }
-//
-//        if (TABLE_SKYLINE_AUDITLOG_MESSAGE.equalsIgnoreCase(name))
-//        {
-//            return new TargetedMSTable(getSchema().getTable(name), this, cf, ContainerJoinType.EntryVersionFK);
-//        }
 
         if (getTableNames().contains(name))
         {
@@ -1436,10 +1414,10 @@ public class TargetedMSSchema extends UserSchema
         return super.createView(context, settings, errors);
     }
 
-    @Override
-    public Set<String> getTableNames()
+    private Set<String> getAllTableNames(boolean caseInsensitive)
     {
-        CaseInsensitiveHashSet hs = new CaseInsensitiveHashSet();
+        HashSet<String> hs = caseInsensitive ? new CaseInsensitiveHashSet() : new HashSet<>();
+
         hs.add(TABLE_TARGETED_MS_RUNS);
         hs.add(TABLE_ENZYME);
         hs.add(TABLE_RUN_ENZYME);
@@ -1521,6 +1499,18 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_SAMPLE_FILE_CHROM_INFO);
 
         return hs;
+    }
+
+    @Override
+    public Set<String> getVisibleTableNames()
+    {
+        return getAllTableNames(false);
+    }
+
+    @Override
+    public Set<String> getTableNames()
+    {
+        return getAllTableNames(true);
     }
 
     public static class ChromatogramDisplayColumn extends DataColumn

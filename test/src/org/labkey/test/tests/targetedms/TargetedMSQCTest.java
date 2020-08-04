@@ -559,7 +559,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         assertEquals("Wrong precursors", precursors, qcPlotsWebPart.getPlotTitles());
 
         // Filter the grid to a single peptide
-        DataRegionTable drt =  getSchemaBrowserDataView("targetedms", "generalmoleculechrominfo");
+        DataRegionTable drt =  getSchemaBrowserDataView("targetedms", "GeneralMoleculeChromInfo");
 
         drt.setFilter("PeptideId", "Equals", "AGGSSEPVTGLADK");
 
@@ -585,7 +585,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         verifyRow(drt, 3, QCREPLICATE_4, QC_2_FILE);
 
         goToSchemaBrowser();
-        selectQuery("targetedms", "replicateannotation");
+        selectQuery("targetedms", "ReplicateAnnotation");
         waitAndClickAndWait(Locator.linkWithText("view data"));
 
         // Ensure samples from QC-1 that exist in QC-2 have been overwritten
@@ -604,7 +604,7 @@ public class TargetedMSQCTest extends TargetedMSTest
 
         // Ensure QC-2 samples have been overwritten by QC-4
         goToSchemaBrowser();
-        selectQuery("targetedms", "precursorchrominfo");
+        selectQuery("targetedms", "PrecursorChromInfo");
         waitAndClickAndWait(Locator.linkWithText("view data"));
         assertTextPresent("42.2525");
         assertTextNotPresent("42.4541");
@@ -785,6 +785,10 @@ public class TargetedMSQCTest extends TargetedMSTest
         //Check for clickable PDF and PNG export icons for Combined plot
         verifyDownloadablePlotIcons(1);
 
+        Locator bubbleClose = Locator.byClass("hopscotch-bubble-close");
+        if (isElementPresent(bubbleClose) && isElementVisible(bubbleClose))
+            click(bubbleClose);
+
         //deselect "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, currentPagePlotCount);
 
@@ -804,7 +808,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         verifyQcSummary(1, 3, 2);
 
         //confirm 3 exclusions
-        DataRegionTable drt = getSchemaBrowserDataView("targetedms", "qcmetricexclusion");
+        DataRegionTable drt = getSchemaBrowserDataView("targetedms", "QCMetricExclusion");
         assertEquals("Wrong count", 3,drt.getDataRowCount());
         assertEquals("Wrong metric", " ", drt.getRowDataAsText(0,"MetricId").get(0));
         assertEquals("Wrong metric", " ", drt.getRowDataAsText(1,"MetricId").get(0));
@@ -814,7 +818,7 @@ public class TargetedMSQCTest extends TargetedMSTest
         clickFolder(subFolderName);
         verifyQcSummary(1, 3, 2);
 
-        drt = getSchemaBrowserDataView("targetedms", "qcmetricexclusion");
+        drt = getSchemaBrowserDataView("targetedms", "QCMetricExclusion");
         assertEquals("Wrong count", 3,drt.getDataRowCount());
         assertEquals("Wrong metric", " ", drt.getRowDataAsText(0,"MetricId").get(0));
         assertEquals("Wrong metric", " ", drt.getRowDataAsText(1,"MetricId").get(0));
