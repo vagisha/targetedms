@@ -15,7 +15,6 @@
  */
 package org.labkey.targetedms.search;
 
-import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSController;
 
 /**

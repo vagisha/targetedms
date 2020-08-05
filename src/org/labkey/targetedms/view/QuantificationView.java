@@ -23,8 +23,6 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSSchema;
 
-import java.sql.SQLException;
-
 /**
  * Base class for displaying peptide/molecule level calculations (i.e. fold changes and calibration curves).
  */

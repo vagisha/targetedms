@@ -15,7 +15,8 @@
  */
 package org.labkey.targetedms.chromlib;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.labkey.api.util.FileUtil;
 
 import java.nio.file.Files;
@@ -50,7 +51,7 @@ public class ChromatogramLibraryWriter
 
     private Path _libFile;
 
-    private static final Logger _log = Logger.getLogger(ChromatogramLibraryWriter.class);
+    private static final Logger _log = LogManager.getLogger(ChromatogramLibraryWriter.class);
 
     public void setMaxCacheSize(int maxCacheSize)
     {

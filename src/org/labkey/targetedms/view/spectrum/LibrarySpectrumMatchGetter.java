@@ -22,7 +22,6 @@ import org.labkey.api.cache.BlockingCache;
 import org.labkey.api.cache.CacheLoader;
 import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
-import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;

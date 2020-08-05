@@ -15,7 +15,8 @@
  */
 package org.labkey.targetedms.chromlib;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.labkey.targetedms.chromlib.Constants.ColumnDef;
 
 import java.sql.Connection;
@@ -32,7 +33,7 @@ import java.util.List;
  */
 public abstract class BaseDaoImpl<T extends ObjectWithId> implements Dao<T>
 {
-    private static final Logger _log = Logger.getLogger(BaseDaoImpl.class);
+    private static final Logger _log = LogManager.getLogger(BaseDaoImpl.class);
 
     public PreparedStatement getPreparedStatement(Connection connection, String sql) throws SQLException
     {

@@ -19,6 +19,7 @@
 <%@ page import="org.apache.commons.io.FileUtils" %>
 <%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.security.User" %>
+<%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
@@ -27,7 +28,6 @@
 <%@ page import="java.nio.file.Files" %>
 <%@ page import="java.nio.file.Path" %>
 <%@ page import="java.text.DecimalFormat" %>
-<%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     Container c = getContainer();

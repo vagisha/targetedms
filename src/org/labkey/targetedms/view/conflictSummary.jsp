@@ -16,11 +16,11 @@
  */
 %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
+<%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.targetedms.TargetedMSManager" %>
 <%@ page import="org.labkey.targetedms.query.ConflictResultsManager" %>
-<%@ page import="org.labkey.api.targetedms.TargetedMSService" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
 

@@ -15,24 +15,23 @@
 package org.labkey.targetedms.view;
 
 import org.labkey.api.data.SimpleDisplayColumn;
-import org.labkey.api.data.Sort;
-import org.labkey.api.data.UrlColumn;
-import org.labkey.api.view.DataView;
-import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.Sort;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.data.UrlColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.view.ActionURL;
+import org.labkey.api.view.DataView;
 import org.labkey.api.view.NavTree;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.targetedms.parser.QuantificationSettings;
 import org.labkey.targetedms.query.CalibrationCurveTable;
 
-import java.sql.SQLException;
 import java.util.Collection;
 
 /**

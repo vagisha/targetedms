@@ -15,7 +15,6 @@
 
 package org.labkey.targetedms.query;
 
-import org.labkey.api.collections.CsvSet;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.exp.api.ExpData;

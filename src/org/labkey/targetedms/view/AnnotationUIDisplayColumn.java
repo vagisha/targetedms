@@ -17,14 +17,10 @@ package org.labkey.targetedms.view;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ColumnInfo;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.User;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.util.Set;
 
 /**

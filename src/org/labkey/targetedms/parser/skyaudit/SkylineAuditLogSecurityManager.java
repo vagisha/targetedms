@@ -16,7 +16,8 @@
 package org.labkey.targetedms.parser.skyaudit;
 
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.Container;
 import org.labkey.api.module.Module;
 import org.labkey.api.module.ModuleProperty;
@@ -47,7 +48,7 @@ public class SkylineAuditLogSecurityManager
     public SkylineAuditLogSecurityManager(Container pContainer, User pUser) throws AuditLogException
     {
         _container = pContainer;
-        _logger = Logger.getLogger(this.getClass());
+        _logger = LogManager.getLogger(this.getClass());
 
         TargetedMSModule targetedMSModule = null;
         for (Module m : _container.getActiveModules())

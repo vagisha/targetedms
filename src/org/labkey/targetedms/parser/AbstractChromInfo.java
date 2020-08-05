@@ -15,7 +15,8 @@
 
 package org.labkey.targetedms.parser;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cache.BlockingCache;
 import org.labkey.api.cache.CacheManager;
@@ -53,7 +54,7 @@ public abstract class AbstractChromInfo extends ChromInfo<PrecursorChromInfoAnno
     private Integer _chromatogramLength;
     private int _chromatogramFormat;
 
-    private static final Logger LOG = Logger.getLogger(AbstractChromInfo.class);
+    private static final Logger LOG = LogManager.getLogger(AbstractChromInfo.class);
 
     private static final BlockingCache<Tuple3<Path, Long, Integer>, byte[]> ON_DEMAND_CHROM_CACHE = new BlockingCache<>(CacheManager.getCache(100, CacheManager.HOUR, "SKYD chromatogram cache"), (key, argument) -> {
         Path path = key.first;

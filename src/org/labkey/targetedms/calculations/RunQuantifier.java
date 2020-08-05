@@ -14,7 +14,17 @@
  */
 package org.labkey.targetedms.calculations;
 
+import org.jetbrains.annotations.Nullable;
+import org.labkey.api.data.Container;
+import org.labkey.api.data.SimpleFilter;
+import org.labkey.api.data.TableSelector;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.security.User;
+import org.labkey.api.util.Tuple3;
 import org.labkey.targetedms.SkylineDocImporter.IProgressStatus;
+import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.calculations.quantification.CalibrationCurve;
 import org.labkey.targetedms.calculations.quantification.CalibrationCurveDataSet;
 import org.labkey.targetedms.calculations.quantification.GroupComparisonDataSet;
@@ -24,16 +34,6 @@ import org.labkey.targetedms.calculations.quantification.PValues;
 import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.targetedms.calculations.quantification.RegressionWeighting;
 import org.labkey.targetedms.calculations.quantification.SampleType;
-import org.jetbrains.annotations.Nullable;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.SimpleFilter;
-import org.labkey.api.data.TableSelector;
-import org.labkey.api.query.FieldKey;
-import org.labkey.api.security.User;
-import org.labkey.api.util.Tuple3;
-import org.labkey.targetedms.TargetedMSManager;
-import org.labkey.targetedms.TargetedMSRun;
-import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.CalibrationCurveEntity;
 import org.labkey.targetedms.parser.FoldChange;
 import org.labkey.targetedms.parser.GeneralMolecule;

@@ -15,7 +15,6 @@
  */
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.ContainerFilter;
 import org.labkey.api.data.TableInfo;
 import org.labkey.targetedms.TargetedMSSchema;

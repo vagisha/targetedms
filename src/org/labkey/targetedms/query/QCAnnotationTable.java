@@ -17,9 +17,6 @@ package org.labkey.targetedms.query;
 
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.ContainerFilter;
-import org.labkey.api.data.ContainerForeignKey;
-import org.labkey.api.data.TableInfo;
-import org.labkey.api.exp.query.ExpSchema;
 import org.labkey.api.query.DefaultQueryUpdateService;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryForeignKey;

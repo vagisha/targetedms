@@ -16,7 +16,8 @@
 package org.labkey.targetedms.parser.blib;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.cache.BlockingCache;
@@ -25,8 +26,8 @@ import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.pipeline.LocalDirectory;
-import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.targetedms.BlibSourceFiles;
+import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.targetedms.parser.Peptide;
@@ -80,7 +81,7 @@ public class BlibSpectrumReader
         }
     }
 
-    private static final Logger LOG = Logger.getLogger(BlibSpectrumReader.class);
+    private static final Logger LOG = LogManager.getLogger(BlibSpectrumReader.class);
 
     @Nullable
     public static BlibSpectrum getSpectrum(Container container, Path blibPath,

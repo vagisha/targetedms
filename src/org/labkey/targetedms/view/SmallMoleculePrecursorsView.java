@@ -22,8 +22,6 @@ import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.query.MoleculePrecursorTableInfo;
 
-import java.sql.SQLException;
-
 /**
  * User: binalpatel
  * Date: 2/26/2016

@@ -17,8 +17,6 @@ package org.labkey.targetedms.parser.skyd;
 import org.apache.poi.util.LittleEndianInput;
 import org.labkey.targetedms.parser.SignedMz;
 
-import java.io.IOException;
-
 /**
  * Structure for a transition within a ChromGroupHeaderInfo.
  */

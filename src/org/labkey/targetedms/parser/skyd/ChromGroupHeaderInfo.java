@@ -19,7 +19,6 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.targetedms.parser.ChromatogramBinaryFormat;
 import org.labkey.targetedms.parser.SignedMz;
 
-import java.io.IOException;
 import java.util.EnumSet;
 
 /**

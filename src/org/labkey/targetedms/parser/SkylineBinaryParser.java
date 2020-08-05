@@ -16,8 +16,7 @@
 package org.labkey.targetedms.parser;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
-import org.jetbrains.annotations.Nullable;
+import org.apache.logging.log4j.Logger;
 import org.labkey.api.exp.api.DataType;
 import org.labkey.targetedms.parser.skyd.CacheFormat;
 import org.labkey.targetedms.parser.skyd.CacheFormatVersion;

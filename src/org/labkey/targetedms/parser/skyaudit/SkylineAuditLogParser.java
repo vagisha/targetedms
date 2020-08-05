@@ -15,7 +15,8 @@
  */
 package org.labkey.targetedms.parser.skyaudit;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -307,7 +308,7 @@ public class SkylineAuditLogParser
         @BeforeClass
         public static void getTestFile(){
 
-            _logger = Logger.getLogger(TestCase.class.getPackageName() + ".test");
+            _logger = LogManager.getLogger(TestCase.class.getPackageName() + ".test");
             UnitTestUtil.cleanupDatabase(_docGUID);
         }
 

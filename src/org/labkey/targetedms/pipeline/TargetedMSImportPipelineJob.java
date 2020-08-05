@@ -18,8 +18,6 @@ package org.labkey.targetedms.pipeline;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.apache.log4j.Logger;
-import org.junit.Test;
 import org.labkey.api.exp.api.ExpData;
 import org.labkey.api.pipeline.LocalDirectory;
 import org.labkey.api.pipeline.PipeRoot;
@@ -32,7 +30,6 @@ import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.ViewBackgroundInfo;
 import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.TargetedMSController;
-import org.labkey.targetedms.TargetedMSModule;
 import org.labkey.targetedms.TargetedMSRun;
 
 import java.util.List;

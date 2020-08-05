@@ -19,7 +19,8 @@ package org.labkey.targetedms;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.collections.CaseInsensitiveHashMap;
@@ -128,7 +129,7 @@ public class SkylineDocImporter
     private ProgressMonitor _progressMonitor;
 
     // Use system logger for bugs & system problems, and in cases where we don't have a pipeline logger
-    protected static final Logger _systemLog = Logger.getLogger(SkylineDocImporter.class);
+    protected static final Logger _systemLog = LogManager.getLogger(SkylineDocImporter.class);
     protected final XarContext _context;
     private int blankLabelIndex;
 

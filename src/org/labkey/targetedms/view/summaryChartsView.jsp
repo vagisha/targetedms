@@ -20,11 +20,11 @@
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.parser.Molecule" %>
 <%@ page import="org.labkey.targetedms.parser.Peptide" %>
 <%@ page import="org.labkey.targetedms.parser.Replicate" %>
-<%@ page import="java.util.List" %>
 <%@ page import="org.labkey.targetedms.parser.ReplicateAnnotation" %>
-<%@ page import="org.labkey.targetedms.parser.Molecule" %>
+<%@ page import="java.util.List" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
     @Override

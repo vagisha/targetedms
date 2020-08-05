@@ -1,12 +1,11 @@
 package org.labkey.targetedms.SkylinePort.Irt;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.labkey.targetedms.IrtPeptide;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 
 /**
  * User: tgaluhn

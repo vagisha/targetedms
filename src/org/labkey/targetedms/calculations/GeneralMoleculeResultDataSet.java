@@ -15,8 +15,6 @@
 package org.labkey.targetedms.calculations;
 
 import org.jetbrains.annotations.NotNull;
-import org.labkey.targetedms.calculations.quantification.ReplicateData;
-import org.labkey.targetedms.calculations.quantification.TransitionAreas;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.TableSelector;
@@ -24,6 +22,8 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.calculations.quantification.ReplicateData;
+import org.labkey.targetedms.calculations.quantification.TransitionAreas;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.GeneralMoleculeChromInfo;
 import org.labkey.targetedms.parser.GeneralPrecursor;

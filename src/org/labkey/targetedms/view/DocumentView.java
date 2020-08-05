@@ -21,8 +21,6 @@ import org.labkey.api.query.QueryNestingOption;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSSchema;
 
-import java.sql.SQLException;
-
 /**
  * User: binalpatel
  * Date: 2/27/2016

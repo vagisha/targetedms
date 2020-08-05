@@ -15,7 +15,8 @@
  */
 package org.labkey.targetedms;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -80,7 +81,7 @@ public class SkylineAuditLogManager
     }
 
     public SkylineAuditLogManager(@NotNull Container pContainer, @NotNull User pUser) throws AuditLogException{
-        _logger = Logger.getLogger(this.getClass());
+        _logger = LogManager.getLogger(this.getClass());
         _securityMgr = new SkylineAuditLogSecurityManager(pContainer, pUser);
     }
 
@@ -448,7 +449,7 @@ public class SkylineAuditLogManager
         @BeforeClass
         public static void InitTest(){
 
-            _logger = Logger.getLogger(SkylineAuditLogManager.TestCase.class.getPackageName() + ".test");
+            _logger = LogManager.getLogger(SkylineAuditLogManager.TestCase.class.getPackageName() + ".test");
             UnitTestUtil.cleanupDatabase(_docGUID);
             _user = TestContext.get().getUser();
             _container = ContainerManager.ensureContainer(JunitUtil.getTestContainer(), FOLDER_NAME);

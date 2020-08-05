@@ -19,13 +19,13 @@
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
 <%@ page import="org.labkey.targetedms.conflict.ConflictPrecursor" %>
 <%@ page import="org.labkey.targetedms.query.PrecursorManager" %>
 <%@ page import="org.labkey.targetedms.view.ModifiedPeptideHtmlMaker" %>
 <%@ page import="org.labkey.targetedms.view.PrecursorHtmlMaker" %>
-<%@ page import="org.labkey.targetedms.TargetedMSSchema" %>
-<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%!
     @Override

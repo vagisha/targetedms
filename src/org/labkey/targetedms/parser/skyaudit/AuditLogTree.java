@@ -15,7 +15,8 @@
  */
 package org.labkey.targetedms.parser.skyaudit;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.util.GUID;
 
@@ -29,7 +30,7 @@ public class AuditLogTree implements Iterable<AuditLogTree>
 {
     public static final String NULL_STRING = "(null)";
 
-    private static final Logger LOG = Logger.getLogger(AuditLogTree.class);
+    private static final Logger LOG = LogManager.getLogger(AuditLogTree.class);
 
     private final Map<String, AuditLogTree> _children = new HashMap<>();
     private final String _entryHash;

@@ -27,8 +27,6 @@ import org.jfree.ui.RectangleEdge;
 import java.awt.*;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
-import java.util.List;
-import java.util.Map;
 
 /**
  * User: vsharma

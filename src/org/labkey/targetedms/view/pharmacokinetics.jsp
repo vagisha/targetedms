@@ -15,10 +15,10 @@
      * limitations under the License.
      */
 %>
-<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
-<%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ taglib prefix="h" uri="http://www.labkey.org/taglib" %>

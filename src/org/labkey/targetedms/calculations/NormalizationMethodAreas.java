@@ -14,13 +14,13 @@
  */
 package org.labkey.targetedms.calculations;
 
-import org.labkey.targetedms.calculations.quantification.NormalizationMethod;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.calculations.quantification.NormalizationMethod;
 import org.labkey.targetedms.parser.GeneralMolecule;
 import org.labkey.targetedms.parser.PeptideSettings;
 import org.labkey.targetedms.parser.StandardType;

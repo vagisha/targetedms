@@ -15,7 +15,8 @@
  */
 package org.labkey.targetedms.parser;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.labkey.targetedms.SkylineDocImporter;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.ReplicateManager;
@@ -34,7 +35,7 @@ public class PeakAreaRatioCalculator
     private final Peptide _peptide;
     private Map<Integer, PeptideAreaRatioCalculator> _peptideAreaRatioCalculatorMap;
 
-    private static Logger _log = Logger.getLogger(SkylineDocImporter.class);
+    private static Logger _log = LogManager.getLogger(SkylineDocImporter.class);
 
     // All the precursors and transitions and chrom infos for this peptide must already have database IDs.
     public PeakAreaRatioCalculator(Peptide peptide)

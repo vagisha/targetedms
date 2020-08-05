@@ -16,8 +16,6 @@ package org.labkey.targetedms.parser.skyd;
 
 import org.apache.poi.util.LittleEndianInput;
 
-import java.io.IOException;
-
 /**
  * Structure which describes a candidate peak in a chromatogram for a transition.
  */

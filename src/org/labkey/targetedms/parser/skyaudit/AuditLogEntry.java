@@ -21,7 +21,6 @@ import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.Table;
 import org.labkey.api.data.TableSelector;
 import org.labkey.api.query.FieldKey;
-import org.labkey.api.query.QueryDefinition;
 import org.labkey.api.util.GUID;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSManager;
@@ -37,13 +36,10 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
 import java.util.LinkedList;
-import java.util.Map;
+import java.util.List;
 
 public class AuditLogEntry
 {

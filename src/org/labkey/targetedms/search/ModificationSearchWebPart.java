@@ -17,7 +17,6 @@ package org.labkey.targetedms.search;
 
 import org.labkey.api.view.JspView;
 import org.labkey.targetedms.TargetedMSController;
-import org.labkey.targetedms.TargetedMSModule;
 
 /**
  * User: cnathe

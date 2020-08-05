@@ -17,8 +17,6 @@ package org.labkey.targetedms.model;
 
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 
-import java.util.Comparator;
-
 /**
  * User: vsharma
  * Date: 5/8/12

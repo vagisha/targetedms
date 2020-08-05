@@ -16,7 +16,6 @@ package org.labkey.targetedms.parser.skyd;
 
 import org.apache.poi.util.LittleEndianByteArrayInputStream;
 
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 

@@ -15,18 +15,17 @@
  */
 package org.labkey.targetedms;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.exp.api.ExpData;
-import org.labkey.api.exp.api.ExpRun;
 import org.labkey.api.exp.api.ExperimentService;
 import org.labkey.api.util.FileUtil;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
 
 /**
  * User: vsharma
@@ -43,7 +42,7 @@ public class SkylineFileUtils
     public static final String EXT_BLIB = "blib";
     public static final String EXT_SKY_LOG = "skyl";
 
-    private static final Logger LOG = Logger.getLogger(SkylineFileUtils.class);
+    private static final Logger LOG = LogManager.getLogger(SkylineFileUtils.class);
 
     public static String getBaseName(String fileName)
     {

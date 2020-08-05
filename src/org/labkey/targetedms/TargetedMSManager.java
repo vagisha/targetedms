@@ -19,7 +19,8 @@ package org.labkey.targetedms;
 import com.google.common.base.Joiner;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.fhcrc.cpas.exp.xml.ExperimentArchiveDocument;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -123,7 +124,7 @@ public class TargetedMSManager
 {
     private static final TargetedMSManager _instance = new TargetedMSManager();
 
-    private static Logger _log = Logger.getLogger(TargetedMSManager.class);
+    private static Logger _log = LogManager.getLogger(TargetedMSManager.class);
 
     private TargetedMSManager()
     {

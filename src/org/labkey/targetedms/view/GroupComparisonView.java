@@ -27,7 +27,6 @@ import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.parser.GroupComparisonSettings;
 import org.labkey.targetedms.query.FoldChangeTable;
 
-import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Objects;
 

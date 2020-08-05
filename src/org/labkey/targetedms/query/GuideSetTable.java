@@ -18,7 +18,6 @@ package org.labkey.targetedms.query;
 import org.jetbrains.annotations.NotNull;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerFilter;
-import org.labkey.api.data.ContainerForeignKey;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SqlSelector;
@@ -29,7 +28,6 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.FilteredTable;
 import org.labkey.api.query.QueryUpdateService;
 import org.labkey.api.query.RowIdQueryUpdateService;
-import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.ValidationException;
 import org.labkey.api.security.User;
 import org.labkey.api.security.UserPrincipal;
@@ -37,8 +35,6 @@ import org.labkey.api.security.permissions.Permission;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.GuideSet;
-
-import java.sql.SQLException;
 
 /**
  * Created by cnathe on 4/9/2015.

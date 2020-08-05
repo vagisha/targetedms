@@ -15,9 +15,9 @@
  */
 package org.labkey.targetedms;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.labkey.api.data.CompareType;
-import org.labkey.api.data.Container;
 import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.DbScope;
@@ -39,7 +39,6 @@ import org.labkey.api.pipeline.PipeRoot;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
-import org.labkey.api.view.Portal;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -52,8 +51,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_TAB;
-
 
 /**
  * User: jeckels
@@ -61,7 +58,7 @@ import static org.labkey.api.targetedms.TargetedMSService.RAW_FILES_TAB;
  */
 public class TargetedMSUpgradeCode implements UpgradeCode
 {
-    private static final Logger LOG = Logger.getLogger(TargetedMSUpgradeCode.class);
+    private static final Logger LOG = LogManager.getLogger(TargetedMSUpgradeCode.class);
 
     // called at every bootstrap to initialize annotation types
     @SuppressWarnings({"UnusedDeclaration"})
