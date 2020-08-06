@@ -1664,4 +1664,19 @@
             <column columnName="PeakArea"/>
         </columns>
     </table>
+    <table tableDbType="TABLE" tableName="keywords">
+        <columns>
+            <column columnName="id"/>
+            <column columnName="keywordid"/>
+            <column columnName="keyword"/>
+            <column columnName="category"/>
+        </columns>
+    </table>
+    <table tableDbType="TABLE" tableName="keywordcategories">
+        <columns>
+            <column columnName="id"/>
+            <column columnName="categoryid"/>
+            <column columnName="label"/>
+        </columns>
+    </table>
 </tables>

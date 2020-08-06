@@ -39,6 +39,7 @@ import org.labkey.api.module.SpringModule;
 import org.labkey.api.pipeline.PipelineService;
 import org.labkey.api.protein.ProteinService;
 import org.labkey.api.protein.ProteomicsModule;
+import org.labkey.api.query.QueryView;
 import org.labkey.api.security.permissions.ApplicationAdminPermission;
 import org.labkey.api.settings.AdminConsole;
 import org.labkey.api.targetedms.TargetedMSService;
@@ -56,6 +57,7 @@ import org.labkey.api.view.template.ClientDependency;
 import org.labkey.targetedms.chart.ComparisonCategory;
 import org.labkey.targetedms.chart.ReplicateLabelMinimizer;
 import org.labkey.targetedms.parser.skyaudit.SkylineAuditLogParser;
+import org.labkey.targetedms.passport.PassportController;
 import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.query.SkylineListSchema;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
@@ -67,6 +69,7 @@ import org.labkey.targetedms.view.QCSummaryWebPart;
 import org.labkey.targetedms.view.TargetedMSRunsWebPartView;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
 import org.labkey.targetedms.view.TransitionProteinSearchViewProvider;
+import org.labkey.targetedms.view.passport.ProteinListView;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -202,7 +205,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     @Override
     public Double getSchemaVersion()
     {
-        return 20.008;
+        return 20.009;
     }
 
     @Override
@@ -371,6 +374,18 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             }
         };
 
+        BaseWebPartFactory passportFactory = new BaseWebPartFactory("Passport")
+        {
+            @Override
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            {
+                QueryView v =  ProteinListView.createView(portalCtx);
+                v.setTitle("Passport");
+                v.setFrame(WebPartView.FrameType.PORTAL);
+                return v;
+            }
+        };
+
         List<WebPartFactory> webpartFactoryList = new ArrayList<>();
         webpartFactoryList.add(setupFactory);
         webpartFactoryList.add(chromatogramLibraryDownload);
@@ -384,6 +399,7 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         webpartFactoryList.add(qcPlotsFactory);
         webpartFactoryList.add(qcSummaryFactory);
         webpartFactoryList.add(paretoPlotFactory);
+        webpartFactoryList.add(passportFactory);
         return webpartFactoryList;
     }
 
@@ -405,6 +421,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     protected void init()
     {
         addController("targetedms", TargetedMSController.class);
+        addController("passport", PassportController.class);
+
         TargetedMSSchema.register(this);
         SkylineListSchema.register(this);
 
