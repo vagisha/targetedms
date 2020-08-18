@@ -87,7 +87,6 @@
     <%}%>
     
     <tr>
-
         <td class="labkey-form-label">Precursors</td>
         <td>
             <%for(Precursor precursor: bean.getPrecursorList())
@@ -100,15 +99,13 @@
                      )%>
 
                      <% String imgUrl = IconFactory.getPrecursorIconPath(precursor.getId(), bean.getPeptide().isDecoyPeptide()); %>
-                     <a href="<%=precursorDetailsUrl+"id="+precursor.getId()%>">
-                        <img src="<%=imgUrl%>" alt="Click to view details"/>
+                     <a href="<%=h(precursorDetailsUrl.replaceParameter("id", precursor.getId()))%>">
+                        <img src="<%=h(imgUrl)%>" alt="Click to view details"/>
                      </a>
 
                  </div>
             <%}%>
-
         </td>
-
     </tr>
 </table>
 

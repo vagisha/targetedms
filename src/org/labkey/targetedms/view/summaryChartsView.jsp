@@ -511,7 +511,7 @@
 
 </script>
 <div>
-    <div id="peakAreasFormDiv" class="summary_form_box" style="display: <%= bean.isShowControls() ? "block" : "none"%>;"></div>
+    <div id="peakAreasFormDiv" class="summary_form_box" style="display: <%=h(bean.isShowControls() ? "block" : "none")%>;"></div>
     <div class="summary_title_box">
         <h3 class="title">Peak Areas</h3>
         <div id="peakAreasGraphImg"></div>

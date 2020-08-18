@@ -15,9 +15,10 @@
  * limitations under the License.
  */
 %>
+<%@ page import="org.labkey.api.util.JavaScriptFragment"%>
 <%@ page import="org.labkey.api.view.HttpView"%>
 <%@ page import="org.labkey.api.view.JspView"%>
-<%@ page import="org.labkey.api.view.template.ClientDependencies"%>
+<%@ page import="org.labkey.api.view.template.ClientDependencies" %>
 <%@ page import="org.labkey.targetedms.parser.PeptideSettings" %>
 <%@ page import="org.labkey.targetedms.view.spectrum.LibrarySpectrumMatch" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
@@ -46,23 +47,23 @@
 </div>
 
 <!-- PLACE HOLDER DIV FOR THE SPECTRUM -->
-<div id="<%=lorikeetOptionsId%>"></div>
-<div id="<%=bean.getLorikeetId()%>"></div>
+<div id="<%=h(lorikeetOptionsId)%>"></div>
+<div id="<%=h(bean.getLorikeetId())%>"></div>
 <script type="text/javascript">
 
 +function($){
 Ext4.onReady(function () {
 
     /* render the spectrum with the given options */
-    $("#<%=bean.getLorikeetId()%>").specview({sequence: <%= q(bean.getPeptide()) %>,
-        staticMods: <%= bean.getStructuralModifications()%>,
-        variableMods: <%= bean.getVariableModifications()%>,
-        ntermMod: <%=bean.getNtermModMass()%>,
-        ctermMod: <%=bean.getCtermModMass()%>,
+    $("#<%=unsafe(bean.getLorikeetId())%>").specview({sequence: <%= q(bean.getPeptide()) %>,
+        staticMods: <%=JavaScriptFragment.unsafe(bean.getStructuralModifications())%>,
+        variableMods: <%=JavaScriptFragment.unsafe(bean.getVariableModifications())%>,
+        ntermMod: <%=JavaScriptFragment.unsafe(bean.getNtermModMass())%>,
+        ctermMod: <%=JavaScriptFragment.unsafe(bean.getCtermModMass())%>,
         maxNeutralLossCount: <%= bean.getMaxNeutralLosses()%>,
         width: 600,
         charge: <%= bean.getCharge()%>,
-        peaks: <%= bean.getPeaks()%>,// peaks in the scan: [m/z, intensity] pairs.
+        peaks: <%=JavaScriptFragment.unsafe(bean.getPeaks())%>,// peaks in the scan: [m/z, intensity] pairs.
         extraPeakSeries: [],
         peakDetect: false
     });
@@ -87,7 +88,7 @@ Ext4.onReady(function () {
     var spectrumCount = <%=bean.getSpectrum().getRedundantSpectrumList().size()%>;
     if(spectrumCount > 1)
     {
-        specSelectData = <%=bean.getRedundantSpectraList()%>;
+        specSelectData = <%=JavaScriptFragment.unsafe(bean.getRedundantSpectraList())%>;
     }
     var spectrumSource = Ext4.create('Ext.data.Store', {
         fields: ['redundantSpectrumId', 'fileName', 'retentionTime', 'isReference', 'display'],

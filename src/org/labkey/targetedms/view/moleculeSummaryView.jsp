@@ -106,8 +106,8 @@
     %>
             <div>
                 <%=text(precursor.getHtml())%>
-                <a href="<%=precursorDetailsUrl+"id="+precursor.getId()%>">
-                    <img src="<%=IconFactory.getTransitionGroupIconPath()%>" alt="Click to view details"/>
+                <a href="<%=h(precursorDetailsUrl.replaceParameter("id", precursor.getId()))%>">
+                    <img src="<%=h(IconFactory.getTransitionGroupIconPath())%>" alt="Click to view details"/>
                 </a>
             </div>
     <%

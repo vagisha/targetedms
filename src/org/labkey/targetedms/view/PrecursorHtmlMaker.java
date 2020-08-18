@@ -16,6 +16,7 @@
 package org.labkey.targetedms.view;
 
 import org.labkey.api.util.Formats;
+import org.labkey.api.util.HtmlString;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.LabelFactory;
 import org.labkey.targetedms.parser.Peptide;
@@ -47,8 +48,8 @@ public class PrecursorHtmlMaker
         return html.toString();
     }
 
-    public static String getModSeqChargeHtml(ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker, Precursor precursor,
-                                             int runId, TargetedMSSchema schema)
+    public static HtmlString getModSeqChargeHtml(ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker, Precursor precursor,
+                                                 int runId, TargetedMSSchema schema)
     {
         StringBuilder html = new StringBuilder();
         html.append(modifiedPeptideHtmlMaker.getPrecursorHtml(precursor, runId, schema));
@@ -56,6 +57,6 @@ public class PrecursorHtmlMaker
         html.append(LabelFactory.getChargeLabel(precursor.getCharge()));
         html.append("</span>");
 
-        return html.toString();
+        return HtmlString.unsafe(html.toString());
     }
 }

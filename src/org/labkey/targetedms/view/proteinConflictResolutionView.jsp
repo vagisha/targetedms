@@ -217,7 +217,7 @@ function toggleCheckboxSelection(element)
         <ul>
             <%for(String conflictRun: bean.getAllConflictRunFiles().keySet()) {%>
                  <li>
-                     <a href="<%=h(proteinConflictUiUrl)%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=conflictRun%></a>
+                     <a href="<%=h(proteinConflictUiUrl)%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=h(conflictRun)%></a>
                  </li>
             <%}%>
         </ul>
@@ -229,7 +229,7 @@ function toggleCheckboxSelection(element)
 
 <%if(bean.getConflictRunFileName() != null) {%>
     <div style="color:red; margin-bottom:10px;">
-        Resolve conflicts for <%=bean.getConflictRunFileName()%>.
+        Resolve conflicts for <%=h(bean.getConflictRunFileName())%>.
     </div>
 <%}%>
 
@@ -277,11 +277,11 @@ function toggleCheckboxSelection(element)
              </td>
              <td class="representative newProtein <%=protein.getNewProteinId()%>">
                  <span class="conflictEntityLabel">
-                     <%=protein.getNewProteinLabel()%>
+                     <%=h(protein.getNewProteinLabel())%>
                  </span>
              </td>
              <td class="representative newProtein <%=protein.getNewProteinId()%>">
-                 <a href="<%=h(runProteinDetailsUrl)%>id=<%=protein.getNewProteinId()%>"><%=protein.getNewRunFile()%></a>
+                 <a href="<%=h(runProteinDetailsUrl)%>id=<%=protein.getNewProteinId()%>"><%=h(protein.getNewRunFile())%></a>
              </td>
 
              <!-- Old representative protein -->
@@ -297,11 +297,11 @@ function toggleCheckboxSelection(element)
              </td>
              <td class="oldProtein <%=protein.getNewProteinId()%>">
                  <span class="conflictEntityLabel">
-                     <%=protein.getOldProteinLabel()%>
+                     <%=h(protein.getOldProteinLabel())%>
                  </span>
              </td>
              <td class="oldProtein <%=protein.getNewProteinId()%>">
-                 <a href="<%=h(runProteinDetailsUrl)%>id=<%=protein.getOldProteinId()%>"><%=protein.getOldRunFile()%></a>
+                 <a href="<%=h(runProteinDetailsUrl)%>id=<%=protein.getOldProteinId()%>"><%=h(protein.getOldRunFile())%></a>
              </td>
          </tr>
     <%}%>

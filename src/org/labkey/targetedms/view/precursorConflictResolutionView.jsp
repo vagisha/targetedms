@@ -44,8 +44,8 @@
 
     ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker = new ModifiedPeptideHtmlMaker();
 
-    String runPrecursorDetailsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer()).getLocalURIString();
-    String precursorConflictUiUrl = new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getContainer()).getLocalURIString();
+    ActionURL runPrecursorDetailsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer());
+    ActionURL precursorConflictUiUrl = new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getContainer());
 %>
 
 <style type="text/css">
@@ -224,7 +224,7 @@ function toggleCheckboxSelection(element)
         <ul>
             <%for(String conflictRun: bean.getAllConflictRunFiles().keySet()) {%>
                  <li>
-                     <a href="<%=precursorConflictUiUrl%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=h(conflictRun)%></a>
+                     <a href="<%=h(precursorConflictUiUrl.replaceParameter("conflictedRunId", bean.getAllConflictRunFiles().get(conflictRun)))%>"><%=h(conflictRun)%></a>
                  </li>
             <%}%>
         </ul>
@@ -288,7 +288,7 @@ function toggleCheckboxSelection(element)
                  </span>
              </td>
              <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
-                 <a href="<%=runPrecursorDetailsUrl%>id=<%=precursor.getNewPrecursorId()%>"><%=precursor.getNewRunFile()%></a>
+                 <a href="<%=h(runPrecursorDetailsUrl.replaceParameter("id", precursor.getNewPrecursorId()))%>"><%=h(precursor.getNewRunFile())%></a>
              </td>
 
              <!-- Old representative precursor -->
@@ -309,7 +309,7 @@ function toggleCheckboxSelection(element)
                  </span>
              </td>
              <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">
-                <a href="<%=runPrecursorDetailsUrl%>id=<%=precursor.getOldPrecursorId()%>"><%=precursor.getOldRunFile()%></a>
+                <a href="<%=h(runPrecursorDetailsUrl.replaceParameter("id", precursor.getOldPrecursorId()))%>"><%=h(precursor.getOldRunFile())%></a>
              </td>
          </tr>
     <%}%>

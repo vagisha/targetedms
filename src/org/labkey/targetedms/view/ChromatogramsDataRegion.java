@@ -172,7 +172,7 @@ public class ChromatogramsDataRegion extends DataRegion
         for (Integer rowSize : sizes)
         {
             URLHelper url = target.clone();
-            url.replaceParameter("maxRowSize", String.valueOf(rowSize));
+            url.replaceParameter("maxRowSize", rowSize);
 
             boolean checked = rowSize == maxRowSize;
             NavTree item = pageSizeMenu.addMenuItem(String.valueOf(rowSize) + " per row",

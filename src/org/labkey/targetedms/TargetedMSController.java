@@ -5070,7 +5070,7 @@ public class TargetedMSController extends SpringActionController
         NavTree navTree = new NavTree(documentSize, null, null, "fa fa-download");
         navTree.setTip("Download");
 
-        final ActionURL fullDownloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, run.getContainer()).replaceParameter("id", Integer.toString(run.getId()));
+        final ActionURL fullDownloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, run.getContainer()).replaceParameter("id", run.getId());
 
         NavTree fullDownloadNavTree = new NavTree("Full Skyline file", fullDownloadUrl);
         fullDownloadNavTree.setScript(onClickScript);
