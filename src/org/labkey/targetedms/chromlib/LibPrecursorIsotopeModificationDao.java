@@ -35,7 +35,7 @@ public class LibPrecursorIsotopeModificationDao extends BaseDaoImpl<LibPrecursor
     protected void setValuesInStatement(LibPrecursorIsotopeModification precIsotopeMod, PreparedStatement stmt) throws SQLException
     {
         int colIndex = 1;
-        stmt.setInt(colIndex++, precIsotopeMod.getPrecursorId());
+        stmt.setLong(colIndex++, precIsotopeMod.getPrecursorId());
         stmt.setInt(colIndex++, precIsotopeMod.getIsotopeModificationId());
         stmt.setInt(colIndex++, precIsotopeMod.getIndexAa());
         stmt.setDouble(colIndex, precIsotopeMod.getMassDiff());

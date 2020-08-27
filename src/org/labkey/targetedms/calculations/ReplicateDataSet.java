@@ -40,10 +40,10 @@ import java.util.stream.Collectors;
  */
 public class ReplicateDataSet
 {
-    Map<Integer, Replicate> _replicates = new HashMap<>();
-    Map<Integer, Integer> _fileIdToReplicateId = new HashMap<>();
-    Map<Integer, Map<String, ReplicateAnnotation>> _replicateAnnotations;
-    Map<Integer, PeptideSettings.IsotopeLabel> _isotopeLabels;
+    Map<Long, Replicate> _replicates = new HashMap<>();
+    Map<Long, Long> _fileIdToReplicateId = new HashMap<>();
+    Map<Long, Map<String, ReplicateAnnotation>> _replicateAnnotations;
+    Map<Long, PeptideSettings.IsotopeLabel> _isotopeLabels;
 
     public ReplicateDataSet(TargetedMSRun run)
     {
@@ -64,9 +64,9 @@ public class ReplicateDataSet
     }
 
     @Nullable
-    public Replicate getReplicateFromSampleFileId(int sampleFileId)
+    public Replicate getReplicateFromSampleFileId(long sampleFileId)
     {
-        Integer replicateId = _fileIdToReplicateId.get(sampleFileId);
+        Long replicateId = _fileIdToReplicateId.get(sampleFileId);
         if (replicateId == null)
         {
             return null;
@@ -75,7 +75,7 @@ public class ReplicateDataSet
     }
 
     @NotNull
-    public String getIsotopeLabelName(int isotopeLabelId)
+    public String getIsotopeLabelName(long isotopeLabelId)
     {
         PeptideSettings.IsotopeLabel isotopeLabel = _isotopeLabels.get(isotopeLabelId);
         if (isotopeLabel == null)

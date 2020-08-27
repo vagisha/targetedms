@@ -24,8 +24,8 @@ package org.labkey.targetedms.chromlib;
 public class LibPrecursorRetentionTime implements ObjectWithId
 {
     private int _id;
-    private int _precursorId;
-    private int _sampleFileId;
+    private long _precursorId;
+    private long _sampleFileId;
     private Double _retentionTime;
     private Double _startTime;
     private Double _endTime;
@@ -41,22 +41,22 @@ public class LibPrecursorRetentionTime implements ObjectWithId
         _id = id;
     }
 
-    public int getPrecursorId()
+    public long getPrecursorId()
     {
         return _precursorId;
     }
 
-    public void setPrecursorId(int precursorId)
+    public void setPrecursorId(long precursorId)
     {
         _precursorId = precursorId;
     }
 
-    public int getSampleFileId()
+    public long getSampleFileId()
     {
         return _sampleFileId;
     }
 
-    public void setSampleFileId(int sampleFileId)
+    public void setSampleFileId(long sampleFileId)
     {
         _sampleFileId = sampleFileId;
     }
@@ -112,8 +112,8 @@ public class LibPrecursorRetentionTime implements ObjectWithId
     @Override
     public int hashCode()
     {
-        int result = _precursorId;
-        result = 31 * result + _sampleFileId;
+        int result = (int) _precursorId;
+        result = (int) (31 * result + _sampleFileId);
         result = 31 * result + (_retentionTime != null ? _retentionTime.hashCode() : 0);
         result = 31 * result + (_startTime != null ? _startTime.hashCode() : 0);
         result = 31 * result + (_endTime != null ? _endTime.hashCode() : 0);

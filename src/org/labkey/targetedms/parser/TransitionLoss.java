@@ -30,25 +30,25 @@ public class TransitionLoss extends SkylineEntity
     private Double _massDiffAvg; // Not null only for custom neutral losses that have a formula
 
     // The database fields
-    private int _transitionId;
-    private int _structuralModLossId;
+    private long _transitionId;
+    private long _structuralModLossId;
 
-    public int getTransitionId()
+    public long getTransitionId()
     {
         return _transitionId;
     }
 
-    public void setTransitionId(int transitionId)
+    public void setTransitionId(long transitionId)
     {
         _transitionId = transitionId;
     }
 
-    public int getStructuralModLossId()
+    public long getStructuralModLossId()
     {
         return _structuralModLossId;
     }
 
-    public void setStructuralModLossId(int structuralModLossId)
+    public void setStructuralModLossId(long structuralModLossId)
     {
         _structuralModLossId = structuralModLossId;
     }

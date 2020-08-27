@@ -25,9 +25,9 @@ import org.labkey.targetedms.parser.SkylineEntity;
 public class PrecursorChromInfoLitePlus extends SkylineEntity implements PrecursorComparator.Comparable
 {
     // Columns from the PrecursorChromInfo table
-    private int _sampleFileId;
-    private int _precursorId;
-    private int _generalMoleculeChromInfoId;
+    private long _sampleFileId;
+    private long _precursorId;
+    private long _generalMoleculeChromInfoId;
     private Double _bestRetentionTime;
     private Double _minStartTime;
     private Double _maxEndTime;
@@ -53,32 +53,32 @@ public class PrecursorChromInfoLitePlus extends SkylineEntity implements Precurs
     // Columns from the Molecule table
     private String _customIonName;
 
-    public int getPrecursorId()
+    public long getPrecursorId()
     {
         return _precursorId;
     }
 
-    public void setPrecursorId(int precursorId)
+    public void setPrecursorId(long precursorId)
     {
         _precursorId = precursorId;
     }
 
-    public int getGeneralMoleculeChromInfoId()
+    public long getGeneralMoleculeChromInfoId()
     {
         return _generalMoleculeChromInfoId;
     }
 
-    public void setGeneralMoleculeChromInfoId(int generalMoleculeChromInfoId)
+    public void setGeneralMoleculeChromInfoId(long generalMoleculeChromInfoId)
     {
         _generalMoleculeChromInfoId = generalMoleculeChromInfoId;
     }
 
-    public int getSampleFileId()
+    public long getSampleFileId()
     {
         return _sampleFileId;
     }
 
-    public void setSampleFileId(int sampleFileId)
+    public void setSampleFileId(long sampleFileId)
     {
         _sampleFileId = sampleFileId;
     }

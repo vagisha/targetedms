@@ -22,25 +22,25 @@ package org.labkey.targetedms.parser;
  */
 public class PeptideAreaRatio extends AreaRatio
 {
-    private int _peptideChromInfoId;
-    private int _peptideChromInfoStdId;
+    private long _peptideChromInfoId;
+    private long _peptideChromInfoStdId;
 
-    public int getPeptideChromInfoId()
+    public long getPeptideChromInfoId()
     {
         return _peptideChromInfoId;
     }
 
-    public void setPeptideChromInfoId(int peptideChromInfoId)
+    public void setPeptideChromInfoId(long peptideChromInfoId)
     {
         _peptideChromInfoId = peptideChromInfoId;
     }
 
-    public int getPeptideChromInfoStdId()
+    public long getPeptideChromInfoStdId()
     {
         return _peptideChromInfoStdId;
     }
 
-    public void setPeptideChromInfoStdId(int peptideChromInfoStdId)
+    public void setPeptideChromInfoStdId(long peptideChromInfoStdId)
     {
         _peptideChromInfoStdId = peptideChromInfoStdId;
     }

@@ -60,10 +60,10 @@ public class ComparisonDataset
     private double _maxValue = 0;
     private final SeriesItemMaker _seriesItemMaker;
     private final boolean _logScale;
-    private final int _runId;
+    private final long _runId;
     private PrecursorColorIndexer _colorIndexer;
 
-    public ComparisonDataset(int runId, SeriesItemMaker seriesItemMaker, boolean logScale)
+    public ComparisonDataset(long runId, SeriesItemMaker seriesItemMaker, boolean logScale)
     {
         _seriesItemMaker = seriesItemMaker;
         _logScale = logScale;
@@ -192,7 +192,7 @@ public class ComparisonDataset
             _colorIndexer.setMinCharge(minCharge);
         }
 
-        int colorIndex = _colorIndexer.getColorIndex(seriesLabel.getIsotopeLabelId(), seriesLabel.getCharge());
+        long colorIndex = _colorIndexer.getColorIndex(seriesLabel.getIsotopeLabelId(), seriesLabel.getCharge());
         return ChartColors.getIsotopeColor(colorIndex);
     }
 

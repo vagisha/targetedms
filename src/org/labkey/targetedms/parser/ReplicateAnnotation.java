@@ -29,16 +29,16 @@ public class ReplicateAnnotation extends AbstractAnnotation
     // be excluded from guide sets and not counted towards outliers in QC folders.
     public static final String IGNORE_IN_QC = "ignore_in_QC";
 
-    private int _replicateId;
+    private long _replicateId;
 
     private String _source;
 
-    public int getReplicateId()
+    public long getReplicateId()
     {
         return _replicateId;
     }
 
-    public void setReplicateId(int replicateId)
+    public void setReplicateId(long replicateId)
     {
         _replicateId = replicateId;
     }

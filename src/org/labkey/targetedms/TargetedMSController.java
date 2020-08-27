@@ -295,14 +295,14 @@ public class TargetedMSController extends SpringActionController
         return new ActionURL(ShowPrecursorListAction.class, c);
     }
 
-    public static ActionURL getShowRunURL(Container c, int runId)
+    public static ActionURL getShowRunURL(Container c, long runId)
     {
         ActionURL url = getShowRunURL(c);
         url.addParameter("id", runId);
         return url;
     }
 
-    public static ActionURL getShowCalibrationCurvesURL(Container c, int runId)
+    public static ActionURL getShowCalibrationCurvesURL(Container c, long runId)
     {
         ActionURL url = new ActionURL(ShowCalibrationCurvesAction.class, c);
         url.addParameter("id", runId);
@@ -1449,7 +1449,7 @@ public class TargetedMSController extends SpringActionController
     public class PrecursorAllChromatogramsChartAction extends SimpleViewAction<ChromatogramForm>
     {
         private TargetedMSRun _run; // save for use in appendNavTrail
-        private int _peptideId; // save for use in appendNavTrail
+        private long _peptideId; // save for use in appendNavTrail
 
         @Override
         public ModelAndView getView(ChromatogramForm form, BindException errors)
@@ -1544,7 +1544,7 @@ public class TargetedMSController extends SpringActionController
     public class MoleculePrecursorAllChromatogramsChartAction extends SimpleViewAction<ChromatogramForm>
     {
         private TargetedMSRun _run; // save for use in appendNavTrail
-        private int _moleculeId; // save for use in appendNavTrail
+        private long _moleculeId; // save for use in appendNavTrail
 
         @Override
         public ModelAndView getView(ChromatogramForm form, BindException errors)
@@ -2300,7 +2300,7 @@ public class TargetedMSController extends SpringActionController
         @Override
         public ModelAndView getView(ShowSpectrumForm form, BindException errors)
         {
-            int peptideId = form.getId();  // peptide Id
+            long peptideId = form.getId();  // peptide Id
 
             Peptide peptide = PeptideManager.getPeptide(getContainer(), peptideId);
             if(peptide == null)
@@ -2480,7 +2480,7 @@ public class TargetedMSController extends SpringActionController
     {
         private String _libraryName;
         private int _redundantRefSpectrumId;
-        private int _precursorId;
+        private long _precursorId;
 
         public String getLibraryName()
         {
@@ -2502,12 +2502,12 @@ public class TargetedMSController extends SpringActionController
             _redundantRefSpectrumId = redundantRefSpectrumId;
         }
 
-        public int getPrecursorId()
+        public long getPrecursorId()
         {
             return _precursorId;
         }
 
-        public void setPrecursorId(int precursorId)
+        public void setPrecursorId(long precursorId)
         {
             _precursorId = precursorId;
         }
@@ -2814,8 +2814,8 @@ public class TargetedMSController extends SpringActionController
     public static class SummaryChartForm extends AbstractChartForm
     {
         private boolean _asProteomics;
-        private int _peptideGroupId;
-        private int _replicateId = 0; // A value of 0 means all replicates should be included in the plot.
+        private long _peptideGroupId;
+        private long _replicateId = 0; // A value of 0 means all replicates should be included in the plot.
         private String _groupByReplicateAnnotName;
         private ReplicateAnnotation _annotationFilter;
         private String _filterByReplicateAnnotName;
@@ -2824,12 +2824,12 @@ public class TargetedMSController extends SpringActionController
         private String _value;
 
         // fields for proteomics
-        private int _peptideId = 0;
-        private int _precursorId = 0;
+        private long _peptideId = 0;
+        private long _precursorId = 0;
 
         // fields for small molecule
-        private int _moleculeId = 0;
-        private int _moleculePrecursorId = 0;
+        private long _moleculeId = 0;
+        private long _moleculePrecursorId = 0;
 
         public boolean isAsProteomics()
         {
@@ -2851,22 +2851,22 @@ public class TargetedMSController extends SpringActionController
             _value = value;
         }
 
-        public int getPeptideGroupId()
+        public long getPeptideGroupId()
         {
             return _peptideGroupId;
         }
 
-        public void setPeptideGroupId(int peptideGroupId)
+        public void setPeptideGroupId(long peptideGroupId)
         {
             _peptideGroupId = peptideGroupId;
         }
 
-        public int getReplicateId()
+        public long getReplicateId()
         {
             return _replicateId;
         }
 
-        public void setReplicateId(int replicateId)
+        public void setReplicateId(long replicateId)
         {
             _replicateId = replicateId;
         }
@@ -2891,42 +2891,42 @@ public class TargetedMSController extends SpringActionController
             _filterByReplicateAnnotName = filterByReplicateAnnotName;
         }
 
-        public int getPeptideId()
+        public long getPeptideId()
         {
             return _peptideId;
         }
 
-        public void setPeptideId(int peptideId)
+        public void setPeptideId(long peptideId)
         {
             _peptideId = peptideId;
         }
 
-        public int getPrecursorId()
+        public long getPrecursorId()
         {
             return _precursorId;
         }
 
-        public void setPrecursorId(int precursorId)
+        public void setPrecursorId(long precursorId)
         {
             _precursorId = precursorId;
         }
 
-        public int getMoleculeId()
+        public long getMoleculeId()
         {
             return _moleculeId;
         }
 
-        public void setMoleculeId(int moleculeId)
+        public void setMoleculeId(long moleculeId)
         {
             _moleculeId = moleculeId;
         }
 
-        public int getMoleculePrecursorId()
+        public long getMoleculePrecursorId()
         {
             return _moleculePrecursorId;
         }
 
-        public void setMoleculePrecursorId(int moleculePrecursorId)
+        public void setMoleculePrecursorId(long moleculePrecursorId)
         {
             _moleculePrecursorId = moleculePrecursorId;
         }
@@ -3839,16 +3839,16 @@ public class TargetedMSController extends SpringActionController
 
     public static class SkylineAuditLogExtraInfoForm
     {
-        private int _runId;
+        private long _runId;
         private int _entryId;
 
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -3866,7 +3866,7 @@ public class TargetedMSController extends SpringActionController
 
     public static class RunDetailsForm extends QueryViewAction.QueryExportForm
     {
-        private int _id = 0;
+        private long _id = 0;
         private String _fileName;
         private String _view;
         private boolean _attemptedLookupByName;
@@ -3881,12 +3881,12 @@ public class TargetedMSController extends SpringActionController
             _fileName = fileName;
         }
 
-        public void setId(int id)
+        public void setId(long id)
         {
             _id = id;
         }
 
-        public int getId()
+        public long getId()
         {
             if (_id == 0 && _fileName != null && !_attemptedLookupByName)
             {
@@ -3955,7 +3955,7 @@ public class TargetedMSController extends SpringActionController
     }
 
     @NotNull
-    private TargetedMSRun validateRun(int runId)
+    private TargetedMSRun validateRun(long runId)
     {
         Container c = getContainer();
         TargetedMSRun run = TargetedMSManager.getRun(runId);
@@ -4260,7 +4260,7 @@ public class TargetedMSController extends SpringActionController
         private int _initialWidth = 600;
         private int _initialHeight = 400;
 
-        private int _peptideGroupId;
+        private long _peptideGroupId;
         private List<Replicate> _replicateList;
         private List<String> _replicateAnnotationNameList;
         private List<ReplicateAnnotation> _replicateAnnotationValueList;
@@ -4272,7 +4272,7 @@ public class TargetedMSController extends SpringActionController
 
         // fields for small molecule
         private long _moleculeId;
-        private int _moleculePrecursorId;
+        private long _moleculePrecursorId;
         private List<Molecule> _moleculeList;
 
         public boolean isShowControls()
@@ -4305,12 +4305,12 @@ public class TargetedMSController extends SpringActionController
             _initialHeight = initialHeight;
         }
 
-        public int getPeptideGroupId()
+        public long getPeptideGroupId()
         {
             return _peptideGroupId;
         }
 
-        public void setPeptideGroupId(int peptideGroupId)
+        public void setPeptideGroupId(long peptideGroupId)
         {
             _peptideGroupId = peptideGroupId;
         }
@@ -4345,12 +4345,12 @@ public class TargetedMSController extends SpringActionController
             _moleculeId = moleculeId;
         }
 
-        public int getMoleculePrecursorId()
+        public long getMoleculePrecursorId()
         {
             return _moleculePrecursorId;
         }
 
-        public void setMoleculePrecursorId(int moleculePrecursorId)
+        public void setMoleculePrecursorId(long moleculePrecursorId)
         {
             _moleculePrecursorId = moleculePrecursorId;
         }
@@ -5070,7 +5070,7 @@ public class TargetedMSController extends SpringActionController
         NavTree navTree = new NavTree(documentSize, null, null, "fa fa-download");
         navTree.setTip("Download");
 
-        final ActionURL fullDownloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, run.getContainer()).replaceParameter("id", run.getId());
+        final ActionURL fullDownloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, run.getContainer()).replaceParameter("id", Long.toString(run.getId()));
 
         NavTree fullDownloadNavTree = new NavTree("Full Skyline file", fullDownloadUrl);
         fullDownloadNavTree.setScript(onClickScript);
@@ -6876,7 +6876,7 @@ public class TargetedMSController extends SpringActionController
             return (TargetedMSUrlsImpl) PageFlowUtil.urlProvider(TargetedMSUrls.class);
         }
         @Override
-        public ActionURL getDownloadDocumentUrl(Container container, int runId)
+        public ActionURL getDownloadDocumentUrl(Container container, long runId)
         {
             ActionURL url = new ActionURL(TargetedMSController.DownloadDocumentAction.class, container);
             url.addParameter("id", runId);
@@ -6884,7 +6884,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public ActionURL getShowRunUrl(Container container, int runId)
+        public ActionURL getShowRunUrl(Container container, long runId)
         {
             ActionURL url = new ActionURL(TargetedMSController.ShowPrecursorListAction.class, container);
             url.addParameter("id", runId);
@@ -6900,7 +6900,7 @@ public class TargetedMSController extends SpringActionController
         }
 
         @Override
-        public ActionURL getShowPeptideUrl(Container container, int peptideId)
+        public ActionURL getShowPeptideUrl(Container container, long peptideId)
         {
             ActionURL url = new ActionURL(TargetedMSController.ShowPeptideAction.class, container);
             url.addParameter("id", peptideId);

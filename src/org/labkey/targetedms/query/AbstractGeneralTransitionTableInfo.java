@@ -36,7 +36,7 @@ public class AbstractGeneralTransitionTableInfo extends JoinedTargetedMSTable
                 TargetedMSManager.getTableInfoTransitionAnnotation(), "TransitionId", "Annotations", "transition", omitAnnotations);
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         checkLocked();
         super.addContainerTableFilter(new CompareType.EqualsCompareClause(FieldKey.fromParts("Id"), CompareType.EQUAL, runId));

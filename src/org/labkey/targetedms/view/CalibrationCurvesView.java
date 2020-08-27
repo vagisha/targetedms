@@ -107,7 +107,7 @@ public class CalibrationCurvesView extends QuantificationView
         menu.addChild("Calibration Curves", url);
     }
 
-    private static Collection<QuantificationSettings> getQuantificationSettings(int runId)
+    private static Collection<QuantificationSettings> getQuantificationSettings(long runId)
     {
         return new TableSelector(
                 TargetedMSManager.getTableInfoQuantificationSettings(),

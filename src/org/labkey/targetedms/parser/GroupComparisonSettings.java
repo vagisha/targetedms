@@ -20,7 +20,7 @@ package org.labkey.targetedms.parser;
  */
 public class GroupComparisonSettings extends SkylineEntity
 {
-    private int _runId;
+    private long _runId;
     private String _name;
     private String _normalizationMethod;
     private double _confidenceLevel = .95;
@@ -34,12 +34,12 @@ public class GroupComparisonSettings extends SkylineEntity
     private Boolean _includeInteractionTransitions;
     private String _summarizationMethod;
 
-    public int getRunId()
+    public long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         _runId = runId;
     }

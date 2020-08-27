@@ -81,7 +81,7 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(GeneralMoleculeChromInfo.class);
     }
 
-    public static Collection<Peptide> getPeptidesForGroup(int peptideGroupId, TargetedMSSchema schema)
+    public static Collection<Peptide> getPeptidesForGroup(long peptideGroupId, TargetedMSSchema schema)
     {
         SQLFragment sql = new SQLFragment("SELECT gm.id, gm.id, gm.peptidegroupid, gm.rtcalculatorscore, gm.predictedretentiontime, ");
         sql.append("gm.avgmeasuredretentiontime, gm.note, gm.explicitretentiontime, ");
@@ -95,7 +95,7 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Peptide.class);
     }
 
-    public static Double getMinRetentionTime(int peptideId)
+    public static Double getMinRetentionTime(long peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT MIN(preci.MinStartTime) FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
@@ -110,7 +110,7 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
-    public static Double getMaxRetentionTime(int peptideId)
+    public static Double getMaxRetentionTime(long peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(preci.MaxEndTime) FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
@@ -125,7 +125,7 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
-    public static Double getMinRetentionTime(int peptideId, int sampleFileId)
+    public static Double getMinRetentionTime(long peptideId, long sampleFileId)
     {
         SQLFragment sql = new SQLFragment("SELECT MIN(preci.MinStartTime) FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
@@ -143,7 +143,7 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
-    public static Double getMaxRetentionTime(int peptideId, int sampleFileId)
+    public static Double getMaxRetentionTime(long peptideId, long sampleFileId)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(preci.MaxEndTime) FROM ");
         sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "preci");
@@ -161,7 +161,7 @@ public class PeptideManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
-    public static boolean hasSpectrumLibraryInformation(int peptideId, Integer runId)
+    public static boolean hasSpectrumLibraryInformation(long peptideId, Long runId)
     {
         if(runId == null)
         {
@@ -241,117 +241,113 @@ public class PeptideManager
         }
         else
         {
-            Set<Integer> peptideIds = _peptideIdsWithSpectra.get(String.valueOf(runId), null, new CacheLoader<String, Set<Integer>>() {
-                @Override
-                public Set<Integer> load(String runId, @Nullable Object argument)
-                {
-                    SQLFragment sql = new SQLFragment("SELECT DISTINCT pep.Id FROM ");
-                    sql.append(TargetedMSManager.getTableInfoBibliospec(), "bib");
-                    sql.append(" , ");
-                    sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
-                    sql.append(" WHERE ");
-                    sql.append(" bib.SpectrumLibraryId = specLib.Id ");
-                    sql.append(" AND ");
-                    sql.append(" pre.GeneralMoleculeId = pep.Id ");
-                    sql.append(" AND ");
-                    sql.append(" bib.PrecursorId = pre.Id ");
-                    sql.append(" AND ");
-                    sql.append(" specLib.RunId = ? ");
-                    sql.add(Integer.valueOf(runId));
-                    sql.append(" UNION ");
-                    sql.append("SELECT DISTINCT pep.Id FROM ");
-                    sql.append(TargetedMSManager.getTableInfoHunterLib(), "hun");
-                    sql.append(" , ");
-                    sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
-                    sql.append(" WHERE ");
-                    sql.append(" hun.SpectrumLibraryId = specLib.Id ");
-                    sql.append(" AND ");
-                    sql.append(" pre.GeneralMoleculeId = pep.Id ");
-                    sql.append(" AND ");
-                    sql.append(" hun.PrecursorId = pre.Id ");
-                    sql.append(" AND ");
-                    sql.append(" specLib.RunId = ? ");
-                    sql.add(Integer.valueOf(runId));
-                    sql.append(" UNION ");
-                    sql.append("SELECT DISTINCT pep.Id FROM ");
-                    sql.append(TargetedMSManager.getTableInfoNistLib(), "nis");
-                    sql.append(" , ");
-                    sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
-                    sql.append(" WHERE ");
-                    sql.append(" nis.SpectrumLibraryId = specLib.Id ");
-                    sql.append(" AND ");
-                    sql.append(" pre.GeneralMoleculeId = pep.Id ");
-                    sql.append(" AND ");
-                    sql.append(" nis.PrecursorId = pre.Id ");
-                    sql.append(" AND ");
-                    sql.append(" specLib.RunId = ? ");
-                    sql.add(Integer.valueOf(runId));
-                    sql.append(" UNION ");
-                    sql.append("SELECT DISTINCT pep.Id FROM ");
-                    sql.append(TargetedMSManager.getTableInfoSpectrastLib(), "sp");
-                    sql.append(" , ");
-                    sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
-                    sql.append(" WHERE ");
-                    sql.append(" sp.SpectrumLibraryId = specLib.Id ");
-                    sql.append(" AND ");
-                    sql.append(" pre.GeneralMoleculeId = pep.Id ");
-                    sql.append(" AND ");
-                    sql.append(" sp.PrecursorId = pre.Id ");
-                    sql.append(" AND ");
-                    sql.append(" specLib.RunId = ? ");
-                    sql.add(Integer.valueOf(runId));
-                    sql.append(" UNION ");
-                    sql.append("SELECT DISTINCT pep.Id FROM ");
-                    sql.append(TargetedMSManager.getTableInfoChromatogramLib(), "ch");
-                    sql.append(" , ");
-                    sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
-                    sql.append(", ");
-                    sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
-                    sql.append(" WHERE ");
-                    sql.append(" ch.SpectrumLibraryId = specLib.Id ");
-                    sql.append(" AND ");
-                    sql.append(" pre.GeneralMoleculeId = pep.Id ");
-                    sql.append(" AND ");
-                    sql.append(" ch.PrecursorId = pre.Id ");
-                    sql.append(" AND ");
-                    sql.append(" specLib.RunId = ? ");
-                    sql.add(Integer.valueOf(runId));
+            Set<Long> peptideIds = _peptideIdsWithSpectra.get(String.valueOf(runId), null, (CacheLoader<String, Set<Long>>) (runId1, argument) -> {
+                SQLFragment sql = new SQLFragment("SELECT DISTINCT pep.Id FROM ");
+                sql.append(TargetedMSManager.getTableInfoBibliospec(), "bib");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
+                sql.append(" WHERE ");
+                sql.append(" bib.SpectrumLibraryId = specLib.Id ");
+                sql.append(" AND ");
+                sql.append(" pre.GeneralMoleculeId = pep.Id ");
+                sql.append(" AND ");
+                sql.append(" bib.PrecursorId = pre.Id ");
+                sql.append(" AND ");
+                sql.append(" specLib.RunId = ? ");
+                sql.add(Long.valueOf(runId1));
+                sql.append(" UNION ");
+                sql.append("SELECT DISTINCT pep.Id FROM ");
+                sql.append(TargetedMSManager.getTableInfoHunterLib(), "hun");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
+                sql.append(" WHERE ");
+                sql.append(" hun.SpectrumLibraryId = specLib.Id ");
+                sql.append(" AND ");
+                sql.append(" pre.GeneralMoleculeId = pep.Id ");
+                sql.append(" AND ");
+                sql.append(" hun.PrecursorId = pre.Id ");
+                sql.append(" AND ");
+                sql.append(" specLib.RunId = ? ");
+                sql.add(Long.valueOf(runId1));
+                sql.append(" UNION ");
+                sql.append("SELECT DISTINCT pep.Id FROM ");
+                sql.append(TargetedMSManager.getTableInfoNistLib(), "nis");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
+                sql.append(" WHERE ");
+                sql.append(" nis.SpectrumLibraryId = specLib.Id ");
+                sql.append(" AND ");
+                sql.append(" pre.GeneralMoleculeId = pep.Id ");
+                sql.append(" AND ");
+                sql.append(" nis.PrecursorId = pre.Id ");
+                sql.append(" AND ");
+                sql.append(" specLib.RunId = ? ");
+                sql.add(Long.valueOf(runId1));
+                sql.append(" UNION ");
+                sql.append("SELECT DISTINCT pep.Id FROM ");
+                sql.append(TargetedMSManager.getTableInfoSpectrastLib(), "sp");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
+                sql.append(" WHERE ");
+                sql.append(" sp.SpectrumLibraryId = specLib.Id ");
+                sql.append(" AND ");
+                sql.append(" pre.GeneralMoleculeId = pep.Id ");
+                sql.append(" AND ");
+                sql.append(" sp.PrecursorId = pre.Id ");
+                sql.append(" AND ");
+                sql.append(" specLib.RunId = ? ");
+                sql.add(Long.valueOf(runId1));
+                sql.append(" UNION ");
+                sql.append("SELECT DISTINCT pep.Id FROM ");
+                sql.append(TargetedMSManager.getTableInfoChromatogramLib(), "ch");
+                sql.append(" , ");
+                sql.append(TargetedMSManager.getTableInfoSpectrumLibrary(), "specLib");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pre");
+                sql.append(", ");
+                sql.append(TargetedMSManager.getTableInfoGeneralMolecule(), "pep");
+                sql.append(" WHERE ");
+                sql.append(" ch.SpectrumLibraryId = specLib.Id ");
+                sql.append(" AND ");
+                sql.append(" pre.GeneralMoleculeId = pep.Id ");
+                sql.append(" AND ");
+                sql.append(" ch.PrecursorId = pre.Id ");
+                sql.append(" AND ");
+                sql.append(" specLib.RunId = ? ");
+                sql.add(Long.valueOf(runId1));
 
-                    return Set.copyOf(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class));
-                }
+                return Set.copyOf(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Long.class));
             });
 
             return peptideIds.contains(peptideId);
         }
     }
 
-    public static void removeRunCachedResults(List<Integer> deletedRunIds)
+    public static void removeRunCachedResults(List<Long> deletedRunIds)
     {
-        for(Integer runId: deletedRunIds)
+        for(Long runId: deletedRunIds)
         {
             _peptideIdsWithSpectra.remove(String.valueOf(runId));
         }
     }
 
-    private static class PeptideIdsWithSpectra extends DatabaseCache<String, Set<Integer>>
+    private static class PeptideIdsWithSpectra extends DatabaseCache<String, Set<Long>>
     {
         public PeptideIdsWithSpectra()
         {

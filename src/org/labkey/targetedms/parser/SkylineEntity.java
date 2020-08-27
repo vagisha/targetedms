@@ -23,14 +23,14 @@ import java.util.Objects;
  */
 public abstract class SkylineEntity
 {
-    private int _id;
+    private long _id;
 
-    public int getId()
+    public long getId()
     {
         return _id;
     }
 
-    public void setId(int id)
+    public void setId(long id)
     {
         _id = id;
     }

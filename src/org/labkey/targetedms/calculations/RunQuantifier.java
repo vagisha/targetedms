@@ -192,8 +192,8 @@ public class RunQuantifier
                 = new GeneralMoleculeResultDataSet(_user, _container, _replicateDataSet, generalMolecule);
         Collection<GeneralMoleculeChromInfo> moleculeChromInfos
                 = generalMoleculeResultDataSet.getGeneralMoleculeChromInfos();
-        Set<Integer> excludedReplicateIds = getExcludedReplicateIds(moleculeChromInfos);
-        Map<Integer, CalibrationCurveDataSet.Replicate> calibrationCurveReplicates = new HashMap<>();
+        Set<Long> excludedReplicateIds = getExcludedReplicateIds(moleculeChromInfos);
+        Map<Long, CalibrationCurveDataSet.Replicate> calibrationCurveReplicates = new HashMap<>();
         for (Replicate replicate : _replicateDataSet.listReplicates())
         {
             Double moleculeConcentration = replicate.getAnalyteConcentration();
@@ -428,9 +428,9 @@ public class RunQuantifier
         return normalizationMethod;
     }
 
-    private Set<Integer> getExcludedReplicateIds(Collection<GeneralMoleculeChromInfo> generalMoleculeChromInfos)
+    private Set<Long> getExcludedReplicateIds(Collection<GeneralMoleculeChromInfo> generalMoleculeChromInfos)
     {
-        Set<Integer> excludedReplicateIds = new HashSet<>();
+        Set<Long> excludedReplicateIds = new HashSet<>();
         for (GeneralMoleculeChromInfo generalMoleculeChromInfo : generalMoleculeChromInfos)
         {
             if (generalMoleculeChromInfo.isExcludeFromCalibration())

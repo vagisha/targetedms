@@ -22,18 +22,18 @@ package org.labkey.targetedms.parser;
  */
 public class AnnotationSetting extends SkylineEntity
 {
-    private int _runId;
+    private long _runId;
     private String _name;
     private String _type;
     private String _targets;
     private String _lookup;
 
-    public int getRunId()
+    public long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         _runId = runId;
     }

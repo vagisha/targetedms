@@ -19,7 +19,7 @@ import java.util.List;
 
 public class GeneralPrecursor<TransitionType extends GeneralTransition> extends AnnotatedEntity<PrecursorAnnotation>
 {
-    protected int _generalMoleculeId;
+    protected long _generalMoleculeId;
     protected int _charge;
     protected double _mz;
     protected Double _collisionEnergy;
@@ -30,19 +30,19 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
     private List<PrecursorChromInfo> _chromInfoList;
     private List<TransitionType> _transitionsList;
     private String _isotopeLabel;
-    private int _isotopeLabelId;
+    private long _isotopeLabelId;
     private Double _ccs;
     private String _explicitIonMobilityUnits;
     private Double _explicitCcsSqa;
     private Double _explicitCompensationVoltage;
     private Double _precursorConcentration;
 
-    public int getGeneralMoleculeId()
+    public long getGeneralMoleculeId()
     {
         return _generalMoleculeId;
     }
 
-    public void setGeneralMoleculeId(int gmId)
+    public void setGeneralMoleculeId(long gmId)
     {
         _generalMoleculeId = gmId;
     }
@@ -142,12 +142,12 @@ public class GeneralPrecursor<TransitionType extends GeneralTransition> extends 
         return new SignedMz(_mz, _charge < 0);
     }
 
-    public int getIsotopeLabelId()
+    public long getIsotopeLabelId()
     {
         return _isotopeLabelId;
     }
 
-    public void setIsotopeLabelId(int isotopeLabelId)
+    public void setIsotopeLabelId(long isotopeLabelId)
     {
         _isotopeLabelId = isotopeLabelId;
     }

@@ -23,8 +23,8 @@ package org.labkey.targetedms.chromlib;
 public class LibPeptideStructuralModification implements ObjectWithId
 {
     private int _id;
-    private int _peptideId;
-    private int _structuralModificationId;
+    private long _peptideId;
+    private long _structuralModificationId;
     private Integer _indexAa;
     private Double _massDiff;
 
@@ -39,22 +39,22 @@ public class LibPeptideStructuralModification implements ObjectWithId
         _id = id;
     }
 
-    public int getPeptideId()
+    public long getPeptideId()
     {
         return _peptideId;
     }
 
-    public void setPeptideId(int peptideId)
+    public void setPeptideId(long peptideId)
     {
         _peptideId = peptideId;
     }
 
-    public int getStructuralModificationId()
+    public long getStructuralModificationId()
     {
         return _structuralModificationId;
     }
 
-    public void setStructuralModificationId(int structuralModificationId)
+    public void setStructuralModificationId(long structuralModificationId)
     {
         _structuralModificationId = structuralModificationId;
     }
@@ -98,8 +98,8 @@ public class LibPeptideStructuralModification implements ObjectWithId
     @Override
     public int hashCode()
     {
-        int result = _peptideId;
-        result = 31 * result + _structuralModificationId;
+        int result = (int) _peptideId;
+        result = (int) (31 * result + _structuralModificationId);
         result = 31 * result + _indexAa.hashCode();
         result = 31 * result + _massDiff.hashCode();
         return result;

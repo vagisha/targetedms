@@ -21,14 +21,14 @@ package org.labkey.targetedms.parser;
  */
 public class GeneralMoleculeAnnotation extends AbstractAnnotation
 {
-    private int _generalMoleculeId;
+    private long _generalMoleculeId;
 
-    public int getGeneralMoleculeId()
+    public long getGeneralMoleculeId()
     {
         return _generalMoleculeId;
     }
 
-    public void setGeneralMoleculeId(int generalMoleculeId)
+    public void setGeneralMoleculeId(long generalMoleculeId)
     {
         _generalMoleculeId = generalMoleculeId;
     }

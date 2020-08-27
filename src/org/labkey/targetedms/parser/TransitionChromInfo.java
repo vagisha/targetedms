@@ -26,8 +26,8 @@ import java.util.Objects;
  */
 public class TransitionChromInfo //extends ChromInfo<TransitionChromInfoAnnotation>
 {
-    private int _transitionId;
-    private int _precursorChromInfoId;
+    private long _transitionId;
+    private long _precursorChromInfoId;
 
     private Double _retentionTime;
     private Double _startTime;
@@ -60,7 +60,7 @@ public class TransitionChromInfo //extends ChromInfo<TransitionChromInfoAnnotati
     /** HACK TO UPDATE TO LONG FOR ID COLUMN - ISSUE 40831 */
     private String _replicateName;
     private String _skylineSampleFileId;
-    private int _sampleFileId;
+    private long _sampleFileId;
     private List<TransitionChromInfoAnnotation> _annotations = Collections.emptyList();
     private long _id;
 
@@ -84,12 +84,12 @@ public class TransitionChromInfo //extends ChromInfo<TransitionChromInfoAnnotati
         _replicateName = replicateName;
     }
 
-    public int getSampleFileId()
+    public long getSampleFileId()
     {
         return _sampleFileId;
     }
 
-    public void setSampleFileId(int sampleFileId)
+    public void setSampleFileId(long sampleFileId)
     {
         _sampleFileId = sampleFileId;
     }
@@ -132,22 +132,22 @@ public class TransitionChromInfo //extends ChromInfo<TransitionChromInfoAnnotati
 
 
 
-    public int getTransitionId()
+    public long getTransitionId()
     {
         return _transitionId;
     }
 
-    public void setTransitionId(int transitionId)
+    public void setTransitionId(long transitionId)
     {
         _transitionId = transitionId;
     }
 
-    public int getPrecursorChromInfoId()
+    public long getPrecursorChromInfoId()
     {
         return _precursorChromInfoId;
     }
 
-    public void setPrecursorChromInfoId(int precursorChromInfoId)
+    public void setPrecursorChromInfoId(long precursorChromInfoId)
     {
         _precursorChromInfoId = precursorChromInfoId;
     }

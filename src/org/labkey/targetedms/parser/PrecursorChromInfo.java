@@ -27,8 +27,8 @@ import org.labkey.targetedms.TargetedMSRun;
  */
 public class PrecursorChromInfo extends AbstractChromInfo
 {
-    private int _precursorId;
-    private int _generalMoleculeChromInfoId;
+    private long _precursorId;
+    private long _generalMoleculeChromInfoId;
 
     private Double _bestRetentionTime;
     private Double _minStartTime;
@@ -72,22 +72,22 @@ public class PrecursorChromInfo extends AbstractChromInfo
         super(c);
     }
 
-    public int getPrecursorId()
+    public long getPrecursorId()
     {
         return _precursorId;
     }
 
-    public void setPrecursorId(int precursorId)
+    public void setPrecursorId(long precursorId)
     {
         _precursorId = precursorId;
     }
 
-    public int getGeneralMoleculeChromInfoId()
+    public long getGeneralMoleculeChromInfoId()
     {
         return _generalMoleculeChromInfoId;
     }
 
-    public void setGeneralMoleculeChromInfoId(int generalmoleculechrominfoid)
+    public void setGeneralMoleculeChromInfoId(long generalmoleculechrominfoid)
     {
         _generalMoleculeChromInfoId = generalmoleculechrominfoid;
     }

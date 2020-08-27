@@ -25,18 +25,18 @@ import java.util.Objects;
 /** Bean class for a list definition imported from a Skyline document */
 public class ListDefinition extends SkylineEntity
 {
-    private int _runId;
+    private long _runId;
     private String _name;
     private Integer _pkColumnIndex;
     private Integer _displayColumnIndex;
     private List<ListColumn> _columns;
 
-    public int getRunId()
+    public long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         _runId = runId;
     }

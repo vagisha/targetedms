@@ -120,38 +120,38 @@ public class Precursor extends GeneralPrecursor<Transition>
 
     public static class LibraryInfo extends SkylineEntity
     {
-        private int _precursorId;
-        private int _generalPrecursorId;
-        private int _spectrumLibraryId;
+        private long _precursorId;
+        private long _generalPrecursorId;
+        private long _spectrumLibraryId;
 
         private String _libraryName;
 
-        public int getPrecursorId()
+        public long getPrecursorId()
         {
             return _precursorId;
         }
 
-        public void setPrecursorId(int precursorId)
+        public void setPrecursorId(long precursorId)
         {
             _precursorId = precursorId;
         }
 
-        public int getGeneralPrecursorId()
+        public long getGeneralPrecursorId()
         {
             return _generalPrecursorId;
         }
 
-        public void setGeneralPrecursorId(int generalPrecursorId)
+        public void setGeneralPrecursorId(long generalPrecursorId)
         {
             _generalPrecursorId = generalPrecursorId;
         }
 
-        public int getSpectrumLibraryId()
+        public long getSpectrumLibraryId()
         {
             return _spectrumLibraryId;
         }
 
-        public void setSpectrumLibraryId(int spectrumLibraryId)
+        public void setSpectrumLibraryId(long spectrumLibraryId)
         {
             _spectrumLibraryId = spectrumLibraryId;
         }

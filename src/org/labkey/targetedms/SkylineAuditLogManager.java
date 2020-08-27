@@ -76,7 +76,7 @@ public class SkylineAuditLogManager
         GUID _documentGUID;
         AuditLogTree _logTree;
         SkylineAuditLogParser _parser = null;
-        Integer _runId;
+        Long _runId;
         MessageDigest _rootHash = null;
     }
 
@@ -86,7 +86,7 @@ public class SkylineAuditLogManager
     }
 
 
-    public int importAuditLogFile(@NotNull File pAuditLogFile, @NotNull GUID pDocumentGUID, int pRunId) throws AuditLogException
+    public int importAuditLogFile(@NotNull File pAuditLogFile, @NotNull GUID pDocumentGUID, long pRunId) throws AuditLogException
     {
         AuditLogImportContext context = new AuditLogImportContext();
         context._logFile = pAuditLogFile;
@@ -345,7 +345,7 @@ public class SkylineAuditLogManager
             while(rs.next()){
                 String parentHash = rs.getString("parenthash");
                 if(rs.wasNull()) parentHash = AuditLogTree.NULL_STRING;
-                Integer versionId = rs.getInt("versionId");
+                Long versionId = rs.getLong("versionId");
                 if(rs.wasNull()) versionId = null;
 
                 AuditLogTree node = new AuditLogTree(
@@ -375,7 +375,7 @@ public class SkylineAuditLogManager
      * belong to more than one version. If the given run has no GUID it does nothing.
      * @param pRunId of the document version to delete
      */
-    public void deleteDocumentVersionLog(int pRunId) throws AuditLogException
+    public void deleteDocumentVersionLog(long pRunId) throws AuditLogException
     {
         SQLFragment query = new SQLFragment(String.format("SELECT documentGUID FROM targetedms.Runs WHERE Id = %d", pRunId));
         String objGUID = new SqlSelector(TargetedMSManager.getSchema(), query).getObject(String.class);

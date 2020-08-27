@@ -58,7 +58,7 @@ public class SamplePivotCustomizer implements TableCustomizer
                     try
                     {
                         // Get the sample names associated with that run
-                        int runId = Integer.parseInt(clause.getParamVals()[0].toString());
+                        long runId = Integer.parseInt(clause.getParamVals()[0].toString());
                         Set<String> sampleNames = new CaseInsensitiveHashSet(new TableSelector(TargetedMSManager.getTableInfoSampleFile(), Collections.singleton("SampleName"), new SimpleFilter(FieldKey.fromParts("ReplicateId", "RunId"), runId), null).getArrayList(String.class));
 
                         // Match the samples from the desired run against all of the pivoted columns

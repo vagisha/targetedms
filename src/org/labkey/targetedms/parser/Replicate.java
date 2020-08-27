@@ -23,11 +23,11 @@ import java.util.List;
  */
 public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
 {
-    private int _runId;
+    private long _runId;
     private String _name;
 
-    private Integer _cePredictorId;
-    private Integer _dpPredictorId;
+    private Long _cePredictorId;
+    private Long _dpPredictorId;
     private String _sampleType;
     private Double _analyteConcentration;
     private Double _sampleDilutionFactor;
@@ -37,12 +37,12 @@ public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
     private List<SampleFile> _sampleFileList;
 
 
-    public int getRunId()
+    public long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         _runId = runId;
     }
@@ -57,22 +57,22 @@ public class Replicate extends AnnotatedEntity<ReplicateAnnotation>
         _name = name;
     }
 
-    public Integer getCePredictorId()
+    public Long getCePredictorId()
     {
         return _cePredictorId;
     }
 
-    public void setCePredictorId(Integer cePredictorId)
+    public void setCePredictorId(Long cePredictorId)
     {
         _cePredictorId = cePredictorId;
     }
 
-    public Integer getDpPredictorId()
+    public Long getDpPredictorId()
     {
         return _dpPredictorId;
     }
 
-    public void setDpPredictorId(Integer dpPredictorId)
+    public void setDpPredictorId(Long dpPredictorId)
     {
         _dpPredictorId = dpPredictorId;
     }

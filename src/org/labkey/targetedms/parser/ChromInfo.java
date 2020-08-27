@@ -24,7 +24,7 @@ public class ChromInfo<AnnotationType extends AbstractAnnotation> extends Annota
 {
     private String _replicateName;
     private String _skylineSampleFileId;
-    private int _sampleFileId;
+    private long _sampleFileId;
 
     public String getSkylineSampleFileId()
     {
@@ -46,12 +46,12 @@ public class ChromInfo<AnnotationType extends AbstractAnnotation> extends Annota
         _replicateName = replicateName;
     }
 
-    public int getSampleFileId()
+    public long getSampleFileId()
     {
         return _sampleFileId;
     }
 
-    public void setSampleFileId(int sampleFileId)
+    public void setSampleFileId(long sampleFileId)
     {
         _sampleFileId = sampleFileId;
     }

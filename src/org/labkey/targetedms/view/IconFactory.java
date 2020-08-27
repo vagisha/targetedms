@@ -29,7 +29,7 @@ public class IconFactory
 {
     private IconFactory(){}
 
-    public static String getPeptideIconPath(int peptideId, Integer runId, boolean isDecoy, String standardType)
+    public static String getPeptideIconPath(long peptideId, Long runId, boolean isDecoy, String standardType)
     {
         boolean hasLibInfo = PeptideManager.hasSpectrumLibraryInformation(peptideId, runId);
 
@@ -86,12 +86,12 @@ public class IconFactory
         return AppProps.getInstance().getContextPath() + iconFile;
     }
 
-    public static String getPrecursorIconPath(int precursorId, boolean isDecoy)
+    public static String getPrecursorIconPath(long precursorId, boolean isDecoy)
     {
         return getPrecursorIconPath(precursorId, null, isDecoy);
     }
 
-    public static String getPrecursorIconPath(int precursorId, Integer runId, boolean isDecoy)
+    public static String getPrecursorIconPath(long precursorId, Long runId, boolean isDecoy)
     {
         String iconPath;
 

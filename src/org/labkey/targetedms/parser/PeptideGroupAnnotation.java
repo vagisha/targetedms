@@ -21,14 +21,14 @@ package org.labkey.targetedms.parser;
  */
 public class PeptideGroupAnnotation extends AbstractAnnotation
 {
-    private int _peptideGroupId;
+    private long _peptideGroupId;
 
-    public int getPeptideGroupId()
+    public long getPeptideGroupId()
     {
         return _peptideGroupId;
     }
 
-    public void setPeptideGroupId(int peptideGroupId)
+    public void setPeptideGroupId(long peptideGroupId)
     {
         _peptideGroupId = peptideGroupId;
     }

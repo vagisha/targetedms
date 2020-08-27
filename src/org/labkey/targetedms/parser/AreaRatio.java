@@ -22,26 +22,26 @@ package org.labkey.targetedms.parser;
  */
 public class AreaRatio extends SkylineEntity
 {
-    private int _isotopeLabelId;
-    private int _isotopeLabelStdId;
+    private long _isotopeLabelId;
+    private long _isotopeLabelStdId;
     private double _areaRatio;
 
-    public int getIsotopeLabelId()
+    public long getIsotopeLabelId()
     {
         return _isotopeLabelId;
     }
 
-    public void setIsotopeLabelId(int isotopeLabelId)
+    public void setIsotopeLabelId(long isotopeLabelId)
     {
         _isotopeLabelId = isotopeLabelId;
     }
 
-    public int getIsotopeLabelStdId()
+    public long getIsotopeLabelStdId()
     {
         return _isotopeLabelStdId;
     }
 
-    public void setIsotopeLabelStdId(int isotopeLabelStdId)
+    public void setIsotopeLabelStdId(long isotopeLabelStdId)
     {
         _isotopeLabelStdId = isotopeLabelStdId;
     }

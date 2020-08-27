@@ -62,7 +62,7 @@ public class NormalizationMethodAreas
         return new NormalizationFactors()
         {
             @Override
-            public double getNormalizationFactor(int sampleFileId)
+            public double getNormalizationFactor(long sampleFileId)
             {
                 return 1.0 / getAreaForNormalization(normalizationMethod, sampleFileId);
             }
@@ -75,7 +75,7 @@ public class NormalizationMethodAreas
                 || normalizationMethod instanceof NormalizationMethod.RatioToSurrogate;
     }
 
-    public double getAreaForNormalization(NormalizationMethod normalizationMethod, int sampleFileId)
+    public double getAreaForNormalization(NormalizationMethod normalizationMethod, long sampleFileId)
     {
         if (!hasNormalizationFactors(normalizationMethod))
         {
@@ -226,6 +226,6 @@ public class NormalizationMethodAreas
 
     public interface NormalizationFactors
     {
-        double getNormalizationFactor(int sampleFileId);
+        double getNormalizationFactor(long sampleFileId);
     }
 }

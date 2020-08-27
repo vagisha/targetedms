@@ -33,7 +33,7 @@ import java.util.Map;
 public class PeakAreaRatioCalculator
 {
     private final Peptide _peptide;
-    private Map<Integer, PeptideAreaRatioCalculator> _peptideAreaRatioCalculatorMap;
+    private Map<Long, PeptideAreaRatioCalculator> _peptideAreaRatioCalculatorMap;
 
     private static Logger _log = LogManager.getLogger(SkylineDocImporter.class);
 
@@ -49,7 +49,7 @@ public class PeakAreaRatioCalculator
     {
         for(GeneralMoleculeChromInfo generalMoleculeChromInfo : _peptide.getGeneralMoleculeChromInfoList())
         {
-            int sampleFileId = generalMoleculeChromInfo.getSampleFileId();
+            long sampleFileId = generalMoleculeChromInfo.getSampleFileId();
             _peptideAreaRatioCalculatorMap.put(sampleFileId, new PeptideAreaRatioCalculator(generalMoleculeChromInfo));
         }
 
@@ -62,7 +62,7 @@ public class PeakAreaRatioCalculator
                     continue; // Do not calculate area ratios for precursor peaks where "step" (optimization step) attribute is present
                 }
 
-                int sampleFileId = precursorChromInfo.getSampleFileId();
+                long sampleFileId = precursorChromInfo.getSampleFileId();
                 PeptideAreaRatioCalculator calculator = getPeptideAreaRatioCalculator(sampleFileId);
                 if(calculator != null)
                 {
@@ -80,7 +80,7 @@ public class PeakAreaRatioCalculator
                         continue; // Do not calculate area ratios for transition peaks where "step" (optimization step) attribute is present
                     }
 
-                    int sampleFileId = transitionChromInfo.getSampleFileId();
+                    long sampleFileId = transitionChromInfo.getSampleFileId();
                     PeptideAreaRatioCalculator calculator = getPeptideAreaRatioCalculator(sampleFileId);
                     if(calculator != null)
                     {
@@ -93,18 +93,18 @@ public class PeakAreaRatioCalculator
     }
 
 
-    private PeptideAreaRatioCalculator getPeptideAreaRatioCalculator(int sampleFileId)
+    private PeptideAreaRatioCalculator getPeptideAreaRatioCalculator(long sampleFileId)
     {
         return  _peptideAreaRatioCalculatorMap.get(sampleFileId);
     }
 
-    public PeptideAreaRatio getPeptideAreaRatio(Integer sampleFileId, Integer numLabelId, Integer denomLabelId)
+    public PeptideAreaRatio getPeptideAreaRatio(Long sampleFileId, Long numLabelId, Long denomLabelId)
     {
         PeptideAreaRatioCalculator pCalc = getPeptideAreaRatioCalculator(sampleFileId);
         return pCalc != null ? pCalc.getRatio(numLabelId, denomLabelId) : null;
     }
 
-    public PrecursorAreaRatio getPrecursorAreaRatio(Integer sampleFileId, Precursor precursor, Integer numLabelId, Integer denomLabelId)
+    public PrecursorAreaRatio getPrecursorAreaRatio(Long sampleFileId, Precursor precursor, Long numLabelId, Long denomLabelId)
     {
         if(precursor.getIsotopeLabelId() != numLabelId)
             return null;
@@ -117,7 +117,7 @@ public class PeakAreaRatioCalculator
         return calculator.getRatio(numLabelId, denomLabelId);
     }
 
-    public TransitionAreaRatio getTransitionAreaRatio(Integer sampleFileId, Precursor precursor, Transition transition, Integer numLabelId, Integer denomLabelId)
+    public TransitionAreaRatio getTransitionAreaRatio(Long sampleFileId, Precursor precursor, Transition transition, Long numLabelId, Long denomLabelId)
     {
         if(precursor.getIsotopeLabelId() != numLabelId)
             return null;
@@ -141,7 +141,7 @@ public class PeakAreaRatioCalculator
             _calculatorMap = new HashMap<>();
         }
 
-        PeptideAreaRatio getRatio(int numIsotopeLabelId, int denomIsotopeLabelId)
+        PeptideAreaRatio getRatio(long numIsotopeLabelId, long denomIsotopeLabelId)
         {
             LabelRatioAreas areas = new LabelRatioAreas();
 
@@ -195,9 +195,9 @@ public class PeakAreaRatioCalculator
     {
         private Map<String, TransitionAreaRatioCalculator> _calculatorMap;
         private String _key;
-        private int _sampleFileId;
+        private long _sampleFileId;
 
-        PrecursorAreaRatioCalculator(String precursorKey, int sampleFileId)
+        PrecursorAreaRatioCalculator(String precursorKey, long sampleFileId)
         {
             super();
             _calculatorMap = new HashMap<>();
@@ -206,7 +206,7 @@ public class PeakAreaRatioCalculator
         }
 
         @Override
-        PrecursorAreaRatio getRatio(int numIsotopeLabelId, int denomIsotopeLabelId)
+        PrecursorAreaRatio getRatio(long numIsotopeLabelId, long denomIsotopeLabelId)
         {
             LabelRatioAreas areas = getLabelRatioAreas(numIsotopeLabelId, denomIsotopeLabelId);
 
@@ -227,7 +227,7 @@ public class PeakAreaRatioCalculator
             return null;
         }
 
-        LabelRatioAreas getLabelRatioAreas(int numIsotopeLabelId, int denomIsotopeLabelId)
+        LabelRatioAreas getLabelRatioAreas(long numIsotopeLabelId, long denomIsotopeLabelId)
         {
             LabelRatioAreas areas = new LabelRatioAreas();
 
@@ -257,7 +257,7 @@ public class PeakAreaRatioCalculator
         }
 
         @Override
-        PrecursorChromInfo getChromInfo(int isotopeLabelId)
+        PrecursorChromInfo getChromInfo(long isotopeLabelId)
         {
             PrecursorChromInfo chromInfo = super.getChromInfo(isotopeLabelId);
             if(chromInfo == null)
@@ -288,7 +288,7 @@ public class PeakAreaRatioCalculator
     private class TransitionAreaRatioCalculator extends AreaRatioCalculator<TransitionChromInfo, TransitionAreaRatio>
     {
         @Override
-        TransitionAreaRatio getRatio(int numIsotopeLabelId, int denomIsotopeLabelId)
+        TransitionAreaRatio getRatio(long numIsotopeLabelId, long denomIsotopeLabelId)
         {
             TransitionChromInfo numChromInfo = getChromInfo(numIsotopeLabelId);
             TransitionChromInfo denomChromInfo = getChromInfo(denomIsotopeLabelId);
@@ -312,14 +312,14 @@ public class PeakAreaRatioCalculator
 
     private abstract class AreaRatioCalculator <T, R extends AreaRatio>
     {
-        private Map<Integer, T> _labelIdChromInfoMap;
+        private Map<Long, T> _labelIdChromInfoMap;
 
         public AreaRatioCalculator()
         {
             _labelIdChromInfoMap = new HashMap<>();
         }
 
-        public void addChromInfo(int isotopeLabelId, T chromInfo)
+        public void addChromInfo(long isotopeLabelId, T chromInfo)
         {
             if(_labelIdChromInfoMap.containsKey(isotopeLabelId))
             {
@@ -330,10 +330,10 @@ public class PeakAreaRatioCalculator
             _labelIdChromInfoMap.put(isotopeLabelId, chromInfo);
         }
 
-        abstract R getRatio(int numIsotopeLabelId, int denomIsotopeLabelId);
+        abstract R getRatio(long numIsotopeLabelId, long denomIsotopeLabelId);
 
 
-        T getChromInfo(int isotopeLabelId)
+        T getChromInfo(long isotopeLabelId)
         {
             return _labelIdChromInfoMap.get(isotopeLabelId);
         }
@@ -379,7 +379,7 @@ public class PeakAreaRatioCalculator
         }
     }
 
-    private String getIsotopeLabelName(int isotopeLabelId)
+    private String getIsotopeLabelName(long isotopeLabelId)
     {
         PeptideSettings.IsotopeLabel label = IsotopeLabelManager.getIsotopeLabel(isotopeLabelId);
         if(label != null)
@@ -387,7 +387,7 @@ public class PeakAreaRatioCalculator
         return "(Error getting isotope label for ID " + isotopeLabelId + ")";
     }
 
-    private String getSampleFileName(int sampleFileId)
+    private String getSampleFileName(long sampleFileId)
     {
         SampleFile sampleFile = ReplicateManager.getSampleFile(sampleFileId);
         if(sampleFile != null)

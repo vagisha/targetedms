@@ -45,7 +45,7 @@ public class TransitionManager
     private TransitionManager() {}
 
     @Nullable
-    public static Transition get(int transitionId, User user, Container container)
+    public static Transition get(long transitionId, User user, Container container)
     {
         return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container), null, true), Transition.getColumns()).getObject(transitionId, Transition.class);
     }
@@ -75,7 +75,7 @@ public class TransitionManager
     }
 
     @NotNull
-    public static List<TransitionChromInfo> getTransitionChromInfoList(int precursorChromInfoId, int chromatogramIndex)
+    public static List<TransitionChromInfo> getTransitionChromInfoList(long precursorChromInfoId, long chromatogramIndex)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("PrecursorChromInfoId"),precursorChromInfoId);
@@ -87,7 +87,7 @@ public class TransitionManager
     }
 
     @NotNull
-    public static List<TransitionChromInfo> getTransitionChromInfoList(int precursorChromInfoId)
+    public static List<TransitionChromInfo> getTransitionChromInfoList(long precursorChromInfoId)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("PrecursorChromInfoId"),precursorChromInfoId);
@@ -98,7 +98,7 @@ public class TransitionManager
     }
 
     @Nullable
-    public static TransitionChromInfo getTransitionChromInfoForTransition(int transitionId, int precursorChromInfoId)
+    public static TransitionChromInfo getTransitionChromInfoForTransition(long transitionId, long precursorChromInfoId)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("PrecursorChromInfoId"), precursorChromInfoId);
@@ -110,12 +110,12 @@ public class TransitionManager
                                  .getObject(TransitionChromInfo.class);
     }
 
-    public static double getMaxTransitionIntensity(int peptideId)
+    public static double getMaxTransitionIntensity(long peptideId)
     {
         return getMaxTransitionIntensity(peptideId, Transition.Type.ALL);
     }
 
-    public static double getMaxTransitionIntensity(int generalMoleculeId, Transition.Type fragmentType)
+    public static double getMaxTransitionIntensity(long generalMoleculeId, Transition.Type fragmentType)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(tci.Height) FROM ");
         sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
@@ -151,7 +151,7 @@ public class TransitionManager
     }
 
     @NotNull
-    public static Set<Integer> getTransitionChromatogramIndexes(int precursorChromInfoId)
+    public static Set<Integer> getTransitionChromatogramIndexes(long precursorChromInfoId)
     {
         TableInfo tinfo = TargetedMSManager.getTableInfoTransitionChromInfo();
         Collection<Integer> tranChromIndexes = new TableSelector(tinfo.getColumn("ChromatogramIndex"),
@@ -162,14 +162,14 @@ public class TransitionManager
     }
 
     @NotNull
-    public static Collection<Transition> getTransitionsForPrecursor(int precursorId, User user, Container container)
+    public static Collection<Transition> getTransitionsForPrecursor(long precursorId, User user, Container container)
     {
         return new TableSelector(new DocTransitionsTableInfo(new TargetedMSSchema(user, container), null), Transition.getColumns(),
                                  new SimpleFilter(FieldKey.fromParts("PrecursorId"), precursorId), null).getCollection(Transition.class);
     }
 
     @NotNull
-    public static Collection<TransitionChromInfo> getTransitionChromInfoListForTransition(int transitionId)
+    public static Collection<TransitionChromInfo> getTransitionChromInfoListForTransition(long transitionId)
     {
         return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(),
                                  new SimpleFilter(FieldKey.fromParts("TransitionId"), transitionId), null).getCollection(TransitionChromInfo.class);

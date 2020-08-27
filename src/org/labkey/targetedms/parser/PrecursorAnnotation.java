@@ -21,24 +21,24 @@ package org.labkey.targetedms.parser;
  */
 public class PrecursorAnnotation extends AbstractAnnotation
 {
-    private int _precursorId;
-    private int _generalPrecursorId;
-    public int getPrecursorId()
+    private long _precursorId;
+    private long _generalPrecursorId;
+    public long getPrecursorId()
     {
         return _precursorId;
     }
 
-    public void setPrecursorId(int precursorId)
+    public void setPrecursorId(long precursorId)
     {
         _precursorId = precursorId;
     }
 
-    public int getGeneralPrecursorId()
+    public long getGeneralPrecursorId()
     {
         return _generalPrecursorId;
     }
 
-    public void setGeneralPrecursorId(int generalPrecursorId)
+    public void setGeneralPrecursorId(long generalPrecursorId)
     {
         _generalPrecursorId = generalPrecursorId;
     }

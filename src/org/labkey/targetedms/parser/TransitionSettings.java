@@ -60,7 +60,7 @@ public class TransitionSettings
 
     public static final class FullScanSettings
     {
-        private int _runId;
+        private long _runId;
         private Double precursorFilter;
         private Double precursorLeftFilter;
         private Double precursorRightFilter;
@@ -80,12 +80,12 @@ public class TransitionSettings
         private List<IsotopeEnrichment> _isotopeEnrichmentList;
         private IsolationScheme _isolationScheme;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -263,17 +263,17 @@ public class TransitionSettings
 
     public static final class IsotopeEnrichment extends SkylineEntity
     {
-        private int _runId;
+        private long _runId;
         private String _symbol;
         private Double _percentEnrichment;
         private String _name;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -311,7 +311,7 @@ public class TransitionSettings
 
     public static final class InstrumentSettings
     {
-        private int _runId;
+        private long _runId;
         private Boolean _dynamicMin;
         private int _minMz;
         private int _maxMz;
@@ -320,12 +320,12 @@ public class TransitionSettings
         private Integer _maxTime;
         private Integer _maxTransitions;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -403,23 +403,23 @@ public class TransitionSettings
     
     public static final class PredictionSettings
     {
-        private int _runId;
+        private long _runId;
         private String _precursorMassType;
         private String _productMassType;
         private String _optimizeBy;
 
-        private int _cePredictorId;
-        private int _dpPredictorId;
+        private long _cePredictorId;
+        private long _dpPredictorId;
 
         private Predictor _cePredictor;
         private Predictor _dpPredictor;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -454,22 +454,22 @@ public class TransitionSettings
             _optimizeBy = optimizeBy;
         }
 
-        public int getCePredictorId()
+        public long getCePredictorId()
         {
             return _cePredictorId;
         }
 
-        public void setCePredictorId(int cePredictorId)
+        public void setCePredictorId(long cePredictorId)
         {
             _cePredictorId = cePredictorId;
         }
 
-        public int getDpPredictorId()
+        public long getDpPredictorId()
         {
             return _dpPredictorId;
         }
 
-        public void setDpPredictorId(int dpPredictorId)
+        public void setDpPredictorId(long dpPredictorId)
         {
             _dpPredictorId = dpPredictorId;
         }
@@ -579,7 +579,7 @@ public class TransitionSettings
 
     public static class PredictorSettings extends SkylineEntity implements Comparable<PredictorSettings>
     {
-        private int _predictorId;
+        private long _predictorId;
         private Integer _charge;
         private Double _slope;
         private Double _intercept;
@@ -614,12 +614,12 @@ public class TransitionSettings
             _intercept = intercept;
         }
 
-        public int getPredictorId()
+        public long getPredictorId()
         {
             return _predictorId;
         }
 
-        public void setPredictorId(int predictorId)
+        public void setPredictorId(long predictorId)
         {
             _predictorId = predictorId;
         }
@@ -667,7 +667,7 @@ public class TransitionSettings
 
     public static final class IsolationScheme extends SkylineEntity
     {
-        private int _runId;
+        private long _runId;
         private String _name;
         private Double _precursorFilter;
         private Double _precursorLeftFilter;
@@ -677,12 +677,12 @@ public class TransitionSettings
 
         private List<IsolationWindow> _isolationWindowList;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -760,8 +760,7 @@ public class TransitionSettings
 
     public static final class IsolationWindow extends SkylineEntity
     {
-
-        private int _isolationSchemeId;
+        private long _isolationSchemeId;
         private Double _windowStart;
         private Double _windowEnd;
         private Double _target;
@@ -769,12 +768,12 @@ public class TransitionSettings
         private Double _marginRight;
         private Double _margin;
 
-        public int getIsolationSchemeId()
+        public long getIsolationSchemeId()
         {
             return _isolationSchemeId;
         }
 
-        public void setIsolationSchemeId(int isolationSchemeId)
+        public void setIsolationSchemeId(long isolationSchemeId)
         {
             _isolationSchemeId = isolationSchemeId;
         }

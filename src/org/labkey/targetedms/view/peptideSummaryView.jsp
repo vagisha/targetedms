@@ -31,7 +31,7 @@
 <%
     JspView<TargetedMSController.PeptideChromatogramsViewBean> me = (JspView<TargetedMSController.PeptideChromatogramsViewBean>) HttpView.currentView();
     TargetedMSController.PeptideChromatogramsViewBean bean = me.getModelBean();
-    Map<Integer, String> labelIdMap = new HashMap<>();
+    Map<Long, String> labelIdMap = new HashMap<>();
     for(PeptideSettings.IsotopeLabel label: bean.getLabels())
     {
         labelIdMap.put(label.getId(), label.getName());

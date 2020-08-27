@@ -20,7 +20,7 @@ import java.util.List;
 public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
 {
 
-    protected int generalPrecursorId;
+    protected long generalPrecursorId;
     protected double mz;
     protected Integer charge;
     protected String fragmentType;  // 'a', 'b', 'c', 'x', 'y', 'z' or 'precursor'
@@ -49,12 +49,12 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
     private static final String C_ION = "c";
     private static final String A_ION = "a";
 
-    public int getGeneralPrecursorId()
+    public long getGeneralPrecursorId()
     {
         return generalPrecursorId;
     }
 
-    public void setGeneralPrecursorId(int precursorId)
+    public void setGeneralPrecursorId(long precursorId)
     {
         this.generalPrecursorId = precursorId;
     }

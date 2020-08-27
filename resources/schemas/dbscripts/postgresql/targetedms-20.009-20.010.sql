@@ -1,0 +1,26 @@
+ALTER TABLE targetedms.Runs ALTER COLUMN Id TYPE bigint;
+
+ALTER TABLE targetedms.AnnotationSettings ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.CalibrationCurve ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.DriftTimePredictionSettings ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.IsolationScheme ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.FoldChange ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.GroupComparisonSettings ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.Instrument ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.IsotopeEnrichment ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.IsotopeLabel ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.LibrarySettings ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.ListDefinition ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.ModificationSettings ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.PeptideGroup ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.Replicate ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.RetentionTimePredictionSettings ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.RunEnzyme ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.RunIsotopeModification ALTER COLUMN RunId TYPE bigint ;
+ALTER TABLE targetedms.RunStructuralModification ALTER COLUMN RunId TYPE bigint ;
+ALTER TABLE targetedms.SpectrumLibrary ALTER COLUMN RunId TYPE bigint;
+ALTER TABLE targetedms.TransitionFullScanSettings ALTER COLUMN RunId TYPE bigint ;
+ALTER TABLE targetedms.TransitionInstrumentSettings ALTER COLUMN RunId TYPE bigint ;
+ALTER TABLE targetedms.TransitionPredictionSettings ALTER COLUMN RunId TYPE bigint ;
+ALTER TABLE targetedms.AuditLogEntry ALTER COLUMN versionId TYPE bigint;
+ALTER TABLE targetedms.QuantificationSettings ALTER COLUMN RunId TYPE bigint;

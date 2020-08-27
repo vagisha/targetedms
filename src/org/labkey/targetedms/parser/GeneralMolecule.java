@@ -19,7 +19,7 @@ import java.util.List;
 
 public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnnotation>
 {
-    protected int _peptideGroupId;
+    protected long _peptideGroupId;
     protected Double _rtCalculatorScore;
     protected Double _predictedRetentionTime;
     protected Double _avgMeasuredRetentionTime;  // average measured retention time over all replicates
@@ -33,12 +33,12 @@ public abstract class GeneralMolecule extends AnnotatedEntity<GeneralMoleculeAnn
     private List<GeneralMoleculeChromInfo> _generalMoleculeChromInfoList;
     private Double _explicitRetentionTimeWindow;
 
-    public int getPeptideGroupId()
+    public long getPeptideGroupId()
     {
         return _peptideGroupId;
     }
 
-    public void setPeptideGroupId(int peptideGroupId)
+    public void setPeptideGroupId(long peptideGroupId)
     {
         _peptideGroupId = peptideGroupId;
     }

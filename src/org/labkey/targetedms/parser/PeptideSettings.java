@@ -100,18 +100,18 @@ public class PeptideSettings
     // ------------------------------------------------------------------------
     public static final class IsotopeLabel extends SkylineEntity
     {
-        private int _runId;
+        private long _runId;
         private String _name;
         private boolean _standard;
 
         public static final String LIGHT = "light";
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -189,16 +189,16 @@ public class PeptideSettings
 
     public static final class ModificationSettings
     {
-        private int _runId;
+        private long _runId;
         private int _maxVariableMods;
         private int _maxNeutralLosses;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -226,40 +226,40 @@ public class PeptideSettings
 
     public static final class RunIsotopeModification extends IsotopeModification
     {
-        private int _runId;
-        private int _isotopeModId;
-        private int _isotopeLabelId;
+        private long _runId;
+        private long _isotopeModId;
+        private long _isotopeLabelId;
 
         private String _isotopeLabel;
         private Boolean _explicitMod;
         private String _relativeRt;  // One of "Matching", "Overlapping", "Preceding", "Unknown"
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
 
-        public int getIsotopeModId()
+        public long getIsotopeModId()
         {
             return _isotopeModId;
         }
 
-        public void setIsotopeModId(int isotopeModId)
+        public void setIsotopeModId(long isotopeModId)
         {
             _isotopeModId = isotopeModId;
         }
 
-        public int getIsotopeLabelId()
+        public long getIsotopeLabelId()
         {
             return _isotopeLabelId;
         }
 
-        public void setIsotopeLabelId(int isotopeLabelId)
+        public void setIsotopeLabelId(long isotopeLabelId)
         {
             _isotopeLabelId = isotopeLabelId;
         }
@@ -371,18 +371,18 @@ public class PeptideSettings
 
     public static class PotentialLoss extends SkylineEntity
     {
-        private int _structuralModId;
+        private long _structuralModId;
         private String _formula;
         private Double _massDiffMono;
         private Double _massDiffAvg;
         private String _inclusion;
 
-        public int getStructuralModId()
+        public long getStructuralModId()
         {
             return _structuralModId;
         }
 
-        public void setStructuralModId(int structuralModId)
+        public void setStructuralModId(long structuralModId)
         {
             _structuralModId = structuralModId;
         }
@@ -459,28 +459,28 @@ public class PeptideSettings
 
     public static final class RunStructuralModification extends StructuralModification
     {
-        private int _runId;
-        private int _structuralModId;
+        private long _runId;
+        private long _structuralModId;
 
         private Boolean _explicitMod;
         private List<PotentialLoss> _potentialLosses;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
 
-        public int getStructuralModId()
+        public long getStructuralModId()
         {
             return _structuralModId;
         }
 
-        public void setStructuralModId(int structuralModId)
+        public void setStructuralModId(long structuralModId)
         {
             _structuralModId = structuralModId;
         }
@@ -620,27 +620,27 @@ public class PeptideSettings
     // ------------------------------------------------------------------------
     public static final class EnzymeDigestionSettings
     {
-        private int _enzymeId;
-        private int _runId;
+        private long _enzymeId;
+        private long _runId;
         private Integer _maxMissedCleavages;
         private Boolean _excludeRaggedEnds;
 
-        public int getEnzymeId()
+        public long getEnzymeId()
         {
             return _enzymeId;
         }
 
-        public void setEnzymeId(int enzymeId)
+        public void setEnzymeId(long enzymeId)
         {
             _enzymeId = enzymeId;
         }
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -774,7 +774,7 @@ public class PeptideSettings
     // ------------------------------------------------------------------------
     public static final class SpectrumLibrarySettings
     {
-        private int _runId;
+        private long _runId;
         private String _pick;  // One of 'library', 'filter', 'both', 'either'
         private String _rankType; // One of 'Picked intensity' or 'Spectrum count'
         private Integer _peptideCount;
@@ -782,12 +782,12 @@ public class PeptideSettings
 
         private List<SpectrumLibrary> libraries;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -845,7 +845,7 @@ public class PeptideSettings
 
     public static final class SpectrumLibrary extends SkylineEntity
     {
-        private int _runId;
+        private long _runId;
         private String _name;
         private String _fileNameHint;
         private String _skylineLibraryId;  // lsid in <bibliospec_lite_library> element, id in others
@@ -854,12 +854,12 @@ public class PeptideSettings
         private Boolean _useExplicitPeakBounds;
         private String _panoramaServer;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -966,7 +966,7 @@ public class PeptideSettings
 
     public static final class RetentionTimePredictionSettings
     {
-        private int _runId;
+        private long _runId;
         private Boolean _useMeasuredRts;
         private Double _measuredRtWindow;
         private String _predictorName;
@@ -977,12 +977,12 @@ public class PeptideSettings
         private String _calculatorName;
         private String _irtDatabasePath;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -1083,20 +1083,19 @@ public class PeptideSettings
     // ------------------------------------------------------------------------
     public static final class DriftTimePredictionSettings extends SkylineEntity
     {
-        private int _runId;
-
+        private long _runId;
         private Boolean _useSpectralLibraryDriftTimes;
         private Double _spectralLibraryDriftTimesResolvingPower;
         private String _predictorName;
         private Double _resolvingPower;
         private List<MeasuredDriftTime> _measuredDriftTimes;
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
 
-        public void setRunId(int runId)
+        public void setRunId(long runId)
         {
             _runId = runId;
         }
@@ -1157,7 +1156,7 @@ public class PeptideSettings
     // ------------------------------------------------------------------------
     public static final class MeasuredDriftTime extends SkylineEntity
     {
-        private int _driftTimePredictionSettingsId;
+        private long _driftTimePredictionSettingsId;
         private String _modifiedSequence;
         private String _charge;
         private Double _driftTime;
@@ -1167,12 +1166,12 @@ public class PeptideSettings
         private Double _highEnergyIonMobilityOffset;
         private String _ionMobilityUnits;
 
-        public int getDriftTimePredictionSettingsId()
+        public long getDriftTimePredictionSettingsId()
         {
             return _driftTimePredictionSettingsId;
         }
 
-        public void setDriftTimePredictionSettingsId(int driftTimePredictionSettingsId)
+        public void setDriftTimePredictionSettingsId(long driftTimePredictionSettingsId)
         {
             _driftTimePredictionSettingsId = driftTimePredictionSettingsId;
         }

@@ -383,7 +383,7 @@ public class RepresentativeStateManager
         updatePrecursorRepresentativeState("pg.Id", peptideGroup.getId());
     }
 
-    private static void updatePrecursorRepresentativeState(String refCol, int refId)
+    private static void updatePrecursorRepresentativeState(String refCol, long refId)
     {
         SQLFragment updatePrecursorStateSQL = new SQLFragment();
         updatePrecursorStateSQL.append("UPDATE "+TargetedMSManager.getTableInfoGeneralPrecursor());

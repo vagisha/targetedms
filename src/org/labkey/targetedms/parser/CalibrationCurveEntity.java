@@ -20,9 +20,9 @@ package org.labkey.targetedms.parser;
  */
 public class CalibrationCurveEntity extends SkylineEntity
 {
-    private int _runId;
-    private int _quantificationSettingsId;
-    private Integer _generalMoleculeId;
+    private long _runId;
+    private long _quantificationSettingsId;
+    private Long _generalMoleculeId;
     private Double _slope;
     private Double _intercept;
     private Integer _pointCount;
@@ -30,32 +30,32 @@ public class CalibrationCurveEntity extends SkylineEntity
     private Double _rSquared;
     private String _errorMessage;
 
-    public int getRunId()
+    public long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         _runId = runId;
     }
 
-    public int getQuantificationSettingsId()
+    public long getQuantificationSettingsId()
     {
         return _quantificationSettingsId;
     }
 
-    public void setQuantificationSettingsId(int quantificationSettingsId)
+    public void setQuantificationSettingsId(long quantificationSettingsId)
     {
         _quantificationSettingsId = quantificationSettingsId;
     }
 
-    public Integer getGeneralMoleculeId()
+    public Long getGeneralMoleculeId()
     {
         return _generalMoleculeId;
     }
 
-    public void setGeneralMoleculeId(Integer generalMoleculeId)
+    public void setGeneralMoleculeId(Long generalMoleculeId)
     {
         _generalMoleculeId = generalMoleculeId;
     }

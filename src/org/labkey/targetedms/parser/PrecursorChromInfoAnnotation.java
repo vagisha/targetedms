@@ -21,14 +21,14 @@ package org.labkey.targetedms.parser;
  */
 public class PrecursorChromInfoAnnotation extends AbstractAnnotation
 {
-    private int _precursorChromInfoId;
+    private long _precursorChromInfoId;
 
-    public int getPrecursorChromInfoId()
+    public long getPrecursorChromInfoId()
     {
         return _precursorChromInfoId;
     }
 
-    public void setPrecursorChromInfoId(int precursorChromInfoId)
+    public void setPrecursorChromInfoId(long precursorChromInfoId)
     {
         _precursorChromInfoId = precursorChromInfoId;
     }

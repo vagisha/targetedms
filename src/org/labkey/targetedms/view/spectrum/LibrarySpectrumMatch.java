@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
  */
 public class LibrarySpectrumMatch
 {
-    private int _precursorId;
+    private long _precursorId;
     private BlibSpectrum _spectrum;
     private String _peptide;
     private String _modifiedSequence;
@@ -45,20 +45,20 @@ public class LibrarySpectrumMatch
     private List<PeptideSettings.SpectrumLibrary> _libraries; // All libraries that have a match
     private String _lorikeetId;
     List<Peptide.StructuralModification> _structuralModifications;
-    private Set<Integer> _variableStructuralMods = new HashSet<>();
+    private Set<Long> _variableStructuralMods = new HashSet<>();
 
     PeptideSettings.RunStructuralModification _ntermMod = null;
     PeptideSettings.RunStructuralModification _ctermMod = null;
-    Map<Integer, List<PeptideSettings.PotentialLoss>> _potentialLossIdMap;
+    Map<Long, List<PeptideSettings.PotentialLoss>> _potentialLossIdMap;
     List<Peptide.IsotopeModification> _isotopeModifications;
     private int _maxNeutralLosses;
 
-    public int getPrecursorId()
+    public long getPrecursorId()
     {
         return _precursorId;
     }
 
-    public void setPrecursorId(int precursorId)
+    public void setPrecursorId(long precursorId)
     {
         _precursorId = precursorId;
     }
@@ -211,7 +211,7 @@ public class LibrarySpectrumMatch
         }
     }
 
-    public void setPotentialLosses(Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossIdMap)
+    public void setPotentialLosses(Map<Long, List<PeptideSettings.PotentialLoss>> potentialLossIdMap)
     {
         _potentialLossIdMap = potentialLossIdMap;
     }
@@ -369,7 +369,7 @@ public class LibrarySpectrumMatch
         {
             return "";
         }
-        int structuralModId = ((Peptide.StructuralModification)modification).getStructuralModId();
+        long structuralModId = ((Peptide.StructuralModification)modification).getStructuralModId();
         List<PeptideSettings.PotentialLoss> losses = _potentialLossIdMap.get(structuralModId);
         if(losses == null || losses.isEmpty())
         {

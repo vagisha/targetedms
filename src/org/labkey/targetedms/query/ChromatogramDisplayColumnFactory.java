@@ -101,11 +101,11 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                 {
                     case GENERAL_MOLECULE:
                         chromAction = new ActionURL(TargetedMSController.GeneralMoleculeChromatogramChartAction.class, _container);
-                        sampleFile = ReplicateManager.getSampleFileForGeneralMoleculeChromInfo((Integer) Id);
+                        sampleFile = ReplicateManager.getSampleFileForGeneralMoleculeChromInfo((Long) Id);
                         break;
                     case PRECURSOR:
                         chromAction = new ActionURL(TargetedMSController.PrecursorChromatogramChartAction.class, _container);
-                        sampleFile = ReplicateManager.getSampleFileForPrecursorChromInfo((Integer) Id);
+                        sampleFile = ReplicateManager.getSampleFileForPrecursorChromInfo((Long) Id);
                         break;
                 }
 

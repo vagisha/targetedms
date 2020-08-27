@@ -30,7 +30,7 @@ public abstract class DocumentTransitionsView extends DocumentView
     protected TargetedMSSchema _targetedMsSchema;
     protected ViewContext _context;
 
-    public DocumentTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId,
+    public DocumentTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, long runId,
                                    boolean forExport, QueryNestingOption queryNestingOption, String dataRegionName, String title)
     {
         super(ctx, schema, queryName, runId, !forExport, queryNestingOption, dataRegionName);

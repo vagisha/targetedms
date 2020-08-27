@@ -76,20 +76,20 @@ public class ContainerChromatogramLibraryWriter
     private int _transitionCount = 0;
 
     // SampleFileId(Panorama) -> SampleFileId(SQLite Library)
-    private Map<Integer, Integer> _sampleFileIdMap;
+    private Map<Long, Integer> _sampleFileIdMap;
     // IsotopeLabelId(Panorama) -> LabelName
-    private Map<Integer, String> _isotopeLabelMap;
+    private Map<Long, String> _isotopeLabelMap;
     // ModificationId(Panorama) -> ModificationId(SQLite Library)
-    private Map<Integer, Integer> _isotopeModificationMap;
+    private Map<Long, Integer> _isotopeModificationMap;
     // ModificationId(Panorama) -> IsotopeLabelId(Panorama)
-    private Map<Integer, Integer> _isotopeModificationAndLabelMap;
+    private Map<Long, Long> _isotopeModificationAndLabelMap;
     // ModificationId(Panorama) -> ModificationId(SQLite Library)
-    private Map<Integer, Integer> _structuralModificationMap;
+    private Map<Long, Integer> _structuralModificationMap;
 
     private ProteinService _proteinService;
 
     private TargetedMSRun.RepresentativeDataState _libraryType = null;
-    private Integer _bestReplicateIdForCurrentPeptideGroup;
+    private Long _bestReplicateIdForCurrentPeptideGroup;
 
     private User _user;
 
@@ -332,9 +332,9 @@ public class ContainerChromatogramLibraryWriter
     {
         List<Precursor> precursors = PrecursorManager.getRepresentativePrecursors(run.getId());
         // Sort by peptideId.
-        precursors.sort(Comparator.comparingInt(Precursor::getGeneralMoleculeId));
+        precursors.sort(Comparator.comparingLong(Precursor::getGeneralMoleculeId));
 
-        int lastPeptideId = 0;
+        long lastPeptideId = 0;
         List<Precursor> peptidePrecursors = new ArrayList<>();
         for(Precursor precursor: precursors)
         {
@@ -410,10 +410,10 @@ public class ContainerChromatogramLibraryWriter
         // Get the isotope modifications for the peptide.
         List<Peptide.IsotopeModification> pepIsotopeMods = ModificationManager.getPeptideIsotopelModifications(peptide.getId());
         // IsotopeLabelId(Panorama) -> List<Peptide.IsotopeModification>
-        Map<Integer, List<Peptide.IsotopeModification>> precIsotopeModMap = new HashMap<>();
+        Map<Long, List<Peptide.IsotopeModification>> precIsotopeModMap = new HashMap<>();
         for(Peptide.IsotopeModification isotopeMod: pepIsotopeMods)
         {
-            Integer isotopeLabelId = _isotopeModificationAndLabelMap.get(isotopeMod.getIsotopeModId());
+            Long isotopeLabelId = _isotopeModificationAndLabelMap.get(isotopeMod.getIsotopeModId());
             if(isotopeLabelId == null)
             {
                 throw new IllegalStateException("Could not find isotope label for isotope modification Id "+isotopeMod.getIsotopeModId());
@@ -522,7 +522,7 @@ public class ContainerChromatogramLibraryWriter
             libPrecursor.setNumPoints(bestChromInfo.getNumPoints());
             libPrecursor.setAverageMassErrorPPM(bestChromInfo.getAverageMassErrorPPM());
 
-            int sampleFileId = bestChromInfo.getSampleFileId();
+            long sampleFileId = bestChromInfo.getSampleFileId();
             Integer libSampleFileId = _sampleFileIdMap.get(sampleFileId);
             if(libSampleFileId == null)
             {
@@ -560,7 +560,7 @@ public class ContainerChromatogramLibraryWriter
             if(chromInfo.getBestRetentionTime() == null)
                 continue;
 
-            int sampleFileId = chromInfo.getSampleFileId();
+            long sampleFileId = chromInfo.getSampleFileId();
             Integer libSampleFileId = _sampleFileIdMap.get(sampleFileId);
             if(libSampleFileId == null)
             {

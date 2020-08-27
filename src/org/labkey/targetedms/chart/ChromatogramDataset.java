@@ -203,7 +203,7 @@ public abstract class ChromatogramDataset
             _colorIndexer = new PrecursorColorIndexer(_run.getId(), _generalMoleculeId, user, container);
         }
 
-        PeptideDataset(int generalMoleculeId, int sampleFileId, boolean syncIntensity, boolean syncRt, User user, Container container)
+        PeptideDataset(long generalMoleculeId, long sampleFileId, boolean syncIntensity, boolean syncRt, User user, Container container)
         {
             super(generalMoleculeId, sampleFileId, syncIntensity, syncRt, user, container);
         }
@@ -333,8 +333,8 @@ public abstract class ChromatogramDataset
         protected Container _container;
         protected User _user;
         protected GeneralMoleculeChromInfo _pepChromInfo;
-        protected final int _generalMoleculeId;
-        protected final int _sampleFileId;
+        protected final long _generalMoleculeId;
+        protected final long _sampleFileId;
         private List<ChartAnnotation> _annotations;
         private double _minPeakRt;
         private double _maxPeakRt;
@@ -347,7 +347,7 @@ public abstract class ChromatogramDataset
             _pepChromInfo = pepChromInfo;
         }
 
-        GeneralMoleculeDataset(int generalMoleculeId, int sampleFileId, boolean syncIntensity, boolean syncRt, User user, Container container)
+        GeneralMoleculeDataset(long generalMoleculeId, long sampleFileId, boolean syncIntensity, boolean syncRt, User user, Container container)
         {
             _generalMoleculeId = generalMoleculeId;
             _sampleFileId = sampleFileId;
@@ -722,7 +722,7 @@ public abstract class ChromatogramDataset
             _container = container;
         }
 
-        protected int getGeneralMoleculeId()
+        protected long getGeneralMoleculeId()
         {
             if (_precursor == null)
             {
@@ -829,7 +829,7 @@ public abstract class ChromatogramDataset
             }
         }
 
-        private void getMaximumIntensity(int generalMoleculeId)
+        private void getMaximumIntensity(long generalMoleculeId)
         {
             _maxDisplayIntensity = null;
             if(_syncIntensity)
@@ -851,7 +851,7 @@ public abstract class ChromatogramDataset
             return true;
         }
 
-        private RtRange getChromatogramRange(int generalMoleculeId, PrecursorChromInfo pChromInfo)
+        private RtRange getChromatogramRange(long generalMoleculeId, PrecursorChromInfo pChromInfo)
         {
             double margin = 0;
             if(_syncRt)
@@ -1015,7 +1015,7 @@ public abstract class ChromatogramDataset
         }
 
         @Override
-        protected int getGeneralMoleculeId()
+        protected long getGeneralMoleculeId()
         {
             if (_molPrecursor == null)
             {

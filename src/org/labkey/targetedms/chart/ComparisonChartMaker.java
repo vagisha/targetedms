@@ -61,7 +61,7 @@ import java.util.List;
  */
 public class ComparisonChartMaker
 {
-    public JFreeChart makePeakAreasChart(int replicateId, PeptideGroup peptideGroup,
+    public JFreeChart makePeakAreasChart(long replicateId, PeptideGroup peptideGroup,
                                          Peptide peptide, Precursor precursor,
                                          String groupByAnnotation, String filterByAnnotation,
                                          boolean cvValues, boolean logValues, User user, Container container)
@@ -97,7 +97,7 @@ public class ComparisonChartMaker
                 new ComparisonDataset.PeakAreasSeriesItemMaker(), yLabel, true, user, container);
     }
 
-    public JFreeChart makePeakAreasChart(int replicateId, PeptideGroup peptideGroup,
+    public JFreeChart makePeakAreasChart(long replicateId, PeptideGroup peptideGroup,
                                          Molecule molecule, MoleculePrecursor precursor,
                                          String groupByAnnotation, String filterByAnnotation,
                                          boolean cvValues, boolean logValues, User user, Container container)
@@ -133,7 +133,7 @@ public class ComparisonChartMaker
                 new ComparisonDataset.PeakAreasSeriesItemMaker(), yLabel, true, user, container);
     }
 
-    public JFreeChart makeRetentionTimesChart(int replicateId, PeptideGroup peptideGroup,
+    public JFreeChart makeRetentionTimesChart(long replicateId, PeptideGroup peptideGroup,
                                          Peptide peptide, Precursor precursor,
                                          String groupByAnnotation, String filterByAnnotation, String value, boolean cvValues,
                                          User user, Container container)
@@ -161,7 +161,7 @@ public class ComparisonChartMaker
                                        filterByAnnotation,  value, cvValues, user, container);
     }
 
-    public JFreeChart makeRetentionTimesChart(int replicateId, PeptideGroup peptideGroup,
+    public JFreeChart makeRetentionTimesChart(long replicateId, PeptideGroup peptideGroup,
                                           Molecule molecule, MoleculePrecursor precursor,
                                           String groupByAnnotation, String filterByAnnotation, String value, boolean cvValues,
                                           User user, Container container)
@@ -354,7 +354,7 @@ public class ComparisonChartMaker
 
     }
 
-    private List<PrecursorChromInfoLitePlus> getInputData(PeptideGroup peptideGroup, int replicateId, Peptide peptide,
+    private List<PrecursorChromInfoLitePlus> getInputData(PeptideGroup peptideGroup, long replicateId, Peptide peptide,
                                                           Precursor precursor, ComparisonDataset.ChartType chartType,
                                                           User user, Container container)
     {
@@ -375,7 +375,7 @@ public class ComparisonChartMaker
         return pciPlusList;
     }
 
-    private List<PrecursorChromInfoLitePlus> getInputData(PeptideGroup peptideGroup, int replicateId, Molecule molecule,
+    private List<PrecursorChromInfoLitePlus> getInputData(PeptideGroup peptideGroup, long replicateId, Molecule molecule,
                                                           MoleculePrecursor precursor, ComparisonDataset.ChartType chartType,
                                                           User user, Container container)
     {
@@ -401,7 +401,7 @@ public class ComparisonChartMaker
         return "None".equalsIgnoreCase(groupByAnnotation) || StringUtils.isBlank(groupByAnnotation);
     }
 
-    private List<PrecursorChromInfoLitePlus> getPrecursorChromInfo(boolean asProteomics, PeptideGroup peptideGroup, int replicateId, User user, Container container)
+    private List<PrecursorChromInfoLitePlus> getPrecursorChromInfo(boolean asProteomics, PeptideGroup peptideGroup, long replicateId, User user, Container container)
     {
         if(replicateId == 0)
         {

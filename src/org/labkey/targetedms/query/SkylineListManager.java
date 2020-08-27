@@ -107,7 +107,7 @@ public class SkylineListManager
         return new TableSelector(getListDefTable()).getObject(container, listId, ListDefinition.class);
     }
 
-    public static ListDefinition getListDefinition(@NotNull ContainerFilter containerFilter, @NotNull Container container, int runId, @NotNull String queryName)
+    public static ListDefinition getListDefinition(@NotNull ContainerFilter containerFilter, @NotNull Container container, long runId, @NotNull String queryName)
     {
         SQLFragment fragment = new SQLFragment("SELECT * FROM ");
         fragment.append(getListDefTable(), "t");

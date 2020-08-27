@@ -45,12 +45,12 @@ public class PeptideGroupManager
 {
     private PeptideGroupManager() {}
 
-    public static PeptideGroup get(int peptideGroupId)
+    public static PeptideGroup get(long peptideGroupId)
     {
         return new TableSelector(TargetedMSManager.getTableInfoPeptideGroup(), new SimpleFilter(FieldKey.fromParts("Id"), peptideGroupId), null).getObject(PeptideGroup.class);
 	}
 
-    public static PeptideGroup getPeptideGroup(Container c, int id)
+    public static PeptideGroup getPeptideGroup(Container c, long id)
     {
         SQLFragment sql = new SQLFragment("SELECT pg.* FROM ");
         sql.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
@@ -156,7 +156,7 @@ public class PeptideGroupManager
         updatePrecursorRepresentativeState(peptideGroupIdsString);
     }
 
-    public static List<PeptideGroup> getRepresentativePeptideGroups(int runId)
+    public static List<PeptideGroup> getRepresentativePeptideGroups(long runId)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("RunId"), runId);
@@ -198,7 +198,7 @@ public class PeptideGroupManager
         return deprecatedGroups[0];
     }
 
-    public static int setRepresentativeState(int runId, RepresentativeDataState state)
+    public static int setRepresentativeState(long runId, RepresentativeDataState state)
     {
         SQLFragment sql = new SQLFragment();
         sql.append("UPDATE "+TargetedMSManager.getTableInfoPeptideGroup());
@@ -235,7 +235,7 @@ public class PeptideGroupManager
         return count != null && count == uniqueIds.size();
     }
 
-    public static Integer getBestReplicateId(PeptideGroup peptideGroup)
+    public static Long getBestReplicateId(PeptideGroup peptideGroup)
     {
         if(peptideGroup == null)
             return null;
@@ -273,7 +273,7 @@ public class PeptideGroupManager
         Map<String, Object>[] mapArray = new SqlSelector(TargetedMSManager.getSchema(), sql).getMapArray();
         if(mapArray != null && mapArray.length > 0)
         {
-            return (Integer) mapArray[0].get("ReplicateId");
+            return (Long) mapArray[0].get("ReplicateId");
         }
         return null;
     }

@@ -28,7 +28,7 @@ import org.labkey.targetedms.parser.Instrument;
  */
 public class InstrumentManager
 {
-    public static Instrument getInstrument(int instrumentId)
+    public static Instrument getInstrument(long instrumentId)
     {
         return new TableSelector(TargetedMSManager.getTableInfoInstrument(),
                                  new SimpleFilter(FieldKey.fromParts("Id"), instrumentId),

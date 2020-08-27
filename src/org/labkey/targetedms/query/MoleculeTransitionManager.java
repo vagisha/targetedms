@@ -31,7 +31,7 @@ public class MoleculeTransitionManager
 {
     private MoleculeTransitionManager() {}
 
-    public static MoleculeTransition get(int transitionId, User user, Container container)
+    public static MoleculeTransition get(long transitionId, User user, Container container)
     {
         TableInfo table = new MoleculeTransitionsTableInfo(new TargetedMSSchema(user, container), null, true);
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("TransitionId"), transitionId);
@@ -39,7 +39,7 @@ public class MoleculeTransitionManager
     }
 
     @NotNull
-    public static Collection<MoleculeTransition> getTransitionsForPrecursor(int precursorId, User user, Container container)
+    public static Collection<MoleculeTransition> getTransitionsForPrecursor(long precursorId, User user, Container container)
     {
         return new TableSelector(new MoleculeTransitionsTableInfo(new TargetedMSSchema(user, container), null, true),
                 MoleculeTransition.getColumns(),

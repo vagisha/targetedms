@@ -843,7 +843,7 @@ public class TargetedMSManager
     }
 
     @Nullable
-    public static TargetedMSRun getRun(int runId)
+    public static TargetedMSRun getRun(long runId)
     {
         TargetedMSRun[] runs = getRuns("Id = ? AND deleted = ?", runId, false);
 
@@ -999,7 +999,7 @@ public class TargetedMSManager
     /** Delete all of the TargetedMS runs in the container, including their experiment run wrappers */
     public static void deleteIncludingExperimentWrapper(Container c, User user)
     {
-        List<Integer> runIds = new SqlSelector(getSchema(), "SELECT Id FROM " + getTableInfoRuns() + " WHERE Container = ?", c).getArrayList(Integer.class);
+        List<Long> runIds = new SqlSelector(getSchema(), "SELECT Id FROM " + getTableInfoRuns() + " WHERE Container = ?", c).getArrayList(Long.class);
 
         if (runIds.isEmpty())
             return;
@@ -1007,7 +1007,7 @@ public class TargetedMSManager
         // Save these to delete after we've deleted the runs
         List<ExpRun> experimentRunsToDelete = new ArrayList<>();
 
-        for (Integer runId : runIds)
+        for (Long runId : runIds)
         {
             TargetedMSRun run = getRun(runId);
             if (run != null && run.getDataId() != null)
@@ -1037,10 +1037,10 @@ public class TargetedMSManager
      * Pulled out into separate method so could be called by itself from data handlers
      * @param runIds targetedms.run.id values
      */
-    public static void deleteRuns(List<Integer> runIds, Container c, User user)
+    public static void deleteRuns(List<Long> runIds, Container c, User user)
     {
-        List<Integer> cantDelete = new ArrayList<>();
-        for(int runId: runIds)
+        List<Long> cantDelete = new ArrayList<>();
+        for(long runId: runIds)
         {
             TargetedMSRun run = getRun(runId);
             if(!run.getContainer().equals(c) && !run.getContainer().hasPermission(user, DeletePermission.class))
@@ -1056,7 +1056,7 @@ public class TargetedMSManager
                     + ". " + (cantDelete.size() > 1 ? "They are" : "It is") + " not in container " + c.getName());
         }
 
-        for(int runId: runIds)
+        for(long runId: runIds)
         {
             TargetedMSRun run = getRun(runId);
             if(run.isDeleted())
@@ -1096,7 +1096,7 @@ public class TargetedMSManager
         try
         {   //deleting audit log data for these runs.
             SkylineAuditLogManager auditMgr = new SkylineAuditLogManager(c, user);
-            for(Integer runId : runIds)
+            for(Long runId : runIds)
                 auditMgr.deleteDocumentVersionLog(runId);
         }
         catch (AuditLogException e)
@@ -1176,7 +1176,7 @@ public class TargetedMSManager
     }
 
     @Nullable
-    public static Integer getPeptideGroupPeptideCount(@Nullable TargetedMSRun run, int peptideGroupId)
+    public static Integer getPeptideGroupPeptideCount(@Nullable TargetedMSRun run, long peptideGroupId)
     {
         if (run != null && peptideGroupId > 0)
         {
@@ -1194,7 +1194,7 @@ public class TargetedMSManager
     }
 
     @Nullable
-    public static Integer getPeptideGroupMoleculeCount(@Nullable TargetedMSRun run, int peptideGroupId)
+    public static Integer getPeptideGroupMoleculeCount(@Nullable TargetedMSRun run, long peptideGroupId)
     {
         if (run != null && peptideGroupId > 0)
         {
@@ -1371,7 +1371,7 @@ public class TargetedMSManager
      * @return the source file path for a sampleFile
      */
     @Nullable
-    public static String getSampleFileUploadFile(int sampleFileId)
+    public static String getSampleFileUploadFile(long sampleFileId)
     {
         SQLFragment sql = new SQLFragment("SELECT d.DataFileUrl FROM ");
         sql.append(getTableInfoReplicate(), "rep");
@@ -1397,7 +1397,7 @@ public class TargetedMSManager
      * @return the file path of the import file containing the sample
      */
     @Nullable
-    public static String deleteSampleFileAndDependencies(int sampleFileId)
+    public static String deleteSampleFileAndDependencies(long sampleFileId)
     {
         purgeDeletedSampleFiles(sampleFileId);
 
@@ -1408,7 +1408,7 @@ public class TargetedMSManager
         return file;
     }
 
-    public static void purgeDeletedSampleFiles(int sampleFileId)
+    public static void purgeDeletedSampleFiles(long sampleFileId)
     {
         // Delete from TransitionChromInfoAnnotation (dependent of TransitionChromInfo)
         execute(getDependentSampleFileDeleteSql(getTableInfoTransitionChromInfoAnnotation(), "TransitionChromInfoId", getTableInfoTransitionChromInfo()), sampleFileId);
@@ -1600,7 +1600,7 @@ public class TargetedMSManager
     {
         // Get a list of deleted runs
         SQLFragment sql = new SQLFragment("SELECT Id FROM " + getTableInfoRuns() + " WHERE Deleted =  ?", true);
-        List<Integer> deletedRunIds = new SqlSelector(getSchema(), sql).getArrayList(Integer.class);
+        List<Long> deletedRunIds = new SqlSelector(getSchema(), sql).getArrayList(Long.class);
         if(deletedRunIds.size() > 0)
         {
             ModificationManager.removeRunCachedResults(deletedRunIds);
@@ -1803,7 +1803,7 @@ public class TargetedMSManager
         }
     }
 
-    public static void renameRun(int runId, String newDescription, User user) throws BatchValidationException
+    public static void renameRun(long runId, String newDescription, User user) throws BatchValidationException
     {
         if (newDescription == null || newDescription.length() == 0)
             return;
@@ -1825,7 +1825,7 @@ public class TargetedMSManager
 
     /** @return the sample file if it has already been imported in the container */
     @Nullable
-    public static Replicate getReplicate(int replicateId, Container container)
+    public static Replicate getReplicate(long replicateId, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT rep.* FROM ");
         sql.append(getTableInfoReplicate(), "rep");
@@ -1845,7 +1845,7 @@ public class TargetedMSManager
 
     /** @return the sample file if it has already been imported in the container */
     @Nullable
-    public static SampleFile getSampleFile(int id, Container container)
+    public static SampleFile getSampleFile(long id, Container container)
     {
         List<SampleFile> matches = getSampleFiles(container, new SQLFragment("sf.Id = ?", id));
         if (matches.size() > 1)
@@ -2271,7 +2271,7 @@ public class TargetedMSManager
         sqlFragment.append("SELECT DISTINCT(COALESCE(p.SubGroup, 'NA')) FROM ");
         sqlFragment.append(tableInfo, "p");
         sqlFragment.append(" WHERE p.MoleculeId = ? ");
-        sqlFragment.add(Integer.toString(molecule.getId()));
+        sqlFragment.add(Long.toString(molecule.getId()));
 
         String[] sampleGroupNames = new SqlSelector(TargetedMSSchema.getSchema(), sqlFragment).getArray(String.class);
         Arrays.sort(sampleGroupNames);
@@ -2320,11 +2320,11 @@ public class TargetedMSManager
         // Create temp tables to help make the rollups efficient
         SqlExecutor executor = new SqlExecutor(getSchema());
         executor.execute("CREATE " + getSqlDialect().getTempTableKeyword() + " TABLE " +
-                precursorGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), PrecursorId INT)");
+                precursorGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), PrecursorId BIGINT)");
         executor.execute("CREATE " + getSqlDialect().getTempTableKeyword() + " TABLE " +
-                moleculeGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), GeneralMoleculeId INT)");
+                moleculeGroupingsTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), GeneralMoleculeId BIGINT)");
         executor.execute("CREATE " + getSqlDialect().getTempTableKeyword() + " TABLE " +
-                areasTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), SampleFileId INT, Area REAL);");
+                areasTableName + "(Grouping " + (getSqlDialect().isSqlServer() ? "NVARCHAR" : "VARCHAR") + "(300), SampleFileId BIGINT, Area REAL);");
 
         // Populate the temp tables
         // TODO - filter based on run

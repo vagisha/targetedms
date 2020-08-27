@@ -21,16 +21,16 @@ package org.labkey.targetedms.parser;
  */
 public class TransitionOptimization extends SkylineEntity
 {
-    private int _transitionId;
+    private long _transitionId;
     private String _optimizationType;
     private double _optValue;
 
-    public int getTransitionId()
+    public long getTransitionId()
     {
         return _transitionId;
     }
 
-    public void setTransitionId(int transitionId)
+    public void setTransitionId(long transitionId)
     {
         _transitionId = transitionId;
     }

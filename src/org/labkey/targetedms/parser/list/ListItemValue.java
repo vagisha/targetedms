@@ -19,17 +19,17 @@ import org.labkey.targetedms.parser.SkylineEntity;
 
 public class ListItemValue extends SkylineEntity
 {
-    private int _listItemId;
+    private long _listItemId;
     private int _columnIndex;
     private String _textValue;
     private Double _numericValue;
 
-    public int getListItemId()
+    public long getListItemId()
     {
         return _listItemId;
     }
 
-    public void setListItemId(int listItemId)
+    public void setListItemId(long listItemId)
     {
         _listItemId = listItemId;
     }

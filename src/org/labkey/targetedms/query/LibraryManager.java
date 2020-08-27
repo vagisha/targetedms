@@ -46,7 +46,7 @@ public class LibraryManager
 {
     private LibraryManager() {}
 
-    public static List<PeptideSettings.SpectrumLibrary> getLibraries(int runId)
+    public static List<PeptideSettings.SpectrumLibrary> getLibraries(long runId)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("RunId"), runId);
@@ -56,19 +56,19 @@ public class LibraryManager
                                null).getArrayList(PeptideSettings.SpectrumLibrary.class);
     }
 
-    public static Path getLibraryFilePath(int runId, PeptideSettings.SpectrumLibrary library)
+    public static Path getLibraryFilePath(long runId, PeptideSettings.SpectrumLibrary library)
     {
         Map<PeptideSettings.SpectrumLibrary, Path> libraryFilePaths = getLibraryFilePaths(runId, Collections.singletonList(library));
         return libraryFilePaths.size() > 0 ? libraryFilePaths.values().iterator().next() : null;
     }
 
-    public static LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> getLibraryFilePaths(int runId)
+    public static LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> getLibraryFilePaths(long runId)
     {
         List<PeptideSettings.SpectrumLibrary> libraries = LibraryManager.getLibraries(runId);
         return getLibraryFilePaths(runId, libraries);
     }
 
-    private static LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> getLibraryFilePaths(int runId, List<PeptideSettings.SpectrumLibrary> libraries)
+    private static LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> getLibraryFilePaths(long runId, List<PeptideSettings.SpectrumLibrary> libraries)
     {
         if(libraries.size() == 0)
             return new LinkedHashMap<>(Collections.emptyMap());

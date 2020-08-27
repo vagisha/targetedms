@@ -31,7 +31,7 @@ public class PeptideTransitionsView extends DocumentTransitionsView
     public static final String DATAREGION_NAME = "transitions_view";
     public static final String TITLE = "Transition List";
 
-    public PeptideTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport)
+    public PeptideTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, long runId, boolean forExport)
     {
         super(ctx, schema, queryName, runId, !forExport,
                 new QueryNestingOption(FieldKey.fromParts("PrecursorId", "PeptideId", "PeptideGroupId"),

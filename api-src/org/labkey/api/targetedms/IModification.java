@@ -2,7 +2,7 @@ package org.labkey.api.targetedms;
 
 public interface IModification
 {
-    int getId();
+    long getId();
 
     String getName();
 

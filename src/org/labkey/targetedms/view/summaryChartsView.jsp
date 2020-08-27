@@ -36,7 +36,7 @@
 <%
     JspView<TargetedMSController.SummaryChartBean> me = (JspView<TargetedMSController.SummaryChartBean>) HttpView.currentView();
     TargetedMSController.SummaryChartBean bean = me.getModelBean();
-    int peptideGroupId = bean.getPeptideGroupId(); // Used when displaying peak areas for all peptides of a protein
+    long peptideGroupId = bean.getPeptideGroupId(); // Used when displaying peak areas for all peptides of a protein
 
     List<Replicate> replicateList = bean.getReplicateList();
     List<String> replicateAnnotationNameList = bean.getReplicateAnnotationNameList();
@@ -54,7 +54,7 @@
     // for small molecule summary charts
     List<Molecule> moleculeList = bean.getMoleculeList();
     long moleculeId = bean.getMoleculeId();
-    int moleculePrecursorId = bean.getMoleculePrecursorId();
+    long moleculePrecursorId = bean.getMoleculePrecursorId();
 
     if ((peptideList != null && !peptideList.isEmpty()) || peptideId != 0 || precursorId != 0)
     {

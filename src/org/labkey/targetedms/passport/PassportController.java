@@ -21,8 +21,6 @@ import org.jetbrains.annotations.Nullable;
 import org.labkey.api.action.SimpleViewAction;
 import org.labkey.api.action.SpringActionController;
 import org.labkey.api.data.BaseColumnInfo;
-import org.labkey.api.data.Container;
-import org.labkey.api.data.ContainerManager;
 import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
@@ -44,7 +42,6 @@ import org.labkey.targetedms.model.passport.IFeature;
 import org.labkey.targetedms.model.passport.IFile;
 import org.labkey.targetedms.model.passport.IKeyword;
 import org.labkey.targetedms.model.passport.IPeptide;
-import org.labkey.targetedms.model.passport.IProject;
 import org.labkey.targetedms.model.passport.IProtein;
 import org.labkey.targetedms.view.passport.ProteinListView;
 import org.springframework.validation.BindException;
@@ -57,12 +54,10 @@ import org.xml.sax.InputSource;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -260,7 +255,7 @@ public class PassportController extends SpringActionController
             p.setGene((String) map.get("bestgenename"));
             p.setSpecies((String) map.get("species"));
             p.setPreferredname((String) map.get("preferredname"));
-            p.setPepGroupId((Integer) map.get("pgid"));
+            p.setPepGroupId((Long) map.get("pgid"));
             p.setSequenceId((Integer) map.get("seqid"));
             p.setDescription((String) map.get("description"));
             p.setSequence((String) map.get("protsequence"));
@@ -271,7 +266,7 @@ public class PassportController extends SpringActionController
             f.setSoftwareVersion((String) map.get("softwareversion"));
             f.setCreatedDate((Date) map.get("created"));
             f.setModifiedDate((Date) map.get("modified"));
-            f.setRunId((Integer) map.get("runid"));
+            f.setRunId((Long) map.get("runid"));
 
             p.setFile(f);
             p.setAccession(accession);
@@ -322,7 +317,7 @@ public class PassportController extends SpringActionController
         if (p == null)
             return;
 
-        Map<Integer, IPeptide> peptideMap = new HashMap<>();
+        Map<Long, IPeptide> peptideMap = new HashMap<>();
 
         UserSchema schema = QueryService.get().getUserSchema(getUser(), getContainer(), "targetedms");
         TableInfo tinfo = schema.getTable("Passport_TotalPrecursorArea");
@@ -333,7 +328,7 @@ public class PassportController extends SpringActionController
         try
         {
             new TableSelector(tinfo, sf, null).forEachResults(pep -> {
-                int peptideId = pep.getInt("peptideid");
+                long peptideId = pep.getLong("peptideid");
                 IPeptide peptide = peptideMap.get(peptideId);
                 if (peptide == null)
                 {
@@ -349,13 +344,13 @@ public class PassportController extends SpringActionController
                 if ("BeforeIncubation".equals(replicateName))
                 {
                     peptide.setBeforeTotalArea(totalArea);
-                    peptide.setPrecursorbeforeid(pep.getInt("panoramaprecursorid"));
+                    peptide.setPrecursorbeforeid(pep.getLong("panoramaprecursorid"));
                     peptide.setBeforeSumArea(pep.getInt("sumarea"));
                 }
                 else if (replicateName.equals("AfterIncubation"))
                 {
                     peptide.setAfterTotalArea(totalArea);
-                    peptide.setPrecursorafterid(pep.getInt("panoramaprecursorid"));
+                    peptide.setPrecursorafterid(pep.getLong("panoramaprecursorid"));
                     peptide.setAfterSumArea(pep.getInt("sumarea"));
                 }
                 peptideMap.put(peptide.getPanoramaPeptideId(), peptide);

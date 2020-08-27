@@ -39,14 +39,14 @@ import java.util.Set;
 public class ComparisonChartInputMaker
 {
     private final ComparisonDataset.ChartType _chartType;
-    private final int _runId;
+    private final long _runId;
     private List<PrecursorChromInfoLitePlus> _pciPlusList;  // precursor = modified sequence + charge + isotope label
     private String _groupByAnnotationName;
     private String _filterByAnnotationValue;
     private boolean _cvValues = false;
     private boolean _logValues = false;
 
-    public ComparisonChartInputMaker(int runId, List<PrecursorChromInfoLitePlus> pciPlusList, ComparisonDataset.ChartType chartType)
+    public ComparisonChartInputMaker(long runId, List<PrecursorChromInfoLitePlus> pciPlusList, ComparisonDataset.ChartType chartType)
     {
         _runId = runId;
         _chartType = chartType;
@@ -91,7 +91,7 @@ public class ComparisonChartInputMaker
         }
 
         // If we are grouping by an annotation, create a map of sample fileID and annotation value
-        Map<Integer, String> sampleFileAnnotMap = getSampleAnnotationMap();
+        Map<Long, String> sampleFileAnnotMap = getSampleAnnotationMap();
 
         if (_chartType == ComparisonDataset.ChartType.PEPTIDE_COMPARISON)
         {
@@ -135,12 +135,7 @@ public class ComparisonChartInputMaker
                 if (!StringUtils.isBlank(_groupByAnnotationName) && !categoryLabel.hasAnnotationValue())
                     continue;
 
-                List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.get(categoryLabel);
-                if (categoryPciList == null)
-                {
-                    categoryPciList = new ArrayList<>();
-                    datasetMap.put(categoryLabel, categoryPciList);
-                }
+                List<PrecursorChromInfoLitePlus> categoryPciList = datasetMap.computeIfAbsent(categoryLabel, k -> new ArrayList<>());
                 categoryPciList.add(pciPlus);
             }
 
@@ -158,11 +153,11 @@ public class ComparisonChartInputMaker
         else
         {
             // REPLICATE COMPARISON
-            Map<Integer, Replicate> sampleFileReplicateMap = getSampleFileReplicateMap();
+            Map<Long, Replicate> sampleFileReplicateMap = getSampleFileReplicateMap();
 
             Map<String, List<PrecursorChromInfoLitePlus>> datasetMap = new HashMap<>();
 
-            Map<String, Integer> categoryLabelToSampleFileId = new HashMap<>();
+            Map<String, Long> categoryLabelToSampleFileId = new HashMap<>();
 
             for (PrecursorChromInfoLitePlus pciPlus : _pciPlusList)
             {
@@ -191,7 +186,7 @@ public class ComparisonChartInputMaker
                 if(StringUtils.isBlank(_groupByAnnotationName))
                 {
                     // Display replicates in document order (replicate.getId()) if we are not grouping by annotations.
-                    Integer sampleFileId = categoryLabelToSampleFileId.get(categoryLabel);
+                    Long sampleFileId = categoryLabelToSampleFileId.get(categoryLabel);
                     Replicate replicate = sampleFileReplicateMap.get(sampleFileId);
                     replicateCategory = new ComparisonCategory.ReplicateCategory(categoryLabel, String.valueOf(replicate.getId()));
                 }
@@ -211,14 +206,14 @@ public class ComparisonChartInputMaker
     private List<PrecursorChromInfoLitePlus> filterInputList()
     {
         List<SampleFile> sampleFileList = ReplicateManager.getSampleFilesForRun(_runId);
-        Map<Integer, Integer> sampleFileReplicateMap = new HashMap<>();
+        Map<Long, Long> sampleFileReplicateMap = new HashMap<>();
         for(SampleFile file: sampleFileList)
         {
             sampleFileReplicateMap.put(file.getId(), file.getReplicateId());
         }
 
         List<ReplicateAnnotation> annotationList = ReplicateManager.getReplicateAnnotationsForRun(_runId);
-        Set<Integer> replicateIdsToKeep = new HashSet<>();
+        Set<Long> replicateIdsToKeep = new HashSet<>();
         for(ReplicateAnnotation annotation: annotationList)
         {
             if(_filterByAnnotationValue.equalsIgnoreCase(annotation.getDisplayName()))
@@ -238,12 +233,12 @@ public class ComparisonChartInputMaker
         return listToKeep;
     }
 
-    private Map<Integer, Replicate> getSampleFileReplicateMap()
+    private Map<Long, Replicate> getSampleFileReplicateMap()
     {
-        Map<Integer, Replicate> sampleFileReplicateMap = new HashMap<>();
+        Map<Long, Replicate> sampleFileReplicateMap = new HashMap<>();
         List<SampleFile> sampleFiles = ReplicateManager.getSampleFilesForRun(_runId);
         List<Replicate> replicates = ReplicateManager.getReplicatesForRun(_runId);
-        Map<Integer, Replicate> replicateMap = new HashMap<>();
+        Map<Long, Replicate> replicateMap = new HashMap<>();
         for(Replicate replicate: replicates)
         {
             replicateMap.put(replicate.getId(), replicate);
@@ -255,13 +250,13 @@ public class ComparisonChartInputMaker
         return sampleFileReplicateMap;
     }
 
-    private Map<Integer, String> getSampleAnnotationMap()
+    private Map<Long, String> getSampleAnnotationMap()
     {
-        Map<Integer, String> sampleFileAnnotMap = new HashMap<>();
+        Map<Long, String> sampleFileAnnotMap = new HashMap<>();
         if(_groupByAnnotationName != null)
         {
             List<ReplicateAnnotation> replicateAnnotationList = ReplicateManager.getReplicateAnnotationsForRun(_runId);
-            Map<Integer, String> replicateAnnotationMap = new HashMap<>();
+            Map<Long, String> replicateAnnotationMap = new HashMap<>();
             for(ReplicateAnnotation annot: replicateAnnotationList)
             {
                 if(!annot.getName().equals(_groupByAnnotationName))
@@ -282,7 +277,7 @@ public class ComparisonChartInputMaker
     }
 
     private ComparisonCategory.PeptideCategory getPeptideCategoryLabel(PrecursorChromInfoLitePlus pciPlus,
-                                                    Map<Integer, String> sampleFileAnnotMap)
+                                                    Map<Long, String> sampleFileAnnotMap)
     {
         return new ComparisonCategory.PeptideCategory(pciPlus.getPeptideModifiedSequence(),
                                    pciPlus.getCharge(),
@@ -291,7 +286,7 @@ public class ComparisonChartInputMaker
     }
 
     private ComparisonCategory.MoleculeCategory getMoleculeCategoryLabel(PrecursorChromInfoLitePlus pciPlus,
-                                                    Map<Integer, String> sampleFileAnnotMap)
+                                                    Map<Long, String> sampleFileAnnotMap)
     {
         return new ComparisonCategory.MoleculeCategory(pciPlus.getCustomIonName(),
                                    pciPlus.getCharge(),

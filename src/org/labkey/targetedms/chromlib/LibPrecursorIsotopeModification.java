@@ -23,7 +23,7 @@ package org.labkey.targetedms.chromlib;
 public class LibPrecursorIsotopeModification implements ObjectWithId
 {
     private int _id;
-    private int _precursorId;
+    private long _precursorId;
     private int _isotopeModificationId;
     private Integer _indexAa;
     private Double _massDiff;
@@ -39,12 +39,12 @@ public class LibPrecursorIsotopeModification implements ObjectWithId
         _id = id;
     }
 
-    public int getPrecursorId()
+    public long getPrecursorId()
     {
         return _precursorId;
     }
 
-    public void setPrecursorId(int precursorId)
+    public void setPrecursorId(long precursorId)
     {
         _precursorId = precursorId;
     }
@@ -98,7 +98,7 @@ public class LibPrecursorIsotopeModification implements ObjectWithId
     @Override
     public int hashCode()
     {
-        int result = _precursorId;
+        int result = (int) _precursorId;
         result = 31 * result + _isotopeModificationId;
         result = 31 * result + _indexAa.hashCode();
         result = 31 * result + _massDiff.hashCode();

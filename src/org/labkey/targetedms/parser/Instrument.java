@@ -22,30 +22,30 @@ package org.labkey.targetedms.parser;
  */
 public class Instrument
 {
-    private int id;
-    private int runId;
+    private long id;
+    private long runId;
 
     private String model;
     private String ionizationType;
     private String analyzer;
     private String detector;
 
-    public int getRunId()
+    public long getRunId()
     {
         return runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         this.runId = runId;
     }
 
-    public int getId()
+    public long getId()
     {
         return id;
     }
 
-    public void setId(int id)
+    public void setId(long id)
     {
         this.id = id;
     }

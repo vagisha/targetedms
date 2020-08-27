@@ -31,7 +31,7 @@ public interface ITargetedMSRun
     public String getFileName();
     public String getDescription();
     public Date getCreated();
-    public int getId();
+    public long getId();
     public Integer getDataId();
     public Integer getSkydDataId();
 }

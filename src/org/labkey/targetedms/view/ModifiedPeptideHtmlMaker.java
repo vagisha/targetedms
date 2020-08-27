@@ -39,7 +39,7 @@ public class ModifiedPeptideHtmlMaker
 {
     // RunId -> IsotopeLabelId (The database ID of the first isotope label type for the run).
     // Used to get the display color for label types.
-    private Map<Integer, Integer> _firstIsotopeLabelIdInDocMap;
+    private Map<Long, Long> _firstIsotopeLabelIdInDocMap;
 
     private final static String[] HEX_PADDING = new String[] {
                                                         "",
@@ -56,28 +56,28 @@ public class ModifiedPeptideHtmlMaker
         _firstIsotopeLabelIdInDocMap = new HashMap<>();
     }
 
-    public String getPrecursorHtml(Precursor precursor, Integer runId, TargetedMSSchema schema)
+    public String getPrecursorHtml(Precursor precursor, Long runId, TargetedMSSchema schema)
     {
         Peptide peptide = PeptideManager.getPeptide(schema.getContainer(), precursor.getGeneralMoleculeId());
         return getPrecursorHtml(peptide, precursor, runId);
     }
 
-    public String getPrecursorHtml(Peptide peptide, Precursor precursor, Integer runId)
+    public String getPrecursorHtml(Peptide peptide, Precursor precursor, Long runId)
     {
         return getPrecursorHtml(peptide.getId(), precursor.getIsotopeLabelId(), peptide.getSequence(), precursor.getModifiedSequence(), runId);
     }
 
-    public String getPrecursorHtml(int peptideId, int isotopeLabelId, String peptideSequence, String precursorModifiedSequence, Integer runId)
+    public String getPrecursorHtml(long peptideId, long isotopeLabelId, String peptideSequence, String precursorModifiedSequence, Long runId)
     {
         return getHtml(peptideId, isotopeLabelId, peptideSequence, precursorModifiedSequence, runId, null, null);
     }
 
-    public String getPeptideHtml(Peptide peptide, Integer runId)
+    public String getPeptideHtml(Peptide peptide, Long runId)
     {
         return getPeptideHtml(peptide.getId(), peptide.getSequence(), peptide.getPeptideModifiedSequence(), runId, null, null);
     }
 
-    public String getPeptideHtml(int peptideId, String sequence, String peptideModifiedSequence, Integer runId, @Nullable String previousAA, @Nullable String nextAA)
+    public String getPeptideHtml(long peptideId, String sequence, String peptideModifiedSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA)
     {
         String altSequence = peptideModifiedSequence;
         if(StringUtils.isBlank(altSequence))
@@ -88,9 +88,9 @@ public class ModifiedPeptideHtmlMaker
         return getHtml(peptideId, null, sequence, altSequence, runId, previousAA, nextAA);
     }
 
-    private String getHtml(int peptideId, @Nullable Integer isotopeLabelId, String sequence, String altSequence, Integer runId, @Nullable String previousAA, @Nullable String nextAA)
+    private String getHtml(long peptideId,  @Nullable Long isotopeLabelId, String sequence, String altSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA)
     {
-        Integer firstIsotopeLabelIdInDoc = null;
+        Long firstIsotopeLabelIdInDoc = null;
         if(runId != null)
         {
             firstIsotopeLabelIdInDoc = _firstIsotopeLabelIdInDocMap.get(runId);

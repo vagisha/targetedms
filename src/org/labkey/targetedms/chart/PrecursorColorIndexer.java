@@ -32,16 +32,16 @@ import java.util.List;
  */
 public class PrecursorColorIndexer
 {
-    private int _lightLabelId = Integer.MAX_VALUE;
+    private long _lightLabelId = Integer.MAX_VALUE;
     private int _minCharge = Integer.MAX_VALUE;
     private int _isotopeLabelCount;
 
-    public PrecursorColorIndexer(int runId, User user, Container container)
+    public PrecursorColorIndexer(long runId, User user, Container container)
     {
         this(runId, 0, user, container);
     }
 
-    public PrecursorColorIndexer(int runId, int peptideId, User user, Container container)
+    public PrecursorColorIndexer(long runId, long peptideId, User user, Container container)
     {
         List<PeptideSettings.IsotopeLabel> labels = IsotopeLabelManager.getIsotopeLabels(runId);
         for(PeptideSettings.IsotopeLabel label: labels)
@@ -65,14 +65,14 @@ public class PrecursorColorIndexer
         _minCharge = charge;
     }
 
-    public int getColorIndex(int precursorId, User user, Container container)
+    public long getColorIndex(long precursorId, User user, Container container)
     {
         // CONSIDER caching the colors, as they will be the same for all the replicates
         Precursor precursor = PrecursorManager.getPrecursor(container, precursorId, user);
         return getColorIndex(precursor.getIsotopeLabelId(), precursor.getCharge());
     }
 
-    public int getColorIndex(int isotopeLabelId, int charge)
+    public long getColorIndex(long isotopeLabelId, int charge)
     {
         return (charge - _minCharge) * _isotopeLabelCount + (isotopeLabelId - _lightLabelId);
 

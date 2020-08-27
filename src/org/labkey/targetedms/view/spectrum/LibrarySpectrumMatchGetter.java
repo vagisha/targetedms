@@ -99,7 +99,7 @@ public class LibrarySpectrumMatchGetter
 
         List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(peptide.getId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
-        Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
+        Map<Long, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
         for(Peptide.StructuralModification mod: structuralModifications)
         {
             List<PeptideSettings.PotentialLoss> losses = ModificationManager.getPotentialLossesForStructuralMod(mod.getStructuralModId());
@@ -131,7 +131,7 @@ public class LibrarySpectrumMatchGetter
 
         List<Peptide.StructuralModification> structuralModifications= ModificationManager.getPeptideStructuralModifications(precursor.getGeneralMoleculeId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
-        Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
+        Map<Long, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
         for(Peptide.StructuralModification mod: structuralModifications)
         {
             List<PeptideSettings.PotentialLoss> losses = ModificationManager.getPotentialLossesForStructuralMod(mod.getStructuralModId());
@@ -147,7 +147,7 @@ public class LibrarySpectrumMatchGetter
     private static LibrarySpectrumMatch getMatch(Peptide peptide, Precursor precursor, Container container,
                                                  LinkedHashMap<PeptideSettings.SpectrumLibrary, Path> libraryFilePathsMap,
                                                  List<Peptide.StructuralModification> structuralModifications, List<PeptideSettings.RunStructuralModification> runStrMods,
-                                                 Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap)
+                                                 Map<Long, List<PeptideSettings.PotentialLoss>> potentialLossMap)
     {
         LibrarySpectrumMatch pepSpec = null;
 
@@ -200,7 +200,7 @@ public class LibrarySpectrumMatchGetter
     {
         List<Peptide.StructuralModification> structuralModifications = ModificationManager.getPeptideStructuralModifications(precursor.getGeneralMoleculeId());
         List<PeptideSettings.RunStructuralModification> runStrMods = ModificationManager.getStructuralModificationsForRun(run.getId());
-        Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
+        Map<Long, List<PeptideSettings.PotentialLoss>> potentialLossMap = new HashMap<>();
         for(Peptide.StructuralModification mod: structuralModifications)
         {
             List<PeptideSettings.PotentialLoss> losses = ModificationManager.getPotentialLossesForStructuralMod(mod.getStructuralModId());
@@ -221,7 +221,7 @@ public class LibrarySpectrumMatchGetter
     @NotNull
     private static LibrarySpectrumMatch makeLibrarySpectrumMatch(BlibSpectrum spectrum, Peptide peptide, Precursor precursor, PeptideSettings.SpectrumLibrary library,
                                                                  List<Peptide.StructuralModification> structuralModifications, List<PeptideSettings.RunStructuralModification> runStrMods,
-                                                                 Map<Integer, List<PeptideSettings.PotentialLoss>> potentialLossMap)
+                                                                 Map<Long, List<PeptideSettings.PotentialLoss>> potentialLossMap)
     {
         LibrarySpectrumMatch pepSpec = new LibrarySpectrumMatch();
         pepSpec.setPrecursorId(precursor.getId());
@@ -284,10 +284,10 @@ public class LibrarySpectrumMatchGetter
     private static class PrecursorKey
     {
         private final String _modifiedSequence;
-        private final int _generalMoleculeId;
+        private final long _generalMoleculeId;
 
 
-        private PrecursorKey(String modifiedSequence, int generalMoleculeId)
+        private PrecursorKey(String modifiedSequence, long generalMoleculeId)
         {
             _modifiedSequence = modifiedSequence;
             _generalMoleculeId = generalMoleculeId;
@@ -298,7 +298,7 @@ public class LibrarySpectrumMatchGetter
             return _modifiedSequence;
         }
 
-        public int getGeneralMoleculeId()
+        public long getGeneralMoleculeId()
         {
             return _generalMoleculeId;
         }
@@ -320,7 +320,7 @@ public class LibrarySpectrumMatchGetter
         public int hashCode()
         {
             int result = _modifiedSequence.hashCode();
-            result = 31 * result + _generalMoleculeId;
+            result = (int) (31 * result + _generalMoleculeId);
             return result;
         }
     }

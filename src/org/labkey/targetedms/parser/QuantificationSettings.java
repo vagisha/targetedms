@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class QuantificationSettings extends SkylineEntity
 {
-    private int _runId;
+    private long _runId;
     private String _regressionWeighting;
     private String _regressionFit;
     private String _normalizationMethod;
@@ -32,12 +32,12 @@ public class QuantificationSettings extends SkylineEntity
     @Nullable private Double _maxLOQCV;
     @Nullable private String _lodCalculation;
 
-    public int getRunId()
+    public long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         _runId = runId;
     }

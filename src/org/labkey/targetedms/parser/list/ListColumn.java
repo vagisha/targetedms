@@ -22,18 +22,18 @@ import java.util.Objects;
 
 public class ListColumn extends SkylineEntity
 {
-    private int _listDefinitionId;
+    private long _listDefinitionId;
     private int _columnIndex;
     private String _name;
     private String _lookup;
     private String _annotationType;
 
-    public int getListDefinitionId()
+    public long getListDefinitionId()
     {
         return _listDefinitionId;
     }
 
-    public void setListDefinitionId(int listId)
+    public void setListDefinitionId(long listId)
     {
         _listDefinitionId = listId;
     }

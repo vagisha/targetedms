@@ -84,7 +84,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
     protected void setValuesInStatement(LibPrecursor precursor, PreparedStatement stmt) throws SQLException
     {
         int colIndex = 1;
-        stmt.setInt(colIndex++, precursor.getPeptideId());
+        stmt.setLong(colIndex++, precursor.getPeptideId());
         stmt.setString(colIndex++, precursor.getIsotopeLabel());
         stmt.setDouble(colIndex++, precursor.getMz());
         stmt.setInt(colIndex++, precursor.getCharge());
@@ -96,7 +96,7 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         stmt.setObject(colIndex++, precursor.getNumTransitions(), Types.INTEGER);
         stmt.setObject(colIndex++, precursor.getNumPoints(), Types.INTEGER);
         stmt.setObject(colIndex++, precursor.getAverageMassErrorPPM(), Types.DOUBLE);
-        stmt.setInt(colIndex++, precursor.getSampleFileId());
+        stmt.setLong(colIndex++, precursor.getSampleFileId());
         stmt.setObject(colIndex++, precursor.getChromatogram(), Types.BLOB);
         stmt.setInt(colIndex++, precursor.getUncompressedSize());
         stmt.setInt(colIndex, precursor.getChromatogramFormat());

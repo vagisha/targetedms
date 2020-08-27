@@ -24,7 +24,7 @@ import java.util.Map;
  */
 public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
 {
-    private int _runId;
+    private long _runId;
     private Integer _sequenceId;
 
     private String _label;
@@ -47,12 +47,12 @@ public class PeptideGroup extends AnnotatedEntity<PeptideGroupAnnotation>
 
     protected RepresentativeDataState _representativeDataState = RepresentativeDataState.NotRepresentative;
 
-    public int getRunId()
+    public long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         _runId = runId;
     }

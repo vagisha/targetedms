@@ -8,13 +8,13 @@ import java.util.List;
 // Class for a Panorama Public Project
 public class IProject
 {
-    int runId;
-    int peptideGroupId;
+    long runId;
+    long peptideGroupId;
     String fileName;
     Container container;
     List<IPeptide> peptides;
 
-    public int getPeptideGroupId()
+    public long getPeptideGroupId()
     {
         return peptideGroupId;
     }
@@ -24,12 +24,12 @@ public class IProject
         this.peptideGroupId = id;
     }
 
-    public int getRunId()
+    public long getRunId()
     {
         return runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         this.runId = runId;
     }

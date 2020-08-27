@@ -28,9 +28,9 @@ import org.labkey.targetedms.TargetedMSSchema;
 
 public abstract class DocumentView extends NestableQueryView
 {
-    protected final int _runId;
+    protected final long _runId;
 
-    public DocumentView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport,
+    public DocumentView(ViewContext ctx, TargetedMSSchema schema, String queryName, long runId, boolean forExport,
                         QueryNestingOption nestingOption, String dataRegionName)
     {
         super(schema, schema.getSettings(ctx, dataRegionName, queryName), true, forExport, nestingOption);

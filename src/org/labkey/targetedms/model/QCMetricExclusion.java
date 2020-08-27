@@ -17,24 +17,24 @@ package org.labkey.targetedms.model;
 
 public class QCMetricExclusion
 {
-    private Integer _replicateId;
+    private Long _replicateId;
     private Integer _metricId;
 
     public QCMetricExclusion()
     {}
 
-    public QCMetricExclusion(Integer replicateId, Integer metricId)
+    public QCMetricExclusion(Long replicateId, Integer metricId)
     {
         _replicateId = replicateId;
         _metricId = metricId;
     }
 
-    public Integer getReplicateId()
+    public Long getReplicateId()
     {
         return _replicateId;
     }
 
-    public void setReplicateId(Integer replicateId)
+    public void setReplicateId(Long replicateId)
     {
         _replicateId = replicateId;
     }

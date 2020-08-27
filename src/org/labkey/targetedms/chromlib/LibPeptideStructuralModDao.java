@@ -35,9 +35,9 @@ public class LibPeptideStructuralModDao extends BaseDaoImpl<LibPeptideStructural
     protected void setValuesInStatement(LibPeptideStructuralModification pepStrMod, PreparedStatement stmt) throws SQLException
     {
         int colIndex = 1;
-        stmt.setInt(colIndex++, pepStrMod.getPeptideId());
-        stmt.setInt(colIndex++, pepStrMod.getStructuralModificationId());
-        stmt.setInt(colIndex++, pepStrMod.getIndexAa());
+        stmt.setLong(colIndex++, pepStrMod.getPeptideId());
+        stmt.setLong(colIndex++, pepStrMod.getStructuralModificationId());
+        stmt.setLong(colIndex++, pepStrMod.getIndexAa());
         stmt.setDouble(colIndex, pepStrMod.getMassDiff());
     }
 
@@ -61,8 +61,8 @@ public class LibPeptideStructuralModDao extends BaseDaoImpl<LibPeptideStructural
         {
             LibPeptideStructuralModification pepStrMod = new LibPeptideStructuralModification();
             pepStrMod.setId(rs.getInt(PeptideStructuralModificationColumn.Id.baseColumn().name()));
-            pepStrMod.setPeptideId(rs.getInt(PeptideStructuralModificationColumn.PeptideId.baseColumn().name()));
-            pepStrMod.setStructuralModificationId(rs.getInt(PeptideStructuralModificationColumn.StructuralModId.baseColumn().name()));
+            pepStrMod.setPeptideId(rs.getLong(PeptideStructuralModificationColumn.PeptideId.baseColumn().name()));
+            pepStrMod.setStructuralModificationId(rs.getLong(PeptideStructuralModificationColumn.StructuralModId.baseColumn().name()));
             pepStrMod.setIndexAa(rs.getInt(PeptideStructuralModificationColumn.IndexAa.baseColumn().name()));
             pepStrMod.setMassDiff(rs.getDouble(PeptideStructuralModificationColumn.MassDiff.baseColumn().name()));
 

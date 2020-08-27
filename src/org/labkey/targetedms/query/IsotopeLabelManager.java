@@ -36,7 +36,7 @@ public class IsotopeLabelManager
 {
     private IsotopeLabelManager() {}
 
-    public static List<PeptideSettings.IsotopeLabel> getIsotopeLabels(int runId)
+    public static List<PeptideSettings.IsotopeLabel> getIsotopeLabels(long runId)
     {
         // TODO: Cache isotope label information for a run
         SimpleFilter filter = new SimpleFilter();
@@ -45,7 +45,7 @@ public class IsotopeLabelManager
         return new TableSelector(TargetedMSManager.getTableInfoIsotopeLabel(), filter, new Sort("Id")).getArrayList(PeptideSettings.IsotopeLabel.class);
     }
 
-    public static int getLightIsotopeLabelId(int peptideId)
+    public static long getLightIsotopeLabelId(long peptideId)
     {
         SQLFragment sql = new SQLFragment();
         sql.append("SELECT MIN(label.Id) ");
@@ -62,7 +62,7 @@ public class IsotopeLabelManager
 
         sql.add(peptideId);
 
-        Integer ltIsotopeLabelId = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
+        Long ltIsotopeLabelId = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Long.class);
 
         if (ltIsotopeLabelId == null)
         {
@@ -71,7 +71,7 @@ public class IsotopeLabelManager
         return ltIsotopeLabelId;
     }
 
-    public static PeptideSettings.IsotopeLabel getIsotopeLabel(int isotopeLabelId)
+    public static PeptideSettings.IsotopeLabel getIsotopeLabel(long isotopeLabelId)
     {
         return new TableSelector(TargetedMSManager.getTableInfoIsotopeLabel()).getObject(isotopeLabelId, PeptideSettings.IsotopeLabel.class);
     }

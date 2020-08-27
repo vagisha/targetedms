@@ -51,7 +51,7 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
         }
     }
 
-    protected int _runId;
+    protected long _runId;
     protected Container _container;
     protected String _description;
     protected String _fileName;
@@ -107,20 +107,20 @@ public class TargetedMSRun implements Serializable, ITargetedMSRun
     }
 
     @Override
-    public int getId() {
+    public long getId() {
         return getRunId();
     }
 
-    public int getRunId()
+    public long getRunId()
     {
         return _runId;
     }
 
-    public void setId(int runId) {
+    public void setId(long runId) {
         setRunId(runId);
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         _runId = runId;
     }

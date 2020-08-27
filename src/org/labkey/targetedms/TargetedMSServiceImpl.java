@@ -60,7 +60,7 @@ public class TargetedMSServiceImpl implements TargetedMSService
     private List<TableCustomizer> _modificationSearchCustomizers = new CopyOnWriteArrayList<>();
 
     @Override
-    public ITargetedMSRun getRun(int runId, Container container)
+    public ITargetedMSRun getRun(long runId, Container container)
     {
         TargetedMSRun run = TargetedMSManager.getRun(runId);
         if(run != null && run.getContainer().equals(container))
@@ -131,19 +131,19 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public List<String> getSampleFilePaths(int runId)
+    public List<String> getSampleFilePaths(long runId)
     {
         return ReplicateManager.getSampleFilePaths(runId);
     }
 
     @Override
-    public List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(int runId)
+    public List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId)
     {
         return ModificationManager.getStructuralModificationsUsedInRun(runId);
     }
 
     @Override
-    public List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(int runId)
+    public List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(long runId)
     {
         return ModificationManager.getIsotopeModificationsUsedInRun(runId);
     }

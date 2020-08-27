@@ -27,7 +27,7 @@ public class MoleculePrecursorColorIndexer
 {
     private int _minCharge = Integer.MAX_VALUE;
 
-    public MoleculePrecursorColorIndexer(int moleculeId, User user, Container container)
+    public MoleculePrecursorColorIndexer(long moleculeId, User user, Container container)
     {
         if (moleculeId > 0)
         {
@@ -44,7 +44,7 @@ public class MoleculePrecursorColorIndexer
         _minCharge = charge;
     }
 
-    public int getColorIndex(int precursorId, User user, Container container)
+    public int getColorIndex(long precursorId, User user, Container container)
     {
         // CONSIDER caching the colors, as they will be the same for all the replicates
         MoleculePrecursor precursor = MoleculePrecursorManager.getPrecursor(container, precursorId, user);

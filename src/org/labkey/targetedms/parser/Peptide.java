@@ -215,18 +215,18 @@ public class Peptide extends GeneralMolecule
 
     public static class Modification extends SkylineEntity
     {
-        private int _peptideId;
+        private long _peptideId;
 
         private String _modificationName;
         private Double _massDiff;
         private int _indexAa;
 
-        public int getPeptideId()
+        public long getPeptideId()
         {
             return _peptideId;
         }
 
-        public void setPeptideId(int peptideId)
+        public void setPeptideId(long peptideId)
         {
             _peptideId = peptideId;
         }
@@ -264,14 +264,14 @@ public class Peptide extends GeneralMolecule
 
     public static final class StructuralModification extends Modification
     {
-        private int _structuralModId;
+        private long _structuralModId;
 
-        public int getStructuralModId()
+        public long getStructuralModId()
         {
             return _structuralModId;
         }
 
-        public void setStructuralModId(int structuralModId)
+        public void setStructuralModId(long structuralModId)
         {
             _structuralModId = structuralModId;
         }
@@ -279,27 +279,27 @@ public class Peptide extends GeneralMolecule
 
     public static final class IsotopeModification extends Modification
     {
-        private int _isotopeLabelId;
-        private int _isotopeModId;
+        private long _isotopeLabelId;
+        private long _isotopeModId;
 
         private String _isotopeLabel;
 
-        public int getIsotopeLabelId()
+        public long getIsotopeLabelId()
         {
             return _isotopeLabelId;
         }
 
-        public void setIsotopeLabelId(int isotopeLabelId)
+        public void setIsotopeLabelId(long isotopeLabelId)
         {
             _isotopeLabelId = isotopeLabelId;
         }
 
-        public int getIsotopeModId()
+        public long getIsotopeModId()
         {
             return _isotopeModId;
         }
 
-        public void setIsotopeModId(int isotopeModId)
+        public void setIsotopeModId(long isotopeModId)
         {
             _isotopeModId = isotopeModId;
         }

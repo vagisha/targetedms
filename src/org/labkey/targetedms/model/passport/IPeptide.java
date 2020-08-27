@@ -6,14 +6,14 @@ public class IPeptide
     private String peptideModifiedSequence;
     private int startIndex;
     private int endIndex;
-    private int proteinId;
-    private int panoramaPeptideId;
+    private long proteinId;
+    private long panoramaPeptideId;
     private double beforeIntensity;
     private double beforeTotalArea;
     private double afterIntensity;
     private double afterTotalArea;
-    private int precursorbeforeid;
-    private int precursorafterid;
+    private long precursorbeforeid;
+    private long precursorafterid;
     private double beforeSumArea;
     private double afterSumArea;
 
@@ -38,12 +38,12 @@ public class IPeptide
     }
 
 
-    public int getPrecursorafterid()
+    public long getPrecursorafterid()
     {
         return precursorafterid;
     }
 
-    public void setPrecursorafterid(int precursorafterid)
+    public void setPrecursorafterid(long precursorafterid)
     {
         this.precursorafterid = precursorafterid;
     }
@@ -79,12 +79,12 @@ public class IPeptide
         this.peptideModifiedSequence = peptideModifiedSequence;
     }
 
-    public int getPrecursorbeforeid()
+    public long getPrecursorbeforeid()
     {
         return precursorbeforeid;
     }
 
-    public void setPrecursorbeforeid(int precursorbeforeid)
+    public void setPrecursorbeforeid(long precursorbeforeid)
     {
         this.precursorbeforeid = precursorbeforeid;
     }
@@ -119,22 +119,22 @@ public class IPeptide
         this.endIndex = endIndex;
     }
 
-    public int getProteinId()
+    public long getProteinId()
     {
         return proteinId;
     }
 
-    public void setProteinId(int proteinId)
+    public void setProteinId(long proteinId)
     {
         this.proteinId = proteinId;
     }
 
-    public int getPanoramaPeptideId()
+    public long getPanoramaPeptideId()
     {
         return panoramaPeptideId;
     }
 
-    public void setPanoramaPeptideId(int panoramaPeptideId)
+    public void setPanoramaPeptideId(long panoramaPeptideId)
     {
         this.panoramaPeptideId = panoramaPeptideId;
     }
@@ -172,6 +172,6 @@ public class IPeptide
     }
 
     public int hashCode() {
-        return getPanoramaPeptideId();
+        return (int) getPanoramaPeptideId();
     }
 }

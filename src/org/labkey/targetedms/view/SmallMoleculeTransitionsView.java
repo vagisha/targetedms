@@ -31,7 +31,7 @@ public class SmallMoleculeTransitionsView extends DocumentTransitionsView
     public static final String DATAREGION_NAME = "small_mol_transitions_view";
     public static final String TITLE = "Small Molecule Transition List";
 
-    public SmallMoleculeTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, int runId, boolean forExport)
+    public SmallMoleculeTransitionsView(ViewContext ctx, TargetedMSSchema schema, String queryName, long runId, boolean forExport)
     {
         super(ctx, schema, queryName, runId, !forExport,
                 new QueryNestingOption(FieldKey.fromParts("MoleculePrecursorId", "MoleculeId", "PeptideGroupId"),

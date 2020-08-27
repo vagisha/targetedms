@@ -35,12 +35,12 @@ public class MoleculeTransition extends GeneralTransition
     private Double _massAverage;
     private String _moleculeTransitionId;
 
-    public int getTransitionId()
+    public long getTransitionId()
     {
         return getId();
     }
 
-    public void setTransitionId(int transitionId)
+    public void setTransitionId(long transitionId)
     {
         // Issue 40075 - small molecule-specific table needs to match id column of generaltransition table, so bind to the same
         // underlying property to avoid more problems in the future

@@ -45,13 +45,13 @@ public class ReplicateManager
 {
     private ReplicateManager() {}
 
-    public static SampleFile getSampleFile(int sampleFileId)
+    public static SampleFile getSampleFile(long sampleFileId)
     {
         return new TableSelector(TargetedMSManager.getSchema().getTable(TargetedMSSchema.TABLE_SAMPLE_FILE))
             .getObject(sampleFileId, SampleFile.class);
     }
 
-    public static Replicate getReplicate(int replicateId)
+    public static Replicate getReplicate(long replicateId)
     {
         return new TableSelector(TargetedMSManager.getSchema().getTable(TargetedMSSchema.TABLE_REPLICATE))
             .getObject(replicateId, Replicate.class);
@@ -75,7 +75,7 @@ public class ReplicateManager
         return new SqlSelector(TargetedMSManager.getSchema(), sqlFragment).getArrayList(Integer.class);
     }
 
-    public static QCMetricExclusion insertReplicateExclusion(User user, Integer replicateId, @Nullable Integer metricId)
+    public static QCMetricExclusion insertReplicateExclusion(User user, Long replicateId, @Nullable Integer metricId)
     {
         // Note: null metricId indicates an exclusion for all metrics for the given replicate
         QCMetricExclusion exclusion = new QCMetricExclusion(replicateId, metricId);
@@ -102,7 +102,7 @@ public class ReplicateManager
         return new SqlSelector(TargetedMSManager.getSchema(), sqlFragment).getObject(ReplicateAnnotation.class);
     }
 
-    public static SampleFile getSampleFileForPrecursorChromInfo(int precursorChromInfoId)
+    public static SampleFile getSampleFileForPrecursorChromInfo(long precursorChromInfoId)
     {
         String sql = "SELECT sf.* FROM "+
                      TargetedMSManager.getTableInfoSampleFile()+" AS sf, "+
@@ -115,7 +115,7 @@ public class ReplicateManager
         return new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(SampleFile.class);
     }
 
-    public static SampleFile getSampleFileForGeneralMoleculeChromInfo(int generalMoleculeChromInfoId)
+    public static SampleFile getSampleFileForGeneralMoleculeChromInfo(long generalMoleculeChromInfoId)
     {
         String sql = "SELECT sf.* FROM "+
                      TargetedMSManager.getTableInfoSampleFile()+" AS sf, "+
@@ -128,7 +128,7 @@ public class ReplicateManager
         return new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(SampleFile.class);
     }
 
-    public static List<SampleFile> getSampleFilesForRun(int runId)
+    public static List<SampleFile> getSampleFilesForRun(long runId)
     {
         String sql = "SELECT sf.* FROM "+
                      TargetedMSManager.getTableInfoSampleFile()+" AS sf, "+
@@ -141,7 +141,7 @@ public class ReplicateManager
         return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sf).getCollection(SampleFile.class));
     }
 
-    public static List<String> getSampleFilePaths(int runId)
+    public static List<String> getSampleFilePaths(long runId)
     {
         String sql = "SELECT sf.filePath FROM "+
                 TargetedMSManager.getTableInfoSampleFile()+" AS sf, "+
@@ -154,7 +154,7 @@ public class ReplicateManager
         return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sf).getCollection(String.class));
     }
 
-    public static List<Replicate> getReplicatesForRun(int runId)
+    public static List<Replicate> getReplicatesForRun(long runId)
     {
         return new ArrayList<>(
                                  new TableSelector(TargetedMSManager.getTableInfoReplicate(),
@@ -163,7 +163,7 @@ public class ReplicateManager
                                  .getCollection(Replicate.class));
     }
 
-    public static List<String> getReplicateAnnotationNamesForRun(int runId)
+    public static List<String> getReplicateAnnotationNamesForRun(long runId)
     {
         SQLFragment sql = new SQLFragment();
         sql.append("SELECT DISTINCT replAnnot.Name FROM ");
@@ -178,7 +178,7 @@ public class ReplicateManager
         return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(String.class));
     }
 
-    public static List<ReplicateAnnotation> getReplicateAnnotationsForRun(int runId)
+    public static List<ReplicateAnnotation> getReplicateAnnotationsForRun(long runId)
     {
         SQLFragment sql = new SQLFragment();
         sql.append("SELECT replAnnot.* FROM ");
@@ -193,7 +193,7 @@ public class ReplicateManager
         return new ArrayList<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(ReplicateAnnotation.class));
     }
 
-    public static List<ReplicateAnnotation> getUniqueSortedAnnotationNameValue(int runId)
+    public static List<ReplicateAnnotation> getUniqueSortedAnnotationNameValue(long runId)
     {
         List<ReplicateAnnotation> allAnnotationsList = getReplicateAnnotationsForRun(runId);
         Map<String, ReplicateAnnotation> uniqueAnnotationsMap = new HashMap<>();

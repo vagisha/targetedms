@@ -59,7 +59,7 @@ public class MoleculePrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(MoleculePrecursor.class);
     }
 
-    public static List<MoleculePrecursor> getPrecursorsForMolecule(int moleculeId, TargetedMSSchema targetedMSSchema)
+    public static List<MoleculePrecursor> getPrecursorsForMolecule(long moleculeId, TargetedMSSchema targetedMSSchema)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("MoleculeId"), moleculeId);
@@ -80,28 +80,28 @@ public class MoleculePrecursorManager
         return precursors;
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId, User user, Container container)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(long peptideGroupId, User user, Container container)
     {
         return getChromInfosLitePlusForPeptideGroup(peptideGroupId, 0, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId, int sampleFileId, User user, Container container)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(long peptideGroupId, long sampleFileId, User user, Container container)
     {
         return getPrecursorChromInfosLitePlusForPeptideGroup(peptideGroupId, true, false, sampleFileId, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForMolecule(int moleculeId, User user, Container container)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForMolecule(long moleculeId, User user, Container container)
     {
         return getPrecursorChromInfosLitePlusForPeptideGroup(moleculeId, false, false, 0, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForMoleculePrecursor(int precursorId, User user, Container container)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForMoleculePrecursor(long precursorId, User user, Container container)
     {
         return getPrecursorChromInfosLitePlusForPeptideGroup(precursorId, false, true, 0, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getPrecursorChromInfosLitePlusForPeptideGroup(int id, boolean forPeptideGroup,
-                                                                     boolean forPrecursor, int sampleFileId, User user, Container container)
+    public static List<PrecursorChromInfoLitePlus> getPrecursorChromInfosLitePlusForPeptideGroup(long id, boolean forPeptideGroup,
+                                                                     boolean forPrecursor, long sampleFileId, User user, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.id, pci.precursorId, pci.sampleFileId, pci.bestRetentionTime, pci.minStartTime, ");
@@ -133,7 +133,7 @@ public class MoleculePrecursorManager
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoLitePlus.class);
     }
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForMolecule(int moleduleId, int sampleFileId, User user, Container container)
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForMolecule(long moleduleId, long sampleFileId, User user, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, mol.customIonName, prec.Charge");

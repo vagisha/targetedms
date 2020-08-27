@@ -350,7 +350,7 @@ public class ConflictResultsManager
         return new ArrayList<>(conflictTransitionMap.values());
     }
 
-    public static List<TransitionWithAreaAndRank> getRankedTransitionsForPrecursor(int precursorId, User user, Container container)
+    public static List<TransitionWithAreaAndRank> getRankedTransitionsForPrecursor(long precursorId, User user, Container container)
     {
         Collection<Transition> transitions = TransitionManager.getTransitionsForPrecursor(precursorId, user, container);
 

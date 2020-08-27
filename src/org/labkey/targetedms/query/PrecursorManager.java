@@ -108,7 +108,7 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(PrecursorChromInfo.class);
     }
 
-    public static List<Precursor> getPrecursorsForPeptide(int peptideId, TargetedMSSchema targetedMSSchema)
+    public static List<Precursor> getPrecursorsForPeptide(long peptideId, TargetedMSSchema targetedMSSchema)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("PeptideId"), peptideId);
@@ -128,7 +128,7 @@ public class PrecursorManager
     }
 
     @NotNull
-    public static List<PrecursorChromInfo> getSortedPrecursorChromInfosForPrecursor(int precursorId)
+    public static List<PrecursorChromInfo> getSortedPrecursorChromInfosForPrecursor(long precursorId)
     {
         SimpleFilter filter = new SimpleFilter();
         filter.addCondition(FieldKey.fromParts("PrecursorId"), precursorId);
@@ -139,12 +139,12 @@ public class PrecursorManager
                                   .getArrayList(PrecursorChromInfo.class);
     }
 
-    public static PrecursorChromInfo getBestPrecursorChromInfoForPrecursor(int precursorId)
+    public static PrecursorChromInfo getBestPrecursorChromInfoForPrecursor(long precursorId)
     {
         return getBestPrecursorChromInfoForPrecursorAndReplicate(precursorId, -1);
     }
 
-    public static PrecursorChromInfo getBestPrecursorChromInfoForPrecursorAndReplicate(int precursorId, int replicateId)
+    public static PrecursorChromInfo getBestPrecursorChromInfoForPrecursorAndReplicate(long precursorId, long replicateId)
     {
         // Get a list of chrom infos sorted by peak area (descending).
         List<PrecursorChromInfo> chromInfos = getSortedPrecursorChromInfosForPrecursor(precursorId);
@@ -183,7 +183,7 @@ public class PrecursorManager
         }
     }
 
-    public static Set<Integer> getSampleFileIdsForReplicate(int replicateId)
+    public static Set<Integer> getSampleFileIdsForReplicate(long replicateId)
     {
         if(replicateId <= 0)
             return Collections.emptySet();
@@ -199,7 +199,7 @@ public class PrecursorManager
         return new HashSet<>(result);
     }
 
-    public static PrecursorChromInfo getBestPrecursorChromInfoForPeptide(int peptideId)
+    public static PrecursorChromInfo getBestPrecursorChromInfoForPeptide(long peptideId)
     {
         List<PrecursorChromInfo> chromInfos = getPrecursorChromInfosForPeptide(peptideId);
 
@@ -238,7 +238,7 @@ public class PrecursorManager
         }
     }
 
-    public static List<PrecursorChromInfo> getPrecursorChromInfosForPeptide(int peptideId)
+    public static List<PrecursorChromInfo> getPrecursorChromInfosForPeptide(long peptideId)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.*");
@@ -255,7 +255,7 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfo.class);
     }
 
-    public static Map<String, Object> getPrecursorSummary(int precursorId)
+    public static Map<String, Object> getPrecursorSummary(long precursorId)
     {
         SQLFragment sf = new SQLFragment("SELECT gp.Mz, gp.Charge, pep.Sequence, label.Name FROM ");
         sf.append(TargetedMSManager.getTableInfoPrecursor(), "pre");
@@ -292,27 +292,27 @@ public class PrecursorManager
         throw new IllegalStateException("Cannot get summary for precursor "+precursorId);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId, User user, Container container)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(long peptideGroupId, User user, Container container)
     {
         return getChromInfosLitePlusForPeptideGroup(peptideGroupId, 0, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(int peptideGroupId, int sampleFileId, User user, Container container)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptideGroup(long peptideGroupId, long sampleFileId, User user, Container container)
     {
         return getPrecursorChromInfoLitePlusList(peptideGroupId, true, false, sampleFileId, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptide(int peptideId, User user, Container container)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPeptide(long peptideId, User user, Container container)
     {
         return getPrecursorChromInfoLitePlusList(peptideId, false, false, 0, user, container);
     }
 
-    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPrecursor(int precursorId, User user, Container container)
+    public static List<PrecursorChromInfoLitePlus> getChromInfosLitePlusForPrecursor(long precursorId, User user, Container container)
     {
         return getPrecursorChromInfoLitePlusList(precursorId, false, true, 0, user, container);
     }
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(int peptideId, int sampleFileId, User user, Container container)
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForPeptide(long peptideId, long sampleFileId, User user, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
@@ -332,8 +332,8 @@ public class PrecursorManager
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
     }
 
-    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForGeneralMoleculeChromInfo(int gmChromInfoId, int precursorId,
-                                                                                                 int sampleFileId, User user,
+    public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForGeneralMoleculeChromInfo(long gmChromInfoId, long precursorId,
+                                                                                                 long sampleFileId, User user,
                                                                                                  Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
@@ -380,8 +380,8 @@ public class PrecursorManager
         sql.append("prec.IsotopeLabelId = label.Id ");
     }
 
-    private static List<PrecursorChromInfoLitePlus> getPrecursorChromInfoLitePlusList(int id, boolean forPeptideGroup,
-                                                                                      boolean forPrecursor, int sampleFileId,
+    private static List<PrecursorChromInfoLitePlus> getPrecursorChromInfoLitePlusList(long id, boolean forPeptideGroup,
+                                                                                      boolean forPrecursor, long sampleFileId,
                                                                                       User user, Container container)
     {
         SQLFragment sql = new SQLFragment("SELECT ");
@@ -414,7 +414,7 @@ public class PrecursorManager
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoLitePlus.class);
     }
 
-    public static List<Precursor> getRepresentativePrecursors(int runId)
+    public static List<Precursor> getRepresentativePrecursors(long runId)
     {
         SQLFragment sql = new SQLFragment();
         sql.append("SELECT gp.*, prec.* FROM ");
@@ -482,7 +482,7 @@ public class PrecursorManager
         return deprecatedPrecursors[0];
     }
 
-    public static int setRepresentativeState(int runId, RepresentativeDataState state)
+    public static int setRepresentativeState(long runId, RepresentativeDataState state)
     {
         SQLFragment sql = new SQLFragment();
         sql.append("UPDATE "+TargetedMSManager.getTableInfoGeneralPrecursor());
@@ -570,7 +570,7 @@ public class PrecursorManager
         StringBuilder precIds = new StringBuilder();
         Arrays.sort(precursorIds);
         int lastPrecursorId = 0;
-        int precursorIdCount = 0;
+        long precursorIdCount = 0;
         for(int id: precursorIds)
         {
             // Ignore duplicates
@@ -599,7 +599,7 @@ public class PrecursorManager
         return count != null && count == precursorIdCount;
     }
 
-    public static double getMaxPrecursorIntensity(int generalMoleculeId)
+    public static double getMaxPrecursorIntensity(long generalMoleculeId)
     {
         SQLFragment sql = new SQLFragment("SELECT MAX(precHeight) FROM (");
         sql.append("SELECT SUM(tci.Height) AS precHeight FROM ");
@@ -621,7 +621,7 @@ public class PrecursorManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Double.class);
     }
 
-    public static boolean hasChromatograms(int precursorId, Integer runId)
+    public static boolean hasChromatograms(long precursorId, Long runId)
     {
         if(runId == null)
         {
@@ -656,7 +656,7 @@ public class PrecursorManager
                     sql.append(" gm.PeptideGroupId = pg.Id ");
                     sql.append(" AND ");
                     sql.append("pg.RunId = ?");
-                    sql.add(Integer.valueOf(runId));
+                    sql.add(Long.valueOf(runId));
                     return Collections.unmodifiableSet(new HashSet<>(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class)));
                 }
             });
@@ -665,7 +665,7 @@ public class PrecursorManager
         }
     }
 
-    public static boolean hasLibrarySpectra(int precursorId, Integer runId)
+    public static boolean hasLibrarySpectra(long precursorId, Long runId)
     {
         if(runId == null)
         {
@@ -712,7 +712,7 @@ public class PrecursorManager
                 sql.append("bib.SpectrumLibraryId = specLib.Id");
                 sql.append(" AND ");
                 sql.append("specLib.RunId = ?");
-                sql.add(Integer.valueOf(runId1));
+                sql.add(Long.valueOf(runId1));
                 sql.append(" UNION ");
                 sql.append("SELECT DISTINCT hun.PrecursorId FROM ");
                 sql.append(TargetedMSManager.getTableInfoHunterLib(), "hun");
@@ -722,7 +722,7 @@ public class PrecursorManager
                 sql.append("hun.SpectrumLibraryId = specLib.Id");
                 sql.append(" AND ");
                 sql.append("specLib.RunId = ?");
-                sql.add(Integer.valueOf(runId1));
+                sql.add(Long.valueOf(runId1));
                 sql.append(" UNION ");
                 sql.append("SELECT DISTINCT nis.PrecursorId FROM ");
                 sql.append(TargetedMSManager.getTableInfoNistLib(), "nis");
@@ -732,7 +732,7 @@ public class PrecursorManager
                 sql.append("nis.SpectrumLibraryId = specLib.Id");
                 sql.append(" AND ");
                 sql.append("specLib.RunId = ?");
-                sql.add(Integer.valueOf(runId1));
+                sql.add(Long.valueOf(runId1));
                 sql.append(" UNION ");
                 sql.append("SELECT DISTINCT sp.PrecursorId FROM ");
                 sql.append(TargetedMSManager.getTableInfoSpectrastLib(), "sp");
@@ -742,7 +742,7 @@ public class PrecursorManager
                 sql.append("sp.SpectrumLibraryId = specLib.Id");
                 sql.append(" AND ");
                 sql.append("specLib.RunId = ?");
-                sql.add(Integer.valueOf(runId1));
+                sql.add(Long.valueOf(runId1));
                 sql.append(" UNION ");
                 sql.append("SELECT DISTINCT ch.PrecursorId FROM ");
                 sql.append(TargetedMSManager.getTableInfoChromatogramLib(), "ch");
@@ -752,7 +752,7 @@ public class PrecursorManager
                 sql.append("ch.SpectrumLibraryId = specLib.Id");
                 sql.append(" AND ");
                 sql.append("specLib.RunId = ?");
-                sql.add(Integer.valueOf(runId1));
+                sql.add(Long.valueOf(runId1));
                 return Set.copyOf(new SqlSelector(TargetedMSManager.getSchema(), sql).getCollection(Integer.class));
             });
 
@@ -760,9 +760,9 @@ public class PrecursorManager
         }
     }
 
-    public static void removeRunCachedResults(List<Integer> deletedRunIds)
+    public static void removeRunCachedResults(List<Long> deletedRunIds)
     {
-        for(Integer runId: deletedRunIds)
+        for(Long runId: deletedRunIds)
         {
             _precursorIdsWithChromatograms.remove(String.valueOf(runId));
             _precursorIdsWithSpectra.remove(String.valueOf(runId));

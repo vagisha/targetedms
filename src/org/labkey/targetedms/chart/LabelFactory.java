@@ -112,7 +112,7 @@ public class LabelFactory
         return label.toString();
     }
 
-    public static String precursorLabel(int precursorId)
+    public static String precursorLabel(long precursorId)
     {
         Map<String, Object> precursorSummary = PrecursorManager.getPrecursorSummary(precursorId);
 
@@ -130,7 +130,7 @@ public class LabelFactory
         return label.toString();
     }
 
-    public static String moleculePrecursorLabel(int moleculePrecursorId, User user, Container container)
+    public static String moleculePrecursorLabel(long moleculePrecursorId, User user, Container container)
     {
         MoleculePrecursor moleculePrecursor = MoleculePrecursorManager.getPrecursor(container, moleculePrecursorId, user);
 

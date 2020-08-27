@@ -6,11 +6,11 @@ import org.labkey.api.view.ActionURL;
 
 public interface TargetedMSUrls extends UrlProvider
 {
-    ActionURL getDownloadDocumentUrl(Container container, int runId);
+    ActionURL getDownloadDocumentUrl(Container container, long runId);
 
-    ActionURL getShowRunUrl(Container container, int runId);
+    ActionURL getShowRunUrl(Container container, long runId);
 
     ActionURL getShowProteinUrl(Container container, int proteinId);
 
-    ActionURL getShowPeptideUrl(Container container, int peptideId);
+    ActionURL getShowPeptideUrl(Container container, long peptideId);
 }

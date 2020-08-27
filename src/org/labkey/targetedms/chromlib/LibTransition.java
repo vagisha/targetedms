@@ -23,7 +23,7 @@ package org.labkey.targetedms.chromlib;
 public class LibTransition implements ObjectWithId
 {
     private int _id;
-    private int _precursorId;
+    private long _precursorId;
     private Double _mz;
     private Integer _charge;
     private Double _neutralMass;
@@ -48,12 +48,12 @@ public class LibTransition implements ObjectWithId
         _id = id;
     }
 
-    public int getPrecursorId()
+    public long getPrecursorId()
     {
         return _precursorId;
     }
 
-    public void setPrecursorId(int precursorId)
+    public void setPrecursorId(long precursorId)
     {
         _precursorId = precursorId;
     }
@@ -199,7 +199,7 @@ public class LibTransition implements ObjectWithId
     @Override
     public int hashCode()
     {
-        int result = _precursorId;
+        int result = (int) _precursorId;
         result = 31 * result + (_mz != null ? _mz.hashCode() : 0);
         result = 31 * result + (_charge != null ? _charge.hashCode() : 0);
         result = 31 * result + (_neutralMass != null ? _neutralMass.hashCode() : 0);

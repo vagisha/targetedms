@@ -44,7 +44,7 @@ import java.util.List;
 public class AuditLogEntry
 {
     private Integer _entryId;
-    private Integer _versionId;
+    private Long _versionId;
     private LocalDateTime _createTimestamp;
     private int _timezoneOffsetMinutes;
     private String _userName;
@@ -89,22 +89,22 @@ public class AuditLogEntry
     }
 
     /** RunId is a synonym for VersionId */
-    public Integer getRunId()
+    public Long getRunId()
     {
         return getVersionId();
     }
 
-    public void setRunId(Integer runId)
+    public void setRunId(Long runId)
     {
         setVersionId(runId);
     }
 
-    public Integer getVersionId()
+    public Long getVersionId()
     {
         return _versionId;
     }
 
-    public void setVersionId(Integer versionId)
+    public void setVersionId(Long versionId)
     {
         _versionId = versionId;
     }
@@ -278,7 +278,7 @@ public class AuditLogEntry
      * @param pVersionId new versionId value.
      * @return this instance if the update is successful.
      */
-    public AuditLogEntry updateVersionId(Integer pVersionId){
+    public AuditLogEntry updateVersionId(Long pVersionId){
         this.setVersionId(pVersionId);
         SQLFragment sqlUpdate = new SQLFragment("");
 

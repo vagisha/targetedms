@@ -5,7 +5,6 @@ import org.json.JSONObject;
 import org.labkey.api.util.PageFlowUtil;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -13,18 +12,18 @@ import java.util.List;
 
 public class IProtein
 {
-    public int getPepGroupId()
+    public long getPepGroupId()
     {
         return pepGroupId;
     }
 
-    public void setPepGroupId(int pepGroupId)
+    public void setPepGroupId(long pepGroupId)
     {
         this.pepGroupId = pepGroupId;
     }
 
-    private int pepGroupId;
-    private int sequenceId;
+    private long pepGroupId;
+    private long sequenceId;
     private Date modified;
     private String accession;
     private String preferredname;
@@ -113,12 +112,12 @@ public class IProtein
         this.label = label;
     }
 
-    public int getSequenceId()
+    public long getSequenceId()
     {
         return sequenceId;
     }
 
-    public void setSequenceId(int sequenceId)
+    public void setSequenceId(long sequenceId)
     {
         this.sequenceId = sequenceId;
     }

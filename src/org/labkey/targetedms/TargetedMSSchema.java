@@ -674,7 +674,7 @@ public class TargetedMSSchema extends UserSchema
                             @Override
                             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
                             {
-                                Integer runId = ctx.get(this.getColumnInfo().getFieldKey(), Integer.class);
+                                Long runId = ctx.get(this.getColumnInfo().getFieldKey(), Long.class);
                                 if (runId != null)
                                 {
                                     TargetedMSRun run = TargetedMSManager.getRun(runId);

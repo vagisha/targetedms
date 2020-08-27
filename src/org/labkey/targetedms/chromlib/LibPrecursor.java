@@ -28,7 +28,7 @@ import java.util.List;
 public class LibPrecursor implements ObjectWithId
 {
     private int _id;
-    private int _peptideId;
+    private long _peptideId;
     private String _isotopeLabel;
     private Double _mz;
     private Integer _charge;
@@ -40,7 +40,7 @@ public class LibPrecursor implements ObjectWithId
     private byte[] _chromatogram;
     private int _uncompressedSize;
     private int _chromatogramFormat;
-    private int _sampleFileId;
+    private long _sampleFileId;
 
     private List<LibTransition> _transitions;
 
@@ -62,12 +62,12 @@ public class LibPrecursor implements ObjectWithId
         _id = id;
     }
 
-    public int getPeptideId()
+    public long getPeptideId()
     {
         return _peptideId;
     }
 
-    public void setPeptideId(int peptideId)
+    public void setPeptideId(long peptideId)
     {
         _peptideId = peptideId;
     }
@@ -273,7 +273,7 @@ public class LibPrecursor implements ObjectWithId
     @Override
     public int hashCode()
     {
-        int result = _peptideId;
+        int result = (int) _peptideId;
         result = 31 * result + _isotopeLabel.hashCode();
         result = 31 * result + _mz.hashCode();
         result = 31 * result + _charge.hashCode();
@@ -285,7 +285,7 @@ public class LibPrecursor implements ObjectWithId
         result = 31 * result + (_averageMassErrorPPM != null ? _averageMassErrorPPM.hashCode() : 0);
         result = 31 * result + (_numPoints != null ? _numPoints.hashCode() : 0);
         result = 31 * result + (_numTransitions != null ? _numTransitions.hashCode() : 0);
-        result = 31 * result + _sampleFileId;
+        result = (int) (31 * result + _sampleFileId);
         result = 31 * result + (_chromatogram != null ? Arrays.hashCode(_chromatogram) : 0);
         result = 31 * result + (_transitions != null ? _transitions.hashCode() : 0);
         result = 31 * result + (_retentionTimes != null ? _retentionTimes.hashCode() : 0);
@@ -323,12 +323,12 @@ public class LibPrecursor implements ObjectWithId
         return _averageMassErrorPPM;
     }
 
-    public int getSampleFileId()
+    public long getSampleFileId()
     {
         return _sampleFileId;
     }
 
-    public void setSampleFileId(int sampleFileId)
+    public void setSampleFileId(long sampleFileId)
     {
         _sampleFileId = sampleFileId;
     }

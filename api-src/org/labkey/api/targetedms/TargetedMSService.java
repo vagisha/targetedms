@@ -59,7 +59,7 @@ public interface TargetedMSService
     String RAW_FILES_DIR = "RawFiles";
     String RAW_FILES_TAB = "Raw Data";
 
-    ITargetedMSRun getRun(int runId, Container container);
+    ITargetedMSRun getRun(long runId, Container container);
     ITargetedMSRun getRunByFileName(String fileName, Container container);
     List<ITargetedMSRun> getRuns(Container container);
     ITargetedMSRun getRunByLsid(String lsid, Container container);
@@ -76,9 +76,9 @@ public interface TargetedMSService
     TableInfo getTableInfoRuns();
     TableInfo getTableInfoPeptideGroup();
     TableInfo getTableInfoGeneralMolecule();
-    List<String> getSampleFilePaths(int runId);
-    List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(int runId);
-    List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(int runId);
+    List<String> getSampleFilePaths(long runId);
+    List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(long runId);
+    List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(long runId);
     Map<String, BlibSourceFiles> getBlibSourceFiles(ITargetedMSRun run);
 
     // Add table customizers for the protein / peptide / modification search results

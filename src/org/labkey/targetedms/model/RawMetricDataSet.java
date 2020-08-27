@@ -30,7 +30,7 @@ public class RawMetricDataSet
     int metricId;
     int metricSeriesIndex;
     int guideSetId;
-    int sampleFileId;
+    long sampleFileId;
 
     Integer precursorId;
     Integer precursorChromInfoId;
@@ -46,7 +46,7 @@ public class RawMetricDataSet
     Double cusumVN;
 
     String filePath;
-    int replicateId;
+    long replicateId;
 
     String modifiedSequence;
     String customIonName;
@@ -237,12 +237,12 @@ public class RawMetricDataSet
         this.inGuideSetTrainingRange = inGuideSetTrainingRange;
     }
 
-    public int getSampleFileId()
+    public long getSampleFileId()
     {
         return sampleFileId;
     }
 
-    public void setSampleFileId(int sampleFileId)
+    public void setSampleFileId(long sampleFileId)
     {
         this.sampleFileId = sampleFileId;
     }
@@ -312,12 +312,12 @@ public class RawMetricDataSet
         this.filePath = filePath;
     }
 
-    public int getReplicateId()
+    public long getReplicateId()
     {
         return replicateId;
     }
 
-    public void setReplicateId(int replicateId)
+    public void setReplicateId(long replicateId)
     {
         this.replicateId = replicateId;
     }

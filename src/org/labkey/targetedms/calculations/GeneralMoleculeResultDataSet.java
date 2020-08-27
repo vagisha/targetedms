@@ -57,7 +57,7 @@ public class GeneralMoleculeResultDataSet
 {
     private final GeneralMolecule _generalMolecule;
     private ReplicateDataSet _replicateSet;
-    private Map<Integer, List<ChromInfoRecord>> _chromInfoRecordsByReplicateId = new HashMap<>();
+    private Map<Long, List<ChromInfoRecord>> _chromInfoRecordsByReplicateId = new HashMap<>();
     private Set<Integer> _msLevels = new HashSet<>();
     private Set<String> _labels = new HashSet<>();
 
@@ -78,7 +78,7 @@ public class GeneralMoleculeResultDataSet
         return _replicateSet;
     }
 
-    public double getTotalArea(int sampleFileId, PeptideSettings.IsotopeLabel isotopeLabel)
+    public double getTotalArea(long sampleFileId, PeptideSettings.IsotopeLabel isotopeLabel)
     {
         Replicate replicate = _replicateSet.getReplicateFromSampleFileId(sampleFileId);
         if (replicate == null)

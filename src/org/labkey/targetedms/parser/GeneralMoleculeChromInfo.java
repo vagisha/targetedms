@@ -22,7 +22,7 @@ package org.labkey.targetedms.parser;
  */
 public class GeneralMoleculeChromInfo extends ChromInfo
 {
-    private int _generalMoleculeId;
+    private long _generalMoleculeId;
 
     private double _peakCountRatio;
     private Double _retentionTime;
@@ -30,12 +30,12 @@ public class GeneralMoleculeChromInfo extends ChromInfo
     private boolean _excludeFromCalibration;
     private Double _predictedRetentionTime;
 
-    public int getGeneralMoleculeId()
+    public long getGeneralMoleculeId()
     {
         return _generalMoleculeId;
     }
 
-    public void setGeneralMoleculeId(int gMId)
+    public void setGeneralMoleculeId(long gMId)
     {
         _generalMoleculeId = gMId;
     }

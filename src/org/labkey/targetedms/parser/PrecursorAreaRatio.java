@@ -22,25 +22,25 @@ package org.labkey.targetedms.parser;
  */
 public class PrecursorAreaRatio extends AreaRatio
 {
-    private int _precursorChromInfoId;
-    private int _precursorChromInfoStdId;
+    private long _precursorChromInfoId;
+    private long _precursorChromInfoStdId;
 
-    public int getPrecursorChromInfoId()
+    public long getPrecursorChromInfoId()
     {
         return _precursorChromInfoId;
     }
 
-    public void setPrecursorChromInfoId(int precursorChromInfoId)
+    public void setPrecursorChromInfoId(long precursorChromInfoId)
     {
         _precursorChromInfoId = precursorChromInfoId;
     }
 
-    public int getPrecursorChromInfoStdId()
+    public long getPrecursorChromInfoStdId()
     {
         return _precursorChromInfoStdId;
     }
 
-    public void setPrecursorChromInfoStdId(int precursorChromInfoStdId)
+    public void setPrecursorChromInfoStdId(long precursorChromInfoStdId)
     {
         _precursorChromInfoStdId = precursorChromInfoStdId;
     }

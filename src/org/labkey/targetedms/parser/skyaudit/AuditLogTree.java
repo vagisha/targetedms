@@ -37,9 +37,9 @@ public class AuditLogTree implements Iterable<AuditLogTree>
     private final GUID _documentGUID;
     private final String _parentEntryHash;
     private final int _entryId;
-    private Integer _versionId;     //runId of the document if this record is the last in that document's log. Null otherwise.
+    private Long _versionId;     //runId of the document if this record is the last in that document's log. Null otherwise.
 
-    public AuditLogTree(int pEntryid, GUID pDocumentGUID, String pEntryHash, String pParentEntryHash, Integer pVersionId)
+    public AuditLogTree(int pEntryid, GUID pDocumentGUID, String pEntryHash, String pParentEntryHash, Long pVersionId)
     {
         _entryHash = pEntryHash;
         _documentGUID = pDocumentGUID;
@@ -68,7 +68,7 @@ public class AuditLogTree implements Iterable<AuditLogTree>
         return _entryId;
     }
 
-    public Integer getVersionId()
+    public Long getVersionId()
     {
         return _versionId;
     }
@@ -107,7 +107,7 @@ public class AuditLogTree implements Iterable<AuditLogTree>
      * @param versionId  runId of the document version to be deleted
      * @return list of entries that can be deleted safely without corrupting other versions' logs.
      */
-    public List<AuditLogTree> deleteList(int versionId)
+    public List<AuditLogTree> deleteList(long versionId)
     {
         List<AuditLogTree> toDelete = new ArrayList<>();
         List<StackEntry> stack = new ArrayList<>();
@@ -173,12 +173,12 @@ public class AuditLogTree implements Iterable<AuditLogTree>
         }
     }
 
-    public AuditLogTree findVersionEntry(int pVersionId)
+    public AuditLogTree findVersionEntry(long pVersionId)
     {
         return recursiveFindVersionEntry(pVersionId);
     }
 
-    private AuditLogTree recursiveFindVersionEntry(int pVersionId)
+    private AuditLogTree recursiveFindVersionEntry(long pVersionId)
     {
         if (this._versionId != null && this._versionId == pVersionId)      //check if it is the right version id
             return this;

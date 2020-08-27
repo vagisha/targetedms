@@ -23,11 +23,11 @@ package org.labkey.targetedms.parser;
 public class FoldChange
 {
     private int _id;
-    private int _runId;
-    private int _groupComparisonSettingsId;
-    private Integer _peptideGroupId;
-    private Integer _generalMoleculeId;
-    private Integer _isotopeLabelId;
+    private long _runId;
+    private long _groupComparisonSettingsId;
+    private Long _peptideGroupId;
+    private Long _generalMoleculeId;
+    private Long _isotopeLabelId;
     private Integer _msLevel;
     private String _groupIdentifier;
     private double _log2FoldChange;
@@ -45,12 +45,12 @@ public class FoldChange
         _id = id;
     }
 
-    public int getRunId()
+    public long getRunId()
     {
         return _runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         _runId = runId;
     }
@@ -58,42 +58,42 @@ public class FoldChange
     /**
      * Returns the ID of the {@link GroupComparisonSettings}
      */
-    public int getGroupComparisonSettingsId()
+    public long getGroupComparisonSettingsId()
     {
         return _groupComparisonSettingsId;
     }
 
-    public void setGroupComparisonSettingsId(int groupComparisonSettingsId)
+    public void setGroupComparisonSettingsId(long groupComparisonSettingsId)
     {
         _groupComparisonSettingsId = groupComparisonSettingsId;
     }
 
-    public Integer getPeptideGroupId()
+    public Long getPeptideGroupId()
     {
         return _peptideGroupId;
     }
 
-    public void setPeptideGroupId(Integer peptideGroupId)
+    public void setPeptideGroupId(Long peptideGroupId)
     {
         _peptideGroupId = peptideGroupId;
     }
 
-    public Integer getGeneralMoleculeId()
+    public Long getGeneralMoleculeId()
     {
         return _generalMoleculeId;
     }
 
-    public void setGeneralMoleculeId(Integer generalMoleculeId)
+    public void setGeneralMoleculeId(Long generalMoleculeId)
     {
         _generalMoleculeId = generalMoleculeId;
     }
 
-    public Integer getIsotopeLabelId()
+    public Long getIsotopeLabelId()
     {
         return _isotopeLabelId;
     }
 
-    public void setIsotopeLabelId(Integer isotopeLabelId)
+    public void setIsotopeLabelId(Long isotopeLabelId)
     {
         _isotopeLabelId = isotopeLabelId;
     }

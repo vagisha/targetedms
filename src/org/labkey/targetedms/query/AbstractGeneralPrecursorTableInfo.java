@@ -74,7 +74,7 @@ public class AbstractGeneralPrecursorTableInfo extends JoinedTargetedMSTable
         }
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         checkLocked();
         super.addContainerTableFilter(new CompareType.EqualsCompareClause(FieldKey.fromParts("Id"), CompareType.EQUAL, runId));

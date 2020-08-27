@@ -84,7 +84,7 @@ public class SkylineListSchema extends UserSchema
         {
             try
             {
-                int runId = Integer.parseInt(name.substring(0, separatorIndex));
+                long runId = Integer.parseInt(name.substring(0, separatorIndex));
                 ListDefinition listDefinition = SkylineListManager.getListDefinition(cf == null ? getDefaultContainerFilter() : cf, getContainer(), runId, name);
                 if (listDefinition != null)
                 {

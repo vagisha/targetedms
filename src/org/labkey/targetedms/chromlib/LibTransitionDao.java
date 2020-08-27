@@ -36,7 +36,7 @@ public class LibTransitionDao extends BaseDaoImpl<LibTransition>
     protected void setValuesInStatement(LibTransition transition, PreparedStatement stmt) throws SQLException
     {
         int colIndex = 1;
-        stmt.setInt(colIndex++, transition.getPrecursorId());
+        stmt.setLong(colIndex++, transition.getPrecursorId());
         stmt.setObject(colIndex++, transition.getMz(), Types.DOUBLE);
         stmt.setObject(colIndex++, transition.getCharge(), Types.INTEGER);
         stmt.setObject(colIndex++, transition.getNeutralMass(), Types.DOUBLE);

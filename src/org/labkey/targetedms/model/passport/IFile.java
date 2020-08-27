@@ -20,17 +20,17 @@ public class IFile
 
     Container container;
 
-    public int getRunId()
+    public long getRunId()
     {
         return runId;
     }
 
-    public void setRunId(int runId)
+    public void setRunId(long runId)
     {
         this.runId = runId;
     }
 
-    private int runId;
+    private long runId;
 
     public int getPepGroupId()
     {

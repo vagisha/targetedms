@@ -36,8 +36,8 @@ public class LibPrecursorRetentionTimeDao extends BaseDaoImpl<LibPrecursorRetent
     protected void setValuesInStatement(LibPrecursorRetentionTime precursorRetentionTime, PreparedStatement stmt) throws SQLException
     {
         int colIndex = 1;
-        stmt.setInt(colIndex++, precursorRetentionTime.getPrecursorId());
-        stmt.setInt(colIndex++, precursorRetentionTime.getSampleFileId());
+        stmt.setLong(colIndex++, precursorRetentionTime.getPrecursorId());
+        stmt.setLong(colIndex++, precursorRetentionTime.getSampleFileId());
         stmt.setObject(colIndex++, precursorRetentionTime.getRetentionTime(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursorRetentionTime.getStartTime(), Types.DOUBLE);
         stmt.setObject(colIndex, precursorRetentionTime.getEndTime(), Types.DOUBLE);

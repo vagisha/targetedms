@@ -116,7 +116,7 @@ public class SkylineDocImporter
     private final ExpData _expData;
     private String _description;
 
-    protected int _runId;
+    protected long _runId;
     private boolean _isProteinLibraryDoc = false;
     private boolean _isPeptideLibraryDoc = false;
     private Set<Integer> _libProteinSequenceIds;
@@ -296,7 +296,7 @@ public class SkylineDocImporter
             ModificationInfo modInfo = insertPeptideSettings(pepSettings);
 
             // Spectrum library settings
-            Map<String, Integer> libraryNameIdMap = insertSpectrumLibrarySettings(pepSettings);
+            Map<String, Long> libraryNameIdMap = insertSpectrumLibrarySettings(pepSettings);
 
             // Data settings -- these are the annotation settings
             List<GroupComparisonSettings> groupComparisons = insertDataSettings(parser);
@@ -437,7 +437,7 @@ public class SkylineDocImporter
     {
         ReplicateInfo replicateInfo = new ReplicateInfo();
 
-        Map<Instrument, Integer> instrumentIdMap = new HashMap<>();
+        Map<Instrument, Long> instrumentIdMap = new HashMap<>();
 
         Map<String, SampleFile> pathToSampleFile = new HashMap<>();
         for(SkylineReplicate skyReplicate: parser.getReplicates())
@@ -580,11 +580,11 @@ public class SkylineDocImporter
 
     private static class ModificationInfo
     {
-        private final Map<String, Integer> isotopeLabelIdMap = new HashMap<>();
-        private final Set<Integer> internalStandardLabelIds = new HashSet<>();
-        private final Map<String, Integer> structuralModNameIdMap = new HashMap<>();
-        private final Map<Integer, List<PeptideSettings.PotentialLoss>> structuralModLossesMap = new HashMap<>();
-        private final Map<String, Integer> isotopeModNameIdMap = new HashMap<>();
+        private final Map<String, Long> isotopeLabelIdMap = new HashMap<>();
+        private final Set<Long> internalStandardLabelIds = new HashSet<>();
+        private final Map<String, Long> structuralModNameIdMap = new HashMap<>();
+        private final Map<Long, List<PeptideSettings.PotentialLoss>> structuralModLossesMap = new HashMap<>();
+        private final Map<String, Long> isotopeModNameIdMap = new HashMap<>();
     }
 
     private ModificationInfo insertPeptideSettings(PeptideSettings pepSettings)
@@ -656,9 +656,9 @@ public class SkylineDocImporter
     }
 
     @NotNull
-    private Map<String, Integer> insertSpectrumLibrarySettings(PeptideSettings pepSettings)
+    private Map<String, Long> insertSpectrumLibrarySettings(PeptideSettings pepSettings)
     {
-        Map<String, Integer> libraryNameIdMap = new HashMap<>();
+        Map<String, Long> libraryNameIdMap = new HashMap<>();
         PeptideSettings.SpectrumLibrarySettings librarySettings = pepSettings.getLibrarySettings();
         if(librarySettings != null)
         {
@@ -1046,7 +1046,7 @@ public class SkylineDocImporter
 
     private void insertPeptideGroup(ProteinService proteinService, OptimizationInfo optimizationInfo, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                     ModificationInfo modInfo,
-                                    Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser, Set<String> peptides, Set<String> smallMolecules)
+                                    Map<String, Long> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser, Set<String> peptides, Set<String> smallMolecules)
             throws XMLStreamException, IOException
     {
         pepGroup.setRunId(_runId);
@@ -1221,7 +1221,7 @@ public class SkylineDocImporter
     private void insertPeptideOrSmallMolecule(OptimizationInfo optimizationInfo,
                                               Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                               ModificationInfo modInfo,
-                                              Map<String, Integer> libraryNameIdMap,
+                                              Map<String, Long> libraryNameIdMap,
                                               PeptideGroup pepGroup,
                                               GeneralMolecule generalMolecule)
     {
@@ -1252,7 +1252,7 @@ public class SkylineDocImporter
             molecule.setId(generalMolecule.getId());
             Table.insert(_user, TargetedMSManager.getTableInfoMolecule(), molecule);
 
-            Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = insertGeneralMoleculeChromInfos(generalMolecule.getId(),
+            Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap = insertGeneralMoleculeChromInfos(generalMolecule.getId(),
                     molecule.getGeneralMoleculeChromInfoList(), skylineIdSampleFileIdMap);
 
             for (MoleculePrecursor moleculePrecursor : molecule.getMoleculePrecursorsList())
@@ -1279,7 +1279,7 @@ public class SkylineDocImporter
                 insertIsotopeModification(modInfo, peptide, mod);
             }
 
-            Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = insertGeneralMoleculeChromInfos(generalMolecule.getId(),
+            Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap = insertGeneralMoleculeChromInfos(generalMolecule.getId(),
                     peptide.getGeneralMoleculeChromInfoList(), skylineIdSampleFileIdMap);
 
             // 3. precursor
@@ -1298,9 +1298,9 @@ public class SkylineDocImporter
             PeakAreaRatioCalculator areaRatioCalculator = new PeakAreaRatioCalculator(peptide);
             areaRatioCalculator.init(skylineIdSampleFileIdMap);
             // Insert area ratios for each combination of 2 isotope labels
-            for (Integer numLabelId : modInfo.isotopeLabelIdMap.values())
+            for (Long numLabelId : modInfo.isotopeLabelIdMap.values())
             {
-                for (Integer denomLabelId : modInfo.isotopeLabelIdMap.values())
+                for (Long denomLabelId : modInfo.isotopeLabelIdMap.values())
                 {
                     if (!modInfo.internalStandardLabelIds.contains(denomLabelId))
                         continue;
@@ -1351,7 +1351,7 @@ public class SkylineDocImporter
 
     private void insertIsotopeModification(ModificationInfo modInfo, Peptide peptide, Peptide.IsotopeModification mod)
     {
-        int modId = modInfo.isotopeModNameIdMap.get(mod.getModificationName());
+        long modId = modInfo.isotopeModNameIdMap.get(mod.getModificationName());
         mod.setIsotopeModId(modId);
         mod.setPeptideId(peptide.getId());
         mod.setIsotopeLabelId(modInfo.isotopeLabelIdMap.get(mod.getIsotopeLabel()));
@@ -1360,7 +1360,7 @@ public class SkylineDocImporter
 
     private void insertStructuralModification(ModificationInfo modInfo, Peptide peptide, Peptide.StructuralModification mod)
     {
-        int modId = modInfo.structuralModNameIdMap.get(mod.getModificationName());
+        long modId = modInfo.structuralModNameIdMap.get(mod.getModificationName());
         mod.setStructuralModId(modId);
         mod.setPeptideId(peptide.getId());
         Table.insert(_user, TargetedMSManager.getTableInfoPeptideStructuralModification(), mod);
@@ -1369,7 +1369,7 @@ public class SkylineDocImporter
     private void insertMoleculePrecursor(Molecule molecule, MoleculePrecursor moleculePrecursor,
                                          Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                          ModificationInfo modInfo,
-                                         Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap)
+                                         Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap)
     {
         GeneralPrecursor gp = insertGeneralPrecursor(modInfo, molecule, moleculePrecursor);
 
@@ -1381,7 +1381,7 @@ public class SkylineDocImporter
         //small molecule precursor annotations
         insertPrecursorAnnotation(moleculePrecursor.getAnnotations(), gp, moleculePrecursor.getId()); //adding small molecule precursor annotation in PrecursorAnnotation table. We might need to change this if we decide to have a separate MoleculePrecursorAnnotation table in the future.
 
-        Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = insertPrecursorChromInfos(gp.getId(),
+        Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap = insertPrecursorChromInfos(gp.getId(),
                 moleculePrecursor.getCustomIonName(), moleculePrecursor.getChromInfoList(), skylineIdSampleFileIdMap, sampleFileIdGeneralMolChromInfoIdMap);
 
         for(MoleculeTransition moleculeTransition: moleculePrecursor.getTransitionsList())
@@ -1390,7 +1390,7 @@ public class SkylineDocImporter
         }
     }
 
-    private void insertPrecursorAnnotation(List<PrecursorAnnotation> precursorAnnotations, GeneralPrecursor gp, int id)
+    private void insertPrecursorAnnotation(List<PrecursorAnnotation> precursorAnnotations, GeneralPrecursor gp, long id)
     {
         for (PrecursorAnnotation annotation : precursorAnnotations)
         {
@@ -1402,7 +1402,7 @@ public class SkylineDocImporter
 
     private void insertMoleculeTransition(MoleculePrecursor moleculePrecursor, MoleculeTransition moleculeTransition,
                                           Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
-                                          Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap)
+                                          Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap)
     {
         GeneralTransition gt = new GeneralTransition();
         gt.setGeneralPrecursorId(moleculePrecursor.getId());
@@ -1431,7 +1431,7 @@ public class SkylineDocImporter
         insertTransitionChromInfos(gt.getId(), moleculeTransition.getChromInfoList(), skylineIdSampleFileIdMap, sampleFilePrecursorChromInfoIdMap);
     }
 
-    private void insertTransitionAnnotation(List<TransitionAnnotation> annotations, int id)
+    private void insertTransitionAnnotation(List<TransitionAnnotation> annotations, long id)
     {
         for (TransitionAnnotation annotation : annotations)
         {
@@ -1443,9 +1443,9 @@ public class SkylineDocImporter
     private void insertPrecursor(OptimizationInfo optimizationInfo,
                                  Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                  ModificationInfo modInfo,
-                                 Map<String, Integer> libraryNameIdMap,
+                                 Map<String, Long> libraryNameIdMap,
                                  Peptide peptide,
-                                 Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap,
+                                 Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap,
                                  Precursor precursor)
     {
         if(_isPeptideLibraryDoc)
@@ -1476,7 +1476,7 @@ public class SkylineDocImporter
         insertLibInfo(precursor.getSpectrastLibraryInfo(), precursor, gp, libraryNameIdMap, TargetedMSManager.getTableInfoSpectrastLib());
         insertLibInfo(precursor.getChromatogramLibraryInfo(), precursor, gp, libraryNameIdMap, TargetedMSManager.getTableInfoChromatogramLib());
 
-        Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = insertPrecursorChromInfos(gp.getId(),
+        Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap = insertPrecursorChromInfos(gp.getId(),
                 precursor.getModifiedSequence(), precursor.getChromInfoList(), skylineIdSampleFileIdMap, sampleFileIdGeneralMolChromInfoIdMap);
 
         // 4. transition
@@ -1486,11 +1486,11 @@ public class SkylineDocImporter
         }
     }
 
-    private void insertLibInfo(Precursor.LibraryInfo libraryInfo, Precursor precursor, GeneralPrecursor gp, Map<String, Integer> libraryNameIdMap, TableInfo tableInfo)
+    private void insertLibInfo(Precursor.LibraryInfo libraryInfo, Precursor precursor, GeneralPrecursor gp, Map<String, Long> libraryNameIdMap, TableInfo tableInfo)
     {
         if(libraryInfo != null)
         {
-            Integer specLibId = libraryNameIdMap.get(libraryInfo.getLibraryName());
+            Long specLibId = libraryNameIdMap.get(libraryInfo.getLibraryName());
             if(specLibId == null)
             {
                 // Skyline documents can end up in a state where a library name is associated with a precursor but the
@@ -1538,7 +1538,7 @@ public class SkylineDocImporter
                                   Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                   ModificationInfo modInfo,
                                   Precursor precursor,
-                                  Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap,
+                                  Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap,
                                   Transition transition)
     {
         GeneralTransition gt = new GeneralTransition();
@@ -1593,7 +1593,7 @@ public class SkylineDocImporter
         {
             if(loss.getModificationName() != null)
             {
-                Integer modificationId = modInfo.structuralModNameIdMap.get(loss.getModificationName());
+                Long modificationId = modInfo.structuralModNameIdMap.get(loss.getModificationName());
                 if (modificationId == null)
                 {
                     throw new PanoramaBadDataException("No such structural modification found: " + loss.getModificationName());
@@ -1640,10 +1640,10 @@ public class SkylineDocImporter
         }
     }
 
-    private Map<Integer, Integer> insertGeneralMoleculeChromInfos(int gmId, List<GeneralMoleculeChromInfo> generalMoleculeChromInfos,
+    private Map<Long, Long> insertGeneralMoleculeChromInfos(long gmId, List<GeneralMoleculeChromInfo> generalMoleculeChromInfos,
                                                                   Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap)
     {
-        Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap = new HashMap<>();
+        Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap = new HashMap<>();
 
         for (GeneralMoleculeChromInfo generalMoleculeChromInfo : generalMoleculeChromInfos)
         {
@@ -1667,12 +1667,12 @@ public class SkylineDocImporter
         return sampleFileIdGeneralMolChromInfoIdMap;
     }
 
-    private Map<SampleFileOptStepKey, Integer> insertPrecursorChromInfos(int gpId, String label,
+    private Map<SampleFileOptStepKey, Long> insertPrecursorChromInfos(long gpId, String label,
                                                                          List<PrecursorChromInfo> precursorChromInfos,
                                                                          Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
-                                                                         Map<Integer, Integer> sampleFileIdGeneralMolChromInfoIdMap)
+                                                                         Map<Long, Long> sampleFileIdGeneralMolChromInfoIdMap)
     {
-        Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap = new HashMap<>();
+        Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap = new HashMap<>();
 
         for (PrecursorChromInfo precursorChromInfo: precursorChromInfos)
         {
@@ -1709,9 +1709,9 @@ public class SkylineDocImporter
         return sampleFilePrecursorChromInfoIdMap;
     }
 
-    private void insertTransitionChromInfos(int gtId, List<TransitionChromInfo> transitionChromInfos,
+    private void insertTransitionChromInfos(long gtId, List<TransitionChromInfo> transitionChromInfos,
                                             Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
-                                            Map<SampleFileOptStepKey, Integer> sampleFilePrecursorChromInfoIdMap)
+                                            Map<SampleFileOptStepKey, Long> sampleFilePrecursorChromInfoIdMap)
     {
         if (!_importTransitionChromInfos)
         {
@@ -1729,7 +1729,7 @@ public class SkylineDocImporter
             transChromInfo.setSampleFileId(sampleFile.getId());
             // Lookup a precursor chrom info measured in the same sample file with the same optimization step
             SampleFileOptStepKey sampleFileKey = SampleFileOptStepKey.getKey(transChromInfo);
-            Integer precursorChromInfoId = sampleFilePrecursorChromInfoIdMap.get(sampleFileKey);
+            Long precursorChromInfoId = sampleFilePrecursorChromInfoIdMap.get(sampleFileKey);
             if (precursorChromInfoId == null)
             {
                 throw new PanoramaBadDataException("Could not find precursor peak for " + sampleFileKey.toString());
@@ -1827,16 +1827,6 @@ public class SkylineDocImporter
         }
     }
 
-    /** Remove this overloaded version when all tables have migrated to 8-byte ID columns */
-    private void insertAnnotation(PreparedStatement stmt, AbstractAnnotation annotation, int entityId) throws SQLException
-    {
-        int index = 1;
-        stmt.setInt(index++, entityId);
-        stmt.setString(index++, annotation.getName());
-        stmt.setString(index++, annotation.getValue());
-        stmt.execute();
-    }
-
     private void insertAnnotation(PreparedStatement stmt, AbstractAnnotation annotation, long entityId) throws SQLException
     {
         int index = 1;
@@ -1878,9 +1868,9 @@ public class SkylineDocImporter
                     true);
 
             int index = 1;
-            _transitionChromInfoStmt.setInt(index++, transChromInfo.getTransitionId());
-            _transitionChromInfoStmt.setInt(index++, transChromInfo.getSampleFileId());
-            _transitionChromInfoStmt.setInt(index++, transChromInfo.getPrecursorChromInfoId());
+            _transitionChromInfoStmt.setLong(index++, transChromInfo.getTransitionId());
+            _transitionChromInfoStmt.setLong(index++, transChromInfo.getSampleFileId());
+            _transitionChromInfoStmt.setLong(index++, transChromInfo.getPrecursorChromInfoId());
             setDouble(_transitionChromInfoStmt, index++, transChromInfo.getRetentionTime());
             setDouble(_transitionChromInfoStmt, index++, transChromInfo.getStartTime());
             setDouble(_transitionChromInfoStmt, index++, transChromInfo.getEndTime());
@@ -1939,9 +1929,9 @@ public class SkylineDocImporter
                     true);
 
             int index = 1;
-            _precursorChromInfoStmt.setInt(index++, preChromInfo.getPrecursorId());
-            _precursorChromInfoStmt.setInt(index++, preChromInfo.getSampleFileId());
-            _precursorChromInfoStmt.setInt(index++, preChromInfo.getGeneralMoleculeChromInfoId());
+            _precursorChromInfoStmt.setLong(index++, preChromInfo.getPrecursorId());
+            _precursorChromInfoStmt.setLong(index++, preChromInfo.getSampleFileId());
+            _precursorChromInfoStmt.setLong(index++, preChromInfo.getGeneralMoleculeChromInfoId());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getBestRetentionTime());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getMinStartTime());
             setDouble(_precursorChromInfoStmt, index++, preChromInfo.getMaxEndTime());
@@ -1980,7 +1970,7 @@ public class SkylineDocImporter
             try (ResultSet rs = TargetedMSManager.getSqlDialect().executeWithResults(_precursorChromInfoStmt))
             {
                 rs.next();
-                preChromInfo.setId(rs.getInt(1));
+                preChromInfo.setId(rs.getLong(1));
             }
         }
         catch (SQLException e)
@@ -2039,7 +2029,7 @@ public class SkylineDocImporter
     }
 
 
-    private void insertSampleFiles(ReplicateInfo replicateInfo, Map<Instrument, Integer> instrumentIdMap, Replicate replicate, Map<String, SampleFile> pathToSampleFile)
+    private void insertSampleFiles(ReplicateInfo replicateInfo, Map<Instrument, Long> instrumentIdMap, Replicate replicate, Map<String, SampleFile> pathToSampleFile)
     {
         for(SampleFile sampleFile: replicate.getSampleFileList())
         {
@@ -2056,7 +2046,7 @@ public class SkylineDocImporter
             {
                 Instrument instrument = combineInstrumentInfos(instrumentInfoList);
 
-                Integer instrumentId = instrumentIdMap.get(instrument);
+                Long instrumentId = instrumentIdMap.get(instrument);
                 if (instrumentId == null)
                 {
                     instrument.setRunId(_runId);
@@ -2353,7 +2343,7 @@ public class SkylineDocImporter
         updateRunStatus(_runId, status, statusId);
     }
 
-    protected static void updateRunStatus(int runId, String status, int statusId)
+    protected static void updateRunStatus(long runId, String status, int statusId)
     {
         new SqlExecutor(TargetedMSManager.getSchema()).execute("UPDATE " + TargetedMSManager.getTableInfoRuns() + " SET Status = ?, StatusId = ? WHERE Id = ?",
                     status, statusId, runId);
@@ -2363,18 +2353,18 @@ public class SkylineDocImporter
 
     public static class RunInfo implements Serializable
     {
-        private final int _runId;
+        private final long _runId;
         private final boolean _alreadyImported;
 
         @JsonCreator
-        private RunInfo(@JsonProperty("_runId") int runId, @JsonProperty("_alreadyImported") boolean alreadyImported)
+        private RunInfo(@JsonProperty("_runId") long runId, @JsonProperty("_alreadyImported") boolean alreadyImported)
         {
             _runId = runId;
 
             _alreadyImported = alreadyImported;
         }
 
-        public int getRunId()
+        public long getRunId()
         {
             return _runId;
         }
@@ -2408,7 +2398,7 @@ public class SkylineDocImporter
         }
     }
 
-    protected int getRun()
+    protected long getRun()
     {
         SimpleFilter filter = new SimpleFilter(FieldKey.fromParts("DataId"), _expData.getRowId());
         filter.addCondition(FieldKey.fromParts("Container"), _container.getId());
@@ -2417,7 +2407,7 @@ public class SkylineDocImporter
         return run != null ? run.getId() : -1;
     }
 
-    protected int createRun()
+    protected long createRun()
     {
         TargetedMSRun run = TargetedMSManager.getRunByDataId(_expData.getRowId(), _container);
         if (run != null)

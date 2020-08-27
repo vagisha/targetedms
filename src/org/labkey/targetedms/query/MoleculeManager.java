@@ -46,7 +46,7 @@ public class MoleculeManager
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Molecule.class);
     }
 
-    public static Collection<Molecule> getMoleculesForGroup(int peptideGroupId)
+    public static Collection<Molecule> getMoleculesForGroup(long peptideGroupId)
     {
         SQLFragment sql = new SQLFragment("SELECT gm.id, gm.peptidegroupid, gm.rtcalculatorscore, gm.predictedretentiontime, ");
         sql.append("gm.avgmeasuredretentiontime, gm.note, gm.explicitretentiontime, ");

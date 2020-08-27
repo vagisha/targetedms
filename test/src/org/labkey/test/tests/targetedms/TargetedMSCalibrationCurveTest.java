@@ -297,7 +297,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
         //setSampleFileReplicate(targetSampleFileId,replicateIdFromBaseSampleFile);
     }
 
-    private void setSampleFileReplicate(int sampleFileId, int replicateId) throws IOException, CommandException
+    private void setSampleFileReplicate(long sampleFileId, long replicateId) throws IOException, CommandException
     {
         Connection connection = createDefaultConnection(true);
         List<Map<String, Object>> sampleFileRows = Arrays.asList(

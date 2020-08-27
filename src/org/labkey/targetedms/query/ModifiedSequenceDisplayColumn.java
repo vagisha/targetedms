@@ -143,11 +143,11 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
         @Override
         public void initialize(RenderContext ctx)
         {
-            Integer peptideId = (Integer)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Id"));
+            Long peptideId = (Long)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Id"));
 
             String sequence = (String)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Sequence"));
 
-            Integer runId = (Integer)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideGroupId/RunId"));
+            Long runId = (Long)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideGroupId/RunId"));
 
             Boolean decoy = (Boolean)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Decoy"));
             if(decoy == null)  decoy = Boolean.FALSE;
@@ -199,15 +199,15 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
         @Override
         public void initialize(RenderContext ctx)
         {
-            Integer precursorId = (Integer)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Id"));
+            Long precursorId = (Long)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "Id"));
 
-            Integer peptideId = (Integer)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId"));
+            Long peptideId = (Long)ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId"));
 
             String sequence = (String) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/Sequence"));
 
-            Integer isotopeLabelId = (Integer) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "IsotopeLabelId"));
+            Long isotopeLabelId = (Long) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "IsotopeLabelId"));
 
-            Integer runId = (Integer) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/PeptideGroupId/RunId"));
+            Long runId = (Long) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/PeptideGroupId/RunId"));
 
             Boolean decoy = (Boolean) ctx.get(FieldKey.fromString(super.getParentFieldKey(), "PeptideId/Decoy"));
             if(decoy == null) decoy = Boolean.FALSE;

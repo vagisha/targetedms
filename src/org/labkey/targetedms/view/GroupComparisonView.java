@@ -77,7 +77,7 @@ public class GroupComparisonView extends QuantificationView
         }
     }
 
-    private static Collection<GroupComparisonSettings> getGroupComparisons(int runId) {
+    private static Collection<GroupComparisonSettings> getGroupComparisons(long runId) {
         return new TableSelector(
                 TargetedMSManager.getTableInfoGroupComparisonSettings(),
                 new SimpleFilter(FieldKey.fromParts("RunId"), runId), null)

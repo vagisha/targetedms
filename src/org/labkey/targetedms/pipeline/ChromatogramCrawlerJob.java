@@ -264,7 +264,7 @@ public class ChromatogramCrawlerJob extends PipelineJob
             _container = container;
         }
 
-        public void exec(int id, int sampleFileId)
+        public void exec(int id, long sampleFileId)
         {
             // We're sorted by sample file, so keep
             if (_sampleFile == null || _sampleFile.getId() != sampleFileId)
