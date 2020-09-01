@@ -16,4 +16,4 @@ WHERE runs.id = peptidegroup.runid
       and (select min(peptide.id) from peptide where peptide.peptidegroupid = peptidegroup.id and peptide.standardtype is not null) is null
       AND peptidegroup.sequenceid.description NOT LIKE 'Isoform%'
       AND peptidegroup.gene != 'APOA1'
-GROUP BY peptidegroup.sequenceid.seqid;
+GROUP BY peptidegroup.sequenceid.seqid
