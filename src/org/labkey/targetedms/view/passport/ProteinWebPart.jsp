@@ -49,7 +49,7 @@
     LABKEY.requiresCss("passport/css/peakareachart.css");
 </script>
 <script type="text/javascript">
-    var proteinJSON = <%=protein.getJSON().getHtmlString(2)%>
+    var proteinJSON = <%=protein.getJSON().getJavaScriptFragment(2)%>
     document.addEventListener("DOMContentLoaded", function() {
         protein.initialize();
     });
