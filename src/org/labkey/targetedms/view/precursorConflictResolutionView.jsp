@@ -40,7 +40,7 @@
 <%
     JspView<TargetedMSController.PrecursorConflictBean> me = (JspView<TargetedMSController.PrecursorConflictBean>) HttpView.currentView();
     TargetedMSController.PrecursorConflictBean bean = me.getModelBean();
-    String conflictTransitionsUrl = new ActionURL(TargetedMSController.PrecursorConflictTransitionsAjaxAction.class, getContainer()).getLocalURIString();
+    ActionURL conflictTransitionsUrl = new ActionURL(TargetedMSController.PrecursorConflictTransitionsAjaxAction.class, getContainer());
 
     ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker = new ModifiedPeptideHtmlMaker();
 

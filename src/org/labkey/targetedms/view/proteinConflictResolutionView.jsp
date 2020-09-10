@@ -15,12 +15,15 @@
  * limitations under the License.
  */
 %>
-<%@ page import="org.labkey.api.data.Container" %>
 <%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.api.view.template.ClientDependencies" %>
-<%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController.ProteinConflictBean" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController.ProteinConflictPeptidesAjaxAction" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController.ResolveConflictAction" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController.ShowProteinAction" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController.ShowProteinConflictUiAction" %>
 <%@ page import="org.labkey.targetedms.conflict.ConflictProtein" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
@@ -36,13 +39,11 @@
 %>
 
 <%
-    Container c = getContainer();
-    JspView<TargetedMSController.ProteinConflictBean> me = (JspView<TargetedMSController.ProteinConflictBean>) HttpView.currentView();
-    TargetedMSController.ProteinConflictBean bean = me.getModelBean();
-    String conflictPeptidesUrl = new ActionURL(TargetedMSController.ProteinConflictPeptidesAjaxAction.class, c).getLocalURIString();
-
-    ActionURL runProteinDetailsUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, c);
-    ActionURL proteinConflictUiUrl = new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, c);
+    JspView<ProteinConflictBean> me = (JspView<ProteinConflictBean>) HttpView.currentView();
+    ProteinConflictBean bean = me.getModelBean();
+    ActionURL conflictPeptidesUrl = urlFor(ProteinConflictPeptidesAjaxAction.class);
+    ActionURL runProteinDetailsUrl = urlFor(ShowProteinAction.class);
+    ActionURL proteinConflictUiUrl = urlFor(ShowProteinConflictUiAction.class);
 %>
 
 <style type="text/css">
@@ -128,7 +129,7 @@ $(document).ready(function () {
 
         if(!srcTd.hasClass('content_loaded'))
         {
-            var url = <%=q(conflictPeptidesUrl.toString())%> // +'newProteinId='+newProteinId+"&oldProteinId="+oldProteinId;
+            var url = <%=q(conflictPeptidesUrl)%> // +'newProteinId='+newProteinId+"&oldProteinId="+oldProteinId;
             var url;
             // alert(url);
 
@@ -235,7 +236,7 @@ function toggleCheckboxSelection(element)
 
 
 <%int colspan=4;%>
-<form <%=formAction(TargetedMSController.ResolveConflictAction.class, Method.Post)%> id="conflictTableForm"><labkey:csrf/>
+<form <%=formAction(ResolveConflictAction.class, Method.Post)%> id="conflictTableForm"><labkey:csrf/>
 <input type="hidden" name="conflictLevel" value="protein"/>
 <input type="hidden" name="selectedInputValues" id="selectedInputValues"/>
 <table class="labkey-data-region-legacy labkey-show-borders myTable" id="dataTable">

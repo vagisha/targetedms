@@ -42,9 +42,9 @@
     Path archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, currentRevision);
 
     long conflictCount = ConflictResultsManager.getConflictCount(user, c);
-    String conflictViewUrl = (folderType == TargetedMSService.FolderType.LibraryProtein) ?
-                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, c).getLocalURIString() :
-                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, c).getLocalURIString();
+    ActionURL conflictViewUrl = (folderType == TargetedMSService.FolderType.LibraryProtein) ?
+                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, c) :
+                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, c);
 %>
 
 <div class="labkey-download">
@@ -65,7 +65,7 @@
         <%= h(ChromatogramLibraryUtils.getDownloadFileName(c, currentRevision)) %>
     <%= h(Files.exists(archiveFile) ? "(" + FileUtils.byteCountToDisplaySize(Files.size(archiveFile)) + ")" : "") %>
     <br/>
-    Revision <%= h(currentRevision)%><br/>
+    Revision <%=currentRevision%><br/>
     <br/>
 <%= link("Archived Revisions", new ActionURL(TargetedMSController.ArchivedRevisionsAction.class, c))%>
 </tr>

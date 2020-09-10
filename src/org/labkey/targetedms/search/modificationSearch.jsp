@@ -379,7 +379,7 @@
                 handler: function(btn) {
                     var values = form.getForm().getValues();
                     form.submit({
-                        url: <%=q(modificationSearchUrl.getLocalURIString())%>,
+                        url: <%=q(modificationSearchUrl)%>,
                         method: 'GET',
                         params: values
                     });

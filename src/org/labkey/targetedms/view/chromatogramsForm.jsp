@@ -108,7 +108,7 @@
             data:   [
                 <%int i = 0; for(Replicate rep: replicatesList){
                     if(i++ > 0){%>, <%}%>
-                    {"replicateName":"<%=h(rep.getName())%>","replicateId":"<%=h(rep.getId())%>"}
+                    {"replicateName":"<%=h(rep.getName())%>","replicateId":"<%=rep.getId()%>"}
                 <%}%>
             ]
         });

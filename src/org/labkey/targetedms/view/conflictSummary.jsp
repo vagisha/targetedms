@@ -26,9 +26,9 @@
 
     long conflictCount = ConflictResultsManager.getConflictCount(getUser(), getContainer());
     TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(getContainer());
-    String conflictViewUrl = (folderType == TargetedMSService.FolderType.LibraryProtein) ?
-                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getContainer()).getLocalURIString() :
-                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getContainer()).getLocalURIString();
+    ActionURL conflictViewUrl = (folderType == TargetedMSService.FolderType.LibraryProtein) ?
+                                           new ActionURL(TargetedMSController.ShowProteinConflictUiAction.class, getContainer()) :
+                                           new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getContainer());
 %>
 
 <%

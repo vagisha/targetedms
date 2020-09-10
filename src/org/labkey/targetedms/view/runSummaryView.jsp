@@ -91,20 +91,20 @@
     </div>
     &nbsp;
     <div>
-        <a href="<%= h(precursorListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getPeptideGroupCount(), peptideGroupLabel))%></a>,
-        <% if (run.getPeptideCount() > 0) { %><a href="<%= h(precursorListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getPeptideCount(), "peptide"))%></a>,<% } %>
-        <% if (run.getSmallMoleculeCount() > 0) { %><a href="<%= h(precursorListAction.getLocalURIString() + "#Small Molecule Precursor List") %>"><%= h(StringUtilsLabKey.pluralize(run.getSmallMoleculeCount(), "small molecule"))%></a>,<% } %>
-        <a href="<%= h(precursorListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getPrecursorCount(), "precursor"))%></a>,
-        <a href="<%= h(transitionListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getTransitionCount(), "transition"))%></a>
+        <a href="<%= h(precursorListAction) %>"><%= h(StringUtilsLabKey.pluralize(run.getPeptideGroupCount(), peptideGroupLabel))%></a>,
+        <% if (run.getPeptideCount() > 0) { %><a href="<%= h(precursorListAction) %>"><%= h(StringUtilsLabKey.pluralize(run.getPeptideCount(), "peptide"))%></a>,<% } %>
+        <% if (run.getSmallMoleculeCount() > 0) { %><a href="<%= h(precursorListAction + "#Small Molecule Precursor List") %>"><%= h(StringUtilsLabKey.pluralize(run.getSmallMoleculeCount(), "small molecule"))%></a>,<% } %>
+        <a href="<%= h(precursorListAction) %>"><%= h(StringUtilsLabKey.pluralize(run.getPrecursorCount(), "precursor"))%></a>,
+        <a href="<%= h(transitionListAction) %>"><%= h(StringUtilsLabKey.pluralize(run.getTransitionCount(), "transition"))%></a>
         &nbsp;-&nbsp;
-        <a href="<%= h(replicateListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getReplicateCount(), "replicate"))%></a><%
-        if (run.getCalibrationCurveCount() > 0) { %>, <a href="<%= h(calibrationCurveListAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getCalibrationCurveCount(), "calibration curve"))%></a><% }
-        if (run.getListCount() > 0) { %>, <a href="<%= h(listAction.getLocalURIString()) %>"><%= h(StringUtilsLabKey.pluralize(run.getListCount(), "list"))%></a><% } %>
+        <a href="<%= h(replicateListAction) %>"><%= h(StringUtilsLabKey.pluralize(run.getReplicateCount(), "replicate"))%></a><%
+        if (run.getCalibrationCurveCount() > 0) { %>, <a href="<%= h(calibrationCurveListAction) %>"><%= h(StringUtilsLabKey.pluralize(run.getCalibrationCurveCount(), "calibration curve"))%></a><% }
+        if (run.getListCount() > 0) { %>, <a href="<%= h(listAction) %>"><%= h(StringUtilsLabKey.pluralize(run.getListCount(), "list"))%></a><% } %>
         <% if (run.getSoftwareVersion() != null) { %>&nbsp;-&nbsp; <%= h(run.getSoftwareVersion()) %> <% } %>
         <% if (TargetedMSService.get().getFolderType(run.getContainer()) == TargetedMSService.FolderType.ExperimentMAM && run.getPeptideCount() > 0) { %>
             &nbsp;-&nbsp;
-            <a href="<%= h(ptmReportAction.getLocalURIString()) %>">PTM Report</a>,
-            <a href="<%= h(peptideMapAction.getLocalURIString()) %>">Peptide Map</a>
+            <a href="<%= h(ptmReportAction) %>">PTM Report</a>,
+            <a href="<%= h(peptideMapAction) %>">Peptide Map</a>
         <% } %>
     </div>
 </div>

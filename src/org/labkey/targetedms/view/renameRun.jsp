@@ -17,13 +17,14 @@
 %>
 <%@ page import="org.labkey.api.view.HttpView" %>
 <%@ page import="org.labkey.api.view.JspView" %>
-<%@ page import="org.labkey.targetedms.TargetedMSController" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController.RenameBean" %>
+<%@ page import="org.labkey.targetedms.TargetedMSController.RenameRunAction" %>
 <%@ taglib prefix="labkey" uri="http://www.labkey.org/taglib" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
-    TargetedMSController.RenameBean bean = ((JspView<TargetedMSController.RenameBean>) HttpView.currentView()).getModelBean();
+    RenameBean bean = ((JspView<RenameBean>) HttpView.currentView()).getModelBean();
 %>
-<labkey:form action="<%=buildURL(TargetedMSController.RenameRunAction.class)%>" method="post" layout="horizontal">
+<labkey:form action="<%=urlFor(RenameRunAction.class)%>" method="post" layout="horizontal">
 <%=generateReturnUrlFormField(bean.returnURL)%>
     <labkey:input type="hidden" name="run" value="<%=bean.run.getRunId()%>"/>
     <labkey:input type="text" size="70" name="description" id="description" label="Name" value="<%=bean.description%>"/>

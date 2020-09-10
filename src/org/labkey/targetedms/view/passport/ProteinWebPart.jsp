@@ -63,11 +63,11 @@
 <div id="passportContainer">
     <div id="basicproteininfo">
         <h2 id="proteinName"><%=h(protein.getName())%>
-            <a href="<%=h(new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer()))%>id=<%=h(protein.getFile().getRunId())%>">
+            <a href="<%=h(new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer()))%>id=<%=protein.getFile().getRunId()%>">
                 <img src="<%=h(contextPath)%>/passport/img/download.png" style="width:30x; height:30px; margin-left:5px;" alt="Download Skyline dataset" title="Download Skyline dataset">
             </a><sub title="month/day/year" id="dataUploaded">Data Uploaded: <%=h(new SimpleDateFormat("MM-dd-yyyy").format(protein.getFile().getCreatedDate()))%></sub>
         </h2>
-        <p id="apiLinks">Sources:&nbsp;<a href="<%=h(new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer()))%>id=<%=h(protein.getPepGroupId())%>">Panorama</a> &#8759; <a href="https://www.uniprot.org/uniprot/<%=h(protein.getAccession())%>">Uniprot</a></p>
+        <p id="apiLinks">Sources:&nbsp;<a href="<%=h(new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer()))%>id=<%=protein.getPepGroupId()%>">Panorama</a> &#8759; <a href="https://www.uniprot.org/uniprot/<%=h(protein.getAccession())%>">Uniprot</a></p>
         <ul style="max-width:300px;"><!-- Color Scheme: http://paletton.com/#uid=72X0X0kCyk3sipxvvmIKxgXRodf-->
             <li style="border-left: 6px solid #A01C00">
                 <span>Protein:&nbsp;</span><%=h(protein.getPreferredname())%></li>
@@ -121,10 +121,10 @@
                                     <tr style="text-align:right;">
                                         <%for(int j = i; j < i+10; j++) {
                                             if(j+2 > seqSegs.length) {%>
-                                                <td><%=h(protein.getSequence().length())%></td>
+                                                <td><%=protein.getSequence().length()%></td>
                                             <%break;
                                             } else {%>
-                                                <td> <%=h((j+1)*10)%></td>
+                                                <td> <%=(j+1)*10%></td>
                                         <%}%>
 
                                         <%}%>
@@ -156,7 +156,7 @@
             <div class="filterBox">
                 <h2>Peptides:&nbsp;
                     <span id="filteredPeptideCount">
-                        <green><%=h(protein.getPep().size())%></green>/<%=h(protein.getPep().size())%>
+                        <green><%=protein.getPep().size()%></green>/<%=protein.getPep().size()%>
                     </span>
                     <span id="copytoclipboard" clipboard="" style="color:rgb(85, 26, 139); cursor:pointer;" title="Copy filtered peptide list to clipboard">  Copy</span>
                 </h2>

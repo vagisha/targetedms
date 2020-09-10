@@ -376,12 +376,12 @@
 
     // peak areas graph
     var peakAreasImg = Ext4.create('Ext.Img', {
-        src: <%=q(peakAreaUrl.toString())%>,
+        src: <%=q(peakAreaUrl)%>,
         renderTo: Ext4.get('peakAreasGraphImg')
     });
 
     var retentionTimesImg = Ext4.create('Ext.Img', {
-        src: <%=q(retentionTimesUrl.toString())%>,
+        src: <%=q(retentionTimesUrl)%>,
         renderTo: Ext4.get('retentionTimesGraphImg')
     });
 
