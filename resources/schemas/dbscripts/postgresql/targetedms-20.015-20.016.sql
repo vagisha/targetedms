@@ -157,4 +157,4 @@ $$ LANGUAGE plpgsql;
 
 SELECT targetedms.handleSequences();
 
-DROP FUNCTION targetedms.handleSequences;
+DROP FUNCTION targetedms.handleSequences();
