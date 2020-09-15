@@ -15,120 +15,91 @@
  */
 package org.labkey.targetedms.clustergrammer;
 
-import org.apache.http.HttpEntity;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.http.Header;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
-import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.BasicResponseHandler;
+import org.apache.http.entity.mime.HttpMultipartMode;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.json.JSONObject;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.springframework.validation.BindException;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.labkey.api.action.SpringActionController.ERROR_MSG;
 
 /**
  * Created by iansigmon on 4/7/16.
  */
-public class ClustergrammerClient implements HeatMapService
+public class ClustergrammerClient
 {
-    //JSON based endpoint
-    private static final String CLUSTERGRAMMER_JSON_ENDPOINT = "http://amp.pharm.mssm.edu/clustergrammer/vector_upload/";
+    // TSV upload-based endpoint
+    private static final String CLUSTERGRAMMER_ENDPOINT = "https://maayanlab.cloud/clustergrammer/upload_network/";
 
-    private static final String CG_JSON_TEMPLATE = "{\"title\":\"%s\", \"columns\":[%s]}";
-    private static final String COLUMN_TEMPLATE = "{\"col_name\":\"%s\", \"data\":[%s]}";
-    private static final String VALUE_TEMPLATE = "{\"val\":%E, \"row_name\":\"%s\" }";
-
-
-    //Example response JSON
-    //    {
-    //        "id": "570c220b9238d045ff38551f",
-    //        "link": "http://amp.pharm.mssm.edu/clustergrammer/viz/570c220b9238d045ff38551f/test"
-    //    }
-
-    @Override
-    public String generateHeatMap(HeatMap matrix, BindException errors) throws Exception
+    public String generateHeatMap(ClustergrammerHeatMap matrix, BindException errors) throws Exception
     {
         try (CloseableHttpClient httpclient = HttpClients.createDefault())
         {
-            HttpPost post = new HttpPost(CLUSTERGRAMMER_JSON_ENDPOINT);
+            HttpPost post = new HttpPost(CLUSTERGRAMMER_ENDPOINT);
 
-            HttpEntity entity = generateHeatMapViaJSON(matrix);
-            post.setEntity(entity);
+            MultipartEntityBuilder builder = MultipartEntityBuilder.create();
+            builder.setMode(HttpMultipartMode.BROWSER_COMPATIBLE);
+            builder.addBinaryBody("file", serializeMatrix(matrix.getMatrix()).getBytes(StringUtilsLabKey.DEFAULT_CHARSET), ContentType.DEFAULT_BINARY, matrix.getTitle() + ".txt");
+
+            post.setEntity(builder.build());
 
             try (CloseableHttpResponse response = httpclient.execute(post))
             {
-                ResponseHandler<String> handler = new BasicResponseHandler();
                 StatusLine status = response.getStatusLine();
 
-                if (status.getStatusCode() == HttpStatus.SC_OK || status.getStatusCode() == HttpStatus.SC_CREATED)
+                if (status.getStatusCode() == HttpStatus.SC_MOVED_TEMPORARILY)
                 {
-                    String resp = handler.handleResponse(response);
-                    JSONObject json = new JSONObject(resp);
-                    return (String)json.get("link");
+                    Header header = response.getFirstHeader("Location");
+                    if (header != null)
+                    {
+                        return header.getValue();
+                    }
                 }
-                else
-                {
-                    EntityUtils.consume(response.getEntity());
-                    errors.reject(ERROR_MSG, "Request to Clustergrammer failed:\n " + status.getStatusCode() +": " + status.getReasonPhrase());
-                }
+
+                EntityUtils.consume(response.getEntity());
+                errors.reject(ERROR_MSG, "Request to Clustergrammer failed:\n " + status.getStatusCode() +": " + status.getReasonPhrase());
             }
         }
 
         return null;
     }
 
-    public HttpEntity generateHeatMapViaJSON(HeatMap matrix)
-    {
-        return new StringEntity(serializeToJSON(matrix), ContentType.APPLICATION_JSON);
-    }
-
-    private String serializeToJSON(HeatMap hm)
-    {
-        return String.format(CG_JSON_TEMPLATE, hm.getTitle(), serializeMatrix(hm.getMatrix()));
-    }
-
+    /**
+     * Convert to a "Simple Matrix Format" TSV for Clustergrammer
+     * https://clustergrammer.readthedocs.io/matrix_format_io.html
+     */
     private String serializeMatrix(Map<String, Map<String, Double>> matrix)
     {
         StringBuilder sb = new StringBuilder();
 
-        String comma = "";
-        for (String rowKey : matrix.keySet())
+        boolean first = true;
+        for (String proteinName : matrix.keySet())
         {
-            Map columnMap = matrix.get(rowKey);
-            sb.append(comma);
-            comma = ",";
-
-            sb.append(String.format(COLUMN_TEMPLATE, rowKey, serializeColumn(columnMap)));
+            Map<String, Double> values = matrix.get(proteinName);
+            if (first)
+            {
+                sb.append("\t");
+                sb.append(StringUtils.join(values.keySet(), "\t"));
+                first = false;
+            }
+            sb.append("\n");
+            sb.append(proteinName.replace("\t", " ").trim());
+            sb.append("\t");
+            sb.append(StringUtils.join(values.values().stream().map(x -> x != null ? String.format("%E", x) : "").collect(Collectors.toList()), "\t"));
         }
 
         return sb.toString();
     }
-
-    private String serializeColumn(Map<String, Double> rowMap)
-    {
-        StringBuilder sb = new StringBuilder();
-
-        String comma = "";
-        for (String rowKey : rowMap.keySet())
-        {
-            Double value = rowMap.get(rowKey);
-            if (value == null)
-                continue;
-
-            sb.append(comma);
-            comma = ",";
-            sb.append(String.format(VALUE_TEMPLATE, value, rowKey));
-        }
-
-        return sb.toString();
-    }
-
 }

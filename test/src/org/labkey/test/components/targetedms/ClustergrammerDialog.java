@@ -25,7 +25,7 @@ import static org.labkey.test.components.html.Input.Input;
 public class ClustergrammerDialog extends Window<ClustergrammerDialog.ElementCache>
 {
     private static final String DIALOG_TITLE = "Clustergrammer Heat Map";
-    public static final String CG_REDIRECT_URL = "amp.pharm.mssm.edu/";
+    public static final String CG_REDIRECT_URL = "maayanlab.cloud/";
 
     public ClustergrammerDialog(WebDriver driver)
     {

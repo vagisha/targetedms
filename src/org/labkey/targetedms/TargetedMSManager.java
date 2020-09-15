@@ -113,6 +113,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -124,7 +125,7 @@ public class TargetedMSManager
 {
     private static final TargetedMSManager _instance = new TargetedMSManager();
 
-    private static Logger _log = LogManager.getLogger(TargetedMSManager.class);
+    private static final Logger _log = LogManager.getLogger(TargetedMSManager.class);
 
     private TargetedMSManager()
     {
@@ -2027,21 +2028,41 @@ public class TargetedMSManager
 
             MathStat stats = StatsService.get().getStats(primitiveValues);
 
+            String proteinName = (String)rowMap.get(rowHeadingColumnName);
+            Map<String, Double> intensityMap = new TreeMap<>();
+            boolean hasValue = false;
             for(ColumnInfo column : columns)
             {
                 String colName = column.getName();
                 if (colName.compareToIgnoreCase(intensityColumnName) == 0 || colName.compareToIgnoreCase(rowHeadingColumnName) == 0)
                     continue;
 
-                Map<String, Double> intensityMap = intensities.computeIfAbsent(column.getLabel(), k -> new HashMap<>());
+                String sampleName = column.getLabel();
 
                 Double value = getValue(column.getValue(rowMap));
                 if (value != null)
                 {
                     value = (value.doubleValue() - stats.getMean()) / stats.getStdDev();
                 }
-                intensityMap.put((String)rowMap.get(rowHeadingColumnName), value);
+
+                if (value == null || value.isNaN())
+                {
+                    // Always store a value so that we have consistent rows
+                    intensityMap.put(sampleName, null);
+                }
+                else
+                {
+                    hasValue = true;
+                    intensityMap.put(sampleName, value);
+                }
             }
+
+            if (hasValue)
+            {
+                // Only stash proteins where we were able to calculate at least one value
+                intensities.put(proteinName, intensityMap);
+            }
+
         }
 
         return intensities;
