@@ -279,17 +279,19 @@ public abstract class ChromatogramDataset
         public void build()
         {
             Chromatogram chromatogram = _chromInfo.createChromatogram(_run);
-
-            _jfreeDataset = new XYSeriesCollection();
-            XYSeries series = new XYSeries(getChartTitle());
-            float[] times = chromatogram.getTimes();
-            float[] intensities = chromatogram.getIntensities(0);
-            assert times.length == intensities.length;
-            for (int i = 0; i < times.length; i++)
+            if (chromatogram != null)
             {
-                series.add(times[i], intensities[i]);
+                _jfreeDataset = new XYSeriesCollection();
+                XYSeries series = new XYSeries(getChartTitle());
+                float[] times = chromatogram.getTimes();
+                float[] intensities = chromatogram.getIntensities(0);
+                assert times.length == intensities.length;
+                for (int i = 0; i < times.length; i++)
+                {
+                    series.add(times[i], intensities[i]);
+                }
+                _jfreeDataset.addSeries(series);
             }
-            _jfreeDataset.addSeries(series);
         }
     }
 
@@ -398,16 +400,18 @@ public abstract class ChromatogramDataset
                 PrecursorChromInfo pChromInfo = precursorChromInfoList.get(i);
 
                 Chromatogram chromatogram = pChromInfo.createChromatogram(_run);
+                if (chromatogram != null)
+                {
+                    // Instead of displaying separate peaks for each transition of this precursor,
+                    // we will sum up the intensities and display a single peak for the precursor
+                    PeakInChart peakInChart = addPrecursorAsSeries(_jfreeDataset, chromatogram, pChromInfo,
+                            chromatogramRtRange,
+                            getLabel(pChromInfo),
+                            i);
+                    _maxDatasetIntensity = Math.max(_maxDatasetIntensity, peakInChart.getMaxTraceIntensity());
 
-                // Instead of displaying separate peaks for each transition of this precursor,
-                // we will sum up the intensities and display a single peak for the precursor
-                PeakInChart peakInChart = addPrecursorAsSeries(_jfreeDataset, chromatogram, pChromInfo,
-                        chromatogramRtRange,
-                        getLabel(pChromInfo),
-                        i);
-                _maxDatasetIntensity = Math.max(_maxDatasetIntensity, peakInChart.getMaxTraceIntensity());
-
-                addAnnotation(pChromInfo, peakInChart, i);
+                    addAnnotation(pChromInfo, peakInChart, i);
+                }
             }
         }
 
@@ -746,8 +750,11 @@ public abstract class ChromatogramDataset
             // Get retention times for any peptide ID matches
             _peptideIdRetentionTimes = getPeptideIdRetentionTimes();
 
-           // Build the dataset
-            buildJFreedataset(chromatogram, chromatogramRtRange);
+            if (chromatogram != null)
+            {
+                // Build the dataset
+                buildJFreedataset(chromatogram, chromatogramRtRange);
+            }
         }
 
         protected List<LibrarySpectrumMatchGetter.PeptideIdRtInfo> getPeptideIdRetentionTimes()
@@ -1215,29 +1222,32 @@ public abstract class ChromatogramDataset
         public void build()
         {
             Chromatogram chromatogram = _pChromInfo.createChromatogram(_run);
-
-            if (_tChromInfo.getChromatogramIndex() >= chromatogram.getTransitionsCount())
+            if (chromatogram != null)
             {
-                throw new IllegalStateException("Requested chromatogram index " + _tChromInfo.getChromatogramIndex() + " but there are only "
-                                                + chromatogram.getTransitionsCount() + " transitions.");
-            }
 
-            _jfreeDataset = new XYSeriesCollection();
-            double[] intensities = addTransitionAsSeries(_jfreeDataset, chromatogram,
-                    new RtRange(_tChromInfo.getStartTime(), _tChromInfo.getEndTime()),
-                    _tChromInfo, getSeriesLabel());
+                if (_tChromInfo.getChromatogramIndex() >= chromatogram.getTransitionsCount())
+                {
+                    throw new IllegalStateException("Requested chromatogram index " + _tChromInfo.getChromatogramIndex() + " but there are only "
+                            + chromatogram.getTransitionsCount() + " transitions.");
+                }
 
-            SampleFile sampleFile = ReplicateManager.getSampleFile(_tChromInfo.getSampleFileId());
-            _chartTitle = sampleFile.getSampleName();
+                _jfreeDataset = new XYSeriesCollection();
+                double[] intensities = addTransitionAsSeries(_jfreeDataset, chromatogram,
+                        new RtRange(_tChromInfo.getStartTime(), _tChromInfo.getEndTime()),
+                        _tChromInfo, getSeriesLabel());
 
-            _maxDatasetIntensity = intensities[0]; // max trace intensity in the displayed range
-            if(_tChromInfo.getRetentionTime() != null)
-            {
-                // Marker for retention time
-                _annotation = makePeakApexAnnotation(_tChromInfo.getRetentionTime(),
-                        _pChromInfo.getAverageMassErrorPPM(),
-                        intensities[1], // max intensity at peak RT
-                        0);
+                SampleFile sampleFile = ReplicateManager.getSampleFile(_tChromInfo.getSampleFileId());
+                _chartTitle = sampleFile.getSampleName();
+
+                _maxDatasetIntensity = intensities[0]; // max trace intensity in the displayed range
+                if (_tChromInfo.getRetentionTime() != null)
+                {
+                    // Marker for retention time
+                    _annotation = makePeakApexAnnotation(_tChromInfo.getRetentionTime(),
+                            _pChromInfo.getAverageMassErrorPPM(),
+                            intensities[1], // max intensity at peak RT
+                            0);
+                }
             }
         }
 

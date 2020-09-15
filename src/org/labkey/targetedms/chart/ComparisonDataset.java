@@ -683,7 +683,7 @@ public class ComparisonDataset
             if(pciPlusList.size() == 1)
             {
                 PrecursorChromInfoLitePlus pciPlus = pciPlusList.get(0);
-                if(pciPlus.getBestRetentionTime() == null)
+                if(pciPlus.getBestRetentionTime() == null || pciPlus.getMinStartTime() == null || pciPlus.getMaxEndTime() == null)
                 {
                     return null;
                 }
@@ -701,8 +701,7 @@ public class ComparisonDataset
             int count = 0;
             for(PrecursorChromInfoLitePlus pciPlus: pciPlusList)
             {
-                // TODO: Confirm this
-                if(pciPlus.getBestRetentionTime() == null)
+                if(pciPlus.getBestRetentionTime() == null || pciPlus.getMinStartTime() == null || pciPlus.getMaxEndTime() == null)
                     continue;
                 rtAtPeakApex += pciPlus.getBestRetentionTime();
                 if(pciPlus.getMinStartTime() != null) minStartTime += pciPlus.getMinStartTime();

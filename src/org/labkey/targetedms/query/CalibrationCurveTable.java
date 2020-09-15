@@ -43,6 +43,7 @@ public class CalibrationCurveTable extends TargetedMSTable
         getMutableColumn(FieldKey.fromParts("Id")).setHidden(true);
         getMutableColumn(FieldKey.fromParts("RunId")).setHidden(true);
         getMutableColumn(FieldKey.fromParts("QuantificationSettingsId")).setHidden(true);
+        getMutableColumn(FieldKey.fromParts("GeneralMoleculeId")).setURL(detailsURL);
     }
 
     public static class PeptideCalibrationCurveTable extends CalibrationCurveTable
