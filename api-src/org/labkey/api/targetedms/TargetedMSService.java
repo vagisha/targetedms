@@ -79,7 +79,7 @@ public interface TargetedMSService
     List<String> getSampleFilePaths(int runId);
     List<? extends IModification.IStructuralModification> getStructuralModificationsUsedInRun(int runId);
     List<? extends IModification.IIsotopeModification> getIsotopeModificationsUsedInRun(int runId);
-    Map<String, BlibSourceFiles> getBlibSourceFiles(ITargetedMSRun run);
+    Map<String, List<BlibSourceFile>> getBlibSourceFiles(ITargetedMSRun run);
 
     // Add table customizers for the protein / peptide / modification search results
     void addProteinSearchResultCustomizer(TableCustomizer customizer);

@@ -15,7 +15,6 @@
 
 package org.labkey.targetedms.parser.blib;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,8 +24,8 @@ import org.labkey.api.cache.CacheManager;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.RuntimeSQLException;
 import org.labkey.api.pipeline.LocalDirectory;
+import org.labkey.api.targetedms.BlibSourceFile;
 import org.labkey.api.targetedms.ITargetedMSRun;
-import org.labkey.api.targetedms.BlibSourceFiles;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.targetedms.parser.Peptide;
@@ -42,7 +41,6 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -52,6 +50,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -517,12 +516,12 @@ public class BlibSpectrumReader
         }
     }
 
-    // Return a map of (blib file) -> (spectrum source files, id files)
-    public static Map<String, BlibSourceFiles> readBlibSourceFiles(ITargetedMSRun run)
+    // Return a map of blib file -> BlibSourceFiles
+    public static Map<String, List<BlibSourceFile>> readBlibSourceFiles(ITargetedMSRun run)
     {
         Map<PeptideSettings.SpectrumLibrary, Path> libs = LibraryManager.getLibraryFilePaths(run.getId());
 
-        Map<String, BlibSourceFiles> m = new TreeMap<>();
+        Map<String, List<BlibSourceFile>> m = new TreeMap<>();
         for (Map.Entry<PeptideSettings.SpectrumLibrary, Path> entry : libs.entrySet())
         {
             if (!entry.getKey().getLibraryType().contains("bibliospec_lite"))
@@ -533,16 +532,27 @@ public class BlibSpectrumReader
             if (null == blibFilePath)
                 continue;
 
-            Set<String> sourceFiles = new HashSet<>();
-            Set<String> idFiles = new HashSet<>();
+            List<BlibSourceFile> blibSourceFiles = new ArrayList<>();
             try (Connection conn = getBlibConnection(blibFilePath))
             {
                 if (!hasTable(conn, "SpectrumSourceFiles"))
                 {
                     continue;
                 }
+                Map<Integer, Set<String>> scoreTypes = new HashMap<>(); // file id -> score types
+                try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT DISTINCT r.fileID, s.scoreType FROM RefSpectra as r JOIN ScoreTypes s ON r.scoreType = s.id"))
+                {
+                    while (rs.next())
+                    {
+                        int fileId = rs.getInt(1);
+                        String scoreType = rs.getString(2);
+                        scoreTypes.putIfAbsent(fileId, new HashSet<>());
+                        scoreTypes.get(fileId).add(scoreType);
+                    }
+                }
                 try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT * FROM SpectrumSourceFiles"))
                 {
+                    int idColumn = -1;
                     int fileNameColumn = -1;
                     int idFileNameColumn = -1;
                     ResultSetMetaData metadata = rs.getMetaData();
@@ -550,6 +560,9 @@ public class BlibSpectrumReader
                     {
                         switch (metadata.getColumnName(i).toLowerCase())
                         {
+                            case "id":
+                                idColumn = i;
+                                break;
                             case "filename":
                                 fileNameColumn = i;
                                 break;
@@ -560,16 +573,10 @@ public class BlibSpectrumReader
                     }
                     while (rs.next())
                     {
+                        Integer id = rs.getInt(idColumn);
                         String fileName = rs.getString(fileNameColumn);
                         String idFileName = idFileNameColumn >= 0 ? rs.getString(idFileNameColumn) : null;
-
-                        // Source spectrum file can be the same as the ID file if embedded spectra are used.
-                        // In this case, we only want it added once (as an ID file).
-                        if (!StringUtils.isBlank(fileName) && !fileName.equalsIgnoreCase(idFileName))
-                            sourceFiles.add(Paths.get(fileName).getFileName().toString());
-
-                        if (!StringUtils.isBlank(idFileName))
-                            idFiles.add(Paths.get(idFileName).getFileName().toString());
+                        blibSourceFiles.add(new BlibSourceFile(fileName, idFileName, scoreTypes.getOrDefault(id, null)));
                     }
                 }
             }
@@ -577,7 +584,7 @@ public class BlibSpectrumReader
             {
                 throw new RuntimeException(e);
             }
-            m.put(path.getFileName().toString(), new BlibSourceFiles(new ArrayList<>(sourceFiles), new ArrayList<>(idFiles)));
+            m.put(path.getFileName().toString(), blibSourceFiles);
         }
         return m;
     }
