@@ -3,6 +3,9 @@ import org.labkey.gradle.util.BuildUtils;
 dependencies
 {
    external 'com.google.protobuf:protobuf-java:3.12.2'
+   external "org.xerial:sqlite-jdbc:3.7.2"
+   external "org.apache.commons:commons-math3:${commonsMath3Version}"
+   external "org.jfree:jcommon:1.0.17"
    implementation "org.apache.httpcomponents:httpmime:${httpmimeVersion}"
    BuildUtils.addLabKeyDependency(project: project, config: "implementation", depProjectPath:  BuildUtils.getCommonAssayModuleProjectPath(project.gradle, "ms2"), depProjectConfig: "apiJarFile")
    BuildUtils.addLabKeyDependency(project: project, config: "jspImplementation", depProjectPath: BuildUtils.getCommonAssayModuleProjectPath(project.gradle, "ms2"), depProjectConfig: "apiJarFile")
