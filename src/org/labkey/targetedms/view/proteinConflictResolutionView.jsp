@@ -129,12 +129,8 @@ $(document).ready(function () {
 
         if(!srcTd.hasClass('content_loaded'))
         {
-            var url = <%=q(conflictPeptidesUrl)%> // +'newProteinId='+newProteinId+"&oldProteinId="+oldProteinId;
-            var url;
-            // alert(url);
-
             Ext4.Ajax.request({
-                url: url,
+                url: <%=q(conflictPeptidesUrl)%>,
                 params: {newProteinId: newProteinId, oldProteinId: oldProteinId},
                 method: 'GET',
                 success: function(response, request){
@@ -218,7 +214,7 @@ function toggleCheckboxSelection(element)
         <ul>
             <%for(String conflictRun: bean.getAllConflictRunFiles().keySet()) {%>
                  <li>
-                     <a href="<%=h(proteinConflictUiUrl)%>conflictedRunId=<%=bean.getAllConflictRunFiles().get(conflictRun)%>"><%=h(conflictRun)%></a>
+                     <a href="<%=h(proteinConflictUiUrl.clone().addParameter("conflictedRunId", bean.getAllConflictRunFiles().get(conflictRun)))%>"><%=h(conflictRun)%></a>
                  </li>
             <%}%>
         </ul>
@@ -282,7 +278,7 @@ function toggleCheckboxSelection(element)
                  </span>
              </td>
              <td class="representative newProtein <%=protein.getNewProteinId()%>">
-                 <a href="<%=h(runProteinDetailsUrl)%>id=<%=protein.getNewProteinId()%>"><%=h(protein.getNewRunFile())%></a>
+                 <a href="<%=h(runProteinDetailsUrl.clone().addParameter("id", protein.getNewProteinId()))%>"><%=h(protein.getNewRunFile())%></a>
              </td>
 
              <!-- Old representative protein -->
@@ -302,7 +298,7 @@ function toggleCheckboxSelection(element)
                  </span>
              </td>
              <td class="oldProtein <%=protein.getNewProteinId()%>">
-                 <a href="<%=h(runProteinDetailsUrl)%>id=<%=protein.getOldProteinId()%>"><%=h(protein.getOldRunFile())%></a>
+                 <a href="<%=h(runProteinDetailsUrl.clone().addParameter("id", protein.getOldProteinId()))%>"><%=h(protein.getOldRunFile())%></a>
              </td>
          </tr>
     <%}%>
