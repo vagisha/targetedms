@@ -20,6 +20,7 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.HtmlString;
 
 import java.util.Set;
 
@@ -59,14 +60,13 @@ public class AnnotationUIDisplayColumn extends DataColumn
     }
 
     @Override @NotNull
-    public String getFormattedValue(RenderContext ctx)
+    public HtmlString getFormattedHtml(RenderContext ctx)
     {
-        String result = h(getValue(ctx));
-        result = result.replaceAll("\\n", "<br />");
-        return result;
+        return HtmlString.of(getValue(ctx).toString(), true);
     }
 
     @Override
+    @NotNull
     public Object getValue(RenderContext ctx)
     {
         String note = (String)ctx.get(_noteFieldKey);

@@ -41,7 +41,7 @@
     </tr>
     <tr>
         <td class="labkey-form-label">Precursor</td>
-        <td><%= text(bean.getModifiedPeptideHtml())%></td>
+        <td><%= bean.getModifiedPeptideHtml() %></td>
     </tr>
 
     <%

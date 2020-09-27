@@ -32,6 +32,8 @@ import org.labkey.api.gwt.client.FacetingBehaviorType;
 import org.labkey.api.query.ExprColumn;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.query.LookupForeignKey;
+import org.labkey.api.util.HtmlString;
+import org.labkey.api.util.HtmlStringBuilder;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
@@ -359,19 +361,19 @@ public class AnnotatedTargetedMSTable extends TargetedMSTable
 
         /** The HTML encoded annotation name/value pairs */
         @Override @NotNull
-        public String getFormattedValue(RenderContext ctx)
+        public HtmlString getFormattedHtml(RenderContext ctx)
         {
-            StringBuilder sb = new StringBuilder();
-            String separator = "";
+            HtmlStringBuilder sb = HtmlStringBuilder.of();
+            HtmlString separator = HtmlString.EMPTY_STRING;
             for (String annotation : getAnnotations(ctx))
             {
                 sb.append(separator);
-                separator = "<br/>";
-                sb.append("<nobr>");
-                sb.append(PageFlowUtil.filter(annotation));
-                sb.append("</nobr>");
+                separator = HtmlString.BR;
+                sb.append(HtmlString.unsafe("<nobr>"));
+                sb.append(annotation);
+                sb.append(HtmlString.unsafe("</nobr>"));
             }
-            return sb.toString();
+            return sb.getHtmlString();
         }
     }
 

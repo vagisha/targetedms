@@ -123,6 +123,7 @@ import org.labkey.api.util.DOM;
 import org.labkey.api.util.DateUtil;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.HelpTopic;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.Pair;
 import org.labkey.api.util.StringUtilsLabKey;
@@ -1741,7 +1742,7 @@ public class TargetedMSController extends SpringActionController
             _precursor = precursor;
         }
 
-        public String getModifiedPeptideHtml()
+        public HtmlString getModifiedPeptideHtml()
         {
             return new ModifiedPeptideHtmlMaker().getPrecursorHtml(getPrecursor(), getRun().getId(), _targetedMSSchema);
         }

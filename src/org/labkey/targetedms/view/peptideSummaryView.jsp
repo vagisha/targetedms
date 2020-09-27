@@ -58,7 +58,7 @@
     </tr>
     <tr>
         <td class="labkey-form-label">Sequence</td>
-        <td><%=text(new ModifiedPeptideHtmlMaker().getPeptideHtml(bean.getPeptide(), bean.getRun().getId()))%></td>
+        <td><%=new ModifiedPeptideHtmlMaker().getPeptideHtml(bean.getPeptide(), bean.getRun().getId())%></td>
     </tr>
     <tr>
         <td class="labkey-form-label">NeutralMass</td>

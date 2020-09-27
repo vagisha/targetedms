@@ -21,6 +21,8 @@ import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.HtmlString;
+import org.labkey.api.util.HtmlStringBuilder;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.targetedms.view.IconFactory;
 
@@ -50,31 +52,36 @@ public abstract class IconColumn extends DataColumn
 
     abstract String getLinkTitle();
 
-    abstract String getCellDataHtml(RenderContext ctx);
+    abstract HtmlString getCellDataHtml(RenderContext ctx);
 
     boolean removeLinkDefaultColor()
     {
         return true;
     }
 
-    private String getIconHtml(String iconPath)
+    private HtmlString getIconHtml(String iconPath)
     {
         if(StringUtils.isBlank(iconPath))
         {
-            return "";
+            return HtmlString.EMPTY_STRING;
         }
 
         StringBuilder imgHtml = new StringBuilder("<img src=\"");
         imgHtml.append(PageFlowUtil.filter(iconPath)).append("\"").append(" title=\"" + PageFlowUtil.filter(getLinkTitle()) +"\"").append(" width=\"16\" height=\"16\" style=\"margin-right: 5px;\"/>");
-        return imgHtml.toString();
+        return HtmlString.unsafe(imgHtml.toString());
     }
 
     @Override
-    public @NotNull String getFormattedValue(RenderContext ctx)
+    public @NotNull HtmlString getFormattedHtml(RenderContext ctx)
     {
-        String iconHtml = getIconHtml(getIconPath());
-        String cellDataHtml = getCellDataHtml(ctx);
-        return "<nobr>" + iconHtml + (cellDataHtml == null ? "" : cellDataHtml) + "</nobr>";
+        HtmlString iconHtml = getIconHtml(getIconPath());
+        HtmlString cellDataHtml = getCellDataHtml(ctx);
+        return
+                HtmlStringBuilder.of(HtmlString.unsafe("<nobr>")).
+                        append(iconHtml).
+                        append(cellDataHtml == null ? HtmlString.EMPTY_STRING : cellDataHtml).
+                        append(HtmlString.unsafe("</nobr>")).
+                        getHtmlString();
     }
 
     @Override
@@ -108,9 +115,9 @@ public abstract class IconColumn extends DataColumn
         }
 
         @Override
-        String getCellDataHtml(RenderContext ctx)
+        HtmlString getCellDataHtml(RenderContext ctx)
         {
-            return PageFlowUtil.filter(ctx.get(getColumnInfo().getFieldKey(), String.class));
+            return HtmlString.of(ctx.get(getColumnInfo().getFieldKey(), String.class));
         }
 
         @Override

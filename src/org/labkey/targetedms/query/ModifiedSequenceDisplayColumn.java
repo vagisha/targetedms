@@ -21,6 +21,7 @@ import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
 import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.targetedms.view.IconFactory;
 import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
@@ -41,7 +42,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 {
     private final ModifiedPeptideHtmlMaker _htmlMaker;
     String _iconPath;
-    String _cellData;
+    HtmlString _cellData;
 
     public static final String PEPTIDE_COLUMN_NAME = "ModifiedPeptideDisplayColumn";
     public static final String PRECURSOR_COLUMN_NAME = "ModifiedPrecursorDisplayColumn";
@@ -74,7 +75,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
     }
 
     @Override
-    String getCellDataHtml(RenderContext ctx)
+    HtmlString getCellDataHtml(RenderContext ctx)
     {
         return _cellData;
     }
@@ -161,7 +162,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 
             if(peptideId == null || sequence == null || runId == null)
             {
-                _cellData = PageFlowUtil.filter(peptideModifiedSequence);
+                _cellData = HtmlString.of(peptideModifiedSequence);
             }
             else
             {
@@ -216,7 +217,7 @@ public abstract class ModifiedSequenceDisplayColumn extends IconColumn
 
             if(precursorId == null || peptideId == null || isotopeLabelId == null || precursorModifiedSequence == null || sequence == null || runId == null)
             {
-                _cellData = PageFlowUtil.filter(precursorModifiedSequence);
+                _cellData = HtmlString.of(precursorModifiedSequence);
             }
             else
             {

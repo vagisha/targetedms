@@ -60,6 +60,7 @@ import org.labkey.api.query.UserIdQueryForeignKey;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.util.ContainerContext;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.UnexpectedException;
@@ -743,9 +744,9 @@ public class TargetedMSSchema extends UserSchema
                                 return getValue(ctx);
                             }
                             @Override
-                            public @NotNull String getFormattedValue(RenderContext ctx)
+                            public @NotNull HtmlString getFormattedHtml(RenderContext ctx)
                             {
-                                return PageFlowUtil.filter(getValue(ctx));
+                                return HtmlString.of(getValue(ctx));
                             }
                             @Override
                             public boolean isFilterable()
@@ -1582,9 +1583,9 @@ public class TargetedMSSchema extends UserSchema
 
         @NotNull
         @Override
-        public String getFormattedValue(RenderContext ctx)
+        public HtmlString getFormattedHtml(RenderContext ctx)
         {
-            return PageFlowUtil.filter(getValue(ctx));
+            return HtmlString.of(getValue(ctx));
         }
 
         @Override

@@ -17,6 +17,7 @@ package org.labkey.targetedms.view;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
+import org.labkey.api.util.HtmlString;
 import org.labkey.api.util.PageFlowUtil;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.chart.ChartColors;
@@ -56,28 +57,28 @@ public class ModifiedPeptideHtmlMaker
         _firstIsotopeLabelIdInDocMap = new HashMap<>();
     }
 
-    public String getPrecursorHtml(Precursor precursor, Long runId, TargetedMSSchema schema)
+    public HtmlString getPrecursorHtml(Precursor precursor, Long runId, TargetedMSSchema schema)
     {
         Peptide peptide = PeptideManager.getPeptide(schema.getContainer(), precursor.getGeneralMoleculeId());
         return getPrecursorHtml(peptide, precursor, runId);
     }
 
-    public String getPrecursorHtml(Peptide peptide, Precursor precursor, Long runId)
+    public HtmlString getPrecursorHtml(Peptide peptide, Precursor precursor, Long runId)
     {
         return getPrecursorHtml(peptide.getId(), precursor.getIsotopeLabelId(), peptide.getSequence(), precursor.getModifiedSequence(), runId);
     }
 
-    public String getPrecursorHtml(long peptideId, long isotopeLabelId, String peptideSequence, String precursorModifiedSequence, Long runId)
+    public HtmlString getPrecursorHtml(long peptideId, long isotopeLabelId, String peptideSequence, String precursorModifiedSequence, Long runId)
     {
         return getHtml(peptideId, isotopeLabelId, peptideSequence, precursorModifiedSequence, runId, null, null);
     }
 
-    public String getPeptideHtml(Peptide peptide, Long runId)
+    public HtmlString getPeptideHtml(Peptide peptide, Long runId)
     {
         return getPeptideHtml(peptide.getId(), peptide.getSequence(), peptide.getPeptideModifiedSequence(), runId, null, null);
     }
 
-    public String getPeptideHtml(long peptideId, String sequence, String peptideModifiedSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA)
+    public HtmlString getPeptideHtml(long peptideId, String sequence, String peptideModifiedSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA)
     {
         String altSequence = peptideModifiedSequence;
         if(StringUtils.isBlank(altSequence))
@@ -88,7 +89,7 @@ public class ModifiedPeptideHtmlMaker
         return getHtml(peptideId, null, sequence, altSequence, runId, previousAA, nextAA);
     }
 
-    private String getHtml(long peptideId,  @Nullable Long isotopeLabelId, String sequence, String altSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA)
+    private HtmlString getHtml(long peptideId,  @Nullable Long isotopeLabelId, String sequence, String altSequence, Long runId, @Nullable String previousAA, @Nullable String nextAA)
     {
         Long firstIsotopeLabelIdInDoc = null;
         if(runId != null)
@@ -171,7 +172,7 @@ public class ModifiedPeptideHtmlMaker
         {
             result.append("<div style='color:red;'>" + PageFlowUtil.filter(error.toString()) + "</div>");
         }
-        return result.toString();
+        return HtmlString.unsafe(result.toString());
     }
 
     public String toHex(int rgb)
