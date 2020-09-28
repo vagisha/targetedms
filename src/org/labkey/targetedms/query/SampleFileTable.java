@@ -87,7 +87,9 @@ public class SampleFileTable extends TargetedMSTable
         ActionURL url = new ActionURL(TargetedMSController.ShowSampleFileAction.class, getContainer());
         Map<String, String> urlParams = new HashMap<>();
         urlParams.put("id", "Id");
-        setDetailsURL(new DetailsURL(url, urlParams));
+        DetailsURL detailsURL = new DetailsURL(url, urlParams);
+        setDetailsURL(detailsURL);
+        getMutableColumn("ReplicateId").setURL(detailsURL);
     }
 
     @Override
@@ -97,7 +99,7 @@ public class SampleFileTable extends TargetedMSTable
         {
             // Always include these columns
             List<FieldKey> defaultCols = new ArrayList<>(Arrays.asList(
-                    FieldKey.fromParts("ReplicateId", "Name"),
+                    FieldKey.fromParts("ReplicateId"),
                     FieldKey.fromParts("FilePath"),
                     FieldKey.fromParts("AcquiredTime")));
 

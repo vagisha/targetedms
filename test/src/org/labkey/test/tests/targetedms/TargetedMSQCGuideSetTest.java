@@ -40,6 +40,7 @@ import org.labkey.test.components.targetedms.ParetoPlotsWebPart;
 import org.labkey.test.components.targetedms.QCPlotsWebPart;
 import org.labkey.test.pages.targetedms.PanoramaDashboard;
 import org.labkey.test.pages.targetedms.ParetoPlotPage;
+import org.labkey.test.util.APIContainerHelper;
 import org.labkey.test.util.DataRegionTable;
 
 import java.io.IOException;
@@ -66,13 +67,13 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
             "VLVLDTDYK",
             "VYVEELKPTPEGDLEILLQK"};
 
-    private static GuideSet gs1 = new GuideSet("2013/08/01", "2013/08/01 00:00:01", "first guide set, entirely before initial data with no data points in range");
-    private static GuideSet gs2 = new GuideSet("2013/08/02", "2013/08/11", "second guide set, starts before initial data start date with only one data point in range");
-    private static GuideSet gs3 = new GuideSet("2013/08/14 22:48:37", "2013/08/16 20:26:28", "third guide set, ten data points in range", 10);
-    private static GuideSet gs4 = new GuideSet("2013/08/21 07:56:12", "2013/08/21 13:15:01", "fourth guide set, four data points in range", 4);
-    private static GuideSet gs5 = new GuideSet("2013/08/27 03:00", "2013/08/31 00:00", "fifth guide set, extends beyond last initial data point with two data points in range");
+    private static final GuideSet gs1 = new GuideSet("2013/08/01", "2013/08/01 00:00:01", "first guide set, entirely before initial data with no data points in range");
+    private static final GuideSet gs2 = new GuideSet("2013/08/02", "2013/08/11", "second guide set, starts before initial data start date with only one data point in range");
+    private static final GuideSet gs3 = new GuideSet("2013/08/14 22:48:37", "2013/08/16 20:26:28", "third guide set, ten data points in range", 10);
+    private static final GuideSet gs4 = new GuideSet("2013/08/21 07:56:12", "2013/08/21 13:15:01", "fourth guide set, four data points in range", 4);
+    private static final GuideSet gs5 = new GuideSet("2013/08/27 03:00", "2013/08/31 00:00", "fifth guide set, extends beyond last initial data point with two data points in range");
 
-    private static GuideSet gsSmallMolecule = new GuideSet("2014/07/15 12:40", "2014/07/15 13:40", "Guide set for small molecules");
+    private static final GuideSet gsSmallMolecule = new GuideSet("2014/07/15 12:40", "2014/07/15 13:40", "Guide set for small molecules");
 
 
     @Override
@@ -105,7 +106,9 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
     @Override
     protected void doCleanup(boolean afterTest) throws TestTimeoutException
     {
-        _containerHelper.deleteProject(getProjectName(), afterTest);
+        // Use the API-based approach for deletion so that we don't trigger AJAX requests navigating to the delete page
+        // that may run in the background and cause SQL Server deadlock exceptions
+        new APIContainerHelper(this).deleteProject(getProjectName(), afterTest);
     }
 
     @Test
@@ -326,7 +329,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
         selectQuery("targetedms", "Replicate");
         //confirm table columns are present and of correct type representing replicate annotations:
         GetQueryDetailsCommand queryDetailsCommand = new GetQueryDetailsCommand("targetedms", "Replicate");
-        GetQueryDetailsResponse queryDetailsResponse = queryDetailsCommand.execute(createDefaultConnection(true),getProjectName() + "/" + folderName);
+        GetQueryDetailsResponse queryDetailsResponse = queryDetailsCommand.execute(createDefaultConnection(),getProjectName() + "/" + folderName);
         List<GetQueryDetailsResponse.Column> columns = queryDetailsResponse.getColumns();
 
         int groupingIndex = 11;
@@ -394,7 +397,7 @@ public class TargetedMSQCGuideSetTest extends TargetedMSTest
             else
                 cmd.addFilter("SeriesLabel", null, Filter.Operator.ISBLANK);
 
-            SelectRowsResponse response = cmd.execute(createDefaultConnection(false), getCurrentContainerPath());
+            SelectRowsResponse response = cmd.execute(createDefaultConnection(), getCurrentContainerPath());
 
             Rowset rowset = response.getRowset();
             assertEquals("Unexpected number of filtered rows", 1, rowset.getSize());
