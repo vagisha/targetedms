@@ -22,9 +22,9 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.CommandException;
 import org.labkey.remoteapi.Connection;
-import org.labkey.remoteapi.query.UpdateRowsCommand;
 import org.labkey.remoteapi.query.ExecuteSqlCommand;
 import org.labkey.remoteapi.query.SelectRowsResponse;
+import org.labkey.remoteapi.query.UpdateRowsCommand;
 import org.labkey.serverapi.reader.TabLoader;
 import org.labkey.test.BaseWebDriverTest;
 import org.labkey.test.Locator;
@@ -703,7 +703,7 @@ public class TargetedMSCalibrationCurveTest extends TargetedMSTest
 
             log("Verify calibration curve");
             assertTrue("No data found for calibration curves", rowWithData >= 0);
-            clickAndWait(calibrationCurvesTable.detailsLink(rowWithData));
+            calibrationCurvesTable.clickRowDetails(rowWithData);
             CalibrationCurveWebpart calibrationCurveWebpart = new CalibrationCurveWebpart(getDriver());
             List<String> actualLegendText = calibrationCurveWebpart.getSvgLegendItems();
             DecimalFormat df = new DecimalFormat("#.#####");
