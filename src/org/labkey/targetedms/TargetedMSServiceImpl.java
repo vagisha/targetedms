@@ -23,7 +23,7 @@ import org.labkey.api.exp.XarFormatException;
 import org.labkey.api.pipeline.PipelineValidationException;
 import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
-import org.labkey.api.targetedms.BlibSourceFiles;
+import org.labkey.api.targetedms.BlibSourceFile;
 import org.labkey.api.targetedms.IModification;
 import org.labkey.api.targetedms.ITargetedMSRun;
 import org.labkey.api.targetedms.SkylineAnnotation;
@@ -149,7 +149,7 @@ public class TargetedMSServiceImpl implements TargetedMSService
     }
 
     @Override
-    public Map<String, BlibSourceFiles> getBlibSourceFiles(ITargetedMSRun run)
+    public Map<String, List<BlibSourceFile>> getBlibSourceFiles(ITargetedMSRun run)
     {
         return BlibSpectrumReader.readBlibSourceFiles(run);
     }
