@@ -236,14 +236,12 @@
     max-height: 200px;
 }
 #selectedPeptideChromatogramContainer {
-    padding-bottom:5px;
-    max-width:500px;
+    padding-bottom: 5px;
+    padding-top: 10px;
     height:400px;
-    display:block;
-    margin-left:auto;
-    margin-right: auto;
+    display: table;
+    margin: auto;
     position:relative;
-    margin-top:25px;
 }
 
 #selectedPeptideChromatogramContainer img {
@@ -258,13 +256,12 @@
     display:block;
     float:right;
 }
-#peptideinfo {
-    display:block;
+
+.peptideDetails {
     min-height:70px;
-    width:500px;
-    padding-top:10px;
-    margin-left:auto;
-    margin-right: auto;
+    display: table;
+    margin: auto;
+    padding-top: 10px;
 }
 
 .external-link-icon {

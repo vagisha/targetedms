@@ -163,25 +163,52 @@ protein =
                 break;
         }
 
+        var showLink = false;
         // sets panorama chromatogram to that of the newly selected peptide
-        if(protein.selectedPeptide["ChromatogramBeforeId"] == null&&protein.selectedPeptide["ChromatogramAfterId"] == null) {
-            $('#selectedPeptideChromatogramBefore').attr("src", "");
-            $('#selectedPeptideChromatogramAfter').attr("src", "");
-            $('#selectedPeptideLink').hide();
-        } else {
-            $('#selectedPeptideLink').show();
-            $('#selectedPeptideChromatogramBefore').attr("src", chomatogramUrl+"id="+protein.selectedPeptide["ChromatogramBeforeId"]+"&chartWidth=250&chartHeight=400&syncY=false&syncX=false")
-            $('#selectedPeptideChromatogramAfter').attr("src", chomatogramUrl+"id="+protein.selectedPeptide["ChromatogramAfterId"]+"&chartWidth=250&chartHeight=400&syncY=false&syncX=false")
+        if(protein.selectedPeptide["ChromatogramBeforeId"]) {
+            $('#selectedPeptideChromatogramBefore').attr("src", chromatogramUrl + "id=" + protein.selectedPeptide["ChromatogramBeforeId"] + "&chartWidth=250&chartHeight=400&syncY=false&syncX=false");
+            $('#selectedPeptideChromatogramBefore').show();
+            showLink = true;
         }
+        else {
+            $('#selectedPeptideChromatogramBefore').hide();
+        }
+
+        if (protein.selectedPeptide["ChromatogramAfterId"]) {
+            $('#selectedPeptideChromatogramAfter').attr("src", chromatogramUrl + "id=" + protein.selectedPeptide["ChromatogramAfterId"] + "&chartWidth=250&chartHeight=400&syncY=false&syncX=false")
+            $('#selectedPeptideChromatogramAfter').show();
+            showLink = true;
+        }
+        else {
+            $('#selectedPeptideChromatogramAfter').hide();
+        }
+
+        if (protein.selectedPeptide["ChromatogramId"]) {
+            $('#selectedPeptideChromatogram').attr("src", chromatogramUrl + "id=" + protein.selectedPeptide["ChromatogramId"] + "&chartWidth=250&chartHeight=400&syncY=false&syncX=false")
+            $('#selectedPeptideChromatogram').show();
+            showLink = true;
+        }
+        else {
+            $('#selectedPeptideChromatogram').hide();
+        }
+
+        if (showLink) {
+            $('#selectedPeptideLink').show();
+        }
+        else {
+            $('#selectedPeptideLink').hide();
+        }
+
         // sets panorama peptide link
         $('#selectedPeptideLink').attr("href", showPeptideUrl + "id=" + protein.selectedPeptide.PeptideId);
         // sets basic peptide info (Seq, location, length, etc..
         $('#peptideinfo').empty();
-        var totalPeakAreaWithCommas = protein.selectedPeptide["Before Incubation"].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-        $('#peptideinfo').append('<span style="font-weight:600">Sequence:</span> <span style="font-family: monospace;">' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.Sequence) + "</span><br />" +
-                '<span style="font-weight:600">Location:</span> <span style="font-family: monospace;">[' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.StartIndex) +","+ LABKEY.Utils.encodeHtml(protein.selectedPeptide.EndIndex) + "]</span> <br />" +
-                '<span style="font-weight:600">Length:</span> <span style="font-family: monospace;">' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.Sequence.length)+ "</span> <br />" +
-                '<span style="font-weight:600">Total Peak Area:</span> <span style="font-family: monospace;">' + LABKEY.Utils.encodeHtml(totalPeakAreaWithCommas) + "</span> ");
+        var value = protein.selectedPeptide["Before Incubation"] ? protein.selectedPeptide["Before Incubation"] : protein.selectedPeptide["Total Area"];
+        var totalPeakAreaWithCommas = value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+        $('#peptideinfo').append('<span style="font-weight:600">Sequence:</span>&nbsp;<span style="font-family: monospace;">' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.Sequence) + "</span><br />" +
+                '<span style="font-weight:600">Location:</span>&nbsp;<span style="font-family: monospace;">[' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.StartIndex) +","+ LABKEY.Utils.encodeHtml(protein.selectedPeptide.EndIndex) + "]</span> <br />" +
+                '<span style="font-weight:600">Length:</span>&nbsp;<span style="font-family: monospace;">' + LABKEY.Utils.encodeHtml(protein.selectedPeptide.Sequence.length)+ "</span> <br />" +
+                '<span style="font-weight:600">Total Peak Area:</span>&nbsp;<span style="font-family: monospace;">' + LABKEY.Utils.encodeHtml(totalPeakAreaWithCommas) + "</span> ");
 
         // scroll in ul
         var liIndex = $("li").index($('.'+protein.selectedPeptide.Sequence+'-text'));
@@ -208,14 +235,28 @@ protein =
 
         var peptides = protein.peptides;
         for (var i = 0; i < peptides.length; i++) {
-            var totalBeforeArea = 0;
-            var totalAfterArea = 0;
+            var totalBeforeArea = null;
+            var totalAfterArea = null;
+            var totalArea = null;
             if (peptides[i].beforeintensity != null)
                 totalBeforeArea = peptides[i].beforeintensity;
             if (peptides[i].normalizedafterintensity != null)
                 totalAfterArea = peptides[i].normalizedafterintensity;
-            barChartData.push({"Sequence":peptides[i].sequence, "Before Incubation": totalBeforeArea, "After Incubation": totalAfterArea, "StartIndex":peptides[i].startindex,"EndIndex":peptides[i].endindex,
-                "Enabled": true, "ChromatogramBeforeId": peptides[i].panoramaprecursorbeforeid, "ChromatogramAfterId": peptides[i].panoramaprecursorafterid, "PeptideId":peptides[i].panoramapeptideid })
+            if (peptides[i].intensity != null)
+                totalArea = peptides[i].intensity;
+            barChartData.push({
+                "Sequence":peptides[i].sequence,
+                "Before Incubation": totalBeforeArea,
+                "After Incubation": totalAfterArea,
+                "Total Area": totalArea,
+                "StartIndex": peptides[i].startindex,
+                "EndIndex":peptides[i].endindex,
+                "Enabled": true,
+                "ChromatogramBeforeId": peptides[i].panoramaprecursorbeforeid,
+                "ChromatogramAfterId": peptides[i].panoramaprecursorafterid,
+                "ChromatogramId": peptides[i].panoramaprecursorid,
+                "PeptideId":peptides[i].panoramapeptideid
+            })
         }
 
         // callback for the chart settings
@@ -249,9 +290,17 @@ protein =
                     return a["StartIndex"] - b["StartIndex"];
                 });
             }
+
+            var sortValue = "Total Area";
+            barChartData.forEach(function (d) {
+                if (d["Before Incubation"]) {
+                    sortValue = "Before Incubation";
+                }
+            });
+
             if (sortBy === "Intensity") {
                 barChartData.sort(function(a, b) {
-                    return b["Before Incubation"] -a["Before Incubation"];
+                    return b[sortValue] - a[sortValue];
                 });
             }
             $("#livepeptidelist").empty();

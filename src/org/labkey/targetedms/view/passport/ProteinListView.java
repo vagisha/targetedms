@@ -12,6 +12,7 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.DataView;
 import org.labkey.api.view.ViewContext;
+import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.passport.PassportController;
 import org.springframework.validation.Errors;
 
@@ -54,11 +55,11 @@ public class ProteinListView extends QueryView
     {
         super.setupDataView(ret);
         ActionURL url = new ActionURL(PassportController.ProteinAction.class, getContainer());
-        url.addParameter("accession", "${accession}");
+        url.addParameter("proteinId", "${proteinId}");
         SimpleDisplayColumn urlColumn = new UrlColumn(url.toString(), "PASSPORT VIEW");
         ret.getDataRegion().addDisplayColumn(0, urlColumn);
 
-        ActionURL urlDownload = new ActionURL("targetedms", "downloadDocument", getContainer());
+        ActionURL urlDownload = new ActionURL(TargetedMSController.DownloadDocumentAction.class, getContainer());
         urlDownload.addParameter("id", "${runid}");
         SimpleDisplayColumn urlColumnDownload = new UrlColumn(urlDownload.toString(), "Download");
         urlColumnDownload.setName("Skyline"); // TODO check if works

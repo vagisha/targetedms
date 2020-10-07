@@ -177,7 +177,32 @@ peakareachart = {
                 .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
                 .attr("id", "barchart");
 
-            var groups = ["Before Incubation", "After Incubation"];
+            var hasBefore = false;
+            var hasAfter = false;
+            var hasPlain = false;
+            barChartData.forEach(function (d) {
+                if (d["Before Incubation"]) {
+                    hasBefore = true;
+                }
+                if (d["After Incubation"]) {
+                    hasAfter = true;
+                }
+                if (d["Total Area"]) {
+                    hasPlain = true;
+                }
+            });
+
+            var groups = [];
+            if (hasBefore) {
+                groups.push("Before Incubation");
+            }
+            if (hasAfter) {
+                groups.push("After Incubation");
+            }
+            if (hasPlain) {
+                groups.push("Total Area");
+            }
+
             barChartData.forEach(function (d) {
                 d.groups = groups.map(function (name) {
                     return {name: name, value: +d[name], enabled: +d["Enabled"]};
@@ -223,14 +248,19 @@ peakareachart = {
                     }
                 })
                 .on("mouseover", function (d) {
-                    if(d.Enabled == true) {
+                    if(d.Enabled) {
                         this.childNodes[0].style.fill = "#494777"; // Lighter option for hover #67668D, #7E3C35
-                        this.childNodes[1].style.fill = "#66221B";
+                        if (this.childNodes.length > 1) {
+                            this.childNodes[1].style.fill = "#66221B";
+                        }
                     }
                 }).on('mouseout', function (d) {
                     if(d.Enabled && (protein.selectedPeptide == null || d.Sequence != protein.selectedPeptide.Sequence)) {
                         this.childNodes[0].style.fill = "#8a89a6";
-                        this.childNodes[1].style.fill = "#a05d56";
+
+                        if (this.childNodes.length > 1) {
+                            this.childNodes[1].style.fill = "#a05d56";
+                        }
                     }
                 });
 
@@ -240,7 +270,7 @@ peakareachart = {
                     if (d.groups[0].value < 0) { // -1 is flag for missing precursor
                         d.groups[0].value = 0;
                         badSeq.push(d.Sequence)
-                    } else if (d.groups[1].value < 0) {
+                    } else if (d.groups.length > 1 && d.groups[1].value < 0) {
                         d.groups[1].value = 0;
                         badSeq.push(d.Sequence);
                     }
@@ -277,30 +307,32 @@ peakareachart = {
                 });
 
             // legend with two boxes and (Before/After text associated to color)
-            var barsLegend = svg.selectAll(".barsLegend")
-                .data(groups)
-                .enter().append("g")
-                .attr("class", "barsLegend")
-                .attr("transform", function (d, i) {
-                    return "translate(0," + i * 32 + ")";
-                });
+            if (groups.length > 1) {
+                var barsLegend = svg.selectAll(".barsLegend")
+                        .data(groups)
+                        .enter().append("g")
+                        .attr("class", "barsLegend")
+                        .attr("transform", function (d, i) {
+                            return "translate(0," + i * 32 + ")";
+                        });
 
-            barsLegend.append("rect")
-                .attr("x", width - 30)
-                .attr("y", "15")
-                .attr("width", 30)
-                .attr("height", 30)
-                .style("fill", color);
+                barsLegend.append("rect")
+                        .attr("x", width - 30)
+                        .attr("y", "15")
+                        .attr("width", 30)
+                        .attr("height", 30)
+                        .style("fill", color);
 
-            barsLegend.append("text")
-                .attr("x", width - 36)
-                .attr("y", 30)
-                .attr("dy", ".35em")
-                .style("text-anchor", "end")
-                .style("font-weight", 600)
-                .text(function (d) {
-                    return d;
-                });
+                barsLegend.append("text")
+                        .attr("x", width - 36)
+                        .attr("y", 30)
+                        .attr("dy", ".35em")
+                        .style("text-anchor", "end")
+                        .style("font-weight", 600)
+                        .text(function (d) {
+                            return d;
+                        });
+            }
 
             svg.append("g")
                 .attr("class", "x axis")

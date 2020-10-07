@@ -989,20 +989,13 @@ public class TargetedMSSchema extends UserSchema
                         FieldKey containerFieldKey = result.getContainerFieldKey();
                         return new AJAXDetailsDisplayColumn(colInfo, new ActionURL(TargetedMSController.ShowProteinAJAXAction.class, getContainer()), params, props, containerFieldKey)
                         {
-                            private boolean _renderedCSS = false;
-
                             @Override
-                            public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
+                            public @NotNull Set<ClientDependency> getClientDependencies()
                             {
-                                if (!_renderedCSS)
-                                {
-                                    out.write("<script type=\"text/javascript\">\n" +
-                                            "LABKEY.requiresCss(\"ProteinCoverageMap.css\");\n" +
-                                            "LABKEY.requiresScript(\"util.js\");\n" +
-                                            "</script>");
-                                    _renderedCSS = true;
-                                }
-                                super.renderGridCellContents(ctx, out);
+                                Set<ClientDependency> result = super.getClientDependencies();
+                                result.add(ClientDependency.fromPath("ProteinCoverageMap.css"));
+                                result.add(ClientDependency.fromPath("util.js"));
+                                return result;
                             }
                         };
                     }

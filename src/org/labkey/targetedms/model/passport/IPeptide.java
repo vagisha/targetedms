@@ -8,13 +8,18 @@ public class IPeptide
     private int endIndex;
     private long proteinId;
     private long panoramaPeptideId;
+
+    private double totalArea;
+    private long precursorId;
+
     private double beforeIntensity;
     private double beforeTotalArea;
+    private long precursorbeforeid;
+    private double beforeSumArea;
+
     private double afterIntensity;
     private double afterTotalArea;
-    private long precursorbeforeid;
     private long precursorafterid;
-    private double beforeSumArea;
     private double afterSumArea;
 
     public double getBeforeSumArea()
@@ -157,6 +162,31 @@ public class IPeptide
     public void setAfterIntensity(double afterIntensity)
     {
         this.afterIntensity = afterIntensity;
+    }
+
+    public double getIntensity()
+    {
+        return getTotalArea();
+    }
+
+    public double getTotalArea()
+    {
+        return totalArea;
+    }
+
+    public void setTotalArea(double totalArea)
+    {
+        this.totalArea = totalArea;
+    }
+
+    public long getPrecursorId()
+    {
+        return precursorId;
+    }
+
+    public void setPrecursorId(long precursorId)
+    {
+        this.precursorId = precursorId;
     }
 
     @Override

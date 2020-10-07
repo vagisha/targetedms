@@ -50,7 +50,6 @@
 
 <style type="text/css">
     td.representative {background-color:#8FBC8F;}
-    span.conflictEntityLabel {text-decoration: underline; cursor: pointer;}
     table.dataTable.myTable thead th,
     table.dataTable.myTable thead td,
     table.dataTable.myTable tbody td,
@@ -67,13 +66,6 @@
 $(document).ready(function () {
     $('input[name="selectedVals"]').click(function() {
          toggleCheckboxSelection($(this));
-    });
-
-    $("span.conflictEntityLabel").click(function() {
-        var id = $(this).attr('id');
-        //alert("You clicked "+id);
-        var tokens = id.split('_');
-        togglePrecursorDetails(this, tokens[0], tokens[1]);
     });
 
     $("#selectAllNew").click(function(){
@@ -288,7 +280,7 @@ function toggleCheckboxSelection(element)
                  </span>
              </td>
              <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
-                 <a href="<%=h(runPrecursorDetailsUrl.replaceParameter("id", precursor.getNewPrecursorId()))%>"><%=h(precursor.getNewRunFile())%></a>
+                 <a href="<%=h(runPrecursorDetailsUrl.replaceParameter("id", precursor.getNewPrecursorId()))%>" target="_blank" rel="noopener noreferrer"><%=h(precursor.getNewRunFile())%></a>
              </td>
 
              <!-- Old representative precursor -->

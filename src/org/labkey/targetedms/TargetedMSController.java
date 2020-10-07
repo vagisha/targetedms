@@ -4422,7 +4422,8 @@ public class TargetedMSController extends SpringActionController
                 throw new NotFoundException("Could not find peptide group #" + form.getId());
             }
 
-            if (group.getSequenceId()!= null)
+            WebPartView<?> view;
+            if (group.getSequenceId() != null)
             {
                 int seqId = group.getSequenceId().intValue();
                 List<String> peptideSequences = new ArrayList<>();
@@ -4435,9 +4436,13 @@ public class TargetedMSController extends SpringActionController
                 searchURL.addParameter("seqId", group.getSequenceId().intValue());
                 searchURL.addParameter("identifier", group.getLabel());
                 getViewContext().getResponse().getWriter().write("<a href=\"" + searchURL + "\">Search for other references to this protein</a><br/>");
-                WebPartView sequenceView = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 40, true);
-                sequenceView.render(getViewContext().getRequest(), getViewContext().getResponse());
+                view = proteinService.getProteinCoverageView(seqId, peptideSequences.toArray(new String[peptideSequences.size()]), 40, true);
             }
+            else
+            {
+                view = new HtmlView(HtmlString.of("No sequence details available: " + group.getLabel()));
+            }
+            view.render(getViewContext().getRequest(), getViewContext().getResponse());
 
             getPageConfig().setTemplate(PageConfig.Template.None);
             return null;

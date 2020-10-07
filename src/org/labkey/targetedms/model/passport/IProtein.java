@@ -2,7 +2,8 @@ package org.labkey.targetedms.model.passport;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.labkey.api.util.PageFlowUtil;
+import org.labkey.api.util.HtmlString;
+import org.labkey.api.util.HtmlStringBuilder;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -222,6 +223,7 @@ public class IProtein
         for (IPeptide pep : peps)
         {
             JSONObject p = new JSONObject();
+            p.put("intensity", pep.getIntensity());
             p.put("beforeintensity", pep.getBeforeIntensity());
             p.put("normalizedafterintensity", pep.getAfterIntensity());
             p.put("startindex", pep.getStartIndex());
@@ -230,6 +232,7 @@ public class IProtein
             p.put("panoramapeptideid", pep.getPanoramaPeptideId());
             p.put("panoramaprecursorbeforeid", pep.getPrecursorbeforeid());
             p.put("panoramaprecursorafterid", pep.getPrecursorafterid());
+            p.put("panoramaprecursorid", pep.getPrecursorId());
             pepJSON.put(p);
         }
         JSONArray featJSON = new JSONArray();
@@ -286,35 +289,43 @@ public class IProtein
         return protJSON;
     }
 
-    public String[] getProtSeqHTML()
+    public List<HtmlString> getProtSeqHTML()
     {
         String[] str = getSequence().split("");
-        List<String> groups = new ArrayList<>();
+        HtmlString[] htmlStrings = new HtmlString[str.length];
+        for (int i = 0; i < str.length; i++)
+        {
+            htmlStrings[i] = HtmlString.of(str[i]);
+        }
+        List<HtmlString> groups = new ArrayList<>();
         if (features != null && features.get(features.size() - 1).getEndIndex() < str.length)
         {
             for (int i = 0; i < features.size(); i++)
             {
                 IFeature f = features.get(i);
-                String aa = str[f.getStartIndex() - 1];
-                aa = "<span class=\"feature-aa feature-" + PageFlowUtil.filter(f.type).replaceAll(" ", "") + "\" index=\"" + i + "\">" + aa + "</span>";
-
-                str[f.getStartIndex() - 1] = aa;
+                int index = f.getStartIndex() - 1;
+                HtmlString aa = htmlStrings[index];
+                htmlStrings[index] = HtmlStringBuilder.of(HtmlString.unsafe("<span class=\"feature-aa feature-")).
+                        append(f.type.replaceAll(" ", "")).
+                        append(HtmlString.unsafe("\" index=\"" + i + "\">")).
+                        append(aa).
+                        append(HtmlString.unsafe("</span>")).getHtmlString();
             }
         }
-        StringBuilder currentStr = new StringBuilder();
+        HtmlStringBuilder currentStr = HtmlStringBuilder.of();
         int counter = 1;
         for (int i = 0; i < str.length; i++)
         {
             currentStr.append(str[i]);
             if (counter == 10 || i == str.length - 1)
             {
-                groups.add(currentStr.toString());
-                currentStr = new StringBuilder();
+                groups.add(currentStr.getHtmlString());
+                currentStr = HtmlStringBuilder.of();
                 counter = 0;
             }
             counter++;
         }
-        return groups.toArray(new String[0]);
+        return groups;
     }
 
     @Override
