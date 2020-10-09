@@ -316,7 +316,7 @@ public class IProtein
         int counter = 1;
         for (int i = 0; i < str.length; i++)
         {
-            currentStr.append(str[i]);
+            currentStr.append(htmlStrings[i]);
             if (counter == 10 || i == str.length - 1)
             {
                 groups.add(currentStr.getHtmlString());

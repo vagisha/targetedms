@@ -21,14 +21,14 @@ import org.junit.experimental.categories.Category;
 import org.labkey.test.Locator;
 import org.labkey.test.categories.External;
 import org.labkey.test.categories.MS2;
+import org.labkey.test.util.APIUserHelper;
 import org.labkey.test.util.LogMethod;
-import org.labkey.test.util.PostgresOnlyTest;
 import org.labkey.test.util.UIContainerHelper;
 
 import java.util.List;
 
 @Category({External.class, MS2.class})
-public class PassportTest  extends PassportTestPart implements PostgresOnlyTest
+public class PassportTest  extends PassportTestPart
 {
     public PassportTest()
     {
@@ -39,9 +39,11 @@ public class PassportTest  extends PassportTestPart implements PostgresOnlyTest
 
 
     @Test
-    public void testSteps() throws Exception
+    public void testSteps()
     {
-        setupUserAccounts(users[0], passwords[0]);
+        APIUserHelper h = new APIUserHelper(this);
+        h.createUser(user);
+
         setupProject();
         testAsSuperAdmin();
         testAsNormalUser();
@@ -50,7 +52,7 @@ public class PassportTest  extends PassportTestPart implements PostgresOnlyTest
     @LogMethod(category = LogMethod.MethodType.VERIFICATION)
     protected void testAsSuperAdmin()
     {
-        loginAs("siteAdmin");
+        signIn();
         clickProject(getProjectName());
         testNormalStuff();
     }
@@ -111,14 +113,12 @@ public class PassportTest  extends PassportTestPart implements PostgresOnlyTest
     @LogMethod(category = LogMethod.MethodType.VERIFICATION)
     protected void testAsNormalUser()
     {
-        signOut();
-        loginAs("normaluser@gmail.com");
+        impersonate("normaluser@gmail.com");
         clickProject(getProjectName());
         testNormalStuff();
 
         // Log back in as a site admin
-        signOut();
-        signIn();
+        stopImpersonating();
     }
 
     @Override
