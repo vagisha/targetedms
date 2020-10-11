@@ -102,7 +102,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
         DbSchema expSchema = expService.getSchema();
 
         TableSelector ts = new TableSelector(TargetedMSManager.getTableInfoRuns(), new SimpleFilter(FieldKey.fromParts("SkydDataId"), null, CompareType.NONBLANK), null);
-        ts.forEachBatch(batch -> {
+        ts.forEachBatch(TargetedMSRun.class, 1000, batch -> {
             try (DbScope.Transaction transaction = expSchema.getScope().ensureTransaction())
             {
                 ArrayList<Collection<Object>> runIdParamList = new ArrayList<>();
@@ -183,7 +183,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
 
                 transaction.commit();
             }
-        }, TargetedMSRun.class, 1000);
+        });
 
     }
 
@@ -198,7 +198,7 @@ public class TargetedMSUpgradeCode implements UpgradeCode
 
         LOG.info("Updating targetedms.DocumentSize for " + documentCount + " rows");
         AddDocumentSizeBatchBlock batch = new AddDocumentSizeBatchBlock(TargetedMSSchema.getSchema(), documentCount);
-        ts.forEachBatch(batch, TargetedMSRun.class, 500);
+        ts.forEachBatch(TargetedMSRun.class, 500, batch);
 
         if(batch.getErrorCount() > 0)
         {
