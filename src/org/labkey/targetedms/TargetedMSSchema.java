@@ -61,7 +61,6 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.security.User;
 import org.labkey.api.util.ContainerContext;
 import org.labkey.api.util.HtmlString;
-import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.util.StringExpression;
 import org.labkey.api.util.UnexpectedException;
 import org.labkey.api.view.ActionURL;
@@ -1335,7 +1334,9 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_KEYWORD_CATEGORIES.equalsIgnoreCase(name) ||
                 TABLE_KEYWORDS.equalsIgnoreCase(name))
         {
-            return new TargetedMSTable(getSchema().getTable(name), this, cf, null);
+            FilteredTable<TargetedMSSchema> result = new FilteredTable<>(getSchema().getTable(name), this);
+            result.wrapAllColumns(true);
+            return result;
         }
 
         if (getTableNames().contains(name))

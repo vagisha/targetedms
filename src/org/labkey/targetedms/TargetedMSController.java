@@ -5078,15 +5078,17 @@ public class TargetedMSController extends SpringActionController
 
         final ActionURL fullDownloadUrl = new ActionURL(TargetedMSController.DownloadDocumentAction.class, run.getContainer()).replaceParameter("id", Long.toString(run.getId()));
 
-        NavTree fullDownloadNavTree = new NavTree("Full Skyline file", fullDownloadUrl);
-        fullDownloadNavTree.setScript(onClickScript);
-        navTree.addChild(fullDownloadNavTree);
-
         ActionURL pointerDownloadUrl = fullDownloadUrl.clone().replaceParameter("view", "skyp");
 
         NavTree pointerDownloadNavTree = new NavTree("SkyP file (link only, 1KB)", pointerDownloadUrl);
         pointerDownloadNavTree.setScript(onClickScript);
         navTree.addChild(pointerDownloadNavTree);
+
+        navTree.addSeparator();
+
+        NavTree fullDownloadNavTree = new NavTree("Full Skyline file", fullDownloadUrl);
+        fullDownloadNavTree.setScript(onClickScript);
+        navTree.addChild(fullDownloadNavTree);
 
         ActionURL runURL = new ActionURL(ShowPrecursorListAction.class, run.getContainer()).addParameter("fileName", run.getFileName());
         if (AppProps.getInstance().getUseContainerRelativeURL())
