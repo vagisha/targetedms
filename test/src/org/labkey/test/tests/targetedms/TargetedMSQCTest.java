@@ -785,6 +785,10 @@ public class TargetedMSQCTest extends TargetedMSTest
         //Check for clickable PDF and PNG export icons for Combined plot
         verifyDownloadablePlotIcons(1);
 
+        Locator bubbleClose = Locator.byClass("hopscotch-bubble-close");
+        if (isElementPresent(bubbleClose) && isElementVisible(bubbleClose))
+            click(bubbleClose);
+
         //deselect "Show All Peptides in Single Plot"
         qcPlotsWebPart.setShowAllPeptidesInSinglePlot(false, currentPagePlotCount);
 
