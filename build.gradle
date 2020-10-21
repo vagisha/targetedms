@@ -2,7 +2,7 @@ import org.labkey.gradle.util.BuildUtils;
 
 dependencies
 {
-   external 'com.google.protobuf:protobuf-java:3.12.2'
+   external "com.google.protobuf:protobuf-java:${googleProtocolBufVersion}"
    external "org.xerial:sqlite-jdbc:3.7.2"
    external "org.apache.commons:commons-math3:${commonsMath3Version}"
    external "org.jfree:jcommon:1.0.17"
