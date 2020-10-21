@@ -344,16 +344,13 @@ public class TargetedMSSchema extends UserSchema
             public SQLFragment getSQL()
             {
                 SQLFragment sql = new SQLFragment();
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci", "PrecursorChromInfoId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoSampleFile(), "sfile", "pci.SampleFileId"));
-                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoReplicate(), "rep", "sfile.ReplicateId"));
-                sql.append(getJoinToRunsTable("rep"));
+                sql.append(makeInnerJoin(TargetedMSManager.getTableInfoPrecursorChromInfo(), TargetedMSTable.CONTAINER_COL_TABLE_ALIAS, "PrecursorChromInfoId"));
                 return sql;
             }
             @Override
             public FieldKey getContainerFieldKey()
             {
-                return FieldKey.fromParts("PrecursorChromInfoId", "SampleFileId", "ReplicateId", "RunId", "Container");
+                return FieldKey.fromParts("PrecursorChromInfoId", "Container");
             }
         },
         PrecursorFK
