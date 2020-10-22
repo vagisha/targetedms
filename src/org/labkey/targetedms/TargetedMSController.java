@@ -236,6 +236,7 @@ import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
@@ -5952,6 +5953,92 @@ public class TargetedMSController extends SpringActionController
         }
 
         return newMap;
+    }
+
+    public static ChromLibAnalyteCounts getChromLibAnalyteCounts(User user, Container container, int libRevision)
+    {
+        int currentLibRevision = ChromatogramLibraryUtils.getCurrentRevision(container, user);
+        if(libRevision == currentLibRevision)
+        {
+            return getCurrentChromLibAnalyteCounts(user, container);
+        }
+        else
+        {
+            ChromLibAnalyteCounts counts = null;
+            // Read the counts from the .clib file on the filesystem
+            try
+            {
+                counts = ChromatogramLibraryUtils.getLibraryAnalyteCounts(container, libRevision);
+            }
+            catch (IOException | SQLException e)
+            {
+                LOG.error("Error reading from chromatogram library file " + ChromatogramLibraryUtils.getDownloadFileName(container, libRevision)
+                        + " in container " + container.getPath(), e);
+            }
+            return counts == null ? ChromLibAnalyteCounts.NOT_EXISTS : counts;
+        }
+    }
+
+    public static ChromLibAnalyteCounts getCurrentChromLibAnalyteCounts(User user, Container container)
+    {
+        ChromLibAnalyteCounts clibAnalyteCounts = new ChromLibAnalyteCounts();
+        clibAnalyteCounts.setPeptideGroupCount((int) getNumRepresentativeProteins(user, container));
+        clibAnalyteCounts.setPeptideCount((int)getNumRepresentativePeptides(container));
+        clibAnalyteCounts.setTransitionCount((int)getNumRankedTransitions(container));
+        return clibAnalyteCounts;
+    }
+
+    public static class ChromLibAnalyteCounts
+    {
+        private int _peptideGroupCount;
+        private int _peptideCount;
+        private int _transitionCount;
+
+        public static ChromLibAnalyteCounts NOT_EXISTS = new ChromLibAnalyteCounts(-1, -1, -1);
+
+        public ChromLibAnalyteCounts() {}
+
+        private ChromLibAnalyteCounts(int peptideGroupCount, int peptideCount, int transitionCount)
+        {
+            _peptideGroupCount = peptideGroupCount;
+            _peptideCount = peptideCount;
+            _transitionCount = transitionCount;
+        }
+
+        public int getPeptideGroupCount()
+        {
+            return _peptideGroupCount;
+        }
+
+        public void setPeptideGroupCount(int peptideGroupCount)
+        {
+            _peptideGroupCount = peptideGroupCount;
+        }
+
+        public int getPeptideCount()
+        {
+            return _peptideCount;
+        }
+
+        public void setPeptideCount(int peptideCount)
+        {
+            _peptideCount = peptideCount;
+        }
+
+        public int getTransitionCount()
+        {
+            return _transitionCount;
+        }
+
+        public void setTransitionCount(int transitionCount)
+        {
+            _transitionCount = transitionCount;
+        }
+
+        public boolean exists()
+        {
+            return _peptideGroupCount != -1 && _peptideCount != -1 && _transitionCount != -1;
+        }
     }
 
     public static long getNumRepresentativeProteins(User user, Container container) {

@@ -16,6 +16,7 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.Container;
+import org.labkey.api.data.DbSchema;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.SimpleFilter;
 import org.labkey.api.data.SqlSelector;
@@ -26,6 +27,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.Formats;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.conflict.ConflictPeptide;
 import org.labkey.targetedms.conflict.ConflictPrecursor;
@@ -476,5 +478,38 @@ public class ConflictResultsManager
         }
 
        return conflictCount;
+    }
+
+    public static TargetedMSRun getOldestRunWithConflicts(Container container)
+    {
+        Integer runId = getOldestConflictRunId(container);
+        return runId != null ? TargetedMSManager.getRun(runId) : null;
+    }
+
+    private static Integer getOldestConflictRunId(Container container)
+    {
+        SQLFragment sqlFragment = new SQLFragment();
+        sqlFragment.append("SELECT r.id FROM ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "p");
+        sqlFragment.append(" INNER JOIN ");
+        sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "gm");
+        sqlFragment.append(" ON p.GeneralMoleculeId = gm.Id ");
+        sqlFragment.append(" INNER JOIN ");
+        sqlFragment.append(TargetedMSManager.getTableInfoPeptideGroup(), "pg");
+        sqlFragment.append(" ON gm.PeptideGroupId = pg.Id ");
+        sqlFragment.append(" INNER JOIN ");
+        sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r");
+        sqlFragment.append(" ON pg.runId = r.Id ");
+        sqlFragment.append(" WHERE ");
+        sqlFragment.append(" r.Deleted = ? AND r.Container = ? ");
+        sqlFragment.append(" AND p.RepresentativeDataState = ? ");
+        sqlFragment.append(" ORDER BY r.Created ");
+
+        sqlFragment.add(false);
+        sqlFragment.add(container.getId());
+        sqlFragment.add(RepresentativeDataState.Conflicted.ordinal());
+
+        DbSchema schema = TargetedMSManager.getSchema();
+        return new SqlSelector(schema, schema.getSqlDialect().limitRows(sqlFragment, 1)).getObject(Integer.class);
     }
 }

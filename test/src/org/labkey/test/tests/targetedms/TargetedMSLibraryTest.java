@@ -23,6 +23,7 @@ import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.LogMethod;
+import org.labkey.test.util.PipelineStatusTable;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
@@ -41,6 +42,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
 {
     private static final String SKY_FILE1 = "Stergachis-SupplementaryData_2_a.sky.zip";
     private static final String SKY_FILE2 = "Stergachis-SupplementaryData_2_b.sky.zip";
+    private static final String SKY_FILE3 = "MRMer_renamed_protein.zip";
 
     @Test
     public void testSteps()
@@ -49,9 +51,29 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         importData(SKY_FILE1);
         verifyRevision1();
         importData(SKY_FILE2, 2);
+        testImportFailAfterConflict();
         verifyRevision2();
         verifyAndResolveConflicts();
         verifyRevision3();
+        testImportSucceedAfterConflictResolved();
+    }
+
+    private void testImportFailAfterConflict()
+    {
+        // Imports in a library folder with conflicts should fail
+        importData(SKY_FILE3, 3, true);
+        PipelineStatusTable statusTable = new PipelineStatusTable(getDriver());
+        var status = statusTable.clickStatusLink("Skyline document import - MRMer_renamed_protein.zip");
+        status.assertLogTextContains("The library folder has conflicts.", "New Skyline documents can be added to the folder after the conflicts have been resolved");
+
+        checkExpectedErrors(1); // Clear the error to keep the test from failing
+    }
+
+    private void testImportSucceedAfterConflictResolved()
+    {
+        // Delete the failed job first otherwise the test fails
+        deletePipelineJob("Skyline document import - MRMer_renamed_protein.zip", false);
+        importData(SKY_FILE3, 3);
     }
 
     @Override
@@ -109,7 +131,9 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         log("Verifying expected protein/peptide counts in library revision 2 after uploading " + SKY_FILE2);
 
         // Download link, library statistics and revision in the ChromatogramLibraryDownloadWebpart
-        verifyChromatogramLibraryDownloadWebPart(10, 89, 582, 2);
+        // The folder has conflicts so the download link and the numbers should be for the last stable library built
+        // before conflicts, which is revision 1.
+        verifyChromatogramLibraryDownloadWebPart(7, 55, 343, 1, true);
 
         // Proteins in SKY_FILE1: "CTCF", "TAF11", "MAX", "QPrEST_CystC_HPRR5000001", "HPRR1440042", "DifferentProteinSameLabel",  "iRT-C18 Standard Peptides"
         // Proteins in SKY_FILE2: "TP53", "GATA3", "MAX", "HPRR350065", "HPRR1440042", "DifferentProteinSameLabel", "HPRR5000001", "iRT-C18 Standard Peptides"
@@ -137,8 +161,22 @@ public class TargetedMSLibraryTest extends TargetedMSTest
 
     private void verifyChromatogramLibraryDownloadWebPart(int proteinCount, int peptideCount, int transitionCount, int revision)
     {
+        verifyChromatogramLibraryDownloadWebPart(proteinCount, peptideCount, transitionCount, revision, false);
+    }
+
+    private void verifyChromatogramLibraryDownloadWebPart(int proteinCount, int peptideCount, int transitionCount, int revision, boolean hasConflict)
+    {
         clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
-        assertElementPresent(Locator.xpath("//img[contains(@src, 'graphLibraryStatistics.view')]"));
+        if(!hasConflict)
+        {
+            assertElementPresent(Locator.xpath("//img[contains(@src, 'graphLibraryStatistics.view')]"));
+        }
+        else
+        {
+            // The library stats graph is not displayed if the folder has conflicts.
+            assertElementNotPresent(Locator.xpath("//img[contains(@src, 'graphLibraryStatistics.view')]"));
+            assertTextPresent("The library cannot be extended until the conflicts are resolved", "The download link below is for the last stable version of the library");
+        }
         assertTextPresent(
                 proteinCount + " proteins", peptideCount + " ranked peptides",
                 transitionCount + " ranked transitions");
@@ -175,9 +213,17 @@ public class TargetedMSLibraryTest extends TargetedMSTest
     private void verifyAndResolveConflicts()
     {
         log("Verifying that expected conflicts exist");
-        assertElementPresent(Locator.xpath("//div[contains(text(), \"There are 4 conflicting proteins in this folder.\") and contains(@style, \"color:red; font-weight:bold\")]"));
-        assertElementPresent(Locator.xpath("//tr[td[div[a[contains(@style,'color:red; text-decoration:underline;') and text()='Resolve conflicts']]]]"));
-        clickAndWait(Locator.linkContainingText("Resolve conflicts"));
+        String[] conflictText = new String[] {"The last Skyline document imported in this folder had 4 proteins that were already a part of the library",
+                "Please click the link below to resolve conflicts and choose the version of each protein that should be included in the library",
+                "The library cannot be extended until the conflicts are resolved. The download link below is for the last stable version of the library"};
+        assertTextPresent(conflictText);
+
+        var resolveConflictsLink = Locator.tagWithClass("div", "labkey-download").descendant(Locator.linkWithText("RESOLVE CONFLICTS"));
+        assertElementPresent(resolveConflictsLink);
+
+        verifyConflictsAsReadOnlyUser();
+
+        clickAndWait(resolveConflictsLink);
         assertTextPresent(
                 "Conflicting Proteins in Document",
                 "Current Library Proteins",
@@ -205,6 +251,15 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         }
 
         clickButton("Apply Changes");
+    }
+
+    private void verifyConflictsAsReadOnlyUser()
+    {
+        impersonateRole("Reader");
+        String[] conflictText = new String[] {"The chromatogram library in this folder is in a conflicted state and is awaiting action from a folder administrator to resolve the conflicts",
+                "The download link below is for the last stable version of the library."};
+        assertTextPresent(conflictText);
+        stopImpersonating(false);
     }
 
     @LogMethod

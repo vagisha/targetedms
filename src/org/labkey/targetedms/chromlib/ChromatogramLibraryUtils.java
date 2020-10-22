@@ -15,6 +15,7 @@
  */
 package org.labkey.targetedms.chromlib;
 
+import org.jetbrains.annotations.Nullable;
 import org.labkey.api.data.Container;
 import org.labkey.api.data.PropertyManager;
 import org.labkey.api.pipeline.LocalDirectory;
@@ -24,13 +25,22 @@ import org.labkey.api.security.User;
 import org.labkey.api.settings.AppProps;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.view.NotFoundException;
+import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
+import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.query.ConflictResultsManager;
+import org.sqlite.SQLiteConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -42,7 +52,7 @@ import java.util.Map;
 public class ChromatogramLibraryUtils
 {
     private static final String propMapKey = "chromLibRevision";
-    private static final int NO_LIB_REVISION = -1;
+    public static final int NO_LIB_REVISION = -1;
 
     public static boolean isRevisionCurrent(Container container, User user, String schemaVersion, int revisionNumber)
     {
@@ -60,6 +70,41 @@ public class ChromatogramLibraryUtils
         {
             return Integer.parseInt(propMap.get(propMapKey));
         }
+    }
+
+    public static int getLastStableLibRevision(Container container, User user) throws IOException
+    {
+        int currentRevision = getCurrentRevision(container, user);
+        // Get the oldest run that has conflicts
+        TargetedMSRun run = ConflictResultsManager.getOldestRunWithConflicts(container);
+        if(run == null)
+        {
+            // No conflicts.  Return the current revision
+            return currentRevision;
+        }
+        else
+        {
+            // Return the library revision that was created just before the oldest run with conflicts.
+            // This should be the last revision that was built with no conflicts.
+            for(int i = currentRevision - 1; i > 0; i--)
+            {
+                Path clibFile = getChromLibFile(container, i);
+                if(!Files.exists(clibFile))
+                {
+                    // If a .clib file does not exist it may be because the user deleted it.  In this case
+                    // we cannot be sure that the last stable .clib is still on the server. If, for example, the last
+                    // stable version was deleted we do not want the user to download an older library that may have been
+                    // built when the folder had conflicts.
+                    // Return a revision only if the revision chain is intact.
+                    return NO_LIB_REVISION;
+                }
+                else if (run.getCreated().after(new Date(Files.getLastModifiedTime(clibFile).toMillis())))
+                {
+                    return i;
+                }
+            }
+        }
+        return NO_LIB_REVISION;
     }
 
     public static int incrementLibraryRevision(Container container, User user, LocalDirectory localDirectory)
@@ -160,5 +205,38 @@ public class ChromatogramLibraryUtils
         {
            throw new RuntimeException("There was an error writing a TargetedMS Library archive file.", exception);
         }
+    }
+
+    @Nullable
+    public static TargetedMSController.ChromLibAnalyteCounts getLibraryAnalyteCounts(Container container, int libRevision) throws IOException, SQLException
+    {
+        Path archiveFile = ChromatogramLibraryUtils.getChromLibFile(container, libRevision);
+        if(!Files.exists(archiveFile))
+        {
+            return null;
+        }
+
+        SQLiteConfig config = new SQLiteConfig();
+        config.setReadOnly(true);
+        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + archiveFile.toAbsolutePath().toString(), config.toProperties()))
+        {
+            TargetedMSController.ChromLibAnalyteCounts analyteCountsInLib = new TargetedMSController.ChromLibAnalyteCounts();
+            analyteCountsInLib.setPeptideGroupCount(getCountsIn("Protein", conn));
+            analyteCountsInLib.setPeptideCount(getCountsIn("Peptide", conn));
+            analyteCountsInLib.setTransitionCount(getCountsIn("Transition", conn));
+            return analyteCountsInLib;
+        }
+    }
+
+    private static int getCountsIn(String tableName, Connection conn) throws SQLException
+    {
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT COUNT(*) from " + tableName))
+        {
+            if (rs.next())
+            {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
     }
 }

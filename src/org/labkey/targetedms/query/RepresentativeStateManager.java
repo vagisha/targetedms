@@ -86,9 +86,10 @@ public class RepresentativeStateManager
             TargetedMsRepresentativeStateAuditProvider.addAuditEntry(container, user,
                     "Updated representative state. Number of conflicts " + conflictCount);
 
+            Table.update(user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
+
             transaction.commit();
         }
-        Table.update(user, TargetedMSManager.getTableInfoRuns(), run, run.getId());
     }
 
     private static void revertProteinRepresentativeState(User user, Container container, TargetedMSRun run)

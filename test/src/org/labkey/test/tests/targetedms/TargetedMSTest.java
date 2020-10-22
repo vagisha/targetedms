@@ -153,6 +153,12 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
     @LogMethod
     protected void importData(@LoggedParam String file, int jobCount)
     {
+        importData(file, jobCount, false);
+    }
+
+    @LogMethod
+    protected void importData(@LoggedParam String file, int jobCount, boolean expectError)
+    {
         Locator.XPathLocator importButtonLoc = Locator.lkButton("Process and Import Data");
         WebElement importButton = importButtonLoc.findElementOrNull(getDriver());
         if (null == importButton)
@@ -166,7 +172,7 @@ public abstract class TargetedMSTest extends BaseWebDriverTest
             _fileBrowserHelper.uploadFile(TestFileUtils.getSampleData("TargetedMS/" + file));
         _fileBrowserHelper.importFile(fileName, "Import Skyline Results");
         waitForText("Skyline document import");
-        waitForPipelineJobsToComplete(jobCount, file, false);
+        waitForPipelineJobsToComplete(jobCount, file, expectError);
     }
 
     protected void verifyRunSummaryCountsSmallMol(int proteinCount, int peptideCount, int moleculeCount, int precursorCount, int transitionCount, int replicateCount, int calibrationCount, int listCount)

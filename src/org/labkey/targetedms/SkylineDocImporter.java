@@ -50,6 +50,7 @@ import org.labkey.api.security.User;
 import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
+import org.labkey.api.util.StringUtilsLabKey;
 import org.labkey.api.writer.ZipUtil;
 import org.labkey.targetedms.SkylinePort.Irt.IRegressionFunction;
 import org.labkey.targetedms.SkylinePort.Irt.IrtRegressionCalculator;
@@ -59,6 +60,7 @@ import org.labkey.targetedms.calculations.quantification.RegressionFit;
 import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.parser.list.ListData;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
+import org.labkey.targetedms.query.ConflictResultsManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
 import org.labkey.targetedms.query.SkylineListManager;
@@ -208,6 +210,20 @@ public class SkylineDocImporter
         TargetedMSService.FolderType folderType = TargetedMSManager.getFolderType(_container);
         _isProteinLibraryDoc = folderType == TargetedMSService.FolderType.LibraryProtein;
         _isPeptideLibraryDoc = folderType == TargetedMSService.FolderType.Library;
+
+        if(_isProteinLibraryDoc || _isPeptideLibraryDoc)
+        {
+            var conflictCount = ConflictResultsManager.getConflictCount(_user, _container);
+            if(conflictCount > 0)
+            {
+                var conflictTarget = _isProteinLibraryDoc ? "protein" : "peptide";
+                throw new PipelineJobException("The library folder has conflicts." +
+                        " The last document imported in to the folder had " + StringUtilsLabKey.pluralize(conflictCount, conflictTarget)
+                        + " that were already included in the library, resulting in conflicts." +
+                        " Please resolve the conflicts by choosing the version of each " + conflictTarget + " that should be included in the library." +
+                        " New Skyline documents can be added to the folder after the conflicts have been resolved.");
+            }
+        }
 
         _progressMonitor = new ProgressMonitor(job, folderType, _log);
 
