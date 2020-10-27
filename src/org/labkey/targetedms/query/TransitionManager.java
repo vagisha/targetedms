@@ -27,12 +27,15 @@ import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.chart.ChromatogramDataset;
+import org.labkey.targetedms.chart.ChromatogramDataset.RtRange;
 import org.labkey.targetedms.parser.Transition;
 import org.labkey.targetedms.parser.TransitionChromInfo;
 
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -173,5 +176,63 @@ public class TransitionManager
     {
         return new TableSelector(TargetedMSManager.getTableInfoTransitionChromInfo(),
                                  new SimpleFilter(FieldKey.fromParts("TransitionId"), transitionId), null).getCollection(TransitionChromInfo.class);
+    }
+
+    public static RtRange getPrecursorPeakRtRange(int precursorChromInfoId)
+    {
+        // Get the min start time from the transition peaks
+        SQLFragment sql = new SQLFragment("SELECT MIN(startTime) AS minRt, MAX(endTime) AS maxRt FROM ");
+        sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
+        sql.append(" WHERE precursorChromInfoId=?").add(precursorChromInfoId);
+
+        return getRtRange(sql);
+    }
+
+    public static RtRange getGeneralMoleculeRtRange(int generalMoleculeId)
+    {
+        // Get the min start time and max end time across all the samples for the given general molecule id.
+        // Use the the start and end time set on the transition peaks.
+        return getGeneralMoleculeSampleRtSummary(generalMoleculeId, null);
+    }
+
+    public static RtRange getGeneralMoleculeSampleRtRange(int generalMoleculeId, int sampleFileId)
+    {
+        // Get the min start time and max end time for the given general molecule id in the given sample
+        // Use the the start and end time set on the transition peaks.
+        return TransitionManager.getGeneralMoleculeSampleRtSummary(generalMoleculeId, sampleFileId);
+    }
+
+    private static RtRange getGeneralMoleculeSampleRtSummary(int generalMoleculeId, Integer sampleFileId)
+    {
+        SQLFragment sql = new SQLFragment("SELECT ").append(" MIN (tci.startTime) AS minRt, MAX(tci.endTime) AS maxRt FROM ");
+        sql.append(TargetedMSManager.getTableInfoTransitionChromInfo(), "tci");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoPrecursorChromInfo(), "pci");
+        sql.append(" ON pci.id = tci.precursorChrominfoId ");
+        sql.append(" INNER JOIN ");
+        sql.append(TargetedMSManager.getTableInfoGeneralMoleculeChromInfo(), "gmci");
+        sql.append(" ON gmci.Id=pci.GeneralMoleculeChromInfoId");
+        sql.append(" WHERE ");
+        sql.append("gmci.GeneralMoleculeId=?").add(generalMoleculeId);
+        if(sampleFileId != null)
+        {
+            sql.append(" AND ");
+            sql.append("pci.SampleFileId = ?").add(sampleFileId);
+        }
+
+        return getRtRange(sql);
+    }
+
+    @NotNull
+    private static ChromatogramDataset.RtRange getRtRange(SQLFragment sql)
+    {
+        Map<String, Object> row = new SqlSelector(TargetedMSManager.getSchema(), sql).getMap();
+        if(row != null)
+        {
+            Float minRt = (Float)row.get("minRt");
+            Float maxRt = (Float)row.get("maxRt");
+            return new RtRange(minRt != null ? minRt : 0, maxRt != null ? maxRt : 0);
+        }
+        return new RtRange(0,0);
     }
 }
