@@ -16,11 +16,13 @@
 package org.labkey.targetedms.query;
 
 import org.labkey.api.data.ContainerFilter;
+import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.TableInfo;
 import org.labkey.api.query.FieldKey;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.parser.RepresentativeDataState;
 import org.springframework.web.servlet.mvc.Controller;
 
 import java.util.ArrayList;
@@ -53,7 +55,7 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
         var customIonName = getMutableColumn("CustomIonName");
         customIonName.setURL(getDetailsURL(null, null));
         customIonName.setLabel("Precursor");
-
+        
         ArrayList<FieldKey> visibleColumns = new ArrayList<>();
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "Label"));
         visibleColumns.add(FieldKey.fromParts("MoleculeId", "PeptideGroupId", "Description"));
@@ -81,4 +83,28 @@ public class MoleculePrecursorTableInfo extends AbstractGeneralPrecursorTableInf
     {
         return TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class;
     }
+
+    public static class LibraryMoleculePrecursorTableInfo extends MoleculePrecursorTableInfo
+    {
+        public LibraryMoleculePrecursorTableInfo(final TargetedMSSchema schema, ContainerFilter cf)
+        {
+            super(TargetedMSManager.getTableInfoMoleculePrecursor(), TargetedMSSchema.TABLE_LIBRARY_MOLECULE_PRECURSOR, schema, cf, false);
+        }
+
+        public void selectRepresentative()
+        {
+            SQLFragment sql = new SQLFragment();
+            sql.append("RepresentativeDataState = ? ");
+            sql.add(RepresentativeDataState.Representative.ordinal());
+            addCondition(sql);
+        }
+
+        @Override
+        public String getName()
+        {
+            return TargetedMSSchema.TABLE_LIBRARY_MOLECULE_PRECURSOR;
+        }
+    }
+
+
 }

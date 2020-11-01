@@ -62,9 +62,8 @@ import org.labkey.targetedms.pipeline.TargetedMSPipelineProvider;
 import org.labkey.targetedms.query.SkylineListSchema;
 import org.labkey.targetedms.search.ModificationSearchWebPart;
 import org.labkey.targetedms.search.ProteinSearchWebPart;
-import org.labkey.targetedms.view.LibraryPrecursorViewWebPart;
+import org.labkey.targetedms.view.LibraryQueryViewWebPart;
 import org.labkey.targetedms.view.PeptideGroupViewWebPart;
-import org.labkey.targetedms.view.PeptideViewWebPart;
 import org.labkey.targetedms.view.QCSummaryWebPart;
 import org.labkey.targetedms.view.TargetedMSRunsWebPartView;
 import org.labkey.targetedms.view.TransitionPeptideSearchViewProvider;
@@ -96,6 +95,8 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD = "Chromatogram Library Download";
     public static final String TARGETED_MS_PRECURSOR_VIEW = "Targeted MS Precursor View";
     public static final String TARGETED_MS_PEPTIDE_VIEW = "Targeted MS Peptide View";
+    public static final String TARGETED_MS_MOLECULE_PRECURSOR_VIEW = "Targeted MS Molecule Precursor View";
+    public static final String TARGETED_MS_MOLECULE_VIEW = "Targeted MS Molecule View";
     public static final String TARGETED_MS_PEPTIDE_GROUP_VIEW = "Targeted MS Protein View";
     public static final String TARGETED_MS_RUNS_WEBPART_NAME = "Targeted MS Runs";
     public static final String TARGETED_MS_PROTEIN_SEARCH = "Targeted MS Protein Search";
@@ -105,21 +106,30 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
     public static final String MASS_SPEC_SEARCH_WEBPART = "Mass Spec Search (Tabbed)";
     public static final String TARGETED_MS_PARETO_PLOT = "Targeted MS Pareto Plot";
 
+    public static final String PEPTIDE_TAB_NAME = "Peptides";
+    public static final String PROTEIN_TAB_NAME = "Proteins";
+    public static final String MOLECULE_TAB_NAME = "Molecules";
+
     public static final String[] EXPERIMENT_FOLDER_WEB_PARTS = new String[] {MASS_SPEC_SEARCH_WEBPART,
                                                                            TARGETED_MS_RUNS_WEBPART_NAME};
 
     public static final String[] LIBRARY_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD,
                                                                           MASS_SPEC_SEARCH_WEBPART,
-                                                                          TARGETED_MS_PEPTIDE_VIEW,
-                                                                          TARGETED_MS_PRECURSOR_VIEW,
                                                                           TARGETED_MS_RUNS_WEBPART_NAME};
 
-    public static final String[] PROTEIN_LIBRARY_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_CHROMATOGRAM_LIBRARY_DOWNLOAD,
-                                                                          MASS_SPEC_SEARCH_WEBPART,
-                                                                          TARGETED_MS_PEPTIDE_GROUP_VIEW,
-                                                                          TARGETED_MS_PEPTIDE_VIEW,
-                                                                          TARGETED_MS_PRECURSOR_VIEW,
-                                                                          TARGETED_MS_RUNS_WEBPART_NAME};
+    public static final String[] PEPTIDE_TAB_WEB_PARTS = new String[] {
+            TARGETED_MS_PEPTIDE_VIEW,
+            TARGETED_MS_PRECURSOR_VIEW
+    };
+
+    public static final String[] MOLECULE_TAB_WEB_PARTS = new String[] {
+            TARGETED_MS_MOLECULE_VIEW,
+            TARGETED_MS_MOLECULE_PRECURSOR_VIEW
+    };
+
+    public static final String[] PROTEIN_TAB_WEB_PARTS = new String[] {
+            TARGETED_MS_PEPTIDE_GROUP_VIEW
+    };
 
     public static final String[] QC_FOLDER_WEB_PARTS = new String[] {TARGETED_MS_QC_SUMMARY, TARGETED_MS_QC_PLOTS};
 
@@ -245,12 +255,22 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
                 return view;
             }
         };
+
         BaseWebPartFactory precursorView = new BaseWebPartFactory(TARGETED_MS_PRECURSOR_VIEW)
         {
             @Override
             public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
-               return new LibraryPrecursorViewWebPart(portalCtx);
+               return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_LIBRARY_PRECURSOR, "Precursors", "LibraryPrecursors");
+            }
+        };
+
+        BaseWebPartFactory moleculePrecursorView = new BaseWebPartFactory(TARGETED_MS_MOLECULE_PRECURSOR_VIEW)
+        {
+            @Override
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            {
+               return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_LIBRARY_MOLECULE_PRECURSOR, "Precursors", "LibraryPrecursors");
             }
         };
 
@@ -259,7 +279,16 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
             @Override
             public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
             {
-                return new PeptideViewWebPart(portalCtx);
+                return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_PEPTIDE, "Peptides", "LibraryPeptides");
+            }
+        };
+
+        BaseWebPartFactory moleculeView  = new BaseWebPartFactory(TARGETED_MS_MOLECULE_VIEW)
+        {
+            @Override
+            public WebPartView getWebPartView(@NotNull ViewContext portalCtx, @NotNull Portal.WebPart webPart)
+            {
+                return new LibraryQueryViewWebPart(portalCtx, TargetedMSSchema.TABLE_MOLECULE, "Molecules", "LibraryMolecules");
             }
         };
 
@@ -390,7 +419,9 @@ public class TargetedMSModule extends SpringModule implements ProteomicsModule
         webpartFactoryList.add(setupFactory);
         webpartFactoryList.add(chromatogramLibraryDownload);
         webpartFactoryList.add(precursorView);
+        webpartFactoryList.add(moleculePrecursorView);
         webpartFactoryList.add(peptideView);
+        webpartFactoryList.add(moleculeView);
         webpartFactoryList.add(peptideGroupView);
         webpartFactoryList.add(runsFactory);
         webpartFactoryList.add(proteinSearchFactory);

@@ -19,6 +19,7 @@
 <%@ page import="org.labkey.api.view.JspView" %>
 <%@ page import="org.labkey.targetedms.TargetedMSController" %>
 <%@ page import="java.text.DecimalFormat" %>
+<%@ page import="org.labkey.api.view.ActionURL" %>
 <%@ page extends="org.labkey.api.jsp.JspBase" %>
 <%
     JspView<TargetedMSController.MoleculePrecursorChromatogramsViewBean> me = (JspView<TargetedMSController.MoleculePrecursorChromatogramsViewBean>) HttpView.currentView();
@@ -29,15 +30,27 @@
 <table class="lk-fields-table">
     <tr>
         <td class="labkey-form-label">File</td>
-        <td><%= h(bean.getRun().getFileName())%></td>
+        <td><a href="<%= h(TargetedMSController.getShowRunURL(bean.getRun().getContainer(), bean.getRun().getRunId()))%>"><%= h(bean.getRun().getDescription())%></a></td>
     </tr>
     <tr>
+        <%
+            ActionURL showProteinUrl = new ActionURL(TargetedMSController.ShowProteinAction.class, getContainer());
+            showProteinUrl.addParameter("id", bean.getPeptideGroup().getId());
+        %>
         <td class="labkey-form-label">Molecule Group</td>
-        <td><%= h(bean.getPeptideGroup().getLabel())%></td>
+        <td><a href="<%=h(showProteinUrl)%>"><%= h(bean.getPeptideGroup().getLabel())%></a></td>
+    </tr>
+    <tr>
+        <%
+            ActionURL showMoleculeUrl = new ActionURL(TargetedMSController.ShowMoleculeAction.class, getContainer());
+            showMoleculeUrl.addParameter("id", bean.getMolecule().getId());
+        %>
+        <td class="labkey-form-label">Molecule</td>
+        <td><a href="<%=h(showMoleculeUrl)%>"><%= h(bean.getMolecule().getName())%></a></td>
     </tr>
     <tr>
         <td class="labkey-form-label">Molecule Precursor</td>
-        <td><%= text(bean.getPrecursorLabel())%></td>
+        <td><%= h(bean.getPrecursorLabel())%></td>
     </tr>
     <tr>
         <td class="labkey-form-label">Charge</td>

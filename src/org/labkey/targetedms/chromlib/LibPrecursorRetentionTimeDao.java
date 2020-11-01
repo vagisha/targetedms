@@ -32,6 +32,13 @@ import java.util.List;
  */
 public class LibPrecursorRetentionTimeDao extends BaseDaoImpl<LibPrecursorRetentionTime>
 {
+    private final Constants.Column _precursorCol;
+
+    public LibPrecursorRetentionTimeDao(Constants.Column precursorCol)
+    {
+        _precursorCol = precursorCol;
+    }
+
     @Override
     protected void setValuesInStatement(LibPrecursorRetentionTime precursorRetentionTime, PreparedStatement stmt) throws SQLException
     {
@@ -63,7 +70,7 @@ public class LibPrecursorRetentionTimeDao extends BaseDaoImpl<LibPrecursorRetent
         {
             LibPrecursorRetentionTime precRetentionTime = new LibPrecursorRetentionTime();
             precRetentionTime.setId(rs.getInt(PrecursorRetentionTimeColumn.Id.baseColumn().name()));
-            precRetentionTime.setPrecursorId(rs.getInt(PrecursorRetentionTimeColumn.PrecursorId.baseColumn().name()));
+            precRetentionTime.setPrecursorId(rs.getInt(_precursorCol.name()));
             precRetentionTime.setSampleFileId(rs.getInt(PrecursorRetentionTimeColumn.SampleFileId.baseColumn().name()));
             precRetentionTime.setRetentionTime(readDouble(rs, PrecursorRetentionTimeColumn.RetentionTime.baseColumn().name()));
             precRetentionTime.setStartTime(readDouble(rs, PrecursorRetentionTimeColumn.StartTime.baseColumn().name()));

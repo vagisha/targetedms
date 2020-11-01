@@ -33,15 +33,17 @@ class Constants
     public static final String CHROM_LIB_FILE_NAME = "chromlib";
     public static final String CHROM_LIB_FILE_EXT = "clib";
 
-    public static final String SCHEMA_VERSION = "1.2";
+    public static final String SCHEMA_VERSION = "2.0";
 
-    public static enum Table
+    public enum Table
     {
         LibInfo,
-        StructuralModification,
-        StructuralModLoss,
         IsotopeModification,
         SampleFile,
+
+        // Proteomics
+        StructuralModification,
+        StructuralModLoss,
         Protein,
         Peptide,
         PeptideStructuralModification,
@@ -49,10 +51,17 @@ class Constants
         PrecursorIsotopeModification,
         PrecursorRetentionTime,
         Transition,
+
+        // Small molecule
+        Molecule,
+        MoleculePrecursor,
+        MoleculePrecursorRetentionTime,
+        MoleculeTransition,
+
         IrtLibrary
     }
 
-    public static enum Column
+    public enum Column
     {
         Id("INTEGER PRIMARY KEY"),
 
@@ -65,6 +74,7 @@ class Constants
         Peptides("INTEGER NOT NULL"),
         Precursors("INTEGER NOT NULL"),
         Transitions("INTEGER NOT NULL"),
+        Molecules("INTEGER NOT NULL"),
 
         FilePath("VARCHAR(500) NOT NULL"),
         SampleName("VARCHAR(300) NOT NULL"),
@@ -95,7 +105,7 @@ class Constants
         Description("TEXT"),
         Sequence,
 
-        ProteinId("INTEGER"),
+        ProteinId("INTEGER", Table.Protein, Id),
         StartIndex("INTEGER"),
         EndIndex("INTEGER"),
         PreviousAa("CHAR(1)"),
@@ -103,9 +113,17 @@ class Constants
         CalcNeutralMass("DOUBLE NOT NULL"),
         NumMissedCleavages("INTEGER NOT NULL"),
 
+        IonFormula("VARCHAR(100)"),
+        CustomIonName("VARCHAR(100)"),
+        MassMonoisotopic("DOUBLE"),
+        MassAverage("DOUBLE"),
+
         PeptideId("INTEGER NOT NULL", Table.Peptide, Id),
         IndexAa("INTEGER NOT NULL"),
         MassDiff("DOUBLE NOT NULL"),
+
+        MoleculeId("INTEGER NOT NULL", Table.Molecule, Id),
+        Molecule("VARCHAR(500)"),
 
         Mz,
         Charge,
@@ -120,11 +138,19 @@ class Constants
         Chromatogram("BLOB"),
         UncompressedSize("INTEGER"),
         ChromatogramFormat("INTEGER"),
+        ExplicitIonMobility("DOUBLE"),
+        CCS("DOUBLE"),
+        IonMobilityMS1("DOUBLE"),
+        IonMobilityFragment("DOUBLE"),
+        IonMobilityWindow("DOUBLE"),
+        IonMobilityType("VARCHAR(200)"),
 
         PrecursorId("INTEGER NOT NULL", Table.Precursor, Id),
         IsotopeModId("INTEGER NOT NULL", Table.IsotopeModification, Id),
 
-        SampleFileId("INTEGER NOT NULL", Table.SampleFile, Id),
+        MoleculePrecursorId("INTEGER NOT NULL", Table.MoleculePrecursor, Id),
+
+        SampleFileId("INTEGER", Table.SampleFile, Id),
         RetentionTime("DOUBLE"),
         StartTime("DOUBLE"),
         EndTime("DOUBLE"),
@@ -149,17 +175,17 @@ class Constants
         private final Table _fkTable;
         private final Column _fkColumn;
 
-        private Column()
+        Column()
         {
             this(null);
         }
 
-        private Column(String definition)
+        Column(String definition)
         {
             this(definition, null, null);
         }
 
-        private Column(String definition, Table fkTable, Column fkColumn)
+        Column(String definition, Table fkTable, Column fkColumn)
         {
             this.definition = definition;
             _fkTable = fkTable;
@@ -168,11 +194,6 @@ class Constants
             {
                 throw new IllegalArgumentException("Both a table and column must be specified as the foreign key targets");
             }
-        }
-
-        public String getDefinition()
-        {
-            return definition;
         }
 
         public Table getFkTable()
@@ -188,11 +209,11 @@ class Constants
 
     public interface ColumnDef
     {
-        public Column baseColumn();
-        public String definition();
+        Column baseColumn();
+        String definition();
     }
 
-    public static enum LibInfoColumn implements ColumnDef
+    public enum LibInfoColumn implements ColumnDef
     {
         PanoramaServer(Column.PanoramaServer),
         Container(Column.Container),
@@ -202,11 +223,12 @@ class Constants
         Proteins(Column.Proteins),
         Peptides(Column.Peptides),
         Precursors(Column.Precursors),
-        Transitions(Column.Transitions);
+        Transitions(Column.Transitions),
+        Molecules(Column.Molecules);
 
         private final Column _column;
 
-        private LibInfoColumn(Column column)
+        LibInfoColumn(Column column)
         {
             _column = column;
         }
@@ -224,7 +246,7 @@ class Constants
         }
     }
 
-    public static enum SampleFileColumn implements ColumnDef
+    public enum SampleFileColumn implements ColumnDef
     {
         Id(Column.Id),
         FilePath(Column.FilePath),
@@ -237,7 +259,7 @@ class Constants
 
         private final Column _column;
 
-        private SampleFileColumn(Column column)
+        SampleFileColumn(Column column)
         {
             _column = column;
         }
@@ -255,7 +277,7 @@ class Constants
         }
     }
 
-    public static enum StructuralModificationColumn implements ColumnDef
+    public enum StructuralModificationColumn implements ColumnDef
     {
         Id(Column.Id),
         Name(Column.Name, "VARCHAR(100) NOT NULL"),
@@ -271,12 +293,12 @@ class Constants
         private final Column _column;
         private final String _definition;
 
-        private StructuralModificationColumn(Column column)
+        StructuralModificationColumn(Column column)
         {
             _column = column;
             _definition = column.definition;
         }
-        private StructuralModificationColumn(Column column, String definition)
+        StructuralModificationColumn(Column column, String definition)
         {
             _column = column;
             _definition = definition;
@@ -295,7 +317,7 @@ class Constants
         }
     }
 
-    public static enum StructuralModLossColumn implements ColumnDef
+    public enum StructuralModLossColumn implements ColumnDef
     {
         Id(Column.Id),
         StructuralModId(Column.StructuralModId),
@@ -305,7 +327,7 @@ class Constants
 
         private final Column _column;
 
-        private StructuralModLossColumn(Column column)
+        StructuralModLossColumn(Column column)
         {
             _column = column;
         }
@@ -323,7 +345,7 @@ class Constants
         }
     }
 
-    public static enum IsotopeModificationColumn implements ColumnDef
+    public enum IsotopeModificationColumn implements ColumnDef
     {
         Id(Column.Id),
         Name(Column.Name, "VARCHAR(100) NOT NULL"),
@@ -342,12 +364,12 @@ class Constants
         private final Column _column;
         private final String _definition;
 
-        private IsotopeModificationColumn(Column column)
+        IsotopeModificationColumn(Column column)
         {
             _column = column;
             _definition = column.definition;
         }
-        private IsotopeModificationColumn(Column column, String definition)
+        IsotopeModificationColumn(Column column, String definition)
         {
             _column = column;
             _definition = definition;
@@ -366,7 +388,7 @@ class Constants
         }
     }
 
-    public static enum ProteinColumn implements ColumnDef
+    public enum ProteinColumn implements ColumnDef
     {
         Id(Column.Id),
         Name(Column.Name, "VARCHAR(250) NOT NULL"),
@@ -376,12 +398,12 @@ class Constants
         private final Column _column;
         private final String _definition;
 
-        private ProteinColumn(Column column)
+        ProteinColumn(Column column)
         {
             _column = column;
             _definition = column.definition;
         }
-        private ProteinColumn(Column column, String definition)
+        ProteinColumn(Column column, String definition)
         {
             _column = column;
             _definition = definition;
@@ -399,7 +421,7 @@ class Constants
         }
     }
 
-    public static enum PeptideColumn implements ColumnDef
+    public enum PeptideColumn implements ColumnDef
     {
         Id(Column.Id),
         ProteinId(Column.ProteinId),
@@ -414,12 +436,12 @@ class Constants
         private final Column _column;
         private final String _definition;
 
-        private PeptideColumn(Column column)
+        PeptideColumn(Column column)
         {
             _column = column;
             _definition = column.definition;
         }
-        private PeptideColumn(Column column, String definition)
+        PeptideColumn(Column column, String definition)
         {
             _column = column;
             _definition = definition;
@@ -438,7 +460,7 @@ class Constants
         }
     }
 
-    public static enum PeptideStructuralModificationColumn implements ColumnDef
+    public enum PeptideStructuralModificationColumn implements ColumnDef
     {
         Id(Column.Id),
         PeptideId(Column.PeptideId),
@@ -448,7 +470,7 @@ class Constants
 
         private final Column _column;
 
-        private PeptideStructuralModificationColumn(Column column)
+        PeptideStructuralModificationColumn(Column column)
         {
             _column = column;
         }
@@ -466,7 +488,7 @@ class Constants
         }
     }
 
-    public static enum PrecursorColumn implements ColumnDef
+    public enum PrecursorColumn implements ColumnDef
     {
         Id(Column.Id),
         PeptideId(Column.PeptideId),
@@ -484,17 +506,23 @@ class Constants
         SampleFileId(Column.SampleFileId),
         Chromatogram(Column.Chromatogram),
         UncompressedSize(Column.UncompressedSize),
-        ChromatogramFormat(Column.ChromatogramFormat);
+        ChromatogramFormat(Column.ChromatogramFormat),
+        ExplicitIonMobility(Column.ExplicitIonMobility),
+        CCS(Column.CCS),
+        IonMobilityMS1(Column.IonMobilityMS1),
+        IonMobilityFragment(Column.IonMobilityFragment),
+        IonMobilityWindow(Column.IonMobilityWindow),
+        IonMobilityType(Column.IonMobilityType);
 
         private final Column _column;
         private final String _definition;
 
-        private PrecursorColumn(Column column)
+        PrecursorColumn(Column column)
         {
             _column = column;
             _definition = column.definition;
         }
-        private PrecursorColumn(Column column, String definition)
+        PrecursorColumn(Column column, String definition)
         {
             _column = column;
             _definition = definition;
@@ -512,7 +540,7 @@ class Constants
         }
     }
 
-    public static enum PrecursorIsotopeModificationColumn implements ColumnDef
+    public enum PrecursorIsotopeModificationColumn implements ColumnDef
     {
         Id(Column.Id),
         PrecursorId(Column.PrecursorId),
@@ -522,7 +550,7 @@ class Constants
 
         private final Column _column;
 
-        private PrecursorIsotopeModificationColumn(Column column)
+        PrecursorIsotopeModificationColumn(Column column)
         {
             _column = column;
         }
@@ -540,7 +568,7 @@ class Constants
         }
     }
 
-    public static enum PrecursorRetentionTimeColumn implements ColumnDef
+    public enum PrecursorRetentionTimeColumn implements ColumnDef
     {
         Id(Column.Id),
         PrecursorId(Column.PrecursorId),
@@ -551,7 +579,7 @@ class Constants
 
         private final Column _column;
 
-        private PrecursorRetentionTimeColumn(Column column)
+        PrecursorRetentionTimeColumn(Column column)
         {
             _column = column;
         }
@@ -569,7 +597,7 @@ class Constants
         }
     }
 
-    public static enum TransitionColumn implements ColumnDef
+    public enum TransitionColumn implements ColumnDef
     {
         Id(Column.Id),
         PrecursorId(Column.PrecursorId),
@@ -589,12 +617,12 @@ class Constants
         private final Column _column;
         private final String _definition;
 
-        private TransitionColumn(Column column)
+        TransitionColumn(Column column)
         {
             _column = column;
             _definition = column.definition;
         }
-        private TransitionColumn(Column column, String definition)
+        TransitionColumn(Column column, String definition)
         {
             _column = column;
             _definition = definition;
@@ -611,7 +639,162 @@ class Constants
         }
     }
 
-    public static enum IrtLibraryColumn implements ColumnDef
+    public enum MoleculeColumn implements ColumnDef
+    {
+        Id(Column.Id),
+        IonFormula(Column.IonFormula),
+        CustomIonName(Column.CustomIonName),
+        MassMonoisotopic(Column.MassMonoisotopic),
+        MassAverage(Column.MassAverage);
+
+        private final Column _column;
+        private final String _definition;
+
+        MoleculeColumn(Column column)
+        {
+            _column = column;
+            _definition = column.definition;
+        }
+        @Override
+        public Column baseColumn()
+        {
+            return _column;
+        }
+
+        @Override
+        public String definition()
+        {
+            return _definition;
+        }
+    }
+
+    public enum MoleculePrecursorColumn implements ColumnDef
+    {
+        Id(Column.Id),
+        MoleculeId(Column.MoleculeId),
+        IsotopeLabel(Column.IsotopeLabel),
+        Mz(Column.Mz, "DOUBLE NOT NULL"),
+        Charge(Column.Charge, "INTEGER NOT NULL"),
+        Molecule(Column.Molecule),
+        CollisionEnergy(Column.CollisionEnergy),
+        DeclusteringPotential(Column.DeclusteringPotential),
+        TotalArea(Column.TotalArea),
+        NumTransitions(Column.NumTransitions),
+        NumPoints(Column.NumPoints),
+        AverageMassErrorPPM(Column.AverageMassErrorPPM),
+        SampleFileId(Column.SampleFileId),
+        Chromatogram(Column.Chromatogram),
+        UncompressedSize(Column.UncompressedSize),
+        ChromatogramFormat(Column.ChromatogramFormat),
+        ExplicitIonMobility(Column.ExplicitIonMobility),
+        MassMonoisotopic(Column.MassMonoisotopic),
+        MassAverage(Column.MassAverage),
+        CCS(Column.CCS),
+        IonMobilityMS1(Column.IonMobilityMS1),
+        IonMobilityFragment(Column.IonMobilityFragment),
+        IonMobilityWindow(Column.IonMobilityWindow),
+        IonMobilityType(Column.IonMobilityType);
+
+        private final Column _column;
+        private final String _definition;
+
+        MoleculePrecursorColumn(Column column)
+        {
+            _column = column;
+            _definition = column.definition;
+        }
+
+        MoleculePrecursorColumn(Column column, String definition)
+        {
+            _column = column;
+            _definition = definition;
+        }
+        @Override
+        public Column baseColumn()
+        {
+            return _column;
+        }
+
+        @Override
+        public String definition()
+        {
+            return _definition;
+        }
+    }
+
+    public enum MoleculePrecursorRetentionTimeColumn implements ColumnDef
+    {
+        Id(Column.Id),
+        MoleculePrecursorId(Column.MoleculePrecursorId),
+        SampleFileId(Column.SampleFileId),
+        RetentionTime(Column.RetentionTime),
+        StartTime(Column.StartTime),
+        EndTime(Column.EndTime);
+
+        private final Column _column;
+
+        MoleculePrecursorRetentionTimeColumn(Column column)
+        {
+            _column = column;
+        }
+
+        @Override
+        public Column baseColumn()
+        {
+            return _column;
+        }
+
+        @Override
+        public String definition()
+        {
+            return _column.definition;
+        }
+    }
+
+    public enum MoleculeTransitionColumn implements ColumnDef
+    {
+        Id(Column.Id),
+        MoleculePrecursorId(Column.MoleculePrecursorId),
+        Mz(Column.Mz, "DOUBLE"),
+        Charge(Column.Charge, "INTEGER"),
+        FragmentType(Column.FragmentType),
+        MassIndex(Column.MassIndex),
+        Area(Column.Area),
+        Height(Column.Height),
+        Fwhm(Column.Fwhm),
+        MassErrorPPM(Column.MassErrorPPM),
+        ChromatogramIndex(Column.ChromatogramIndex);
+
+        private final Column _column;
+        private final String _definition;
+
+        MoleculeTransitionColumn(Column column)
+        {
+            _column = column;
+            _definition = column.definition;
+        }
+
+        MoleculeTransitionColumn(Column column, String definition)
+        {
+            _column = column;
+            _definition = definition;
+        }
+
+        @Override
+        public Column baseColumn()
+        {
+            return _column;
+        }
+        @Override
+        public String definition()
+        {
+            return _definition;
+        }
+    }
+
+
+
+    public enum IrtLibraryColumn implements ColumnDef
     {
         Id(Column.Id),
         PeptideModSeq(Column.PeptideModSeq),
@@ -622,15 +805,10 @@ class Constants
         private final Column _column;
         private final String _definition;
 
-        private IrtLibraryColumn(Column column)
+        IrtLibraryColumn(Column column)
         {
             _column = column;
             _definition = column.definition;
-        }
-        private IrtLibraryColumn(Column column, String definition)
-        {
-            _column = column;
-            _definition = definition;
         }
 
         @Override

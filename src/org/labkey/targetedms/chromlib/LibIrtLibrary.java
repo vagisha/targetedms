@@ -23,26 +23,12 @@ package org.labkey.targetedms.chromlib;
  * One instance of this class represents one peptide's data in the iRTScale.
  *
  */
-public class LibIrtLibrary implements ObjectWithId
+public class LibIrtLibrary extends AbstractLibEntity
 {
-    private int _id;
-
-
     private String _modifiedSequence;
     private Double _irtValue;
     private Boolean _irtStandard;
     private Integer _timeSource;
-
-    public int getId()
-    {
-        return _id;
-    }
-
-    @Override
-    public void setId(int id)
-    {
-        _id = id;
-    }
 
     public String getModifiedSequence()
     {

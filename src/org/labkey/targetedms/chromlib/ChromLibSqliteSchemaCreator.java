@@ -35,47 +35,34 @@ public class ChromLibSqliteSchemaCreator
         }
         finally
         {
-            if(connection != null) try {connection.close();} catch(SQLException ignored){ignored.printStackTrace();}
+            if(connection != null) try {connection.close();} catch(SQLException ignored){}
         }
     }
 
     private void createTables(Connection conn) throws SQLException
     {
-        // Create LibInfo table
         createLibInfoTable(conn);
-
-        // Create StructuralModification table.
-        createStructuralModificationTable(conn);
-
-        // Create StructuralModLoss table.
-        createStructuralModLossTable(conn);
-
-        // Create IsotopeModification table.
-        createIsotopeModificationTable(conn);
-
-        // Create Protein table.
-        createProteinTable(conn);
-
-        // Create Peptide table.
-        createPeptideTable(conn);
-
-        // Create PeptideStructuralModification table.
-        createPeptideStructuralModificationTable(conn);
-
-        // Create SampleFile table.
         createSampleFileTable(conn);
 
-        // Create Precursor table.
+        // Proteomics modifications
+        createStructuralModificationTable(conn);
+        createStructuralModLossTable(conn);
+        createIsotopeModificationTable(conn);
+
+        // Proteomics
+        createProteinTable(conn);
+        createPeptideTable(conn);
+        createPeptideStructuralModificationTable(conn);
         createPrecursorTable(conn);
-
-        // Create PrecursorIsotopeModification table.
         createPrecursorIsotopeModificationTable(conn);
-
-        // Create PrecursorRetentionTime table.
         createPrecursorRetentionTimeTable(conn);
-
-        // Create Transition table.
         createTransitionTable(conn);
+
+        // Small molecule
+        createMoleculeTable(conn);
+        createMoleculePrecursorTable(conn);
+        createMoleculePrecursorRetentionTimeTable(conn);
+        createMoleculeTransitionTable(conn);
 
         createIrtLibraryTable(conn);
     }
@@ -103,6 +90,26 @@ public class ChromLibSqliteSchemaCreator
     private void createProteinTable(Connection conn) throws SQLException
     {
         createTable(conn, Table.Protein, Constants.ProteinColumn.values());
+    }
+
+    private void createMoleculeTable(Connection conn) throws SQLException
+    {
+        createTable(conn, Table.Molecule, Constants.MoleculeColumn.values());
+    }
+
+    private void createMoleculePrecursorTable(Connection conn) throws SQLException
+    {
+        createTable(conn, Table.MoleculePrecursor, Constants.MoleculePrecursorColumn.values());
+    }
+
+    private void createMoleculePrecursorRetentionTimeTable(Connection conn) throws SQLException
+    {
+        createTable(conn, Table.MoleculePrecursorRetentionTime, Constants.MoleculePrecursorRetentionTimeColumn.values());
+    }
+
+    private void createMoleculeTransitionTable(Connection conn) throws SQLException
+    {
+        createTable(conn, Table.MoleculeTransition, Constants.MoleculeTransitionColumn.values());
     }
 
     private void createPeptideTable(Connection conn) throws SQLException

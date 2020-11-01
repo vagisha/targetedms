@@ -24,24 +24,21 @@ import java.util.List;
  * Date: 12/31/12
  * Time: 9:22 AM
  */
-public class LibProtein implements ObjectWithId
+public class LibProtein extends AbstractLibEntity
 {
-    private int _id;
+    private String _sequence;
     private String _name;
     private String _description;
-    private String _sequence;
+    private List<LibPeptide> _peptides = new ArrayList<>();
 
-    private List<LibPeptide> _peptides;
-
-    public int getId()
+    public String getSequence()
     {
-        return _id;
+        return _sequence;
     }
 
-    @Override
-    public void setId(int id)
+    public void setSequence(String sequence)
     {
-        _id = id;
+        _sequence = sequence;
     }
 
     public String getName()
@@ -64,30 +61,19 @@ public class LibProtein implements ObjectWithId
         _description = description;
     }
 
-    public String getSequence()
+    public void addPeptide(LibPeptide child)
     {
-        return _sequence;
-    }
-
-    public void setSequence(String sequence)
-    {
-        _sequence = sequence;
-    }
-
-    public void addPeptide(LibPeptide peptide)
-    {
-        if(_peptides == null)
-        {
-            _peptides = new ArrayList<>();
-        }
-        _peptides.add(peptide);
+        _peptides.add(child);
     }
 
     List<LibPeptide> getPeptides()
     {
-        if(_peptides == null)
-            return Collections.emptyList();
-       else
-            return Collections.unmodifiableList(_peptides);
+        return Collections.unmodifiableList(_peptides);
+    }
+
+    @Override
+    public int getCacheSize()
+    {
+        return super.getCacheSize() + getPeptides().stream().mapToInt(AbstractLibEntity::getCacheSize).sum();
     }
 }

@@ -37,8 +37,8 @@
     int currentRevision = ChromatogramLibraryUtils.getCurrentRevision(c, getUser());
 %>
 
-<table class="labkey-data-region-legacy labkey-show-borders">
-<tr>
+<table class="table-condensed labkey-data-region table-bordered" style="width: auto">
+<tr class="labkey-col-header-row">
     <th>Revision #</th>
     <th>File name</th>
     <th>Size</th>
@@ -52,10 +52,10 @@
         Path archiveFile = ChromatogramLibraryUtils.getChromLibFile(c, i);
         if (Files.exists(archiveFile) && !Files.isDirectory(archiveFile)) {
 %>
-    <tr>
-        <td><%= i %></td>
+    <tr class="<%= h(i % 2 == 0 ? "labkey-row" : "labkey-alternate-row")%>">
+        <td align="right"><%= i %></td>
         <td><%= link(ChromatogramLibraryUtils.getDownloadFileName(c, i), u) %></td>
-        <td><%= h(FileUtils.byteCountToDisplaySize(Files.size(archiveFile))) %></td>
+        <td align="right"><%= h(FileUtils.byteCountToDisplaySize(Files.size(archiveFile))) %></td>
         <td><%= formatDateTime(new Date(Files.getLastModifiedTime(archiveFile).toMillis()))%></td>
     </tr>
 <%

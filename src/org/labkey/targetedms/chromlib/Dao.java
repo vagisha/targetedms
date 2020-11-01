@@ -26,15 +26,15 @@ import java.util.List;
  */
 public interface Dao<T extends Object>
 {
-    public void save(T t, Connection connection) throws SQLException;
+    void save(T t, Connection connection) throws SQLException;
 
-    public void saveAll(List<T> list, Connection connection) throws SQLException;
+    void saveAll(List<T> list, Connection connection) throws SQLException;
 
-    public String getTableName();
+    String getTableName();
 
-    public T queryForId(int id, Connection connection) throws SQLException;
+    T queryForId(int id, Connection connection) throws SQLException;
 
-    public List<T> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection) throws SQLException;
+    List<T> queryForForeignKey(String foreignKeyColumn, int foreignKeyValue, Connection connection) throws SQLException;
 
-    public List<T> queryAll(Connection connection) throws SQLException;
+    List<T> queryAll(Connection connection) throws SQLException;
 }

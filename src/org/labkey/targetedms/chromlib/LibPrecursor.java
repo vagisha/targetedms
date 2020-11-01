@@ -15,51 +15,36 @@
  */
 package org.labkey.targetedms.chromlib;
 
+import org.labkey.targetedms.TargetedMSRun;
+import org.labkey.targetedms.parser.Precursor;
+import org.labkey.targetedms.parser.PrecursorChromInfo;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: vsharma
  * Date: 12/31/12
  * Time: 9:25 AM
  */
-public class LibPrecursor implements ObjectWithId
+public class LibPrecursor extends AbstractLibPrecursor<LibTransition>
 {
-    private int _id;
     private long _peptideId;
-    private String _isotopeLabel;
-    private Double _mz;
-    private Integer _charge;
     private Double _neutralMass;
     private String _modifiedSequence;
-    private Double _collisionEnergy;
-    private Double _declusteringPotential;
-    private Double _totalArea;
-    private byte[] _chromatogram;
-    private int _uncompressedSize;
-    private int _chromatogramFormat;
-    private long _sampleFileId;
-
-    private List<LibTransition> _transitions;
-
-    private List<LibPrecursorRetentionTime> _retentionTimes;
 
     private List<LibPrecursorIsotopeModification> _isotopeModifications;
-    private Integer _numTransitions;
-    private Integer _numPoints;
-    private Double _averageMassErrorPPM;
 
-    public int getId()
-    {
-        return _id;
-    }
+    public LibPrecursor() {}
 
-    @Override
-    public void setId(int id)
+    public LibPrecursor(Precursor precursor, Map<Long, String> isotopeLabelMap, PrecursorChromInfo bestChromInfo, TargetedMSRun run, Map<Long, Integer> sampleFileIdMap)
     {
-        _id = id;
+        super(precursor, isotopeLabelMap, bestChromInfo, run, sampleFileIdMap);
+        setNeutralMass(precursor.getNeutralMass());
+        setModifiedSequence(precursor.getModifiedSequence());
     }
 
     public long getPeptideId()
@@ -70,36 +55,6 @@ public class LibPrecursor implements ObjectWithId
     public void setPeptideId(long peptideId)
     {
         _peptideId = peptideId;
-    }
-
-    public String getIsotopeLabel()
-    {
-        return _isotopeLabel;
-    }
-
-    public void setIsotopeLabel(String isotopeLabel)
-    {
-        _isotopeLabel = isotopeLabel;
-    }
-
-    public Double getMz()
-    {
-        return _mz;
-    }
-
-    public void setMz(Double mz)
-    {
-        _mz = mz;
-    }
-
-    public Integer getCharge()
-    {
-        return _charge;
-    }
-
-    public void setCharge(Integer charge)
-    {
-        _charge = charge;
     }
 
     public Double getNeutralMass()
@@ -122,99 +77,7 @@ public class LibPrecursor implements ObjectWithId
         _modifiedSequence = modifiedSequence;
     }
 
-    public Double getCollisionEnergy()
-    {
-        return _collisionEnergy;
-    }
 
-    public void setCollisionEnergy(Double collisionEnergy)
-    {
-        _collisionEnergy = collisionEnergy;
-    }
-
-    public Double getDeclusteringPotential()
-    {
-        return _declusteringPotential;
-    }
-
-    public void setDeclusteringPotential(Double declusteringPotential)
-    {
-        _declusteringPotential = declusteringPotential;
-    }
-
-    public Double getTotalArea()
-    {
-        return _totalArea;
-    }
-
-    public void setTotalArea(Double totalArea)
-    {
-        _totalArea = totalArea;
-    }
-
-    public byte[] getChromatogram()
-    {
-        return _chromatogram;
-    }
-
-    public void setChromatogram(byte[] chromatogram)
-    {
-        _chromatogram = chromatogram;
-    }
-
-    public int getUncompressedSize()
-    {
-        return _uncompressedSize;
-    }
-
-    public void setUncompressedSize(int uncompressedSize)
-    {
-        _uncompressedSize = uncompressedSize;
-    }
-
-    public int getChromatogramFormat()
-    {
-        return _chromatogramFormat;
-    }
-
-    public void setChromatogramFormat(int chromatogramFormat)
-    {
-        _chromatogramFormat = chromatogramFormat;
-    }
-
-    public void addTransition(LibTransition transition)
-    {
-        if(_transitions == null)
-        {
-            _transitions = new ArrayList<>();
-        }
-        _transitions.add(transition);
-    }
-
-    public List<LibTransition> getTransitions()
-    {
-        if(_transitions == null)
-            return Collections.emptyList();
-        else
-            return Collections.unmodifiableList(_transitions);
-    }
-
-    public void addRetentionTime(LibPrecursorRetentionTime retentionTime)
-    {
-        if(_retentionTimes == null)
-        {
-            _retentionTimes = new ArrayList<>();
-        }
-        _retentionTimes.add(retentionTime);
-    }
-
-    public List<LibPrecursorRetentionTime> getRetentionTimes()
-    {
-        if(_retentionTimes == null)
-            return Collections.emptyList();
-        else
-            return Collections.unmodifiableList(_retentionTimes);
-    }
 
     public void addIsotopeModification(LibPrecursorIsotopeModification isotopeModification)
     {
@@ -242,7 +105,7 @@ public class LibPrecursor implements ObjectWithId
         LibPrecursor precursor = (LibPrecursor) o;
 
         if (_peptideId != precursor._peptideId) return false;
-        if (!_charge.equals(precursor._charge)) return false;
+        if (_charge != precursor._charge) return false;
         if (!Arrays.equals(_chromatogram, precursor._chromatogram)) return false;
         if (_collisionEnergy != null ? !_collisionEnergy.equals(precursor._collisionEnergy) : precursor._collisionEnergy != null)
             return false;
@@ -252,7 +115,7 @@ public class LibPrecursor implements ObjectWithId
         if (_isotopeModifications != null ? !_isotopeModifications.equals(precursor._isotopeModifications) : precursor._isotopeModifications != null)
             return false;
         if (!_modifiedSequence.equals(precursor._modifiedSequence)) return false;
-        if (!_mz.equals(precursor._mz)) return false;
+        if (_mz != precursor._mz) return false;
         if (_sampleFileId != precursor._sampleFileId) return false;
         if (!_neutralMass.equals(precursor._neutralMass)) return false;
         if (_retentionTimes != null ? !_retentionTimes.equals(precursor._retentionTimes) : precursor._retentionTimes != null)
@@ -274,9 +137,9 @@ public class LibPrecursor implements ObjectWithId
     public int hashCode()
     {
         int result = (int) _peptideId;
-        result = 31 * result + _isotopeLabel.hashCode();
-        result = 31 * result + _mz.hashCode();
-        result = 31 * result + _charge.hashCode();
+        result = 31 * result + getIsotopeLabel().hashCode();
+        result = 31 * result + Double.hashCode(_mz);
+        result = 31 * result + _charge;
         result = 31 * result + _neutralMass.hashCode();
         result = 31 * result + _modifiedSequence.hashCode();
         result = 31 * result + (_collisionEnergy != null ? _collisionEnergy.hashCode() : 0);
@@ -293,43 +156,9 @@ public class LibPrecursor implements ObjectWithId
         return result;
     }
 
-    public void setNumTransitions(Integer numTransitions)
+    @Override
+    public int getCacheSize()
     {
-        _numTransitions = numTransitions;
-    }
-
-    public Integer getNumTransitions()
-    {
-        return _numTransitions;
-    }
-
-    public void setNumPoints(Integer numPoints)
-    {
-        _numPoints = numPoints;
-    }
-
-    public Integer getNumPoints()
-    {
-        return _numPoints;
-    }
-
-    public void setAverageMassErrorPPM(Double averageMassErrorPPM)
-    {
-        _averageMassErrorPPM = averageMassErrorPPM;
-    }
-
-    public Double getAverageMassErrorPPM()
-    {
-        return _averageMassErrorPPM;
-    }
-
-    public long getSampleFileId()
-    {
-        return _sampleFileId;
-    }
-
-    public void setSampleFileId(long sampleFileId)
-    {
-        _sampleFileId = sampleFileId;
+        return super.getCacheSize() + getIsotopeModifications().stream().mapToInt(AbstractLibEntity::getCacheSize).sum();
     }
 }

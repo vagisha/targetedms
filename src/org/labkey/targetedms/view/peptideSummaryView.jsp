@@ -41,8 +41,8 @@
 
 <table class="lk-fields-table">
     <tr>
-        <td class="labkey-form-label">Name</td>
-        <td><%= h(bean.getRun().getDescription())%></td>
+        <td class="labkey-form-label">File</td>
+        <td><a href="<%= h(TargetedMSController.getShowRunURL(bean.getRun().getContainer(), bean.getRun().getRunId()))%>"><%= h(bean.getRun().getDescription())%></a></td>
     </tr>
     <tr>
         <%

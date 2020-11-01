@@ -98,7 +98,7 @@ public class LibPeptideDao extends BaseDaoImpl<LibPeptide>
     @Override
     public void saveAll(List<LibPeptide> peptides, Connection connection) throws SQLException
     {
-        if(peptides != null && peptides.size() > 0)
+        if(peptides.size() > 0)
         {
             super.saveAll(peptides, connection);
 

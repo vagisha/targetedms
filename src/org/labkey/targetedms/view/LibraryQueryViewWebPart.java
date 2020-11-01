@@ -22,13 +22,18 @@ import org.labkey.api.query.UserSchema;
 import org.labkey.api.view.ViewContext;
 import org.labkey.targetedms.TargetedMSSchema;
 
-public class PeptideViewWebPart extends QueryView
+public class LibraryQueryViewWebPart extends QueryView
 {
-    public PeptideViewWebPart(ViewContext viewContext)
+    private final String _tableName;
+    private final String _viewName;
+
+    public LibraryQueryViewWebPart(ViewContext viewContext, String tableName, String title, String viewName)
     {
         super(new TargetedMSSchema(viewContext.getUser(), viewContext.getContainer()));
-        setSettings(createQuerySettings(viewContext, TargetedMSSchema.TABLE_PEPTIDE));
-        setTitle("Peptides");
+        _tableName = tableName;
+        _viewName = viewName;
+        setSettings(createQuerySettings(viewContext, _tableName));
+        setTitle(title);
         setShowDetailsColumn(false);
 
         setShowBorders(true);
@@ -38,10 +43,9 @@ public class PeptideViewWebPart extends QueryView
     private QuerySettings createQuerySettings(ViewContext portalCtx, String dataRegionName)
     {
         UserSchema schema = getSchema();
-        QuerySettings settings = schema.getSettings(portalCtx, dataRegionName, TargetedMSSchema.TABLE_PEPTIDE);
-
+        QuerySettings settings = schema.getSettings(portalCtx, dataRegionName, _tableName);
         if (!portalCtx.getRequest().getParameterMap().containsKey(settings.param(QueryParam.viewName)))
-            settings.setViewName("LibraryPeptides");
+            settings.setViewName(_viewName);
 
         return settings;
     }

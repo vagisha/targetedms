@@ -272,7 +272,9 @@ import static org.labkey.api.util.DOM.at;
 import static org.labkey.api.util.DOM.cl;
 import static org.labkey.targetedms.TargetedMSModule.EXPERIMENT_FOLDER_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.LIBRARY_FOLDER_WEB_PARTS;
-import static org.labkey.targetedms.TargetedMSModule.PROTEIN_LIBRARY_FOLDER_WEB_PARTS;
+import static org.labkey.targetedms.TargetedMSModule.PEPTIDE_TAB_WEB_PARTS;
+import static org.labkey.targetedms.TargetedMSModule.PROTEIN_TAB_NAME;
+import static org.labkey.targetedms.TargetedMSModule.PROTEIN_TAB_WEB_PARTS;
 import static org.labkey.targetedms.TargetedMSModule.QC_FOLDER_WEB_PARTS;
 
 public class TargetedMSController extends SpringActionController
@@ -364,7 +366,7 @@ public class TargetedMSController extends SpringActionController
                 moduleProperty.saveValue(getUser(), c, FolderType.Experiment.toString());
 
                 // setup the EXPERIMENTAL_DATA default webparts
-                addDashboardTab(c, EXPERIMENT_FOLDER_WEB_PARTS);
+                addDashboardTab(DefaultFolderType.DEFAULT_DASHBOARD, c, EXPERIMENT_FOLDER_WEB_PARTS);
             }
             else if (FolderType.Library.toString().equals(folderSetupForm.getFolderType()))
             {
@@ -379,20 +381,18 @@ public class TargetedMSController extends SpringActionController
                 }
 
 
+                addDashboardTab(DefaultFolderType.DEFAULT_DASHBOARD, c, LIBRARY_FOLDER_WEB_PARTS);
                 // Add the appropriate web parts to the page
                 if(folderSetupForm.isPrecursorNormalized())
                 {
-                    addDashboardTab(c, PROTEIN_LIBRARY_FOLDER_WEB_PARTS);
-                }
-                else
-                {
-                    addDashboardTab(c, LIBRARY_FOLDER_WEB_PARTS);
+                    addDashboardTab(PROTEIN_TAB_NAME, c, PROTEIN_TAB_WEB_PARTS);
+                    addDashboardTab(TargetedMSModule.PEPTIDE_TAB_NAME, c, PEPTIDE_TAB_WEB_PARTS);
                 }
             }
             else if (FolderType.QC.toString().equals(folderSetupForm.getFolderType()))
             {
                 moduleProperty.saveValue(getUser(), c, FolderType.QC.toString());
-                addDashboardTab(c, QC_FOLDER_WEB_PARTS);
+                addDashboardTab(DefaultFolderType.DEFAULT_DASHBOARD, c, QC_FOLDER_WEB_PARTS);
 
                 ArrayList<Portal.WebPart> runsTab = new ArrayList<>();
                 runsTab.add(Portal.getPortalPart(TargetedMSModule.TARGETED_MS_RUNS_WEBPART_NAME).createWebPart());
@@ -440,23 +440,6 @@ public class TargetedMSController extends SpringActionController
             return true;
         }
 
-        private void addDashboardTab(Container c, String[] includeWebParts)
-        {
-            ArrayList<Portal.WebPart> newWebParts = new ArrayList<>();
-            for(String name: includeWebParts)
-            {
-                Portal.WebPart webPart = Portal.getPortalPart(name).createWebPart();
-                newWebParts.add(webPart);
-            }
-
-            // Save webparts to both pages, otherwise the TARGETED_MS_SETUP webpart gets copied over from
-            // portal.default to DefaultDashboard
-            Portal.saveParts(c, DefaultFolderType.DEFAULT_DASHBOARD, newWebParts);
-            Portal.saveParts(c, Portal.DEFAULT_PORTAL_PAGE_ID, newWebParts); // this will remove the TARGETED_MS_SETUP
-            // webpart added to portal.default during
-            // the initial folder creation.
-        }
-
         private void addDataPipelineTab(Container c)
         {
             List<Portal.WebPart> tab = new ArrayList<>();
@@ -472,6 +455,28 @@ public class TargetedMSController extends SpringActionController
             return getContainer().getStartURL(getUser());
         }
 
+    }
+
+    public static void addDashboardTab(String tab, Container c, String[] includeWebParts)
+    {
+        ArrayList<Portal.WebPart> newWebParts = new ArrayList<>();
+        for(String name: includeWebParts)
+        {
+            Portal.WebPart webPart = Portal.getPortalPart(name).createWebPart();
+            newWebParts.add(webPart);
+        }
+
+        Portal.saveParts(c, tab, newWebParts);
+        if (DefaultFolderType.DEFAULT_DASHBOARD.equals(tab))
+        {
+            // Save webparts to both pages, otherwise the TARGETED_MS_SETUP webpart gets copied over from
+            // portal.default to DefaultDashboard
+            Portal.saveParts(c, Portal.DEFAULT_PORTAL_PAGE_ID, newWebParts); // this will remove the TARGETED_MS_SETUP
+        }
+        else
+        {
+            Portal.addProperty(c, tab, Portal.PROP_CUSTOMTAB);
+        }
     }
 
     private static class ChromatogramCrawlerForm
@@ -1452,25 +1457,26 @@ public class TargetedMSController extends SpringActionController
     {
         private TargetedMSRun _run; // save for use in appendNavTrail
         private long _peptideId; // save for use in appendNavTrail
+        private Precursor _precursor;
 
         @Override
         public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
             long precursorId = form.getId();
-            Precursor precursor = PrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
-            if (precursor == null)
+            _precursor = PrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
+            if (_precursor == null)
             {
                 throw new NotFoundException("No such Precursor found in this folder: " + precursorId);
             }
 
             _run = TargetedMSManager.getRunForPrecursor(precursorId);
-            _peptideId = precursor.getGeneralMoleculeId();
+            _peptideId = _precursor.getGeneralMoleculeId();
 
-            Peptide peptide = PeptideManager.getPeptide(getContainer(), precursor.getGeneralMoleculeId());
+            Peptide peptide = PeptideManager.getPeptide(getContainer(), _precursor.getGeneralMoleculeId());
 
             PeptideGroup pepGroup = PeptideGroupManager.get(peptide.getPeptideGroupId());
 
-            PeptideSettings.IsotopeLabel label = IsotopeLabelManager.getIsotopeLabel(precursor.getIsotopeLabelId());
+            PeptideSettings.IsotopeLabel label = IsotopeLabelManager.getIsotopeLabel(_precursor.getIsotopeLabelId());
 
             PrecursorChromatogramsViewBean bean = new PrecursorChromatogramsViewBean(
                     new ActionURL(PrecursorAllChromatogramsChartAction.class, getContainer()).getLocalURIString()
@@ -1480,7 +1486,7 @@ public class TargetedMSController extends SpringActionController
             form.setDefaultChartHeight(ChromatogramDisplayColumnFactory.calculateChartHeight(maxTransitions));
 
             bean.setForm(form);
-            bean.setPrecursor(precursor);
+            bean.setPrecursor(_precursor);
             bean.setPeptide(peptide);
             bean.setPeptideGroup(pepGroup);
             bean.setIsotopeLabel(label);
@@ -1507,8 +1513,8 @@ public class TargetedMSController extends SpringActionController
 
             // Summary charts for the precursor
             SummaryChartBean summaryChartBean = new SummaryChartBean();
-            summaryChartBean.setPeptideId(precursor.getGeneralMoleculeId());
-            summaryChartBean.setPrecursorId(precursor.getId());
+            summaryChartBean.setPeptideId(_precursor.getGeneralMoleculeId());
+            summaryChartBean.setPrecursorId(_precursor.getId());
             summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
             summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
 
@@ -1520,7 +1526,7 @@ public class TargetedMSController extends SpringActionController
             vbox.addView(summaryChartView);
 
             // library spectrum
-            addSpectrumViews(_run, vbox, precursor, errors);
+            addSpectrumViews(_run, vbox, _precursor, errors);
             return vbox;
         }
 
@@ -1537,7 +1543,7 @@ public class TargetedMSController extends SpringActionController
                 pepDetailsUrl.addParameter("id", String.valueOf(_peptideId));
                 root.addChild("Peptide Details", pepDetailsUrl);
 
-                root.addChild("Precursor Chromatograms");
+                root.addChild("Precursor Chromatograms: " + _precursor.getModifiedSequence());
             }
         }
     }
@@ -1547,32 +1553,32 @@ public class TargetedMSController extends SpringActionController
     {
         private TargetedMSRun _run; // save for use in appendNavTrail
         private long _moleculeId; // save for use in appendNavTrail
+        private MoleculePrecursor _precursor;
 
         @Override
         public ModelAndView getView(ChromatogramForm form, BindException errors)
         {
             long precursorId = form.getId();
-            MoleculePrecursor precursor = MoleculePrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
-            if (precursor == null)
+            _precursor = MoleculePrecursorManager.getPrecursor(getContainer(), precursorId, getUser());
+            if (_precursor == null)
             {
                 throw new NotFoundException("No such MoleculePrecursor found in this folder: " + precursorId);
             }
 
             _run = TargetedMSManager.getRunForPrecursor(precursorId);
-            _moleculeId = precursor.getGeneralMoleculeId();
+            _moleculeId = _precursor.getGeneralMoleculeId();
 
-            Molecule molecule = MoleculeManager.getMolecule(getContainer(), precursor.getGeneralMoleculeId());
+            Molecule molecule = MoleculeManager.getMolecule(getContainer(), _precursor.getGeneralMoleculeId());
             PeptideGroup pepGroup = PeptideGroupManager.get(molecule.getPeptideGroupId());
 
             MoleculePrecursorChromatogramsViewBean bean = new MoleculePrecursorChromatogramsViewBean(
                     new ActionURL(MoleculePrecursorAllChromatogramsChartAction.class, getContainer()).getLocalURIString()
             );
             bean.setForm(form);
-            bean.setPrecursor(precursor);
+            bean.setPrecursor(_precursor);
             bean.setMolecule(molecule);
             bean.setPeptideGroup(pepGroup);
             bean.setRun(_run);
-            bean.setTargetedMSSchema(new TargetedMSSchema(getUser(), getContainer()));
 
             JspView<MoleculePrecursorChromatogramsViewBean> precursorInfo = new JspView<>("/org/labkey/targetedms/view/moleculePrecursorChromatogramsView.jsp", bean);
             precursorInfo.setFrame(WebPartView.FrameType.PORTAL);
@@ -1590,8 +1596,8 @@ public class TargetedMSController extends SpringActionController
 
             // Summary charts for the molecule precursor
             SummaryChartBean summaryChartBean = new SummaryChartBean();
-            summaryChartBean.setMoleculeId(precursor.getGeneralMoleculeId());
-            summaryChartBean.setMoleculePrecursorId(precursor.getId());
+            summaryChartBean.setMoleculeId(_precursor.getGeneralMoleculeId());
+            summaryChartBean.setMoleculePrecursorId(_precursor.getId());
             summaryChartBean.setReplicateAnnotationNameList(ReplicateManager.getReplicateAnnotationNamesForRun(_run.getId()));
             summaryChartBean.setReplicateAnnotationValueList(ReplicateManager.getUniqueSortedAnnotationNameValue(_run.getId()));
 
@@ -1619,7 +1625,7 @@ public class TargetedMSController extends SpringActionController
                 molDetailsUrl.addParameter("id", String.valueOf(_moleculeId));
                 root.addChild("Molecule Details", molDetailsUrl);
 
-                root.addChild("Molecule Precursor Chromatograms");
+                root.addChild("Molecule Precursor Chromatograms: " + _precursor.toString());
             }
         }
     }
@@ -1689,7 +1695,6 @@ public class TargetedMSController extends SpringActionController
     public static class MoleculePrecursorChromatogramsViewBean extends MoleculeChromatogramsViewBean
     {
         private MoleculePrecursor _precursor;
-        private TargetedMSSchema _targetedMSSchema;
 
         public MoleculePrecursorChromatogramsViewBean(String resultsUri)
         {
@@ -1709,16 +1714,6 @@ public class TargetedMSController extends SpringActionController
         public void setPrecursor(MoleculePrecursor precursor)
         {
             _precursor = precursor;
-        }
-
-        public void setTargetedMSSchema(TargetedMSSchema s)
-        {
-            _targetedMSSchema = s;
-        }
-
-        public TargetedMSSchema getTargetedMSSchema()
-        {
-            return _targetedMSSchema;
         }
     }
 
@@ -1761,11 +1756,6 @@ public class TargetedMSController extends SpringActionController
         public void setTargetedMSSchema(TargetedMSSchema s)
         {
             _targetedMSSchema = s;
-        }
-
-        public TargetedMSSchema getTargetedMSSchema()
-        {
-            return _targetedMSSchema;
         }
     }
 
@@ -4131,15 +4121,16 @@ public class TargetedMSController extends SpringActionController
 
             Integer peptideCount = TargetedMSManager.getPeptideGroupPeptideCount(_run, group.getId());
             Integer moleculeCount = TargetedMSManager.getPeptideGroupMoleculeCount(_run, group.getId());
+            boolean proteomics = peptideCount != null && peptideCount.intValue() > 0;
 
             // Peptide group details
             DataRegion groupDetails = new DataRegion();
             TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
-            TableInfo tableInfo = schema.getTable(TargetedMSSchema.TABLE_PEPTIDE_GROUP);
+            TableInfo tableInfo = schema.getTable(proteomics ? TargetedMSSchema.TABLE_PEPTIDE_GROUP : TargetedMSSchema.TABLE_MOLECULE_GROUP);
             groupDetails.setColumns(tableInfo.getColumns("Label", "Description", "Decoy", "Note", "RunId"));
             groupDetails.setButtonBar(new ButtonBar());
             DetailsView groupDetailsView = new DetailsView(groupDetails, form.getId());
-            groupDetailsView.setTitle(peptideCount != null && peptideCount > 0 ? "Protein" : "Molecule Group");
+            groupDetailsView.setTitle(proteomics ? "Protein" : "Molecule List");
 
             VBox result = new VBox(groupDetailsView);
 
@@ -4178,6 +4169,7 @@ public class TargetedMSController extends SpringActionController
             if (moleculeCount != null && moleculeCount > 0)
             {
                 List<FieldKey> baseVisibleColumns = new ArrayList<>();
+                baseVisibleColumns.add(FieldKey.fromParts("Molecule"));
                 baseVisibleColumns.add(FieldKey.fromParts("CustomIonName"));
                 baseVisibleColumns.add(FieldKey.fromParts("IonFormula"));
                 baseVisibleColumns.add(FieldKey.fromParts("MassAverage"));
@@ -4666,7 +4658,7 @@ public class TargetedMSController extends SpringActionController
             List<ConflictPrecursor> conflictPrecursorList = ConflictResultsManager.getConflictedPrecursors(getContainer());
             if(conflictPrecursorList.size() == 0)
             {
-                errors.reject(ERROR_MSG, "Library folder "+getContainer().getPath()+" does not contain any conflicting peptides.");
+                errors.reject(ERROR_MSG, "Library folder "+getContainer().getPath()+" does not contain any conflicting data.");
                 return new SimpleErrorView(errors, true);
             }
 
@@ -4722,7 +4714,7 @@ public class TargetedMSController extends SpringActionController
 
             JspView<PrecursorConflictBean> conflictInfo = new JspView<>("/org/labkey/targetedms/view/precursorConflictResolutionView.jsp", bean);
             conflictInfo.setFrame(WebPartView.FrameType.PORTAL);
-            conflictInfo.setTitle("Library Peptide Conflicts");
+            conflictInfo.setTitle("Library Conflicts");
 
             return conflictInfo;
         }
@@ -4780,12 +4772,14 @@ public class TargetedMSController extends SpringActionController
             ApiSimpleResponse response = new ApiSimpleResponse();
 
             int newPrecursorId = conflictPrecursorsForm.getNewPrecursorId();
-            if(PrecursorManager.getPrecursor(getContainer(), newPrecursorId, getUser()) == null)
+            if(PrecursorManager.getPrecursor(getContainer(), newPrecursorId, getUser()) == null &&
+               MoleculePrecursorManager.getPrecursor(getContainer(), newPrecursorId, getUser()) == null)
             {
                 throw new NotFoundException("Precursor with ID "+newPrecursorId+" was not found in the container.");
             }
             int oldPrecursorId = conflictPrecursorsForm.getOldPrecursorId();
-            if(PrecursorManager.getPrecursor(getContainer(), oldPrecursorId, getUser()) == null)
+            if(PrecursorManager.getPrecursor(getContainer(), oldPrecursorId, getUser()) == null &&
+                MoleculePrecursorManager.getPrecursor(getContainer(), oldPrecursorId, getUser()) == null)
             {
                 throw new NotFoundException("Precursor with ID "+oldPrecursorId+" was not found in the container.");
             }
@@ -4867,16 +4861,16 @@ public class TargetedMSController extends SpringActionController
                 return false;
             }
 
-            int[] selectedIds = resolveConflictForm.getSelectedIds();
-            int[] deselectIds = resolveConflictForm.getDeselectedIds();
+            List<Integer> selectedIds = resolveConflictForm.getSelectedIds();
+            List<Integer> deselectIds = resolveConflictForm.getDeselectedIds();
 
-            if (selectedIds == null || selectedIds.length == 0)
+            if (selectedIds == null || selectedIds.isEmpty())
             {
                 errors.reject(ERROR_MSG, "No IDs were found to be marked as representative.");
                 return false;
             }
 
-            if (deselectIds == null || deselectIds.length == 0)
+            if (deselectIds == null || deselectIds.isEmpty())
             {
                 errors.reject(ERROR_MSG, "No IDs were found to be marked as deprecated.");
                 return false;
@@ -4975,8 +4969,8 @@ public class TargetedMSController extends SpringActionController
     {
         public String _conflictLevel; // Either 'peptide' or 'protein'
         public String _selectedInputValues;
-        private int[] _selectedIds;
-        private int[] _deselectedIds;
+        private List<Integer> _selectedIds;
+        private List<Integer> _deselectedIds;
 
         public String getConflictLevel()
         {
@@ -4999,10 +4993,9 @@ public class TargetedMSController extends SpringActionController
             if(!StringUtils.isBlank(selectedInputValues))
             {
                 String[] vals = selectedInputValues.split(",");
-                _selectedIds = new int[vals.length];
-                _deselectedIds = new int[vals.length];
+                _selectedIds = new ArrayList<>(vals.length);
+                _deselectedIds = new ArrayList<>(vals.length);
 
-                int count = 0;
                 for(String value: vals)
                 {
                     int idx = value.indexOf('_');
@@ -5010,20 +5003,19 @@ public class TargetedMSController extends SpringActionController
                     {
                         int selected = Integer.parseInt(value.substring(0, idx));
                         int deselected = Integer.parseInt(value.substring(idx+1));
-                        _selectedIds[count] = selected;
-                        _deselectedIds[count] = deselected;
-                        count++;
+                        _selectedIds.add(selected);
+                        _deselectedIds.add(deselected);
                     }
                 }
             }
         }
 
-        public int[] getSelectedIds()
+        public List<Integer> getSelectedIds()
         {
             return _selectedIds;
         }
 
-        public int[] getDeselectedIds()
+        public List<Integer> getDeselectedIds()
         {
             return _deselectedIds;
         }
@@ -5828,29 +5820,21 @@ public class TargetedMSController extends SpringActionController
             // determine the folder type
             final FolderType folderType = TargetedMSManager.getFolderType(getContainer());
 
-            final String proteinLabel = "Proteins";
-            final String peptideLabel = "Peptides";
-
             SQLFragment sqlFragment = new SQLFragment();
-            sqlFragment.append("SELECT COALESCE(x.RunDate,y.RunDate) AS RunDate, ProteinCount, PeptideCount FROM ");
-            sqlFragment.append("(SELECT pepCount.RunDate, COUNT(DISTINCT pepCount.Id) AS PeptideCount ");
+            sqlFragment.append("SELECT COALESCE(x.RunDate,y.RunDate) AS RunDate, ProteinCount, PeptideCount, MoleculeCount FROM ");
+            sqlFragment.append("(SELECT pepCount.RunDate, COUNT(DISTINCT pepCount.PeptideId) AS PeptideCount, COUNT(DISTINCT pepCount.MoleculeId) AS MoleculeCount ");
             sqlFragment.append("FROM   ( SELECT ");
             sqlFragment.append("r.Created as RunDate, ");
-            sqlFragment.append("p.Id ");
+            sqlFragment.append("p.Id AS PeptideId, ");
+            sqlFragment.append("m.Id AS MoleculeId ");
             sqlFragment.append("FROM ");
-            sqlFragment.append("targetedms.peptide AS p, ");
-            sqlFragment.append("targetedms.GeneralMolecule AS gm, ");
-            sqlFragment.append("targetedms.Runs AS r, ");
-            sqlFragment.append("targetedms.PeptideGroup AS pg, ");
-            sqlFragment.append("targetedms.Precursor AS pc, ");
-            sqlFragment.append("targetedms.GeneralPrecursor AS gp ");
-            sqlFragment.append("WHERE  ");
-            sqlFragment.append("p.Id = gm.Id AND ");
-            sqlFragment.append("gm.PeptideGroupId = pg.Id AND ");
-            sqlFragment.append("pg.RunId = r.Id AND ");
-            sqlFragment.append("pc.Id = gp.Id AND ");
-            sqlFragment.append("gp.GeneralMoleculeId = gm.Id AND ");
-            sqlFragment.append("r.Deleted = ? AND r.Container = ? ");
+            sqlFragment.append("\ttargetedms.Runs AS r INNER JOIN \n");
+            sqlFragment.append("\ttargetedms.PeptideGroup AS pg ON r.Id = pg.RunId INNER JOIN\n");
+            sqlFragment.append("\ttargetedms.GeneralMolecule AS gm ON gm.PeptideGroupId = pg.Id INNER JOIN\n");
+            sqlFragment.append("\ttargetedms.GeneralPrecursor AS gp ON gp.GeneralMoleculeId = gm.Id LEFT OUTER JOIN\n");
+            sqlFragment.append("\ttargetedms.peptide AS p ON p.Id = gm.Id LEFT OUTER JOIN\n");
+            sqlFragment.append("\ttargetedms.molecule AS m ON m.Id = gm.Id\n");
+            sqlFragment.append("WHERE r.Deleted = ? AND r.Container = ? ");
             // Only proteins (PeptideGroup) are marked as representative in "LibraryProtein" folder types. Get the Ids
             // of all the peptides of representative proteins.
             if(folderType == FolderType.LibraryProtein)
@@ -5887,29 +5871,35 @@ public class TargetedMSController extends SpringActionController
             // build HashMap of values for binning purposes
             final LinkedHashMap<Date, Integer> protMap = new LinkedHashMap<>();
             final LinkedHashMap<Date, Integer> pepMap = new LinkedHashMap<>();
+            final LinkedHashMap<Date, Integer> moleculeMap = new LinkedHashMap<>();
 
             // add data to maps - binning by the date specified in simpleDateFormat
             sqlSelector.forEach(rs -> {
                 Date runDate = rs.getDate("runDate");
-                int protCount = protMap.containsKey(runDate) ? protMap.get(runDate) : 0;
+                int protCount = protMap.getOrDefault(runDate, 0);
                 protMap.put(runDate, protCount + rs.getInt("ProteinCount"));
-                int pepCount = pepMap.containsKey(runDate) ? pepMap.get(runDate) : 0;
+                int pepCount = pepMap.getOrDefault(runDate, 0);
                 pepMap.put(runDate, pepCount + rs.getInt("PeptideCount"));
+                int moleculeCount = moleculeMap.getOrDefault(runDate, 0);
+                moleculeMap.put(runDate, moleculeCount + rs.getInt("MoleculeCount"));
             });
 
             LinkedHashMap<Date, Integer> binnedProtMap = binDateHashMap(protMap, 0);
             LinkedHashMap<Date, Integer> binnedPepMap = binDateHashMap(pepMap, 0);
+            LinkedHashMap<Date, Integer> binnedMoleculeMap = binDateHashMap(moleculeMap, 0);
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("M/d");
 
             if (protMap.size() > 10) // if more than 2 weeks, bin by week
             {
                 binnedProtMap = binDateHashMap(protMap, Calendar.DAY_OF_WEEK);
                 binnedPepMap = binDateHashMap(pepMap, Calendar.DAY_OF_WEEK);
+                binnedMoleculeMap = binDateHashMap(moleculeMap, Calendar.DAY_OF_WEEK);
             }
-            if (binnedProtMap.size() > 10 )
+            if (binnedProtMap.size() > 10)
             {
                 binnedProtMap = binDateHashMap(protMap, Calendar.DAY_OF_MONTH);
                 binnedPepMap = binDateHashMap(pepMap, Calendar.DAY_OF_MONTH);
+                binnedMoleculeMap = binDateHashMap(moleculeMap, Calendar.DAY_OF_MONTH);
                 simpleDateFormat = new SimpleDateFormat("MMM yy");
             }
             // put all data from maps into dataset
@@ -5917,8 +5907,9 @@ public class TargetedMSController extends SpringActionController
             {
                 Date key = entry.getKey();
                 if (folderType == FolderType.LibraryProtein)
-                    dataset.addValue(entry.getValue(), proteinLabel, simpleDateFormat.format(key));
-                dataset.addValue( binnedPepMap.get(key), peptideLabel, simpleDateFormat.format(key));
+                    dataset.addValue(entry.getValue(), "Proteins", simpleDateFormat.format(key));
+                dataset.addValue(binnedPepMap.get(key), "Peptides", simpleDateFormat.format(key));
+                dataset.addValue(binnedMoleculeMap.get(key), "Molecules", simpleDateFormat.format(key));
             }
 
             return dataset;
@@ -5948,7 +5939,7 @@ public class TargetedMSController extends SpringActionController
                 calendar.set(mode, 1);
             Date newDate = calendar.getTime();
 
-            int count = newMap.containsKey(keyDate) ? newMap.get(keyDate) : 0;
+            int count = newMap.getOrDefault(keyDate, 0);
             newMap.put(newDate, count + hashMap.get(keyDate));
         }
 
@@ -5985,6 +5976,7 @@ public class TargetedMSController extends SpringActionController
         clibAnalyteCounts.setPeptideGroupCount((int) getNumRepresentativeProteins(user, container));
         clibAnalyteCounts.setPeptideCount((int)getNumRepresentativePeptides(container));
         clibAnalyteCounts.setTransitionCount((int)getNumRankedTransitions(container));
+        clibAnalyteCounts.setMoleculeCount((int)getNumRepresentativeMolecules(container));
         return clibAnalyteCounts;
     }
 
@@ -5993,15 +5985,17 @@ public class TargetedMSController extends SpringActionController
         private int _peptideGroupCount;
         private int _peptideCount;
         private int _transitionCount;
+        private int _moleculeCount;
 
-        public static ChromLibAnalyteCounts NOT_EXISTS = new ChromLibAnalyteCounts(-1, -1, -1);
+        public static final ChromLibAnalyteCounts NOT_EXISTS = new ChromLibAnalyteCounts(-1, -1, -1, -1);
 
         public ChromLibAnalyteCounts() {}
 
-        private ChromLibAnalyteCounts(int peptideGroupCount, int peptideCount, int transitionCount)
+        private ChromLibAnalyteCounts(int peptideGroupCount, int peptideCount, int moleculeCount, int transitionCount)
         {
             _peptideGroupCount = peptideGroupCount;
             _peptideCount = peptideCount;
+            _moleculeCount = moleculeCount;
             _transitionCount = transitionCount;
         }
 
@@ -6035,9 +6029,19 @@ public class TargetedMSController extends SpringActionController
             _transitionCount = transitionCount;
         }
 
+        public int getMoleculeCount()
+        {
+            return _moleculeCount;
+        }
+
+        public void setMoleculeCount(int moleculeCount)
+        {
+            _moleculeCount = moleculeCount;
+        }
+
         public boolean exists()
         {
-            return _peptideGroupCount != -1 && _peptideCount != -1 && _transitionCount != -1;
+            return _peptideGroupCount != -1 && _peptideCount != -1 && _moleculeCount != -1 && _transitionCount != -1;
         }
     }
 
@@ -6053,11 +6057,23 @@ public class TargetedMSController extends SpringActionController
         return peptideGroupCount;
     }
 
-    public static long getNumRepresentativePeptides(Container container) {
+    public static long getNumRepresentativePeptides(Container container)
+    {
+        return getNumRepresentativeGeneralMolecules(container, TargetedMSManager.getTableInfoPeptide());
+    }
 
+    public static long getNumRepresentativeMolecules(Container container)
+    {
+        return getNumRepresentativeGeneralMolecules(container, TargetedMSManager.getTableInfoMolecule());
+    }
+
+    private static long getNumRepresentativeGeneralMolecules(Container container, TableInfo moleculeTypeTable)
+    {
         SQLFragment sqlFragment = new SQLFragment();
         sqlFragment.append("SELECT DISTINCT(p.Id) FROM ");
         sqlFragment.append(TargetedMSManager.getTableInfoGeneralMolecule(), "p");
+        sqlFragment.append(", ");
+        sqlFragment.append(moleculeTypeTable, "mt");
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoRuns(), "r");
         sqlFragment.append(", ");
@@ -6065,7 +6081,8 @@ public class TargetedMSController extends SpringActionController
         sqlFragment.append(", ");
         sqlFragment.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "pc");
         sqlFragment.append(" WHERE ");
-        sqlFragment.append("p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.GeneralMoleculeId = p.Id  AND r.Deleted = ? AND r.Container = ? ");
+        sqlFragment.append(" p.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND pc.GeneralMoleculeId = p.Id AND mt.Id = p.Id ");
+        sqlFragment.append(" AND r.Deleted = ? AND r.Container = ? ");
         sqlFragment.append("AND pc.RepresentativeDataState = ? ");
 
         // add variables

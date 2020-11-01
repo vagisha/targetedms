@@ -126,6 +126,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_PRECURSOR = "Precursor";
     public static final String TABLE_EXPERIMENT_PRECURSOR = "ExperimentPrecursor";
     public static final String TABLE_LIBRARY_PRECURSOR = "LibraryPrecursor";
+    public static final String TABLE_LIBRARY_MOLECULE_PRECURSOR = "LibraryMoleculePrecursor";
     public static final String TABLE_LIBRARY_DOC_PRECURSOR = "LibraryDocPrecursor";
     public static final String TABLE_PRECURSOR_ANNOTATION = "PrecursorAnnotation";
     public static final String TABLE_TRANSITION = "Transition";
@@ -207,7 +208,7 @@ public class TargetedMSSchema extends UserSchema
     public static final String TABLE_KEYWORDS = "keywords";
 
     public static final String COL_PROTEIN = "Protein";
-    public static final String COL_LIST = "List";
+    public static final String COL_LIST = "Molecule List";
 
     /** Prefix for a run-specific table name, customized based on the data present within that run */
     public static final String SAMPLE_FILE_RUN_PREFIX = "samplefile_run";
@@ -950,7 +951,7 @@ public class TargetedMSSchema extends UserSchema
                                                                   ContainerJoinType.RunFK,
                                                                   TargetedMSManager.getTableInfoPeptideGroupAnnotation(),
                                                                   "PeptideGroupId",
-                                                                  "Protein Annotations",
+                                                                  proteomics ? "Protein Annotations" : "Molecule List Annotations",
                                                                   "protein", false) // This may change as more small molecule work is done in Skyline.
             {
                 @Override
@@ -1147,6 +1148,10 @@ public class TargetedMSSchema extends UserSchema
         if (TABLE_LIBRARY_PRECURSOR.equalsIgnoreCase(name) || TABLE_LIBRARY_DOC_PRECURSOR.equalsIgnoreCase(name))
         {
             return new PrecursorTableInfo.LibraryPrecursorTableInfo(this, cf);
+        }
+        if (TABLE_LIBRARY_MOLECULE_PRECURSOR.equalsIgnoreCase(name))
+        {
+            return new MoleculePrecursorTableInfo.LibraryMoleculePrecursorTableInfo(this, cf);
         }
         if (TABLE_GENERAL_MOLECULE_ANNOTATION.equalsIgnoreCase(name) || TABLE_PEPTIDE_ANNOTATION.equalsIgnoreCase(name))
         {
@@ -1471,6 +1476,7 @@ public class TargetedMSSchema extends UserSchema
         hs.add(TABLE_RETENTION_TIME_PREDICTION_SETTINGS);
         hs.add(TABLE_EXPERIMENT_PRECURSOR);
         hs.add(TABLE_LIBRARY_PRECURSOR);
+        hs.add(TABLE_LIBRARY_MOLECULE_PRECURSOR);
         hs.add(TABLE_LIBRARY_DOC_PRECURSOR);
         hs.add(TABLE_ISOLATION_SCHEME);
         hs.add(TABLE_ISOLATION_WINDOW);

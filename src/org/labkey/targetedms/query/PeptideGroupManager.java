@@ -30,6 +30,7 @@ import org.labkey.targetedms.parser.RepresentativeDataState;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,18 +64,6 @@ public class PeptideGroupManager
         sql.add(id);
 
         return new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(PeptideGroup.class);
-    }
-
-    public static void updateRepresentativeStatus(int[] peptideGroupIds, RepresentativeDataState representativeState)
-    {
-        if(peptideGroupIds == null || peptideGroupIds.length == 0)
-            return;
-        List<Integer> peptideGroupIdList = new ArrayList<>(peptideGroupIds.length);
-        for(int i = 0; i < peptideGroupIds.length; i++)
-        {
-            peptideGroupIdList.add(peptideGroupIds[i]);
-        }
-        updateRepresentativeStatus(peptideGroupIdList, representativeState);
     }
 
     public static void updateRepresentativeStatus(List<Integer> peptideGroupIds, RepresentativeDataState representativeState)
@@ -209,12 +198,12 @@ public class PeptideGroupManager
         return new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
-    public static boolean ensureContainerMembership(int[] peptideGroupIds, Container container)
+    public static boolean ensureContainerMembership(List<Integer> peptideGroupIds, Container container)
     {
-        if(peptideGroupIds == null || peptideGroupIds.length == 0)
+        if(peptideGroupIds == null || peptideGroupIds.isEmpty())
             return false;
 
-        Set<Integer> uniqueIds = IntStream.of(peptideGroupIds).boxed().collect(Collectors.toSet());
+        Set<Integer> uniqueIds = new HashSet<>(peptideGroupIds);
 
         StringBuilder pepGrpIds = new StringBuilder();
         for(Integer id: uniqueIds)

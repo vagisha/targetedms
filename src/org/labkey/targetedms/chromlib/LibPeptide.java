@@ -24,9 +24,8 @@ import java.util.List;
  * Date: 12/31/12
  * Time: 9:25 AM
  */
-public class LibPeptide implements ObjectWithId
+public class LibPeptide extends AbstractLibMolecule<LibPrecursor>
 {
-    private int _id;
     private Integer _proteinId;
     private String _sequence;
     private Integer _startIndex;
@@ -37,19 +36,6 @@ public class LibPeptide implements ObjectWithId
     private Integer _numMissedCleavages;
 
     private List<LibPeptideStructuralModification> _structuralModifications;
-
-    private List<LibPrecursor> _precursors;
-
-    public int getId()
-    {
-        return _id;
-    }
-
-    @Override
-    public void setId(int id)
-    {
-        _id = id;
-    }
 
     public Integer getProteinId()
     {
@@ -148,21 +134,10 @@ public class LibPeptide implements ObjectWithId
             return Collections.unmodifiableList(_structuralModifications);
     }
 
-    public void addPrecursor(LibPrecursor precursor)
+    @Override
+    public int getCacheSize()
     {
-        if(_precursors == null)
-        {
-            _precursors = new ArrayList<>();
-        }
-        _precursors.add(precursor);
-    }
-
-    List<LibPrecursor> getPrecursors()
-    {
-        if(_precursors == null)
-            return Collections.emptyList();
-        else
-            return Collections.unmodifiableList(_precursors);
+        return super.getCacheSize() + getStructuralModifications().stream().mapToInt(AbstractLibEntity::getCacheSize).sum();
     }
 
     @Override

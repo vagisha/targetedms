@@ -92,6 +92,8 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         // Download link, library statistics and revision in the ChromatogramLibraryDownloadWebpart
         verifyChromatogramLibraryDownloadWebPart(7, 55, 343, 1);
 
+        clickTab("Proteins");
+
         // Verify proteins in the library
         // Proteins in SKY_FILE1: "CTCF", "TAF11", "MAX", "QPrEST_CystC_HPRR5000001", "HPRR1440042", "DifferentProteinSameLabel",  "iRT-C18 Standard Peptides"
         List<String> proteins  = Arrays.asList("CTCF", "TAF11", "MAX", "QPrEST_CystC_HPRR5000001", "HPRR1440042", "DifferentProteinSameLabel",  "iRT-C18 Standard Peptides");
@@ -149,6 +151,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         //  HPRR350065                  -> SKY_FILE2 (no conflict)
         //  iRT-C18 Standard Peptides   -> SKY_FILE2 (no conflict; new versions of iRT and standard proteins are always added to the library)
 
+        clickTab("Proteins");
         List<String> proteins = Arrays.asList( /*Proteins from SKY_FILE1*/ "CTCF", "TAF11", "MAX", "QPrEST_CystC_HPRR5000001", "HPRR1440042", "DifferentProteinSameLabel",
                                                /*Proteins from SKY_FILE2*/ "TP53", "GATA3", "HPRR350065",
                                                /*iRT peptides; always from the latest file (SKY_FILE2)*/"iRT-C18 Standard Peptides");
@@ -212,6 +215,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
     @LogMethod
     private void verifyAndResolveConflicts()
     {
+        clickTab("Panorama Dashboard");
         log("Verifying that expected conflicts exist");
         String[] conflictText = new String[] {"The last Skyline document imported in this folder had 4 proteins that were already a part of the library",
                 "Please click the link below to resolve conflicts and choose the version of each protein that should be included in the library",
@@ -284,6 +288,7 @@ public class TargetedMSLibraryTest extends TargetedMSTest
         //  HPRR350065                  -> SKY_FILE2
         //  iRT-C18 Standard Peptides   -> SKY_FILE2
 
+        clickTab("Proteins");
         List<String> proteins = Arrays.asList( /*Proteins from SKY_FILE1*/ "CTCF", "TAF11",
                 /*Proteins from SKY_FILE2*/ "TP53", "GATA3", "HPRR350065", "MAX", "HPRR1440042", "HPRR5000001", "DifferentProteinSameLabel",
                 /*iRT peptides; always from the latest file (SKY_FILE2)*/"iRT-C18 Standard Peptides");

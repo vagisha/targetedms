@@ -15,31 +15,19 @@
  */
 package org.labkey.targetedms.chromlib;
 
+
 /**
+ * Does double-duty for both proteomics and small molecule since it's the same fields
  * User: vsharma
  * Date: 12/31/12
- * Time: 1:38 PM
  */
-
-public class LibPrecursorRetentionTime implements ObjectWithId
+public class LibPrecursorRetentionTime extends AbstractLibEntity
 {
-    private int _id;
     private long _precursorId;
     private long _sampleFileId;
     private Double _retentionTime;
     private Double _startTime;
     private Double _endTime;
-
-    public int getId()
-    {
-        return _id;
-    }
-
-    @Override
-    public void setId(int id)
-    {
-        _id = id;
-    }
 
     public long getPrecursorId()
     {

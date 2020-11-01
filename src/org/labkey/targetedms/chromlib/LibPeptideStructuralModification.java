@@ -20,24 +20,12 @@ package org.labkey.targetedms.chromlib;
  * Date: 12/31/12
  * Time: 1:46 PM
  */
-public class LibPeptideStructuralModification implements ObjectWithId
+public class LibPeptideStructuralModification extends AbstractLibEntity
 {
-    private int _id;
     private long _peptideId;
     private long _structuralModificationId;
     private Integer _indexAa;
     private Double _massDiff;
-
-    public int getId()
-    {
-        return _id;
-    }
-
-    @Override
-    public void setId(int id)
-    {
-        _id = id;
-    }
 
     public long getPeptideId()
     {

@@ -1,13 +1,15 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         label="Library Precursors" canOverride="true">
     <columns>
-        <column name="PeptideId/PeptideGroupId/RunId/File" />
-        <column name="PeptideId/PeptideGroupId/Label" />
-        <column name="ModifiedPrecursorDisplayColumn" /> <!-- Defined in ModifiedSequenceDisplayColumn.java -->
+        <column name="MoleculeId/PeptideGroupId/RunId/File" />
+        <column name="MoleculeId/MoleculeName" />
+        <column name="IonFormula" />
+        <column name="CustomIonName" />
         <column name="Charge" />
         <column name="IsotopeLabelId" />
         <column name="Mz" />
-        <column name="NeutralMass" />
+        <column name="MassMonoisotopic" />
+        <column name="MassAverage" />
         <column name="CollisionEnergy" />
         <column name="DeclusteringPotential" />
         <column name="NoteAnnotations" />
@@ -18,9 +20,10 @@
     </filters>
 
     <sorts>
-       <sort column="PeptideId/PeptideGroupId/Label" />
-       <sort column="ModifiedSequence" />
-       <sort column="PeptideId/PeptideGroupId/RunId/File" />
+        <sort column="MoleculeId/MoleculeName" />
+        <sort column="IonFormula" />
+        <sort column="CustomIonName" />
+        <sort column="MoleculeId/PeptideGroupId/RunId/File" />
    </sorts>
 
 </customView>

@@ -384,7 +384,7 @@
             </column>
             <column columnName="DeclusteringPotential">
                 <columnTitle>DP</columnTitle>
-                <description>Declustring Potential</description>
+                <description>Declustering Potential</description>
                 <formatString>0.0000</formatString>
             </column>
             <column columnName="Note"/>

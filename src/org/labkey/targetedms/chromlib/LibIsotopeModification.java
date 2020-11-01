@@ -20,9 +20,8 @@ package org.labkey.targetedms.chromlib;
  * Date: 12/29/12
  * Time: 9:56 PM
  */
-public class LibIsotopeModification implements ObjectWithId
+public class LibIsotopeModification extends AbstractLibEntity
 {
-    private int _id;
     private String _name;
     private String _isotopeLabel;
     private String _aminoAcid;
@@ -35,17 +34,6 @@ public class LibIsotopeModification implements ObjectWithId
     private Boolean _label18O;
     private Boolean _label2H;
     private Integer _unimodId;
-
-    public int getId()
-    {
-        return _id;
-    }
-
-    @Override
-    public void setId(int id)
-    {
-        _id = id;
-    }
 
     public String getName()
     {

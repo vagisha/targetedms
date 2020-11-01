@@ -18,26 +18,13 @@ package org.labkey.targetedms.chromlib;
 /**
  * User: vsharma
  * Date: 12/31/12
- * Time: 1:46 PM
  */
-public class LibPrecursorIsotopeModification implements ObjectWithId
+public class LibPrecursorIsotopeModification extends AbstractLibEntity
 {
-    private int _id;
     private long _precursorId;
     private int _isotopeModificationId;
     private Integer _indexAa;
     private Double _massDiff;
-
-    public int getId()
-    {
-        return _id;
-    }
-
-    @Override
-    public void setId(int id)
-    {
-        _id = id;
-    }
 
     public long getPrecursorId()
     {

@@ -51,6 +51,7 @@ import org.labkey.api.targetedms.TargetedMSService;
 import org.labkey.api.util.FileUtil;
 import org.labkey.api.util.NetworkDrive;
 import org.labkey.api.util.StringUtilsLabKey;
+import org.labkey.api.view.Portal;
 import org.labkey.api.writer.ZipUtil;
 import org.labkey.targetedms.SkylinePort.Irt.IRegressionFunction;
 import org.labkey.targetedms.SkylinePort.Irt.IrtRegressionCalculator;
@@ -61,6 +62,7 @@ import org.labkey.targetedms.parser.*;
 import org.labkey.targetedms.parser.list.ListData;
 import org.labkey.targetedms.parser.skyaudit.AuditLogException;
 import org.labkey.targetedms.query.ConflictResultsManager;
+import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.ReplicateManager;
 import org.labkey.targetedms.query.RepresentativeStateManager;
 import org.labkey.targetedms.query.SkylineListManager;
@@ -420,6 +422,32 @@ public class SkylineDocImporter
                 for (String msg : msgs)
                 {
                     _log.info(msg);
+                }
+            }
+            else if (folderType == TargetedMSService.FolderType.Library)
+            {
+                // Add the Peptides and Molecules tabs if needed
+                List<Portal.PortalPage> tabPages = Portal.getTabPages(_container);
+                Portal.PortalPage peptidesTab = null;
+                Portal.PortalPage moleculesTab = null;
+                for (Portal.PortalPage tabPage : tabPages)
+                {
+                    if (TargetedMSModule.PEPTIDE_TAB_NAME.equals(tabPage.getPageId()))
+                    {
+                        peptidesTab = tabPage;
+                    }
+                    if (TargetedMSModule.MOLECULE_TAB_NAME.equals(tabPage.getPageId()))
+                    {
+                        moleculesTab = tabPage;
+                    }
+                }
+                if (TargetedMSManager.containerHasSmallMolecules(_container) && moleculesTab == null)
+                {
+                    TargetedMSController.addDashboardTab(TargetedMSModule.MOLECULE_TAB_NAME, _container, TargetedMSModule.MOLECULE_TAB_WEB_PARTS);
+                }
+                if (TargetedMSManager.containerHasPeptides(_container) && peptidesTab == null)
+                {
+                    TargetedMSController.addDashboardTab(TargetedMSModule.PEPTIDE_TAB_NAME, _container, TargetedMSModule.PEPTIDE_TAB_WEB_PARTS);
                 }
             }
 

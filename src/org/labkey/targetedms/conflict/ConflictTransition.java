@@ -15,6 +15,8 @@
  */
 package org.labkey.targetedms.conflict;
 
+import org.labkey.targetedms.parser.GeneralPrecursor;
+import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.Transition;
 
@@ -25,29 +27,29 @@ import org.labkey.targetedms.parser.Transition;
  */
 public class ConflictTransition
 {
-    private Precursor _newPrecursor;
-    private Transition _newTransition;
+    private GeneralPrecursor<?> _newPrecursor;
+    private GeneralTransition _newTransition;
     private int _newTransitionRank = Integer.MAX_VALUE;
-    private Precursor _oldPrecursor;
-    private Transition _oldTransition;
+    private GeneralPrecursor<?> _oldPrecursor;
+    private GeneralTransition _oldTransition;
     private int _oldTransitionRank = Integer.MAX_VALUE;
 
-    public Precursor getNewPrecursor()
+    public GeneralPrecursor<?> getNewPrecursor()
     {
         return _newPrecursor;
     }
 
-    public void setNewPrecursor(Precursor newPrecursor)
+    public void setNewPrecursor(GeneralPrecursor<?> newPrecursor)
     {
         _newPrecursor = newPrecursor;
     }
 
-    public Transition getNewTransition()
+    public GeneralTransition getNewTransition()
     {
         return _newTransition;
     }
 
-    public void setNewTransition(Transition newTransition)
+    public void setNewTransition(GeneralTransition newTransition)
     {
         _newTransition = newTransition;
     }
@@ -62,22 +64,22 @@ public class ConflictTransition
         _newTransitionRank = newTransitionRank;
     }
 
-    public Precursor getOldPrecursor()
+    public GeneralPrecursor getOldPrecursor()
     {
         return _oldPrecursor;
     }
 
-    public void setOldPrecursor(Precursor oldPrecursor)
+    public void setOldPrecursor(GeneralPrecursor<?> oldPrecursor)
     {
         _oldPrecursor = oldPrecursor;
     }
 
-    public Transition getOldTransition()
+    public GeneralTransition getOldTransition()
     {
         return _oldTransition;
     }
 
-    public void setOldTransition(Transition oldTransition)
+    public void setOldTransition(GeneralTransition oldTransition)
     {
         _oldTransition = oldTransition;
     }

@@ -15,10 +15,7 @@
  */
 package org.labkey.targetedms.query;
 
-import org.labkey.api.data.ColumnInfo;
 import org.labkey.api.data.ContainerFilter;
-import org.labkey.api.data.DisplayColumn;
-import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.JdbcType;
 import org.labkey.api.data.SQLFragment;
 import org.labkey.api.data.WrappedColumn;
@@ -43,7 +40,7 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
         {
             // Add a WrappedColumn for Note & Annotations
             WrappedColumn noteAnnotation = new WrappedColumn(getColumn("Annotations"), "NoteAnnotations");
-            noteAnnotation.setDisplayColumnFactory(colInfo -> new AnnotationUIDisplayColumn(colInfo));
+            noteAnnotation.setDisplayColumnFactory(AnnotationUIDisplayColumn::new);
             noteAnnotation.setLabel("Molecule Note/Annotations");
             addColumn(noteAnnotation);
         }
@@ -61,16 +58,11 @@ public class MoleculeTableInfo extends AbstractGeneralMoleculeTableInfo
         WrappedColumn moleculeCol = new WrappedColumn(getColumn("MoleculeName"), "Molecule");
         moleculeCol.setLabel("Molecule");
         moleculeCol.setDescription("Custom Ion Name");
-        moleculeCol.setDisplayColumnFactory( new DisplayColumnFactory()
-        {
-            @Override
-            public DisplayColumn createRenderer(ColumnInfo colInfo)
-            {
-                return new IconColumn.MoleculeDisplayCol(colInfo);
-            }
-        });
+        moleculeCol.setDisplayColumnFactory(IconColumn.MoleculeDisplayCol::new);
         moleculeCol.setURL(getDetailsURL(null, null));
         addColumn(moleculeCol);
+
+        setTitleColumn(moleculeCol.getColumnName());
 
         List<FieldKey> defaultCols = new ArrayList<>(getDefaultVisibleColumns());
         defaultCols.add(0, FieldKey.fromParts("PeptideGroupId", "RunId", "Folder", "Path"));

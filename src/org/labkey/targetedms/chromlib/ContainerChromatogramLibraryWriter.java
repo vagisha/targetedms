@@ -27,7 +27,12 @@ import org.labkey.api.util.FileUtil;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSRun;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.parser.GeneralPrecursor;
+import org.labkey.targetedms.parser.GeneralTransition;
 import org.labkey.targetedms.parser.Instrument;
+import org.labkey.targetedms.parser.Molecule;
+import org.labkey.targetedms.parser.MoleculePrecursor;
+import org.labkey.targetedms.parser.MoleculeTransition;
 import org.labkey.targetedms.parser.Peptide;
 import org.labkey.targetedms.parser.PeptideGroup;
 import org.labkey.targetedms.parser.PeptideSettings;
@@ -39,6 +44,9 @@ import org.labkey.targetedms.parser.TransitionChromInfo;
 import org.labkey.targetedms.query.InstrumentManager;
 import org.labkey.targetedms.query.IsotopeLabelManager;
 import org.labkey.targetedms.query.ModificationManager;
+import org.labkey.targetedms.query.MoleculeManager;
+import org.labkey.targetedms.query.MoleculePrecursorManager;
+import org.labkey.targetedms.query.MoleculeTransitionManager;
 import org.labkey.targetedms.query.PeptideGroupManager;
 import org.labkey.targetedms.query.PeptideManager;
 import org.labkey.targetedms.query.PrecursorManager;
@@ -57,6 +65,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 /**
  * User: vsharma
@@ -65,13 +74,14 @@ import java.util.Map;
  */
 public class ContainerChromatogramLibraryWriter
 {
-    private String _panoramaServer;
-    private Container _container;
-    private List<Integer> _representativeRunIds;
+    private final String _panoramaServer;
+    private final Container _container;
+    private final List<Integer> _representativeRunIds;
     private ChromatogramLibraryWriter _libWriter;
 
     private int _proteinCount = 0;
     private int _peptideCount = 0;
+    private int _moleculeCount = 0;
     private int _precursorCount = 0;
     private int _transitionCount = 0;
 
@@ -86,12 +96,10 @@ public class ContainerChromatogramLibraryWriter
     // ModificationId(Panorama) -> ModificationId(SQLite Library)
     private Map<Long, Integer> _structuralModificationMap;
 
-    private ProteinService _proteinService;
-
     private TargetedMSRun.RepresentativeDataState _libraryType = null;
     private Long _bestReplicateIdForCurrentPeptideGroup;
 
-    private User _user;
+    private final User _user;
 
     public ContainerChromatogramLibraryWriter(String panoramaServer, Container container, List<Integer> representativeRunIds, User user)
     {
@@ -99,8 +107,6 @@ public class ContainerChromatogramLibraryWriter
         _container = container;
         _user = user;
         _representativeRunIds = representativeRunIds != null ? representativeRunIds : Collections.emptyList();
-
-        _proteinService = ProteinService.get();
     }
 
     public String writeLibrary(LocalDirectory localDirectory, int libraryRevision) throws SQLException, IOException
@@ -167,6 +173,7 @@ public class ContainerChromatogramLibraryWriter
         libInfo.setPeptides(_peptideCount);
         libInfo.setPrecursors(_precursorCount);
         libInfo.setTransitions(_transitionCount);
+        libInfo.setMolecules(_moleculeCount);
         _libWriter.writeLibInfo(libInfo);
     }
 
@@ -330,6 +337,12 @@ public class ContainerChromatogramLibraryWriter
 
     private void saveRepresentativePrecursors(TargetedMSRun run) throws SQLException
     {
+        saveProteomicsPrecursors(run);
+        saveMoleculePrecursors(run);
+    }
+
+    private void saveProteomicsPrecursors(TargetedMSRun run) throws SQLException
+    {
         List<Precursor> precursors = PrecursorManager.getRepresentativePrecursors(run.getId());
         // Sort by peptideId.
         precursors.sort(Comparator.comparingLong(Precursor::getGeneralMoleculeId));
@@ -361,6 +374,39 @@ public class ContainerChromatogramLibraryWriter
         }
     }
 
+    private void saveMoleculePrecursors(TargetedMSRun run) throws SQLException
+    {
+        List<MoleculePrecursor> precursors = MoleculePrecursorManager.getRepresentativeMoleculePrecursors(run.getId());
+        // Sort by id
+        precursors.sort(Comparator.comparingLong(MoleculePrecursor::getGeneralMoleculeId));
+
+        long lastMoleculeId = 0;
+        List<MoleculePrecursor> moleculePrecursors = new ArrayList<>();
+        for(MoleculePrecursor precursor: precursors)
+        {
+            if(precursor.getGeneralMoleculeId() != lastMoleculeId)
+            {
+                if(moleculePrecursors.size() > 0)
+                {
+                    Molecule molecule = MoleculeManager.getMolecule(_container, lastMoleculeId);
+                    LibMolecule libMolecule = makeLibMolecule(molecule, moleculePrecursors, run);
+                    moleculePrecursors.clear();
+
+                    _libWriter.writeMolecule(libMolecule);
+                }
+                lastMoleculeId = precursor.getGeneralMoleculeId();
+                moleculePrecursors = new ArrayList<>();
+            }
+            moleculePrecursors.add(precursor);
+        }
+        if(moleculePrecursors.size() > 0)
+        {
+            Molecule molecule = MoleculeManager.getMolecule(_container, lastMoleculeId);
+            LibMolecule libMolecule = makeLibMolecule(molecule, moleculePrecursors, run);
+            _libWriter.writeMolecule(libMolecule);
+        }
+    }
+
     private void savePeptideGroup(PeptideGroup pepGroup, TargetedMSRun run) throws SQLException
     {
         // Create an entry in the Protein table.
@@ -369,7 +415,7 @@ public class ContainerChromatogramLibraryWriter
         libProtein.setDescription(pepGroup.getDescription());
         if(pepGroup.getSequenceId() != null)
         {
-            libProtein.setSequence(_proteinService.getProteinSequence(pepGroup.getSequenceId()));
+            libProtein.setSequence(ProteinService.get().getProteinSequence(pepGroup.getSequenceId()));
         }
 
         // Get the replicate that has the maximum overall peak area for this protein
@@ -398,7 +444,6 @@ public class ContainerChromatogramLibraryWriter
             List<Precursor> precursors = PrecursorManager.getPrecursorsForPeptide(peptide.getId(), schema);
 
             LibPeptide libPeptide = makeLibPeptide(peptide, precursors, run);
-
             protein.addPeptide(libPeptide);
         }
     }
@@ -418,12 +463,7 @@ public class ContainerChromatogramLibraryWriter
             {
                 throw new IllegalStateException("Could not find isotope label for isotope modification Id "+isotopeMod.getIsotopeModId());
             }
-            List<Peptide.IsotopeModification> isotopeMods = precIsotopeModMap.get(isotopeLabelId);
-            if(isotopeMods == null)
-            {
-                isotopeMods = new ArrayList<>();
-                precIsotopeModMap.put(isotopeLabelId, isotopeMods);
-            }
+            List<Peptide.IsotopeModification> isotopeMods = precIsotopeModMap.computeIfAbsent(isotopeLabelId, k -> new ArrayList<>());
             isotopeMods.add(isotopeMod);
         }
 
@@ -436,6 +476,18 @@ public class ContainerChromatogramLibraryWriter
             libPeptide.addPrecursor(libPrecursor);
         }
         return libPeptide;
+    }
+
+    private LibMolecule makeLibMolecule(Molecule molecule, List<MoleculePrecursor> precursors, TargetedMSRun run)
+    {
+        LibMolecule libMolecule = makeLibMolecule(molecule);
+
+        for(MoleculePrecursor precursor: precursors)
+        {
+            LibMoleculePrecursor libPrecursor = makeLibPrecursor(precursor, run);
+            libMolecule.addPrecursor(libPrecursor);
+        }
+        return libMolecule;
     }
 
     private LibPeptide makeLibPeptide(Peptide peptide)
@@ -477,7 +529,18 @@ public class ContainerChromatogramLibraryWriter
         return libPeptide;
     }
 
-    private PrecursorChromInfo getBestPrecursorChromInfo(Precursor precursor)
+    private LibMolecule makeLibMolecule(Molecule molecule)
+    {
+        LibMolecule libMolecule = new LibMolecule();
+        libMolecule.setIonFormula(molecule.getIonFormula());
+        libMolecule.setCustomIonName(molecule.getCustomIonName());
+        libMolecule.setMassMonoisotopic(molecule.getMassMonoisotopic());
+        libMolecule.setMassAverage(molecule.getMassAverage());
+        _moleculeCount++;
+        return libMolecule;
+    }
+
+    private PrecursorChromInfo getBestPrecursorChromInfo(GeneralPrecursor<?> precursor)
     {
         if(_libraryType == TargetedMSRun.RepresentativeDataState.Representative_Peptide)
         {
@@ -497,45 +560,8 @@ public class ContainerChromatogramLibraryWriter
     private LibPrecursor makeLibPrecursor(Precursor precursor,
                                           List<Peptide.IsotopeModification> precursorIsotopeMods, TargetedMSRun run)
     {
-        LibPrecursor libPrecursor = new LibPrecursor();
-        String isotopeLabel = _isotopeLabelMap.get(precursor.getIsotopeLabelId());
-        if(isotopeLabel == null)
-        {
-            throw new IllegalStateException("Isotope label name not found for Id "+precursor.getIsotopeLabelId());
-        }
-        libPrecursor.setIsotopeLabel(isotopeLabel);
-        libPrecursor.setMz(precursor.getMz());
-        libPrecursor.setCharge(precursor.getCharge());
-        libPrecursor.setNeutralMass(precursor.getNeutralMass());
-        libPrecursor.setModifiedSequence(precursor.getModifiedSequence());
-        libPrecursor.setCollisionEnergy(precursor.getCollisionEnergy());
-        libPrecursor.setDeclusteringPotential(precursor.getDeclusteringPotential());
-
         PrecursorChromInfo bestChromInfo = getBestPrecursorChromInfo(precursor);
-        if(bestChromInfo != null)
-        {
-            libPrecursor.setTotalArea(bestChromInfo.getTotalArea() == null ? 0.0 : bestChromInfo.getTotalArea());
-            libPrecursor.setChromatogram(bestChromInfo.getChromatogramBytes(run));
-            libPrecursor.setUncompressedSize(bestChromInfo.getUncompressedSize());
-            libPrecursor.setChromatogramFormat(bestChromInfo.getChromatogramFormat());
-            libPrecursor.setNumTransitions(bestChromInfo.getNumTransitions());
-            libPrecursor.setNumPoints(bestChromInfo.getNumPoints());
-            libPrecursor.setAverageMassErrorPPM(bestChromInfo.getAverageMassErrorPPM());
-
-            long sampleFileId = bestChromInfo.getSampleFileId();
-            Integer libSampleFileId = _sampleFileIdMap.get(sampleFileId);
-            if(libSampleFileId == null)
-            {
-                throw new IllegalStateException("Could not find an Id in the library for sample file Id "+sampleFileId);
-            }
-            libPrecursor.setSampleFileId(libSampleFileId.intValue());
-        }
-        else
-        {
-            libPrecursor.setTotalArea(0.0);
-            libPrecursor.setNumTransitions(0);
-            libPrecursor.setNumPoints(0);
-        }
+        LibPrecursor libPrecursor = new LibPrecursor(precursor, _isotopeLabelMap, bestChromInfo, run, _sampleFileIdMap);
 
         // Add the precursor isotope modifications
         addPrecursorIsotopeModifications(precursorIsotopeMods, libPrecursor);
@@ -544,13 +570,33 @@ public class ContainerChromatogramLibraryWriter
         addPrecursorRetentionTimes(libPrecursor, precursor);
 
         // Add transitions.
-        addTransitions(libPrecursor, precursor, bestChromInfo);
+        Collection<Transition> transitions = TransitionManager.getTransitionsForPrecursor(precursor.getId(), _user, _container);
+        addTransitions(libPrecursor, transitions, bestChromInfo, (t, tci) -> {
+                LibTransition transitionToSave = new LibTransition(t, tci);
+                _transitionCount++;
+                return transitionToSave;
+        });
 
         _precursorCount++;
         return libPrecursor;
     }
 
-    private void addPrecursorRetentionTimes(LibPrecursor libPrecursor, Precursor precursor)
+    private LibMoleculePrecursor makeLibPrecursor(MoleculePrecursor precursor, TargetedMSRun run)
+    {
+        PrecursorChromInfo bestChromInfo = getBestPrecursorChromInfo(precursor);
+        LibMoleculePrecursor libPrecursor = new LibMoleculePrecursor(precursor, _isotopeLabelMap, bestChromInfo, run, _sampleFileIdMap);
+
+        // Add precursor retention times
+        addPrecursorRetentionTimes(libPrecursor, precursor);
+
+        Collection<MoleculeTransition> transitions = MoleculeTransitionManager.getTransitionsForPrecursor(precursor.getId(), _user, _container);
+        // Add transitions.
+        addTransitions(libPrecursor, transitions, bestChromInfo, LibMoleculeTransition::new);
+        _precursorCount++;
+        return libPrecursor;
+    }
+
+    private void addPrecursorRetentionTimes(AbstractLibPrecursor<?> libPrecursor, GeneralPrecursor<?> precursor)
     {
         // Get the precursor chrom infos
         List<PrecursorChromInfo> precursorChromInfos = PrecursorManager.getSortedPrecursorChromInfosForPrecursor(precursor.getId());
@@ -595,49 +641,18 @@ public class ContainerChromatogramLibraryWriter
         }
     }
 
-    private void addTransitions(LibPrecursor precToSave, Precursor precursor, PrecursorChromInfo precursorChromInfo)
+    private <L extends AbstractLibTransition, T extends GeneralTransition> void addTransitions(AbstractLibPrecursor<L> precToSave, Collection<T> transitions, PrecursorChromInfo precursorChromInfo, BiFunction<T, TransitionChromInfo, L> factory)
     {
-        List<Transition> transitions = new ArrayList<>(TransitionManager.getTransitionsForPrecursor(precursor.getId(), _user, _container));
-        for(Transition transition: transitions)
+        for(T transition: transitions)
         {
             TransitionChromInfo tci = null;
             if(precursorChromInfo != null)
             {
                 tci = TransitionManager.getTransitionChromInfoForTransition(transition.getId(), precursorChromInfo.getId());
             }
-            LibTransition transitionToSave = makeLibTransition(transition, tci);
-
+            L transitionToSave = factory.apply(transition, tci);
             precToSave.addTransition(transitionToSave);
+            _transitionCount++;
         }
-    }
-
-    private LibTransition makeLibTransition(Transition transition, TransitionChromInfo tci)
-    {
-        LibTransition transitionToSave = new LibTransition();
-        transitionToSave.setMz(transition.getMz());
-        transitionToSave.setCharge(transition.getCharge());
-        transitionToSave.setNeutralMass(transition.getNeutralMass());
-        transitionToSave.setNeutralLossMass(transition.getNeutralLossMass());
-        transitionToSave.setFragmentType(transition.getFragmentType());
-        transitionToSave.setFragmentOrdinal(transition.getFragmentOrdinal());
-        transitionToSave.setMassIndex(transition.getMassIndex());
-
-        if(tci != null)
-        {
-            transitionToSave.setArea(tci.getArea() == null ? 0.0 : tci.getArea());
-            transitionToSave.setHeight(tci.getHeight() == null ? 0.0 : tci.getHeight());
-            transitionToSave.setFwhm(tci.getFwhm() == null ? 0.0 : tci.getFwhm());
-            transitionToSave.setChromatogramIndex(tci.getChromatogramIndex());
-            transitionToSave.setMassErrorPPM(tci.getMassErrorPPM());
-        }
-        else
-        {
-            transitionToSave.setArea(0.0);
-            transitionToSave.setHeight(0.0);
-            transitionToSave.setFwhm(0.0);
-        }
-
-        _transitionCount++;
-        return transitionToSave;
     }
 }

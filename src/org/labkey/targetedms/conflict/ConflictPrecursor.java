@@ -15,6 +15,12 @@
  */
 package org.labkey.targetedms.conflict;
 
+import org.labkey.api.util.HtmlString;
+import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.query.PrecursorManager;
+import org.labkey.targetedms.view.ModifiedPeptideHtmlMaker;
+import org.labkey.targetedms.view.PrecursorHtmlMaker;
+
 /**
  * User: vsharma
  * Date: 11/25/12
@@ -30,6 +36,8 @@ public class ConflictPrecursor
     private int _oldPrecursorRunId;
     private String _oldRunFile;
     private String _oldPrecursorLabel;
+    private boolean _peptide;
+    private String _moleculeName;
 
     public ConflictPrecursor() {}
 
@@ -111,5 +119,36 @@ public class ConflictPrecursor
     public void setOldPrecursorLabel(String oldPrecursorLabel)
     {
         _oldPrecursorLabel = oldPrecursorLabel;
+    }
+
+    public boolean isPeptide()
+    {
+        return _peptide;
+    }
+
+    public void setPeptide(boolean peptide)
+    {
+        _peptide = peptide;
+    }
+
+    public String getMoleculeName()
+    {
+        return _moleculeName;
+    }
+
+    public void setMoleculeName(String moleculeName)
+    {
+        _moleculeName = moleculeName;
+    }
+
+    public HtmlString getHTML(TargetedMSSchema schema, ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker, boolean newVersion)
+    {
+        if (_peptide)
+        {
+            return PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker,
+                    PrecursorManager.getPrecursor(schema.getContainer(), newVersion ? getNewPrecursorId() : getOldPrecursorId(), schema.getUser()),
+                    newVersion ? getNewPrecursorRunId() : getOldPrecursorRunId(), schema);
+        }
+        return HtmlString.of(_moleculeName);
     }
 }

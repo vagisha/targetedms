@@ -31,7 +31,7 @@ import java.util.List;
  * Date: 1/3/13
  * Time: 11:22 AM
  */
-public abstract class BaseDaoImpl<T extends ObjectWithId> implements Dao<T>
+public abstract class BaseDaoImpl<T extends AbstractLibEntity> implements Dao<T>
 {
     private static final Logger _log = LogManager.getLogger(BaseDaoImpl.class);
 
@@ -61,7 +61,7 @@ public abstract class BaseDaoImpl<T extends ObjectWithId> implements Dao<T>
     public void saveAll(List<T> list, Connection connection) throws SQLException
     {
         _log.info("Batch insert of "+list.size()+" objects");
-        if(list != null && list.size() > 0)
+        if(list.size() > 0)
         {
             String sql = getInsertSql();
 

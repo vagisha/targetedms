@@ -31,36 +31,25 @@ import java.util.List;
  * Date: 1/2/13
  * Time: 10:15 PM
  */
-public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
+public class LibMoleculePrecursorDao extends BaseDaoImpl<LibMoleculePrecursor>
 {
-    private final Dao<LibPrecursorIsotopeModification> _precIsotopeModDao;
     private final Dao<LibPrecursorRetentionTime> _precRetentionTimeDao;
-    private final Dao<LibTransition> _transitionDao;
+    private final Dao<LibMoleculeTransition> _transitionDao;
 
-    public LibPrecursorDao(Dao<LibPrecursorIsotopeModification> precIsotopeModDao,
-                           Dao<LibPrecursorRetentionTime> precRetentionTimeDao,
-                           Dao<LibTransition> transitionDao)
+    public LibMoleculePrecursorDao(Dao<LibPrecursorRetentionTime> precRetentionTimeDao,
+                                   Dao<LibMoleculeTransition> transitionDao)
     {
-        _precIsotopeModDao = precIsotopeModDao;
         _precRetentionTimeDao = precRetentionTimeDao;
         _transitionDao = transitionDao;
     }
 
     @Override
-    public void save(LibPrecursor precursor, Connection connection) throws SQLException
+    public void save(LibMoleculePrecursor precursor, Connection connection) throws SQLException
     {
         if(precursor != null)
         {
             super.save(precursor, connection);
 
-            if(_precIsotopeModDao != null)
-            {
-                for(LibPrecursorIsotopeModification isotopeMod: precursor.getIsotopeModifications())
-                {
-                    isotopeMod.setPrecursorId(precursor.getId());
-                }
-                _precIsotopeModDao.saveAll(precursor.getIsotopeModifications(), connection);
-            }
             if(_precRetentionTimeDao != null)
             {
                 for(LibPrecursorRetentionTime precRetentionTime: precursor.getRetentionTimes())
@@ -71,9 +60,9 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
             }
             if(_transitionDao != null)
             {
-                for(LibTransition transition: precursor.getTransitions())
+                for(LibMoleculeTransition transition: precursor.getTransitions())
                 {
-                    transition.setPrecursorId(precursor.getId());
+                    transition.setMoleculePrecursorId(precursor.getId());
                 }
                 _transitionDao.saveAll(precursor.getTransitions(), connection);
             }
@@ -81,15 +70,14 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
     }
 
     @Override
-    protected void setValuesInStatement(LibPrecursor precursor, PreparedStatement stmt) throws SQLException
+    protected void setValuesInStatement(LibMoleculePrecursor precursor, PreparedStatement stmt) throws SQLException
     {
         int colIndex = 1;
-        stmt.setLong(colIndex++, precursor.getPeptideId());
+        stmt.setLong(colIndex++, precursor.getMoleculeId());
         stmt.setString(colIndex++, precursor.getIsotopeLabel());
         stmt.setDouble(colIndex++, precursor.getMz());
         stmt.setInt(colIndex++, precursor.getCharge());
-        stmt.setDouble(colIndex++, precursor.getNeutralMass());
-        stmt.setString(colIndex++, precursor.getModifiedSequence());
+        stmt.setString(colIndex++, precursor.getMolecule());
         stmt.setObject(colIndex++, precursor.getCollisionEnergy(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getDeclusteringPotential(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getTotalArea(), Types.DOUBLE);
@@ -102,51 +90,39 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
         stmt.setInt(colIndex++, precursor.getChromatogramFormat());
 
         stmt.setObject(colIndex++, precursor.getExplicitIonMobility(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getMassMonoisotopic(), Types.DOUBLE);
+        stmt.setObject(colIndex++, precursor.getMassAverage(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getCcs(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getIonMobilityMS1(), Types.DOUBLE);
         stmt.setObject(colIndex++, precursor.getIonMobilityFragment(), Types.DOUBLE);
         stmt.setString(colIndex++, precursor.getIonMobilityType());
-
     }
 
     @Override
     public String getTableName()
     {
-        return Table.Precursor.name();
+        return Table.MoleculePrecursor.name();
     }
 
     @Override
     protected Constants.ColumnDef[] getColumns()
     {
-        return PrecursorColumn.values();
+        return Constants.MoleculePrecursorColumn.values();
     }
 
     @Override
-    public void saveAll(List<LibPrecursor> precursors, Connection connection) throws SQLException
+    public void saveAll(List<LibMoleculePrecursor> precursors, Connection connection) throws SQLException
     {
         if(precursors.size() > 0)
         {
             super.saveAll(precursors, connection);
 
-            List<LibPrecursorIsotopeModification> precIsotopeMods = new ArrayList<>();
             List<LibPrecursorRetentionTime> precRetentionTimes = new ArrayList<>();
-            List<LibTransition> transitions = new ArrayList<>();
+            List<LibMoleculeTransition> transitions = new ArrayList<>();
 
-            if(_precIsotopeModDao != null)
-            {
-                for(LibPrecursor precursor: precursors)
-                {
-                    for(LibPrecursorIsotopeModification isotopeMod: precursor.getIsotopeModifications())
-                    {
-                        isotopeMod.setPrecursorId(precursor.getId());
-                        precIsotopeMods.add(isotopeMod);
-                    }
-                }
-                _precIsotopeModDao.saveAll(precIsotopeMods, connection);
-            }
             if(_precRetentionTimeDao != null)
             {
-                for(LibPrecursor precursor: precursors)
+                for(LibMoleculePrecursor precursor: precursors)
                 {
                     for(LibPrecursorRetentionTime precRetentionTime: precursor.getRetentionTimes())
                     {
@@ -158,11 +134,11 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
             }
             if(_transitionDao != null)
             {
-                for(LibPrecursor precursor: precursors)
+                for(LibMoleculePrecursor precursor: precursors)
                 {
-                    for(LibTransition transition: precursor.getTransitions())
+                    for(LibMoleculeTransition transition: precursor.getTransitions())
                     {
-                        transition.setPrecursorId(precursor.getId());
+                        transition.setMoleculePrecursorId(precursor.getId());
                         transitions.add(transition);
                     }
                 }
@@ -172,64 +148,54 @@ public class LibPrecursorDao extends BaseDaoImpl<LibPrecursor>
     }
 
     @Override
-    protected List<LibPrecursor> parseQueryResult(ResultSet rs) throws SQLException
+    protected List<LibMoleculePrecursor> parseQueryResult(ResultSet rs) throws SQLException
     {
-        List<LibPrecursor> precursors = new ArrayList<>();
+        List<LibMoleculePrecursor> precursors = new ArrayList<>();
         while(rs.next())
         {
-            LibPrecursor precursor = new LibPrecursor();
-            precursor.setId(rs.getInt(PrecursorColumn.Id.baseColumn().name()));
-            precursor.setPeptideId(rs.getInt(PrecursorColumn.PeptideId.baseColumn().name()));
-            precursor.setIsotopeLabel(rs.getString(PrecursorColumn.IsotopeLabel.baseColumn().name()));
-            precursor.setMz(rs.getDouble(PrecursorColumn.Mz.baseColumn().name()));
-            precursor.setCharge(rs.getInt(PrecursorColumn.Charge.baseColumn().name()));
-            precursor.setNeutralMass(rs.getDouble(PrecursorColumn.NeutralMass.baseColumn().name()));
-            precursor.setModifiedSequence(rs.getString(PrecursorColumn.ModifiedSequence.baseColumn().name()));
-            precursor.setCollisionEnergy(readDouble(rs, PrecursorColumn.CollisionEnergy.baseColumn().name()));
-            precursor.setDeclusteringPotential(readDouble(rs, PrecursorColumn.DeclusteringPotential.baseColumn().name()));
-            precursor.setTotalArea(rs.getDouble(PrecursorColumn.TotalArea.baseColumn().name()));
-            precursor.setNumTransitions(rs.getInt(PrecursorColumn.NumTransitions.baseColumn().name()));
-            precursor.setNumPoints(rs.getInt(PrecursorColumn.NumPoints.baseColumn().name()));
-            precursor.setAverageMassErrorPPM(rs.getDouble(PrecursorColumn.AverageMassErrorPPM.baseColumn().name()));
-            precursor.setSampleFileId(rs.getInt(PrecursorColumn.SampleFileId.baseColumn().name()));
-            precursor.setChromatogram(rs.getBytes(PrecursorColumn.Chromatogram.baseColumn().name()));
+            LibMoleculePrecursor precursor = new LibMoleculePrecursor();
+            precursor.setId(rs.getInt(Constants.MoleculePrecursorColumn.Id.baseColumn().name()));
+            precursor.setMoleculeId(rs.getInt(Constants.MoleculePrecursorColumn.MoleculeId.baseColumn().name()));
+            precursor.setIsotopeLabel(rs.getString(Constants.MoleculePrecursorColumn.IsotopeLabel.baseColumn().name()));
+            precursor.setMz(rs.getDouble(Constants.MoleculePrecursorColumn.Mz.baseColumn().name()));
+            precursor.setCharge(rs.getInt(Constants.MoleculePrecursorColumn.Charge.baseColumn().name()));
+            precursor.setCollisionEnergy(readDouble(rs, Constants.MoleculePrecursorColumn.CollisionEnergy.baseColumn().name()));
+            precursor.setDeclusteringPotential(readDouble(rs, Constants.MoleculePrecursorColumn.DeclusteringPotential.baseColumn().name()));
+            precursor.setTotalArea(rs.getDouble(Constants.MoleculePrecursorColumn.TotalArea.baseColumn().name()));
+            precursor.setNumTransitions(rs.getInt(Constants.MoleculePrecursorColumn.NumTransitions.baseColumn().name()));
+            precursor.setNumPoints(rs.getInt(Constants.MoleculePrecursorColumn.NumPoints.baseColumn().name()));
+            precursor.setAverageMassErrorPPM(rs.getDouble(Constants.MoleculePrecursorColumn.AverageMassErrorPPM.baseColumn().name()));
+            precursor.setSampleFileId(rs.getInt(Constants.MoleculePrecursorColumn.SampleFileId.baseColumn().name()));
+            precursor.setChromatogram(rs.getBytes(Constants.MoleculePrecursorColumn.Chromatogram.baseColumn().name()));
             precursor.setExplicitIonMobility(readDouble(rs, Constants.MoleculePrecursorColumn.ExplicitIonMobility.baseColumn().name()));
+            precursor.setMassMonoisotopic(readDouble(rs, Constants.MoleculePrecursorColumn.MassMonoisotopic.baseColumn().name()));
+            precursor.setMassAverage(readDouble(rs, Constants.MoleculePrecursorColumn.MassAverage.baseColumn().name()));
             precursor.setCcs(readDouble(rs, Constants.MoleculePrecursorColumn.CCS.baseColumn().name()));
             precursor.setIonMobilityMS1(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityMS1.baseColumn().name()));
             precursor.setIonMobilityFragment(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityFragment.baseColumn().name()));
             precursor.setIonMobilityWindow(readDouble(rs, Constants.MoleculePrecursorColumn.IonMobilityWindow.baseColumn().name()));
             precursor.setIonMobilityType(rs.getString(Constants.MoleculePrecursorColumn.IonMobilityType.baseColumn().name()));
+            precursor.setMolecule(rs.getString(Constants.MoleculePrecursorColumn.Molecule.baseColumn().name()));
 
             precursors.add(precursor);
         }
         return precursors;
     }
 
-    public void loadTransitions(LibPrecursor precursor, Connection connection) throws SQLException
+    public void loadTransitions(LibMoleculePrecursor precursor, Connection connection) throws SQLException
     {
-        List<LibTransition> transitions = _transitionDao.queryForForeignKey(Constants.TransitionColumn.PrecursorId.baseColumn().name(),
+        List<LibMoleculeTransition> transitions = _transitionDao.queryForForeignKey(Constants.TransitionColumn.PrecursorId.baseColumn().name(),
                                                                             precursor.getId(),
                                                                             connection);
-        for(LibTransition transition: transitions)
+        for(LibMoleculeTransition transition: transitions)
         {
             precursor.addTransition(transition);
         }
     }
 
-    public void loadPrecursorIsotopeModifications(LibPrecursor precursor, Connection connection) throws SQLException
+    public void loadPrecursorRetentionTimes(LibMoleculePrecursor precursor, Connection connection) throws SQLException
     {
-        List<LibPrecursorIsotopeModification> precIsotopeMods = _precIsotopeModDao.queryForForeignKey(Constants.PrecursorIsotopeModificationColumn.PrecursorId.baseColumn().name(),
-                                                                                                      precursor.getId(),
-                                                                                                      connection);
-        for(LibPrecursorIsotopeModification precIsoMod: precIsotopeMods)
-        {
-            precursor.addIsotopeModification(precIsoMod);
-        }
-    }
-
-    public void loadPrecursorRetentionTimes(LibPrecursor precursor, Connection connection) throws SQLException
-    {
-        List<LibPrecursorRetentionTime> precRetTimes = _precRetentionTimeDao.queryForForeignKey(Constants.PrecursorRetentionTimeColumn.PrecursorId.baseColumn().name(),
+        List<LibPrecursorRetentionTime> precRetTimes = _precRetentionTimeDao.queryForForeignKey(Constants.MoleculePrecursorRetentionTimeColumn.MoleculePrecursorId.baseColumn().name(),
                                                                                                 precursor.getId(),
                                                                                                 connection);
         for(LibPrecursorRetentionTime precRt: precRetTimes)

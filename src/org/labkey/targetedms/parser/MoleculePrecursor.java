@@ -16,6 +16,8 @@
 package org.labkey.targetedms.parser;
 
 import org.labkey.api.util.Formats;
+import org.labkey.api.util.HtmlString;
+import org.labkey.api.util.HtmlStringBuilder;
 import org.labkey.targetedms.chart.LabelFactory;
 
 /**
@@ -72,17 +74,29 @@ public class MoleculePrecursor extends GeneralPrecursor<MoleculeTransition>
     @Override
     public String toString()
     {
-        return getCustomIonName();
+        StringBuilder sb = new StringBuilder();
+        boolean hasCustomName = getCustomIonName() != null;
+        if (hasCustomName)
+        {
+            sb.append(getCustomIonName());
+        }
+        if (getIonFormula() != null)
+        {
+            if (hasCustomName)
+            {
+                sb.append(" - ");
+            }
+            sb.append(getIonFormula());
+        }
+        return sb.toString();
     }
 
-    public String getHtml()
+    public HtmlString getHtml()
     {
-        StringBuilder html = new StringBuilder();
-        html.append(toString());
-        html.append("<span>");
-        html.append(" - ").append(Formats.f4.format(getMz()));
-        html.append(LabelFactory.getChargeLabel(getCharge()));
-        html.append("</span>");
-        return html.toString();
+        HtmlStringBuilder hsb = HtmlStringBuilder.of(toString());
+        hsb.append(" - ");
+        hsb.append(Formats.f4.format(getMz()));
+        hsb.append(LabelFactory.getChargeLabel(getCharge()));
+        return hsb.getHtmlString();
     }
 }

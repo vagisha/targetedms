@@ -37,14 +37,20 @@ public class ChromatogramLibraryWriter
 
     private Dao<LibInfo> _libInfoDao;
     private Dao<LibSampleFile> _sampleFileDao;
+
+    // Proteomics
     private Dao<LibStructuralModification> _structuralModificationDao;
     private Dao<LibIsotopeModification> _isotopeModificationDao;
     private Dao<LibProtein> _proteinDao;
     private Dao<LibPeptide> _peptideDao;
     private Dao<LibIrtLibrary> _irtLibraryDao;
 
-    private List<LibPeptide> _libPeptideCache;
-    private List<LibProtein> _libProteinCache;
+    // Small molecule
+    private Dao<LibMolecule> _moleculeDao;
+
+    private final List<LibPeptide> _libPeptideCache = new ArrayList<>();
+    private final List<LibProtein> _libProteinCache = new ArrayList<>();
+    private final List<LibMolecule> _libMoleculeCache = new ArrayList<>();
     private int _cacheSize = 0;
 
     private int _maxCacheSize = 1000;
@@ -80,19 +86,21 @@ public class ChromatogramLibraryWriter
 
     private void initializeDaos()
     {
-
         _libInfoDao = new LibInfoDao();
         _sampleFileDao = new LibSampleFileDao();
         _structuralModificationDao = new LibStructuralModificationDao(new LibStructuralModLossDao());
         _isotopeModificationDao = new LibIsotopeModificationDao();
 
         Dao<LibPrecursor> precursorDao = new LibPrecursorDao(new LibPrecursorIsotopeModificationDao(),
-                new LibPrecursorRetentionTimeDao(),
+                new LibPrecursorRetentionTimeDao(Constants.Column.PrecursorId),
                 new LibTransitionDao());
-
         _peptideDao = new LibPeptideDao(new LibPeptideStructuralModDao(), precursorDao);
-
         _proteinDao = new LibProteinDao(_peptideDao);
+
+        Dao<LibMoleculePrecursor> moleculePrecursorDao = new LibMoleculePrecursorDao(
+                new LibPrecursorRetentionTimeDao(Constants.Column.MoleculePrecursorId),
+                new LibMoleculeTransitionDao());
+        _moleculeDao = new LibMoleculeDao(moleculePrecursorDao);
 
         _irtLibraryDao = new LibIrtLibraryDao();
     }
@@ -111,24 +119,15 @@ public class ChromatogramLibraryWriter
         {
             _connectionSource.close();
         }
-        _log.info("Done writing chromatogram library "+FileUtil.pathToString(_libFile));
+        _log.info("Done writing chromatogram library " + FileUtil.pathToString(_libFile));
     }
 
     private void flushCache() throws SQLException
     {
-        // _log.info("ChromatogramLibraryWriter.flushCache() cache size is " + _cacheSize);
-        if(_libPeptideCache != null && _libPeptideCache.size() > 0)
-        {
-            writePeptides(_libPeptideCache);
-            _libPeptideCache.clear();
-            _libPeptideCache = null;
-        }
-        if(_libProteinCache != null && _libProteinCache.size() > 0)
-        {
-            writeProteins(_libProteinCache);
-            _libProteinCache.clear();
-            _libProteinCache = null;
-        }
+        _log.debug("ChromatogramLibraryWriter.flushCache() cache size is " + _cacheSize);
+        flushList(_peptideDao, _libPeptideCache);
+        flushList(_proteinDao, _libProteinCache);
+        flushList(_moleculeDao, _libMoleculeCache);
 
         _cacheSize = 0;
     }
@@ -155,82 +154,32 @@ public class ChromatogramLibraryWriter
 
     public void writeIrtLibrary(List<LibIrtLibrary> irtLibraries) throws SQLException
     {
-        saveList(_irtLibraryDao, irtLibraries);
+        flushList(_irtLibraryDao, irtLibraries);
     }
 
     public void writeProtein(LibProtein protein) throws SQLException
     {
-        addToProteinCache(protein);
+        addToCache(protein, _libProteinCache);
     }
 
     public void writePeptide(LibPeptide peptide) throws SQLException
     {
-        addToPeptideCache(peptide);
+        addToCache(peptide, _libPeptideCache);
     }
 
-    private void writeProteins(List<LibProtein> proteins) throws SQLException
+    public void writeMolecule(LibMolecule molecule) throws SQLException
     {
-        saveList(_proteinDao, proteins);
+        addToCache(molecule, _libMoleculeCache);
     }
 
-    private void writePeptides(List<LibPeptide> peptides) throws SQLException
+    private <T extends AbstractLibEntity> void addToCache(T entity, List<T> cache) throws SQLException
     {
-        saveList(_peptideDao, peptides);
-    }
-
-    private void addToProteinCache(LibProtein libProtein) throws SQLException
-    {
-        if(_libProteinCache == null)
-        {
-            _libProteinCache = new ArrayList<>();
-        }
-        _libProteinCache.add(libProtein);
-
-        updateCacheSize(libProtein);
+        cache.add(entity);
+        _cacheSize += entity.getCacheSize();
 
         if(_cacheSize >= _maxCacheSize)
         {
            flushCache();
-        }
-    }
-
-    private void addToPeptideCache(LibPeptide libPeptide) throws SQLException
-    {
-        if(_libPeptideCache == null)
-        {
-            _libPeptideCache = new ArrayList<>();
-        }
-        _libPeptideCache.add(libPeptide);
-
-        updateCacheSize(libPeptide);
-
-        if(_cacheSize >= _maxCacheSize)
-        {
-            flushCache();
-        }
-    }
-
-    private void updateCacheSize(LibProtein libProtein)
-    {
-        _cacheSize++;
-        _cacheSize += libProtein.getPeptides().size();
-        for(LibPeptide libPeptide: libProtein.getPeptides())
-        {
-            updateCacheSize(libPeptide);
-        }
-    }
-
-    private void updateCacheSize(LibPeptide libPeptide)
-    {
-        _cacheSize++;
-        _cacheSize += libPeptide.getPrecursors().size();
-        _cacheSize += libPeptide.getStructuralModifications().size();
-
-        for(LibPrecursor libPrecursor: libPeptide.getPrecursors())
-        {
-            _cacheSize += libPrecursor.getTransitions().size();
-            _cacheSize += libPrecursor.getIsotopeModifications().size();
-            _cacheSize += libPrecursor.getRetentionTimes().size();
         }
     }
 
@@ -247,11 +196,12 @@ public class ChromatogramLibraryWriter
         }
     }
 
-    private <T> void saveList(Dao<T> dao, List<T> list) throws SQLException
+    private <T> void flushList(Dao<T> dao, List<T> list) throws SQLException
     {
         try (Connection connection = getConnection())
         {
             dao.saveAll(list, connection);
+            list.clear();
         }
         catch(SQLException e)
         {

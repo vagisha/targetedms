@@ -20,24 +20,12 @@ package org.labkey.targetedms.chromlib;
  * Date: 12/30/12
  * Time: 4:46 PM
  */
-public class LibStructuralModLoss implements ObjectWithId
+public class LibStructuralModLoss extends AbstractLibEntity
 {
-    private int _id;
     private int _structuralModId;
     private String _formula;
     private Double _massDiffMono;
     private Double _massDiffAvg;
-
-    public int getId()
-    {
-        return _id;
-    }
-
-    @Override
-    public void setId(int id)
-    {
-        _id = id;
-    }
 
     public int getStructuralModId()
     {

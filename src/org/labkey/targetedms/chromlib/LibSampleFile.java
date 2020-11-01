@@ -22,9 +22,8 @@ import java.util.Date;
  * Date: 12/31/12
  * Time: 12:06 PM
  */
-public class LibSampleFile implements ObjectWithId
+public class LibSampleFile extends AbstractLibEntity
 {
-    private int _id;
     private String _filePath;
     private String _sampleName;
     private Date _acquiredTime;
@@ -32,17 +31,6 @@ public class LibSampleFile implements ObjectWithId
     private String _instrumentIonizationType;
     private String _instrumentAnalyzer;
     private String _instrumentDetector;
-
-    public int getId()
-    {
-        return _id;
-    }
-
-    @Override
-    public void setId(int id)
-    {
-        _id = id;
-    }
 
     public String getFilePath()
     {

@@ -1,13 +1,12 @@
 <customView xmlns="http://labkey.org/data/xml/queryCustomView" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        label="Library Peptides" canOverride="true">
+        label="Library Molecules" canOverride="true">
     <columns>
         <column name="PeptideGroupId/RunId/File" />
-        <column name="PeptideGroupId/Label" />
-        <column name="ModifiedPeptideDisplayColumn" />  <!-- Defined in ModifiedPeptideDisplayColumn.java -->
-        <column name="StartIndex" />
-        <column name="EndIndex" />
-        <column name="CalcNeutralMass" />
-        <column name="NumMissedCleavages" />
+        <column name="Molecule" />
+        <column name="IonFormula" />
+        <column name="CustomIonName" />
+        <column name="MassMonoisotopic" />
+        <column name="MassAverage" />
         <column name="RtCalculatorScore" />
         <column name="PredictedRetentionTime" />
         <column name="AvgMeasuredRetentionTime" />
@@ -17,8 +16,9 @@
         <filter column="RepresentivePrecursorCount" operator="gt" value="0"/>
     </filters>
     <sorts>
-       <sort column="PeptideGroupId/Label" />
-       <sort column="Sequence" />
+       <sort column="Molecule" />
+       <sort column="IonFormula" />
+       <sort column="CustomIonName" />
        <sort column="PeptideGroupId/RunId/File" />
     </sorts>
 </customView>

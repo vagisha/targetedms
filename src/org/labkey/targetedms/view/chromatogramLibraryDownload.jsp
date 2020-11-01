@@ -45,6 +45,7 @@
     long peptideGroupCount = chromLibAnalyteCounts.getPeptideGroupCount();
     long peptideCount = chromLibAnalyteCounts.getPeptideCount();
     long transitionCount = chromLibAnalyteCounts.getTransitionCount();
+    long moleculeCount = chromLibAnalyteCounts.getMoleculeCount();
 
     DecimalFormat format = new DecimalFormat("#,###");
 
@@ -57,7 +58,7 @@
     boolean readOnlyUser = !getContainer().hasPermission(getUser(), InsertPermission.class); // Importing a document and resolving conflicts require Insert permissions.
 
     String conflictMessage = "";
-    String analyteType = folderType == TargetedMSService.FolderType.LibraryProtein ? "protein" : "peptide";
+    String analyteType = folderType == TargetedMSService.FolderType.LibraryProtein ? "protein" : (moleculeCount > 0 ? "molecule" : "peptide");
     boolean libFileExists = Files.exists(archiveFile);
     if(hasConflicts)
     {
@@ -127,7 +128,10 @@
             if (folderType == TargetedMSService.FolderType.Library)
             {
 %>
-        The library contains <%= h(format.format(peptideCount))%> peptides with <%= h(format.format(transitionCount))%> ranked transitions.
+        The library contains <%= h(peptideCount > 0 ? (format.format(peptideCount) + " peptides") : "")%>
+        <%= h(peptideCount > 0 && moleculeCount > 0 ? "and" : "")%>
+        <%= h(moleculeCount > 0 ? (format.format(moleculeCount) + " molecules") : "")%>
+        with <%= h(format.format(transitionCount))%> ranked transitions.
 <%
             }
             else if (folderType == TargetedMSService.FolderType.LibraryProtein)

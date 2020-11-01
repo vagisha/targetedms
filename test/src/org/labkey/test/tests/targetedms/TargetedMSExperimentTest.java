@@ -276,7 +276,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         //Click on a precursor icon link.
         clickAndWait(Locator.linkWithHref("precursorAllChromatogramsChart.view?"));
         //Verify expected values in detail view. Verify chromatogram.
-        assertTextPresentInThisOrder("Precursor Chromatograms", "YAL038W", "LTSLNVVAGSDLR", "672.8777");
+        assertTextPresentInThisOrder("Precursor Chromatograms: LTSLNVVAGSDLR", "YAL038W", "672.8777");
         assertElementPresent(Locator.xpath("//img[contains(@src, 'Chromatogram')]"));
 
         goBack();
@@ -352,7 +352,7 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertTextPresent("Molecule Precursor Chromatograms");
         assertTextPresent("Molecule Precursor Summary");
         waitForElement(Locator.xpath("//tr[td[text()='Molecule Group']][td[normalize-space()='PC']]"));
-        assertElementPresent(Locator.xpath("//tr[td[text()='Molecule Precursor']][td[normalize-space()='PC aa C26:0']]"));
+        assertElementPresent(Locator.xpath("//tr[td[text()='Molecule Precursor']][td[normalize-space()='PC aa C26:0 - C34H68NO8P[M+H]']]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='Charge']][td[normalize-space()='1']]"));
         assertElementPresent(Locator.xpath("//tr[td[text()='m/z']][td[normalize-space()='650.4755']]"));
 

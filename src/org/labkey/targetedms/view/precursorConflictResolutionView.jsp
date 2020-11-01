@@ -44,7 +44,8 @@
 
     ModifiedPeptideHtmlMaker modifiedPeptideHtmlMaker = new ModifiedPeptideHtmlMaker();
 
-    ActionURL runPrecursorDetailsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer());
+    ActionURL peptidePrecursorDetailsUrl = new ActionURL(TargetedMSController.PrecursorAllChromatogramsChartAction.class, getContainer());
+    ActionURL moleculePrecursorDetailsUrl = new ActionURL(TargetedMSController.MoleculePrecursorAllChromatogramsChartAction.class, getContainer());
     ActionURL precursorConflictUiUrl = new ActionURL(TargetedMSController.ShowPrecursorConflictUiAction.class, getContainer());
 %>
 
@@ -224,7 +225,7 @@ function toggleCheckboxSelection(element)
     </div>
 <%}%>
 
-<div style="margin-bottom:10px;">Check the peptides that you would like to include in the library.</div>
+<div style="margin-bottom:10px;">Choose which variant you would like to include in the library.</div>
 
 <%if(bean.getConflictRunFileName() != null) {%>
     <div style="color:red; margin-bottom:10px;">
@@ -239,8 +240,8 @@ function toggleCheckboxSelection(element)
 <table class="labkey-data-region-legacy labkey-show-borders myTable" id="dataTable">
     <thead>
        <tr>
-            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Conflicting Peptides in Document</div></th>
-            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Current Library Peptides</div></th>
+            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Newly Imported Data</div></th>
+            <th colspan="<%=colspan%>"><div class="labkey-button-bar" style="width:98%">Current Library Data</div></th>
         </tr>
        <tr>
            <th class="labkey-column-header"></th>
@@ -258,7 +259,9 @@ function toggleCheckboxSelection(element)
     </thead>
     <tbody>
 
-    <%for (ConflictPrecursor precursor: bean.getConflictPrecursorList()) {%>
+    <%
+        TargetedMSSchema schema = new TargetedMSSchema(getUser(), getContainer());
+        for (ConflictPrecursor precursor: bean.getConflictPrecursorList()) {%>
          <tr class="labkey-alternate-row">
 
              <!-- New representative precursor -->
@@ -275,12 +278,11 @@ function toggleCheckboxSelection(element)
              </td>
              <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
                  <span class="conflictEntityLabel">
-                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.getPrecursor(getContainer(), precursor.getNewPrecursorId(),
-                             getUser()), precursor.getNewPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
+                     <%= precursor.getHTML(schema, modifiedPeptideHtmlMaker, true) %>
                  </span>
              </td>
              <td class="representative newPrecursor <%=precursor.getNewPrecursorId()%>">
-                 <a href="<%=h(runPrecursorDetailsUrl.replaceParameter("id", precursor.getNewPrecursorId()))%>" target="_blank" rel="noopener noreferrer"><%=h(precursor.getNewRunFile())%></a>
+                 <a href="<%=h((precursor.isPeptide() ? peptidePrecursorDetailsUrl : moleculePrecursorDetailsUrl).replaceParameter("id", precursor.getNewPrecursorId()))%>" target="_blank" rel="noopener noreferrer"><%=h(precursor.getNewRunFile())%></a>
              </td>
 
              <!-- Old representative precursor -->
@@ -296,12 +298,11 @@ function toggleCheckboxSelection(element)
              </td>
              <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">
                  <span class="conflictEntityLabel">
-                     <%=PrecursorHtmlMaker.getModSeqChargeHtml(modifiedPeptideHtmlMaker, PrecursorManager.getPrecursor(getContainer(), precursor.getOldPrecursorId(),
-                             getUser()), precursor.getOldPrecursorRunId(), new TargetedMSSchema(getUser(), getContainer()))%>
+                     <%= precursor.getHTML(schema, modifiedPeptideHtmlMaker, false) %>
                  </span>
              </td>
              <td class="oldPrecursor <%=precursor.getNewPrecursorId()%>">
-                <a href="<%=h(runPrecursorDetailsUrl.replaceParameter("id", precursor.getOldPrecursorId()))%>"><%=h(precursor.getOldRunFile())%></a>
+                <a href="<%=h((precursor.isPeptide() ? peptidePrecursorDetailsUrl : moleculePrecursorDetailsUrl).replaceParameter("id", precursor.getOldPrecursorId()))%>"><%=h(precursor.getOldRunFile())%></a>
              </td>
          </tr>
     <%}%>

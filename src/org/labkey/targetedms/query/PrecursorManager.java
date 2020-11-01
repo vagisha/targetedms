@@ -36,6 +36,7 @@ import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
+import org.labkey.targetedms.parser.MoleculePrecursor;
 import org.labkey.targetedms.parser.Precursor;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
 import org.labkey.targetedms.parser.RepresentativeDataState;
@@ -438,8 +439,7 @@ public class PrecursorManager
         sql.append(" gp.RepresentativeDataState = ?");
         sql.add(RepresentativeDataState.Representative.ordinal());
 
-        Precursor[] reprPrecursors = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Precursor.class);
-        return Arrays.asList(reprPrecursors);
+        return new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(Precursor.class);
     }
 
     public static Precursor getLastDeprecatedPrecursor(Precursor prec, Container container)
@@ -474,14 +474,10 @@ public class PrecursorManager
         sql.add(prec.getModifiedSequence());
         sql.append(" ORDER BY gp.Modified DESC ");
 
-        Precursor[] deprecatedPrecursors = new SqlSelector(TargetedMSManager.getSchema(), sql).getArray(Precursor.class);
-        if (deprecatedPrecursors.length == 0)
-        {
-            return null;
-        }
-        return deprecatedPrecursors[0];
+        return new SqlSelector(TargetedMSManager.getSchema(), TargetedMSManager.getSqlDialect().limitRows(sql, 1)).getObject(Precursor.class);
     }
 
+    /** Handles both peptide and molecule variants */
     public static int setRepresentativeState(long runId, RepresentativeDataState state)
     {
         SQLFragment sql = new SQLFragment();
@@ -498,19 +494,6 @@ public class PrecursorManager
         sql.append(TargetedMSManager.getTableInfoPeptideGroup()+".RunId = ?");
         sql.add(runId);
         return new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
-    }
-
-    public static void updateRepresentativeStatus(int[] precursorIds, RepresentativeDataState representativeState)
-    {
-        if(precursorIds == null || precursorIds.length == 0)
-            return;
-
-        List<Integer> precursorIdList = new ArrayList<>(precursorIds.length);
-        for(int i = 0; i < precursorIds.length; i++)
-        {
-            precursorIdList.add(precursorIds[i]);
-        }
-       updateRepresentativeStatus(precursorIdList, representativeState);
     }
 
     public static void updateRepresentativeStatus(List<Integer> precursorIds, RepresentativeDataState representativeState)
@@ -562,27 +545,13 @@ public class PrecursorManager
         new SqlExecutor(TargetedMSManager.getSchema()).execute(sql);
     }
 
-    public static boolean ensureContainerMembership(int[] precursorIds, Container container)
+    public static boolean ensureContainerMembership(List<Integer> precursorIds, Container container)
     {
-        if(precursorIds == null || precursorIds.length == 0)
+        if(precursorIds == null || precursorIds.isEmpty())
             return false;
+        // Dedupe
+        Set<Integer> ids = new HashSet<>(precursorIds);
 
-        StringBuilder precIds = new StringBuilder();
-        Arrays.sort(precursorIds);
-        int lastPrecursorId = 0;
-        long precursorIdCount = 0;
-        for(int id: precursorIds)
-        {
-            // Ignore duplicates
-            if( id != lastPrecursorId)
-            {
-                precIds.append(",").append(id);
-                precursorIdCount++;
-            }
-            lastPrecursorId = id;
-        }
-        if(precIds.length() > 0)
-            precIds.deleteCharAt(0);
         SQLFragment sql = new SQLFragment("SELECT COUNT(pg.Id) FROM ");
         sql.append(TargetedMSManager.getTableInfoGeneralPrecursor(), "gp");
         sql.append(", ");
@@ -592,11 +561,13 @@ public class PrecursorManager
         sql.append(", ");
         sql.append(TargetedMSManager.getTableInfoRuns(), "r");
         sql.append(" WHERE gp.GeneralMoleculeId = gm.Id AND ");
-        sql.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Container = ? AND gp.Id IN ("+precIds+")");
+        sql.append("gm.PeptideGroupId = pg.Id AND pg.RunId = r.Id AND r.Container = ? AND gp.Id IN (");
+        sql.append(StringUtils.join(ids, ","));
+        sql.append(")");
         sql.add(container.getId());
 
         Integer count = new SqlSelector(TargetedMSManager.getSchema(), sql).getObject(Integer.class);
-        return count != null && count == precursorIdCount;
+        return count != null && count.intValue() == ids.size() ;
     }
 
     public static double getMaxPrecursorIntensity(long generalMoleculeId)

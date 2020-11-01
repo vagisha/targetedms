@@ -23,10 +23,8 @@ import org.labkey.test.Locator;
 import org.labkey.test.categories.DailyB;
 import org.labkey.test.categories.MS2;
 import org.labkey.test.components.CustomizeView;
-import org.labkey.test.components.targetedms.TargetedMSRunsTable;
 import org.labkey.test.util.DataRegionTable;
 import org.labkey.test.util.LogMethod;
-import org.labkey.test.util.PipelineStatusTable;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -43,7 +41,6 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
 {
     private static final String SKY_FILE1 = "Stergachis-SupplementaryData_2_a.sky.zip";
     private static final String SKY_FILE2 = "Stergachis-SupplementaryData_2_b.sky.zip";
-    private static final String SKY_FILE3 = "MRMer_renamed_protein.zip";
 
     @Test
     public void testSteps()
@@ -96,6 +93,7 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
 
     private void verifyLibraryPeptideCount(int totalPeptideCount)
     {
+        clickTab("Peptides");
         log("Verify peptide count in the library");
         DataRegionTable peptidesTable = new DataRegionTable("Peptide",getDriver());
         assertEquals("Unexpected number of rows in peptides table", totalPeptideCount, peptidesTable.getDataRowCount());
@@ -201,6 +199,7 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
     @LogMethod
     private void verifyAndResolveConflicts()
     {
+        clickTab("Panorama Dashboard");
         log("Verifying that expected conflicts exist");
         String[] conflictText = new String[] {"The last Skyline document imported in this folder had 10 peptides that were already a part of the library",
                 "Please click the link below to resolve conflicts and choose the version of each peptide that should be included in the library",
@@ -210,8 +209,8 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
         assertElementPresent(resolveConflictsLink);
         clickAndWait(resolveConflictsLink);
         assertTextPresent(
-                "Conflicting Peptides in Document",
-                "Current Library Peptides",
+                "Newly Imported Data",
+                "Current Library Data",
                 "Resolve conflicts for " + SKY_FILE2 + ".");
 
         int expectedConflictCount = 10;
@@ -269,13 +268,6 @@ public class TargetedMSPeptideLibraryTest extends TargetedMSTest
         precursorMap.put("ADVTPADFSEWSK",      new Pair(SKY_FILE2, "iRT-C18 Standard Peptides")); // iRT peptide should always be from the new file
 
         verifyLibraryPrecursors(precursorMap, totalPrecursorCount);
-    }
-
-    private void deleteSkyFile(String skyFile)
-    {
-        clickAndWait(Locator.linkContainingText("Panorama Dashboard"));
-        TargetedMSRunsTable runsTable = new TargetedMSRunsTable(this);
-        runsTable.deleteRun(SKY_FILE2);
     }
 
     protected void verifyRevision4()

@@ -1041,13 +1041,19 @@ public class TargetedMSManager
     public static void deleteRuns(List<Long> runIds, Container c, User user)
     {
         List<Long> cantDelete = new ArrayList<>();
+        List<TargetedMSRun> runsToDelete = new ArrayList<>();
         for(long runId: runIds)
         {
             TargetedMSRun run = getRun(runId);
+            if (run == null || run.isDeleted())
+            {
+                continue;
+            }
             if(!run.getContainer().equals(c) && !run.getContainer().hasPermission(user, DeletePermission.class))
             {
                cantDelete.add(runId);
             }
+            runsToDelete.add(run);
         }
 
         if(cantDelete.size() > 0)
@@ -1057,13 +1063,8 @@ public class TargetedMSManager
                     + ". " + (cantDelete.size() > 1 ? "They are" : "It is") + " not in container " + c.getName());
         }
 
-        for(long runId: runIds)
+        for (TargetedMSRun run : runsToDelete)
         {
-            TargetedMSRun run = getRun(runId);
-            if(run.isDeleted())
-            {
-                continue;
-            }
             // Revert the representative state if any of the runs are representative at the protein or peptide level.
             if(run.isRepresentative())
             {

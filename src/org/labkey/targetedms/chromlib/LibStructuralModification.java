@@ -24,9 +24,8 @@ import java.util.List;
  * Date: 12/29/12
  * Time: 9:56 PM
  */
-public class LibStructuralModification implements ObjectWithId
+public class LibStructuralModification extends AbstractLibEntity
 {
-    private int _id;
     private String _name;
     private String _aminoAcid;
     private Character _terminus;
@@ -38,17 +37,6 @@ public class LibStructuralModification implements ObjectWithId
     private Boolean _explicitMod;
 
     private List<LibStructuralModLoss> _modLosses;
-
-    public int getId()
-    {
-        return _id;
-    }
-
-    @Override
-    public void setId(int id)
-    {
-        _id = id;
-    }
 
     public String getName()
     {

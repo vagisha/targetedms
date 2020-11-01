@@ -221,22 +221,24 @@ public class ChromatogramLibraryUtils
         try (Connection conn = DriverManager.getConnection("jdbc:sqlite:/" + archiveFile.toAbsolutePath().toString(), config.toProperties()))
         {
             TargetedMSController.ChromLibAnalyteCounts analyteCountsInLib = new TargetedMSController.ChromLibAnalyteCounts();
-            analyteCountsInLib.setPeptideGroupCount(getCountsIn("Protein", conn));
-            analyteCountsInLib.setPeptideCount(getCountsIn("Peptide", conn));
-            analyteCountsInLib.setTransitionCount(getCountsIn("Transition", conn));
+            analyteCountsInLib.setPeptideGroupCount(getCountsIn(Constants.Table.Protein, conn));
+            analyteCountsInLib.setPeptideCount(getCountsIn(Constants.Table.Peptide, conn));
+            analyteCountsInLib.setMoleculeCount(getCountsIn(Constants.Table.Molecule, conn));
+            analyteCountsInLib.setTransitionCount(getCountsIn(Constants.Table.Transition, conn) + getCountsIn(Constants.Table.MoleculeTransition, conn));
             return analyteCountsInLib;
         }
     }
 
-    private static int getCountsIn(String tableName, Connection conn) throws SQLException
+    private static int getCountsIn(Constants.Table table, Connection conn) throws SQLException
     {
-        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT COUNT(*) from " + tableName))
+        try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT COUNT(*) from " + table.name()))
         {
             if (rs.next())
             {
                 return rs.getInt(1);
             }
         }
+        catch (SQLException ignored) {} // May not have all tables in older library files
         return 0;
     }
 }
