@@ -204,6 +204,7 @@ public class MoleculePrecursorManager
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, mol.customIonName, prec.Charge");
+        sql.append(", (SELECT ").append(PrecursorManager.getIsQuantitativeSql()).append(") AS quantitative ");
         sql.append(" FROM ");
         joinTablesForMoleculePrecursorChromInfo(sql, user, container);
         sql.append(" WHERE ");

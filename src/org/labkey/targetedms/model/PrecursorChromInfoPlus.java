@@ -15,7 +15,9 @@
 
 package org.labkey.targetedms.model;
 
+import org.labkey.targetedms.chart.ChromatogramDataset;
 import org.labkey.targetedms.parser.PrecursorChromInfo;
+import org.labkey.targetedms.query.PrecursorManager;
 
 /**
  * User: vsharma
@@ -32,6 +34,10 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo implements Precur
     private String _isotopeLabel;
 
     private int _isotopeLabelId;
+
+    private Double _minPeakRt;
+    private Double _maxPeakRt;
+    private boolean _quantitative;
 
     public String getGroupName()
     {
@@ -103,5 +109,40 @@ public class PrecursorChromInfoPlus extends PrecursorChromInfo implements Precur
     public void setIsotopeLabelId(int isotopeLabelId)
     {
         _isotopeLabelId = isotopeLabelId;
+    }
+
+    public double getMinPeakRt()
+    {
+        if(_minPeakRt == null)
+        {
+            initPeakRtRange();
+        }
+        return _minPeakRt;
+    }
+
+    public double getMaxPeakRt()
+    {
+        if(_maxPeakRt == null)
+        {
+            initPeakRtRange();
+        }
+        return _maxPeakRt;
+    }
+
+    private void initPeakRtRange()
+    {
+        ChromatogramDataset.RtRange peakRt = PrecursorManager.getPrecursorPeakRtRange(this);
+        _minPeakRt = peakRt.getMinRt();
+        _maxPeakRt = peakRt.getMaxRt();
+    }
+
+    public boolean isQuantitative()
+    {
+        return _quantitative;
+    }
+
+    public void setQuantitative(boolean quantitative)
+    {
+        _quantitative = quantitative;
     }
 }

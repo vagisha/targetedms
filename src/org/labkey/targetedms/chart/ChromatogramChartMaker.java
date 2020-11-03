@@ -197,7 +197,7 @@ class ChromatogramChartMaker
         for(int i = 0; i < plot.getSeriesCount(); i++)
         {
             renderer.setSeriesPaint(i, chromatogramDataset.getSeriesColor(i));
-            renderer.setSeriesStroke(i, new BasicStroke(2.0f));
+            renderer.setSeriesStroke(i, chromatogramDataset.getSeriesStroke(i));
         }
     }
 

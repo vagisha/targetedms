@@ -190,6 +190,11 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
         this.quantitative = quantitative;
     }
 
+    public boolean isQuantitativeTransition()
+    {
+        return quantitative == null || quantitative;
+    }
+
     public Double getExplicitIonMobilityHighEnergyOffset()
     {
         return explicitIonMobilityHighEnergyOffset;
