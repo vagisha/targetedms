@@ -29,11 +29,13 @@ import org.labkey.api.data.SqlExecutor;
 import org.labkey.api.data.SqlSelector;
 import org.labkey.api.data.TableResultSet;
 import org.labkey.api.data.TableSelector;
+import org.labkey.api.data.dialect.SqlDialect;
 import org.labkey.api.query.FieldKey;
 import org.labkey.api.security.User;
 import org.labkey.api.view.NotFoundException;
 import org.labkey.targetedms.TargetedMSManager;
 import org.labkey.targetedms.TargetedMSSchema;
+import org.labkey.targetedms.chart.ChromatogramDataset.RtRange;
 import org.labkey.targetedms.model.PrecursorChromInfoLitePlus;
 import org.labkey.targetedms.model.PrecursorChromInfoPlus;
 import org.labkey.targetedms.parser.MoleculePrecursor;
@@ -317,6 +319,7 @@ public class PrecursorManager
     {
         SQLFragment sql = new SQLFragment("SELECT ");
         sql.append("pci.* , pg.Label AS groupName, pep.Sequence, pep.PeptideModifiedSequence, prec.ModifiedSequence, prec.Charge, label.Name AS isotopeLabel, label.Id AS isotopeLabelId");
+        sql.append(", (SELECT ").append(getIsQuantitativeSql()).append(") AS quantitative ");
         sql.append(" FROM ");
         joinTablesForPrecursorChromInfo(sql, user, container);
         sql.append(" WHERE ");
@@ -331,6 +334,16 @@ public class PrecursorManager
         }
 
         return  new SqlSelector(TargetedMSManager.getSchema(), sql).getArrayList(PrecursorChromInfoPlus.class);
+    }
+
+    static SQLFragment getIsQuantitativeSql()
+    {
+        SqlDialect sqlDialect = TargetedMSManager.getSchema().getSqlDialect();
+        SQLFragment quantitativeSql = new SQLFragment("EXISTS (SELECT 1 FROM ")
+                .append(TargetedMSManager.getTableInfoGeneralTransition(), "gt")
+                .append(" WHERE (quantitative is NULL OR quantitative=" + sqlDialect.getBooleanTRUE() + ") AND generalprecursorid = pci.precursorid) ");
+
+        return sqlDialect.wrapExistsExpression(quantitativeSql);
     }
 
     public static List<PrecursorChromInfoPlus> getPrecursorChromInfosForGeneralMoleculeChromInfo(long gmChromInfoId, long precursorId,
@@ -778,6 +791,22 @@ public class PrecursorManager
         sql.append(" AND ");
         sql.append(" gm.Id = " + peptideId);
         return new SqlSelector(TargetedMSManager.getSchema(), sql).exists();
+    }
+
+    public static RtRange getPrecursorPeakRtRange(@NotNull PrecursorChromInfo pci)
+    {
+        if(pci.getMinStartTime() != null && pci.getMaxEndTime() != null)
+        {
+            return new RtRange(pci.getMinStartTime(), pci.getMaxEndTime());
+        }
+        else
+        {
+            // Issue 41617: Chromatograms are not displayed for precursors that do not have any quantitative transitions.
+            // Min peak start and max peak end times for a precursor chrom info can be null if none of the
+            // transitions for the precursor are quantitative. We will try to get the min start and max end
+            // retention times from the transition chrom infos instead.
+            return TransitionManager.getPrecursorPeakRtRange(pci.getId());
+        }
     }
 
     private static class PrecursorIdsWithSpectra extends DatabaseCache<String, Set<Integer>>
