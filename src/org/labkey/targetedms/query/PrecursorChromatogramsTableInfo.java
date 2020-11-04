@@ -48,7 +48,7 @@ public class PrecursorChromatogramsTableInfo extends FilteredTable<TargetedMSSch
         peptideCol.setLabel("");
 
         ChromatogramDisplayColumnFactory colFactory = new ChromatogramDisplayColumnFactory(getContainer(),
-                ChromatogramDisplayColumnFactory.TYPE.PRECURSOR, chartWidth, chartHeight);
+                ChromatogramDisplayColumnFactory.Type.PrecursorSampleLookup, chartWidth, chartHeight);
         peptideCol.setDisplayColumnFactory(colFactory);
     }
 

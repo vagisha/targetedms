@@ -21,13 +21,17 @@ import org.labkey.api.data.DataColumn;
 import org.labkey.api.data.DisplayColumn;
 import org.labkey.api.data.DisplayColumnFactory;
 import org.labkey.api.data.RenderContext;
+import org.labkey.api.query.FieldKey;
+import org.labkey.api.util.PageFlowUtil;
 import org.labkey.api.view.ActionURL;
 import org.labkey.api.view.HttpView;
 import org.labkey.targetedms.TargetedMSController;
 import org.labkey.targetedms.parser.SampleFile;
+import org.springframework.web.servlet.mvc.Controller;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.Set;
 
 /**
  * User: vsharma
@@ -36,8 +40,8 @@ import java.io.Writer;
  */
 public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
 {
-    private Container _container;
-    private TYPE _type;
+    private final Container _container;
+    private final Type _type;
     private final int _chartWidth;
     private final int _chart_height;
     private final boolean _syncY;
@@ -50,23 +54,67 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
     public static final int CHART_WIDTH = 400;
     public static final int CHART_HEIGHT = 400;
 
-    public static enum TYPE
+    public enum Type
     {
-        GENERAL_MOLECULE,
-        PRECURSOR
+        GeneralMoleculeSampleLookup(TargetedMSController.GeneralMoleculeChromatogramChartAction.class)
+                {
+                    @Override
+                    public FieldKey getSampleNameFieldKey(FieldKey parentFieldKey)
+                    {
+                        return new FieldKey(new FieldKey(parentFieldKey, "SampleFileId"), "SampleName");
+                    }
+                },
+        GeneralMoleculePeer(TargetedMSController.GeneralMoleculeChromatogramChartAction.class)
+                {
+                    @Override
+                    public FieldKey getSampleNameFieldKey(FieldKey parentFieldKey)
+                    {
+                        return new FieldKey(parentFieldKey, "sample");
+                    }
+                },
+        PrecursorSampleLookup(TargetedMSController.PrecursorChromatogramChartAction.class)
+                {
+                    @Override
+                    public FieldKey getSampleNameFieldKey(FieldKey parentFieldKey)
+                    {
+                        return new FieldKey(new FieldKey(parentFieldKey, "SampleFileId"), "SampleName");
+                    }
+                },
+        PrecursorPeer(TargetedMSController.PrecursorChromatogramChartAction.class)
+                {
+                    @Override
+                    public FieldKey getSampleNameFieldKey(FieldKey parentFieldKey)
+                    {
+                        return new FieldKey(parentFieldKey, "sample");
+                    }
+                };
+
+        private final Class<? extends Controller> _actionClass;
+
+        Type(Class<? extends Controller> actionClass)
+        {
+            _actionClass = actionClass;
+        }
+
+        public Class<? extends Controller> getActionClass()
+        {
+            return _actionClass;
+        }
+
+        public abstract FieldKey getSampleNameFieldKey(FieldKey parentFieldKey);
     }
 
-    public ChromatogramDisplayColumnFactory(Container container, TYPE type)
+    public ChromatogramDisplayColumnFactory(Container container, Type type)
     {
         this(container, type, CHART_WIDTH, CHART_HEIGHT, false, false, false, false, null, null);
     }
 
-    public ChromatogramDisplayColumnFactory(Container container, TYPE type, int chartWidth, int chartHeight)
+    public ChromatogramDisplayColumnFactory(Container container, Type type, int chartWidth, int chartHeight)
     {
         this(container, type, chartWidth, chartHeight, false, false, false, false, null, null);
     }
 
-    public ChromatogramDisplayColumnFactory(Container container, TYPE type,
+    public ChromatogramDisplayColumnFactory(Container container, Type type,
                                             int chartWidth, int chartHeight,
                                             boolean syncIntensity, boolean syncRt,
                                             boolean splitGraph, boolean showOptimizationPeaks,
@@ -91,25 +139,13 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
             @Override
             public void renderGridCellContents(RenderContext ctx, Writer out) throws IOException
             {
-                Object Id = getValue(ctx);  // Primary key from the relevant table
-                if(null == Id)
+                Object id = getValue(ctx);  // Primary key from the relevant table
+                if(null == id)
                     return;
 
-                ActionURL chromAction = null;
-                SampleFile sampleFile = null;
-                switch (_type)
-                {
-                    case GENERAL_MOLECULE:
-                        chromAction = new ActionURL(TargetedMSController.GeneralMoleculeChromatogramChartAction.class, _container);
-                        sampleFile = ReplicateManager.getSampleFileForGeneralMoleculeChromInfo((Long) Id);
-                        break;
-                    case PRECURSOR:
-                        chromAction = new ActionURL(TargetedMSController.PrecursorChromatogramChartAction.class, _container);
-                        sampleFile = ReplicateManager.getSampleFileForPrecursorChromInfo((Long) Id);
-                        break;
-                }
+                ActionURL chromAction = new ActionURL(_type.getActionClass(), _container);
 
-                chromAction.addParameter("id", String.valueOf(Id));
+                chromAction.addParameter("id", String.valueOf(id));
                 chromAction.addParameter("chartWidth", String.valueOf(_chartWidth));
                 chromAction.addParameter("chartHeight", String.valueOf(_chart_height));
                 chromAction.addParameter("syncY", String.valueOf(_syncY));
@@ -123,11 +159,20 @@ public class ChromatogramDisplayColumnFactory implements DisplayColumnFactory
                 boolean highlight = false;
                 if (HttpView.hasCurrentView())
                 {
-                    highlight = String.valueOf(Id).equals(HttpView.currentRequest().getParameter("chromInfoId"));
+                    highlight = String.valueOf(id).equals(HttpView.currentRequest().getParameter("chromInfoId"));
                 }
 
-                String imgLink = "<a name=\"ChromInfo" + Id + "\"><img style=\"border: " + (highlight ? "beige" : "white") + " solid 8px; width:" + _chartWidth +"px; height:" + _chart_height + "px\" src=\"" + chromAction.getLocalURIString() + "\" alt=\"Chromatogram "+sampleFile.getSampleName()+"\"></a>";
+                String sampleName = ctx.get(_type.getSampleNameFieldKey(getBoundColumn().getFieldKey().getParent()), String.class);
+
+                String imgLink = "<a name=\"ChromInfo" + id + "\"><img style=\"border: " + (highlight ? "beige" : "white") + " solid 8px; width:" + _chartWidth +"px; height:" + _chart_height + "px\" src=\"" + PageFlowUtil.filter(chromAction.getLocalURIString()) + "\" alt=\"Chromatogram "+ PageFlowUtil.filter(sampleName)+"\"></a>";
                 out.write(imgLink);
+            }
+
+            @Override
+            public void addQueryFieldKeys(Set<FieldKey> keys)
+            {
+                super.addQueryFieldKeys(keys);
+                keys.add(_type.getSampleNameFieldKey(getBoundColumn().getFieldKey().getParent()));
             }
         };
     }
