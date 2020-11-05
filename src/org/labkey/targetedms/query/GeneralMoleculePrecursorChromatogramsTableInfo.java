@@ -73,7 +73,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
 
         pepChromCol.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(
                                                         schema.getContainer(),
-                                                        ChromatogramDisplayColumnFactory.TYPE.GENERAL_MOLECULE,
+                                                        ChromatogramDisplayColumnFactory.Type.GeneralMoleculePeer,
                                                         form.getChartWidth(),
                                                         form.getChartHeight(),
                                                         form.isSyncY(),
@@ -89,7 +89,7 @@ public class GeneralMoleculePrecursorChromatogramsTableInfo extends FilteredTabl
         {
             ((BaseColumnInfo)colInfo).setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(
                                                         schema.getContainer(),
-                                                        ChromatogramDisplayColumnFactory.TYPE.PRECURSOR,
+                                                        ChromatogramDisplayColumnFactory.Type.PrecursorPeer,
                                                         form.getChartWidth(),
                                                         form.getChartHeight(),
                                                         form.isSyncY(),

@@ -102,32 +102,6 @@ public class ReplicateManager
         return new SqlSelector(TargetedMSManager.getSchema(), sqlFragment).getObject(ReplicateAnnotation.class);
     }
 
-    public static SampleFile getSampleFileForPrecursorChromInfo(long precursorChromInfoId)
-    {
-        String sql = "SELECT sf.* FROM "+
-                     TargetedMSManager.getTableInfoSampleFile()+" AS sf, "+
-                     TargetedMSManager.getTableInfoPrecursorChromInfo()+" AS pci "+
-                     "WHERE sf.Id=pci.SampleFileId "+
-                     "AND pci.Id=?";
-        SQLFragment sf = new SQLFragment(sql);
-        sf.add(precursorChromInfoId);
-
-        return new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(SampleFile.class);
-    }
-
-    public static SampleFile getSampleFileForGeneralMoleculeChromInfo(long generalMoleculeChromInfoId)
-    {
-        String sql = "SELECT sf.* FROM "+
-                     TargetedMSManager.getTableInfoSampleFile()+" AS sf, "+
-                     TargetedMSManager.getTableInfoGeneralMoleculeChromInfo()+" AS gmci "+
-                     "WHERE sf.Id=gmci.SampleFileId "+
-                     "AND gmci.Id=?";
-        SQLFragment sf = new SQLFragment(sql);
-        sf.add(generalMoleculeChromInfoId);
-
-        return new SqlSelector(TargetedMSManager.getSchema(), sf).getObject(SampleFile.class);
-    }
-
     public static List<SampleFile> getSampleFilesForRun(long runId)
     {
         String sql = "SELECT sf.* FROM "+

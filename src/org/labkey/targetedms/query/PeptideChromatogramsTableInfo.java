@@ -42,7 +42,7 @@ public class PeptideChromatogramsTableInfo extends FilteredTable<TargetedMSSchem
         var chartCol = getMutableColumn("Id");
         chartCol.setLabel("");
         chartCol.setDisplayColumnFactory(new ChromatogramDisplayColumnFactory(getContainer(),
-                                         ChromatogramDisplayColumnFactory.TYPE.GENERAL_MOLECULE));
+                                         ChromatogramDisplayColumnFactory.Type.GeneralMoleculeSampleLookup));
     }
 
     public void setPeptideId(long peptideId)
