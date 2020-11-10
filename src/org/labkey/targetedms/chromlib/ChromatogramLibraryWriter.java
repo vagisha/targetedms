@@ -18,13 +18,18 @@ package org.labkey.targetedms.chromlib;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.labkey.api.util.FileUtil;
+import org.labkey.targetedms.parser.Molecule;
+import org.labkey.targetedms.parser.Peptide;
+import org.labkey.targetedms.query.PeptideGroupManager;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * User: vsharma
@@ -46,23 +51,19 @@ public class ChromatogramLibraryWriter
     private Dao<LibIrtLibrary> _irtLibraryDao;
 
     // Small molecule
+    private Dao<LibMoleculeList> _moleculeListDao;
     private Dao<LibMolecule> _moleculeDao;
 
-    private final List<LibPeptide> _libPeptideCache = new ArrayList<>();
-    private final List<LibProtein> _libProteinCache = new ArrayList<>();
-    private final List<LibMolecule> _libMoleculeCache = new ArrayList<>();
-    private int _cacheSize = 0;
+    // Maps are keyed with the Panorama DB rowId values
+    private final Map<Long, LibProtein> _libProteinCache = new LinkedHashMap<>();
+    private final Map<Long, LibMoleculeList> _libMoleculeListCache = new LinkedHashMap<>();
 
-    private int _maxCacheSize = 1000;
+    private int _peptideCount;
+    private int _moleculeCount;
 
     private Path _libFile;
 
     private static final Logger _log = LogManager.getLogger(ChromatogramLibraryWriter.class);
-
-    public void setMaxCacheSize(int maxCacheSize)
-    {
-        _maxCacheSize = maxCacheSize;
-    }
 
     public void openLibrary(Path libFile) throws SQLException
     {
@@ -101,6 +102,7 @@ public class ChromatogramLibraryWriter
                 new LibPrecursorRetentionTimeDao(Constants.Column.MoleculePrecursorId),
                 new LibMoleculeTransitionDao());
         _moleculeDao = new LibMoleculeDao(moleculePrecursorDao);
+        _moleculeListDao = new LibMoleculeListDao(_moleculeDao);
 
         _irtLibraryDao = new LibIrtLibraryDao();
     }
@@ -124,12 +126,8 @@ public class ChromatogramLibraryWriter
 
     private void flushCache() throws SQLException
     {
-        _log.debug("ChromatogramLibraryWriter.flushCache() cache size is " + _cacheSize);
-        flushList(_peptideDao, _libPeptideCache);
-        flushList(_proteinDao, _libProteinCache);
-        flushList(_moleculeDao, _libMoleculeCache);
-
-        _cacheSize = 0;
+        flush(_proteinDao, _libProteinCache.values());
+        flush(_moleculeListDao, _libMoleculeListCache.values());
     }
 
     public void writeLibInfo(LibInfo libInfo) throws SQLException
@@ -154,33 +152,48 @@ public class ChromatogramLibraryWriter
 
     public void writeIrtLibrary(List<LibIrtLibrary> irtLibraries) throws SQLException
     {
-        flushList(_irtLibraryDao, irtLibraries);
+        flush(_irtLibraryDao, irtLibraries);
     }
 
-    public void writeProtein(LibProtein protein) throws SQLException
+    public void writeProtein(long rowId, LibProtein protein)
     {
-        addToCache(protein, _libProteinCache);
+        _libProteinCache.put(rowId, protein);
     }
 
-    public void writePeptide(LibPeptide peptide) throws SQLException
+    public void writePeptide(LibPeptide libPeptide, Peptide peptide)
     {
-        addToCache(peptide, _libPeptideCache);
+        LibProtein protein = _libProteinCache.computeIfAbsent(peptide.getPeptideGroupId(), (id) ->
+                new LibProtein(PeptideGroupManager.get(id)));
+        _peptideCount++;
+        protein.addChild(libPeptide);
     }
 
-    public void writeMolecule(LibMolecule molecule) throws SQLException
+    public void writeMolecule(LibMolecule libMolecule, Molecule molecule)
     {
-        addToCache(molecule, _libMoleculeCache);
+        LibMoleculeList moleculeList = _libMoleculeListCache.computeIfAbsent(molecule.getPeptideGroupId(), (id) ->
+                new LibMoleculeList(PeptideGroupManager.get(id)));
+        _moleculeCount++;
+        moleculeList.addChild(libMolecule);
     }
 
-    private <T extends AbstractLibEntity> void addToCache(T entity, List<T> cache) throws SQLException
+    public int getProteinCount()
     {
-        cache.add(entity);
-        _cacheSize += entity.getCacheSize();
+        return _libProteinCache.size();
+    }
 
-        if(_cacheSize >= _maxCacheSize)
-        {
-           flushCache();
-        }
+    public int getMoleculeListCount()
+    {
+        return _libMoleculeListCache.size();
+    }
+
+    public int getPeptideCount()
+    {
+        return _peptideCount;
+    }
+
+    public int getMoleculeCount()
+    {
+        return _moleculeCount;
     }
 
     private <T> void saveEntry(Dao<T> dao, T object) throws SQLException
@@ -196,12 +209,11 @@ public class ChromatogramLibraryWriter
         }
     }
 
-    private <T> void flushList(Dao<T> dao, List<T> list) throws SQLException
+    private <T> void flush(Dao<T> dao, Collection<T> list) throws SQLException
     {
         try (Connection connection = getConnection())
         {
             dao.saveAll(list, connection);
-            list.clear();
         }
         catch(SQLException e)
         {

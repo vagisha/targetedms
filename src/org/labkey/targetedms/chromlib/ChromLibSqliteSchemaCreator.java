@@ -59,6 +59,7 @@ public class ChromLibSqliteSchemaCreator
         createTransitionTable(conn);
 
         // Small molecule
+        createMoleculeListTable(conn);
         createMoleculeTable(conn);
         createMoleculePrecursorTable(conn);
         createMoleculePrecursorRetentionTimeTable(conn);
@@ -90,6 +91,11 @@ public class ChromLibSqliteSchemaCreator
     private void createProteinTable(Connection conn) throws SQLException
     {
         createTable(conn, Table.Protein, Constants.ProteinColumn.values());
+    }
+
+    private void createMoleculeListTable(Connection conn) throws SQLException
+    {
+        createTable(conn, Table.MoleculeList, Constants.MoleculeListColumn.values());
     }
 
     private void createMoleculeTable(Connection conn) throws SQLException

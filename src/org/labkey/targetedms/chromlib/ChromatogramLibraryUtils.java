@@ -229,7 +229,7 @@ public class ChromatogramLibraryUtils
         }
     }
 
-    private static int getCountsIn(Constants.Table table, Connection conn) throws SQLException
+    private static int getCountsIn(Constants.Table table, Connection conn)
     {
         try (Statement stmt = conn.createStatement(); ResultSet rs = stmt.executeQuery("SELECT COUNT(*) from " + table.name()))
         {

@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -62,10 +63,12 @@ public class LibMoleculeDao extends BaseDaoImpl<LibMolecule>
     protected void setValuesInStatement(LibMolecule molecule, PreparedStatement stmt) throws SQLException
     {
         int colIndex = 1;
+        stmt.setObject(colIndex++, molecule.getMoleculeListId(), Types.INTEGER);
         stmt.setObject(colIndex++, molecule.getIonFormula(), Types.VARCHAR);
         stmt.setObject(colIndex++, molecule.getCustomIonName(), Types.VARCHAR);
         stmt.setObject(colIndex++, molecule.getMassMonoisotopic(), Types.DOUBLE);
-        stmt.setObject(colIndex, molecule.getMassAverage(), Types.DOUBLE);
+        stmt.setObject(colIndex++, molecule.getMassAverage(), Types.DOUBLE);
+        stmt.setString(colIndex, molecule.getMoleculeAccession());
     }
 
     @Override
@@ -81,7 +84,7 @@ public class LibMoleculeDao extends BaseDaoImpl<LibMolecule>
     }
 
     @Override
-    public void saveAll(List<LibMolecule> molecules, Connection connection) throws SQLException
+    public void saveAll(Collection<LibMolecule> molecules, Connection connection) throws SQLException
     {
         if(molecules != null && molecules.size() > 0)
         {
@@ -123,6 +126,7 @@ public class LibMoleculeDao extends BaseDaoImpl<LibMolecule>
             molecule.setCustomIonName(rs.getString(Constants.MoleculeColumn.CustomIonName.baseColumn().name()));
             molecule.setMassMonoisotopic(readDouble(rs, Constants.MoleculeColumn.MassMonoisotopic.baseColumn().name()));
             molecule.setMassAverage(readDouble(rs, Constants.MoleculeColumn.MassAverage.baseColumn().name()));
+            molecule.setMoleculeAccession(rs.getString(Constants.MoleculeColumn.MoleculeAccession.baseColumn().name()));
 
             molecules.add(molecule);
         }

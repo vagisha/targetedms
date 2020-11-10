@@ -24,6 +24,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -96,7 +97,7 @@ public class LibPeptideDao extends BaseDaoImpl<LibPeptide>
     }
 
     @Override
-    public void saveAll(List<LibPeptide> peptides, Connection connection) throws SQLException
+    public void saveAll(Collection<LibPeptide> peptides, Connection connection) throws SQLException
     {
         if(peptides.size() > 0)
         {

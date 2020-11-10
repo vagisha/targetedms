@@ -53,6 +53,7 @@ class Constants
         Transition,
 
         // Small molecule
+        MoleculeList,
         Molecule,
         MoleculePrecursor,
         MoleculePrecursorRetentionTime,
@@ -74,6 +75,7 @@ class Constants
         Peptides("INTEGER NOT NULL"),
         Precursors("INTEGER NOT NULL"),
         Transitions("INTEGER NOT NULL"),
+        MoleculeLists("INTEGER NOT NULL"),
         Molecules("INTEGER NOT NULL"),
 
         FilePath("VARCHAR(500) NOT NULL"),
@@ -122,8 +124,9 @@ class Constants
         IndexAa("INTEGER NOT NULL"),
         MassDiff("DOUBLE NOT NULL"),
 
+        MoleculeListId("INTEGER", Table.MoleculeList, Id),
         MoleculeId("INTEGER NOT NULL", Table.Molecule, Id),
-        Molecule("VARCHAR(500)"),
+        MoleculeAccession("VARCHAR(500)"),
 
         Mz,
         Charge,
@@ -224,6 +227,7 @@ class Constants
         Peptides(Column.Peptides),
         Precursors(Column.Precursors),
         Transitions(Column.Transitions),
+        MoleculeLists(Column.MoleculeLists),
         Molecules(Column.Molecules);
 
         private final Column _column;
@@ -404,6 +408,38 @@ class Constants
             _definition = column.definition;
         }
         ProteinColumn(Column column, String definition)
+        {
+            _column = column;
+            _definition = definition;
+        }
+        @Override
+        public Column baseColumn()
+        {
+            return _column;
+        }
+
+        @Override
+        public String definition()
+        {
+            return _definition;
+        }
+    }
+
+    public enum MoleculeListColumn implements ColumnDef
+    {
+        Id(Column.Id),
+        Name(Column.Name, "VARCHAR(250) NOT NULL"),
+        Description(Column.Description);
+
+        private final Column _column;
+        private final String _definition;
+
+        MoleculeListColumn(Column column)
+        {
+            _column = column;
+            _definition = column.definition;
+        }
+        MoleculeListColumn(Column column, String definition)
         {
             _column = column;
             _definition = definition;
@@ -642,10 +678,12 @@ class Constants
     public enum MoleculeColumn implements ColumnDef
     {
         Id(Column.Id),
+        MoleculeListId(Column.MoleculeListId),
         IonFormula(Column.IonFormula),
         CustomIonName(Column.CustomIonName),
         MassMonoisotopic(Column.MassMonoisotopic),
-        MassAverage(Column.MassAverage);
+        MassAverage(Column.MassAverage),
+        MoleculeAccession(Column.MoleculeAccession);
 
         private final Column _column;
         private final String _definition;
@@ -675,7 +713,6 @@ class Constants
         IsotopeLabel(Column.IsotopeLabel),
         Mz(Column.Mz, "DOUBLE NOT NULL"),
         Charge(Column.Charge, "INTEGER NOT NULL"),
-        Molecule(Column.Molecule),
         CollisionEnergy(Column.CollisionEnergy),
         DeclusteringPotential(Column.DeclusteringPotential),
         TotalArea(Column.TotalArea),
@@ -689,6 +726,8 @@ class Constants
         ExplicitIonMobility(Column.ExplicitIonMobility),
         MassMonoisotopic(Column.MassMonoisotopic),
         MassAverage(Column.MassAverage),
+        IonFormula(Column.IonFormula),
+        CustomIonName(Column.CustomIonName),
         CCS(Column.CCS),
         IonMobilityMS1(Column.IonMobilityMS1),
         IonMobilityFragment(Column.IonMobilityFragment),

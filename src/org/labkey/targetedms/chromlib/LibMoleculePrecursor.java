@@ -12,7 +12,8 @@ public class LibMoleculePrecursor extends AbstractLibPrecursor<LibMoleculeTransi
 
     private Double _massMonoisotopic;
     private Double _massAverage;
-    private String _molecule;
+    private String _ionFormula;
+    private String _customIonName;
 
     public LibMoleculePrecursor() {}
 
@@ -20,6 +21,10 @@ public class LibMoleculePrecursor extends AbstractLibPrecursor<LibMoleculeTransi
                                 TargetedMSRun run, Map<Long, Integer> sampleFileIdMap)
     {
         super(p, isotopeLabelMap, chromInfo, run, sampleFileIdMap);
+        setIonFormula(p.getIonFormula());
+        setCustomIonName(p.getCustomIonName());
+        setMassMonoisotopic(p.getMassMonoisotopic());
+        setMassAverage(p.getMassAverage());
     }
 
     public long getMoleculeId()
@@ -52,14 +57,23 @@ public class LibMoleculePrecursor extends AbstractLibPrecursor<LibMoleculeTransi
         _massAverage = massAverage;
     }
 
-    /** “id” from the <molecule> elements in Skyline XML files, but Id is our RowId value in all of these tables */
-    public String getMolecule()
+    public String getIonFormula()
     {
-        return _molecule;
+        return _ionFormula;
     }
 
-    public void setMolecule(String molecule)
+    public void setIonFormula(String ionFormula)
     {
-        _molecule = molecule;
+        _ionFormula = ionFormula;
+    }
+
+    public String getCustomIonName()
+    {
+        return _customIonName;
+    }
+
+    public void setCustomIonName(String customIonName)
+    {
+        _customIonName = customIonName;
     }
 }

@@ -41,6 +41,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.labkey.test.util.DataRegionTable.DataRegion;
 
 @Category({DailyB.class, MS2.class})
@@ -182,7 +183,8 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         clickAndWait(Locator.id("expandCollapse-ProteinSearchProteinMatches"), 0); // Search results are hidden by default.
         DataRegionTable potentialProteins = new DataRegionTable("PotentialProteins", this);
         assertEquals(1, potentialProteins.getDataRowCount());
-        assertEquals("YAL038W", potentialProteins.getDataAsText(0, "BestName"));
+        String bestName = potentialProteins.getDataAsText(0, "BestName");
+        assertTrue("Protein name didn't include 'YAL038W' :" + bestName, bestName.contains("YAL038W"));
 
         DataRegionTable targetedMSMatches = new DataRegionTable("TargetedMSMatches", this);
         List<String> labels = targetedMSMatches.getColumnDataAsText("Protein / Label");

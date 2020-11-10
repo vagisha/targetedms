@@ -25,6 +25,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -138,7 +139,7 @@ public class LibStructuralModificationDao extends BaseDaoImpl<LibStructuralModif
     }
 
     @Override
-    public void saveAll(List<LibStructuralModification> structuralModifications, Connection connection)
+    public void saveAll(Collection<LibStructuralModification> structuralModifications, Connection connection)
     {
         throw new UnsupportedOperationException();
     }

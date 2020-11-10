@@ -17,6 +17,7 @@ package org.labkey.targetedms.chromlib;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -28,7 +29,7 @@ public interface Dao<T extends Object>
 {
     void save(T t, Connection connection) throws SQLException;
 
-    void saveAll(List<T> list, Connection connection) throws SQLException;
+    void saveAll(Collection<T> list, Connection connection) throws SQLException;
 
     String getTableName();
 
