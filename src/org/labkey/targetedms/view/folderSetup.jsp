@@ -46,33 +46,33 @@ tr.spaceUnder > td
 }
 </style>
 
-<div id="folder-type-set" <%= text(isUndefined ? "" : "style=\"display:none\"") %> >
+<div id="folder-type-set" <%= unsafe(isUndefined ? "" : "style=\"display:none\"") %> >
     <labkey:form action="<%= new ActionURL(TargetedMSController.FolderSetupAction.class, getContainer()) %>" method="post">
         <table cellspacing="7" width="100%">
             <tr class="spaceUnder">
                 <td>
-                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSService.FolderType.Experiment.toString()) %>"<%=checked(isUndefined || isExperiment)%>> <b>Experimental data</b>
+                    <input type="radio" name="folderType" id="experimentalData" value="<%= h(TargetedMSService.FolderType.Experiment.toString()) %>"<%=checked(isUndefined || isExperiment)%>> <label for="experimentalData"><strong>Experimental data</strong></label>
                     - A collection of published Skyline documents for various experimental designs
                 </td>
             </tr>
             <tr class="spaceUnder">
                 <td>
-                    <input type="radio" name="folderType" id="multiAttributeMethod" value="<%= h(TargetedMSService.FolderType.Experiment.toString()) %>"> <b>Multi-attribute method (MAM)</b> - An experimental data folder variant with additional reporting for multi-attribute method analyses
+                    <input type="radio" name="folderType" id="multiAttributeMethod" value="<%= h(TargetedMSService.FolderType.ExperimentMAM.toString()) %>"> <label for="multiAttributeMethod"><strong>Multi-attribute method (MAM)</strong></label> - An experimental data folder variant with additional reporting for multi-attribute method analyses
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSService.FolderType.Library.toString()) %>"> <b>Chromatogram library</b> - Curated precursor and product ion expression data for use in designing and validating future experiments
+                    <input type="radio" name="folderType" id="chromatogramLibrary" value="<%= h(TargetedMSService.FolderType.Library.toString()) %>"> <label for="chromatogramLibrary"><strong>Chromatogram library</strong></label> - Curated precursor and product ion expression data for use in designing and validating future experiments
                 </td>
             </tr>
             <tr>
                 <td style="padding: 14px 0 14px 25px;">
-                    <input type="checkbox" name="precursorNormalized" value="true">Rank peptides within proteins by peak area
+                    <input type="checkbox" name="precursorNormalized" id="precursorNormalized" value="true"><label for="precursorNormalized">Rank peptides within proteins by peak area</label>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type="radio" name="folderType" id="QC" value="<%= h(TargetedMSService.FolderType.QC.toString()) %>"> <b>Quality control</b> - System suitability monitoring of reagents and instruments
+                    <input type="radio" name="folderType" id="QC" value="<%= h(TargetedMSService.FolderType.QC.toString()) %>"> <label for="QC"><strong>Quality control</strong></label> - System suitability monitoring of reagents and instruments
                 </td>
             </tr>
             <tr>
@@ -84,7 +84,7 @@ tr.spaceUnder > td
     </labkey:form>
 </div>
 
-<div id="folder-type-unset" <%= text(isSet ? "" : "style=\"display:none\"") %> >
+<div id="folder-type-unset" <%= unsafe(isSet ? "" : "style=\"display:none\"") %> >
     This Panorama folder has already been configured with the following folder type: '<%= h(folderType == null ? "none" : folderType.toString())%>'.<br>
 </div>
 

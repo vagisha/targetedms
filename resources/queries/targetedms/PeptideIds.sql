@@ -6,7 +6,7 @@ SELECT
    PrecursorId.NeutralMass AS ExpectedPeptideMass,
    -- Concatenate the empty string so that the protein DisplayColumn doesn't get propagated too
    PrecursorId.PeptideId.PeptideGroupId.Label || '' AS Chain,
-   (PrecursorId.PeptideId.StartIndex + 1) || '-' || (PrecursorId.PeptideId.EndIndex) AS PeptideLocation,
+   CAST(PrecursorId.PeptideId.StartIndex + 1 AS VARCHAR) || '-' || CAST(PrecursorId.PeptideId.EndIndex AS VARCHAR) AS PeptideLocation,
    PrecursorId.PeptideId.Sequence,
    PrecursorId.PeptideId.NextAA @hidden,
    PrecursorId.PeptideId.PreviousAA @hidden,
@@ -15,13 +15,14 @@ SELECT
    -- Show the modifications and their locations
    (SELECT GROUP_CONCAT((StructuralModId.Name ||
                          ' @ ' ||
-                         SUBSTRING(PrecursorId.PeptideId.Sequence, IndexAA + 1, 1) ||
-                         CAST(IndexAA + PrecursorId.PeptideId.StartIndex AS VARCHAR)),
+                         SUBSTRING(p.Sequence, IndexAA + 1, 1) ||
+                         CAST(IndexAA + p.StartIndex AS VARCHAR)),
        (', ' || CHR(10)))
-   FROM targetedms.PeptideStructuralModification psm WHERE psm.PeptideId = pci.PrecursorId.PeptideId) AS Modification
+   FROM targetedms.PeptideStructuralModification psm INNER JOIN targetedms.Peptide p ON psm.PeptideId = p.Id WHERE psm.PeptideId = pci.PrecursorId.PeptideId) AS Modification
 FROM
      targetedms.precursorchrominfo pci
 GROUP BY
+   PrecursorId.ModifiedSequence,
    PrecursorId.ModifiedSequence,
    PrecursorId.NeutralMass,
    PrecursorId.PeptideId,
