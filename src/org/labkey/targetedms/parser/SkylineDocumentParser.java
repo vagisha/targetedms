@@ -1865,6 +1865,17 @@ public class SkylineDocumentParser implements AutoCloseable
                 transition.setIsotopeDistProportion(fromOptional(transitionProto.getIsotopeDistProportion()));
                 transition.setExplicitCollisionEnergy(fromOptional(transitionProto.getCollisionEnergy()));
                 transition.setExplicitDeclusteringPotential(fromOptional(transitionProto.getDeclusteringPotential()));
+                transition.setQuantitative(!transitionProto.getNotQuantitative());
+                transition.setExplicitIonMobilityHighEnergyOffset(fromOptional(transitionProto.getExplicitIonMobilityHighEnergyOffset()));
+                transition.setCollisionEnergy(fromOptional(transitionProto.getCollisionEnergy()));
+                transition.setDeclusteringPotential(fromOptional(transitionProto.getDeclusteringPotential()));
+                transition.setExplicitSLens(transition.getExplicitSLens());
+                transition.setExplicitConeVoltage(transition.getExplicitConeVoltage());
+                if (null != transitionProto.getLibInfo()) {
+                    transition.setRank(transitionProto.getLibInfo().getRank());
+                    transition.setIntensity((double) transitionProto.getLibInfo().getIntensity());
+                }
+
                 if (null != transitionProto.getResults()) {
                     transition.getChromInfoList().addAll(makeTransitionChromInfos(transitionProto.getResults()));
                 }
@@ -2345,6 +2356,12 @@ public class SkylineDocumentParser implements AutoCloseable
             }
             else if (XmlUtil.isStartElement(reader, evtType, LINKED_FRAGMENT_ION)) {
                 complexFragmentIonName.addChild( readLinkedFragmentIon(reader));
+            }
+            else if (XmlUtil.isStartElement(reader, evtType, TRANSITION_LIB_INFO))
+            {
+                transition.setRank(XmlUtil.readIntegerAttribute(reader, "rank"));
+                transition.setIntensity(Double.parseDouble(reader.getAttributeValue(null, "intensity")));
+                reader.nextTag();
             }
         }
 

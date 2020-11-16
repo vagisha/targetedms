@@ -173,6 +173,25 @@ public class Transition extends GeneralTransition
         _complexFragmentIon = complexFragmentIon;
     }
 
+    boolean isMs1()
+    {
+        if (!isPrecursorIon())
+        {
+            return false;
+        }
+        if (getNeutralLosses() != null && !getNeutralLosses().isEmpty())
+        {
+            return false;
+        }
+
+        if (getComplexFragmentIon() != null && !ComplexFragmentIonName.looksLikeIntactPrecursor(getComplexFragmentIon()))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     @Override
     public String toString()
     {

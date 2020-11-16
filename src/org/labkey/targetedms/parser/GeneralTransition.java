@@ -190,9 +190,33 @@ public class GeneralTransition extends AnnotatedEntity<TransitionAnnotation>
         this.quantitative = quantitative;
     }
 
-    public boolean isQuantitativeTransition()
+    public boolean explicitQuantitative()
     {
         return quantitative == null || quantitative;
+    }
+
+    // Look at TransitionDocNode.IsQuantitative(SrmSettings settings) in the Skyline code
+    public boolean isQuantitative(TransitionSettings.FullScanSettings settings)
+    {
+        if(!explicitQuantitative())
+        {
+            return false;
+        }
+        if(!isMs1() && isFullScanAcquisitionDDA(settings))
+        {
+            return false;
+        }
+        return true;
+    }
+
+    boolean isMs1()
+    {
+        return isPrecursorIon();
+    }
+
+    private boolean isFullScanAcquisitionDDA(TransitionSettings.FullScanSettings fullScanSettings)
+    {
+        return fullScanSettings != null && "DDA".equals(fullScanSettings.getAcquisitionMethod());
     }
 
     public Double getExplicitIonMobilityHighEnergyOffset()

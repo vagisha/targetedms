@@ -331,7 +331,7 @@ public class SkylineDocImporter
                 // TODO: bulk insert of precursor, transition, chrom info etc.
                 PeptideGroup pepGroup = parser.nextPeptideGroup();
                 insertPeptideGroup(proteinService, optimizationInfo, replicateInfo.skylineIdSampleFileIdMap,
-                        modInfo, libraryNameIdMap, pepGroup, parser, peptides, smallMolecules);
+                        modInfo, libraryNameIdMap, pepGroup, parser, peptides, smallMolecules, parser.getTransitionSettings());
                 if (++peptideGroupCount % 100 == 0)
                 {
                     _log.info("Imported " + peptideGroupCount + " peptide groups.");
@@ -1045,7 +1045,8 @@ public class SkylineDocImporter
 
     private void insertPeptideGroup(ProteinService proteinService, OptimizationInfo optimizationInfo, Map<SampleFileKey, SampleFile> skylineIdSampleFileIdMap,
                                     ModificationInfo modInfo,
-                                    Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser, Set<String> peptides, Set<String> smallMolecules)
+                                    Map<String, Integer> libraryNameIdMap, PeptideGroup pepGroup, SkylineDocumentParser parser, Set<String> peptides, Set<String> smallMolecules,
+                                    TransitionSettings transitionSettings)
             throws XMLStreamException, IOException
     {
         pepGroup.setRunId(_runId);
@@ -1167,7 +1168,7 @@ public class SkylineDocImporter
             }
 
             insertPeptideOrSmallMolecule(optimizationInfo, skylineIdSampleFileIdMap, modInfo,
-                    libraryNameIdMap, pepGroup, generalMolecule);
+                    libraryNameIdMap, pepGroup, generalMolecule, transitionSettings);
         }
         if(peptideCount > 0)
         {
@@ -1222,7 +1223,8 @@ public class SkylineDocImporter
                                               ModificationInfo modInfo,
                                               Map<String, Integer> libraryNameIdMap,
                                               PeptideGroup pepGroup,
-                                              GeneralMolecule generalMolecule)
+                                              GeneralMolecule generalMolecule,
+                                              TransitionSettings transitionSettings)
     {
         Peptide peptide = null;
 
@@ -1294,7 +1296,7 @@ public class SkylineDocImporter
             }
 
             // 4. Calculate and insert peak area ratios
-            PeakAreaRatioCalculator areaRatioCalculator = new PeakAreaRatioCalculator(peptide);
+            PeakAreaRatioCalculator areaRatioCalculator = new PeakAreaRatioCalculator(peptide, transitionSettings);
             areaRatioCalculator.init(skylineIdSampleFileIdMap);
             // Insert area ratios for each combination of 2 isotope labels
             for (Integer numLabelId : modInfo.isotopeLabelIdMap.values())
