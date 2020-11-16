@@ -32,15 +32,18 @@ import java.util.Map;
  */
 public class PeakAreaRatioCalculator
 {
-    private final Peptide _peptide;
-    private Map<Long, PeptideAreaRatioCalculator> _peptideAreaRatioCalculatorMap;
-
     private static Logger _log = LogManager.getLogger(SkylineDocImporter.class);
 
+    private final Peptide _peptide;
+    private final TransitionSettings _transitionSettings;
+
+    private Map<Long, PeptideAreaRatioCalculator> _peptideAreaRatioCalculatorMap;
+
     // All the precursors and transitions and chrom infos for this peptide must already have database IDs.
-    public PeakAreaRatioCalculator(Peptide peptide)
+    public PeakAreaRatioCalculator(Peptide peptide, TransitionSettings transitionSettings)
     {
         _peptide = peptide;
+        _transitionSettings = transitionSettings;
 
         _peptideAreaRatioCalculatorMap = new HashMap<>();
     }
@@ -73,6 +76,11 @@ public class PeakAreaRatioCalculator
 
             for(Transition transition: precursor.getTransitionsList())
             {
+                // Issue 41788: Exclude non-quantitative transitions from peak area ratio calculations
+                if(!transition.isQuantitative(_transitionSettings.getFullScanSettings()))
+                {
+                    continue;
+                }
                 for(TransitionChromInfo transitionChromInfo: transition.getChromInfoList())
                 {
                     if(transitionChromInfo.isOptimizationPeak())
@@ -244,10 +252,7 @@ public class PeakAreaRatioCalculator
                 // For transition group (precursor) area ratio calculation in Skyline look at
                 // PeptideChromInfoCalculator.CalcTransitionGroupRatio. This function calculates
                     // peptide area ratio as well when precursorCharge == -1.
-                if(na == null || na == 0.0)
-                    continue;
-
-                if(da == null || da == 0.0)
+                if(na == null || da == null)
                     continue;
 
                 areas.addNumeratorArea(na);

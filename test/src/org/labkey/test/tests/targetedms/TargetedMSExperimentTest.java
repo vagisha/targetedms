@@ -15,6 +15,7 @@
  */
 package org.labkey.test.tests.targetedms;
 
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.labkey.remoteapi.CommandException;
@@ -38,6 +39,7 @@ import org.openqa.selenium.WebElement;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -53,6 +55,9 @@ public class TargetedMSExperimentTest extends TargetedMSTest
 
     private static final String SKY_FILE_SMALLMOL_PEP = "smallmol_plus_peptides.sky.zip";
     private static final String SKY_FILE_SKYD_14 = "SampleIdTest.sky.zip";
+
+    private static final String SKY_FILE_AREA_RATIOS = "AreaRatioTestDoc.sky.zip";
+    private static final String SKY_FILE_AREA_RATIOS_2 = "quantitativetest_dda.sky.zip";
 
     @Test
     public void testSteps() throws IOException, CommandException
@@ -73,6 +78,11 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         // SKYD version 14
         importData(SKY_FILE_SKYD_14, 4);
         verifyInstrumentSerialNumber();
+
+        // Test peak area ratio calculation
+        importData(SKY_FILE_AREA_RATIOS, 5);
+        importData(SKY_FILE_AREA_RATIOS_2, 6);
+        verifyAreaRatios();
     }
 
     @LogMethod
@@ -527,5 +537,65 @@ public class TargetedMSExperimentTest extends TargetedMSTest
         assertEquals(query.getDataAsText(0, "Sequence1"), query.getDataAsText(0, "Sequence1"));
         assertEquals(query.getDataAsText(0, "Protein1"), query.getDataAsText(0, "Protein2"));
         query.clearFilter("Protein1");
+    }
+
+    @LogMethod
+    private void verifyAreaRatios() throws IOException, CommandException
+    {
+        // SKY_FILE_AREA_RATIOS: Transitions are explicitly marked as non-quantitative and should not be included calculating total areas
+        String docName = SKY_FILE_AREA_RATIOS;
+        Rowset rowset = getPeptideAreaRatiosResults(docName);
+        assertEquals("Wrong number of PeptideAreaRatio rows returned for " + docName, 2, rowset.getSize());
+        Iterator<Row> iterator = rowset.iterator();
+        checkAreaRatio(iterator.next(), docName, "A01_acq_01", "ALGS[+79.966331]PTKQLLPC[+57.021464]EMAC[+57.021464]NEK",0.9462725);
+        checkAreaRatio(iterator.next(), docName, "A01_acq_01", "VSMPDVELNLKS[+79.966331]PK",0.03584785);
+
+        // SKY_FILE_AREA_RATIOS_2: Full scan acquisition method is set to "DDA" so MS2 transitions should not be included in calculating total areas
+        docName = SKY_FILE_AREA_RATIOS_2;
+        rowset = getPeptideAreaRatiosResults(docName);
+        assertEquals("Wrong number of PeptideAreaRatio rows returned for " + docName, 12, rowset.getSize());
+        iterator = rowset.iterator();
+
+        checkAreaRatio(iterator.next(), docName, "2_1-01", "EVELFSR",2.8158202);
+        checkAreaRatio(iterator.next(), docName, "2_1-01", "YSPSPLSMK",2.1585193);
+        checkAreaRatio(iterator.next(), docName, "2_1-01", "QLLDFGSENAC[+57.021464]ER",0.8570299);
+        checkAreaRatio(iterator.next(), docName, "2_1-01", "ALSEFVDTLVK",3.1268802);
+        checkAreaRatio(iterator.next(), docName, "2_1-01", "NAPLAGFGYGLPISR",1.1077645);
+
+        checkAreaRatio(iterator.next(), docName, "4_1-01", "EVELFSR",1.5434148);
+        checkAreaRatio(iterator.next(), docName, "4_1-01", "YSPSPLSMK",0.44915965);
+        checkAreaRatio(iterator.next(), docName, "4_1-01", "QLLDFGSENAC[+57.021464]ER",0.6879811);
+        checkAreaRatio(iterator.next(), docName, "4_1-01", "ALSEFVDTLVK",1.3860041);
+
+        checkAreaRatio(iterator.next(), docName, "6_1-01", "EVELFSR",1.0394642);
+        checkAreaRatio(iterator.next(), docName, "6_1-01", "QLLDFGSENAC[+57.021464]ER",0.2087488);
+        checkAreaRatio(iterator.next(), docName, "6_1-01", "ALSEFVDTLVK",0.9737395);
+    }
+
+    @NotNull
+    private Rowset getPeptideAreaRatiosResults(String documentName) throws IOException, CommandException
+    {
+        Connection conn = createDefaultConnection(false);
+        SelectRowsCommand cmd = new SelectRowsCommand("targetedms", "peptidearearatio");
+        cmd.setRequiredVersion(9.1);
+        cmd.setSorts(List.of(new Sort("PeptideChrominfoId/SampleFileId/ReplicateId"),
+                new Sort("PeptideChrominfoId/PeptideId")));
+        cmd.setColumns(Arrays.asList("PeptideChrominfoId/SampleFileId/ReplicateId/RunId",
+                "PeptideChrominfoId/SampleFileId/ReplicateId",
+                "PeptideChrominfoId/PeptideId",
+                "AreaRatio"));
+        cmd.addFilter("PeptideChrominfoId/SampleFileId/ReplicateId/RunId/FileName", documentName, Filter.Operator.EQUAL);
+        SelectRowsResponse response = cmd.execute(conn, getCurrentContainerPath());
+        return response.getRowset();
+    }
+
+    private void checkAreaRatio(Row row, String file,  String replicate, String peptide, double ratio)
+    {
+        assertEquals("Wrong filename", file, row.getDisplayValue("PeptideChrominfoId/SampleFileId/ReplicateId/RunId"));
+        assertEquals("Wrong replicate", replicate, row.getDisplayValue("PeptideChrominfoId/SampleFileId/ReplicateId"));
+        assertEquals("Wrong peptide", peptide, row.getDisplayValue("PeptideChrominfoId/PeptideId"));
+        // Round to avoid floating point precision false positives
+        long ratioL = Math.round(ratio * 10000);
+        assertEquals("Wrong area ratio", ratioL, Math.round(((Number)row.getValue("AreaRatio")).doubleValue() * 10000));
     }
 }

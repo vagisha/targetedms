@@ -110,4 +110,27 @@ public class ComplexFragmentIonName
     {
         return !_children.isEmpty();
     }
+
+    /**
+     * Returns true if all of the parts are intact precursor ions.
+     * This method could potentially be fooled if one of the crosslinker names contains
+     * "}".
+     */
+    public static boolean looksLikeIntactPrecursor(String name)
+    {
+        // The top level transition needs to be a precursor
+        if (!name.startsWith("p")) {
+            return false;
+        }
+        // All of the sub-components need to be precursors as well, which means that they all end
+        // with ":p}".
+        int indexCloseBrace = 0;
+        while ((indexCloseBrace  = name.indexOf('}', indexCloseBrace  + 1)) >= 0)
+        {
+            if (indexCloseBrace  > 0 && name.charAt(indexCloseBrace - 1) != 'p') {
+                return false;
+            }
+        }
+        return true;
+    }
 }
