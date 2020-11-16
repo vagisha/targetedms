@@ -133,7 +133,7 @@ public class JoinedTargetedMSTable extends AnnotatedTargetedMSTable
 
         // Append them to the generated SQL
         Map<FieldKey, ColumnInfo> columnMap = Table.createColumnMap(getFromTable(), getFromTable().getColumns());
-        SQLFragment filterFrag = realFilter.getSQLFragment(_rootTable.getSqlDialect(), columnMap);
+        SQLFragment filterFrag = realFilter.getSQLFragment(_rootTable.getSqlDialect(), "i", columnMap);
         result.append("\n").append(filterFrag).append(") ").append(alias);
 
 
